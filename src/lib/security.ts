@@ -120,23 +120,25 @@ export function verifyApplicationIsolation(): {
   let gitOrigin = "UNKNOWN";
   let method = "DIRECTORY_NAME_ONLY";
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const fs = require("fs") as typeof import("fs");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const nodePath = require("path") as typeof import("path");
-    const gitConfigPath = nodePath.join(workspaceDir, ".git", "config");
-    if (fs.existsSync(gitConfigPath)) {
-      const gitConfig = fs.readFileSync(gitConfigPath, "utf-8");
-      const originMatch = gitConfig.match(/\[remote "origin"\][^\[]*url\s*=\s*(.+)/);
-      if (originMatch && originMatch[1]) {
-        gitOrigin = originMatch[1].trim();
-        method = "GIT_CONFIG_FILE";
+  if (typeof window === "undefined") {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require("fs") as typeof import("fs");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodePath = require("path") as typeof import("path");
+      const gitConfigPath = nodePath.join(workspaceDir, ".git", "config");
+      if (fs.existsSync(gitConfigPath)) {
+        const gitConfig = fs.readFileSync(gitConfigPath, "utf-8");
+        const originMatch = gitConfig.match(/\[remote "origin"\][^\[]*url\s*=\s*(.+)/);
+        if (originMatch && originMatch[1]) {
+          gitOrigin = originMatch[1].trim();
+          method = "GIT_CONFIG_FILE";
+        }
       }
+    } catch {
+      // Fallback to directory name check
+      method = "DIRECTORY_NAME_FALLBACK";
     }
-  } catch {
-    // Fallback to directory name check
-    method = "DIRECTORY_NAME_FALLBACK";
   }
 
   // Method 2: Confirm origin matches expected repository
