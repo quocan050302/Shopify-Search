@@ -454,22 +454,63 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
 /**
  * Live test connection for Google Gemini AI.
  * Uses @google/generative-ai to perform an authenticated generateContent call.
+ *
+ * NOTE: Google AI Studio now issues API keys in two formats:
+ *   - Legacy:  AIzaSy... (older projects)
+ *   - New:     AQ.xxxx  (newer projects via OAuth 2.0)
+ * Both formats are fully valid — no format validation is applied here.
+ *
+ * Model fallback order (newest → stable):
+ *   1. gemini-2.0-flash          — preferred stable model (2025)
+ *   2. gemini-2.0-flash-lite     — lighter/faster variant
+ *   3. gemini-1.5-flash-latest   — stable alias (avoids deprecated suffix)
+ *   4. gemini-1.5-flash-002      — pinned stable release
+ * We try each in sequence until one succeeds.
  */
 async function testGeminiConnection(key: string): Promise<ConnectionTestResult> {
   const startTime = Date.now();
   const testedAt = new Date().toISOString();
 
-  try {
-    const ai = new GoogleGenerativeAI(key);
-    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent("Ping. Respond with OK.");
-    const responseText = result.response.text();
-    const latencyMs = Date.now() - startTime;
+  // Ordered list of models to probe — newest first
+  const MODELS_TO_TRY = [
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash-002",
+  ];
 
-    if (!responseText) {
-      throw new Error("Gemini returned empty response text.");
+  const ai = new GoogleGenerativeAI(key);
+  let lastError: any = null;
+  let workingModel: string | null = null;
+  let responseText = "";
+
+  for (const modelName of MODELS_TO_TRY) {
+    try {
+      const model = ai.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent("Ping. Respond with OK.");
+      responseText = result.response.text();
+      workingModel = modelName;
+      break; // Success — stop trying
+    } catch (err: any) {
+      lastError = err;
+      // Only continue if it's a model-not-found error (404)
+      const is404 =
+        err.status === 404 ||
+        (typeof err.message === "string" && (
+          err.message.includes("not found") ||
+          err.message.includes("404") ||
+          err.message.includes("not supported")
+        ));
+      if (!is404) {
+        // Auth failure or network error — no point trying other models
+        break;
+      }
     }
+  }
 
+  const latencyMs = Date.now() - startTime;
+
+  if (workingModel && responseText) {
     return {
       provider: "gemini",
       status: "CONNECTED",
@@ -477,12 +518,12 @@ async function testGeminiConnection(key: string): Promise<ConnectionTestResult> 
       testedAt,
       errorMessage: null,
       missingPermissions: [],
-      grantedPermissions: ["generateContent", "multimodal_video"],
+      grantedPermissions: ["generateContent", "multimodal_analysis"],
       capabilities: [
         {
           name: "Video Creative Analysis (MP4 / WebM)",
           status: "VERIFIED",
-          notes: "Live verification succeeded on gemini-1.5-flash.",
+          notes: `Live verification succeeded on ${workingModel}.`,
         },
         {
           name: "Opening 3-Second Hook Quality Scoring",
@@ -507,30 +548,56 @@ async function testGeminiConnection(key: string): Promise<ConnectionTestResult> 
       ],
       policyNotice: null,
       details: {
-        model: "gemini-1.5-flash",
-        responsePreview: responseText.slice(0, 40).trim(),
+        model: workingModel,
+        responsePreview: responseText.slice(0, 60).trim(),
+        modelsAttempted: MODELS_TO_TRY.slice(0, MODELS_TO_TRY.indexOf(workingModel) + 1),
       },
     };
-  } catch (err: any) {
-    const latencyMs = Date.now() - startTime;
-    return {
-      provider: "gemini",
-      status: "ERROR",
-      latencyMs,
-      testedAt,
-      errorMessage: err.message || "Failed to authenticate with Google Gemini API.",
-      errorCode: err.status || err.code || "AUTH_FAILED",
-      missingPermissions: ["Valid GEMINI_API_KEY"],
-      grantedPermissions: [],
-      capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
-        name: cap,
-        status: "UNAVAILABLE",
-        notes: `Authentication failed: ${err.message}`,
-      })),
-      policyNotice:
-        "Please check your GEMINI_API_KEY at aistudio.google.com and ensure the Gemini API is enabled.",
-    };
   }
+
+  // All models failed
+  const errMsg = lastError?.message || "Failed to authenticate with Google Gemini API.";
+  const is401or403 =
+    lastError?.status === 401 ||
+    lastError?.status === 403 ||
+    (typeof errMsg === "string" && (
+      errMsg.includes("API_KEY_INVALID") ||
+      errMsg.includes("PERMISSION_DENIED") ||
+      errMsg.includes("403") ||
+      errMsg.includes("401")
+    ));
+
+  const keyFormatNote =
+    "Google AI Studio generates keys in two valid formats: \"AIzaSy...\" (older) " +
+    "and \"AQ.xxxx\" (newer OAuth 2.0 based). Both are accepted by SWAI.";
+
+  return {
+    provider: "gemini",
+    status: "ERROR",
+    latencyMs,
+    testedAt,
+    errorMessage: errMsg,
+    errorCode: lastError?.status || lastError?.code || "AUTH_FAILED",
+    missingPermissions: is401or403
+      ? ["Valid GEMINI_API_KEY — check for API restrictions or disabled billing"]
+      : ["Accessible Gemini model — all tested models returned 404"],
+    grantedPermissions: [],
+    capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
+      name: cap,
+      status: "UNAVAILABLE" as const,
+      notes: errMsg,
+    })),
+    policyNotice:
+      is401or403
+        ? `Authentication rejected. ${keyFormatNote} Verify the key has no API restrictions at console.cloud.google.com.`
+        : `All model variants tested (${MODELS_TO_TRY.join(", ")}) returned 404. " +
+          "This may be a regional restriction or project quota issue. ${keyFormatNote}`,
+    details: {
+      modelsAttempted: MODELS_TO_TRY,
+      lastErrorCode: lastError?.status,
+      keyFormatNote,
+    },
+  };
 }
 
 /**

@@ -22,14 +22,22 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 export const GEMINI_ADAPTER_VERSION = "7.1.0";
 
 /**
- * Current Gemini model for creative video analysis.
- * Using flash for speed/cost efficiency; pro for deeper analysis.
- * These are checked against the SDK at runtime via validateGeminiConfiguration().
+ * Current Gemini models for creative video analysis.
+ * Google AI Studio now issues keys in two formats:
+ *   - Legacy:  AIzaSy... (older projects)
+ *   - New:     AQ.xxxx  (newer OAuth 2.0 based projects — fully valid)
+ *
+ * Model precedence (newest stable first):
+ *   FLASH   — gemini-2.0-flash        (preferred — stable 2025)
+ *   FLASH_LITE — gemini-2.0-flash-lite (faster/cheaper variant)
+ *   FLASH_STABLE — gemini-1.5-flash-latest (stable alias, no deprecated suffix)
+ *   PRO     — gemini-1.5-pro-latest   (deep analysis)
  */
 export const GEMINI_MODELS = {
-  FLASH: "gemini-1.5-flash",
-  PRO: "gemini-1.5-pro",
-  FLASH_2: "gemini-2.0-flash",
+  FLASH: "gemini-2.0-flash",
+  FLASH_LITE: "gemini-2.0-flash-lite",
+  FLASH_STABLE: "gemini-1.5-flash-latest",
+  PRO: "gemini-1.5-pro-latest",
 } as const;
 
 export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS];
