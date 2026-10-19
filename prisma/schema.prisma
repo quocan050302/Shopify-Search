@@ -122,7 +122,7 @@ model CompetitorAd {
   dataSourceId     String
   externalAdId     String?              @unique
   platform         String               // META, TIKTOK
-  targetMarket     String               @default("US")
+  targetMarket     String               @default("UNKNOWN") // V7: was US, now UNKNOWN to avoid false market attribution
   headline         String?
   bodyText         String?
   callToAction     String?
@@ -130,26 +130,44 @@ model CompetitorAd {
   originalAdUrl    String               // Canonical source link
   firstSeenAt      DateTime             @default(now())
   lastSeenAt       DateTime             @default(now())
-  daysRunning      Int                  @default(1)
-  status           String               @default("ACTIVE") // ACTIVE, INACTIVE, UNKNOWN
+  daysRunning      Int                  @default(1)    // Legacy: use calendarAgeDays from longevity engine instead
+  status           String               @default("UNKNOWN") // V7: UNKNOWN|ACTIVE_VERIFIED|INACTIVE_VERIFIED|NOT_OBSERVED_RECENTLY|SOURCE_UNAVAILABLE|ARCHIVED|SYNTHETIC_QUARANTINED
+  lifecycleStatus  String               @default("UNKNOWN") // V7: explicit lifecycle state
   category         String               @default("Other")
-  dataConfidence   String               @default("OBSERVED") // VERIFIED, OBSERVED, ESTIMATED, UNAVAILABLE
+  dataConfidence   String               @default("UNVERIFIED") // V7: was OBSERVED, now UNVERIFIED for new imports
+  // V7 lifecycle fields (all nullable — provider data may not supply these)
+  sourceReportedStartAt  DateTime?      // Date the provider reported the ad started
+  sourceReportedEndAt    DateTime?      // Date the provider reported the ad stopped
+  lastVerifiedActiveAt   DateTime?      // Last time ACTIVE status was positively confirmed
+  lastVerifiedInactiveAt DateTime?      // Last time INACTIVE status was positively confirmed
+  firstObservedAt        DateTime?      // When SWAI first saw this ad
+  lastObservedAt         DateTime?      // Most recent SWAI observation
+  longevityCategory      String?        // NEW_TESTING|EARLY_POTENTIAL|PROMISING|STRONG_CANDIDATE|EVERGREEN_CANDIDATE|LONG_TERM_REFERENCE
+  observationCount       Int            @default(0)  // Count of SWAI observations
+  verifiedActiveCount    Int            @default(0)  // Subset of observations with confirmed active status
+  isSyntheticQuarantine  Boolean        @default(false) // V7: explicit quarantine flag
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   advertiser       Advertiser           @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
   dataSource       DataSource           @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
   mediaAssets      AdMediaAsset[]
   observations     AdObservation[]
+  lifecycleEvents  AdLifecycleEvent[]
   metricObservations AdMetricObservation[]
   productLinks     AdProductLink[]
+  creativeVariants ProductCreativeVariant[]
   analyses         CreativeAnalysis[]
   researchScores   ResearchScore[]
+  evergreenScores  EvergreenScore[]
   watchlistItems   WatchlistItem[]
   notes            ResearchNote[]
+  researchDecisions ResearchDecision[]
 
   @@index([platform, status])
+  @@index([platform, lifecycleStatus])
   @@index([category])
   @@index([firstSeenAt])
+  @@index([longevityCategory])
   @@map("competitor_ads")
 }
 
@@ -174,15 +192,22 @@ model AdMediaAsset {
 }
 
 model AdObservation {
-  id           String        @id @default(cuid())
-  adId         String
-  observedAt   DateTime      @default(now())
-  isActive     Boolean       @default(true)
-  evidenceType String        @default("API_SYNC") // API_SYNC, USER_OBSERVED, URL_CHECK
-  rawPayload   String?
-  ad           CompetitorAd  @relation(fields: [adId], references: [id], onDelete: Cascade)
+  id                String        @id @default(cuid())
+  adId              String
+  observedAt        DateTime      @default(now())
+  // V7: replaced isActive Boolean with observationStatus string
+  observationStatus String        @default("UNKNOWN") // ACTIVE|INACTIVE|UNKNOWN|CHECK_FAILED|ACCESS_RESTRICTED
+  isActive          Boolean?      // Deprecated — kept for migration safety
+  evidenceType      String        @default("USER_OBSERVED") // API_SYNC|USER_OBSERVED|URL_CHECK|MANUAL_ENTRY
+  verificationMethod String?      // HEAD_CHECK|SOURCE_PAGE_LOADED|AD_METADATA_VERIFIED|ACTIVE_STATUS_VERIFIED
+  evidenceReference String?       // URL or payload reference supporting this observation
+  sourceTimestamp   DateTime?     // Timestamp from the source provider (if any)
+  confidence        Float?        // 0.0–1.0 confidence in this observation
+  rawPayload        String?
+  ad                CompetitorAd  @relation(fields: [adId], references: [id], onDelete: Cascade)
 
   @@index([adId, observedAt])
+  @@index([adId, observationStatus])
   @@map("ad_observations")
 }
 
@@ -236,6 +261,9 @@ model ResearchProduct {
   priceHistory     ProductPriceObservation[]
   watchlistItems   WatchlistItem[]
   notes            ResearchNote[]
+  demandObservations ProductDemandObservation[]
+  evergreenScores    EvergreenProductScore[]
+  researchDecisions  ResearchDecision[]
 
   @@index([category])
   @@map("research_products")
@@ -441,4 +469,140 @@ model AdvertisingAccount {
 
   @@unique([workspaceId, platform, accountId])
   @@map("advertising_accounts")
+}
+
+// -------------------------------------------------------------
+// V7 — Evergreen Intelligence Models
+// -------------------------------------------------------------
+
+/// Lifecycle events for an advertisement (ordered timeline)
+model AdLifecycleEvent {
+  id                String       @id @default(cuid())
+  adId              String
+  eventType         String       // AD_DISCOVERED|SOURCE_START_DATE_OBSERVED|ACTIVE_VERIFIED|INACTIVE_VERIFIED|SOURCE_ACCESS_LOST|CREATIVE_VARIANT_DISCOVERED|PRODUCT_ASSOCIATION_CONFIRMED
+  occurredAt        DateTime     @default(now())
+  sourceTimestamp   DateTime?    // Provider-reported timestamp (if different from occurredAt)
+  evidenceReference String?      // URL or source backing this event
+  confidence        Float?       // 0.0–1.0
+  notes             String?
+  createdAt         DateTime     @default(now())
+  ad                CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, occurredAt])
+  @@map("ad_lifecycle_events")
+}
+
+/// V7 Evergreen Score — separate from legacy ResearchScore
+model EvergreenScore {
+  id                     String       @id @default(cuid())
+  adId                   String
+  // Score components
+  totalScore             Float?       // 0–100 or null if INSUFFICIENT_EVIDENCE
+  tier                   String       @default("INSUFFICIENT_EVIDENCE") // HIGH_RESEARCH_PRIORITY|MEDIUM_RESEARCH_PRIORITY|LOW_RESEARCH_PRIORITY|INSUFFICIENT_EVIDENCE
+  longevityScore         Float?       // Evidence-backed longevity component
+  observationScore       Float?       // Observation history quality
+  coverageScore          Float?       // Continuity coverage
+  sourceReliabilityScore Float?       // Source credibility
+  // Evidence metadata
+  evidenceConfidence     Float?       // 0.0–1.0 overall confidence
+  coverageStatus         String       @default("INSUFFICIENT_EVIDENCE") // HIGH_COVERAGE|MODERATE_COVERAGE|SPARSE_COVERAGE|SINGLE_OBSERVATION|INSUFFICIENT_EVIDENCE
+  availableSignals       String?      // JSON array of available evidence signals
+  missingSignals         String?      // JSON array of missing evidence signals
+  longevityCategory      String?      // NEW_TESTING|EARLY_POTENTIAL|PROMISING|STRONG_CANDIDATE|EVERGREEN_CANDIDATE|LONG_TERM_REFERENCE
+  calendarAgeDays        Int?         // Computed from earliest known date to now
+  observedActiveDays     Int?         // Days we have positive observation of active status
+  observationCoverageDays Int?        // Calendar days spanned by our observation history
+  verifiedActiveObservationCount Int? // Count of verified-ACTIVE observations
+  scoreBreakdown         String?      // JSON: detailed breakdown with sources
+  formulaVersion         String       @default("7.0.0")
+  explanation            String?      // Human-readable score explanation
+  createdAt              DateTime     @default(now())
+  ad                     CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, createdAt])
+  @@index([totalScore])
+  @@map("evergreen_scores")
+}
+
+/// Product demand observations imported from authorized sources
+model ProductDemandObservation {
+  id                   String          @id @default(cuid())
+  productId            String
+  source               String          // GOOGLE_TRENDS_CSV|USER_MANUAL|PROVIDER_API
+  region               String          @default("US")
+  keyword              String
+  periodStart          DateTime
+  periodEnd            DateTime
+  demandValue          Float?          // Relative interest 0–100 (Google Trends scale)
+  valueType            String          @default("RELATIVE_INTEREST") // RELATIVE_INTEREST|SEARCH_VOLUME_EST|PROVIDER_METRIC
+  demandStabilityClass String?         // EVERGREEN_STABLE|SEASONAL_RECURRING|TREND_DRIVEN|DECLINING|INSUFFICIENT_DATA
+  observedAt           DateTime        @default(now())
+  evidenceReference    String?         // Source file, URL, or method
+  methodologyVersion   String          @default("1.0")
+  product              ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, periodStart])
+  @@index([keyword, region])
+  @@map("product_demand_observations")
+}
+
+/// Creative variants linked to a product + advertiser
+model ProductCreativeVariant {
+  id               String          @id @default(cuid())
+  adId             String
+  productId        String?
+  advertiserId     String?
+  creativeFormat   String          @default("VIDEO") // VIDEO|IMAGE|CAROUSEL
+  creativeAngle    String?         // PROBLEM_SOLUTION|PRODUCT_DEMO|UGC|TESTIMONIAL|COMPARISON|OFFER_LED|EDUCATIONAL|OTHER|UNKNOWN
+  firstObservedAt  DateTime        @default(now())
+  lastObservedAt   DateTime        @default(now())
+  verifiedStatus   String          @default("UNVERIFIED") // VERIFIED|UNVERIFIED|SYNTHETIC
+  sourceReference  String?         // Original source URL
+  notes            String?
+  createdAt        DateTime        @default(now())
+  ad               CompetitorAd    @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@index([productId])
+  @@map("product_creative_variants")
+}
+
+/// Researcher's manual decision on a product or ad
+model ResearchDecision {
+  id          String          @id @default(cuid())
+  adId        String?
+  productId   String?
+  decision    String          // RESEARCHING|SHORTLISTED|TEST_CANDIDATE|REJECTED|ARCHIVED
+  notes       String?
+  decidedAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  ad          CompetitorAd?   @relation(fields: [adId], references: [id], onDelete: Cascade)
+  product     ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("research_decisions")
+}
+
+/// V7 Evergreen Product Score (product-level, separate from ad-level)
+model EvergreenProductScore {
+  id                     String          @id @default(cuid())
+  productId              String
+  totalScore             Float?
+  tier                   String          @default("INSUFFICIENT_EVIDENCE")
+  demandStabilityScore   Float?
+  adPersistenceScore     Float?
+  creativeInvestScore    Float?
+  productAvailScore      Float?
+  evidenceConfidence     Float?
+  demandStabilityClass   String?         // EVERGREEN_STABLE|SEASONAL_RECURRING|TREND_DRIVEN|DECLINING|INSUFFICIENT_DATA
+  observationPeriodDays  Int?
+  demandObservationCount Int?
+  linkedAdCount          Int?
+  distinctCreativeCount  Int?
+  scoreBreakdown         String?         // JSON
+  formulaVersion         String          @default("7.0.0")
+  createdAt              DateTime        @default(now())
+  product                ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@map("evergreen_product_scores")
 }
