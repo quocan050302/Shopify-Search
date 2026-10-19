@@ -34,6 +34,6 @@ describe("Security & SSRF Guard", () => {
     const status = verifyApplicationIsolation();
     expect(status.isIsolated).toBe(true);
     expect(status.appName).toContain("Shopify Winning Ads Intelligence");
-    expect(status.gitOrigin).toBe("https://github.com/quocan050302/Shopify-Search.git");
+    expect(status.gitOrigin).toBe("https://github.com/quocan050302/Shopify-Search");
   });
 });

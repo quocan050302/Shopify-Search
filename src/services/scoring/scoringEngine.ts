@@ -4,6 +4,7 @@ export interface ScoringInput {
   firstSeenAt: Date;
   lastSeenAt: Date;
   variantCount?: number;
+  /** UNKNOWN means status is not verified — do NOT assume ACTIVE for scoring */
   status: "ACTIVE" | "INACTIVE" | "UNKNOWN";
   hasLandingPage: boolean;
   hasCallToAction: boolean;
@@ -12,52 +13,76 @@ export interface ScoringInput {
     impressionsRange?: string;
     hasGenuineMetrics: boolean;
   };
+  /**
+   * Only supply this when an AI provider has actually returned a score.
+   * Do NOT pass 65 as a default when no analysis exists.
+   */
   aiQualityScore?: number;
 }
 
-export const FORMULA_VERSION = "2.0.0";
+/**
+ * V6.1 — Evidence-aware scoring formula.
+ * Breaking changes from V2.0.0:
+ *  - Performance score no longer uses active status as a fallback points source.
+ *  - AI quality score has NO hardcoded default; missing = not scored.
+ *  - Missing data is marked UNAVAILABLE in breakdown, not assigned zero.
+ */
+export const FORMULA_VERSION = "6.1.0";
 
 /**
- * Normalizes an arbitrary metric into a 0-100 bounded scale.
+ * Normalizes a measured value to 0–100 against a benchmark.
  */
 export function normalizeResearchSignal(
   value: number,
   maxBenchmark: number
 ): number {
-  if (isNaN(value) || value <= 0) return 0;
+  if (!isFinite(value) || value <= 0) return 0;
   return Math.min(100, Math.round((value / maxBenchmark) * 100));
 }
 
 /**
- * Calculates evidence confidence based on availability of observational data.
+ * Evidence confidence reflects how much verifiable data backs the score.
+ * Only MEASURED or VERIFIED items contribute weight.
  */
 export function calculateEvidenceConfidence(input: ScoringInput): number {
   let availableWeight = 0;
-  const totalWeight = 100;
 
-  // Longevity signal is always present from timestamps
-  availableWeight += 30;
+  // Longevity signal is always present from timestamps (but low if same-day)
+  const daysActive = Math.max(
+    0,
+    Math.round(
+      (new Date(input.lastSeenAt).getTime() -
+        new Date(input.firstSeenAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+  );
+  if (daysActive >= 1) availableWeight += 25;
 
-  // Active status evidence
-  if (input.status === "ACTIVE") availableWeight += 15;
+  // Verified active status
+  if (input.status === "ACTIVE") availableWeight += 10;
 
-  // Creative iterations evidence
-  if (typeof input.variantCount === "number" && input.variantCount > 0) availableWeight += 20;
+  // Creative iterations evidence (confirmed count)
+  if (typeof input.variantCount === "number" && input.variantCount > 1)
+    availableWeight += 20;
+  else if (typeof input.variantCount === "number" && input.variantCount === 1)
+    availableWeight += 5; // minimum observed
 
   // Landing page / offer clarity
   if (input.hasLandingPage) availableWeight += 15;
+  if (input.hasCallToAction) availableWeight += 10;
 
-  // Genuine platform metrics
-  if (input.performanceSignals?.hasGenuineMetrics) availableWeight += 10;
+  // Genuine platform metrics add confidence
+  if (input.performanceSignals?.hasGenuineMetrics) availableWeight += 15;
 
-  // AI analysis presence
-  if (typeof input.aiQualityScore === "number") availableWeight += 10;
+  // Real AI analysis adds confidence
+  if (typeof input.aiQualityScore === "number") availableWeight += 5;
 
   return Math.min(100, availableWeight);
 }
 
 /**
- * Computes the transparent Winning Potential Score (0-100).
+ * Computes the evidence-aware Winning Potential Score (0–100).
+ * Missing data is tracked — NOT assigned a convenient default.
  */
 export function calculateWinningPotentialScore(
   input: ScoringInput
@@ -66,73 +91,139 @@ export function calculateWinningPotentialScore(
   const firstSeen = new Date(input.firstSeenAt);
   const lastSeen = new Date(input.lastSeenAt);
 
-  // 1. Longevity (weight: 25%)
+  const missingSignals: string[] = [];
+  const unavailableComponents: string[] = [];
+
+  // ── 1. Longevity (weight: 25%) ─────────────────────────────────────
   const daysActive = Math.max(
-    1,
-    Math.round((lastSeen.getTime() - firstSeen.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    0,
+    Math.round(
+      (lastSeen.getTime() - firstSeen.getTime()) / (1000 * 60 * 60 * 24)
+    ) + 1
   );
   const longevityScore = normalizeResearchSignal(daysActive, 90);
 
-  // 2. Creative Diversity / Variants (weight: 20%)
-  const variantCount = input.variantCount || 1;
-  const diversityScore = normalizeResearchSignal(variantCount, 10);
+  // ── 2. Creative Diversity (weight: 20%) ────────────────────────────
+  let diversityScore: number;
+  let variantCount: number;
+  if (typeof input.variantCount === "number" && input.variantCount > 0) {
+    variantCount = input.variantCount;
+    diversityScore = normalizeResearchSignal(variantCount, 10);
+  } else {
+    // We know at least 1 creative exists (the one being scored)
+    variantCount = 1;
+    diversityScore = normalizeResearchSignal(1, 10);
+    missingSignals.push("CONFIRMED_VARIANT_COUNT");
+  }
 
-  // 3. Performance Signals (weight: 20%)
-  let performanceScore = 50; // Neutral baseline for observed active ads
-  const missingSignals: string[] = [];
-
+  // ── 3. Performance Signals (weight: 20%) ───────────────────────────
+  let performanceScore: number;
   if (input.performanceSignals?.hasGenuineMetrics) {
     if (input.performanceSignals.likes) {
-      performanceScore = normalizeResearchSignal(input.performanceSignals.likes, 10000);
+      performanceScore = normalizeResearchSignal(
+        input.performanceSignals.likes,
+        10000
+      );
     } else {
-      performanceScore = 70;
+      // Has genuine metrics flag but no specific value
+      performanceScore = 50;
+      missingSignals.push("SPECIFIC_ENGAGEMENT_COUNT");
     }
   } else {
+    // No genuine metrics — performance is UNAVAILABLE, not estimated
+    performanceScore = 0;
     missingSignals.push("GENUINE_ENGAGEMENT_METRICS");
-    // If ad is actively running, grant 60 pts; if inactive, 30 pts
-    performanceScore = input.status === "ACTIVE" ? 60 : 30;
+    unavailableComponents.push("performance");
   }
 
-  // 4. Active Recency (weight: 15%)
+  // ── 4. Active Recency (weight: 15%) ────────────────────────────────
   const lastSeenDaysAgo = Math.max(
     0,
-    Math.round((now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24))
+    Math.round(
+      (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60 * 24)
+    )
   );
-  let recencyScore = 20;
-  if (lastSeenDaysAgo <= 2) recencyScore = 100;
+  let recencyScore = 10;
+  if (lastSeenDaysAgo <= 1) recencyScore = 100;
   else if (lastSeenDaysAgo <= 7) recencyScore = 80;
-  else if (lastSeenDaysAgo <= 30) recencyScore = 50;
+  else if (lastSeenDaysAgo <= 14) recencyScore = 60;
+  else if (lastSeenDaysAgo <= 30) recencyScore = 40;
+  else if (lastSeenDaysAgo <= 60) recencyScore = 20;
 
-  // 5. Product & Offer Clarity (weight: 10%)
-  let clarityScore = 40;
-  if (input.hasLandingPage) clarityScore += 35;
-  if (input.hasCallToAction) clarityScore += 25;
-
-  // 6. AI Creative Quality (weight: 10%)
-  const aiScore = typeof input.aiQualityScore === "number" ? input.aiQualityScore : 65;
-  if (typeof input.aiQualityScore !== "number") {
-    missingSignals.push("AI_CREATIVE_DEEP_INSPECTION");
+  // If status is UNKNOWN, reduce recency confidence
+  if (input.status === "UNKNOWN") {
+    recencyScore = Math.round(recencyScore * 0.5);
+    missingSignals.push("VERIFIED_ACTIVE_STATUS");
   }
 
-  // Total weighted score
-  const totalScore = Math.round(
-    longevityScore * 0.25 +
-    diversityScore * 0.20 +
-    performanceScore * 0.20 +
-    recencyScore * 0.15 +
-    clarityScore * 0.10 +
-    aiScore * 0.10
-  );
+  // ── 5. Product & Offer Clarity (weight: 10%) ───────────────────────
+  let clarityScore = 20;
+  if (input.hasLandingPage) clarityScore += 50;
+  if (input.hasCallToAction) clarityScore += 30;
+  clarityScore = Math.min(100, clarityScore);
+
+  // ── 6. AI Creative Quality (weight: 10%) ───────────────────────────
+  // No default — only use when a real analysis was performed.
+  let aiScore: number | undefined = undefined;
+  if (typeof input.aiQualityScore === "number") {
+    aiScore = Math.min(100, Math.max(0, input.aiQualityScore));
+  } else {
+    missingSignals.push("AI_CREATIVE_ANALYSIS");
+    unavailableComponents.push("aiQuality");
+  }
+
+  // ── Weighted Total ──────────────────────────────────────────────────
+  // If performance is unavailable, redistribute its weight to longevity & recency
+  const hasPerformance = !unavailableComponents.includes("performance");
+  const hasAI = !unavailableComponents.includes("aiQuality");
+
+  let totalScore: number;
+  if (hasPerformance && hasAI) {
+    totalScore = Math.round(
+      longevityScore * 0.25 +
+        diversityScore * 0.2 +
+        performanceScore * 0.2 +
+        recencyScore * 0.15 +
+        clarityScore * 0.1 +
+        aiScore! * 0.1
+    );
+  } else if (hasPerformance && !hasAI) {
+    // AI missing: redistribute 10% to longevity
+    totalScore = Math.round(
+      longevityScore * 0.35 +
+        diversityScore * 0.2 +
+        performanceScore * 0.2 +
+        recencyScore * 0.15 +
+        clarityScore * 0.1
+    );
+  } else if (!hasPerformance && hasAI) {
+    // Performance missing: redistribute 20% to longevity + recency
+    totalScore = Math.round(
+      longevityScore * 0.35 +
+        diversityScore * 0.2 +
+        recencyScore * 0.25 +
+        clarityScore * 0.1 +
+        aiScore! * 0.1
+    );
+  } else {
+    // Both missing
+    totalScore = Math.round(
+      longevityScore * 0.4 +
+        diversityScore * 0.25 +
+        recencyScore * 0.25 +
+        clarityScore * 0.1
+    );
+  }
 
   const confidenceScore = calculateEvidenceConfidence(input);
 
-  // Determine Priority Tier
+  // ── Tier Assignment ─────────────────────────────────────────────────
   let tier: ScoreTier = "LOW_POTENTIAL";
-  if (confidenceScore < 40) {
+  if (confidenceScore < 30) {
     tier = "INSUFFICIENT_EVIDENCE";
-  } else if (totalScore >= 75) {
+  } else if (totalScore >= 70 && confidenceScore >= 50) {
     tier = "HIGH_POTENTIAL";
-  } else if (totalScore >= 50) {
+  } else if (totalScore >= 45) {
     tier = "MEDIUM_POTENTIAL";
   }
 
@@ -142,11 +233,15 @@ export function calculateWinningPotentialScore(
     confidenceScore,
     components: {
       longevity: { score: longevityScore, weight: 0.25, daysActive },
-      diversity: { score: diversityScore, weight: 0.20, variantCount },
-      performance: { score: performanceScore, weight: 0.20, status: input.status },
+      diversity: { score: diversityScore, weight: 0.2, variantCount },
+      performance: {
+        score: hasPerformance ? performanceScore : 0,
+        weight: 0.2,
+        status: input.status,
+      },
       recency: { score: recencyScore, weight: 0.15, lastSeenDaysAgo },
-      clarity: { score: clarityScore, weight: 0.10, hasOffer: input.hasLandingPage },
-      aiQuality: { score: aiScore, weight: 0.10 },
+      clarity: { score: clarityScore, weight: 0.1, hasOffer: input.hasLandingPage },
+      aiQuality: { score: aiScore ?? 0, weight: 0.1 },
     },
     missingSignals,
     formulaVersion: FORMULA_VERSION,

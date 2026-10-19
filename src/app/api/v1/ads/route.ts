@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchCompetitorAds, upsertCompetitorAd } from "@/services/ads/adService";
 import { resolveAdSourceUrl } from "@/services/providers/urlResolver";
 import { normalizeExternalAdRecord } from "@/services/providers/registry";
+import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,8 @@ export async function GET(request: NextRequest) {
       sortBy,
       page,
       pageSize,
-      market: "US",
+      // Do NOT force market = US — let the user's research context set this
+      // market: "US",
     });
 
     return NextResponse.json({
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
       meta: {
         timestamp: new Date().toISOString(),
         version: "v1",
+        dataNote:
+          "All records are user-imported or seed data. No automatic ad search performed.",
       },
     });
   } catch (error: any) {
@@ -42,6 +46,8 @@ export async function GET(request: NextRequest) {
         error: {
           code: "SEARCH_FAILED",
           message: error.message || "Failed to search competitor ads",
+          retryable: true,
+          timestamp: new Date().toISOString(),
         },
       },
       { status: 500 }
@@ -52,13 +58,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, advertiserName, headline, bodyText, landingPageUrl, category, price } = body;
+    const {
+      url,
+      advertiserName,
+      headline,
+      bodyText,
+      callToAction,
+      landingPageUrl,
+      category,
+      targetMarket,
+    } = body;
 
     if (!url) {
       return NextResponse.json(
         {
           success: false,
-          error: { code: "MISSING_URL", message: "Advertisement URL is required." },
+          error: {
+            code: "MISSING_URL",
+            message: "Advertisement source URL is required.",
+            retryable: false,
+            timestamp: new Date().toISOString(),
+          },
         },
         { status: 400 }
       );
@@ -69,31 +89,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: { code: "INVALID_URL", message: resolution.notes || "Invalid or restricted URL." },
+          error: {
+            code: "INVALID_URL",
+            message: resolution.notes || "Invalid or restricted URL.",
+            retryable: false,
+            timestamp: new Date().toISOString(),
+          },
         },
         { status: 400 }
       );
     }
 
+    // Validate advertiser name is not a fabricated placeholder
+    const validatedAdvertiserName =
+      advertiserName && advertiserName.trim().length > 0
+        ? advertiserName.trim()
+        : "UNKNOWN";
+
+    // Do NOT fabricate a Facebook render_ad embed — these require authentication
+    // and are not public embeds
+    const embedUrl =
+      resolution.platform === "META" && resolution.externalId
+        ? undefined // No valid public Meta embed endpoint exists
+        : resolution.platform === "TIKTOK" && resolution.externalId
+        ? undefined // TikTok Creative Center embed requires auth
+        : undefined;
+
     const normalized = normalizeExternalAdRecord(resolution.platform, {
       platform: resolution.platform,
       externalAdId: resolution.externalId,
-      advertiserName: advertiserName || (resolution.platform === "META" ? "Meta Advertiser" : "TikTok Merchant"),
-      headline: headline || "Observed Video Advertisement",
+      advertiserName: validatedAdvertiserName,
+      headline: headline || "",
       bodyText: bodyText || "",
+      callToAction: callToAction || "",
       landingPageUrl: landingPageUrl || "",
       originalAdUrl: resolution.canonicalUrl,
-      targetMarket: "US",
+      // User-specified target market or UNKNOWN
+      targetMarket: targetMarket || "UNKNOWN",
       category: category || "Other",
       firstSeenAt: new Date(),
       lastSeenAt: new Date(),
-      status: "ACTIVE",
+      // Cannot verify ACTIVE status from a URL alone
+      status: "UNKNOWN",
       dataConfidence: "OBSERVED",
       mediaType: "VIDEO",
-      embedUrl: resolution.platform === "META"
-        ? `https://www.facebook.com/ads/archive/render_ad/?id=${resolution.externalId || ""}`
-        : resolution.canonicalUrl,
-      thumbnailUrl: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&auto=format&fit=crop&q=80",
+      embedUrl,
+      // Never assign a stock image — leave thumbnail empty until verified
+      thumbnailUrl: undefined,
     });
 
     const savedAd = await upsertCompetitorAd(normalized);
@@ -104,6 +146,8 @@ export async function POST(request: NextRequest) {
       meta: {
         timestamp: new Date().toISOString(),
         version: "v1",
+        dataNote:
+          "Ad imported as OBSERVED. Status is UNKNOWN until source is verified. No media has been validated.",
       },
     });
   } catch (error: any) {
@@ -113,6 +157,8 @@ export async function POST(request: NextRequest) {
         error: {
           code: "IMPORT_FAILED",
           message: error.message || "Failed to import advertisement",
+          retryable: false,
+          timestamp: new Date().toISOString(),
         },
       },
       { status: 500 }

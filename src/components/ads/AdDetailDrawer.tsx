@@ -14,8 +14,11 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
+  Store,
 } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
+import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
 
 interface AdDetailDrawerProps {
   ad: any | null;
@@ -40,6 +43,12 @@ export function AdDetailDrawer({
   const score = ad.researchScores?.[0];
   const analysis = ad.analyses?.[0];
   const linkedProduct = ad.productLinks?.[0]?.product;
+
+  // Detect data quality issues
+  const hasSampleVideo = isSampleOrFakeMedia(media?.videoUrl);
+  const hasStockThumbnail = isStockImage(media?.thumbnailUrl);
+  const hasLegacyFakeAnalysis =
+    analysis && analysis.hookQualityScore === 88 && analysis.pacingScore === 82;
 
   let concepts: any = null;
   if (analysis?.scriptIdeas) {
@@ -68,6 +77,33 @@ export function AdDetailDrawer({
     }
   }
 
+  const scoreBreakdown = score?.scoreBreakdown
+    ? (() => {
+        try {
+          return JSON.parse(score.scoreBreakdown);
+        } catch {
+          return null;
+        }
+      })()
+    : null;
+
+  // Score tier display
+  const tierLabel =
+    !score
+      ? "NOT SCORED"
+      : score.tier?.replace(/_/g, " ") || "INSUFFICIENT EVIDENCE";
+
+  const tierClass =
+    score?.tier === "HIGH_POTENTIAL"
+      ? "bg-emerald-500/20 text-emerald-400"
+      : score?.tier === "MEDIUM_POTENTIAL"
+      ? "bg-amber-500/20 text-amber-400"
+      : "bg-slate-700/40 text-slate-400";
+
+  // Determine if storefront URL is likely valid
+  const storefrontUrl = linkedProduct?.productUrl || ad.landingPageUrl;
+  const storefrontDomain = linkedProduct?.store?.domain;
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-2xl bg-[#0c121e] border-l border-[#1f293d] h-full flex flex-col shadow-2xl overflow-hidden">
@@ -78,7 +114,9 @@ export function AdDetailDrawer({
               {ad.platform}
             </span>
             <h2 className="text-sm font-bold text-white truncate max-w-sm">
-              {ad.advertiser?.name || "Advertiser Details"}
+              {ad.advertiser?.name && ad.advertiser.name !== "UNKNOWN"
+                ? ad.advertiser.name
+                : "Unknown Advertiser"}
             </h2>
           </div>
 
@@ -111,6 +149,39 @@ export function AdDetailDrawer({
           </div>
         </div>
 
+        {/* Data Quality Warnings */}
+        {(hasSampleVideo || hasStockThumbnail || hasLegacyFakeAnalysis) && (
+          <div className="px-6 pt-4 space-y-1.5">
+            {hasSampleVideo && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-950/40 border border-red-800/40 text-[11px] text-red-300">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-400" />
+                <span>
+                  <strong>Sample video detected</strong> — the stored video URL is a Google
+                  demonstration file, not the actual advertisement creative.
+                </span>
+              </div>
+            )}
+            {hasStockThumbnail && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-800/40 text-[11px] text-amber-300">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-400" />
+                <span>
+                  <strong>Stock thumbnail</strong> — thumbnail is a stock photo, not the
+                  actual ad creative image.
+                </span>
+              </div>
+            )}
+            {hasLegacyFakeAnalysis && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-800/40 text-[11px] text-amber-300">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-400" />
+                <span>
+                  <strong>Legacy analysis</strong> — hook quality score (88) and pacing
+                  score (82) are hardcoded placeholders, not from real video analysis.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Main Video Player & Primary Facts */}
@@ -131,19 +202,27 @@ export function AdDetailDrawer({
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-400 font-medium">Winning Potential</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold uppercase">
-                    {score?.tier?.replace(/_/g, " ") || "HIGH POTENTIAL"}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase ${tierClass}`}>
+                    {tierLabel}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-extrabold text-white">
-                    {score?.totalScore ?? 85}
+                    {score?.totalScore ?? "—"}
                   </span>
                   <span className="text-slate-500 font-bold">/ 100</span>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Evidence Confidence: {score?.confidenceScore ?? 80}%
+                  Evidence Confidence:{" "}
+                  {score?.confidenceScore != null
+                    ? `${score.confidenceScore}%`
+                    : "Not calculated"}
                 </p>
+                {!score && (
+                  <p className="text-[10px] text-amber-400 mt-1">
+                    Score not yet calculated for this record.
+                  </p>
+                )}
               </div>
 
               {/* Ad Copy */}
@@ -161,26 +240,63 @@ export function AdDetailDrawer({
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex items-center gap-2">
-                {onSaveToWatchlist && (
-                  <button
-                    onClick={() => onSaveToWatchlist(ad.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md transition-colors"
-                  >
-                    <BookmarkPlus className="h-3.5 w-3.5" />
-                    <span>Save to Watchlist</span>
-                  </button>
-                )}
-                <a
-                  href={ad.originalAdUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors"
+              {/* Status & Data Confidence */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded font-medium border ${
+                    ad.status === "ACTIVE"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : ad.status === "INACTIVE"
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : "bg-slate-800 text-slate-400 border-slate-700"
+                  }`}
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span>Inspect Source</span>
-                </a>
+                  {ad.status}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-medium">
+                  {ad.dataConfidence || "UNVERIFIED"}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  {onSaveToWatchlist && (
+                    <button
+                      onClick={() => onSaveToWatchlist(ad.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md transition-colors"
+                    >
+                      <BookmarkPlus className="h-3.5 w-3.5" />
+                      <span>Save to Watchlist</span>
+                    </button>
+                  )}
+                  {ad.originalAdUrl && (
+                    <a
+                      href={ad.originalAdUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Inspect Source</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Storefront Actions */}
+                {storefrontUrl && (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={storefrontUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-800/30 hover:bg-emerald-700/30 text-emerald-300 font-medium text-xs border border-emerald-700/30 transition-colors"
+                    >
+                      <Store className="h-3.5 w-3.5" />
+                      <span>Visit Product Page</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -196,7 +312,7 @@ export function AdDetailDrawer({
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              <span>AI Creative Breakdown</span>
+              <span>Creative Breakdown</span>
             </button>
             <button
               onClick={() => setActiveTab("score")}
@@ -222,87 +338,119 @@ export function AdDetailDrawer({
             </button>
           </div>
 
-          {/* Tab 1: AI Creative Analysis */}
+          {/* Tab 1: Creative Analysis */}
           {activeTab === "analysis" && (
             <div className="space-y-4">
-              {/* Hook Analysis */}
-              <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400 font-semibold">0-3s Opening Hook Technique</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    {analysis?.hookType || "Problem-First"}
-                  </span>
+              {!analysis ? (
+                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-xs text-slate-400">
+                  <Sparkles className="h-6 w-6 text-slate-600 mx-auto mb-2" />
+                  <p className="font-medium text-slate-300 mb-1">No Analysis Yet</p>
+                  <p className="text-slate-500">
+                    Click "Analyze Creative" to run a copy-based analysis.
+                    Video inspection requires actual video access.
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                  <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-slate-500 text-[10px] block">Hook Retention Rating</span>
-                    <span className="text-base font-bold text-white">
-                      {analysis?.hookQualityScore || 88} / 100
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                    <span className="text-slate-500 text-[10px] block">Pacing & Dynamics</span>
-                    <span className="text-base font-bold text-white">
-                      {analysis?.pacingScore || 82} / 100
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selling Points */}
-              {sellingPoints.length > 0 && (
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-                  <span className="text-xs text-slate-400 font-semibold block">Key Selling Arguments</span>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
-                    {sellingPoints.map((pt, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                        <span>{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Weaknesses */}
-              {weaknesses.length > 0 && (
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-                  <span className="text-xs text-slate-400 font-semibold block">Observed Creative Weaknesses</span>
-                  <ul className="space-y-1.5 text-xs text-slate-400">
-                    {weaknesses.map((w, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
-                        <span>{w}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Original Concepts */}
-              {concepts && (
-                <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-900/30 space-y-3">
-                  <div className="flex items-center gap-1.5 text-indigo-400 font-semibold text-xs">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Original Ad Concepts & Script Inspirations</span>
-                  </div>
-
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <strong className="text-slate-300 block mb-1">15-Second High-Conversion Script:</strong>
-                      <pre className="p-3 rounded-lg bg-slate-950 font-mono text-[11px] text-slate-300 whitespace-pre-wrap border border-slate-800">
-                        {concepts.script15s}
-                      </pre>
+              ) : (
+                <>
+                  {/* Hook Analysis */}
+                  <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-semibold">
+                        Hook Technique (from ad copy)
+                      </span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        {analysis.hookType || "Unknown"}
+                      </span>
                     </div>
-
-                    <div>
-                      <strong className="text-slate-300 block mb-1">UGC Angle Recommendation:</strong>
-                      <p className="text-slate-400 italic bg-slate-950/50 p-2.5 rounded-lg border border-slate-800">
-                        "{concepts.ugcAngle}"
-                      </p>
+                    <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                        <span className="text-slate-500 text-[10px] block">Hook Quality Score</span>
+                        {hasLegacyFakeAnalysis ? (
+                          <span className="text-xs text-amber-400 italic">Hardcoded — not real</span>
+                        ) : (
+                          <span className="text-base font-bold text-white">
+                            {analysis.hookQualityScore > 0
+                              ? `${analysis.hookQualityScore} / 100`
+                              : "N/A — copy only"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                        <span className="text-slate-500 text-[10px] block">Pacing & Dynamics</span>
+                        {hasLegacyFakeAnalysis ? (
+                          <span className="text-xs text-amber-400 italic">Hardcoded — not real</span>
+                        ) : (
+                          <span className="text-base font-bold text-white">
+                            {analysis.pacingScore > 0
+                              ? `${analysis.pacingScore} / 100`
+                              : "N/A — video not analyzed"}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Analysis source: ad copy text only. Video frames were not inspected.
+                    </p>
                   </div>
-                </div>
+
+                  {/* Selling Points */}
+                  {sellingPoints.length > 0 && (
+                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                      <span className="text-xs text-slate-400 font-semibold block">
+                        Observed from Ad Copy
+                      </span>
+                      <ul className="space-y-1.5 text-xs text-slate-300">
+                        {sellingPoints.map((pt, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                            <span>{pt}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Weaknesses */}
+                  {weaknesses.length > 0 && (
+                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                      <span className="text-xs text-slate-400 font-semibold block">
+                        Research Notes
+                      </span>
+                      <ul className="space-y-1.5 text-xs text-slate-400">
+                        {weaknesses.map((w, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
+                            <span>{w}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Original Concepts */}
+                  {concepts && (
+                    <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-900/30 space-y-3">
+                      <div className="flex items-center gap-1.5 text-indigo-400 font-semibold text-xs">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>Original Script Ideas (Category-Based)</span>
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        <div>
+                          <strong className="text-slate-300 block mb-1">15-Second Script:</strong>
+                          <pre className="p-3 rounded-lg bg-slate-950 font-mono text-[11px] text-slate-300 whitespace-pre-wrap border border-slate-800">
+                            {concepts.script15s}
+                          </pre>
+                        </div>
+                        <div>
+                          <strong className="text-slate-300 block mb-1">UGC Angle:</strong>
+                          <p className="text-slate-400 italic bg-slate-950/50 p-2.5 rounded-lg border border-slate-800">
+                            &ldquo;{concepts.ugcAngle}&rdquo;
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -310,65 +458,117 @@ export function AdDetailDrawer({
           {/* Tab 2: Score Breakdown */}
           {activeTab === "score" && (
             <div className="space-y-3 text-xs">
-              <p className="text-slate-400">
-                Formula Version <strong>{score?.formulaVersion || "2.0.0"}</strong>. Weighted
-                objective signals evaluated without synthetic estimations:
-              </p>
+              {!score ? (
+                <p className="text-slate-400 text-center py-4">No score calculated yet.</p>
+              ) : (
+                <>
+                  <p className="text-slate-400">
+                    Formula Version{" "}
+                    <strong>{score.formulaVersion || "unknown"}</strong>.
+                    Evidence-aware scoring — missing data is not substituted.
+                  </p>
 
-              <div className="space-y-2">
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold text-white block">Observed Longevity</span>
-                    <span className="text-[11px] text-slate-500">Weight: 25% • {ad.daysRunning} days active</span>
-                  </div>
-                  <span className="font-mono font-bold text-indigo-400">{score?.longevityScore ?? 75}/100</span>
-                </div>
+                  {scoreBreakdown?.missingSignals?.length > 0 && (
+                    <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/30 text-[11px] text-amber-300">
+                      <strong className="block mb-1">Missing signals:</strong>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {scoreBreakdown.missingSignals.map((s: string, i: number) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold text-white block">Creative Diversity</span>
-                    <span className="text-[11px] text-slate-500">Weight: 20% • Tested variant iterations</span>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        label: "Observed Longevity",
+                        sub: `Weight: 25% • ${ad.daysRunning} days since first seen`,
+                        value: score.longevityScore,
+                      },
+                      {
+                        label: "Creative Diversity",
+                        sub: "Weight: 20% • Confirmed variant count",
+                        value: score.diversityScore,
+                      },
+                      {
+                        label: "Active Recency",
+                        sub: "Weight: 15% • Freshness of last observation",
+                        value: score.recencyScore,
+                      },
+                      {
+                        label: "Product & Offer Clarity",
+                        sub: "Weight: 10% • Landing page and CTA presence",
+                        value: score.clarityScore,
+                      },
+                      {
+                        label: "Performance Signals",
+                        sub:
+                          scoreBreakdown?.missingSignals?.includes("GENUINE_ENGAGEMENT_METRICS")
+                            ? "Weight: 20% • UNAVAILABLE — no genuine metrics"
+                            : "Weight: 20% • From verified platform data",
+                        value: score.performanceScore,
+                        unavailable:
+                          scoreBreakdown?.missingSignals?.includes("GENUINE_ENGAGEMENT_METRICS"),
+                      },
+                      {
+                        label: "AI Creative Quality",
+                        sub:
+                          scoreBreakdown?.missingSignals?.includes("AI_CREATIVE_ANALYSIS")
+                            ? "Weight: 10% • UNAVAILABLE — no AI analysis performed"
+                            : "Weight: 10% • From AI model analysis",
+                        value: score.aiQualityScore,
+                        unavailable:
+                          scoreBreakdown?.missingSignals?.includes("AI_CREATIVE_ANALYSIS"),
+                      },
+                    ].map((item, i) => (
+                      <div
+                        key={i}
+                        className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center"
+                      >
+                        <div>
+                          <span className="font-semibold text-white block">{item.label}</span>
+                          <span className="text-[11px] text-slate-500">{item.sub}</span>
+                        </div>
+                        <span
+                          className={`font-mono font-bold ${
+                            item.unavailable ? "text-slate-500 italic" : "text-indigo-400"
+                          }`}
+                        >
+                          {item.unavailable ? "N/A" : `${item.value ?? "—"}/100`}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  <span className="font-mono font-bold text-indigo-400">{score?.diversityScore ?? 60}/100</span>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold text-white block">Active Recency</span>
-                    <span className="text-[11px] text-slate-500">Weight: 15% • Freshness of observation</span>
-                  </div>
-                  <span className="font-mono font-bold text-indigo-400">{score?.recencyScore ?? 90}/100</span>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold text-white block">Product & Offer Clarity</span>
-                    <span className="text-[11px] text-slate-500">Weight: 10% • Landing page and CTA</span>
-                  </div>
-                  <span className="font-mono font-bold text-indigo-400">{score?.clarityScore ?? 100}/100</span>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           )}
 
           {/* Tab 3: Provenance & Links */}
           {activeTab === "provenance" && (
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-semibold text-[10px] uppercase">Canonical Ad Library Link</span>
-                <a
-                  href={ad.originalAdUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-400 hover:underline break-all block"
-                >
-                  {ad.originalAdUrl}
-                </a>
-              </div>
+              {ad.originalAdUrl && (
+                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-semibold text-[10px] uppercase">
+                    Original Source Link
+                  </span>
+                  <a
+                    href={ad.originalAdUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:underline break-all block"
+                  >
+                    {ad.originalAdUrl}
+                  </a>
+                </div>
+              )}
 
               {ad.landingPageUrl && (
                 <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
-                  <span className="text-slate-500 font-semibold text-[10px] uppercase">Observed Storefront Landing Page</span>
+                  <span className="text-slate-500 font-semibold text-[10px] uppercase">
+                    Observed Landing Page
+                  </span>
                   <a
                     href={ad.landingPageUrl}
                     target="_blank"
@@ -377,17 +577,69 @@ export function AdDetailDrawer({
                   >
                     {ad.landingPageUrl}
                   </a>
+                  <p className="text-[10px] text-amber-400">
+                    ⚠ Link not validated — may return 404 or redirect to a different product.
+                  </p>
+                </div>
+              )}
+
+              {linkedProduct && (
+                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-semibold text-[10px] uppercase">
+                    Linked Research Product
+                  </span>
+                  <p className="text-slate-300">{linkedProduct.title}</p>
+                  {linkedProduct.productUrl && (
+                    <a
+                      href={linkedProduct.productUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 hover:underline break-all block"
+                    >
+                      {linkedProduct.productUrl}
+                    </a>
+                  )}
                 </div>
               )}
 
               <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-semibold text-[10px] uppercase">Data Provenance Stamp</span>
+                <span className="text-slate-500 font-semibold text-[10px] uppercase">
+                  Data Provenance
+                </span>
                 <p className="text-slate-300">
-                  Reliability: <strong>{ad.dataConfidence}</strong> • First Seen:{" "}
-                  {new Date(ad.firstSeenAt).toLocaleDateString()} • Last Seen:{" "}
-                  {new Date(ad.lastSeenAt).toLocaleDateString()}
+                  Confidence: <strong>{ad.dataConfidence || "UNVERIFIED"}</strong>
+                  {" • "}
+                  Status: <strong>{ad.status || "UNKNOWN"}</strong>
+                </p>
+                <p className="text-slate-400">
+                  First observed: {new Date(ad.firstSeenAt).toLocaleDateString()}
+                  {" • "}
+                  Last observed: {new Date(ad.lastSeenAt).toLocaleDateString()}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Note: first/last seen dates reflect when data was entered, not verified
+                  platform delivery dates.
                 </p>
               </div>
+
+              {/* Media provenance warnings */}
+              {(hasSampleVideo || hasStockThumbnail) && (
+                <div className="p-3 rounded-lg bg-red-950/30 border border-red-800/30 space-y-1">
+                  <span className="text-red-400 font-semibold text-[10px] uppercase">
+                    Media Integrity Issues
+                  </span>
+                  {hasSampleVideo && (
+                    <p className="text-red-300 text-[11px]">
+                      Video URL points to a Google sample file (gtv-videos-bucket), not the real ad.
+                    </p>
+                  )}
+                  {hasStockThumbnail && (
+                    <p className="text-amber-300 text-[11px]">
+                      Thumbnail is an Unsplash stock photo, not the actual creative.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
