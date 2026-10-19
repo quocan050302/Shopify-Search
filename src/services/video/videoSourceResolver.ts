@@ -181,13 +181,15 @@ export function extractTikTokPostId(url: string): string | null {
 }
 
 /**
- * Builds the official TikTok oEmbed embed URL for a TikTok post.
- * Uses the standard TikTok oEmbed player format.
- * Only valid for real TikTok post IDs (10-20 digits from tiktok.com/@user/video/ID).
+ * Builds the official TikTok player URL for embedding.
+ * Uses /player/v1/{postId} format (official documented endpoint).
+ * Docs: https://developers.tiktok.com/doc/embed-videos
+ *
+ * NOTE: /embed/v2/ is deprecated in favor of /player/v1/.
+ * /player/v1/ supports autoplay, loop, and rel controls via query params.
  */
 export function buildTikTokOEmbedUrl(postId: string): string {
-  // Official TikTok embed endpoint documented at https://developers.tiktok.com/doc/embed-videos
-  return `https://www.tiktok.com/embed/v2/${postId}`;
+  return `https://www.tiktok.com/player/v1/${postId}?autoplay=0&controls=1&loop=0&rel=0`;
 }
 
 // ─── Main Resolution Function ─────────────────────────────────────────────────
