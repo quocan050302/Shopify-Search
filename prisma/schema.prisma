@@ -1,0 +1,444 @@
+// Prisma Schema for Shopify Winning Ads Intelligence (SWAI)
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// -------------------------------------------------------------
+// Authentication & Multi-Tenant Workspaces
+// -------------------------------------------------------------
+model User {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  name         String?
+  role         String            @default("RESEARCHER") // ADMIN, RESEARCHER, VIEWER
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  workspaces   WorkspaceMember[]
+  notes        ResearchNote[]
+  watchlists   Watchlist[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id                  String               @id @default(cuid())
+  name                String               @default("Default Research Workspace")
+  operatingMode       String               @default("RESEARCH_ONLY") // RESEARCH_ONLY, RESEARCH_AND_STORE, OWNED_AD_ACCOUNT_ANALYTICS
+  targetMarket        String               @default("US")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  members             WorkspaceMember[]
+  connections         ProviderConnection[]
+  watchlists          Watchlist[]
+  savedSearches       SavedSearch[]
+  syncJobs            SyncJob[]
+  connectedShops      ConnectedShop[]
+  advertisingAccounts AdvertisingAccount[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String    @default("MEMBER")
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// -------------------------------------------------------------
+// Provider Management & Capabilities
+// -------------------------------------------------------------
+model DataSource {
+  id             String               @id @default(cuid())
+  name           String               @unique // META_AD_LIBRARY, TIKTOK_CREATIVE_CENTER, USER_OBSERVED, WEB_SCRAPER
+  displayName    String
+  description    String?
+  status         String               @default("AVAILABLE") // AVAILABLE, CONNECTED, REQUIRES_AUTH, REQUIRES_LICENSE, UNSUPPORTED_REGION, UNAVAILABLE
+  capabilities   String               // JSON array of strings
+  supportedRegions String             // JSON array e.g. ["US", "CA", "UK"]
+  rateLimitInfo  String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  connections    ProviderConnection[]
+  ads            CompetitorAd[]
+
+  @@map("data_sources")
+}
+
+model ProviderConnection {
+  id           String      @id @default(cuid())
+  workspaceId  String
+  dataSourceId String
+  status       String      @default("NOT_CONNECTED") // CONNECTED, NOT_CONNECTED, ERROR, EXPIRED
+  authDetails  String?     // Encrypted or redacted token info
+  lastTestedAt DateTime?
+  errorMessage String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  workspace    Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  dataSource   DataSource  @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, dataSourceId])
+  @@map("provider_connections")
+}
+
+// -------------------------------------------------------------
+// Competitor Research Core (Ads, Media, Observations)
+// -------------------------------------------------------------
+model Advertiser {
+  id               String          @id @default(cuid())
+  externalId       String?         @unique // Meta page ID or TikTok advertiser ID
+  platform         String          // META, TIKTOK, OTHER
+  name             String
+  profileUrl       String?
+  avatarUrl        String?
+  domain           String?
+  country          String?         @default("US")
+  verifiedStatus   String          @default("OBSERVED") // VERIFIED, OBSERVED, ESTIMATED, UNAVAILABLE
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  ads              CompetitorAd[]
+  stores           CompetitorStore[]
+
+  @@index([platform, name])
+  @@map("advertisers")
+}
+
+model CompetitorAd {
+  id               String               @id @default(cuid())
+  advertiserId     String
+  dataSourceId     String
+  externalAdId     String?              @unique
+  platform         String               // META, TIKTOK
+  targetMarket     String               @default("US")
+  headline         String?
+  bodyText         String?
+  callToAction     String?
+  landingPageUrl   String?
+  originalAdUrl    String               // Canonical source link
+  firstSeenAt      DateTime             @default(now())
+  lastSeenAt       DateTime             @default(now())
+  daysRunning      Int                  @default(1)
+  status           String               @default("ACTIVE") // ACTIVE, INACTIVE, UNKNOWN
+  category         String               @default("Other")
+  dataConfidence   String               @default("OBSERVED") // VERIFIED, OBSERVED, ESTIMATED, UNAVAILABLE
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  advertiser       Advertiser           @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  dataSource       DataSource           @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  mediaAssets      AdMediaAsset[]
+  observations     AdObservation[]
+  metricObservations AdMetricObservation[]
+  productLinks     AdProductLink[]
+  analyses         CreativeAnalysis[]
+  researchScores   ResearchScore[]
+  watchlistItems   WatchlistItem[]
+  notes            ResearchNote[]
+
+  @@index([platform, status])
+  @@index([category])
+  @@index([firstSeenAt])
+  @@map("competitor_ads")
+}
+
+model AdMediaAsset {
+  id              String        @id @default(cuid())
+  adId            String
+  mediaType       String        @default("VIDEO") // VIDEO, IMAGE, CAROUSEL
+  videoUrl        String?       // Direct mp4 if authorized
+  embedUrl        String?       // Official authorized embed iframe URL
+  thumbnailUrl    String?
+  aspectRatio     String?       @default("9:16") // 9:16, 1:1, 16:9
+  durationSeconds Float?
+  width           Int?
+  height          Int?
+  availability    String        @default("READY") // READY, EXPIRED, RESTRICTED, FALLBACK_ONLY
+  source          String        @default("OFFICIAL_EMBED")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  ad              CompetitorAd  @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("ad_media_assets")
+}
+
+model AdObservation {
+  id           String        @id @default(cuid())
+  adId         String
+  observedAt   DateTime      @default(now())
+  isActive     Boolean       @default(true)
+  evidenceType String        @default("API_SYNC") // API_SYNC, USER_OBSERVED, URL_CHECK
+  rawPayload   String?
+  ad           CompetitorAd  @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, observedAt])
+  @@map("ad_observations")
+}
+
+model AdMetricObservation {
+  id             String        @id @default(cuid())
+  adId           String
+  metricKey      String        // IMPRESSIONS_RANGE, LIKES, COMMENTS, SHARES, SPEND_RANGE
+  metricValue    Float?
+  textValue      String?       // e.g. "< 10k", "10k - 50k"
+  classification String        @default("OBSERVED") // VERIFIED, OBSERVED, ESTIMATED, UNAVAILABLE
+  observedAt     DateTime      @default(now())
+  ad             CompetitorAd  @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, metricKey])
+  @@map("ad_metric_observations")
+}
+
+// -------------------------------------------------------------
+// Product Research & Store Detection
+// -------------------------------------------------------------
+model CompetitorStore {
+  id                String            @id @default(cuid())
+  advertiserId      String?
+  domain            String            @unique // e.g. pureglow.com
+  storeName         String?
+  commercePlatform  String            @default("UNKNOWN") // SHOPIFY_CONFIRMED, SHOPIFY_POSSIBLE, OTHER, UNKNOWN
+  currency          String            @default("USD")
+  country           String?           @default("US")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  advertiser        Advertiser?       @relation(fields: [advertiserId], references: [id], onDelete: SetNull)
+  products          ResearchProduct[]
+
+  @@map("competitor_stores")
+}
+
+model ResearchProduct {
+  id               String                 @id @default(cuid())
+  storeId          String?
+  title            String
+  category         String                 @default("Other")
+  description      String?
+  imageUrl         String?
+  currentPrice     Float?
+  currency         String                 @default("USD")
+  productUrl       String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  store            CompetitorStore?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  adLinks          AdProductLink[]
+  priceHistory     ProductPriceObservation[]
+  watchlistItems   WatchlistItem[]
+  notes            ResearchNote[]
+
+  @@index([category])
+  @@map("research_products")
+}
+
+model ProductPriceObservation {
+  id         String          @id @default(cuid())
+  productId  String
+  price      Float
+  currency   String          @default("USD")
+  observedAt DateTime        @default(now())
+  source     String          @default("STOREFRONT_HTTP")
+  product    ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, observedAt])
+  @@map("product_price_observations")
+}
+
+model AdProductLink {
+  id         String          @id @default(cuid())
+  adId       String
+  productId  String
+  confidence String          @default("HIGH_CONFIDENCE") // CONFIRMED, HIGH_CONFIDENCE, PROBABLE
+  createdAt  DateTime        @default(now())
+  ad         CompetitorAd    @relation(fields: [adId], references: [id], onDelete: Cascade)
+  product    ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([adId, productId])
+  @@map("ad_product_links")
+}
+
+// -------------------------------------------------------------
+// AI Creative Intelligence & Winning Potential Score
+// -------------------------------------------------------------
+model CreativeAnalysis {
+  id                 String       @id @default(cuid())
+  adId               String
+  modelVersion       String       @default("gemini-1.5-pro")
+  hookType           String       // Problem-First, Curiosity, Surprise, Demonstration, UGC, Transformation, Emotional
+  hookQualityScore   Float        // 0-100
+  pacingScore        Float        // 0-100
+  ctaClassification  String       // SHOP_NOW, LEARN_MORE, DISCOUNT, FREE_SHIPPING
+  sellingPoints      String       // JSON array of strings
+  weaknesses         String       // JSON array of strings
+  scriptIdeas        String?      // JSON or text of original 15s/30s ad concepts
+  rawAnalysis        String?
+  createdAt          DateTime     @default(now())
+  ad                 CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@map("creative_analyses")
+}
+
+model ResearchScore {
+  id                 String       @id @default(cuid())
+  adId               String
+  totalScore         Float        // 0-100
+  tier               String       // HIGH_POTENTIAL, MEDIUM_POTENTIAL, LOW_POTENTIAL, INSUFFICIENT_EVIDENCE
+  longevityScore     Float
+  diversityScore     Float
+  performanceScore   Float
+  recencyScore       Float
+  clarityScore       Float
+  aiQualityScore     Float
+  confidenceScore    Float        // 0-100
+  formulaVersion     String       @default("1.0.0")
+  scoreBreakdown     String       // JSON details
+  createdAt          DateTime     @default(now())
+  ad                 CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, createdAt])
+  @@index([totalScore])
+  @@map("research_scores")
+}
+
+// -------------------------------------------------------------
+// Watchlists, Saved Searches & Research Notes
+// -------------------------------------------------------------
+model Watchlist {
+  id          String          @id @default(cuid())
+  workspaceId String
+  userId      String?
+  name        String
+  description String?
+  isPinned    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items       WatchlistItem[]
+
+  @@map("watchlists")
+}
+
+model WatchlistItem {
+  id         String           @id @default(cuid())
+  watchlistId String
+  itemType   String           // AD, PRODUCT
+  adId       String?
+  productId  String?
+  addedAt    DateTime         @default(now())
+  watchlist  Watchlist        @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  ad         CompetitorAd?    @relation(fields: [adId], references: [id], onDelete: Cascade)
+  product    ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, itemType, adId, productId])
+  @@map("watchlist_items")
+}
+
+model SavedSearch {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  filtersJson String    // JSON of search criteria
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
+}
+
+model ResearchNote {
+  id        String           @id @default(cuid())
+  userId    String?
+  adId      String?
+  productId String?
+  title     String?
+  content   String
+  tags      String?          // Comma-separated tags
+  priority  String           @default("MEDIUM") // HIGH, MEDIUM, LOW
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  ad        CompetitorAd?    @relation(fields: [adId], references: [id], onDelete: Cascade)
+  product   ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("research_notes")
+}
+
+// -------------------------------------------------------------
+// Automation, Jobs & Provenance Audit
+// -------------------------------------------------------------
+model SyncJob {
+  id          String    @id @default(cuid())
+  workspaceId String
+  jobType     String    // AD_IMPORT, SOURCE_REFRESH, SCORE_RECOMPUTE, REPORT_GEN
+  status      String    @default("PENDING") // PENDING, RUNNING, COMPLETED, PARTIALLY_COMPLETED, FAILED
+  progress    Int       @default(0)
+  totalItems  Int       @default(0)
+  resultJson  String?
+  errorMessage String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("sync_jobs")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // AD_IMPORTED, NOTE_ADDED, SCORE_CALCULATED, SETTING_CHANGED
+  entityType String
+  entityId   String
+  detailsJson String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// -------------------------------------------------------------
+// Future Commerce Architecture (Prepared Schema, Inactive)
+// -------------------------------------------------------------
+model ConnectedShop {
+  id          String    @id @default(cuid())
+  workspaceId String
+  shopDomain  String    @unique
+  status      String    @default("NOT_CONNECTED") // CONNECTED, NOT_CONNECTED, DISCONNECTED
+  accessToken String?   // Encrypted
+  scopes      String?
+  installedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("connected_shops")
+}
+
+model AdvertisingAccount {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  platform     String    // META_ADS, TIKTOK_ADS
+  accountId    String
+  accountName  String?
+  currency     String    @default("USD")
+  status       String    @default("NOT_CONNECTED")
+  accessToken  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, platform, accountId])
+  @@map("advertising_accounts")
+}
