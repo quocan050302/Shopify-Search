@@ -34,7 +34,9 @@ export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
           embedUrl={media?.embedUrl}
           thumbnailUrl={media?.thumbnailUrl}
           originalAdUrl={ad.originalAdUrl}
+          externalAdId={ad.externalAdId}
           platform={ad.platform}
+          status={ad.status}
           aspectRatio="9:16"
         />
 

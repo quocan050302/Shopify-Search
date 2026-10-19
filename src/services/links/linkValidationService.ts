@@ -1,12 +1,24 @@
 /**
- * Link Validation Service — SWAI V6.1
+ * Link Validation Service — SWAI V6.2
  *
  * Centralized, SSRF-safe external URL verification.
- * Never guesses replacement URLs.
- * Records history in the database.
+ * Media resolution now delegates to videoSourceResolver.ts (V6.2).
  */
 
 import { validateExternalResourceUrl } from "@/lib/security";
+
+// Re-export media resolution helpers from V6.2 resolver (single source of truth)
+export {
+  isSampleOrFakeMedia,
+  isStockImage,
+  resolvePlayableMedia,
+  resolveVideoSource,
+  classifySourceType,
+  extractTikTokPostId,
+  buildTikTokOEmbedUrl,
+  isSyntheticAdId,
+} from "@/services/video/videoSourceResolver";
+
 
 // ─── Link Type Classifications ───────────────────────────────────────────────
 
@@ -58,8 +70,8 @@ const PRIVATE_IP_PATTERNS = [
   /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,
   /^0\.0\.0\.0$/,
   /^::1$/,
-  /^fc[0-9a-f]{2}:/i, // IPv6 unique local
-  /^fe80:/i, // IPv6 link-local
+  /^fc[0-9a-f]{2}:/i,
+  /^fe80:/i,
 ];
 
 const BLOCKED_HOSTNAMES = new Set([
@@ -67,10 +79,10 @@ const BLOCKED_HOSTNAMES = new Set([
   "127.0.0.1",
   "::1",
   "0.0.0.0",
-  "169.254.169.254", // AWS/GCP/Azure IMDS
+  "169.254.169.254",
   "metadata.google.internal",
-  "169.254.170.2", // ECS task metadata
-  "fd00:ec2::254", // AWS IMDSv6
+  "169.254.170.2",
+  "fd00:ec2::254",
 ]);
 
 function isPrivateOrBlockedHost(hostname: string): boolean {
@@ -109,7 +121,7 @@ function classifyHttpStatus(status: number): LinkStatus {
   if (status === 429) return "RATE_LIMITED";
   if (status === 500 || status === 502 || status === 503 || status === 504)
     return "TEMPORARILY_UNAVAILABLE";
-  if (status === 405) return "UNSUPPORTED"; // HEAD not allowed
+  if (status === 405) return "UNSUPPORTED";
   return "UNVERIFIED";
 }
 
@@ -162,7 +174,7 @@ export async function checkExternalLink(
   url: string,
   options: CheckLinkOptions = {}
 ): Promise<LinkVerificationResult> {
-  const { timeoutMs = 8000, maxRedirects = 3, allowGet = false } = options;
+  const { timeoutMs = 8000, allowGet = false } = options;
   const startTime = Date.now();
   const now = new Date().toISOString();
 
@@ -191,8 +203,7 @@ export async function checkExternalLink(
       verificationStatus: "ACCESS_RESTRICTED",
       verificationMethod: "BLOCKED",
       provider,
-      notes:
-        "Known embed endpoint: requires authenticated session or is not publicly embeddable",
+      notes: "Known embed endpoint: requires authenticated session or is not publicly embeddable",
       verifiedAt: now,
     };
   }
@@ -201,7 +212,6 @@ export async function checkExternalLink(
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    // Try HEAD first; fall back to GET if not supported or fails
     let method: "HEAD" | "GET" = "HEAD";
     let response: Response;
 
@@ -212,11 +222,10 @@ export async function checkExternalLink(
         signal: controller.signal,
         headers: {
           "User-Agent":
-            "SWAI-LinkValidator/6.1 (Research Tool; +https://github.com/quocan050302/Shopify-Search)",
+            "SWAI-LinkValidator/6.2 (Research Tool; +https://github.com/quocan050302/Shopify-Search)",
         },
       });
 
-      // Some servers return 405 for HEAD; retry with GET if allowed
       if (response.status === 405 && allowGet) {
         method = "GET";
         response = await fetch(sanitizedUrl, {
@@ -225,13 +234,14 @@ export async function checkExternalLink(
           signal: controller.signal,
           headers: {
             "User-Agent":
-              "SWAI-LinkValidator/6.1 (Research Tool; +https://github.com/quocan050302/Shopify-Search)",
-            Range: "bytes=0-0", // minimal GET
+              "SWAI-LinkValidator/6.2 (Research Tool; +https://github.com/quocan050302/Shopify-Search)",
+            Range: "bytes=0-0",
           },
         });
       }
     } catch (fetchErr: any) {
       const responseTimeMs = Date.now() - startTime;
+      clearTimeout(timeout);
       if (fetchErr.name === "AbortError") {
         return {
           originalUrl: url,
@@ -281,13 +291,11 @@ export async function checkExternalLink(
       }
     }
 
-    const status = classifyHttpStatus(response.status);
-
     return {
       originalUrl: url,
       resolvedUrl,
       httpStatus: response.status,
-      verificationStatus: status,
+      verificationStatus: classifyHttpStatus(response.status),
       verificationMethod: method,
       responseTimeMs,
       provider,
@@ -307,138 +315,4 @@ export async function checkExternalLink(
       verifiedAt: now,
     };
   }
-}
-
-// ─── Media Source Resolution ──────────────────────────────────────────────────
-
-export type PlaybackStrategy =
-  | "DIRECT_VIDEO"
-  | "OFFICIAL_EMBED"
-  | "OPEN_SOURCE"
-  | "UNAVAILABLE";
-
-export interface PlayableMediaResult {
-  strategy: PlaybackStrategy;
-  url?: string;
-  reason: string;
-  platform: string;
-  isSampleMedia: boolean;
-  originalSourceUrl?: string;
-}
-
-const SAMPLE_MEDIA_DOMAINS = [
-  "commondatastorage.googleapis.com/gtv-videos-bucket",
-  "sample-videos.com",
-  "w3schools.com/html/mov",
-];
-
-export function isSampleOrFakeMedia(url?: string | null): boolean {
-  if (!url) return false;
-  return SAMPLE_MEDIA_DOMAINS.some((domain) => url.includes(domain));
-}
-
-export function isStockImage(url?: string | null): boolean {
-  if (!url) return false;
-  return (
-    url.includes("unsplash.com") ||
-    url.includes("pexels.com") ||
-    url.includes("pixabay.com") ||
-    url.includes("shutterstock.com") ||
-    url.includes("gettyimages.com")
-  );
-}
-
-export function resolvePlayableMedia(ad: {
-  platform: string;
-  originalAdUrl?: string | null;
-  mediaAssets?: Array<{
-    videoUrl?: string | null;
-    embedUrl?: string | null;
-    thumbnailUrl?: string | null;
-    availability?: string | null;
-  }>;
-}): PlayableMediaResult {
-  const platform = (ad.platform || "").toUpperCase();
-  const media = ad.mediaAssets?.[0];
-  const videoUrl = media?.videoUrl;
-  const embedUrl = media?.embedUrl;
-  const originalAdUrl = ad.originalAdUrl;
-
-  // Reject sample media
-  if (isSampleOrFakeMedia(videoUrl)) {
-    return {
-      strategy: "OPEN_SOURCE",
-      url: originalAdUrl || undefined,
-      reason: "Sample/demonstration video is not a real advertisement. Open the original source.",
-      platform,
-      isSampleMedia: true,
-      originalSourceUrl: originalAdUrl || undefined,
-    };
-  }
-
-  // Direct video (non-sample)
-  if (videoUrl && !isSampleOrFakeMedia(videoUrl)) {
-    return {
-      strategy: "DIRECT_VIDEO",
-      url: videoUrl,
-      reason: "Direct video stream available",
-      platform,
-      isSampleMedia: false,
-      originalSourceUrl: originalAdUrl || undefined,
-    };
-  }
-
-  // META: facebook.com/ads/archive/render_ad is NOT a public embed endpoint
-  if (
-    platform === "META" &&
-    embedUrl?.includes("facebook.com/ads/archive/render_ad")
-  ) {
-    return {
-      strategy: "OPEN_SOURCE",
-      url: originalAdUrl || undefined,
-      reason:
-        "Meta Ad Archive render endpoint requires authenticated session. Open source link instead.",
-      platform,
-      isSampleMedia: false,
-      originalSourceUrl: originalAdUrl || undefined,
-    };
-  }
-
-  // TikTok: Creative Center embed path is not a public embed endpoint
-  if (
-    platform === "TIKTOK" &&
-    embedUrl?.includes("creativecenter/inspiration/topads/embed/")
-  ) {
-    return {
-      strategy: "OPEN_SOURCE",
-      url: originalAdUrl || undefined,
-      reason:
-        "TikTok Creative Center embed endpoint is not publicly accessible. Open the source link.",
-      platform,
-      isSampleMedia: false,
-      originalSourceUrl: originalAdUrl || undefined,
-    };
-  }
-
-  // Generic embed (may work)
-  if (embedUrl) {
-    return {
-      strategy: "OFFICIAL_EMBED",
-      url: embedUrl,
-      reason: "Attempting official embed — may be restricted by the platform",
-      platform,
-      isSampleMedia: false,
-      originalSourceUrl: originalAdUrl || undefined,
-    };
-  }
-
-  // No video path found
-  return {
-    strategy: "UNAVAILABLE",
-    url: originalAdUrl || undefined,
-    reason: "No accessible video source. Open the original advertisement.",
-    platform,
-    isSampleMedia: false,
-    originalSourceUrl: originalAdUrl || undefined,
-  };
 }

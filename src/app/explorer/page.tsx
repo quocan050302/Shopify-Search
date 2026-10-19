@@ -89,8 +89,11 @@ export default function ExplorerPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+              📁 Local Database Search
+            </span>
             <span className="text-xs text-slate-400 font-mono">
-              {totalCount} ads recorded
+              {totalCount} real records
             </span>
           </div>
         </div>
@@ -203,9 +206,10 @@ export default function ExplorerPage() {
         ) : ads.length === 0 ? (
           <div className="p-16 rounded-xl bg-[#111827] border border-[#1f293d] text-center space-y-3">
             <PlaySquare className="h-10 w-10 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-bold text-white">No advertisements match your filters</h3>
+            <h3 className="text-sm font-bold text-white">No verified ads in your research library</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Try adjusting your category or platform filters, or import a new competitor ad link using the "Import Ad URL" button.
+              Import a real Meta Ad Library URL or TikTok post URL using the "Import Ad URL" button.
+              All 6 original seed records have been quarantined as synthetic demo data.
             </p>
           </div>
         ) : viewMode === "grid" ? (

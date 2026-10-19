@@ -13,6 +13,8 @@ export interface SearchAdsFilters {
   page?: number;
   pageSize?: number;
   sortBy?: "newest" | "score" | "longevity" | "variants";
+  /** When true, include quarantined SYNTHETIC_DEMO records. Defaults to false. */
+  includeSynthetic?: boolean;
 }
 
 /**
@@ -50,6 +52,17 @@ export async function searchCompetitorAds(filters: SearchAdsFilters = {}) {
       { advertiser: { name: { contains: q } } },
       { category: { contains: q } },
     ];
+  }
+
+  // Exclude quarantined SYNTHETIC_DEMO records from production results by default
+  // These records have UNAVAILABLE dataConfidence and [SYNTHETIC_DEMO] headline prefix
+  if (!filters.includeSynthetic) {
+    whereClause.dataConfidence = { not: "UNAVAILABLE" };
+    // Additional guard: exclude headlines prefixed with [SYNTHETIC_DEMO]
+    if (!whereClause.AND) whereClause.AND = [];
+    whereClause.AND.push({
+      NOT: { headline: { startsWith: "[SYNTHETIC_DEMO]" } },
+    });
   }
 
   // Count total matching
