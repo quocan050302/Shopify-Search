@@ -453,64 +453,194 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
 
 /**
  * Live test connection for Google Gemini AI.
- * Uses @google/generative-ai to perform an authenticated generateContent call.
  *
- * NOTE: Google AI Studio now issues API keys in two formats:
- *   - Legacy:  AIzaSy... (older projects)
- *   - New:     AQ.xxxx  (newer projects via OAuth 2.0)
- * Both formats are fully valid — no format validation is applied here.
+ * Strategy:
+ * 1. Call ListModels on both v1beta and v1 API versions to discover actually-available models.
+ * 2. Pick the best available flash/pro model from the list.
+ * 3. Run generateContent with that model to confirm it works.
  *
- * Model fallback order (newest → stable):
- *   1. gemini-2.0-flash          — preferred stable model (2025)
- *   2. gemini-2.0-flash-lite     — lighter/faster variant
- *   3. gemini-1.5-flash-latest   — stable alias (avoids deprecated suffix)
- *   4. gemini-1.5-flash-002      — pinned stable release
- * We try each in sequence until one succeeds.
+ * This handles:
+ *   - Key format AQ.xxx (newer OAuth 2.0 keys from AI Studio) ← user's key
+ *   - Key format AIzaSy... (older project keys)
+ *   - API version differences (v1beta vs v1)
+ *   - Regional model availability differences
  */
 async function testGeminiConnection(key: string): Promise<ConnectionTestResult> {
   const startTime = Date.now();
   const testedAt = new Date().toISOString();
 
-  // Ordered list of models to probe — newest first
-  const MODELS_TO_TRY = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash-002",
+  // Step 1: Discover which models are actually available for this key
+  // by calling the ListModels endpoint on both API versions
+  const BASE_URLS = [
+    "https://generativelanguage.googleapis.com/v1",
+    "https://generativelanguage.googleapis.com/v1beta",
   ];
 
-  const ai = new GoogleGenerativeAI(key);
-  let lastError: any = null;
-  let workingModel: string | null = null;
-  let responseText = "";
+  let availableModels: string[] = [];
+  let listError: string | null = null;
+  let workingApiVersion = "";
 
-  for (const modelName of MODELS_TO_TRY) {
+  for (const baseUrl of BASE_URLS) {
     try {
-      const model = ai.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent("Ping. Respond with OK.");
-      responseText = result.response.text();
-      workingModel = modelName;
-      break; // Success — stop trying
-    } catch (err: any) {
-      lastError = err;
-      // Only continue if it's a model-not-found error (404)
-      const is404 =
-        err.status === 404 ||
-        (typeof err.message === "string" && (
-          err.message.includes("not found") ||
-          err.message.includes("404") ||
-          err.message.includes("not supported")
-        ));
-      if (!is404) {
-        // Auth failure or network error — no point trying other models
+      const listRes = await fetch(
+        `${baseUrl}/models?key=${encodeURIComponent(key)}&pageSize=50`,
+        {
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(8000),
+        }
+      );
+
+      if (listRes.ok) {
+        const json = await listRes.json();
+        if (Array.isArray(json.models)) {
+          // Extract model names that support generateContent
+          availableModels = json.models
+            .filter(
+              (m: any) =>
+                Array.isArray(m.supportedGenerationMethods) &&
+                m.supportedGenerationMethods.includes("generateContent") &&
+                typeof m.name === "string"
+            )
+            .map((m: any) =>
+              // Strip "models/" prefix — SDK uses bare model names
+              (m.name as string).replace(/^models\//, "")
+            );
+          workingApiVersion = baseUrl.endsWith("v1") ? "v1" : "v1beta";
+          break;
+        }
+      } else if (listRes.status === 400 || listRes.status === 401 || listRes.status === 403) {
+        // Auth failure — key is invalid, no point trying other API version
+        const errJson = await listRes.json().catch(() => ({}));
+        listError = errJson?.error?.message || `HTTP ${listRes.status} from ListModels`;
         break;
+      }
+    } catch (err: any) {
+      listError = err.message;
+    }
+  }
+
+  // If we got an auth error from ListModels, report immediately
+  if (listError && availableModels.length === 0) {
+    const latencyMs = Date.now() - startTime;
+    const isAuthError =
+      listError.includes("API_KEY_INVALID") ||
+      listError.includes("PERMISSION_DENIED") ||
+      listError.includes("401") ||
+      listError.includes("403");
+    return {
+      provider: "gemini",
+      status: "ERROR",
+      latencyMs,
+      testedAt,
+      errorMessage: `API key rejected by Google Generative AI: ${listError}`,
+      errorCode: isAuthError ? 401 : "LIST_FAILED",
+      missingPermissions: ["Valid GEMINI_API_KEY — key was rejected by the Gemini API"],
+      grantedPermissions: [],
+      capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
+        name: cap,
+        status: "UNAVAILABLE" as const,
+        notes: listError!,
+      })),
+      policyNotice:
+        "Google AI Studio now issues keys in two formats: \"AIzaSy...\" (older) and \"AQ.xxxx\" " +
+        "(newer OAuth 2.0 based). Both are accepted. Ensure your key has no IP restrictions and " +
+        "the Gemini API is enabled in your Google Cloud project.",
+    };
+  }
+
+  // If no models found at all, check for ListModels failure
+  if (availableModels.length === 0) {
+    const latencyMs = Date.now() - startTime;
+    return {
+      provider: "gemini",
+      status: "ERROR",
+      latencyMs,
+      testedAt,
+      errorMessage:
+        listError || "No models supporting generateContent found for this API key.",
+      errorCode: "NO_MODELS_FOUND",
+      missingPermissions: ["Gemini API access — no generateContent models available"],
+      grantedPermissions: [],
+      capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
+        name: cap,
+        status: "UNAVAILABLE" as const,
+        notes: "No available Gemini models found for this key.",
+      })),
+      policyNotice:
+        "The Gemini API ListModels returned no models supporting generateContent. " +
+        "Ensure the Gemini API is enabled at console.cloud.google.com.",
+    };
+  }
+
+  // Step 2: Pick the best flash model from the discovered list
+  // Priority: gemini-2.0-flash > gemini-2.0-flash-lite > gemini-1.5-flash > any flash > any model
+  const PREFERRED_ORDER = [
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-exp",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-flash-001",
+  ];
+
+  let selectedModel =
+    PREFERRED_ORDER.find((m) => availableModels.includes(m)) ||
+    availableModels.find((m) => m.includes("flash")) ||
+    availableModels.find((m) => m.includes("gemini")) ||
+    availableModels[0];
+
+  // Step 3: Run generateContent with the selected model
+  // Try both with SDK (v1beta default) and, if that fails, with direct fetch on working API version
+  let responseText = "";
+  let generateError: any = null;
+  let usedApiVersion = workingApiVersion;
+
+  // Try SDK first (uses v1beta by default)
+  try {
+    const ai = new GoogleGenerativeAI(key);
+    const model = ai.getGenerativeModel(
+      { model: selectedModel },
+      // Pass apiVersion if we know v1 works
+      workingApiVersion === "v1" ? { apiVersion: "v1" } as any : undefined
+    );
+    const result = await model.generateContent("Ping. Respond with OK.");
+    responseText = result.response.text();
+  } catch (sdkErr: any) {
+    generateError = sdkErr;
+
+    // If SDK failed, try raw fetch with the working API version
+    if (workingApiVersion) {
+      try {
+        const directRes = await fetch(
+          `https://generativelanguage.googleapis.com/${workingApiVersion}/models/${selectedModel}:generateContent?key=${encodeURIComponent(key)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "Ping. Respond with OK." }] }] }),
+            signal: AbortSignal.timeout(10000),
+          }
+        );
+        if (directRes.ok) {
+          const json = await directRes.json();
+          responseText = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "OK";
+          usedApiVersion = workingApiVersion;
+          generateError = null;
+        } else {
+          const errJson = await directRes.json().catch(() => ({}));
+          generateError = new Error(
+            errJson?.error?.message || `HTTP ${directRes.status} from generateContent`
+          );
+        }
+      } catch (fetchErr: any) {
+        generateError = fetchErr;
       }
     }
   }
 
   const latencyMs = Date.now() - startTime;
 
-  if (workingModel && responseText) {
+  if (responseText) {
     return {
       provider: "gemini",
       status: "CONNECTED",
@@ -518,15 +648,15 @@ async function testGeminiConnection(key: string): Promise<ConnectionTestResult> 
       testedAt,
       errorMessage: null,
       missingPermissions: [],
-      grantedPermissions: ["generateContent", "multimodal_analysis"],
+      grantedPermissions: ["generateContent", "listModels", "multimodal_analysis"],
       capabilities: [
         {
           name: "Video Creative Analysis (MP4 / WebM)",
           status: "VERIFIED",
-          notes: `Live verification succeeded on ${workingModel}.`,
+          notes: `Live verification succeeded on ${selectedModel} via ${usedApiVersion}.`,
         },
         {
-          name: "Opening 3-Second Hook Quality Scoring",
+          name: "Opening 3-Second Hook Quality Scoring (0–100)",
           status: "VERIFIED",
           notes: "Algorithmic scoring ready.",
         },
@@ -541,61 +671,46 @@ async function testGeminiConnection(key: string): Promise<ConnectionTestResult> 
           notes: "Longevity classification enabled.",
         },
         {
-          name: "Original Ad Script Generation",
+          name: "Original 15s / 30s Ad Script Generation",
           status: "VERIFIED",
-          notes: "15s / 30s creative concept generation enabled.",
+          notes: "Script generation enabled.",
         },
       ],
       policyNotice: null,
       details: {
-        model: workingModel,
+        model: selectedModel,
+        apiVersion: usedApiVersion,
+        availableModels: availableModels.slice(0, 8),
         responsePreview: responseText.slice(0, 60).trim(),
-        modelsAttempted: MODELS_TO_TRY.slice(0, MODELS_TO_TRY.indexOf(workingModel) + 1),
       },
     };
   }
 
-  // All models failed
-  const errMsg = lastError?.message || "Failed to authenticate with Google Gemini API.";
-  const is401or403 =
-    lastError?.status === 401 ||
-    lastError?.status === 403 ||
-    (typeof errMsg === "string" && (
-      errMsg.includes("API_KEY_INVALID") ||
-      errMsg.includes("PERMISSION_DENIED") ||
-      errMsg.includes("403") ||
-      errMsg.includes("401")
-    ));
-
-  const keyFormatNote =
-    "Google AI Studio generates keys in two valid formats: \"AIzaSy...\" (older) " +
-    "and \"AQ.xxxx\" (newer OAuth 2.0 based). Both are accepted by SWAI.";
-
+  // generateContent also failed
+  const errMsg = generateError?.message || "generateContent request failed.";
   return {
     provider: "gemini",
     status: "ERROR",
     latencyMs,
     testedAt,
     errorMessage: errMsg,
-    errorCode: lastError?.status || lastError?.code || "AUTH_FAILED",
-    missingPermissions: is401or403
-      ? ["Valid GEMINI_API_KEY — check for API restrictions or disabled billing"]
-      : ["Accessible Gemini model — all tested models returned 404"],
-    grantedPermissions: [],
+    errorCode: generateError?.status || "GENERATE_FAILED",
+    missingPermissions: ["generateContent — model found via ListModels but generation failed"],
+    grantedPermissions: ["listModels"],
     capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
       name: cap,
       status: "UNAVAILABLE" as const,
       notes: errMsg,
     })),
     policyNotice:
-      is401or403
-        ? `Authentication rejected. ${keyFormatNote} Verify the key has no API restrictions at console.cloud.google.com.`
-        : `All model variants tested (${MODELS_TO_TRY.join(", ")}) returned 404. " +
-          "This may be a regional restriction or project quota issue. ${keyFormatNote}`,
+      `Models discovered (${availableModels.slice(0, 3).join(", ")}...) ` +
+      `but generateContent call to ${selectedModel} failed. ` +
+      "Check if the Gemini API is fully enabled and not restricted by project quota.",
     details: {
-      modelsAttempted: MODELS_TO_TRY,
-      lastErrorCode: lastError?.status,
-      keyFormatNote,
+      availableModels: availableModels.slice(0, 8),
+      selectedModel,
+      apiVersion: usedApiVersion,
+      generateErrorCode: generateError?.status,
     },
   };
 }
