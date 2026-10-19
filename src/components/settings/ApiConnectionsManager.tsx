@@ -74,8 +74,8 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
       } else {
         setError(json.error?.message || "Failed to load provider credentials.");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to connect to credentials API.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to connect to credentials API.");
     } finally {
       setLoading(false);
     }
@@ -124,10 +124,10 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
           [provider]: { type: "error", message: json.error?.message || "Failed to save credential." },
         }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setActionFeedback((prev) => ({
         ...prev,
-        [provider]: { type: "error", message: err.message || "Network error while saving." },
+        [provider]: { type: "error", message: err instanceof Error ? err.message : "Network error while saving." },
       }));
     } finally {
       setSaving((prev) => ({ ...prev, [provider]: false }));
@@ -161,10 +161,10 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
           [provider]: { type: "error", message: json.error?.message || "Failed to remove credential." },
         }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setActionFeedback((prev) => ({
         ...prev,
-        [provider]: { type: "error", message: err.message || "Network error." },
+        [provider]: { type: "error", message: err instanceof Error ? err.message : "Network error." },
       }));
     }
   };
@@ -211,10 +211,10 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
           [provider]: { type: "error", message: json.error?.message || "Test request failed." },
         }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setActionFeedback((prev) => ({
         ...prev,
-        [provider]: { type: "error", message: err.message || "Failed to execute connection test." },
+        [provider]: { type: "error", message: err instanceof Error ? err.message : "Failed to execute connection test." },
       }));
     } finally {
       setTesting((prev) => ({ ...prev, [provider]: false }));
@@ -324,6 +324,17 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
           const isSaving = saving[pid];
           const isGuideOpen = expandedGuides[pid];
           const feedback = actionFeedback[pid];
+          const details = (provider.details || {}) as {
+            selectedModel?: string;
+            apiVersion?: string;
+            testedCandidates?: Array<{
+              model: string;
+              success: boolean;
+              statusCode?: number;
+              latencyMs?: number;
+              error?: string;
+            }>;
+          };
 
           return (
             <div
@@ -366,7 +377,7 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
               </div>
 
               {/* Status & Diagnostics Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
                   <span className="text-slate-400 block text-[11px]">Server Storage</span>
                   <div className="flex items-center gap-1.5 font-mono">
@@ -401,7 +412,28 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-                  <span className="text-slate-400 block text-[11px]">Permissions Status</span>
+                  <span className="text-slate-400 block text-[11px]">Connected Model</span>
+                  <div className="flex items-center gap-1.5">
+                    {pid === "gemini" && details.selectedModel ? (
+                      <span className="text-indigo-300 font-semibold font-mono text-[11px] truncate flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-indigo-400 shrink-0" />
+                        {String(details.selectedModel)}
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-400">
+                          {String(details.apiVersion || "v1")}
+                        </span>
+                      </span>
+                    ) : provider.status === "CONNECTED" ? (
+                      <span className="text-emerald-400 font-semibold text-[11px]">
+                        Active Provider
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 font-mono text-[11px]">None</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                  <span className="text-slate-400 block text-[11px]">Verification Status</span>
                   <div className="flex items-center gap-1.5">
                     {provider.status === "CONNECTED" ? (
                       <span className="text-emerald-400 font-semibold flex items-center gap-1">
@@ -414,7 +446,7 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                       </span>
                     ) : isSaved ? (
                       <span className="text-amber-400 font-semibold">
-                        Awaiting Test Verification
+                        Awaiting Test
                       </span>
                     ) : (
                       <span className="text-slate-400">Key required</span>
@@ -584,7 +616,7 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                       ) : (
                         <>
                           <RefreshCw className="h-3.5 w-3.5 text-emerald-400" />
-                          <span>Test Connection</span>
+                          <span>{isSaved ? "Retest Connection" : "Test Connection"}</span>
                         </>
                       )}
                     </button>
@@ -601,6 +633,32 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                     )}
                   </div>
                 </div>
+
+                {/* Candidate Models & Fallback Provenance */}
+                {details.testedCandidates && details.testedCandidates.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1 text-[11px] text-slate-400">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Evaluated candidates:</span>
+                    {details.testedCandidates.map((c) => (
+                      <span
+                        key={c.model}
+                        className={`px-1.5 py-0.5 rounded font-mono text-[10px] border ${
+                          c.success
+                            ? "bg-emerald-950/60 text-emerald-400 border-emerald-700/50 font-semibold"
+                            : "bg-slate-900 text-slate-400 border-slate-800"
+                        }`}
+                      >
+                        {c.model} {c.success ? "✓ active" : c.statusCode ? `(${c.statusCode})` : "×"}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Key Rotation Guidance */}
+                {isSaved && (
+                  <p className="text-[11px] text-slate-400 pt-0.5">
+                    <span className="text-indigo-400 font-semibold">Key Rotation:</span> To replace this credential with a new key from your provider, enter the new key above and click Save Key. The server will update encrypted storage and require re-verification.
+                  </p>
+                )}
               </div>
 
               {/* Collapsible Configuration Guide */}

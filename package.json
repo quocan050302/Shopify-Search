@@ -12,6 +12,7 @@
     "prisma:push": "prisma db push"
   },
   "dependencies": {
+    "@google/genai": "^2.30.0",
     "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.18.0",
     "@prisma/adapter-libsql": "^7.10.1",

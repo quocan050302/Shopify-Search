@@ -15,7 +15,10 @@
 
 import fs from "fs";
 import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  resolveAndVerifyActiveModel,
+  redactSecrets,
+} from "@/services/ai/geminiModelService";
 
 export type ProviderId = "gemini" | "meta" | "captapi";
 
@@ -53,7 +56,7 @@ export interface ProviderConnectionState {
     notes: string;
   }>;
   policyNotice?: string | null;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   setupInstructions: {
     title: string;
     steps: string[];
@@ -77,7 +80,7 @@ export interface ConnectionTestResult {
     notes: string;
   }>;
   policyNotice: string | null;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // ─── Provider Catalog ─────────────────────────────────────────────────────────
@@ -185,7 +188,7 @@ interface StoredStatusCache {
       notes: string;
     }>;
     policyNotice?: string | null;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
   };
 }
 
@@ -388,6 +391,23 @@ export async function removeCredential(
   return { success: true };
 }
 
+/**
+ * Safely rotates an existing provider credential with live validation.
+ * Invalidates previous cache, saves new key to server storage, and runs authenticated test.
+ */
+export async function rotateCredential(
+  provider: ProviderId,
+  newKey: string
+): Promise<{ success: boolean; maskedKey: string; testResult: ConnectionTestResult }> {
+  const saveRes = await saveCredential(provider, newKey);
+  const testResult = await testProviderConnection(provider, newKey);
+  return {
+    success: testResult.status === "CONNECTED",
+    maskedKey: saveRes.maskedKey,
+    testResult,
+  };
+}
+
 // ─── Provider Status Inspection ───────────────────────────────────────────────
 
 /**
@@ -451,266 +471,107 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
 
 // ─── Test Connection Implementations ──────────────────────────────────────────
 
-/**
- * Live test connection for Google Gemini AI.
- *
- * Strategy:
- * 1. Call ListModels on both v1beta and v1 API versions to discover actually-available models.
- * 2. Pick the best available flash/pro model from the list.
- * 3. Run generateContent with that model to confirm it works.
- *
- * This handles:
- *   - Key format AQ.xxx (newer OAuth 2.0 keys from AI Studio) ← user's key
- *   - Key format AIzaSy... (older project keys)
- *   - API version differences (v1beta vs v1)
- *   - Regional model availability differences
- */
 async function testGeminiConnection(key: string): Promise<ConnectionTestResult> {
-  const startTime = Date.now();
   const testedAt = new Date().toISOString();
 
-  // Step 1: Discover which models are actually available for this key
-  // by calling the ListModels endpoint on both API versions
-  const BASE_URLS = [
-    "https://generativelanguage.googleapis.com/v1",
-    "https://generativelanguage.googleapis.com/v1beta",
-  ];
+  // Call the unified model selection and verification service
+  const result = await resolveAndVerifyActiveModel(key);
 
-  let availableModels: string[] = [];
-  let listError: string | null = null;
-  let workingApiVersion = "";
-
-  for (const baseUrl of BASE_URLS) {
-    try {
-      const listRes = await fetch(
-        `${baseUrl}/models?key=${encodeURIComponent(key)}&pageSize=50`,
-        {
-          headers: { Accept: "application/json" },
-          signal: AbortSignal.timeout(8000),
-        }
-      );
-
-      if (listRes.ok) {
-        const json = await listRes.json();
-        if (Array.isArray(json.models)) {
-          // Extract model names that support generateContent
-          availableModels = json.models
-            .filter(
-              (m: any) =>
-                Array.isArray(m.supportedGenerationMethods) &&
-                m.supportedGenerationMethods.includes("generateContent") &&
-                typeof m.name === "string"
-            )
-            .map((m: any) =>
-              // Strip "models/" prefix — SDK uses bare model names
-              (m.name as string).replace(/^models\//, "")
-            );
-          workingApiVersion = baseUrl.endsWith("v1") ? "v1" : "v1beta";
-          break;
-        }
-      } else if (listRes.status === 400 || listRes.status === 401 || listRes.status === 403) {
-        // Auth failure — key is invalid, no point trying other API version
-        const errJson = await listRes.json().catch(() => ({}));
-        listError = errJson?.error?.message || `HTTP ${listRes.status} from ListModels`;
-        break;
-      }
-    } catch (err: any) {
-      listError = err.message;
-    }
-  }
-
-  // If we got an auth error from ListModels, report immediately
-  if (listError && availableModels.length === 0) {
-    const latencyMs = Date.now() - startTime;
-    const isAuthError =
-      listError.includes("API_KEY_INVALID") ||
-      listError.includes("PERMISSION_DENIED") ||
-      listError.includes("401") ||
-      listError.includes("403");
-    return {
-      provider: "gemini",
-      status: "ERROR",
-      latencyMs,
-      testedAt,
-      errorMessage: `API key rejected by Google Generative AI: ${listError}`,
-      errorCode: isAuthError ? 401 : "LIST_FAILED",
-      missingPermissions: ["Valid GEMINI_API_KEY — key was rejected by the Gemini API"],
-      grantedPermissions: [],
-      capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
-        name: cap,
-        status: "UNAVAILABLE" as const,
-        notes: listError!,
-      })),
-      policyNotice:
-        "Google AI Studio now issues keys in two formats: \"AIzaSy...\" (older) and \"AQ.xxxx\" " +
-        "(newer OAuth 2.0 based). Both are accepted. Ensure your key has no IP restrictions and " +
-        "the Gemini API is enabled in your Google Cloud project.",
-    };
-  }
-
-  // If no models found at all, check for ListModels failure
-  if (availableModels.length === 0) {
-    const latencyMs = Date.now() - startTime;
-    return {
-      provider: "gemini",
-      status: "ERROR",
-      latencyMs,
-      testedAt,
-      errorMessage:
-        listError || "No models supporting generateContent found for this API key.",
-      errorCode: "NO_MODELS_FOUND",
-      missingPermissions: ["Gemini API access — no generateContent models available"],
-      grantedPermissions: [],
-      capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
-        name: cap,
-        status: "UNAVAILABLE" as const,
-        notes: "No available Gemini models found for this key.",
-      })),
-      policyNotice:
-        "The Gemini API ListModels returned no models supporting generateContent. " +
-        "Ensure the Gemini API is enabled at console.cloud.google.com.",
-    };
-  }
-
-  // Step 2: Pick the best flash model from the discovered list
-  // Priority: gemini-2.0-flash > gemini-2.0-flash-lite > gemini-1.5-flash > any flash > any model
-  const PREFERRED_ORDER = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-exp",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-flash-001",
-  ];
-
-  let selectedModel =
-    PREFERRED_ORDER.find((m) => availableModels.includes(m)) ||
-    availableModels.find((m) => m.includes("flash")) ||
-    availableModels.find((m) => m.includes("gemini")) ||
-    availableModels[0];
-
-  // Step 3: Run generateContent with the selected model
-  // Try both with SDK (v1beta default) and, if that fails, with direct fetch on working API version
-  let responseText = "";
-  let generateError: any = null;
-  let usedApiVersion = workingApiVersion;
-
-  // Try SDK first (uses v1beta by default)
-  try {
-    const ai = new GoogleGenerativeAI(key);
-    const model = ai.getGenerativeModel(
-      { model: selectedModel },
-      // Pass apiVersion if we know v1 works
-      workingApiVersion === "v1" ? { apiVersion: "v1" } as any : undefined
-    );
-    const result = await model.generateContent("Ping. Respond with OK.");
-    responseText = result.response.text();
-  } catch (sdkErr: any) {
-    generateError = sdkErr;
-
-    // If SDK failed, try raw fetch with the working API version
-    if (workingApiVersion) {
-      try {
-        const directRes = await fetch(
-          `https://generativelanguage.googleapis.com/${workingApiVersion}/models/${selectedModel}:generateContent?key=${encodeURIComponent(key)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: "Ping. Respond with OK." }] }] }),
-            signal: AbortSignal.timeout(10000),
-          }
-        );
-        if (directRes.ok) {
-          const json = await directRes.json();
-          responseText = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "OK";
-          usedApiVersion = workingApiVersion;
-          generateError = null;
-        } else {
-          const errJson = await directRes.json().catch(() => ({}));
-          generateError = new Error(
-            errJson?.error?.message || `HTTP ${directRes.status} from generateContent`
-          );
-        }
-      } catch (fetchErr: any) {
-        generateError = fetchErr;
-      }
-    }
-  }
-
-  const latencyMs = Date.now() - startTime;
-
-  if (responseText) {
+  if (result.success && result.textGenerationVerified) {
     return {
       provider: "gemini",
       status: "CONNECTED",
-      latencyMs,
+      latencyMs: result.latencyMs,
       testedAt,
       errorMessage: null,
       missingPermissions: [],
-      grantedPermissions: ["generateContent", "listModels", "multimodal_analysis"],
+      grantedPermissions: ["listModels", "generateContent"],
       capabilities: [
         {
-          name: "Video Creative Analysis (MP4 / WebM)",
+          name: "Gemini API Authentication & Model Discovery",
           status: "VERIFIED",
-          notes: `Live verification succeeded on ${selectedModel} via ${usedApiVersion}.`,
+          notes: `Discovered ${result.discoveryCount} models on ${result.workingApiVersion}. Authenticated successfully.`,
         },
         {
-          name: "Opening 3-Second Hook Quality Scoring (0–100)",
+          name: "Text Generation & Creative Reasoning (0–100 Hook Scoring, Angles)",
           status: "VERIFIED",
-          notes: "Algorithmic scoring ready.",
+          notes: `Verified live generateContent on ${result.selectedModel} (${result.workingApiVersion}).`,
         },
         {
-          name: "Core Selling Angle & UVP Extraction",
-          status: "VERIFIED",
-          notes: "Creative parsing enabled.",
+          name: "Multimodal Video Creative Analysis (MP4 / WebM via Files API)",
+          status: "REQUIRES_AUTH",
+          notes: `Text generation verified on ${result.selectedModel}. Video analysis requires authorized MP4/WebM upload via Files API.`,
         },
         {
           name: "Evergreen vs Trend-Driven Creative Classification",
           status: "VERIFIED",
-          notes: "Longevity classification enabled.",
+          notes: `Creative reasoning enabled with ${result.selectedModel}.`,
         },
         {
           name: "Original 15s / 30s Ad Script Generation",
           status: "VERIFIED",
-          notes: "Script generation enabled.",
+          notes: `Script generation enabled with ${result.selectedModel}.`,
         },
       ],
       policyNotice: null,
       details: {
-        model: selectedModel,
-        apiVersion: usedApiVersion,
-        availableModels: availableModels.slice(0, 8),
-        responsePreview: responseText.slice(0, 60).trim(),
+        selectedModel: result.selectedModel,
+        apiVersion: result.workingApiVersion,
+        availableModels: result.availableModels.slice(0, 10),
+        testedCandidates: result.testedCandidates,
+        authVerified: true,
+        textGenerationVerified: true,
+        videoAnalysisVerified: false,
       },
     };
   }
 
-  // generateContent also failed
-  const errMsg = generateError?.message || "generateContent request failed.";
+  // Handle failure with accurate error classification
+  const errCode = result.error?.code || "GENERATION_FAILED";
+  const rawMsg = result.error?.message || "Gemini connection test failed.";
+  const errMsg = redactSecrets(rawMsg);
+  const missingPerms: string[] = [];
+
+  if (errCode === "INVALID_API_KEY") {
+    missingPerms.push("Valid GEMINI_API_KEY — key was rejected by Google AI Studio");
+  } else if (errCode === "PERMISSION_DENIED") {
+    missingPerms.push("Generative Language API permission — enable API in Google Cloud Console");
+  } else if (errCode === "QUOTA_EXCEEDED") {
+    missingPerms.push("API quota — check quota limits in Google AI Studio");
+  } else if (errCode === "MODEL_NOT_AVAILABLE") {
+    missingPerms.push(`Model availability — tested models (${result.testedCandidates.map((c) => c.model).join(", ")}) not available for this account`);
+  } else {
+    missingPerms.push("Live generateContent execution");
+  }
+
   return {
     provider: "gemini",
     status: "ERROR",
-    latencyMs,
+    latencyMs: result.latencyMs,
     testedAt,
     errorMessage: errMsg,
-    errorCode: generateError?.status || "GENERATE_FAILED",
-    missingPermissions: ["generateContent — model found via ListModels but generation failed"],
-    grantedPermissions: ["listModels"],
+    errorCode: errCode,
+    missingPermissions: missingPerms,
+    grantedPermissions: result.discoveryCount > 0 ? ["listModels"] : [],
     capabilities: PROVIDER_CATALOG.gemini.supportedCapabilities.map((cap) => ({
       name: cap,
       status: "UNAVAILABLE" as const,
       notes: errMsg,
     })),
     policyNotice:
-      `Models discovered (${availableModels.slice(0, 3).join(", ")}...) ` +
-      `but generateContent call to ${selectedModel} failed. ` +
-      "Check if the Gemini API is fully enabled and not restricted by project quota.",
+      errCode === "RATE_LIMITED"
+        ? "Gemini models are experiencing temporary demand spikes (HTTP 503). Automatic fallback attempted alternative models."
+        : errCode === "MODEL_NOT_AVAILABLE"
+        ? "The configured or default model was deprecated or not available for your account. Please update to a supported model in AI Studio."
+        : null,
     details: {
-      availableModels: availableModels.slice(0, 8),
-      selectedModel,
-      apiVersion: usedApiVersion,
-      generateErrorCode: generateError?.status,
+      selectedModel: result.selectedModel,
+      apiVersion: result.workingApiVersion,
+      availableModels: result.availableModels.slice(0, 10),
+      testedCandidates: result.testedCandidates,
+      authVerified: result.discoveryCount > 0,
+      textGenerationVerified: false,
+      videoAnalysisVerified: false,
     },
   };
 }
@@ -730,7 +591,6 @@ async function testMetaConnection(token: string): Promise<ConnectionTestResult> 
     // 1. Check permissions granted to this token via /me/permissions
     let grantedPerms: string[] = [];
     let hasAdArchive = false;
-    let tokenDebugInfo: Record<string, any> = {};
 
     try {
       const permRes = await fetch(
@@ -740,9 +600,9 @@ async function testMetaConnection(token: string): Promise<ConnectionTestResult> 
       if (permRes.ok) {
         const permJson = await permRes.json();
         if (Array.isArray(permJson?.data)) {
-          grantedPerms = permJson.data
-            .filter((p: any) => p.status === "granted")
-            .map((p: any) => p.permission);
+          grantedPerms = (permJson.data as Array<{ status?: string; permission?: string }>)
+            .filter((p) => p.status === "granted" && typeof p.permission === "string")
+            .map((p) => p.permission as string);
           hasAdArchive = grantedPerms.includes("ad_archive");
         }
       }
@@ -859,14 +719,15 @@ async function testMetaConnection(token: string): Promise<ConnectionTestResult> 
         recordReturned: Array.isArray(resJson.data) ? resJson.data.length : 0,
       },
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     const latencyMs = Date.now() - startTime;
+    const errMsg = err instanceof Error ? err.message : "Failed to connect to Meta Graph API.";
     return {
       provider: "meta",
       status: "ERROR",
       latencyMs,
       testedAt,
-      errorMessage: err.message || "Failed to connect to Meta Graph API.",
+      errorMessage: errMsg,
       errorCode: "NETWORK_ERROR",
       missingPermissions: ["Network connectivity or valid token"],
       grantedPermissions: [],
@@ -874,7 +735,7 @@ async function testMetaConnection(token: string): Promise<ConnectionTestResult> 
         {
           name: "Meta Ad Library Automated Archive Query",
           status: "UNAVAILABLE",
-          notes: `Connection failed: ${err.message}`,
+          notes: `Connection failed: ${errMsg}`,
         },
       ],
       policyNotice:
@@ -988,14 +849,15 @@ async function testCaptapiConnection(key: string): Promise<ConnectionTestResult>
         accountData: data,
       },
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     const latencyMs = Date.now() - startTime;
+    const errMsg = err instanceof Error ? err.message : "Failed to reach Captapi API endpoint.";
     return {
       provider: "captapi",
       status: "ERROR",
       latencyMs,
       testedAt,
-      errorMessage: err.message || "Failed to reach Captapi API endpoint.",
+      errorMessage: errMsg,
       errorCode: "NETWORK_ERROR",
       missingPermissions: ["Network connectivity or valid host"],
       grantedPermissions: [],
@@ -1003,7 +865,7 @@ async function testCaptapiConnection(key: string): Promise<ConnectionTestResult>
         {
           name: "Third-Party Ad Intelligence Queries",
           status: "UNAVAILABLE",
-          notes: `Connection failed: ${err.message}`,
+          notes: `Connection failed: ${errMsg}`,
         },
       ],
       policyNotice: "Failed to reach https://api.captapi.com. Check network connectivity.",
@@ -1024,7 +886,10 @@ export async function testProviderConnection(
     throw new Error(`Unknown provider: ${provider}`);
   }
 
-  const keyToTest = keyOverride?.trim() || getCredentialValue(provider);
+  const keyToTest =
+    keyOverride !== undefined
+      ? keyOverride.trim()
+      : (getCredentialValue(provider) || "");
 
   if (!keyToTest) {
     const res: ConnectionTestResult = {

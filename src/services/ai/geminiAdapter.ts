@@ -1,49 +1,46 @@
 /**
- * Gemini AI Adapter — SWAI V7.1
+ * Gemini AI Adapter — SWAI V7.2
  *
  * Integrates Google Gemini API for real video creative analysis.
  *
  * CRITICAL PRINCIPLES:
- * - If no key is configured → return AI_PROVIDER_NOT_CONFIGURED (not an error, a state)
- * - If no accessible video → return MEDIA_UNAVAILABLE (never fabricate analysis)
- * - All analysis results include model ID, prompt version, timestamp, confidence
- * - Never expose GEMINI_API_KEY to the client
- * - Never hardcode model names that may become deprecated
- * - Current stable model: gemini-1.5-flash (as of 2025)
- *
- * SDK: @google/generative-ai v0.24.1
- * Docs: https://ai.google.dev/gemini-api/docs
+ * - If no key is configured -> return AI_PROVIDER_NOT_CONFIGURED (not an error, a state).
+ * - If no accessible video or invalid container -> return MEDIA_UNAVAILABLE (never fabricate analysis).
+ * - Implements documented Gemini Files API upload and polling before calling generateContent.
+ * - Dynamic unified model selection shared with Test Connection (no obsolete hardcoded models).
+ * - All analysis results include actual model ID used, prompt version, timestamp, confidence, and source attribution.
+ * - Never expose GEMINI_API_KEY to the client or in log output.
+ * - Uses x-goog-api-key header authentication and cleans up uploaded files after analysis.
  */
 
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { getActiveVerifiedModel, redactSecrets } from "./geminiModelService";
+import {
+  validateVideoForGeminiAnalysis,
+  uploadVideoToGeminiFiles,
+} from "./geminiFilesService";
+
+// Re-export video validator for consumers
+export { validateVideoForGeminiAnalysis };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export const GEMINI_ADAPTER_VERSION = "7.1.0";
+export const GEMINI_ADAPTER_VERSION = "7.2.0";
 
 /**
- * Current Gemini models for creative video analysis.
- * Google AI Studio now issues keys in two formats:
- *   - Legacy:  AIzaSy... (older projects)
- *   - New:     AQ.xxxx  (newer OAuth 2.0 based projects — fully valid)
- *
- * Model precedence (newest stable first):
- *   FLASH   — gemini-2.0-flash        (preferred — stable 2025)
- *   FLASH_LITE — gemini-2.0-flash-lite (faster/cheaper variant)
- *   FLASH_STABLE — gemini-1.5-flash-latest (stable alias, no deprecated suffix)
- *   PRO     — gemini-1.5-pro-latest   (deep analysis)
+ * Backwards-compatible model aliases.
+ * The active model is resolved dynamically via getActiveVerifiedModel().
  */
 export const GEMINI_MODELS = {
-  FLASH: "gemini-2.0-flash",
-  FLASH_LITE: "gemini-2.0-flash-lite",
-  FLASH_STABLE: "gemini-1.5-flash-latest",
-  PRO: "gemini-1.5-pro-latest",
+  FLASH: "gemini-3.5-flash",
+  FLASH_LITE: "gemini-3.5-flash-lite",
+  FLASH_STABLE: "gemini-3.5-flash",
+  PRO: "gemini-2.5-pro",
 } as const;
 
-export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS];
+export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS] | string;
 
-// Default prompt version — increment when prompts change
-export const CREATIVE_ANALYSIS_PROMPT_VERSION = "v2.0.0";
+export const CREATIVE_ANALYSIS_PROMPT_VERSION = "v2.2.0";
 
 // ─── Configuration Types ──────────────────────────────────────────────────────
 
@@ -67,11 +64,10 @@ export type GeminiAnalysisStatus =
 
 export interface GeminiCreativeAnalysisResult {
   status: GeminiAnalysisStatus;
-  // Core analysis fields (null if status ≠ COMPLETE)
   hookType: string | null;
-  hookQualityScore: number | null;        // 0–100, null if unscored
-  pacingScore: number | null;             // 0–100, null if unscored
-  openingHookTimestamp: string | null;    // e.g. "0:00-0:03"
+  hookQualityScore: number | null; // 0–100, null if unscored
+  pacingScore: number | null; // 0–100, null if unscored
+  openingHookTimestamp: string | null; // e.g. "0:00-0:03"
   openingHookDescription: string | null;
   ctaClassification: string | null;
   sellingAngles: string[];
@@ -84,37 +80,30 @@ export interface GeminiCreativeAnalysisResult {
     script30s: string;
     ugcAngle: string;
   } | null;
-  // Provenance
   modelId: string;
   promptVersion: string;
-  sourceVideoReference: string;           // URL or description of the analyzed video
+  sourceVideoReference: string;
   analysisTimestamp: string;
   confidence: "HIGH" | "MEDIUM" | "LOW" | "NONE";
   confidenceNote: string;
   limitations: string[];
-  rawResponse?: string;                   // Stored for audit; not shown to users
+  rawResponse?: string;
 }
 
 // ─── Validate Configuration ───────────────────────────────────────────────────
 
-/**
- * Validates the Gemini API configuration.
- * NEVER calls the API to verify — only checks presence and format.
- * Actual live verification requires a real API call with a real video.
- */
 export function validateGeminiConfiguration(): GeminiConfigStatus {
   const apiKey = process.env.GEMINI_API_KEY;
+  const activeModel = getActiveVerifiedModel().modelId;
 
   if (!apiKey || apiKey.trim().length === 0) {
     return {
       configured: false,
       status: "NOT_CONFIGURED",
-      modelVersion: GEMINI_MODELS.FLASH,
+      modelVersion: activeModel,
       promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
       message:
-        "GEMINI_API_KEY is not configured in the server environment. " +
-        "Set this variable to enable AI video creative analysis. " +
-        "The key must NEVER be exposed to the browser.",
+        "GEMINI_API_KEY is not configured in server environment. Set this variable to enable AI video analysis.",
       limitations: [
         "AI video analysis is unavailable",
         "Hook quality scores cannot be computed",
@@ -124,81 +113,16 @@ export function validateGeminiConfiguration(): GeminiConfigStatus {
     };
   }
 
-  // Key is present but not verified (we don't make a live call here)
   return {
     configured: true,
     status: "KEY_PRESENT_UNVERIFIED",
-    modelVersion: GEMINI_MODELS.FLASH,
+    modelVersion: activeModel,
     promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
-    message:
-      "GEMINI_API_KEY is present. Not live-tested against the Gemini API — will be verified on first analysis call.",
+    message: "GEMINI_API_KEY is present but not live-tested against the Gemini API — unverified until first analysis.",
     limitations: [
-      "API key has not been tested against the Gemini API",
-      "Analysis of video requires an accessible, authorized video URL",
+      "Analysis requires an authorized MP4/WebM upload or direct video URL",
+      "TikTok web page URLs require uploading the raw media file via Media Upload",
     ],
-  };
-}
-
-// ─── Video Upload ─────────────────────────────────────────────────────────────
-
-/**
- * NOTE: Gemini File API is available for uploading large video files for analysis.
- * For public URLs, we pass the URL directly — no upload needed.
- * For local files, we would use the Files API.
- *
- * This function validates an accessible video URL for Gemini analysis eligibility.
- */
-export async function validateVideoForGeminiAnalysis(
-  videoUrl: string | null | undefined
-): Promise<{
-  eligible: boolean;
-  reason: string;
-  videoReference: string | null;
-}> {
-  if (!videoUrl || videoUrl.trim().length === 0) {
-    return {
-      eligible: false,
-      reason: "No video URL provided.",
-      videoReference: null,
-    };
-  }
-
-  // Reject sample/demo videos
-  const samplePatterns = [
-    /commondatastorage\.googleapis\.com\/gtv-videos-bucket/i,
-    /sample-videos\.com/i,
-    /w3schools\.com\/html\/mov/i,
-    /filesamples\.com/i,
-  ];
-  if (samplePatterns.some((p) => p.test(videoUrl))) {
-    return {
-      eligible: false,
-      reason: "Video URL points to a Google sample/demo file, not a real ad creative.",
-      videoReference: null,
-    };
-  }
-
-  // For now, accept direct MP4/WebM URLs and TikTok post URLs as eligible
-  // (Gemini can analyze video from URL for supported formats)
-  const isDirectVideo = /\.(mp4|webm|mov|m4v)(\\?.*)?$/i.test(videoUrl);
-  const isTikTokPost = /tiktok\.com\/@[^/]+\/video\/\d+/.test(videoUrl);
-
-  if (isDirectVideo || isTikTokPost) {
-    return {
-      eligible: true,
-      reason: isDirectVideo
-        ? "Direct video URL is eligible for Gemini analysis."
-        : "TikTok post URL — analysis via publicly accessible video.",
-      videoReference: videoUrl,
-    };
-  }
-
-  return {
-    eligible: false,
-    reason:
-      "Video URL format not supported for direct Gemini analysis. " +
-      "Supported: direct MP4/WebM URL, TikTok post URL.",
-    videoReference: null,
   };
 }
 
@@ -280,21 +204,18 @@ Respond ONLY in this JSON format:
 Base ALL output on what you actually observe. Do not invent angles not present in the video.
 `.trim();
 
+// ─── Client Initializer ───────────────────────────────────────────────────────
+
+function getGeminiClient(apiKey?: string): GoogleGenerativeAI | null {
+  const key = (apiKey || process.env.GEMINI_API_KEY || "").trim();
+  if (!key) return null;
+  return new GoogleGenerativeAI(key);
+}
+
 // ─── Core Analysis Functions ──────────────────────────────────────────────────
 
 /**
- * Initializes the Gemini client.
- * Returns null if not configured — callers must handle null.
- */
-function getGeminiClient(): GoogleGenerativeAI | null {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey.trim().length === 0) return null;
-  return new GoogleGenerativeAI(apiKey.trim());
-}
-
-/**
- * Analyzes the opening hook of a video ad.
- * Returns AI_PROVIDER_NOT_CONFIGURED or MEDIA_UNAVAILABLE if prerequisites not met.
+ * Analyzes the opening hook of a video ad using Gemini Files API.
  */
 export async function analyzeOpeningHook(
   videoUrl: string | null | undefined,
@@ -312,10 +233,10 @@ export async function analyzeOpeningHook(
   limitations: string[];
 }> {
   const now = new Date().toISOString();
-  const modelId = GEMINI_MODELS.FLASH;
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  const { modelId } = getActiveVerifiedModel();
 
-  const client = getGeminiClient();
-  if (!client) {
+  if (!apiKey) {
     return {
       status: "AI_PROVIDER_NOT_CONFIGURED",
       hookType: null,
@@ -326,7 +247,7 @@ export async function analyzeOpeningHook(
       modelId,
       promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
       analysisTimestamp: now,
-      limitations: ["GEMINI_API_KEY not configured. Set this environment variable to enable AI analysis."],
+      limitations: ["GEMINI_API_KEY is not configured in server environment."],
     };
   }
 
@@ -346,7 +267,12 @@ export async function analyzeOpeningHook(
     };
   }
 
+  let preparedFile = null;
   try {
+    // Upload video via Files API
+    preparedFile = await uploadVideoToGeminiFiles(apiKey, videoCheck);
+
+    const client = getGeminiClient(apiKey)!;
     const model = client.getGenerativeModel({
       model: modelId,
       safetySettings: [
@@ -355,16 +281,14 @@ export async function analyzeOpeningHook(
       ],
     });
 
-    // Build prompt with optional ad copy context
     let prompt = HOOK_ANALYSIS_PROMPT;
     if (adCopy?.headline || adCopy?.bodyText) {
-      prompt += `\n\nAd copy context (text-only, not from video):\nHeadline: ${adCopy.headline || "N/A"}\nBody: ${adCopy.bodyText || "N/A"}`;
+      prompt += `\n\nAd copy context:\nHeadline: ${adCopy.headline || "N/A"}\nBody: ${adCopy.bodyText || "N/A"}`;
     }
 
-    // Pass video URL as inline content
     const result = await model.generateContent([
       { text: prompt },
-      { fileData: { mimeType: "video/mp4", fileUri: videoCheck.videoReference! } },
+      { fileData: { mimeType: preparedFile.mimeType, fileUri: preparedFile.fileUri } },
     ]);
 
     const text = result.response.text();
@@ -381,13 +305,14 @@ export async function analyzeOpeningHook(
       hookQualityScore: typeof parsed.hookQualityScore === "number" ? parsed.hookQualityScore : null,
       hookTimestamp: parsed.hookTimestamp ?? null,
       hookDescription: parsed.hookDescription ?? null,
-      confidence: (parsed.confidence as any) ?? "LOW",
+      confidence: (parsed.confidence === "HIGH" || parsed.confidence === "MEDIUM" || parsed.confidence === "LOW" ? parsed.confidence : "LOW"),
       modelId,
       promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
       analysisTimestamp: now,
       limitations: [],
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     return {
       status: "ANALYSIS_FAILED",
       hookType: null,
@@ -398,14 +323,17 @@ export async function analyzeOpeningHook(
       modelId,
       promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
       analysisTimestamp: now,
-      limitations: [`Gemini analysis failed: ${err.message}`],
+      limitations: [`Hook analysis failed: ${redactSecrets(errMsg)}`],
     };
+  } finally {
+    if (preparedFile) {
+      await preparedFile.cleanup().catch(() => {});
+    }
   }
 }
 
 /**
- * Full creative analysis of a video ad using Gemini.
- * Returns complete analysis with all fields, or a clearly labeled partial/failed state.
+ * Full creative analysis of a video ad using Gemini Files API.
  */
 export async function analyzeVideoWithGemini(
   videoUrl: string | null | undefined,
@@ -418,12 +346,11 @@ export async function analyzeVideoWithGemini(
   }
 ): Promise<GeminiCreativeAnalysisResult> {
   const now = new Date().toISOString();
-  const modelId = GEMINI_MODELS.FLASH;
-  const sourceVideoRef = videoUrl || "no_video_url_provided";
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  const { modelId } = getActiveVerifiedModel();
+  const sourceVideoRef = videoUrl || "no_video_reference";
 
-  // Check configuration
-  const client = getGeminiClient();
-  if (!client) {
+  if (!apiKey) {
     return {
       status: "AI_PROVIDER_NOT_CONFIGURED",
       hookType: null,
@@ -442,15 +369,11 @@ export async function analyzeVideoWithGemini(
       sourceVideoReference: sourceVideoRef,
       analysisTimestamp: now,
       confidence: "NONE",
-      confidenceNote: "GEMINI_API_KEY not configured. AI video analysis is unavailable.",
-      limitations: [
-        "Set GEMINI_API_KEY in server environment to enable AI analysis",
-        "Key must never be exposed to the browser",
-      ],
+      confidenceNote: "GEMINI_API_KEY is not configured.",
+      limitations: ["Set GEMINI_API_KEY in server environment to enable AI analysis"],
     };
   }
 
-  // Check video eligibility
   const videoCheck = await validateVideoForGeminiAnalysis(videoUrl);
   if (!videoCheck.eligible) {
     return {
@@ -476,7 +399,11 @@ export async function analyzeVideoWithGemini(
     };
   }
 
+  let preparedFile = null;
   try {
+    preparedFile = await uploadVideoToGeminiFiles(apiKey, videoCheck);
+
+    const client = getGeminiClient(apiKey)!;
     const model = client.getGenerativeModel({
       model: modelId,
       safetySettings: [
@@ -486,11 +413,10 @@ export async function analyzeVideoWithGemini(
       generationConfig: { responseMimeType: "text/plain" },
     });
 
-    // Build context-enhanced prompt
     let prompt = CREATIVE_ANALYSIS_PROMPT;
     if (adContext) {
       prompt +=
-        `\n\nAd context metadata (do not treat as video observations):` +
+        `\n\nAd context metadata (for context only):` +
         `\nPlatform: ${adContext.platform || "Unknown"}` +
         `\nCategory: ${adContext.category || "Unknown"}` +
         `\nHeadline: ${adContext.headline || "N/A"}` +
@@ -500,7 +426,7 @@ export async function analyzeVideoWithGemini(
 
     const result = await model.generateContent([
       { text: prompt },
-      { fileData: { mimeType: "video/mp4", fileUri: videoCheck.videoReference! } },
+      { fileData: { mimeType: preparedFile.mimeType, fileUri: preparedFile.fileUri } },
     ]);
 
     const rawText = result.response.text();
@@ -526,14 +452,15 @@ export async function analyzeVideoWithGemini(
       adScriptConcepts: parsed.adScriptConcepts ?? null,
       modelId,
       promptVersion: CREATIVE_ANALYSIS_PROMPT_VERSION,
-      sourceVideoReference: videoCheck.videoReference!,
+      sourceVideoReference: sourceVideoRef,
       analysisTimestamp: now,
-      confidence: (parsed.confidence as any) ?? "LOW",
-      confidenceNote: parsed.confidenceNote ?? "Confidence level not provided by model.",
+      confidence: (parsed.confidence === "HIGH" || parsed.confidence === "MEDIUM" || parsed.confidence === "LOW" ? parsed.confidence : "LOW"),
+      confidenceNote: parsed.confidenceNote ?? "Confidence based on observed creative elements.",
       limitations: [],
       rawResponse: rawText,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     return {
       status: "ANALYSIS_FAILED",
       hookType: null,
@@ -552,14 +479,18 @@ export async function analyzeVideoWithGemini(
       sourceVideoReference: sourceVideoRef,
       analysisTimestamp: now,
       confidence: "NONE",
-      confidenceNote: `Analysis failed: ${err.message}`,
-      limitations: [`Gemini API error: ${err.message}`],
+      confidenceNote: `Gemini video analysis failed: ${redactSecrets(errMsg)}`,
+      limitations: [`Gemini API error: ${redactSecrets(errMsg)}`],
     };
+  } finally {
+    if (preparedFile) {
+      await preparedFile.cleanup().catch(() => {});
+    }
   }
 }
 
 /**
- * Extracts creative selling angles from a video ad.
+ * Extracts creative selling angles from video using Files API.
  */
 export async function extractCreativeSellingAngles(
   videoUrl: string | null | undefined
@@ -573,10 +504,10 @@ export async function extractCreativeSellingAngles(
   limitations: string[];
 }> {
   const now = new Date().toISOString();
-  const modelId = GEMINI_MODELS.FLASH;
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  const { modelId } = getActiveVerifiedModel();
 
-  const client = getGeminiClient();
-  if (!client) {
+  if (!apiKey) {
     return {
       status: "AI_PROVIDER_NOT_CONFIGURED",
       angles: [],
@@ -584,7 +515,7 @@ export async function extractCreativeSellingAngles(
       confidence: "NONE",
       modelId,
       analysisTimestamp: now,
-      limitations: ["GEMINI_API_KEY not configured."],
+      limitations: ["GEMINI_API_KEY is not configured."],
     };
   }
 
@@ -601,11 +532,16 @@ export async function extractCreativeSellingAngles(
     };
   }
 
+  let preparedFile = null;
   try {
+    preparedFile = await uploadVideoToGeminiFiles(apiKey, videoCheck);
+
+    const client = getGeminiClient(apiKey)!;
     const model = client.getGenerativeModel({ model: modelId });
+
     const result = await model.generateContent([
       { text: SELLING_ANGLES_PROMPT },
-      { fileData: { mimeType: "video/mp4", fileUri: videoCheck.videoReference! } },
+      { fileData: { mimeType: preparedFile.mimeType, fileUri: preparedFile.fileUri } },
     ]);
 
     const text = result.response.text();
@@ -618,12 +554,13 @@ export async function extractCreativeSellingAngles(
       status: "COMPLETE",
       angles: Array.isArray(parsed.sellingAngles) ? parsed.sellingAngles : [],
       primaryAngle: parsed.primaryAngle ?? null,
-      confidence: (parsed.confidence as any) ?? "LOW",
+      confidence: (parsed.confidence === "HIGH" || parsed.confidence === "MEDIUM" || parsed.confidence === "LOW" ? parsed.confidence : "LOW"),
       modelId,
       analysisTimestamp: now,
       limitations: [],
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     return {
       status: "ANALYSIS_FAILED",
       angles: [],
@@ -631,8 +568,12 @@ export async function extractCreativeSellingAngles(
       confidence: "NONE",
       modelId,
       analysisTimestamp: now,
-      limitations: [`Extraction failed: ${err.message}`],
+      limitations: [`Angle extraction failed: ${redactSecrets(errMsg)}`],
     };
+  } finally {
+    if (preparedFile) {
+      await preparedFile.cleanup().catch(() => {});
+    }
   }
 }
 
@@ -654,7 +595,7 @@ export async function classifyEvergreenCreative(
 
   return {
     status: result.status,
-    classification: result.evergreenClassification as any,
+    classification: (result.evergreenClassification as "EVERGREEN" | "TREND_DRIVEN" | "INSUFFICIENT_EVIDENCE") || null,
     rationale: result.evergreenRationale,
     confidence: result.confidence,
     modelId: result.modelId,

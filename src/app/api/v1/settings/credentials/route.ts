@@ -15,6 +15,7 @@ import {
   maskApiKey,
   ProviderId,
 } from "@/services/credentials/credentialService";
+import { requireAdminAuth } from "@/services/security/adminAuth";
 
 export async function GET() {
   try {
@@ -56,6 +57,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const authErr = requireAdminAuth(request);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { provider, key } = body;
@@ -116,6 +120,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authErr = requireAdminAuth(request);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { provider } = body;

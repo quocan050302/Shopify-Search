@@ -17,8 +17,12 @@ import {
   testProviderConnection,
   ProviderId,
 } from "@/services/credentials/credentialService";
+import { requireAdminAuth } from "@/services/security/adminAuth";
 
 export async function POST(request: NextRequest) {
+  const authErr = requireAdminAuth(request);
+  if (authErr) return authErr;
+
   try {
     const body = await request.json();
     const { provider, key } = body;
