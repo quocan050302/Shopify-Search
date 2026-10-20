@@ -1,9 +1,17 @@
 /**
- * SWAI V9 — TikTok Creative Center Top Ads Provider Adapter
+ * SWAI V9.1 — TikTok Creative Center Top Ads Provider Adapter
  *
- * Implements the direct, authorized interface to TikTok Creative Center Top Ads.
- * Honest status: Returns REQUIRES_AUTH / BLOCKED_SOURCE when session credentials
- * are unconfigured, refusing to fake mock data in production.
+ * Implements the direct, session-authenticated interface to the TikTok Creative
+ * Center internal research API endpoint.
+ *
+ * IMPORTANT HONESTY NOTES:
+ * - The endpoint `ads.tiktok.com/creative_radar_api/...` is NOT an official public
+ *   TikTok Business API. It is the internal XHR endpoint backing the Creative Center
+ *   web UI. TikTok does not publish its schema or guarantee stability.
+ * - When TIKTOK_CC_COOKIE is absent the provider returns NOT_CONFIGURED — it does
+ *   NOT claim TikTok returned a 40101 error (that would be fabricated evidence).
+ * - A live connectivity probe is only made when the cookie IS present.
+ * - No CAPTCHA bypass, proxy rotation, or session impersonation is performed.
  */
 
 import {
@@ -21,17 +29,23 @@ import {
 import { executeGuardedProviderRequest } from "../providerRequestGuard";
 import { normalizeTikTokTopAd } from "../normalization/normalizeTikTokTopAd";
 
+/** Undocumented internal endpoint backing TikTok Creative Center Top Ads UI */
+const CC_TOP_ADS_ENDPOINT =
+  "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list";
+
 export class TiktokTopAdsProvider implements AdDiscoveryProvider {
   readonly id = "tiktok-topads";
   readonly name = "TikTok Creative Center Top Ads (Direct)";
-  readonly version = "9.0.0";
+  readonly version = "9.1.0";
 
   getCapabilities(): DiscoveryProviderCapabilities {
     return {
       providerId: this.id,
       displayName: this.name,
       description:
-        "Primary manual & automated research interface for TikTok Creative Center US Top Ads. Free to use with zero external paid credit costs.",
+        "Session-authenticated interface to TikTok Creative Center internal Top Ads API. " +
+        "Free to use with an active CC session cookie. " +
+        "WARNING: endpoint is not officially documented and may change without notice.",
       supportsUS: true,
       supportsKeywordFiltering: true,
       supportsKeywords: true,
@@ -45,66 +59,129 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
       requiresAuth: true,
       isPaid: false,
       isLiveVerified: false,
-      notes: "Requires session authorization (TIKTOK_CC_COOKIE) to prevent 40101 no-permission blocks by TikTok anti-bot WAF.",
+      notes:
+        "Requires TIKTOK_CC_COOKIE (browser session cookie from ads.tiktok.com). " +
+        "Without it, the provider is NOT_CONFIGURED — the cookie absence alone does NOT " +
+        "prove TikTok returned error 40101. A live probe is performed only when the cookie " +
+        "is provided. This endpoint is undocumented and not officially supported by TikTok.",
     };
   }
 
   async checkAvailability(): Promise<ProviderAvailabilityResult> {
     const cookie = process.env.TIKTOK_CC_COOKIE;
 
+    // State 1: NOT_CONFIGURED — credential simply not provided; we make no claims
+    // about what TikTok would return because we haven't tried.
     if (!cookie || cookie.trim().length === 0) {
       return {
-        status: "REQUIRES_AUTH",
+        status: "NOT_CONFIGURED",
         message:
-          "TikTok Creative Center internal API requires an active session cookie (TIKTOK_CC_COOKIE). " +
-          "Without it, TikTok responds with code 40101 ('no permission'). Configure in Settings or use Manual URL Import.",
+          "TIKTOK_CC_COOKIE is not set. " +
+          "Export a valid session cookie from ads.tiktok.com and add it to your .env.local file. " +
+          "Without it, automated collection is unavailable — use Manual URL Import instead.",
         isAuthorized: false,
         requiresConfig: true,
       };
     }
 
+    // State 2: Cookie is present — attempt a minimal 1-item probe to verify.
     try {
-      // Small connectivity probe with the provided cookie
-      const res = await executeGuardedProviderRequest<{ code: number; msg: string; data?: unknown }>({
+      const probeUrl =
+        `${CC_TOP_ADS_ENDPOINT}?page=1&limit=1&period=30&region=US`;
+
+      const res = await executeGuardedProviderRequest<{
+        code?: number;
+        msg?: string;
+        data?: unknown;
+      }>({
         providerId: this.id,
-        url: "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list?page=1&limit=1&period=30&region=US",
-        headers: {
-          Cookie: cookie.trim(),
-        },
-        timeoutMs: 8000,
+        url: probeUrl,
+        headers: { Cookie: cookie.trim() },
+        timeoutMs: 10000,
         isAutomaticRequest: false,
         isPaid: false,
       });
 
-      if (res.data?.code === 0) {
+      // HTTP-level auth failure
+      if (res.status === 401 || res.status === 403) {
+        return {
+          status: "BLOCKED_SOURCE",
+          message:
+            `HTTP ${res.status}: TikTok rejected the session cookie. ` +
+            "The cookie may have expired or been invalidated. Re-authenticate in your browser.",
+          isAuthorized: false,
+          requiresConfig: true,
+        };
+      }
+
+      // Non-JSON or empty body (likely a WAF HTML block page)
+      if (res.data === null || typeof res.data !== "object") {
+        return {
+          status: "BLOCKED_SOURCE",
+          message:
+            "TikTok returned a non-JSON response. The endpoint may be WAF-blocked or the " +
+            "session cookie is from a different geographic IP than this server.",
+          isAuthorized: false,
+          requiresConfig: true,
+        };
+      }
+
+      const apiCode = (res.data as { code?: number }).code;
+
+      // Application-level success
+      if (apiCode === 0) {
         return {
           status: "AVAILABLE",
-          message: "Session authenticated with TikTok Creative Center. Top Ads auto-discovery ready.",
+          message:
+            "Session validated with TikTok Creative Center. " +
+            "Live probe returned code 0 — Top Ads auto-discovery is ready.",
           isAuthorized: true,
           requiresConfig: false,
         };
       }
 
-      if (res.data?.code === 40101) {
+      // Application-level auth rejection
+      if (apiCode === 40101) {
         return {
           status: "BLOCKED_SOURCE",
-          message: "Provided TIKTOK_CC_COOKIE has expired or lacks permissions (Code 40101). Re-authenticate.",
+          message:
+            "TikTok Creative Center returned code 40101 ('no permission'). " +
+            "The session cookie has expired or lacks the required permissions. " +
+            "Please re-authenticate and update TIKTOK_CC_COOKIE.",
+          isAuthorized: false,
+          requiresConfig: true,
+        };
+      }
+
+      // Unknown endpoint response (e.g., API schema changed)
+      return {
+        status: "UNVERIFIED",
+        message:
+          `Unexpected TikTok API response: code ${apiCode ?? "absent"}, ` +
+          `msg: "${(res.data as { msg?: string }).msg ?? "none"}". ` +
+          "The internal endpoint schema may have changed.",
+        isAuthorized: false,
+        requiresConfig: true,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+
+      // Network failure: connectivity, DNS, TLS — no claim about TikTok's auth response
+      if (
+        msg.includes("PROVIDER_PERMISSION_DENIED") ||
+        msg.includes("access denied")
+      ) {
+        return {
+          status: "BLOCKED_SOURCE",
+          message: `HTTP permission denied by TikTok during probe: ${msg}`,
           isAuthorized: false,
           requiresConfig: true,
         };
       }
 
       return {
-        status: "UNVERIFIED",
-        message: `TikTok returned unexpected response: ${res.data?.msg || "Unknown state"}`,
-        isAuthorized: false,
-        requiresConfig: true,
-      };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return {
         status: "BLOCKED_SOURCE",
-        message: `Connectivity probe failed: ${msg}`,
+        message: `Connectivity probe failed: ${msg}. Check network access to ads.tiktok.com.`,
         isAuthorized: false,
         requiresConfig: true,
       };
@@ -130,10 +207,11 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
 
     if (!cookie || cookie.trim().length === 0) {
       throw new DiscoveryError({
-        code: "NO_AUTHORIZED_PROVIDER",
+        code: "PROVIDER_NOT_CONFIGURED",
         message:
-          "Authentication required: TikTok Creative Center automated collection requires session authorization. " +
-          "TIKTOK_CC_COOKIE is missing. Please configure session credentials in Settings or use free Manual URL Import.",
+          "TIKTOK_CC_COOKIE is not configured. " +
+          "Automated TikTok Top Ads collection requires an active session cookie. " +
+          "Add TIKTOK_CC_COOKIE to .env.local or use Manual URL Import.",
         providerId: this.id,
         statusHttp: 401,
       });
@@ -159,7 +237,7 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
       params.set("industry", query.industries[0]);
     }
 
-    const endpoint = `https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list?${params.toString()}`;
+    const endpoint = `${CC_TOP_ADS_ENDPOINT}?${params.toString()}`;
 
     const res = await executeGuardedProviderRequest<{
       code: number;
@@ -172,9 +250,7 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
     }>({
       providerId: this.id,
       url: endpoint,
-      headers: {
-        Cookie: cookie.trim(),
-      },
+      headers: { Cookie: cookie.trim() },
       jobId: context?.jobId,
       timeoutMs: context?.timeoutMs || 15000,
       isAutomaticRequest: query.runMode === "SCHEDULED",
@@ -184,7 +260,9 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
     if (res.data?.code === 40101) {
       throw new DiscoveryError({
         code: "PROVIDER_PERMISSION_DENIED",
-        message: "TikTok session expired or rejected (40101: no permission).",
+        message:
+          "TikTok session rejected during data fetch (code 40101: no permission). " +
+          "The session cookie has expired. Update TIKTOK_CC_COOKIE and retry.",
         providerId: this.id,
         statusHttp: 403,
       });
@@ -193,13 +271,17 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
     if (res.data?.code !== 0 && res.data?.code !== undefined) {
       throw new DiscoveryError({
         code: "PROVIDER_RESPONSE_INVALID",
-        message: `TikTok Creative Center API error: ${res.data.msg || "Unknown error"} (code: ${res.data.code})`,
+        message:
+          `TikTok Creative Center API error: ${res.data.msg || "Unknown error"} ` +
+          `(code: ${res.data.code}). The undocumented endpoint schema may have changed.`,
         providerId: this.id,
         statusHttp: 502,
       });
     }
 
-    const rawItems = res.data?.data?.materials || res.data?.data?.list || [];
+    const rawItems =
+      res.data?.data?.materials || res.data?.data?.list || [];
+
     const normalizedItems = rawItems.map((item) =>
       normalizeTikTokTopAd(item, {
         providerId: this.id,

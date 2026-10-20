@@ -61,10 +61,11 @@ export class ApifyTopAdsProvider implements AdDiscoveryProvider {
       };
     }
 
-    // Check budget service authorization
-    // Apify is categorized as a paid provider
-    const budget = getProviderBudget("captapi"); // shares or uses paid provider budget framework
-    if (!budget.enabled && !process.env.ENABLE_APIFY_DISCOVERY) {
+    // Check budget service authorization against Apify's own budget entry.
+    // Note: if "apify" is not in the budget config it falls through to the
+    // ENABLE_APIFY_DISCOVERY environment guard in providerRegistry.ts.
+    const budget = getProviderBudget("apify" as Parameters<typeof getProviderBudget>[0]);
+    if (!budget?.enabled && !process.env.ENABLE_APIFY_DISCOVERY) {
       return {
         status: "PAID_DISABLED",
         message: "Paid discovery providers are disabled by default. Enable in Settings → API Connections & Budgets.",

@@ -72,8 +72,10 @@ export async function selectDiscoveryProvider(query: DiscoveryQuery): Promise<Ad
     }
   }
 
-  // 3. User-Authorized Paid Provider (only if explicitly enabled by user)
-  if (process.env.ENABLE_APIFY_DISCOVERY === "true" || process.env.APIFY_TOKEN) {
+  // 3. User-Authorized Paid Provider (only if EXPLICITLY enabled).
+  //    IMPORTANT: APIFY_TOKEN existing alone does NOT authorize paid discovery.
+  //    The user must set ENABLE_APIFY_DISCOVERY=true to opt-in to metered spend.
+  if (process.env.ENABLE_APIFY_DISCOVERY === "true") {
     const apify = getDiscoveryProvider("apify-topads");
     if (apify) {
       const avail = await apify.checkAvailability();

@@ -81,8 +81,13 @@ interface DiscoveryStats {
   activeSchedules: number;
   lastDiscoveredAt?: string | null;
   workerStatus?: {
+    /** True when a heartbeat is detected in the DB (cross-process, not module-memory) */
+    isOnline: boolean;
+    /** Alias kept for backwards compat */
     isRunning: boolean;
     activeJobsCount: number;
+    lastHeartbeatAt?: string | null;
+    notice?: string;
   };
 }
 
@@ -399,15 +404,23 @@ export default function DiscoveryPage() {
 
         <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Background Worker</span>
-            <div className="text-2xl font-bold text-white mt-1">
-              {stats?.workerStatus?.isRunning ? "Online" : "Standalone CLI"}
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Worker Process</span>
+            <div className={`text-2xl font-bold mt-1 ${
+              stats?.workerStatus?.isOnline ? "text-emerald-400" : "text-slate-400"
+            }`}>
+              {stats?.workerStatus?.isOnline ? "Online" : "Offline"}
             </div>
-            <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">
-              npm run discovery:worker
+            <span className="text-[10px] text-slate-500 mt-0.5 block">
+              {stats?.workerStatus?.isOnline
+                ? `Active job detected via DB heartbeat`
+                : "Start: npm run discovery:worker"}
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400">
+          <div className={`p-2.5 rounded-lg ${
+            stats?.workerStatus?.isOnline
+              ? "bg-emerald-500/10 text-emerald-400"
+              : "bg-slate-800 text-slate-500"
+          }`}>
             <Clock className="h-5 w-5" />
           </div>
         </div>

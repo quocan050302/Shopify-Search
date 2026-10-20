@@ -59,13 +59,27 @@ export class DiscoveryOrchestrator {
     // 2. Check Provider Availability
     const availability = await provider.checkAvailability();
     if (!availability.isAuthorized || availability.status !== "AVAILABLE") {
-      // Record blocked run in database
+      // Map provider status → job status
       const blockedStatus: DiscoveryJobStatus =
-        availability.status === "REQUIRES_AUTH" || availability.status === "BLOCKED_SOURCE"
+        availability.status === "REQUIRES_AUTH" ||
+        availability.status === "BLOCKED_SOURCE"
+          ? "BLOCKED_SOURCE"
+          : availability.status === "NOT_CONFIGURED"
           ? "BLOCKED_SOURCE"
           : availability.status === "PAID_DISABLED"
           ? "BUDGET_BLOCKED"
           : "FAILED";
+
+      // Preserve the exact error category from the provider response
+      const errorCategory =
+        availability.status === "NOT_CONFIGURED"
+          ? "PROVIDER_NOT_CONFIGURED"
+          : availability.status === "PAID_DISABLED"
+          ? "PROVIDER_BUDGET_BLOCKED"
+          : availability.status === "REQUIRES_AUTH" ||
+            availability.status === "BLOCKED_SOURCE"
+          ? "PROVIDER_PERMISSION_DENIED"
+          : "NO_AUTHORIZED_PROVIDER";
 
       const blockedWorkspaceId = await getEffectiveWorkspaceId(query.workspaceId);
       const run = await prisma.discoveryRun.create({
@@ -77,7 +91,10 @@ export class DiscoveryOrchestrator {
           runMode: query.runMode,
           queryConfigJson: JSON.stringify(query),
           errorMessage: availability.message || "Provider access blocked.",
-          errorCategory: "NO_AUTHORIZED_PROVIDER",
+          errorCategory,
+          // Zero outbound provider requests were made — availability probe
+          // is not counted as a discovery request.
+          totalRequestCount: 0,
           startedAt: startTime,
           finishedAt: new Date(),
         },
@@ -93,7 +110,7 @@ export class DiscoveryOrchestrator {
         existingDuplicateCount: 0,
         rejectedCount: 0,
         failedCount: 0,
-        totalRequestCount: 1,
+        totalRequestCount: 0, // no outbound requests made
         startTime,
         finishTime: new Date(),
         finalStatus: blockedStatus,
