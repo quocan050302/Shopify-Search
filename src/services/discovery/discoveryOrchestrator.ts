@@ -67,9 +67,10 @@ export class DiscoveryOrchestrator {
           ? "BUDGET_BLOCKED"
           : "FAILED";
 
+      const blockedWorkspaceId = await getEffectiveWorkspaceId(query.workspaceId);
       const run = await prisma.discoveryRun.create({
         data: {
-          workspaceId: query.workspaceId || "default-workspace",
+          workspaceId: blockedWorkspaceId,
           scheduleId: options.scheduleId || null,
           providerId: provider.id,
           status: blockedStatus,
