@@ -13,6 +13,7 @@ import {
   Settings,
   Lock,
   ShieldCheck,
+  Radar,
 } from "lucide-react";
 
 export function Sidebar() {
@@ -20,6 +21,7 @@ export function Sidebar() {
 
   const navigation = [
     { name: "Overview", href: "/", icon: Compass },
+    { name: "Auto Discovery", href: "/discovery", icon: Radar },
     { name: "Winning Ads Explorer", href: "/explorer", icon: PlaySquare },
     { name: "Winning Product Finder", href: "/products", icon: ShoppingBag },
     { name: "AI Creative Analyzer", href: "/analyzer", icon: Sparkles },

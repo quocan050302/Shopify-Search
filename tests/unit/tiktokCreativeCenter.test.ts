@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   parseAndValidateTikTokUrl,
   buildTikTokPlayerUrl,
+  canonicalizeTikTokDiscoveryUrl,
+  generateStableSourceHash,
 } from "@/services/tiktok/tiktokUrlParser";
 import {
   buildTikTokTopAdsUrl,
@@ -76,6 +78,47 @@ describe("TikTok Creative Center US & Genuine Post URL Parsing", () => {
   it("rejects non-TikTok or malicious URLs", () => {
     expect(parseAndValidateTikTokUrl("https://fake-tiktok.com/ad/123").isValid).toBe(false);
     expect(parseAndValidateTikTokUrl("not-a-url").isValid).toBe(false);
+  });
+
+  it("extracts path-based Top Ads material ID correctly", () => {
+    const pathUrl = "https://ads.tiktok.com/business/creativecenter/topads/7680863927458562066/pc/en";
+    const parsed = parseAndValidateTikTokUrl(pathUrl);
+
+    expect(parsed.isValid).toBe(true);
+    expect(parsed.isCreativeCenter).toBe(true);
+    expect(parsed.creativeId).toBe("7680863927458562066");
+    expect(parsed.isSearchPage).toBe(false);
+    expect(parsed.isEmbeddable).toBe(false);
+  });
+
+  it("distinguishes search / inspiration listing page from ad detail page", () => {
+    const searchUrl = "https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US";
+    const parsed = parseAndValidateTikTokUrl(searchUrl);
+
+    expect(parsed.isValid).toBe(true);
+    expect(parsed.isCreativeCenter).toBe(true);
+    expect(parsed.creativeId).toBeNull();
+    expect(parsed.isSearchPage).toBe(true);
+    expect(parsed.sourceSubtype).toBe("TIKTOK_SEARCH_PAGE");
+  });
+
+  it("canonicalizes TikTok discovery URLs removing tracking parameters while preserving identity", () => {
+    const trackingUrl = "https://ads.tiktok.com/business/creativecenter/topads/7680863927458562066/pc/en?utm_source=google&utm_medium=cpc&fbclid=xyz&region=US";
+    const canonical = canonicalizeTikTokDiscoveryUrl(trackingUrl);
+
+    expect(canonical).toContain("7680863927458562066");
+    expect(canonical).not.toContain("utm_source");
+    expect(canonical).not.toContain("fbclid");
+  });
+
+  it("generates stable deterministic SHA256 hashes for URL deduplication", () => {
+    const hash1 = generateStableSourceHash("TIKTOK", "tiktok_creative_center_direct", "https://ads.tiktok.com/ad/123");
+    const hash2 = generateStableSourceHash("TIKTOK", "tiktok_creative_center_direct", "https://ads.tiktok.com/ad/123");
+    const hash3 = generateStableSourceHash("TIKTOK", "tiktok_creative_center_direct", "https://ads.tiktok.com/ad/456");
+
+    expect(hash1).toBe(hash2);
+    expect(hash1).not.toBe(hash3);
+    expect(hash1).toMatch(/^[a-f0-9]{32}$/);
   });
 });
 

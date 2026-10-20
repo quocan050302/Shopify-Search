@@ -10,11 +10,13 @@
  *    ever claiming 180 days of continuous ad activity.
  */
 
+import crypto from "crypto";
 import { URL } from "url";
 import { validateExternalResourceUrl } from "@/lib/security";
 
 export type TikTokSourceType =
   | "TIKTOK_CREATIVE_CENTER"
+  | "TIKTOK_SEARCH_PAGE"
   | "TIKTOK_POST"
   | "TIKTOK_LIBRARY"
   | "INVALID";
@@ -24,7 +26,9 @@ export interface TikTokUrlParseResult {
   isTikTok: boolean;
   platform: "TIKTOK";
   sourceType: TikTokSourceType;
+  sourceSubtype?: string;
   isCreativeCenter: boolean;
+  isSearchPage?: boolean;
   creativeId?: string | null;
   postId?: string | null;
   externalId: string | null;
@@ -86,6 +90,39 @@ export function buildTikTokPlayerUrl(postId: string, options?: { withParams?: bo
     return `https://www.tiktok.com/player/v1/${postId}?autoplay=0&controls=1&loop=0&rel=0`;
   }
   return `https://www.tiktok.com/player/v1/${postId}`;
+}
+
+/**
+ * Canonicalizes a TikTok advertisement URL by retaining only identity and region parameters,
+ * stripping extraneous tracking and session tags.
+ */
+export function canonicalizeTikTokDiscoveryUrl(rawUrl: string): string {
+  try {
+    const sec = validateExternalResourceUrl(rawUrl.trim());
+    if (!sec.isValid || !sec.sanitizedUrl) return rawUrl.trim();
+    const parsed = new URL(sec.sanitizedUrl);
+    const cleanParams = new URLSearchParams();
+
+    // Retain only identity-relevant and region params
+    for (const [key, value] of parsed.searchParams.entries()) {
+      const k = key.toLowerCase();
+      if (["id", "material_id", "ad_id", "period", "region", "countrycode"].includes(k)) {
+        cleanParams.set(k === "countrycode" ? "region" : k, value);
+      }
+    }
+    parsed.search = cleanParams.toString();
+    return parsed.toString();
+  } catch {
+    return rawUrl.trim();
+  }
+}
+
+/**
+ * Generates a stable source identity hash for deduplication.
+ */
+export function generateStableSourceHash(platform: string, providerId: string, identifierOrUrl: string): string {
+  const norm = `${platform.toUpperCase()}:${providerId.toLowerCase()}:${identifierOrUrl.trim()}`;
+  return crypto.createHash("sha256").update(norm).digest("hex").slice(0, 32);
 }
 
 /**
@@ -164,13 +201,18 @@ export function parseAndValidateTikTokUrl(rawUrl: string): TikTokUrlParseResult 
         pathname.includes("/creativecenter/topads") ||
         pathname.includes("/inspiration/popular/video"))
     ) {
+      // Support path-based ID e.g. /creativecenter/topads/7680863927458562066/pc/en
+      const pathMatch = pathname.match(/\/topads\/(\d+)/i) || pathname.match(/\/detail\/(\d+)/i);
+      const pathAdId = pathMatch ? pathMatch[1] : null;
+
       const adId =
+        pathAdId ||
         cleanParams.get("id") ||
         cleanParams.get("material_id") ||
         cleanParams.get("ad_id") ||
         null;
 
-      const region = cleanParams.get("region")?.toUpperCase() || null;
+      const region = cleanParams.get("region")?.toUpperCase() || cleanParams.get("countrycode")?.toUpperCase() || null;
       const periodStr = cleanParams.get("period");
       const periodDays = periodStr ? parseInt(periodStr, 10) : null;
 
@@ -180,12 +222,40 @@ export function parseAndValidateTikTokUrl(rawUrl: string): TikTokUrlParseResult 
         ? `URL specified search filter period=${periodDays}d. This ${periodDays}-day search window reflects the search filter on TikTok Creative Center, and does NOT verify ${periodDays} days of active ad delivery.`
         : undefined;
 
+      // Distinguish search page from specific ad detail
+      if (!adId) {
+        return {
+          isValid: true,
+          isTikTok: true,
+          platform: "TIKTOK",
+          sourceType: "TIKTOK_SEARCH_PAGE",
+          sourceSubtype: "TIKTOK_SEARCH_PAGE",
+          isCreativeCenter: true,
+          isSearchPage: true,
+          creativeId: null,
+          externalId: null,
+          regionParam: region,
+          targetRegion: region,
+          searchWindowPeriodDays: !isNaN(periodDays as number) ? periodDays : null,
+          isSearchWindowOnly: true,
+          searchWindowNotice: warningNotice,
+          searchWindowWarning: warningNotice,
+          isEmbeddable: false,
+          embedUrl: null,
+          canonicalUrl: parsed.toString(),
+          originalUrl: rawUrl,
+          reason:
+            "TikTok Creative Center Top Ads search index page. Contains filter criteria but does not reference an individual ad material ID.",
+        };
+      }
+
       return {
         isValid: true,
         isTikTok: true,
         platform: "TIKTOK",
         sourceType: "TIKTOK_CREATIVE_CENTER",
         isCreativeCenter: true,
+        isSearchPage: false,
         creativeId: adId,
         externalId: adId,
         regionParam: region,

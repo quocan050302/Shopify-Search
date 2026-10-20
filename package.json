@@ -9,7 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "discovery:doctor": "tsx scripts/discovery-doctor.ts",
+    "discovery:once": "tsx scripts/discovery-once.ts",
+    "discovery:worker": "tsx scripts/discovery-worker.ts",
+    "discovery:dry-run": "tsx scripts/discovery-dry-run.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

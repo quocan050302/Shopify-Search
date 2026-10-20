@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Search,
   LayoutGrid,
@@ -15,6 +16,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Flame,
+  Compass,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { AdCard } from "@/components/ads/AdCard";
@@ -195,11 +197,18 @@ export default function ExplorerPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href="/discovery"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all shadow-sm"
+            >
+              <Compass className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Auto Discovery</span>
+            </Link>
             <a
               href="https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-all"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-all"
             >
               <Flame className="h-3.5 w-3.5 text-amber-400" />
               <span>Open TikTok Top Ads (US)</span>

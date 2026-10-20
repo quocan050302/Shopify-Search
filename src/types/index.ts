@@ -68,6 +68,7 @@ export interface AdSourceResolution {
   extractedAdId?: string;
   sourceType?: string;
   isCreativeCenter?: boolean;
+  isSearchPage?: boolean;
   region?: string;
   targetRegion?: string;
   searchWindowPeriodDays?: number | null;
