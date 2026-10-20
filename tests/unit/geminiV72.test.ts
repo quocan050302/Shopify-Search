@@ -294,7 +294,9 @@ describe("SWAI V7.2 — Gemini Connection & Real Video Analysis", () => {
   describe("76: Video Processing State Handling", () => {
     it("handles processing wait loop and throws on FAILED state", async () => {
       // Create a mock video check object
-      const tmpFile = path.join(process.cwd(), "public", "uploads", "temp_mock.mp4");
+      const tmpDir = path.join(process.cwd(), "public", "uploads");
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+      const tmpFile = path.join(tmpDir, "temp_mock.mp4");
       const ftypHeader = Buffer.from([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d]);
       fs.writeFileSync(tmpFile, ftypHeader);
 

@@ -19,6 +19,11 @@ import {
   resolveAndVerifyActiveModel,
   redactSecrets,
 } from "@/services/ai/geminiModelService";
+import {
+  getProviderBudget,
+  authorizePaidApiCall,
+  ProviderBudgetConfig,
+} from "@/services/providers/budgetService";
 
 export type ProviderId = "gemini" | "meta" | "captapi";
 
@@ -28,6 +33,9 @@ export interface ProviderDefinition {
   envVar: string;
   description: string;
   docsUrl: string;
+  isOptional?: boolean;
+  isPaid?: boolean;
+  defaultEnabled?: boolean;
   setupInstructions: {
     title: string;
     steps: string[];
@@ -43,6 +51,10 @@ export interface ProviderConnectionState {
   configured: boolean;
   maskedKey: string | null;
   status: "CONNECTED" | "KEY_PRESENT_UNVERIFIED" | "NOT_CONFIGURED" | "ERROR";
+  isOptional?: boolean;
+  isPaid?: boolean;
+  enabled?: boolean;
+  usageBudget?: any;
   lastTestedAt: string | null;
   lastTestStatus: "SUCCESS" | "FAILED" | null;
   lastError: string | null;
@@ -144,23 +156,27 @@ export const PROVIDER_CATALOG: Record<ProviderId, ProviderDefinition> = {
     id: "captapi",
     name: "Captapi Ads Intelligence",
     envVar: "CAPTAPI_KEY",
+    isOptional: true,
+    isPaid: true,
+    defaultEnabled: false,
     description:
-      "Licensed third-party ad intelligence and multi-platform social advertising data extraction.",
+      "Optional third-party licensed ad intelligence. Disabled by default to protect against unexpected credit charges. Core research uses TikTok Creative Center (US) without paid API calls.",
     docsUrl: "https://captapi.com/dashboard/api-keys",
     setupInstructions: {
-      title: "How to configure Captapi Ads Intelligence",
+      title: "How to configure Captapi Ads Intelligence (Optional)",
       steps: [
         "Create an account at captapi.com.",
         "Navigate to Dashboard → API Keys.",
         "Generate a Live API Key (typically prefixed with 'capt_live_').",
         "Paste the key below and click 'Save & Test'.",
+        "Captapi is optional and disabled by default. You can enable or disable it anytime.",
         "SWAI will verify your key against the Captapi account balance endpoint (0 credits consumed).",
       ],
       securityNote:
-        "Your Captapi key is stored securely in server-side storage and tested against https://api.captapi.com/v1/account/balance.",
+        "Your Captapi key is stored securely in server-side storage. Automatic paid calls remain disabled until explicitly authorized.",
     },
     supportedCapabilities: [
-      "Third-Party Ad Intelligence Queries",
+      "Third-Party Ad Intelligence Queries (Optional)",
       "Cross-Platform Social Ad Extraction",
       "Credit Balance & Quota Monitoring",
     ],
@@ -438,6 +454,8 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
       }
     }
 
+    const budget = getProviderBudget(pid);
+
     results[pid] = {
       id: pid,
       name: def.name,
@@ -445,6 +463,10 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
       configured,
       maskedKey: masked,
       status,
+      isOptional: def.isOptional ?? false,
+      isPaid: def.isPaid ?? false,
+      enabled: budget.enabled,
+      usageBudget: budget,
       lastTestedAt: cached?.lastTestedAt || null,
       lastTestStatus: cached?.lastTestStatus || null,
       lastError: cached?.lastError || null,
@@ -467,6 +489,29 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
   }
 
   return results as Record<ProviderId, ProviderConnectionState>;
+}
+
+/**
+ * Checks if a provider request is authorized under budget and enablement rules.
+ */
+export function isProviderAuthorizedForRequest(
+  provider: ProviderId,
+  estimatedCredits: number | boolean = 1,
+  isAutomatic = false
+): { allowed: boolean; authorized: boolean; reason?: string; config: ProviderBudgetConfig } {
+  let credits = 1;
+  let auto = isAutomatic;
+  if (typeof estimatedCredits === "boolean") {
+    auto = estimatedCredits;
+    credits = 1;
+  } else {
+    credits = estimatedCredits;
+  }
+  const auth = authorizePaidApiCall({ provider, estimatedCredits: credits, isAutomaticRequest: auto });
+  return {
+    ...auth,
+    authorized: auth.allowed,
+  };
 }
 
 // ─── Test Connection Implementations ──────────────────────────────────────────

@@ -14,6 +14,7 @@ import {
   Eye,
   AlertTriangle,
   RefreshCw,
+  Flame,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { AdCard } from "@/components/ads/AdCard";
@@ -194,6 +195,16 @@ export default function ExplorerPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href="https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-all"
+            >
+              <Flame className="h-3.5 w-3.5 text-amber-400" />
+              <span>Open TikTok Top Ads (US)</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
             <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
               📁 Local Database
             </span>

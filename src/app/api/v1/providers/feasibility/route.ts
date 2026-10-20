@@ -48,6 +48,29 @@ export async function GET(_request: NextRequest) {
       },
       providers: [
         {
+          id: "tiktok-creative-center",
+          name: "TikTok Creative Center (US) — Primary Manual Research Source",
+          isPrimary: true,
+          type: "PUBLIC_AD_INSPIRATION_TOOL",
+          usCommercialAdCoverage: "TOP_ADS_US_PREFILTERED",
+          credentialStatus: "NOT_REQUIRED",
+          credentialRequired: "None — free public research portal for US commercial winning ads.",
+          liveStatus: "PRIMARY_SOURCE_AVAILABLE",
+          topAdsUsUrl: "https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US",
+          capabilities: {
+            topAdsUsResearch: "AVAILABLE — prefiltered for United States",
+            directUrlImport: "AVAILABLE — single and batch URL import supported",
+            automatedSearch: "NOT_APPLICABLE — manual research workflow avoids scraper fragility",
+            videoPlayback: "EXTERNAL_AND_AUTHORIZED_UPLOAD — opens natively on TikTok or upload MP4 for AI",
+            sourceUrlOpen: "AVAILABLE",
+            tiktokPostEmbed: "AVAILABLE — if underlying organic post link is provided",
+          },
+          verdict:
+            "Primary manual research tool for US ecommerce ads. Researchers browse Top Ads directly on " +
+            "TikTok Creative Center with prefiltered US settings, then import links into SWAI individually or in batch. " +
+            "No paid API key required.",
+        },
+        {
           id: "meta-ad-library",
           name: "Meta Ad Library",
           type: "PUBLIC_TRANSPARENCY_ARCHIVE",
@@ -71,26 +94,6 @@ export async function GET(_request: NextRequest) {
             step3: "Generate a long-lived access token",
             step4: "Set META_AD_LIBRARY_ACCESS_TOKEN in .env.local",
           },
-        },
-        {
-          id: "tiktok-creative-center",
-          name: "TikTok Creative Center",
-          type: "PUBLIC_AD_INSPIRATION_TOOL",
-          usCommercialAdCoverage: "BROWSE_ONLY",
-          credentialStatus: "NOT_APPLICABLE",
-          credentialRequired: "None for browsing. No public API for Top Ads discovery.",
-          liveStatus: "AVAILABLE_URL_IMPORT_ONLY",
-          capabilities: {
-            automatedSearch: "BLOCKED — No public API for Top Ads or commercial ad search",
-            directUrlImport: "AVAILABLE — import the Creative Center URL",
-            videoPlayback: "BLOCKED — Creative Center URLs are NOT embeddable",
-            sourceUrlOpen: "AVAILABLE",
-            tiktokPostEmbed: "AVAILABLE — only if you have the organic TikTok post URL (tiktok.com/@user/video/ID)",
-          },
-          verdict:
-            "Creative Center provides competitive inspiration via browsing only. " +
-            "Inline video embed is NOT available for Creative Center links. " +
-            "If you find the underlying TikTok post URL, it can be embedded via the official player/v1 endpoint.",
         },
         {
           id: "tiktok-post-embed",
@@ -132,33 +135,29 @@ export async function GET(_request: NextRequest) {
         {
           id: "captapi",
           name: "Captapi (Third-Party Licensed Provider)",
+          isOptional: true,
+          defaultEnabled: false,
           type: "LICENSED_THIRD_PARTY_DATA",
-          usCommercialAdCoverage: "UNVERIFIED — requires evaluation",
+          usCommercialAdCoverage: "OPTIONAL — requires paid subscription",
           credentialStatus: hasCaptapiKey ? "KEY_PRESENT_UNVERIFIED" : "NOT_CONFIGURED",
-          credentialRequired: "CAPTAPI_KEY — requires paid subscription at captapi.com",
-          liveStatus: hasCaptapiKey ? "KEY_PRESENT_AWAITING_VERIFICATION" : "NOT_CONFIGURED",
+          credentialRequired: "CAPTAPI_KEY — optional paid subscription at captapi.com",
+          liveStatus: "OPTIONAL_DISABLED_BY_DEFAULT",
           capabilities: {
-            automatedSearch: hasCaptapiKey ? "UNVERIFIED" : "BLOCKED_NO_CREDENTIALS",
+            automatedSearch: "BLOCKED_UNTIL_AUTHORIZED",
             directUrlImport: "NOT_APPLICABLE",
-            videoPlayback: "UNVERIFIED — depends on their creative URL coverage",
+            videoPlayback: "UNVERIFIED",
             sourceUrlOpen: "UNVERIFIED",
           },
-          evaluationStatus: {
-            usCommercialAdCoverage: "NOT_VERIFIED — must test with real query",
-            commercialAdMetadata: "NOT_VERIFIED",
-            actualCreativeUrls: "NOT_VERIFIED",
-            runDateAccuracy: "NOT_VERIFIED",
-            playbackRights: "NOT_VERIFIED — check Terms of Service",
-            apiPricing: "Not evaluated",
-            rateLimits: "Not evaluated",
+          budgetProtection: {
+            disabledByDefault: true,
+            automaticRequestsBlocked: true,
+            manualAuthorizationRequired: true,
           },
           verdict:
-            "Captapi is a candidate third-party licensed data provider. " +
-            "SWAI adapter is prepared but live verification requires a paid API key. " +
-            "Set CAPTAPI_KEY in .env.local to enable. " +
-            "Verify US commercial ad coverage, source URL authenticity, and playback rights " +
-            "against Captapi documentation before production use.",
-          adapterStatus: "IMPLEMENTED — live_verification_BLOCKED_until_credentials_provided",
+            "Captapi is an optional third-party licensed data provider, disabled by default. " +
+            "Core research prioritizes free manual research with TikTok Creative Center US and Meta Ad Library without paid API calls. " +
+            "Automatic paid calls are blocked until explicitly authorized in Settings.",
+          adapterStatus: "OPTIONAL — disabled_by_default",
         },
       ],
       aiAnalysis: {

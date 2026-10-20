@@ -1,6 +1,7 @@
 import { URL } from "url";
 import { AdPlatform, AdSourceResolution } from "@/types";
 import { validateExternalResourceUrl } from "@/lib/security";
+import { parseAndValidateTikTokUrl } from "@/services/tiktok/tiktokUrlParser";
 
 /**
  * Resolves, validates, and extracts platform metadata from advertisement links.
@@ -57,26 +58,34 @@ export function resolveAdSourceUrl(rawUrl: string): AdSourceResolution {
     host.includes("tiktok.com") ||
     host.includes("ads.tiktok.com")
   ) {
-    // e.g. https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US&id=123456
-    // or https://www.tiktok.com/@brand/video/7123456789
-    let externalId = cleanParams.get("id") || cleanParams.get("material_id") || undefined;
-
-    if (!externalId) {
-      const match = path.match(/\/video\/(\d+)/);
-      if (match && match[1]) {
-        externalId = match[1];
-      }
+    const ttResult = parseAndValidateTikTokUrl(rawUrl);
+    if (!ttResult.isValid) {
+      return {
+        platform: "TIKTOK",
+        canonicalUrl: rawUrl,
+        originalUrl: rawUrl,
+        isValid: false,
+        notes: ttResult.reason,
+      };
     }
-
-    parsed.search = cleanParams.toString();
 
     return {
       platform: "TIKTOK",
-      canonicalUrl: parsed.toString(),
+      canonicalUrl: ttResult.canonicalUrl,
       originalUrl: rawUrl,
-      externalId,
+      externalId: ttResult.externalId || undefined,
+      extractedAdId: ttResult.externalId || undefined,
+      sourceType: ttResult.sourceType,
+      isCreativeCenter: ttResult.sourceType === "TIKTOK_CREATIVE_CENTER",
+      region: ttResult.regionParam || undefined,
+      targetRegion: ttResult.regionParam || undefined,
+      searchWindowPeriodDays: ttResult.searchWindowPeriodDays,
+      isEmbeddable: ttResult.isEmbeddable,
+      embedUrl: ttResult.embedUrl,
+      authorUsername: ttResult.authorUsername || undefined,
       isValid: true,
-      notes: externalId ? `TikTok Asset ID: ${externalId}` : "TikTok platform URL identified",
+      resolved: true,
+      notes: ttResult.reason,
     };
   }
 

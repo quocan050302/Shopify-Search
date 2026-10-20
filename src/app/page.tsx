@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { AdCard } from "@/components/ads/AdCard";
@@ -159,7 +160,17 @@ export default function OverviewPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?period=30&region=US"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-medium text-xs flex items-center gap-2 shadow-lg shadow-rose-600/25 transition-all"
+            >
+              <Flame className="h-4 w-4 text-amber-300" />
+              <span>Open TikTok Top Ads (US)</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
             <Link
               href="/explorer"
               className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/25 transition-all"

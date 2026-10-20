@@ -67,6 +67,9 @@ export interface LongevityInput {
     observationStatus: ObservationStatus;
     confidence?: number | null;
   }>;
+  // External search query window (e.g. ?period=180 from TikTok Top Ads)
+  // CRITICAL: A 180-day search window must NEVER be claimed as 180 days of active delivery
+  searchWindowPeriodDays?: number | null;
   // Current state
   lifecycleStatus?: LifecycleStatus | string;
   isSyntheticQuarantine?: boolean;
@@ -345,7 +348,16 @@ export function calculateAdLongevity(input: LongevityInput): LongevityResult {
       ? " Single observation — age is an estimate from first discovery only."
       : "";
 
-  const explanation = `${agePart} ${obsPart}${gapNote}${disclaimer}`;
+  const searchWindowDisclaimer =
+    input.searchWindowPeriodDays != null
+      ? ` Note: Creative discovered via a ${input.searchWindowPeriodDays}-day search window filter — query window boundaries do NOT verify active delivery duration.`
+      : "";
+
+  if (input.searchWindowPeriodDays != null) {
+    ageNote += `${ageNote ? " " : ""}Search window filter was ${input.searchWindowPeriodDays} days (never treated as verified delivery age).`;
+  }
+
+  const explanation = `${agePart} ${obsPart}${gapNote}${disclaimer}${searchWindowDisclaimer}`;
 
   return {
     adId: input.adId,

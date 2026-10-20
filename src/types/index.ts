@@ -65,7 +65,17 @@ export interface AdSourceResolution {
   canonicalUrl: string;
   originalUrl: string;
   externalId?: string;
+  extractedAdId?: string;
+  sourceType?: string;
+  isCreativeCenter?: boolean;
+  region?: string;
+  targetRegion?: string;
+  searchWindowPeriodDays?: number | null;
+  isEmbeddable?: boolean;
+  embedUrl?: string | null;
+  authorUsername?: string;
   isValid: boolean;
+  resolved?: boolean;
   notes?: string;
 }
 

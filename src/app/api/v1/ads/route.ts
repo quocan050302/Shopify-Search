@@ -108,12 +108,22 @@ export async function POST(request: NextRequest) {
 
     // Do NOT fabricate a Facebook render_ad embed — these require authentication
     // and are not public embeds
+    // Support official TikTok post embeds where valid (Requirement 7)
+    // Never assume TikTok Creative Center ads are embeddable (Requirement 8)
     const embedUrl =
-      resolution.platform === "META" && resolution.externalId
-        ? undefined // No valid public Meta embed endpoint exists
-        : resolution.platform === "TIKTOK" && resolution.externalId
-        ? undefined // TikTok Creative Center embed requires auth
+      resolution.platform === "TIKTOK" && resolution.isEmbeddable && resolution.embedUrl
+        ? resolution.embedUrl
         : undefined;
+
+    const mediaAvailability = embedUrl ? "READY" : "RESTRICTED";
+
+    // Respect user market or extract genuine US region from Creative Center URL (Requirement 6)
+    const resolvedTargetMarket =
+      targetMarket && targetMarket.trim().length > 0
+        ? targetMarket.trim().toUpperCase()
+        : resolution.region === "US"
+        ? "US"
+        : "UNKNOWN";
 
     const normalized = normalizeExternalAdRecord(resolution.platform, {
       platform: resolution.platform,
@@ -124,17 +134,16 @@ export async function POST(request: NextRequest) {
       callToAction: callToAction || "",
       landingPageUrl: landingPageUrl || "",
       originalAdUrl: resolution.canonicalUrl,
-      // User-specified target market or UNKNOWN
-      targetMarket: targetMarket || "UNKNOWN",
+      targetMarket: resolvedTargetMarket,
       category: category || "Other",
       firstSeenAt: new Date(),
       lastSeenAt: new Date(),
-      // Cannot verify ACTIVE status from a URL alone
+      // Status remains UNKNOWN until verified active
       status: "UNKNOWN",
       dataConfidence: "OBSERVED",
       mediaType: "VIDEO",
       embedUrl,
-      // Never assign a stock image — leave thumbnail empty until verified
+      mediaAvailability,
       thumbnailUrl: undefined,
     });
 

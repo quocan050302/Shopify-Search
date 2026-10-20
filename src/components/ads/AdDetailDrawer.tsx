@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   AlertCircle,
   Store,
+  Upload,
+  FileVideo,
 } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
 import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
@@ -37,7 +39,47 @@ export function AdDetailDrawer({
 }: AdDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<"analysis" | "score" | "provenance">("analysis");
 
+  // Video Upload State (Requirement 9)
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
   if (!ad) return null;
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadFeedback(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("video", file);
+      formData.append("adId", ad.id);
+
+      const res = await fetch("/api/v1/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || "Failed to upload video.");
+      }
+
+      setUploadedVideoUrl(json.data.playbackUrl);
+      setUploadFeedback({
+        type: "success",
+        message: `Video uploaded (${json.data.format} container, verified via magic bytes). Ready for playback and Gemini AI analysis!`,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Video upload failed.";
+      setUploadFeedback({ type: "error", message: msg });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const media = ad.mediaAssets?.[0];
   const score = ad.researchScores?.[0];
@@ -186,10 +228,10 @@ export function AdDetailDrawer({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Main Video Player & Primary Facts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-            <div className="max-w-[280px] mx-auto w-full">
+            <div className="max-w-[280px] mx-auto w-full space-y-3">
               <AdVideoPlayer
-                videoUrl={media?.videoUrl}
-                embedUrl={media?.embedUrl}
+                videoUrl={uploadedVideoUrl || media?.videoUrl}
+                embedUrl={uploadedVideoUrl ? null : media?.embedUrl}
                 thumbnailUrl={media?.thumbnailUrl}
                 originalAdUrl={ad.originalAdUrl}
                 externalAdId={ad.externalAdId}
@@ -197,6 +239,56 @@ export function AdDetailDrawer({
                 status={ad.status}
                 aspectRatio="9:16"
               />
+
+              {/* Authorized Video Upload for AI Analysis (Requirement 9) */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Upload className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Upload Video for AI</span>
+                  </span>
+                  {uploadedVideoUrl && (
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Attached
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-500 leading-relaxed">
+                  Attach an authorized MP4 or WebM video to unlock inline playback and Gemini AI creative analysis.
+                </p>
+
+                {uploadFeedback && (
+                  <div
+                    className={`p-2 rounded-lg text-[10px] ${
+                      uploadFeedback.type === "success"
+                        ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/40"
+                        : "bg-rose-950/40 text-rose-300 border border-rose-800/40"
+                    }`}
+                  >
+                    {uploadFeedback.message}
+                  </div>
+                )}
+
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={handleVideoUpload}
+                    disabled={uploading}
+                    className="hidden"
+                    id={`upload-video-${ad.id}`}
+                  />
+                  <span
+                    className={`w-full py-1.5 px-3 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                      uploading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    <FileVideo className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>{uploading ? "Validating & Uploading..." : "Attach MP4 / WebM File"}</span>
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="space-y-4 text-xs">
@@ -604,23 +696,56 @@ export function AdDetailDrawer({
                 </div>
               )}
 
+              {/* Observation Time vs Actual Calendar Age (Requirement 11 & 12) */}
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
+                <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block">
+                  Observation History vs. Actual Ad Age
+                </span>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                    <span className="text-slate-500 block text-[10px]">SWAI Observation Span</span>
+                    <strong className="text-white block font-mono">
+                      {ad.observations?.length || 1} observation{(ad.observations?.length || 1) !== 1 ? "s" : ""}
+                    </strong>
+                    <span className="text-[10px] text-slate-400">
+                      Since {new Date(ad.firstSeenAt).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                    <span className="text-slate-500 block text-[10px]">Provider Calendar Age</span>
+                    <strong className="text-white block font-mono">
+                      {ad.sourceReportedStartAt
+                        ? `${Math.max(1, Math.round((Date.now() - new Date(ad.sourceReportedStartAt).getTime()) / (1000 * 60 * 60 * 24)))} days`
+                        : "Not reported by source"}
+                    </strong>
+                    <span className="text-[10px] text-slate-400">
+                      {ad.sourceReportedStartAt ? "Source reported launch" : "Unverified calendar runtime"}
+                    </span>
+                  </div>
+                </div>
+
+                {ad.originalAdUrl?.includes("period=180") && (
+                  <div className="p-2 rounded-lg bg-indigo-950/30 border border-indigo-800/40 text-[10px] text-indigo-300">
+                    ℹ <strong>Search Window Integrity:</strong> This creative was imported from a TikTok Creative Center 180-day search filter. A result appearing in a 180-day window does NOT prove 180 days of continuous ad delivery.
+                  </div>
+                )}
+              </div>
+
               <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
                 <span className="text-slate-500 font-semibold text-[10px] uppercase">
-                  Data Provenance
+                  Data Confidence & Status
                 </span>
                 <p className="text-slate-300">
                   Confidence: <strong>{ad.dataConfidence || "UNVERIFIED"}</strong>
                   {" • "}
                   Status: <strong>{ad.status || "UNKNOWN"}</strong>
-                </p>
-                <p className="text-slate-400">
-                  First observed: {new Date(ad.firstSeenAt).toLocaleDateString()}
                   {" • "}
-                  Last observed: {new Date(ad.lastSeenAt).toLocaleDateString()}
+                  Market: <strong>{ad.targetMarket || "UNKNOWN"}</strong>
                 </p>
                 <p className="text-[10px] text-slate-500">
-                  Note: first/last seen dates reflect when data was entered, not verified
-                  platform delivery dates.
+                  Note: Observation records require active verification checks. Status remains UNKNOWN unless actively confirmed.
                 </p>
               </div>
 

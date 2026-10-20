@@ -3,37 +3,40 @@ import { prisma } from "@/lib/db";
 
 export const BUILTIN_PROVIDERS: ProviderCapability[] = [
   {
+    id: "tiktok-creative-center",
+    name: "TIKTOK_CREATIVE_CENTER",
+    displayName: "TikTok Creative Center (US) — Primary",
+    description:
+      "Primary manual research source for high-performing, trending commercial ads in the United States. " +
+      "Browse Top Ads directly on TikTok Creative Center with prefiltered US settings, then import links " +
+      "into SWAI via individual or batch URL import.",
+    status: "AVAILABLE",
+    capabilities: [
+      "TOP_ADS_US_RESEARCH",
+      "DIRECT_URL_IMPORT",
+      "BATCH_URL_IMPORT",
+      "OPEN_EXTERNAL_SOURCE",
+    ],
+    supportedRegions: ["US", "GLOBAL"],
+    rateLimitInfo: "Unlimited manual research via official TikTok Creative Center web interface.",
+  },
+  {
     id: "meta-ad-library",
     name: "META_AD_LIBRARY",
     displayName: "Meta Ad Library",
     description:
       "Official public transparency archive of active and past ads across Facebook & Instagram. " +
       "LIMITATION: Automatic search API requires approved Meta developer access token. " +
-      "Without a token, only direct URL import of individual ad library links is supported.",
+      "Without a token, direct URL import of individual ad library links is supported.",
     status: "AVAILABLE",
     capabilities: [
       "DIRECT_URL_IMPORT",
+      "BATCH_URL_IMPORT",
       "VIEW_AD_LIBRARY_PAGE",
     ],
     supportedRegions: ["US", "CA", "GB", "AU"],
     rateLimitInfo:
       "Public browsing: no rate limit. API token required for automated search.",
-  },
-  {
-    id: "tiktok-creative-center",
-    name: "TIKTOK_CREATIVE_CENTER",
-    displayName: "TikTok Creative Center",
-    description:
-      "Public repository of high-performing, trending commercial ads on TikTok. " +
-      "LIMITATION: TikTok Creative Center does not support authenticated public embed — " +
-      "videos must be opened on the TikTok website. Inline playback is NOT available.",
-    status: "AVAILABLE",
-    capabilities: [
-      "DIRECT_URL_IMPORT",
-      "OPEN_EXTERNAL_SOURCE",
-    ],
-    supportedRegions: ["US", "CA", "GB", "DE", "FR"],
-    rateLimitInfo: "Session-based rate throttling on the public website.",
   },
   {
     id: "user-observed",
@@ -165,12 +168,13 @@ export async function validateProviderConfiguration(providerId: string): Promise
       isValid: true,
       status: "AVAILABLE",
       message:
-        "TikTok Creative Center is accessible for URL import. " +
-        "Inline video playback is NOT supported — users must open videos on TikTok.",
+        "TikTok Creative Center (US) is ready as the primary manual research source. " +
+        "Prefiltered US Top Ads browsing, individual URL import, and batch URL import are enabled. " +
+        "Videos open directly on TikTok, or authorized MP4 files can be uploaded for AI analysis.",
       limitations: [
-        "No public embed API — inline playback is unavailable",
-        "TikTok does not expose a public US commercial ad search API",
-        "Import by pasting the Creative Center URL for individual ads",
+        "Creative Center Top Ads detail links open directly on TikTok (not embeddable in third-party iframes)",
+        "Underlying organic TikTok post URLs (tiktok.com/@user/video/ID) support official player embed",
+        "Authorized MP4 uploads can be attached to any ad for Gemini AI video creative analysis",
       ],
     };
   }

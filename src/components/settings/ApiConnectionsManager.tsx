@@ -81,8 +81,42 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
     }
   };
 
+  const [budgets, setBudgets] = useState<Record<string, any> | null>(null);
+
+  const fetchBudgets = async () => {
+    try {
+      const res = await fetch("/api/v1/settings/budgets");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setBudgets(json.data);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleUpdateBudget = async (provider: ProviderId, updates: Record<string, any>) => {
+    try {
+      const res = await fetch("/api/v1/settings/budgets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, ...updates }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setBudgets((prev) => ({
+          ...prev,
+          [provider]: json.data,
+        }));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchConnections();
+    fetchBudgets();
   }, []);
 
   const handleSave = async (provider: ProviderId) => {
@@ -364,6 +398,11 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                       <span className="text-[10px] px-2 py-0.5 rounded bg-slate-950 text-indigo-400 border border-indigo-900/50 font-mono">
                         {provider.envVar}
                       </span>
+                      {pid === "captapi" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold uppercase">
+                          Optional • Disabled by default
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {provider.setupInstructions.title}
@@ -548,6 +587,81 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
                     <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
                   )}
                   <span>{feedback.message}</span>
+                </div>
+              )}
+
+              {/* Provider Usage Budget & Credit Protection (Requirements 1 & 13) */}
+              {pid === "captapi" && (
+                <div className="p-4 rounded-xl bg-slate-900/90 border border-amber-800/40 space-y-3 text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                        <Lock className="h-3.5 w-3.5 text-amber-400" />
+                        <span>Credit Protection & Usage Budget</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Captapi is optional and disabled by default. Core research uses TikTok Creative Center (US) without paid API calls.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] text-slate-400">Provider Status:</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleUpdateBudget("captapi", {
+                            enabled: !(budgets?.captapi?.enabled ?? false),
+                          })
+                        }
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                          budgets?.captapi?.enabled
+                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-600/50"
+                            : "bg-slate-800 text-slate-400 border-slate-700"
+                        }`}
+                      >
+                        {budgets?.captapi?.enabled ? "ENABLED" : "DISABLED (DEFAULT)"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                      <span className="text-slate-400 text-[10px] block font-semibold uppercase">
+                        Automatic Paid Requests
+                      </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[11px] font-mono text-slate-300">
+                          {budgets?.captapi?.allowAutomaticRequests
+                            ? "Allowed"
+                            : "BLOCKED (Default)"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleUpdateBudget("captapi", {
+                              allowAutomaticRequests: !(budgets?.captapi?.allowAutomaticRequests ?? false),
+                            })
+                          }
+                          className="text-[10px] text-indigo-400 hover:underline cursor-pointer"
+                        >
+                          {budgets?.captapi?.allowAutomaticRequests ? "Disable auto" : "Allow auto"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                      <span className="text-slate-400 text-[10px] block font-semibold uppercase">
+                        Monthly Credit Budget
+                      </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[11px] font-mono text-slate-300">
+                          {budgets?.captapi?.creditsUsedThisMonth ?? 0} /{" "}
+                          {budgets?.captapi?.monthlyCreditLimit ?? 100} credits
+                        </span>
+                        <span className="text-[10px] text-slate-500">Cap protected</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
