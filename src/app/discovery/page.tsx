@@ -8,16 +8,17 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  ShieldAlert,
-  Sliders,
-  Layers,
-  Sparkles,
-  Info,
   Flame,
-  XCircle,
+  Layers,
+  Sliders,
   Database,
   Calendar,
+  Activity,
+  ShieldCheck,
+  ShieldAlert,
+  HelpCircle,
+  RefreshCw,
+  FolderInput,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,6 +32,10 @@ interface ProviderItem {
     supportsIndustryFiltering: boolean;
     isPaid: boolean;
     description: string;
+    authMethod?: string;
+    sourceType?: string;
+    lastLiveVerificationAt?: string | null;
+    lastVerificationError?: string | null;
   };
   availability: {
     status: string;
@@ -75,15 +80,23 @@ interface DiscoveryJob {
 
 interface DiscoveryStats {
   totalDiscoveredAds: number;
+  totalTikTokAds?: number;
+  manualImportedTikTokAds?: number;
+  latestRunStats?: {
+    id: string;
+    status: string;
+    retrievedCount: number;
+    newUniqueAds: number;
+    duplicates: number;
+    createdAt: string;
+  } | null;
   totalRuns: number;
   completedRuns: number;
   blockedRuns: number;
   activeSchedules: number;
   lastDiscoveredAt?: string | null;
   workerStatus?: {
-    /** True when a heartbeat is detected in the DB (cross-process, not module-memory) */
     isOnline: boolean;
-    /** Alias kept for backwards compat */
     isRunning: boolean;
     activeJobsCount: number;
     lastHeartbeatAt?: string | null;
@@ -109,6 +122,7 @@ export default function DiscoveryPage() {
   const [stats, setStats] = useState<DiscoveryStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRunningJob, setIsRunningJob] = useState(false);
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [activeJobResult, setActiveJobResult] = useState<any | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
@@ -212,7 +226,12 @@ export default function DiscoveryPage() {
       if (data.data.finalStatus === "BLOCKED_SOURCE") {
         setActionError(
           data.data.errorMessage ||
-            "Provider requires session authentication (TIKTOK_CC_COOKIE). Zero fake ads inserted."
+            "Auto Discovery source is unavailable. No external ads were collected. Existing research data is safe."
+        );
+      } else if (data.data.finalStatus === "BUDGET_BLOCKED") {
+        setActionError(
+          data.data.errorMessage ||
+            "Paid discovery provider was blocked by budget policy. Free mode ($0 spend) is enforced."
         );
       } else {
         setActionNotice(
@@ -227,6 +246,41 @@ export default function DiscoveryPage() {
       setActionError(`Run failed: ${msg}`);
     } finally {
       setIsRunningJob(false);
+    }
+  };
+
+  // Test provider connection explicitly (Rule 50)
+  const handleTestProvider = async (providerId: string) => {
+    try {
+      setTestingProvider(providerId);
+      setActionError(null);
+      setActionNotice(null);
+
+      const res = await fetch("/api/v1/discovery/providers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setActionError(data.error?.message || "Provider connection test failed.");
+        return;
+      }
+
+      const avail = data.data?.availability;
+      if (avail?.isAuthorized && avail?.status === "AVAILABLE") {
+        setActionNotice(`Provider connection verified successfully: ${avail.message || "Ready"}`);
+      } else {
+        setActionError(`Provider verification outcome [${avail?.status || "UNAVAILABLE"}]: ${avail?.message || "Not available"}`);
+      }
+
+      loadData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setActionError(`Test failed: ${msg}`);
+    } finally {
+      setTestingProvider(null);
     }
   };
 
@@ -273,8 +327,6 @@ export default function DiscoveryPage() {
     }
   };
 
-  const activeProviderObj = providers.find((p) => p.id === selectedProvider);
-
   return (
     <div className="min-h-screen bg-[#0c121e] text-slate-100 p-8 space-y-8">
       {/* ── Header ── */}
@@ -288,7 +340,7 @@ export default function DiscoveryPage() {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight text-white">TikTok Auto Discovery Engine</h1>
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  V9 Production
+                  V9.2 Engine Ready
                 </span>
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   US 🇺🇸 Focus
@@ -316,9 +368,10 @@ export default function DiscoveryPage() {
 
           <Link
             href="/explorer"
-            className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition-all"
           >
-            View Ads Explorer
+            <FolderInput className="h-3.5 w-3.5 text-indigo-400" />
+            <span>Manual Batch Import</span>
           </Link>
 
           <button
@@ -337,8 +390,8 @@ export default function DiscoveryPage() {
         <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-3">
           <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400 mt-0.5" />
           <div className="flex-1">
-            <strong className="block font-semibold text-rose-200">Action Notice / Blocked State</strong>
-            <p className="mt-0.5">{actionError}</p>
+            <strong className="block font-semibold text-rose-200">Notice / Blocked Provider State</strong>
+            <p className="mt-0.5 leading-relaxed">{actionError}</p>
           </div>
           <button onClick={() => setActionError(null)} className="text-slate-400 hover:text-white text-xs">
             ✕
@@ -359,14 +412,15 @@ export default function DiscoveryPage() {
         </div>
       )}
 
-      {/* ── Top Metric Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── Top Metric Cards (Rule 121: Separated Counts) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Card 1: Auto-Discovered Ads */}
         <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Discovered Ads</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Auto Discovered</span>
             <div className="text-2xl font-bold text-white mt-1">{stats?.totalDiscoveredAds ?? 0}</div>
             <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-              <CheckCircle2 className="h-2.5 w-2.5" /> Verified in Database
+              <CheckCircle2 className="h-2.5 w-2.5" /> Source Identifiers Verified
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400">
@@ -374,6 +428,21 @@ export default function DiscoveryPage() {
           </div>
         </div>
 
+        {/* Card 2: Manual Imports */}
+        <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Manual / Batch Imports</span>
+            <div className="text-2xl font-bold text-white mt-1">{stats?.manualImportedTikTokAds ?? 0}</div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block">
+              Direct URLs / Batch Paste
+            </span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-slate-800 text-slate-400">
+            <FolderInput className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* Card 3: Discovery Runs */}
         <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
           <div>
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Discovery Runs</span>
@@ -387,10 +456,11 @@ export default function DiscoveryPage() {
           </div>
         </div>
 
+        {/* Card 4: Daily Schedule */}
         <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
           <div>
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Daily Schedule</span>
-            <div className="text-2xl font-bold text-white mt-1">
+            <div className={`text-2xl font-bold mt-1 ${schedule.enabled ? "text-amber-400" : "text-slate-400"}`}>
               {schedule.enabled ? "Active" : "Paused"}
             </div>
             <span className="text-[10px] text-slate-400 mt-0.5 block">
@@ -402,6 +472,7 @@ export default function DiscoveryPage() {
           </div>
         </div>
 
+        {/* Card 5: Worker Process (Rule 123 & 124) */}
         <div className="p-4 rounded-xl bg-slate-900/60 border border-[#1f293d] flex items-center justify-between">
           <div>
             <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Worker Process</span>
@@ -412,8 +483,8 @@ export default function DiscoveryPage() {
             </div>
             <span className="text-[10px] text-slate-500 mt-0.5 block">
               {stats?.workerStatus?.isOnline
-                ? `Active job detected via DB heartbeat`
-                : "Start: npm run discovery:worker"}
+                ? `Heartbeat: ${stats?.workerStatus?.lastHeartbeatAt ? new Date(stats.workerStatus.lastHeartbeatAt).toLocaleTimeString() : "Recent"}`
+                : "Run: npm run discovery:worker"}
             </span>
           </div>
           <div className={`p-2.5 rounded-lg ${
@@ -421,7 +492,7 @@ export default function DiscoveryPage() {
               ? "bg-emerald-500/10 text-emerald-400"
               : "bg-slate-800 text-slate-500"
           }`}>
-            <Clock className="h-5 w-5" />
+            <Activity className="h-5 w-5" />
           </div>
         </div>
       </div>
@@ -482,7 +553,7 @@ export default function DiscoveryPage() {
                   <option value={180}>Last 180 Days (Broad Candidate Pool)</option>
                 </select>
                 <span className="text-[10px] text-slate-500 block">
-                  Rule 12: Search window specifies query scope, NOT continuous running duration.
+                  Rule 113: Search window specifies query scope, NOT continuous verified ad age.
                 </span>
               </div>
 
@@ -572,7 +643,9 @@ export default function DiscoveryPage() {
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                       : activeJobResult.finalStatus === "BLOCKED_SOURCE"
                       ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                      : activeJobResult.finalStatus === "BUDGET_BLOCKED"
+                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                      : "bg-slate-500/10 text-slate-400 border border-slate-500/30"
                   }`}
                 >
                   {activeJobResult.finalStatus}
@@ -585,7 +658,7 @@ export default function DiscoveryPage() {
                 <div>Cost: <strong className="text-white">${activeJobResult.actualCostUsd || "0.00"}</strong></div>
               </div>
               {activeJobResult.errorMessage && (
-                <p className="text-[11px] text-rose-300 pt-1 border-t border-slate-800">
+                <p className="text-[11px] text-rose-300 pt-1 border-t border-slate-800 leading-relaxed">
                   {activeJobResult.errorMessage}
                 </p>
               )}
@@ -593,18 +666,26 @@ export default function DiscoveryPage() {
           )}
         </div>
 
-        {/* Right Column: Provider Transparency & Diagnostics (1 Col) */}
+        {/* Right Column: Provider Transparency & Diagnostics (Rule 119 & 50) */}
         <div className="space-y-6">
           <div className="p-5 rounded-2xl bg-slate-900/60 border border-[#1f293d] space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <ShieldAlert className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-sm font-semibold text-white">Provider Verification</h3>
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-sm font-semibold text-white">Provider Verification</h3>
+              </div>
+              <span className="text-[10px] text-slate-500">Live Status</span>
             </div>
 
             {providers.map((p) => {
               const isSelected = p.id === selectedProvider;
-              const isAvailable = p.availability.status === "AVAILABLE";
-              const isBlocked = p.availability.status === "BLOCKED_SOURCE" || p.availability.status === "REQUIRES_AUTH";
+              const isAvailable = p.availability.status === "AVAILABLE" || p.availability.status === "LIVE_VERIFIED";
+              const isBlocked =
+                p.availability.status === "BLOCKED_SOURCE" ||
+                p.availability.status === "PERMISSION_DENIED" ||
+                p.availability.status === "REQUIRES_AUTH" ||
+                p.availability.status === "NOT_CONFIGURED";
+              const isPaidDisabled = p.availability.status === "PAID_DISABLED";
 
               return (
                 <div
@@ -622,36 +703,57 @@ export default function DiscoveryPage() {
                       className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${
                         isAvailable
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          : isPaidDisabled
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
                           : isBlocked
                           ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
                           : "bg-slate-800 text-slate-400 border-slate-700"
                       }`}
                     >
-                      {p.availability.status.replace("_", " ")}
+                      {p.availability.status.replace(/_/g, " ")}
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {p.availability.message || p.capabilities.description}
                   </p>
 
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
-                    <span>{p.capabilities.isPaid ? "Metered Paid" : "Zero Cost ($0.00)"}</span>
-                    <span>•</span>
-                    <span>{p.capabilities.supportsUS ? "US Supported" : "Non-US"}</span>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
+                    <div className="flex items-center gap-1.5">
+                      <span>{p.capabilities.isPaid ? "Metered" : "$0.00 Free"}</span>
+                      <span>•</span>
+                      <span>{p.capabilities.supportsUS ? "US Supported" : "Non-US"}</span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTestProvider(p.id);
+                      }}
+                      disabled={testingProvider === p.id}
+                      className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {testingProvider === p.id ? (
+                        <>
+                          <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Testing...
+                        </>
+                      ) : (
+                        "Test Connection"
+                      )}
+                    </button>
                   </div>
                 </div>
               );
             })}
 
-            {/* Honest Blocked State Notice */}
+            {/* Honest Blocked State Notice (Rule 125) */}
             <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-400 space-y-1.5">
               <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-                <Info className="h-3.5 w-3.5 shrink-0" />
-                <span>Zero-Cost Architecture Notice</span>
+                <HelpCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Zero-Cost Honest Research Architecture</span>
               </div>
               <p className="text-[10px] leading-relaxed text-slate-400">
-                SWAI never bypasses CAPTCHA, rotates illegal proxies, or fabricates synthetic advertisements. If TikTok requires session credentials, provide <code className="text-slate-300">TIKTOK_CC_COOKIE</code> in your environment or use the zero-cost Manual Batch Import.
+                Auto Discovery source is unavailable if session credentials or authorized providers are unconfigured. No external ads are collected and existing research data is completely safe. Use <strong>Manual Batch Import</strong> at Ads Explorer to add ads without credentials or API spend.
               </p>
             </div>
           </div>
@@ -704,9 +806,11 @@ export default function DiscoveryPage() {
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                             : j.status === "BLOCKED_SOURCE"
                             ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            : j.status === "BUDGET_BLOCKED"
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
                             : j.status === "RUNNING"
                             ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/30 animate-pulse"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                            : "bg-slate-800 text-slate-400 border-slate-700"
                         }`}
                       >
                         {j.status}

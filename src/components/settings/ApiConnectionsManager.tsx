@@ -20,6 +20,7 @@ import {
   Layers,
   Store,
   Lock,
+  Globe,
 } from "lucide-react";
 import type { ProviderConnectionState, ProviderId } from "@/services/credentials/credentialService";
 
@@ -37,31 +38,37 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
     gemini: "",
     meta: "",
     captapi: "",
+    apify: "",
   });
   const [showKeys, setShowKeys] = useState<Record<ProviderId, boolean>>({
     gemini: false,
     meta: false,
     captapi: false,
+    apify: false,
   });
   const [saving, setSaving] = useState<Record<ProviderId, boolean>>({
     gemini: false,
     meta: false,
     captapi: false,
+    apify: false,
   });
   const [testing, setTesting] = useState<Record<ProviderId, boolean>>({
     gemini: false,
     meta: false,
     captapi: false,
+    apify: false,
   });
   const [expandedGuides, setExpandedGuides] = useState<Record<ProviderId, boolean>>({
     gemini: false,
     meta: false,
     captapi: false,
+    apify: false,
   });
   const [actionFeedback, setActionFeedback] = useState<Record<ProviderId, { type: "success" | "error"; message: string } | null>>({
     gemini: null,
     meta: null,
     captapi: null,
+    apify: null,
   });
 
   const fetchConnections = async () => {
@@ -81,7 +88,16 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
     }
   };
 
-  const [budgets, setBudgets] = useState<Record<string, any> | null>(null);
+interface ProviderBudgetSummary {
+  enabled?: boolean;
+  allowAutomaticRequests?: boolean;
+  creditsUsedThisMonth?: number;
+  monthlyCreditLimit?: number;
+  allowanceUsd?: number;
+  spentUsd?: number;
+}
+
+  const [budgets, setBudgets] = useState<Record<string, ProviderBudgetSummary> | null>(null);
 
   const fetchBudgets = async () => {
     try {
@@ -95,7 +111,7 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
     }
   };
 
-  const handleUpdateBudget = async (provider: ProviderId, updates: Record<string, any>) => {
+  const handleUpdateBudget = async (provider: ProviderId, updates: Partial<ProviderBudgetSummary>) => {
     try {
       const res = await fetch("/api/v1/settings/budgets", {
         method: "POST",
@@ -296,6 +312,8 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
         return <Layers className="h-5 w-5 text-blue-400" />;
       case "captapi":
         return <Key className="h-5 w-5 text-teal-400" />;
+      case "apify":
+        return <Globe className="h-5 w-5 text-amber-400" />;
     }
   };
 
@@ -326,7 +344,7 @@ export function ApiConnectionsManager({ onStatusChange }: ApiConnectionsManagerP
     );
   }
 
-  const providerKeys: ProviderId[] = ["gemini", "meta", "captapi"];
+  const providerKeys: ProviderId[] = ["gemini", "meta", "captapi", "apify"];
 
   return (
     <div className="space-y-6">

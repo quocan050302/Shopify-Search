@@ -42,18 +42,30 @@ export class TiktokOfficialProvider implements AdDiscoveryProvider {
       isPaid: false,
       isLiveVerified: false,
       notes: "Official TikTok Research API is restricted to accredited university researchers. Commercial Content Library API is restricted to EU DSA compliance.",
+      authMethod: "OAUTH2",
+      allowedDataAccess: "European Union public commercial repository only (DSA)",
+      supportedRegions: ["EU"],
+      termsBasis: "Official TikTok Commercial Content API (EU DSA Compliance)",
+      sourceType: "OFFICIAL_API",
+      apiDocumentationUrl: "https://developers.tiktok.com/doc/commercial-content-api-overview",
+      lastLiveVerificationAt: null,
+      lastVerificationError: null,
+    };
+  }
+
+  getProviderConfigurationStatus(): ProviderAvailabilityResult {
+    return {
+      status: "REGION_UNSUPPORTED",
+      message:
+        "Official TikTok Commercial Content Library API is legally restricted to European Union member states (EU DSA). " +
+        "United States commercial competitor ad discovery is not supported on this official endpoint.",
+      isAuthorized: false,
+      requiresConfig: false,
     };
   }
 
   async checkAvailability(): Promise<ProviderAvailabilityResult> {
-    return {
-      status: "REGION_UNSUPPORTED",
-      message:
-        "Official TikTok Commercial Content Library API is restricted to European Union member states (EU DSA). " +
-        "United States commercial competitor ad discovery is not supported on this official endpoint. Use TikTok Creative Center Top Ads interface.",
-      isAuthorized: false,
-      requiresConfig: false,
-    };
+    return this.getProviderConfigurationStatus();
   }
 
   estimateCost(_query: DiscoveryQuery): ProviderCostEstimate {

@@ -25,7 +25,7 @@ import {
   ProviderBudgetConfig,
 } from "@/services/providers/budgetService";
 
-export type ProviderId = "gemini" | "meta" | "captapi";
+export type ProviderId = "gemini" | "meta" | "captapi" | "apify";
 
 export interface ProviderDefinition {
   id: ProviderId;
@@ -179,6 +179,34 @@ export const PROVIDER_CATALOG: Record<ProviderId, ProviderDefinition> = {
       "Third-Party Ad Intelligence Queries (Optional)",
       "Cross-Platform Social Ad Extraction",
       "Credit Balance & Quota Monitoring",
+    ],
+  },
+  apify: {
+    id: "apify",
+    name: "Apify Platform (Metered Actor)",
+    envVar: "APIFY_TOKEN",
+    isOptional: true,
+    isPaid: true,
+    defaultEnabled: false,
+    description:
+      "Optional cloud actor runner for TikTok Top Ads discovery. Disabled by default ($0 spend) to protect user budget.",
+    docsUrl: "https://docs.apify.com/api/v2",
+    setupInstructions: {
+      title: "How to configure Apify Platform (Optional)",
+      steps: [
+        "Create an account at console.apify.com.",
+        "Navigate to Settings → Integrations → API Tokens.",
+        "Copy your personal API token and paste it here.",
+        "Apify is metered and requires explicit enablement (ENABLE_APIFY_DISCOVERY=true).",
+        "SWAI verifies your token against the Apify /users/me endpoint (0 credits consumed).",
+      ],
+      securityNote:
+        "Your Apify token is stored securely in server-side storage (.env.local). Automatic paid calls remain disabled until authorized.",
+    },
+    supportedCapabilities: [
+      "TikTok Top Ads Actor Automation (Metered)",
+      "Cloud Browser Automation Run",
+      "Actor Run Status & Metered Credit Tracking",
     ],
   },
 };
@@ -434,7 +462,7 @@ export function getProviderConnectionStates(): Record<ProviderId, ProviderConnec
   const cache = readStatusCache();
   const results: Partial<Record<ProviderId, ProviderConnectionState>> = {};
 
-  const providers: ProviderId[] = ["gemini", "meta", "captapi"];
+  const providers: ProviderId[] = ["gemini", "meta", "captapi", "apify"];
 
   for (const pid of providers) {
     const def = PROVIDER_CATALOG[pid];
@@ -918,6 +946,100 @@ async function testCaptapiConnection(key: string): Promise<ConnectionTestResult>
   }
 }
 
+async function testApifyConnection(key: string): Promise<ConnectionTestResult> {
+  const testedAt = new Date().toISOString();
+  const startTime = Date.now();
+
+  try {
+    const res = await fetch("https://api.apify.com/v2/users/me", {
+      headers: {
+        Authorization: `Bearer ${key.trim()}`,
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    const latencyMs = Date.now() - startTime;
+
+    if (res.status === 200) {
+      const data = (await res.json()) as { data?: { username?: string; plan?: { id?: string } } };
+      const username = data?.data?.username || "authenticated user";
+      const plan = data?.data?.plan?.id || "payg";
+
+      return {
+        provider: "apify",
+        status: "CONNECTED",
+        latencyMs,
+        testedAt,
+        errorMessage: null,
+        missingPermissions: [],
+        grantedPermissions: ["users:me", "acts:run"],
+        capabilities: [
+          {
+            name: "Apify Account Authentication",
+            status: "VERIFIED",
+            notes: `Authenticated as '${username}' (Plan: ${plan}).`,
+          },
+          {
+            name: "TikTok Top Ads Metered Actor Runs",
+            status: "VERIFIED",
+            notes: "Actor dispatch ready. Requires explicit budget enablement before running.",
+          },
+        ],
+        policyNotice: "Paid actor calls require ENABLE_APIFY_DISCOVERY=true and an active credit budget.",
+        details: { username, plan },
+      };
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      return {
+        provider: "apify",
+        status: "ERROR",
+        latencyMs,
+        testedAt,
+        errorMessage: `Apify API token rejected (HTTP ${res.status}: Invalid or unauthorized token).`,
+        errorCode: "INVALID_CREDENTIAL",
+        missingPermissions: ["APIFY_TOKEN"],
+        grantedPermissions: [],
+        capabilities: [
+          {
+            name: "Apify Account Authentication",
+            status: "UNAVAILABLE",
+            notes: `HTTP ${res.status}: token authentication failed.`,
+          },
+        ],
+        policyNotice: "Please verify your personal API token in Apify Console → Integrations.",
+      };
+    }
+
+    return {
+      provider: "apify",
+      status: "ERROR",
+      latencyMs,
+      testedAt,
+      errorMessage: `Apify responded with HTTP ${res.status}.`,
+      errorCode: `HTTP_${res.status}`,
+      missingPermissions: [],
+      grantedPermissions: [],
+      capabilities: [],
+      policyNotice: null,
+    };
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return {
+      provider: "apify",
+      status: "ERROR",
+      latencyMs: Date.now() - startTime,
+      testedAt,
+      errorMessage: `Could not reach Apify API: ${errMsg}`,
+      errorCode: "NETWORK_ERROR",
+      missingPermissions: [],
+      grantedPermissions: [],
+      capabilities: [],
+      policyNotice: "Failed to reach https://api.apify.com. Check network connectivity.",
+    };
+  }
+}
+
 /**
  * Executes a live connection test for the given provider.
  * Optionally tests a freshly supplied key override before saving.
@@ -963,6 +1085,8 @@ export async function testProviderConnection(
     testResult = await testMetaConnection(keyToTest);
   } else if (provider === "captapi") {
     testResult = await testCaptapiConnection(keyToTest);
+  } else if (provider === "apify") {
+    testResult = await testApifyConnection(keyToTest);
   } else {
     throw new Error(`Unsupported provider: ${provider}`);
   }

@@ -260,14 +260,36 @@ export async function executeGuardedProviderRequest<T = unknown>(
     }
   }
 
-  // 7. Record successful ledger entry
+  // 7. Calculate real validated result count (Rule 93 - no fake resultCount: 1)
+  let validatedResultCount = 0;
+  let isApplicationSuccess = response.ok;
+
+  if (Array.isArray(parsedJson)) {
+    validatedResultCount = parsedJson.length;
+  } else if (parsedJson && typeof parsedJson === "object") {
+    const obj = parsedJson as Record<string, unknown>;
+    const apiCode = obj.code;
+    if (typeof apiCode === "number" && apiCode !== 0) {
+      isApplicationSuccess = false;
+    }
+    const dataObj = obj.data as Record<string, unknown> | undefined;
+    if (dataObj && typeof dataObj === "object") {
+      if (Array.isArray(dataObj.list)) {
+        validatedResultCount = dataObj.list.length;
+      } else if (Array.isArray(dataObj.materials)) {
+        validatedResultCount = dataObj.materials.length;
+      }
+    }
+  }
+
+  // 8. Record accurate ledger entry
   await recordLedgerEntry({
     providerId,
     discoveryRunId,
     jobId,
-    outcome: response.ok ? "SUCCESS" : "FAILED",
+    outcome: isApplicationSuccess ? "SUCCESS" : "FAILED",
     httpStatus: response.status,
-    resultCount: 1,
+    resultCount: validatedResultCount,
     durationMs,
     providerRequestId,
     url,

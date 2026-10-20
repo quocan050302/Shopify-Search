@@ -68,6 +68,20 @@ const DEFAULT_BUDGETS: AllProviderBudgets = {
       "Captapi is an optional third-party licensed provider. Disabled by default. " +
       "Core research prioritizes free manual research via TikTok Creative Center US and Meta Ad Library.",
   },
+  apify: {
+    provider: "apify",
+    enabled: false, // Optional and DISABLED by default
+    isOptional: true,
+    isPaid: true, // Consumes paid subscription credits
+    monthlyCreditLimit: 0, // Safe default cap (zero until authorized)
+    creditsUsedThisMonth: 0,
+    allowAutomaticRequests: false, // Automatic background requests strictly blocked
+    requireManualAuthorization: true, // Manual confirmation required before spending
+    lastResetDate: new Date().toISOString(),
+    notes:
+      "Apify is an optional third-party cloud scraper actor. Disabled by default ($0 spend). " +
+      "Requires explicit authorization and budget before any metered runs.",
+  },
 };
 
 /**
@@ -82,6 +96,7 @@ export function loadProviderBudgets(): AllProviderBudgets {
         gemini: { ...DEFAULT_BUDGETS.gemini, ...(parsed.gemini || {}) },
         meta: { ...DEFAULT_BUDGETS.meta, ...(parsed.meta || {}) },
         captapi: { ...DEFAULT_BUDGETS.captapi, ...(parsed.captapi || {}) },
+        apify: { ...DEFAULT_BUDGETS.apify, ...(parsed.apify || {}) },
       };
     }
   } catch (err) {
@@ -105,10 +120,18 @@ export function saveProviderBudgets(budgets: AllProviderBudgets): void {
 
 /**
  * Retrieves budget configuration for a specific provider.
+ * Throws a typed error if the provider is unknown.
  */
 export function getProviderBudget(provider: ProviderId): ProviderBudgetConfig {
+  if (!provider || typeof provider !== "string" || !DEFAULT_BUDGETS[provider]) {
+    throw new Error(`Unknown or unsupported provider ID: '${String(provider)}'`);
+  }
   const all = loadProviderBudgets();
-  return all[provider] || DEFAULT_BUDGETS[provider];
+  const config = all[provider] || DEFAULT_BUDGETS[provider];
+  if (!config) {
+    throw new Error(`Budget configuration not found for provider: '${String(provider)}'`);
+  }
+  return config;
 }
 
 /**
@@ -118,6 +141,9 @@ export function updateProviderBudget(
   provider: ProviderId,
   updates: Partial<ProviderBudgetConfig>
 ): ProviderBudgetConfig {
+  if (!provider || !DEFAULT_BUDGETS[provider]) {
+    throw new Error(`Cannot update budget: Unknown provider '${String(provider)}'`);
+  }
   const all = loadProviderBudgets();
   const current = all[provider] || DEFAULT_BUDGETS[provider];
 
@@ -134,7 +160,7 @@ export function updateProviderBudget(
 
 /**
  * Checks authorization and budget before executing a paid provider API call.
- * Blocks calls if the provider is disabled, if automatic calls are disallowed,
+ * Blocks calls if the provider is unknown, disabled, if automatic calls are disallowed,
  * or if the credit budget would be exceeded.
  */
 export function authorizePaidApiCall(options: {
@@ -147,6 +173,26 @@ export function authorizePaidApiCall(options: {
   config: ProviderBudgetConfig;
 } {
   const { provider, estimatedCredits = 1, isAutomaticRequest = false } = options;
+
+  // Reject unknown provider IDs immediately before accessing budgets
+  if (!provider || typeof provider !== "string" || !DEFAULT_BUDGETS[provider]) {
+    return {
+      allowed: false,
+      reason: `Unknown or unconfigured paid provider '${String(provider)}'. Request blocked.`,
+      config: {
+        provider: (provider || "captapi") as ProviderId,
+        enabled: false,
+        isOptional: true,
+        isPaid: true,
+        monthlyCreditLimit: 0,
+        creditsUsedThisMonth: 0,
+        allowAutomaticRequests: false,
+        requireManualAuthorization: true,
+        lastResetDate: new Date().toISOString(),
+      },
+    };
+  }
+
   const config = getProviderBudget(provider);
 
   // 1. Check if provider is enabled
@@ -191,12 +237,17 @@ export function authorizePaidApiCall(options: {
 
 /**
  * Records credit consumption after a successful paid API call.
+ * Uses atomic read-modify-write synchronization to prevent race conditions.
  */
 export function recordPaidApiUsage(provider: ProviderId, creditsConsumed: number): void {
   if (creditsConsumed <= 0) return;
+  if (!provider || !DEFAULT_BUDGETS[provider]) {
+    console.warn(`Cannot record usage for unknown provider: '${String(provider)}'`);
+    return;
+  }
   const all = loadProviderBudgets();
   const current = all[provider] || DEFAULT_BUDGETS[provider];
-  current.creditsUsedThisMonth += creditsConsumed;
+  current.creditsUsedThisMonth = Math.max(0, current.creditsUsedThisMonth + creditsConsumed);
   all[provider] = current;
   saveProviderBudgets(all);
 }

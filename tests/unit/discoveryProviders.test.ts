@@ -55,15 +55,19 @@ describe("Discovery Provider Contracts & Adapters", () => {
       expect(cost.isMetered).toBe(false);
     });
 
-    it("honestly reports REQUIRES_AUTH when no browser session cookie is configured", async () => {
+    it("honestly reports NOT_CONFIGURED when no browser session cookie is configured", async () => {
       const provider = new TiktokTopAdsProvider();
-      const status = await provider.checkAvailability();
+      const configStatus = provider.getProviderConfigurationStatus();
+      expect(configStatus.status).toBe("NOT_CONFIGURED");
+      expect(configStatus.message).toContain("TIKTOK_CC_COOKIE");
 
-      expect(status.status).toBe("REQUIRES_AUTH");
+      const status = await provider.checkAvailability();
+      expect(status.status).toBe("NOT_CONFIGURED");
       expect(status.message).toContain("TIKTOK_CC_COOKIE");
+      expect(status.message).not.toContain("40101");
     });
 
-    it("halts safely on permission denied without attempting evasion or fake data", async () => {
+    it("halts safely on missing cookie without attempting evasion or fake data", async () => {
       const provider = new TiktokTopAdsProvider();
       const query: DiscoveryQuery = {
         workspaceId: "ws_default",
@@ -79,7 +83,7 @@ describe("Discovery Provider Contracts & Adapters", () => {
         runMode: "MANUAL",
       };
 
-      await expect(provider.discoverPage(query)).rejects.toThrow("Authentication required");
+      await expect(provider.discoverPage(query)).rejects.toThrow("TIKTOK_CC_COOKIE is not configured");
     });
   });
 

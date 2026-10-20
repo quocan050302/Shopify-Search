@@ -46,10 +46,18 @@ export class ApifyTopAdsProvider implements AdDiscoveryProvider {
       isPaid: true,
       isLiveVerified: false,
       notes: "Requires APIFY_TOKEN and explicit budget authorization. Consumes paid credits.",
+      authMethod: "BEARER_TOKEN",
+      allowedDataAccess: "Apify Actor dataset results",
+      supportedRegions: ["US", "GLOBAL"],
+      termsBasis: "Apify Platform API & Actor Terms of Service",
+      sourceType: "CLOUD_ACTOR",
+      apiDocumentationUrl: "https://docs.apify.com/api/v2",
+      lastLiveVerificationAt: null,
+      lastVerificationError: null,
     };
   }
 
-  async checkAvailability(): Promise<ProviderAvailabilityResult> {
+  getProviderConfigurationStatus(): ProviderAvailabilityResult {
     const token = process.env.APIFY_TOKEN || process.env.APIFY_API_TOKEN;
 
     if (!token || token.trim().length === 0) {
@@ -61,25 +69,50 @@ export class ApifyTopAdsProvider implements AdDiscoveryProvider {
       };
     }
 
-    // Check budget service authorization against Apify's own budget entry.
-    // Note: if "apify" is not in the budget config it falls through to the
-    // ENABLE_APIFY_DISCOVERY environment guard in providerRegistry.ts.
-    const budget = getProviderBudget("apify" as Parameters<typeof getProviderBudget>[0]);
-    if (!budget?.enabled && !process.env.ENABLE_APIFY_DISCOVERY) {
+    const budget = getProviderBudget("apify");
+    const isExplicitlyEnabled = process.env.ENABLE_APIFY_DISCOVERY === "true" || budget.enabled === true;
+
+    if (!isExplicitlyEnabled) {
       return {
         status: "PAID_DISABLED",
-        message: "Paid discovery providers are disabled by default. Enable in Settings → API Connections & Budgets.",
+        message:
+          "Paid discovery providers are disabled by default ($0 spending policy). " +
+          "Set ENABLE_APIFY_DISCOVERY=true in .env.local or enable in Settings → API Connections & Budgets.",
         isAuthorized: false,
         requiresConfig: true,
       };
     }
+
+    return {
+      status: "READY_UNVERIFIED",
+      message: "APIFY_TOKEN is configured and enabled. Ready for live probe.",
+      isAuthorized: true,
+      requiresConfig: false,
+    };
+  }
+
+  async checkAvailability(): Promise<ProviderAvailabilityResult> {
+    const configStatus = this.getProviderConfigurationStatus();
+    if (configStatus.status !== "READY_UNVERIFIED") {
+      return configStatus;
+    }
+    return this.verifyProviderConnection();
+  }
+
+  async verifyProviderConnection(): Promise<ProviderAvailabilityResult> {
+    const configStatus = this.getProviderConfigurationStatus();
+    if (configStatus.status !== "READY_UNVERIFIED") {
+      return configStatus;
+    }
+
+    const token = (process.env.APIFY_TOKEN || process.env.APIFY_API_TOKEN)!.trim();
 
     try {
       const res = await executeGuardedProviderRequest<{ data?: { username?: string } }>({
         providerId: this.id,
         url: "https://api.apify.com/v2/users/me",
         headers: {
-          Authorization: `Bearer ${token.trim()}`,
+          Authorization: `Bearer ${token}`,
         },
         timeoutMs: 5000,
         isAutomaticRequest: false,
@@ -131,7 +164,28 @@ export class ApifyTopAdsProvider implements AdDiscoveryProvider {
     _cursor?: string | null,
     context?: ProviderRequestContext
   ): Promise<DiscoveryPageResult> {
-    const token = process.env.APIFY_TOKEN;
+    // Strict Zero-Cost & Authorization Guard
+    if (process.env.FREE_DISCOVERY_MODE === "true") {
+      throw new DiscoveryError({
+        code: "PROVIDER_BUDGET_BLOCKED",
+        message: "Apify metered discovery is blocked: FREE_DISCOVERY_MODE is active ($0 spending policy).",
+        providerId: this.id,
+        statusHttp: 403,
+      });
+    }
+
+    if (process.env.ENABLE_APIFY_DISCOVERY !== "true") {
+      throw new DiscoveryError({
+        code: "PROVIDER_BUDGET_BLOCKED",
+        message:
+          "Apify metered discovery is disabled. " +
+          "Explicitly set ENABLE_APIFY_DISCOVERY=true in .env.local and enable Apify in Settings → API Connections.",
+        providerId: this.id,
+        statusHttp: 403,
+      });
+    }
+
+    const token = process.env.APIFY_TOKEN || process.env.APIFY_API_TOKEN;
 
     if (!token || token.trim().length === 0) {
       throw new DiscoveryError({

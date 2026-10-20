@@ -1,17 +1,21 @@
 #!/usr/bin/env tsx
 /**
- * SWAI V9 — Discovery Dry Run (Zero DB Inserts & Zero Paid Calls)
+ * SWAI V9.2 — Discovery Dry Run (Zero DB Inserts & Zero Paid Calls)
  *
  * Usage:
- *   npx tsx scripts/discovery-dry-run.ts
+ *   npm run discovery:dry-run
  */
+
+// 1. Initialize environment with Next.js precedence FIRST
+import { loadLocalEnvironment } from "../src/lib/loadLocalEnvironment";
+loadLocalEnvironment();
 
 import { discoveryOrchestrator } from "../src/services/discovery/discoveryOrchestrator";
 import { DiscoveryQuery } from "../src/services/discovery/types";
 
 async function runDryRun() {
   console.log("==================================================================");
-  console.log("  SWAI V9 — DISCOVERY DRY RUN (ZERO WRITES / ZERO PAID CALLS)");
+  console.log("  SWAI V9.2 — DISCOVERY DRY RUN (ZERO WRITES / ZERO PAID CALLS)");
   console.log("==================================================================");
 
   const query: DiscoveryQuery = {

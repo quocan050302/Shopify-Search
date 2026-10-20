@@ -1,17 +1,19 @@
 /**
- * SWAI V9.1 — TikTok Creative Center Top Ads Provider Adapter
+ * SWAI V9.2 — TikTok Creative Center Top Ads Provider Adapter
  *
- * Implements the direct, session-authenticated interface to the TikTok Creative
+ * Implements the session-authenticated interface to the TikTok Creative
  * Center internal research API endpoint.
  *
- * IMPORTANT HONESTY NOTES:
- * - The endpoint `ads.tiktok.com/creative_radar_api/...` is NOT an official public
- *   TikTok Business API. It is the internal XHR endpoint backing the Creative Center
- *   web UI. TikTok does not publish its schema or guarantee stability.
- * - When TIKTOK_CC_COOKIE is absent the provider returns NOT_CONFIGURED — it does
- *   NOT claim TikTok returned a 40101 error (that would be fabricated evidence).
- * - A live connectivity probe is only made when the cookie IS present.
- * - No CAPTCHA bypass, proxy rotation, or session impersonation is performed.
+ * HONESTY & COMPLIANCE DISCLOSURE:
+ * - The endpoint `ads.tiktok.com/creative_radar_api/...` is an UNDOCUMENTED, INTERNAL
+ *   endpoint backing TikTok's Creative Center web application. TikTok does not publish
+ *   an official third-party API for automated competitor Top Ads discovery in the US.
+ * - When TIKTOK_CC_COOKIE is absent, the provider reports NOT_CONFIGURED.
+ *   No network requests are dispatched and error 40101 is NEVER fabricated.
+ * - Live probes separate: HTTP 401 (REQUIRES_AUTH), HTTP 403 (PERMISSION_DENIED),
+ *   HTTP 404 (ENDPOINT_UNSUPPORTED), HTTP 429 (RATE_LIMITED), HTML responses (BLOCKED_SOURCE/WAF),
+ *   and code 0 (AVAILABLE).
+ * - Zero unauthorized CAPTCHA bypass, rotating proxy evasion, or session forgery is performed.
  */
 
 import {
@@ -36,7 +38,12 @@ const CC_TOP_ADS_ENDPOINT =
 export class TiktokTopAdsProvider implements AdDiscoveryProvider {
   readonly id = "tiktok-topads";
   readonly name = "TikTok Creative Center Top Ads (Direct)";
-  readonly version = "9.1.0";
+  readonly version = "9.2.0";
+
+  private cachedAvailability: ProviderAvailabilityResult | null = null;
+  private cacheTimestampMs = 0;
+  private lastVerifiedAt: Date | null = null;
+  private lastVerificationError: string | null = null;
 
   getCapabilities(): DiscoveryProviderCapabilities {
     return {
@@ -45,7 +52,7 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
       description:
         "Session-authenticated interface to TikTok Creative Center internal Top Ads API. " +
         "Free to use with an active CC session cookie. " +
-        "WARNING: endpoint is not officially documented and may change without notice.",
+        "WARNING: Endpoint is undocumented, experimental, and subject to TikTok WAF policies.",
       supportsUS: true,
       supportsKeywordFiltering: true,
       supportsKeywords: true,
@@ -58,36 +65,64 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
       requiresAuthentication: true,
       requiresAuth: true,
       isPaid: false,
-      isLiveVerified: false,
+      isLiveVerified: Boolean(this.cachedAvailability?.status === "AVAILABLE" || this.cachedAvailability?.status === "LIVE_VERIFIED"),
       notes:
-        "Requires TIKTOK_CC_COOKIE (browser session cookie from ads.tiktok.com). " +
-        "Without it, the provider is NOT_CONFIGURED — the cookie absence alone does NOT " +
-        "prove TikTok returned error 40101. A live probe is performed only when the cookie " +
-        "is provided. This endpoint is undocumented and not officially supported by TikTok.",
+        "Requires TIKTOK_CC_COOKIE (session cookie from ads.tiktok.com). " +
+        "Without it, status is NOT_CONFIGURED. Endpoint is undocumented and not officially " +
+        "supported for third-party automated access. Detail pages are protected from iframe embedding.",
+      authMethod: "SESSION_COOKIE",
+      allowedDataAccess: "TikTok Creative Center inspiration Top Ads ranking index",
+      supportedRegions: ["US"],
+      termsBasis: "Undocumented internal web application endpoint (Experimental/Unverified)",
+      sourceType: "INTERNAL_ENDPOINT",
+      apiDocumentationUrl: "https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en",
+      lastLiveVerificationAt: this.lastVerifiedAt ? this.lastVerifiedAt.toISOString() : null,
+      lastVerificationError: this.lastVerificationError,
     };
   }
 
-  async checkAvailability(): Promise<ProviderAvailabilityResult> {
+  /**
+   * Static configuration check. Does NOT send any HTTP request.
+   */
+  getProviderConfigurationStatus(): ProviderAvailabilityResult {
     const cookie = process.env.TIKTOK_CC_COOKIE;
 
-    // State 1: NOT_CONFIGURED — credential simply not provided; we make no claims
-    // about what TikTok would return because we haven't tried.
     if (!cookie || cookie.trim().length === 0) {
       return {
         status: "NOT_CONFIGURED",
         message:
           "TIKTOK_CC_COOKIE is not set. " +
-          "Export a valid session cookie from ads.tiktok.com and add it to your .env.local file. " +
-          "Without it, automated collection is unavailable — use Manual URL Import instead.",
+          "Automated direct collection requires an active browser session cookie in .env.local, " +
+          "or use zero-cost Manual URL Import / Batch Import at /explorer.",
         isAuthorized: false,
         requiresConfig: true,
       };
     }
 
-    // State 2: Cookie is present — attempt a minimal 1-item probe to verify.
+    return {
+      status: "READY_UNVERIFIED",
+      message:
+        "TIKTOK_CC_COOKIE is configured locally. Ready for authorized connectivity verification probe.",
+      isAuthorized: false,
+      requiresConfig: false,
+    };
+  }
+
+  /**
+   * Explicit live verification probe against the TikTok endpoint.
+   */
+  async verifyProviderConnection(): Promise<ProviderAvailabilityResult> {
+    const staticStatus = this.getProviderConfigurationStatus();
+    if (staticStatus.status === "NOT_CONFIGURED") {
+      this.cachedAvailability = staticStatus;
+      this.cacheTimestampMs = Date.now();
+      return staticStatus;
+    }
+
+    const cookie = process.env.TIKTOK_CC_COOKIE!;
+
     try {
-      const probeUrl =
-        `${CC_TOP_ADS_ENDPOINT}?page=1&limit=1&period=30&region=US`;
+      const probeUrl = `${CC_TOP_ADS_ENDPOINT}?page=1&limit=1&period=30&region=US`;
 
       const res = await executeGuardedProviderRequest<{
         code?: number;
@@ -102,90 +137,178 @@ export class TiktokTopAdsProvider implements AdDiscoveryProvider {
         isPaid: false,
       });
 
-      // HTTP-level auth failure
-      if (res.status === 401 || res.status === 403) {
-        return {
-          status: "BLOCKED_SOURCE",
+      this.lastVerifiedAt = new Date();
+
+      // HTTP-level Auth & Permission Denials
+      if (res.status === 401) {
+        const result: ProviderAvailabilityResult = {
+          status: "REQUIRES_AUTH",
           message:
-            `HTTP ${res.status}: TikTok rejected the session cookie. ` +
-            "The cookie may have expired or been invalidated. Re-authenticate in your browser.",
+            "HTTP 401 Unauthorized: TikTok rejected the session cookie. " +
+            "The session has expired or was revoked. Re-authenticate in browser.",
           isAuthorized: false,
           requiresConfig: true,
         };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
       }
 
-      // Non-JSON or empty body (likely a WAF HTML block page)
-      if (res.data === null || typeof res.data !== "object") {
-        return {
-          status: "BLOCKED_SOURCE",
+      if (res.status === 403) {
+        const result: ProviderAvailabilityResult = {
+          status: "PERMISSION_DENIED",
           message:
-            "TikTok returned a non-JSON response. The endpoint may be WAF-blocked or the " +
-            "session cookie is from a different geographic IP than this server.",
+            "HTTP 403 Forbidden: TikTok denied access. Web Application Firewall (WAF) or IP block detected.",
           isAuthorized: false,
           requiresConfig: true,
         };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
+      }
+
+      if (res.status === 404) {
+        const result: ProviderAvailabilityResult = {
+          status: "ENDPOINT_UNSUPPORTED",
+          message:
+            "HTTP 404 Not Found: The undocumented TikTok Creative Center endpoint is unavailable or changed.",
+          isAuthorized: false,
+          requiresConfig: true,
+        };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
+      }
+
+      if (res.status === 429) {
+        const result: ProviderAvailabilityResult = {
+          status: "RATE_LIMITED",
+          message: "HTTP 429: TikTok rate limit exceeded. Please back off before retrying.",
+          isAuthorized: false,
+          requiresConfig: false,
+        };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
+      }
+
+      // Non-JSON or empty response (WAF HTML challenge)
+      if (res.data === null || typeof res.data !== "object") {
+        const result: ProviderAvailabilityResult = {
+          status: "BLOCKED_SOURCE",
+          message:
+            "TikTok returned a non-JSON HTML response (WAF / bot detection challenge). " +
+            "Direct automation is blocked on this network IP.",
+          isAuthorized: false,
+          requiresConfig: true,
+        };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
       }
 
       const apiCode = (res.data as { code?: number }).code;
 
-      // Application-level success
+      // Upstream Application-level success
       if (apiCode === 0) {
-        return {
+        const result: ProviderAvailabilityResult = {
           status: "AVAILABLE",
           message:
             "Session validated with TikTok Creative Center. " +
-            "Live probe returned code 0 — Top Ads auto-discovery is ready.",
+            "Live probe returned code 0 — US Top Ads discovery ready.",
           isAuthorized: true,
           requiresConfig: false,
         };
+        this.lastVerificationError = null;
+        this.cacheResult(result);
+        return result;
       }
 
-      // Application-level auth rejection
+      // Upstream Application-level auth rejection
       if (apiCode === 40101) {
-        return {
-          status: "BLOCKED_SOURCE",
+        const result: ProviderAvailabilityResult = {
+          status: "PERMISSION_DENIED",
           message:
-            "TikTok Creative Center returned code 40101 ('no permission'). " +
-            "The session cookie has expired or lacks the required permissions. " +
-            "Please re-authenticate and update TIKTOK_CC_COOKIE.",
+            "TikTok Creative Center returned API code 40101 ('no permission'). " +
+            "The session cookie has expired or lacks authorization.",
           isAuthorized: false,
           requiresConfig: true,
         };
+        this.lastVerificationError = result.message || null;
+        this.cacheResult(result);
+        return result;
       }
 
-      // Unknown endpoint response (e.g., API schema changed)
-      return {
-        status: "UNVERIFIED",
+      // Unknown JSON schema response
+      const result: ProviderAvailabilityResult = {
+        status: "INVALID_RESPONSE",
         message:
           `Unexpected TikTok API response: code ${apiCode ?? "absent"}, ` +
-          `msg: "${(res.data as { msg?: string }).msg ?? "none"}". ` +
-          "The internal endpoint schema may have changed.",
+          `msg: "${(res.data as { msg?: string }).msg ?? "none"}".`,
         isAuthorized: false,
         requiresConfig: true,
       };
+      this.lastVerificationError = result.message || null;
+      this.cacheResult(result);
+      return result;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      this.lastVerificationError = msg;
 
-      // Network failure: connectivity, DNS, TLS — no claim about TikTok's auth response
-      if (
-        msg.includes("PROVIDER_PERMISSION_DENIED") ||
-        msg.includes("access denied")
-      ) {
-        return {
-          status: "BLOCKED_SOURCE",
-          message: `HTTP permission denied by TikTok during probe: ${msg}`,
+      if (msg.includes("PROVIDER_PERMISSION_DENIED") || msg.includes("access denied") || msg.includes("HTTP 403")) {
+        const result: ProviderAvailabilityResult = {
+          status: "PERMISSION_DENIED",
+          message: `HTTP permission denied by TikTok: ${msg}`,
           isAuthorized: false,
           requiresConfig: true,
         };
+        this.cacheResult(result);
+        return result;
       }
 
-      return {
+      if (msg.includes("PROVIDER_RATE_LIMITED") || msg.includes("HTTP 429")) {
+        const result: ProviderAvailabilityResult = {
+          status: "RATE_LIMITED",
+          message: `TikTok rate limit reached: ${msg}`,
+          isAuthorized: false,
+          requiresConfig: false,
+        };
+        this.cacheResult(result);
+        return result;
+      }
+
+      const result: ProviderAvailabilityResult = {
         status: "BLOCKED_SOURCE",
-        message: `Connectivity probe failed: ${msg}. Check network access to ads.tiktok.com.`,
+        message: `Connectivity probe failed: ${msg}. Check network route to ads.tiktok.com.`,
         isAuthorized: false,
         requiresConfig: true,
       };
+      this.cacheResult(result);
+      return result;
     }
+  }
+
+  /**
+   * Cached availability check to prevent spamming TikTok on every page render.
+   * Cache lifetime: 5 minutes.
+   */
+  async checkAvailability(): Promise<ProviderAvailabilityResult> {
+    const staticStatus = this.getProviderConfigurationStatus();
+    if (staticStatus.status === "NOT_CONFIGURED") {
+      return staticStatus;
+    }
+
+    const fiveMinutes = 5 * 60 * 1000;
+    if (this.cachedAvailability && Date.now() - this.cacheTimestampMs < fiveMinutes) {
+      return this.cachedAvailability;
+    }
+
+    return this.verifyProviderConnection();
+  }
+
+  private cacheResult(result: ProviderAvailabilityResult): void {
+    this.cachedAvailability = result;
+    this.cacheTimestampMs = Date.now();
   }
 
   estimateCost(_query: DiscoveryQuery): ProviderCostEstimate {

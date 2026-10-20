@@ -1,19 +1,23 @@
 #!/usr/bin/env tsx
 /**
- * SWAI V9 — Run Discovery Once
+ * SWAI V9.2 — Run Discovery Once
  *
- * Triggers a single immediate discovery run via CLI.
+ * Triggers a single immediate discovery run via CLI with shared Next.js environment loading.
  *
  * Usage:
- *   npx tsx scripts/discovery-once.ts --limit 10 --keywords "ecommerce,gadget"
+ *   npm run discovery:once
  */
+
+// 1. Initialize environment with Next.js precedence FIRST
+import { loadLocalEnvironment } from "../src/lib/loadLocalEnvironment";
+loadLocalEnvironment();
 
 import { discoveryOrchestrator } from "../src/services/discovery/discoveryOrchestrator";
 import { DiscoveryQuery } from "../src/services/discovery/types";
 
 async function runOnce() {
   console.log("==================================================================");
-  console.log("  SWAI V9 — RUN DISCOVERY ONCE");
+  console.log("  SWAI V9.2 — RUN DISCOVERY ONCE");
   console.log("==================================================================");
 
   const query: DiscoveryQuery = {

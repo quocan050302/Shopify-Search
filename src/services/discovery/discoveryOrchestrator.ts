@@ -1,5 +1,5 @@
 /**
- * SWAI V9 — Discovery Job Orchestrator & State Machine
+ * SWAI V9.2 — Discovery Job Orchestrator & State Machine
  *
  * Coordinates provider execution, durable job lease claiming, bounded pagination,
  * atomic ingestion, and state transitions across PENDING, RUNNING, COMPLETED, and BLOCKED states.
@@ -42,13 +42,69 @@ async function getEffectiveWorkspaceId(requestedWorkspaceId?: string): Promise<s
 
 export class DiscoveryOrchestrator {
   /**
-   * Main entry point to run an automated discovery job.
+   * Claims a pending job atomically for execution (Job Leasing - Rule 99).
+   * Prevents multiple concurrent worker processes from claiming the same job.
    */
-  async runDiscoveryJob(
-    query: DiscoveryQuery,
+  async claimPendingDiscoveryJob(): Promise<string | null> {
+    const pendingRun = await prisma.discoveryRun.findFirst({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+
+    if (!pendingRun) return null;
+
+    try {
+      const updated = await prisma.discoveryRun.update({
+        where: { id: pendingRun.id, status: "PENDING" },
+        data: {
+          status: "RUNNING",
+          startedAt: new Date(),
+          heartbeatAt: new Date(),
+        },
+      });
+      return updated.id;
+    } catch {
+      // Race condition: another worker claimed the job
+      return null;
+    }
+  }
+
+  /**
+   * Executes an existing discovery job by ID with checkpoints and bounded pagination.
+   */
+  async executeDiscoveryJob(
+    runId: string,
     options: RunDiscoveryOptions = {}
   ): Promise<DiscoveryRunSummary> {
     const startTime = new Date();
+
+    const run = await prisma.discoveryRun.findUnique({
+      where: { id: runId },
+    });
+
+    if (!run) {
+      throw new Error(`Discovery run with ID '${runId}' not found.`);
+    }
+
+    let query: DiscoveryQuery;
+    try {
+      query = JSON.parse(run.queryConfigJson) as DiscoveryQuery;
+    } catch {
+      query = {
+        workspaceId: run.workspaceId,
+        platform: "TIKTOK",
+        market: "US",
+        keywords: [],
+        industries: [],
+        objectives: [],
+        searchWindowDays: 30,
+        sortBy: "relevance",
+        requestedLimit: run.requestedLimit,
+        pageSize: 20,
+        runMode: (run.runMode as "MANUAL" | "SCHEDULED" | "DRY_RUN") || "MANUAL",
+      };
+    }
 
     // 1. Resolve Provider
     let provider = query.providerId ? getDiscoveryProvider(query.providerId) : undefined;
@@ -59,46 +115,50 @@ export class DiscoveryOrchestrator {
     // 2. Check Provider Availability
     const availability = await provider.checkAvailability();
     if (!availability.isAuthorized || availability.status !== "AVAILABLE") {
-      // Map provider status → job status
       const blockedStatus: DiscoveryJobStatus =
         availability.status === "REQUIRES_AUTH" ||
-        availability.status === "BLOCKED_SOURCE"
-          ? "BLOCKED_SOURCE"
-          : availability.status === "NOT_CONFIGURED"
+        availability.status === "BLOCKED_SOURCE" ||
+        availability.status === "PERMISSION_DENIED" ||
+        availability.status === "NOT_CONFIGURED"
           ? "BLOCKED_SOURCE"
           : availability.status === "PAID_DISABLED"
           ? "BUDGET_BLOCKED"
           : "FAILED";
 
-      // Preserve the exact error category from the provider response
       const errorCategory =
         availability.status === "NOT_CONFIGURED"
           ? "PROVIDER_NOT_CONFIGURED"
           : availability.status === "PAID_DISABLED"
           ? "PROVIDER_BUDGET_BLOCKED"
           : availability.status === "REQUIRES_AUTH" ||
-            availability.status === "BLOCKED_SOURCE"
+            availability.status === "BLOCKED_SOURCE" ||
+            availability.status === "PERMISSION_DENIED"
           ? "PROVIDER_PERMISSION_DENIED"
           : "NO_AUTHORIZED_PROVIDER";
 
-      const blockedWorkspaceId = await getEffectiveWorkspaceId(query.workspaceId);
-      const run = await prisma.discoveryRun.create({
+      const finishTime = new Date();
+      await prisma.discoveryRun.update({
+        where: { id: run.id },
         data: {
-          workspaceId: blockedWorkspaceId,
-          scheduleId: options.scheduleId || null,
-          providerId: provider.id,
           status: blockedStatus,
-          runMode: query.runMode,
-          queryConfigJson: JSON.stringify(query),
           errorMessage: availability.message || "Provider access blocked.",
           errorCategory,
-          // Zero outbound provider requests were made — availability probe
-          // is not counted as a discovery request.
           totalRequestCount: 0,
           startedAt: startTime,
-          finishedAt: new Date(),
+          finishedAt: finishTime,
         },
       });
+
+      if (run.jobId) {
+        await prisma.syncJob.update({
+          where: { id: run.jobId },
+          data: {
+            status: "FAILED",
+            errorMessage: availability.message || "Provider access blocked.",
+            completedAt: finishTime,
+          },
+        });
+      }
 
       return {
         jobId: run.id,
@@ -110,65 +170,57 @@ export class DiscoveryOrchestrator {
         existingDuplicateCount: 0,
         rejectedCount: 0,
         failedCount: 0,
-        totalRequestCount: 0, // no outbound requests made
+        totalRequestCount: 0,
         startTime,
-        finishTime: new Date(),
+        finishTime,
         finalStatus: blockedStatus,
         errorMessage: availability.message,
       };
     }
 
-    // 3. Create Persisted Discovery Run & SyncJob
-    const effectiveWorkspaceId = await getEffectiveWorkspaceId(query.workspaceId);
-    const syncJob = await prisma.syncJob.create({
+    // Mark as running
+    await prisma.discoveryRun.update({
+      where: { id: run.id },
       data: {
-        workspaceId: effectiveWorkspaceId,
-        jobType: "AD_AUTO_DISCOVERY",
         status: "RUNNING",
-        totalItems: query.requestedLimit,
-        progress: 0,
-        startedAt: startTime,
-      },
-    });
-
-    const run = await prisma.discoveryRun.create({
-      data: {
-        workspaceId: effectiveWorkspaceId,
-        scheduleId: options.scheduleId || null,
-        jobId: syncJob.id,
-        providerId: provider.id,
-        status: "RUNNING",
-        runMode: query.runMode,
-        queryConfigJson: JSON.stringify(query),
-        requestedLimit: query.requestedLimit,
         startedAt: startTime,
         heartbeatAt: startTime,
       },
     });
 
-    let cursor: string | null = null;
-    let actualRetrieved = 0;
-    let newUniqueTotal = 0;
-    let existingUpdatedTotal = 0;
-    let failedTotal = 0;
-    let requestCount = 0;
-    let totalCreditsUsed = 0;
+    if (run.jobId) {
+      await prisma.syncJob.update({
+        where: { id: run.jobId },
+        data: {
+          status: "RUNNING",
+          startedAt: startTime,
+        },
+      });
+    }
+
+    let cursor: string | null = run.cursor || null;
+    let actualRetrieved = run.actualRetrievedCount || 0;
+    let newUniqueTotal = run.newUniqueCount || 0;
+    let existingUpdatedTotal = run.existingDuplicateCount || 0;
+    let failedTotal = run.failedCount || 0;
+    let requestCount = run.totalRequestCount || 0;
+    let totalCreditsUsed = run.creditsUsed || 0;
     let lastError: string | null = null;
     let finalStatus: DiscoveryJobStatus = "COMPLETED";
 
-    const maxPages = Math.min(Math.ceil(query.requestedLimit / query.pageSize), 10);
+    const maxPages = Math.min(Math.ceil(query.requestedLimit / (query.pageSize || 20)), 10);
     const seenHashes = new Set<string>();
 
     try {
-      // 4. Bounded Pagination Loop
+      // 3. Bounded Pagination Loop
       for (let pageIdx = 0; pageIdx < maxPages; pageIdx++) {
-        // Heartbeat update
+        // Heartbeat update (Checkpoints - Rule 101)
         await prisma.discoveryRun.update({
           where: { id: run.id },
           data: { heartbeatAt: new Date() },
         });
 
-        // Check if cancelled
+        // Check if cancelled (Rule 102)
         const checkRun = await prisma.discoveryRun.findUnique({
           where: { id: run.id },
           select: { status: true },
@@ -180,8 +232,8 @@ export class DiscoveryOrchestrator {
 
         requestCount++;
         const pageResult = await provider.discoverPage(query, cursor, {
-          jobId: syncJob.id,
-          scheduleId: options.scheduleId,
+          jobId: run.jobId || undefined,
+          scheduleId: options.scheduleId || run.scheduleId || undefined,
           timeoutMs: options.timeoutMs,
         });
 
@@ -201,8 +253,8 @@ export class DiscoveryOrchestrator {
         // Ingest into database (unless dry run)
         if (!options.dryRun && uniqueInPage.length > 0) {
           const ingResult = await ingestDiscoveredAds(uniqueInPage, {
-            workspaceId: query.workspaceId || "default-workspace",
-            jobId: syncJob.id,
+            workspaceId: query.workspaceId || run.workspaceId,
+            jobId: run.jobId || undefined,
             discoveryRunId: run.id,
             providerId: provider.id,
           });
@@ -220,10 +272,12 @@ export class DiscoveryOrchestrator {
           Math.round((actualRetrieved / query.requestedLimit) * 100)
         );
 
-        await prisma.syncJob.update({
-          where: { id: syncJob.id },
-          data: { progress: progressPercent },
-        });
+        if (run.jobId) {
+          await prisma.syncJob.update({
+            where: { id: run.jobId },
+            data: { progress: progressPercent },
+          });
+        }
 
         await prisma.discoveryRun.update({
           where: { id: run.id },
@@ -238,10 +292,10 @@ export class DiscoveryOrchestrator {
           },
         });
 
-        // Stopping conditions (Rule 56)
+        // Stopping conditions
         if (!pageResult.hasMore || !pageResult.nextCursor) break;
         if (actualRetrieved >= query.requestedLimit) break;
-        if (pageResult.nextCursor === cursor) break; // repeated cursor safeguard
+        if (pageResult.nextCursor === cursor) break;
         cursor = pageResult.nextCursor;
       }
     } catch (err: unknown) {
@@ -250,7 +304,10 @@ export class DiscoveryOrchestrator {
       finalStatus =
         err instanceof DiscoveryError && err.code === "PROVIDER_BUDGET_BLOCKED"
           ? "BUDGET_BLOCKED"
-          : err instanceof DiscoveryError && (err.code === "PROVIDER_PERMISSION_DENIED" || err.code === "NO_AUTHORIZED_PROVIDER")
+          : err instanceof DiscoveryError &&
+            (err.code === "PROVIDER_PERMISSION_DENIED" ||
+              err.code === "NO_AUTHORIZED_PROVIDER" ||
+              err.code === "PROVIDER_NOT_CONFIGURED")
           ? "BLOCKED_SOURCE"
           : actualRetrieved > 0
           ? "PARTIALLY_COMPLETED"
@@ -260,8 +317,10 @@ export class DiscoveryOrchestrator {
     }
 
     const finishTime = new Date();
+    const isPaidProvider = provider.getCapabilities().isPaid;
+    const actualCostUsd = isPaidProvider ? totalCreditsUsed * 0.05 : 0.0;
 
-    // 5. Finalize Job Records
+    // 4. Finalize Job Records
     await prisma.discoveryRun.update({
       where: { id: run.id },
       data: {
@@ -273,28 +332,35 @@ export class DiscoveryOrchestrator {
         failedCount: failedTotal,
         totalRequestCount: requestCount,
         creditsUsed: totalCreditsUsed,
+        actualCostUsd,
         errorMessage: lastError,
         finishedAt: finishTime,
       },
     });
 
-    await prisma.syncJob.update({
-      where: { id: syncJob.id },
-      data: {
-        status: finalStatus === "COMPLETED" ? "COMPLETED" : "FAILED",
-        progress: 100,
-        completedAt: finishTime,
-        errorMessage: lastError,
-      },
-    });
+    if (run.jobId) {
+      await prisma.syncJob.update({
+        where: { id: run.jobId },
+        data: {
+          status: finalStatus === "COMPLETED" ? "COMPLETED" : "FAILED",
+          progress: 100,
+          completedAt: finishTime,
+          errorMessage: lastError,
+        },
+      });
+    }
 
     // Update schedule lastRunAt if linked
-    if (options.scheduleId) {
+    const scheduleId = options.scheduleId || run.scheduleId;
+    if (scheduleId) {
       await prisma.discoverySchedule.update({
-        where: { id: options.scheduleId },
+        where: { id: scheduleId },
         data: {
           lastRunAt: finishTime,
-          failureCount: finalStatus === "FAILED" || finalStatus === "BLOCKED_SOURCE" ? { increment: 1 } : 0,
+          failureCount:
+            finalStatus === "FAILED" || finalStatus === "BLOCKED_SOURCE"
+              ? { increment: 1 }
+              : 0,
           lastErrorReason: lastError,
         },
       });
@@ -312,7 +378,7 @@ export class DiscoveryOrchestrator {
       failedCount: failedTotal,
       totalRequestCount: requestCount,
       estimatedCostUsd: 0,
-      actualCostUsd: totalCreditsUsed * 0.05,
+      actualCostUsd,
       startTime,
       finishTime,
       finalStatus,
@@ -321,23 +387,41 @@ export class DiscoveryOrchestrator {
   }
 
   /**
-   * Creates a persisted initial discovery job in PENDING state (Requirement 95).
+   * Main entry point to run an automated discovery job synchronously.
    */
-  async createDiscoveryJob(query: DiscoveryQuery): Promise<{ jobId: string; syncJobId: string; status: DiscoveryJobStatus }> {
+  async runDiscoveryJob(
+    query: DiscoveryQuery,
+    options: RunDiscoveryOptions = {}
+  ): Promise<DiscoveryRunSummary> {
+    const job = await this.createDiscoveryJob(query, options.scheduleId);
+    return this.executeDiscoveryJob(job.jobId, options);
+  }
+
+  /**
+   * Creates a persisted initial discovery job in PENDING state (Rule 96 & 97).
+   * Decouples job creation from execution.
+   */
+  async createDiscoveryJob(
+    query: DiscoveryQuery,
+    scheduleId?: string
+  ): Promise<{ jobId: string; syncJobId: string; status: DiscoveryJobStatus }> {
     const validated = DiscoveryQuerySchema.parse(query);
     const effectiveWorkspaceId = await getEffectiveWorkspaceId(validated.workspaceId);
+
     const syncJob = await prisma.syncJob.create({
       data: {
         workspaceId: effectiveWorkspaceId,
         jobType: "AD_AUTO_DISCOVERY",
         status: "PENDING",
         progress: 0,
+        totalItems: validated.requestedLimit,
       },
     });
 
     const run = await prisma.discoveryRun.create({
       data: {
         workspaceId: effectiveWorkspaceId,
+        scheduleId: scheduleId || null,
         jobId: syncJob.id,
         providerId: validated.providerId || "tiktok-topads",
         status: "PENDING",
@@ -351,7 +435,7 @@ export class DiscoveryOrchestrator {
   }
 
   /**
-   * Cancels an active or pending discovery job safely.
+   * Cancels an active or pending discovery job safely (Rule 102).
    */
   async cancelDiscoveryJob(runId: string): Promise<boolean> {
     try {

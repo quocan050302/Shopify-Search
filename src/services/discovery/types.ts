@@ -50,27 +50,37 @@ export class DiscoveryError extends Error {
 // ─── Provider Capabilities & Status ──────────────────────────────────────────
 
 export const PROVIDER_AVAILABILITY_STATES = [
-  "AVAILABLE",
   "NOT_CONFIGURED",
-  "REQUIRES_AUTH",
-  "BLOCKED_SOURCE",
-  "REGION_UNSUPPORTED",
-  "UNVERIFIED",
-  "PAID_DISABLED",
+  "READY_UNVERIFIED",
+  "AVAILABLE",
   "LIVE_VERIFIED",
+  "REQUIRES_AUTH",
+  "PERMISSION_DENIED",
+  "REGION_UNSUPPORTED",
+  "ENDPOINT_UNSUPPORTED",
+  "INVALID_RESPONSE",
+  "RATE_LIMITED",
+  "BLOCKED_SOURCE",
+  "PAID_DISABLED",
+  "UNVERIFIED",
 ] as const;
 
 export type ProviderAvailabilityStatus = (typeof PROVIDER_AVAILABILITY_STATES)[number];
 
 export const DISCOVERY_PROVIDER_STATUS = {
-  AVAILABLE: "AVAILABLE",
   NOT_CONFIGURED: "NOT_CONFIGURED",
-  REQUIRES_AUTH: "REQUIRES_AUTH",
-  BLOCKED_SOURCE: "BLOCKED_SOURCE",
-  REGION_UNSUPPORTED: "REGION_UNSUPPORTED",
-  UNVERIFIED: "UNVERIFIED",
-  PAID_DISABLED: "PAID_DISABLED",
+  READY_UNVERIFIED: "READY_UNVERIFIED",
+  AVAILABLE: "AVAILABLE",
   LIVE_VERIFIED: "LIVE_VERIFIED",
+  REQUIRES_AUTH: "REQUIRES_AUTH",
+  PERMISSION_DENIED: "PERMISSION_DENIED",
+  REGION_UNSUPPORTED: "REGION_UNSUPPORTED",
+  ENDPOINT_UNSUPPORTED: "ENDPOINT_UNSUPPORTED",
+  INVALID_RESPONSE: "INVALID_RESPONSE",
+  RATE_LIMITED: "RATE_LIMITED",
+  BLOCKED_SOURCE: "BLOCKED_SOURCE",
+  PAID_DISABLED: "PAID_DISABLED",
+  UNVERIFIED: "UNVERIFIED",
 } as const;
 
 export interface DiscoveryProviderCapabilities {
@@ -91,6 +101,15 @@ export interface DiscoveryProviderCapabilities {
   isPaid: boolean;
   isLiveVerified: boolean;
   notes?: string;
+  // V9.2 Source compatibility metadata
+  authMethod?: "NONE" | "SESSION_COOKIE" | "BEARER_TOKEN" | "API_KEY" | "OAUTH2";
+  allowedDataAccess?: string;
+  supportedRegions?: string[];
+  termsBasis?: string;
+  sourceType?: "OFFICIAL_API" | "INTERNAL_ENDPOINT" | "CLOUD_ACTOR" | "MANUAL_IMPORT";
+  apiDocumentationUrl?: string;
+  lastLiveVerificationAt?: string | null;
+  lastVerificationError?: string | null;
 }
 
 // ─── Discovery Query ────────────────────────────────────────────────────────

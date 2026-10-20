@@ -47,10 +47,22 @@ export interface AdDiscoveryProvider {
   getCapabilities(): DiscoveryProviderCapabilities;
 
   /**
-   * Performs an authorized availability check (connectivity, authentication, permissions).
+   * Inspects local environment and static configuration ONLY.
+   * Does NOT make network or HTTP requests.
+   */
+  getProviderConfigurationStatus(): ProviderAvailabilityResult;
+
+  /**
+   * Performs an authorized availability check (cached connectivity, authentication, permissions).
    * Does NOT consume paid credits or make heavy requests.
    */
   checkAvailability(): Promise<ProviderAvailabilityResult>;
+
+  /**
+   * Explicit live connection verification probe to an authorized endpoint.
+   * Returns genuine upstream outcome, latency, and status.
+   */
+  verifyProviderConnection?(): Promise<ProviderAvailabilityResult>;
 
   /**
    * Estimates the credit and monetary cost of executing the given query.

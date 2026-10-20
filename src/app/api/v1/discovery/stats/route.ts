@@ -20,18 +20,26 @@ export async function GET() {
 
     const [
       autoDiscoveredAdsCount,
+      totalTikTokAdsCount,
       totalRuns,
       completedRuns,
       blockedRuns,
       activeSchedules,
       latestAutoDiscoveredAd,
       latestActiveRun,
+      workerHeartbeatJob,
+      latestRun,
     ] = await Promise.all([
       // Only ads that originated from a Discovery run (have an AdSourceIdentity)
       prisma.adSourceIdentity.groupBy({
         by: ["adId"],
         _count: { adId: true },
       }).then((rows) => rows.length),
+
+      // Total TikTok ads in database
+      prisma.competitorAd.count({
+        where: { platform: "TIKTOK" },
+      }),
 
       prisma.discoveryRun.count(),
       prisma.discoveryRun.count({ where: { status: "COMPLETED" } }),
@@ -49,8 +57,7 @@ export async function GET() {
           select: { firstSeenAt: true },
         }),
 
-      // Cross-process heartbeat: a RUNNING job that updated its heartbeat within 5 min
-      // means the worker process is alive.
+      // Active job heartbeat
       prisma.discoveryRun.findFirst({
         where: {
           status: "RUNNING",
@@ -59,15 +66,54 @@ export async function GET() {
         orderBy: { heartbeatAt: "desc" },
         select: { heartbeatAt: true, providerId: true },
       }),
+
+      // Worker background polling loop heartbeat
+      prisma.syncJob.findFirst({
+        where: {
+          jobType: "DISCOVERY_WORKER_HEARTBEAT",
+          startedAt: { gte: fiveMinutesAgo },
+          status: "RUNNING",
+        },
+        orderBy: { startedAt: "desc" },
+        select: { startedAt: true },
+      }),
+
+      // Latest run for incremental stats
+      prisma.discoveryRun.findFirst({
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          status: true,
+          actualRetrievedCount: true,
+          newUniqueCount: true,
+          existingDuplicateCount: true,
+          createdAt: true,
+        },
+      }),
     ]);
 
-    const workerOnline = latestActiveRun !== null;
+    const workerOnline = workerHeartbeatJob !== null || latestActiveRun !== null;
+    const lastHeartbeat = workerHeartbeatJob?.startedAt || latestActiveRun?.heartbeatAt || null;
+    const manualImportedCount = Math.max(0, totalTikTokAdsCount - autoDiscoveredAdsCount);
 
     return NextResponse.json({
       success: true,
       data: {
-        // Count only ads ingested via auto-discovery, not manual imports
+        // Count separation (Rule 121)
         totalDiscoveredAds: autoDiscoveredAdsCount,
+        totalTikTokAds: totalTikTokAdsCount,
+        manualImportedTikTokAds: manualImportedCount,
+        latestRunStats: latestRun
+          ? {
+              id: latestRun.id,
+              status: latestRun.status,
+              retrievedCount: latestRun.actualRetrievedCount,
+              newUniqueAds: latestRun.newUniqueCount,
+              duplicates: latestRun.existingDuplicateCount,
+              createdAt: latestRun.createdAt,
+            }
+          : null,
+
         totalRuns,
         completedRuns,
         blockedRuns,
@@ -78,20 +124,20 @@ export async function GET() {
         // Worker online state is cross-process via DB heartbeat — NOT module memory
         workerStatus: {
           isOnline: workerOnline,
-          isRunning: workerOnline, // alias for backwards compat with existing UI reads
-          lastHeartbeatAt: latestActiveRun?.heartbeatAt ?? null,
-          activeJobsCount: workerOnline ? 1 : 0,
+          isRunning: workerOnline,
+          lastHeartbeatAt: lastHeartbeat,
+          activeJobsCount: latestActiveRun ? 1 : 0,
           notice: workerOnline
-            ? "Worker process detected via heartbeat."
+            ? "Worker process detected via database heartbeat."
             : "No active worker process found. Start with: npm run discovery:worker",
         },
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "v9.1",
+        version: "v9.2",
         note:
-          "totalDiscoveredAds includes only auto-discovery ingested ads (AdSourceIdentity). " +
-          "workerStatus.isOnline is derived from DB heartbeat, not module-memory state.",
+          "totalDiscoveredAds counts only auto-discovery ingested ads (AdSourceIdentity). " +
+          "manualImportedTikTokAds counts manual imports without source identity.",
       },
     });
   } catch (err: unknown) {
