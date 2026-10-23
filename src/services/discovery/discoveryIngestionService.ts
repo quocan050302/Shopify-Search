@@ -23,7 +23,8 @@ export interface IngestionContext {
   jobId?: string;
   discoveryRunId?: string;
   providerId: string;
-  runMode?: "MANUAL" | "SCHEDULED" | "DRY_RUN";
+  runMode?: "MANUAL" | "SCHEDULED" | "DRY_RUN" | "SIMULATED";
+  isQuarantined?: boolean;
 }
 
 export interface IngestionResultSummary {
@@ -252,7 +253,8 @@ export async function ingestDiscoveredAds(
               observationCount: 1,
               status: "UNKNOWN", // Rule 80: UNKNOWN is strictly preserved
               lifecycleStatus: "UNKNOWN",
-              dataConfidence: "OBSERVED",
+              dataConfidence: context.isQuarantined ? "UNVERIFIED" : "OBSERVED",
+              isSyntheticQuarantine: Boolean(context.isQuarantined),
               sourceReportedStartAt: record.sourceReportedStartAt || null,
               sourceReportedEndAt: record.sourceReportedEndAt || null,
             },
@@ -266,6 +268,7 @@ export async function ingestDiscoveredAds(
               lastSeenAt: now,
               lastObservedAt: now,
               observationCount: { increment: 1 },
+              ...(context.isQuarantined ? { isSyntheticQuarantine: true } : {}),
               // Update landing page and headline if previously missing
               headline: targetAd.headline ? targetAd.headline : record.headline || undefined,
               landingPageUrl: targetAd.landingPageUrl ? targetAd.landingPageUrl : record.landingPageUrl || undefined,

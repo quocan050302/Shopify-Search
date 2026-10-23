@@ -21,6 +21,7 @@ import {
 import { ingestDiscoveredAds } from "../discoveryIngestionService";
 import { NormalizedDiscoveredAd } from "../types";
 import { AuthenticatedMuseAgent } from "@/services/security/museAuth";
+import { isTestOrSimulatedAgent } from "./museBridgeService";
 
 export const MuseResultSubmissionSchema = z.object({
   submissionId: z.string().min(1).default(() => `sub_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`),
@@ -223,12 +224,21 @@ export async function submitMuseResearchResults(
     errors: [] as Array<{ identityHash: string; error: string }>,
   };
 
+  const isSimulation =
+    run.runMode === "SIMULATED" ||
+    run.runMode === "TEST" ||
+    isTestOrSimulatedAgent(agent.agentId) ||
+    Boolean((rawPayload as Record<string, unknown>)?.isSimulation) ||
+    (rawPayload as Record<string, unknown>)?.environment === "TEST";
+
   if (normalized.length > 0) {
     ing = await ingestDiscoveredAds(normalized, {
       workspaceId: run.workspaceId,
       jobId: run.jobId || undefined,
       discoveryRunId: run.id,
       providerId: MUSE_PROVIDER_ID,
+      runMode: isSimulation ? "SIMULATED" : "MANUAL",
+      isQuarantined: isSimulation,
     });
   }
 
@@ -259,11 +269,12 @@ export async function submitMuseResearchResults(
       ? null
       : [...rejectedReasons, ...ing.errors.map((e) => e.error)].slice(0, 5).join(" | ") || null;
 
-  // 7. Update DiscoveryRun
+  // 7. Update DiscoveryRun (isolate simulated/test runs)
   await prisma.discoveryRun.update({
     where: { id: run.id },
     data: {
       status: finalStatus,
+      runMode: isSimulation ? "SIMULATED" : run.runMode,
       actualRetrievedCount: retrieved,
       validCount: Math.max(0, validCommitted),
       newUniqueCount: ing.newUniqueInserted,

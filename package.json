@@ -13,7 +13,9 @@
     "discovery:doctor": "tsx scripts/discovery-doctor.ts",
     "discovery:once": "tsx scripts/discovery-once.ts",
     "discovery:worker": "tsx scripts/discovery-worker.ts",
-    "discovery:dry-run": "tsx scripts/discovery-dry-run.ts"
+    "discovery:dry-run": "tsx scripts/discovery-dry-run.ts",
+    "muse:gateway": "tsx scripts/muse-gateway.ts",
+    "muse:tunnel": "tsx scripts/muse-tunnel.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

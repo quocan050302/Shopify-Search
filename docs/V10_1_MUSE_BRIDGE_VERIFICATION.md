@@ -158,5 +158,30 @@ $ npx tsx scripts/verify-v10-e2e.ts
 - [x] Diagnostic states accurately distinguish `CONFIGURED`, `AGENT_NOT_CONNECTED`, and `AGENT_VERIFIED`.
 - [x] Primary platform is Meta/Facebook while TikTok remains fully preserved.
 - [x] $0 external API spend guaranteed across all ledger transactions.
-- [x] All 21 test files (234 tests) pass with 0 failures.
+- [x] All 22 test files (243 tests) pass with 0 failures.
 - [x] Next.js production build succeeds with 41 static/dynamic routes.
+- [x] Dedicated local reverse proxy gateway (`127.0.0.1:8787`) enforces route whitelisting, 2MB size limit, rate limiting, and 404 for all other paths.
+- [x] Cloudflare Quick Tunnel points strictly to `http://127.0.0.1:8787` (port 3000 is never exposed).
+- [x] Completed test jobs or simulated heartbeats do NOT trick the bridge into `AGENT_VERIFIED` (honest `AGENT_NOT_CONNECTED` maintained).
+- [x] Test-created Facebook ads are isolated with `isSyntheticQuarantine = true` without deleting legitimate user records.
+
+---
+
+## 6. Local Reverse Proxy Gateway (Port 8787) Verification
+
+```bash
+$ npx vitest run tests/integration/museGateway.test.ts
+ ✓ tests/integration/museGateway.test.ts (9 tests)
+   ✓ allows permitted agent endpoint with valid MUSE_INGESTION_TOKEN
+   ✓ rejects request without authorization token with 401
+   ✓ rejects invalid token with 403
+   ✓ rejects ADMIN_API_KEY with 403 FORBIDDEN_ADMIN_CREDENTIAL_ON_AGENT_GATEWAY
+   ✓ returns 404 for forbidden routes outside whitelist (/, /settings, /api/v1/settings, dev routes)
+   ✓ returns 404 for non-whitelisted HTTP methods on agent routes
+   ✓ returns 413 when payload exceeds maximum size limit (2MB)
+   ✓ returns 429 when rate limit is exceeded (60 req/min)
+   ✓ ensures simulated heartbeats leave bridge in AGENT_NOT_CONNECTED while live external heartbeat sets AGENT_VERIFIED
+
+Test Files  1 passed (1)
+     Tests  9 passed (9)
+```

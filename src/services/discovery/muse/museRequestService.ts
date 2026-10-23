@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { MUSE_PROVIDER_ID } from "../normalization/normalizeFacebookAd";
 import { DiscoveryQuerySchema, DiscoveryJobStatus } from "../types";
 import { AuthenticatedMuseAgent } from "@/services/security/museAuth";
+import { isTestOrSimulatedAgent } from "./museBridgeService";
 
 export interface CreateMuseRequestInput {
   workspaceId?: string;
@@ -297,12 +298,14 @@ export async function claimMuseResearchRequest(
       }
 
       // Claim request
+      const isSim = isTestOrSimulatedAgent(agent.agentId);
       const updated = await tx.discoveryRun.update({
         where: { id: run.id },
         data: {
           status: "CLAIMED",
           startedAt: run.startedAt || now,
           heartbeatAt: now,
+          ...(isSim ? { runMode: "SIMULATED" } : {}),
         },
       });
 
