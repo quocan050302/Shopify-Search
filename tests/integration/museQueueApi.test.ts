@@ -20,6 +20,11 @@ const ADMIN_TEST_KEY = "admin_super_secret_key_999";
 describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
   const originalSecret = process.env.MUSE_INGESTION_TOKEN;
   const originalAdminKey = process.env.ADMIN_API_KEY;
+  const testRunIds: string[] = [];
+  function trackRun(id: string): string {
+    testRunIds.push(id);
+    return id;
+  }
 
   beforeAll(() => {
     process.env.MUSE_INGESTION_TOKEN = TEST_SECRET;
@@ -29,17 +34,15 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
   afterAll(async () => {
     process.env.MUSE_INGESTION_TOKEN = originalSecret;
     process.env.ADMIN_API_KEY = originalAdminKey;
-    // Clean up test runs and ads
+    // Clean up ONLY runs created by this test suite to preserve real user runs
     try {
-      const testRuns = await prisma.discoveryRun.findMany({
-        where: { providerId: MUSE_PROVIDER_ID },
-      });
-      for (const r of testRuns) {
-        await prisma.providerRequestLedger.deleteMany({ where: { discoveryRunId: r.id } });
-        if (r.jobId) {
+      for (const id of testRunIds) {
+        await prisma.providerRequestLedger.deleteMany({ where: { discoveryRunId: id } });
+        const r = await prisma.discoveryRun.findUnique({ where: { id } });
+        if (r?.jobId) {
           await prisma.syncJob.delete({ where: { id: r.jobId } }).catch(() => {});
         }
-        await prisma.discoveryRun.delete({ where: { id: r.id } }).catch(() => {});
+        await prisma.discoveryRun.delete({ where: { id } }).catch(() => {});
       }
     } catch (e) {
       console.warn("Cleanup warning:", e);
@@ -120,7 +123,7 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
     expect(createRes.status).toBe(200);
     const createJson = await createRes.json();
     expect(createJson.success).toBe(true);
-    const requestId = createJson.data.requestId;
+    const requestId = trackRun(createJson.data.requestId);
     expect(requestId).toBeDefined();
     expect(createJson.data.status).toBe("PENDING");
     expect(createJson.data.platform).toBe("META");
@@ -178,6 +181,7 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       method: "POST",
       headers: {
         authorization: AUTH_HEADER,
+        "x-muse-gateway-source": "muse-reverse-proxy-8787",
         "content-type": "application/json",
       },
       body: JSON.stringify({ requestId }),
@@ -208,7 +212,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       body: JSON.stringify({ keywords: ["ergonomic mousepad"] }),
     });
     const createRes = await postRequest(createReq);
-    const { requestId } = (await createRes.json()).data;
+    const { requestId: rawId } = (await createRes.json()).data;
+    const requestId = trackRun(rawId);
 
     // Agent 1 claims
     const claim1Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
@@ -239,7 +244,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["sunset lamp"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
 
     // Cancel request
     const cancelReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
@@ -267,7 +273,17 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["crystal hair eraser"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent claims request
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-idempotent-agent", "content-type": "application/json" },
+      body: JSON.stringify({ action: "CLAIM" }),
+    });
+    const claimRes = await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+    expect(claimRes.status).toBe(200);
 
     const testLibraryId = "2489" + String(Date.now()).slice(-10);
     const submissionPayload = {
@@ -286,9 +302,9 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
     };
 
     // First submission
-    const sub1Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}/results`, {
+    const sub1Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
       method: "POST",
-      headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-idempotent-agent", "content-type": "application/json" },
       body: JSON.stringify(submissionPayload),
     });
     const sub1Res = await postAgentResults(sub1Req, { params: Promise.resolve({ id: requestId }) });
@@ -300,7 +316,7 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
     // Second submission with exact same submissionId (Idempotent replay)
     const sub2Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
       method: "POST",
-      headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-idempotent-agent", "content-type": "application/json" },
       body: JSON.stringify(submissionPayload),
     });
     const sub2Res = await postAgentResults(sub2Req, { params: Promise.resolve({ id: requestId }) });
@@ -322,7 +338,17 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["cleaning gel putty"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent claims request
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-mixed-agent", "content-type": "application/json" },
+      body: JSON.stringify({ action: "CLAIM" }),
+    });
+    const claimRes = await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+    expect(claimRes.status).toBe(200);
 
     const validLibId = "3344" + String(Date.now()).slice(-10);
     const mixedPayload = {
@@ -343,12 +369,12 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       ],
     };
 
-    const subReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}/results`, {
+    const subReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
       method: "POST",
-      headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-mixed-agent", "content-type": "application/json" },
       body: JSON.stringify(mixedPayload),
     });
-    const subRes = await postResults(subReq, { params: Promise.resolve({ id: requestId }) });
+    const subRes = await postAgentResults(subReq, { params: Promise.resolve({ id: requestId }) });
     expect(subRes.status).toBe(200);
     const subJson = await subRes.json();
 
@@ -366,7 +392,17 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["extremely obscure keyword nonexistent ad"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent claims request
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-empty-agent", "content-type": "application/json" },
+      body: JSON.stringify({ action: "CLAIM" }),
+    });
+    const claimRes = await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+    expect(claimRes.status).toBe(200);
 
     // Agent submits empty array indicating no ads were found on Meta Ad Library
     const emptyPayload = {
@@ -375,12 +411,12 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       outcome: "COMPLETED_EMPTY",
     };
 
-    const emptyReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}/results`, {
+    const emptyReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
       method: "POST",
-      headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
+      headers: { authorization: AUTH_HEADER, "x-muse-agent-id": "muse-empty-agent", "content-type": "application/json" },
       body: JSON.stringify(emptyPayload),
     });
-    const emptyRes = await postResults(emptyReq, { params: Promise.resolve({ id: requestId }) });
+    const emptyRes = await postAgentResults(emptyReq, { params: Promise.resolve({ id: requestId }) });
     expect(emptyRes.status).toBe(200);
     const emptyJson = await emptyRes.json();
 
@@ -398,7 +434,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["worker exclusion test"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
 
     // Local orchestrator worker claims pending jobs
     const claimedByWorker = await discoveryOrchestrator.claimPendingDiscoveryJob();
@@ -425,7 +462,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["ice roller face"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
 
     // 2. User imports artifact via dedicated /import endpoint (no agent secret!)
     const userImportId = "9876" + String(Date.now()).slice(-10);
@@ -469,7 +507,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
       headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
       body: JSON.stringify({ keywords: ["sleep mask noise cancelling"] }),
     });
-    const { requestId } = (await (await postRequest(createReq)).json()).data;
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
 
     // Agent attempts to cancel via agent gateway
     const agentCancelReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
@@ -487,5 +526,167 @@ describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
     expect(agentCancelRes.status).toBe(403);
     const cancelJson = await agentCancelRes.json();
     expect(cancelJson.error.code).toBe("FORBIDDEN_ACTION");
+  });
+
+  // Test 227: Rejects result submission when request belongs to another workspace
+  it("Test 227: rejects result submission when request belongs to another workspace", async () => {
+    const rogueWs = await prisma.workspace.create({
+      data: { id: `ws_rogue_${Date.now()}`, name: "Rogue Workspace" },
+    });
+    const run = await prisma.discoveryRun.create({
+      data: {
+        workspaceId: rogueWs.id,
+        providerId: MUSE_PROVIDER_ID,
+        status: "CLAIMED",
+        queryConfigJson: JSON.stringify({
+          keywords: ["workspace isolation test"],
+          market: "US",
+          claimedByAgentId: "external-agent-1",
+        }),
+      },
+    });
+    trackRun(run.id);
+
+    const subReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${run.id}/results`, {
+      method: "POST",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "external-agent-1",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        submissionId: `sub_ws_test_${Date.now()}`,
+        records: [],
+      }),
+    });
+
+    const res = await postAgentResults(subReq, { params: Promise.resolve({ id: run.id }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error.code).toBe("UNAUTHORIZED_WORKSPACE");
+
+    await prisma.workspace.delete({ where: { id: rogueWs.id } }).catch(() => {});
+  });
+
+  // Test 228: Rejects result submission from external agent on an unclaimed PENDING request
+  it("Test 228: rejects result submission from external agent on an unclaimed PENDING request", async () => {
+    const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+      method: "POST",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ keywords: ["unclaimed test keyword"] }),
+    });
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent attempts to submit results directly without claiming
+    const subReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
+      method: "POST",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "agent-skip-claim",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        submissionId: `sub_unclaimed_${Date.now()}`,
+        records: [],
+      }),
+    });
+
+    const res = await postAgentResults(subReq, { params: Promise.resolve({ id: requestId }) });
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error.code).toBe("REQUEST_NOT_CLAIMED");
+  });
+
+  // Test 229: Rejects result submission from Agent 2 when request was claimed by Agent 1
+  it("Test 229: prevents agent without claim ownership from submitting results", async () => {
+    const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+      method: "POST",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ keywords: ["ownership test item"] }),
+    });
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent 1 claims request
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "legitimate-agent-1",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ action: "CLAIM" }),
+    });
+    const claimRes = await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+    expect(claimRes.status).toBe(200);
+
+    // Rogue Agent 2 attempts to submit results into request claimed by Agent 1
+    const rogueSubReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
+      method: "POST",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "rogue-agent-2",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        submissionId: `sub_rogue_${Date.now()}`,
+        records: [],
+      }),
+    });
+
+    const rogueRes = await postAgentResults(rogueSubReq, { params: Promise.resolve({ id: requestId }) });
+    expect(rogueRes.status).toBe(403);
+    const rogueJson = await rogueRes.json();
+    expect(rogueJson.error.code).toBe("UNAUTHORIZED_AGENT");
+  });
+
+  // Test 230: Rejects result submission when agent claim lease has expired (> 15 minutes)
+  it("Test 230: rejects result submission when agent claim lease has expired", async () => {
+    const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+      method: "POST",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ keywords: ["expired lease test"] }),
+    });
+    const { requestId: rawId } = (await (await postRequest(createReq)).json()).data;
+    const requestId = trackRun(rawId);
+
+    // Agent claims request
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "lease-expiring-agent",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ action: "CLAIM" }),
+    });
+    await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+
+    // Simulate lease expiration by updating startedAt and heartbeatAt to 20 minutes ago
+    const twentyMinsAgo = new Date(Date.now() - 20 * 60 * 1000);
+    await prisma.discoveryRun.update({
+      where: { id: requestId },
+      data: { startedAt: twentyMinsAgo, heartbeatAt: twentyMinsAgo },
+    });
+
+    // Agent attempts to submit results after lease expiration
+    const expiredSubReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
+      method: "POST",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-muse-agent-id": "lease-expiring-agent",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        submissionId: `sub_expired_${Date.now()}`,
+        records: [],
+      }),
+    });
+
+    const expiredRes = await postAgentResults(expiredSubReq, { params: Promise.resolve({ id: requestId }) });
+    expect(expiredRes.status).toBe(409);
+    const expiredJson = await expiredRes.json();
+    expect(expiredJson.error.code).toBe("LEASE_EXPIRED");
   });
 });

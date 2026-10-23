@@ -261,9 +261,9 @@ describe("Restricted Local Muse Gateway (127.0.0.1:8787)", () => {
 
   // Test 9: Live external vs simulated test heartbeat separation
   it("ensures simulated heartbeats leave bridge in AGENT_NOT_CONNECTED while live external heartbeat sets AGENT_VERIFIED", async () => {
-    // Reset prior test runs and jobs so we test simulated heartbeat isolation cleanly
+    // Reset simulated test runs and jobs so we test simulated heartbeat isolation cleanly
     await prisma.discoveryRun.updateMany({
-      where: { providerId: "muse-ad-library" },
+      where: { providerId: "muse-ad-library", runMode: { in: ["SIMULATED", "TEST"] } },
       data: { status: "COMPLETED", heartbeatAt: null },
     });
     await prisma.syncJob.deleteMany({

@@ -11,7 +11,7 @@
 import { prisma } from "@/lib/db";
 import { MUSE_PROVIDER_ID } from "../normalization/normalizeFacebookAd";
 import { DiscoveryQuerySchema, DiscoveryJobStatus } from "../types";
-import { AuthenticatedMuseAgent } from "@/services/security/museAuth";
+import { AuthenticatedMuseAgent, getAuthorizedWorkspaceForAgent } from "@/services/security/museAuth";
 import { isTestOrSimulatedAgent } from "./museBridgeService";
 
 export interface CreateMuseRequestInput {
@@ -55,16 +55,29 @@ export async function createMuseResearchRequest(
   input: CreateMuseRequestInput,
   context?: { workspaceId?: string }
 ): Promise<{ requestId: string; syncJobId: string; status: DiscoveryJobStatus }> {
-  // 1. Resolve and validate workspace
-  let effectiveWorkspaceId = input.workspaceId || context?.workspaceId || "default-workspace";
+  // 1. Resolve and validate workspace consistently with agent gateway
+  const defaultAgentWs = getAuthorizedWorkspaceForAgent();
+  let effectiveWorkspaceId = input.workspaceId || context?.workspaceId || defaultAgentWs;
   const workspace = await prisma.workspace.findUnique({
     where: { id: effectiveWorkspaceId },
     select: { id: true },
   });
 
   if (!workspace) {
-    const fallback = await prisma.workspace.findFirst({ select: { id: true } });
-    if (fallback) effectiveWorkspaceId = fallback.id;
+    const defaultWsExists = await prisma.workspace.findUnique({
+      where: { id: defaultAgentWs },
+      select: { id: true },
+    });
+    if (defaultWsExists) {
+      effectiveWorkspaceId = defaultWsExists.id;
+    } else {
+      const fallback = await prisma.workspace.findFirst({ select: { id: true } });
+      if (fallback) {
+        effectiveWorkspaceId = fallback.id;
+      } else {
+        effectiveWorkspaceId = defaultAgentWs;
+      }
+    }
   }
 
   // 2. Validate and clean keywords
@@ -169,7 +182,14 @@ export async function listMuseResearchRequests(filter: {
     whereClause.status = status;
   }
   if (filter.workspaceId && filter.workspaceId !== "ALL") {
-    whereClause.workspaceId = filter.workspaceId;
+    const canonicalAgentWs = getAuthorizedWorkspaceForAgent();
+    if (filter.workspaceId === canonicalAgentWs || filter.workspaceId === "default-workspace") {
+      whereClause.workspaceId = {
+        in: Array.from(new Set([filter.workspaceId, canonicalAgentWs, "default-workspace"])),
+      };
+    } else {
+      whereClause.workspaceId = filter.workspaceId;
+    }
   }
 
   const runs = await prisma.discoveryRun.findMany({
@@ -222,7 +242,14 @@ export async function getMuseResearchRequest(
     providerId: MUSE_PROVIDER_ID,
   };
   if (workspaceId && workspaceId !== "ALL") {
-    whereClause.workspaceId = workspaceId;
+    const canonicalAgentWs = getAuthorizedWorkspaceForAgent();
+    if (workspaceId === canonicalAgentWs || workspaceId === "default-workspace") {
+      whereClause.workspaceId = {
+        in: Array.from(new Set([workspaceId, canonicalAgentWs, "default-workspace"])),
+      };
+    } else {
+      whereClause.workspaceId = workspaceId;
+    }
   }
 
   const run = await prisma.discoveryRun.findFirst({
@@ -283,21 +310,45 @@ export async function claimMuseResearchRequest(
         return { success: false, error: "NOT_FOUND" };
       }
 
+      // Check agent workspace
+      const canonicalAgentWs = getAuthorizedWorkspaceForAgent();
+      const isAgentInDefaultWs = agent.workspaceId === "default-workspace" || agent.workspaceId === canonicalAgentWs;
+      const isRunInDefaultWs = run.workspaceId === "default-workspace" || run.workspaceId === canonicalAgentWs;
+      const isWsMatch = (isAgentInDefaultWs && isRunInDefaultWs) || run.workspaceId === agent.workspaceId;
+
+      if (agent.workspaceId !== "ALL" && !isWsMatch) {
+        return { success: false, error: "UNAUTHORIZED_WORKSPACE" };
+      }
+
+      let currentConfig: Record<string, unknown> = {};
+      try {
+        currentConfig = JSON.parse(run.queryConfigJson);
+      } catch {
+        currentConfig = {};
+      }
+
+      const existingClaimedAgent = typeof currentConfig.claimedByAgentId === "string" ? currentConfig.claimedByAgentId : null;
+
       // Check if already claimed and lease is still valid
       if (
         (run.status === "CLAIMED" || run.status === "RUNNING") &&
         run.heartbeatAt &&
         run.heartbeatAt > leaseExpirationCutoff
       ) {
-        return { success: false, error: "ALREADY_CLAIMED" };
+        if (existingClaimedAgent && existingClaimedAgent !== agent.agentId) {
+          return { success: false, error: "ALREADY_CLAIMED" };
+        }
       }
 
       // Check if terminal
-      if (run.status === "COMPLETED" || run.status === "PARTIALLY_COMPLETED" || run.status === "CANCELLED") {
+      if (run.status === "COMPLETED" || run.status === "PARTIALLY_COMPLETED" || run.status === "CANCELLED" || run.status === "FAILED") {
         return { success: false, error: "REQUEST_ALREADY_CLOSED" };
       }
 
-      // Claim request
+      // Claim request and save claimedByAgentId into queryConfigJson
+      currentConfig.claimedByAgentId = agent.agentId;
+      currentConfig.claimedAt = now.toISOString();
+
       const isSim = isTestOrSimulatedAgent(agent.agentId);
       const updated = await tx.discoveryRun.update({
         where: { id: run.id },
@@ -305,6 +356,7 @@ export async function claimMuseResearchRequest(
           status: "CLAIMED",
           startedAt: run.startedAt || now,
           heartbeatAt: now,
+          queryConfigJson: JSON.stringify(currentConfig),
           ...(isSim ? { runMode: "SIMULATED" } : {}),
         },
       });
@@ -346,7 +398,6 @@ export async function updateMuseRequestStatus(
   update: { status: "RUNNING" | "FAILED" | "CANCELLED"; errorMessage?: string },
   agent: AuthenticatedMuseAgent
 ): Promise<{ success: boolean; status?: string; error?: string }> {
-  void agent;
   const run = await prisma.discoveryRun.findUnique({
     where: { id: requestId },
   });
@@ -368,6 +419,33 @@ export async function updateMuseRequestStatus(
       success: false,
       error: `Request '${requestId}' has been cancelled and cannot be changed to ${update.status}.`,
     };
+  }
+
+  // Check agent authorization and claim ownership for external agents
+  if (agent.agentId !== "user-ui-session" && !agent.agentId.startsWith("user-ui-")) {
+    const canonicalAgentWs = getAuthorizedWorkspaceForAgent();
+    const isAgentInDefaultWs = agent.workspaceId === "default-workspace" || agent.workspaceId === canonicalAgentWs;
+    const isRunInDefaultWs = run.workspaceId === "default-workspace" || run.workspaceId === canonicalAgentWs;
+    const isWsMatch = (isAgentInDefaultWs && isRunInDefaultWs) || run.workspaceId === agent.workspaceId;
+
+    if (agent.workspaceId !== "ALL" && !isWsMatch) {
+      return { success: false, error: "UNAUTHORIZED_WORKSPACE" };
+    }
+
+    let config: Record<string, unknown> = {};
+    try {
+      config = JSON.parse(run.queryConfigJson);
+    } catch {
+      config = {};
+    }
+
+    const claimedAgentId = typeof config.claimedByAgentId === "string" ? config.claimedByAgentId : null;
+    if (claimedAgentId && claimedAgentId !== agent.agentId) {
+      return {
+        success: false,
+        error: `Unauthorized agent: request was claimed by '${claimedAgentId}', not '${agent.agentId}'.`,
+      };
+    }
   }
 
   const now = new Date();

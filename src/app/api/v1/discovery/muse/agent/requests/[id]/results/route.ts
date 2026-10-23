@@ -45,24 +45,47 @@ export async function POST(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to submit Muse research results.";
     const isNotFound = msg.includes("not found");
+    const isUnauthorized = msg.includes("Unauthorized");
+    const isLeaseExpired = msg.includes("expired");
+    const isUnclaimed = msg.includes("has not been claimed yet") || msg.includes("has no active claim");
     const isConflict = msg.includes("already");
     const isValidation = msg.includes("Invalid");
+
+    const code = isNotFound
+      ? "NOT_FOUND"
+      : isUnauthorized
+      ? msg.includes("workspace")
+        ? "UNAUTHORIZED_WORKSPACE"
+        : "UNAUTHORIZED_AGENT"
+      : isLeaseExpired
+      ? "LEASE_EXPIRED"
+      : isUnclaimed
+      ? "REQUEST_NOT_CLAIMED"
+      : isConflict
+      ? "REQUEST_ALREADY_CLOSED"
+      : isValidation
+      ? "VALIDATION_FAILED"
+      : "MUSE_RESULTS_FAILED";
+
+    const status = isNotFound
+      ? 404
+      : isUnauthorized
+      ? 403
+      : (isConflict || isLeaseExpired || isUnclaimed)
+      ? 409
+      : isValidation
+      ? 400
+      : 500;
 
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: isNotFound
-            ? "NOT_FOUND"
-            : isConflict
-            ? "REQUEST_ALREADY_CLOSED"
-            : isValidation
-            ? "VALIDATION_FAILED"
-            : "MUSE_RESULTS_FAILED",
+          code,
           message: msg,
         },
       },
-      { status: isNotFound ? 404 : isConflict ? 409 : isValidation ? 400 : 500 }
+      { status }
     );
   }
 }

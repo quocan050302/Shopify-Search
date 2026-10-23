@@ -20,7 +20,7 @@ import {
 } from "../normalization/normalizeFacebookAd";
 import { ingestDiscoveredAds } from "../discoveryIngestionService";
 import { NormalizedDiscoveredAd } from "../types";
-import { AuthenticatedMuseAgent } from "@/services/security/museAuth";
+import { AuthenticatedMuseAgent, getAuthorizedWorkspaceForAgent } from "@/services/security/museAuth";
 import { isTestOrSimulatedAgent } from "./museBridgeService";
 
 export const MuseResultSubmissionSchema = z.object({
@@ -113,10 +113,62 @@ export async function submitMuseResearchResults(
     throw new Error(`Muse request '${requestId}' not found.`);
   }
 
+  // 3A. Enforce Agent Workspace Isolation
+  const canonicalAgentWs = getAuthorizedWorkspaceForAgent();
+  const isAgentInDefaultWs = agent.workspaceId === "default-workspace" || agent.workspaceId === canonicalAgentWs;
+  const isRunInDefaultWs = run.workspaceId === "default-workspace" || run.workspaceId === canonicalAgentWs;
+  const isWorkspaceMatch = (isAgentInDefaultWs && isRunInDefaultWs) || run.workspaceId === agent.workspaceId;
+
+  if (agent.workspaceId !== "ALL" && !isWorkspaceMatch) {
+    throw new Error(
+      `Unauthorized workspace: request '${requestId}' belongs to workspace '${run.workspaceId}', but agent is authorized for '${agent.workspaceId}'.`
+    );
+  }
+
+  // 3B. Check Terminal Request Status
   if (run.status === "COMPLETED" || run.status === "CANCELLED" || run.status === "FAILED") {
     throw new Error(
       `Muse request '${requestId}' is already ${run.status}; results are accepted only once.`
     );
+  }
+
+  // 3C. Claim Ownership & Active Lease Check for External Agents
+  const isUserSession = agent.agentId === "user-ui-session" || agent.agentId.startsWith("user-ui-");
+  if (!isUserSession) {
+    if (run.status === "PENDING") {
+      throw new Error(
+        `Request '${requestId}' has not been claimed yet. External agents must claim the request before submitting results.`
+      );
+    }
+
+    let config: Record<string, unknown> = {};
+    try {
+      config = JSON.parse(run.queryConfigJson);
+    } catch {
+      config = {};
+    }
+
+    const claimedAgentId = typeof config.claimedByAgentId === "string" ? config.claimedByAgentId : null;
+    if (!claimedAgentId) {
+      throw new Error(
+        `Request '${requestId}' has no active claim. External agents must claim the request before submitting results.`
+      );
+    }
+
+    if (claimedAgentId !== agent.agentId) {
+      throw new Error(
+        `Unauthorized agent: request '${requestId}' was claimed by agent '${claimedAgentId}', not '${agent.agentId}'.`
+      );
+    }
+
+    // Verify lease has not expired (15 minutes)
+    const LEASE_DURATION_MS = 15 * 60 * 1000;
+    const lastActiveTime = run.heartbeatAt || run.startedAt;
+    if (lastActiveTime && Date.now() - lastActiveTime.getTime() > LEASE_DURATION_MS) {
+      throw new Error(
+        `Agent lease for request '${requestId}' has expired. Re-claim the request before submitting results.`
+      );
+    }
   }
 
   // Extract query context
