@@ -89,6 +89,11 @@ export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
         <div>
           {/* Category & Status */}
           <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
+            {ad.platform === "META" && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                FB ID: {ad.externalAdId || "Ad Library"}
+              </span>
+            )}
             <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               {ad.category}
             </span>

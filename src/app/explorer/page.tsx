@@ -108,10 +108,23 @@ export default function ExplorerPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [platform, setPlatform] = useState("ALL");
+  const [platform, setPlatform] = useState("META"); // Meta is primary platform
   const [category, setCategory] = useState("ALL");
   const [minAgeDays, setMinAgeDays] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Read URL query parameters on initial mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const urlPlatform = sp.get("platform");
+      if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
+      const urlMode = sp.get("mode");
+      if (urlMode && (urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
+        setResearchMode(urlMode as ResearchMode);
+      }
+    }
+  }, []);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -290,12 +303,20 @@ export default function ExplorerPage() {
                 <span className="text-slate-500 font-medium">Platform:</span>
                 <select
                   value={platform}
-                  onChange={(e) => { setPlatform(e.target.value); setPage(1); }}
-                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                  onChange={(e) => {
+                    setPlatform(e.target.value);
+                    setPage(1);
+                    if (typeof window !== "undefined") {
+                      const sp = new URLSearchParams(window.location.search);
+                      sp.set("platform", e.target.value);
+                      window.history.replaceState(null, "", `?${sp.toString()}`);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs cursor-pointer"
                 >
-                  <option value="ALL">All Platforms</option>
-                  <option value="META">Meta Ads (FB/IG)</option>
+                  <option value="META">Meta / Facebook Ads (Primary)</option>
                   <option value="TIKTOK">TikTok Ads</option>
+                  <option value="ALL">All Platforms</option>
                 </select>
               </div>
 

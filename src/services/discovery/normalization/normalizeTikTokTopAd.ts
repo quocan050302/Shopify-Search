@@ -162,6 +162,7 @@ export function normalizeTikTokTopAd(
   return {
     platform: "TIKTOK",
     providerId,
+    mediaType: "VIDEO",
     sourceNamespace: `TIKTOK:${providerId.toUpperCase()}`,
     sourceExternalId,
     stableIdentityHash,

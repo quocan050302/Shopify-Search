@@ -112,11 +112,50 @@ export interface DiscoveryProviderCapabilities {
   lastVerificationError?: string | null;
 }
 
+// ─── Platforms & Execution Modes ─────────────────────────────────────────────
+
+export const DISCOVERY_PLATFORMS = ["TIKTOK", "META"] as const;
+export type DiscoveryPlatform = (typeof DISCOVERY_PLATFORMS)[number];
+
+export const MUSE_EXECUTION_MODES = [
+  "MUSE_ASSISTED_ON_DEMAND",
+  "MUSE_CONNECTED_AGENT",
+  "MUSE_SCHEDULED_VERIFIED",
+  "META_OFFICIAL_API",
+  "MANUAL_IMPORT",
+  "LOCAL_DATABASE_SEARCH",
+] as const;
+export type MuseExecutionMode = (typeof MUSE_EXECUTION_MODES)[number];
+
+export interface SourceEvidence {
+  sourceUrl: string;
+  observedAt: string;
+  observationMethod: string;
+  verifiedLibraryId: boolean;
+  reportedStartDate?: string | null;
+  reportedStatus?: "ACTIVE" | "INACTIVE" | "UNKNOWN";
+  facebookPlacement?: "CONFIRMED" | "POSSIBLE" | "UNKNOWN";
+  marketEvidence?: "QUERY_FILTER" | "CONFIRMED_DELIVERY" | "UNKNOWN";
+  notes?: string | null;
+}
+
+export const SourceEvidenceSchema = z.object({
+  sourceUrl: z.string().url(),
+  observedAt: z.string(),
+  observationMethod: z.string(),
+  verifiedLibraryId: z.boolean(),
+  reportedStartDate: z.string().nullable().optional(),
+  reportedStatus: z.enum(["ACTIVE", "INACTIVE", "UNKNOWN"]).optional(),
+  facebookPlacement: z.enum(["CONFIRMED", "POSSIBLE", "UNKNOWN"]).optional(),
+  marketEvidence: z.enum(["QUERY_FILTER", "CONFIRMED_DELIVERY", "UNKNOWN"]).optional(),
+  notes: z.string().nullable().optional(),
+});
+
 // ─── Discovery Query ────────────────────────────────────────────────────────
 
 export const DiscoveryQuerySchema = z.object({
   workspaceId: z.string().default("default-workspace"),
-  platform: z.literal("TIKTOK").default("TIKTOK"),
+  platform: z.enum(DISCOVERY_PLATFORMS).default("TIKTOK"),
   market: z.string().default("US"),
   keywords: z.array(z.string()).default([]),
   industries: z.array(z.string()).default([]),
@@ -155,8 +194,9 @@ export const DiscoveredMetricSchema = z.object({
 });
 
 export const NormalizedDiscoveredAdSchema = z.object({
-  platform: z.literal("TIKTOK"),
+  platform: z.enum(DISCOVERY_PLATFORMS),
   providerId: z.string(),
+  mediaType: z.enum(["VIDEO", "IMAGE", "CAROUSEL", "UNKNOWN"]).default("UNKNOWN").optional(),
   sourceNamespace: z.string(),
   sourceExternalId: z.string().nullable(),
   stableIdentityHash: z.string(),
@@ -183,6 +223,8 @@ export const NormalizedDiscoveredAdSchema = z.object({
   retrievedAt: z.date().default(() => new Date()),
   confidenceScore: z.number().min(0).max(1).default(0.8),
   rawEvidenceReference: z.string().nullable().optional(),
+  sourceEvidence: SourceEvidenceSchema.optional(),
+  idempotencyKey: z.string().optional(),
 });
 
 export type NormalizedDiscoveredAd = z.infer<typeof NormalizedDiscoveredAdSchema>;
@@ -203,11 +245,13 @@ export interface DiscoveryPageResult {
 
 export const DISCOVERY_JOB_STATUS = {
   PENDING: "PENDING",
+  CLAIMED: "CLAIMED",
   RUNNING: "RUNNING",
-  COMPLETED: "COMPLETED",
   PARTIALLY_COMPLETED: "PARTIALLY_COMPLETED",
+  COMPLETED: "COMPLETED",
   FAILED: "FAILED",
   CANCELLED: "CANCELLED",
+  EXPIRED: "EXPIRED",
   BLOCKED_SOURCE: "BLOCKED_SOURCE",
   BUDGET_BLOCKED: "BUDGET_BLOCKED",
 } as const;

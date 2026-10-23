@@ -14,6 +14,8 @@ import {
   Lock,
   ShieldCheck,
   Radar,
+  Flame,
+  Globe2,
 } from "lucide-react";
 
 export function Sidebar() {
@@ -21,13 +23,15 @@ export function Sidebar() {
 
   const navigation = [
     { name: "Overview", href: "/", icon: Compass },
-    { name: "Auto Discovery", href: "/discovery", icon: Radar },
-    { name: "Winning Ads Explorer", href: "/explorer", icon: PlaySquare },
+    { name: "Meta Ads Discovery", href: "/meta-discovery", icon: Globe2 },
+    { name: "Facebook Winning Ads Explorer", href: "/explorer", icon: PlaySquare },
+    { name: "Evergreen Research", href: "/explorer?mode=EVERGREEN", icon: Flame },
     { name: "Winning Product Finder", href: "/products", icon: ShoppingBag },
     { name: "AI Creative Analyzer", href: "/analyzer", icon: Sparkles },
     { name: "Competitor Tracker", href: "/tracker", icon: Users },
     { name: "Watchlist", href: "/watchlist", icon: Bookmark },
     { name: "Reports & Exports", href: "/reports", icon: FileSpreadsheet },
+    { name: "TikTok Research", href: "/discovery", icon: Radar },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 

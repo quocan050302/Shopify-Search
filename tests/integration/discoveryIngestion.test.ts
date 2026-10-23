@@ -10,6 +10,7 @@ describe("Discovery Ingestion Pipeline & Transactional Integrity", () => {
   const sampleAd: NormalizedDiscoveredAd = {
     platform: "TIKTOK",
     providerId: "tiktok-topads",
+    mediaType: "VIDEO",
     sourceNamespace: "TIKTOK:TIKTOK-TOPADS",
     sourceExternalId: testMaterialId,
     stableIdentityHash: "test_stable_hash_9876543210123456789",

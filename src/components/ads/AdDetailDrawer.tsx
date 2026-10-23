@@ -717,7 +717,7 @@ export function AdDetailDrawer({
                     <span className="text-slate-500 block text-[10px]">Provider Calendar Age</span>
                     <strong className="text-white block font-mono">
                       {ad.sourceReportedStartAt
-                        ? `${Math.max(1, Math.round((Date.now() - new Date(ad.sourceReportedStartAt).getTime()) / (1000 * 60 * 60 * 24)))} days`
+                        ? `${ad.daysRunning || 1} days`
                         : "Not reported by source"}
                     </strong>
                     <span className="text-[10px] text-slate-400">
@@ -725,6 +725,22 @@ export function AdDetailDrawer({
                     </span>
                   </div>
                 </div>
+
+                {ad.platform === "META" && (
+                  <div className="p-2.5 rounded-lg bg-blue-950/30 border border-blue-800/40 text-[10px] text-blue-300 space-y-1">
+                    <div className="font-semibold flex items-center gap-1 text-blue-200">
+                      <ShieldCheck className="h-3 w-3 text-blue-400" />
+                      <span>Meta Ad Library Provenance</span>
+                    </div>
+                    <p className="text-slate-300">
+                      Researched via external Muse AI agent on public Meta Ad Library. Meta Library ID:{" "}
+                      <span className="font-mono text-white">{ad.externalAdId || "N/A"}</span>.
+                    </p>
+                    <p className="text-slate-400">
+                      Meta Ad Library does not expose spend, impressions, or ROAS for US commercial ads; metrics are strictly omitted.
+                    </p>
+                  </div>
+                )}
 
                 {ad.originalAdUrl?.includes("period=180") && (
                   <div className="p-2 rounded-lg bg-indigo-950/30 border border-indigo-800/40 text-[10px] text-indigo-300">

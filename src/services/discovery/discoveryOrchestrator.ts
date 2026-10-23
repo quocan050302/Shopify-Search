@@ -47,7 +47,10 @@ export class DiscoveryOrchestrator {
    */
   async claimPendingDiscoveryJob(): Promise<string | null> {
     const pendingRun = await prisma.discoveryRun.findFirst({
-      where: { status: "PENDING" },
+      // Muse provider jobs are completed asynchronously by the external Muse
+      // agent (see /api/v1/discovery/muse/*) — the local worker must never
+      // claim or execute them.
+      where: { status: "PENDING", providerId: { not: "muse-ad-library" } },
       orderBy: { createdAt: "asc" },
       select: { id: true },
     });
@@ -85,6 +88,13 @@ export class DiscoveryOrchestrator {
 
     if (!run) {
       throw new Error(`Discovery run with ID '${runId}' not found.`);
+    }
+
+    if (run.providerId === "muse-ad-library") {
+      throw new Error(
+        "Muse provider jobs are asynchronous and are completed by the external Muse agent " +
+          "via POST /api/v1/discovery/muse/requests/:id/results — they cannot be executed by the local orchestrator."
+      );
     }
 
     let query: DiscoveryQuery;
@@ -423,7 +433,7 @@ export class DiscoveryOrchestrator {
         workspaceId: effectiveWorkspaceId,
         scheduleId: scheduleId || null,
         jobId: syncJob.id,
-        providerId: validated.providerId || "tiktok-topads",
+        providerId: validated.providerId || (validated.platform === "META" ? "muse-ad-library" : "tiktok-topads"),
         status: "PENDING",
         runMode: validated.runMode,
         queryConfigJson: JSON.stringify(validated),
