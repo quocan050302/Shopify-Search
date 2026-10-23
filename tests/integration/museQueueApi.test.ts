@@ -3,23 +3,32 @@ import { NextRequest } from "next/server";
 import { POST as postRequest, GET as getRequests } from "@/app/api/v1/discovery/muse/requests/route";
 import { GET as getRequestDetail, PATCH as patchRequestDetail } from "@/app/api/v1/discovery/muse/requests/[id]/route";
 import { POST as postResults } from "@/app/api/v1/discovery/muse/requests/[id]/results/route";
+import { POST as postUserImport } from "@/app/api/v1/discovery/muse/requests/[id]/import/route";
 import { GET as getBridgeStatus } from "@/app/api/v1/discovery/muse/bridge/route";
+import { GET as getAgentRequests } from "@/app/api/v1/discovery/muse/agent/requests/route";
+import { GET as getAgentRequestDetail, PATCH as patchAgentRequestDetail } from "@/app/api/v1/discovery/muse/agent/requests/[id]/route";
+import { POST as postAgentResults } from "@/app/api/v1/discovery/muse/agent/requests/[id]/results/route";
+import { POST as postAgentHeartbeat } from "@/app/api/v1/discovery/muse/agent/heartbeat/route";
 import { prisma } from "@/lib/db";
 import { discoveryOrchestrator } from "@/services/discovery/discoveryOrchestrator";
 import { MUSE_PROVIDER_ID } from "@/services/discovery/normalization/normalizeFacebookAd";
 
 const TEST_SECRET = "test_muse_secret_key_12345";
 const AUTH_HEADER = `Bearer ${TEST_SECRET}`;
+const ADMIN_TEST_KEY = "admin_super_secret_key_999";
 
-describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
+describe("Muse Queue API & Ingestion Integration (Part 18 & V10.1)", () => {
   const originalSecret = process.env.MUSE_INGESTION_TOKEN;
+  const originalAdminKey = process.env.ADMIN_API_KEY;
 
   beforeAll(() => {
     process.env.MUSE_INGESTION_TOKEN = TEST_SECRET;
+    process.env.ADMIN_API_KEY = ADMIN_TEST_KEY;
   });
 
   afterAll(async () => {
     process.env.MUSE_INGESTION_TOKEN = originalSecret;
+    process.env.ADMIN_API_KEY = originalAdminKey;
     // Clean up test runs and ads
     try {
       const testRuns = await prisma.discoveryRun.findMany({
@@ -37,31 +46,66 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
     }
   });
 
-  // Test 216: Missing / invalid authentication
-  it("Test 216: returns 401 when no token is provided, and 403 for invalid credentials", async () => {
-    // 1. No auth
-    const reqNoAuth = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+  // Test 216 & V10.1: Strict separation of agent credentials and workspace binding
+  it("Test 216: returns 401 on agent gateway when no token, and 403 for invalid or admin credentials", async () => {
+    // 1. External agent endpoint without token -> 401
+    const reqNoAuth = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/requests", {
       method: "GET",
     });
-    const resNoAuth = await getRequests(reqNoAuth);
+    const resNoAuth = await getAgentRequests(reqNoAuth);
     expect(resNoAuth.status).toBe(401);
+    const jsonNoAuth = await resNoAuth.json();
+    expect(jsonNoAuth.error.code).toBe("MUSE_AUTH_REQUIRED");
 
-    // 2. Invalid auth
-    const reqBadAuth = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+    // 2. External agent endpoint with invalid token -> 403
+    const reqBadAuth = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/requests", {
       method: "GET",
       headers: { authorization: "Bearer completely_wrong_token" },
     });
-    const resBadAuth = await getRequests(reqBadAuth);
+    const resBadAuth = await getAgentRequests(reqBadAuth);
     expect(resBadAuth.status).toBe(403);
+    const jsonBadAuth = await resBadAuth.json();
+    expect(jsonBadAuth.error.code).toBe("INVALID_MUSE_CREDENTIALS");
+
+    // 3. External agent endpoint rejects ADMIN credentials -> 403
+    const reqAdminOnAgent = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/requests", {
+      method: "GET",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}` },
+    });
+    const resAdminOnAgent = await getAgentRequests(reqAdminOnAgent);
+    expect(resAdminOnAgent.status).toBe(403);
+    const jsonAdminOnAgent = await resAdminOnAgent.json();
+    expect(jsonAdminOnAgent.error.code).toBe("FORBIDDEN_ADMIN_CREDENTIAL_ON_AGENT_GATEWAY");
+
+    // 4. External agent endpoint rejects unauthorized workspace header -> 403
+    const reqSpoofedWorkspace = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/requests", {
+      method: "GET",
+      headers: {
+        authorization: AUTH_HEADER,
+        "x-workspace-id": "unauthorized-rogue-workspace",
+      },
+    });
+    const resSpoofed = await getAgentRequests(reqSpoofedWorkspace);
+    expect(resSpoofed.status).toBe(403);
+    const jsonSpoofed = await resSpoofed.json();
+    expect(jsonSpoofed.error.code).toBe("UNAUTHORIZED_WORKSPACE");
+
+    // 5. External agent endpoint with valid MUSE_INGESTION_TOKEN -> 200
+    const reqValid = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/requests", {
+      method: "GET",
+      headers: { authorization: AUTH_HEADER },
+    });
+    const resValid = await getAgentRequests(reqValid);
+    expect(resValid.status).toBe(200);
   });
 
-  // Test 215: Request creation, listing, claim, heartbeat, cancellation, failure
-  it("Test 215: creates, lists, claims, heartbeats, and updates requests", async () => {
-    // 1. Create a request
+  // Test 215 & V10.1: User creates request without Muse token, agent claims via gateway
+  it("Test 215: user creates request without secret, external agent claims via gateway", async () => {
+    // 1. User creates a request from UI (no x-muse-token!)
     const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
       method: "POST",
       headers: {
-        authorization: AUTH_HEADER,
+        authorization: `Bearer ${ADMIN_TEST_KEY}`,
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -81,10 +125,10 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
     expect(createJson.data.status).toBe("PENDING");
     expect(createJson.data.platform).toBe("META");
 
-    // 2. List queue
+    // 2. User lists queue from UI
     const listReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests?status=PENDING", {
       method: "GET",
-      headers: { authorization: AUTH_HEADER },
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}` },
     });
     const listRes = await getRequests(listReq);
     expect(listRes.status).toBe(200);
@@ -94,18 +138,28 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
     expect(found).toBeDefined();
     expect(found.keywords).toContain("pet grooming glove");
 
-    // 3. Inspect detail
-    const detailReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
+    // 2b. User inspects detail from UI (no agent secret)
+    const userDetailReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}` },
+    });
+    const userDetailRes = await getRequestDetail(userDetailReq, { params: Promise.resolve({ id: requestId }) });
+    expect(userDetailRes.status).toBe(200);
+    const userDetailJson = await userDetailRes.json();
+    expect(userDetailJson.data.requestId).toBe(requestId);
+
+    // 3. Agent inspects assigned request via agent gateway
+    const detailReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
       method: "GET",
       headers: { authorization: AUTH_HEADER },
     });
-    const detailRes = await getRequestDetail(detailReq, { params: Promise.resolve({ id: requestId }) });
+    const detailRes = await getAgentRequestDetail(detailReq, { params: Promise.resolve({ id: requestId }) });
     expect(detailRes.status).toBe(200);
     const detailJson = await detailRes.json();
     expect(detailJson.data.requestId).toBe(requestId);
 
-    // 4. Claim request atomically
-    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
+    // 4. Agent claims request atomically via agent gateway
+    const claimReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
       method: "PATCH",
       headers: {
         authorization: AUTH_HEADER,
@@ -114,24 +168,26 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
       },
       body: JSON.stringify({ action: "CLAIM" }),
     });
-    const claimRes = await patchRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
+    const claimRes = await patchAgentRequestDetail(claimReq, { params: Promise.resolve({ id: requestId }) });
     expect(claimRes.status).toBe(200);
     const claimJson = await claimRes.json();
     expect(claimJson.success).toBe(true);
 
-    // 5. Send RUNNING heartbeat
-    const hbReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}`, {
-      method: "PATCH",
+    // 5. Agent sends standalone heartbeat
+    const hbReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/agent/heartbeat", {
+      method: "POST",
       headers: {
         authorization: AUTH_HEADER,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ status: "RUNNING" }),
+      body: JSON.stringify({ requestId }),
     });
-    const hbRes = await patchRequestDetail(hbReq, { params: Promise.resolve({ id: requestId }) });
+    const hbRes = await postAgentHeartbeat(hbReq);
     expect(hbRes.status).toBe(200);
+    const hbJson = await hbRes.json();
+    expect(hbJson.data.heartbeatRecorded).toBe(true);
 
-    // Check bridge status
+    // 6. Check bridge status & diagnostics
     const bridgeReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/bridge", {
       method: "GET",
     });
@@ -139,7 +195,8 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
     expect(bridgeRes.status).toBe(200);
     const bridgeJson = await bridgeRes.json();
     expect(bridgeJson.data.isConfigured).toBe(true);
-    expect(bridgeJson.data.runningRequestsCount).toBeGreaterThanOrEqual(1);
+    expect(bridgeJson.data.diagnosticState).toBe("AGENT_VERIFIED");
+    expect(bridgeJson.data.agentConnected).toBe(true);
   });
 
   // Test 218: Atomic claim & concurrency protection
@@ -234,19 +291,19 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify(submissionPayload),
     });
-    const sub1Res = await postResults(sub1Req, { params: Promise.resolve({ id: requestId }) });
+    const sub1Res = await postAgentResults(sub1Req, { params: Promise.resolve({ id: requestId }) });
     expect(sub1Res.status).toBe(200);
     const sub1Json = await sub1Res.json();
     expect(sub1Json.data.newUniqueInserted).toBe(1);
     expect(sub1Json.data.status).toBe("COMPLETED");
 
     // Second submission with exact same submissionId (Idempotent replay)
-    const sub2Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}/results`, {
+    const sub2Req = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}/results`, {
       method: "POST",
       headers: { authorization: AUTH_HEADER, "content-type": "application/json" },
       body: JSON.stringify(submissionPayload),
     });
-    const sub2Res = await postResults(sub2Req, { params: Promise.resolve({ id: requestId }) });
+    const sub2Res = await postAgentResults(sub2Req, { params: Promise.resolve({ id: requestId }) });
     expect(sub2Res.status).toBe(200);
     const sub2Json = await sub2Res.json();
     expect(sub2Json.data.isIdempotentReplay).toBe(true);
@@ -358,5 +415,77 @@ describe("Muse Queue API & Ingestion Integration (Part 18)", () => {
     await expect(discoveryOrchestrator.executeDiscoveryJob(requestId)).rejects.toThrow(
       /Muse provider jobs are asynchronous/
     );
+  });
+
+  // Test 225 (V10.1): Same-origin user imports research artifact without Muse secret
+  it("Test 225: allows user to import structured research artifact without agent secret", async () => {
+    // 1. Create request
+    const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+      method: "POST",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ keywords: ["ice roller face"] }),
+    });
+    const { requestId } = (await (await postRequest(createReq)).json()).data;
+
+    // 2. User imports artifact via dedicated /import endpoint (no agent secret!)
+    const userImportId = "9876" + String(Date.now()).slice(-10);
+    const importPayload = {
+      submissionId: `sub_user_import_${Date.now()}`,
+      records: [
+        {
+          libraryId: userImportId,
+          advertiserName: "Glow Skin Store",
+          headline: "Stainless Steel Face Ice Roller",
+          mediaType: "IMAGE",
+        },
+      ],
+    };
+
+    const importReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/requests/${requestId}/import`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${ADMIN_TEST_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(importPayload),
+    });
+
+    const importRes = await postUserImport(importReq, { params: Promise.resolve({ id: requestId }) });
+    expect(importRes.status).toBe(200);
+    const importJson = await importRes.json();
+    expect(importJson.success).toBe(true);
+    expect(importJson.data.newUniqueInserted).toBe(1);
+    expect(importJson.data.status).toBe("COMPLETED");
+
+    // Verify ad exists in database
+    const ad = await prisma.competitorAd.findUnique({ where: { externalAdId: userImportId } });
+    expect(ad).not.toBeNull();
+  });
+
+  // Test 226 (V10.1): External agent cannot cancel user research requests
+  it("Test 226: forbids external agent from cancelling a user research request", async () => {
+    const createReq = new NextRequest("http://localhost:3000/api/v1/discovery/muse/requests", {
+      method: "POST",
+      headers: { authorization: `Bearer ${ADMIN_TEST_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ keywords: ["sleep mask noise cancelling"] }),
+    });
+    const { requestId } = (await (await postRequest(createReq)).json()).data;
+
+    // Agent attempts to cancel via agent gateway
+    const agentCancelReq = new NextRequest(`http://localhost:3000/api/v1/discovery/muse/agent/requests/${requestId}`, {
+      method: "PATCH",
+      headers: {
+        authorization: AUTH_HEADER,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ status: "CANCELLED" }),
+    });
+
+    const agentCancelRes = await patchAgentRequestDetail(agentCancelReq, {
+      params: Promise.resolve({ id: requestId }),
+    });
+    expect(agentCancelRes.status).toBe(403);
+    const cancelJson = await agentCancelRes.json();
+    expect(cancelJson.error.code).toBe("FORBIDDEN_ACTION");
   });
 });

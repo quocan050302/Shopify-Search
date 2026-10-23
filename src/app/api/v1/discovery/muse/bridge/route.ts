@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
       data: status,
       meta: {
         timestamp: new Date().toISOString(),
-        version: "v10.0",
+        version: "v10.1",
+        diagnosticState: status.diagnosticState,
       },
     });
   } catch (err: unknown) {
@@ -50,7 +51,12 @@ export async function POST(request: NextRequest) {
       data: {
         heartbeatRecorded: true,
         agentId: auth.agent!.agentId,
+        diagnosticState: status.diagnosticState,
         bridgeStatus: status,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: "v10.1",
       },
     });
   } catch (err: unknown) {

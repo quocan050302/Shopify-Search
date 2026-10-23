@@ -6,29 +6,25 @@ import {
   Globe2,
   Sparkles,
   ShieldCheck,
-  ShieldAlert,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Play,
-  RotateCcw,
   RefreshCw,
   ExternalLink,
   Upload,
   FileCode,
-  Layers,
   Search,
-  Filter,
-  Eye,
   Sliders,
   X,
-  Radio,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 
 interface MuseBridgeStatus {
   isConfigured: boolean;
+  gatewayConfigured?: boolean;
+  agentConnected?: boolean;
   connectionState: string;
+  diagnosticState?: string;
   executionMode: string;
   lastHeartbeatAt: string | null;
   lastSubmissionAt: string | null;
@@ -62,10 +58,18 @@ interface MuseRequestItem {
   heartbeatAt: string | null;
 }
 
+interface ArtifactImportResult {
+  totalSubmitted?: number;
+  newUniqueInserted?: number;
+  existingUpdated?: number;
+  rejectedCount?: number;
+  status?: string;
+  [key: string]: unknown;
+}
+
 export default function MetaDiscoveryPage() {
   const [bridgeStatus, setBridgeStatus] = useState<MuseBridgeStatus | null>(null);
   const [requests, setRequests] = useState<MuseRequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -83,28 +87,23 @@ export default function MetaDiscoveryPage() {
   const [artifactTargetRequestId, setArtifactTargetRequestId] = useState<string>("");
   const [artifactJson, setArtifactJson] = useState("");
   const [artifactSubmitting, setArtifactSubmitting] = useState(false);
-  const [artifactResult, setArtifactResult] = useState<any | null>(null);
+  const [artifactResult, setArtifactResult] = useState<ArtifactImportResult | null>(null);
 
-  // Fetch bridge status and requests
+  // Fetch bridge status and requests on manual refresh
   const fetchData = useCallback(async () => {
     try {
       setRefreshing(true);
       setError(null);
 
-      // Fetch bridge health
-      const bridgeRes = await fetch("/api/v1/discovery/muse/bridge");
+      const [bridgeRes, queueRes] = await Promise.all([
+        fetch("/api/v1/discovery/muse/bridge"),
+        fetch("/api/v1/discovery/muse/requests?status=ALL&limit=50"),
+      ]);
+
       if (bridgeRes.ok) {
         const bJson = await bridgeRes.json();
         if (bJson.success) setBridgeStatus(bJson.data);
       }
-
-      // Fetch queue items
-      const queueRes = await fetch("/api/v1/discovery/muse/requests?status=ALL&limit=50", {
-        headers: {
-          // Use default admin token if available via session or header
-          "x-muse-token": "dev_session_token",
-        },
-      });
 
       if (queueRes.ok) {
         const qJson = await queueRes.json();
@@ -113,16 +112,39 @@ export default function MetaDiscoveryPage() {
     } catch (err: unknown) {
       console.warn("Failed to load Meta discovery data:", err);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 15000); // 15s polling
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    let mounted = true;
+    const loadInitial = async () => {
+      try {
+        const [bridgeRes, queueRes] = await Promise.all([
+          fetch("/api/v1/discovery/muse/bridge"),
+          fetch("/api/v1/discovery/muse/requests?status=ALL&limit=50"),
+        ]);
+        if (!mounted) return;
+        if (bridgeRes.ok) {
+          const bJson = await bridgeRes.json();
+          if (bJson.success) setBridgeStatus(bJson.data);
+        }
+        if (queueRes.ok) {
+          const qJson = await queueRes.json();
+          if (qJson.success) setRequests(qJson.data);
+        }
+      } catch (err: unknown) {
+        console.warn("Failed to load Meta discovery data:", err);
+      }
+    };
+
+    loadInitial();
+    const interval = setInterval(loadInitial, 15000); // 15s polling
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Create Muse Research Request
   const handleCreateRequest = async (e: React.FormEvent) => {
@@ -146,7 +168,6 @@ export default function MetaDiscoveryPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-muse-token": "dev_session_token",
         },
         body: JSON.stringify({
           keywords,
@@ -179,7 +200,6 @@ export default function MetaDiscoveryPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-muse-token": "dev_session_token",
         },
         body: JSON.stringify({ status: "CANCELLED" }),
       });
@@ -202,20 +222,19 @@ export default function MetaDiscoveryPage() {
       setArtifactSubmitting(true);
       setArtifactResult(null);
 
-      let parsed: any;
+      let parsed: unknown;
       try {
         parsed = JSON.parse(artifactJson);
       } catch {
         throw new Error("Invalid JSON format. Please verify the research artifact.");
       }
 
-      const payload = Array.isArray(parsed) ? { records: parsed } : parsed;
+      const payload = Array.isArray(parsed) ? { records: parsed } : (parsed as Record<string, unknown>);
 
-      const res = await fetch(`/api/v1/discovery/muse/requests/${artifactTargetRequestId}/results`, {
+      const res = await fetch(`/api/v1/discovery/muse/requests/${artifactTargetRequestId}/import`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-muse-token": "dev_session_token",
         },
         body: JSON.stringify(payload),
       });
@@ -346,20 +365,26 @@ export default function MetaDiscoveryPage() {
           <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
             <div>
               <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Muse Bridge Status</span>
-                <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
+                <span className="font-semibold uppercase tracking-wider text-[10px]">Muse Agent Diagnostic</span>
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    bridgeStatus?.agentConnected ? "bg-emerald-400 animate-ping" : "bg-amber-400"
+                  }`}
+                />
               </div>
               <div className="flex items-center gap-2">
                 <span
                   className={`text-xs font-semibold px-2 py-0.5 rounded border ${
-                    bridgeStatus?.connectionState === "AGENT_CONNECTED" || bridgeStatus?.connectionState === "RESEARCH_IN_PROGRESS"
+                    bridgeStatus?.diagnosticState === "AGENT_VERIFIED"
                       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                      : bridgeStatus?.connectionState === "LIVE_VERIFIED"
+                      : bridgeStatus?.diagnosticState === "AGENT_NOT_CONNECTED"
+                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      : bridgeStatus?.diagnosticState === "CONFIGURED"
                       ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                      : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      : "bg-rose-500/15 text-rose-400 border-rose-500/30"
                   }`}
                 >
-                  {bridgeStatus?.connectionState || "CHECKING..."}
+                  {bridgeStatus?.diagnosticState || bridgeStatus?.connectionState || "CHECKING..."}
                 </span>
               </div>
             </div>
@@ -371,17 +396,17 @@ export default function MetaDiscoveryPage() {
           <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
             <div>
               <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-400 block mb-1.5">
-                Execution Mode
+                Gateway & Token
               </span>
-              <span className="text-xs font-semibold text-slate-200">
-                {bridgeStatus?.executionMode || "MUSE_AGENT_CONNECTION_NOT_VERIFIED"}
-              </span>
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <span className={bridgeStatus?.isConfigured ? "text-emerald-400" : "text-rose-400"}>
+                  {bridgeStatus?.isConfigured ? "TOKEN CONFIGURED" : "TOKEN MISSING"}
+                </span>
+              </div>
             </div>
-            <div className="text-[11px] text-slate-500 mt-2">
-              <span>Token Configured: </span>
-              <span className={bridgeStatus?.isConfigured ? "text-emerald-400" : "text-amber-400"}>
-                {bridgeStatus?.isConfigured ? "YES (MUSE_INGESTION_TOKEN)" : "NO (Admin Fallback)"}
-              </span>
+            <div className="text-[11px] text-slate-400 mt-2 flex flex-col gap-0.5">
+              <span>Agent Connected: <strong className={bridgeStatus?.agentConnected ? "text-emerald-400" : "text-amber-400"}>{bridgeStatus?.agentConnected ? "YES (Live)" : "NO (Awaiting)"}</strong></span>
+              <span className="text-[10px] text-slate-500">Mode: {bridgeStatus?.executionMode || "UNVERIFIED"}</span>
             </div>
           </div>
 

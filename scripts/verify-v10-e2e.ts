@@ -76,10 +76,12 @@ async function main() {
   });
 
   // 4. Submit genuine Facebook Ad Library records
-  console.log("\n4. Submitting Source-Backed Facebook Ad Library Records...");
+  const libId1 = "1642" + String(Date.now()).slice(-10);
+  const libId2 = "1410" + String(Date.now() + 1).slice(-10);
+
   const submissionRecords = [
     {
-      libraryId: "1642750633880173",
+      libraryId: libId1,
       advertiserName: "Uproot Clean",
       advertiserPageId: "109823481234",
       headline: "Uproot Clean Pet Hair Remover - The Original",
@@ -95,7 +97,7 @@ async function main() {
       facebookPlacement: "CONFIRMED" as const,
     },
     {
-      libraryId: "1410922084469845",
+      libraryId: libId2,
       advertiserName: "ChomChom Roller",
       advertiserPageId: "98765432109",
       headline: "ChomChom Pet Hair Roller with Self-Cleaning Base",
@@ -137,7 +139,7 @@ async function main() {
   // 5. Verify Database Entities
   console.log("\n5. Verifying Database Entities across Tables...");
   const storedAd = await prisma.competitorAd.findFirst({
-    where: { externalAdId: "1642750633880173" },
+    where: { externalAdId: libId1 },
     include: {
       advertiser: true,
       dataSource: true,
@@ -210,7 +212,7 @@ async function main() {
   }
 
   const finalAdCount = await prisma.competitorAd.count({
-    where: { externalAdId: "1642750633880173" },
+    where: { externalAdId: libId1 },
   });
   console.log("-> Verified single unique CompetitorAd in database (Count:", finalAdCount, ")");
   if (finalAdCount !== 1) {

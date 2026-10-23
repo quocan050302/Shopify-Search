@@ -13,18 +13,30 @@ import { prisma } from "@/lib/db";
 import { MUSE_PROVIDER_ID } from "../normalization/normalizeFacebookAd";
 import { MuseExecutionMode } from "../types";
 
+export type MuseDiagnosticState =
+  | "NOT_CONFIGURED"
+  | "CONFIGURED"
+  | "AGENT_NOT_CONNECTED"
+  | "AGENT_VERIFIED";
+
 export type MuseBridgeConnectionState =
   | "BRIDGE_NOT_CONFIGURED"
   | "BRIDGE_CONFIGURED"
+  | "CONFIGURED"
+  | "NOT_CONFIGURED"
   | "AGENT_NOT_CONNECTED"
   | "AGENT_CONNECTED"
+  | "AGENT_VERIFIED"
   | "RESEARCH_IN_PROGRESS"
   | "LIVE_VERIFIED"
   | "CONNECTION_FAILED";
 
 export interface MuseBridgeStatus {
   isConfigured: boolean;
+  gatewayConfigured: boolean;
+  agentConnected: boolean;
   connectionState: MuseBridgeConnectionState;
+  diagnosticState: MuseDiagnosticState;
   executionMode: MuseExecutionMode | "MUSE_AGENT_CONNECTION_NOT_VERIFIED";
   lastHeartbeatAt: string | null;
   lastSubmissionAt: string | null;
@@ -40,18 +52,16 @@ const HEARTBEAT_EXPIRATION_MS = 15 * 60 * 1000; // 15 minutes lease
 
 /**
  * Reads persistent status for the Muse bridge and reports honest connectivity.
+ * - CONFIGURED: MUSE_INGESTION_TOKEN exists in environment.
+ * - AGENT_NOT_CONNECTED: Token configured, but no active heartbeat within lease.
+ * - AGENT_VERIFIED: Active agent connected with verified fresh heartbeat.
+ * Never claims connection merely because the token is defined!
  */
 export async function getMuseBridgeStatus(
   workspaceId: string = "default-workspace"
 ): Promise<MuseBridgeStatus> {
   void workspaceId;
-  const token = (
-    process.env.MUSE_INGESTION_TOKEN ||
-    process.env.ADMIN_API_KEY ||
-    process.env.SWAI_ADMIN_TOKEN ||
-    ""
-  ).trim();
-
+  const token = (process.env.MUSE_INGESTION_TOKEN || "").trim();
   const isConfigured = token.length > 0;
 
   // Query recent runs for the muse provider
@@ -66,7 +76,7 @@ export async function getMuseBridgeStatus(
   const completed = runs.filter((r) => r.status === "COMPLETED" || r.status === "PARTIALLY_COMPLETED").length;
   const failed = runs.filter((r) => r.status === "FAILED").length;
 
-  // Find most recent heartbeat from running jobs or sync jobs
+  // Find most recent heartbeat from running jobs
   const mostRecentHeartbeatRun = runs.find((r) => r.heartbeatAt != null);
   const lastHeartbeat = mostRecentHeartbeatRun?.heartbeatAt || null;
 
@@ -80,40 +90,49 @@ export async function getMuseBridgeStatus(
   const isHeartbeatFresh =
     lastHeartbeat != null && now - lastHeartbeat.getTime() < HEARTBEAT_EXPIRATION_MS;
 
+  let diagnosticState: MuseDiagnosticState = "NOT_CONFIGURED";
   let connectionState: MuseBridgeConnectionState = "BRIDGE_NOT_CONFIGURED";
+  let agentConnected = false;
   let executionMode: MuseExecutionMode | "MUSE_AGENT_CONNECTION_NOT_VERIFIED" =
     "MUSE_AGENT_CONNECTION_NOT_VERIFIED";
 
   if (!isConfigured) {
+    diagnosticState = "NOT_CONFIGURED";
     connectionState = "BRIDGE_NOT_CONFIGURED";
+    agentConnected = false;
   } else if (running > 0 && isHeartbeatFresh) {
+    diagnosticState = "AGENT_VERIFIED";
     connectionState = "RESEARCH_IN_PROGRESS";
+    agentConnected = true;
     executionMode = "MUSE_CONNECTED_AGENT";
   } else if (isHeartbeatFresh) {
+    diagnosticState = "AGENT_VERIFIED";
     connectionState = "AGENT_CONNECTED";
+    agentConnected = true;
     executionMode = "MUSE_CONNECTED_AGENT";
-  } else if (completed > 0) {
-    connectionState = "LIVE_VERIFIED";
-    executionMode = "MUSE_ASSISTED_ON_DEMAND";
   } else {
+    // Token configured, but no active agent session or heartbeat is stale
+    diagnosticState = "AGENT_NOT_CONNECTED";
     connectionState = "AGENT_NOT_CONNECTED";
-    executionMode = "MUSE_AGENT_CONNECTION_NOT_VERIFIED";
+    agentConnected = false;
+    executionMode = completed > 0 ? "MUSE_ASSISTED_ON_DEMAND" : "MUSE_AGENT_CONNECTION_NOT_VERIFIED";
   }
 
   const notice =
-    connectionState === "RESEARCH_IN_PROGRESS"
+    diagnosticState === "AGENT_VERIFIED" && connectionState === "RESEARCH_IN_PROGRESS"
       ? "Muse research session is active and researching Meta Ad Library."
-      : connectionState === "AGENT_CONNECTED"
-      ? "Muse agent connector is active and connected to SWAI."
-      : connectionState === "LIVE_VERIFIED"
-      ? "Previous research submitted successfully. Ready for new research on demand."
-      : isConfigured
-      ? "Bridge gateway is configured. Waiting for Muse agent to claim pending requests."
+      : diagnosticState === "AGENT_VERIFIED"
+      ? "Active Muse agent connector is verified and sending fresh heartbeats."
+      : diagnosticState === "AGENT_NOT_CONNECTED"
+      ? "Gateway is configured (MUSE_INGESTION_TOKEN set), but no active Muse agent heartbeat received recently."
       : "MUSE_INGESTION_TOKEN not configured. Configure credential to authorize external Muse requests.";
 
   return {
     isConfigured,
+    gatewayConfigured: isConfigured,
+    agentConnected,
     connectionState,
+    diagnosticState,
     executionMode,
     lastHeartbeatAt: lastHeartbeat ? lastHeartbeat.toISOString() : null,
     lastSubmissionAt: lastSubmission ? lastSubmission.toISOString() : null,
@@ -180,12 +199,7 @@ export function verifyMuseBridgeConfiguration(): {
   isConfigured: boolean;
   tokenConfigured: boolean;
 } {
-  const token = (
-    process.env.MUSE_INGESTION_TOKEN ||
-    process.env.ADMIN_API_KEY ||
-    process.env.SWAI_ADMIN_TOKEN ||
-    ""
-  ).trim();
+  const token = (process.env.MUSE_INGESTION_TOKEN || "").trim();
 
   return {
     isConfigured: token.length > 0,

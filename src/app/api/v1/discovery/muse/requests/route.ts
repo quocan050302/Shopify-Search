@@ -15,14 +15,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMuseAgentAuthorization } from "@/services/security/museAuth";
+import { verifyUserOrAgentAuthorization } from "@/services/security/museAuth";
 import {
   createMuseResearchRequest,
   listMuseResearchRequests,
 } from "@/services/discovery/muse/museRequestService";
 
 export async function POST(request: NextRequest) {
-  const auth = verifyMuseAgentAuthorization(request, "CLAIM");
+  const auth = verifyUserOrAgentAuthorization(request, "CLAIM");
   if (!auth.authorized) return auth.errorResponse!;
 
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     const result = await createMuseResearchRequest(
       {
-        workspaceId: auth.agent?.workspaceId,
+        workspaceId: auth.workspaceId,
         keywords,
         market: rawQuery.market || "US",
         requestedLimit: rawQuery.requestedLimit || rawQuery.targetCount || 25,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         creativePreference: rawQuery.creativePreference,
         notes: rawQuery.notes,
       },
-      { workspaceId: auth.agent?.workspaceId }
+      { workspaceId: auth.workspaceId }
     );
 
     return NextResponse.json({
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "v10.0",
+        version: "v10.1",
         notice:
           "Research request queued as PENDING. It completes only when the Muse agent submits verified results — no ads are created by queuing alone.",
       },
@@ -84,14 +84,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = verifyMuseAgentAuthorization(request, "READ_QUEUE");
+  const auth = verifyUserOrAgentAuthorization(request, "READ_QUEUE");
   if (!auth.authorized) return auth.errorResponse!;
 
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "PENDING";
     const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
-    const workspaceId = searchParams.get("workspaceId") || auth.agent?.workspaceId;
+    const workspaceId = searchParams.get("workspaceId") || auth.workspaceId;
 
     const runs = await listMuseResearchRequests({
       status,

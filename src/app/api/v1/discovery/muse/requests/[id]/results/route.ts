@@ -15,14 +15,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMuseAgentAuthorization } from "@/services/security/museAuth";
+import { verifyUserOrAgentAuthorization } from "@/services/security/museAuth";
 import { submitMuseResearchResults } from "@/services/discovery/muse/museResultSubmissionService";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = verifyMuseAgentAuthorization(request, "SUBMIT_RESULTS");
+  const auth = verifyUserOrAgentAuthorization(request, "SUBMIT_RESULTS");
   if (!auth.authorized) return auth.errorResponse!;
 
   const { id } = await params;

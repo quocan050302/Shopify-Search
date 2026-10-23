@@ -6,22 +6,23 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMuseAgentAuthorization } from "@/services/security/museAuth";
+import { verifyUserOrAgentAuthorization } from "@/services/security/museAuth";
 import {
   getMuseResearchRequest,
   claimMuseResearchRequest,
   updateMuseRequestStatus,
+  cancelMuseResearchRequest,
 } from "@/services/discovery/muse/museRequestService";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = verifyMuseAgentAuthorization(request, "READ_QUEUE");
+  const auth = verifyUserOrAgentAuthorization(request, "READ_QUEUE");
   if (!auth.authorized) return auth.errorResponse!;
 
   const { id } = await params;
-  const run = await getMuseResearchRequest(id, auth.agent?.workspaceId);
+  const run = await getMuseResearchRequest(id, auth.workspaceId);
 
   if (!run) {
     return NextResponse.json(
@@ -43,7 +44,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = verifyMuseAgentAuthorization(request, "CLAIM");
+  const auth = verifyUserOrAgentAuthorization(request, "CLAIM");
   if (!auth.authorized) return auth.errorResponse!;
 
   const { id } = await params;
@@ -54,7 +55,29 @@ export async function PATCH(
     const status = body.status as string | undefined;
     const errorMessage = typeof body.errorMessage === "string" ? body.errorMessage : undefined;
 
-    // Handle atomic claim action
+    // Handle cancellation (User-facing or agent)
+    if (status === "CANCELLED" || action === "CANCEL") {
+      const cancelled = await cancelMuseResearchRequest(id, auth.workspaceId);
+      if (!cancelled) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "CANCEL_FAILED",
+              message: `Request '${id}' could not be cancelled or is already finished.`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({
+        success: true,
+        data: { requestId: id, status: "CANCELLED" },
+        meta: { notice: "Request successfully cancelled." },
+      });
+    }
+
+    // Handle atomic claim action (Agent)
     if (action === "CLAIM" || status === "CLAIMED") {
       const claimResult = await claimMuseResearchRequest(id, auth.agent!);
       if (!claimResult.success) {
@@ -88,8 +111,8 @@ export async function PATCH(
       });
     }
 
-    // Handle status updates
-    if (status !== "RUNNING" && status !== "FAILED" && status !== "CANCELLED") {
+    // Handle status updates (RUNNING heartbeat or FAILED)
+    if (status !== "RUNNING" && status !== "FAILED") {
       return NextResponse.json(
         {
           success: false,
