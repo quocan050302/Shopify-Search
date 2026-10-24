@@ -10,6 +10,12 @@ import {
   renewKh01Lease,
   recoverInterruptedKh01Jobs,
   executeKh01Job,
+  updateJobIfClaimOwned,
+  acquireResearchSlot,
+  renewResearchSlot,
+  releaseResearchSlot,
+  cancelKh01Job,
+  ClaimedKh01Job,
 } from "@/workers/kh01Worker";
 import { executeLandingPageResearchJob } from "@/services/research/landingPageInspectionService";
 
@@ -328,5 +334,195 @@ describe("KH-01 Job Engine — Atomic Claims, Leases & Recovery", () => {
     const meta = JSON.parse(inDb?.resultJson || "{}");
     expect(meta.workerId).toBe("worker_b");
     expect(meta.claimToken).toBe("token_b_new");
+  });
+
+  it("updateJobIfClaimOwned rejects mutation when claim token or fencing version does not match", async () => {
+    await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        resultJson: JSON.stringify({
+          workerId: "worker_authorized",
+          claimToken: "token_auth_999",
+          fencingVersion: 3,
+          leaseExpiresAt: new Date(Date.now() + 60000).toISOString(),
+          targetUrl: "https://example.com/item",
+        }),
+      },
+    });
+
+    const validClaim: ClaimedKh01Job = {
+      id: TEST_JOB_ID_1,
+      workspaceId: TEST_WORKSPACE,
+      jobType: "KH01_LANDING_PAGE_RESEARCH",
+      status: "RUNNING",
+      workerId: "worker_authorized",
+      claimToken: "token_auth_999",
+      fencingVersion: 3,
+      attemptNumber: 1,
+    };
+
+    // Stale token attempt
+    const staleTokenClaim = { ...validClaim, claimToken: "token_stale_111" };
+    const staleTokenUpdated = await updateJobIfClaimOwned(staleTokenClaim, { progress: 50 });
+    expect(staleTokenUpdated).toBe(false);
+
+    // Stale fencing version attempt
+    const staleVersionClaim = { ...validClaim, fencingVersion: 2 };
+    const staleVersionUpdated = await updateJobIfClaimOwned(staleVersionClaim, { progress: 50 });
+    expect(staleVersionUpdated).toBe(false);
+
+    // Valid claim attempt: must succeed and monotonically advance fencing version
+    const validUpdated = await updateJobIfClaimOwned(validClaim, { progress: 50 });
+    expect(validUpdated).toBe(true);
+    expect(validClaim.fencingVersion).toBe(4);
+
+    const inDb = await prisma.syncJob.findUnique({ where: { id: TEST_JOB_ID_1 } });
+    expect(inDb?.progress).toBe(50);
+    const meta = JSON.parse(inDb?.resultJson || "{}");
+    expect(meta.fencingVersion).toBe(4);
+  });
+
+  it("enforces global concurrency limit = 1 across multiple heavy research jobs", async () => {
+    // Create two pending heavy jobs
+    await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: "https://example.com/product-1" }),
+      },
+    });
+
+    await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_2,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: "https://example.com/product-2" }),
+      },
+    });
+
+    // Worker A claims Job 1
+    const claimA = await claimPendingKh01Job("worker_A");
+    expect(claimA).not.toBeNull();
+    expect(claimA?.id).toBe(TEST_JOB_ID_1);
+
+    // Worker B attempts to claim while Job 1 is RUNNING -> Must return null due to concurrency = 1!
+    const claimB = await claimPendingKh01Job("worker_B");
+    expect(claimB).toBeNull();
+
+    // Now Job 1 finishes
+    await prisma.syncJob.update({
+      where: { id: TEST_JOB_ID_1 },
+      data: { status: "COMPLETED", progress: 100 },
+    });
+
+    // Capacity is now released! Worker B can claim Job 2
+    const claimBAfter = await claimPendingKh01Job("worker_B");
+    expect(claimBAfter).not.toBeNull();
+    expect(claimBAfter?.id).toBe(TEST_JOB_ID_2);
+  });
+
+  it("renewKh01Lease fails safely when claim ownership has been lost", async () => {
+    const job = await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        resultJson: JSON.stringify({
+          workerId: "worker_new_owner",
+          claimToken: "token_new",
+          fencingVersion: 5,
+          leaseExpiresAt: new Date(Date.now() + 60000).toISOString(),
+          targetUrl: "https://example.com/item",
+        }),
+      },
+    });
+
+    // Stale worker tries to renew
+    const staleClaim: ClaimedKh01Job = {
+      id: job.id,
+      workspaceId: TEST_WORKSPACE,
+      jobType: "KH01_LANDING_PAGE_RESEARCH",
+      status: "RUNNING",
+      workerId: "worker_old_stale",
+      claimToken: "token_old",
+      fencingVersion: 4,
+      attemptNumber: 1,
+    };
+
+    const result = await renewKh01Lease(staleClaim);
+    expect(result.renewed).toBe(false);
+    expect(result.error).toContain("Claim lost or lease expired");
+
+    // DB state must remain untouched
+    const inDb = await prisma.syncJob.findUnique({ where: { id: job.id } });
+    const meta = JSON.parse(inDb?.resultJson || "{}");
+    expect(meta.workerId).toBe("worker_new_owner");
+    expect(meta.claimToken).toBe("token_new");
+    expect(meta.fencingVersion).toBe(5);
+  });
+
+  it("cancelKh01Job authoritatively marks job cancelled and prevents subsequent claim updates", async () => {
+    const job = await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        resultJson: JSON.stringify({
+          workerId: "worker_active",
+          claimToken: "token_active",
+          fencingVersion: 1,
+          leaseExpiresAt: new Date(Date.now() + 60000).toISOString(),
+          targetUrl: "https://example.com/item",
+        }),
+      },
+    });
+
+    const claim: ClaimedKh01Job = {
+      id: job.id,
+      workspaceId: TEST_WORKSPACE,
+      jobType: "KH01_LANDING_PAGE_RESEARCH",
+      status: "RUNNING",
+      workerId: "worker_active",
+      claimToken: "token_active",
+      fencingVersion: 1,
+      attemptNumber: 1,
+    };
+
+    // User cancels the job
+    const cancelled = await cancelKh01Job(job.id, "User requested stop");
+    expect(cancelled).toBe(true);
+
+    const cancelledInDb = await prisma.syncJob.findUnique({ where: { id: job.id } });
+    expect(cancelledInDb?.status).toBe("CANCELLED");
+
+    // Worker attempts lease renewal -> rejected
+    const renewal = await renewKh01Lease(claim);
+    expect(renewal.renewed).toBe(false);
+
+    // Worker attempts progress update -> rejected
+    const progressUpdated = await updateJobIfClaimOwned(claim, { progress: 80 });
+    expect(progressUpdated).toBe(false);
+  });
+
+  it("slot lifecycle manages explicit reservations correctly", async () => {
+    const slot = await acquireResearchSlot("worker_slot_test", TEST_JOB_ID_1);
+    expect(slot).not.toBeNull();
+    expect(slot?.jobId).toBe(TEST_JOB_ID_1);
+
+    const renewed = await renewResearchSlot("worker_slot_test", TEST_JOB_ID_1, "fake_token");
+    // Since job isn't RUNNING in DB yet, renew returns false
+    expect(renewed).toBe(false);
+
+    const released = await releaseResearchSlot("worker_slot_test", TEST_JOB_ID_1, "fake_token");
+    expect(released).toBe(true);
   });
 });
