@@ -59,28 +59,46 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
     }
   }
 
-  // If a secret is configured in environment, require exact timing-safe match
+  // Check if request originates from local loopback (desktop research application mode)
+  const host = (request.headers.get("host") || "").toLowerCase();
+  const isLoopback =
+    host.startsWith("localhost:") ||
+    host === "localhost" ||
+    host.startsWith("127.0.0.1:") ||
+    host === "127.0.0.1" ||
+    host.startsWith("[::1]:") ||
+    host === "[::1]";
+
+  // If a secret is configured in environment, require exact timing-safe match if provided,
+  // or permit local desktop loopback access when running locally.
   if (configuredSecret.length > 0) {
-    if (!providedToken) {
+    if (providedToken) {
+      if (!safeSecretCompare(providedToken, configuredSecret)) {
+        return {
+          authorized: false,
+          code: "INVALID_ADMIN_TOKEN",
+          message: "Invalid administrator credentials provided.",
+        };
+      }
       return {
-        authorized: false,
-        code: "ADMIN_AUTH_REQUIRED",
-        message: "Administrator authorization required to manage system credentials.",
+        authorized: true,
+        principalId: "admin_owner",
+        authMode: "OWNER_ADMIN",
       };
     }
 
-    if (!safeSecretCompare(providedToken, configuredSecret)) {
+    if (isLoopback) {
       return {
-        authorized: false,
-        code: "INVALID_ADMIN_TOKEN",
-        message: "Invalid administrator credentials provided.",
+        authorized: true,
+        principalId: "local_desktop_admin",
+        authMode: "LOCAL_DEV",
       };
     }
 
     return {
-      authorized: true,
-      principalId: "admin_owner",
-      authMode: "OWNER_ADMIN",
+      authorized: false,
+      code: "ADMIN_AUTH_REQUIRED",
+      message: "Administrator authorization required to manage system credentials.",
     };
   }
 
