@@ -91,12 +91,13 @@ export function normalizeMetaCollectorAd(
     pageId
   );
 
-  // 3. Extract Creative Content
+  // 3. Extract Creative Content & Variants across all creative objects
   const creatives = (Array.isArray(anyRaw.creatives) ? anyRaw.creatives : []) as Array<Record<string, unknown>>;
   const primaryCreative = creatives[0] || {};
 
   const headline = String(
     primaryCreative.title ||
+    creatives.find((c) => typeof c.title === "string" && c.title.trim())?.title ||
     anyRaw.title ||
     anyRaw.headline ||
     ""
@@ -106,6 +107,7 @@ export function normalizeMetaCollectorAd(
     primaryCreative.body ||
     primaryCreative.description ||
     primaryCreative.caption ||
+    creatives.find((c) => typeof (c.body || c.description || c.caption) === "string")?.body ||
     anyRaw.body ||
     anyRaw.bodyText ||
     ""
@@ -114,6 +116,7 @@ export function normalizeMetaCollectorAd(
   const callToAction = String(
     primaryCreative.cta_text ||
     primaryCreative.cta_type ||
+    creatives.find((c) => typeof (c.cta_text || c.cta_type) === "string")?.cta_text ||
     anyRaw.cta ||
     anyRaw.callToAction ||
     ""
@@ -121,62 +124,235 @@ export function normalizeMetaCollectorAd(
 
   const rawLinkUrl =
     (typeof primaryCreative.link_url === "string" && primaryCreative.link_url) ||
+    creatives.find((c) => typeof c.link_url === "string" && c.link_url)?.link_url ||
     (typeof anyRaw.link_url === "string" && anyRaw.link_url) ||
     (typeof anyRaw.landingPageUrl === "string" && anyRaw.landingPageUrl) ||
     null;
-  const landingPageUrl = isSafeHttpUrl(rawLinkUrl) ? rawLinkUrl!.trim() : null;
+  const landingPageUrl = isSafeHttpUrl(rawLinkUrl) ? (rawLinkUrl as string).trim() : null;
 
-  // 4. Honest Media Classification
+  // 4. Honest Media Classification (Phase 3: Support display_format & avoid false carousel)
   const explicitMediaType = String(anyRaw.media_type || anyRaw.mediaType || "").toUpperCase();
-  const hasVideo =
-    explicitMediaType === "VIDEO" ||
-    creatives.some((c) => Boolean(c.video_url || c.video_hd_url || c.video_sd_url)) ||
-    Boolean(anyRaw.video_url || anyRaw.videoUrl);
+  const displayFormat = String(anyRaw.display_format || anyRaw.displayFormat || "").toUpperCase();
+  const rawAdType = String(anyRaw.ad_type || "").toUpperCase();
 
-  const hasMultiple =
+  const isExplicitCarousel =
     explicitMediaType === "CAROUSEL" ||
-    creatives.length > 1;
+    displayFormat === "CAROUSEL" ||
+    rawAdType === "CAROUSEL";
 
-  const hasImage =
+  const hasVideoMedia =
+    explicitMediaType === "VIDEO" ||
+    displayFormat === "VIDEO" ||
+    creatives.some((c) =>
+      Boolean(
+        c.video_url ||
+        c.video_hd_url ||
+        c.video_sd_url ||
+        c.watermarked_video_hd_url ||
+        c.watermarked_video_sd_url
+      )
+    ) ||
+    Boolean(
+      anyRaw.video_url ||
+      anyRaw.video_hd_url ||
+      anyRaw.video_sd_url ||
+      anyRaw.watermarked_video_hd_url ||
+      anyRaw.watermarked_video_sd_url ||
+      anyRaw.videoUrl
+    );
+
+  const hasImageMedia =
     explicitMediaType === "IMAGE" ||
-    creatives.some((c) => Boolean(c.image_url || c.thumbnail_url || c.original_image_url)) ||
-    Boolean(anyRaw.image_url || anyRaw.thumbnail_url || anyRaw.imageUrl || anyRaw.thumbnailUrl);
+    displayFormat === "IMAGE" ||
+    creatives.some((c) =>
+      Boolean(
+        c.image_url ||
+        c.thumbnail_url ||
+        c.original_image_url ||
+        c.resized_image_url ||
+        c.watermarked_image_url
+      )
+    ) ||
+    Boolean(
+      anyRaw.image_url ||
+      anyRaw.thumbnail_url ||
+      anyRaw.imageUrl ||
+      anyRaw.thumbnailUrl ||
+      anyRaw.original_image_url
+    );
 
   let mediaType: "VIDEO" | "IMAGE" | "CAROUSEL" | "UNKNOWN" = "UNKNOWN";
-  if (hasMultiple) {
+  if (isExplicitCarousel) {
     mediaType = "CAROUSEL";
-  } else if (hasVideo) {
+  } else if (hasVideoMedia) {
     mediaType = "VIDEO";
-  } else if (hasImage) {
+  } else if (hasImageMedia) {
     mediaType = "IMAGE";
   }
 
-  // Extract direct media URLs if safely formed
-  const videoUrlCandidate =
-    (typeof primaryCreative.video_hd_url === "string" && primaryCreative.video_hd_url) ||
-    (typeof primaryCreative.video_url === "string" && primaryCreative.video_url) ||
-    (typeof primaryCreative.video_sd_url === "string" && primaryCreative.video_sd_url) ||
-    (typeof anyRaw.video_url === "string" && anyRaw.video_url) ||
-    (typeof anyRaw.videoUrl === "string" && anyRaw.videoUrl) ||
-    null;
-  const videoUrl = isSafeHttpUrl(videoUrlCandidate) ? (videoUrlCandidate as string).trim() : null;
+  // Extract direct media URLs across all creatives with source-backed priority
+  let videoUrl: string | null = null;
+  for (const c of creatives) {
+    const candidate =
+      c.video_hd_url ||
+      c.video_url ||
+      c.video_sd_url ||
+      c.watermarked_video_hd_url ||
+      c.watermarked_video_sd_url;
+    if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
+      videoUrl = candidate.trim();
+      break;
+    }
+  }
+  if (!videoUrl) {
+    const rawVideo =
+      anyRaw.video_hd_url ||
+      anyRaw.video_url ||
+      anyRaw.video_sd_url ||
+      anyRaw.watermarked_video_hd_url ||
+      anyRaw.watermarked_video_sd_url ||
+      anyRaw.videoUrl;
+    if (typeof rawVideo === "string" && isSafeHttpUrl(rawVideo)) {
+      videoUrl = (rawVideo as string).trim();
+    }
+  }
 
-  const thumbnailCandidate =
-    (typeof primaryCreative.thumbnail_url === "string" && primaryCreative.thumbnail_url) ||
-    (typeof primaryCreative.image_url === "string" && primaryCreative.image_url) ||
-    (typeof anyRaw.thumbnail_url === "string" && anyRaw.thumbnail_url) ||
-    (typeof anyRaw.image_url === "string" && anyRaw.image_url) ||
-    (typeof anyRaw.thumbnailUrl === "string" && anyRaw.thumbnailUrl) ||
-    null;
-  const thumbnailUrl = isSafeHttpUrl(thumbnailCandidate) ? (thumbnailCandidate as string).trim() : null;
+  // Thumbnail extraction with explicit priority
+  let thumbnailUrl: string | null = null;
+  if (mediaType === "VIDEO") {
+    // For video ads, prioritize genuine video poster/thumbnail preview
+    for (const c of creatives) {
+      const candidate =
+        c.thumbnail_url ||
+        c.image_url ||
+        c.original_image_url ||
+        c.resized_image_url ||
+        c.watermarked_image_url;
+      if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
+        thumbnailUrl = candidate.trim();
+        break;
+      }
+    }
+    if (!thumbnailUrl) {
+      const rawThumb =
+        anyRaw.thumbnail_url ||
+        anyRaw.thumbnailUrl ||
+        anyRaw.image_url ||
+        anyRaw.imageUrl ||
+        anyRaw.original_image_url;
+      if (typeof rawThumb === "string" && isSafeHttpUrl(rawThumb)) {
+        thumbnailUrl = (rawThumb as string).trim();
+      }
+    }
+  } else {
+    // For image or carousel ads, prioritize high-quality genuine creative image
+    for (const c of creatives) {
+      const candidate =
+        c.original_image_url ||
+        c.image_url ||
+        c.resized_image_url ||
+        c.thumbnail_url ||
+        c.watermarked_image_url;
+      if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
+        thumbnailUrl = candidate.trim();
+        break;
+      }
+    }
+    if (!thumbnailUrl) {
+      const rawImage =
+        anyRaw.original_image_url ||
+        anyRaw.image_url ||
+        anyRaw.imageUrl ||
+        anyRaw.thumbnail_url ||
+        anyRaw.thumbnailUrl ||
+        anyRaw.resized_image_url;
+      if (typeof rawImage === "string" && isSafeHttpUrl(rawImage)) {
+        thumbnailUrl = (rawImage as string).trim();
+      }
+    }
+  }
 
-  // 5. Date validation
-  const startAtVal = (anyRaw.start_date || anyRaw.delivery_start_time || anyRaw.startDate) as
+  // Preserve multiple creative variants rather than discarding
+  const creativeVariants = creatives.map((c, idx) => {
+    const cVideo =
+      c.video_hd_url ||
+      c.video_url ||
+      c.video_sd_url ||
+      c.watermarked_video_hd_url ||
+      c.watermarked_video_sd_url;
+    const cImage =
+      c.original_image_url ||
+      c.image_url ||
+      c.resized_image_url ||
+      c.thumbnail_url ||
+      c.watermarked_image_url;
+
+    return {
+      variantIndex: idx,
+      format: cVideo ? "VIDEO" : cImage ? "IMAGE" : "UNKNOWN",
+      videoUrl: typeof cVideo === "string" && isSafeHttpUrl(cVideo) ? cVideo.trim() : null,
+      thumbnailUrl: typeof cImage === "string" && isSafeHttpUrl(cImage) ? cImage.trim() : null,
+      title: typeof c.title === "string" ? c.title.trim() : null,
+      body: typeof c.body === "string" ? c.body.trim() : null,
+      cta: typeof c.cta_text === "string" ? c.cta_text.trim() : null,
+    };
+  });
+
+  // Aspect ratio calculation (avoid guessing 9:16 for all videos)
+  let aspectRatio = "UNKNOWN";
+  for (const c of creatives) {
+    const w = typeof c.width === "number" ? c.width : typeof c.original_width === "number" ? c.original_width : null;
+    const h = typeof c.height === "number" ? c.height : typeof c.original_height === "number" ? c.original_height : null;
+    if (w && h && w > 0 && h > 0) {
+      const ratio = w / h;
+      if (Math.abs(ratio - 1) < 0.08) {
+        aspectRatio = "1:1";
+        break;
+      } else if (ratio >= 0.5 && ratio <= 0.65) {
+        aspectRatio = "9:16";
+        break;
+      } else if (ratio >= 1.6 && ratio <= 1.85) {
+        aspectRatio = "16:9";
+        break;
+      } else if (ratio >= 0.75 && ratio <= 0.85) {
+        aspectRatio = "4:5";
+        break;
+      }
+    }
+  }
+
+  if (aspectRatio === "UNKNOWN") {
+    const rawW = typeof anyRaw.width === "number" ? anyRaw.width : null;
+    const rawH = typeof anyRaw.height === "number" ? anyRaw.height : null;
+    if (rawW && rawH && rawW > 0 && rawH > 0) {
+      const ratio = rawW / rawH;
+      if (Math.abs(ratio - 1) < 0.08) aspectRatio = "1:1";
+      else if (ratio >= 0.5 && ratio <= 0.65) aspectRatio = "9:16";
+      else if (ratio >= 1.6 && ratio <= 1.85) aspectRatio = "16:9";
+      else if (ratio >= 0.75 && ratio <= 0.85) aspectRatio = "4:5";
+    }
+  }
+
+  // If still unknown and format is image/carousel, neutral 1:1 is appropriate
+  if (aspectRatio === "UNKNOWN") {
+    if (mediaType === "IMAGE" || mediaType === "CAROUSEL") {
+      aspectRatio = "1:1";
+    } else {
+      aspectRatio = "UNKNOWN";
+    }
+  }
+
+  // Media availability: READY when authentic HTTPS media asset is available
+  const mediaAvailability: "READY" | "RESTRICTED" | "FALLBACK_ONLY" =
+    thumbnailUrl || videoUrl ? "READY" : "RESTRICTED";
+
+  // 5. Date validation (Phase 3: map delivery_start_time and delivery_stop_time accurately)
+  const startAtVal = (anyRaw.delivery_start_time || anyRaw.start_date || anyRaw.startDate) as
     | string
     | number
     | null
     | undefined;
-  const endAtVal = (anyRaw.end_date || anyRaw.delivery_stop_time || anyRaw.endDate) as
+  const endAtVal = (anyRaw.delivery_stop_time || anyRaw.end_date || anyRaw.endDate) as
     | string
     | number
     | null
@@ -185,11 +361,11 @@ export function normalizeMetaCollectorAd(
   const endAt = parseMetaDate(endAtVal);
 
   // 6. Source-reported active status
-  const rawStatus = anyRaw.status || anyRaw.activeStatus;
+  const rawStatus = anyRaw.status || anyRaw.activeStatus || anyRaw.ad_status;
   const reportedStatus: "ACTIVE" | "INACTIVE" | "UNKNOWN" =
     anyRaw.is_active === true || rawStatus === "ACTIVE"
       ? "ACTIVE"
-      : anyRaw.is_active === false || rawStatus === "INACTIVE"
+      : anyRaw.is_active === false || rawStatus === "INACTIVE" || rawStatus === "PAUSED"
       ? "INACTIVE"
       : "UNKNOWN";
 
@@ -208,6 +384,7 @@ export function normalizeMetaCollectorAd(
   if (startAt) confidence += 0.05;
   if (headline || bodyText) confidence += 0.05;
   if (landingPageUrl) confidence += 0.05;
+  if (thumbnailUrl || videoUrl) confidence += 0.05;
   const confidenceScore = Math.min(0.95, Math.round(confidence * 100) / 100);
 
   // 9. SourceEvidence object
@@ -222,6 +399,7 @@ export function normalizeMetaCollectorAd(
     facebookPlacement: "CONFIRMED",
     marketEvidence: "QUERY_FILTER",
     notes,
+    creativeVariants,
   };
 
   const rawCountry = typeof anyRaw.country === "string" ? anyRaw.country : "US";
@@ -244,8 +422,8 @@ export function normalizeMetaCollectorAd(
     embedUrl: null, // Meta Ad Library does not support public unauthenticated iframe embeds
     thumbnailUrl,
     durationSeconds,
-    aspectRatio: mediaType === "VIDEO" ? "9:16" : "1:1",
-    mediaAvailability: "RESTRICTED",
+    aspectRatio,
+    mediaAvailability,
     landingPageUrl,
     targetMarket,
     marketEvidenceType: "QUERY_FILTER",

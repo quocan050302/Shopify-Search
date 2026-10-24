@@ -34,6 +34,11 @@ export async function GET(request: NextRequest) {
     const minAgeDays = searchParams.get("minAgeDays")
       ? parseInt(searchParams.get("minAgeDays")!, 10)
       : undefined;
+    const rawLaunch = searchParams.get("launchWithinDays");
+    const launchWithinDays = rawLaunch
+      ? parseInt(rawLaunch, 10)
+      : (mode === "NEWLY_LAUNCHED" ? 30 : undefined);
+    const sortBy = searchParams.get("sortBy") || (mode === "NEWLY_LAUNCHED" ? "launch_date" : "default");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get("pageSize") || "12", 10)));
 
@@ -164,7 +169,7 @@ export async function GET(request: NextRequest) {
                 videoUrl: media.videoUrl,
                 embedUrl: media.embedUrl,
                 thumbnailUrl: media.thumbnailUrl,
-                aspectRatio: media.aspectRatio || "9:16",
+                aspectRatio: media.aspectRatio || "1:1",
                 availability: (media.availability as any) || "RESTRICTED",
               }
             : null,
@@ -184,35 +189,76 @@ export async function GET(request: NextRequest) {
         };
       });
 
-    // Apply mode ranking
-    const filters: EvergreenRankingFilters = {
-      mode,
-      platform: platform === "ALL" ? "ALL" : (platform as any),
-      minAgeDays,
-    };
+    let allAds: AdViewModel[] = [];
+    let unknownDateCount = 0;
 
-    const ranked = rankEvergreenAds(
-      scoredAds.map((s) => s.score),
-      filters
-    );
+    if (mode === "NEWLY_LAUNCHED") {
+      const days = launchWithinDays || 30;
+      const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
 
-    // Map back to ad objects in ranked order
-    const rankedAdIds = ranked.map((s) => s.adId);
-    const adMap = new Map(scoredAds.map((s) => [s.score.adId, s.ad]));
+      const qualifying: typeof scoredAds = [];
 
-    const rankedAds = rankedAdIds.map((id) => adMap.get(id)).filter(Boolean) as AdViewModel[];
+      for (const item of scoredAds) {
+        if (!item.ad.sourceReportedStartAt) {
+          unknownDateCount++;
+          continue;
+        }
+        const startMs = new Date(item.ad.sourceReportedStartAt).getTime();
+        if (startMs >= cutoffMs) {
+          qualifying.push(item);
+        }
+      }
 
-    // Unranked / INSUFFICIENT_EVIDENCE ads (appended at end)
-    const insufficientIds = new Set(
-      scoredAds
-        .filter((s) => !s.score.eligible || s.score.tier === "INSUFFICIENT_EVIDENCE")
-        .map((s) => s.score.adId)
-    );
-    const insufficientAds = [...insufficientIds]
-      .map((id) => adMap.get(id))
-      .filter(Boolean) as AdViewModel[];
+      // Sort qualifying ads
+      if (sortBy === "first_seen") {
+        qualifying.sort((a, b) => {
+          const aMs = a.ad.firstSeenAt ? new Date(a.ad.firstSeenAt).getTime() : 0;
+          const bMs = b.ad.firstSeenAt ? new Date(b.ad.firstSeenAt).getTime() : 0;
+          return bMs - aMs;
+        });
+      } else if (sortBy === "score") {
+        qualifying.sort((a, b) => (b.score.totalScore ?? 0) - (a.score.totalScore ?? 0));
+      } else {
+        // Default "launch_date": newest launch date first
+        qualifying.sort((a, b) => {
+          const aMs = new Date(a.ad.sourceReportedStartAt!).getTime();
+          const bMs = new Date(b.ad.sourceReportedStartAt!).getTime();
+          return bMs - aMs;
+        });
+      }
 
-    const allAds = [...rankedAds, ...insufficientAds];
+      allAds = qualifying.map((q) => q.ad);
+    } else {
+      // Apply standard mode ranking
+      const filters: EvergreenRankingFilters = {
+        mode,
+        platform: platform === "ALL" ? "ALL" : (platform as any),
+        minAgeDays,
+      };
+
+      const ranked = rankEvergreenAds(
+        scoredAds.map((s) => s.score),
+        filters
+      );
+
+      // Map back to ad objects in ranked order
+      const rankedAdIds = ranked.map((s) => s.adId);
+      const adMap = new Map(scoredAds.map((s) => [s.score.adId, s.ad]));
+
+      const rankedAds = rankedAdIds.map((id) => adMap.get(id)).filter(Boolean) as AdViewModel[];
+
+      // Unranked / INSUFFICIENT_EVIDENCE ads (appended at end)
+      const insufficientIds = new Set(
+        scoredAds
+          .filter((s) => !s.score.eligible || s.score.tier === "INSUFFICIENT_EVIDENCE")
+          .map((s) => s.score.adId)
+      );
+      const insufficientAds = [...insufficientIds]
+        .map((id) => adMap.get(id))
+        .filter(Boolean) as AdViewModel[];
+
+      allAds = [...rankedAds, ...insufficientAds];
+    }
 
     // Pagination
     const total = allAds.length;
@@ -232,8 +278,11 @@ export async function GET(request: NextRequest) {
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "v11",
+        version: "v11.2",
         researchMode: mode,
+        launchWithinDays: mode === "NEWLY_LAUNCHED" ? (launchWithinDays || 30) : null,
+        sortBy,
+        unknownDateCount,
         dataNote:
           "Rankings are RESEARCH PRIORITY signals based on evidence quality and longevity. " +
           "They are NOT profitability indicators. Long-running ads are not confirmed profitable.",

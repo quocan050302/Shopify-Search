@@ -57,6 +57,21 @@ export interface MetaCollectorPageRaw {
   category?: string | null;
 }
 
+export interface MetaCollectorFilters {
+  start_date?: string | null;
+  end_date?: string | null;
+  media_type?: "ALL" | "IMAGE" | "VIDEO" | "MEME" | "NONE";
+  has_video?: boolean | null;
+  has_image?: boolean | null;
+  missing_data?: "include" | "exclude";
+  min_impressions?: number | null;
+  max_impressions?: number | null;
+  min_spend?: number | null;
+  max_spend?: number | null;
+  publisher_platforms?: string[];
+  languages?: string[];
+}
+
 export interface MetaCollectorRawAd {
   id: string; // Meta Library ID
   source_url?: string;
@@ -88,6 +103,12 @@ export interface MetaCollectorRawAd {
   categories?: string[];
   delivery_start_time?: string | null;
   delivery_stop_time?: string | null;
+  display_format?: string | null;
+  media_type?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+  snapshot_url?: string | null;
 }
 
 export interface MetaCollectorJobState {
@@ -123,11 +144,28 @@ export interface MetaCollectorStoredResults {
   continuation?: string | null;
   retrieval_pending: boolean;
   data_status: string;
+  untrusted_ad_content?: boolean;
+}
+
+export interface MetaCollectorInspectItem {
+  ad: MetaCollectorRawAd;
+  enrichment?: string;
+  media?: unknown[];
+  media_status?: string;
+}
+
+export interface MetaCollectorInspectResponse {
+  result_set_id: string;
+  items: MetaCollectorInspectItem[];
+  untrusted_ad_content?: boolean;
 }
 
 export interface MetaCollectorInspectedAd {
   id: string;
   ad: MetaCollectorRawAd;
+  enrichment?: string;
+  media?: unknown[];
   media_downloaded?: boolean;
   media_paths?: string[];
 }
+

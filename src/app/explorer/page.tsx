@@ -17,17 +17,24 @@ import {
   RefreshCw,
   Flame,
   Compass,
+  Sparkles,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { AdCard } from "@/components/ads/AdCard";
 import { AdDetailDrawer } from "@/components/ads/AdDetailDrawer";
 
-type ResearchMode = "EVERGREEN" | "EMERGING" | "TRENDING";
+type ResearchMode = "NEWLY_LAUNCHED" | "EVERGREEN" | "EMERGING" | "TRENDING";
 
 const MODE_CONFIG: Record<
   ResearchMode,
   { label: string; icon: React.ReactNode; description: string; color: string }
 > = {
+  NEWLY_LAUNCHED: {
+    label: "Newly Launched",
+    icon: <Sparkles className="h-3.5 w-3.5" />,
+    description: "Recent commercial ads in the US — prioritize fresh product testing and new entrants",
+    color: "text-rose-400 border-rose-500/30 bg-rose-500/10",
+  },
   EVERGREEN: {
     label: "Evergreen",
     icon: <Leaf className="h-3.5 w-3.5" />,
@@ -47,6 +54,15 @@ const MODE_CONFIG: Record<
     color: "text-sky-400 border-sky-500/30 bg-sky-500/10",
   },
 };
+
+const LAUNCH_AGE_OPTIONS = [
+  { value: "7", label: "Launched within 7 days" },
+  { value: "14", label: "Launched within 14 days" },
+  { value: "30", label: "Launched within 30 days (Default)" },
+  { value: "60", label: "Launched within 60 days" },
+  { value: "90", label: "Launched within 90 days" },
+  { value: "180", label: "Launched within 180 days" },
+];
 
 const AGE_FILTER_OPTIONS = [
   { value: "", label: "Any age" },
@@ -104,13 +120,16 @@ export default function ExplorerPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Research mode
-  const [researchMode, setResearchMode] = useState<ResearchMode>("EVERGREEN");
+  const [researchMode, setResearchMode] = useState<ResearchMode>("NEWLY_LAUNCHED");
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [platform, setPlatform] = useState("META"); // Meta is primary platform
   const [category, setCategory] = useState("ALL");
   const [minAgeDays, setMinAgeDays] = useState("");
+  const [launchWithinDays, setLaunchWithinDays] = useState("30");
+  const [sortBy, setSortBy] = useState<"launch_date" | "first_seen" | "score">("launch_date");
+  const [unknownDateCount, setUnknownDateCount] = useState(0);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -121,8 +140,14 @@ export default function ExplorerPage() {
       const urlPlatform = sp.get("platform");
       if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
       const urlMode = sp.get("mode");
-      if (urlMode && (urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
+      if (urlMode && (urlMode === "NEWLY_LAUNCHED" || urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
         setResearchMode(urlMode as ResearchMode);
+      }
+      const urlLaunch = sp.get("launchWithinDays");
+      if (urlLaunch) setLaunchWithinDays(urlLaunch);
+      const urlSort = sp.get("sortBy");
+      if (urlSort && (urlSort === "launch_date" || urlSort === "first_seen" || urlSort === "score")) {
+        setSortBy(urlSort as any);
       }
       const urlRequestId = sp.get("requestId");
       if (urlRequestId) setRequestId(urlRequestId);
@@ -144,10 +169,17 @@ export default function ExplorerPage() {
         mode: researchMode,
       });
 
+      if (researchMode === "NEWLY_LAUNCHED") {
+        params.append("launchWithinDays", launchWithinDays);
+        params.append("sortBy", sortBy);
+      } else {
+        if (minAgeDays) params.append("minAgeDays", minAgeDays);
+        params.append("sortBy", sortBy === "launch_date" ? "default" : sortBy);
+      }
+
       if (searchQuery.trim()) params.append("query", searchQuery.trim());
       if (platform !== "ALL") params.append("platform", platform);
       if (category !== "ALL") params.append("category", category);
-      if (minAgeDays) params.append("minAgeDays", minAgeDays);
       if (requestId) params.append("requestId", requestId);
 
       // Use evergreen API for mode-based ranking
@@ -158,6 +190,7 @@ export default function ExplorerPage() {
         setAds(evJson.data);
         setTotalPages(evJson.pagination.totalPages || 1);
         setTotalCount(evJson.pagination.total || 0);
+        setUnknownDateCount(evJson.meta?.unknownDateCount || 0);
         return;
       }
 
@@ -188,7 +221,7 @@ export default function ExplorerPage() {
 
   useEffect(() => {
     fetchAds();
-  }, [page, platform, category, researchMode, minAgeDays, requestId]);
+  }, [page, platform, category, researchMode, minAgeDays, launchWithinDays, sortBy, requestId]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,6 +284,9 @@ export default function ExplorerPage() {
                 key={mode}
                 onClick={() => {
                   setResearchMode(mode);
+                  if (mode === "NEWLY_LAUNCHED") {
+                    setSortBy("launch_date");
+                  }
                   setPage(1);
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
@@ -268,6 +304,24 @@ export default function ExplorerPage() {
             {modeInfo.description}
           </span>
         </div>
+
+        {/* Banner — Newly Launched mode */}
+        {researchMode === "NEWLY_LAUNCHED" && (
+          <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg bg-rose-950/20 border border-rose-500/30 text-xs text-rose-300">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>
+                <strong>Fresh Commercial Ads (US):</strong> Showing ads launched within the last{" "}
+                <span className="font-bold text-white underline">{launchWithinDays} days</span> (Meta delivery start date).
+              </span>
+            </div>
+            {unknownDateCount > 0 && (
+              <span className="text-[10px] text-slate-500 shrink-0">
+                {unknownDateCount} ad{unknownDateCount !== 1 ? "s" : ""} with unrecorded launch date excluded
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Disclaimer — Evergreen mode */}
         {researchMode === "EVERGREEN" && (
@@ -349,17 +403,56 @@ export default function ExplorerPage() {
                 </select>
               </div>
 
-              {/* Min Age */}
+              {/* Age / Launch Window selector */}
+              {researchMode === "NEWLY_LAUNCHED" ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Launch Window:</span>
+                  <select
+                    value={launchWithinDays}
+                    onChange={(e) => { setLaunchWithinDays(e.target.value); setPage(1); }}
+                    className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-rose-500 text-xs"
+                  >
+                    {LAUNCH_AGE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Min Age:</span>
+                  <select
+                    value={minAgeDays}
+                    onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
+                    className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                  >
+                    {AGE_FILTER_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Sort By */}
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 font-medium">Min Age:</span>
+                <span className="text-slate-500 font-medium">Sort:</span>
                 <select
-                  value={minAgeDays}
-                  onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
-                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value as any); setPage(1); }}
+                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs cursor-pointer"
                 >
-                  {AGE_FILTER_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
+                  {researchMode === "NEWLY_LAUNCHED" ? (
+                    <>
+                      <option value="launch_date">Launch Date (Newest first)</option>
+                      <option value="first_seen">SWAI Discovery Date</option>
+                      <option value="score">Research Priority Score</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="score">Longevity Score / Priority</option>
+                      <option value="launch_date">Launch Date (Newest first)</option>
+                      <option value="first_seen">SWAI Discovery Date</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -427,7 +520,7 @@ export default function ExplorerPage() {
             </p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
             {ads.map((ad) => {
               const evScore = ad.evergreenScore;
               return (

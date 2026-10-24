@@ -670,7 +670,7 @@ export function calculateEvergreenEvidenceConfidence(
 
 // ─── Ranking Engine ───────────────────────────────────────────────────────────
 
-export type ResearchMode = "EVERGREEN" | "EMERGING" | "TRENDING";
+export type ResearchMode = "NEWLY_LAUNCHED" | "EVERGREEN" | "EMERGING" | "TRENDING";
 
 export interface EvergreenRankingFilters {
   mode: ResearchMode;
@@ -719,7 +719,14 @@ export function rankEvergreenAds(
   }
 
   // Sort by mode
-  if (filters.mode === "EVERGREEN") {
+  if (filters.mode === "NEWLY_LAUNCHED") {
+    // Newest ads first (lowest calendar age days), secondary: score desc
+    filtered.sort((a, b) => {
+      const ageDiff = (a.calendarAgeDays ?? 9999) - (b.calendarAgeDays ?? 9999);
+      if (ageDiff !== 0) return ageDiff;
+      return (b.totalScore ?? 0) - (a.totalScore ?? 0);
+    });
+  } else if (filters.mode === "EVERGREEN") {
     // Primary: total score desc, secondary: calendar age desc, tertiary: confidence desc
     filtered.sort((a, b) => {
       const scoreDiff = (b.totalScore ?? 0) - (a.totalScore ?? 0);

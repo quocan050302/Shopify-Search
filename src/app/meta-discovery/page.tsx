@@ -92,6 +92,7 @@ export default function MetaDiscoveryPage() {
   const [market, setMarket] = useState("US");
   const [creativePreference, setCreativePreference] = useState<"VIDEO" | "IMAGE" | "ALL">("ALL");
   const [activeStatus, setActiveStatus] = useState<"ACTIVE" | "INACTIVE" | "ALL">("ACTIVE");
+  const [launchWithinDays, setLaunchWithinDays] = useState<number | undefined>(undefined);
   const [requestedLimit, setRequestedLimit] = useState<number>(25);
   const [advertiserPageId, setAdvertiserPageId] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -159,6 +160,7 @@ export default function MetaDiscoveryPage() {
           requestedLimit,
           creativePreference,
           activeStatus,
+          launchWithinDays,
           advertiserPageId: advertiserPageId.trim() || undefined,
         }),
       });
@@ -449,7 +451,7 @@ export default function MetaDiscoveryPage() {
             </div>
 
             {/* Advanced Filters Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800/60">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-800/60">
               {/* Status */}
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 mb-1">
@@ -479,6 +481,26 @@ export default function MetaDiscoveryPage() {
                   <option value="ALL">ALL Formats</option>
                   <option value="VIDEO">Videos only</option>
                   <option value="IMAGE">Images only</option>
+                </select>
+              </div>
+
+              {/* Launch Freshness */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Launch Freshness
+                </label>
+                <select
+                  value={launchWithinDays !== undefined ? String(launchWithinDays) : ""}
+                  onChange={(e) => setLaunchWithinDays(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="">Any launch date</option>
+                  <option value="7">Last 7 days (Ultra fresh)</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days (Recommended)</option>
+                  <option value="60">Last 60 days</option>
+                  <option value="90">Last 90 days</option>
+                  <option value="180">Last 180 days</option>
                 </select>
               </div>
 

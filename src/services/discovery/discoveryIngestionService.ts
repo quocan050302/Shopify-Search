@@ -41,6 +41,14 @@ export interface IngestionResultSummary {
   errors: Array<{ identityHash: string; error: string }>;
 }
 
+export interface MediaUpsertResult {
+  action: "CREATED" | "UPDATED" | "UNCHANGED";
+  mediaAssetId: string;
+  thumbnailUpdated: boolean;
+  videoUpdated: boolean;
+}
+
+
 /**
  * Resolves or creates the appropriate DataSource row for the platform.
  */
@@ -164,6 +172,114 @@ export async function findExistingAdBySourceIdentity(
   }
 
   return null;
+}
+
+/**
+ * Upserts verified advertisement media asset in the database.
+ * Reusable helper (Phase 4, Items 41-53).
+ * Ensures thumbnailUrl updates independently of videoUrl, preserves legitimate media,
+ * and maintains true mediaType and aspect ratio without overwriting with null.
+ */
+export async function upsertVerifiedAdMedia(
+  tx: PrismaTransactionClient,
+  adId: string,
+  incoming: NormalizedDiscoveredAd
+): Promise<MediaUpsertResult> {
+  const existingMedia = await tx.adMediaAsset.findFirst({
+    where: { adId },
+  });
+
+  const mediaType = incoming.mediaType || (incoming.platform === "META" ? "UNKNOWN" : "VIDEO");
+  const incomingAspect = incoming.aspectRatio && incoming.aspectRatio !== "UNKNOWN" ? incoming.aspectRatio : null;
+
+  if (!existingMedia) {
+    const isReady = Boolean(incoming.thumbnailUrl || incoming.videoUrl);
+    const availability = isReady ? "READY" : (incoming.mediaAvailability || "RESTRICTED");
+
+    const created = await tx.adMediaAsset.create({
+      data: {
+        adId,
+        mediaType,
+        videoUrl: incoming.videoUrl || null,
+        embedUrl: incoming.embedUrl || null,
+        thumbnailUrl: incoming.thumbnailUrl || null,
+        durationSeconds: incoming.durationSeconds || null,
+        aspectRatio: incomingAspect || (mediaType === "IMAGE" ? "1:1" : "9:16"),
+        availability,
+        source: incoming.embedUrl ? "OFFICIAL_EMBED" : incoming.thumbnailUrl ? "SOURCE_ONLY" : "FALLBACK_ONLY",
+      },
+    });
+
+    return {
+      action: "CREATED",
+      mediaAssetId: created.id,
+      thumbnailUpdated: Boolean(incoming.thumbnailUrl),
+      videoUpdated: Boolean(incoming.videoUrl),
+    };
+  }
+
+  // Existing media row exists. Check for legitimate updates without overwriting legitimate values with null.
+  const updateData: Record<string, unknown> = {};
+  let thumbnailUpdated = false;
+  let videoUpdated = false;
+
+  // Rule 42 & 43: If existing thumbnailUrl is missing and incoming has a valid thumbnailUrl, update it.
+  // Updating thumbnail must NOT depend on finding a new videoUrl.
+  if ((!existingMedia.thumbnailUrl || existingMedia.thumbnailUrl.trim() === "") && incoming.thumbnailUrl) {
+    updateData.thumbnailUrl = incoming.thumbnailUrl;
+    thumbnailUpdated = true;
+  }
+
+  // Update video URL if missing in DB and present in incoming record
+  if ((!existingMedia.videoUrl || existingMedia.videoUrl.trim() === "") && incoming.videoUrl) {
+    updateData.videoUrl = incoming.videoUrl;
+    videoUpdated = true;
+  }
+
+  // Update mediaType if previously UNKNOWN and incoming is concrete
+  if (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") {
+    updateData.mediaType = mediaType;
+  }
+
+  // Update aspect ratio if previously unknown/neutral and incoming is specific
+  if (incomingAspect && (!existingMedia.aspectRatio || existingMedia.aspectRatio === "UNKNOWN")) {
+    updateData.aspectRatio = incomingAspect;
+  }
+
+  // Update duration if previously null
+  if (existingMedia.durationSeconds == null && incoming.durationSeconds != null) {
+    updateData.durationSeconds = incoming.durationSeconds;
+  }
+
+  // Update availability to READY if legitimate media is now available
+  const hasValidMedia = Boolean(
+    (updateData.thumbnailUrl || existingMedia.thumbnailUrl) ||
+    (updateData.videoUrl || existingMedia.videoUrl)
+  );
+  if (hasValidMedia && existingMedia.availability !== "READY") {
+    updateData.availability = "READY";
+  }
+
+  if (Object.keys(updateData).length > 0) {
+    updateData.updatedAt = new Date();
+    await tx.adMediaAsset.update({
+      where: { id: existingMedia.id },
+      data: updateData,
+    });
+    return {
+      action: "UPDATED",
+      mediaAssetId: existingMedia.id,
+      thumbnailUpdated,
+      videoUpdated,
+    };
+  }
+
+  return {
+    action: "UNCHANGED",
+    mediaAssetId: existingMedia.id,
+    thumbnailUpdated: false,
+    videoUpdated: false,
+  };
 }
 
 /**
@@ -330,38 +446,8 @@ export async function ingestDiscoveredAds(
           },
         });
 
-        // 6. Upsert Media Asset (Honest media type!)
-        const mediaType = record.mediaType || (platform === "META" ? "UNKNOWN" : "VIDEO");
-        const aspectRatio = record.aspectRatio || (mediaType === "VIDEO" ? "9:16" : "1:1");
-
-        const existingMedia = await tx.adMediaAsset.findFirst({
-          where: { adId: targetAd.id },
-        });
-
-        if (!existingMedia) {
-          await tx.adMediaAsset.create({
-            data: {
-              adId: targetAd.id,
-              mediaType,
-              videoUrl: record.videoUrl || null,
-              embedUrl: record.embedUrl || null,
-              thumbnailUrl: record.thumbnailUrl || null,
-              durationSeconds: record.durationSeconds || null,
-              aspectRatio,
-              availability: record.mediaAvailability,
-              source: record.embedUrl ? "OFFICIAL_EMBED" : "SOURCE_ONLY",
-            },
-          });
-        } else if (record.videoUrl && !existingMedia.videoUrl) {
-          await tx.adMediaAsset.update({
-            where: { id: existingMedia.id },
-            data: {
-              videoUrl: record.videoUrl,
-              thumbnailUrl: record.thumbnailUrl || existingMedia.thumbnailUrl,
-              availability: "READY",
-            },
-          });
-        }
+        // 6. Upsert Media Asset (Phase 4: Reusable verified helper)
+        await upsertVerifiedAdMedia(tx, targetAd.id, record);
 
         // 7. Add Factual Ad Observation (UNKNOWN status)
         const evidenceType = platform === "META" ? "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION" : "API_SYNC";

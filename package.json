@@ -16,7 +16,8 @@
     "discovery:dry-run": "tsx scripts/discovery-dry-run.ts",
     "meta:doctor": "tsx scripts/meta-doctor.ts",
     "meta:once": "tsx scripts/meta-once.ts",
-    "meta:test": "tsx scripts/meta-test.ts"
+    "meta:test": "tsx scripts/meta-test.ts",
+    "meta:repair": "tsx scripts/meta-repair-media.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

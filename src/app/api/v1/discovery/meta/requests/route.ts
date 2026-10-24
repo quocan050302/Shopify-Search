@@ -11,6 +11,7 @@ const CreateMetaRequestSchema = z.object({
   creativePreference: z.enum(["VIDEO", "IMAGE", "ALL"]).default("ALL").optional(),
   activeStatus: z.enum(["ACTIVE", "INACTIVE", "ALL"]).default("ACTIVE").optional(),
   advertiserPageId: z.string().optional(),
+  launchWithinDays: z.union([z.literal(7), z.literal(14), z.literal(30), z.literal(60), z.literal(90), z.literal(180)]).optional(),
 });
 
 /**
@@ -39,6 +40,10 @@ export async function POST(request: NextRequest) {
       requestedLimit: validated.requestedLimit,
       pageSize: Math.min(25, validated.requestedLimit),
       runMode: "MANUAL",
+      launchWithinDays: validated.launchWithinDays,
+      creativePreference: validated.creativePreference,
+      activeStatus: validated.activeStatus,
+      advertiserPageId: validated.advertiserPageId,
     });
 
     return NextResponse.json(

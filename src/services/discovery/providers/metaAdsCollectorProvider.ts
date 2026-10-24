@@ -20,9 +20,60 @@ import {
   DiscoveryProviderCapabilities,
   DiscoveryError,
 } from "../types";
-import { createMetaCollectorClient, MetaCollectorClient } from "../metaCollector/metaCollectorMcpClient";
+import {
+  createMetaCollectorClient,
+  MetaCollectorClient,
+  getDetailedMetaAdsBatch,
+} from "../metaCollector/metaCollectorMcpClient";
 import { getMetaCollectorConfig } from "../metaCollector/metaCollectorConfig";
+import { MetaCollectorFilters, MetaCollectorRawAd } from "../metaCollector/metaCollectorTypes";
 import { normalizeMetaCollectorAd } from "../normalization/normalizeMetaCollectorAd";
+
+interface MetaCursorPayload {
+  resultSetId: string;
+  offset: number;
+  mode: "stored" | "upstream";
+}
+
+function parseCursor(cursor?: string | null): MetaCursorPayload | null {
+  if (!cursor || typeof cursor !== "string") return null;
+  const trimmed = cursor.trim();
+  if (!trimmed) return null;
+
+  // Try JSON base64
+  try {
+    const decoded = Buffer.from(trimmed, "base64").toString("utf-8");
+    const parsed = JSON.parse(decoded);
+    if (parsed && typeof parsed.resultSetId === "string" && parsed.resultSetId.length > 0) {
+      return {
+        resultSetId: parsed.resultSetId,
+        offset: typeof parsed.offset === "number" ? parsed.offset : 0,
+        mode: parsed.mode === "stored" ? "stored" : "upstream",
+      };
+    }
+  } catch {}
+
+  // Try colon format "resultSetId:offset"
+  if (trimmed.includes(":")) {
+    const parts = trimmed.split(":");
+    return {
+      resultSetId: parts[0],
+      offset: parseInt(parts[1], 10) || 0,
+      mode: "stored",
+    };
+  }
+
+  // Raw resultSetId (e.g. hex UUID)
+  return {
+    resultSetId: trimmed,
+    offset: 0,
+    mode: "upstream",
+  };
+}
+
+function encodeCursor(resultSetId: string, offset: number, mode: "stored" | "upstream"): string {
+  return Buffer.from(JSON.stringify({ resultSetId, offset, mode })).toString("base64");
+}
 
 export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
   readonly id = "meta-ads-collector";
@@ -226,45 +277,140 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
     try {
       client = await createMetaCollectorClient();
 
-      let mcpResponse;
-      if (cursor && cursor.startsWith("rs_")) {
-        // Continuation of existing search session
-        mcpResponse = await client.continueSearch(cursor, pageSize);
+      const cursorPayload = parseCursor(cursor);
+      let rawAds: MetaCollectorRawAd[] = [];
+      let resultSetId = "";
+      let nextCursor: string | null = null;
+      const warnings: string[] = [];
+
+      let launchCutoffDate: Date | null = null;
+      if (query.launchWithinDays) {
+        launchCutoffDate = new Date(Date.now() - query.launchWithinDays * 24 * 60 * 60 * 1000);
+      }
+
+      if (cursorPayload) {
+        resultSetId = cursorPayload.resultSetId;
+
+        if (cursorPayload.mode === "stored" && cursorPayload.offset > 0) {
+          // Paginating through already stored detailed results
+          try {
+            const stored = await client.getResults(resultSetId, cursorPayload.offset, pageSize, "detailed");
+            rawAds = stored.ads || [];
+            if (stored.next_offset) {
+              nextCursor = encodeCursor(resultSetId, stored.next_offset, "stored");
+            } else if (stored.continuation) {
+              nextCursor = encodeCursor(resultSetId, 0, "upstream");
+            }
+          } catch (err: unknown) {
+            warnings.push(`Failed to read stored results at offset ${cursorPayload.offset}: ${(err as Error).message}`);
+          }
+        }
+
+        if (rawAds.length === 0) {
+          // Upstream continuation: continueSearch takes raw resultSetId
+          const continueRes = await client.continueSearch(resultSetId, pageSize);
+          resultSetId = continueRes.result_set_id || resultSetId;
+
+          try {
+            // Always retrieve detailed view for real creative URLs
+            rawAds = await getDetailedMetaAdsBatch(client, resultSetId, cursorPayload.offset || 0, pageSize);
+          } catch {
+            rawAds = continueRes.ads || [];
+          }
+
+          if (continueRes.next_offset) {
+            nextCursor = encodeCursor(resultSetId, continueRes.next_offset, "stored");
+          } else if (continueRes.continuation) {
+            nextCursor = encodeCursor(resultSetId, 0, "upstream");
+          }
+        }
       } else {
-        // New search
-        mcpResponse = await client.searchAds({
+        // New search with collector-side filters translation (Phase 9)
+        const filters: MetaCollectorFilters = {};
+        if (launchCutoffDate) {
+          filters.start_date = launchCutoffDate.toISOString();
+        }
+        if (query.creativePreference === "VIDEO") {
+          filters.has_video = true;
+          filters.media_type = "VIDEO";
+        } else if (query.creativePreference === "IMAGE") {
+          filters.has_image = true;
+          filters.media_type = "IMAGE";
+        }
+
+        const searchStatus =
+          query.activeStatus === "ALL"
+            ? "ALL"
+            : query.activeStatus === "INACTIVE"
+            ? "INACTIVE"
+            : "ACTIVE";
+
+        const mcpResponse = await client.searchAds({
           query: keyword,
           country: query.market || "US",
-          status: "ACTIVE",
+          status: searchStatus,
           maxResults: requestedLimit,
           maxRequests: 10,
           maxSeconds: 120,
           pageSize,
+          filters,
         });
+
+        resultSetId = mcpResponse.result_set_id;
+
+        // Retrieve DETAILED batch using getDetailedMetaAdsBatch (Phase 2, Items 13-18)
+        try {
+          rawAds = await getDetailedMetaAdsBatch(client, resultSetId, 0, pageSize);
+        } catch (detailErr: unknown) {
+          warnings.push(
+            `Detailed results fetch failed; using summary results with media marked restricted: ${(detailErr as Error).message}`
+          );
+          rawAds = (mcpResponse.ads || []).map((ad) => ({
+            ...ad,
+            thumbnail_url: null,
+            video_url: null,
+          }));
+        }
+
+        if (mcpResponse.next_offset) {
+          nextCursor = encodeCursor(resultSetId, mcpResponse.next_offset, "stored");
+        } else if (mcpResponse.continuation) {
+          nextCursor = encodeCursor(resultSetId, 0, "upstream");
+        }
       }
 
-      const rawAds = mcpResponse.ads || [];
       const normalizedAds = [];
-      const warnings: string[] = [];
-
       for (const raw of rawAds) {
         try {
           const norm = normalizeMetaCollectorAd(raw, {
             queryMarket: query.market || "US",
             keyword,
           });
+
+          // Strict freshness filter check: if launchWithinDays is requested, require usable start date within cutoff
+          if (launchCutoffDate) {
+            if (!norm.sourceReportedStartAt || norm.sourceReportedStartAt < launchCutoffDate) {
+              continue;
+            }
+          }
+
+          // Strict creative preference filter check
+          if (query.creativePreference === "VIDEO" && norm.mediaType !== "VIDEO") {
+            continue;
+          }
+          if (
+            query.creativePreference === "IMAGE" &&
+            norm.mediaType !== "IMAGE" &&
+            norm.mediaType !== "CAROUSEL"
+          ) {
+            continue;
+          }
+
           normalizedAds.push(norm);
         } catch (normErr: unknown) {
           warnings.push(`Record ${raw?.id || "unknown"} rejected: ${(normErr as Error).message}`);
         }
       }
-
-      const nextCursor =
-        mcpResponse.next_offset && mcpResponse.result_set_id
-          ? `${mcpResponse.result_set_id}:${mcpResponse.next_offset}`
-          : mcpResponse.continuation
-          ? mcpResponse.continuation
-          : null;
 
       const hasMore = Boolean(nextCursor && normalizedAds.length > 0);
 
@@ -272,7 +418,7 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
         items: normalizedAds,
         nextCursor,
         hasMore,
-        requestId: mcpResponse.result_set_id,
+        requestId: resultSetId,
         usage: {
           creditsUsed: 0,
           costUsd: 0.0,

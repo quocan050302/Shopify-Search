@@ -17,6 +17,8 @@ import {
   MetaCollectorStoredResults,
   MetaCollectorInspectedAd,
   MetaCollectorRawAd,
+  MetaCollectorFilters,
+  MetaCollectorInspectItem,
 } from "./metaCollectorTypes";
 import { DiscoveryError } from "../types";
 
@@ -30,10 +32,11 @@ export interface MetaCollectorClient {
     maxRequests?: number;
     maxSeconds?: number;
     pageSize?: number;
+    filters?: MetaCollectorFilters;
   }): Promise<MetaCollectorSearchResponse>;
   continueSearch(resultSetId: string, batchSize?: number): Promise<MetaCollectorSearchResponse>;
-  getResults(resultSetId: string, offset?: number, limit?: number): Promise<MetaCollectorStoredResults>;
-  inspectAds(resultSetId: string, libraryIds: string[]): Promise<MetaCollectorInspectedAd[]>;
+  getResults(resultSetId: string, offset?: number, limit?: number, view?: "summary" | "detailed" | "raw"): Promise<MetaCollectorStoredResults>;
+  inspectAds(resultSetId: string, libraryIds: string[], options?: { enrich?: boolean; downloadMedia?: boolean }): Promise<MetaCollectorInspectedAd[]>;
   close(): Promise<void>;
   isAlive(): boolean;
 }
@@ -223,6 +226,7 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       maxRequests?: number;
       maxSeconds?: number;
       pageSize?: number;
+      filters?: MetaCollectorFilters;
     }): Promise<MetaCollectorSearchResponse> {
       // 1. Sanitize & clamp input parameters
       const cleanQuery = (input.query || "").trim().slice(0, 1000);
@@ -233,19 +237,25 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       const maxRequests = Math.min(config.maxRequests, Math.max(1, input.maxRequests || 10));
       const maxSeconds = Math.min(config.maxSeconds, Math.max(10, input.maxSeconds || 300));
 
+      const searchConfig: Record<string, unknown> = {
+        query: cleanQuery,
+        country,
+        ad_type: "ALL",
+        status,
+        search_type: "KEYWORD_UNORDERED",
+        page_size: pageSize,
+        max_results: maxResults,
+        max_requests: maxRequests,
+        max_seconds: maxSeconds,
+        timeout: 30,
+      };
+
+      if (input.filters && Object.keys(input.filters).length > 0) {
+        searchConfig.filters = input.filters;
+      }
+
       const payload = {
-        search: {
-          query: cleanQuery,
-          country,
-          ad_type: "ALL",
-          status,
-          search_type: "KEYWORD_UNORDERED",
-          page_size: pageSize,
-          max_results: maxResults,
-          max_requests: maxRequests,
-          max_seconds: maxSeconds,
-          timeout: 30,
-        },
+        search: searchConfig,
         batch_size: pageSize,
         background: false,
       };
@@ -293,7 +303,12 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       return searchRes;
     },
 
-    async getResults(resultSetId: string, offset: number = 0, limit: number = 20): Promise<MetaCollectorStoredResults> {
+    async getResults(
+      resultSetId: string,
+      offset: number = 0,
+      limit: number = 20,
+      view: "summary" | "detailed" | "raw" = "detailed"
+    ): Promise<MetaCollectorStoredResults> {
       const clampedLimit = Math.min(100, Math.max(1, limit));
 
       const res = await client.callTool({
@@ -302,7 +317,7 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
           result_set_id: resultSetId,
           offset: Math.max(0, offset),
           limit: clampedLimit,
-          view: "detailed",
+          view,
         },
       });
 
@@ -314,7 +329,11 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       return parseToolTextResponse<MetaCollectorStoredResults>(res.content);
     },
 
-    async inspectAds(resultSetId: string, libraryIds: string[]): Promise<MetaCollectorInspectedAd[]> {
+    async inspectAds(
+      resultSetId: string,
+      libraryIds: string[],
+      options?: { enrich?: boolean; downloadMedia?: boolean }
+    ): Promise<MetaCollectorInspectedAd[]> {
       const boundedIds = libraryIds.slice(0, 20);
       if (boundedIds.length === 0) return [];
 
@@ -323,8 +342,8 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
         arguments: {
           result_set_id: resultSetId,
           ad_ids: boundedIds,
-          enrich: false,
-          download_media: false, // Default media download off for safety
+          enrich: Boolean(options?.enrich),
+          download_media: Boolean(options?.downloadMedia),
           view: "detailed",
         },
       });
@@ -334,7 +353,17 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
         throw mapUpstreamError(errPayload?.error || errPayload);
       }
 
-      const rawResult = parseToolTextResponse<{ ads: MetaCollectorRawAd[] }>(res.content);
+      const rawResult = parseToolTextResponse<{ items?: MetaCollectorInspectItem[]; ads?: MetaCollectorRawAd[] }>(res.content);
+      if (Array.isArray(rawResult.items)) {
+        return rawResult.items.map((item) => ({
+          id: item.ad?.id,
+          ad: item.ad,
+          enrichment: item.enrichment,
+          media: item.media,
+          media_downloaded: Boolean(item.media && item.media.length > 0),
+        }));
+      }
+
       return (rawResult.ads || []).map((ad) => ({
         id: ad.id,
         ad,
@@ -370,3 +399,24 @@ export async function getMetaCollectorCapabilities(): Promise<MetaCollectorCapab
     await client.close();
   }
 }
+
+/**
+ * Helper to fetch detailed records for a batch from stored MCP results.
+ * Validates IDs and preserves ordering and batch boundaries (Phase 2, Items 17-18).
+ */
+export async function getDetailedMetaAdsBatch(
+  client: MetaCollectorClient,
+  resultSetId: string,
+  offset: number,
+  limit: number
+): Promise<MetaCollectorRawAd[]> {
+  try {
+    const stored = await client.getResults(resultSetId, offset, limit, "detailed");
+    const ads = stored.ads || [];
+    return ads.filter((ad) => Boolean(ad && typeof ad.id === "string" && ad.id.trim().length > 0));
+  } catch (err) {
+    console.warn(`[getDetailedMetaAdsBatch] Failed fetching detailed batch for resultSet ${resultSetId} offset ${offset}:`, err);
+    throw err;
+  }
+}
+
