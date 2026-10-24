@@ -5,6 +5,7 @@ import {
   CanonicalDatabaseLocation,
   DatabaseConfiguration,
   canonicalizeSqliteDatabasePath,
+  resolveDatabaseConfiguration,
 } from "./database/databaseConfig";
 import { assertSafeTestDatabase, isProtectedTestExecution } from "./database/databaseSafety";
 

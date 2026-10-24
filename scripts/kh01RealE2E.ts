@@ -252,9 +252,10 @@ export async function resolveE2ESourceAd(
 }
 
 /**
- * Performs actual HTTP API readback via production Route Handlers and validates IDs.
+ * Performs direct Route Handler readback via production Next.js Route Handlers (in-process).
+ * For actual HTTP exchange over network socket, use verifyHttpServerReadback.
  */
-export async function verifyHttpApiReadback(
+export async function verifyRouteHandlerReadback(
   productId: string,
   jobId: string | null,
   expected: {
@@ -263,6 +264,7 @@ export async function verifyHttpApiReadback(
   },
   workspaceId: string
 ): Promise<{ verified: boolean; statusCode: number; data?: any; error?: string }> {
+
   try {
     const overviewReq = new NextRequest(
       `http://localhost:3000/api/v1/research/products/${productId}/overview`,
@@ -360,6 +362,13 @@ export async function verifyHttpApiReadback(
     };
   }
 }
+
+/**
+ * Backward-compatible alias for verifyRouteHandlerReadback.
+ * @deprecated Use verifyRouteHandlerReadback for in-process Route Handlers or verifyHttpServerReadback for real HTTP requests.
+ */
+export const verifyHttpApiReadback = verifyRouteHandlerReadback;
+
 
 /**
  * Performs database readback via direct Prisma queries and validates integrity.
