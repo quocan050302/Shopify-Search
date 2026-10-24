@@ -73,12 +73,23 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   // Recalculate Opportunity State
   const [recalculating, setRecalculating] = useState(false);
 
+  // Helper to forward workspace query parameter or cookie
+  const getWorkspaceQuery = () => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    const ws = params.get("workspaceId");
+    if (ws) return `?workspaceId=${encodeURIComponent(ws)}`;
+    const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+    if (cookieMatch) return `?workspaceId=${encodeURIComponent(cookieMatch[1])}`;
+    return "";
+  };
+
   // Fetch complete product overview
   const loadOverview = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/v1/research/products/${productId}/overview`, { signal });
+      const res = await fetch(`/api/v1/research/products/${productId}/overview${getWorkspaceQuery()}`, { signal });
       const json = await res.json();
 
       if (!json.success) {
@@ -126,7 +137,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
     try {
       setInspecting(true);
       setInspectFeedback("Initiating public landing page research job...");
-      const res = await fetch(`/api/v1/research/products/${productId}/landing-page-jobs`, {
+      const res = await fetch(`/api/v1/research/products/${productId}/landing-page-jobs${getWorkspaceQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ forceRefresh: true }),
@@ -147,8 +158,9 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         await new Promise((r) => setTimeout(r, 1500));
         attempts++;
 
-        const statusRes = await fetch(`/api/v1/research/jobs/${jobId}`);
+        const statusRes = await fetch(`/api/v1/research/jobs/${jobId}${getWorkspaceQuery()}`);
         const statusJson = await statusRes.json();
+
 
         if (statusJson.success && statusJson.data) {
           const status = statusJson.data.status;
@@ -213,7 +225,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         throw new Error("Valid selling price is required");
       }
 
-      const res = await fetch(`/api/v1/research/products/${productId}/economics`, {
+      const res = await fetch(`/api/v1/research/products/${productId}/economics${getWorkspaceQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -252,7 +264,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         throw new Error("Valid unit cost is required");
       }
 
-      const res = await fetch(`/api/v1/research/products/${productId}/fulfillment`, {
+      const res = await fetch(`/api/v1/research/products/${productId}/fulfillment${getWorkspaceQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -283,7 +295,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   const handleRecalculateOpportunity = async () => {
     try {
       setRecalculating(true);
-      const res = await fetch(`/api/v1/research/products/${productId}/opportunity`, {
+      const res = await fetch(`/api/v1/research/products/${productId}/opportunity${getWorkspaceQuery()}`, {
         method: "POST",
       });
       const json = await res.json();
@@ -303,7 +315,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
       setSavingDecision(true);
       setDecisionFeedback(null);
 
-      const res = await fetch(`/api/v1/research/products/${productId}/decisions`, {
+      const res = await fetch(`/api/v1/research/products/${productId}/decisions${getWorkspaceQuery()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -311,6 +323,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
           notes: decisionNotes,
         }),
       });
+
 
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to record decision");
@@ -509,13 +522,14 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         <div className="flex border-b border-[#1f293d] overflow-x-auto gap-2">
           {[
             { id: "product", label: "Product & Problem", icon: ShoppingBag },
-            { id: "creative", label: `Creative & Ads (${advertisingProfile.distinctAdsCount})`, icon: PlaySquare },
-            { id: "offer", label: `Offer Intelligence (${offerSnapshots.length})`, icon: TrendingUp },
+            { id: "creative", label: `Creative & Ads (${advertisingProfile?.distinctAdsCount ?? 0})`, icon: PlaySquare },
+            { id: "offer", label: `Offer Intelligence (${(offerSnapshots || []).length})`, icon: TrendingUp },
             { id: "funnel", label: "Landing Page & CRO", icon: Layers },
-            { id: "economics", label: `Economics & Margin (${economicsScenarios.length})`, icon: Calculator },
-            { id: "fulfillment", label: `Fulfillment & Supplier (${supplierQuotes.length})`, icon: Truck },
+            { id: "economics", label: `Economics & Margin (${(economicsScenarios || []).length})`, icon: Calculator },
+            { id: "fulfillment", label: `Fulfillment & Supplier (${(supplierQuotes || []).length})`, icon: Truck },
             { id: "decision", label: "Decision & Audit", icon: ShieldCheck },
           ].map((tab) => {
+
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -1229,23 +1243,24 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
                         </div>
 
                         <div className="flex justify-between text-[11px] text-slate-400 font-mono">
-                          <span>Readiness: {p.readiness}%</span>
+                          <span>Readiness: {p.readiness ?? 0}%</span>
                           <span>Score: {p.score != null ? `${p.score}/100` : "INSUFFICIENT"}</span>
                         </div>
 
-                        {p.findings.length > 0 && (
+                        {p.findings && p.findings.length > 0 && (
                           <p className="text-[11px] text-slate-300 italic">
                             "{p.findings[0]}"
                           </p>
                         )}
 
-                        {p.missingEvidence.length > 0 && (
+                        {p.missingEvidence && p.missingEvidence.length > 0 && (
                           <p className="text-[10px] text-amber-400">
                             Missing: {p.missingEvidence[0]}
                           </p>
                         )}
                       </div>
                     ))}
+
                   </div>
                 ) : (
                   <div className="p-6 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">

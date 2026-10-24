@@ -98,12 +98,18 @@ export async function resolveAuthorizedResearchContext(
 ): Promise<ResearchAccessContext> {
   const principal = await resolveResearchPrincipal(request);
 
-  // Caller may request a specific workspace via header or query parameter
+  // Caller may request a specific workspace via header, query parameter, or cookie
   const queryWorkspace =
     request.nextUrl?.searchParams?.get?.("workspaceId") ||
     (request.url ? new URL(request.url).searchParams.get("workspaceId") : null) ||
     "";
-  const requestedWorkspaceId = (request.headers.get("x-workspace-id") || queryWorkspace).trim();
+  const cookieWorkspace = request.cookies?.get?.("swai_workspace_id")?.value || "";
+  const requestedWorkspaceId = (
+    request.headers.get("x-workspace-id") ||
+    queryWorkspace ||
+    cookieWorkspace
+  ).trim();
+
 
   let workspaceId: string;
 

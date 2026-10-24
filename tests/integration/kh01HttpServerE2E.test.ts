@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createIsolatedTestDatabase, IsolatedDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
+import { createIsolatedTestDatabase, TestDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
 import { startSwaiTestServer, SwaiTestServerHandle } from "../e2e/helpers/startSwaiTestServer";
 import { verifyHttpServerReadback } from "../../scripts/kh01/verifyHttpServerReadback";
 
 describe("KH-01 Checkpoint 1: Real HTTP Server Acceptance", () => {
-  let dbHandle: IsolatedDatabaseHandle;
+  let dbHandle: TestDatabaseHandle;
+
   let serverHandle: SwaiTestServerHandle;
   const adminSecret = "kh01_http_e2e_secret_998877";
   const workspaceId = "ws_kh01_http_e2e";
