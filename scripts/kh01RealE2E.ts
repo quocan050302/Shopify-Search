@@ -1,7 +1,7 @@
 /**
- * SWAI KH-01 V11.4.4 — Real End-to-End Acceptance Runner
+ * SWAI KH-01 V11.4.5 — Real End-to-End Acceptance Runner
  *
- * Checkpoint 6 (Tasks 078–090, 138–143)
+ * Checkpoint 1 & 2 (Tasks 047–060, 147–155)
  *
  * Coordinates the full queue -> claim -> fetch -> extract -> persist -> readback -> assess lifecycle.
  * Derives all release acceptance flags strictly from executed verification assertions.
@@ -32,6 +32,9 @@ import {
   claimPendingKh01Job,
   executeKh01Job,
   assertActiveJobLease,
+  renewKh01Lease,
+  acquireResearchSlot,
+  releaseResearchSlot,
   recoverInterruptedKh01Jobs,
   ClaimedKh01Job,
 } from "../src/workers/kh01Worker";
@@ -44,7 +47,7 @@ import { ResearchAccessContext } from "../src/services/research/researchAuthServ
 import { GET as getProductOverviewRoute } from "../src/app/api/v1/research/products/[id]/overview/route";
 import { GET as getJobStatusRoute } from "../src/app/api/v1/research/jobs/[jobId]/route";
 import { verifyHttpServerReadback } from "./kh01/verifyHttpServerReadback";
-import { runBrowserE2E } from "./kh01/runBrowserE2E";
+import { runBrowserE2E, BrowserE2EResult } from "./kh01/runBrowserE2E";
 
 export type E2EClassification =
   | "FIXTURE_INTEGRATION_E2E"
@@ -60,6 +63,7 @@ export interface Kh01E2EOptions {
   isOptInLive?: boolean;
   serverBaseUrl?: string;
   includeBrowser?: boolean;
+  acceptanceRunId?: string;
 }
 
 export interface Kh01E2EStepResult {
@@ -86,7 +90,8 @@ export interface AcceptanceVerificationResult {
 
 export interface Kh01E2EManifest {
   plan: "KH-01";
-  version: "11.4.4";
+  version: "11.4.5";
+  acceptanceRunId?: string;
   testClassification: E2EClassification;
   branch: string;
   commitSha: string | null;
@@ -127,7 +132,7 @@ export interface Kh01E2EManifest {
   research: {
     fixtureE2E: "PASSED" | "FAILED" | "NOT_RUN";
     sourceBackedE2E: "PASSED" | "FAILED" | "NOT_RUN";
-    liveSourceE2E: "PASSED" | "FAILED" | "NOT_RUN";
+    liveSourceE2E: "PASSED" | "FAILED" | "BLOCKED_BY_SOURCE" | "NOT_RUN";
     databaseReadback: "PASSED" | "FAILED" | "NOT_RUN";
     httpReadback: "PASSED" | "FAILED" | "NOT_RUN";
     browserReadback: "PASSED" | "FAILED" | "NOT_RUN";
@@ -139,6 +144,7 @@ export interface Kh01E2EManifest {
     evidenceIds: string[];
     databaseReadbackVerified: boolean;
     httpApiReadbackVerified: boolean;
+    routeHandlerReadbackVerified: boolean;
     browserReadbackVerified: boolean | "NOT_RUN";
   };
   economics: {
@@ -174,12 +180,14 @@ export interface Kh01E2EManifest {
   recommendation?: string | null;
   databaseReadbackVerified?: boolean;
   httpApiReadbackVerified?: boolean;
+  routeHandlerReadbackVerified?: boolean;
   persistedResultVerified?: boolean;
 }
 
 export interface Kh01E2EReport {
   plan: "KH-01";
-  version: "11.4.4";
+  version: "11.4.5";
+  acceptanceRunId?: string;
   testClassification: E2EClassification;
   startedAt: string;
   completedAt: string;
@@ -277,9 +285,10 @@ export async function verifyDatabaseIsolation(): Promise<{
 }
 
 /**
- * Verifies global worker concurrency by validating active heavy research jobs against configured budget.
+ * Passive health check inspecting active unexpired running jobs against configured budget.
+ * (Task 061: Concurrency proof is separately established via active multi-worker contention tests).
  */
-export async function verifyWorkerConcurrency(): Promise<AcceptanceVerificationResult> {
+export async function inspectWorkerConcurrencyState(): Promise<AcceptanceVerificationResult> {
   try {
     const runningJobs = await prisma.syncJob.findMany({
       where: {
@@ -309,13 +318,17 @@ export async function verifyWorkerConcurrency(): Promise<AcceptanceVerificationR
       status: "FAILED",
       verified: false,
       evidenceType: "PROCESS_TEST",
-      details: `Worker concurrency verification error: ${err.message}`,
+      details: `Worker concurrency inspection error: ${err.message}`,
     };
   }
 }
 
+/** Backward compatible alias for passive concurrency inspection */
+export const verifyWorkerConcurrency = inspectWorkerConcurrencyState;
+
 /**
- * Verifies worker crash recovery mechanics by executing recovery scan.
+ * Verifies worker crash recovery scanner execution.
+ * (Task 070: Crash recovery proof is separately established via expired-lease transition assertions).
  */
 export async function verifyWorkerRecovery(): Promise<AcceptanceVerificationResult> {
   try {
@@ -372,6 +385,7 @@ export function buildAcceptanceManifest(params: {
   classification: E2EClassification;
   branch: string;
   commitSha: string;
+  acceptanceRunId?: string;
   dbIsolation: {
     isolated: AcceptanceVerificationResult;
     schema: AcceptanceVerificationResult;
@@ -382,6 +396,8 @@ export function buildAcceptanceManifest(params: {
     fencingVerified: boolean;
     concurrencyResult: AcceptanceVerificationResult;
     recoveryResult: AcceptanceVerificationResult;
+    leaseRenewalVerified?: boolean;
+    capacityReleaseVerified?: boolean;
   };
   researchResults: {
     sourceProvenance: {
@@ -397,13 +413,17 @@ export function buildAcceptanceManifest(params: {
     routeHandlerReadbackVerified: boolean;
     actualHttpReadbackVerified: boolean | "NOT_RUN";
     browserReadbackVerified: boolean | "NOT_RUN";
+    snapshotReconciliationVerified?: boolean;
+    evidenceReadinessVerified?: boolean;
   };
   economicsResults: {
     supplierCostKnown: boolean;
     testEligibilityVerified: boolean;
     recommendation: string | null;
     gatingPassed: boolean;
+    recommendationIntegrityVerified?: boolean;
   };
+  browserResults?: BrowserE2EResult | null;
   identifiers: {
     jobId: string | null;
     workerId: string | null;
@@ -455,9 +475,20 @@ export function buildAcceptanceManifest(params: {
   const claimTokenFingerprint = token ? `${token.slice(0, 8)}...` : null;
   const safeClaimToken = token ? "[REDACTED_VERIFIED]" : null;
 
+  // Snapshot reconciliation requires matching IDs across worker output, DB record, and API
+  const snapshotReconciled =
+    params.researchResults.snapshotReconciliationVerified !== undefined
+      ? params.researchResults.snapshotReconciliationVerified
+      : params.researchResults.landingSnapshotId !== null &&
+        params.researchResults.offerSnapshotId !== null &&
+        params.researchResults.databaseReadbackVerified;
+
+  const browserRes = params.browserResults;
+
   return {
     plan: "KH-01",
-    version: "11.4.4",
+    version: "11.4.5",
+    acceptanceRunId: params.acceptanceRunId,
     testClassification: params.classification,
     branch: params.branch,
     commitSha: params.commitSha,
@@ -479,37 +510,78 @@ export function buildAcceptanceManifest(params: {
           ? "NOT_RUN"
           : "FAILED",
       authentication: params.researchResults.actualHttpReadbackVerified === true ? "PASSED" : "NOT_RUN",
-      snapshotReconciliation:
-        params.researchResults.landingSnapshotId !== null ? "PASSED" : "FAILED",
+      snapshotReconciliation: snapshotReconciled ? "PASSED" : "FAILED",
     },
     browser: {
       productIntelligence:
-        params.researchResults.browserReadbackVerified === true
+        browserRes?.productHeaderVerified !== undefined
+          ? browserRes.productHeaderVerified ? "PASSED" : "FAILED"
+          : params.researchResults.browserReadbackVerified === true
           ? "PASSED"
           : params.researchResults.browserReadbackVerified === "NOT_RUN"
           ? "NOT_RUN"
           : "FAILED",
-      offers: params.researchResults.browserReadbackVerified === true ? "PASSED" : "NOT_RUN",
-      landingPage: params.researchResults.browserReadbackVerified === true ? "PASSED" : "NOT_RUN",
-      economics: params.researchResults.browserReadbackVerified === true ? "PASSED" : "NOT_RUN",
-      decisionPersistence: params.researchResults.browserReadbackVerified === true ? "PASSED" : "NOT_RUN",
+      offers:
+        browserRes?.offerPanelVerified !== undefined
+          ? browserRes.offerPanelVerified ? "PASSED" : "FAILED"
+          : params.researchResults.browserReadbackVerified === true
+          ? "PASSED"
+          : "NOT_RUN",
+      landingPage:
+        browserRes?.landingPagePanelVerified !== undefined
+          ? browserRes.landingPagePanelVerified ? "PASSED" : "FAILED"
+          : params.researchResults.browserReadbackVerified === true
+          ? "PASSED"
+          : "NOT_RUN",
+      economics:
+        browserRes?.economicsFormVerified !== undefined
+          ? browserRes.economicsFormVerified ? "PASSED" : "FAILED"
+          : params.researchResults.browserReadbackVerified === true
+          ? "PASSED"
+          : "NOT_RUN",
+      decisionPersistence:
+        browserRes?.decisionPersistedVerified !== undefined
+          ? browserRes.decisionPersistedVerified ? "PASSED" : "FAILED"
+          : params.researchResults.browserReadbackVerified === true
+          ? "PASSED"
+          : "NOT_RUN",
     },
     worker: {
       atomicClaim: params.workerResults.claimVerified ? "PASSED" : "FAILED",
       globalConcurrency: params.workerResults.concurrencyResult.status,
-      leaseRenewal: "PASSED",
+      leaseRenewal:
+        params.workerResults.leaseRenewalVerified === true
+          ? "PASSED"
+          : params.workerResults.leaseRenewalVerified === false
+          ? "FAILED"
+          : "NOT_RUN",
       recovery: params.workerResults.recoveryResult.status,
       staleWriteProtection: params.workerResults.fencingVerified ? "PASSED" : "FAILED",
-      capacityRelease: "PASSED",
+      capacityRelease:
+        params.workerResults.capacityReleaseVerified === true
+          ? "PASSED"
+          : params.workerResults.capacityReleaseVerified === false
+          ? "FAILED"
+          : "NOT_RUN",
       claimVerified: params.workerResults.claimVerified,
       fencingVerified: params.workerResults.fencingVerified,
       globalConcurrencyVerified: params.workerResults.concurrencyResult.verified,
       recoveryVerified: params.workerResults.recoveryResult.verified,
     },
     research: {
-      fixtureE2E: params.classification === "FIXTURE_INTEGRATION_E2E" || params.classification === "INTEGRATION_E2E" ? "PASSED" : "NOT_RUN",
+      fixtureE2E:
+        params.classification === "FIXTURE_INTEGRATION_E2E" || params.classification === "INTEGRATION_E2E"
+          ? "PASSED"
+          : "NOT_RUN",
       sourceBackedE2E: params.classification === "SOURCE_BACKED_E2E" ? "PASSED" : "NOT_RUN",
-      liveSourceE2E: params.classification === "LIVE_SOURCE_E2E" ? "PASSED" : "NOT_RUN",
+      liveSourceE2E:
+        params.classification === "LIVE_SOURCE_E2E" &&
+        params.researchResults.sourceProvenance.level === "LIVE_SOURCE_VERIFIED" &&
+        params.researchResults.jobCompleted
+          ? "PASSED"
+          : params.isBlockedBySource
+          ? "BLOCKED_BY_SOURCE"
+          : "NOT_RUN",
       databaseReadback: params.researchResults.databaseReadbackVerified ? "PASSED" : "FAILED",
       httpReadback:
         params.researchResults.actualHttpReadbackVerified === true
@@ -530,7 +602,8 @@ export function buildAcceptanceManifest(params: {
       offerSnapshotId: params.researchResults.offerSnapshotId,
       evidenceIds: params.researchResults.evidenceIds,
       databaseReadbackVerified: params.researchResults.databaseReadbackVerified,
-      httpApiReadbackVerified: params.researchResults.routeHandlerReadbackVerified,
+      httpApiReadbackVerified: params.researchResults.actualHttpReadbackVerified === true,
+      routeHandlerReadbackVerified: params.researchResults.routeHandlerReadbackVerified,
       browserReadbackVerified: params.researchResults.browserReadbackVerified,
     },
     economics: {
@@ -539,9 +612,15 @@ export function buildAcceptanceManifest(params: {
       recommendation: params.economicsResults.recommendation,
     },
     business: {
-      evidenceReadiness: "PASSED",
+      evidenceReadiness:
+        params.researchResults.evidenceReadinessVerified !== undefined
+          ? params.researchResults.evidenceReadinessVerified ? "PASSED" : "FAILED"
+          : params.researchResults.evidenceIds.length > 0 ? "PASSED" : "FAILED",
       economicsGates: params.economicsResults.gatingPassed ? "PASSED" : "FAILED",
-      recommendationIntegrity: "PASSED",
+      recommendationIntegrity:
+        params.economicsResults.recommendationIntegrityVerified !== undefined
+          ? params.economicsResults.recommendationIntegrityVerified ? "PASSED" : "FAILED"
+          : params.economicsResults.gatingPassed && params.economicsResults.recommendation !== null ? "PASSED" : "FAILED",
     },
     release: {
       status: releaseStatus,
@@ -569,7 +648,9 @@ export function buildAcceptanceManifest(params: {
         : "FAILED",
     liveSourceStatus: params.isBlockedBySource
       ? "BLOCKED_BY_SOURCE"
-      : params.classification === "LIVE_SOURCE_E2E"
+      : params.classification === "LIVE_SOURCE_E2E" &&
+        params.researchResults.sourceProvenance.level === "LIVE_SOURCE_VERIFIED" &&
+        params.researchResults.jobCompleted
       ? "ACCEPTED"
       : "NOT_RUN",
     releaseStatus,
@@ -584,8 +665,9 @@ export function buildAcceptanceManifest(params: {
     evidenceCount: params.researchResults.evidenceIds.length,
     recommendation: params.economicsResults.recommendation,
     databaseReadbackVerified: params.researchResults.databaseReadbackVerified,
-    httpApiReadbackVerified: params.researchResults.routeHandlerReadbackVerified,
-    persistedResultVerified: params.researchResults.landingSnapshotId !== null,
+    httpApiReadbackVerified: params.researchResults.actualHttpReadbackVerified === true,
+    routeHandlerReadbackVerified: params.researchResults.routeHandlerReadbackVerified,
+    persistedResultVerified: snapshotReconciled,
   };
 }
 
@@ -894,6 +976,9 @@ export async function executeKh01EndToEndAcceptance(
   let routeHandlerReadbackVerified = false;
   let actualHttpReadbackVerified: boolean | "NOT_RUN" = "NOT_RUN";
   let browserReadbackVerified: boolean | "NOT_RUN" = "NOT_RUN";
+  let browserRes: BrowserE2EResult | null = null;
+  let leaseRenewalVerified = false;
+  let capacityReleaseVerified = false;
   let sourceProvenanceResult = {
     verified: false,
     level: "UNVERIFIED",
@@ -937,12 +1022,15 @@ export async function executeKh01EndToEndAcceptance(
         classification: options.classification,
         branch: "feature/v11-meta-collector-remove-muse",
         commitSha,
+        acceptanceRunId: options.acceptanceRunId,
         dbIsolation,
         workerResults: {
           claimVerified: false,
           fencingVerified: false,
           concurrencyResult,
           recoveryResult,
+          leaseRenewalVerified: false,
+          capacityReleaseVerified: false,
         },
         researchResults: {
           sourceProvenance: {
@@ -958,19 +1046,23 @@ export async function executeKh01EndToEndAcceptance(
           routeHandlerReadbackVerified: false,
           actualHttpReadbackVerified: "NOT_RUN",
           browserReadbackVerified: "NOT_RUN",
+          snapshotReconciliationVerified: false,
+          evidenceReadinessVerified: false,
         },
         economicsResults: {
           supplierCostKnown: false,
           testEligibilityVerified: false,
           recommendation: null,
           gatingPassed: false,
+          recommendationIntegrityVerified: false,
         },
         identifiers: { jobId: null, workerId: null, claimToken: null },
       });
 
       return {
         plan: "KH-01",
-        version: "11.4.4",
+        version: "11.4.5",
+        acceptanceRunId: options.acceptanceRunId,
         testClassification: options.classification,
         startedAt,
         completedAt: new Date().toISOString(),
@@ -1091,21 +1183,59 @@ export async function executeKh01EndToEndAcceptance(
       throw new Error(`Failed to claim queued job '${jobId}'. Claim returned: ${JSON.stringify(claimedJob)}`);
     }
 
-    await assertActiveJobLease(claimedJob);
+    // Lease renewal verification (Finding B, Task 047)
+    const leaseRenewRes = await renewKh01Lease(claimedJob);
+    leaseRenewalVerified = leaseRenewRes.renewed;
 
-    // Concurrency & Recovery checks
-    concurrencyResult = await verifyWorkerConcurrency();
+    // Concurrency inspection & Recovery scan
+    concurrencyResult = await inspectWorkerConcurrencyState();
     recoveryResult = await verifyWorkerRecovery();
+
+    // Capacity release verification on dedicated test slot (Finding B, Task 047, 081-083)
+    try {
+      const capCheckJobId = `cap_check_${Date.now()}`;
+      await prisma.syncJob.create({
+        data: {
+          id: capCheckJobId,
+          workspaceId,
+          jobType: "KH01_LANDING_PAGE_RESEARCH",
+          status: "PENDING",
+          resultJson: JSON.stringify({ targetUrl: "https://example.com/cap-check" }),
+        },
+      });
+      const originalLimit = process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS;
+      process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS = "2";
+      const slot = await acquireResearchSlot("kh01-cap-tester", capCheckJobId, "cap_claim_token_99");
+      if (slot) {
+        capacityReleaseVerified = await releaseResearchSlot("kh01-cap-tester", capCheckJobId, "cap_claim_token_99");
+      }
+      if (originalLimit !== undefined) {
+        process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS = originalLimit;
+      } else {
+        delete process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS;
+      }
+      await prisma.syncJob.delete({ where: { id: capCheckJobId } }).catch(() => {});
+    } catch {
+      capacityReleaseVerified = false;
+    }
 
     steps.push({
       step: 5,
       name: "Atomic Worker Claim, Fencing & Capacity Invariants",
-      status: concurrencyResult.verified && recoveryResult.verified ? "PASSED" : "FAILED",
+      status:
+        concurrencyResult.verified &&
+        recoveryResult.verified &&
+        leaseRenewalVerified &&
+        capacityReleaseVerified
+          ? "PASSED"
+          : "FAILED",
       details: {
         workerId: claimedJob.workerId,
         claimTokenFingerprint: `${claimedJob.claimToken.slice(0, 8)}...`,
         fencingVersion: claimedJob.fencingVersion,
         attemptNumber: claimedJob.attemptNumber,
+        leaseRenewalVerified,
+        capacityReleaseVerified,
         concurrency: concurrencyResult,
         recovery: recoveryResult,
       },
@@ -1225,7 +1355,7 @@ export async function executeKh01EndToEndAcceptance(
 
     // Optional Real Browser E2E if requested
     if (options.includeBrowser && options.serverBaseUrl) {
-      const browserRes = await runBrowserE2E({
+      browserRes = await runBrowserE2E({
         baseUrl: options.serverBaseUrl,
         productId,
         workspaceId,
@@ -1331,16 +1461,26 @@ export async function executeKh01EndToEndAcceptance(
   const hasFailedStep = steps.some((s) => s.status === "FAILED");
   const isBlockedBySource = steps.some((s) => s.details?.liveSourceResult === "BLOCKED_BY_SOURCE");
 
+  // Reconciliation assertion: IDs must match between worker execution and DB readback
+  const snapshotReconciliationVerified =
+    landingSnapshotId !== null &&
+    offerSnapshotId !== null &&
+    databaseReadbackVerified &&
+    (executionResult?.snapshotId ? landingSnapshotId === executionResult.snapshotId : true);
+
   const manifest = buildAcceptanceManifest({
     classification: options.classification,
     branch: "feature/v11-meta-collector-remove-muse",
     commitSha,
+    acceptanceRunId: options.acceptanceRunId,
     dbIsolation,
     workerResults: {
       claimVerified: claimedJob !== null,
       fencingVerified: claimedJob?.fencingVersion !== undefined,
       concurrencyResult,
       recoveryResult,
+      leaseRenewalVerified,
+      capacityReleaseVerified,
     },
     researchResults: {
       sourceProvenance: sourceProvenanceResult,
@@ -1353,13 +1493,17 @@ export async function executeKh01EndToEndAcceptance(
       routeHandlerReadbackVerified,
       actualHttpReadbackVerified,
       browserReadbackVerified,
+      snapshotReconciliationVerified,
+      evidenceReadinessVerified: evidenceIds.length > 0,
     },
     economicsResults: {
       supplierCostKnown: false,
       testEligibilityVerified: finalRecommendation !== "TEST_CANDIDATE",
       recommendation: finalRecommendation,
       gatingPassed: finalRecommendation !== "TEST_CANDIDATE",
+      recommendationIntegrityVerified: finalRecommendation !== null && finalRecommendation !== "TEST_CANDIDATE",
     },
+    browserResults: browserRes,
     identifiers: {
       jobId,
       workerId: claimedJob?.workerId || null,
@@ -1371,7 +1515,8 @@ export async function executeKh01EndToEndAcceptance(
 
   const report: Kh01E2EReport = {
     plan: "KH-01",
-    version: "11.4.4",
+    version: "11.4.5",
+    acceptanceRunId: options.acceptanceRunId,
     testClassification: options.classification,
     startedAt,
     completedAt,
@@ -1382,7 +1527,7 @@ export async function executeKh01EndToEndAcceptance(
 
   // Write manifest artifact
   try {
-    const artifactDir = path.resolve(process.cwd(), "artifacts/kh01-v11.4.4");
+    const artifactDir = path.resolve(process.cwd(), "artifacts/kh01-v11.4.5");
     if (!fs.existsSync(artifactDir)) {
       fs.mkdirSync(artifactDir, { recursive: true });
     }
@@ -1423,11 +1568,11 @@ if (require.main === module) {
       }
 
       console.log(`\n=================================================`);
-      console.log(`KH-01 V11.4.4 E2E Status: ${rep.overallStatus}`);
+      console.log(`KH-01 V11.4.5 E2E Status: ${rep.overallStatus}`);
       console.log(`Commit SHA: ${rep.manifest.commitSha}`);
       console.log(`Steps Passed: ${rep.steps.filter((s) => s.status === "PASSED").length}/${rep.steps.length}`);
       console.log(`Database Readback: ${rep.manifest.research.databaseReadbackVerified}`);
-      console.log(`Route Handler Readback: ${rep.manifest.research.httpApiReadbackVerified}`);
+      console.log(`Route Handler Readback: ${rep.manifest.research.routeHandlerReadbackVerified}`);
       console.log(`Actual HTTP Server: ${rep.manifest.api.actualHttpReadback}`);
       console.log(`Browser Readback: ${rep.manifest.browser.productIntelligence}`);
       console.log(`Worker Concurrency: ${rep.manifest.worker.globalConcurrency}`);

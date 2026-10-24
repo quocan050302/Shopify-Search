@@ -70,6 +70,7 @@ export interface ResearchSlotLease {
   slotId: string;
   workerId: string;
   jobId: string;
+  claimToken: string;
   leaseExpiresAt: string;
 }
 
@@ -353,9 +354,42 @@ export async function acquireResearchSlot(
   claimToken: string = crypto.randomUUID(),
   txClient?: any
 ): Promise<ResearchSlotLease | null> {
+  // Input validation (Tasks 082, 083)
+  if (!workerId || typeof workerId !== "string" || !workerId.trim()) return null;
+  if (!jobId || typeof jobId !== "string" || !jobId.trim()) return null;
+  if (!claimToken || typeof claimToken !== "string" || !claimToken.trim()) return null;
+
   const maxConcurrency = getKh01MaxConcurrency();
 
   const runner = async (tx: any) => {
+    const job = await tx.syncJob.findUnique({ where: { id: jobId } });
+    if (!job) {
+      return null;
+    }
+
+    // Task 085: Restrict acquisition states. Only PENDING or RUNNING jobs can acquire/renew.
+    if (job.status !== "PENDING" && job.status !== "RUNNING") {
+      return null;
+    }
+
+    let meta: any = {};
+    try {
+      meta = JSON.parse(job.resultJson || "{}");
+    } catch {
+      meta = {};
+    }
+
+    const now = Date.now();
+    const isLeaseActive = meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() >= now;
+
+    // Task 084: Prevent arbitrary reassignment.
+    // If the job is RUNNING under another worker with an unexpired active lease, reject takeover!
+    if (job.status === "RUNNING") {
+      if (meta.workerId && meta.workerId !== workerId && isLeaseActive) {
+        return null;
+      }
+    }
+
     // 1. Check currently active heavy research jobs with unexpired lease
     const runningJobs = await tx.syncJob.findMany({
       where: {
@@ -364,12 +398,11 @@ export async function acquireResearchSlot(
       },
     });
 
-    const now = Date.now();
     const activeCount = runningJobs.filter((j: any) => {
       if (j.id === jobId) return false;
       try {
-        const meta = JSON.parse(j.resultJson || "{}");
-        return meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() >= now;
+        const m = JSON.parse(j.resultJson || "{}");
+        return m.leaseExpiresAt && new Date(m.leaseExpiresAt).getTime() >= now;
       } catch {
         return false;
       }
@@ -377,18 +410,6 @@ export async function acquireResearchSlot(
 
     if (activeCount >= maxConcurrency) {
       return null;
-    }
-
-    const job = await tx.syncJob.findUnique({ where: { id: jobId } });
-    if (!job) {
-      return null;
-    }
-
-    let meta: any = {};
-    try {
-      meta = JSON.parse(job.resultJson || "{}");
-    } catch {
-      // ignore
     }
 
     const leaseExpiresAt = new Date(now + KH01_LEASE_DURATION_MS).toISOString();
@@ -415,6 +436,7 @@ export async function acquireResearchSlot(
       slotId: `slot_${jobId}`,
       workerId,
       jobId,
+      claimToken,
       leaseExpiresAt,
     };
   };
@@ -436,6 +458,10 @@ export async function renewResearchSlot(
   claimToken: string,
   txClient?: any
 ): Promise<boolean> {
+  if (!workerId || typeof workerId !== "string" || !workerId.trim()) return false;
+  if (!jobId || typeof jobId !== "string" || !jobId.trim()) return false;
+  if (!claimToken || typeof claimToken !== "string" || !claimToken.trim()) return false;
+
   const runner = async (tx: any) => {
     const job = await tx.syncJob.findUnique({ where: { id: jobId } });
     if (!job || job.status !== "RUNNING") return false;
@@ -478,14 +504,19 @@ export async function renewResearchSlot(
 /**
  * Explicit research slot release helper.
  * Atomically verifies claim ownership and clears the capacity reservation.
- * Rejects stale, mismatched, or already released claimants with false.
+ * Rejects stale, mismatched, empty, or already released claimants with false.
  */
 export async function releaseResearchSlot(
   workerId: string,
   jobId: string,
-  claimToken?: string,
+  claimToken: string,
   txClient?: any
 ): Promise<boolean> {
+  // Tasks 081 & 082: Strictly require non-empty claimToken at runtime
+  if (!workerId || typeof workerId !== "string" || !workerId.trim()) return false;
+  if (!jobId || typeof jobId !== "string" || !jobId.trim()) return false;
+  if (!claimToken || typeof claimToken !== "string" || !claimToken.trim()) return false;
+
   const runner = async (tx: any) => {
     const job = await tx.syncJob.findUnique({ where: { id: jobId } });
     if (!job || job.status !== "RUNNING") return false;
@@ -497,9 +528,9 @@ export async function releaseResearchSlot(
       return false;
     }
 
-    // Ownership check: workerId and claimToken
+    // Task 083: Ownership check: workerId and claimToken
     if (meta.workerId !== workerId) return false;
-    if (claimToken && meta.claimToken !== claimToken) return false;
+    if (meta.claimToken !== claimToken) return false;
 
     // Check if lease already expired or slot already released
     if (meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() < Date.now()) {
