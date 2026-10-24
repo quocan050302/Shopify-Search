@@ -10,6 +10,8 @@
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "doctor": "tsx scripts/meta-doctor.ts",
+    "worker:discovery": "tsx scripts/discovery-worker.ts",
     "discovery:doctor": "tsx scripts/discovery-doctor.ts",
     "discovery:once": "tsx scripts/discovery-once.ts",
     "discovery:worker": "tsx scripts/discovery-worker.ts",
