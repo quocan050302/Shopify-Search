@@ -697,8 +697,8 @@ export async function fetchPublicResearchPage(
         protocol: currentValidation.protocol,
         port,
         validatedAddresses: validatedDest.addresses,
-        selectedAddress: validatedDest.selectedAddress || validatedDest.addresses[0],
-        family: validatedDest.family || (net.isIPv6(validatedDest.addresses[0]) ? 6 : 4),
+        selectedAddress: validatedDest.addresses[0],
+        family: (net.isIPv6(validatedDest.addresses[0]) ? 6 : 4) as 4 | 6,
         validatedAt: Date.now(),
       };
 

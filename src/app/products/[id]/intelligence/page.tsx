@@ -152,19 +152,21 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
         if (statusJson.success && statusJson.data) {
           const status = statusJson.data.status;
+          terminalData = statusJson.data;
+
           if (status === "RUNNING") {
-            setInspectFeedback(`Worker processing inspection... (${attempts * 1.5}s)`);
+            setInspectFeedback(`Worker processing inspection... (${Math.round(attempts * 1.5)}s elapsed)`);
           } else if (status === "COMPLETED") {
             terminalStatus = "COMPLETED";
-            terminalData = statusJson.data;
             break;
           } else if (status === "ACCESS_RESTRICTED") {
             terminalStatus = "ACCESS_RESTRICTED";
-            terminalData = statusJson.data;
             break;
           } else if (status === "FAILED") {
             terminalStatus = "FAILED";
-            terminalData = statusJson.data;
+            break;
+          } else if (status === "CANCELLED") {
+            terminalStatus = "CANCELLED";
             break;
           }
         }
@@ -174,13 +176,21 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         setInspectFeedback("Landing page snapshot and CRO analysis completed!");
         await loadOverview();
       } else if (terminalStatus === "ACCESS_RESTRICTED") {
-        setInspectFeedback("Competitor website restricted access (HTTP 401/403). Preserved as restricted snapshot.");
+        setInspectFeedback("Competitor storefront restricted access (HTTP 401/403). Preserved as restricted snapshot without false CRO claims.");
         await loadOverview();
       } else if (terminalStatus === "FAILED") {
         throw new Error(terminalData?.errorMessage || "Inspection job failed during execution.");
+      } else if (terminalStatus === "CANCELLED") {
+        setInspectFeedback("Inspection job was cancelled.");
       } else {
-        // Still pending after 18s: worker is offline
-        setInspectFeedback("Job queued. Worker is offline. Run 'npm run kh01:worker' or 'npm run kh01:once' to process.");
+        // Differentiate WORKER_BUSY from WORKER_OFFLINE using true heartbeat timestamp
+        const lastHb = terminalData?.lastHeartbeatAt ? new Date(terminalData.lastHeartbeatAt).getTime() : 0;
+        const isWorkerActive = lastHb > 0 && Date.now() - lastHb < 60000;
+        if (isWorkerActive) {
+          setInspectFeedback("Job queued. Background worker is active and processing other queue items.");
+        } else {
+          setInspectFeedback("Job queued. Background worker appears offline (no recent heartbeat). Run 'npm run kh01:worker' or 'npm run kh01:once' to process.");
+        }
       }
     } catch (err: any) {
       setInspectFeedback(`Inspection note: ${err.message}`);
@@ -748,34 +758,96 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
             {latestLandingPage ? (
               <div className="space-y-6">
-                {/* Snapshot Meta */}
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                  <div>
-                    <span className="text-slate-500 block">Access Status:</span>
-                    <span className="font-bold text-emerald-400 font-mono">{latestLandingPage.accessStatus}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">HTTP Status:</span>
-                    <span className="font-bold text-white font-mono">{latestLandingPage.httpStatus}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Last Inspected:</span>
-                    <span className="text-slate-300 font-mono">
-                      {new Date(latestLandingPage.observedAt).toLocaleString()}
+                {/* Research Result Integrity & Provenance Panel */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="font-semibold text-white flex items-center gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                      Research Result Integrity & Provenance
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Engine v{latestLandingPage.analysisVersion || "11.4.2"}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">Source Page:</span>
-                    <a
-                      href={latestLandingPage.originalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-400 hover:underline truncate block font-mono text-[11px]"
-                    >
-                      {latestLandingPage.originalUrl}
-                    </a>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-slate-500 block">Access Status:</span>
+                      <span className={`font-bold font-mono px-1.5 py-0.5 rounded text-[11px] inline-block mt-0.5 border ${
+                        latestLandingPage.accessStatus === "SUCCESS"
+                          ? "text-emerald-400 bg-emerald-950/40 border-emerald-800"
+                          : latestLandingPage.accessStatus === "ACCESS_RESTRICTED"
+                          ? "text-amber-400 bg-amber-950/40 border-amber-800"
+                          : "text-rose-400 bg-rose-950/40 border-rose-800"
+                      }`}>
+                        {latestLandingPage.accessStatus}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">HTTP Status:</span>
+                      <span className="font-bold text-white font-mono">{latestLandingPage.httpStatus}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Last Inspected:</span>
+                      <span className="text-slate-300 font-mono">
+                        {new Date(latestLandingPage.observedAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Source Page:</span>
+                      <a
+                        href={latestLandingPage.originalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-400 hover:underline truncate block font-mono text-[11px]"
+                      >
+                        {latestLandingPage.originalUrl}
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-slate-800/60 text-[11px]">
+                    <div>
+                      <span className="text-slate-500 block">Landing Snapshot ID:</span>
+                      <span className="text-slate-300 font-mono truncate block" title={latestLandingPage.id}>
+                        {latestLandingPage.id}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Offer Snapshot ID:</span>
+                      <span className="text-slate-300 font-mono truncate block" title={overview?.latestOffer?.id || "None"}>
+                        {overview?.latestOffer?.id || "None"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Content Hash:</span>
+                      <span className="text-slate-400 font-mono truncate block" title={latestLandingPage.contentHash}>
+                        {latestLandingPage.contentHash ? `${latestLandingPage.contentHash.slice(0, 12)}...` : "None"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Evidence Records:</span>
+                      <span className="text-slate-300 font-mono">
+                        {overview?.evidence?.length ?? 0} verifiable entries
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Blocked Source Notice */}
+                {latestLandingPage.accessStatus === "ACCESS_RESTRICTED" && (
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/60 flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1 text-xs">
+                      <h4 className="font-bold text-amber-300">Competitor Storefront Restricted Automated Access (HTTP 401/403)</h4>
+                      <p className="text-amber-200/80 leading-relaxed">
+                        The destination website deployed an anti-bot or Cloudflare restriction.
+                        In accordance with SWAI integrity rules, CRO signals are marked as <strong>NOT_PERFORMED</strong> and no synthetic scores or pricing claims are fabricated.
+                        You may record authentic supplier quotes and pricing under the Economics tab manually.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* CRO Observations & Elements */}
                 {landingObservations && (
