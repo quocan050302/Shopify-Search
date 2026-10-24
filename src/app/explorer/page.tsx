@@ -48,9 +48,9 @@ const MODE_CONFIG: Record<
     color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
   },
   TRENDING: {
-    label: "Trending",
+    label: "Evidence Ranked",
     icon: <TrendingUp className="h-3.5 w-3.5" />,
-    description: "Ads sorted by evidence confidence — may include short-lived signals",
+    description: "Ranked by multi-observation continuity and evidence confidence",
     color: "text-sky-400 border-sky-500/30 bg-sky-500/10",
   },
 };
@@ -642,10 +642,20 @@ export default function ExplorerPage() {
         )}
       </main>
 
-      <AdDetailDrawer
-        ad={selectedAd}
-        onClose={() => setSelectedAd(null)}
-      />
+      {selectedAd && (() => {
+        const selectedIndex = ads.findIndex((a) => (a.id || a.adId) === (selectedAd.id || selectedAd.adId));
+        const handleNext = selectedIndex >= 0 && selectedIndex < ads.length - 1 ? () => setSelectedAd(ads[selectedIndex + 1]) : undefined;
+        const handlePrev = selectedIndex > 0 ? () => setSelectedAd(ads[selectedIndex - 1]) : undefined;
+        return (
+          <AdDetailDrawer
+            ad={selectedAd}
+            onClose={() => setSelectedAd(null)}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onProductCandidateSaved={() => fetchAds()}
+          />
+        );
+      })()}
     </div>
   );
 }

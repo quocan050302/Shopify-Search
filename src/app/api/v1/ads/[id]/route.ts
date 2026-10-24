@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdvertisementDetails, findRelatedCreativeVariants } from "@/services/ads/adService";
+import { getAdvertisementDetailViewModel } from "@/services/ads/adService";
 
 export async function GET(
   request: NextRequest,
@@ -7,29 +7,25 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const ad = await getAdvertisementDetails(id);
+    const detail = await getAdvertisementDetailViewModel(id);
 
-    if (!ad) {
+    if (!detail) {
       return NextResponse.json(
         {
           success: false,
           error: { code: "NOT_FOUND", message: `Ad not found with ID: ${id}` },
         },
-        { status: 400 }
+        { status: 404 }
       );
     }
 
-    const variants = await findRelatedCreativeVariants(id);
-
     return NextResponse.json({
       success: true,
-      data: {
-        ...ad,
-        relatedVariants: variants,
-      },
+      data: detail,
       meta: {
         timestamp: new Date().toISOString(),
-        version: "v1",
+        version: "v11.3",
+        contract: "AdDetailViewModel",
       },
     });
   } catch (error: any) {
@@ -45,3 +41,4 @@ export async function GET(
     );
   }
 }
+
