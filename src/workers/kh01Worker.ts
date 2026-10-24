@@ -292,8 +292,11 @@ export async function executeKh01Job(job: ClaimedKh01Job, signal?: AbortSignal):
 
     return {
       jobId: job.id,
-      status: researchResult.status === "ACCESS_RESTRICTED" ? "ACCESS_RESTRICTED" : "COMPLETED",
+      status: (researchResult.status === "PARTIAL" ? "COMPLETED" : researchResult.status) as "COMPLETED" | "ACCESS_RESTRICTED" | "RATE_LIMITED" | "FAILED",
       snapshotId: researchResult.snapshotId || undefined,
+      errorMessage: researchResult.status === "FAILED" || researchResult.status === "RATE_LIMITED"
+        ? (researchResult.warnings?.join("; ") || "Research job failed.")
+        : undefined,
     };
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
