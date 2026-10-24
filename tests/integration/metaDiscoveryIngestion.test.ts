@@ -44,6 +44,21 @@ describe("Meta Discovery Ingestion & DiscoveryRunAd Relational Integrity", () =>
   };
 
   beforeAll(async () => {
+    // Clean up any stale test records from previous runs
+    await prisma.discoveryRunAd.deleteMany({
+      where: { runId: { in: [testRunId1, testRunId2] } },
+    });
+    const staleAd = await prisma.competitorAd.findFirst({
+      where: { externalAdId: testLibraryId },
+    });
+    if (staleAd) {
+      await prisma.adSourceIdentity.deleteMany({ where: { adId: staleAd.id } });
+      await prisma.adMediaAsset.deleteMany({ where: { adId: staleAd.id } });
+      await prisma.evergreenScore.deleteMany({ where: { adId: staleAd.id } });
+      await prisma.discoveryRunAd.deleteMany({ where: { adId: staleAd.id } });
+      await prisma.competitorAd.delete({ where: { id: staleAd.id } });
+    }
+
     // Ensure test runs exist in db
     await prisma.discoveryRun.upsert({
       where: { id: testRunId1 },

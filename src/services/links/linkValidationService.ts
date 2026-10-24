@@ -316,3 +316,475 @@ export async function checkExternalLink(
     };
   }
 }
+
+// ─── KH-01.A2: Hardened Public Research URL & Bounded Page Fetcher ─────────────
+
+export interface ValidatedResearchUrl {
+  originalUrl: string;
+  normalizedUrl: string;
+  hostname: string;
+  protocol: "http:" | "https:";
+  isPublic: boolean;
+}
+
+export interface PublicFetchOptions {
+  timeoutMs?: number;
+  maxRedirects?: number;
+  maxResponseBytes?: number;
+  allowedContentTypes?: string[];
+  signal?: AbortSignal;
+}
+
+export interface PublicPageFetchResult {
+  originalUrl: string;
+  finalUrl: string;
+  httpStatus: number;
+  statusClassification:
+    | "SUCCESS"
+    | "REDIRECTED"
+    | "ACCESS_RESTRICTED"
+    | "RATE_LIMITED"
+    | "NOT_FOUND"
+    | "FAILED";
+  contentType: string | null;
+  contentLengthBytes: number;
+  content: string | null;
+  headers: Record<string, string>;
+  isTruncated: boolean;
+  durationMs: number;
+  errorMessage?: string;
+}
+
+/**
+ * Checks whether an IP or encoded IP string belongs to private, loopback, link-local,
+ * CGNAT, or cloud-metadata address spaces.
+ */
+function isRestrictedIpOrEncodedHost(hostname: string): boolean {
+  const clean = hostname.replace(/^\[|\]$/g, "").trim().toLowerCase();
+
+  // Known metadata hostnames
+  if (
+    clean === "localhost" ||
+    clean === "metadata" ||
+    clean === "instance-data" ||
+    clean.endsWith(".internal") ||
+    clean.endsWith(".local") ||
+    clean === "metadata.google.internal"
+  ) {
+    return true;
+  }
+
+  // IPv6 checks
+  if (
+    clean === "::1" ||
+    clean === "::" ||
+    clean.startsWith("fe80:") ||
+    clean.startsWith("fc") ||
+    clean.startsWith("fd") ||
+    clean === "fd00:ec2::254"
+  ) {
+    return true;
+  }
+
+  // Handle decimal dword IP (e.g. 2130706433 -> 127.0.0.1)
+  if (/^\d+$/.test(clean)) {
+    const num = parseInt(clean, 10);
+    if (!isNaN(num) && num >= 0 && num <= 4294967295) {
+      const b1 = (num >>> 24) & 255;
+      const b2 = (num >>> 16) & 255;
+      const b3 = (num >>> 8) & 255;
+      const b4 = num & 255;
+      return isPrivateIpv4Octets(b1, b2, b3, b4);
+    }
+  }
+
+  // Handle standard dotted IPv4 or hex/octal dotted parts
+  const parts = clean.split(".");
+  if (parts.length === 4) {
+    const octets = parts.map((p) => {
+      if (p.startsWith("0x") || p.startsWith("0X")) {
+        return parseInt(p, 16);
+      }
+      if (p.startsWith("0") && p.length > 1 && !isNaN(parseInt(p, 8))) {
+        return parseInt(p, 8);
+      }
+      return parseInt(p, 10);
+    });
+
+    if (octets.every((o) => !isNaN(o) && o >= 0 && o <= 255)) {
+      return isPrivateIpv4Octets(octets[0], octets[1], octets[2], octets[3]);
+    }
+  }
+
+  // Pattern checks on hostname string
+  for (const pattern of PRIVATE_IP_PATTERNS) {
+    if (pattern.test(clean)) return true;
+  }
+
+  return false;
+}
+
+function isPrivateIpv4Octets(b1: number, b2: number, b3: number, b4: number): boolean {
+  if (b1 === 0) return true; // 0.0.0.0/8
+  if (b1 === 10) return true; // 10.0.0.0/8
+  if (b1 === 127) return true; // 127.0.0.0/8 (Loopback)
+  if (b1 === 169 && b2 === 254) return true; // 169.254.0.0/16 (Link-local & cloud metadata)
+  if (b1 === 172 && b2 >= 16 && b2 <= 31) return true; // 172.16.0.0/12
+  if (b1 === 192 && b2 === 168) return true; // 192.168.0.0/16
+  if (b1 === 100 && b2 >= 64 && b2 <= 127) return true; // 100.64.0.0/10 (CGNAT)
+  return false;
+}
+
+/**
+ * Validates a public research URL strictly according to KH-01.A2 requirements:
+ * - Only http: and https: protocols allowed
+ * - Rejects embedded credentials (username:password@)
+ * - Rejects private, loopback, cloud metadata destinations
+ * - Handles IPv4, IPv6, and numeric/encoded address forms
+ * - Preserves original submitted URL
+ */
+export function validatePublicResearchUrl(rawUrl: string): ValidatedResearchUrl {
+  if (!rawUrl || typeof rawUrl !== "string" || !rawUrl.trim()) {
+    throw new Error("URL must be a non-empty string.");
+  }
+
+  const trimmed = rawUrl.trim();
+  let parsed: URL;
+
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error(`Malformed URL structure: '${rawUrl}'.`);
+  }
+
+  // Protocol check
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(
+      `Unsupported URL scheme '${parsed.protocol}'. Only 'http:' and 'https:' are permitted.`
+    );
+  }
+
+  // Embedded credentials check
+  if (parsed.username || parsed.password) {
+    throw new Error("URLs with embedded credentials (user:password@) are strictly prohibited.");
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // SSRF check on hostname
+  if (isRestrictedIpOrEncodedHost(hostname)) {
+    throw new Error(
+      `Access to restricted, local, private, or cloud metadata destination '${hostname}' is prohibited.`
+    );
+  }
+
+  return {
+    originalUrl: rawUrl,
+    normalizedUrl: parsed.toString(),
+    hostname,
+    protocol: parsed.protocol as "http:" | "https:",
+    isPublic: true,
+  };
+}
+
+/**
+ * Executes a bounded, safe HTTP fetch of a public landing page.
+ *
+ * Guarantees:
+ * - Total timeout with AbortSignal cancellation
+ * - Hop-by-hop redirect validation (prevents redirect bypass to internal networks)
+ * - Max redirects enforcement (default 3)
+ * - Max response byte bounding (default 2MB) to prevent memory exhaustion
+ * - Content-Type validation
+ * - Clear distinction of blocked / rate-limited sources (403, 429) without fake data
+ */
+export async function fetchPublicResearchPage(
+  validatedUrl: ValidatedResearchUrl,
+  options: PublicFetchOptions = {}
+): Promise<PublicPageFetchResult> {
+  const {
+    timeoutMs = 8000,
+    maxRedirects = 3,
+    maxResponseBytes = 2 * 1024 * 1024, // 2 MB limit
+    allowedContentTypes = ["text/html", "application/xhtml+xml", "application/json", "text/plain"],
+    signal,
+  } = options;
+
+  const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Link caller signal if provided
+  if (signal) {
+    signal.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+
+  let currentUrl = validatedUrl.normalizedUrl;
+  let redirectCount = 0;
+
+  try {
+    while (redirectCount <= maxRedirects) {
+      // Re-validate current URL at each step (including redirects)
+      const currentValidation = validatePublicResearchUrl(currentUrl);
+
+      const response = await fetch(currentValidation.normalizedUrl, {
+        method: "GET",
+        redirect: "manual", // Hop-by-hop manual verification
+        signal: controller.signal,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (SWAI Research Bot)",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      });
+
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((val, key) => {
+        responseHeaders[key.toLowerCase()] = val;
+      });
+
+      const httpStatus = response.status;
+
+      // Handle redirects
+      if ([301, 302, 303, 307, 308].includes(httpStatus)) {
+        redirectCount++;
+        const location = response.headers.get("location");
+        if (!location) {
+          clearTimeout(timeoutId);
+          return {
+            originalUrl: validatedUrl.originalUrl,
+            finalUrl: currentUrl,
+            httpStatus,
+            statusClassification: "FAILED",
+            contentType: null,
+            contentLengthBytes: 0,
+            content: null,
+            headers: responseHeaders,
+            isTruncated: false,
+            durationMs: Date.now() - startTime,
+            errorMessage: "Redirect status received without Location header.",
+          };
+        }
+
+        if (redirectCount > maxRedirects) {
+          clearTimeout(timeoutId);
+          return {
+            originalUrl: validatedUrl.originalUrl,
+            finalUrl: currentUrl,
+            httpStatus,
+            statusClassification: "FAILED",
+            contentType: null,
+            contentLengthBytes: 0,
+            content: null,
+            headers: responseHeaders,
+            isTruncated: false,
+            durationMs: Date.now() - startTime,
+            errorMessage: `Exceeded maximum redirect limit of ${maxRedirects}.`,
+          };
+        }
+
+        // Resolve target URL relative to current URL
+        try {
+          const resolvedTarget = new URL(location, currentUrl).toString();
+          currentUrl = resolvedTarget;
+          continue;
+        } catch {
+          clearTimeout(timeoutId);
+          return {
+            originalUrl: validatedUrl.originalUrl,
+            finalUrl: currentUrl,
+            httpStatus,
+            statusClassification: "FAILED",
+            contentType: null,
+            contentLengthBytes: 0,
+            content: null,
+            headers: responseHeaders,
+            isTruncated: false,
+            durationMs: Date.now() - startTime,
+            errorMessage: `Invalid redirect location header: '${location}'.`,
+          };
+        }
+      }
+
+      // Terminal response reached
+      clearTimeout(timeoutId);
+
+      // Check access restrictions
+      if (httpStatus === 401 || httpStatus === 403) {
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus,
+          statusClassification: "ACCESS_RESTRICTED",
+          contentType: responseHeaders["content-type"] || null,
+          contentLengthBytes: 0,
+          content: null,
+          headers: responseHeaders,
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: `Source returned HTTP ${httpStatus}: Access restricted or forbidden.`,
+        };
+      }
+
+      if (httpStatus === 429) {
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus,
+          statusClassification: "RATE_LIMITED",
+          contentType: responseHeaders["content-type"] || null,
+          contentLengthBytes: 0,
+          content: null,
+          headers: responseHeaders,
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: "Source returned HTTP 429: Rate limit exceeded.",
+        };
+      }
+
+      if (httpStatus === 404 || httpStatus === 410) {
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus,
+          statusClassification: "NOT_FOUND",
+          contentType: responseHeaders["content-type"] || null,
+          contentLengthBytes: 0,
+          content: null,
+          headers: responseHeaders,
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: `Source returned HTTP ${httpStatus}: Page not found or removed.`,
+        };
+      }
+
+      const contentType = responseHeaders["content-type"] || "";
+      const isAllowedContent =
+        !contentType ||
+        allowedContentTypes.some((type) => contentType.toLowerCase().includes(type));
+
+      if (!isAllowedContent) {
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus,
+          statusClassification: "FAILED",
+          contentType,
+          contentLengthBytes: 0,
+          content: null,
+          headers: responseHeaders,
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: `Unsupported content type '${contentType}'. Only text and html are permitted.`,
+        };
+      }
+
+      // Read response body with byte cap
+      if (!response.body) {
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus,
+          statusClassification: httpStatus >= 200 && httpStatus < 300 ? "SUCCESS" : "FAILED",
+          contentType,
+          contentLengthBytes: 0,
+          content: "",
+          headers: responseHeaders,
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+        };
+      }
+
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let totalBytes = 0;
+      let isTruncated = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          totalBytes += value.length;
+          if (totalBytes > maxResponseBytes) {
+            const allowed = value.slice(0, value.length - (totalBytes - maxResponseBytes));
+            chunks.push(allowed);
+            isTruncated = true;
+            await reader.cancel("Response size exceeded threshold");
+            break;
+          } else {
+            chunks.push(value);
+          }
+        }
+      }
+
+      const decoder = new TextDecoder("utf-8");
+      let fullContent = "";
+      for (const chunk of chunks) {
+        fullContent += decoder.decode(chunk, { stream: true });
+      }
+      fullContent += decoder.decode();
+
+      return {
+        originalUrl: validatedUrl.originalUrl,
+        finalUrl: currentUrl,
+        httpStatus,
+        statusClassification: httpStatus >= 200 && httpStatus < 300 ? "SUCCESS" : "FAILED",
+        contentType,
+        contentLengthBytes: totalBytes,
+        content: fullContent,
+        headers: responseHeaders,
+        isTruncated,
+        durationMs: Date.now() - startTime,
+      };
+    }
+
+    clearTimeout(timeoutId);
+    return {
+      originalUrl: validatedUrl.originalUrl,
+      finalUrl: currentUrl,
+      httpStatus: 0,
+      statusClassification: "FAILED",
+      contentType: null,
+      contentLengthBytes: 0,
+      content: null,
+      headers: {},
+      isTruncated: false,
+      durationMs: Date.now() - startTime,
+      errorMessage: `Exceeded maximum redirect limit of ${maxRedirects}.`,
+    };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    const durationMs = Date.now() - startTime;
+    if (err.name === "AbortError") {
+      return {
+        originalUrl: validatedUrl.originalUrl,
+        finalUrl: currentUrl,
+        httpStatus: 0,
+        statusClassification: "FAILED",
+        contentType: null,
+        contentLengthBytes: 0,
+        content: null,
+        headers: {},
+        isTruncated: false,
+        durationMs,
+        errorMessage: `Request timed out after ${timeoutMs}ms or was cancelled.`,
+      };
+    }
+
+    return {
+      originalUrl: validatedUrl.originalUrl,
+      finalUrl: currentUrl,
+      httpStatus: 0,
+      statusClassification: "FAILED",
+      contentType: null,
+      contentLengthBytes: 0,
+      content: null,
+      headers: {},
+      isTruncated: false,
+      durationMs,
+      errorMessage: err.message || "Failed to fetch public research page.",
+    };
+  }
+}
+

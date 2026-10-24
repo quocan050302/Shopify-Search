@@ -47,6 +47,7 @@ next-env.d.ts
 *.db
 *.db-journal
 *.bak
+*.backup*
 .env
 !.env.example
 .agents/

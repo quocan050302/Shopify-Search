@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
 import { saveAdProductCandidate } from "@/services/products/productService";
+import {
+  resolveAuthorizedResearchContext,
+  assertAdWorkspaceAccess,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
 
 const CandidateSchema = z.object({
   workspaceId: z.string().min(1).max(100).optional(),
@@ -137,91 +141,11 @@ export async function POST(
 
     const validated = parseResult.data;
 
-    // 2. Authorization and workspace ownership check
-    const headerWorkspaceId = request.headers.get("x-workspace-id");
-    const requestedWorkspaceId = headerWorkspaceId || validated.workspaceId;
+    // 2. Authoritative Research Context Resolution (KH-01.A1)
+    const researchContext = await resolveAuthorizedResearchContext(request);
 
-    let workspace = null;
-    if (requestedWorkspaceId) {
-      workspace = await prisma.workspace.findUnique({
-        where: { id: requestedWorkspaceId },
-      });
-      if (!workspace) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: "UNAUTHORIZED_WORKSPACE",
-              message: "The requested workspace does not exist or access is unauthorized.",
-            },
-          },
-          { status: 403 }
-        );
-      }
-    } else {
-      workspace = await prisma.workspace.findFirst();
-      if (!workspace) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: "NO_WORKSPACE_CONFIGURED",
-              message: "No accessible workspace is configured.",
-            },
-          },
-          { status: 403 }
-        );
-      }
-    }
-
-    // 3. Verify selected ad belongs to an accessible workspace
-    const ad = await prisma.competitorAd.findUnique({
-      where: { id },
-      include: {
-        runAds: true,
-        watchlistItems: {
-          include: { watchlist: true },
-        },
-      },
-    });
-
-    if (!ad) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "AD_NOT_FOUND",
-            message: `Advertisement with ID ${id} was not found.`,
-          },
-        },
-        { status: 404 }
-      );
-    }
-
-    const associatedWorkspaceIds = new Set<string>();
-    for (const runAd of ad.runAds) {
-      if (runAd.workspaceId) associatedWorkspaceIds.add(runAd.workspaceId);
-    }
-    for (const item of ad.watchlistItems) {
-      if (item.watchlist?.workspaceId) associatedWorkspaceIds.add(item.watchlist.workspaceId);
-    }
-
-    if (
-      associatedWorkspaceIds.size > 0 &&
-      !associatedWorkspaceIds.has(workspace.id) &&
-      !associatedWorkspaceIds.has("default-workspace")
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "FORBIDDEN_WORKSPACE_AD",
-            message: "The requested advertisement does not belong to your accessible workspace.",
-          },
-        },
-        { status: 403 }
-      );
-    }
+    // 3. Strict Ad Tenant Access Assertion (KH-01.A1: No default-workspace cross-tenant bypass)
+    await assertAdWorkspaceAccess(id, researchContext);
 
     // 4. Save Candidate inside transaction
     const result = await saveAdProductCandidate({
@@ -249,23 +173,38 @@ export async function POST(
       success: true,
       data: result,
       meta: {
-        workspaceId: workspace.id,
+        workspaceId: researchContext.workspaceId,
+        accessMode: researchContext.accessMode,
         timestamp: new Date().toISOString(),
         note: "Product research recommendation is an evidence-based assessment, not a guarantee of sales or profit.",
       },
     });
-  } catch (error: any) {
-    // 5. Do not expose raw internal errors to the client
+  } catch (error: unknown) {
+    if (error instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        },
+        { status: error.statusCode }
+      );
+    }
+
     console.error("API error in POST /api/v1/ads/[id]/product-candidate:", error);
+    const message = error instanceof Error ? error.message : "Failed to save product candidate.";
     return NextResponse.json(
       {
         success: false,
         error: {
           code: "CANDIDATE_SAVE_FAILED",
-          message: error?.message || "Failed to save product candidate.",
+          message,
         },
       },
       { status: 500 }
     );
   }
 }
+

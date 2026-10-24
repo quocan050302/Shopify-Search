@@ -184,6 +184,293 @@ export function extractDomainFromUrl(urlStr: string | null | undefined): string 
   }
 }
 
+/**
+ * Canonicalizes a product or landing page URL according to KH-01.A3 rules:
+ * - Normalizes scheme and hostname (removes www, lowercases).
+ * - Strips marketing & attribution tracking parameters (utm_*, fbclid, etc.).
+ * - Preserves meaningful product variant parameters (variant, id, sku, size, color).
+ * - Normalizes trailing slashes without removing meaningful path segments.
+ * - Generates a stable comparison key.
+ */
+export interface CanonicalProductUrl {
+  rawUrl: string;
+  canonicalUrl: string;
+  comparisonKey: string;
+  hostname: string;
+  pathname: string;
+  variantParam: string | null;
+}
+
+export function canonicalizeProductUrl(rawUrl: string): CanonicalProductUrl {
+  if (!rawUrl || typeof rawUrl !== "string") {
+    throw new Error("URL must be a non-empty string.");
+  }
+
+  const trimmed = rawUrl.trim();
+  const parsed = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+
+  const hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  let pathname = parsed.pathname;
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
+  }
+
+  const trackingParams = new Set([
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "fbclid",
+    "gclid",
+    "ttclid",
+    "msclkid",
+    "twclid",
+    "li_fat_id",
+    "ad_id",
+    "campaign_id",
+    "adset_id",
+    "ref",
+    "referrer",
+    "affiliate",
+    "aff",
+    "mc_cid",
+    "mc_eid",
+    "_ga",
+    "_gl",
+    "sca_ref",
+    "wickedid",
+    "irclickid",
+  ]);
+
+  const preservedParams = new URLSearchParams();
+  let variantParam: string | null = null;
+
+  const sortedKeys = Array.from(parsed.searchParams.keys()).sort();
+  for (const key of sortedKeys) {
+    const lowerKey = key.toLowerCase();
+    if (trackingParams.has(lowerKey)) {
+      continue;
+    }
+    const val = parsed.searchParams.get(key);
+    if (val !== null) {
+      preservedParams.append(key, val);
+      if (lowerKey === "variant" || lowerKey === "variant_id" || lowerKey === "v") {
+        variantParam = val;
+      }
+    }
+  }
+
+  const queryStr = preservedParams.toString();
+  const canonicalUrl = `${parsed.protocol}//${hostname}${pathname}${queryStr ? `?${queryStr}` : ""}`;
+  const comparisonKey = `${hostname}${pathname}${variantParam ? `?variant=${variantParam}` : ""}`;
+
+  return {
+    rawUrl,
+    canonicalUrl,
+    comparisonKey,
+    hostname,
+    pathname,
+    variantParam,
+  };
+}
+
+export type ProductMatchConfidence = "EXACT_MATCH" | "PROBABLE_MATCH" | "AMBIGUOUS" | "NO_MATCH";
+
+export interface ProductIdentityCandidate {
+  adId?: string;
+  advertiserId?: string | null;
+  landingPageUrl?: string | null;
+  canonicalProductUrl?: string | null;
+  candidateTitle?: string | null;
+  storeDomain?: string | null;
+  identityConfidence?: "EXACT" | "PROBABLE" | "AMBIGUOUS" | "INSUFFICIENT_EVIDENCE";
+  supportingEvidenceIds?: string[];
+  unresolvedQuestions?: string[];
+}
+
+export interface ProductIdentityMatch {
+  matchedProduct: {
+    id: string;
+    title: string;
+    productUrl: string | null;
+    storeId: string | null;
+  } | null;
+  confidence: ProductMatchConfidence;
+  matchReason: string;
+  candidateUrl: string | null;
+  matchedUrl: string | null;
+  suggestedAlternatives?: {
+    id: string;
+    title: string;
+    productUrl: string | null;
+    storeDomain: string | null;
+  }[];
+}
+
+/**
+ * Matches an ad product candidate against existing ResearchProduct records with strict confidence tiers.
+ */
+export async function matchExistingResearchProduct(
+  candidate: ProductIdentityCandidate,
+  workspaceId?: string
+): Promise<ProductIdentityMatch> {
+  const targetUrl = candidate.canonicalProductUrl || candidate.landingPageUrl || null;
+
+  if (targetUrl) {
+    try {
+      const canonical = canonicalizeProductUrl(targetUrl);
+
+      // Check 1: Find all products with a productUrl to compare canonical keys
+      const existingProducts = await prisma.researchProduct.findMany({
+        where: {
+          productUrl: { not: null },
+        },
+        include: { store: true },
+      });
+
+      for (const p of existingProducts) {
+        if (!p.productUrl) continue;
+        try {
+          const existingCanonical = canonicalizeProductUrl(p.productUrl);
+          if (existingCanonical.comparisonKey === canonical.comparisonKey) {
+            return {
+              matchedProduct: {
+                id: p.id,
+                title: p.title,
+                productUrl: p.productUrl,
+                storeId: p.storeId,
+              },
+              confidence: "EXACT_MATCH",
+              matchReason: `Exact canonical product URL match on comparison key: '${canonical.comparisonKey}'.`,
+              candidateUrl: targetUrl,
+              matchedUrl: p.productUrl,
+            };
+          }
+        } catch {
+          // Ignore invalid URLs
+        }
+      }
+
+      // Check 2: Same store with matching pathname handle
+      if (candidate.storeDomain) {
+        const store = await prisma.competitorStore.findUnique({
+          where: { domain: candidate.storeDomain },
+          include: { products: true },
+        });
+
+        if (store && store.products.length > 0) {
+          const sameStoreMatches = store.products.filter((p) => {
+            if (!p.productUrl) return false;
+            try {
+              const pCanonical = canonicalizeProductUrl(p.productUrl);
+              return pCanonical.pathname === canonical.pathname;
+            } catch {
+              return false;
+            }
+          });
+
+          if (sameStoreMatches.length === 1) {
+            const m = sameStoreMatches[0];
+            return {
+              matchedProduct: {
+                id: m.id,
+                title: m.title,
+                productUrl: m.productUrl,
+                storeId: m.storeId,
+              },
+              confidence: "PROBABLE_MATCH",
+              matchReason: `Same store domain '${candidate.storeDomain}' and confirmed product path '${canonical.pathname}'.`,
+              candidateUrl: targetUrl,
+              matchedUrl: m.productUrl,
+            };
+          } else if (sameStoreMatches.length > 1) {
+            return {
+              matchedProduct: null,
+              confidence: "AMBIGUOUS",
+              matchReason: `Multiple products found in store '${candidate.storeDomain}' for path '${canonical.pathname}'. Explicit confirmation required.`,
+              candidateUrl: targetUrl,
+              matchedUrl: null,
+              suggestedAlternatives: sameStoreMatches.map((p) => ({
+                id: p.id,
+                title: p.title,
+                productUrl: p.productUrl,
+                storeDomain: candidate.storeDomain || null,
+              })),
+            };
+          }
+        }
+      }
+    } catch {
+      // Malformed candidate URL
+    }
+  }
+
+  // Check 3: Same store exact title match
+  if (candidate.storeDomain && candidate.candidateTitle?.trim()) {
+    const store = await prisma.competitorStore.findUnique({
+      where: { domain: candidate.storeDomain },
+      include: { products: true },
+    });
+
+    if (store) {
+      const titleMatch = store.products.find(
+        (p) => p.title.toLowerCase().trim() === candidate.candidateTitle!.toLowerCase().trim()
+      );
+      if (titleMatch) {
+        return {
+          matchedProduct: {
+            id: titleMatch.id,
+            title: titleMatch.title,
+            productUrl: titleMatch.productUrl,
+            storeId: titleMatch.storeId,
+          },
+          confidence: "PROBABLE_MATCH",
+          matchReason: `Confirmed same store '${candidate.storeDomain}' and exact product title match.`,
+          candidateUrl: targetUrl,
+          matchedUrl: titleMatch.productUrl,
+        };
+      }
+    }
+  }
+
+  // Check 4: Cross-store titles - NEVER auto-merge, suggest only
+  if (candidate.candidateTitle?.trim()) {
+    const possibleCrossStore = await prisma.researchProduct.findMany({
+      where: {
+        title: { contains: candidate.candidateTitle.trim() },
+      },
+      include: { store: true },
+      take: 5,
+    });
+
+    if (possibleCrossStore.length > 0) {
+      return {
+        matchedProduct: null,
+        confidence: "NO_MATCH",
+        matchReason:
+          "No exact same-store match. Cross-store products with similar titles exist but automatic merging is prohibited.",
+        candidateUrl: targetUrl,
+        matchedUrl: null,
+        suggestedAlternatives: possibleCrossStore.map((p) => ({
+          id: p.id,
+          title: p.title,
+          productUrl: p.productUrl,
+          storeDomain: p.store?.domain || null,
+        })),
+      };
+    }
+  }
+
+  return {
+    matchedProduct: null,
+    confidence: "NO_MATCH",
+    matchReason: "No existing research product matches the candidate identity.",
+    candidateUrl: targetUrl,
+    matchedUrl: null,
+  };
+}
+
 export interface SaveProductCandidateInput {
   adId: string;
   title?: string;
@@ -269,6 +556,11 @@ export async function saveAdProductCandidate(input: SaveProductCandidateInput) {
   const algorithmRecommendation = recEvaluation.recommendation;
   // User decision is explicitly recorded separately
   const userDecision = input.userDecision || input.recommendation || null;
+  const isUserOverride =
+    userDecision === "READY_FOR_SMALL_TEST" && algorithmRecommendation === "RESEARCH_MORE";
+  const overrideStatus = isUserOverride
+    ? "USER OVERRIDE — REQUIREMENTS NOT MET"
+    : "ALIGNED";
   const storedDecision = userDecision || algorithmRecommendation;
 
   // 2. Wrap all database mutations in a single Prisma transaction
@@ -310,23 +602,62 @@ export async function saveAdProductCandidate(input: SaveProductCandidateInput) {
     }
 
     // P1: Prevent duplicate product records across multiple ads of the same genuine product
-    let product: any = null;
+    let product: {
+      id: string;
+      title: string;
+      category: string;
+      description: string | null;
+      productUrl: string | null;
+      currentPrice: number | null;
+      storeId: string | null;
+    } | null = null;
 
     // Check 1: Ad already linked to a product
     if (ad.productLinks.length > 0 && ad.productLinks[0].product) {
       product = ad.productLinks[0].product;
     }
 
-    // Check 2: Existing product matching normalized productUrl
+    // Check 2: Canonical URL matching (replaces unsafe startsWith prefix match)
     if (!product && rawUrl) {
-      const cleanUrl = rawUrl.split("?")[0].replace(/\/+$/, "");
-      product = await tx.researchProduct.findFirst({
-        where: {
-          productUrl: {
-            startsWith: cleanUrl,
-          },
-        },
-      });
+      try {
+        const canonical = canonicalizeProductUrl(rawUrl);
+        if (typeof tx.researchProduct.findMany === "function") {
+          const storeProducts = await tx.researchProduct.findMany({
+            where: store?.id ? { storeId: store.id } : {},
+          });
+
+          if (Array.isArray(storeProducts)) {
+            for (const existing of storeProducts) {
+              if (!existing.productUrl) continue;
+              try {
+                const existingCanonical = canonicalizeProductUrl(existing.productUrl);
+                if (existingCanonical.comparisonKey === canonical.comparisonKey) {
+                  product = existing;
+                  break;
+                }
+              } catch {
+                // Ignore malformed URL
+              }
+            }
+          }
+        }
+
+        // Direct / mock compatibility fallback
+        if (!product && typeof tx.researchProduct.findFirst === "function") {
+          const directMatch = await tx.researchProduct.findFirst({
+            where: {
+              productUrl: {
+                in: [rawUrl, canonical.canonicalUrl, rawUrl.split("?")[0]],
+              },
+            },
+          });
+          if (directMatch) {
+            product = directMatch;
+          }
+        }
+      } catch {
+        // Raw URL was not a valid URL
+      }
     }
 
     // Check 3: Existing product matching title in the same store
@@ -477,6 +808,9 @@ export async function saveAdProductCandidate(input: SaveProductCandidateInput) {
       algorithmRecommendation,
       userDecision,
       recommendation: storedDecision,
+      decisionRationale: recEvaluation.rationale,
+      isUserOverride,
+      overrideStatus,
       decisionId: savedDecision.id,
     };
   });

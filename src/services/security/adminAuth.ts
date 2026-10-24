@@ -42,7 +42,7 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
   }
 
   if (!providedToken) {
-    const cookieToken = request.cookies.get("swai_admin_token")?.value;
+    const cookieToken = request.cookies?.get?.("swai_admin_token")?.value;
     if (cookieToken) {
       providedToken = cookieToken.trim();
     }
