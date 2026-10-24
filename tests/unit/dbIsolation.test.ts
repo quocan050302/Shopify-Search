@@ -96,6 +96,39 @@ describe("KH-01 — Checkpoint 1: Strict Database Isolation & Canonical Path Saf
       }).toThrow(/resolves to the same file as the active application database/);
     });
 
+    it("enforces isolation when NODE_ENV is production but SWAI_DB_ROLE is INTEGRATION_TEST", () => {
+      // Must fail closed if TEST_DATABASE_URL is missing
+      expect(() => {
+        assertSafeTestDatabase("file:./dev.db", {
+          NODE_ENV: "production",
+          SWAI_DB_ROLE: "INTEGRATION_TEST",
+        });
+      }).toThrow(/requires an explicit isolated TEST_DATABASE_URL/);
+
+      // Must fail closed if TEST_DATABASE_URL collides with active dev.db
+      const activeUrl = "file:./dev.db";
+      const collidingUrl = `file:${path.resolve(cwd, "dev.db")}`;
+      expect(() => {
+        assertSafeTestDatabase(collidingUrl, {
+          NODE_ENV: "production",
+          SWAI_DB_ROLE: "INTEGRATION_TEST",
+          DATABASE_URL: activeUrl,
+          TEST_DATABASE_URL: collidingUrl,
+        });
+      }).toThrow(/resolves to the same file as the active application database/);
+
+      // Must pass when TEST_DATABASE_URL is distinct
+      const distinctTestUrl = "file:/tmp/swai-test-isolated-prod-role/test.db";
+      expect(() => {
+        assertSafeTestDatabase(distinctTestUrl, {
+          NODE_ENV: "production",
+          SWAI_DB_ROLE: "INTEGRATION_TEST",
+          DATABASE_URL: activeUrl,
+          TEST_DATABASE_URL: distinctTestUrl,
+        });
+      }).not.toThrow();
+    });
+
     it("allows execution when TEST_DATABASE_URL points to a genuinely distinct SQLite path", () => {
       const distinctTestUrl = "file:/tmp/swai-test-isolated-12345/test.db";
       expect(() => {
@@ -107,6 +140,7 @@ describe("KH-01 — Checkpoint 1: Strict Database Isolation & Canonical Path Saf
       }).not.toThrow();
     });
   });
+
 
   describe("createIsolatedTestDatabase factory", () => {
     it("allocates a distinct isolated database file and safely performs schema queries", async () => {

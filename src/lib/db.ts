@@ -5,12 +5,16 @@ import {
   CanonicalDatabaseLocation,
   DatabaseConfiguration,
   canonicalizeSqliteDatabasePath,
-  resolveDatabaseConfiguration,
 } from "./database/databaseConfig";
-import { assertSafeTestDatabase } from "./database/databaseSafety";
+import { assertSafeTestDatabase, isProtectedTestExecution } from "./database/databaseSafety";
 
 export type { DatabaseRole, CanonicalDatabaseLocation, DatabaseConfiguration };
-export { canonicalizeSqliteDatabasePath, resolveDatabaseConfiguration, assertSafeTestDatabase };
+export {
+  canonicalizeSqliteDatabasePath,
+  resolveDatabaseConfiguration,
+  assertSafeTestDatabase,
+  isProtectedTestExecution,
+};
 
 interface GlobalPrismaState {
   prisma?: PrismaClient;

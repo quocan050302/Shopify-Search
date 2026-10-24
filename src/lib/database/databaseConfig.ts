@@ -134,6 +134,32 @@ export function canonicalizeSqliteDatabasePath(
 }
 
 /**
+ * Returns true when any authoritative configured test mode applies.
+ * Ensures an explicit test role (e.g. SWAI_DB_ROLE=INTEGRATION_TEST) never silently
+ * bypasses isolation checks merely because NODE_ENV=production.
+ */
+export function isProtectedTestExecution(
+  environment: NodeJS.ProcessEnv = process.env
+): boolean {
+  if (environment.NODE_ENV === "test") return true;
+  if (environment.VITEST === "true") return true;
+  if (
+    environment.SWAI_DB_ROLE === "INTEGRATION_TEST" ||
+    environment.SWAI_DB_ROLE === "LIVE_ACCEPTANCE" ||
+    environment.SWAI_DB_ROLE === "UNIT_TEST"
+  ) {
+    return true;
+  }
+  if (
+    environment.SWAI_E2E_SERVER === "true" ||
+    environment.SWAI_TEST_ISOLATION === "strict"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Resolves the active database configuration without constructing Prisma.
  */
 export function resolveDatabaseConfiguration(
@@ -141,7 +167,8 @@ export function resolveDatabaseConfiguration(
 ): DatabaseConfiguration {
   const isVitest = environment.VITEST === "true";
   const isTestEnv = environment.NODE_ENV === "test";
-  const isTest = isVitest || isTestEnv;
+  const isProtected = isProtectedTestExecution(environment);
+  const isTest = isVitest || isTestEnv || isProtected;
 
   let role: DatabaseRole = "APPLICATION";
   if (environment.SWAI_DB_ROLE) {
@@ -167,7 +194,7 @@ export function resolveDatabaseConfiguration(
   }
 
   const rawUrl =
-    (isTest && environment.TEST_DATABASE_URL) ||
+    (isProtected && environment.TEST_DATABASE_URL) ||
     environment.DATABASE_URL ||
     "file:./dev.db";
 
@@ -179,3 +206,4 @@ export function resolveDatabaseConfiguration(
     location,
   };
 }
+

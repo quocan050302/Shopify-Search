@@ -2,7 +2,11 @@ import {
   canonicalizeSqliteDatabasePath,
   DatabaseConfiguration,
   resolveDatabaseConfiguration,
+  isProtectedTestExecution,
 } from "./databaseConfig";
+
+export { isProtectedTestExecution };
+
 
 /**
  * Asserts that test execution cannot accidentally overwrite or mutate the active application database.
@@ -12,8 +16,7 @@ export function assertSafeTestDatabase(
   databaseUrl: string,
   environment: NodeJS.ProcessEnv = process.env
 ): void {
-  const isTest = environment.NODE_ENV === "test" || environment.VITEST === "true";
-  if (!isTest) return;
+  if (!isProtectedTestExecution(environment)) return;
 
   const activeAppRawUrl = environment.DATABASE_URL || "file:./dev.db";
   const activeAppLocation = canonicalizeSqliteDatabasePath(activeAppRawUrl);
@@ -36,7 +39,9 @@ export function assertSafeTestDatabase(
   // 3. Strict integration test isolation check
   const isStrictIntegration =
     environment.SWAI_TEST_ISOLATION === "strict" ||
-    environment.SWAI_DB_ROLE === "INTEGRATION_TEST";
+    environment.SWAI_DB_ROLE === "INTEGRATION_TEST" ||
+    environment.SWAI_DB_ROLE === "LIVE_ACCEPTANCE" ||
+    environment.SWAI_E2E_SERVER === "true";
 
   if (isStrictIntegration) {
     if (!environment.TEST_DATABASE_URL) {
@@ -55,3 +60,4 @@ export function assertSafeTestDatabase(
     }
   }
 }
+
