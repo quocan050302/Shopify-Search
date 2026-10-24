@@ -29,7 +29,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
-import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
+import { isSampleOrFakeMedia, isStockImage } from "@/services/video/videoSourceResolver";
 import { AdViewModel, AdDetailViewModel, ProductEconomics, ResearchChecklist, MissingCostState } from "@/types/adViewModel";
 import { calculateEconomics, deriveRecommendation } from "@/lib/economics";
 

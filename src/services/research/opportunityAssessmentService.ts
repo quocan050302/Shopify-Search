@@ -838,7 +838,40 @@ export async function buildProductOpportunityInput(
             : [],
           confidence: dynamicConfidence,
           croReadiness: croScore, // Explicit null when missing; no fallback 65!
+          structure: {
+            pageUrl: landingPage.finalUrl || landingPage.originalUrl,
+            hasProductHero: true,
+            heroHeadline: null,
+            productImagesCount: 0,
+            hasVisiblePriceNearCta: false,
+            primaryCtaText: null,
+            hasBenefitList: false,
+            hasDemonstrationOrVideo: false,
+            hasCustomerReviews: false,
+            observedReviewCountText: null,
+            observedRatingScoreText: null,
+            hasFaqSection: false,
+            hasShippingPolicySummary: false,
+            hasReturnPolicySummary: false,
+            hasTrustBadges: false,
+            hasPaymentIcons: false,
+            missingObservableComponents: [],
+          },
+          trustSignals: {
+            score: 0,
+            observedSignals: [],
+            missingSignals: [],
+            disclaimer: "RESEARCH_ONLY heuristic trust score.",
+          },
+          messageMatch: {
+            overallMatchScore: 0,
+            matchedClaims: [],
+            conflictingClaims: [],
+            missingOnLandingPage: [],
+            unverifiedClaims: [],
+          },
           analysisVersion: "11.4.1",
+          disclaimer: "RESEARCH_ONLY assessment based on public page inspection.",
         };
       } catch {
         funnelAssessment = null;

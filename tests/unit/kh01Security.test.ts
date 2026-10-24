@@ -2,7 +2,7 @@
  * KH-01.A — Security, Data Integrity & Evidence Foundation Unit Tests
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import {

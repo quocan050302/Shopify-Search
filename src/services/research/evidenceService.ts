@@ -34,6 +34,13 @@ export type ResearchPillar =
 
 export type EvidenceSubjectType = "PRODUCT" | "AD" | "STORE" | "OFFER" | "FUNNEL";
 
+export interface VerificationResult {
+  isVerified: boolean;
+  verifierActorId?: string;
+  verificationMethod?: string;
+  notes?: string;
+}
+
 export interface CreateResearchEvidenceInput {
   productId?: string;
   subjectType: EvidenceSubjectType;

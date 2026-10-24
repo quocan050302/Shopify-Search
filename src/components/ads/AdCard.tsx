@@ -2,7 +2,7 @@
 
 import { ExternalLink, Flame, Clock, ShieldCheck, BookmarkPlus, AlertCircle, Image as ImageIcon, Video, Layers } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
-import { isSampleOrFakeMedia } from "@/services/links/linkValidationService";
+import { isSampleOrFakeMedia } from "@/services/video/videoSourceResolver";
 import { AdViewModel } from "@/types/adViewModel";
 
 interface AdCardProps {

@@ -14,8 +14,6 @@ import {
   calculateOpportunityAssessment,
   evaluateSmallTestReadiness,
   explainOpportunityRecommendation,
-  evaluateProductPillar,
-  evaluateEconomicsPillar,
 } from "@/services/research/opportunityAssessmentService";
 
 describe("KH-01.D — Product Economics & Opportunity Assessment Tests", () => {

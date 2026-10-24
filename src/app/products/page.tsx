@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
-import { isStockImage } from "@/services/links/linkValidationService";
+import { isStockImage } from "@/services/video/videoSourceResolver";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);

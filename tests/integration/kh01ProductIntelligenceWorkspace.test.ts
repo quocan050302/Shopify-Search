@@ -51,11 +51,9 @@ import {
 } from "@/services/research/productIdentityService";
 import {
   createLandingPageResearchJob,
-  executeLandingPageResearchJob,
 } from "@/services/research/landingPageInspectionService";
 import {
   calculateOrderEconomics,
-  compareEconomicsScenarios,
 } from "@/lib/economics";
 import {
   recordSupplierQuote,
@@ -70,7 +68,6 @@ import {
 import {
   claimPendingKh01Job,
   executeKh01Job,
-  recoverInterruptedKh01Jobs,
 } from "@/workers/kh01Worker";
 
 describe("KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow", () => {
