@@ -155,15 +155,18 @@ describe("SWAI V11.3 — Ad Detail & Shopify Research Foundation", () => {
     });
 
     it("evaluates recommendation states based on explicit criteria", () => {
-      // 1. Ready for small test: healthy margin, viable differentiation, demand evidence
+      // 1. Ready for small test: healthy margin, viable differentiation, demand evidence with citation & confirmed costs
       const readyRec = deriveRecommendation({
-        demandEvidence: true,
+        demandEvidence: "VERIFIED",
+        demandEvidenceSource: "Google Trends index > 65 & 200+ customer reviews",
         competitionLevel: "MODERATE",
         creativeAppeal: "STRONG",
         differentiationFeasibility: true,
         deliveryFeasibility: true,
         returnRisk: "LOW",
         contributionMargin: 25.00,
+        isConfirmedByUser: true,
+        costVerificationSource: "USER_VERIFIED_QUOTE",
       });
       expect(readyRec.recommendation).toBe("READY_FOR_SMALL_TEST");
 

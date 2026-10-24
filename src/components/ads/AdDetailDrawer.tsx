@@ -30,7 +30,8 @@ import {
 } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
 import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
-import { AdViewModel, AdDetailViewModel, ProductEconomics, ResearchChecklist } from "@/types/adViewModel";
+import { AdViewModel, AdDetailViewModel, ProductEconomics, ResearchChecklist, MissingCostState } from "@/types/adViewModel";
+import { calculateEconomics, deriveRecommendation } from "@/lib/economics";
 
 interface AdDetailDrawerProps {
   ad: AdViewModel | null;
@@ -64,29 +65,35 @@ export function AdDetailDrawer({
   const [analyzingCreative, setAnalyzingCreative] = useState(false);
   const [analysisFeedback, setAnalysisFeedback] = useState<string | null>(null);
 
-  // Product Candidate Economics State (P1)
+  // Product Candidate Economics State (P1 & Decision Safety)
   const [sellingPrice, setSellingPrice] = useState<string>("");
   const [supplierCost, setSupplierCost] = useState<string>("");
-  const [shippingCost, setShippingCost] = useState<string>("0");
-  const [platformFees, setPlatformFees] = useState<string>("0");
+  const [shippingCost, setShippingCost] = useState<string>("");
+  const [platformFees, setPlatformFees] = useState<string>("");
   const [returnAllowancePercent, setReturnAllowancePercent] = useState<string>("5");
+  const [targetProfitPerUnit, setTargetProfitPerUnit] = useState<string>("5.00");
+  const [isConfirmedByUser, setIsConfirmedByUser] = useState<boolean>(false);
+  const [costVerificationSource, setCostVerificationSource] = useState<"USER_ESTIMATE" | "SUPPLIER_INVOICE" | "USER_VERIFIED_QUOTE">("USER_ESTIMATE");
   const [candidateNotes, setCandidateNotes] = useState<string>("");
+  const [userDecision, setUserDecision] = useState<"READY_FOR_SMALL_TEST" | "RESEARCH_MORE" | "REJECTED" | "">("");
 
-  // Product Candidate Checklist State (P1)
+  // Product Candidate Checklist State with explicit UNKNOWN support
   const [checklist, setChecklist] = useState<{
-    demandEvidence: boolean;
-    competitionLevel: "LOW" | "MODERATE" | "HIGH" | "SATURATED";
-    creativeAppeal: "STRONG" | "MODERATE" | "WEAK";
-    differentiationFeasibility: boolean;
-    deliveryFeasibility: boolean;
-    returnRisk: "LOW" | "MEDIUM" | "HIGH";
+    demandEvidence: "UNKNOWN" | "UNVERIFIED" | "VERIFIED";
+    demandEvidenceSource: string;
+    competitionLevel: "UNKNOWN" | "LOW" | "MODERATE" | "HIGH" | "SATURATED";
+    creativeAppeal: "UNKNOWN" | "STRONG" | "MODERATE" | "WEAK";
+    differentiationFeasibility: "UNKNOWN" | "VIABLE" | "UNCERTAIN" | "NOT_VIABLE";
+    deliveryFeasibility: "UNKNOWN" | "CONFIRMED" | "UNCERTAIN" | "HIGH_RISK";
+    returnRisk: "UNKNOWN" | "LOW" | "MEDIUM" | "HIGH";
   }>({
-    demandEvidence: true,
-    competitionLevel: "MODERATE",
-    creativeAppeal: "MODERATE",
-    differentiationFeasibility: true,
-    deliveryFeasibility: true,
-    returnRisk: "LOW",
+    demandEvidence: "UNKNOWN",
+    demandEvidenceSource: "",
+    competitionLevel: "UNKNOWN",
+    creativeAppeal: "UNKNOWN",
+    differentiationFeasibility: "UNKNOWN",
+    deliveryFeasibility: "UNKNOWN",
+    returnRisk: "UNKNOWN",
   });
 
   const [savingCandidate, setSavingCandidate] = useState(false);
@@ -106,6 +113,27 @@ export function AdDetailDrawer({
     setUploadFeedback(null);
     setAnalysisFeedback(null);
     setCandidateFeedback(null);
+
+    // Rule 29: Reset all editable economics fields when switching ads
+    setSellingPrice("");
+    setSupplierCost("");
+    setShippingCost("");
+    setPlatformFees("");
+    setReturnAllowancePercent("5");
+    setTargetProfitPerUnit("5.00");
+    setIsConfirmedByUser(false);
+    setCostVerificationSource("USER_ESTIMATE");
+    setCandidateNotes("");
+    setUserDecision("");
+    setChecklist({
+      demandEvidence: "UNKNOWN",
+      demandEvidenceSource: "",
+      competitionLevel: "UNKNOWN",
+      creativeAppeal: "UNKNOWN",
+      differentiationFeasibility: "UNKNOWN",
+      deliveryFeasibility: "UNKNOWN",
+      returnRisk: "UNKNOWN",
+    });
 
     const controller = new AbortController();
     setLoadingDetail(true);
@@ -127,18 +155,30 @@ export function AdDetailDrawer({
             if (existingEcon.shippingCost != null) setShippingCost(String(existingEcon.shippingCost));
             if (existingEcon.platformFees != null) setPlatformFees(String(existingEcon.platformFees));
             if (existingEcon.returnAllowancePercent != null) setReturnAllowancePercent(String(existingEcon.returnAllowancePercent));
+            if (existingEcon.targetProfitPerUnit != null) setTargetProfitPerUnit(String(existingEcon.targetProfitPerUnit));
+            if (existingEcon.isConfirmedByUser != null) setIsConfirmedByUser(Boolean(existingEcon.isConfirmedByUser));
+            if (existingEcon.costVerificationSource) {
+              setCostVerificationSource(existingEcon.costVerificationSource as any);
+            }
           } else if (json.data.linkedProduct?.currentPrice != null) {
             setSellingPrice(String(json.data.linkedProduct.currentPrice));
           }
+
           if (json.data.linkedProduct?.checklist) {
+            const c = json.data.linkedProduct.checklist;
             setChecklist({
-              demandEvidence: json.data.linkedProduct.checklist.demandEvidence ?? true,
-              competitionLevel: json.data.linkedProduct.checklist.competitionLevel ?? "MODERATE",
-              creativeAppeal: json.data.linkedProduct.checklist.creativeAppeal ?? "MODERATE",
-              differentiationFeasibility: json.data.linkedProduct.checklist.differentiationFeasibility ?? true,
-              deliveryFeasibility: json.data.linkedProduct.checklist.deliveryFeasibility ?? true,
-              returnRisk: json.data.linkedProduct.checklist.returnRisk ?? "LOW",
+              demandEvidence: typeof c.demandEvidence === "string" ? c.demandEvidence : c.demandEvidence ? "VERIFIED" : "UNKNOWN",
+              demandEvidenceSource: c.demandEvidenceSource ?? "",
+              competitionLevel: c.competitionLevel ?? "UNKNOWN",
+              creativeAppeal: c.creativeAppeal ?? "UNKNOWN",
+              differentiationFeasibility: typeof c.differentiationFeasibility === "string" ? c.differentiationFeasibility : c.differentiationFeasibility ? "VIABLE" : "NOT_VIABLE",
+              deliveryFeasibility: typeof c.deliveryFeasibility === "string" ? c.deliveryFeasibility : c.deliveryFeasibility ? "CONFIRMED" : "HIGH_RISK",
+              returnRisk: c.returnRisk ?? "UNKNOWN",
             });
+          }
+
+          if (json.data.linkedProduct?.userDecision) {
+            setUserDecision(json.data.linkedProduct.userDecision);
           }
         } else {
           throw new Error(json.error?.message || "Failed to parse ad details");
@@ -190,72 +230,47 @@ export function AdDetailDrawer({
     missingFields: [],
   };
 
-  // Live Economics Calculation (never invent costs)
+  // Live Economics Calculation using Canonical Engine
   const parsedPrice = sellingPrice ? parseFloat(sellingPrice) : null;
   const parsedCost = supplierCost ? parseFloat(supplierCost) : null;
-  const parsedShipping = shippingCost ? parseFloat(shippingCost) : 0;
-  const parsedFees = platformFees ? parseFloat(platformFees) : 0;
-  const parsedReturnRate = returnAllowancePercent ? parseFloat(returnAllowancePercent) : 0;
+  const parsedShipping = shippingCost !== "" ? parseFloat(shippingCost) : null;
+  const parsedFees = platformFees !== "" ? parseFloat(platformFees) : null;
+  const parsedReturnRate = returnAllowancePercent !== "" ? parseFloat(returnAllowancePercent) : null;
+  const parsedTargetProfit = targetProfitPerUnit !== "" ? parseFloat(targetProfitPerUnit) : null;
 
-  const returnAllowanceDollar =
-    parsedPrice != null && !isNaN(parsedPrice) ? (parsedPrice * parsedReturnRate) / 100 : 0;
+  const liveEconomics = calculateEconomics({
+    observedSellingPrice: parsedPrice,
+    estimatedSupplierCost: parsedCost,
+    shippingCost: parsedShipping,
+    platformFees: parsedFees,
+    returnAllowancePercent: parsedReturnRate,
+    targetProfitPerUnit: parsedTargetProfit,
+    isConfirmedByUser,
+    costVerificationSource,
+    sourceStatus: "USER_ENTERED",
+  });
 
-  const liveContributionMargin =
-    parsedPrice != null && parsedCost != null && !isNaN(parsedPrice) && !isNaN(parsedCost)
-      ? Number((parsedPrice - parsedCost - parsedShipping - parsedFees - returnAllowanceDollar).toFixed(2))
-      : null;
+  const liveRecommendation = deriveRecommendation({
+    contributionMargin: liveEconomics.contributionMargin,
+    observedSellingPrice: parsedPrice,
+    missingCostState: liveEconomics.missingCostState,
+    isConfirmedByUser: liveEconomics.isConfirmedByUser,
+    costVerificationSource: (liveEconomics.costVerificationSource as any),
+    demandEvidence: checklist.demandEvidence,
+    demandEvidenceSource: checklist.demandEvidenceSource,
+    competitionLevel: checklist.competitionLevel,
+    creativeAppeal: checklist.creativeAppeal,
+    differentiationFeasibility: checklist.differentiationFeasibility,
+    deliveryFeasibility: checklist.deliveryFeasibility,
+    returnRisk: checklist.returnRisk,
+  });
 
-  const liveBreakEvenCPA = liveContributionMargin;
-
-  // Live Recommendation evaluation
-  const liveRecommendation = (() => {
-    if (liveContributionMargin !== null && liveContributionMargin <= 0) {
-      return {
-        rec: "REJECTED" as const,
-        label: "REJECTED",
-        color: "bg-rose-500/20 text-rose-400 border-rose-500/30",
-        rationale: "Unviable unit economics: contribution margin is zero or negative.",
-      };
-    }
-    if (checklist.competitionLevel === "SATURATED" && !checklist.differentiationFeasibility) {
-      return {
-        rec: "REJECTED" as const,
-        label: "REJECTED",
-        color: "bg-rose-500/20 text-rose-400 border-rose-500/30",
-        rationale: "Saturated competition without viable creative or product differentiation.",
-      };
-    }
-    if (!checklist.deliveryFeasibility) {
-      return {
-        rec: "REJECTED" as const,
-        label: "REJECTED",
-        color: "bg-rose-500/20 text-rose-400 border-rose-500/30",
-        rationale: "Delivery feasibility is unconfirmed or high risk.",
-      };
-    }
-    const isHealthyMargin = liveContributionMargin !== null && liveContributionMargin >= 12;
-    if (
-      checklist.demandEvidence &&
-      checklist.differentiationFeasibility &&
-      checklist.deliveryFeasibility &&
-      checklist.creativeAppeal !== "WEAK" &&
-      checklist.returnRisk !== "HIGH" &&
-      (isHealthyMargin || checklist.competitionLevel === "LOW")
-    ) {
-      return {
-        rec: "READY_FOR_SMALL_TEST" as const,
-        label: "READY FOR SMALL TEST",
-        color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-        rationale: "Criteria met for preliminary small test: positive margin, demand evidence, viable differentiation, and acceptable risk.",
-      };
-    }
-    return {
-      rec: "RESEARCH_MORE" as const,
-      label: "RESEARCH MORE",
-      color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-      rationale: "Further validation needed before spending ad budget. Verify actual supplier quotes, inspect sample quality, or test creative messaging first.",
-    };
-  })();
+  const recColor =
+    liveRecommendation.recommendation === "READY_FOR_SMALL_TEST"
+      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+      : liveRecommendation.recommendation === "REJECTED"
+      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+      : "bg-amber-500/20 text-amber-400 border border-amber-500/30";
 
   // Handle Save Candidate
   const handleSaveProductCandidate = async () => {
@@ -271,8 +286,11 @@ export function AdDetailDrawer({
           shippingCost: parsedShipping,
           platformFees: parsedFees,
           returnAllowancePercent: parsedReturnRate,
+          targetProfitPerUnit: parsedTargetProfit,
+          isConfirmedByUser,
+          costVerificationSource,
           checklist,
-          recommendation: liveRecommendation.rec,
+          userDecision: userDecision || null,
           notes: candidateNotes,
         }),
       });
@@ -280,7 +298,7 @@ export function AdDetailDrawer({
       if (!json.success) throw new Error(json.error?.message || "Failed to save candidate");
       setCandidateFeedback({
         type: "success",
-        message: "Saved to ResearchProduct! Candidate economics and checklist recorded.",
+        message: "Saved to ResearchProduct! Candidate economics, scenario decision, and checklist recorded.",
       });
       if (onProductCandidateSaved) onProductCandidateSaved();
     } catch (err: any) {
@@ -798,19 +816,19 @@ export function AdDetailDrawer({
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>Script Ideas (Category-Based)</span>
                       </div>
-                      {analysis.scriptIdeas.script15s && (
+                      {Boolean(analysis.scriptIdeas.script15s) && (
                         <div>
                           <strong className="text-slate-300 text-[11px] block mb-1">15-Second Concept:</strong>
                           <pre className="p-2.5 rounded-lg bg-slate-950 font-mono text-[11px] text-slate-300 whitespace-pre-wrap border border-slate-800">
-                            {analysis.scriptIdeas.script15s}
+                            {String(analysis.scriptIdeas.script15s)}
                           </pre>
                         </div>
                       )}
-                      {analysis.scriptIdeas.ugcAngle && (
+                      {Boolean(analysis.scriptIdeas.ugcAngle) && (
                         <div>
                           <strong className="text-slate-300 text-[11px] block mb-1">UGC Angle:</strong>
                           <p className="text-slate-400 italic bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 text-[11px]">
-                            &ldquo;{analysis.scriptIdeas.ugcAngle}&rdquo;
+                            &ldquo;{String(analysis.scriptIdeas.ugcAngle)}&rdquo;
                           </p>
                         </div>
                       )}
@@ -983,7 +1001,7 @@ export function AdDetailDrawer({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="text-[10px] text-slate-400 block mb-1">
-                      Observed Selling Price ($)
+                      Observed Selling Price ($) *
                     </label>
                     <input
                       type="number"
@@ -997,7 +1015,7 @@ export function AdDetailDrawer({
 
                   <div>
                     <label className="text-[10px] text-slate-400 block mb-1">
-                      Est. Supplier Cost / COGS ($)
+                      Est. Supplier Cost / COGS ($) *
                     </label>
                     <input
                       type="number"
@@ -1016,7 +1034,7 @@ export function AdDetailDrawer({
                     <input
                       type="number"
                       step="0.01"
-                      placeholder="e.g. 4.50"
+                      placeholder="Leave blank if unknown"
                       value={shippingCost}
                       onChange={(e) => setShippingCost(e.target.value)}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
@@ -1025,12 +1043,12 @@ export function AdDetailDrawer({
 
                   <div>
                     <label className="text-[10px] text-slate-400 block mb-1">
-                      Platform & Gateway Fees ($)
+                      Platform & Fees ($)
                     </label>
                     <input
                       type="number"
                       step="0.01"
-                      placeholder="e.g. 2.00"
+                      placeholder="Leave blank if unknown"
                       value={platformFees}
                       onChange={(e) => setPlatformFees(e.target.value)}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
@@ -1044,59 +1062,179 @@ export function AdDetailDrawer({
                     <input
                       type="number"
                       step="1"
-                      placeholder="e.g. 5"
+                      placeholder="Default 5%"
                       value={returnAllowancePercent}
                       onChange={(e) => setReturnAllowancePercent(e.target.value)}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
                     />
                   </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">
+                      Target Profit / Unit ($)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.50"
+                      placeholder="e.g. 5.00"
+                      value={targetProfitPerUnit}
+                      onChange={(e) => setTargetProfitPerUnit(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
                 </div>
 
-                {/* Economics Output Card */}
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 grid grid-cols-2 gap-3 items-center">
+                {/* Verification Source & Confirmation Checkbox */}
+                <div className="pt-2 border-t border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={isConfirmedByUser}
+                      onChange={(e) => setIsConfirmedByUser(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-0"
+                    />
+                    <span>I have confirmed these costs from a supplier price sheet or invoice</span>
+                  </label>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-500">Source:</span>
+                    <select
+                      value={costVerificationSource}
+                      onChange={(e) => setCostVerificationSource(e.target.value as any)}
+                      className="px-2 py-1 rounded bg-slate-950 border border-slate-800 text-slate-300 text-[10px]"
+                    >
+                      <option value="USER_ESTIMATE">User Estimate</option>
+                      <option value="USER_VERIFIED_QUOTE">Verified Supplier Quote</option>
+                      <option value="SUPPLIER_INVOICE">Supplier Invoice</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Missing Cost State Alert */}
+                {liveEconomics.missingCostState === "MISSING_SHIPPING_AND_FEES" && (
+                  <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/40 text-[11px] text-amber-300 flex items-start gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Warning:</strong> Shipping or gateway fees are unspecified. Margin calculation assumes $0 shipping/fees for preliminary modeling only and cannot produce a small test recommendation.
+                    </span>
+                  </div>
+                )}
+                {liveEconomics.missingCostState === "MISSING_SUPPLIER_COST" && (
+                  <div className="p-2.5 rounded-lg bg-blue-950/30 border border-blue-800/40 text-[11px] text-blue-300 flex items-start gap-2">
+                    <HelpCircle className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" />
+                    <span>
+                      Enter estimated supplier cost (COGS) to calculate contribution margin, break-even ROAS, and max allowable CPA.
+                    </span>
+                  </div>
+                )}
+
+                {/* Economics Output Grid */}
+                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 items-center">
                   <div>
                     <span className="text-[10px] text-slate-500 block">Est. Contribution Margin</span>
-                    {liveContributionMargin !== null ? (
-                      <span className={`text-xl font-bold font-mono ${liveContributionMargin > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                        ${liveContributionMargin.toFixed(2)}
+                    {liveEconomics.contributionMargin !== null ? (
+                      <span className={`text-base sm:text-lg font-bold font-mono ${liveEconomics.contributionMargin > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        ${liveEconomics.contributionMargin.toFixed(2)}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-500 italic">Enter selling price & supplier cost</span>
+                      <span className="text-[11px] text-slate-500 italic">Requires price & cost</span>
                     )}
+                    <span className="text-[9px] text-slate-500 block">Hypothetical model</span>
                   </div>
+
                   <div>
                     <span className="text-[10px] text-slate-500 block">Break-even CPA (Max Ad Cost)</span>
-                    {liveBreakEvenCPA !== null ? (
-                      <span className={`text-xl font-bold font-mono ${liveBreakEvenCPA > 0 ? "text-indigo-400" : "text-rose-400"}`}>
-                        ${liveBreakEvenCPA.toFixed(2)}
+                    {liveEconomics.breakEvenCPA !== null ? (
+                      <span className={`text-base sm:text-lg font-bold font-mono ${liveEconomics.breakEvenCPA > 0 ? "text-indigo-400" : "text-rose-400"}`}>
+                        ${liveEconomics.breakEvenCPA.toFixed(2)}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-500 italic">Requires price & supplier cost</span>
+                      <span className="text-[11px] text-slate-500 italic">Uncalculated</span>
                     )}
+                    <span className="text-[9px] text-slate-500 block">Zero profit threshold</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Break-even ROAS</span>
+                    {liveEconomics.breakEvenROAS !== null ? (
+                      <span className="text-base sm:text-lg font-bold font-mono text-cyan-400">
+                        {liveEconomics.breakEvenROAS.toFixed(2)}x
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 italic">N/A</span>
+                    )}
+                    <span className="text-[9px] text-slate-500 block">Price / Margin</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Target CPA</span>
+                    {liveEconomics.targetCPA != null ? (
+                      <span className="text-base sm:text-lg font-bold font-mono text-purple-400">
+                        ${liveEconomics.targetCPA.toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 italic">N/A</span>
+                    )}
+                    <span className="text-[9px] text-slate-500 block">After target profit</span>
                   </div>
                 </div>
               </div>
 
               {/* Structured Research Checklist */}
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-                <span className="text-slate-200 font-bold text-xs block">
-                  Structured Research Checklist
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-200 font-bold text-xs block">
+                    Structured Research Checklist (Evidence Gates)
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    All gates must be evaluated (no UNKNOWN allowed for small test)
+                  </span>
+                </div>
 
-                <div className="space-y-2.5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={checklist.demandEvidence}
-                      onChange={(e) => setChecklist({ ...checklist, demandEvidence: e.target.checked })}
-                      className="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-0"
-                    />
-                    <span className="text-slate-300">
-                      <strong>Demand Evidence:</strong> Verified ad longevity, repeated observation, or proven problem-solving angle
-                    </span>
-                  </label>
+                <div className="space-y-3">
+                  {/* Demand Evidence */}
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-slate-300">
+                        Market Demand Evidence
+                      </label>
+                      <select
+                        value={checklist.demandEvidence}
+                        onChange={(e) => setChecklist({ ...checklist, demandEvidence: e.target.value as any })}
+                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white text-[11px]"
+                      >
+                        <option value="UNKNOWN">UNKNOWN — Not yet investigated</option>
+                        <option value="UNVERIFIED">UNVERIFIED — No external proof</option>
+                        <option value="VERIFIED">VERIFIED — External evidence cited</option>
+                      </select>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    {checklist.demandEvidence === "VERIFIED" && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block">
+                          Demand Source Citation (Required for VERIFIED):
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Google Trends index > 60, Amazon Best Seller #12, 400+ genuine reviews"
+                          value={checklist.demandEvidenceSource}
+                          onChange={(e) => setChecklist({ ...checklist, demandEvidenceSource: e.target.value })}
+                          className="w-full px-2.5 py-1.5 rounded bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+                        />
+                        {checklist.demandEvidenceSource &&
+                          (checklist.demandEvidenceSource.toLowerCase().includes("headline") ||
+                            checklist.demandEvidenceSource.toLowerCase().includes("ad copy") ||
+                            checklist.demandEvidenceSource.toLowerCase().includes("body")) && (
+                            <span className="text-[10px] text-rose-400 block font-semibold">
+                              ⚠ Ad headline or body text is commercial copy, not verified market demand proof.
+                            </span>
+                          )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Competition Level */}
                     <div>
                       <label className="text-[10px] text-slate-400 block mb-1">Competition Level</label>
                       <select
@@ -1104,13 +1242,15 @@ export function AdDetailDrawer({
                         onChange={(e) => setChecklist({ ...checklist, competitionLevel: e.target.value as any })}
                         className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
                       >
-                        <option value="LOW">Low (Few active competitors)</option>
-                        <option value="MODERATE">Moderate (Established category)</option>
-                        <option value="HIGH">High (Multiple active sellers)</option>
-                        <option value="SATURATED">Saturated (Intense bidding wars)</option>
+                        <option value="UNKNOWN">UNKNOWN — Not researched</option>
+                        <option value="LOW">LOW — Few active competitors</option>
+                        <option value="MODERATE">MODERATE — Established category</option>
+                        <option value="HIGH">HIGH — Multiple active sellers</option>
+                        <option value="SATURATED">SATURATED — Intense bidding wars</option>
                       </select>
                     </div>
 
+                    {/* Creative Appeal */}
                     <div>
                       <label className="text-[10px] text-slate-400 block mb-1">Creative Angle Appeal</label>
                       <select
@@ -1118,67 +1258,114 @@ export function AdDetailDrawer({
                         onChange={(e) => setChecklist({ ...checklist, creativeAppeal: e.target.value as any })}
                         className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
                       >
-                        <option value="STRONG">Strong (Visual & clear problem hook)</option>
-                        <option value="MODERATE">Moderate (Standard commercial angle)</option>
-                        <option value="WEAK">Weak (Generic commodity ad)</option>
+                        <option value="UNKNOWN">UNKNOWN — Not reviewed</option>
+                        <option value="STRONG">STRONG — Visual & clear problem hook</option>
+                        <option value="MODERATE">MODERATE — Standard commercial angle</option>
+                        <option value="WEAK">WEAK — Generic commodity ad</option>
                       </select>
                     </div>
-                  </div>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={checklist.differentiationFeasibility}
-                      onChange={(e) => setChecklist({ ...checklist, differentiationFeasibility: e.target.checked })}
-                      className="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-0"
-                    />
-                    <span className="text-slate-300">
-                      <strong>Differentiation Feasible:</strong> Viable to improve packaging, bundle, or create unique UGC angle
-                    </span>
-                  </label>
+                    {/* Differentiation Feasibility */}
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-1">Differentiation Feasibility</label>
+                      <select
+                        value={checklist.differentiationFeasibility}
+                        onChange={(e) => setChecklist({ ...checklist, differentiationFeasibility: e.target.value as any })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
+                      >
+                        <option value="UNKNOWN">UNKNOWN — Not evaluated</option>
+                        <option value="VIABLE">VIABLE — Feasible packaging/UGC/angle</option>
+                        <option value="UNCERTAIN">UNCERTAIN — Difficult to differentiate</option>
+                        <option value="NOT_VIABLE">NOT VIABLE — Undifferentiated commodity</option>
+                      </select>
+                    </div>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={checklist.deliveryFeasibility}
-                      onChange={(e) => setChecklist({ ...checklist, deliveryFeasibility: e.target.checked })}
-                      className="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-0"
-                    />
-                    <span className="text-slate-300">
-                      <strong>Delivery Feasible:</strong> Standard packet size, non-fragile, low customs hazard
-                    </span>
-                  </label>
+                    {/* Delivery Feasibility */}
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-1">Delivery Feasibility</label>
+                      <select
+                        value={checklist.deliveryFeasibility}
+                        onChange={(e) => setChecklist({ ...checklist, deliveryFeasibility: e.target.value as any })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
+                      >
+                        <option value="UNKNOWN">UNKNOWN — Not evaluated</option>
+                        <option value="CONFIRMED">CONFIRMED — Standard packet, durable</option>
+                        <option value="UNCERTAIN">UNCERTAIN — Requires packaging test</option>
+                        <option value="HIGH_RISK">HIGH RISK — Fragile, hazardous, oversize</option>
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">Return & Quality Risk</label>
-                    <select
-                      value={checklist.returnRisk}
-                      onChange={(e) => setChecklist({ ...checklist, returnRisk: e.target.value as any })}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
-                    >
-                      <option value="LOW">Low (Simple durable goods, non-sizing)</option>
-                      <option value="MEDIUM">Medium (Apparel sizing, minor tech)</option>
-                      <option value="HIGH">High (Complex electronics, perishables)</option>
-                    </select>
+                    {/* Return Risk */}
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] text-slate-400 block mb-1">Return & Quality Risk</label>
+                      <select
+                        value={checklist.returnRisk}
+                        onChange={(e) => setChecklist({ ...checklist, returnRisk: e.target.value as any })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs"
+                      >
+                        <option value="UNKNOWN">UNKNOWN — Not evaluated</option>
+                        <option value="LOW">LOW — Simple durable goods, no sizing</option>
+                        <option value="MEDIUM">MEDIUM — Apparel sizing, minor tech</option>
+                        <option value="HIGH">HIGH — Complex electronics, breakables</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Research Recommendation State */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+              {/* Research Recommendation (Algorithm vs Researcher Decision) */}
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">Research Recommendation</span>
-                  <span className={`text-xs px-2.5 py-1 rounded font-bold tracking-wide uppercase ${liveRecommendation.color}`}>
-                    {liveRecommendation.label}
+                  <span className="text-xs font-semibold text-slate-400">Algorithm Recommendation</span>
+                  <span className={`text-xs px-2.5 py-1 rounded font-bold tracking-wide uppercase ${recColor}`}>
+                    {liveRecommendation.recommendation.replace(/_/g, " ")}
                   </span>
                 </div>
                 <p className="text-slate-300 text-xs leading-relaxed">
                   {liveRecommendation.rationale}
                 </p>
-                <p className="text-[10px] text-slate-500 italic pt-1">
-                  ⚠ Research guidance only. Never represented as a guarantee of sales, conversion, or store revenue.
-                </p>
+
+                {/* Explicit Researcher Decision Selector */}
+                <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-slate-400">
+                      Researcher Decision (Override/Confirmation):
+                    </label>
+                    <select
+                      value={userDecision}
+                      onChange={(e) => setUserDecision(e.target.value as any)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs font-semibold"
+                    >
+                      <option value="">(Default: Follow Algorithm)</option>
+                      <option value="READY_FOR_SMALL_TEST">READY FOR SMALL TEST</option>
+                      <option value="RESEARCH_MORE">RESEARCH MORE</option>
+                      <option value="REJECTED">REJECTED</option>
+                    </select>
+                  </div>
+                  <span className="text-[10px] text-slate-500 italic block">
+                    The algorithmic recommendation is computed from verified gates. Your decision is preserved separately for research accountability.
+                  </span>
+                </div>
               </div>
+
+              {/* Historical Decisions / Scenario Scenarios */}
+              {linkedProduct?.history && linkedProduct.history.length > 0 && (
+                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5">
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                    Scenario Audit Trail ({linkedProduct.history.length} logged decision{linkedProduct.history.length !== 1 ? "s" : ""})
+                  </span>
+                  <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                    {linkedProduct.history.map((h, i) => (
+                      <div key={h.id || i} className="text-[10px] p-1.5 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                        <span className="font-semibold text-slate-300">{h.decision}</span>
+                        <span className="text-slate-500 font-mono">
+                          {new Date(h.decidedAt || h.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Notes & Save Button */}
               <div className="space-y-2">

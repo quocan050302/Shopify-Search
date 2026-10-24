@@ -169,10 +169,11 @@ export async function getAdvertisementDetailViewModel(adId: string): Promise<AdD
           : "UNKNOWN",
       confidence: o.confidence,
     })),
+    // Rule 32: Do not classify MetaAdsCollector as OFFICIAL_PROVIDER solely from an ad's VERIFIED confidence
     sourceReliability:
-      ad.dataConfidence === "VERIFIED"
+      ad.dataSource?.name === "META_GRAPH_API" || ad.dataSource?.name === "TIKTOK_BUSINESS_API"
         ? "OFFICIAL_PROVIDER"
-        : ad.dataConfidence === "OBSERVED"
+        : ad.dataConfidence === "VERIFIED" || ad.dataConfidence === "OBSERVED"
         ? "USER_IMPORT"
         : "UNKNOWN",
   });
@@ -238,13 +239,24 @@ export async function getAdvertisementDetailViewModel(adId: string): Promise<AdD
   const productRecord = primaryLink?.product;
 
   if (productRecord) {
-    const decisionRecord =
-      ad.researchDecisions?.[0] ||
-      productRecord.researchDecisions?.[0] ||
-      null;
+    // Preserve scenario history: query all decisions for product and ad
+    const allDecisions = await prisma.researchDecision.findMany({
+      where: {
+        OR: [
+          { adId: ad.id, productId: productRecord.id },
+          { productId: productRecord.id },
+          { adId: ad.id },
+        ],
+      },
+      orderBy: { decidedAt: "desc" },
+    });
+
+    const decisionRecord = allDecisions[0] || null;
 
     let economics: ProductEconomics | null = null;
     let checklist: ResearchChecklist | null = null;
+    let algorithmRecommendation: "READY_FOR_SMALL_TEST" | "RESEARCH_MORE" | "REJECTED" | null = null;
+    let userDecision: "READY_FOR_SMALL_TEST" | "RESEARCH_MORE" | "REJECTED" | null = null;
 
     if (decisionRecord?.notes) {
       try {
@@ -254,6 +266,12 @@ export async function getAdvertisementDetailViewModel(adId: string): Promise<AdD
         }
         if (parsedNotes.checklist) {
           checklist = parsedNotes.checklist;
+        }
+        if (parsedNotes.algorithmRecommendation) {
+          algorithmRecommendation = parsedNotes.algorithmRecommendation;
+        }
+        if (parsedNotes.userDecision) {
+          userDecision = parsedNotes.userDecision;
         }
       } catch {}
     }
@@ -277,7 +295,9 @@ export async function getAdvertisementDetailViewModel(adId: string): Promise<AdD
         : null,
       economics,
       checklist,
-      decision: decisionRecord?.decision ?? null,
+      algorithmRecommendation,
+      userDecision,
+      decision: (userDecision || decisionRecord?.decision || null) as any,
       notes: decisionRecord?.notes ?? null,
       priceHistory: (productRecord.priceHistory || []).map((p) => ({
         id: p.id,
@@ -285,6 +305,13 @@ export async function getAdvertisementDetailViewModel(adId: string): Promise<AdD
         currency: p.currency,
         observedAt: p.observedAt.toISOString(),
         source: p.source,
+      })),
+      history: allDecisions.map((d) => ({
+        id: d.id,
+        decision: d.decision as any,
+        notes: d.notes,
+        decidedAt: d.decidedAt.toISOString(),
+        createdAt: d.decidedAt.toISOString(),
       })),
     };
   }

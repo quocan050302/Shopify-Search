@@ -51,24 +51,48 @@ export interface AdViewModel {
   isSyntheticQuarantine?: boolean;
 }
 
+export type MissingCostState =
+  | "COMPLETE"
+  | "MISSING_SELLING_PRICE"
+  | "MISSING_SUPPLIER_COST"
+  | "MISSING_SHIPPING_AND_FEES"
+  | "MISSING_ECONOMICS";
+
 export interface ProductEconomics {
   observedSellingPrice: number | null;
   estimatedSupplierCost: number | null;
   shippingCost: number | null;
   platformFees: number | null;
   returnAllowancePercent: number | null;
+  targetProfitPerUnit?: number | null;
   estimatedContributionMargin: number | null;
+  contributionMargin?: number | null;
   breakEvenCPA: number | null;
-  sourceStatus: "USER_ENTERED" | "STOREFRONT_VERIFIED" | "UNVERIFIED";
+  breakEvenROAS: number | null;
+  targetCPA?: number | null;
+  sourceStatus: "USER_ENTERED" | "STOREFRONT_VERIFIED" | "UNVERIFIED" | "HYPOTHETICAL";
+  costVerificationSource?: "USER_ESTIMATE" | "SUPPLIER_INVOICE" | "USER_VERIFIED_QUOTE" | "UNVERIFIED" | string | null;
+  missingCostState: MissingCostState;
+  hasAssumedZeroShipping: boolean;
+  hasAssumedZeroFees: boolean;
+  isConfirmedByUser: boolean;
 }
 
+export type ChecklistDemandState = "VERIFIED" | "UNCONFIRMED" | "UNKNOWN";
+export type ChecklistCompetitionState = "LOW" | "MODERATE" | "HIGH" | "SATURATED" | "UNKNOWN";
+export type ChecklistCreativeState = "STRONG" | "MODERATE" | "WEAK" | "UNKNOWN";
+export type ChecklistDifferentiationState = "VIABLE" | "NOT_VIABLE" | "UNKNOWN";
+export type ChecklistDeliveryState = "CONFIRMED" | "HIGH_RISK" | "UNKNOWN";
+export type ChecklistReturnRiskState = "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+
 export interface ResearchChecklist {
-  demandEvidence: boolean;
-  competitionLevel: "LOW" | "MODERATE" | "HIGH" | "SATURATED";
-  creativeAppeal: "STRONG" | "MODERATE" | "WEAK";
-  differentiationFeasibility: boolean;
-  deliveryFeasibility: boolean;
-  returnRisk: "LOW" | "MEDIUM" | "HIGH";
+  demandEvidence: ChecklistDemandState | "UNVERIFIED";
+  competitionLevel: ChecklistCompetitionState;
+  creativeAppeal: ChecklistCreativeState;
+  differentiationFeasibility: ChecklistDifferentiationState | "UNCERTAIN";
+  deliveryFeasibility: ChecklistDeliveryState | "UNCERTAIN";
+  returnRisk: ChecklistReturnRiskState;
+  demandEvidenceSource?: string | null;
   recommendation: "RESEARCH_MORE" | "READY_FOR_SMALL_TEST" | "REJECTED";
   recommendationRationale: string;
 }
@@ -142,8 +166,17 @@ export interface AdLinkedProductViewModel {
   } | null;
   economics: ProductEconomics | null;
   checklist: ResearchChecklist | null;
-  decision: "RESEARCH_MORE" | "READY_FOR_SMALL_TEST" | "REJECTED" | "RESEARCHING" | string | null;
+  algorithmRecommendation: "RESEARCH_MORE" | "READY_FOR_SMALL_TEST" | "REJECTED" | null;
+  userDecision: "RESEARCHING" | "SHORTLISTED" | "TEST_CANDIDATE" | "REJECTED" | "ARCHIVED" | string | null;
+  decision?: "READY_FOR_SMALL_TEST" | "RESEARCH_MORE" | "REJECTED" | string | null;
   notes: string | null;
+  history?: Array<{
+    id?: string;
+    decision: string;
+    decidedAt?: string;
+    createdAt?: string;
+    notes: string | null;
+  }>;
   priceHistory: Array<{
     id: string;
     price: number;
