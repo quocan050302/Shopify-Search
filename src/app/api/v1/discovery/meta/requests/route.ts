@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { discoveryOrchestrator } from "@/services/discovery/discoveryOrchestrator";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
 
 const CreateMetaRequestSchema = z.object({
   workspaceId: z.string().optional(),
@@ -17,18 +21,33 @@ const CreateMetaRequestSchema = z.object({
 /**
  * POST /api/v1/discovery/meta/requests
  * Creates a new Meta Ad Library research job executed locally by meta-ads-collector.
+ * Scoped strictly to the authenticated principal's authorized workspace.
  * Returns HTTP 202 Accepted with the pending run ID.
  */
 export async function POST(request: NextRequest) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const body = await request.json();
     const validated = CreateMetaRequestSchema.parse(body);
 
-    const defaultWorkspace = await prisma.workspace.findFirst({ select: { id: true } });
-    const workspaceId = validated.workspaceId || defaultWorkspace?.id || "default-workspace";
+    let targetWorkspaceId = context.workspaceId;
+    if (validated.workspaceId && validated.workspaceId !== context.workspaceId) {
+      if (context.principal?.allowedWorkspaceIds.includes(validated.workspaceId)) {
+        targetWorkspaceId = validated.workspaceId;
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "UNAUTHORIZED_WORKSPACE",
+            message: `Principal does not have authorization for workspace '${validated.workspaceId}'.`,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const job = await discoveryOrchestrator.createDiscoveryJob({
-      workspaceId,
+      workspaceId: targetWorkspaceId,
       platform: "META",
       providerId: "meta-ads-collector",
       market: validated.market.toUpperCase(),
@@ -55,11 +74,22 @@ export async function POST(request: NextRequest) {
         provider: "meta-ads-collector",
         market: validated.market.toUpperCase(),
         requestedLimit: validated.requestedLimit,
+        workspaceId: targetWorkspaceId,
         createdAt: new Date().toISOString(),
       },
       { status: 202 }
     );
   } catch (err: unknown) {
+    if (err instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: err.code,
+          message: err.message,
+        },
+        { status: err.statusCode }
+      );
+    }
     if (err instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -84,16 +114,18 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/v1/discovery/meta/requests
- * Lists historical and active Meta discovery runs for the authorized workspace.
+ * Lists historical and active Meta discovery runs strictly for the authorized workspace.
  */
 export async function GET(request: NextRequest) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
 
     const where: any = {
+      workspaceId: context.workspaceId,
       providerId: { in: ["meta-ads-collector", "muse-ad-library"] },
     };
 
@@ -125,6 +157,7 @@ export async function GET(request: NextRequest) {
       return {
         id: r.id,
         jobId: r.jobId,
+        workspaceId: r.workspaceId,
         providerId: r.providerId,
         status: r.status,
         keywords: parsedQuery.keywords || [],
@@ -154,6 +187,16 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err: unknown) {
+    if (err instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: err.code,
+          message: err.message,
+        },
+        { status: err.statusCode }
+      );
+    }
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       {

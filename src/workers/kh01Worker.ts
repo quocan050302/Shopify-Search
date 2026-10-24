@@ -382,11 +382,13 @@ export async function acquireResearchSlot(
     const now = Date.now();
     const isLeaseActive = meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() >= now;
 
-    // Task 084: Prevent arbitrary reassignment.
-    // If the job is RUNNING under another worker with an unexpired active lease, reject takeover!
-    if (job.status === "RUNNING") {
-      if (meta.workerId && meta.workerId !== workerId && isLeaseActive) {
-        return null;
+    // Task 084 & Section 30: Prevent arbitrary reassignment and same-worker-ID claim hijacking.
+    // If the job is RUNNING under an unexpired active lease, reject takeover if workerId OR claimToken mismatch!
+    if (job.status === "RUNNING" && isLeaseActive) {
+      if (meta.workerId) {
+        if (meta.workerId !== workerId || (meta.claimToken && meta.claimToken !== claimToken)) {
+          return null;
+        }
       }
     }
 
@@ -665,102 +667,123 @@ export async function persistKh01Heartbeat(
  */
 export async function claimPendingKh01Job(workerId: string = WORKER_ID): Promise<ClaimedKh01Job | null> {
   const maxConcurrency = getKh01MaxConcurrency();
+  const maxAttempts = 5;
 
-  return await prisma.$transaction(async (tx) => {
-    // 1. Enforce global research capacity across all workers sharing this database
-    const runningJobs = await tx.syncJob.findMany({
-      where: {
-        jobType: "KH01_LANDING_PAGE_RESEARCH",
-        status: "RUNNING",
-      },
-    });
-
-    const nowMs = Date.now();
-    const activeUnexpiredCount = runningJobs.filter((job) => {
-      try {
-        const meta = JSON.parse(job.resultJson || "{}");
-        return meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() >= nowMs;
-      } catch {
-        return false;
-      }
-    }).length;
-
-    if (activeUnexpiredCount >= maxConcurrency) {
-      // Global concurrency limit reached. No worker can claim additional heavy jobs.
-      return null;
-    }
-
-    // 2. Select oldest pending job
-    const pending = await tx.syncJob.findFirst({
-      where: {
-        jobType: "KH01_LANDING_PAGE_RESEARCH",
-        status: "PENDING",
-      },
-      orderBy: { createdAt: "asc" },
-    });
-
-    if (!pending) {
-      return null;
-    }
-
-    // 3. Validate payload before claiming
-    let existingPayload: Kh01JobInput;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const raw = JSON.parse(pending.resultJson || "{}");
-      existingPayload = assertValidJobPayload(raw);
-    } catch (err: any) {
-      // Malformed input must not be claimed; fail it safely
-      await tx.syncJob.update({
-        where: { id: pending.id },
-        data: {
-          status: "FAILED",
-          completedAt: new Date(),
-          errorMessage: `Invalid job payload: ${err?.message || "parse error"}`,
-        },
-      });
-      return null;
-    }
+      return await prisma.$transaction(async (tx) => {
+        // 1. Enforce global research capacity across all workers sharing this database
+        const runningJobs = await tx.syncJob.findMany({
+          where: {
+            jobType: "KH01_LANDING_PAGE_RESEARCH",
+            status: "RUNNING",
+          },
+        });
 
-    // 4. Atomically transition from PENDING to RUNNING with worker claim token & monotonic fencing
-    const claimToken = crypto.randomUUID();
-    const attemptNumber = (existingPayload.attemptNumber || 0) + 1;
-    const fencingVersion = (existingPayload.fencingVersion || 0) + 1;
-    const now = new Date();
-    const leaseExpiresAt = new Date(now.getTime() + KH01_LEASE_DURATION_MS);
+        const nowMs = Date.now();
+        const activeUnexpiredCount = runningJobs.filter((job) => {
+          try {
+            const meta = JSON.parse(job.resultJson || "{}");
+            return meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() >= nowMs;
+          } catch {
+            return false;
+          }
+        }).length;
 
-    const updated = await tx.syncJob.update({
-      where: {
-        id: pending.id,
-        status: "PENDING", // Atomic guard
-      },
-      data: {
-        status: "RUNNING",
-        startedAt: now,
-        resultJson: JSON.stringify({
-          ...existingPayload,
+        if (activeUnexpiredCount >= maxConcurrency) {
+          // Global concurrency limit reached. No worker can claim additional heavy jobs.
+          return null;
+        }
+
+        // 2. Select oldest pending job
+        const pending = await tx.syncJob.findFirst({
+          where: {
+            jobType: "KH01_LANDING_PAGE_RESEARCH",
+            status: "PENDING",
+          },
+          orderBy: { createdAt: "asc" },
+        });
+
+        if (!pending) {
+          return null;
+        }
+
+        // 3. Validate payload before claiming
+        let existingPayload: Kh01JobInput;
+        try {
+          const raw = JSON.parse(pending.resultJson || "{}");
+          existingPayload = assertValidJobPayload(raw);
+        } catch (err: any) {
+          // Malformed input must not be claimed; fail it safely
+          await tx.syncJob.update({
+            where: { id: pending.id },
+            data: {
+              status: "FAILED",
+              completedAt: new Date(),
+              errorMessage: `Invalid job payload: ${err?.message || "parse error"}`,
+            },
+          });
+          return null;
+        }
+
+        // 4. Atomically transition from PENDING to RUNNING with worker claim token & monotonic fencing
+        const claimToken = crypto.randomUUID();
+        const attemptNumber = (existingPayload.attemptNumber || 0) + 1;
+        const fencingVersion = (existingPayload.fencingVersion || 0) + 1;
+        const now = new Date();
+        const leaseExpiresAt = new Date(now.getTime() + KH01_LEASE_DURATION_MS);
+
+        const updated = await tx.syncJob.update({
+          where: {
+            id: pending.id,
+            status: "PENDING", // Atomic guard
+          },
+          data: {
+            status: "RUNNING",
+            startedAt: now,
+            resultJson: JSON.stringify({
+              ...existingPayload,
+              workerId,
+              claimToken,
+              fencingVersion,
+              attemptNumber,
+              leaseExpiresAt: leaseExpiresAt.toISOString(),
+              lastHeartbeatAt: now.toISOString(),
+            }),
+          },
+        });
+
+        return {
+          id: updated.id,
+          workspaceId: updated.workspaceId,
+          jobType: updated.jobType,
+          status: updated.status,
           workerId,
           claimToken,
           fencingVersion,
           attemptNumber,
           leaseExpiresAt: leaseExpiresAt.toISOString(),
-          lastHeartbeatAt: now.toISOString(),
-        }),
-      },
-    });
-
-    return {
-      id: updated.id,
-      workspaceId: updated.workspaceId,
-      jobType: updated.jobType,
-      status: updated.status,
-      workerId,
-      claimToken,
-      fencingVersion,
-      attemptNumber,
-      leaseExpiresAt: leaseExpiresAt.toISOString(),
-      payload: existingPayload,
-    };
-  });
+          payload: existingPayload,
+        };
+      }, {
+        timeout: 10000,
+        maxWait: 10000,
+      });
+    } catch (err: any) {
+      const isLocked =
+        err?.message?.includes("SQLITE_BUSY") ||
+        err?.message?.includes("database is locked") ||
+        err?.message?.includes("Operation has timed out") ||
+        err?.code === "P2034" ||
+        err?.code === "P2028";
+      if (isLocked && attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, 40 + Math.random() * 40));
+        continue;
+      }
+      throw err;
+    }
+  }
+  return null;
 }
 
 /**

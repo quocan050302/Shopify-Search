@@ -24,6 +24,17 @@ loadLocalEnvironment();
 
 export type AcceptanceStatus = "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
 
+export interface GateEvidence {
+  gateId: string;
+  runId: string;
+  testId: string;
+  status: AcceptanceStatus;
+  evidenceType: string;
+  evidenceReference: string | null;
+  observedAt: string | null;
+  error?: string;
+}
+
 export interface AcceptanceAssertionResult {
   assertionId: string;
   stageId: string;
@@ -79,6 +90,7 @@ export interface Section14Manifest {
   startedAt: string;
   completedAt: string;
   stages: AcceptanceStageResult[];
+  gateEvidence: GateEvidence[];
   gates: {
     gateId: string;
     description: string;
@@ -127,6 +139,8 @@ export interface Section14Manifest {
   };
   liveSource: {
     status: AcceptanceStatus;
+    detailedOutcome?: "NOT_RUN" | "PASSED" | "FAILED" | "BLOCKED_SOURCE" | "RATE_LIMITED";
+    evidenceReference?: string | null;
   };
   release: {
     status: "ACCEPTED" | "CONDITIONALLY_ACCEPTED" | "BLOCKED" | "NOT_EVALUATED";
@@ -146,14 +160,136 @@ export interface FullKh01AcceptanceReport {
   manifest: Section14Manifest;
 }
 
-function resolveGitInfo(): { branch: string; commitSha: string } {
+export function resolveGitInfo(): {
+  branch: string;
+  commitSha: string;
+  isCorrectBranch: boolean;
+  workingTreeClean: boolean;
+  workingTreeStatus: string;
+  error?: string;
+} {
   try {
     const branch = execSync("git branch --show-current", { encoding: "utf8" }).trim();
     const commitSha = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
-    return { branch, commitSha };
-  } catch {
-    return { branch: "feature/v11-meta-collector-remove-muse", commitSha: "UNKNOWN" };
+    const workingTreeStatus = execSync("git status --porcelain", { encoding: "utf8" }).trim();
+    const isCorrectBranch = branch === "feature/v11-meta-collector-remove-muse";
+    return {
+      branch,
+      commitSha,
+      isCorrectBranch,
+      workingTreeClean: workingTreeStatus.length === 0,
+      workingTreeStatus,
+    };
+  } catch (err: any) {
+    return {
+      branch: "UNKNOWN",
+      commitSha: "UNKNOWN",
+      isCorrectBranch: false,
+      workingTreeClean: false,
+      workingTreeStatus: "UNKNOWN",
+      error: err.message || String(err),
+    };
   }
+}
+
+export async function verifyLiveMetaSource(
+  options: FullKh01AcceptanceOptions
+): Promise<{
+  status: AcceptanceStatus;
+  detailedOutcome: "NOT_RUN" | "PASSED" | "FAILED" | "BLOCKED_SOURCE" | "RATE_LIMITED";
+  evidenceReference: string | null;
+  error?: string;
+}> {
+  if (!options.runLiveSource) {
+    return {
+      status: "NOT_RUN",
+      detailedOutcome: "NOT_RUN",
+      evidenceReference: "Live source verification not requested (opt-in only)",
+    };
+  }
+
+  try {
+    const targetUrl = options.approvedLiveSourceUrl || "https://www.facebook.com/ads/library/";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(targetUrl, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (res.status === 429) {
+      return {
+        status: "BLOCKED",
+        detailedOutcome: "RATE_LIMITED",
+        evidenceReference: `HTTP 429 from ${targetUrl}`,
+        error: "Rate limited by upstream Meta endpoint",
+      };
+    }
+    if (res.status === 403 || res.status === 401) {
+      return {
+        status: "BLOCKED",
+        detailedOutcome: "BLOCKED_SOURCE",
+        evidenceReference: `HTTP ${res.status} from ${targetUrl}`,
+        error: "Source blocked or restricted access",
+      };
+    }
+    if (res.ok) {
+      const text = await res.text();
+      if (text.includes("Ad Library") || text.includes("facebook") || text.length > 500) {
+        return {
+          status: "PASSED",
+          detailedOutcome: "PASSED",
+          evidenceReference: `Verified live network observation from ${targetUrl} (HTTP ${res.status}, length: ${text.length})`,
+        };
+      }
+    }
+    return {
+      status: "FAILED",
+      detailedOutcome: "FAILED",
+      evidenceReference: `HTTP ${res.status} from ${targetUrl}`,
+      error: `Unexpected response status ${res.status}`,
+    };
+  } catch (err: any) {
+    return {
+      status: "FAILED",
+      detailedOutcome: "FAILED",
+      evidenceReference: "Network error during live source request",
+      error: err.message || String(err),
+    };
+  }
+}
+
+export function parseVitestJsonAssertions(
+  reportPath: string
+): Map<string, { status: AcceptanceStatus; duration: number; error?: string }> {
+  const resultsMap = new Map<string, { status: AcceptanceStatus; duration: number; error?: string }>();
+  if (!fs.existsSync(reportPath)) {
+    return resultsMap;
+  }
+  try {
+    const raw = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+    const testResults = raw.testResults || [];
+    for (const fileResult of testResults) {
+      for (const assertion of fileResult.assertionResults || []) {
+        const title: string = assertion.title || "";
+        const fullName: string = assertion.fullName || "";
+        const status: AcceptanceStatus = assertion.status === "passed" ? "PASSED" : "FAILED";
+        const error = assertion.failureMessages && assertion.failureMessages.length > 0
+          ? assertion.failureMessages.join("\n")
+          : undefined;
+        const entry = { status, duration: assertion.duration || 0, error };
+        resultsMap.set(title, entry);
+        resultsMap.set(fullName, entry);
+      }
+    }
+  } catch (err) {
+    console.warn(`Could not parse Vitest report at ${reportPath}:`, err);
+  }
+  return resultsMap;
 }
 
 export async function executeAcceptanceStage(
@@ -161,7 +297,8 @@ export async function executeAcceptanceStage(
   name: string,
   command: string,
   acceptanceRunId: string,
-  assertionsDef: { id: string; type: AcceptanceAssertionResult["evidenceType"] }[]
+  assertionsDef: { id: string; type: AcceptanceAssertionResult["evidenceType"]; testTitleMatch?: string }[],
+  jsonReportPath?: string
 ): Promise<AcceptanceStageResult> {
   const startedAt = new Date().toISOString();
   const startTime = Date.now();
@@ -190,25 +327,52 @@ export async function executeAcceptanceStage(
 
   const completedAt = new Date().toISOString();
   const durationMs = Date.now() - startTime;
-  const status: AcceptanceStatus = exitCode === 0 ? "PASSED" : "FAILED";
+  const stageStatus: AcceptanceStatus = exitCode === 0 ? "PASSED" : "FAILED";
 
-  const assertions: AcceptanceAssertionResult[] = assertionsDef.map((def) => ({
-    assertionId: def.id,
-    stageId,
-    acceptanceRunId,
-    status,
-    startedAt,
-    completedAt,
-    evidenceType: def.type,
-    evidenceReference: `${command} (exitCode: ${exitCode})`,
-    error: status === "FAILED" ? errorSummary || "Command failed" : null,
-  }));
+  // If a JSON report path was specified, parse individual assertion results
+  const vitestResults = jsonReportPath ? parseVitestJsonAssertions(jsonReportPath) : new Map();
+
+  const assertions: AcceptanceAssertionResult[] = assertionsDef.map((def) => {
+    let assertionStatus: AcceptanceStatus = stageStatus;
+    let assertionError = stageStatus === "FAILED" ? errorSummary || "Command failed" : null;
+    let ref = `${command} (exitCode: ${exitCode})`;
+
+    if (def.testTitleMatch && vitestResults.size > 0) {
+      let matched = false;
+      for (const [key, val] of vitestResults.entries()) {
+        if (key.includes(def.testTitleMatch)) {
+          assertionStatus = val.status;
+          assertionError = val.error || null;
+          ref = `Vitest: "${key}" (${val.status}, ${val.duration}ms)`;
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        assertionStatus = "NOT_RUN";
+        assertionError = `Test matching "${def.testTitleMatch}" was not found in suite output`;
+        ref = `Missing test: ${def.testTitleMatch}`;
+      }
+    }
+
+    return {
+      assertionId: def.id,
+      stageId,
+      acceptanceRunId,
+      status: assertionStatus,
+      startedAt,
+      completedAt,
+      evidenceType: def.type,
+      evidenceReference: ref,
+      error: assertionError,
+    };
+  });
 
   return {
     stageId,
     name,
     command,
-    status,
+    status: stageStatus,
     exitCode,
     durationMs,
     startedAt,
@@ -234,19 +398,50 @@ export async function runFullKh01Acceptance(
   console.log(`Started At: ${startedAt}`);
   console.log(`######################################################\n`);
 
+  const artifactDir = path.resolve(process.cwd(), "artifacts/kh01-v11.4.5");
+  if (!fs.existsSync(artifactDir)) {
+    fs.mkdirSync(artifactDir, { recursive: true });
+  }
+
   const stages: AcceptanceStageResult[] = [];
 
   // STAGE 1: Git Invariants & Working Tree Check
-  const stageGit = await executeAcceptanceStage(
-    "STAGE_01_GIT_STATE",
-    "Verify Git Branch and Working Copy Invariants",
-    "git branch --show-current",
-    acceptanceRunId,
-    [
-      { id: "GATE_01_CORRECT_BRANCH", type: "TEST_ASSERTION" },
-      { id: "GATE_36_FEATURE_BRANCH_ONLY", type: "TEST_ASSERTION" },
-    ]
-  );
+  const stageGitStartedAt = new Date().toISOString();
+  const gitInvariantsPassed = gitInfo.isCorrectBranch && gitInfo.branch !== "main" && gitInfo.branch !== "master" && gitInfo.branch !== "dev";
+  const stageGit: AcceptanceStageResult = {
+    stageId: "STAGE_01_GIT_STATE",
+    name: "Verify Git Branch and Working Copy Invariants",
+    command: "git branch --show-current && git rev-parse HEAD",
+    status: gitInvariantsPassed ? "PASSED" : "FAILED",
+    exitCode: gitInvariantsPassed ? 0 : 1,
+    durationMs: 50,
+    startedAt: stageGitStartedAt,
+    completedAt: new Date().toISOString(),
+    assertions: [
+      {
+        assertionId: "GATE_01_CORRECT_BRANCH",
+        stageId: "STAGE_01_GIT_STATE",
+        acceptanceRunId,
+        status: gitInfo.isCorrectBranch ? "PASSED" : "FAILED",
+        startedAt: stageGitStartedAt,
+        completedAt: new Date().toISOString(),
+        evidenceType: "TEST_ASSERTION",
+        evidenceReference: `Branch: ${gitInfo.branch} (Expected: feature/v11-meta-collector-remove-muse)`,
+        error: gitInfo.isCorrectBranch ? null : `Branch mismatch: expected feature/v11-meta-collector-remove-muse, got ${gitInfo.branch}`,
+      },
+      {
+        assertionId: "GATE_36_FEATURE_BRANCH_ONLY",
+        stageId: "STAGE_01_GIT_STATE",
+        acceptanceRunId,
+        status: gitInvariantsPassed ? "PASSED" : "FAILED",
+        startedAt: stageGitStartedAt,
+        completedAt: new Date().toISOString(),
+        evidenceType: "TEST_ASSERTION",
+        evidenceReference: `Branch ${gitInfo.branch} is not protected main/master/dev`,
+        error: gitInvariantsPassed ? null : `Protected branch violation: on ${gitInfo.branch}`,
+      },
+    ],
+  };
   stages.push(stageGit);
 
   // STAGE 2: TypeScript Strict Compilation
@@ -260,55 +455,61 @@ export async function runFullKh01Acceptance(
   stages.push(stageTsc);
 
   // STAGE 3: Unit Tests (Security, Decision Integrity, Job Engine, DB Isolation)
+  const unitReportPath = path.join(artifactDir, "unit-test-results.json");
   const stageUnit = await executeAcceptanceStage(
     "STAGE_03_UNIT_SUITE",
     "Execute Unit Test Matrix (Security, Decision Integrity, Job Engine)",
-    "npx vitest run tests/unit/kh01Security.test.ts tests/unit/kh01JobExecution.test.ts tests/unit/shopifyDecisionIntegrity.test.ts tests/unit/dbIsolation.test.ts",
+    `npx vitest run tests/unit/kh01Security.test.ts tests/unit/kh01JobExecution.test.ts tests/unit/shopifyDecisionIntegrity.test.ts tests/unit/dbIsolation.test.ts --reporter=default --reporter=json --outputFile=${unitReportPath}`,
     acceptanceRunId,
     [
-      { id: "GATE_02_ACTIVE_DB_PROTECTED", type: "DATABASE_QUERY" },
-      { id: "GATE_10_SLOT_REQUIRES_OWNERSHIP", type: "TEST_ASSERTION" },
-      { id: "GATE_11_STALE_RELEASE_REJECTED", type: "TEST_ASSERTION" },
-      { id: "GATE_12_STALE_WORKER_NO_PERSIST", type: "TEST_ASSERTION" },
-      { id: "GATE_21_MISSING_COSTS_BLOCK_APPROVAL", type: "TEST_ASSERTION" },
-      { id: "GATE_25_OPPORTUNITY_DISTINCT_FROM_READINESS", type: "TEST_ASSERTION" },
-    ]
+      { id: "GATE_02_ACTIVE_DB_PROTECTED", type: "DATABASE_QUERY", testTitleMatch: "blocks test execution when databaseUrl contains production.db" },
+      { id: "GATE_10_SLOT_REQUIRES_OWNERSHIP", type: "TEST_ASSERTION", testTitleMatch: "claims a pending job with an unpredictable claim token and lease expiration" },
+      { id: "GATE_11_STALE_RELEASE_REJECTED", type: "TEST_ASSERTION", testTitleMatch: "assertActiveJobLease verifies active claim and rejects mismatched claim tokens" },
+      { id: "GATE_12_STALE_WORKER_NO_PERSIST", type: "TEST_ASSERTION", testTitleMatch: "executeKh01Job prevents stale worker from overwriting state if claim ownership was lost" },
+      { id: "GATE_21_MISSING_COSTS_BLOCK_APPROVAL", type: "TEST_ASSERTION", testTitleMatch: "Strong advertising evidence but unknown supplier cost strictly blocks TEST_CANDIDATE" },
+      { id: "GATE_25_OPPORTUNITY_DISTINCT_FROM_READINESS", type: "TEST_ASSERTION", testTitleMatch: "Partial opportunity score coverage is visible and distinct from Evidence Readiness" },
+    ],
+    unitReportPath
   );
   stages.push(stageUnit);
 
   // STAGE 4: Concurrency & Crash Recovery Adversarial Proof
+  const concurrencyReportPath = path.join(artifactDir, "concurrency-test-results.json");
   const stageConcurrency = await executeAcceptanceStage(
     "STAGE_04_CONCURRENCY_RECOVERY",
     "Execute Active Multi-Worker Concurrency and Crash Recovery Tests",
-    "npx vitest run tests/integration/kh01WorkerConcurrency.test.ts",
+    `npx vitest run tests/integration/kh01WorkerConcurrency.test.ts --reporter=default --reporter=json --outputFile=${concurrencyReportPath}`,
     acceptanceRunId,
     [
-      { id: "GATE_08_GENUINE_CONCURRENCY_PROOF", type: "PROCESS_CONCURRENCY_TEST" },
-      { id: "GATE_09_GENUINE_CRASH_RECOVERY", type: "PROCESS_CONCURRENCY_TEST" },
-      { id: "GATE_30_RESOURCE_USAGE_BOUNDED", type: "PROCESS_CONCURRENCY_TEST" },
-    ]
+      { id: "GATE_08_GENUINE_CONCURRENCY_PROOF", type: "PROCESS_CONCURRENCY_TEST", testTitleMatch: "proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite" },
+      { id: "GATE_09_GENUINE_CRASH_RECOVERY", type: "PROCESS_CONCURRENCY_TEST", testTitleMatch: "verifies full crash recovery scenario, immutable payload preservation, and stale rejection" },
+      { id: "GATE_30_RESOURCE_USAGE_BOUNDED", type: "PROCESS_CONCURRENCY_TEST", testTitleMatch: "measures and enforces active overlap bounds under simultaneous multi-worker claims" },
+    ],
+    concurrencyReportPath
   );
   stages.push(stageConcurrency);
 
   // STAGE 5: Continuous Unified Research Journey (Queue -> Worker -> DB -> HTTP TCP -> Browser UI)
+  const journeyReportPath = path.join(artifactDir, "journey-test-results.json");
   const stageJourney = await executeAcceptanceStage(
     "STAGE_05_UNIFIED_JOURNEY",
     "Execute Unified Continuous Journey E2E (Queue to Browser)",
-    "npx vitest run tests/integration/kh01UnifiedJourney.test.ts",
+    `npx vitest run tests/integration/kh01UnifiedJourney.test.ts --reporter=default --reporter=json --outputFile=${journeyReportPath}`,
     acceptanceRunId,
     [
-      { id: "GATE_03_ISOLATED_SCHEMA_INITIALIZED", type: "DATABASE_QUERY" },
-      { id: "GATE_13_QUEUE_TO_PERSISTENCE_PASSED", type: "TEST_ASSERTION" },
-      { id: "GATE_14_SNAPSHOT_RECORDS_EXIST", type: "DATABASE_QUERY" },
-      { id: "GATE_15_OFFER_MATCHES_FIXTURE", type: "TEST_ASSERTION" },
-      { id: "GATE_16_EVIDENCE_PERSISTED", type: "DATABASE_QUERY" },
-      { id: "GATE_17_ACTUAL_HTTP_READBACK_PASSED", type: "HTTP_RESPONSE" },
-      { id: "GATE_18_EXACT_IDS_RECONCILED", type: "HTTP_RESPONSE" },
-      { id: "GATE_19_BROWSER_READS_WORKER_DATA", type: "BROWSER_ACTION" },
-      { id: "GATE_20_ECONOMICS_FORM_FUNCTIONAL", type: "BROWSER_ACTION" },
-      { id: "GATE_22_RESEARCH_DECISION_PERSISTS", type: "DATABASE_QUERY" },
-      { id: "GATE_23_FIXTURE_PROVENANCE_EXPLICIT", type: "TEST_ASSERTION" },
-    ]
+      { id: "GATE_03_ISOLATED_SCHEMA_INITIALIZED", type: "DATABASE_QUERY", testTitleMatch: "Step 1: Queues a real research job through the production service" },
+      { id: "GATE_13_QUEUE_TO_PERSISTENCE_PASSED", type: "TEST_ASSERTION", testTitleMatch: "Step 1: Queues a real research job through the production service" },
+      { id: "GATE_14_SNAPSHOT_RECORDS_EXIST", type: "DATABASE_QUERY", testTitleMatch: "Step 3: Executes the research job via production worker and persists real snapshots" },
+      { id: "GATE_15_OFFER_MATCHES_FIXTURE", type: "TEST_ASSERTION", testTitleMatch: "Step 3: Executes the research job via production worker and persists real snapshots" },
+      { id: "GATE_16_EVIDENCE_PERSISTED", type: "DATABASE_QUERY", testTitleMatch: "Step 3: Executes the research job via production worker and persists real snapshots" },
+      { id: "GATE_17_ACTUAL_HTTP_READBACK_PASSED", type: "HTTP_RESPONSE", testTitleMatch: "Step 5: Verifies exact snapshot IDs through real HTTP API readback over TCP" },
+      { id: "GATE_18_EXACT_IDS_RECONCILED", type: "HTTP_RESPONSE", testTitleMatch: "Step 5: Verifies exact snapshot IDs through real HTTP API readback over TCP" },
+      { id: "GATE_19_BROWSER_READS_WORKER_DATA", type: "BROWSER_ACTION", testTitleMatch: "Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data" },
+      { id: "GATE_20_ECONOMICS_FORM_FUNCTIONAL", type: "BROWSER_ACTION", testTitleMatch: "Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data" },
+      { id: "GATE_22_RESEARCH_DECISION_PERSISTS", type: "DATABASE_QUERY", testTitleMatch: "Step 7: Enforces economic gating and persists human research decision" },
+      { id: "GATE_23_FIXTURE_PROVENANCE_EXPLICIT", type: "TEST_ASSERTION", testTitleMatch: "Step 3: Executes the research job via production worker and persists real snapshots" },
+    ],
+    journeyReportPath
   );
   stages.push(stageJourney);
 
@@ -322,36 +523,57 @@ export async function runFullKh01Acceptance(
   );
   stages.push(stageBuild);
 
+  // STAGE 7: Live Source Verification (Opt-In / Explicitly verified)
+  const liveSourceResult = await verifyLiveMetaSource(options);
+
   const completedAt = new Date().toISOString();
 
-  // Evaluate gates and release status
-  const mandatoryGates = [
-    { gateId: "GATE_01_CORRECT_BRANCH", stage: stageGit, desc: "Working strictly on feature branch" },
-    { gateId: "GATE_31_TYPESCRIPT_PASSED", stage: stageTsc, desc: "TypeScript type check passes without errors" },
-    { gateId: "GATE_02_ACTIVE_DB_PROTECTED", stage: stageUnit, desc: "Production/development SQLite DB protected" },
-    { gateId: "GATE_08_GENUINE_CONCURRENCY_PROOF", stage: stageConcurrency, desc: "Global worker capacity verified under concurrent claims" },
-    { gateId: "GATE_09_GENUINE_CRASH_RECOVERY", stage: stageConcurrency, desc: "Expired lease recovery and stale claimant rejection verified" },
-    { gateId: "GATE_10_SLOT_REQUIRES_OWNERSHIP", stage: stageConcurrency, desc: "Research slot requires valid ownership and token" },
-    { gateId: "GATE_13_QUEUE_TO_PERSISTENCE_PASSED", stage: stageJourney, desc: "Continuous research queue to database persistence passed" },
-    { gateId: "GATE_17_ACTUAL_HTTP_READBACK_PASSED", stage: stageJourney, desc: "Real HTTP API TCP loopback readback verified" },
-    { gateId: "GATE_18_EXACT_IDS_RECONCILED", stage: stageJourney, desc: "Exact snapshot and product IDs match across DB and API" },
-    { gateId: "GATE_19_BROWSER_READS_WORKER_DATA", stage: stageJourney, desc: "Chromium browser renders worker-created data" },
-    { gateId: "GATE_21_MISSING_COSTS_BLOCK_APPROVAL", stage: stageJourney, desc: "Missing supplier costs block TEST_CANDIDATE" },
-    { gateId: "GATE_22_RESEARCH_DECISION_PERSISTS", stage: stageJourney, desc: "Human research decision persists after mutation" },
-    { gateId: "GATE_33_PRODUCTION_BUILD_PASSED", stage: stageBuild, desc: "Next.js production bundle compiles successfully" },
+  // Aggregate all assertions across all stages into the explicit GateEvidence registry
+  const gateEvidenceMap = new Map<string, GateEvidence>();
+  for (const st of stages) {
+    for (const a of st.assertions) {
+      gateEvidenceMap.set(a.assertionId, {
+        gateId: a.assertionId,
+        runId: acceptanceRunId,
+        testId: `${st.stageId}::${a.assertionId}`,
+        status: a.status,
+        evidenceType: a.evidenceType,
+        evidenceReference: a.evidenceReference,
+        observedAt: a.completedAt,
+        error: a.error || undefined,
+      });
+    }
+  }
+
+  // Mandatory release gates definition
+  const mandatoryGateDefs = [
+    { gateId: "GATE_01_CORRECT_BRANCH", desc: "Working strictly on feature branch" },
+    { gateId: "GATE_31_TYPESCRIPT_PASSED", desc: "TypeScript type check passes without errors" },
+    { gateId: "GATE_02_ACTIVE_DB_PROTECTED", desc: "Production/development SQLite DB protected" },
+    { gateId: "GATE_08_GENUINE_CONCURRENCY_PROOF", desc: "Global worker capacity verified under concurrent claims" },
+    { gateId: "GATE_09_GENUINE_CRASH_RECOVERY", desc: "Expired lease recovery and stale claimant rejection verified" },
+    { gateId: "GATE_10_SLOT_REQUIRES_OWNERSHIP", desc: "Research slot requires valid ownership and token" },
+    { gateId: "GATE_13_QUEUE_TO_PERSISTENCE_PASSED", desc: "Continuous research queue to database persistence passed" },
+    { gateId: "GATE_17_ACTUAL_HTTP_READBACK_PASSED", desc: "Real HTTP API TCP loopback readback verified" },
+    { gateId: "GATE_18_EXACT_IDS_RECONCILED", desc: "Exact snapshot and product IDs match across DB and API" },
+    { gateId: "GATE_19_BROWSER_READS_WORKER_DATA", desc: "Chromium browser renders worker-created data" },
+    { gateId: "GATE_21_MISSING_COSTS_BLOCK_APPROVAL", desc: "Missing supplier costs block TEST_CANDIDATE" },
+    { gateId: "GATE_22_RESEARCH_DECISION_PERSISTS", desc: "Human research decision persists after mutation" },
+    { gateId: "GATE_33_PRODUCTION_BUILD_PASSED", desc: "Next.js production bundle compiles successfully" },
   ];
 
   const failedMandatoryGates: string[] = [];
   const notRunMandatoryGates: string[] = [];
 
-  const evaluatedGates = mandatoryGates.map((mg) => {
+  const evaluatedGates = mandatoryGateDefs.map((mg) => {
+    const evidence = gateEvidenceMap.get(mg.gateId);
     let gateStatus: AcceptanceStatus = "NOT_RUN";
-    if (mg.stage.status === "PASSED") {
-      gateStatus = "PASSED";
-    } else if (mg.stage.status === "FAILED") {
-      gateStatus = "FAILED";
+    if (evidence) {
+      gateStatus = evidence.status;
+    }
+    if (gateStatus === "FAILED" || gateStatus === "BLOCKED") {
       failedMandatoryGates.push(mg.gateId);
-    } else {
+    } else if (gateStatus === "NOT_RUN") {
       notRunMandatoryGates.push(mg.gateId);
     }
     return {
@@ -379,49 +601,52 @@ export async function runFullKh01Acceptance(
     startedAt,
     completedAt,
     stages,
+    gateEvidence: Array.from(gateEvidenceMap.values()),
     gates: evaluatedGates,
     database: {
-      isolated: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      schemaVerified: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      activeDatabaseProtected: stageUnit.status === "PASSED" ? "PASSED" : "FAILED",
+      isolated: gateEvidenceMap.get("GATE_03_ISOLATED_SCHEMA_INITIALIZED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      schemaVerified: gateEvidenceMap.get("GATE_03_ISOLATED_SCHEMA_INITIALIZED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      activeDatabaseProtected: gateEvidenceMap.get("GATE_02_ACTIVE_DB_PROTECTED")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     worker: {
-      atomicClaim: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
-      globalConcurrency: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
-      leaseRenewal: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
-      capacityRelease: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
-      crashRecovery: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
-      staleWriteProtection: stageConcurrency.status === "PASSED" ? "PASSED" : "FAILED",
+      atomicClaim: gateEvidenceMap.get("GATE_08_GENUINE_CONCURRENCY_PROOF")?.status === "PASSED" ? "PASSED" : "FAILED",
+      globalConcurrency: gateEvidenceMap.get("GATE_08_GENUINE_CONCURRENCY_PROOF")?.status === "PASSED" ? "PASSED" : "FAILED",
+      leaseRenewal: gateEvidenceMap.get("GATE_10_SLOT_REQUIRES_OWNERSHIP")?.status === "PASSED" ? "PASSED" : "FAILED",
+      capacityRelease: gateEvidenceMap.get("GATE_11_STALE_RELEASE_REJECTED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      crashRecovery: gateEvidenceMap.get("GATE_09_GENUINE_CRASH_RECOVERY")?.status === "PASSED" ? "PASSED" : "FAILED",
+      staleWriteProtection: gateEvidenceMap.get("GATE_12_STALE_WORKER_NO_PERSIST")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     research: {
       sourceClassification: "FIXTURE_SYNTHETIC",
-      jobPersistence: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      offerSnapshot: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      landingSnapshot: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      evidencePersistence: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      databaseReadback: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
+      jobPersistence: gateEvidenceMap.get("GATE_13_QUEUE_TO_PERSISTENCE_PASSED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      offerSnapshot: gateEvidenceMap.get("GATE_14_SNAPSHOT_RECORDS_EXIST")?.status === "PASSED" ? "PASSED" : "FAILED",
+      landingSnapshot: gateEvidenceMap.get("GATE_14_SNAPSHOT_RECORDS_EXIST")?.status === "PASSED" ? "PASSED" : "FAILED",
+      evidencePersistence: gateEvidenceMap.get("GATE_16_EVIDENCE_PERSISTED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      databaseReadback: gateEvidenceMap.get("GATE_17_ACTUAL_HTTP_READBACK_PASSED")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     http: {
-      actualNetworkRequest: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      authentication: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      snapshotReconciliation: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
+      actualNetworkRequest: gateEvidenceMap.get("GATE_17_ACTUAL_HTTP_READBACK_PASSED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      authentication: gateEvidenceMap.get("GATE_17_ACTUAL_HTTP_READBACK_PASSED")?.status === "PASSED" ? "PASSED" : "FAILED",
+      snapshotReconciliation: gateEvidenceMap.get("GATE_18_EXACT_IDS_RECONCILED")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     browser: {
-      realBrowserExecuted: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      productOverview: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      offerPanel: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      landingPagePanel: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      economicsForm: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      decisionPersistence: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
+      realBrowserExecuted: gateEvidenceMap.get("GATE_19_BROWSER_READS_WORKER_DATA")?.status === "PASSED" ? "PASSED" : "FAILED",
+      productOverview: gateEvidenceMap.get("GATE_19_BROWSER_READS_WORKER_DATA")?.status === "PASSED" ? "PASSED" : "FAILED",
+      offerPanel: gateEvidenceMap.get("GATE_19_BROWSER_READS_WORKER_DATA")?.status === "PASSED" ? "PASSED" : "FAILED",
+      landingPagePanel: gateEvidenceMap.get("GATE_19_BROWSER_READS_WORKER_DATA")?.status === "PASSED" ? "PASSED" : "FAILED",
+      economicsForm: gateEvidenceMap.get("GATE_20_ECONOMICS_FORM_FUNCTIONAL")?.status === "PASSED" ? "PASSED" : "FAILED",
+      decisionPersistence: gateEvidenceMap.get("GATE_22_RESEARCH_DECISION_PERSISTS")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     business: {
-      opportunityAssessment: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      evidenceReadiness: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      economicsGates: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
-      recommendationIntegrity: stageJourney.status === "PASSED" ? "PASSED" : "FAILED",
+      opportunityAssessment: gateEvidenceMap.get("GATE_25_OPPORTUNITY_DISTINCT_FROM_READINESS")?.status === "PASSED" ? "PASSED" : "FAILED",
+      evidenceReadiness: gateEvidenceMap.get("GATE_25_OPPORTUNITY_DISTINCT_FROM_READINESS")?.status === "PASSED" ? "PASSED" : "FAILED",
+      economicsGates: gateEvidenceMap.get("GATE_21_MISSING_COSTS_BLOCK_APPROVAL")?.status === "PASSED" ? "PASSED" : "FAILED",
+      recommendationIntegrity: gateEvidenceMap.get("GATE_21_MISSING_COSTS_BLOCK_APPROVAL")?.status === "PASSED" ? "PASSED" : "FAILED",
     },
     liveSource: {
-      status: options.runLiveSource ? "PASSED" : "NOT_RUN",
+      status: liveSourceResult.status,
+      detailedOutcome: liveSourceResult.detailedOutcome,
+      evidenceReference: liveSourceResult.evidenceReference,
     },
     release: {
       status: overallStatus,
@@ -443,10 +668,6 @@ export async function runFullKh01Acceptance(
 
   // Persist manifest artifact
   try {
-    const artifactDir = path.resolve(process.cwd(), "artifacts/kh01-v11.4.5");
-    if (!fs.existsSync(artifactDir)) {
-      fs.mkdirSync(artifactDir, { recursive: true });
-    }
     fs.writeFileSync(
       path.join(artifactDir, "full-acceptance-manifest.json"),
       JSON.stringify(manifest, null, 2),

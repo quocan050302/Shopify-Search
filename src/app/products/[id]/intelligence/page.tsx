@@ -344,7 +344,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0e17] text-white flex flex-col">
+      <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -358,7 +358,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
   if (error || !overview) {
     return (
-      <div className="min-h-screen bg-[#0a0e17] text-white flex flex-col">
+      <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
         <Header />
         <div className="p-8 max-w-4xl mx-auto space-y-4">
           <Link href="/products" className="inline-flex items-center gap-2 text-xs text-indigo-400 hover:underline">
@@ -397,7 +397,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   } catch {}
 
   return (
-    <div className="min-h-screen bg-[#0a0e17] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
       <Header />
 
       <main className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">

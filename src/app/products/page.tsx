@@ -55,7 +55,7 @@ export default function ProductsPage() {
   }, [category]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#0a0e17]">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020]">
       <Header onImportSuccess={fetchProducts} />
 
       <main className="p-8 max-w-7xl mx-auto w-full space-y-6">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   LayoutGrid,
@@ -113,7 +114,7 @@ function EvidenceSourceBadge({ source }: { source?: string }) {
   );
 }
 
-export default function ExplorerPage() {
+function ExplorerContent() {
   const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAd, setSelectedAd] = useState<any | null>(null);
@@ -133,26 +134,33 @@ export default function ExplorerPage() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Read URL query parameters on initial mount
+  const searchParams = useSearchParams();
+
+  // Read URL query parameters reactively
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sp = new URLSearchParams(window.location.search);
-      const urlPlatform = sp.get("platform");
-      if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
-      const urlMode = sp.get("mode");
-      if (urlMode && (urlMode === "NEWLY_LAUNCHED" || urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
-        setResearchMode(urlMode as ResearchMode);
-      }
-      const urlLaunch = sp.get("launchWithinDays");
-      if (urlLaunch) setLaunchWithinDays(urlLaunch);
-      const urlSort = sp.get("sortBy");
-      if (urlSort && (urlSort === "launch_date" || urlSort === "first_seen" || urlSort === "score")) {
-        setSortBy(urlSort as any);
-      }
-      const urlRequestId = sp.get("requestId");
-      if (urlRequestId) setRequestId(urlRequestId);
+    if (!searchParams) return;
+    const urlPlatform = searchParams.get("platform");
+    if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
+
+    const urlMode = searchParams.get("mode");
+    if (urlMode && (urlMode === "NEWLY_LAUNCHED" || urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
+      setResearchMode(urlMode as ResearchMode);
     }
-  }, []);
+
+    const urlQuery = searchParams.get("query");
+    if (urlQuery) setSearchQuery(urlQuery);
+
+    const urlLaunch = searchParams.get("launchWithinDays");
+    if (urlLaunch) setLaunchWithinDays(urlLaunch);
+
+    const urlSort = searchParams.get("sortBy");
+    if (urlSort && (urlSort === "launch_date" || urlSort === "first_seen" || urlSort === "score")) {
+      setSortBy(urlSort as any);
+    }
+
+    const urlRequestId = searchParams.get("requestId");
+    if (urlRequestId) setRequestId(urlRequestId);
+  }, [searchParams]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -232,7 +240,7 @@ export default function ExplorerPage() {
   const modeInfo = MODE_CONFIG[researchMode];
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#0a0e17]">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020]">
       <Header onImportSuccess={fetchAds} />
 
       <main className="p-8 max-w-7xl mx-auto w-full space-y-6">
@@ -657,5 +665,19 @@ export default function ExplorerPage() {
         );
       })()}
     </div>
+  );
+}
+
+export default function ExplorerPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 min-h-screen bg-[#0B1020] flex items-center justify-center text-slate-400 text-sm">
+          Loading Ads Explorer...
+        </div>
+      }
+    >
+      <ExplorerContent />
+    </Suspense>
   );
 }

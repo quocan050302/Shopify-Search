@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AdViewModel } from "@/types/adViewModel";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
 
 /**
  * GET /api/v1/discovery/meta/requests/:id/ads
- * Returns ONLY the advertisements linked to that exact research run via DiscoveryRunAd.
+ * Returns ONLY the advertisements linked to that exact research run via DiscoveryRunAd,
+ * scoped strictly to the authorized workspace.
  * Excludes unrelated seed, test, or other-run records.
  */
 export async function GET(
@@ -12,6 +17,7 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const { id } = await props.params;
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -19,13 +25,24 @@ export async function GET(
 
     const run = await prisma.discoveryRun.findUnique({
       where: { id },
-      select: { id: true, providerId: true, status: true },
+      select: { id: true, workspaceId: true, providerId: true, status: true },
     });
 
     if (!run) {
       return NextResponse.json(
-        { success: false, error: "NOT_FOUND", message: `Discovery run '${id}' not found` },
+        { success: false, error: "NOT_FOUND", message: `Discovery run '${id}' not found.` },
         { status: 404 }
+      );
+    }
+
+    if (run.workspaceId !== context.workspaceId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "FORBIDDEN",
+          message: `Access denied: Discovery run '${id}' belongs to another workspace.`,
+        },
+        { status: 403 }
       );
     }
 
@@ -119,6 +136,12 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
+    if (err instanceof ResearchAuthError) {
+      return NextResponse.json(
+        { success: false, error: err.code, message: err.message },
+        { status: err.statusCode }
+      );
+    }
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       { success: false, error: "FAILED_TO_LOAD_RUN_ADS", message: msg },

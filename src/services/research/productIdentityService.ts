@@ -113,7 +113,15 @@ export async function extractProductIdentityCandidate(
 
   if (existingLinks.length > 0) {
     candidateTitle = existingLinks[0].title;
-    identityConfidence = "EXACT";
+    const topConfidence = existingLinks[0].confidence;
+    if (topConfidence === "CONFIRMED" || topConfidence === "VERIFIED" || topConfidence === "EXACT") {
+      identityConfidence = "EXACT";
+    } else {
+      identityConfidence = "PROBABLE";
+      unresolvedQuestions.push(
+        `Existing product link has confidence '${topConfidence}' and requires verified confirmation.`
+      );
+    }
   } else if (landingPageUrl && canonicalProductUrl) {
     // Check if landing page points to a specific product path
     const path = new URL(canonicalProductUrl).pathname;
@@ -226,6 +234,9 @@ export async function resolveOrCreateResearchProduct(
     if (!selection.targetProductId) {
       throw new Error("Missing targetProductId for LINK_EXISTING action.");
     }
+    // Strict tenant boundary check: assert that target product belongs to authorized workspace
+    await assertProductWorkspaceAccess(selection.targetProductId, context);
+
     return await prisma.$transaction(async (tx) => {
       const existingProduct = await tx.researchProduct.findUnique({
         where: { id: selection.targetProductId },

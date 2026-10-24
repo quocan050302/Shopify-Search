@@ -1,0 +1,44 @@
+/* SWAI V11.5 Central Design Token System */
+:root {
+  /* Surfaces & Backgrounds */
+  --swai-bg: #0B1020;
+  --swai-sidebar: #0D1424;
+  --swai-surface: #111827;
+  --swai-surface-elevated: #131D30;
+  --swai-surface-hover: #1A2640;
+  --swai-surface-active: #202F4E;
+
+  /* Borders */
+  --swai-border: #1E293B;
+  --swai-border-strong: #334155;
+  --swai-border-accent: #6366F1;
+
+  /* Text & Typography */
+  --swai-text-primary: #F4F7FC;
+  --swai-text-secondary: #A8B5CA;
+  --swai-text-muted: #64748B;
+  --swai-text-inverse: #0B1020;
+
+  /* Brand & Accents */
+  --swai-brand-primary: #6366F1;
+  --swai-brand-hover: #4F46E5;
+  --swai-brand-subtle: rgba(99, 102, 241, 0.15);
+
+  /* Semantic Status Colors */
+  --swai-success: #10B981;
+  --swai-success-subtle: rgba(16, 185, 129, 0.15);
+  --swai-warning: #F59E0B;
+  --swai-warning-subtle: rgba(245, 158, 11, 0.15);
+  --swai-danger: #EF4444;
+  --swai-danger-subtle: rgba(239, 68, 68, 0.15);
+  --swai-info: #3B82F6;
+  --swai-info-subtle: rgba(59, 130, 246, 0.15);
+
+  /* Focus & Focus Rings */
+  --swai-focus-ring: 0 0 0 2px rgba(99, 102, 241, 0.5);
+
+  /* Shadows */
+  --swai-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --swai-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --swai-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}

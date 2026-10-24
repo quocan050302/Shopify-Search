@@ -127,6 +127,16 @@ export async function createIsolatedTestDatabase(
     await initializeIsolatedDatabaseSchema(url, schemaSqlPath);
   }
 
+  // Configure WAL mode and busy timeout for safe multi-process concurrency
+  try {
+    const pragmaClient = createClient({ url });
+    await pragmaClient.execute("PRAGMA journal_mode = WAL;");
+    await pragmaClient.execute("PRAGMA busy_timeout = 10000;");
+    pragmaClient.close();
+  } catch {
+    // Ignore pragma error if unsupported
+  }
+
   const prisma = createPrismaClient(url);
 
   // Verify that all required tables exist

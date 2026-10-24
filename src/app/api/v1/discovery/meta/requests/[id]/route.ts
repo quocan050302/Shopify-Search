@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
 
 /**
  * GET /api/v1/discovery/meta/requests/:id
- * Retrieves detailed status, progress, checkpoints, and counters for a specific research run.
+ * Retrieves detailed status, progress, checkpoints, and counters for a specific research run
+ * within the authorized workspace.
  */
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const { id } = await props.params;
 
     const run = await prisma.discoveryRun.findUnique({
@@ -31,6 +37,18 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: "NOT_FOUND", message: `Discovery run '${id}' not found` },
         { status: 404 }
+      );
+    }
+
+    // Tenant isolation assertion: must match caller's active authorized workspace
+    if (run.workspaceId !== context.workspaceId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "FORBIDDEN",
+          message: `Access denied: Discovery run '${id}' belongs to another workspace.`,
+        },
+        { status: 403 }
       );
     }
 
@@ -56,6 +74,7 @@ export async function GET(
       data: {
         id: run.id,
         jobId: run.jobId,
+        workspaceId: run.workspaceId,
         providerId: run.providerId,
         status: run.status,
         progress,
@@ -83,6 +102,12 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
+    if (err instanceof ResearchAuthError) {
+      return NextResponse.json(
+        { success: false, error: err.code, message: err.message },
+        { status: err.statusCode }
+      );
+    }
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       { success: false, error: "INTERNAL_ERROR", message: msg },

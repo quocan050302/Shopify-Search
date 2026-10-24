@@ -42,8 +42,31 @@ export async function POST(
     const isOverride =
       decision === "TEST_CANDIDATE" && algorithmRecommendation !== "TEST_CANDIDATE";
 
+    // Section 35: Require a non-empty reason when overriding an algorithmic blocker
+    if (isOverride && (!notes || !notes.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "OVERRIDE_REASON_REQUIRED",
+          message:
+            "A non-empty justification reason is strictly required when overriding an algorithmic recommendation.",
+        },
+        { status: 400 }
+      );
+    }
+
+    let unmetRequirements: string[] = [];
+    try {
+      if (latestAssessment?.risksJson) {
+        unmetRequirements.push(...JSON.parse(latestAssessment.risksJson));
+      }
+      if (latestAssessment?.missingCriticalEvidenceJson) {
+        unmetRequirements.push(...JSON.parse(latestAssessment.missingCriticalEvidenceJson));
+      }
+    } catch {}
+
     const overrideNotice = isOverride
-      ? "[USER OVERRIDE — ALGORITHMIC REQUIREMENTS NOT MET]"
+      ? `[USER OVERRIDE by actor '${context.actorId}' at ${new Date().toISOString()} | Algorithmic Recommendation: ${algorithmRecommendation} | Unmet Requirements: ${unmetRequirements.join("; ") || "None recorded"}]`
       : "";
 
     const combinedNotes = `${overrideNotice} ${notes}`.trim();
@@ -67,10 +90,12 @@ export async function POST(
         overrideStatus: isOverride
           ? "USER OVERRIDE — REQUIREMENTS NOT MET"
           : "ALIGNED_WITH_ALGORITHM",
+        actorId: context.actorId,
+        unmetRequirements,
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "11.4.0",
+        version: "11.5.0",
       },
     });
   } catch (err: any) {
