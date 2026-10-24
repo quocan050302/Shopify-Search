@@ -11,12 +11,23 @@
  * 4. In test / dev environments, an explicitly wrong token is always rejected with 401 UNAUTHORIZED.
  */
 
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface AdminAuthCheckResult {
   authorized: boolean;
   code?: "ADMIN_AUTH_REQUIRED" | "INVALID_ADMIN_TOKEN" | "FORBIDDEN";
   message?: string;
+  principalId?: string;
+  authMode?: "OWNER_ADMIN" | "USER_SESSION" | "LOCAL_DEV";
+}
+
+function safeSecretCompare(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 /**
@@ -48,7 +59,7 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
     }
   }
 
-  // If a secret is configured in environment, require exact match
+  // If a secret is configured in environment, require exact timing-safe match
   if (configuredSecret.length > 0) {
     if (!providedToken) {
       return {
@@ -58,7 +69,7 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
       };
     }
 
-    if (providedToken !== configuredSecret) {
+    if (!safeSecretCompare(providedToken, configuredSecret)) {
       return {
         authorized: false,
         code: "INVALID_ADMIN_TOKEN",
@@ -66,7 +77,11 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
       };
     }
 
-    return { authorized: true };
+    return {
+      authorized: true,
+      principalId: "admin_owner",
+      authMode: "OWNER_ADMIN",
+    };
   }
 
   // If no secret configured in environment:
@@ -79,7 +94,7 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
     };
   }
 
-  // In production without secret configured: require secret configuration
+  // In production without secret configured: require secret configuration (fail closed)
   if (process.env.NODE_ENV === "production") {
     return {
       authorized: false,
@@ -89,7 +104,11 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
   }
 
   // In development / local testing mode without ADMIN_API_KEY set, allow local requests
-  return { authorized: true };
+  return {
+    authorized: true,
+    principalId: "local_dev_admin",
+    authMode: "LOCAL_DEV",
+  };
 }
 
 /**

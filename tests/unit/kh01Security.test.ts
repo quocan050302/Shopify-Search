@@ -9,6 +9,7 @@ import {
   resolveAuthorizedResearchContext,
   assertAdWorkspaceAccess,
   assertProductWorkspaceAccess,
+  assertWorkspaceMembership,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
 import {
@@ -34,6 +35,8 @@ describe("KH-01.A — Security, Data Integrity & Evidence Foundation", () => {
   const testStoreId = "store_test_kh01_sec";
   const testStoreDomain = "kh01-brand.example.com";
   let testProductId1 = "";
+  let testAdvertiserId = "";
+  let testDataSourceId = "";
 
   beforeAll(async () => {
     // Clean up test fixtures
@@ -115,6 +118,9 @@ describe("KH-01.A — Security, Data Integrity & Evidence Foundation", () => {
         },
       });
     }
+
+    testAdvertiserId = advertiser.id;
+    testDataSourceId = dataSource.id;
 
     // Create ad 1 assigned to Workspace 1
     await prisma.competitorAd.create({
@@ -262,6 +268,68 @@ describe("KH-01.A — Security, Data Integrity & Evidence Foundation", () => {
       await expect(assertProductWorkspaceAccess(testProductId1, context)).rejects.toThrow(
         ResearchAuthError
       );
+    });
+
+    it("fails closed on unassociated orphan ad when accessed from isolated non-default workspace", async () => {
+      // Create orphan ad with no DiscoveryRunAd or Watchlist associations
+      const orphanAd = await prisma.competitorAd.create({
+        data: {
+          id: "ad_test_kh01_orphan_01",
+          externalAdId: "kh01_orphan_ext",
+          platform: "META",
+          originalAdUrl: "https://www.facebook.com/ads/library/?id=kh01_orphan_ext",
+          headline: "Orphan Ad",
+          advertiserId: testAdvertiserId,
+          dataSourceId: testDataSourceId,
+        },
+      });
+
+      try {
+        const nonDefaultContext = {
+          workspaceId: testWorkspace2,
+          actorId: "researcher",
+          accessMode: "AUTHENTICATED" as const,
+        };
+        await expect(assertAdWorkspaceAccess(orphanAd.id, nonDefaultContext)).rejects.toThrow(
+          ResearchAuthError
+        );
+      } finally {
+        await prisma.competitorAd.deleteMany({ where: { id: orphanAd.id } });
+      }
+    });
+
+    it("ignores forged x-actor-id header and strictly binds actorId to verified principal", async () => {
+      const req = new NextRequest("http://localhost:3000/api/v1/test", {
+        headers: {
+          "x-workspace-id": testWorkspace1,
+          "x-actor-id": "infiltrator_superuser_override",
+        },
+      });
+      const context = await resolveAuthorizedResearchContext(req);
+      expect(context.actorId).not.toBe("infiltrator_superuser_override");
+      expect(context.actorId).toBe("local_dev_admin");
+    });
+
+    it("assertWorkspaceMembership enforces role hierarchy and rejects viewers from mutating", () => {
+      const viewerPrincipal = {
+        principalId: "viewer_1",
+        authMode: "USER_SESSION" as const,
+        isAuthenticated: true,
+        allowedWorkspaceIds: [testWorkspace1],
+        role: "VIEWER" as const,
+      };
+
+      expect(() =>
+        assertWorkspaceMembership(viewerPrincipal, testWorkspace1, "VIEWER")
+      ).not.toThrow();
+
+      expect(() =>
+        assertWorkspaceMembership(viewerPrincipal, testWorkspace1, "ADMIN")
+      ).toThrow(ResearchAuthError);
+
+      expect(() =>
+        assertWorkspaceMembership(viewerPrincipal, "unauthorized_ws", "VIEWER")
+      ).toThrow(ResearchAuthError);
     });
   });
 

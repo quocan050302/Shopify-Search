@@ -1,23 +1,33 @@
 /**
  * SWAI Research Authorization & Context Resolution Service
  *
- * KH-01.A — Security, Data Integrity & Evidence Foundation
+ * KH-01.A / V11.4.1 — Security, Data Integrity & Evidence Foundation
  *
  * Responsibilities:
- * 1. Resolve authorized research context from server-side security primitives.
+ * 1. Resolve trusted research principal from server-side security primitives.
  * 2. Prevent arbitrary caller-controlled workspace headers from bypassing authorization.
- * 3. Enforce tenant ownership for advertisements and products without implicit default-workspace bypasses.
- * 4. Fail closed when authentication is required but missing or invalid.
+ * 3. Enforce tenant ownership for advertisements and products; fail closed on unassociated orphan records.
+ * 4. Reject forged actor headers (x-actor-id) and enforce server-verified principal identity.
+ * 5. Fail closed when authentication is required but missing or invalid.
  */
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { validateAdminRequest } from "@/services/security/adminAuth";
 
+export interface ResearchPrincipal {
+  principalId: string;
+  authMode: "OWNER_ADMIN" | "USER_SESSION" | "LOCAL_DEV";
+  isAuthenticated: boolean;
+  allowedWorkspaceIds: string[];
+  role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+}
+
 export interface ResearchAccessContext {
   workspaceId: string;
-  actorId: string | null;
+  actorId: string;
   accessMode: "AUTHENTICATED" | "EXPLICIT_LOCAL_DEV";
+  principal?: ResearchPrincipal;
 }
 
 export type ResearchAuthErrorCode =
@@ -42,17 +52,12 @@ export class ResearchAuthError extends Error {
 }
 
 /**
- * Resolves the authenticated caller's identity and authorized research context.
- *
- * Rules:
- * - Checks administrator authentication via Bearer token, x-admin-token, or session cookie.
- * - In production mode, authentication is strictly required.
- * - In local development without configured admin secret, explicit local dev access is granted.
- * - Caller-supplied workspaceId is validated against database; never trusted blindly as authentication.
+ * Resolves the trusted server-side research principal.
+ * Never trusts x-actor-id or unverified caller assertions.
  */
-export async function resolveAuthorizedResearchContext(
+export async function resolveResearchPrincipal(
   request: NextRequest
-): Promise<ResearchAccessContext> {
+): Promise<ResearchPrincipal> {
   const adminCheck = validateAdminRequest(request);
 
   if (!adminCheck.authorized) {
@@ -63,6 +68,36 @@ export async function resolveAuthorizedResearchContext(
     );
   }
 
+  // Resolve all workspaces accessible to this administrator/owner
+  const workspaces = await prisma.workspace.findMany({
+    select: { id: true },
+  });
+  const allowedWorkspaceIds = workspaces.map((w) => w.id);
+
+  return {
+    principalId: adminCheck.principalId || "admin_owner",
+    authMode: adminCheck.authMode || "OWNER_ADMIN",
+    isAuthenticated: true,
+    allowedWorkspaceIds,
+    role: "OWNER",
+  };
+}
+
+/**
+ * Resolves the authenticated caller's identity and authorized research context.
+ *
+ * Rules:
+ * - Checks administrator authentication via Bearer token, x-admin-token, or session cookie.
+ * - In production mode, authentication is strictly required.
+ * - In local development without configured admin secret, explicit local dev access is granted.
+ * - Caller-supplied workspaceId must be present in the principal's allowed workspaces.
+ * - Existence of a workspace in DB alone does NOT grant authorization.
+ */
+export async function resolveAuthorizedResearchContext(
+  request: NextRequest
+): Promise<ResearchAccessContext> {
+  const principal = await resolveResearchPrincipal(request);
+
   // Caller may request a specific workspace via header or query parameter
   const queryWorkspace =
     request.nextUrl?.searchParams?.get?.("workspaceId") ||
@@ -71,48 +106,35 @@ export async function resolveAuthorizedResearchContext(
   const requestedWorkspaceId = (request.headers.get("x-workspace-id") || queryWorkspace).trim();
 
   let workspaceId: string;
-  let accessMode: "AUTHENTICATED" | "EXPLICIT_LOCAL_DEV" = "AUTHENTICATED";
-  const actorId = request.headers.get("x-actor-id") || "admin";
-
-  const isConfiguredAdminSecret = Boolean(
-    (process.env.ADMIN_API_KEY || process.env.SWAI_ADMIN_TOKEN || process.env.ADMIN_SECRET || "").trim()
-  );
-
-  if (!isConfiguredAdminSecret && process.env.NODE_ENV !== "production") {
-    accessMode = "EXPLICIT_LOCAL_DEV";
-  }
 
   if (requestedWorkspaceId) {
-    const ws = await prisma.workspace.findUnique({
-      where: { id: requestedWorkspaceId },
-    });
-    if (!ws) {
+    if (!principal.allowedWorkspaceIds.includes(requestedWorkspaceId)) {
       throw new ResearchAuthError(
-        "The requested workspace does not exist or access is unauthorized.",
+        "The requested workspace does not exist or access is unauthorized for the authenticated principal.",
         "UNAUTHORIZED_WORKSPACE",
         403
       );
     }
-    workspaceId = ws.id;
+    workspaceId = requestedWorkspaceId;
   } else {
-    // Default to the first available workspace
-    const defaultWs = await prisma.workspace.findFirst({
-      orderBy: { createdAt: "asc" },
-    });
-    if (!defaultWs) {
+    // Default to the first available authorized workspace
+    if (principal.allowedWorkspaceIds.length === 0) {
       throw new ResearchAuthError(
         "No accessible workspace is configured.",
         "NO_WORKSPACE_CONFIGURED",
         403
       );
     }
-    workspaceId = defaultWs.id;
+    workspaceId = principal.allowedWorkspaceIds[0];
   }
+
+  const accessMode = principal.authMode === "LOCAL_DEV" ? "EXPLICIT_LOCAL_DEV" : "AUTHENTICATED";
 
   return {
     workspaceId,
-    actorId,
+    actorId: principal.principalId,
     accessMode,
+    principal,
   };
 }
 
@@ -122,7 +144,8 @@ export async function resolveAuthorizedResearchContext(
  * Rules:
  * - Ad must exist.
  * - Ad must belong to the caller's authorized workspace via DiscoveryRunAd or Watchlist.
- * - No implicit cross-tenant leaks or fallback on 'default-workspace'.
+ * - Orphan ads with no workspace association fail closed by default.
+ * - No implicit cross-tenant leaks.
  */
 export async function assertAdWorkspaceAccess(
   adId: string,
@@ -154,8 +177,20 @@ export async function assertAdWorkspaceAccess(
     if (item.watchlist?.workspaceId) associatedWorkspaceIds.add(item.watchlist.workspaceId);
   }
 
-  // If the ad has explicit tenant associations, caller's workspace MUST be one of them
-  if (associatedWorkspaceIds.size > 0 && !associatedWorkspaceIds.has(context.workspaceId)) {
+  // Fail closed: If the ad has NO workspace associations (orphan record), deny access unless
+  // operating in the system default workspace with owner authorization.
+  if (associatedWorkspaceIds.size === 0) {
+    const isSystemOwner =
+      (context.accessMode === "AUTHENTICATED" || context.accessMode === "EXPLICIT_LOCAL_DEV") &&
+      context.workspaceId === "default-workspace";
+    if (!isSystemOwner) {
+      throw new ResearchAuthError(
+        "Access denied: Unassociated orphan advertisement cannot be accessed outside the system default workspace.",
+        "FORBIDDEN_WORKSPACE_AD",
+        403
+      );
+    }
+  } else if (!associatedWorkspaceIds.has(context.workspaceId)) {
     throw new ResearchAuthError(
       "The requested advertisement does not belong to your accessible workspace.",
       "FORBIDDEN_WORKSPACE_AD",
@@ -170,6 +205,7 @@ export async function assertAdWorkspaceAccess(
  * Rules:
  * - Product must exist.
  * - Product must belong to the caller's authorized workspace via Watchlist or linked ads.
+ * - Orphan products fail closed by default.
  */
 export async function assertProductWorkspaceAccess(
   productId: string,
@@ -215,9 +251,57 @@ export async function assertProductWorkspaceAccess(
     }
   }
 
-  if (associatedWorkspaceIds.size > 0 && !associatedWorkspaceIds.has(context.workspaceId)) {
+  // Fail closed: If the product has NO workspace associations, deny access unless
+  // operating in the system default workspace with owner authorization.
+  if (associatedWorkspaceIds.size === 0) {
+    const isSystemOwner =
+      (context.accessMode === "AUTHENTICATED" || context.accessMode === "EXPLICIT_LOCAL_DEV") &&
+      context.workspaceId === "default-workspace";
+    if (!isSystemOwner) {
+      throw new ResearchAuthError(
+        `Access denied: Product '${productId}' has no valid workspace association and cannot be accessed.`,
+        "FORBIDDEN",
+        403
+      );
+    }
+  } else if (!associatedWorkspaceIds.has(context.workspaceId)) {
     throw new ResearchAuthError(
       `Access denied: Product '${productId}' does not belong to authorized workspace '${context.workspaceId}'.`,
+      "FORBIDDEN",
+      403
+    );
+  }
+}
+
+/**
+ * Asserts workspace membership and role hierarchy.
+ */
+export function assertWorkspaceMembership(
+  principal: ResearchPrincipal,
+  workspaceId: string,
+  requiredRole: "VIEWER" | "MEMBER" | "ADMIN" = "VIEWER"
+): void {
+  if (!principal.allowedWorkspaceIds.includes(workspaceId)) {
+    throw new ResearchAuthError(
+      `Principal '${principal.principalId}' does not have access to workspace '${workspaceId}'.`,
+      "UNAUTHORIZED_WORKSPACE",
+      403
+    );
+  }
+
+  const roleWeights: Record<string, number> = {
+    VIEWER: 1,
+    MEMBER: 2,
+    ADMIN: 3,
+    OWNER: 4,
+  };
+
+  const userWeight = roleWeights[principal.role] || 1;
+  const requiredWeight = roleWeights[requiredRole] || 1;
+
+  if (userWeight < requiredWeight) {
+    throw new ResearchAuthError(
+      `Insufficient permissions: Role '${principal.role}' does not satisfy required role '${requiredRole}'.`,
       "FORBIDDEN",
       403
     );
