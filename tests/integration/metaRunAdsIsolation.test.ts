@@ -291,16 +291,15 @@ describe("Exact Research Run Results & Workspace Isolation (/api/v1/evergreen/ad
     expect(json.pagination.total).toBe(0);
   });
 
-  it("rejects or returns 0 ads when Workspace Beta attempts to access Workspace Alpha's Run A", async () => {
+  it("rejects with 403 when Workspace Beta attempts to access Workspace Alpha's Run A", async () => {
     // Principal belongs to Workspace Beta, but requests Run A (owned by Alpha)
     const req = makeRequest(`/api/v1/evergreen/ads?requestId=${runAId}`, workspaceBetaId);
     const res = await getEvergreenAds(req);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
 
     const json = await res.json();
-    expect(json.success).toBe(true);
-    expect(json.data.length).toBe(0);
-    expect(json.pagination.total).toBe(0);
+    expect(json.success).toBe(false);
+    expect(json.error.code).toBe("FORBIDDEN_WORKSPACE_RUN");
   });
 
   it("returns only Workspace Beta ads when Workspace Beta requests general ads without requestId", async () => {

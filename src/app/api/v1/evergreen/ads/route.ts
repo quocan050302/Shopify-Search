@@ -25,7 +25,10 @@ import {
   resolveAuthorizedResearchContext,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
-import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
+import {
+  buildAuthorizedAdWhere,
+  resolveAuthorizedDiscoveryRun,
+} from "@/services/research/authorizedScopeHelpers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,29 +68,7 @@ export async function GET(request: NextRequest) {
 
     // Workspace-scoped exact run or general ads filtering
     if (requestId) {
-      const discoveryRun = await prisma.discoveryRun.findFirst({
-        where: {
-          id: requestId,
-          workspaceId: context.workspaceId,
-        },
-      });
-
-      if (!discoveryRun) {
-        return NextResponse.json({
-          success: true,
-          data: [],
-          pagination: { page, pageSize, total: 0, totalPages: 0 },
-          meta: {
-            timestamp: new Date().toISOString(),
-            version: "v11.5.1",
-            requestId,
-            researchMode: mode,
-            unknownDateCount: 0,
-            dataNote: "Selected research run not found in active workspace or contains no ads.",
-            syntheticRecordsExcluded: true,
-          },
-        });
-      }
+      await resolveAuthorizedDiscoveryRun(requestId, context);
 
       where.runAds = {
         some: {
@@ -230,7 +211,10 @@ export async function GET(request: NextRequest) {
     let allAds: AdViewModel[] = [];
     let unknownDateCount = 0;
 
-    if (mode === "NEWLY_LAUNCHED") {
+    if (requestId) {
+      // Exact-run mode: return 100% of ads linked to this research run without 30-day cutoff or date exclusion
+      allAds = scoredAds.map((q) => q.ad);
+    } else if (mode === "NEWLY_LAUNCHED") {
       const days = launchWithinDays || 30;
       const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
 

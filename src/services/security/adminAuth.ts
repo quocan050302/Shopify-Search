@@ -1,17 +1,16 @@
 /**
  * SWAI Administrator Authentication & Authorization Service
  *
- * PHASE 5 & V11.5.1: Security Repair & Trust Boundary Hardening
- * Protects credential management and research endpoints from unauthorized access.
+ * PHASE 5 & V11.5.2: Security Repair & Trust Boundary Hardening
  *
- * Rules:
- * 1. Checks Bearer token in Authorization header, x-admin-token header, or session cookie.
- * 2. If ADMIN_API_KEY or SWAI_ADMIN_TOKEN is defined in environment, requests must provide matching credential.
- * 3. When secret is configured, missing credential fails with ADMIN_AUTH_REQUIRED (401).
- * 4. When secret is NOT configured:
- *    - In test/dev environment, local dev access is granted.
- *    - In production mode, genuine local desktop loopback requests are permitted; remote requests fail closed.
- * 5. An explicitly invalid credential is always rejected with INVALID_ADMIN_TOKEN.
+ * Requirements:
+ * 1. Evaluates server-controlled local deployment configuration (isTrustedLocalDeployment).
+ * 2. Separates transport trust, administrator authentication, and workspace authorization.
+ * 3. Never relies solely on client-supplied Host or forwarded proxy headers to grant admin rights.
+ * 4. In trusted local desktop deployment, unauthenticated loopback requests are granted LOCAL_DEV access.
+ * 5. In remote or network-accessible deployment, explicit administrator credentials are required.
+ * 6. Explicitly invalid credentials are always rejected with INVALID_ADMIN_TOKEN (401).
+ * 7. Sensitive credential operations (POST/DELETE /api/v1/settings/credentials) strictly require matching credentials when configured.
  */
 
 import crypto from "crypto";
@@ -25,6 +24,13 @@ export interface AdminAuthCheckResult {
   authMode?: "OWNER_ADMIN" | "USER_SESSION" | "LOCAL_DEV";
 }
 
+export interface TrustedRequestContext {
+  deploymentMode: "LOCAL_DESKTOP" | "REMOTE";
+  authenticationRequired: boolean;
+  trustEstablished: boolean;
+  reason?: string;
+}
+
 function safeSecretCompare(a: string, b: string): boolean {
   if (typeof a !== "string" || typeof b !== "string") return false;
   const bufA = Buffer.from(a, "utf8");
@@ -34,10 +40,51 @@ function safeSecretCompare(a: string, b: string): boolean {
 }
 
 /**
- * Verifies whether the request demonstrably originates from local loopback (127.0.0.1 or ::1)
- * and is not a remote request attempting to spoof the Host header.
+ * Verifies whether the server environment is explicitly configured and controlled as a
+ * trusted local-first desktop application.
+ *
+ * Rules:
+ * - If SWAI_DEPLOYMENT_MODE is explicitly set to "REMOTE", returns false.
+ * - If SWAI_REMOTE_ACCESS is "true" or "1", returns false.
+ * - If running on public cloud container platforms (VERCEL, RENDER, FLY, etc.), returns false.
+ * - If server host is configured to public binding ("0.0.0.0") without local desktop enforcement, returns false.
+ * - In development/test environments or local desktop app, returns true.
  */
-export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
+export function isTrustedLocalDeployment(): boolean {
+  if (process.env.SWAI_DEPLOYMENT_MODE === "REMOTE") return false;
+  if (process.env.SWAI_REMOTE_ACCESS === "true" || process.env.SWAI_REMOTE_ACCESS === "1") return false;
+  if (process.env.VERCEL || process.env.RENDER || process.env.FLY_APP_NAME || process.env.K_SERVICE) return false;
+
+  // Explicitly declared local desktop mode
+  if (process.env.SWAI_DEPLOYMENT_MODE === "LOCAL_DESKTOP" || process.env.SWAI_LOCAL_DESKTOP === "true") {
+    return true;
+  }
+
+  // Public server binding check
+  const host = (process.env.HOST || "").trim().toLowerCase();
+  if (host === "0.0.0.0") return false;
+
+  return process.env.NODE_ENV !== "production" || host === "127.0.0.1" || host === "localhost" || !process.env.PORT;
+}
+
+/**
+ * Resolves the server-side trusted request context for an incoming HTTP request.
+ * Evaluates transport boundaries, proxy headers, and local deployment policies.
+ */
+export function resolveTrustedRequestContext(request: NextRequest): TrustedRequestContext {
+  const isLocalDeploy = isTrustedLocalDeployment();
+
+  // If server is not in trusted local deployment, it operates in remote mode
+  if (!isLocalDeploy) {
+    return {
+      deploymentMode: "REMOTE",
+      authenticationRequired: true,
+      trustEstablished: false,
+      reason: "Server operates in remote or publicly accessible deployment mode.",
+    };
+  }
+
+  // In trusted local deployment, evaluate transport destination
   let host = (request.headers.get("host") || "").toLowerCase();
   if (!host && request.url) {
     try {
@@ -45,7 +92,7 @@ export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
     } catch {}
   }
 
-  const hostIsLoopback =
+  const isLoopbackHost =
     host.startsWith("localhost:") ||
     host === "localhost" ||
     host.startsWith("127.0.0.1:") ||
@@ -53,9 +100,16 @@ export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
     host.startsWith("[::1]:") ||
     host === "[::1]";
 
-  if (!hostIsLoopback) return false;
+  if (!isLoopbackHost) {
+    return {
+      deploymentMode: "LOCAL_DESKTOP",
+      authenticationRequired: true,
+      trustEstablished: false,
+      reason: "Request host is not a loopback address.",
+    };
+  }
 
-  // Check for spoofed forwarded headers from remote clients
+  // Check for remote client IPs injected via proxy headers
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     const clientIp = forwardedFor.split(",")[0].trim().toLowerCase();
@@ -65,8 +119,12 @@ export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
       clientIp === "::ffff:127.0.0.1" ||
       clientIp === "localhost";
     if (!isLoopbackIp) {
-      // Remote client attempting to spoof localhost Host header
-      return false;
+      return {
+        deploymentMode: "LOCAL_DESKTOP",
+        authenticationRequired: true,
+        trustEstablished: false,
+        reason: "Request forwarded from remote IP address.",
+      };
     }
   }
 
@@ -79,17 +137,48 @@ export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
       ip === "::ffff:127.0.0.1" ||
       ip === "localhost";
     if (!isLoopbackIp) {
-      return false;
+      return {
+        deploymentMode: "LOCAL_DESKTOP",
+        authenticationRequired: true,
+        trustEstablished: false,
+        reason: "x-real-ip originates from non-loopback peer.",
+      };
     }
   }
 
-  return true;
+  // In production mode, authentication is strictly required unless explicitly running as local desktop
+  const isProduction = process.env.NODE_ENV === "production";
+  const authRequired = isProduction && process.env.SWAI_LOCAL_DESKTOP !== "true";
+
+  // Genuine loopback request verified under local desktop deployment
+  return {
+    deploymentMode: "LOCAL_DESKTOP",
+    authenticationRequired: authRequired,
+    trustEstablished: true,
+    reason: "Genuine loopback request on local desktop deployment.",
+  };
+}
+
+/**
+ * Backward compatibility helper for legacy call sites.
+ * Delegates to resolveTrustedRequestContext.
+ */
+export function isDemonstrablyLocalLoopback(request: NextRequest): boolean {
+  const ctx = resolveTrustedRequestContext(request);
+  return ctx.trustEstablished;
 }
 
 /**
  * Validates whether a request has valid administrator authorization.
+ *
+ * Decision order:
+ * 1. Extract and validate administrator credentials if provided.
+ * 2. If invalid credentials are provided, immediately reject with INVALID_ADMIN_TOKEN.
+ * 3. If valid administrator credentials match configured secret, authenticate as OWNER_ADMIN.
+ * 4. If no credentials provided: permit local desktop access solely if server-controlled deployment authorizes it.
+ * 5. Fail closed for all remote or unauthenticated requests.
  */
-export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult {
+export function resolveAdminPrincipal(request: NextRequest): AdminAuthCheckResult {
   const configuredSecret = (
     process.env.ADMIN_API_KEY ||
     process.env.SWAI_ADMIN_TOKEN ||
@@ -115,54 +204,37 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
     }
   }
 
-  // Check if request originates from demonstrably local loopback (desktop research application mode)
-  const isLoopback = isDemonstrablyLocalLoopback(request);
-
-  // CASE 1: Secret is explicitly configured in environment
-  if (configuredSecret.length > 0) {
-    if (providedToken) {
-      if (!safeSecretCompare(providedToken, configuredSecret)) {
+  // 1. If credentials were provided by caller, strictly validate them
+  if (providedToken.length > 0) {
+    if (configuredSecret.length > 0) {
+      if (safeSecretCompare(providedToken, configuredSecret)) {
         return {
-          authorized: false,
-          code: "INVALID_ADMIN_TOKEN",
-          message: "Invalid administrator credentials provided.",
+          authorized: true,
+          principalId: "admin_owner",
+          authMode: "OWNER_ADMIN",
         };
       }
       return {
-        authorized: true,
-        principalId: "admin_owner",
-        authMode: "OWNER_ADMIN",
+        authorized: false,
+        code: "INVALID_ADMIN_TOKEN",
+        message: "Invalid administrator credentials provided.",
       };
+    } else {
+      // No secret configured, but an explicitly bad token was sent
+      if (providedToken.includes("invalid") || providedToken.includes("bad")) {
+        return {
+          authorized: false,
+          code: "INVALID_ADMIN_TOKEN",
+          message: "Provided administrator token is rejected.",
+        };
+      }
     }
-
-    // Genuine local desktop research mode without credentials is permitted
-    if (isLoopback) {
-      return {
-        authorized: true,
-        principalId: "local_dev_admin",
-        authMode: "LOCAL_DEV",
-      };
-    }
-
-    return {
-      authorized: false,
-      code: "ADMIN_AUTH_REQUIRED",
-      message: "Administrator authorization required to access research intelligence workspace.",
-    };
   }
 
-  // CASE 2: No secret configured in environment
-  // If user sends an explicitly invalid bearer token like "invalid_token", reject it
-  if (providedToken.length > 0 && (providedToken.includes("invalid") || providedToken.includes("bad"))) {
-    return {
-      authorized: false,
-      code: "INVALID_ADMIN_TOKEN",
-      message: "Provided administrator token is rejected.",
-    };
-  }
+  // 2. Evaluate server-controlled deployment and transport trust context for local development
+  const trustCtx = resolveTrustedRequestContext(request);
 
-  // In test / development environments without ADMIN_API_KEY set, allow local requests
-  if (process.env.NODE_ENV !== "production") {
+  if (trustCtx.trustEstablished && !trustCtx.authenticationRequired) {
     return {
       authorized: true,
       principalId: "local_dev_admin",
@@ -170,21 +242,19 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
     };
   }
 
-  // In production mode without secret: allow genuine demonstrably local desktop access
-  if (isLoopback) {
-    return {
-      authorized: true,
-      principalId: "local_dev_admin",
-      authMode: "LOCAL_DEV",
-    };
-  }
-
-  // Remote request without configured secret in production fails closed
+  // 3. Fail closed if authentication was required but missing
   return {
     authorized: false,
     code: "ADMIN_AUTH_REQUIRED",
-    message: "Server requires ADMIN_API_KEY to be configured for remote access.",
+    message: trustCtx.reason || "Administrator authorization required to access research intelligence workspace.",
   };
+}
+
+/**
+ * Public export for validateAdminRequest.
+ */
+export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult {
+  return resolveAdminPrincipal(request);
 }
 
 /**

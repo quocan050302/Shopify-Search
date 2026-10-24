@@ -5,6 +5,7 @@ import {
   resolveAuthorizedResearchContext,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
+import { resolveAuthorizedDiscoveryRun } from "@/services/research/authorizedScopeHelpers";
 
 /**
  * GET /api/v1/discovery/meta/requests/:id/ads
@@ -23,28 +24,7 @@ export async function GET(
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
 
-    const run = await prisma.discoveryRun.findUnique({
-      where: { id },
-      select: { id: true, workspaceId: true, providerId: true, status: true },
-    });
-
-    if (!run) {
-      return NextResponse.json(
-        { success: false, error: "NOT_FOUND", message: `Discovery run '${id}' not found.` },
-        { status: 404 }
-      );
-    }
-
-    if (run.workspaceId !== context.workspaceId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "FORBIDDEN",
-          message: `Access denied: Discovery run '${id}' belongs to another workspace.`,
-        },
-        { status: 403 }
-      );
-    }
+    await resolveAuthorizedDiscoveryRun(id, context);
 
     const [total, runAdRelations] = await Promise.all([
       prisma.discoveryRunAd.count({ where: { runId: id } }),
@@ -137,8 +117,19 @@ export async function GET(
     });
   } catch (err: unknown) {
     if (err instanceof ResearchAuthError) {
+      const errorString =
+        err.code === "FORBIDDEN_WORKSPACE_RUN" || err.code === "FORBIDDEN"
+          ? "FORBIDDEN"
+          : err.code === "RUN_NOT_FOUND"
+          ? "NOT_FOUND"
+          : err.code;
       return NextResponse.json(
-        { success: false, error: err.code, message: err.message },
+        {
+          success: false,
+          error: errorString,
+          code: err.code,
+          message: err.message,
+        },
         { status: err.statusCode }
       );
     }

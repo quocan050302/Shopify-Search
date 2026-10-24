@@ -203,11 +203,20 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
         const latencyMs = Date.now() - startTime;
         const retrieved = testRes.ads?.length || 0;
 
+        if (retrieved > 0) {
+          return {
+            status: "LIVE_VERIFIED",
+            isAuthorized: true,
+            requiresConfig: false,
+            message: `Live Meta Ad Library probe succeeded in ${latencyMs}ms. Retrieved ${retrieved} factual ad records from public endpoint.`,
+          };
+        }
+
         return {
-          status: "LIVE_VERIFIED",
+          status: "AVAILABLE",
           isAuthorized: true,
           requiresConfig: false,
-          message: `Live Meta Ad Library probe succeeded in ${latencyMs}ms. Retrieved ${retrieved} factual ad records from public endpoint.`,
+          message: `Live Meta Ad Library query completed in ${latencyMs}ms with 0 ads returned. Upstream source reachable and MCP responsive, but no ad records collected for test query.`,
         };
       } finally {
         await client.close();

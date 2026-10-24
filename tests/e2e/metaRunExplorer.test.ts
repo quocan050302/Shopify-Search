@@ -145,6 +145,61 @@ describe("Meta Run Explorer E2E Browser Journey (Section 36 & 57)", () => {
       },
     });
 
+    const now = new Date();
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const oneEightyDaysAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+    const adA3 = await dbHandle.prisma.competitorAd.create({
+      data: {
+        id: "ad_e2e_a3",
+        advertiserId: adv.id,
+        dataSourceId: "ds_meta_collector",
+        platform: "META",
+        headline: "Run A 90-Day Proven Roller",
+        bodyText: "90 days old ad from Run A.",
+        originalAdUrl: "https://facebook.com/ads/103",
+        landingPageUrl: "https://uproot.com/product/a3",
+        sourceReportedStartAt: ninetyDaysAgo,
+        daysRunning: 90,
+        firstSeenAt: ninetyDaysAgo,
+        lastSeenAt: now,
+      },
+    });
+
+    const adA4 = await dbHandle.prisma.competitorAd.create({
+      data: {
+        id: "ad_e2e_a4",
+        advertiserId: adv.id,
+        dataSourceId: "ds_meta_collector",
+        platform: "META",
+        headline: "Run A 180-Day Evergreen Roller",
+        bodyText: "180 days old ad from Run A.",
+        originalAdUrl: "https://facebook.com/ads/104",
+        landingPageUrl: "https://uproot.com/product/a4",
+        sourceReportedStartAt: oneEightyDaysAgo,
+        daysRunning: 180,
+        firstSeenAt: oneEightyDaysAgo,
+        lastSeenAt: now,
+      },
+    });
+
+    const adA5 = await dbHandle.prisma.competitorAd.create({
+      data: {
+        id: "ad_e2e_a5",
+        advertiserId: adv.id,
+        dataSourceId: "ds_meta_collector",
+        platform: "META",
+        headline: "Run A Unknown Launch Date Roller",
+        bodyText: "Ad with unknown launch date from Run A.",
+        originalAdUrl: "https://facebook.com/ads/105",
+        landingPageUrl: "https://uproot.com/product/a5",
+        sourceReportedStartAt: null,
+        daysRunning: 0,
+        firstSeenAt: now,
+        lastSeenAt: now,
+      },
+    });
+
     const adB1 = await dbHandle.prisma.competitorAd.create({
       data: {
         id: "ad_e2e_b1",
@@ -166,6 +221,9 @@ describe("Meta Run Explorer E2E Browser Journey (Section 36 & 57)", () => {
       data: [
         { runId: runAId, adId: adA1.id, workspaceId, libraryId: "lib_e2e_a1", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
         { runId: runAId, adId: adA2.id, workspaceId, libraryId: "lib_e2e_a2", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
+        { runId: runAId, adId: adA3.id, workspaceId, libraryId: "lib_e2e_a3", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
+        { runId: runAId, adId: adA4.id, workspaceId, libraryId: "lib_e2e_a4", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
+        { runId: runAId, adId: adA5.id, workspaceId, libraryId: "lib_e2e_a5", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
         { runId: runBId, adId: adB1.id, workspaceId, libraryId: "lib_e2e_b1", providerId: "meta-ads-collector", ingestOutcome: "NEW" },
       ],
     });
@@ -199,39 +257,43 @@ describe("Meta Run Explorer E2E Browser Journey (Section 36 & 57)", () => {
     if (dbHandle) await dbHandle.teardown();
   });
 
-  it("loads Explorer with requestId and shows active run scope banner", async () => {
-    page.on("response", async (res) => {
-      if (res.url().includes("/api/v1/evergreen/ads")) {
-        try {
-          const body = await res.text();
-          console.log("EVERGREEN RES STATUS:", res.status(), body);
-        } catch {}
-      }
-    });
-
+  it("loads Explorer with requestId and shows active exact run scope banner and all ads including 180d and unknown date", async () => {
     await page.goto(`${serverHandle.baseUrl}/explorer?platform=META&requestId=${runAId}`, {
       waitUntil: "networkidle",
     });
 
-    // Active run banner should appear
-    const banner = page.locator("text=Viewing advertisements from Research Run");
+    // Exact run banner should appear
+    const banner = page.locator("[data-testid='exact-run-context-banner']");
     await banner.waitFor({ state: "visible", timeout: 15000 });
     expect(await banner.isVisible()).toBe(true);
 
     const runIdText = page.locator(`text=${runAId}`).first();
     expect(await runIdText.isVisible()).toBe(true);
 
-    // Verify Run A ads appear and Run B ad does NOT appear
+    // Verify all Run A ads appear, including 90d, 180d, and unknown-date ads!
     const adA1 = page.locator("text=Run A Exclusive Pet Hair Remover");
     await adA1.waitFor({ state: "visible", timeout: 15000 });
     expect(await adA1.isVisible()).toBe(true);
 
+    const adA3 = page.locator("text=Run A 90-Day Proven Roller");
+    await adA3.waitFor({ state: "visible", timeout: 15000 });
+    expect(await adA3.isVisible()).toBe(true);
+
+    const adA4 = page.locator("text=Run A 180-Day Evergreen Roller");
+    await adA4.waitFor({ state: "visible", timeout: 15000 });
+    expect(await adA4.isVisible()).toBe(true);
+
+    const adA5 = page.locator("text=Run A Unknown Launch Date Roller");
+    await adA5.waitFor({ state: "visible", timeout: 15000 });
+    expect(await adA5.isVisible()).toBe(true);
+
+    // Verify Run B ad does NOT appear
     const adB1 = page.locator("text=Run B Different Special Brush");
     expect(await adB1.isVisible()).toBe(false);
   }, 30000);
 
   it("clears run-specific view when clicking Exit Run View", async () => {
-    const exitBtn = page.locator("button:has-text('Exit Run View')");
+    const exitBtn = page.locator("[data-testid='exit-run-view-btn']");
     await exitBtn.waitFor({ state: "visible", timeout: 5000 });
     expect(await exitBtn.isVisible()).toBe(true);
     await exitBtn.click();
@@ -239,7 +301,7 @@ describe("Meta Run Explorer E2E Browser Journey (Section 36 & 57)", () => {
     await page.waitForTimeout(500);
 
     // Banner should disappear and URL should not contain requestId
-    const banner = page.locator("text=Viewing advertisements from Research Run");
+    const banner = page.locator("[data-testid='exact-run-context-banner']");
     expect(await banner.isVisible()).toBe(false);
     expect(page.url()).not.toContain("requestId=");
   }, 20000);
@@ -249,8 +311,8 @@ describe("Meta Run Explorer E2E Browser Journey (Section 36 & 57)", () => {
       waitUntil: "networkidle",
     });
 
-    // Active run banner is visible
-    const banner = page.locator("text=Viewing advertisements from Research Run");
+    // Exact run banner is visible
+    const banner = page.locator("[data-testid='exact-run-context-banner']");
     await banner.waitFor({ state: "visible", timeout: 15000 });
     expect(await banner.isVisible()).toBe(true);
 

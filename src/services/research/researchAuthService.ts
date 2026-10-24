@@ -38,7 +38,9 @@ export type ResearchAuthErrorCode =
   | "FORBIDDEN_WORKSPACE_AD"
   | "AD_NOT_FOUND"
   | "PRODUCT_NOT_FOUND"
-  | "NO_WORKSPACE_CONFIGURED";
+  | "NO_WORKSPACE_CONFIGURED"
+  | "RUN_NOT_FOUND"
+  | "FORBIDDEN_WORKSPACE_RUN";
 
 export class ResearchAuthError extends Error {
   constructor(

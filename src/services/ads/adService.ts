@@ -123,6 +123,23 @@ export async function searchCompetitorAds(filters: SearchAdsFilters = {}) {
 }
 
 /**
+ * User-facing authorized search helper.
+ * Strictly injects the caller's authorized workspaceId into search filters.
+ */
+export async function searchAuthorizedCompetitorAds(
+  context: { workspaceId: string },
+  filters: Omit<SearchAdsFilters, "workspaceId"> = {}
+) {
+  if (!context?.workspaceId) {
+    throw new Error("Authorized workspace context is required to search competitor ads.");
+  }
+  return await searchCompetitorAds({
+    ...filters,
+    workspaceId: context.workspaceId,
+  });
+}
+
+/**
  * Retrieves full raw Prisma details for a single competitor advertisement.
  */
 export async function getAdvertisementDetails(adId: string) {

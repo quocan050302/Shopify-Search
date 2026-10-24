@@ -114,6 +114,69 @@ function EvidenceSourceBadge({ source }: { source?: string }) {
   );
 }
 
+export type ExplorerScope =
+  | { kind: "EXACT_RUN"; runId: string }
+  | { kind: "RESEARCH"; mode: ResearchMode };
+
+export function resolveExplorerScope(
+  searchParams: URLSearchParams | { get: (k: string) => string | null } | null,
+  fallbackMode: ResearchMode = "NEWLY_LAUNCHED"
+): ExplorerScope {
+  const reqId = searchParams?.get("requestId");
+  if (reqId && reqId.trim()) {
+    return { kind: "EXACT_RUN", runId: reqId.trim() };
+  }
+  const mode = searchParams?.get("mode") as ResearchMode;
+  if (mode && (mode === "NEWLY_LAUNCHED" || mode === "EVERGREEN" || mode === "EMERGING" || mode === "TRENDING")) {
+    return { kind: "RESEARCH", mode };
+  }
+  return { kind: "RESEARCH", mode: fallbackMode };
+}
+
+function ExactRunContextBanner({
+  runId,
+  totalCount,
+  onExit,
+}: {
+  runId: string;
+  totalCount: number;
+  onExit: () => void;
+}) {
+  return (
+    <div
+      data-testid="exact-run-context-banner"
+      className="flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-indigo-950/60 to-slate-900 border border-indigo-500/50 text-xs shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold text-[10px] tracking-wide border border-indigo-500/30">
+              EXACT RUN RESULTS
+            </span>
+            <span className="text-white font-medium">
+              Run ID: <strong className="font-mono text-indigo-300">{runId}</strong>
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Showing authentic run-linked advertisements without 30-day age filtering.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onExit}
+        data-testid="exit-run-view-btn"
+        className="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+      >
+        Exit Run View ✕
+      </button>
+    </div>
+  );
+}
+
 function ExplorerContent() {
   const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,6 +234,29 @@ function ExplorerContent() {
     try {
       setLoading(true);
       setError(null);
+
+      // Exact Run Mode: Call canonical run-scoped API without 30-day age filtering or mode ranking
+      if (requestId) {
+        const exactRunUrl = `/api/v1/discovery/meta/requests/${encodeURIComponent(requestId)}/ads?page=${page}&pageSize=12`;
+        const res = await fetch(exactRunUrl);
+        const json = await res.json();
+
+        if (json.success && Array.isArray(json.data)) {
+          setAds(json.data);
+          setTotalPages(json.pagination?.totalPages || 1);
+          setTotalCount(json.pagination?.total || 0);
+          setUnknownDateCount(0);
+          return;
+        }
+
+        setAds([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setError(json.message || json.error || `No advertisements found for research run '${requestId}'.`);
+        return;
+      }
+
+      // Discovery Research Mode
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: "12",
@@ -188,7 +274,6 @@ function ExplorerContent() {
       if (searchQuery.trim()) params.append("query", searchQuery.trim());
       if (platform !== "ALL") params.append("platform", platform);
       if (category !== "ALL") params.append("category", category);
-      if (requestId) params.append("requestId", requestId);
 
       // Use evergreen API for mode-based ranking
       const evRes = await fetch(`/api/v1/evergreen/ads?${params.toString()}`);
@@ -202,16 +287,7 @@ function ExplorerContent() {
         return;
       }
 
-      // If in run-specific mode, do NOT fall back to general ads!
-      if (requestId) {
-        setAds([]);
-        setTotalPages(1);
-        setTotalCount(0);
-        setError(evJson.error?.message || "No advertisements found for this research run.");
-        return;
-      }
-
-      // Fallback to legacy ads API ONLY when not querying an exact run
+      // Fallback to legacy ads API ONLY in general discovery mode (workspace-scoped)
       const legacyParams = new URLSearchParams({
         page: page.toString(),
         pageSize: "12",
@@ -225,14 +301,26 @@ function ExplorerContent() {
 
       if (legacyJson.success) {
         setAds(legacyJson.data);
-        setTotalPages(legacyJson.pagination.totalPages || 1);
-        setTotalCount(legacyJson.pagination.total || 0);
+        setTotalPages(legacyJson.pagination?.totalPages || 1);
+        setTotalCount(legacyJson.pagination?.total || 0);
+      } else {
+        setError(legacyJson.message || "Failed to load advertisements.");
       }
     } catch (err: any) {
       console.error("Failed to fetch ads:", err);
       setError("Failed to load advertisements.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExitRunView = () => {
+    setRequestId(null);
+    setPage(1);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("requestId");
+      window.history.pushState({}, "", url.pathname + (url.search ? url.search : ""));
     }
   };
 
@@ -291,112 +379,75 @@ function ExplorerContent() {
           </div>
         </div>
 
-        {/* Active Research Run Banner */}
-        {requestId && (
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-xs text-indigo-200">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-              <span>
-                Viewing advertisements from Research Run: <strong className="font-mono text-indigo-300">{requestId}</strong>
+        {/* Exact Run Context Banner */}
+        {requestId ? (
+          <ExactRunContextBanner
+            runId={requestId}
+            totalCount={totalCount}
+            onExit={handleExitRunView}
+          />
+        ) : (
+          <>
+            {/* Research Mode Tabs */}
+            <div className="flex items-start gap-2 flex-wrap">
+              {(Object.keys(MODE_CONFIG) as ResearchMode[]).map((mode) => {
+                const cfg = MODE_CONFIG[mode];
+                const isActive = researchMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setResearchMode(mode);
+                      if (mode === "NEWLY_LAUNCHED") {
+                        setSortBy("launch_date");
+                      }
+                      setPage(1);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                      isActive
+                        ? cfg.color
+                        : "text-slate-500 border-slate-700/50 hover:text-slate-300 hover:border-slate-600"
+                    }`}
+                  >
+                    {cfg.icon}
+                    {cfg.label}
+                  </button>
+                );
+              })}
+              <span className="text-[10px] text-slate-600 self-center ml-1 max-w-xs">
+                {modeInfo.description}
               </span>
             </div>
-            <button
-              onClick={() => {
-                setRequestId(null);
-                setPage(1);
-                const url = new URL(window.location.href);
-                url.searchParams.delete("requestId");
-                window.history.pushState({}, "", url.pathname + (url.search ? url.search : ""));
-              }}
-              className="px-2.5 py-1 rounded-md bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-medium border border-indigo-500/30 transition-colors cursor-pointer"
-            >
-              Exit Run View ✕
-            </button>
-          </div>
-        )}
 
-        {/* Research Mode Tabs */}
-        <div className="flex items-start gap-2 flex-wrap">
-          {(Object.keys(MODE_CONFIG) as ResearchMode[]).map((mode) => {
-            const cfg = MODE_CONFIG[mode];
-            const isActive = researchMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => {
-                  setResearchMode(mode);
-                  if (mode === "NEWLY_LAUNCHED") {
-                    setSortBy("launch_date");
-                  }
-                  setPage(1);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                  isActive
-                    ? cfg.color
-                    : "text-slate-500 border-slate-700/50 hover:text-slate-300 hover:border-slate-600"
-                }`}
-              >
-                {cfg.icon}
-                {cfg.label}
-              </button>
-            );
-          })}
-          <span className="text-[10px] text-slate-600 self-center ml-1 max-w-xs">
-            {modeInfo.description}
-          </span>
-        </div>
-
-        {/* Banner — Newly Launched mode */}
-        {researchMode === "NEWLY_LAUNCHED" && (
-          <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg bg-rose-950/20 border border-rose-500/30 text-xs text-rose-300">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 shrink-0 text-rose-400" />
-              <span>
-                <strong>Fresh Commercial Ads (US):</strong> Showing ads launched within the last{" "}
-                <span className="font-bold text-white underline">{launchWithinDays} days</span> (Meta delivery start date).
-              </span>
-            </div>
-            {unknownDateCount > 0 && (
-              <span className="text-[10px] text-slate-500 shrink-0">
-                {unknownDateCount} ad{unknownDateCount !== 1 ? "s" : ""} with unrecorded launch date excluded
-              </span>
+            {/* Banner — Newly Launched mode */}
+            {researchMode === "NEWLY_LAUNCHED" && (
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg bg-rose-950/20 border border-rose-500/30 text-xs text-rose-300">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 shrink-0 text-rose-400" />
+                  <span>
+                    <strong>Fresh Commercial Ads (US):</strong> Showing ads launched within the last{" "}
+                    <span className="font-bold text-white underline">{launchWithinDays} days</span> (Meta delivery start date).
+                  </span>
+                </div>
+                {unknownDateCount > 0 && (
+                  <span className="text-[10px] text-slate-500 shrink-0">
+                    {unknownDateCount} ad{unknownDateCount !== 1 ? "s" : ""} with unrecorded launch date excluded
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Disclaimer — Evergreen mode */}
-        {researchMode === "EVERGREEN" && (
-          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/20 border border-amber-800/20 text-[10px] text-amber-600/80">
-            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-600" />
-            <span>
-              <strong>Research Signal Only.</strong> Longevity tiers reflect evidence quality,
-              not confirmed profitability. Long-running ads do not guarantee sales or positive ROAS.
-            </span>
-          </div>
-        )}
-
-        {/* Active Research Run Filter Banner */}
-        {requestId && (
-          <div className="flex items-center justify-between px-3.5 py-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-300">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white">Filtered by Research Run:</span>
-              <span className="font-mono text-indigo-200">{requestId}</span>
-            </div>
-            <button
-              onClick={() => {
-                setRequestId(null);
-                setPage(1);
-                if (typeof window !== "undefined") {
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete("requestId");
-                  window.history.replaceState({}, "", url.toString());
-                }
-              }}
-              className="text-[11px] px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-white font-medium transition-colors"
-            >
-              Show All Ads
-            </button>
-          </div>
+            {/* Disclaimer — Evergreen mode */}
+            {researchMode === "EVERGREEN" && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/20 border border-amber-800/20 text-[10px] text-amber-600/80">
+                <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-600" />
+                <span>
+                  <strong>Research Signal Only.</strong> Longevity tiers reflect evidence quality,
+                  not confirmed profitability. Long-running ads do not guarantee sales or positive ROAS.
+                </span>
+              </div>
+            )}
+          </>
         )}
 
         {/* Filter Controls */}
@@ -444,33 +495,35 @@ function ExplorerContent() {
                 </select>
               </div>
 
-              {/* Age / Launch Window selector */}
-              {researchMode === "NEWLY_LAUNCHED" ? (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">Launch Window:</span>
-                  <select
-                    value={launchWithinDays}
-                    onChange={(e) => { setLaunchWithinDays(e.target.value); setPage(1); }}
-                    className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-rose-500 text-xs"
-                  >
-                    {LAUNCH_AGE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">Min Age:</span>
-                  <select
-                    value={minAgeDays}
-                    onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
-                    className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
-                  >
-                    {AGE_FILTER_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Age / Launch Window selector — hidden in exact run mode */}
+              {!requestId && (
+                researchMode === "NEWLY_LAUNCHED" ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">Launch Window:</span>
+                    <select
+                      value={launchWithinDays}
+                      onChange={(e) => { setLaunchWithinDays(e.target.value); setPage(1); }}
+                      className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-rose-500 text-xs"
+                    >
+                      {LAUNCH_AGE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">Min Age:</span>
+                    <select
+                      value={minAgeDays}
+                      onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
+                      className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                    >
+                      {AGE_FILTER_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
               )}
 
               {/* Sort By */}

@@ -18,6 +18,7 @@ import {
   validateMetaResearchForm,
 } from "@/lib/meta/validateMetaResearchForm";
 import { getAllowedResearchLimits } from "@/lib/meta/getAllowedResearchLimits";
+import { deriveResearchAction } from "@/lib/meta/researchActionPolicy";
 
 export type CreateResearchResult =
   | { ok: true; runId: string; queuedStatus?: string }
@@ -50,6 +51,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
   const allowedLimits = useMemo(() => getAllowedResearchLimits(maxBudget), [maxBudget]);
+  const researchAction = useMemo(() => deriveResearchAction(readiness), [readiness]);
 
   useEffect(() => {
     if (requestedLimit > maxBudget && maxBudget > 0) {
@@ -59,6 +61,15 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent submission if readiness action policy disallows it (e.g. UNKNOWN, LOADING, SETUP)
+    if (researchAction.kind !== "START" && researchAction.kind !== "QUEUE") {
+      return;
+    }
+
+    if (!readiness.canStartResearch && !readiness.canQueueForLater) {
+      return;
+    }
 
     // Prevent duplicate or rapid concurrent submissions
     if (isSubmitting || isSubmittingLocal) {
@@ -296,24 +307,42 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          {readiness.state === "SETUP_REQUIRED" ? (
+          {researchAction.kind === "SETUP" ? (
             <Button
               type="button"
               variant="secondary"
               onClick={onOpenSetupGuide}
               className="text-amber-300 border-amber-500/30"
             >
-              Configure Collector
+              {researchAction.label}
+            </Button>
+          ) : researchAction.kind === "DIAGNOSTICS" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onOpenSetupGuide}
+              className="text-slate-300 border-slate-700 hover:border-slate-500"
+            >
+              {researchAction.label}
+            </Button>
+          ) : researchAction.kind === "WAIT" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled
+              className="opacity-50 cursor-not-allowed text-slate-400"
+            >
+              {researchAction.label}
             </Button>
           ) : (
             <Button
               type="submit"
               variant="primary"
               isLoading={isSubmitting || isSubmittingLocal}
-              disabled={isSubmitting || isSubmittingLocal}
+              disabled={!researchAction.enabled || isSubmitting || isSubmittingLocal}
               leftIcon={<Play className="h-4 w-4 fill-current" />}
             >
-              {readiness.primaryActionLabel}
+              {researchAction.label}
             </Button>
           )}
         </div>

@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchCompetitorAds, upsertCompetitorAd } from "@/services/ads/adService";
 import { resolveAdSourceUrl } from "@/services/providers/urlResolver";
 import { normalizeExternalAdRecord } from "@/services/providers/registry";
-import { isSampleOrFakeMedia, isStockImage } from "@/services/links/linkValidationService";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
+import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const { searchParams } = new URL(request.url);
 
     const query = searchParams.get("query") || undefined;
@@ -24,8 +29,7 @@ export async function GET(request: NextRequest) {
       sortBy,
       page,
       pageSize,
-      // Do NOT force market = US — let the user's research context set this
-      // market: "US",
+      workspaceId: context.workspaceId,
     });
 
     return NextResponse.json({
@@ -35,11 +39,25 @@ export async function GET(request: NextRequest) {
       meta: {
         timestamp: new Date().toISOString(),
         version: "v1",
+        workspaceId: context.workspaceId,
         dataNote:
           "All records are user-imported or seed data. No automatic ad search performed.",
       },
     });
   } catch (error: any) {
+    if (error instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+            statusCode: error.statusCode,
+          },
+        },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
       {
         success: false,
@@ -57,6 +75,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const body = await request.json();
     const {
       url,
@@ -106,10 +125,6 @@ export async function POST(request: NextRequest) {
         ? advertiserName.trim()
         : "UNKNOWN";
 
-    // Do NOT fabricate a Facebook render_ad embed — these require authentication
-    // and are not public embeds
-    // Support official TikTok post embeds where valid (Requirement 7)
-    // Never assume TikTok Creative Center ads are embeddable (Requirement 8)
     const embedUrl =
       resolution.platform === "TIKTOK" && resolution.isEmbeddable && resolution.embedUrl
         ? resolution.embedUrl
@@ -117,7 +132,6 @@ export async function POST(request: NextRequest) {
 
     const mediaAvailability = embedUrl ? "READY" : "RESTRICTED";
 
-    // Respect user market or extract genuine US region from Creative Center URL (Requirement 6)
     const resolvedTargetMarket =
       targetMarket && targetMarket.trim().length > 0
         ? targetMarket.trim().toUpperCase()
@@ -138,7 +152,6 @@ export async function POST(request: NextRequest) {
       category: category || "Other",
       firstSeenAt: new Date(),
       lastSeenAt: new Date(),
-      // Status remains UNKNOWN until verified active
       status: "UNKNOWN",
       dataConfidence: "OBSERVED",
       mediaType: "VIDEO",
@@ -148,6 +161,41 @@ export async function POST(request: NextRequest) {
     });
 
     const savedAd = await upsertCompetitorAd(normalized);
+    if (!savedAd) {
+      throw new Error("Failed to retrieve saved competitor advertisement");
+    }
+
+    // Attach imported ad to caller's authorized workspace via default watchlist
+    let watchlist = await prisma.watchlist.findFirst({
+      where: { workspaceId: context.workspaceId, name: "Imported Ads" },
+    });
+    if (!watchlist) {
+      watchlist = await prisma.watchlist.create({
+        data: {
+          workspaceId: context.workspaceId,
+          name: "Imported Ads",
+          description: "Default watchlist for user-imported competitor advertisements",
+        },
+      });
+    }
+
+    const existingItem = await prisma.watchlistItem.findFirst({
+      where: {
+        watchlistId: watchlist.id,
+        itemType: "AD",
+        adId: savedAd.id,
+      },
+    });
+
+    if (!existingItem) {
+      await prisma.watchlistItem.create({
+        data: {
+          watchlistId: watchlist.id,
+          itemType: "AD",
+          adId: savedAd.id,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -155,11 +203,25 @@ export async function POST(request: NextRequest) {
       meta: {
         timestamp: new Date().toISOString(),
         version: "v1",
+        workspaceId: context.workspaceId,
         dataNote:
-          "Ad imported as OBSERVED. Status is UNKNOWN until source is verified. No media has been validated.",
+          "Ad imported as OBSERVED. Status is UNKNOWN until source is verified. Attached to authorized workspace.",
       },
     });
   } catch (error: any) {
+    if (error instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+            statusCode: error.statusCode,
+          },
+        },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
       {
         success: false,
