@@ -514,17 +514,46 @@ describe("KH-01 Job Engine — Atomic Claims, Leases & Recovery", () => {
   });
 
   it("slot lifecycle manages explicit reservations correctly", async () => {
-    const slot = await acquireResearchSlot("worker_slot_test", TEST_JOB_ID_1);
+    await prisma.syncJob.create({
+      data: {
+        id: "slot_test_job_1",
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: "https://example.com" }),
+      },
+    });
+
+    const token = "slot_token_999";
+    const slot = await acquireResearchSlot("worker_slot_test", "slot_test_job_1", token);
     expect(slot).not.toBeNull();
-    expect(slot?.jobId).toBe(TEST_JOB_ID_1);
+    expect(slot?.jobId).toBe("slot_test_job_1");
 
-    const renewed = await renewResearchSlot("worker_slot_test", TEST_JOB_ID_1, "fake_token");
-    // Since job isn't RUNNING in DB yet, renew returns false
-    expect(renewed).toBe(false);
+    // Renewal with matching token and worker succeeds
+    const renewed = await renewResearchSlot("worker_slot_test", "slot_test_job_1", token);
+    expect(renewed).toBe(true);
 
-    const released = await releaseResearchSlot("worker_slot_test", TEST_JOB_ID_1, "fake_token");
+    // Renewal with wrong token fails
+    const invalidTokenRenew = await renewResearchSlot("worker_slot_test", "slot_test_job_1", "wrong_token");
+    expect(invalidTokenRenew).toBe(false);
+
+    // Renewal with wrong worker fails
+    const invalidWorkerRenew = await renewResearchSlot("wrong_worker", "slot_test_job_1", token);
+    expect(invalidWorkerRenew).toBe(false);
+
+    // Release with wrong worker fails
+    const wrongWorkerRelease = await releaseResearchSlot("wrong_worker", "slot_test_job_1", token);
+    expect(wrongWorkerRelease).toBe(false);
+
+    // Release with matching worker succeeds
+    const released = await releaseResearchSlot("worker_slot_test", "slot_test_job_1", token);
     expect(released).toBe(true);
+
+    // Second release fails (already released/expired)
+    const secondRelease = await releaseResearchSlot("worker_slot_test", "slot_test_job_1", token);
+    expect(secondRelease).toBe(false);
   });
+
 
   it("KH-01 workers strictly ignore non-KH01 discovery jobs (Task 169)", async () => {
     // Create an unrelated META discovery job in PENDING state

@@ -222,12 +222,16 @@ export async function assertActiveJobLease(
  * Atomically updates a job ONLY if the caller is the current active claim owner
  * with an unexpired lease and matching fencing version.
  * Advances the fencing version monotonically on every successful mutation.
+ * In-memory claim is mutated strictly AFTER the database write has committed.
  */
 export async function updateJobIfClaimOwned(
   claim: ClaimedKh01Job,
   patch: Kh01OwnedJobPatch,
   txClient?: any
 ): Promise<boolean> {
+  let committedFencingVersion: number | null = null;
+  let committedLeaseExpiry: string | null = null;
+
   const runner = async (tx: any) => {
     const job = await tx.syncJob.findUnique({
       where: { id: claim.id },
@@ -264,19 +268,14 @@ export async function updateJobIfClaimOwned(
       return false;
     }
 
-    // Monotonically advance fencing version
+    // Calculate monotonically advanced fencing version locally without mutating claim prematurely
     const nextFencingVersion = (meta.fencingVersion ?? claim.fencingVersion ?? 0) + 1;
-    claim.fencingVersion = nextFencingVersion;
 
     const now = new Date();
     const leaseDuration = patch.leaseDurationMs || KH01_LEASE_DURATION_MS;
     const newLeaseExpiry = patch.extendLease
       ? new Date(now.getTime() + leaseDuration).toISOString()
       : meta.leaseExpiresAt;
-
-    if (patch.extendLease) {
-      claim.leaseExpiresAt = newLeaseExpiry;
-    }
 
     const updatedMeta = {
       ...meta,
@@ -300,14 +299,25 @@ export async function updateJobIfClaimOwned(
       },
     });
 
+    committedFencingVersion = nextFencingVersion;
+    if (patch.extendLease) {
+      committedLeaseExpiry = newLeaseExpiry;
+    }
+
     return true;
   };
 
-  if (txClient) {
-    return await runner(txClient);
-  } else {
-    return await prisma.$transaction(runner);
+  const success = txClient ? await runner(txClient) : await prisma.$transaction(runner);
+
+  // Update in-memory claim object strictly after transaction has committed
+  if (success && committedFencingVersion !== null) {
+    claim.fencingVersion = committedFencingVersion;
+    if (committedLeaseExpiry) {
+      claim.leaseExpiresAt = committedLeaseExpiry;
+    }
   }
+
+  return success;
 }
 
 /**
@@ -335,16 +345,18 @@ export async function renewKh01Lease(claim: ClaimedKh01Job): Promise<LeaseRenewa
 
 /**
  * Explicit research slot acquisition helper.
+ * Atomically checks capacity and establishes a durable capacity reservation on SyncJob.
  */
 export async function acquireResearchSlot(
   workerId: string,
   jobId: string,
-  _claimToken: string = crypto.randomUUID()
+  claimToken: string = crypto.randomUUID(),
+  txClient?: any
 ): Promise<ResearchSlotLease | null> {
   const maxConcurrency = getKh01MaxConcurrency();
 
-  return await prisma.$transaction(async (tx) => {
-    // Check currently active heavy research jobs with unexpired lease
+  const runner = async (tx: any) => {
+    // 1. Check currently active heavy research jobs with unexpired lease
     const runningJobs = await tx.syncJob.findMany({
       where: {
         jobType: "KH01_LANDING_PAGE_RESEARCH",
@@ -353,7 +365,7 @@ export async function acquireResearchSlot(
     });
 
     const now = Date.now();
-    const activeCount = runningJobs.filter((j) => {
+    const activeCount = runningJobs.filter((j: any) => {
       if (j.id === jobId) return false;
       try {
         const meta = JSON.parse(j.resultJson || "{}");
@@ -367,25 +379,64 @@ export async function acquireResearchSlot(
       return null;
     }
 
+    const job = await tx.syncJob.findUnique({ where: { id: jobId } });
+    if (!job) {
+      return null;
+    }
+
+    let meta: any = {};
+    try {
+      meta = JSON.parse(job.resultJson || "{}");
+    } catch {
+      // ignore
+    }
+
     const leaseExpiresAt = new Date(now + KH01_LEASE_DURATION_MS).toISOString();
+    const fencingVersion = (meta.fencingVersion || 0) + 1;
+
+    // Atomically transition or update the job reservation
+    await tx.syncJob.update({
+      where: { id: jobId },
+      data: {
+        status: "RUNNING",
+        startedAt: job.startedAt || new Date(now),
+        resultJson: JSON.stringify({
+          ...meta,
+          workerId,
+          claimToken,
+          fencingVersion,
+          leaseExpiresAt,
+          lastHeartbeatAt: new Date(now).toISOString(),
+        }),
+      },
+    });
+
     return {
       slotId: `slot_${jobId}`,
       workerId,
       jobId,
       leaseExpiresAt,
     };
-  });
+  };
+
+  if (txClient) {
+    return await runner(txClient);
+  } else {
+    return await prisma.$transaction(runner);
+  }
 }
 
 /**
  * Explicit research slot renewal helper.
+ * Atomically extends the lease only if owned by the caller.
  */
 export async function renewResearchSlot(
   workerId: string,
   jobId: string,
-  claimToken: string
+  claimToken: string,
+  txClient?: any
 ): Promise<boolean> {
-  return await prisma.$transaction(async (tx) => {
+  const runner = async (tx: any) => {
     const job = await tx.syncJob.findUnique({ where: { id: jobId } });
     if (!job || job.status !== "RUNNING") return false;
     let meta: any = {};
@@ -396,19 +447,87 @@ export async function renewResearchSlot(
     }
     if (meta.workerId !== workerId || meta.claimToken !== claimToken) return false;
     if (meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() < Date.now()) return false;
+    if (meta.cancellationRequested) return false;
+
+    const now = Date.now();
+    const leaseExpiresAt = new Date(now + KH01_LEASE_DURATION_MS).toISOString();
+    const nextFencingVersion = (meta.fencingVersion || 0) + 1;
+
+    await tx.syncJob.update({
+      where: { id: jobId },
+      data: {
+        resultJson: JSON.stringify({
+          ...meta,
+          leaseExpiresAt,
+          fencingVersion: nextFencingVersion,
+          lastHeartbeatAt: new Date(now).toISOString(),
+        }),
+      },
+    });
+
     return true;
-  });
+  };
+
+  if (txClient) {
+    return await runner(txClient);
+  } else {
+    return await prisma.$transaction(runner);
+  }
 }
 
 /**
  * Explicit research slot release helper.
+ * Atomically verifies claim ownership and clears the capacity reservation.
+ * Rejects stale, mismatched, or already released claimants with false.
  */
 export async function releaseResearchSlot(
-  _workerId: string,
-  _jobId: string,
-  _claimToken?: string
+  workerId: string,
+  jobId: string,
+  claimToken?: string,
+  txClient?: any
 ): Promise<boolean> {
-  return true;
+  const runner = async (tx: any) => {
+    const job = await tx.syncJob.findUnique({ where: { id: jobId } });
+    if (!job || job.status !== "RUNNING") return false;
+
+    let meta: any = {};
+    try {
+      meta = JSON.parse(job.resultJson || "{}");
+    } catch {
+      return false;
+    }
+
+    // Ownership check: workerId and claimToken
+    if (meta.workerId !== workerId) return false;
+    if (claimToken && meta.claimToken !== claimToken) return false;
+
+    // Check if lease already expired or slot already released
+    if (meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() < Date.now()) {
+      return false;
+    }
+
+    // Atomically release the capacity reservation
+    const nextFencingVersion = (meta.fencingVersion || 0) + 1;
+    await tx.syncJob.update({
+      where: { id: jobId },
+      data: {
+        resultJson: JSON.stringify({
+          ...meta,
+          leaseExpiresAt: new Date(0).toISOString(), // Expired/freed lease
+          releasedAt: new Date().toISOString(),
+          fencingVersion: nextFencingVersion,
+        }),
+      },
+    });
+
+    return true;
+  };
+
+  if (txClient) {
+    return await runner(txClient);
+  } else {
+    return await prisma.$transaction(runner);
+  }
 }
 
 /**
@@ -418,6 +537,7 @@ export async function recoverExpiredResearchSlots(): Promise<number> {
   const rec = await recoverInterruptedKh01Jobs();
   return rec.recoveredCount;
 }
+
 
 /**
  * Cancels an active or pending KH-01 research job safely.
