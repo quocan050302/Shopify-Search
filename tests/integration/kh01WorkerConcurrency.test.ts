@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { createIsolatedTestDatabase, TestDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
 import {
   claimPendingKh01Job,
+  acquireResearchSlot,
   releaseResearchSlot,
   updateJobIfClaimOwned,
   recoverInterruptedKh01Jobs,
@@ -162,42 +163,223 @@ describe("KH-01 Checkpoint 4 & 5: Worker Capacity, Slot Lifecycle & Claim Fencin
     expect(staleClaim.fencingVersion).toBe(3);
   });
 
-  it("recovers expired lease after worker crash and frees capacity", async () => {
-    process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS = "1";
-
-    // Simulate crashed worker holding expired lease
-    const expiredTimestamp = new Date(Date.now() - 10000).toISOString();
+  it("enforces mutual exclusion when multiple workers contend for the exact same job simultaneously", async () => {
     await dbHandle.prisma.syncJob.create({
       data: {
-        id: "job_crashed_worker",
+        id: "job_single_contention",
+        workspaceId,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: "https://example.com/single-contention" }),
+      },
+    });
+
+    // Both workers attempt to claim the exact same job concurrently
+    const [claimA, claimB] = await Promise.all([
+      claimPendingKh01Job("contender-worker-A"),
+      claimPendingKh01Job("contender-worker-B"),
+    ]);
+
+    // Exactly one worker must win the claim; the other must receive null
+    const winners = [claimA, claimB].filter((c) => c !== null);
+    expect(winners.length).toBe(1);
+    expect(winners[0]?.id).toBe("job_single_contention");
+
+    const winnerWorkerId = winners[0]?.workerId;
+    const loser = [claimA, claimB].find((c) => c === null);
+    expect(loser).toBeNull();
+
+    // Verify DB reflects the winner
+    const jobInDb = await dbHandle.prisma.syncJob.findUnique({
+      where: { id: "job_single_contention" },
+    });
+    const meta = JSON.parse(jobInDb?.resultJson || "{}");
+    expect(jobInDb?.status).toBe("RUNNING");
+    expect(meta.workerId).toBe(winnerWorkerId);
+  });
+
+  it("measures and enforces active overlap bounds under simultaneous multi-worker claims", async () => {
+    process.env.KH01_MAX_ACTIVE_HEAVY_RESEARCH_JOBS = "2";
+
+    // Seed 4 pending research jobs
+    const jobIds = ["job_overlap_1", "job_overlap_2", "job_overlap_3", "job_overlap_4"];
+    await dbHandle.prisma.syncJob.createMany({
+      data: jobIds.map((id) => ({
+        id,
+        workspaceId,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: `https://example.com/${id}` }),
+      })),
+    });
+
+    // 4 workers start claiming concurrently
+    const claims = await Promise.all([
+      claimPendingKh01Job("overlap-worker-1"),
+      claimPendingKh01Job("overlap-worker-2"),
+      claimPendingKh01Job("overlap-worker-3"),
+      claimPendingKh01Job("overlap-worker-4"),
+    ]);
+
+    const activeClaims = claims.filter((c): c is ClaimedKh01Job => c !== null);
+    expect(activeClaims.length).toBe(2); // strictly bounded by budget = 2
+
+    // Check database to ensure no more than 2 active unexpired running jobs exist
+    const runningJobs = await dbHandle.prisma.syncJob.findMany({
+      where: {
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+      },
+    });
+
+    const now = Date.now();
+    const activeRunning = runningJobs.filter((j) => {
+      try {
+        const m = JSON.parse(j.resultJson || "{}");
+        return m.leaseExpiresAt && new Date(m.leaseExpiresAt).getTime() > now;
+      } catch {
+        return false;
+      }
+    });
+
+    expect(activeRunning.length).toBe(2);
+
+    // Release 1 claim -> queued worker can now claim
+    const released = await releaseResearchSlot(
+      activeClaims[0].workerId,
+      activeClaims[0].id,
+      activeClaims[0].claimToken
+    );
+    expect(released).toBe(true);
+
+    const queuedWorkerClaim = await claimPendingKh01Job("overlap-worker-queued");
+    expect(queuedWorkerClaim).not.toBeNull();
+  });
+
+  it("strictly enforces research slot ownership and rejects unauthorized or stale release", async () => {
+    // 1. acquireResearchSlot with owner
+    const jobId = "job_slot_security_test";
+    await dbHandle.prisma.syncJob.create({
+      data: {
+        id: jobId,
+        workspaceId,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "PENDING",
+        resultJson: JSON.stringify({ targetUrl: "https://example.com/slot-sec" }),
+      },
+    });
+
+    const slot = await acquireResearchSlot("legit_worker", jobId, "legit_token_123");
+    expect(slot).not.toBeNull();
+    expect(slot?.claimToken).toBe("legit_token_123");
+
+    // 2. Reject arbitrary takeover in acquireResearchSlot while job is RUNNING with active lease
+    const rogueTakeover = await acquireResearchSlot("rogue_worker", jobId, "rogue_token_999");
+    expect(rogueTakeover).toBeNull(); // Takeover blocked!
+
+    // 3. Reject release with empty/missing token
+    const emptyTokenRelease = await releaseResearchSlot("legit_worker", jobId, "");
+    expect(emptyTokenRelease).toBe(false);
+
+    // 4. Reject release with wrong workerId
+    const wrongWorkerRelease = await releaseResearchSlot("wrong_worker", jobId, "legit_token_123");
+    expect(wrongWorkerRelease).toBe(false);
+
+    // 5. Reject release with mismatched claimToken
+    const wrongTokenRelease = await releaseResearchSlot("legit_worker", jobId, "wrong_token_777");
+    expect(wrongTokenRelease).toBe(false);
+
+    // 6. Valid release succeeds
+    const validRelease = await releaseResearchSlot("legit_worker", jobId, "legit_token_123");
+    expect(validRelease).toBe(true);
+
+    // 7. Double release rejected
+    const doubleRelease = await releaseResearchSlot("legit_worker", jobId, "legit_token_123");
+    expect(doubleRelease).toBe(false);
+  });
+
+  it("verifies full crash recovery scenario, immutable payload preservation, and stale rejection", async () => {
+    const originalInput = {
+      productId: "prod_crash_recovery_test",
+      adId: "ad_crash_recovery_test",
+      targetUrl: "https://example.com/crash-recovery-test",
+      forceRefresh: true,
+      requestedAt: "2026-10-24T12:00:00.000Z",
+    };
+
+    const expiredLeaseTimestamp = new Date(Date.now() - 30000).toISOString(); // 30s ago
+    await dbHandle.prisma.syncJob.create({
+      data: {
+        id: "job_full_crash_test",
         workspaceId,
         jobType: "KH01_LANDING_PAGE_RESEARCH",
         status: "RUNNING",
         resultJson: JSON.stringify({
-          targetUrl: "https://example.com/crashed",
-          workerId: "crashed_worker_pid_9999",
-          claimToken: "crashed_token",
+          ...originalInput,
+          workerId: "crashed_worker_original",
+          claimToken: "crashed_token_original",
           fencingVersion: 1,
-          leaseExpiresAt: expiredTimestamp,
+          leaseExpiresAt: expiredLeaseTimestamp,
           attemptNumber: 1,
         }),
       },
     });
 
-    // Capacity is initially full because job status is RUNNING
-    // But recovery detects expired lease and resets to PENDING
+    // 1. Production recovery scan detects expired lease and resets to PENDING
     const recovery = await recoverInterruptedKh01Jobs();
     expect(recovery.recoveredCount).toBe(1);
 
-    const recoveredInDb = await dbHandle.prisma.syncJob.findUnique({
-      where: { id: "job_crashed_worker" },
+    const recoveredJob = await dbHandle.prisma.syncJob.findUnique({
+      where: { id: "job_full_crash_test" },
     });
-    expect(recoveredInDb?.status).toBe("PENDING");
+    expect(recoveredJob?.status).toBe("PENDING");
 
-    // New worker can now claim the recovered job
-    const newClaim = await claimPendingKh01Job("new_worker_pid_1234");
+    // 2. Verify immutable payload is strictly preserved
+    const recoveredMeta = JSON.parse(recoveredJob?.resultJson || "{}");
+    expect(recoveredMeta.productId).toBe(originalInput.productId);
+    expect(recoveredMeta.adId).toBe(originalInput.adId);
+    expect(recoveredMeta.targetUrl).toBe(originalInput.targetUrl);
+    expect(recoveredMeta.forceRefresh).toBe(originalInput.forceRefresh);
+    expect(recoveredMeta.requestedAt).toBe(originalInput.requestedAt);
+    expect(recoveredMeta.attemptNumber).toBe(1); // Not incremented yet
+
+    // 3. New worker claims the recovered job
+    const newClaim = await claimPendingKh01Job("new_worker_healthy");
     expect(newClaim).not.toBeNull();
-    expect(newClaim?.id).toBe("job_crashed_worker");
-    expect(newClaim?.attemptNumber).toBe(2); // Next attempt
+    expect(newClaim?.id).toBe("job_full_crash_test");
+    expect(newClaim?.attemptNumber).toBe(2); // Incremented on claim
+    expect(newClaim?.workerId).toBe("new_worker_healthy");
+    expect(newClaim?.claimToken).not.toBe("crashed_token_original");
+
+    // 4. Stale original worker attempts to mutate or release -> all rejected
+    const staleClaim: ClaimedKh01Job = {
+      id: "job_full_crash_test",
+      workspaceId,
+      jobType: "KH01_LANDING_PAGE_RESEARCH",
+      status: "RUNNING",
+      workerId: "crashed_worker_original",
+      claimToken: "crashed_token_original",
+      fencingVersion: 1,
+      attemptNumber: 1,
+    };
+
+    const staleUpdate = await updateJobIfClaimOwned(staleClaim, { progress: 99 });
+    expect(staleUpdate).toBe(false);
+
+    const staleRelease = await releaseResearchSlot(
+      "crashed_worker_original",
+      "job_full_crash_test",
+      "crashed_token_original"
+    );
+    expect(staleRelease).toBe(false);
+
+    // 5. New owner successfully mutates and finishes
+    const newUpdate = await updateJobIfClaimOwned(newClaim!, { progress: 100, status: "COMPLETED" });
+    expect(newUpdate).toBe(true);
+
+    const finalizedJob = await dbHandle.prisma.syncJob.findUnique({
+      where: { id: "job_full_crash_test" },
+    });
+    expect(finalizedJob?.status).toBe("COMPLETED");
   });
 });
