@@ -22,24 +22,31 @@ export interface MetaCollectorConfig {
 }
 
 export function resolvePythonBinary(customPath?: string): string {
-  if (customPath && fs.existsSync(customPath)) {
-    return customPath;
+  if (customPath) {
+    try {
+      if (fs.existsSync(customPath)) return customPath;
+    } catch {}
   }
 
-  const projectRoot = process.cwd();
-  const venvDir = path.join(projectRoot, "services", "meta-ads-collector", ".venv");
+  // Obfuscate path to avoid Turbopack statically resolving virtualenv symlinks
+  const venvParts = ["services", "meta-ads-collector", [".", "venv"].join("")];
+  const venvDir = path.join(String(process.cwd()), ...venvParts);
 
   // Check Posix (macOS / Linux)
   const posixBin = path.join(venvDir, "bin", "python");
-  if (fs.existsSync(posixBin)) {
-    return posixBin;
-  }
+  try {
+    if (fs.existsSync(posixBin)) {
+      return posixBin;
+    }
+  } catch {}
 
   // Check Windows
   const winBin = path.join(venvDir, "Scripts", "python.exe");
-  if (fs.existsSync(winBin)) {
-    return winBin;
-  }
+  try {
+    if (fs.existsSync(winBin)) {
+      return winBin;
+    }
+  } catch {}
 
   // Fallback to system python3 / python if in PATH
   return process.platform === "win32" ? "python.exe" : "python3";

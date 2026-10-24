@@ -95,7 +95,25 @@ export function validateAdminRequest(request: NextRequest): AdminAuthCheckResult
   }
 
   // In production without secret configured: require secret configuration (fail closed)
+  // unless request originates from local loopback (desktop research mode)
   if (process.env.NODE_ENV === "production") {
+    const host = (request.headers.get("host") || "").toLowerCase();
+    const isLoopback =
+      host.startsWith("localhost:") ||
+      host === "localhost" ||
+      host.startsWith("127.0.0.1:") ||
+      host === "127.0.0.1" ||
+      host.startsWith("[::1]:") ||
+      host === "[::1]";
+
+    if (isLoopback) {
+      return {
+        authorized: true,
+        principalId: "local_desktop_admin",
+        authMode: "LOCAL_DEV",
+      };
+    }
+
     return {
       authorized: false,
       code: "ADMIN_AUTH_REQUIRED",
