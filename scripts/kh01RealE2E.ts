@@ -92,9 +92,9 @@ export interface Kh01E2EManifest {
   commitSha: string | null;
   timestamp: string;
   database: {
-    isolation: "PASSED" | "FAILED" | "NOT_RUN";
-    schema: "PASSED" | "FAILED" | "NOT_RUN";
-    activeDatabaseProtection: "PASSED" | "FAILED" | "NOT_RUN";
+    isolation: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    schema: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    activeDatabaseProtection: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
     isolated: boolean;
     schemaInitialized: boolean;
     activeDatabaseProtected: boolean;
@@ -113,12 +113,12 @@ export interface Kh01E2EManifest {
     decisionPersistence: "PASSED" | "FAILED" | "NOT_RUN";
   };
   worker: {
-    atomicClaim: "PASSED" | "FAILED" | "NOT_RUN";
-    globalConcurrency: "PASSED" | "FAILED" | "NOT_RUN";
-    leaseRenewal: "PASSED" | "FAILED" | "NOT_RUN";
-    recovery: "PASSED" | "FAILED" | "NOT_RUN";
-    staleWriteProtection: "PASSED" | "FAILED" | "NOT_RUN";
-    capacityRelease: "PASSED" | "FAILED" | "NOT_RUN";
+    atomicClaim: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    globalConcurrency: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    leaseRenewal: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    recovery: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    staleWriteProtection: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+    capacityRelease: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
     claimVerified: boolean;
     fencingVerified: boolean;
     globalConcurrencyVerified: boolean;
@@ -324,7 +324,7 @@ export async function verifyWorkerRecovery(): Promise<AcceptanceVerificationResu
       status: "PASSED",
       verified: true,
       evidenceType: "PROCESS_TEST",
-      details: `Crash recovery scanner executed: scanned ${res.scannedCount}, recovered ${res.recoveredCount}, terminal failures ${res.failedCount}`,
+      details: `Crash recovery scanner executed: recovered ${res.recoveredCount}, abandoned ${res.abandonedCount}`,
     };
   } catch (err: any) {
     return {
@@ -990,6 +990,12 @@ export async function executeKh01EndToEndAcceptance(
     candidateAd = sourceResolution.ad;
     sourceProvenanceResult = verifySourceProvenance(sourceResolution);
 
+    await prisma.workspace.upsert({
+      where: { id: workspaceId },
+      update: {},
+      create: { id: workspaceId, name: "KH-01 E2E Acceptance Workspace" },
+    });
+
     const watchlist = await prisma.watchlist.upsert({
       where: { id: `wl_${workspaceId}` },
       update: {},
@@ -1201,7 +1207,7 @@ export async function executeKh01EndToEndAcceptance(
         expectedLandingSnapshotId: landingSnapshotId,
         expectedOfferSnapshotId: offerSnapshotId,
         expectedEvidenceIds: evidenceIds,
-        auth: { token: "swai_test_owner_token_kh01" },
+        auth: { token: "swai_test_owner_token_kh01", workspaceId },
       });
       actualHttpReadbackVerified = httpReadback.verified;
 
@@ -1223,8 +1229,9 @@ export async function executeKh01EndToEndAcceptance(
         baseUrl: options.serverBaseUrl,
         productId,
         workspaceId,
+        adminApiKey: "swai_test_owner_token_kh01",
       });
-      browserReadbackVerified = browserRes.passed;
+      browserReadbackVerified = browserRes.verified;
 
       steps.push({
         step: 8.8,

@@ -305,8 +305,9 @@ export function evaluateLandingPagePillar(funnel?: CompetitorFunnelAssessment | 
     };
   }
 
-  if (funnel.statusClassification === "ACCESS_RESTRICTED" || funnel.httpStatus === 403 || funnel.httpStatus === 429) {
-    risks.push(`Landing page returned access restriction (HTTP ${funnel.httpStatus || 403}); page was not inspectable.`);
+  const funnelAny = funnel as any;
+  if (funnelAny.statusClassification === "ACCESS_RESTRICTED" || funnelAny.httpStatus === 403 || funnelAny.httpStatus === 429) {
+    risks.push(`Landing page returned access restriction (HTTP ${funnelAny.httpStatus || 403}); page was not inspectable.`);
     missingEvidence.push("Landing page content blocked by website access restrictions");
     return {
       pillar: "LANDING_PAGE",

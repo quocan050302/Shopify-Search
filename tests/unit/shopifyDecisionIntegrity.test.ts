@@ -9,6 +9,7 @@ import {
   explainOpportunityRecommendation,
   SixPillarOpportunityInput,
 } from "@/services/research/opportunityAssessmentService";
+import { CompetitorFunnelAssessment } from "@/services/research/funnelAnalysisService";
 
 describe("KH-01 Checkpoint 7: Shopify Economics & Six-Pillar Decision Integrity (Tasks 125–137)", () => {
   it("Scenario 1: Strong advertising evidence but unknown supplier cost strictly blocks TEST_CANDIDATE", () => {
@@ -144,7 +145,7 @@ describe("KH-01 Checkpoint 7: Shopify Economics & Six-Pillar Decision Integrity 
         elements: [],
         croChecklist: [],
         score: null,
-      } as any,
+      } as unknown as CompetitorFunnelAssessment,
       economicsScenarios: [],
     });
 

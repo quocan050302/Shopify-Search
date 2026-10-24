@@ -2,8 +2,6 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { createIsolatedTestDatabase, TestDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
 import {
   claimPendingKh01Job,
-  acquireResearchSlot,
-  renewResearchSlot,
   releaseResearchSlot,
   updateJobIfClaimOwned,
   recoverInterruptedKh01Jobs,
