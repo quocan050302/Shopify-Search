@@ -305,22 +305,39 @@ export function evaluateLandingPagePillar(funnel?: CompetitorFunnelAssessment | 
     };
   }
 
+  if (funnel.statusClassification === "ACCESS_RESTRICTED" || funnel.httpStatus === 403 || funnel.httpStatus === 429) {
+    risks.push(`Landing page returned access restriction (HTTP ${funnel.httpStatus || 403}); page was not inspectable.`);
+    missingEvidence.push("Landing page content blocked by website access restrictions");
+    return {
+      pillar: "LANDING_PAGE",
+      weight: 15,
+      score: null,
+      readiness: 10,
+      status: "FAIL",
+      findings: [],
+      missingEvidence,
+      risks,
+    };
+  }
+
   const croScore = funnel.croReadiness != null ? funnel.croReadiness : null;
   const readiness = funnel.confidence != null ? Math.round(funnel.confidence * 100) : 0;
 
-  for (const str of funnel.observedStrengths) {
+  for (const str of funnel.observedStrengths || []) {
     findings.push(`${str.finding}: ${str.observedEvidence}`);
   }
 
-  for (const w of funnel.observedWeaknesses) {
+  for (const w of funnel.observedWeaknesses || []) {
     risks.push(`${w.finding}: ${w.observedEvidence}`);
   }
 
-  for (const f of funnel.potentialFriction) {
+  for (const f of funnel.potentialFriction || []) {
     risks.push(`Friction: ${f.finding}`);
   }
 
-  missingEvidence.push(...funnel.missingEvidence);
+  if (Array.isArray(funnel.missingEvidence)) {
+    missingEvidence.push(...funnel.missingEvidence);
+  }
   if (croScore == null) {
     missingEvidence.push("No verified CRO score available from landing page inspection");
   }
@@ -616,7 +633,10 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
 /**
  * Validates critical decision gates that must pass before any real ad spend is authorized.
  */
-export function evaluateSmallTestReadiness(assessment: ProductOpportunityAssessment): TestReadinessDecision {
+export function evaluateSmallTestReadiness(
+  assessment: ProductOpportunityAssessment,
+  options?: { allowUserOverride?: boolean; overrideReason?: string }
+): TestReadinessDecision {
   const gateChecks = [
     {
       name: "Product Identity & Problem Clarity",
@@ -646,21 +666,25 @@ export function evaluateSmallTestReadiness(assessment: ProductOpportunityAssessm
   ];
 
   const unmetRequirements = gateChecks.filter((g) => !g.passed).map((g) => `${g.name}: ${g.reason}`);
-  const isReady = unmetRequirements.length === 0;
+  const isAlgoReady = unmetRequirements.length === 0;
 
   const actionableNextSteps: string[] = [];
   if (!gateChecks[2].passed) actionableNextSteps.push("Obtain authentic supplier invoice or platform quote to lock COGS");
   if (!gateChecks[3].passed) actionableNextSteps.push("Verify package weight, shipping transit times, and compliance risks");
   if (!gateChecks[1].passed) actionableNextSteps.push("Inspect competitor landing page offer and bundle terms");
   if (!gateChecks[0].passed) actionableNextSteps.push("Verify product identity and validate clear customer problem statement");
-  if (actionableNextSteps.length === 0 && isReady) {
+  if (actionableNextSteps.length === 0 && isAlgoReady) {
     actionableNextSteps.push("Build high-converting Shopify product page mirroring validated offer terms");
     actionableNextSteps.push("Determine disciplined test budget based on target CPA and initial hypothesis validation goals");
   }
 
+  const isUserOverride = Boolean(options?.allowUserOverride && !isAlgoReady);
+  const status: "ELIGIBLE" | "BLOCKED_MISSING_DATA" | "USER_OVERRIDE" =
+    isAlgoReady ? "ELIGIBLE" : isUserOverride ? "USER_OVERRIDE" : "BLOCKED_MISSING_DATA";
+
   return {
-    isReadyForSmallTest: isReady,
-    status: isReady ? "ELIGIBLE" : "BLOCKED_MISSING_DATA",
+    isReadyForSmallTest: isAlgoReady || isUserOverride,
+    status,
     gateChecks,
     unmetRequirements,
     actionableNextSteps,
