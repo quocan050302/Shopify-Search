@@ -18,6 +18,13 @@
 
 import { prisma } from "@/lib/db";
 import {
+  ClaimedKh01Job,
+  assertActiveJobLease,
+  updateJobIfClaimOwned,
+} from "@/workers/kh01Worker";
+
+export type { ClaimedKh01Job };
+import {
   ResearchAccessContext,
   assertAdWorkspaceAccess,
   assertProductWorkspaceAccess,
@@ -291,36 +298,44 @@ export async function createLandingPageResearchJob(
   };
 }
 
-export interface ClaimedKh01Job {
-  id: string;
-  workspaceId: string;
-  jobType: string;
-  status: string;
-  workerId: string;
-  claimToken: string;
-  attemptNumber: number;
-  payload?: {
-    productId?: string | null;
-    adId?: string | null;
-    targetUrl: string;
-    forceRefresh?: boolean;
-  };
-}
 
 /**
  * Executes a claimed landing page research job with complete error boundaries.
+ * Strictly claim-only: requires a valid ClaimedKh01Job with active unexpired lease.
  */
 export async function executeLandingPageResearchJob(
-  jobOrClaim: string | ClaimedKh01Job,
+  claim: ClaimedKh01Job,
   signal?: AbortSignal
 ): Promise<LandingPageResearchResult> {
   const startTime = Date.now();
-  const jobId = typeof jobOrClaim === "string" ? jobOrClaim : jobOrClaim.id;
+
+  // Enforce valid claim object contract
+  if (
+    !claim ||
+    typeof claim !== "object" ||
+    !claim.id ||
+    !claim.workerId ||
+    !claim.claimToken
+  ) {
+    throw new Error(
+      "Job cannot be executed directly: status must be claimed and RUNNING. Use a worker to claim pending jobs."
+    );
+  }
+
+  const jobId = claim.id;
+
+  // Verify active lease ownership before any network operation
+  await assertActiveJobLease(claim);
+
+  // Update progress atomically under active claim
+  const progressUpdated = await updateJobIfClaimOwned(claim, { progress: 20 });
+  if (!progressUpdated) {
+    throw new Error(`Claim lost or expired for job '${jobId}' before execution.`);
+  }
 
   const syncJob = await prisma.syncJob.findUnique({
     where: { id: jobId },
   });
-
   if (!syncJob) {
     throw new Error(`Research job '${jobId}' not found.`);
   }
@@ -340,49 +355,7 @@ export async function executeLandingPageResearchJob(
     throw new Error(`Corrupted job payload for job '${jobId}'.`);
   }
 
-  // Enforce valid claim and active lease
-  if (
-    !jobOrClaim ||
-    typeof jobOrClaim !== "object" ||
-    !("claimToken" in jobOrClaim) ||
-    !jobOrClaim.claimToken ||
-    !jobOrClaim.workerId
-  ) {
-    throw new Error(
-      `Job '${jobId}' cannot be executed directly: status must be claimed and RUNNING. Use a worker to claim pending jobs.`
-    );
-  }
-
-  const claim = jobOrClaim as ClaimedKh01Job;
-  if (syncJob.status !== "RUNNING") {
-    throw new Error(`Job '${jobId}' is not running (status: ${syncJob.status}).`);
-  }
-
-  if (
-    jobConfig.workerId !== claim.workerId ||
-    jobConfig.claimToken !== claim.claimToken
-  ) {
-    throw new Error(
-      `Claim mismatch: Worker '${claim.workerId}' does not own active lease on job '${jobId}'.`
-    );
-  }
-
-  if (
-    jobConfig.leaseExpiresAt &&
-    new Date(jobConfig.leaseExpiresAt).getTime() < Date.now()
-  ) {
-    throw new Error(`Lease expired for job '${jobId}'.`);
-  }
-
-  // Update progress atomically under active claim
-  await prisma.syncJob.update({
-    where: { id: jobId, status: "RUNNING" },
-    data: { progress: 20 },
-  });
-
-  const targetUrl =
-    (typeof jobOrClaim === "object" && jobOrClaim.payload?.targetUrl) || jobConfig.targetUrl;
-
+  const targetUrl = claim.payload?.targetUrl || jobConfig.targetUrl;
   if (!targetUrl || typeof targetUrl !== "string") {
     throw new Error(`Target URL missing in job '${jobId}' payload.`);
   }
@@ -432,9 +405,11 @@ export async function executeLandingPageResearchJob(
   }
 
   if (fetchResult.statusClassification === "RATE_LIMITED") {
-    await prisma.syncJob.update({
-      where: { id: jobId },
-      data: { status: "FAILED", progress: 100, errorMessage: "HTTP 429 Rate limited." },
+    await updateJobIfClaimOwned(claim, {
+      status: "FAILED",
+      progress: 100,
+      errorMessage: "HTTP 429 Rate limited.",
+      completedAt: new Date(),
     });
     return {
       jobId,
@@ -452,13 +427,11 @@ export async function executeLandingPageResearchJob(
   }
 
   if (!fetchResult.content) {
-    await prisma.syncJob.update({
-      where: { id: jobId },
-      data: {
-        status: "FAILED",
-        progress: 100,
-        errorMessage: fetchResult.errorMessage || "No readable content returned from landing page.",
-      },
+    await updateJobIfClaimOwned(claim, {
+      status: "FAILED",
+      progress: 100,
+      errorMessage: fetchResult.errorMessage || "No readable content returned from landing page.",
+      completedAt: new Date(),
     });
     return {
       jobId,

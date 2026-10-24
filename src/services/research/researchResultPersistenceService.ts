@@ -108,16 +108,32 @@ export async function persistCompletedResearchResult(
   // 3. Handle ACCESS_RESTRICTED sources truthfully
   if (result.accessStatus === "ACCESS_RESTRICTED") {
     return await prisma.$transaction(async (tx) => {
-      // Re-verify lease inside transaction boundary
+      // Re-verify lease and fencing inside transaction boundary
       const inTxJob = await tx.syncJob.findUnique({ where: { id: claim.id } });
+      if (!inTxJob || inTxJob.status !== "RUNNING") {
+        throw new Error(`SyncJob '${claim.id}' is not in RUNNING status during persistence.`);
+      }
       let txMeta: any = {};
       try {
         txMeta = JSON.parse(inTxJob?.resultJson || "{}");
       } catch {
         // ignore
       }
-      if (txMeta.claimToken !== claim.claimToken) {
+      if (txMeta.workerId !== claim.workerId || txMeta.claimToken !== claim.claimToken) {
         throw new Error("Claim token mismatch during transaction persistence.");
+      }
+      if (
+        typeof claim.fencingVersion === "number" &&
+        txMeta.fencingVersion !== undefined &&
+        txMeta.fencingVersion !== claim.fencingVersion
+      ) {
+        throw new Error("Fencing version mismatch during transaction persistence.");
+      }
+      if (txMeta.leaseExpiresAt && new Date(txMeta.leaseExpiresAt).getTime() < Date.now()) {
+        throw new Error("Lease expired before persistence could be completed.");
+      }
+      if (txMeta.cancellationRequested) {
+        throw new Error(`Job '${claim.id}' was cancelled.`);
       }
 
       const blockedSnapshot = await tx.landingPageSnapshot.create({
@@ -176,16 +192,32 @@ export async function persistCompletedResearchResult(
 
   // 4. Handle successful inspection atomically
   return await prisma.$transaction(async (tx) => {
-    // Re-verify lease inside transaction boundary
+    // Re-verify lease and fencing inside transaction boundary
     const inTxJob = await tx.syncJob.findUnique({ where: { id: claim.id } });
+    if (!inTxJob || inTxJob.status !== "RUNNING") {
+      throw new Error(`SyncJob '${claim.id}' is not in RUNNING status during persistence.`);
+    }
     let txMeta: any = {};
     try {
       txMeta = JSON.parse(inTxJob?.resultJson || "{}");
     } catch {
       // ignore
     }
-    if (txMeta.claimToken !== claim.claimToken) {
+    if (txMeta.workerId !== claim.workerId || txMeta.claimToken !== claim.claimToken) {
       throw new Error("Claim token mismatch during transaction persistence.");
+    }
+    if (
+      typeof claim.fencingVersion === "number" &&
+      txMeta.fencingVersion !== undefined &&
+      txMeta.fencingVersion !== claim.fencingVersion
+    ) {
+      throw new Error("Fencing version mismatch during transaction persistence.");
+    }
+    if (txMeta.leaseExpiresAt && new Date(txMeta.leaseExpiresAt).getTime() < Date.now()) {
+      throw new Error("Lease expired before persistence could be completed.");
+    }
+    if (txMeta.cancellationRequested) {
+      throw new Error(`Job '${claim.id}' was cancelled.`);
     }
 
     // A. Persist / Resolve Offer Snapshot
