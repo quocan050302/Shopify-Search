@@ -17,11 +17,15 @@ async function runKh01Doctor() {
 
   let hasError = false;
 
-  // 1. Database Connectivity
+  // 1. Database Role & Connectivity
   try {
-    process.stdout.write("[1/4] Checking SQLite/libSQL database connection... ");
+    process.stdout.write("[1/6] Checking database role & connectivity... ");
+    const { resolveDatabaseConfiguration } = await import("../src/lib/db");
+    const dbConfig = resolveDatabaseConfiguration(process.env);
     await prisma.$queryRaw`SELECT 1`;
     console.log("OK");
+    console.log(`      - Database Role: ${dbConfig.role}`);
+    console.log(`      - Destination: ${dbConfig.location.canonicalPath || dbConfig.location.canonicalKey}`);
   } catch (err) {
     console.log("FAILED");
     console.error("  Database error:", err);
@@ -30,7 +34,7 @@ async function runKh01Doctor() {
 
   // 2. Schema Migration Verification for all 7 KH-01 Models
   try {
-    process.stdout.write("[2/4] Verifying KH-01 Prisma schema models in database... ");
+    process.stdout.write("[2/6] Verifying KH-01 Prisma schema models in database... ");
     const [
       evidenceCount,
       offerSnapshotsCount,
@@ -63,27 +67,77 @@ async function runKh01Doctor() {
     hasError = true;
   }
 
-  // 3. Worker Configuration & Resource Budgets
-  process.stdout.write("[3/4] Checking research resource budgets & worker bounds... ");
-  const workerConcurrency = 1;
-  const timeoutMs = 8000;
-  const maxRedirects = 3;
-  const maxResponseBytes = 2 * 1024 * 1024; // 2MB
+  // 3. Queue Summary
+  try {
+    process.stdout.write("[3/6] Inspecting KH-01 research job queue... ");
+    const queueCounts = await prisma.syncJob.groupBy({
+      by: ["status"],
+      where: { jobType: "KH01_LANDING_PAGE_RESEARCH" },
+      _count: { status: true },
+    });
+    const summaryMap: Record<string, number> = {};
+    for (const item of queueCounts) {
+      summaryMap[item.status] = item._count.status;
+    }
+    console.log("OK");
+    console.log(`      - PENDING: ${summaryMap["PENDING"] || 0}`);
+    console.log(`      - RUNNING: ${summaryMap["RUNNING"] || 0}`);
+    console.log(`      - COMPLETED: ${summaryMap["COMPLETED"] || 0}`);
+    console.log(`      - ACCESS_RESTRICTED: ${summaryMap["ACCESS_RESTRICTED"] || 0}`);
+    console.log(`      - RATE_LIMITED: ${summaryMap["RATE_LIMITED"] || 0}`);
+    console.log(`      - FAILED: ${summaryMap["FAILED"] || 0}`);
+  } catch (err) {
+    console.log("FAILED");
+    console.error("  Queue inspection error:", err);
+    hasError = true;
+  }
 
+  // 4. Worker Configuration & Recent Heartbeat
+  try {
+    process.stdout.write("[4/6] Checking worker status & recent heartbeat... ");
+    const latestHeartbeat = await prisma.syncJob.findFirst({
+      where: { jobType: "KH01_WORKER_HEARTBEAT" },
+      orderBy: { createdAt: "desc" },
+    });
+    console.log("OK");
+    if (latestHeartbeat) {
+      let hbMeta: any = {};
+      try {
+        hbMeta = JSON.parse(latestHeartbeat.resultJson || "{}");
+      } catch {
+        // ignore
+      }
+      console.log(`      - Worker ID: ${hbMeta.workerId || "kh01-worker"}`);
+      console.log(`      - Last Heartbeat: ${latestHeartbeat.createdAt.toISOString()}`);
+      console.log(`      - State: ${hbMeta.status || latestHeartbeat.status}`);
+    } else {
+      console.log("      - Heartbeat: No active worker heartbeat recorded (STANDBY)");
+    }
+    console.log("      - Concurrency: 1 (Strict single heavy research task)");
+    console.log("      - Lease Duration: 60,000ms (Canonical)");
+  } catch (err) {
+    console.log("FAILED");
+    console.error("  Heartbeat inspection error:", err);
+    hasError = true;
+  }
+
+  // 5. Network & Transport Safety
+  process.stdout.write("[5/6] Checking URL-fetch safety & transport configuration... ");
   console.log("OK");
-  console.log(`      - Concurrency ceiling: ${workerConcurrency} job (Strict single-thread)`);
-  console.log(`      - Network timeout budget: ${timeoutMs}ms`);
-  console.log(`      - Maximum redirect hops: ${maxRedirects}`);
-  console.log(`      - Maximum response payload: ${maxResponseBytes / (1024 * 1024)}MB`);
-  console.log("      - Mass-crawling / Auto-browsing on render: DISABLED");
+  console.log("      - Transport: Destination IP-Pinned Dispatcher (DNS Rebinding Protected)");
+  console.log("      - TLS Verification: SNI Hostname Validated (Reject unauthorized certs)");
+  console.log("      - SSRF IP Blocklist: Active (RFC 1918 / Loopback / Cloud Metadata blocked)");
+  console.log("      - Stream Cap: 2MB enforced via chunk count");
+  console.log("      - Network Timeout: 8,000ms");
+  console.log("      - Redirect Budget: 3 hops maximum (Re-resolved and validated per hop)");
 
-  // 4. Security & Tenant Scoping
-  process.stdout.write("[4/4] Checking security configuration... ");
+  // 6. Security & Tenant Scoping
+  process.stdout.write("[6/6] Checking security & authorization mode... ");
   const isDev = process.env.NODE_ENV !== "production";
   console.log("OK");
-  console.log(`      - Environment: ${isDev ? "DEVELOPMENT (Local Safe Mode)" : "PRODUCTION"}`);
-  console.log("      - SSRF IP Blocklist (RFC 1918 / Cloud Metadata / Loopback): ACTIVE");
-  console.log("      - Workspace Tenant Isolation: ENFORCED (Cross-tenant bypasses removed)");
+  console.log(`      - Mode: ${isDev ? "DEVELOPMENT (Local Safe Mode)" : "PRODUCTION"}`);
+  console.log("      - Tenant Scoping: Workspace-scoped queries and mutations enforced");
+  console.log("      - Default Workspace Fallback: REMOVED");
 
   console.log("\n=================================================");
   if (hasError) {

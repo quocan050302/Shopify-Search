@@ -290,11 +290,18 @@ export async function executeKh01Job(job: ClaimedKh01Job, signal?: AbortSignal):
   try {
     const researchResult = await executeLandingPageResearchJob(job, signal);
 
+    const normalizedStatus: "COMPLETED" | "FAILED" | "ACCESS_RESTRICTED" =
+      researchResult.status === "ACCESS_RESTRICTED"
+        ? "ACCESS_RESTRICTED"
+        : researchResult.status === "COMPLETED" || (researchResult.status as string) === "PARTIAL"
+        ? "COMPLETED"
+        : "FAILED";
+
     return {
       jobId: job.id,
-      status: (researchResult.status === "PARTIAL" ? "COMPLETED" : researchResult.status) as "COMPLETED" | "ACCESS_RESTRICTED" | "RATE_LIMITED" | "FAILED",
+      status: normalizedStatus,
       snapshotId: researchResult.snapshotId || undefined,
-      errorMessage: researchResult.status === "FAILED" || researchResult.status === "RATE_LIMITED"
+      errorMessage: normalizedStatus === "FAILED"
         ? (researchResult.warnings?.join("; ") || "Research job failed.")
         : undefined,
     };

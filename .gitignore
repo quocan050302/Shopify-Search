@@ -58,3 +58,4 @@ skills-lock.json
 /services/meta-ads-collector/.venv/
 /services/meta-ads-collector/data/
 .meta-ads-collector-mcp/
+artifacts/
