@@ -107,9 +107,11 @@ describe("KH-01.A — Security, Data Integrity & Evidence Foundation", () => {
     if (!dataSource) {
       dataSource = await prisma.dataSource.create({
         data: {
-          platform: "META",
-          name: "Meta Ad Library Test Source",
-          status: "ACTIVE",
+          name: "META_AD_LIBRARY",
+          displayName: "Meta Ad Library",
+          capabilities: JSON.stringify(["DISCOVERY"]),
+          supportedRegions: JSON.stringify(["US"]),
+          status: "AVAILABLE",
         },
       });
     }
