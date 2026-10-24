@@ -8,6 +8,17 @@
 import dns from "dns";
 import net from "net";
 import { validateExternalResourceUrl } from "@/lib/security";
+import {
+  createVerifiedPublicDispatcher,
+  VerifiedPublicDestination,
+  VerifiedPublicTransport,
+} from "./verifiedPublicTransport";
+
+export {
+  createVerifiedPublicDispatcher,
+  type VerifiedPublicDestination,
+  type VerifiedPublicTransport,
+};
 
 // Re-export media resolution helpers from V6.2 resolver (single source of truth)
 export {
@@ -652,8 +663,9 @@ export async function fetchPublicResearchPage(
       const currentValidation = validatePublicResearchUrl(currentUrl);
 
       // Verify destination IP resolution to block DNS rebinding and private addresses
+      let validatedDest: ValidatedDestination;
       try {
-        await resolveAndValidatePublicDestination(currentValidation.hostname, { dnsLookupFn });
+        validatedDest = await resolveAndValidatePublicDestination(currentValidation.hostname, { dnsLookupFn });
       } catch (destErr: any) {
         clearTimeout(timeoutId);
         return {
@@ -671,29 +683,66 @@ export async function fetchPublicResearchPage(
         };
       }
 
-      const response = await fetch(currentValidation.normalizedUrl, {
-        method: "GET",
-        redirect: "manual", // Hop-by-hop manual verification
-        signal: controller.signal,
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (SWAI Research Bot; +https://github.com/quocan050302/Shopify-Search)",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-      });
+      // Construct verified destination with pinned IP to guarantee zero DNS rebinding
+      const currentParsedUrl = new URL(currentUrl);
+      const port = currentParsedUrl.port
+        ? parseInt(currentParsedUrl.port, 10)
+        : currentValidation.protocol === "https:"
+        ? 443
+        : 80;
 
-      const responseHeaders: Record<string, string> = {};
-      response.headers.forEach((val, key) => {
-        responseHeaders[key.toLowerCase()] = val;
-      });
+      const verifiedDest: VerifiedPublicDestination = {
+        originalHostname: currentValidation.hostname,
+        normalizedHostname: currentValidation.hostname,
+        protocol: currentValidation.protocol,
+        port,
+        validatedAddresses: validatedDest.addresses,
+        selectedAddress: validatedDest.selectedAddress || validatedDest.addresses[0],
+        family: validatedDest.family || (net.isIPv6(validatedDest.addresses[0]) ? 6 : 4),
+        validatedAt: Date.now(),
+      };
 
-      const httpStatus = response.status;
+      const transport = createVerifiedPublicDispatcher(verifiedDest);
+      let transportRes;
+
+      try {
+        transportRes = await transport.request(currentParsedUrl, {
+          method: "GET",
+          timeoutMs: Math.max(1000, timeoutMs - (Date.now() - startTime)),
+          maxBytes: maxResponseBytes,
+          signal: controller.signal,
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (SWAI Research Bot; +https://github.com/quocan050302/Shopify-Search)",
+          },
+        });
+      } catch (reqErr: any) {
+        transport.close();
+        clearTimeout(timeoutId);
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus: 0,
+          statusClassification: "FAILED",
+          contentType: null,
+          contentLengthBytes: 0,
+          content: null,
+          headers: {},
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: reqErr.message || "Network transport connection failed.",
+        };
+      } finally {
+        transport.close();
+      }
+
+      const responseHeaders = transportRes.headers;
+      const httpStatus = transportRes.statusCode;
 
       // Handle redirects
       if ([301, 302, 303, 307, 308].includes(httpStatus)) {
         redirectCount++;
-        const location = response.headers.get("location");
+        const location = responseHeaders["location"];
         if (!location) {
           clearTimeout(timeoutId);
           return {
@@ -824,61 +873,16 @@ export async function fetchPublicResearchPage(
         };
       }
 
-      // Read response body with byte cap
-      if (!response.body) {
-        return {
-          originalUrl: validatedUrl.originalUrl,
-          finalUrl: currentUrl,
-          httpStatus,
-          statusClassification: httpStatus >= 200 && httpStatus < 300 ? "SUCCESS" : "FAILED",
-          contentType,
-          contentLengthBytes: 0,
-          content: "",
-          headers: responseHeaders,
-          isTruncated: false,
-          durationMs: Date.now() - startTime,
-        };
-      }
-
-      const reader = response.body.getReader();
-      const chunks: Uint8Array[] = [];
-      let totalBytes = 0;
-      let isTruncated = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          totalBytes += value.length;
-          if (totalBytes > maxResponseBytes) {
-            const allowed = value.slice(0, value.length - (totalBytes - maxResponseBytes));
-            chunks.push(allowed);
-            isTruncated = true;
-            await reader.cancel("Response size exceeded threshold");
-            break;
-          } else {
-            chunks.push(value);
-          }
-        }
-      }
-
-      const decoder = new TextDecoder("utf-8");
-      let fullContent = "";
-      for (const chunk of chunks) {
-        fullContent += decoder.decode(chunk, { stream: true });
-      }
-      fullContent += decoder.decode();
-
       return {
         originalUrl: validatedUrl.originalUrl,
         finalUrl: currentUrl,
         httpStatus,
         statusClassification: httpStatus >= 200 && httpStatus < 300 ? "SUCCESS" : "FAILED",
         contentType,
-        contentLengthBytes: totalBytes,
-        content: fullContent,
+        contentLengthBytes: transportRes.bytesRead,
+        content: transportRes.body,
         headers: responseHeaders,
-        isTruncated,
+        isTruncated: transportRes.isTruncated,
         durationMs: Date.now() - startTime,
       };
     }
