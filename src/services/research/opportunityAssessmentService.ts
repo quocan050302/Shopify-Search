@@ -302,8 +302,8 @@ export function evaluateLandingPagePillar(funnel?: CompetitorFunnelAssessment | 
     };
   }
 
-  const croScore = funnel.croReadiness ?? 50;
-  const readiness = funnel.confidence ? Math.round(funnel.confidence * 100) : 50;
+  const croScore = funnel.croReadiness != null ? funnel.croReadiness : null;
+  const readiness = funnel.confidence != null ? Math.round(funnel.confidence * 100) : 0;
 
   for (const str of funnel.observedStrengths) {
     findings.push(`${str.finding}: ${str.observedEvidence}`);
@@ -318,8 +318,18 @@ export function evaluateLandingPagePillar(funnel?: CompetitorFunnelAssessment | 
   }
 
   missingEvidence.push(...funnel.missingEvidence);
+  if (croScore == null) {
+    missingEvidence.push("No verified CRO score available from landing page inspection");
+  }
 
-  const status = croScore >= 70 ? "PASS" : croScore >= 45 ? "NEEDS_WORK" : "FAIL";
+  const status =
+    croScore == null
+      ? "INSUFFICIENT_DATA"
+      : croScore >= 70
+      ? "PASS"
+      : croScore >= 45
+      ? "NEEDS_WORK"
+      : "FAIL";
 
   return {
     pillar: "LANDING_PAGE",
@@ -421,20 +431,33 @@ export function evaluateFulfillmentPillar(assessment?: FulfillmentAssessmentResu
     };
   }
 
-  const readiness = Math.max(20, 100 - (assessment.criticalGaps.length * 20));
-  const score = 100 - assessment.riskScore;
+  const isInsufficient =
+    assessment.overallRiskLevel === "UNKNOWN" ||
+    (assessment.overallRiskLevel as string) === "INSUFFICIENT_DATA";
+
+  const readiness = isInsufficient
+    ? Math.max(10, Math.min(40, 100 - (assessment.criticalGaps.length * 20)))
+    : Math.max(20, 100 - (assessment.criticalGaps.length * 20));
+
+  const score = isInsufficient ? null : Math.max(0, 100 - assessment.riskScore);
 
   findings.push(`Lead time evaluation: ${assessment.leadTimeAssessment}`);
   findings.push(`Compliance status: ${assessment.complianceStatus}`);
   risks.push(...assessment.identifiedRisks);
   missingEvidence.push(...assessment.criticalGaps);
 
-  const status = assessment.overallRiskLevel === "LOW" ? "PASS" : assessment.overallRiskLevel === "MODERATE" ? "NEEDS_WORK" : "FAIL";
+  const status = isInsufficient
+    ? "INSUFFICIENT_DATA"
+    : assessment.overallRiskLevel === "LOW"
+    ? "PASS"
+    : assessment.overallRiskLevel === "MODERATE"
+    ? "NEEDS_WORK"
+    : "FAIL";
 
   return {
     pillar: "FULFILLMENT",
     weight: 10,
-    score: readiness >= 40 ? score : null,
+    score: readiness >= 40 && !isInsufficient ? score : null,
     readiness,
     status,
     findings,
@@ -474,26 +497,32 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
     (fulfillmentPillar.readiness * 0.10)
   );
 
-  // 2. Opportunity Score: weighted evaluation score, only valid when sufficient evidence exists
+  // 2. Opportunity Score: weighted evaluation score, only valid when sufficient factual evidence exists
   let opportunityScore: number | null = null;
-  const criticalPillarsScored = productPillar.score != null && economicsPillar.score != null;
 
-  if (totalReadiness >= 40 && criticalPillarsScored) {
-    const pScore = productPillar.score ?? 50;
-    const cScore = creativePillar.score ?? 50;
-    const oScore = offerPillar.score ?? 50;
-    const lScore = landingPagePillar.score ?? 50;
-    const eScore = economicsPillar.score ?? 0;
-    const fScore = fulfillmentPillar.score ?? 50;
+  // Filter only pillars that have factual, non-null scores.
+  // CRITICAL INTEGRITY: Never substitute unassessed or missing pillars with 50!
+  const scoredPillars = [
+    { pillar: productPillar, weight: 0.20 },
+    { pillar: creativePillar, weight: 0.15 },
+    { pillar: offerPillar, weight: 0.15 },
+    { pillar: landingPagePillar, weight: 0.15 },
+    { pillar: economicsPillar, weight: 0.25 },
+    { pillar: fulfillmentPillar, weight: 0.10 },
+  ].filter((p) => p.pillar.score != null);
 
-    opportunityScore = Math.round(
-      (pScore * 0.20) +
-      (cScore * 0.15) +
-      (oScore * 0.15) +
-      (lScore * 0.15) +
-      (eScore * 0.25) +
-      (fScore * 0.10)
-    );
+  const totalAssessedWeight = scoredPillars.reduce((acc, p) => acc + p.weight, 0);
+
+  // Require core factual evidence: product, offer, and economics MUST be scored, and total readiness >= 45
+  const hasCoreEvidence =
+    productPillar.score != null &&
+    offerPillar.score != null &&
+    economicsPillar.score != null &&
+    totalReadiness >= 45;
+
+  if (hasCoreEvidence && totalAssessedWeight > 0) {
+    const weightedSum = scoredPillars.reduce((acc, p) => acc + (p.pillar.score! * p.weight), 0);
+    opportunityScore = Math.round(weightedSum / totalAssessedWeight);
   }
 
   // 3. Aggregate Strengths, Risks & Missing Evidence
@@ -509,12 +538,15 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
     missingCriticalEvidence.push(...p.missingEvidence);
   }
 
-  // 4. Recommendation derivation
+  // 4. Recommendation derivation (Canonical Policy)
   let recommendation: "RESEARCH_MORE" | "SHORTLIST" | "TEST_CANDIDATE" | "REJECT" = "RESEARCH_MORE";
   let recommendationRationale = "";
 
   // Disqualifiers
-  const isNegativeEconomics = economicsPillar.score === 0;
+  const isNegativeEconomics =
+    economicsPillar.score === 0 ||
+    (input.economicsScenarios[0]?.contributionBeforeAds != null &&
+      input.economicsScenarios[0].contributionBeforeAds <= 0);
   const isHighFulfillmentRisk = input.fulfillmentAssessment?.overallRiskLevel === "HIGH";
 
   if (isNegativeEconomics) {
@@ -526,22 +558,40 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
   } else if (totalReadiness < 50 || missingCriticalEvidence.length > 3) {
     recommendation = "RESEARCH_MORE";
     recommendationRationale = `Insufficient factual evidence (${totalReadiness}% readiness). Critical gaps: ${missingCriticalEvidence.slice(0, 3).join("; ")}.`;
-  } else if (opportunityScore != null && opportunityScore >= 70 && totalReadiness >= 75) {
-    recommendation = "TEST_CANDIDATE";
-    recommendationRationale = `Strong candidate (${opportunityScore}/100) with verified economics ($${input.economicsScenarios[0]?.breakEvenCpa?.toFixed(2) ?? 0} break-even CPA) and confirmed fulfillment feasibility.`;
-  } else if (opportunityScore != null && opportunityScore >= 50) {
-    recommendation = "SHORTLIST";
-    recommendationRationale = `Promising angle (${opportunityScore}/100) with acceptable foundation. Further offer refinement and supplier negotiation recommended.`;
   } else {
-    recommendation = "RESEARCH_MORE";
-    recommendationRationale = "Underperforming research score or low margin cushion. Deepen research before committing testing budget.";
+    // Canonical Readiness Check
+    const tempAssessment = {
+      productId: input.productId,
+      methodologyVersion: "11.4.1",
+      opportunityScore,
+      evidenceReadinessScore: totalReadiness,
+      pillars,
+      strengths,
+      risks,
+      missingCriticalEvidence,
+      recommendation: "RESEARCH_MORE" as const,
+      recommendationRationale: "",
+      testReadinessStatus: "BLOCKED_MISSING_DATA" as const,
+    };
+    const readinessCheck = evaluateSmallTestReadiness(tempAssessment);
+
+    if (readinessCheck.isReadyForSmallTest && opportunityScore != null && opportunityScore >= 65) {
+      recommendation = "TEST_CANDIDATE";
+      recommendationRationale = `Strong candidate (${opportunityScore}/100) meeting all canonical decision gates with verified economics ($${input.economicsScenarios[0]?.breakEvenCpa?.toFixed(2) ?? 0} break-even CPA) and confirmed fulfillment feasibility.`;
+    } else if (opportunityScore != null && opportunityScore >= 50) {
+      recommendation = "SHORTLIST";
+      recommendationRationale = `Promising angle (${opportunityScore}/100) with acceptable foundation. Unmet gates: ${readinessCheck.unmetRequirements.slice(0, 2).join("; ")}. Further offer refinement and supplier negotiation recommended.`;
+    } else {
+      recommendation = "RESEARCH_MORE";
+      recommendationRationale = `Underperforming research score or low margin cushion. Unmet gates: ${readinessCheck.unmetRequirements.slice(0, 2).join("; ") || "Deeper research required"}.`;
+    }
   }
 
   const testReadinessStatus = recommendation === "TEST_CANDIDATE" ? "ELIGIBLE" : "BLOCKED_MISSING_DATA";
 
   return {
     productId: input.productId,
-    methodologyVersion: "11.4.0",
+    methodologyVersion: "11.4.1",
     opportunityScore,
     evidenceReadinessScore: totalReadiness,
     pillars,
@@ -566,7 +616,7 @@ export function evaluateSmallTestReadiness(assessment: ProductOpportunityAssessm
     },
     {
       name: "Competing Offer Understanding",
-      passed: assessment.pillars.offer.status !== "INSUFFICIENT_DATA" && assessment.pillars.offer.status !== "FAIL",
+      passed: assessment.pillars.offer.status === "PASS" || assessment.pillars.offer.status === "NEEDS_WORK",
       reason: assessment.pillars.offer.findings.join("; ") || "Competitor commercial terms unverified",
     },
     {
@@ -576,8 +626,8 @@ export function evaluateSmallTestReadiness(assessment: ProductOpportunityAssessm
     },
     {
       name: "Operational & Logistics Feasibility",
-      passed: assessment.pillars.fulfillment.status !== "FAIL",
-      reason: assessment.pillars.fulfillment.findings.join("; ") || "Critical fulfillment or hazmat blocker",
+      passed: assessment.pillars.fulfillment.status === "PASS" || assessment.pillars.fulfillment.status === "NEEDS_WORK",
+      reason: assessment.pillars.fulfillment.findings.join("; ") || "Critical fulfillment blocker or unperformed assessment",
     },
     {
       name: "Evidence Readiness Threshold (>= 70%)",
@@ -591,11 +641,12 @@ export function evaluateSmallTestReadiness(assessment: ProductOpportunityAssessm
 
   const actionableNextSteps: string[] = [];
   if (!gateChecks[2].passed) actionableNextSteps.push("Obtain authentic supplier invoice or platform quote to lock COGS");
-  if (!gateChecks[3].passed) actionableNextSteps.push("Verify package weight and transit time to US destination");
+  if (!gateChecks[3].passed) actionableNextSteps.push("Verify package weight, shipping transit times, and compliance risks");
   if (!gateChecks[1].passed) actionableNextSteps.push("Inspect competitor landing page offer and bundle terms");
+  if (!gateChecks[0].passed) actionableNextSteps.push("Verify product identity and validate clear customer problem statement");
   if (actionableNextSteps.length === 0 && isReady) {
     actionableNextSteps.push("Build high-converting Shopify product page mirroring validated offer terms");
-    actionableNextSteps.push("Launch controlled $50-$100 Meta broad-targeting test with demonstration hook");
+    actionableNextSteps.push("Determine disciplined test budget based on target CPA and initial hypothesis validation goals");
   }
 
   return {
@@ -673,4 +724,200 @@ export async function saveProductOpportunityAssessment(
       testReadinessStatus: assessment.testReadinessStatus,
     },
   });
+}
+
+/**
+ * Assembles factual SixPillarOpportunityInput strictly from persisted database records.
+ * NEVER fabricates confidence, pain points, video demonstration, or default CRO scores.
+ */
+export async function buildProductOpportunityInput(
+  productId: string,
+  context: ResearchAccessContext
+): Promise<SixPillarOpportunityInput> {
+  await assertProductWorkspaceAccess(productId, context);
+
+  // 1. Load product and linked ads
+  const product = await prisma.researchProduct.findUnique({
+    where: { id: productId },
+    include: {
+      adLinks: { include: { ad: { include: { mediaAssets: true } } } },
+    },
+  });
+
+  if (!product) {
+    throw new Error(`Product '${productId}' not found.`);
+  }
+
+  // 2. Load persisted research evidence to establish proven facts
+  const evidenceRecords = await prisma.researchEvidence.findMany({
+    where: { productId },
+  });
+
+  // Identity confidence: Only EXACT if verified evidence exists, else PROBABLE if ad links exist, else INSUFFICIENT_EVIDENCE
+  const hasVerifiedIdentity = evidenceRecords.some(
+    (e) => e.pillar === "PRODUCT" && e.classification === "VERIFIED"
+  );
+  const identityConfidence: "EXACT" | "PROBABLE" | "AMBIGUOUS" | "INSUFFICIENT_EVIDENCE" =
+    hasVerifiedIdentity
+      ? "EXACT"
+      : product.adLinks.length > 0
+      ? "PROBABLE"
+      : "INSUFFICIENT_EVIDENCE";
+
+  // Problem solved & pain point: Truthfully derived, never defaulting to "Identified consumer utility"
+  const problemSolved =
+    product.description && product.description.trim().length > 0
+      ? product.description.trim()
+      : null;
+
+  const customerPainPointClarity: "CLEAR" | "MODERATE" | "VAGUE" | "UNKNOWN" =
+    problemSolved && problemSolved.length > 20
+      ? "MODERATE"
+      : problemSolved
+      ? "VAGUE"
+      : "UNKNOWN";
+
+  // Creative evidence: Do NOT infer video demonstration from 9:16 or positive duration!
+  const hasDemonstrationEvidence = evidenceRecords.some(
+    (e) =>
+      e.pillar === "CREATIVE" &&
+      (e.classification === "SOURCE_OBSERVED" || e.classification === "VERIFIED") &&
+      e.claim.toLowerCase().includes("demonstration")
+  );
+
+  const hasCtaEvidence = evidenceRecords.some(
+    (e) =>
+      e.pillar === "CREATIVE" &&
+      (e.classification === "SOURCE_OBSERVED" || e.classification === "VERIFIED") &&
+      (e.claim.toLowerCase().includes("call-to-action") || e.claim.toLowerCase().includes("cta"))
+  );
+  const hasAdCta = product.adLinks.some((l) =>
+    Boolean(
+      l.ad.callToAction ||
+        (l.ad.headline && /(shop|get|buy|claim|order)/i.test(l.ad.headline))
+    )
+  );
+
+  // 3. Load latest offer snapshots
+  const offerSnapshots = await prisma.competitorOfferSnapshot.findMany({
+    where: { productId },
+    orderBy: { observedAt: "desc" },
+    take: 10,
+  });
+
+  // 4. Load latest landing page & funnel
+  const landingPage = await prisma.landingPageSnapshot.findFirst({
+    where: { productId },
+    orderBy: { observedAt: "desc" },
+  });
+
+  let funnelAssessment: CompetitorFunnelAssessment | null = null;
+  if (landingPage) {
+    if (
+      landingPage.accessStatus === "ACCESS_RESTRICTED" ||
+      landingPage.accessStatus === "RATE_LIMITED"
+    ) {
+      // Restricted source: No verified CRO signals can be inferred!
+      funnelAssessment = null;
+    } else if (landingPage.croSignalsJson) {
+      try {
+        const cro = JSON.parse(landingPage.croSignalsJson);
+        const croScore =
+          typeof cro.croReadinessScore === "number" ? cro.croReadinessScore : null;
+        const observationsCount =
+          (cro.aboveTheFold?.strengths?.length ?? 0) +
+          (cro.aboveTheFold?.weaknesses?.length ?? 0);
+        const dynamicConfidence = Math.min(1.0, Math.max(0.1, observationsCount * 0.15));
+
+        funnelAssessment = {
+          observedStrengths: cro.aboveTheFold?.strengths || [],
+          observedWeaknesses: cro.aboveTheFold?.weaknesses || [],
+          potentialFriction: cro.potentialFriction || [],
+          missingEvidence: landingPage.warningsJson
+            ? JSON.parse(landingPage.warningsJson)
+            : [],
+          confidence: dynamicConfidence,
+          croReadiness: croScore, // Explicit null when missing; no fallback 65!
+          analysisVersion: "11.4.1",
+        };
+      } catch {
+        funnelAssessment = null;
+      }
+    }
+  }
+
+  // 5. Load economics scenarios
+  const savedEconomics = await prisma.productEconomicsScenario.findMany({
+    where: { productId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const economicsScenarios: ProductEconomicsScenarioResult[] = [];
+  for (const e of savedEconomics) {
+    try {
+      if (e.outputsJson) economicsScenarios.push(JSON.parse(e.outputsJson));
+    } catch {}
+  }
+
+  // 6. Load fulfillment assessment
+  const fulfillmentRecord = await prisma.fulfillmentAssessment.findFirst({
+    where: { productId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  let fulfillmentAssessment: FulfillmentAssessmentResult | null = null;
+  if (fulfillmentRecord) {
+    try {
+      const riskLevel = fulfillmentRecord.overallRiskLevel;
+      const isInsufficient =
+        riskLevel === "UNKNOWN" || (riskLevel as string) === "INSUFFICIENT_DATA";
+      const riskScore =
+        riskLevel === "HIGH"
+          ? 75
+          : riskLevel === "MODERATE"
+          ? 50
+          : riskLevel === "LOW"
+          ? 20
+          : 50;
+
+      fulfillmentAssessment = {
+        overallRiskLevel: riskLevel as any,
+        identifiedRisks: fulfillmentRecord.risksJson
+          ? JSON.parse(fulfillmentRecord.risksJson)
+          : [],
+        criticalGaps: fulfillmentRecord.criticalGapsJson
+          ? JSON.parse(fulfillmentRecord.criticalGapsJson)
+          : [],
+        leadTimeAssessment: isInsufficient
+          ? "Unverified lead times"
+          : "Lead times evaluated",
+        complianceStatus: isInsufficient
+          ? "Unverified compliance"
+          : "Compliance reviewed",
+        riskScore,
+      };
+    } catch {
+      fulfillmentAssessment = null;
+    }
+  }
+
+  return {
+    productId,
+    productEvidence: {
+      productTitle: product.title,
+      category: product.category,
+      problemSolved,
+      customerPainPointClarity,
+      identityConfidence,
+    },
+    creativeEvidence: {
+      adCount: product.adLinks.length,
+      hasVideoDemonstration: hasDemonstrationEvidence,
+      clearCtaObserved: hasCtaEvidence || hasAdCta,
+    },
+    offerSnapshots,
+    funnelAssessment,
+    economicsScenarios,
+    fulfillmentAssessment,
+  };
 }

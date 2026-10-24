@@ -330,5 +330,114 @@ describe("KH-01.D — Product Economics & Opportunity Assessment Tests", () => {
       );
       expect(explanation.hypothesisFalsificationConditions.length).toBeGreaterThan(0);
     });
+
+    describe("Adversarial Scoring Fixtures & Integrity Invariants (Task 105)", () => {
+      it("adversarial 1: one ad and no economics never passes test eligibility", () => {
+        const assessment = calculateOpportunityAssessment({
+          productId: "prod_adv_1",
+          productEvidence: {
+            productTitle: "Random Ad Item",
+            customerPainPointClarity: "UNKNOWN",
+            identityConfidence: "INSUFFICIENT_EVIDENCE",
+          },
+          creativeEvidence: { adCount: 1 },
+          offerSnapshots: [],
+          economicsScenarios: [],
+        });
+
+        expect(assessment.recommendation).not.toBe("TEST_CANDIDATE");
+        expect(assessment.opportunityScore).toBeNull();
+        const decision = evaluateSmallTestReadiness(assessment);
+        expect(decision.isReadyForSmallTest).toBe(false);
+      });
+
+      it("adversarial 2: blocked landing page produces null CRO score and does not award default 65", () => {
+        const assessment = calculateOpportunityAssessment({
+          productId: "prod_adv_2",
+          productEvidence: { productTitle: "Blocked Page Item", identityConfidence: "EXACT", customerPainPointClarity: "CLEAR" },
+          creativeEvidence: { adCount: 2, hasVideoDemonstration: true },
+          offerSnapshots: [{ sellingPrice: 29.99 }],
+          funnelAssessment: null, // Blocked landing page: no funnel
+          economicsScenarios: [
+            calculateOrderEconomics({ unitsPerOrder: 1, sellingPricePerUnit: 29.99, supplierCostPerUnit: 8, actualShippingCostPaid: 4 })
+          ],
+        });
+
+        expect(assessment.pillars.landingPage.score).toBeNull();
+        expect(assessment.pillars.landingPage.status).toBe("INSUFFICIENT_DATA");
+      });
+
+      it("adversarial 3: negative contribution immediately forces REJECT recommendation", () => {
+        const negativeScenario = calculateOrderEconomics({
+          unitsPerOrder: 1,
+          sellingPricePerUnit: 19.99,
+          supplierCostPerUnit: 15.00,
+          actualShippingCostPaid: 8.00,
+          fulfillmentCostPerOrder: 2.00,
+        });
+
+        const assessment = calculateOpportunityAssessment({
+          productId: "prod_adv_3",
+          productEvidence: { productTitle: "Money Loser", identityConfidence: "EXACT", customerPainPointClarity: "CLEAR" },
+          creativeEvidence: { adCount: 3, hasVideoDemonstration: true },
+          offerSnapshots: [{ sellingPrice: 19.99 }],
+          economicsScenarios: [negativeScenario],
+        });
+
+        expect(assessment.recommendation).toBe("REJECT");
+        expect(assessment.recommendationRationale).toMatch(/Negative or zero contribution margin/i);
+        const decision = evaluateSmallTestReadiness(assessment);
+        expect(decision.isReadyForSmallTest).toBe(false);
+      });
+
+      it("adversarial 4: positive margin but unperformed fulfillment check fails logistics gate", () => {
+        const goodScenario = calculateOrderEconomics({
+          unitsPerOrder: 1,
+          sellingPricePerUnit: 49.99,
+          supplierCostPerUnit: 10.00,
+          actualShippingCostPaid: 5.00,
+          fulfillmentCostPerOrder: 2.00,
+        });
+
+        const assessment = calculateOpportunityAssessment({
+          productId: "prod_adv_4",
+          productEvidence: { productTitle: "High Margin Mystery Fulfillment", identityConfidence: "EXACT", customerPainPointClarity: "CLEAR" },
+          creativeEvidence: { adCount: 3, hasVideoDemonstration: true },
+          offerSnapshots: [{ sellingPrice: 49.99 }],
+          economicsScenarios: [goodScenario],
+          fulfillmentAssessment: null, // Unperformed fulfillment!
+        });
+
+        const decision = evaluateSmallTestReadiness(assessment);
+        expect(decision.isReadyForSmallTest).toBe(false);
+        const fulfillmentGate = decision.gateChecks.find((g) => g.name.includes("Operational & Logistics"));
+        expect(fulfillmentGate?.passed).toBe(false);
+      });
+
+      it("adversarial 5: deterministic scoring invariant — same evidence yields exact same result", () => {
+        const scenario = calculateOrderEconomics({
+          unitsPerOrder: 1,
+          sellingPricePerUnit: 39.99,
+          supplierCostPerUnit: 9.00,
+          actualShippingCostPaid: 5.00,
+        });
+
+        const input = {
+          productId: "prod_adv_5",
+          productEvidence: { productTitle: "Stable Widget", identityConfidence: "EXACT" as const, customerPainPointClarity: "CLEAR" as const },
+          creativeEvidence: { adCount: 4, hasVideoDemonstration: true },
+          offerSnapshots: [{ sellingPrice: 39.99 }],
+          economicsScenarios: [scenario],
+        };
+
+        const res1 = calculateOpportunityAssessment(input);
+        const res2 = calculateOpportunityAssessment(input);
+
+        expect(res1.opportunityScore).toBe(res2.opportunityScore);
+        expect(res1.evidenceReadinessScore).toBe(res2.evidenceReadinessScore);
+        expect(res1.recommendation).toBe(res2.recommendation);
+        expect(res1.testReadinessStatus).toBe(res2.testReadinessStatus);
+      });
+    });
   });
 });

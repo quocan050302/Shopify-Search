@@ -6,6 +6,7 @@ import {
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
 import {
+  buildProductOpportunityInput,
   calculateOpportunityAssessment,
   evaluateSmallTestReadiness,
   explainOpportunityRecommendation,
@@ -99,109 +100,7 @@ export async function POST(
 
     await assertProductWorkspaceAccess(productId, context);
 
-    // 1. Load product
-    const product = await prisma.researchProduct.findUnique({
-      where: { id: productId },
-      include: {
-        adLinks: { include: { ad: { include: { mediaAssets: true } } } },
-      },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: "Product not found" },
-        { status: 404 }
-      );
-    }
-
-    // 2. Load latest offer snapshots
-    const offerSnapshots = await prisma.competitorOfferSnapshot.findMany({
-      where: { productId },
-      orderBy: { observedAt: "desc" },
-      take: 10,
-    });
-
-    // 3. Load latest landing page & funnel
-    const landingPage = await prisma.landingPageSnapshot.findFirst({
-      where: { productId },
-      orderBy: { observedAt: "desc" },
-    });
-
-    let funnelAssessment = null;
-    if (landingPage?.croSignalsJson) {
-      try {
-        const cro = JSON.parse(landingPage.croSignalsJson);
-        const match = landingPage.messageMatchJson ? JSON.parse(landingPage.messageMatchJson) : null;
-        funnelAssessment = {
-          observedStrengths: cro.aboveTheFold?.strengths || [],
-          observedWeaknesses: cro.aboveTheFold?.weaknesses || [],
-          potentialFriction: cro.potentialFriction || [],
-          missingEvidence: landingPage.warningsJson ? JSON.parse(landingPage.warningsJson) : [],
-          confidence: 0.8,
-          croReadiness: cro.croReadinessScore || 65,
-          analysisVersion: "11.4.0",
-        };
-      } catch {
-        // ignore parse error
-      }
-    }
-
-    // 4. Load economics scenarios
-    const savedEconomics = await prisma.productEconomicsScenario.findMany({
-      where: { productId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const economicsScenarios: ProductEconomicsScenarioResult[] = [];
-    for (const e of savedEconomics) {
-      try {
-        if (e.outputsJson) economicsScenarios.push(JSON.parse(e.outputsJson));
-      } catch {}
-    }
-
-    // 5. Load fulfillment assessment
-    const fulfillmentRecord = await prisma.fulfillmentAssessment.findFirst({
-      where: { productId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    let fulfillmentAssessment = null;
-    if (fulfillmentRecord) {
-      try {
-        fulfillmentAssessment = {
-          overallRiskLevel: fulfillmentRecord.overallRiskLevel as any,
-          identifiedRisks: fulfillmentRecord.risksJson ? JSON.parse(fulfillmentRecord.risksJson) : [],
-          criticalGaps: fulfillmentRecord.criticalGapsJson ? JSON.parse(fulfillmentRecord.criticalGapsJson) : [],
-          leadTimeAssessment: "Lead times evaluated",
-          complianceStatus: "Evaluated",
-          riskScore: fulfillmentRecord.overallRiskLevel === "HIGH" ? 75 : 25,
-        };
-      } catch {}
-    }
-
-    // Build Six-Pillar Input
-    const sixPillarInput: SixPillarOpportunityInput = {
-      productId,
-      productEvidence: {
-        productTitle: product.title,
-        category: product.category,
-        problemSolved: product.description || "Identified consumer utility",
-        customerPainPointClarity: product.description ? "CLEAR" : "MODERATE",
-        identityConfidence: "EXACT",
-      },
-      creativeEvidence: {
-        adCount: product.adLinks.length,
-        hasVideoDemonstration: product.adLinks.some((l) =>
-          l.ad.mediaAssets?.some((m) => m.aspectRatio === "9:16" || m.durationSeconds)
-        ),
-        clearCtaObserved: true,
-      },
-      offerSnapshots,
-      funnelAssessment: funnelAssessment as any,
-      economicsScenarios,
-      fulfillmentAssessment,
-    };
-
+    const sixPillarInput = await buildProductOpportunityInput(productId, context);
     const opportunityAssessment = calculateOpportunityAssessment(sixPillarInput);
     const saved = await saveProductOpportunityAssessment(productId, opportunityAssessment, context);
 
@@ -218,7 +117,7 @@ export async function POST(
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "11.4.0",
+        version: "11.4.1",
       },
     });
   } catch (err: any) {
