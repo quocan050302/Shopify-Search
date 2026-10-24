@@ -74,11 +74,11 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   const [recalculating, setRecalculating] = useState(false);
 
   // Fetch complete product overview
-  const loadOverview = async () => {
+  const loadOverview = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/v1/research/products/${productId}/overview`);
+      const res = await fetch(`/api/v1/research/products/${productId}/overview`, { signal });
       const json = await res.json();
 
       if (!json.success) {
@@ -93,6 +93,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         setEconSellingPrice(String(json.data.product.currentPrice));
       }
     } catch (err: any) {
+      if (err.name === "AbortError") return;
       setError(err?.message || "Network error loading overview");
     } finally {
       setLoading(false);
@@ -100,7 +101,24 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   };
 
   useEffect(() => {
-    loadOverview();
+    const controller = new AbortController();
+
+    // Reset form and feedback states on product ID change
+    setInspectFeedback(null);
+    setEconFeedback(null);
+    setQuoteFeedback(null);
+    setDecisionFeedback(null);
+    setEconSellingPrice("");
+    setEconSupplierCost("");
+    setQuoteSupplierName("");
+    setQuoteUnitCost("");
+    setDecisionNotes("");
+
+    loadOverview(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
   }, [productId]);
 
   // Handle User-Triggered Landing Page Inspection Job
@@ -335,7 +353,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
   // Opportunity and Readiness Scores
   const opportunityScore = opportunityAssessment?.opportunityScore ?? null;
-  const readinessScore = opportunityAssessment?.evidenceReadinessScore ?? 35;
+  const readinessScore = opportunityAssessment?.evidenceReadinessScore ?? null;
   const recommendation = opportunityAssessment?.recommendation || "RESEARCH_MORE";
   const testReadiness = opportunityAssessment?.testReadinessStatus || "BLOCKED_MISSING_DATA";
 
@@ -422,10 +440,22 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
             <div>
               <div className="text-[10px] text-slate-400 font-medium">Evidence Readiness</div>
               <div className="text-lg font-extrabold text-white font-mono flex items-center gap-1.5">
-                <span>{readinessScore}%</span>
-                <span className={`text-[9px] px-1.5 py-0.5 rounded ${readinessScore >= 70 ? "bg-emerald-950 text-emerald-400" : "bg-amber-950 text-amber-400"}`}>
-                  {readinessScore >= 70 ? "SUFFICIENT" : "GAPS EXIST"}
-                </span>
+                {readinessScore !== null && readinessScore !== undefined ? (
+                  <>
+                    <span>{readinessScore}%</span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded ${
+                        readinessScore >= 70
+                          ? "bg-emerald-950 text-emerald-400"
+                          : "bg-amber-950 text-amber-400"
+                      }`}
+                    >
+                      {readinessScore >= 70 ? "SUFFICIENT" : "GAPS EXIST"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 text-sm">Not Assessed</span>
+                )}
               </div>
               <div className="text-[9px] text-slate-500">Verified factual inputs</div>
             </div>
@@ -433,11 +463,15 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
             <div className="h-8 w-[1px] bg-slate-800" />
 
             <div>
-              <div className="text-[10px] text-slate-400 font-medium">Opportunity Score</div>
+              <div className="text-[10px] text-slate-400 font-medium">Product Opportunity Research Score</div>
               <div className="text-lg font-extrabold font-mono flex items-center gap-1.5">
-                <span className={opportunityScore ? (opportunityScore >= 70 ? "text-emerald-400" : "text-amber-400") : "text-slate-500"}>
-                  {opportunityScore ? `${opportunityScore}/100` : "INSUFFICIENT DATA"}
-                </span>
+                {opportunityScore !== null && opportunityScore !== undefined ? (
+                  <span className={opportunityScore >= 70 ? "text-emerald-400" : "text-amber-400"}>
+                    {opportunityScore}/100
+                  </span>
+                ) : (
+                  <span className="text-slate-500 text-sm">Not Assessed</span>
+                )}
               </div>
               <div className="text-[9px] text-slate-500">Six-pillar research heuristic</div>
             </div>

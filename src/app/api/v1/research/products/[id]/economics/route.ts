@@ -12,7 +12,26 @@ import {
   ProductEconomicsScenarioInput,
   ProductEconomicsScenarioResult,
 } from "@/lib/economics";
+import { z } from "zod";
 import { createResearchEvidence } from "@/services/research/evidenceService";
+
+const EconomicsScenarioInputSchema = z.object({
+  scenarioName: z.string().optional(),
+  scenarioType: z.string().optional(),
+  unitsPerOrder: z.number().int().positive().default(1),
+  sellingPricePerUnit: z.number().finite().positive(),
+  supplierCostPerUnit: z.number().finite().nonnegative().nullable().optional(),
+  shippingChargedToCustomer: z.number().finite().nonnegative().optional(),
+  actualShippingCostPaid: z.number().finite().nonnegative().nullable().optional(),
+  fulfillmentCostPerOrder: z.number().finite().nonnegative().optional(),
+  paymentProcessingFeePercent: z.number().finite().nonnegative().max(100).optional(),
+  paymentProcessingFeeFixed: z.number().finite().nonnegative().optional(),
+  otherVariableCostPerOrder: z.number().finite().nonnegative().optional(),
+  expectedReturnRatePercent: z.number().finite().nonnegative().max(100).optional(),
+  recoverableCostOnReturnPercent: z.number().finite().nonnegative().max(100).optional(),
+  targetProfitPerOrder: z.number().finite().nonnegative().optional(),
+  sourceProvenance: z.record(z.string(), z.any()).optional(),
+});
 
 export async function GET(
   request: NextRequest,
@@ -78,7 +97,15 @@ export async function POST(
 
     await assertProductWorkspaceAccess(productId, context);
 
-    const body: ProductEconomicsScenarioInput = await request.json();
+    const json = await request.json();
+    const parseResult = EconomicsScenarioInputSchema.safeParse(json);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid economics inputs", details: parseResult.error.format() },
+        { status: 400 }
+      );
+    }
+    const body: ProductEconomicsScenarioInput = parseResult.data as any;
 
     const result = calculateOrderEconomics(body);
     const eligibility = evaluateEconomicsEligibility(result);

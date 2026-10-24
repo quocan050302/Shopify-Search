@@ -87,6 +87,13 @@ export interface EvidenceReadinessResult {
 }
 
 /**
+export interface VerificationResult {
+  isVerified: boolean;
+  verifierActorId?: string;
+  notes?: string;
+}
+
+/**
  * Persists an evidence record with strict classification safeguards.
  */
 export async function createResearchEvidence(
@@ -98,22 +105,12 @@ export async function createResearchEvidence(
     await assertProductWorkspaceAccess(input.productId, context);
   }
 
-  // Safety gate: 'VERIFIED' requires explicit verification timestamp and actor or verified method
+  // Safety gate: 'VERIFIED' status CANNOT be directly claimed via initial user input.
+  // It requires explicit invocation of verifyResearchEvidence by an authorized principal.
   let sanitizedClassification = input.classification;
-  let verifiedAt = input.verifiedAt ?? null;
-  let verifierActorId = input.verifierActorId ?? null;
-
   if (sanitizedClassification === "VERIFIED") {
-    if (!verifiedAt && !verifierActorId && !input.observationMethod.includes("VERIFIED")) {
-      // Downgrade to USER_REVIEWED or USER_ENTERED if verification proof is absent
-      sanitizedClassification =
-        input.observationMethod === "USER_INPUT" ? "USER_ENTERED" : "SOURCE_OBSERVED";
-      verifiedAt = null;
-      verifierActorId = null;
-    } else {
-      verifiedAt = verifiedAt || new Date();
-      verifierActorId = verifierActorId || context.actorId || "authorized_researcher";
-    }
+    sanitizedClassification =
+      input.observationMethod === "USER_INPUT" ? "USER_ENTERED" : "SOURCE_OBSERVED";
   }
 
   const record = await prisma.researchEvidence.create({
@@ -130,8 +127,8 @@ export async function createResearchEvidence(
       classification: sanitizedClassification,
       sourceContentRef: input.sourceContentRef ?? null,
       observedAt: new Date(),
-      verifiedAt,
-      verifierActorId,
+      verifiedAt: null,
+      verifierActorId: null,
     },
   });
 
@@ -141,6 +138,46 @@ export async function createResearchEvidence(
     observedAt: record.observedAt.toISOString(),
     verifiedAt: record.verifiedAt ? record.verifiedAt.toISOString() : null,
     createdAt: record.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Performs explicit verification on an existing evidence record.
+ */
+export async function verifyResearchEvidence(
+  evidenceId: string,
+  verification: VerificationResult,
+  context: ResearchAccessContext
+): Promise<ResearchEvidenceRecord> {
+  const existing = await prisma.researchEvidence.findUnique({
+    where: { id: evidenceId },
+  });
+
+  if (!existing) {
+    throw new Error(`Evidence '${evidenceId}' not found.`);
+  }
+
+  if (existing.productId) {
+    await assertProductWorkspaceAccess(existing.productId, context);
+  }
+
+  const updated = await prisma.researchEvidence.update({
+    where: { id: evidenceId },
+    data: {
+      classification: verification.isVerified ? "VERIFIED" : "SOURCE_REVIEWED",
+      verifiedAt: verification.isVerified ? new Date() : null,
+      verifierActorId: verification.isVerified
+        ? context.actorId || verification.verifierActorId || "authorized_verifier"
+        : null,
+    },
+  });
+
+  return {
+    ...updated,
+    classification: updated.classification as EvidenceClassification,
+    observedAt: updated.observedAt.toISOString(),
+    verifiedAt: updated.verifiedAt ? updated.verifiedAt.toISOString() : null,
+    createdAt: updated.createdAt.toISOString(),
   };
 }
 

@@ -73,7 +73,10 @@ import {
   recoverInterruptedKh01Jobs,
 } from "@/workers/kh01Worker";
 
-describe("KH-01.E — End-to-End Product Intelligence Integration & Acceptance", () => {
+describe("KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow", () => {
+  // NOTE: This test utilizes synthetic fixtures (UNIT_FIXTURE / INTEGRATION_FIXTURE) to validate
+  // inter-service wiring, database state transitions, and analytical pipelines.
+  // It is NOT a live external network verification against Meta servers.
   const TEST_WORKSPACE = "test-kh01-workspace";
   const TEST_AD_ID = "test-kh01-meta-ad-1";
   const TEST_ADVERTISER_ID = "test-kh01-advertiser-1";
@@ -94,6 +97,8 @@ describe("KH-01.E — End-to-End Product Intelligence Integration & Acceptance",
     await prisma.productOpportunityAssessment.deleteMany({ where: { workspaceId: TEST_WORKSPACE } });
     await prisma.adProductLink.deleteMany({ where: { adId: TEST_AD_ID } });
     await prisma.researchDecision.deleteMany({ where: { adId: TEST_AD_ID } });
+    await prisma.discoveryRunAd.deleteMany({ where: { adId: TEST_AD_ID } });
+    await prisma.discoveryRun.deleteMany({ where: { workspaceId: TEST_WORKSPACE } });
     await prisma.competitorAd.deleteMany({ where: { id: TEST_AD_ID } });
     await prisma.advertiser.deleteMany({ where: { id: TEST_ADVERTISER_ID } });
     await prisma.competitorStore.deleteMany({ where: { domain: "petgroomer.shop" } });
@@ -144,6 +149,25 @@ describe("KH-01.E — End-to-End Product Intelligence Integration & Acceptance",
         sourceReportedStartAt: new Date("2026-03-01T10:00:00Z"),
       },
     });
+
+    const testRun = await prisma.discoveryRun.create({
+      data: {
+        id: "test-discovery-run-kh01",
+        workspaceId: TEST_WORKSPACE,
+        providerId: "META_AD_LIBRARY",
+        queryConfigJson: "{}",
+      },
+    });
+
+    await prisma.discoveryRunAd.create({
+      data: {
+        runId: testRun.id,
+        adId: TEST_AD_ID,
+        workspaceId: TEST_WORKSPACE,
+        providerId: "META_AD_LIBRARY",
+        ingestOutcome: "NEW",
+      },
+    });
   });
 
   afterEach(async () => {
@@ -156,6 +180,8 @@ describe("KH-01.E — End-to-End Product Intelligence Integration & Acceptance",
     await prisma.fulfillmentAssessment.deleteMany({ where: { workspaceId: TEST_WORKSPACE } });
     await prisma.productOpportunityAssessment.deleteMany({ where: { workspaceId: TEST_WORKSPACE } });
     await prisma.adProductLink.deleteMany({ where: { adId: TEST_AD_ID } });
+    await prisma.discoveryRunAd.deleteMany({ where: { adId: TEST_AD_ID } });
+    await prisma.discoveryRun.deleteMany({ where: { workspaceId: TEST_WORKSPACE } });
     await prisma.competitorAd.deleteMany({ where: { id: TEST_AD_ID } });
     await prisma.advertiser.deleteMany({ where: { id: TEST_ADVERTISER_ID } });
     await prisma.competitorStore.deleteMany({ where: { domain: "petgroomer.shop" } });

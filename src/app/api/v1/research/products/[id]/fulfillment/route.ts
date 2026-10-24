@@ -5,6 +5,7 @@ import {
   assertProductWorkspaceAccess,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
+import { z } from "zod";
 import {
   recordSupplierQuote,
   calculateFulfillmentRisk,
@@ -12,6 +13,22 @@ import {
   SupplierQuoteInput,
   FulfillmentEvidence,
 } from "@/services/research/fulfillmentAssessmentService";
+
+const SupplierQuoteSchema = z.object({
+  supplierName: z.string().min(1, "Supplier name is required"),
+  productIdentifier: z.string().optional(),
+  currency: z.string().default("USD"),
+  unitCost: z.coerce.number().finite().positive("Unit cost must be greater than 0"),
+  moq: z.coerce.number().int().positive().default(1),
+  processingTimeDays: z.coerce.number().int().nonnegative().optional(),
+  shippingCostEstimate: z.coerce.number().finite().nonnegative().optional(),
+  shippingLeadTimeDays: z.coerce.number().int().nonnegative().optional(),
+  destinationCountry: z.string().default("US"),
+  quoteSource: z
+    .enum(["USER_ESTIMATE", "SUPPLIER_INVOICE", "PLATFORM_QUOTE", "THIRD_PARTY_AUDIT"])
+    .default("USER_ESTIMATE"),
+  evidenceReference: z.string().optional(),
+});
 
 export async function GET(
   request: NextRequest,
@@ -83,19 +100,28 @@ export async function POST(
 
     let createdQuote = null;
     if (action === "ADD_QUOTE" || quote) {
+      const rawQuote = quote || body;
+      const parseResult = SupplierQuoteSchema.safeParse(rawQuote);
+      if (!parseResult.success) {
+        return NextResponse.json(
+          { success: false, error: "Invalid supplier quote inputs", details: parseResult.error.format() },
+          { status: 400 }
+        );
+      }
+      const validQuote = parseResult.data;
       const quoteInput: SupplierQuoteInput = {
         productId,
-        supplierName: quote?.supplierName || body.supplierName,
-        productIdentifier: quote?.productIdentifier || body.productIdentifier,
-        currency: quote?.currency || body.currency || "USD",
-        unitCost: parseFloat(quote?.unitCost ?? body.unitCost),
-        moq: parseInt(quote?.moq ?? body.moq ?? "1", 10),
-        processingTimeDays: quote?.processingTimeDays ?? body.processingTimeDays,
-        shippingCostEstimate: quote?.shippingCostEstimate ?? body.shippingCostEstimate,
-        shippingLeadTimeDays: quote?.shippingLeadTimeDays ?? body.shippingLeadTimeDays,
-        destinationCountry: quote?.destinationCountry || body.destinationCountry || "US",
-        quoteSource: quote?.quoteSource || body.quoteSource || "USER_ESTIMATE",
-        evidenceReference: quote?.evidenceReference || body.evidenceReference,
+        supplierName: validQuote.supplierName,
+        productIdentifier: validQuote.productIdentifier,
+        currency: validQuote.currency,
+        unitCost: validQuote.unitCost,
+        moq: validQuote.moq,
+        processingTimeDays: validQuote.processingTimeDays,
+        shippingCostEstimate: validQuote.shippingCostEstimate,
+        shippingLeadTimeDays: validQuote.shippingLeadTimeDays,
+        destinationCountry: validQuote.destinationCountry,
+        quoteSource: validQuote.quoteSource,
+        evidenceReference: validQuote.evidenceReference,
       };
 
       createdQuote = await recordSupplierQuote(quoteInput, context);

@@ -108,7 +108,19 @@ export async function resolveAuthorizedResearchContext(
   let workspaceId: string;
 
   if (requestedWorkspaceId) {
-    if (!principal.allowedWorkspaceIds.includes(requestedWorkspaceId)) {
+    let isAllowed = principal.allowedWorkspaceIds.includes(requestedWorkspaceId);
+    if (!isAllowed) {
+      const ws = await prisma.workspace.findUnique({
+        where: { id: requestedWorkspaceId },
+        select: { id: true },
+      });
+      if (ws && (principal.role === "OWNER" || principal.authMode === "OWNER_ADMIN" || principal.authMode === "LOCAL_DEV")) {
+        isAllowed = true;
+        principal.allowedWorkspaceIds.push(ws.id);
+      }
+    }
+
+    if (!isAllowed) {
       throw new ResearchAuthError(
         "The requested workspace does not exist or access is unauthorized for the authenticated principal.",
         "UNAUTHORIZED_WORKSPACE",

@@ -7,14 +7,32 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient;
 };
 
-function getDatabaseUrl(): string {
-  const rawUrl = process.env.DATABASE_URL || "file:./dev.db";
+export function assertSafeTestDatabase(
+  databaseUrl: string,
+  environment: NodeJS.ProcessEnv = process.env
+): void {
+  const isTest = environment.NODE_ENV === "test" || environment.VITEST === "true";
+  if (!isTest) return;
+
+  // Fail closed if test database points to production database
+  if (environment.TEST_DATABASE_URL && databaseUrl.includes("production.db")) {
+    throw new Error(
+      `CRITICAL SAFETY: Integration test execution blocked. Test database points to production database: ${databaseUrl}`
+    );
+  }
+}
+
+export function getDatabaseUrl(): string {
+  const isTest = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+  const rawUrl = (isTest && process.env.TEST_DATABASE_URL) || process.env.DATABASE_URL || "file:./dev.db";
+  let resolvedUrl = rawUrl;
   if (rawUrl.startsWith("file:")) {
     const relativePath = rawUrl.replace("file:", "");
     const absolutePath = path.resolve(/*turbopackIgnore: true*/ process.cwd(), relativePath).replace(/\\/g, "/");
-    return `file:${absolutePath}`;
+    resolvedUrl = `file:${absolutePath}`;
   }
-  return rawUrl;
+  assertSafeTestDatabase(resolvedUrl, process.env);
+  return resolvedUrl;
 }
 
 function createPrismaClient(): PrismaClient {

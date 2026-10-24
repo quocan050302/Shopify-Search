@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
 import {
   resolveAuthorizedResearchContext,
   assertProductWorkspaceAccess,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
+
+const DecisionRequestSchema = z.object({
+  decision: z.enum(["RESEARCHING", "SHORTLISTED", "TEST_CANDIDATE", "REJECTED", "ARCHIVED"]),
+  notes: z.string().max(2000).default(""),
+});
 
 export async function POST(
   request: NextRequest,
@@ -16,16 +22,15 @@ export async function POST(
 
     await assertProductWorkspaceAccess(productId, context);
 
-    const body = await request.json();
-    const { decision, notes = "" } = body;
-
-    const validDecisions = ["RESEARCHING", "SHORTLISTED", "TEST_CANDIDATE", "REJECTED", "ARCHIVED"];
-    if (!decision || !validDecisions.includes(decision)) {
+    const json = await request.json();
+    const parseResult = DecisionRequestSchema.safeParse(json);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: `Valid decision required: ${validDecisions.join(", ")}` },
+        { success: false, error: "Invalid decision inputs", details: parseResult.error.format() },
         { status: 400 }
       );
     }
+    const { decision, notes } = parseResult.data;
 
     // Check latest algorithmic assessment
     const latestAssessment = await prisma.productOpportunityAssessment.findFirst({

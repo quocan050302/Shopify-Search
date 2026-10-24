@@ -4,6 +4,7 @@ import {
   assertAdWorkspaceAccess,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
+import { z } from "zod";
 import {
   extractProductIdentityCandidate,
   resolveOrCreateResearchProduct,
@@ -11,18 +12,35 @@ import {
   ProductIdentitySelection,
 } from "@/services/research/productIdentityService";
 
+const FromAdRequestSchema = z.object({
+  adId: z.string().min(1, "adId is required"),
+  selection: z
+    .object({
+      action: z.enum(["LINK_EXISTING", "CREATE_NEW"]).optional(),
+      mode: z.enum(["LINK_EXISTING", "CREATE_NEW"]).optional(),
+      targetProductId: z.string().optional(),
+      customTitle: z.string().optional(),
+      title: z.string().optional(),
+      category: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
     const context = await resolveAuthorizedResearchContext(request);
-    const body = await request.json();
-    const { adId, selection } = body;
+    const json = await request.json();
+    const parseResult = FromAdRequestSchema.safeParse(json);
 
-    if (!adId || typeof adId !== "string") {
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "adId is required" },
+        { success: false, error: "Invalid request payload", details: parseResult.error.format() },
         { status: 400 }
       );
     }
+
+    const { adId, selection } = parseResult.data;
 
     await assertAdWorkspaceAccess(adId, context);
 
@@ -32,8 +50,17 @@ export async function POST(request: NextRequest) {
     let link = null;
 
     if (selection) {
-      product = await resolveOrCreateResearchProduct(candidate, selection as ProductIdentitySelection, context);
-      link = await attachAdvertisementToProduct(adId, product.productId, candidate.supportingEvidenceIds, context);
+      product = await resolveOrCreateResearchProduct(
+        candidate,
+        selection as ProductIdentitySelection,
+        context
+      );
+      link = await attachAdvertisementToProduct(
+        adId,
+        product.productId,
+        candidate.supportingEvidenceIds,
+        context
+      );
     }
 
     return NextResponse.json({
