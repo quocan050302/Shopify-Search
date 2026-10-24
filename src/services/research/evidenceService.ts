@@ -105,10 +105,11 @@ export interface VerificationResult {
  */
 export async function createResearchEvidence(
   input: CreateResearchEvidenceInput,
-  context: ResearchAccessContext
+  context: ResearchAccessContext,
+  tx?: any
 ): Promise<ResearchEvidenceRecord> {
-  // If associated with a product, enforce workspace access
-  if (input.productId) {
+  // If associated with a product, enforce workspace access when not within a transaction
+  if (input.productId && !tx) {
     await assertProductWorkspaceAccess(input.productId, context);
   }
 
@@ -120,7 +121,31 @@ export async function createResearchEvidence(
       input.observationMethod === "USER_INPUT" ? "USER_ENTERED" : "SOURCE_OBSERVED";
   }
 
-  const record = await prisma.researchEvidence.create({
+  const db = tx || prisma;
+
+  // Duplicate guard for job retries (Task 102)
+  if (input.productId && input.sourceContentRef) {
+    const existing = await db.researchEvidence.findFirst({
+      where: {
+        workspaceId: context.workspaceId,
+        productId: input.productId,
+        pillar: input.pillar,
+        claim: input.claim.trim(),
+        sourceContentRef: input.sourceContentRef,
+      },
+    });
+    if (existing) {
+      return {
+        ...existing,
+        classification: existing.classification as EvidenceClassification,
+        observedAt: existing.observedAt.toISOString(),
+        verifiedAt: existing.verifiedAt ? existing.verifiedAt.toISOString() : null,
+        createdAt: existing.createdAt.toISOString(),
+      };
+    }
+  }
+
+  const record = await db.researchEvidence.create({
     data: {
       workspaceId: context.workspaceId,
       productId: input.productId ?? null,

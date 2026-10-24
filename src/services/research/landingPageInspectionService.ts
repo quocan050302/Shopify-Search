@@ -42,6 +42,7 @@ import {
 import { saveLandingPageSnapshot } from "./landingPageSnapshotService";
 import { createResearchEvidence } from "./evidenceService";
 import { getAdvertisementDetails } from "@/services/ads/adService";
+import { persistCompletedResearchResult } from "./researchResultPersistenceService";
 
 export interface CreateLandingPageResearchInput {
   productId?: string | null;
@@ -396,39 +397,23 @@ export async function executeLandingPageResearchJob(
     signal,
   });
 
-  // 2. Handle restricted / blocked access honestly
+  // 2. Handle restricted / blocked access honestly via persistence orchestrator
   if (fetchResult.statusClassification === "ACCESS_RESTRICTED") {
-    const blockedSnapshot = await prisma.landingPageSnapshot.create({
-      data: {
-        workspaceId: syncJob.workspaceId,
-        productId: jobConfig.productId ?? null,
-        adId: jobConfig.adId ?? null,
-        originalUrl: validatedUrl.originalUrl,
-        finalUrl: fetchResult.finalUrl,
-        httpStatus: fetchResult.httpStatus,
-        accessStatus: "ACCESS_RESTRICTED",
-        contentHash: "blocked_access",
-        observationsJson: JSON.stringify({ note: "Access restricted by competitor website." }),
-        croSignalsJson: JSON.stringify({ note: "Unable to inspect DOM: HTTP 401/403 access restricted." }),
-        warningsJson: JSON.stringify([fetchResult.errorMessage || "Access restricted by destination."]),
-        analysisVersion: "11.4.1",
-        observedAt: new Date(),
-      },
-    });
-
-    await prisma.syncJob.update({
-      where: { id: jobId, status: "RUNNING" },
-      data: {
-        status: "COMPLETED",
-        progress: 100,
-        completedAt: new Date(),
-        errorMessage: fetchResult.errorMessage,
-        resultJson: JSON.stringify({
-          ...jobConfig,
-          snapshotId: blockedSnapshot.id,
-          accessStatus: "ACCESS_RESTRICTED",
-        }),
-      },
+    const persisted = await persistCompletedResearchResult(claim, {
+      workspaceId: syncJob.workspaceId,
+      productId: jobConfig.productId ?? null,
+      adId: jobConfig.adId ?? null,
+      originalUrl: validatedUrl.originalUrl,
+      finalUrl: fetchResult.finalUrl,
+      httpStatus: fetchResult.httpStatus,
+      accessStatus: "ACCESS_RESTRICTED",
+      pageTitle: null,
+      metaDescription: null,
+      htmlContent: null,
+      normalizedOffer: null,
+      funnelAssessment: null,
+      warnings: [fetchResult.errorMessage || "Competitor storefront restricted bot/crawler access."],
+      errorMessage: fetchResult.errorMessage,
     });
 
     return {
@@ -437,7 +422,7 @@ export async function executeLandingPageResearchJob(
       originalUrl: validatedUrl.originalUrl,
       finalUrl: fetchResult.finalUrl,
       httpStatus: fetchResult.httpStatus,
-      snapshotId: blockedSnapshot.id,
+      snapshotId: persisted.snapshotId,
       offerSnapshotId: null,
       offer: null,
       funnel: null,
@@ -515,16 +500,8 @@ export async function executeLandingPageResearchJob(
     ad: adDetails,
   });
 
-  // 6. Persistence of snapshots
-  const context: ResearchAccessContext = {
-    workspaceId: syncJob.workspaceId,
-    actorId: "kh01_worker",
-    accessMode: "AUTHENTICATED",
-  };
-
-  const offerSnapshot = await persistCompetitorOfferSnapshot(normalizedOffer, context);
-
-  const landingSnapshot = await saveLandingPageSnapshot({
+  // 6. Transactional & Idempotent Persistence
+  const persisted = await persistCompletedResearchResult(claim, {
     workspaceId: syncJob.workspaceId,
     productId: jobConfig.productId,
     adId: jobConfig.adId,
@@ -535,68 +512,9 @@ export async function executeLandingPageResearchJob(
     pageTitle: parsedPage.pageTitle,
     metaDescription: parsedPage.metaDescription,
     htmlContent: fetchResult.content,
-    structure: funnelAssessment.structure,
-    croSignals: funnelAssessment,
-    messageMatch: funnelAssessment.messageMatch,
+    normalizedOffer,
+    funnelAssessment,
     warnings: normalizedOffer.warnings,
-  });
-
-  // 7. Provenance: Create evidence entries
-  if (jobConfig.productId) {
-    // Record offer price evidence
-    if (normalizedOffer.sellingPrice !== null) {
-      await createResearchEvidence(
-        {
-          productId: jobConfig.productId,
-          subjectType: "OFFER",
-          subjectId: offerSnapshot.id,
-          pillar: "OFFER",
-          claim: "Observed competitor selling price on landing page",
-          observedValue: `$${normalizedOffer.sellingPrice} ${normalizedOffer.currency}`,
-          sourceUrl: fetchResult.finalUrl,
-          observationMethod: "STOREFRONT_HTTP",
-          classification: "SOURCE_OBSERVED",
-          sourceContentRef: `snapshot:${landingSnapshot.id}`,
-        },
-        context
-      );
-    }
-
-    // Record landing page hero CTA evidence
-    if (funnelAssessment.structure.primaryCtaText) {
-      await createResearchEvidence(
-        {
-          productId: jobConfig.productId,
-          subjectType: "FUNNEL",
-          subjectId: landingSnapshot.id,
-          pillar: "LANDING_PAGE",
-          claim: "Observed primary Call-to-Action button",
-          observedValue: funnelAssessment.structure.primaryCtaText,
-          sourceUrl: fetchResult.finalUrl,
-          observationMethod: "DOM_INSPECTION",
-          classification: "SOURCE_OBSERVED",
-          sourceContentRef: `snapshot:${landingSnapshot.id}`,
-        },
-        context
-      );
-    }
-  }
-
-  // 8. Reconcile job status atomically under active claim
-  await prisma.syncJob.update({
-    where: { id: jobId, status: "RUNNING" },
-    data: {
-      status: "COMPLETED",
-      progress: 100,
-      completedAt: new Date(),
-      resultJson: JSON.stringify({
-        ...jobConfig,
-        snapshotId: landingSnapshot.id,
-        offerSnapshotId: offerSnapshot.id,
-        sellingPrice: normalizedOffer.sellingPrice,
-        croReadiness: funnelAssessment.croReadiness,
-      }),
-    },
   });
 
   return {
@@ -605,8 +523,8 @@ export async function executeLandingPageResearchJob(
     originalUrl: validatedUrl.originalUrl,
     finalUrl: fetchResult.finalUrl,
     httpStatus: fetchResult.httpStatus,
-    snapshotId: landingSnapshot.id,
-    offerSnapshotId: offerSnapshot.id,
+    snapshotId: persisted.snapshotId,
+    offerSnapshotId: persisted.offerSnapshotId,
     offer: normalizedOffer,
     funnel: funnelAssessment,
     warnings: normalizedOffer.warnings,

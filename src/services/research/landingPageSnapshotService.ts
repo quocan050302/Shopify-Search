@@ -18,7 +18,7 @@ import {
 } from "./funnelAnalysisService";
 
 export interface SaveLandingPageSnapshotInput {
-  workspaceId?: string | null;
+  workspaceId: string;
   productId?: string | null;
   storeId?: string | null;
   adId?: string | null;
@@ -29,10 +29,15 @@ export interface SaveLandingPageSnapshotInput {
   pageTitle?: string | null;
   metaDescription?: string | null;
   htmlContent?: string | null;
+  observedPrice?: number | null;
+  currency?: string | null;
+  bundleQuantity?: number | null;
+  freeShippingThreshold?: number | null;
   structure: LandingPageStructure;
   croSignals: CompetitorFunnelAssessment;
   messageMatch?: MessageMatchAssessment | null;
   warnings?: string[];
+  tx?: any;
 }
 
 export interface LandingPageChangeReport {
@@ -50,23 +55,41 @@ export interface LandingPageChangeReport {
 
 /**
  * Persists a versioned snapshot of an inspected competitor landing page.
+ * Requires explicit workspaceId (no default-workspace fallback).
+ * Incorporates commercial pricing and bundle terms into contentHash.
  */
 export async function saveLandingPageSnapshot(input: SaveLandingPageSnapshotInput) {
-  // Compute deterministic content hash based on visible semantic content (not ephemeral session tokens)
+  if (!input.workspaceId) {
+    throw new Error(
+      "Cannot save landing page snapshot without an explicit, authorized workspaceId."
+    );
+  }
+
+  // Compute deterministic content hash based on visible semantic & commercial content
   const semanticDigest = [
     input.pageTitle || "",
     input.structure.heroHeadline || "",
     input.structure.primaryCtaText || "",
-    input.structure.hasVisiblePriceNearCta ? "price:yes" : "price:no",
+    input.observedPrice !== undefined && input.observedPrice !== null
+      ? `price:${input.observedPrice}`
+      : input.structure.hasVisiblePriceNearCta
+      ? "price:yes"
+      : "price:no",
+    input.currency ? `curr:${input.currency}` : "curr:none",
+    input.bundleQuantity ? `bundle:${input.bundleQuantity}` : "bundle:none",
+    input.freeShippingThreshold !== undefined && input.freeShippingThreshold !== null
+      ? `shipThresh:${input.freeShippingThreshold}`
+      : "shipThresh:none",
     input.structure.hasShippingPolicySummary ? "shipping:yes" : "shipping:no",
     input.structure.hasReturnPolicySummary ? "return:yes" : "return:no",
   ].join("|");
 
   const contentHash = createHash("sha256").update(semanticDigest).digest("hex");
+  const db = input.tx || prisma;
 
-  return await prisma.landingPageSnapshot.create({
+  return await db.landingPageSnapshot.create({
     data: {
-      workspaceId: input.workspaceId || "default-workspace",
+      workspaceId: input.workspaceId,
       productId: input.productId ?? null,
       storeId: input.storeId ?? null,
       adId: input.adId ?? null,
@@ -81,7 +104,7 @@ export async function saveLandingPageSnapshot(input: SaveLandingPageSnapshotInpu
       croSignalsJson: JSON.stringify(input.croSignals),
       messageMatchJson: input.messageMatch ? JSON.stringify(input.messageMatch) : null,
       warningsJson: input.warnings ? JSON.stringify(input.warnings) : null,
-      analysisVersion: "11.4.0",
+      analysisVersion: "11.4.2",
       observedAt: new Date(),
     },
   });

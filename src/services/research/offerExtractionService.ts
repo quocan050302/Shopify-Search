@@ -398,9 +398,10 @@ export function normalizeCompetitorOffer(
  */
 export async function persistCompetitorOfferSnapshot(
   input: NormalizedCompetitorOffer,
-  context: ResearchAccessContext
+  context: ResearchAccessContext,
+  tx?: any
 ) {
-  if (input.productId) {
+  if (input.productId && !tx) {
     await assertProductWorkspaceAccess(input.productId, context);
   }
 
@@ -421,8 +422,10 @@ export async function persistCompetitorOfferSnapshot(
     .update(JSON.stringify(termsPayload))
     .digest("hex");
 
+  const db = tx || prisma;
+
   // Check if identical snapshot already exists recently
-  const existingLatest = await prisma.competitorOfferSnapshot.findFirst({
+  const existingLatest = await db.competitorOfferSnapshot.findFirst({
     where: {
       productId: input.productId ?? undefined,
       snapshotHash,
@@ -435,7 +438,7 @@ export async function persistCompetitorOfferSnapshot(
     return existingLatest;
   }
 
-  return await prisma.competitorOfferSnapshot.create({
+  return await db.competitorOfferSnapshot.create({
     data: {
       workspaceId: context.workspaceId,
       productId: input.productId ?? null,
