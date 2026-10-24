@@ -52,6 +52,9 @@ export interface ProductOpportunityAssessment {
   productId: string;
   methodologyVersion: string;
   opportunityScore: number | null;
+  isPartialScore?: boolean;
+  assessedCoveragePercent?: number;
+  missingPillarWeights?: number;
   evidenceReadinessScore: number | null;
   pillars: {
     product: PillarAssessment;
@@ -562,8 +565,11 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
     // Canonical Readiness Check
     const tempAssessment = {
       productId: input.productId,
-      methodologyVersion: "11.4.1",
+      methodologyVersion: "11.4.2",
       opportunityScore,
+      isPartialScore: totalAssessedWeight < 1.0,
+      assessedCoveragePercent: Math.round(totalAssessedWeight * 100),
+      missingPillarWeights: Math.round((1.0 - totalAssessedWeight) * 100) / 100,
       evidenceReadinessScore: totalReadiness,
       pillars,
       strengths,
@@ -591,8 +597,11 @@ export function calculateOpportunityAssessment(input: SixPillarOpportunityInput)
 
   return {
     productId: input.productId,
-    methodologyVersion: "11.4.1",
+    methodologyVersion: "11.4.2",
     opportunityScore,
+    isPartialScore: totalAssessedWeight < 1.0,
+    assessedCoveragePercent: Math.round(totalAssessedWeight * 100),
+    missingPillarWeights: Math.round((1.0 - totalAssessedWeight) * 100) / 100,
     evidenceReadinessScore: totalReadiness,
     pillars,
     strengths: Array.from(new Set(strengths)),
@@ -688,9 +697,9 @@ export function explainOpportunityRecommendation(assessment: ProductOpportunityA
     ],
     missingCriticalInformation: assessment.missingCriticalEvidence,
     hypothesisFalsificationConditions: [
-      "If supplier unit cost exceeds target COGS by > 20%, unit economics break",
-      "If initial click-through rate on demonstration hook is < 1.0%, customer angle is rejected",
-      "If competitor landing page uses hidden subscription terms not visible in DOM",
+      "User-configurable hypothesis: If supplier unit cost exceeds target COGS, modeled break-even margin shrinks accordingly",
+      "User-configurable hypothesis: If creative demonstration fails to generate qualifying engagement, messaging angle requires review",
+      "If competitor landing page uses hidden subscription or shipping terms not observable in public DOM",
     ],
     recommendedNextActions: [
       ...assessment.missingCriticalEvidence.map((m) => `Verify: ${m}`),
