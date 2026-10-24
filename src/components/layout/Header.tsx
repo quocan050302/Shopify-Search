@@ -78,33 +78,45 @@ export function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced search query
+  // Debounced search query with request cancellation and stale response protection
   useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 2) {
       setSearchResults(null);
       setIsSearching(false);
       return;
     }
 
+    const abortController = new AbortController();
+
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: abortController.signal,
+        });
         if (res.ok) {
           const json: SearchResponse = await res.json();
-          if (json.success) {
+          if (json.success && !abortController.signal.aborted) {
             setSearchResults(json.data);
             setIsDropdownOpen(true);
           }
         }
-      } catch (err) {
-        console.error("Global search error:", err);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Global search error:", err);
+        }
       } finally {
-        setIsSearching(false);
+        if (!abortController.signal.aborted) {
+          setIsSearching(false);
+        }
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
   }, [searchQuery]);
 
   // Derive breadcrumb from pathname

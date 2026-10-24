@@ -83,7 +83,9 @@ export interface FullKh01AcceptanceOptions {
 
 export interface Section14Manifest {
   plan: "KH-01";
-  version: "11.4.5";
+  applicationReleaseVersion: "11.5.1";
+  kh01ProtocolVersion: "11.4.5";
+  version: "11.5.1";
   acceptanceRunId: string;
   branch: string;
   commitSha: string;
@@ -151,7 +153,9 @@ export interface Section14Manifest {
 
 export interface FullKh01AcceptanceReport {
   plan: "KH-01";
-  version: "11.4.5";
+  applicationReleaseVersion: "11.5.1";
+  kh01ProtocolVersion: "11.4.5";
+  version: "11.5.1";
   acceptanceRunId: string;
   startedAt: string;
   completedAt: string;
@@ -333,26 +337,41 @@ export async function executeAcceptanceStage(
   const vitestResults = jsonReportPath ? parseVitestJsonAssertions(jsonReportPath) : new Map();
 
   const assertions: AcceptanceAssertionResult[] = assertionsDef.map((def) => {
-    let assertionStatus: AcceptanceStatus = stageStatus;
-    let assertionError = stageStatus === "FAILED" ? errorSummary || "Command failed" : null;
+    let assertionStatus: AcceptanceStatus = "NOT_RUN";
+    let assertionError: string | null = null;
     let ref = `${command} (exitCode: ${exitCode})`;
 
-    if (def.testTitleMatch && vitestResults.size > 0) {
-      let matched = false;
-      for (const [key, val] of vitestResults.entries()) {
-        if (key.includes(def.testTitleMatch)) {
-          assertionStatus = val.status;
-          assertionError = val.error || null;
-          ref = `Vitest: "${key}" (${val.status}, ${val.duration}ms)`;
-          matched = true;
-          break;
+    if (def.testTitleMatch) {
+      // Test-specific assertion: requires actual match in test results
+      if (!jsonReportPath || !fs.existsSync(jsonReportPath)) {
+        assertionStatus = "BLOCKED";
+        assertionError = `Test report was not generated or missing at ${jsonReportPath}`;
+        ref = `Missing report: ${jsonReportPath}`;
+      } else if (vitestResults.size === 0) {
+        assertionStatus = exitCode === 0 ? "NOT_RUN" : "FAILED";
+        assertionError = `Test report at ${jsonReportPath} contained 0 parsed assertions`;
+        ref = `Empty report: ${jsonReportPath}`;
+      } else {
+        let matched = false;
+        for (const [key, val] of vitestResults.entries()) {
+          if (key.includes(def.testTitleMatch)) {
+            assertionStatus = val.status;
+            assertionError = val.error || null;
+            ref = `Vitest: "${key}" (${val.status}, ${val.duration}ms)`;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          assertionStatus = "NOT_RUN";
+          assertionError = `Test matching "${def.testTitleMatch}" was not found in suite output`;
+          ref = `Missing test: ${def.testTitleMatch}`;
         }
       }
-      if (!matched) {
-        assertionStatus = "NOT_RUN";
-        assertionError = `Test matching "${def.testTitleMatch}" was not found in suite output`;
-        ref = `Missing test: ${def.testTitleMatch}`;
-      }
+    } else {
+      // Process-level check (e.g. git invariant, tsc exit code, production build exit code)
+      assertionStatus = stageStatus;
+      assertionError = stageStatus === "FAILED" ? errorSummary || "Command failed" : null;
     }
 
     return {
@@ -584,8 +603,9 @@ export async function runFullKh01Acceptance(
     };
   });
 
+  const anyMandatoryStageFailed = stages.some((s) => s.status === "FAILED");
   let overallStatus: "ACCEPTED" | "CONDITIONALLY_ACCEPTED" | "BLOCKED" = "ACCEPTED";
-  if (failedMandatoryGates.length > 0) {
+  if (failedMandatoryGates.length > 0 || anyMandatoryStageFailed) {
     overallStatus = "BLOCKED";
   } else if (notRunMandatoryGates.length > 0) {
     overallStatus = "CONDITIONALLY_ACCEPTED";
@@ -594,7 +614,9 @@ export async function runFullKh01Acceptance(
   // Construct pure Section 14 Manifest
   const manifest: Section14Manifest = {
     plan: "KH-01",
-    version: "11.4.5",
+    applicationReleaseVersion: "11.5.1",
+    kh01ProtocolVersion: "11.4.5",
+    version: "11.5.1",
     acceptanceRunId,
     branch: gitInfo.branch,
     commitSha: gitInfo.commitSha,
@@ -657,7 +679,9 @@ export async function runFullKh01Acceptance(
 
   const report: FullKh01AcceptanceReport = {
     plan: "KH-01",
-    version: "11.4.5",
+    applicationReleaseVersion: "11.5.1",
+    kh01ProtocolVersion: "11.4.5",
+    version: "11.5.1",
     acceptanceRunId,
     startedAt,
     completedAt,
@@ -670,6 +694,16 @@ export async function runFullKh01Acceptance(
   try {
     fs.writeFileSync(
       path.join(artifactDir, "full-acceptance-manifest.json"),
+      JSON.stringify(manifest, null, 2),
+      "utf8"
+    );
+
+    const v1151ArtifactDir = path.resolve(process.cwd(), "artifacts/v11.5.1");
+    if (!fs.existsSync(v1151ArtifactDir)) {
+      fs.mkdirSync(v1151ArtifactDir, { recursive: true });
+    }
+    fs.writeFileSync(
+      path.join(v1151ArtifactDir, "manifest.json"),
       JSON.stringify(manifest, null, 2),
       "utf8"
     );

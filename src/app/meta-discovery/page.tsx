@@ -16,6 +16,9 @@ export default function MetaDiscoveryPage() {
     health,
     jobs,
     readiness,
+    pagination,
+    searchQuery,
+    statusFilter,
     isInitialLoading,
     isRefreshing,
     isSubmitting,
@@ -24,6 +27,9 @@ export default function MetaDiscoveryPage() {
     lastCheckedAt,
     setError,
     setSuccessMessage,
+    setPage,
+    setSearchQuery,
+    setStatusFilter,
     refreshWorkspace,
     createJob,
     cancelJob,
@@ -90,9 +96,7 @@ export default function MetaDiscoveryPage() {
           readiness={readiness}
           maxBudget={maxBudget}
           isSubmitting={isSubmitting}
-          onSubmit={async (formData) => {
-            await createJob(formData);
-          }}
+          onSubmit={(formData) => createJob(formData)}
           onOpenSetupGuide={() => setDiagnosticsOpen(true)}
         />
 
@@ -108,13 +112,19 @@ export default function MetaDiscoveryPage() {
               </p>
             </div>
             <span className="text-xs text-slate-400 font-mono">
-              {jobs.length} total {jobs.length === 1 ? "run" : "runs"}
+              {pagination.total} total {pagination.total === 1 ? "run" : "runs"}
             </span>
           </div>
 
           <MetaJobsTable
             jobs={jobs}
             isLoading={isInitialLoading}
+            pagination={pagination}
+            onPageChange={setPage}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
             onRefresh={() => refreshWorkspace(false)}
             onSelectJob={(job) => setSelectedJob(job)}
             onCancelJob={cancelJob}

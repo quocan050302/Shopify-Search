@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { MetaRequestItem } from "./MetaJobsTable";
 import { mapMetaJobStatus } from "@/lib/meta/mapMetaJobStatus";
+import { buildExplorerUrlForRun } from "@/lib/meta/buildExplorerUrlForRun";
 
 export interface MetaJobDetailsDrawerProps {
   job: MetaRequestItem | null;
@@ -53,7 +54,7 @@ export const MetaJobDetailsDrawer: React.FC<MetaJobDetailsDrawerProps> = ({
             Close
           </Button>
           {job.validCount > 0 && (
-            <Link href={`/explorer?query=${encodeURIComponent(primaryKeyword)}`}>
+            <Link href={buildExplorerUrlForRun(job.id, "META")}>
               <Button
                 variant="primary"
                 size="sm"

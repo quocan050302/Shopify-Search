@@ -216,4 +216,55 @@ describe("Meta Discovery Readiness Model", () => {
     expect(result.primaryActionLabel).toBe("Start Research");
     expect(result.setupSteps.every((s) => s.status === "COMPLETE")).toBe(true);
   });
+
+  it("returns UNKNOWN state when health is null and not loading (prevents infinite LOADING spinner)", () => {
+    const result = normalizeMetaHealth(null, false);
+    expect(result.state).toBe("UNKNOWN");
+    expect(result.canStartResearch).toBe(false);
+    expect(result.primaryActionLabel).toBe("Run Diagnostics");
+  });
+
+  it("allows newer successful retrieval to supersede older BLOCKED_SOURCE failure", () => {
+    const olderFailure = new Date(Date.now() - 3600_000).toISOString(); // 1 hour ago
+    const newerSuccess = new Date(Date.now() - 600_000).toISOString();  // 10 mins ago
+
+    const healthFixture: ProviderHealthResponse = {
+      provider: {
+        id: "meta-ads-collector",
+        name: "Meta Ad Library (Local MCP)",
+        enabled: true,
+        status: "READY",
+        isAuthorized: true,
+        message: "Collector operational",
+      },
+      environment: {
+        pythonReady: true,
+        dataDirReady: true,
+        defaultCountry: "US",
+        liveTestEnabled: false,
+      },
+      worker: {
+        status: "RUNNING",
+        lastHeartbeat: new Date().toISOString(),
+      },
+      history: {
+        lastSuccessfulRetrievalAt: newerSuccess,
+        lastSuccessfulRecordCount: 20,
+        lastFailureCategory: "BLOCKED_SOURCE",
+        lastFailureMessage: "Old challenge",
+        lastFailureAt: olderFailure,
+      },
+      limits: {
+        maxResultsPerSearch: 25,
+        maxRequestsPerSearch: 5,
+        maxExecutionSeconds: 60,
+        maxConcurrency: 1,
+      },
+    };
+
+    const result = normalizeMetaHealth(healthFixture, false);
+    // Because newer success happened AFTER the failure, status should be READY, not permanently restricted!
+    expect(result.state).toBe("READY");
+    expect(result.canStartResearch).toBe(true);
+  });
 });

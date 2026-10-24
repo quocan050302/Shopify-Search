@@ -40,10 +40,16 @@ export const MetaDiagnosticsPanel: React.FC<MetaDiagnosticsPanelProps> = ({
 
   if (!isOpen) return null;
 
-  const copyDoctorCommand = () => {
-    navigator.clipboard.writeText("npm run doctor");
-    setCopiedCmd(true);
-    setTimeout(() => setCopiedCmd(false), 2000);
+  const copyDoctorCommand = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText("npm run doctor");
+        setCopiedCmd(true);
+        setTimeout(() => setCopiedCmd(false), 2000);
+      }
+    } catch (err) {
+      console.warn("Clipboard copy failed:", err);
+    }
   };
 
   const getStatusIcon = (isOk: boolean, isWarning?: boolean) => {

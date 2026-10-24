@@ -95,6 +95,7 @@ export async function GET() {
         lastSuccessfulRecordCount: lastSuccessfulRun?.validCount || 0,
         lastFailureCategory: lastFailedRun?.errorCategory || null,
         lastFailureMessage: lastFailedRun?.errorMessage || null,
+        lastFailureAt: lastFailedRun?.createdAt || null,
       },
       limits: {
         maxResultsPerSearch: config.maxResults,

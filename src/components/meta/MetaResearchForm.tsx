@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -17,12 +17,17 @@ import {
   MetaResearchFormState,
   validateMetaResearchForm,
 } from "@/lib/meta/validateMetaResearchForm";
+import { getAllowedResearchLimits } from "@/lib/meta/getAllowedResearchLimits";
+
+export type CreateResearchResult =
+  | { ok: true; runId: string; queuedStatus?: string }
+  | { ok: false; error: string };
 
 export interface MetaResearchFormProps {
   readiness: NormalizedReadiness;
   maxBudget: number;
   isSubmitting: boolean;
-  onSubmit: (formData: MetaResearchFormState) => Promise<void>;
+  onSubmit: (formData: MetaResearchFormState) => Promise<CreateResearchResult>;
   onOpenSetupGuide?: () => void;
 }
 
@@ -42,9 +47,23 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
   const [advertiserPageId, setAdvertiserPageId] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [formErrors, setFormErrors] = useState<{ keywords?: string; limit?: string }>({});
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
+
+  const allowedLimits = useMemo(() => getAllowedResearchLimits(maxBudget), [maxBudget]);
+
+  useEffect(() => {
+    if (requestedLimit > maxBudget && maxBudget > 0) {
+      setRequestedLimit(maxBudget);
+    }
+  }, [maxBudget, requestedLimit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent duplicate or rapid concurrent submissions
+    if (isSubmitting || isSubmittingLocal) {
+      return;
+    }
 
     const currentState: MetaResearchFormState = {
       keywordsInput,
@@ -66,9 +85,23 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
     }
 
     setFormErrors({});
-    await onSubmit(currentState);
-    setKeywordsInput("");
-    setAdvertiserPageId("");
+    setIsSubmittingLocal(true);
+    try {
+      const result = await onSubmit(currentState);
+      if (result.ok) {
+        // Clear keywords only on confirmed successful backend mutation
+        setKeywordsInput("");
+        setAdvertiserPageId("");
+        setFormErrors({});
+      } else {
+        // On failure: PRESERVE keywordsInput, advertiserPageId, and all filters!
+        setFormErrors({ keywords: result.error || "Failed to queue research task." });
+      }
+    } catch (err: any) {
+      setFormErrors({ keywords: err.message || "Failed to submit research request." });
+    } finally {
+      setIsSubmittingLocal(false);
+    }
   };
 
   // Quick preset keyword helper
@@ -161,10 +194,11 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
             onChange={(e) => setRequestedLimit(Number(e.target.value))}
             className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
           >
-            <option value={10}>10 ads</option>
-            <option value={20}>20 ads</option>
-            <option value={25}>25 ads (standard)</option>
-            {maxBudget > 25 && <option value={maxBudget}>{maxBudget} ads (max)</option>}
+            {allowedLimits.map((lim) => (
+              <option key={lim} value={lim}>
+                {lim} ads {lim === 25 ? "(standard)" : lim === maxBudget ? "(max)" : ""}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -275,7 +309,8 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
             <Button
               type="submit"
               variant="primary"
-              isLoading={isSubmitting}
+              isLoading={isSubmitting || isSubmittingLocal}
+              disabled={isSubmitting || isSubmittingLocal}
               leftIcon={<Play className="h-4 w-4 fill-current" />}
             >
               {readiness.primaryActionLabel}

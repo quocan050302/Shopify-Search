@@ -18,7 +18,11 @@ export interface SearchAdsFilters {
   sortBy?: "newest" | "score" | "longevity" | "variants";
   /** When true, include quarantined SYNTHETIC_DEMO records. Defaults to false. */
   includeSynthetic?: boolean;
+  /** When provided, restricts query strictly to ads authorized for this workspace. */
+  workspaceId?: string;
 }
+
+import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 
 /**
  * Searches stored competitor ads backed by real observation records.
@@ -66,6 +70,12 @@ export async function searchCompetitorAds(filters: SearchAdsFilters = {}) {
     whereClause.AND.push({
       NOT: { headline: { startsWith: "[SYNTHETIC_DEMO]" } },
     });
+  }
+
+  // Enforce workspace authorization if workspaceId is specified
+  if (filters.workspaceId) {
+    if (!whereClause.AND) whereClause.AND = [];
+    whereClause.AND.push(buildAuthorizedAdWhere(filters.workspaceId));
   }
 
   // Count total matching

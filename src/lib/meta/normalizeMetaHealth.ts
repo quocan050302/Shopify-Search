@@ -1,3 +1,5 @@
+import { getCollectorSetupSteps } from "@/lib/meta/collectorSetupCommands";
+
 export type MetaReadinessState =
   | "LOADING"
   | "READY"
@@ -31,6 +33,7 @@ export interface ProviderHealthResponse {
     lastSuccessfulRecordCount: number;
     lastFailureCategory: string | null;
     lastFailureMessage: string | null;
+    lastFailureAt?: string | null;
   };
   limits: {
     maxResultsPerSearch: number;
@@ -57,11 +60,52 @@ export interface NormalizedReadiness {
   }[];
 }
 
+export interface SourceHealthOutcome {
+  isRestricted: boolean;
+  category: "BLOCKED_SOURCE" | "RATE_LIMITED" | null;
+  reason: string | null;
+}
+
+/**
+ * Derives current upstream source health by comparing the latest failure with
+ * the latest successful observation. An old failure record does not override
+ * a more recent successful collection.
+ */
+export function deriveLatestSourceHealth(
+  lastSuccessAt: string | null | undefined,
+  lastFailureAt: string | null | undefined,
+  failureCategory: string | null | undefined,
+  failureMessage: string | null | undefined
+): SourceHealthOutcome {
+  if (!failureCategory || (failureCategory !== "BLOCKED_SOURCE" && failureCategory !== "RATE_LIMITED")) {
+    return { isRestricted: false, category: null, reason: null };
+  }
+
+  if (lastSuccessAt && lastFailureAt) {
+    const successTime = new Date(lastSuccessAt).getTime();
+    const failureTime = new Date(lastFailureAt).getTime();
+    // If a verified success occurred AFTER the failure, the restriction is resolved
+    if (successTime >= failureTime) {
+      return { isRestricted: false, category: null, reason: null };
+    }
+  } else if (lastSuccessAt && !lastFailureAt) {
+    // If success has timestamp but failure does not, prefer verified success
+    return { isRestricted: false, category: null, reason: null };
+  }
+
+  return {
+    isRestricted: true,
+    category: failureCategory as "BLOCKED_SOURCE" | "RATE_LIMITED",
+    reason: failureMessage || "Upstream Meta Ad Library returned rate limiting or restricted public access.",
+  };
+}
+
 export function normalizeMetaHealth(
   health: ProviderHealthResponse | null | undefined,
   isLoading: boolean
 ): NormalizedReadiness {
-  if (isLoading || !health) {
+  // 1. Initial or ongoing background loading without cached health
+  if (isLoading && !health) {
     return {
       state: "LOADING",
       title: "Checking Collector Readiness",
@@ -74,51 +118,59 @@ export function normalizeMetaHealth(
     };
   }
 
+  // 2. Health check failed or uncontactable
+  if (!health) {
+    return {
+      state: "UNKNOWN",
+      title: "Health Check Unavailable",
+      message: "Unable to query local MetaAdsCollector daemon. Verify server or run diagnostics.",
+      badgeVariant: "danger",
+      canStartResearch: false,
+      canQueueForLater: false,
+      primaryActionLabel: "Run Diagnostics",
+      setupSteps: [],
+    };
+  }
+
   const { provider, environment, worker, history, limits } = health;
 
-  // Build real setup steps with observable states
-  const setupSteps = [
-    {
-      id: "python_env",
-      title: "Verify Python Environment",
-      description: "Python 3.10+ virtualenv with required dependencies in collector directory.",
-      status: environment.pythonReady ? ("COMPLETE" as const) : ("NEEDS_ACTION" as const),
-      command: "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
-    },
-    {
-      id: "collector_config",
-      title: "Configure Local MCP Provider",
-      description: "Local MetaAdsCollector provider initialized and authorized.",
-      status:
-        provider.enabled && provider.status !== "NOT_CONFIGURED"
-          ? ("COMPLETE" as const)
-          : ("NEEDS_ACTION" as const),
-      command: "npm run doctor",
-    },
-    {
-      id: "worker_process",
-      title: "Start Discovery Background Worker",
-      description: "Worker processes queued research runs and persists extracted ad records.",
-      status: worker.status === "RUNNING" ? ("COMPLETE" as const) : ("NEEDS_ACTION" as const),
-      command: "npm run worker:discovery",
-    },
-    {
-      id: "connectivity_test",
-      title: "Source Access Verification",
-      description: "Direct HTTP reachability to public Meta Ad Library repository.",
-      status:
-        history.lastFailureCategory === "BLOCKED_SOURCE"
-          ? ("FAILED" as const)
-          : history.lastFailureCategory === "RATE_LIMITED"
-          ? ("NEEDS_ACTION" as const)
-          : history.lastSuccessfulRetrievalAt
-          ? ("COMPLETE" as const)
-          : ("UNKNOWN" as const),
-      command: "curl -I https://www.facebook.com/ads/library/",
-    },
-  ];
+  // Use centralized setup step definitions
+  const canonicalSteps = getCollectorSetupSteps();
+  const setupSteps = canonicalSteps.map((step) => {
+    let status: "COMPLETE" | "NEEDS_ACTION" | "FAILED" | "UNKNOWN" = "NEEDS_ACTION";
 
-  // 1. Missing python or unconfigured provider
+    if (step.id === "python_env") {
+      status = environment.pythonReady ? "COMPLETE" : "NEEDS_ACTION";
+    } else if (step.id === "collector_config") {
+      status = provider.enabled && provider.status !== "NOT_CONFIGURED" ? "COMPLETE" : "NEEDS_ACTION";
+    } else if (step.id === "worker_process") {
+      status = worker.status === "RUNNING" ? "COMPLETE" : "NEEDS_ACTION";
+    } else if (step.id === "connectivity_test") {
+      const sourceHealth = deriveLatestSourceHealth(
+        history.lastSuccessfulRetrievalAt,
+        history.lastFailureAt,
+        history.lastFailureCategory,
+        history.lastFailureMessage
+      );
+      if (sourceHealth.isRestricted) {
+        status = sourceHealth.category === "BLOCKED_SOURCE" ? "FAILED" : "NEEDS_ACTION";
+      } else if (history.lastSuccessfulRetrievalAt) {
+        status = "COMPLETE";
+      } else {
+        status = "UNKNOWN";
+      }
+    }
+
+    return {
+      id: step.id,
+      title: step.title,
+      description: step.description,
+      status,
+      command: step.command,
+    };
+  });
+
+  // 3. Missing python or unconfigured provider
   if (!environment.pythonReady || !environment.dataDirReady || provider.status === "NOT_CONFIGURED" || !provider.enabled) {
     return {
       state: "SETUP_REQUIRED",
@@ -134,13 +186,20 @@ export function normalizeMetaHealth(
     };
   }
 
-  // 2. Upstream source restrictions (e.g. rate limit or geo block)
-  if (history.lastFailureCategory === "BLOCKED_SOURCE" || history.lastFailureCategory === "RATE_LIMITED") {
+  // 4. Upstream source restrictions (e.g. rate limit or geo block), taking timestamps into account
+  const sourceHealth = deriveLatestSourceHealth(
+    history.lastSuccessfulRetrievalAt,
+    history.lastFailureAt,
+    history.lastFailureCategory,
+    history.lastFailureMessage
+  );
+
+  if (sourceHealth.isRestricted) {
     return {
       state: "SOURCE_RESTRICTED",
       title: "External Source Restricted",
       message:
-        history.lastFailureMessage ||
+        sourceHealth.reason ||
         "Upstream Meta Ad Library returned rate limiting or restricted public access.",
       badgeVariant: "danger",
       canStartResearch: false,
@@ -150,7 +209,7 @@ export function normalizeMetaHealth(
     };
   }
 
-  // 3. Worker offline
+  // 5. Worker offline
   if (worker.status !== "RUNNING") {
     return {
       state: "WORKER_OFFLINE",
@@ -164,7 +223,7 @@ export function normalizeMetaHealth(
     };
   }
 
-  // 4. Ready
+  // 6. Ready
   return {
     state: "READY",
     title: "System Operational",

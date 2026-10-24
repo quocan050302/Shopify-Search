@@ -25,10 +25,16 @@ export const MetaSetupGuide: React.FC<MetaSetupGuideProps> = ({
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopy = (command: string, id: string) => {
-    navigator.clipboard.writeText(command);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = async (command: string, id: string) => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(command);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      }
+    } catch (err) {
+      console.warn("Clipboard copy failed:", err);
+    }
   };
 
   // Only render if action is required

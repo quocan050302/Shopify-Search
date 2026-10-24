@@ -196,13 +196,22 @@ function ExplorerContent() {
 
       if (evJson.success) {
         setAds(evJson.data);
-        setTotalPages(evJson.pagination.totalPages || 1);
-        setTotalCount(evJson.pagination.total || 0);
+        setTotalPages(evJson.pagination?.totalPages || 1);
+        setTotalCount(evJson.pagination?.total || 0);
         setUnknownDateCount(evJson.meta?.unknownDateCount || 0);
         return;
       }
 
-      // Fallback to legacy ads API
+      // If in run-specific mode, do NOT fall back to general ads!
+      if (requestId) {
+        setAds([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setError(evJson.error?.message || "No advertisements found for this research run.");
+        return;
+      }
+
+      // Fallback to legacy ads API ONLY when not querying an exact run
       const legacyParams = new URLSearchParams({
         page: page.toString(),
         pageSize: "12",
@@ -281,6 +290,30 @@ function ExplorerContent() {
             </span>
           </div>
         </div>
+
+        {/* Active Research Run Banner */}
+        {requestId && (
+          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-xs text-indigo-200">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+              <span>
+                Viewing advertisements from Research Run: <strong className="font-mono text-indigo-300">{requestId}</strong>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setRequestId(null);
+                setPage(1);
+                const url = new URL(window.location.href);
+                url.searchParams.delete("requestId");
+                window.history.pushState({}, "", url.pathname + (url.search ? url.search : ""));
+              }}
+              className="px-2.5 py-1 rounded-md bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-medium border border-indigo-500/30 transition-colors cursor-pointer"
+            >
+              Exit Run View ✕
+            </button>
+          </div>
+        )}
 
         {/* Research Mode Tabs */}
         <div className="flex items-start gap-2 flex-wrap">

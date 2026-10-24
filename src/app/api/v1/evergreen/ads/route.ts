@@ -21,9 +21,15 @@ import {
 } from "@/services/evergreen/evergreenScoring";
 import { isSyntheticAdId } from "@/services/video/videoSourceResolver";
 import { AdViewModel } from "@/types/adViewModel";
+import {
+  resolveAuthorizedResearchContext,
+  ResearchAuthError,
+} from "@/services/research/researchAuthService";
+import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 
 export async function GET(request: NextRequest) {
   try {
+    const context = await resolveAuthorizedResearchContext(request);
     const { searchParams } = new URL(request.url);
 
     const mode = (searchParams.get("mode") || "EVERGREEN") as ResearchMode;
@@ -57,11 +63,43 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
-    // Exact research run filter (Part 10 & 15)
+    // Workspace-scoped exact run or general ads filtering
     if (requestId) {
+      const discoveryRun = await prisma.discoveryRun.findFirst({
+        where: {
+          id: requestId,
+          workspaceId: context.workspaceId,
+        },
+      });
+
+      if (!discoveryRun) {
+        return NextResponse.json({
+          success: true,
+          data: [],
+          pagination: { page, pageSize, total: 0, totalPages: 0 },
+          meta: {
+            timestamp: new Date().toISOString(),
+            version: "v11.5.1",
+            requestId,
+            researchMode: mode,
+            unknownDateCount: 0,
+            dataNote: "Selected research run not found in active workspace or contains no ads.",
+            syntheticRecordsExcluded: true,
+          },
+        });
+      }
+
       where.runAds = {
-        some: { runId: requestId },
+        some: {
+          runId: requestId,
+          OR: [
+            { workspaceId: context.workspaceId },
+            { run: { workspaceId: context.workspaceId } },
+          ],
+        },
       };
+    } else {
+      where.AND.push(buildAuthorizedAdWhere(context.workspaceId));
     }
 
     // Keyword query filtering (headline, bodyText, externalAdId, advertiser name)
@@ -290,6 +328,20 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof ResearchAuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+            retryable: false,
+            timestamp: new Date().toISOString(),
+          },
+        },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
       {
         success: false,

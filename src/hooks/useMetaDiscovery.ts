@@ -9,71 +9,158 @@ import {
 import { MetaRequestItem } from "@/components/meta/MetaJobsTable";
 import { MetaResearchFormState } from "@/lib/meta/validateMetaResearchForm";
 
+export type CreateResearchResult =
+  | { ok: true; runId: string; queuedStatus?: string }
+  | { ok: false; error: string };
+
+export interface MetaDiscoveryErrors {
+  health?: string | null;
+  jobs?: string | null;
+  mutation?: string | null;
+}
+
+export interface ResearchJobsPagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export function useMetaDiscovery() {
   const [health, setHealth] = useState<ProviderHealthResponse | null>(null);
   const [jobs, setJobs] = useState<MetaRequestItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<MetaDiscoveryErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<string | undefined>(undefined);
 
-  const isMountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  // Server-side pagination & filter state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<ResearchJobsPagination>({
+    page: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 1,
+  });
 
-  // 1. Fetch Health
+  const isMountedRef = useRef(true);
+  const healthAbortRef = useRef<AbortController | null>(null);
+  const jobsAbortRef = useRef<AbortController | null>(null);
+  const isRefreshingRef = useRef(false);
+
+  // 1. Fetch Health (with AbortController protection)
   const fetchHealth = useCallback(async (): Promise<ProviderHealthResponse | null> => {
+    healthAbortRef.current?.abort();
+    const controller = new AbortController();
+    healthAbortRef.current = controller;
+
     try {
-      const res = await fetch("/api/v1/discovery/meta/provider/health");
-      if (!res.ok) throw new Error("Failed to query provider health");
+      const res = await fetch("/api/v1/discovery/meta/provider/health", {
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Health query failed (HTTP ${res.status})`);
       const json: ProviderHealthResponse = await res.json();
       if (isMountedRef.current) {
         setHealth(json);
         setLastCheckedAt(new Date().toISOString());
+        setErrors((prev) => ({ ...prev, health: null }));
       }
       return json;
     } catch (err: any) {
+      if (err.name === "AbortError") return null;
       console.warn("Meta health check failed:", err.message);
+      if (isMountedRef.current) {
+        setErrors((prev) => ({ ...prev, health: err.message || "Failed to query provider health" }));
+      }
       return null;
     }
   }, []);
 
-  // 2. Fetch Jobs
-  const fetchJobs = useCallback(async (): Promise<MetaRequestItem[]> => {
-    try {
-      const res = await fetch("/api/v1/discovery/meta/requests?pageSize=50");
-      if (!res.ok) throw new Error("Failed to fetch research jobs");
-      const json = await res.json();
-      const items: MetaRequestItem[] = json.data || [];
-      if (isMountedRef.current) {
-        setJobs(items);
-      }
-      return items;
-    } catch (err: any) {
-      console.warn("Meta jobs fetch failed:", err.message);
-      return [];
-    }
-  }, []);
+  // 2. Fetch Jobs (with server-side filtering, pagination & AbortController)
+  const fetchJobs = useCallback(
+    async (overrideParams?: {
+      page?: number;
+      pageSize?: number;
+      status?: string;
+      query?: string;
+    }): Promise<MetaRequestItem[]> => {
+      jobsAbortRef.current?.abort();
+      const controller = new AbortController();
+      jobsAbortRef.current = controller;
 
-  // 3. Refresh Workspace
-  const refreshWorkspace = useCallback(async (isBackground = false) => {
-    if (!isBackground) setIsRefreshing(true);
-    try {
-      await Promise.all([fetchHealth(), fetchJobs()]);
-    } finally {
-      if (isMountedRef.current) {
-        setIsRefreshing(false);
-        setIsInitialLoading(false);
+      const p = overrideParams?.page ?? page;
+      const ps = overrideParams?.pageSize ?? pageSize;
+      const s = overrideParams?.status ?? statusFilter;
+      const q = overrideParams?.query ?? searchQuery;
+
+      try {
+        const searchParams = new URLSearchParams({
+          page: String(p),
+          pageSize: String(ps),
+        });
+        if (s && s !== "ALL") searchParams.set("status", s);
+        if (q && q.trim()) searchParams.set("query", q.trim());
+
+        const res = await fetch(`/api/v1/discovery/meta/requests?${searchParams.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Jobs fetch failed (HTTP ${res.status})`);
+        const json = await res.json();
+        const items: MetaRequestItem[] = json.data || [];
+        if (isMountedRef.current) {
+          setJobs(items);
+          if (json.pagination) {
+            setPagination({
+              page: json.pagination.page,
+              pageSize: json.pagination.pageSize,
+              total: json.pagination.total,
+              totalPages: json.pagination.totalPages || 1,
+            });
+          }
+          setErrors((prev) => ({ ...prev, jobs: null }));
+        }
+        return items;
+      } catch (err: any) {
+        if (err.name === "AbortError") return [];
+        console.warn("Meta jobs fetch failed:", err.message);
+        if (isMountedRef.current) {
+          setErrors((prev) => ({ ...prev, jobs: err.message || "Failed to fetch research jobs" }));
+        }
+        return [];
       }
-    }
-  }, [fetchHealth, fetchJobs]);
+    },
+    [page, pageSize, statusFilter, searchQuery]
+  );
+
+  // 3. Refresh Workspace (prevents overlapping refreshes)
+  const refreshWorkspace = useCallback(
+    async (isBackground = false) => {
+      if (isRefreshingRef.current) return;
+      isRefreshingRef.current = true;
+      if (!isBackground) setIsRefreshing(true);
+      try {
+        await Promise.all([fetchHealth(), fetchJobs()]);
+      } finally {
+        isRefreshingRef.current = false;
+        if (isMountedRef.current) {
+          setIsRefreshing(false);
+          setIsInitialLoading(false);
+        }
+      }
+    },
+    [fetchHealth, fetchJobs]
+  );
 
   // 4. Create Research Request
   const createJob = useCallback(
-    async (formData: MetaResearchFormState): Promise<string | null> => {
+    async (formData: MetaResearchFormState): Promise<CreateResearchResult> => {
       setIsSubmitting(true);
-      setError(null);
+      setErrors((prev) => ({ ...prev, mutation: null }));
       setSuccessMessage(null);
 
       try {
@@ -98,16 +185,22 @@ export function useMetaDiscovery() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.message || json.error || "Failed to queue research task.");
+          const errMsg =
+            (typeof json.error === "string" ? json.error : json.error?.message) ||
+            json.message ||
+            "Failed to queue research task.";
+          throw new Error(errMsg);
         }
 
         const runId = json.runId;
+        const queuedStatus = json.status || "PENDING";
         setSuccessMessage(`Research task queued successfully (Run ID: ${runId}).`);
         await refreshWorkspace(true);
-        return runId;
+        return { ok: true, runId, queuedStatus };
       } catch (err: any) {
-        setError(err.message || "Failed to create research request");
-        return null;
+        const errMsg = err.message || "Failed to create research request";
+        setErrors((prev) => ({ ...prev, mutation: errMsg }));
+        return { ok: false, error: errMsg };
       } finally {
         if (isMountedRef.current) setIsSubmitting(false);
       }
@@ -118,17 +211,23 @@ export function useMetaDiscovery() {
   // 5. Cancel Job
   const cancelJob = useCallback(
     async (jobId: string) => {
-      setError(null);
+      setErrors((prev) => ({ ...prev, mutation: null }));
       try {
         const res = await fetch(`/api/v1/discovery/meta/requests/${jobId}/cancel`, {
           method: "POST",
         });
         const json = await res.json();
-        if (!res.ok) throw new Error(json.message || "Could not cancel task");
+        if (!res.ok) {
+          const errMsg =
+            (typeof json.error === "string" ? json.error : json.error?.message) ||
+            json.message ||
+            "Could not cancel task";
+          throw new Error(errMsg);
+        }
         setSuccessMessage(`Task '${jobId}' has been cancelled.`);
         await refreshWorkspace(true);
       } catch (err: any) {
-        setError(err.message || "Cancellation failed");
+        setErrors((prev) => ({ ...prev, mutation: err.message || "Cancellation failed" }));
       }
     },
     [refreshWorkspace]
@@ -137,23 +236,58 @@ export function useMetaDiscovery() {
   // 6. Retry Job
   const retryJob = useCallback(
     async (jobId: string) => {
-      setError(null);
+      setErrors((prev) => ({ ...prev, mutation: null }));
       try {
         const res = await fetch(`/api/v1/discovery/meta/requests/${jobId}/retry`, {
           method: "POST",
         });
         const json = await res.json();
-        if (!res.ok) throw new Error(json.message || "Could not retry task");
+        if (!res.ok) {
+          const errMsg =
+            (typeof json.error === "string" ? json.error : json.error?.message) ||
+            json.message ||
+            "Could not retry task";
+          throw new Error(errMsg);
+        }
         setSuccessMessage(`Retry attempt queued (New Run ID: ${json.newRunId}).`);
         await refreshWorkspace(true);
       } catch (err: any) {
-        setError(err.message || "Retry failed");
+        setErrors((prev) => ({ ...prev, mutation: err.message || "Retry failed" }));
       }
     },
     [refreshWorkspace]
   );
 
-  // Initial fetch and visibility-aware polling
+  // Filter & Pagination handlers that trigger fetch
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setPage(newPage);
+      fetchJobs({ page: newPage });
+    },
+    [fetchJobs]
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (newStatus: string) => {
+      setStatusFilter(newStatus);
+      setPage(1);
+      fetchJobs({ status: newStatus, page: 1 });
+    },
+    [fetchJobs]
+  );
+
+  const handleSearchQueryChange = useCallback(
+    (newQuery: string) => {
+      setSearchQuery(newQuery);
+      setPage(1);
+      fetchJobs({ query: newQuery, page: 1 });
+    },
+    [fetchJobs]
+  );
+
+  // Adaptive visibility-aware polling
+  const hasActiveJobs = jobs.some((j) => j.status === "PENDING" || j.status === "RUNNING");
+
   useEffect(() => {
     isMountedRef.current = true;
     refreshWorkspace();
@@ -165,19 +299,25 @@ export function useMetaDiscovery() {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Adaptive polling: poll every 10s if any job is RUNNING or PENDING, else every 30s
+    const intervalTime = hasActiveJobs ? 10000 : 35000;
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         refreshWorkspace(true);
       }
-    }, 12000);
+    }, intervalTime);
 
     return () => {
-      isMountedRef.current = false;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(interval);
     };
-  }, [refreshWorkspace]);
+  }, [refreshWorkspace, hasActiveJobs]);
+
+  // Derived error string for backward-compatible feedback banners
+  const error = errors.mutation || errors.jobs || errors.health || null;
+
+  const setError = useCallback((msg: string | null) => {
+    setErrors((prev) => ({ ...prev, mutation: msg }));
+  }, []);
 
   // Derived readiness model
   const readiness: NormalizedReadiness = normalizeMetaHealth(health, isInitialLoading);
@@ -186,14 +326,23 @@ export function useMetaDiscovery() {
     health,
     jobs,
     readiness,
+    pagination,
+    page,
+    pageSize,
+    statusFilter,
+    searchQuery,
     isInitialLoading,
     isRefreshing,
     isSubmitting,
     error,
+    errors,
     successMessage,
     lastCheckedAt,
     setError,
     setSuccessMessage,
+    setPage: handlePageChange,
+    setStatusFilter: handleStatusFilterChange,
+    setSearchQuery: handleSearchQueryChange,
     refreshWorkspace,
     createJob,
     cancelJob,
