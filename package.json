@@ -28,6 +28,7 @@
     "kh01:test:http": "vitest run tests/integration/kh01HttpServerE2E.test.ts",
     "kh01:test:browser": "vitest run tests/integration/kh01BrowserE2E.test.ts",
     "kh01:test:concurrency": "vitest run tests/integration/kh01WorkerConcurrency.test.ts",
+    "kh01:test:journey": "vitest run tests/integration/kh01UnifiedJourney.test.ts",
     "kh01:test:live": "tsx scripts/kh01RealE2E.ts --live",
     "kh01:acceptance": "tsx scripts/kh01RealE2E.ts",
     "kh01:acceptance:full": "tsx scripts/kh01RealE2E.ts"
