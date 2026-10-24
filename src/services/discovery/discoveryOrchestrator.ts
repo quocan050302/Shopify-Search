@@ -47,10 +47,11 @@ export class DiscoveryOrchestrator {
    */
   async claimPendingDiscoveryJob(): Promise<string | null> {
     const pendingRun = await prisma.discoveryRun.findFirst({
-      // Muse provider jobs are completed asynchronously by the external Muse
-      // agent (see /api/v1/discovery/muse/*) — the local worker must never
-      // claim or execute them.
-      where: { status: "PENDING", providerId: { not: "muse-ad-library" } },
+      // Claim executable registered providers (excluding obsolete legacy Muse requests)
+      where: {
+        status: "PENDING",
+        providerId: { not: "muse-ad-library" },
+      },
       orderBy: { createdAt: "asc" },
       select: { id: true },
     });
@@ -92,8 +93,7 @@ export class DiscoveryOrchestrator {
 
     if (run.providerId === "muse-ad-library") {
       throw new Error(
-        "Muse provider jobs are asynchronous and are completed by the external Muse agent " +
-          "via POST /api/v1/discovery/muse/requests/:id/results — they cannot be executed by the local orchestrator."
+        "Legacy Muse research jobs are retired and cannot be executed. Please create a new Meta research job with meta-ads-collector."
       );
     }
 
@@ -433,7 +433,7 @@ export class DiscoveryOrchestrator {
         workspaceId: effectiveWorkspaceId,
         scheduleId: scheduleId || null,
         jobId: syncJob.id,
-        providerId: validated.providerId || (validated.platform === "META" ? "muse-ad-library" : "tiktok-topads"),
+        providerId: validated.providerId || (validated.platform === "META" ? "meta-ads-collector" : "tiktok-topads"),
         status: "PENDING",
         runMode: validated.runMode,
         queryConfigJson: JSON.stringify(validated),

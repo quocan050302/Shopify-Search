@@ -11,146 +11,137 @@ import {
   AlertTriangle,
   RefreshCw,
   ExternalLink,
-  Upload,
-  FileCode,
   Search,
   Sliders,
   X,
+  Play,
+  Activity,
+  Terminal,
+  Server,
+  Cpu,
+  Layers,
+  HelpCircle,
+  RotateCcw,
+  Ban,
+  Check,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 
-interface MuseBridgeStatus {
-  isConfigured: boolean;
-  gatewayConfigured?: boolean;
-  agentConnected?: boolean;
-  connectionState: string;
-  diagnosticState?: string;
-  executionMode: string;
-  lastHeartbeatAt: string | null;
-  lastSubmissionAt: string | null;
-  pendingRequestsCount: number;
-  runningRequestsCount: number;
-  completedRequestsCount: number;
-  failedRequestsCount: number;
-  agentSessionId: string | null;
-  notice: string;
+interface ProviderHealth {
+  provider: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    status: string;
+    isAuthorized: boolean;
+    message: string;
+  };
+  environment: {
+    pythonReady: boolean;
+    dataDirReady: boolean;
+    defaultCountry: string;
+    liveTestEnabled: boolean;
+  };
+  worker: {
+    status: "RUNNING" | "STOPPED";
+    lastHeartbeat: string | null;
+  };
+  history: {
+    lastSuccessfulRetrievalAt: string | null;
+    lastSuccessfulRecordCount: number;
+    lastFailureCategory: string | null;
+    lastFailureMessage: string | null;
+  };
+  limits: {
+    maxResultsPerSearch: number;
+    maxRequestsPerSearch: number;
+    maxExecutionSeconds: number;
+    maxConcurrency: number;
+  };
 }
 
-interface MuseRequestItem {
-  requestId: string;
-  status: string;
+interface MetaRequestItem {
+  id: string;
+  jobId: string | null;
   providerId: string;
-  platform: string;
+  status: string;
   keywords: string[];
   market: string;
-  targetCount: number;
-  creativePreference?: string;
+  requestedLimit: number;
   actualRetrievedCount: number;
   validCount: number;
   newUniqueCount: number;
   existingDuplicateCount: number;
-  rejectedCount: number;
-  failedCount: number;
+  linkedAdsCount: number;
   errorMessage: string | null;
-  createdAt: string;
+  errorCategory: string | null;
   startedAt: string | null;
   finishedAt: string | null;
-  heartbeatAt: string | null;
-}
-
-interface ArtifactImportResult {
-  totalSubmitted?: number;
-  newUniqueInserted?: number;
-  existingUpdated?: number;
-  rejectedCount?: number;
-  status?: string;
-  [key: string]: unknown;
+  createdAt: string;
 }
 
 export default function MetaDiscoveryPage() {
-  const [bridgeStatus, setBridgeStatus] = useState<MuseBridgeStatus | null>(null);
-  const [requests, setRequests] = useState<MuseRequestItem[]>([]);
+  const [health, setHealth] = useState<ProviderHealth | null>(null);
+  const [requests, setRequests] = useState<MetaRequestItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Form state
   const [keywordsInput, setKeywordsInput] = useState("");
-  const [category, setCategory] = useState("ALL");
-  const [creativePreference, setCreativePreference] = useState<"VIDEO" | "IMAGE" | "CAROUSEL" | "ALL">("VIDEO");
-  const [targetCount, setTargetCount] = useState<number>(25);
+  const [market, setMarket] = useState("US");
+  const [creativePreference, setCreativePreference] = useState<"VIDEO" | "IMAGE" | "ALL">("ALL");
+  const [activeStatus, setActiveStatus] = useState<"ACTIVE" | "INACTIVE" | "ALL">("ACTIVE");
+  const [requestedLimit, setRequestedLimit] = useState<number>(25);
+  const [advertiserPageId, setAdvertiserPageId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Drawer / Modal state
-  const [selectedRequest, setSelectedRequest] = useState<MuseRequestItem | null>(null);
-  const [artifactModalOpen, setArtifactModalOpen] = useState(false);
-  const [artifactTargetRequestId, setArtifactTargetRequestId] = useState<string>("");
-  const [artifactJson, setArtifactJson] = useState("");
-  const [artifactSubmitting, setArtifactSubmitting] = useState(false);
-  const [artifactResult, setArtifactResult] = useState<ArtifactImportResult | null>(null);
+  // Diagnostics Modal
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<MetaRequestItem | null>(null);
 
-  // Fetch bridge status and requests on manual refresh
   const fetchData = useCallback(async () => {
     try {
       setRefreshing(true);
       setError(null);
 
-      const [bridgeRes, queueRes] = await Promise.all([
-        fetch("/api/v1/discovery/muse/bridge"),
-        fetch("/api/v1/discovery/muse/requests?status=ALL&limit=50"),
+      const [healthRes, requestsRes] = await Promise.all([
+        fetch("/api/v1/discovery/meta/provider/health"),
+        fetch("/api/v1/discovery/meta/requests?pageSize=50"),
       ]);
 
-      if (bridgeRes.ok) {
-        const bJson = await bridgeRes.json();
-        if (bJson.success) setBridgeStatus(bJson.data);
+      if (healthRes.ok) {
+        const hJson = await healthRes.json();
+        setHealth(hJson);
       }
 
-      if (queueRes.ok) {
-        const qJson = await queueRes.json();
-        if (qJson.success) setRequests(qJson.data);
+      if (requestsRes.ok) {
+        const rJson = await requestsRes.json();
+        setRequests(rJson.data || []);
       }
     } catch (err: unknown) {
-      console.warn("Failed to load Meta discovery data:", err);
+      console.error("Failed to load Meta discovery data:", err);
+      setError("Failed to connect to local Meta discovery services.");
     } finally {
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const loadInitial = async () => {
-      try {
-        const [bridgeRes, queueRes] = await Promise.all([
-          fetch("/api/v1/discovery/muse/bridge"),
-          fetch("/api/v1/discovery/muse/requests?status=ALL&limit=50"),
-        ]);
-        if (!mounted) return;
-        if (bridgeRes.ok) {
-          const bJson = await bridgeRes.json();
-          if (bJson.success) setBridgeStatus(bJson.data);
-        }
-        if (queueRes.ok) {
-          const qJson = await queueRes.json();
-          if (qJson.success) setRequests(qJson.data);
-        }
-      } catch (err: unknown) {
-        console.warn("Failed to load Meta discovery data:", err);
-      }
-    };
+    fetchData();
+    const timer = setInterval(fetchData, 10000);
+    return () => clearInterval(timer);
+  }, [fetchData]);
 
-    loadInitial();
-    const interval = setInterval(loadInitial, 15000); // 15s polling
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Create Muse Research Request
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keywordsInput.trim()) {
-      setError("Please enter at least one keyword for Meta Ad Library research.");
+    const rawKeywords = keywordsInput
+      .split(",")
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0);
+
+    if (rawKeywords.length === 0) {
+      setError("Please provide at least one search keyword.");
       return;
     }
 
@@ -159,725 +150,591 @@ export default function MetaDiscoveryPage() {
       setError(null);
       setSuccessMsg(null);
 
-      const keywords = keywordsInput
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0);
-
-      const res = await fetch("/api/v1/discovery/muse/requests", {
+      const res = await fetch("/api/v1/discovery/meta/requests", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          keywords,
-          market: "US",
-          requestedLimit: targetCount,
-          category: category !== "ALL" ? category : undefined,
+          keywords: rawKeywords,
+          market,
+          requestedLimit,
           creativePreference,
+          activeStatus,
+          advertiserPageId: advertiserPageId.trim() || undefined,
         }),
       });
 
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to create research request.");
+        throw new Error(json.message || json.error || "Failed to create research task.");
       }
 
-      setSuccessMsg(`Research request '${json.data.requestId}' created! Waiting for Muse research execution.`);
+      setSuccessMsg(`Research task queued successfully (Run ID: ${json.runId}). Local worker will process it.`);
       setKeywordsInput("");
+      setAdvertiserPageId("");
       await fetchData();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error creating request.");
+      setError((err as Error).message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Cancel Request
-  const handleCancelRequest = async (id: string) => {
+  const handleCancel = async (runId: string) => {
     try {
-      const res = await fetch(`/api/v1/discovery/muse/requests/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: "CANCELLED" }),
+      setError(null);
+      const res = await fetch(`/api/v1/discovery/meta/requests/${runId}/cancel`, {
+        method: "POST",
       });
-      if (res.ok) {
-        await fetchData();
-      }
-    } catch (err) {
-      console.error("Cancel failed:", err);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Could not cancel task");
+      setSuccessMsg(`Task '${runId}' cancelled.`);
+      await fetchData();
+    } catch (err: unknown) {
+      setError((err as Error).message);
     }
   };
 
-  // Submit Artifact (Mode C bridge fallback)
-  const handleSubmitArtifact = async () => {
-    if (!artifactTargetRequestId || !artifactJson.trim()) {
-      setError("Please specify request ID and valid JSON payload.");
-      return;
-    }
-
+  const handleRetry = async (runId: string) => {
     try {
-      setArtifactSubmitting(true);
-      setArtifactResult(null);
-
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(artifactJson);
-      } catch {
-        throw new Error("Invalid JSON format. Please verify the research artifact.");
-      }
-
-      const payload = Array.isArray(parsed) ? { records: parsed } : (parsed as Record<string, unknown>);
-
-      const res = await fetch(`/api/v1/discovery/muse/requests/${artifactTargetRequestId}/import`, {
+      setError(null);
+      const res = await fetch(`/api/v1/discovery/meta/requests/${runId}/retry`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
       });
-
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Submission failed.");
-      }
-
-      setArtifactResult(json.data);
-      setSuccessMsg(`Artifact successfully ingested! ${json.data.newUniqueInserted} new ads committed.`);
+      if (!res.ok) throw new Error(json.message || "Could not retry task");
+      setSuccessMsg(`New retry attempt queued (Run ID: ${json.newRunId}).`);
       await fetchData();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Artifact submission failed.");
-    } finally {
-      setArtifactSubmitting(false);
+      setError((err as Error).message);
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "COMPLETED":
-        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-      case "PARTIALLY_COMPLETED":
-        return "bg-cyan-500/15 text-cyan-400 border-cyan-500/30";
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
       case "RUNNING":
-      case "CLAIMED":
-        return "bg-amber-500/15 text-amber-400 border-amber-500/30 animate-pulse";
+        return "bg-blue-500/10 text-blue-400 border-blue-500/30 animate-pulse";
       case "PENDING":
-        return "bg-indigo-500/15 text-indigo-400 border-indigo-500/30";
+        return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      case "BLOCKED_SOURCE":
+        return "bg-rose-500/15 text-rose-400 border-rose-500/40";
+      case "RATE_LIMITED":
+        return "bg-yellow-500/15 text-yellow-400 border-yellow-500/40";
       case "CANCELLED":
         return "bg-slate-800 text-slate-400 border-slate-700";
-      case "FAILED":
       default:
-        return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        return "bg-red-500/10 text-red-400 border-red-500/30";
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#090d16] text-slate-100">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#0a0e17]">
       <Header />
 
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
-        {/* Top Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1f293d] pb-5">
+      <main className="p-8 max-w-7xl mx-auto w-full space-y-6">
+        {/* Top Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
-                <Globe2 className="h-6 w-6" />
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
+                <Globe2 className="h-5 w-5" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-white tracking-tight">
-                    Meta Ads Discovery & Muse AI Research
-                  </h1>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">
-                    Primary Platform
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">
-                    US Market 🇺🇸
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Asynchronous research on public Meta Ad Library with verified Library IDs, start dates, and video creatives.
-                </p>
-              </div>
+              <h1 className="text-xl font-extrabold text-white tracking-tight">
+                Meta Ads Discovery Desk
+              </h1>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                Self-Hosted MCP
+              </span>
             </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Local-first Facebook Ad Library research powered by MetaAdsCollector MCP. Zero subscription APIs, zero cloud tunnels.
+            </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setDiagnosticsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-all cursor-pointer"
+            >
+              <Cpu className="h-3.5 w-3.5 text-blue-400" />
+              <span>Diagnostics</span>
+            </button>
             <button
               onClick={fetchData}
               disabled={refreshing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-all cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-indigo-400" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-blue-400" : ""}`} />
               <span>Refresh</span>
             </button>
-
             <Link
               href="/explorer?platform=META"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-medium hover:bg-blue-600/30 transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-500/40 text-xs font-semibold transition-all shadow-sm"
             >
-              <span>View Meta Ads Explorer</span>
-              <ExternalLink className="h-3 w-3" />
+              <Layers className="h-3.5 w-3.5 text-blue-400" />
+              <span>Open Meta Explorer</span>
             </Link>
-
-            <button
-              onClick={() => {
-                setArtifactTargetRequestId(requests.find((r) => r.status === "PENDING" || r.status === "RUNNING")?.requestId || "");
-                setArtifactModalOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 shadow-sm transition-all cursor-pointer"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              <span>Import Artifact</span>
-            </button>
           </div>
         </div>
 
-        {/* Alerts & Messages */}
+        {/* Global Notifications */}
         {error && (
-          <div className="p-3.5 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-300 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
-              <span>{error}</span>
-            </div>
-            <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-200">
+          <div className="p-3.5 rounded-xl bg-red-950/30 border border-red-800/40 text-xs text-red-300 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+            <div className="flex-1">{error}</div>
+            <button onClick={() => setError(null)} className="text-slate-400 hover:text-white">
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-              <span>{successMsg}</span>
-            </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-emerald-200">
+          <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-xs text-emerald-300 flex items-start gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+            <div className="flex-1">{successMsg}</div>
+            <button onClick={() => setSuccessMsg(null)} className="text-slate-400 hover:text-white">
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
-        {/* Live Muse Bridge Status Card */}
+        {/* 1. Provider Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
+          {/* Card 1: Local MCP Server */}
+          <div className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-400">Local MCP Server</span>
+              <Server className="h-4 w-4 text-blue-400" />
+            </div>
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Muse Agent Diagnostic</span>
+              <div className="flex items-center gap-1.5 mb-1">
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    bridgeStatus?.agentConnected ? "bg-emerald-400 animate-ping" : "bg-amber-400"
+                    health?.environment.pythonReady ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" : "bg-red-400"
                   }`}
                 />
+                <span className="text-sm font-bold text-white">
+                  {health?.environment.pythonReady ? "Active (Python venv)" : "Not Configured"}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
+              <p className="text-[10px] text-slate-500">
+                {health?.provider.message || "services/meta-ads-collector/.venv"}
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2: Source Availability */}
+          <div className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-400">Source Protocol</span>
+              <Globe2 className="h-4 w-4 text-blue-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="text-sm font-bold text-white">Public Ad Library</span>
+              </div>
+              <p className="text-[10px] text-slate-500">
+                Market: {health?.environment.defaultCountry || "US"} (Zero token cost)
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3: Background Worker */}
+          <div className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-400">Background Worker</span>
+              <Activity className="h-4 w-4 text-indigo-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
                 <span
-                  className={`text-xs font-semibold px-2 py-0.5 rounded border ${
-                    bridgeStatus?.diagnosticState === "AGENT_VERIFIED"
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                      : bridgeStatus?.diagnosticState === "AGENT_NOT_CONNECTED"
-                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                      : bridgeStatus?.diagnosticState === "CONFIGURED"
-                      ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                      : "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                  className={`h-2 w-2 rounded-full ${
+                    health?.worker.status === "RUNNING"
+                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                      : "bg-amber-400"
                   }`}
-                >
-                  {bridgeStatus?.diagnosticState || bridgeStatus?.connectionState || "CHECKING..."}
+                />
+                <span className="text-sm font-bold text-white">
+                  {health?.worker.status === "RUNNING" ? "Worker Online" : "Worker Offline"}
                 </span>
               </div>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2 line-clamp-2 leading-relaxed">
-              {bridgeStatus?.notice || "Checking Muse bridge connectivity..."}
-            </p>
-          </div>
-
-          <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
-            <div>
-              <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-400 block mb-1.5">
-                Gateway & Token
-              </span>
-              <div className="flex items-center gap-1.5 text-xs font-semibold">
-                <span className={bridgeStatus?.isConfigured ? "text-emerald-400" : "text-rose-400"}>
-                  {bridgeStatus?.isConfigured ? "TOKEN CONFIGURED" : "TOKEN MISSING"}
-                </span>
-              </div>
-            </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex flex-col gap-0.5">
-              <span>Agent Connected: <strong className={bridgeStatus?.agentConnected ? "text-emerald-400" : "text-amber-400"}>{bridgeStatus?.agentConnected ? "YES (Live)" : "NO (Awaiting)"}</strong></span>
-              <span className="text-[10px] text-slate-500">Mode: {bridgeStatus?.executionMode || "UNVERIFIED"}</span>
+              <p className="text-[10px] text-slate-500">
+                {health?.worker.status === "RUNNING"
+                  ? "Heartbeat active in database"
+                  : "Start with: npm run discovery:worker"}
+              </p>
             </div>
           </div>
 
-          <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
+          {/* Card 4: Historical Retrieval */}
+          <div className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-400">Latest Valid Ads</span>
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            </div>
             <div>
-              <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-400 block mb-1.5">
-                Queue Activity
-              </span>
-              <div className="flex items-center gap-3">
-                <div>
-                  <span className="text-lg font-bold text-white">{bridgeStatus?.pendingRequestsCount ?? 0}</span>
-                  <span className="text-[10px] text-slate-400 block">Pending</span>
-                </div>
-                <div className="h-6 w-px bg-slate-800" />
-                <div>
-                  <span className="text-lg font-bold text-amber-400">{bridgeStatus?.runningRequestsCount ?? 0}</span>
-                  <span className="text-[10px] text-slate-400 block">Running</span>
-                </div>
-                <div className="h-6 w-px bg-slate-800" />
-                <div>
-                  <span className="text-lg font-bold text-emerald-400">{bridgeStatus?.completedRequestsCount ?? 0}</span>
-                  <span className="text-[10px] text-slate-400 block">Completed</span>
-                </div>
+              <div className="text-sm font-bold text-white mb-1">
+                {health?.history.lastSuccessfulRecordCount || 0} ads verified
               </div>
-            </div>
-            <div className="text-[10px] text-slate-500 mt-2 truncate font-mono">
-              Heartbeat: {bridgeStatus?.lastHeartbeatAt ? new Date(bridgeStatus.lastHeartbeatAt).toLocaleTimeString() : "No active lease"}
-            </div>
-          </div>
-
-          <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-4 flex flex-col justify-between shadow-sm">
-            <div>
-              <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-400 block mb-1.5">
-                Last Verified Results
-              </span>
-              <div className="text-xs font-semibold text-slate-200">
-                {bridgeStatus?.lastSubmissionAt ? new Date(bridgeStatus.lastSubmissionAt).toLocaleDateString() : "No submissions yet"}
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-2">
-              <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-              <span>Free discovery ($0 API spend)</span>
+              <p className="text-[10px] text-slate-500">
+                {health?.history.lastSuccessfulRetrievalAt
+                  ? `Last retrieved: ${new Date(health.history.lastSuccessfulRetrievalAt).toLocaleTimeString()}`
+                  : "No recent collections"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Research Request Creation Card */}
-        <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4 border-b border-[#1f293d]/80 pb-3">
-            <Sliders className="h-4 w-4 text-blue-400" />
-            <h2 className="text-sm font-semibold text-white">Create Meta Ad Library Research Request</h2>
+        {/* 2. New Research Search Form */}
+        <div className="p-6 rounded-xl bg-[#111827] border border-[#1f293d] shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Search className="h-4 w-4 text-blue-400" />
+                <span>Launch New Meta Ad Library Search</span>
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Executes bounded keyword discovery on facebook.com/ads/library via local MCP stdio collector
+              </p>
+            </div>
+            <span className="text-[10px] text-slate-500 font-mono">
+              Limit: {requestedLimit} ads max
+            </span>
           </div>
 
           <form onSubmit={handleCreateRequest} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2 space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">
-                  Search Keywords (comma separated) <span className="text-rose-400">*</span>
+              {/* Keywords Input */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Search Keywords <span className="text-blue-400">*</span>
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                   <input
                     type="text"
+                    placeholder="e.g. pet hair remover, portable blender, teeth whitening"
                     value={keywordsInput}
                     onChange={(e) => setKeywordsInput(e.target.value)}
-                    placeholder="e.g. pet hair remover, dog shedding brush, sofa cleaner"
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                    required
                   />
                 </div>
-                <p className="text-[10px] text-slate-500">
-                  Muse will search the public Meta Ad Library in the US market using these exact commercial terms.
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Separate multiple keywords with commas. Search operates on US commercial ads.
                 </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Product Category</label>
+              {/* Requested Limit */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Max Ads to Retrieve
+                </label>
                 <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                  value={requestedLimit}
+                  onChange={(e) => setRequestedLimit(parseInt(e.target.value, 10))}
+                  className="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="ALL">All Categories</option>
-                  <option value="Home & Kitchen">Home & Kitchen</option>
-                  <option value="Beauty & Personal Care">Beauty & Personal Care</option>
-                  <option value="Gadgets & Electronics">Gadgets & Electronics</option>
-                  <option value="Pet Supplies">Pet Supplies</option>
-                  <option value="Health & Fitness">Health & Fitness</option>
-                  <option value="Fashion & Apparel">Fashion & Apparel</option>
+                  <option value={5}>5 Ads (Fast check)</option>
+                  <option value={10}>10 Ads (Standard)</option>
+                  <option value={25}>25 Ads (Comprehensive)</option>
+                  <option value={50}>50 Ads (Deep dive)</option>
+                  <option value={100}>100 Ads (Exhaustive)</option>
                 </select>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Bounded retrieval prevents rate limits.
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Creative Format Preference</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCreativePreference("VIDEO")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                      creativePreference === "VIDEO"
-                        ? "bg-blue-600/20 text-blue-400 border-blue-500/40"
-                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
-                    }`}
-                  >
-                    Video Preferred 🎬
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCreativePreference("ALL")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                      creativePreference === "ALL"
-                        ? "bg-blue-600/20 text-blue-400 border-blue-500/40"
-                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
-                    }`}
-                  >
-                    All Formats 📁
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Target Results Count</label>
+            {/* Advanced Filters Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800/60">
+              {/* Status */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Delivery Status
+                </label>
                 <select
-                  value={targetCount}
-                  onChange={(e) => setTargetCount(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                  value={activeStatus}
+                  onChange={(e) => setActiveStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value={5}>5 Verified Ads</option>
-                  <option value={10}>10 Verified Ads</option>
-                  <option value={25}>25 Verified Ads (Standard)</option>
-                  <option value={50}>50 Verified Ads (Deep Research)</option>
+                  <option value="ACTIVE">ACTIVE (Currently delivering)</option>
+                  <option value="ALL">ALL (Active & Inactive)</option>
+                  <option value="INACTIVE">INACTIVE only</option>
                 </select>
               </div>
 
-              <div className="flex items-end">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              {/* Creative Preference */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Format Preference
+                </label>
+                <select
+                  value={creativePreference}
+                  onChange={(e) => setCreativePreference(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  {submitting ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Queueing Request...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span>Create Muse Research Request</span>
-                    </>
-                  )}
-                </button>
+                  <option value="ALL">ALL Formats</option>
+                  <option value="VIDEO">Videos only</option>
+                  <option value="IMAGE">Images only</option>
+                </select>
               </div>
+
+              {/* Optional Advertiser Page ID */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Specific Page ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 109823485721"
+                  value={advertiserPageId}
+                  onChange={(e) => setAdvertiserPageId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 placeholder-slate-700 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Submit Action */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                <Terminal className="h-3.5 w-3.5 text-slate-400" />
+                <span>Runs asynchronously in background worker with durable checkpoints.</span>
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {submitting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Queuing Task...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 fill-current" />
+                    <span>Queue Meta Research Task</span>
+                  </>
+                )}
+              </button>
             </div>
           </form>
         </div>
 
-        {/* Request Queue & History Table */}
-        <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-[#1f293d] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-400" />
-              <h2 className="text-sm font-semibold text-white">Research Request Queue & Execution History</h2>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
-                {requests.length} requests
-              </span>
+        {/* 3. Research Jobs Panel */}
+        <div className="p-6 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Layers className="h-4 w-4 text-blue-400" />
+                <span>Research Jobs Ledger</span>
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Durable execution history, verifiable outcome counters, and run-to-ad associations
+              </p>
             </div>
+            <span className="text-xs text-slate-400 font-mono">
+              {requests.length} task{requests.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900/80 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                <tr>
-                  <th className="p-3">Request ID</th>
-                  <th className="p-3">Keywords</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Target</th>
-                  <th className="p-3">Results (New / Upd / Rej)</th>
-                  <th className="p-3">Created</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
-                {requests.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-500">
-                      No research requests queued yet. Enter keywords above to initiate Meta discovery.
-                    </td>
+          {requests.length === 0 ? (
+            <div className="p-8 rounded-lg bg-slate-900/50 border border-slate-800 text-center">
+              <Globe2 className="h-8 w-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-xs font-medium text-slate-400">No Meta research tasks created yet.</p>
+              <p className="text-[11px] text-slate-600 mt-1">
+                Enter a keyword above to start collecting factual public Facebook Ad Library records.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                    <th className="pb-2.5 font-semibold">Job ID</th>
+                    <th className="pb-2.5 font-semibold">Keywords / Market</th>
+                    <th className="pb-2.5 font-semibold">Status</th>
+                    <th className="pb-2.5 font-semibold">Counters (Retr / Valid / New / Dups)</th>
+                    <th className="pb-2.5 font-semibold">Created</th>
+                    <th className="pb-2.5 font-semibold text-right">Actions</th>
                   </tr>
-                ) : (
-                  requests.map((r) => (
-                    <tr key={r.requestId} className="hover:bg-slate-900/50 transition-colors">
-                      <td className="p-3 font-semibold text-blue-400">
-                        {r.requestId.slice(0, 10)}...
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {requests.map((job) => (
+                    <tr key={job.id} className="hover:bg-slate-900/40 transition-colors">
+                      {/* Job ID & Provider */}
+                      <td className="py-3 pr-3 font-mono text-[11px] text-slate-300">
+                        <span className="text-blue-400 font-semibold">{job.id.slice(0, 10)}...</span>
+                        <div className="text-[10px] text-slate-500 font-sans">{job.providerId}</div>
                       </td>
-                      <td className="p-3 font-sans text-slate-200">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {r.keywords.map((kw, i) => (
-                            <span key={i} className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700">
-                              {kw}
+
+                      {/* Keywords & Market */}
+                      <td className="py-3 pr-3">
+                        <div className="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                          {job.keywords.map((k, idx) => (
+                            <span
+                              key={idx}
+                              className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300"
+                            >
+                              {k}
                             </span>
                           ))}
                         </div>
+                        <span className="text-[10px] text-slate-500">Market: {job.market}</span>
                       </td>
-                      <td className="p-3 font-sans">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${getStatusBadge(r.status)}`}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="p-3">{r.targetCount}</td>
-                      <td className="p-3">
-                        <span className="text-emerald-400 font-semibold">{r.newUniqueCount}</span>
-                        <span className="text-slate-500"> / </span>
-                        <span className="text-blue-400">{r.existingDuplicateCount}</span>
-                        <span className="text-slate-500"> / </span>
-                        <span className="text-rose-400">{r.rejectedCount}</span>
-                      </td>
-                      <td className="p-3 text-slate-400 text-[10px]">
-                        {new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </td>
-                      <td className="p-3 text-right font-sans space-x-2">
-                        <button
-                          onClick={() => setSelectedRequest(r)}
-                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-medium transition-colors cursor-pointer"
+
+                      {/* Status */}
+                      <td className="py-3 pr-3">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(
+                            job.status
+                          )}`}
                         >
-                          Details
-                        </button>
-
-                        {r.status === "PENDING" && (
-                          <button
-                            onClick={() => handleCancelRequest(r.requestId)}
-                            className="px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-800/40 text-[10px] font-medium transition-colors cursor-pointer"
-                          >
-                            Cancel
-                          </button>
+                          {job.status}
+                        </span>
+                        {job.errorMessage && (
+                          <p className="text-[10px] text-red-400/80 mt-1 max-w-xs truncate" title={job.errorMessage}>
+                            {job.errorMessage}
+                          </p>
                         )}
+                      </td>
 
-                        {(r.status === "PENDING" || r.status === "RUNNING") && (
-                          <button
-                            onClick={() => {
-                              setArtifactTargetRequestId(r.requestId);
-                              setArtifactModalOpen(true);
-                            }}
-                            className="px-2 py-1 rounded bg-indigo-900/40 hover:bg-indigo-800/50 text-indigo-300 border border-indigo-700/40 text-[10px] font-medium transition-colors cursor-pointer"
+                      {/* Counters */}
+                      <td className="py-3 pr-3 font-mono text-[11px]">
+                        <span className="text-white font-semibold">{job.actualRetrievedCount}</span>
+                        <span className="text-slate-500"> / </span>
+                        <span className="text-emerald-400 font-semibold">{job.validCount}</span>
+                        <span className="text-slate-500"> / </span>
+                        <span className="text-blue-400 font-semibold">+{job.newUniqueCount}</span>
+                        <span className="text-slate-500"> / </span>
+                        <span className="text-slate-400">{job.existingDuplicateCount}</span>
+                      </td>
+
+                      {/* Created Time */}
+                      <td className="py-3 pr-3 text-slate-400 text-[11px]">
+                        {new Date(job.createdAt).toLocaleTimeString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* View in Explorer */}
+                          <Link
+                            href={`/explorer?platform=META&requestId=${job.id}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-[11px] font-medium transition-colors"
+                            title="Inspect exactly the ads retrieved in this run"
                           >
-                            Submit Results
-                          </button>
-                        )}
+                            <span>View Ads</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+
+                          {/* Cancel if active */}
+                          {(job.status === "PENDING" || job.status === "RUNNING") && (
+                            <button
+                              onClick={() => handleCancel(job.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-[11px] font-medium transition-colors cursor-pointer"
+                              title="Cancel execution"
+                            >
+                              <Ban className="h-3 w-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+
+                          {/* Retry if failed/cancelled */}
+                          {(job.status === "FAILED" ||
+                            job.status === "CANCELLED" ||
+                            job.status === "BLOCKED_SOURCE") && (
+                            <button
+                              onClick={() => handleRetry(job.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
+                              title="Create a new retry attempt"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              <span>Retry</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* Modal: Import Muse Research Artifact (Mode C Bridge Fallback) */}
-        {artifactModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-[#0f172a] rounded-xl border border-[#1f293d] w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in duration-150">
-              <div className="p-4 border-b border-[#1f293d] flex items-center justify-between">
+        {/* 4. Diagnostics Modal */}
+        {diagnosticsOpen && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#111827] border border-[#1f293d] rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <FileCode className="h-5 w-5 text-indigo-400" />
-                  <h3 className="text-sm font-semibold text-white">Import Muse Research Artifact (JSON)</h3>
+                  <Cpu className="h-5 w-5 text-blue-400" />
+                  <h3 className="text-sm font-bold text-white">MetaAdsCollector System Diagnostics</h3>
                 </div>
                 <button
-                  onClick={() => {
-                    setArtifactModalOpen(false);
-                    setArtifactResult(null);
-                  }}
-                  className="text-slate-400 hover:text-white"
+                  onClick={() => setDiagnosticsOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  When Muse operates in a browser conversation without direct connectivity to localhost:3000,
-                  paste Muse&apos;s structured JSON research output below. SWAI will normalize, verify, and commit the ads to the database.
-                </p>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">Target Request ID</label>
-                  <input
-                    type="text"
-                    value={artifactTargetRequestId}
-                    onChange={(e) => setArtifactTargetRequestId(e.target.value)}
-                    placeholder="Enter or select Request ID"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    Muse JSON Records Array or Submission Payload
-                  </label>
-                  <textarea
-                    rows={8}
-                    value={artifactJson}
-                    onChange={(e) => setArtifactJson(e.target.value)}
-                    placeholder={`[
-  {
-    "libraryId": "1642750633880173",
-    "advertiserName": "Uproot Clean",
-    "headline": "Pet Hair Remover Pro",
-    "mediaType": "VIDEO",
-    "sourceReportedStartAt": "2025-11-02",
-    "activeStatus": "ACTIVE"
-  }
-]`}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed"
-                  />
-                </div>
-
-                {artifactResult && (
-                  <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-xs space-y-1">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Ingestion Successful</span>
-                    </div>
-                    <p className="text-slate-300">
-                      Total Submitted: {artifactResult.totalSubmitted} | New Unique Ads: {artifactResult.newUniqueInserted} | Duplicates: {artifactResult.existingUpdated} | Rejected: {artifactResult.rejectedCount}
-                    </p>
+              <div className="space-y-3 text-xs">
+                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1.5 font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Local MCP Client:</span>
+                    <span className="text-emerald-400 font-semibold">READY (stdio transport)</span>
                   </div>
-                )}
-              </div>
-
-              <div className="p-4 border-t border-[#1f293d] flex items-center justify-end gap-2 bg-slate-900/60">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setArtifactModalOpen(false);
-                    setArtifactResult(null);
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  disabled={artifactSubmitting}
-                  onClick={handleSubmitArtifact}
-                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {artifactSubmitting ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Ingesting...</span>
-                    </>
-                  ) : (
-                    <span>Commit Artifact to Database</span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Drawer: Request Details */}
-        {selectedRequest && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-lg bg-[#0f172a] border-l border-[#1f293d] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
-              <div className="p-4 border-b border-[#1f293d] flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-white">Research Request Details</h3>
-                  <p className="text-[10px] text-slate-500 font-mono">{selectedRequest.requestId}</p>
-                </div>
-                <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-white">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="p-5 flex-1 overflow-y-auto space-y-4 text-xs">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Status</span>
-                  <div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${getStatusBadge(selectedRequest.status)}`}>
-                      {selectedRequest.status}
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Python Binary:</span>
+                    <span className="text-slate-200">{health?.environment.pythonReady ? "Found" : "Missing"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Collector Data Dir:</span>
+                    <span className="text-slate-200">{health?.environment.dataDirReady ? "Accessible" : "Missing"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Worker Status:</span>
+                    <span className={health?.worker.status === "RUNNING" ? "text-emerald-400" : "text-amber-400"}>
+                      {health?.worker.status}
                     </span>
                   </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Keywords</span>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedRequest.keywords.map((kw, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
-                        {kw}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px]">
-                  <div>
-                    <span className="text-slate-500 block">Platform</span>
-                    <span className="text-slate-200 font-semibold">{selectedRequest.platform}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Market</span>
-                    <span className="text-slate-200 font-semibold">{selectedRequest.market}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Target Count</span>
-                    <span className="text-slate-200 font-semibold">{selectedRequest.targetCount}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Creative Preference</span>
-                    <span className="text-slate-200 font-semibold">{selectedRequest.creativePreference || "ALL"}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Ingestion Counters</span>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-800/30">
-                      <span className="text-sm font-bold text-emerald-400 block">{selectedRequest.newUniqueCount}</span>
-                      <span className="text-[10px] text-slate-400">New Ads</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-800/30">
-                      <span className="text-sm font-bold text-blue-400 block">{selectedRequest.existingDuplicateCount}</span>
-                      <span className="text-[10px] text-slate-400">Duplicates</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-rose-950/20 border border-rose-800/30">
-                      <span className="text-sm font-bold text-rose-400 block">{selectedRequest.rejectedCount}</span>
-                      <span className="text-[10px] text-slate-400">Rejected</span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedRequest.errorMessage && (
-                  <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-300 text-[11px]">
-                    <span className="font-semibold block mb-0.5">Execution Error</span>
-                    <span>{selectedRequest.errorMessage}</span>
-                  </div>
-                )}
-
-                <div className="pt-3 border-t border-slate-800 space-y-1.5 text-[11px] text-slate-500">
                   <div className="flex justify-between">
-                    <span>Created:</span>
-                    <span className="text-slate-400">{new Date(selectedRequest.createdAt).toLocaleString()}</span>
+                    <span className="text-slate-400">Max Results Budget:</span>
+                    <span className="text-slate-200">{health?.limits.maxResultsPerSearch} ads</span>
                   </div>
-                  {selectedRequest.startedAt && (
-                    <div className="flex justify-between">
-                      <span>Started / Claimed:</span>
-                      <span className="text-slate-400">{new Date(selectedRequest.startedAt).toLocaleString()}</span>
-                    </div>
-                  )}
-                  {selectedRequest.finishedAt && (
-                    <div className="flex justify-between">
-                      <span>Finished:</span>
-                      <span className="text-slate-400">{new Date(selectedRequest.finishedAt).toLocaleString()}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Max Requests Budget:</span>
+                    <span className="text-slate-200">{health?.limits.maxRequestsPerSearch}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Execution Timeout:</span>
+                    <span className="text-slate-200">{health?.limits.maxExecutionSeconds}s</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-blue-950/20 border border-blue-800/30 text-[11px] text-blue-300">
+                  <p className="font-semibold mb-1">Architecture Guarantee:</p>
+                  <p className="leading-relaxed">
+                    MetaAdsCollector operates strictly within your local machine. No external gateway, ngrok,
+                    or Cloudflare tunnel is required. Public Meta Ad Library endpoints are queried without
+                    third-party paid API intermediaries.
+                  </p>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-[#1f293d] flex items-center justify-between">
-                <Link
-                  href="/explorer?platform=META"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-medium hover:bg-blue-600/30"
-                >
-                  <span>Open Meta Explorer</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+              <div className="pt-3 border-t border-slate-800 flex justify-end">
                 <button
-                  onClick={() => setSelectedRequest(null)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs hover:bg-slate-700"
+                  onClick={() => setDiagnosticsOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Close
                 </button>

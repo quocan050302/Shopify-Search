@@ -112,20 +112,10 @@ export interface DiscoveryProviderCapabilities {
   lastVerificationError?: string | null;
 }
 
-// ─── Platforms & Execution Modes ─────────────────────────────────────────────
+// ─── Platforms ─────────────────────────────────────────────────────────────
 
 export const DISCOVERY_PLATFORMS = ["TIKTOK", "META"] as const;
 export type DiscoveryPlatform = (typeof DISCOVERY_PLATFORMS)[number];
-
-export const MUSE_EXECUTION_MODES = [
-  "MUSE_ASSISTED_ON_DEMAND",
-  "MUSE_CONNECTED_AGENT",
-  "MUSE_SCHEDULED_VERIFIED",
-  "META_OFFICIAL_API",
-  "MANUAL_IMPORT",
-  "LOCAL_DATABASE_SEARCH",
-] as const;
-export type MuseExecutionMode = (typeof MUSE_EXECUTION_MODES)[number];
 
 export interface SourceEvidence {
   sourceUrl: string;

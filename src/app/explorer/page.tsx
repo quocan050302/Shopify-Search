@@ -111,6 +111,7 @@ export default function ExplorerPage() {
   const [platform, setPlatform] = useState("META"); // Meta is primary platform
   const [category, setCategory] = useState("ALL");
   const [minAgeDays, setMinAgeDays] = useState("");
+  const [requestId, setRequestId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Read URL query parameters on initial mount
@@ -123,6 +124,8 @@ export default function ExplorerPage() {
       if (urlMode && (urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
         setResearchMode(urlMode as ResearchMode);
       }
+      const urlRequestId = sp.get("requestId");
+      if (urlRequestId) setRequestId(urlRequestId);
     }
   }, []);
 
@@ -143,7 +146,9 @@ export default function ExplorerPage() {
 
       if (searchQuery.trim()) params.append("query", searchQuery.trim());
       if (platform !== "ALL") params.append("platform", platform);
+      if (category !== "ALL") params.append("category", category);
       if (minAgeDays) params.append("minAgeDays", minAgeDays);
+      if (requestId) params.append("requestId", requestId);
 
       // Use evergreen API for mode-based ranking
       const evRes = await fetch(`/api/v1/evergreen/ads?${params.toString()}`);
@@ -183,7 +188,7 @@ export default function ExplorerPage() {
 
   useEffect(() => {
     fetchAds();
-  }, [page, platform, category, researchMode, minAgeDays]);
+  }, [page, platform, category, researchMode, minAgeDays, requestId]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,6 +277,30 @@ export default function ExplorerPage() {
               <strong>Research Signal Only.</strong> Longevity tiers reflect evidence quality,
               not confirmed profitability. Long-running ads do not guarantee sales or positive ROAS.
             </span>
+          </div>
+        )}
+
+        {/* Active Research Run Filter Banner */}
+        {requestId && (
+          <div className="flex items-center justify-between px-3.5 py-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-300">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-white">Filtered by Research Run:</span>
+              <span className="font-mono text-indigo-200">{requestId}</span>
+            </div>
+            <button
+              onClick={() => {
+                setRequestId(null);
+                setPage(1);
+                if (typeof window !== "undefined") {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("requestId");
+                  window.history.replaceState({}, "", url.toString());
+                }
+              }}
+              className="text-[11px] px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-white font-medium transition-colors"
+            >
+              Show All Ads
+            </button>
           </div>
         )}
 

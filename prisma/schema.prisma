@@ -163,6 +163,7 @@ model CompetitorAd {
   notes            ResearchNote[]
   researchDecisions ResearchDecision[]
   sourceIdentities AdSourceIdentity[]
+  runAds           DiscoveryRunAd[]
 
   @@index([platform, status])
   @@index([platform, lifecycleStatus])
@@ -667,6 +668,7 @@ model DiscoveryRun {
   updatedAt              DateTime                @updatedAt
   schedule               DiscoverySchedule?      @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
   requestLedgers         ProviderRequestLedger[]
+  runAds                 DiscoveryRunAd[]
 
   @@index([workspaceId, status])
   @@index([providerId, createdAt])
@@ -714,5 +716,25 @@ model AdSourceIdentity {
   @@index([platform, providerId, sourceExternalId])
   @@index([adId])
   @@map("ad_source_identities")
+}
+
+model DiscoveryRunAd {
+  id            String       @id @default(cuid())
+  runId         String
+  adId          String
+  workspaceId   String       @default("default-workspace")
+  providerId    String
+  libraryId     String?
+  ingestOutcome String       // NEW or EXISTING
+  sourceUrl     String?
+  observedAt    DateTime     @default(now())
+
+  run           DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  ad            CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, adId])
+  @@index([workspaceId, runId])
+  @@index([adId])
+  @@map("discovery_run_ads")
 }
 

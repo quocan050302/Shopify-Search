@@ -53,3 +53,7 @@ next-env.d.ts
 .claude/
 .windsurf/
 skills-lock.json
+/backups/
+/services/meta-ads-collector/.venv/
+/services/meta-ads-collector/data/
+.meta-ads-collector-mcp/

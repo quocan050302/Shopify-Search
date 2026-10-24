@@ -10,7 +10,7 @@ import { AdDiscoveryProvider, ProviderAvailabilityResult } from "./providerContr
 import { TiktokTopAdsProvider } from "./providers/tiktokTopAdsProvider";
 import { ApifyTopAdsProvider } from "./providers/apifyTopAdsProvider";
 import { TiktokOfficialProvider } from "./providers/tiktokOfficialProvider";
-import { MuseAdLibraryProvider } from "./providers/museAdLibraryProvider";
+import { MetaAdsCollectorProvider } from "./providers/metaAdsCollectorProvider";
 import { DiscoveryQuery, DiscoveryError } from "./types";
 
 export interface ProviderRegistryEntry {
@@ -31,9 +31,8 @@ const defaultProviders: Array<{
   { provider: new TiktokTopAdsProvider(), category: "AUTOMATED_DISCOVERY" },
   { provider: new ApifyTopAdsProvider(), category: "AUTOMATED_DISCOVERY" },
   { provider: new TiktokOfficialProvider(), category: "OFFICIAL_COMPLIANCE" },
-  // External agent (asynchronous): Muse researches the Meta Ad Library and
-  // submits verified Facebook ads through the /api/v1/discovery/muse endpoints.
-  { provider: new MuseAdLibraryProvider(), category: "MANUAL_RESEARCH" },
+  // Self-hosted Meta Ad Library research via local MetaAdsCollector MCP server
+  { provider: new MetaAdsCollectorProvider(), category: "AUTOMATED_DISCOVERY" },
 ];
 
 for (const { provider, category } of defaultProviders) {
@@ -139,10 +138,10 @@ export async function selectDiscoveryProvider(query: DiscoveryQuery): Promise<Ad
     return prov;
   }
 
-  // 1B. Platform META: Muse External Agent Provider
+  // 1B. Platform META: MetaAdsCollector Provider
   if (query.platform === "META") {
-    const muse = getDiscoveryProvider("muse-ad-library");
-    if (muse) return muse;
+    const metaCollector = getDiscoveryProvider("meta-ads-collector");
+    if (metaCollector) return metaCollector;
   }
 
   // 2. Primary Free Automated: TikTok Top Ads Direct

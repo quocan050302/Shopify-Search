@@ -733,7 +733,7 @@ export function AdDetailDrawer({
                       <span>Meta Ad Library Provenance</span>
                     </div>
                     <p className="text-slate-300">
-                      Researched via external Muse AI agent on public Meta Ad Library. Meta Library ID:{" "}
+                      Researched via local MetaAdsCollector on public Meta Ad Library. Meta Library ID:{" "}
                       <span className="font-mono text-white">{ad.externalAdId || "N/A"}</span>.
                     </p>
                     <p className="text-slate-400">

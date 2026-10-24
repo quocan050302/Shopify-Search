@@ -214,9 +214,11 @@ export async function processDueSchedulesOnce(): Promise<void> {
         }
       }
 
+      const scheduledPlatform = schedule.providerId.toLowerCase().includes("meta") ? "META" : "TIKTOK";
+
       const query: DiscoveryQuery = {
         workspaceId: schedule.workspaceId,
-        platform: "TIKTOK",
+        platform: scheduledPlatform,
         market: schedule.targetMarket || "US",
         keywords,
         industries,

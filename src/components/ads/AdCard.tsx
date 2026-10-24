@@ -3,18 +3,19 @@
 import { ExternalLink, Flame, Clock, ShieldCheck, BookmarkPlus, AlertCircle } from "lucide-react";
 import { AdVideoPlayer } from "./AdVideoPlayer";
 import { isSampleOrFakeMedia } from "@/services/links/linkValidationService";
+import { AdViewModel } from "@/types/adViewModel";
 
 interface AdCardProps {
-  ad: any;
+  ad: AdViewModel | any;
   onSelect: (ad: any) => void;
   onSaveToWatchlist?: (adId: string) => void;
 }
 
 export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
-  const media = ad.mediaAssets?.[0];
-  const scoreRecord = ad.researchScores?.[0];
+  // Support both unified AdViewModel and legacy shapes
+  const media = ad.media || ad.mediaAssets?.[0];
+  const scoreRecord = ad.score || ad.researchScores?.[0] || ad.evergreenScore;
   const totalScore = scoreRecord?.totalScore ?? null;
-  const tier = scoreRecord?.tier ?? "INSUFFICIENT_EVIDENCE";
   const hasSampleVideo = isSampleOrFakeMedia(media?.videoUrl);
 
   // Score badge style
@@ -23,6 +24,23 @@ export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
     if (s >= 75) return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
     if (s >= 50) return "bg-amber-500/15 text-amber-400 border-amber-500/30";
     return "bg-slate-800 text-slate-400 border-slate-700";
+  };
+
+  // Safe age label calculation (Rule 267: Never display malformed "d active")
+  const renderAgeLabel = () => {
+    if (typeof ad.calendarAgeDays === "number" && ad.calendarAgeDays > 0) {
+      return `${ad.calendarAgeDays}d observed`;
+    }
+    if (ad.sourceReportedStartAt) {
+      try {
+        const dateStr = new Date(ad.sourceReportedStartAt).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+        return `From ${dateStr}`;
+      } catch {}
+    }
+    return "Age unverified";
   };
 
   return (
@@ -67,7 +85,7 @@ export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
             </span>
             <div className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
               <Clock className="h-3 w-3 text-slate-500" />
-              <span>{ad.daysRunning}d active</span>
+              <span>{renderAgeLabel()}</span>
             </div>
           </div>
 
@@ -89,13 +107,13 @@ export function AdCard({ ad, onSelect, onSaveToWatchlist }: AdCardProps) {
         <div>
           {/* Category & Status */}
           <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
-            {ad.platform === "META" && (
+            {ad.platform === "META" && ad.externalAdId && (
               <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                FB ID: {ad.externalAdId || "Ad Library"}
+                FB ID: {ad.externalAdId}
               </span>
             )}
             <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              {ad.category}
+              {ad.category || "General"}
             </span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${

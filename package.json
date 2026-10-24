@@ -14,13 +14,15 @@
     "discovery:once": "tsx scripts/discovery-once.ts",
     "discovery:worker": "tsx scripts/discovery-worker.ts",
     "discovery:dry-run": "tsx scripts/discovery-dry-run.ts",
-    "muse:gateway": "tsx scripts/muse-gateway.ts",
-    "muse:tunnel": "tsx scripts/muse-tunnel.ts"
+    "meta:doctor": "tsx scripts/meta-doctor.ts",
+    "meta:once": "tsx scripts/meta-once.ts",
+    "meta:test": "tsx scripts/meta-test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
     "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.18.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@prisma/adapter-libsql": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "clsx": "^2.1.1",
