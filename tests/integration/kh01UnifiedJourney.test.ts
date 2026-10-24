@@ -76,8 +76,7 @@ describe("KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Work
   const authContext: ResearchAccessContext = {
     actorId: "unified_tester",
     workspaceId,
-    role: "ADMIN",
-    tier: "ENTERPRISE",
+    accessMode: "AUTHENTICATED",
   };
 
   let queuedJobId: string;

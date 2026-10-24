@@ -31,7 +31,7 @@
     "kh01:test:journey": "vitest run tests/integration/kh01UnifiedJourney.test.ts",
     "kh01:test:live": "tsx scripts/kh01RealE2E.ts --live",
     "kh01:acceptance": "tsx scripts/kh01RealE2E.ts",
-    "kh01:acceptance:full": "tsx scripts/kh01RealE2E.ts"
+    "kh01:acceptance:full": "tsx scripts/kh01/runFullAcceptance.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
