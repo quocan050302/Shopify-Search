@@ -525,4 +525,24 @@ describe("KH-01 Job Engine — Atomic Claims, Leases & Recovery", () => {
     const released = await releaseResearchSlot("worker_slot_test", TEST_JOB_ID_1, "fake_token");
     expect(released).toBe(true);
   });
+
+  it("KH-01 workers strictly ignore non-KH01 discovery jobs (Task 169)", async () => {
+    // Create an unrelated META discovery job in PENDING state
+    await prisma.syncJob.create({
+      data: {
+        id: "discovery_job_meta_01",
+        workspaceId: TEST_WORKSPACE,
+        jobType: "META_AD_DISCOVERY",
+        status: "PENDING",
+        resultJson: JSON.stringify({ query: "pets", count: 20 }),
+      },
+    });
+
+    const claimed = await claimPendingKh01Job("kh01_worker_specialist");
+    // Must NOT claim META_AD_DISCOVERY
+    expect(claimed).toBeNull();
+
+    const inDb = await prisma.syncJob.findUnique({ where: { id: "discovery_job_meta_01" } });
+    expect(inDb?.status).toBe("PENDING");
+  });
 });
