@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ShoppingBag,
   Search,
@@ -9,6 +10,7 @@ import {
   PlaySquare,
   Store,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { isStockImage } from "@/services/links/linkValidationService";
@@ -218,6 +220,15 @@ export default function ProductsPage() {
                         </span>
                       </div>
                     </div>
+
+                    {/* Product Intelligence Workspace Link */}
+                    <Link
+                      href={`/products/${product.id}/intelligence`}
+                      className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Product Intelligence</span>
+                    </Link>
 
                     {/* Visit Storefront — with availability warning */}
                     {productUrl ? (

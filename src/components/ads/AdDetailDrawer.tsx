@@ -76,6 +76,7 @@ export function AdDetailDrawer({
   const [costVerificationSource, setCostVerificationSource] = useState<"USER_ESTIMATE" | "SUPPLIER_INVOICE" | "USER_VERIFIED_QUOTE">("USER_ESTIMATE");
   const [candidateNotes, setCandidateNotes] = useState<string>("");
   const [userDecision, setUserDecision] = useState<"READY_FOR_SMALL_TEST" | "RESEARCH_MORE" | "REJECTED" | "">("");
+  const [savedProductId, setSavedProductId] = useState<string | null>(null);
 
   // Product Candidate Checklist State with explicit UNKNOWN support
   const [checklist, setChecklist] = useState<{
@@ -296,6 +297,9 @@ export function AdDetailDrawer({
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || "Failed to save candidate");
+      if (json.data?.productId) {
+        setSavedProductId(json.data.productId);
+      }
       setCandidateFeedback({
         type: "success",
         message: "Saved to ResearchProduct! Candidate economics, scenario decision, and checklist recorded.",
@@ -1398,6 +1402,16 @@ export function AdDetailDrawer({
                   <ShoppingBag className="h-4 w-4" />
                   <span>{savingCandidate ? "Saving Candidate..." : "Save as Product Candidate"}</span>
                 </button>
+
+                {(savedProductId || detail?.linkedProduct?.id) && (
+                  <a
+                    href={`/products/${savedProductId || detail?.linkedProduct?.id}/intelligence`}
+                    className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Open Product Intelligence Workspace →</span>
+                  </a>
+                )}
               </div>
             </div>
           )}

@@ -38,9 +38,11 @@ export interface ProductIdentityCandidate {
 }
 
 export interface ProductIdentitySelection {
-  action: "LINK_EXISTING" | "CREATE_NEW";
+  action?: "LINK_EXISTING" | "CREATE_NEW";
+  mode?: "LINK_EXISTING" | "CREATE_NEW";
   targetProductId?: string;
   customTitle?: string;
+  title?: string;
   category?: string;
   description?: string;
 }
@@ -216,12 +218,15 @@ export async function resolveOrCreateResearchProduct(
 ): Promise<{ productId: string; title: string; isNew: boolean }> {
   await assertAdWorkspaceAccess(candidate.adId, context);
 
-  return await prisma.$transaction(async (tx) => {
-    // Path A: Explicit link to an existing product
-    if (selection.action === "LINK_EXISTING") {
-      if (!selection.targetProductId) {
-        throw new Error("Missing targetProductId for LINK_EXISTING action.");
-      }
+  const action = selection.action || selection.mode || "AUTO";
+  const customTitle = selection.customTitle || selection.title;
+
+  // Path A: Explicit link to an existing product
+  if (action === "LINK_EXISTING") {
+    if (!selection.targetProductId) {
+      throw new Error("Missing targetProductId for LINK_EXISTING action.");
+    }
+    return await prisma.$transaction(async (tx) => {
       const existingProduct = await tx.researchProduct.findUnique({
         where: { id: selection.targetProductId },
       });
@@ -253,37 +258,42 @@ export async function resolveOrCreateResearchProduct(
         title: existingProduct.title,
         isNew: false,
       };
-    }
+    });
+  }
 
-    // Path B: Automatic matching before creating new
+  // Path B: Automatic matching before creating new (only if not explicitly CREATE_NEW)
+  if (action !== "CREATE_NEW") {
     const match = await matchExistingResearchProduct(candidate, context.workspaceId);
     if (match.confidence === "EXACT_MATCH" && match.matchedProduct) {
-      // Re-use exact match
-      const link = await tx.adProductLink.findUnique({
-        where: {
-          adId_productId: {
-            adId: candidate.adId,
-            productId: match.matchedProduct.id,
-          },
-        },
-      });
-      if (!link) {
-        await tx.adProductLink.create({
-          data: {
-            adId: candidate.adId,
-            productId: match.matchedProduct.id,
-            confidence: "CONFIRMED",
+      return await prisma.$transaction(async (tx) => {
+        const link = await tx.adProductLink.findUnique({
+          where: {
+            adId_productId: {
+              adId: candidate.adId,
+              productId: match.matchedProduct!.id,
+            },
           },
         });
-      }
-      return {
-        productId: match.matchedProduct.id,
-        title: match.matchedProduct.title,
-        isNew: false,
-      };
+        if (!link) {
+          await tx.adProductLink.create({
+            data: {
+              adId: candidate.adId,
+              productId: match.matchedProduct!.id,
+              confidence: "CONFIRMED",
+            },
+          });
+        }
+        return {
+          productId: match.matchedProduct!.id,
+          title: match.matchedProduct!.title,
+          isNew: false,
+        };
+      });
     }
+  }
 
-    // Path C: Create new canonical ResearchProduct
+  // Path C: Create new canonical ResearchProduct
+  return await prisma.$transaction(async (tx) => {
     let storeId: string | null = null;
     if (candidate.storeDomain) {
       let store = await tx.competitorStore.findUnique({
@@ -304,7 +314,7 @@ export async function resolveOrCreateResearchProduct(
     }
 
     const title =
-      selection.customTitle?.trim() ||
+      customTitle?.trim() ||
       candidate.candidateTitle?.trim() ||
       "New Product Candidate";
 

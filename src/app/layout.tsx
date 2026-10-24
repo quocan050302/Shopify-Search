@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full">
       <body className="bg-[#0a0e17] text-slate-100 flex min-h-screen">
-        <Sidebar />
+        <Suspense fallback={<aside className="w-64 border-r border-slate-800 bg-[#070a10]" />}>
+          <Sidebar />
+        </Suspense>
         <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           {children}
         </div>

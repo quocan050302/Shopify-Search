@@ -17,7 +17,11 @@
     "meta:doctor": "tsx scripts/meta-doctor.ts",
     "meta:once": "tsx scripts/meta-once.ts",
     "meta:test": "tsx scripts/meta-test.ts",
-    "meta:repair": "tsx scripts/meta-repair-media.ts"
+    "meta:repair": "tsx scripts/meta-repair-media.ts",
+    "kh01:doctor": "tsx scripts/kh01Doctor.ts",
+    "kh01:once": "tsx src/workers/kh01Worker.ts --once",
+    "kh01:worker": "tsx src/workers/kh01Worker.ts",
+    "kh01:verify": "vitest run tests/unit/kh01Security.test.ts tests/unit/kh01ProductOffer.test.ts tests/unit/kh01LandingPage.test.ts tests/unit/kh01EconomicsOpportunity.test.ts tests/integration/kh01ProductIntelligenceWorkspace.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
