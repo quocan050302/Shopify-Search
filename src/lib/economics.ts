@@ -147,6 +147,488 @@ export function calculateEconomics(inputs: CalculateEconomicsInput): EconomicsRe
   };
 }
 
+// =========================================================================
+// KH-01 Advanced Economics, Money Arithmetic & Multi-Offer Scenarios
+// =========================================================================
+
+export interface Money {
+  amount: number;
+  currency: string;
+  minorUnits: number;
+  formatted: string;
+}
+
+/**
+ * Validates and converts monetary string or number inputs into tested minor units.
+ */
+export function parseMoney(input: string | number | null | undefined, currency = "USD"): Money {
+  if (input == null || input === "") {
+    throw new Error("Money input cannot be null or empty");
+  }
+
+  const num = typeof input === "number" ? input : parseFloat(String(input).replace(/[^0-9.-]/g, ""));
+
+  if (isNaN(num) || !Number.isFinite(num)) {
+    throw new Error(`Invalid monetary amount: ${input}`);
+  }
+
+  const rounded = roundCurrency(num);
+  const minorUnits = Math.round(rounded * 100);
+
+  return {
+    amount: rounded,
+    currency: currency.toUpperCase(),
+    minorUnits,
+    formatted: new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: 2,
+    }).format(rounded),
+  };
+}
+
+export type FinancialSourceType =
+  | "USER_ESTIMATE"
+  | "SUPPLIER_QUOTE"
+  | "OBSERVED_STOREFRONT"
+  | "FIRST_PARTY_ACTUAL"
+  | "UNKNOWN";
+
+export interface FinancialAssumption {
+  value: number | string | null;
+  currency: string;
+  sourceType: FinancialSourceType;
+  evidenceId?: string;
+  observedAt?: string;
+}
+
+export interface ProductEconomicsScenarioInput {
+  scenarioName?: string;
+  currency?: string;
+  unitsPerOrder?: number;
+  grossMerchandiseValue?: number | null | undefined;
+  sellingPricePerUnit: number | null | undefined;
+  discountPerUnit?: number | null | undefined;
+  supplierCostPerUnit: number | null | undefined;
+  shippingChargedToCustomer?: number | null | undefined;
+  actualShippingCostPaid?: number | null | undefined;
+  fulfillmentCostPerOrder?: number | null | undefined;
+  paymentProcessingFeePercent?: number | null | undefined; // e.g. 2.9%
+  paymentProcessingFeeFixed?: number | null | undefined;   // e.g. $0.30
+  otherVariableCostPerOrder?: number | null | undefined;
+  expectedReturnRatePercent?: number | null | undefined;   // e.g. 5%
+  recoverableCostOnReturnPercent?: number | null | undefined; // 0% if scrapped, 50% if restocked
+  targetProfitPerOrder?: number | null | undefined;
+  assumedCpa?: number | null | undefined;
+  sourceProvenance?: Record<string, FinancialAssumption>;
+}
+
+export interface ProductEconomicsScenarioResult {
+  scenarioName: string;
+  currency: string;
+  unitsPerOrder: number;
+  grossMerchandiseValue: number | null;
+  discountAmount: number;
+  netSellingRevenue: number | null;
+  cogs: number | null;
+  shippingSubsidy: number | null;
+  fulfillmentCost: number | null;
+  paymentProcessingFee: number | null;
+  otherVariableCosts: number | null;
+  expectedReturnLoss: number | null;
+  contributionBeforeAds: number | null;
+  contributionMarginPercent: number | null;
+  breakEvenCpa: number | null;
+  targetProfitPerOrder: number | null;
+  targetCpa: number | null;
+  breakEvenRoas: number | null;
+  targetRoas: number | null;
+  contributionAfterAssumedCpa: number | null;
+  isComplete: boolean;
+  missingCostState: MissingCostState;
+  missingInputs: string[];
+  riskFlags: string[];
+  provenance: Record<string, FinancialAssumption>;
+  isHypothetical: boolean;
+}
+
+/**
+ * Calculates complete order economics with honest tracking of missing costs.
+ * Never silently turns unknown shipping or supplier cost into free/zero.
+ */
+export function calculateOrderEconomics(input: ProductEconomicsScenarioInput): ProductEconomicsScenarioResult {
+  const currency = (input.currency || "USD").toUpperCase();
+  const units = Math.max(1, Math.floor(input.unitsPerOrder || 1));
+  const scenarioName = input.scenarioName || "Base Order Scenario";
+  const missingInputs: string[] = [];
+  const riskFlags: string[] = [];
+
+  // 1. Selling Price
+  const hasPrice =
+    input.sellingPricePerUnit != null &&
+    !isNaN(input.sellingPricePerUnit) &&
+    Number.isFinite(input.sellingPricePerUnit) &&
+    input.sellingPricePerUnit >= 0;
+
+  if (!hasPrice) {
+    missingInputs.push("Selling price per unit is unknown");
+  }
+
+  const unitPrice = hasPrice ? roundCurrency(input.sellingPricePerUnit!) : null;
+  const unitDiscount = input.discountPerUnit != null && Number.isFinite(input.discountPerUnit) && input.discountPerUnit >= 0
+    ? roundCurrency(input.discountPerUnit)
+    : 0;
+
+  const grossMerchandiseValue =
+    input.grossMerchandiseValue != null && !isNaN(input.grossMerchandiseValue) && input.grossMerchandiseValue >= 0
+      ? roundCurrency(input.grossMerchandiseValue)
+      : unitPrice != null
+      ? roundCurrency(unitPrice * units)
+      : null;
+  const discountAmount = roundCurrency(unitDiscount * units);
+  const netSellingRevenue = grossMerchandiseValue != null
+    ? roundCurrency(Math.max(0, grossMerchandiseValue - discountAmount))
+    : null;
+
+  // 2. Supplier Cost (COGS)
+  const hasCost =
+    input.supplierCostPerUnit != null &&
+    !isNaN(input.supplierCostPerUnit) &&
+    Number.isFinite(input.supplierCostPerUnit) &&
+    input.supplierCostPerUnit >= 0;
+
+  if (!hasCost) {
+    missingInputs.push("Supplier cost (COGS) is unknown");
+  }
+
+  const unitCost = hasCost ? roundCurrency(input.supplierCostPerUnit!) : null;
+  const cogs = unitCost != null ? roundCurrency(unitCost * units) : null;
+
+  // 3. Shipping & Subsidy
+  const hasShippingPaid =
+    input.actualShippingCostPaid != null &&
+    !isNaN(input.actualShippingCostPaid) &&
+    Number.isFinite(input.actualShippingCostPaid) &&
+    input.actualShippingCostPaid >= 0;
+
+  const hasShippingCharged =
+    input.shippingChargedToCustomer != null &&
+    !isNaN(input.shippingChargedToCustomer) &&
+    Number.isFinite(input.shippingChargedToCustomer) &&
+    input.shippingChargedToCustomer >= 0;
+
+  let shippingSubsidy: number | null = null;
+  if (hasShippingPaid) {
+    const actualShipping = roundCurrency(input.actualShippingCostPaid!);
+    const chargedShipping = hasShippingCharged ? roundCurrency(input.shippingChargedToCustomer!) : 0;
+    // Subsidy = merchant expense minus customer payment
+    shippingSubsidy = roundCurrency(actualShipping - chargedShipping);
+  } else {
+    missingInputs.push("Actual shipping cost paid by merchant is unknown");
+    riskFlags.push("Shipping cost not confirmed; shipping subsidy omitted");
+  }
+
+  // 4. Fulfillment
+  const hasFulfillment =
+    input.fulfillmentCostPerOrder != null &&
+    !isNaN(input.fulfillmentCostPerOrder) &&
+    Number.isFinite(input.fulfillmentCostPerOrder) &&
+    input.fulfillmentCostPerOrder >= 0;
+
+  const fulfillmentCost = hasFulfillment ? roundCurrency(input.fulfillmentCostPerOrder!) : null;
+  if (!hasFulfillment) {
+    missingInputs.push("Fulfillment/handling fee is unknown");
+  }
+
+  // 5. Payment Processing Fee (e.g. Stripe 2.9% + $0.30)
+  let paymentProcessingFee: number | null = null;
+  const feePercent = input.paymentProcessingFeePercent ?? 2.9;
+  const feeFixed = input.paymentProcessingFeeFixed ?? 0.30;
+
+  if (netSellingRevenue != null) {
+    const customerTotal = netSellingRevenue + (hasShippingCharged ? input.shippingChargedToCustomer! : 0);
+    paymentProcessingFee = roundCurrency((customerTotal * (feePercent / 100)) + feeFixed);
+  }
+
+  // 6. Other Variable Costs
+  const otherVariableCosts = input.otherVariableCostPerOrder != null && Number.isFinite(input.otherVariableCostPerOrder)
+    ? roundCurrency(input.otherVariableCostPerOrder)
+    : 0;
+
+  // 7. Expected Return/Refund Loss
+  const returnRate = input.expectedReturnRatePercent ?? 5; // default 5%
+  const recoverablePercent = input.recoverableCostOnReturnPercent ?? 0; // 0% default (lost)
+
+  let expectedReturnLoss: number | null = null;
+  if (netSellingRevenue != null) {
+    // Loss per order = return rate * (net revenue - recoverable unit cost)
+    const orderCostBasis = cogs ?? 0;
+    const lossBasis = netSellingRevenue - (orderCostBasis * (recoverablePercent / 100));
+    expectedReturnLoss = roundCurrency(Math.max(0, lossBasis * (returnRate / 100)));
+  }
+
+  // 8. Missing Cost State
+  let missingCostState: MissingCostState = "COMPLETE";
+  if (!hasPrice && !hasCost) {
+    missingCostState = "MISSING_ECONOMICS";
+  } else if (!hasPrice) {
+    missingCostState = "MISSING_SELLING_PRICE";
+  } else if (!hasCost) {
+    missingCostState = "MISSING_SUPPLIER_COST";
+  } else if (!hasShippingPaid || !hasFulfillment) {
+    missingCostState = "MISSING_SHIPPING_AND_FEES";
+  }
+
+  const isComplete = missingInputs.length === 0;
+
+  // 9. Contribution Before Ads & Break-Even CPA
+  let contributionBeforeAds: number | null = null;
+  let contributionMarginPercent: number | null = null;
+  let breakEvenCpa: number | null = null;
+  let breakEvenRoas: number | null = null;
+  let targetCpa: number | null = null;
+  let targetRoas: number | null = null;
+  let contributionAfterAssumedCpa: number | null = null;
+
+  if (netSellingRevenue != null && cogs != null) {
+    // Base required subtraction
+    let margin = netSellingRevenue - cogs;
+
+    if (shippingSubsidy != null) {
+      margin -= shippingSubsidy;
+    }
+    if (fulfillmentCost != null) {
+      margin -= fulfillmentCost;
+    }
+    if (paymentProcessingFee != null) {
+      margin -= paymentProcessingFee;
+    }
+    margin -= otherVariableCosts;
+
+    if (expectedReturnLoss != null) {
+      margin -= expectedReturnLoss;
+    }
+
+    contributionBeforeAds = roundCurrency(margin);
+    breakEvenCpa = contributionBeforeAds;
+
+    if (netSellingRevenue > 0) {
+      contributionMarginPercent = roundCurrency((contributionBeforeAds / netSellingRevenue) * 100);
+    }
+
+    if (contributionBeforeAds > 0) {
+      breakEvenRoas = roundCurrency(netSellingRevenue / contributionBeforeAds);
+    } else {
+      riskFlags.push("Contribution before ads is zero or negative. Unviable unit economics.");
+    }
+
+    if (input.targetProfitPerOrder != null && Number.isFinite(input.targetProfitPerOrder)) {
+      const targetProfit = roundCurrency(input.targetProfitPerOrder);
+      targetCpa = Math.max(0, roundCurrency(contributionBeforeAds - targetProfit));
+      if (targetCpa > 0) {
+        targetRoas = roundCurrency(netSellingRevenue / targetCpa);
+      }
+    }
+
+    if (input.assumedCpa != null && Number.isFinite(input.assumedCpa)) {
+      contributionAfterAssumedCpa = roundCurrency(contributionBeforeAds - input.assumedCpa);
+    }
+  }
+
+  return {
+    scenarioName,
+    currency,
+    unitsPerOrder: units,
+    grossMerchandiseValue,
+    discountAmount,
+    netSellingRevenue,
+    cogs,
+    shippingSubsidy,
+    fulfillmentCost,
+    paymentProcessingFee,
+    otherVariableCosts,
+    expectedReturnLoss,
+    contributionBeforeAds,
+    contributionMarginPercent,
+    breakEvenCpa,
+    targetProfitPerOrder: input.targetProfitPerOrder != null ? roundCurrency(input.targetProfitPerOrder) : null,
+    targetCpa,
+    breakEvenRoas,
+    targetRoas,
+    contributionAfterAssumedCpa,
+    isComplete,
+    missingCostState,
+    missingInputs,
+    riskFlags,
+    provenance: input.sourceProvenance || {},
+    isHypothetical: true,
+  };
+}
+
+export interface OfferScenarioInput {
+  name: string;
+  type: "SINGLE" | "TWO_UNIT_BUNDLE" | "THREE_UNIT_BUNDLE" | "QUANTITY_TIER" | "FREE_SHIPPING_THRESHOLD" | "GIFT_WITH_PURCHASE" | "UPSELL";
+  units: number;
+  bundleSellingPrice: number;
+  discountAmount?: number;
+  freeShippingApplied?: boolean;
+  giftItemCost?: number;
+}
+
+export interface ProductCostAssumptions {
+  supplierUnitCost: number | null;
+  shippingPaidPerOrder: number | null;
+  shippingChargedToCustomer: number | null;
+  fulfillmentFeePerOrder: number | null;
+  paymentFeePercent?: number;
+  paymentFeeFixed?: number;
+  expectedReturnRatePercent?: number;
+  targetProfitPerOrder?: number;
+  sourceProvenance?: Record<string, FinancialAssumption>;
+}
+
+/**
+ * Builds offer-specific unit economics scenario (bundles, thresholds, gifts).
+ */
+export function buildOfferEconomicsScenario(
+  product: { currentPrice?: number | null; currency?: string } | null,
+  offer: OfferScenarioInput,
+  costs: ProductCostAssumptions
+): ProductEconomicsScenarioResult {
+  const units = Math.max(1, offer.units);
+  const unitPrice = roundCurrency(offer.bundleSellingPrice / units);
+
+  // Additional variable cost if gift included
+  let extraVariableCost = 0;
+  if (offer.giftItemCost != null && offer.giftItemCost > 0) {
+    extraVariableCost += roundCurrency(offer.giftItemCost);
+  }
+
+  // Shipping charged: if free shipping applied in offer, customer pays 0
+  const shippingCharged = offer.freeShippingApplied ? 0 : costs.shippingChargedToCustomer;
+
+  return calculateOrderEconomics({
+    scenarioName: offer.name,
+    currency: product?.currency || "USD",
+    unitsPerOrder: units,
+    grossMerchandiseValue: offer.bundleSellingPrice,
+    sellingPricePerUnit: unitPrice,
+    discountPerUnit: offer.discountAmount ? roundCurrency(offer.discountAmount / units) : 0,
+    supplierCostPerUnit: costs.supplierUnitCost,
+    shippingChargedToCustomer: shippingCharged,
+    actualShippingCostPaid: costs.shippingPaidPerOrder,
+    fulfillmentCostPerOrder: costs.fulfillmentFeePerOrder,
+    paymentProcessingFeePercent: costs.paymentFeePercent,
+    paymentProcessingFeeFixed: costs.paymentFeeFixed,
+    otherVariableCostPerOrder: extraVariableCost,
+    expectedReturnRatePercent: costs.expectedReturnRatePercent,
+    targetProfitPerOrder: costs.targetProfitPerOrder,
+    sourceProvenance: costs.sourceProvenance,
+  });
+}
+
+export interface EconomicsComparison {
+  scenarios: ProductEconomicsScenarioResult[];
+  recommendedScenario: string | null;
+  summary: {
+    highestContributionScenario: string | null;
+    lowestBreakEvenRoasScenario: string | null;
+    missingCostCount: number;
+  };
+}
+
+/**
+ * Compares multiple offer scenarios side-by-side to identify the strongest commercial configuration.
+ */
+export function compareEconomicsScenarios(scenarios: ProductEconomicsScenarioResult[]): EconomicsComparison {
+  if (scenarios.length === 0) {
+    return {
+      scenarios: [],
+      recommendedScenario: null,
+      summary: { highestContributionScenario: null, lowestBreakEvenRoasScenario: null, missingCostCount: 0 },
+    };
+  }
+
+  let bestContribution: ProductEconomicsScenarioResult | null = null;
+  let bestRoas: ProductEconomicsScenarioResult | null = null;
+  let totalMissing = 0;
+
+  for (const s of scenarios) {
+    totalMissing += s.missingInputs.length;
+
+    if (s.contributionBeforeAds != null) {
+      if (!bestContribution || s.contributionBeforeAds > (bestContribution.contributionBeforeAds ?? -Infinity)) {
+        bestContribution = s;
+      }
+    }
+
+    if (s.breakEvenRoas != null && s.breakEvenRoas > 0) {
+      if (!bestRoas || s.breakEvenRoas < (bestRoas.breakEvenRoas ?? Infinity)) {
+        bestRoas = s;
+      }
+    }
+  }
+
+  return {
+    scenarios,
+    recommendedScenario: bestContribution?.scenarioName || scenarios[0]?.scenarioName || null,
+    summary: {
+      highestContributionScenario: bestContribution?.scenarioName || null,
+      lowestBreakEvenRoasScenario: bestRoas?.scenarioName || null,
+      missingCostCount: totalMissing,
+    },
+  };
+}
+
+export interface EconomicsEligibility {
+  isEligibleForTest: boolean;
+  acquisitionCapacity: "HEALTHY" | "TIGHT" | "UNVIABLE" | "INSUFFICIENT_DATA";
+  rationale: string;
+  missingInputs: string[];
+}
+
+/**
+ * Validates whether an economics scenario meets the rigorous threshold for real ad spend.
+ */
+export function evaluateEconomicsEligibility(scenario: ProductEconomicsScenarioResult): EconomicsEligibility {
+  if (!scenario.isComplete) {
+    return {
+      isEligibleForTest: false,
+      acquisitionCapacity: "INSUFFICIENT_DATA",
+      rationale: `Cannot approve ad spend: ${scenario.missingInputs.join(", ")}.`,
+      missingInputs: scenario.missingInputs,
+    };
+  }
+
+  const margin = scenario.contributionBeforeAds;
+  if (margin == null || margin <= 0) {
+    return {
+      isEligibleForTest: false,
+      acquisitionCapacity: "UNVIABLE",
+      rationale: `Negative or zero contribution margin ($${margin ?? 0.00}). Orders will lose money before advertising.`,
+      missingInputs: [],
+    };
+  }
+
+  // Acquisition capacity relative to target CPA
+  if (margin < 12) {
+    return {
+      isEligibleForTest: false,
+      acquisitionCapacity: "TIGHT",
+      rationale: `Contribution before ads ($${margin.toFixed(2)}) is under $12.00, leaving negligible cushion for Meta CPA volatility.`,
+      missingInputs: [],
+    };
+  }
+
+  return {
+    isEligibleForTest: true,
+    acquisitionCapacity: "HEALTHY",
+    rationale: `Sufficient acquisition capacity: $${margin.toFixed(2)} break-even CPA (Break-even ROAS ${scenario.breakEvenRoas ?? "N/A"}x).`,
+    missingInputs: [],
+  };
+}
+
+
 export interface RecommendationInputs {
   contributionMargin: number | null;
   observedSellingPrice?: number | null;
