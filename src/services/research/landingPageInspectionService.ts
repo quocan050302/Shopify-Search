@@ -290,14 +290,32 @@ export async function createLandingPageResearchJob(
   };
 }
 
+export interface ClaimedKh01Job {
+  id: string;
+  workspaceId: string;
+  jobType: string;
+  status: string;
+  workerId: string;
+  claimToken: string;
+  attemptNumber: number;
+  payload?: {
+    productId?: string | null;
+    adId?: string | null;
+    targetUrl: string;
+    forceRefresh?: boolean;
+  };
+}
+
 /**
  * Executes a claimed landing page research job with complete error boundaries.
  */
 export async function executeLandingPageResearchJob(
-  jobId: string,
+  jobOrClaim: string | ClaimedKh01Job,
   signal?: AbortSignal
 ): Promise<LandingPageResearchResult> {
   const startTime = Date.now();
+  const jobId = typeof jobOrClaim === "string" ? jobOrClaim : jobOrClaim.id;
+
   const syncJob = await prisma.syncJob.findUnique({
     where: { id: jobId },
   });
@@ -306,20 +324,55 @@ export async function executeLandingPageResearchJob(
     throw new Error(`Research job '${jobId}' not found.`);
   }
 
-  // Atomically mark job as RUNNING
-  await prisma.syncJob.update({
-    where: { id: jobId },
-    data: { status: "RUNNING", progress: 20 },
-  });
-
-  let jobConfig: { productId?: string | null; adId?: string | null; targetUrl: string };
+  let jobConfig: {
+    productId?: string | null;
+    adId?: string | null;
+    targetUrl: string;
+    workerId?: string;
+    claimToken?: string;
+    attemptNumber?: number;
+    leaseExpiresAt?: string;
+  };
   try {
     jobConfig = JSON.parse(syncJob.resultJson || "{}");
   } catch {
     throw new Error(`Corrupted job payload for job '${jobId}'.`);
   }
 
-  const validatedUrl = validatePublicResearchUrl(jobConfig.targetUrl);
+  // Enforce valid claim and active lease
+  if (typeof jobOrClaim === "object") {
+    if (
+      jobConfig.claimToken &&
+      jobOrClaim.claimToken &&
+      jobConfig.claimToken !== jobOrClaim.claimToken
+    ) {
+      throw new Error(
+        `Claim token mismatch for job '${jobId}'. Active lease owned by another claimant.`
+      );
+    }
+  } else {
+    // If called directly by string ID, ensure it was claimed by a worker into RUNNING state
+    if (syncJob.status !== "RUNNING") {
+      throw new Error(
+        `Job '${jobId}' cannot be executed directly: status must be claimed and RUNNING. Use a worker to claim pending jobs.`
+      );
+    }
+  }
+
+  // Update progress atomically under active claim
+  await prisma.syncJob.update({
+    where: { id: jobId },
+    data: { progress: 20 },
+  });
+
+  const targetUrl =
+    (typeof jobOrClaim === "object" && jobOrClaim.payload?.targetUrl) || jobConfig.targetUrl;
+
+  if (!targetUrl || typeof targetUrl !== "string") {
+    throw new Error(`Target URL missing in job '${jobId}' payload.`);
+  }
+
+  const validatedUrl = validatePublicResearchUrl(targetUrl);
 
   // 1. Bounded HTTP fetch
   const fetchResult = await fetchPublicResearchPage(validatedUrl, {
@@ -344,18 +397,23 @@ export async function executeLandingPageResearchJob(
         observationsJson: JSON.stringify({ note: "Access restricted by competitor website." }),
         croSignalsJson: JSON.stringify({ note: "Unable to inspect DOM: HTTP 401/403 access restricted." }),
         warningsJson: JSON.stringify([fetchResult.errorMessage || "Access restricted by destination."]),
-        analysisVersion: "11.4.0",
+        analysisVersion: "11.4.1",
         observedAt: new Date(),
       },
     });
 
     await prisma.syncJob.update({
-      where: { id: jobId },
+      where: { id: jobId, status: "RUNNING" },
       data: {
         status: "COMPLETED",
         progress: 100,
         completedAt: new Date(),
         errorMessage: fetchResult.errorMessage,
+        resultJson: JSON.stringify({
+          ...jobConfig,
+          snapshotId: blockedSnapshot.id,
+          accessStatus: "ACCESS_RESTRICTED",
+        }),
       },
     });
 
@@ -510,14 +568,15 @@ export async function executeLandingPageResearchJob(
     }
   }
 
-  // 8. Reconcile job status
+  // 8. Reconcile job status atomically under active claim
   await prisma.syncJob.update({
-    where: { id: jobId },
+    where: { id: jobId, status: "RUNNING" },
     data: {
       status: "COMPLETED",
       progress: 100,
       completedAt: new Date(),
       resultJson: JSON.stringify({
+        ...jobConfig,
         snapshotId: landingSnapshot.id,
         offerSnapshotId: offerSnapshot.id,
         sellingPrice: normalizedOffer.sellingPrice,

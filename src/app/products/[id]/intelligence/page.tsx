@@ -117,18 +117,55 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
       if (!json.success) throw new Error(json.error || "Failed to launch inspection job");
 
       const jobId = json.data.jobId;
-      setInspectFeedback("Research job queued. Analyzing DOM structure and commercial terms...");
+      setInspectFeedback("Research job queued. Checking worker processing...");
 
-      // Poll or execute immediately
-      const execRes = await fetch(`/api/v1/research/jobs/${jobId}?execute=true`);
-      const execJson = await execRes.json();
+      // Poll job status cleanly via read-only GET (no execution side effects)
+      let attempts = 0;
+      const maxAttempts = 12; // 18s ceiling
+      let terminalStatus: string | null = null;
+      let terminalData: any = null;
 
-      if (!execJson.success) throw new Error(execJson.error || "Inspection execution failed");
+      while (attempts < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1500));
+        attempts++;
 
-      setInspectFeedback("Landing page snapshot and CRO analysis completed!");
-      await loadOverview();
+        const statusRes = await fetch(`/api/v1/research/jobs/${jobId}`);
+        const statusJson = await statusRes.json();
+
+        if (statusJson.success && statusJson.data) {
+          const status = statusJson.data.status;
+          if (status === "RUNNING") {
+            setInspectFeedback(`Worker processing inspection... (${attempts * 1.5}s)`);
+          } else if (status === "COMPLETED") {
+            terminalStatus = "COMPLETED";
+            terminalData = statusJson.data;
+            break;
+          } else if (status === "ACCESS_RESTRICTED") {
+            terminalStatus = "ACCESS_RESTRICTED";
+            terminalData = statusJson.data;
+            break;
+          } else if (status === "FAILED") {
+            terminalStatus = "FAILED";
+            terminalData = statusJson.data;
+            break;
+          }
+        }
+      }
+
+      if (terminalStatus === "COMPLETED") {
+        setInspectFeedback("Landing page snapshot and CRO analysis completed!");
+        await loadOverview();
+      } else if (terminalStatus === "ACCESS_RESTRICTED") {
+        setInspectFeedback("Competitor website restricted access (HTTP 401/403). Preserved as restricted snapshot.");
+        await loadOverview();
+      } else if (terminalStatus === "FAILED") {
+        throw new Error(terminalData?.errorMessage || "Inspection job failed during execution.");
+      } else {
+        // Still pending after 18s: worker is offline
+        setInspectFeedback("Job queued. Worker is offline. Run 'npm run kh01:worker' or 'npm run kh01:once' to process.");
+      }
     } catch (err: any) {
-      setInspectFeedback(`Inspection error: ${err.message}`);
+      setInspectFeedback(`Inspection note: ${err.message}`);
     } finally {
       setInspecting(false);
     }

@@ -4,7 +4,6 @@ import {
   resolveAuthorizedResearchContext,
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
-import { executeLandingPageResearchJob } from "@/services/research/landingPageInspectionService";
 
 export async function GET(
   request: NextRequest,
@@ -32,38 +31,34 @@ export async function GET(
       );
     }
 
-    // Optional execute=true for immediate execution in UI if worker is not running
-    const { searchParams } = new URL(request.url);
-    if (searchParams.get("execute") === "true" && job.status === "PENDING") {
-      try {
-        const result = await executeLandingPageResearchJob(job.id);
-        const refreshed = await prisma.syncJob.findUnique({ where: { id: jobId } });
-        return NextResponse.json({
-          success: true,
-          data: {
-            ...refreshed,
-            executionResult: result,
-          },
-          meta: {
-            timestamp: new Date().toISOString(),
-            version: "11.4.0",
-          },
-        });
-      } catch (err: any) {
-        return NextResponse.json({
-          success: false,
-          error: err?.message || "Job execution failed",
-          data: job,
-        }, { status: 500 });
-      }
+    // GET is strictly read-only and idempotent. No mutations or crawler execution allowed.
+    let parsedMetadata: any = {};
+    try {
+      parsedMetadata = JSON.parse(job.resultJson || "{}");
+    } catch {
+      // ignore
     }
 
     return NextResponse.json({
       success: true,
-      data: job,
+      data: {
+        jobId: job.id,
+        workspaceId: job.workspaceId,
+        jobType: job.jobType,
+        status: job.status,
+        progress: job.progress,
+        startedAt: job.startedAt?.toISOString() || null,
+        completedAt: job.completedAt?.toISOString() || null,
+        lastHeartbeatAt: parsedMetadata.leaseExpiresAt || null,
+        snapshotId: parsedMetadata.snapshotId || null,
+        errorCode: parsedMetadata.errorCode || null,
+        errorMessage: job.errorMessage,
+        targetUrl: parsedMetadata.targetUrl || null,
+        attemptNumber: parsedMetadata.attemptNumber || 1,
+      },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "11.4.0",
+        version: "11.4.1",
       },
     });
   } catch (err: any) {
