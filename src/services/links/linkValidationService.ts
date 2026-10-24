@@ -5,6 +5,8 @@
  * Media resolution now delegates to videoSourceResolver.ts (V6.2).
  */
 
+import dns from "dns";
+import net from "net";
 import { validateExternalResourceUrl } from "@/lib/security";
 
 // Re-export media resolution helpers from V6.2 resolver (single source of truth)
@@ -192,6 +194,23 @@ export async function checkExternalLink(
 
   const { sanitizedUrl, hostname = "", provider } = validation;
 
+  try {
+    if (hostname) {
+      await resolveAndValidatePublicDestination(hostname);
+    }
+  } catch (destErr: any) {
+    return {
+      originalUrl: url,
+      resolvedUrl: sanitizedUrl,
+      verificationStatus: "INVALID",
+      verificationMethod: "BLOCKED",
+      errorCode: "SSRF_BLOCKED",
+      errorMessage: destErr.message || "Destination IP validation failed.",
+      provider,
+      verifiedAt: now,
+    };
+  }
+
   // Detect known-inaccessible embed patterns without hitting network
   if (
     sanitizedUrl.includes("facebook.com/ads/archive/render_ad") ||
@@ -333,6 +352,12 @@ export interface PublicFetchOptions {
   maxResponseBytes?: number;
   allowedContentTypes?: string[];
   signal?: AbortSignal;
+  dnsLookupFn?: typeof dns.promises.lookup;
+}
+
+export interface ValidatedDestination {
+  hostname: string;
+  addresses: string[];
 }
 
 export interface PublicPageFetchResult {
@@ -432,7 +457,105 @@ function isPrivateIpv4Octets(b1: number, b2: number, b3: number, b4: number): bo
   if (b1 === 172 && b2 >= 16 && b2 <= 31) return true; // 172.16.0.0/12
   if (b1 === 192 && b2 === 168) return true; // 192.168.0.0/16
   if (b1 === 100 && b2 >= 64 && b2 <= 127) return true; // 100.64.0.0/10 (CGNAT)
+  if (b1 === 192 && b2 === 0 && b3 === 0) return true; // 192.0.0.0/24 (IETF)
+  if (b1 === 192 && b2 === 0 && b3 === 2) return true; // 192.0.2.0/24 (TEST-NET-1)
+  if (b1 === 198 && (b2 === 18 || b2 === 19)) return true; // 198.18.0.0/15 (Benchmarking)
+  if (b1 === 198 && b2 === 51 && b3 === 100) return true; // 198.51.100.0/24 (TEST-NET-2)
+  if (b1 === 203 && b2 === 0 && b3 === 113) return true; // 203.0.113.0/24 (TEST-NET-3)
+  if (b1 >= 224) return true; // 224.0.0.0/4 Multicast & 240.0.0.0/4 Reserved & 255.255.255.255 Broadcast
   return false;
+}
+
+export function isRestrictedIpAddress(ip: string): boolean {
+  let address = ip.trim();
+  if (address.startsWith("[") && address.endsWith("]")) {
+    address = address.slice(1, -1);
+  }
+
+  // IPv4-mapped IPv6 check (e.g. ::ffff:127.0.0.1 or ::ffff:192.168.1.1)
+  const ipv4MappedMatch = address.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
+  if (ipv4MappedMatch) {
+    address = ipv4MappedMatch[1];
+  }
+
+  if (net.isIPv4(address)) {
+    const parts = address.split(".").map((p) => parseInt(p, 10));
+    if (parts.length !== 4 || parts.some((p) => isNaN(p) || p < 0 || p > 255)) {
+      return true;
+    }
+    return isPrivateIpv4Octets(parts[0], parts[1], parts[2], parts[3]);
+  }
+
+  if (net.isIPv6(address)) {
+    const lower = address.toLowerCase();
+    if (lower === "::1" || lower === "::") return true;
+    if (lower.startsWith("fe80:") || lower.startsWith("fe9") || lower.startsWith("fea") || lower.startsWith("feb")) return true; // fe80::/10 link-local
+    if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7 unique local
+    if (lower.startsWith("ff")) return true; // ff00::/8 multicast
+    if (lower.startsWith("2001:db8:")) return true; // 2001:db8::/32 documentation
+    if (lower.startsWith("::ffff:")) return true; // any other IPv4-mapped IPv6
+    if (lower === "fd00:ec2::254") return true; // AWS IMDSv6
+    return false;
+  }
+
+  return false;
+}
+
+/**
+ * Resolves destination IP addresses and validates against SSRF, DNS rebinding,
+ * private networks, loopback, link-local, and cloud metadata.
+ */
+export async function resolveAndValidatePublicDestination(
+  hostname: string,
+  options?: { dnsLookupFn?: typeof dns.promises.lookup }
+): Promise<ValidatedDestination> {
+  const cleanHost = hostname.replace(/^\[|\]$/g, "").trim().toLowerCase();
+
+  // If hostname is directly an IP or encoded host that is restricted
+  if (isRestrictedIpOrEncodedHost(cleanHost) || isRestrictedIpAddress(cleanHost)) {
+    throw new Error(
+      `Access to restricted, local, private, or cloud metadata destination '${cleanHost}' is prohibited.`
+    );
+  }
+
+  // If cleanHost is already a valid public IP literal (e.g. 8.8.8.8)
+  if (net.isIP(cleanHost)) {
+    return {
+      hostname: cleanHost,
+      addresses: [cleanHost],
+    };
+  }
+
+  // Resolve DNS records (A and AAAA)
+  const lookup = options?.dnsLookupFn || dns.promises.lookup;
+  let records: dns.LookupAddress[] = [];
+
+  try {
+    const result = await lookup(cleanHost, { all: true });
+    records = Array.isArray(result) ? result : [result];
+  } catch (err: any) {
+    throw new Error(`DNS resolution failed for host '${cleanHost}': ${err.message || "Unknown error"}`);
+  }
+
+  if (!records || records.length === 0) {
+    throw new Error(`No DNS records found for host '${cleanHost}'.`);
+  }
+
+  const addresses: string[] = [];
+  for (const record of records) {
+    const ip = record.address;
+    if (isRestrictedIpAddress(ip) || isRestrictedIpOrEncodedHost(ip)) {
+      throw new Error(
+        `DNS resolution for host '${cleanHost}' resolved to restricted destination IP '${ip}'. Connection prohibited.`
+      );
+    }
+    addresses.push(ip);
+  }
+
+  return {
+    hostname: cleanHost,
+    addresses,
+  };
 }
 
 /**
@@ -508,6 +631,7 @@ export async function fetchPublicResearchPage(
     maxResponseBytes = 2 * 1024 * 1024, // 2 MB limit
     allowedContentTypes = ["text/html", "application/xhtml+xml", "application/json", "text/plain"],
     signal,
+    dnsLookupFn,
   } = options;
 
   const startTime = Date.now();
@@ -527,13 +651,33 @@ export async function fetchPublicResearchPage(
       // Re-validate current URL at each step (including redirects)
       const currentValidation = validatePublicResearchUrl(currentUrl);
 
+      // Verify destination IP resolution to block DNS rebinding and private addresses
+      try {
+        await resolveAndValidatePublicDestination(currentValidation.hostname, { dnsLookupFn });
+      } catch (destErr: any) {
+        clearTimeout(timeoutId);
+        return {
+          originalUrl: validatedUrl.originalUrl,
+          finalUrl: currentUrl,
+          httpStatus: 0,
+          statusClassification: "FAILED",
+          contentType: null,
+          contentLengthBytes: 0,
+          content: null,
+          headers: {},
+          isTruncated: false,
+          durationMs: Date.now() - startTime,
+          errorMessage: destErr.message || "Destination IP validation failed.",
+        };
+      }
+
       const response = await fetch(currentValidation.normalizedUrl, {
         method: "GET",
         redirect: "manual", // Hop-by-hop manual verification
         signal: controller.signal,
         headers: {
           "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (SWAI Research Bot)",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 (SWAI Research Bot; +https://github.com/quocan050302/Shopify-Search)",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "en-US,en;q=0.9",
         },

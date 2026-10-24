@@ -15,6 +15,7 @@ import {
 import {
   validatePublicResearchUrl,
   fetchPublicResearchPage,
+  resolveAndValidatePublicDestination,
 } from "@/services/links/linkValidationService";
 import {
   canonicalizeProductUrl,
@@ -405,6 +406,83 @@ describe("KH-01.A — Security, Data Integrity & Evidence Foundation", () => {
       expect(() => validatePublicResearchUrl("javascript:alert(1)")).toThrow(
         /unsupported url scheme/i
       );
+    });
+
+    it("resolveAndValidatePublicDestination allows valid public addresses", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "93.184.216.34", family: 4 },
+      ]);
+      const res = await resolveAndValidatePublicDestination("example.com", {
+        dnsLookupFn: mockDns as any,
+      });
+      expect(res.hostname).toBe("example.com");
+      expect(res.addresses).toEqual(["93.184.216.34"]);
+    });
+
+    it("resolveAndValidatePublicDestination rejects private IPv4 DNS resolution", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "10.0.0.1", family: 4 },
+      ]);
+      await expect(
+        resolveAndValidatePublicDestination("attacker-controlled.example.com", {
+          dnsLookupFn: mockDns as any,
+        })
+      ).rejects.toThrow(/resolved to restricted destination IP '10.0.0.1'/i);
+    });
+
+    it("resolveAndValidatePublicDestination rejects IPv6 loopback / unique local", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "::1", family: 6 },
+      ]);
+      await expect(
+        resolveAndValidatePublicDestination("attacker.example.com", {
+          dnsLookupFn: mockDns as any,
+        })
+      ).rejects.toThrow(/resolved to restricted destination IP '::1'/i);
+
+      const mockDnsUla = vi.fn().mockResolvedValue([
+        { address: "fc00::1", family: 6 },
+      ]);
+      await expect(
+        resolveAndValidatePublicDestination("attacker.example.com", {
+          dnsLookupFn: mockDnsUla as any,
+        })
+      ).rejects.toThrow(/resolved to restricted destination IP 'fc00::1'/i);
+    });
+
+    it("resolveAndValidatePublicDestination rejects IPv4-mapped IPv6", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "::ffff:127.0.0.1", family: 6 },
+      ]);
+      await expect(
+        resolveAndValidatePublicDestination("attacker.example.com", {
+          dnsLookupFn: mockDns as any,
+        })
+      ).rejects.toThrow(/resolved to restricted destination IP '::ffff:127.0.0.1'/i);
+    });
+
+    it("resolveAndValidatePublicDestination rejects mixed public and private candidate IPs", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "93.184.216.34", family: 4 },
+        { address: "192.168.1.100", family: 4 },
+      ]);
+      await expect(
+        resolveAndValidatePublicDestination("mixed.example.com", {
+          dnsLookupFn: mockDns as any,
+        })
+      ).rejects.toThrow(/resolved to restricted destination IP '192.168.1.100'/i);
+    });
+
+    it("fetchPublicResearchPage fails closed when DNS resolves to a restricted address", async () => {
+      const mockDns = vi.fn().mockResolvedValue([
+        { address: "169.254.169.254", family: 4 },
+      ]);
+      const validated = validatePublicResearchUrl("https://imds.example.com/product");
+      const result = await fetchPublicResearchPage(validated, {
+        dnsLookupFn: mockDns as any,
+      });
+      expect(result.statusClassification).toBe("FAILED");
+      expect(result.errorMessage).toMatch(/restricted destination IP/i);
     });
   });
 
