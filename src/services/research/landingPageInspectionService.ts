@@ -32,22 +32,18 @@ import {
 import {
   validatePublicResearchUrl,
   fetchPublicResearchPage,
-  ValidatedResearchUrl,
 } from "@/services/links/linkValidationService";
 import {
   ParsedPublicLandingPage,
   extractStructuredProductOffer,
   extractPromotionalOffer,
   normalizeCompetitorOffer,
-  persistCompetitorOfferSnapshot,
   NormalizedCompetitorOffer,
 } from "./offerExtractionService";
 import {
   analyzeCompetitorFunnel,
   CompetitorFunnelAssessment,
 } from "./funnelAnalysisService";
-import { saveLandingPageSnapshot } from "./landingPageSnapshotService";
-import { createResearchEvidence } from "./evidenceService";
 import { getAdvertisementDetails } from "@/services/ads/adService";
 import { persistCompletedResearchResult } from "./researchResultPersistenceService";
 

@@ -339,7 +339,7 @@ export async function renewKh01Lease(claim: ClaimedKh01Job): Promise<LeaseRenewa
 export async function acquireResearchSlot(
   workerId: string,
   jobId: string,
-  claimToken: string = crypto.randomUUID()
+  _claimToken: string = crypto.randomUUID()
 ): Promise<ResearchSlotLease | null> {
   const maxConcurrency = getKh01MaxConcurrency();
 
@@ -404,9 +404,9 @@ export async function renewResearchSlot(
  * Explicit research slot release helper.
  */
 export async function releaseResearchSlot(
-  workerId: string,
-  jobId: string,
-  claimToken: string
+  _workerId: string,
+  _jobId: string,
+  _claimToken?: string
 ): Promise<boolean> {
   return true;
 }
