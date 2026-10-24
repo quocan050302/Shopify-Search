@@ -18,6 +18,35 @@ import {
 
 export type { ClaimedKh01Job };
 
+export type ResearchJobStatus =
+  | "PENDING"
+  | "RUNNING"
+  | "COMPLETED"
+  | "PARTIAL"
+  | "ACCESS_RESTRICTED"
+  | "RATE_LIMITED"
+  | "FAILED"
+  | "CANCELLED";
+
+export interface Kh01JobInput {
+  productId?: string | null;
+  adId?: string | null;
+  targetUrl: string;
+  forceRefresh?: boolean;
+  requestedAt?: string;
+}
+
+export interface Kh01JobRuntime {
+  workerId: string | null;
+  claimToken: string | null;
+  leaseExpiresAt: string | null;
+  lastHeartbeatAt: string | null;
+  attemptNumber: number;
+  cancellationRequested?: boolean;
+  recoveredAt?: string;
+  failedAt?: string;
+}
+
 export interface Kh01JobResult {
   jobId: string;
   status: "COMPLETED" | "FAILED" | "ACCESS_RESTRICTED";
@@ -34,9 +63,30 @@ let isRunning = false;
 let isPolling = false;
 let pollTimer: NodeJS.Timeout | null = null;
 let currentAbortController: AbortController | null = null;
+let currentExecutingJobId: string | null = null;
 
 const WORKER_ID = `kh01-worker-${process.pid}-${Date.now().toString(36)}`;
-const LEASE_DURATION_MS = 5 * 60 * 1000; // 5 minute lease
+export const KH01_LEASE_DURATION_MS = 60 * 1000; // 60 seconds (canonical lease duration)
+
+/**
+ * Validates that the input stored in SyncJob.resultJson contains valid KH-01 parameters.
+ */
+export function assertValidJobPayload(input: unknown): Kh01JobInput {
+  if (!input || typeof input !== "object") {
+    throw new Error("Job payload must be a non-empty object.");
+  }
+  const rec = input as Record<string, unknown>;
+  if (!rec.targetUrl || typeof rec.targetUrl !== "string") {
+    throw new Error("Job payload missing valid 'targetUrl' string.");
+  }
+  return {
+    productId: typeof rec.productId === "string" ? rec.productId : null,
+    adId: typeof rec.adId === "string" ? rec.adId : null,
+    targetUrl: rec.targetUrl,
+    forceRefresh: Boolean(rec.forceRefresh),
+    requestedAt: typeof rec.requestedAt === "string" ? rec.requestedAt : new Date().toISOString(),
+  };
+}
 
 /**
  * Asserts that the specified worker and claim token currently hold an active, unexpired lease.
@@ -51,6 +101,9 @@ export async function assertActiveJobLease(
   });
   if (!job) {
     throw new Error(`Research job '${jobId}' not found.`);
+  }
+  if (job.jobType !== "KH01_LANDING_PAGE_RESEARCH") {
+    throw new Error(`Job '${jobId}' is not a KH01_LANDING_PAGE_RESEARCH job.`);
   }
   if (job.status !== "RUNNING") {
     throw new Error(`Job '${jobId}' is not running (status: ${job.status}).`);
@@ -69,16 +122,23 @@ export async function assertActiveJobLease(
     );
   }
 
+  if (meta.cancellationRequested) {
+    throw new Error(`Job '${jobId}' has been cancelled.`);
+  }
+
   if (meta.leaseExpiresAt && new Date(meta.leaseExpiresAt).getTime() < Date.now()) {
     throw new Error(`Lease expired for job '${jobId}'.`);
   }
 }
 
 /**
- * Renews the lease expiration timestamp for an active claimed job.
+ * Renews the lease expiration timestamp and heartbeat for an active claimed job.
  */
 export async function renewKh01Lease(claim: ClaimedKh01Job): Promise<void> {
   await assertActiveJobLease(claim.id, claim.workerId, claim.claimToken);
+  const now = new Date();
+  const newLeaseExpiry = new Date(now.getTime() + KH01_LEASE_DURATION_MS);
+
   const job = await prisma.syncJob.findUnique({ where: { id: claim.id } });
   let payload: any = {};
   try {
@@ -87,12 +147,16 @@ export async function renewKh01Lease(claim: ClaimedKh01Job): Promise<void> {
     // ignore
   }
 
+  // Conditional update requiring status RUNNING
   await prisma.syncJob.update({
     where: { id: claim.id, status: "RUNNING" },
     data: {
       resultJson: JSON.stringify({
         ...payload,
-        leaseExpiresAt: new Date(Date.now() + LEASE_DURATION_MS),
+        workerId: claim.workerId,
+        claimToken: claim.claimToken,
+        leaseExpiresAt: newLeaseExpiry.toISOString(),
+        lastHeartbeatAt: now.toISOString(),
       }),
     },
   });
@@ -118,7 +182,7 @@ export async function persistKh01Heartbeat(
           status: state,
           startedAt: state === "RUNNING" ? new Date() : existing.startedAt,
           completedAt: state === "STOPPED" ? new Date() : null,
-          resultJson: JSON.stringify({ workerId, activeJobId: jobId, timestamp: new Date() }),
+          resultJson: JSON.stringify({ workerId, activeJobId: jobId, timestamp: new Date().toISOString() }),
         },
       });
     } else {
@@ -132,7 +196,7 @@ export async function persistKh01Heartbeat(
             status: state,
             startedAt: new Date(),
             completedAt: state === "STOPPED" ? new Date() : null,
-            resultJson: JSON.stringify({ workerId, activeJobId: jobId, timestamp: new Date() }),
+            resultJson: JSON.stringify({ workerId, activeJobId: jobId, timestamp: new Date().toISOString() }),
           },
         });
       }
@@ -158,17 +222,30 @@ export async function claimPendingKh01Job(workerId: string = WORKER_ID): Promise
     return null;
   }
 
+  // Validate payload before claiming
+  let existingPayload: any = {};
+  try {
+    existingPayload = JSON.parse(pending.resultJson || "{}");
+    assertValidJobPayload(existingPayload);
+  } catch (err: any) {
+    // Malformed input must not be claimed; fail it safely
+    await prisma.syncJob.update({
+      where: { id: pending.id },
+      data: {
+        status: "FAILED",
+        completedAt: new Date(),
+        errorMessage: `Invalid job payload: ${err?.message || "parse error"}`,
+      },
+    });
+    return null;
+  }
+
   // Atomically transition from PENDING to RUNNING with worker claim token
   try {
-    let existingPayload: any = {};
-    try {
-      existingPayload = JSON.parse(pending.resultJson || "{}");
-    } catch {
-      // ignore
-    }
-
     const claimToken = crypto.randomUUID();
     const attemptNumber = (existingPayload.attemptNumber || 0) + 1;
+    const now = new Date();
+    const leaseExpiresAt = new Date(now.getTime() + KH01_LEASE_DURATION_MS);
 
     const updated = await prisma.syncJob.update({
       where: {
@@ -177,13 +254,14 @@ export async function claimPendingKh01Job(workerId: string = WORKER_ID): Promise
       },
       data: {
         status: "RUNNING",
-        startedAt: new Date(),
+        startedAt: now,
         resultJson: JSON.stringify({
           ...existingPayload,
           workerId,
           claimToken,
           attemptNumber,
-          leaseExpiresAt: new Date(Date.now() + LEASE_DURATION_MS),
+          leaseExpiresAt: leaseExpiresAt.toISOString(),
+          lastHeartbeatAt: now.toISOString(),
         }),
       },
     });
@@ -206,6 +284,7 @@ export async function claimPendingKh01Job(workerId: string = WORKER_ID): Promise
 
 /**
  * Executes a claimed KH-01 job safely with an AbortSignal.
+ * Guarded against stale worker overwrite if lease was lost during execution.
  */
 export async function executeKh01Job(job: ClaimedKh01Job, signal?: AbortSignal): Promise<Kh01JobResult> {
   try {
@@ -218,42 +297,73 @@ export async function executeKh01Job(job: ClaimedKh01Job, signal?: AbortSignal):
     };
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
-    await prisma.syncJob.update({
-      where: { id: job.id, status: "RUNNING" },
-      data: {
-        status: "FAILED",
-        completedAt: new Date(),
-        errorMessage: errorMsg,
-      },
-    });
 
-    return {
-      jobId: job.id,
-      status: "FAILED",
-      errorMessage: errorMsg,
-    };
+    // Verify worker still owns the active lease before writing failure state
+    let stillOwned = false;
+    try {
+      await assertActiveJobLease(job.id, job.workerId, job.claimToken);
+      stillOwned = true;
+    } catch {
+      stillOwned = false;
+    }
+
+    if (stillOwned) {
+      let currentPayload: any = {};
+      const currentJob = await prisma.syncJob.findUnique({ where: { id: job.id } });
+      try {
+        currentPayload = JSON.parse(currentJob?.resultJson || "{}");
+      } catch {
+        // ignore
+      }
+
+      await prisma.syncJob.update({
+        where: { id: job.id, status: "RUNNING" },
+        data: {
+          status: "FAILED",
+          completedAt: new Date(),
+          errorMessage: errorMsg,
+          resultJson: JSON.stringify({
+            ...currentPayload,
+            failedAt: new Date().toISOString(),
+            errorMessage: errorMsg,
+          }),
+        },
+      });
+
+      return {
+        jobId: job.id,
+        status: "FAILED",
+        errorMessage: errorMsg,
+      };
+    } else {
+      // Lease was lost or claimed by another worker; do NOT overwrite
+      return {
+        jobId: job.id,
+        status: "FAILED",
+        errorMessage: `Claim lost or expired for job '${job.id}'. State not overwritten: ${errorMsg}`,
+      };
+    }
   }
 }
 
 /**
- * Recovers jobs that were interrupted due to process restart or server crash.
+ * Recovers jobs that were interrupted due to process restart or worker lease expiry.
  * Strictly preserves original job research inputs (targetUrl, productId, adId).
+ * Enforces single attempt increment rule: attemptNumber increments strictly upon claim, NOT during recovery.
  */
 export async function recoverInterruptedKh01Jobs(): Promise<RecoverySummary> {
-  const expiredThreshold = new Date(Date.now() - LEASE_DURATION_MS);
-
-  const staleJobs = await prisma.syncJob.findMany({
+  const runningJobs = await prisma.syncJob.findMany({
     where: {
       jobType: "KH01_LANDING_PAGE_RESEARCH",
       status: "RUNNING",
-      startedAt: { lt: expiredThreshold },
     },
   });
 
+  const now = Date.now();
   let recoveredCount = 0;
   let abandonedCount = 0;
 
-  for (const job of staleJobs) {
+  for (const job of runningJobs) {
     let existingData: any = {};
     try {
       if (job.resultJson) existingData = JSON.parse(job.resultJson);
@@ -261,8 +371,25 @@ export async function recoverInterruptedKh01Jobs(): Promise<RecoverySummary> {
       // ignore parse error
     }
 
+    // Recover using actual lease expiration, not merely original start time
+    const leaseExpiresAtMs = existingData.leaseExpiresAt
+      ? new Date(existingData.leaseExpiresAt).getTime()
+      : 0;
+    const isExpired =
+      leaseExpiresAtMs > 0
+        ? leaseExpiresAtMs < now
+        : job.startedAt
+        ? now - job.startedAt.getTime() > KH01_LEASE_DURATION_MS
+        : true;
+
+    if (!isExpired) {
+      // Job is actively running with valid lease; do not recover
+      continue;
+    }
+
     const attempt = existingData.attemptNumber || 1;
 
+    // Retry budget: 3 attempts. Attempt counter increments only when claimed, not during recovery
     if (attempt < 3) {
       await prisma.syncJob.update({
         where: { id: job.id, status: "RUNNING" },
@@ -271,11 +398,12 @@ export async function recoverInterruptedKh01Jobs(): Promise<RecoverySummary> {
           startedAt: null,
           resultJson: JSON.stringify({
             ...existingData,
-            attemptNumber: attempt + 1,
-            recoveredAt: new Date(),
+            attemptNumber: attempt, // Retain attempt number; next claim increments it
+            recoveredAt: new Date().toISOString(),
             workerId: null,
             claimToken: null,
             leaseExpiresAt: null,
+            lastHeartbeatAt: null,
           }),
         },
       });
@@ -290,7 +418,7 @@ export async function recoverInterruptedKh01Jobs(): Promise<RecoverySummary> {
           resultJson: JSON.stringify({
             ...existingData,
             attemptNumber: attempt,
-            failedAt: new Date(),
+            failedAt: new Date().toISOString(),
           }),
         },
       });

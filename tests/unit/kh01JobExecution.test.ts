@@ -9,6 +9,7 @@ import {
   assertActiveJobLease,
   renewKh01Lease,
   recoverInterruptedKh01Jobs,
+  executeKh01Job,
 } from "@/workers/kh01Worker";
 import { executeLandingPageResearchJob } from "@/services/research/landingPageInspectionService";
 
@@ -212,9 +213,16 @@ describe("KH-01 Job Engine — Atomic Claims, Leases & Recovery", () => {
     expect(payload.productId).toBe("prod_preserved_99");
     expect(payload.adId).toBe("ad_preserved_88");
     expect(payload.targetUrl).toBe("https://example.com/products/must-preserve-url");
-    expect(payload.attemptNumber).toBe(2);
+    // Attempt number is strictly preserved during recovery (Task 082)
+    expect(payload.attemptNumber).toBe(1);
     expect(payload.workerId).toBeNull();
     expect(payload.claimToken).toBeNull();
+
+    // Reclaiming by a new worker increments the attempt to 2 exactly once
+    const reclaimed = await claimPendingKh01Job("worker_beta");
+    expect(reclaimed).not.toBeNull();
+    expect(reclaimed?.id).toBe(TEST_JOB_ID_1);
+    expect(reclaimed?.attemptNumber).toBe(2);
   });
 
   it("recoverInterruptedKh01Jobs transitions to FAILED when maximum attempts are exhausted", async () => {
@@ -255,8 +263,70 @@ describe("KH-01 Job Engine — Atomic Claims, Leases & Recovery", () => {
       },
     });
 
-    await expect(executeLandingPageResearchJob(unclaimed.id)).rejects.toThrow(
+    await expect(executeLandingPageResearchJob(unclaimed.id as any)).rejects.toThrow(
       /status must be claimed and RUNNING/
     );
+  });
+
+  it("assertActiveJobLease rejects job if cancellation has been requested", async () => {
+    const cancelledJob = await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        resultJson: JSON.stringify({
+          workerId: "worker_cancelled",
+          claimToken: "token_canc_1",
+          leaseExpiresAt: new Date(Date.now() + 60000),
+          cancellationRequested: true,
+        }),
+      },
+    });
+
+    await expect(
+      assertActiveJobLease(cancelledJob.id, "worker_cancelled", "token_canc_1")
+    ).rejects.toThrow(/cancelled/i);
+  });
+
+  it("executeKh01Job prevents stale worker from overwriting state if claim ownership was lost", async () => {
+    // Worker A claims job
+    await prisma.syncJob.create({
+      data: {
+        id: TEST_JOB_ID_1,
+        workspaceId: TEST_WORKSPACE,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        resultJson: JSON.stringify({
+          workerId: "worker_b",
+          claimToken: "token_b_new",
+          leaseExpiresAt: new Date(Date.now() + 60000),
+          targetUrl: "https://example.com/stale-test",
+        }),
+      },
+    });
+
+    // Stale worker A tries to report failure with its old token
+    const staleClaim: any = {
+      id: TEST_JOB_ID_1,
+      workspaceId: TEST_WORKSPACE,
+      jobType: "KH01_LANDING_PAGE_RESEARCH",
+      status: "RUNNING",
+      workerId: "worker_a_stale",
+      claimToken: "token_a_stale",
+      attemptNumber: 1,
+    };
+
+    // Simulate executeKh01Job failing under stale worker A
+    const res = await executeKh01Job(staleClaim);
+    expect(res.status).toBe("FAILED");
+    expect(res.errorMessage).toContain("Claim lost or expired");
+
+    // DB state must remain owned by Worker B with status RUNNING
+    const inDb = await prisma.syncJob.findUnique({ where: { id: TEST_JOB_ID_1 } });
+    expect(inDb?.status).toBe("RUNNING");
+    const meta = JSON.parse(inDb?.resultJson || "{}");
+    expect(meta.workerId).toBe("worker_b");
+    expect(meta.claimToken).toBe("token_b_new");
   });
 });

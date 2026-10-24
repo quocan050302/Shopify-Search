@@ -49,7 +49,8 @@ export async function GET(
         progress: job.progress,
         startedAt: job.startedAt?.toISOString() || null,
         completedAt: job.completedAt?.toISOString() || null,
-        lastHeartbeatAt: parsedMetadata.leaseExpiresAt || null,
+        lastHeartbeatAt: parsedMetadata.lastHeartbeatAt || null,
+        leaseExpiresAt: parsedMetadata.leaseExpiresAt || null,
         snapshotId: parsedMetadata.snapshotId || null,
         errorCode: parsedMetadata.errorCode || null,
         errorMessage: job.errorMessage,
@@ -58,7 +59,7 @@ export async function GET(
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "11.4.1",
+        version: "11.4.2",
       },
     });
   } catch (err: any) {

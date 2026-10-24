@@ -340,28 +340,42 @@ export async function executeLandingPageResearchJob(
   }
 
   // Enforce valid claim and active lease
-  if (typeof jobOrClaim === "object") {
-    if (
-      jobConfig.claimToken &&
-      jobOrClaim.claimToken &&
-      jobConfig.claimToken !== jobOrClaim.claimToken
-    ) {
-      throw new Error(
-        `Claim token mismatch for job '${jobId}'. Active lease owned by another claimant.`
-      );
-    }
-  } else {
-    // If called directly by string ID, ensure it was claimed by a worker into RUNNING state
-    if (syncJob.status !== "RUNNING") {
-      throw new Error(
-        `Job '${jobId}' cannot be executed directly: status must be claimed and RUNNING. Use a worker to claim pending jobs.`
-      );
-    }
+  if (
+    !jobOrClaim ||
+    typeof jobOrClaim !== "object" ||
+    !("claimToken" in jobOrClaim) ||
+    !jobOrClaim.claimToken ||
+    !jobOrClaim.workerId
+  ) {
+    throw new Error(
+      `Job '${jobId}' cannot be executed directly: status must be claimed and RUNNING. Use a worker to claim pending jobs.`
+    );
+  }
+
+  const claim = jobOrClaim as ClaimedKh01Job;
+  if (syncJob.status !== "RUNNING") {
+    throw new Error(`Job '${jobId}' is not running (status: ${syncJob.status}).`);
+  }
+
+  if (
+    jobConfig.workerId !== claim.workerId ||
+    jobConfig.claimToken !== claim.claimToken
+  ) {
+    throw new Error(
+      `Claim mismatch: Worker '${claim.workerId}' does not own active lease on job '${jobId}'.`
+    );
+  }
+
+  if (
+    jobConfig.leaseExpiresAt &&
+    new Date(jobConfig.leaseExpiresAt).getTime() < Date.now()
+  ) {
+    throw new Error(`Lease expired for job '${jobId}'.`);
   }
 
   // Update progress atomically under active claim
   await prisma.syncJob.update({
-    where: { id: jobId },
+    where: { id: jobId, status: "RUNNING" },
     data: { progress: 20 },
   });
 
