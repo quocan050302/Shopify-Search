@@ -1,0 +1,19 @@
+{
+  "transport": "stdio",
+  "requestedKeyword": "gadget",
+  "requestedMarket": "US",
+  "requestedLimit": 2,
+  "resultSetId": "4b62f42d96b54f589483c37820e2ff0e",
+  "upstreamRequestObserved": true,
+  "upstreamResponseObserved": true,
+  "isFixture": false,
+  "adsReturned": 2,
+  "validSourceIds": 2,
+  "missingLibraryIds": 0,
+  "duplicateLibraryIds": [],
+  "recordsWithAdvertisers": 2,
+  "recordsWithSourceUrls": 2,
+  "sourceClassification": "REAL_UPSTREAM",
+  "status": "PASSED",
+  "errors": []
+}
