@@ -149,6 +149,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
           <div className="relative">
             <input
               id="meta-keywords-input"
+              data-testid="meta-keyword-input"
               type="text"
               value={keywordsInput}
               onChange={(e) => {
@@ -320,6 +321,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
             <Button
               type="button"
               variant="secondary"
+              data-testid="meta-diagnostics-open"
               onClick={onOpenSetupGuide}
               className="text-slate-300 border-slate-700 hover:border-slate-500"
             >
@@ -338,6 +340,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
             <Button
               type="submit"
               variant="primary"
+              data-testid="meta-research-submit"
               isLoading={isSubmitting || isSubmittingLocal}
               disabled={!researchAction.enabled || isSubmitting || isSubmittingLocal}
               leftIcon={<Play className="h-4 w-4 fill-current" />}

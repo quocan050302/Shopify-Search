@@ -45,7 +45,7 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
     await dbHandle.prisma.dataSource.create({
       data: {
         id: "ds_meta_disc_e2e",
-        name: "META_COLLECTOR",
+        name: "meta-ads-collector",
         displayName: "Meta Ads Collector",
         capabilities: JSON.stringify(["KEYWORD_SEARCH"]),
         supportedRegions: JSON.stringify(["US"]),
@@ -57,20 +57,64 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
       data: {
         id: runId,
         workspaceId,
-        providerId: "META_COLLECTOR",
+        providerId: "meta-ads-collector",
         status: "COMPLETED",
         runMode: "MANUAL",
         queryConfigJson: JSON.stringify({ keywords: ["orthopedic dog bed"], market: "US" }),
-        actualRetrievedCount: 12,
-        validCount: 12,
-        newUniqueCount: 12,
+        actualRetrievedCount: 1,
+        validCount: 1,
+        newUniqueCount: 1,
         existingDuplicateCount: 0,
       },
     });
 
+    // Seed Advertiser, CompetitorAd, and DiscoveryRunAd for Exact Run verification
+    const adv = await dbHandle.prisma.advertiser.create({
+      data: {
+        id: "adv_meta_e2e_01",
+        name: "PupRest Co",
+        domain: "puprest.com",
+        platform: "META",
+      },
+    });
+
+    const adId = "ad_e2e_exact_001";
+    await dbHandle.prisma.competitorAd.create({
+      data: {
+        id: adId,
+        advertiserId: adv.id,
+        dataSourceId: "ds_meta_disc_e2e",
+        platform: "META",
+        externalAdId: "meta_e2e_001",
+        originalAdUrl: "https://facebook.com/ads/library/?id=meta_e2e_001",
+        headline: "Luxury Orthopedic Dog Bed",
+        bodyText: "Memory foam orthopedic dog bed with washable cover",
+        callToAction: "Shop Now",
+        landingPageUrl: "https://example.com/dog-bed",
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        status: "ACTIVE",
+        targetMarket: "US",
+        dataConfidence: "VERIFIED",
+      },
+    });
+
+    await dbHandle.prisma.discoveryRunAd.create({
+      data: {
+        runId,
+        adId,
+        workspaceId,
+        providerId: "meta-ads-collector",
+        sourceUrl: "https://facebook.com/ads/library/?id=meta_e2e_001",
+        ingestOutcome: "NEW",
+      },
+    });
+
+    const adminApiKey = "test_meta_discovery_e2e_token";
     // Start real Next.js server against isolated DB
     serverHandle = await startSwaiTestServer({
       databaseUrl: dbHandle.url,
+      adminApiKey,
       mode: "production",
       timeoutMs: 30000,
     });
@@ -85,6 +129,10 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
 
     context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
+      extraHTTPHeaders: {
+        authorization: `Bearer ${serverHandle.adminApiKey}`,
+        "x-workspace-id": workspaceId,
+      },
     });
     page = await context.newPage();
   }, 45000);
@@ -120,7 +168,7 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
       timeout: 20000,
     });
 
-    const keywordInput = page.locator("input[placeholder*='keyword' i], input[type='text'], textarea").first();
+    const keywordInput = page.locator("[data-testid='meta-keyword-input'], input[placeholder*='keyword' i], input[type='text']").first();
     if (await keywordInput.isVisible()) {
       await keywordInput.fill("pet hair remover");
       const val = await keywordInput.inputValue();

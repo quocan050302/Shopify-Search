@@ -168,7 +168,7 @@ function ExactRunContextBanner({
       </div>
       <button
         onClick={onExit}
-        data-testid="exit-run-view-btn"
+        data-testid="exact-run-exit"
         className="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
       >
         Exit Run View ✕
@@ -618,7 +618,11 @@ function ExplorerContent() {
             {ads.map((ad) => {
               const evScore = ad.evergreenScore;
               return (
-                <div key={ad.id || ad.adId} className="relative group">
+                <div
+                  key={ad.id || ad.adId}
+                  className="relative group"
+                  data-testid={requestId ? "exact-run-ad-card" : "ad-card"}
+                >
                   <AdCard
                     ad={{
                       ...ad,

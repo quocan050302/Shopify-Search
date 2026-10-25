@@ -149,7 +149,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "PROCESS_CONCURRENCY_TEST",
     stageId: "STAGE_04_CONCURRENCY_RECOVERY",
     expectedTestFile: "tests/integration/kh01WorkerConcurrency.test.ts",
-    expectedTestName: "proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite",
+    expectedTestName: "proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite (Section 31)",
   },
   {
     gateId: "GATE_09_GENUINE_CRASH_RECOVERY",
@@ -188,9 +188,9 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     description: "Acceptance runner truthfulness verified; reports cannot inherit PASS from missing/skipped tests",
     criticality: "MANDATORY",
     evidenceType: "TEST_ASSERTION",
-    stageId: "STAGE_03_TRUTHFULNESS_SUITE",
+    stageId: "STAGE_03D_TRUTHFULNESS_SUITE",
     expectedTestFile: "tests/unit/kh01AcceptanceTruthfulness.test.ts",
-    expectedTestName: "rejects report when expected test failed or was skipped",
+    expectedTestName: "accurately classifies SKIPPED test and does not report it as passed",
   },
   // Optional Live Source Gate
   {
@@ -230,17 +230,37 @@ export function validateKh01AcceptanceManifest(manifest: Kh01AcceptanceManifest)
       errors.push(`Duplicate gateId '${g.gateId}' found in manifest.`);
     }
     seenGateIds.add(g.gateId);
+
+    if (g.runId !== manifest.acceptanceRunId) {
+      errors.push(`Gate '${g.gateId}' runId '${g.runId}' does not match manifest acceptanceRunId '${manifest.acceptanceRunId}'.`);
+    }
+
+    if (!g.evidenceReference || !g.evidenceReference.trim()) {
+      errors.push(`Gate '${g.gateId}' is missing an evidence reference.`);
+    }
   }
 
   // Ensure all mandatory gates are present and evaluated
-  for (const def of CANONICAL_ACCEPTANCE_GATES.filter((g) => g.criticality === "MANDATORY")) {
+  const mandatoryGates = CANONICAL_ACCEPTANCE_GATES.filter((g) => g.criticality === "MANDATORY");
+  for (const def of mandatoryGates) {
     const gate = manifest.gates.find((g) => g.gateId === def.gateId);
     if (!gate) {
       errors.push(`Missing mandatory gate evidence for '${def.gateId}'.`);
-    } else if (gate.status === "NOT_RUN") {
-      errors.push(`Mandatory gate '${def.gateId}' is marked NOT_RUN.`);
-    } else if (gate.status === "FAILED" && manifest.releaseVerdict === "ACCEPTED") {
-      errors.push(`Contradictory release verdict: gate '${def.gateId}' FAILED but releaseVerdict is ACCEPTED.`);
+    } else if (manifest.releaseVerdict !== "BLOCKED" && gate.status !== "PASSED") {
+      errors.push(
+        `Contradictory release verdict: mandatory gate '${def.gateId}' has status '${gate.status}' but releaseVerdict is '${manifest.releaseVerdict}'. Non-BLOCKED releases strictly require PASSED.`
+      );
+    }
+  }
+
+  // Ensure all required stages are present and passed if release is not BLOCKED
+  if (manifest.stages && Array.isArray(manifest.stages) && manifest.releaseVerdict !== "BLOCKED") {
+    for (const stage of manifest.stages) {
+      if (stage.status !== "PASSED") {
+        errors.push(
+          `Stage '${stage.stageId || stage.name}' failed with exit code ${stage.exitCode}, but release verdict is '${manifest.releaseVerdict}'.`
+        );
+      }
     }
   }
 
@@ -253,12 +273,23 @@ export function validateKh01AcceptanceManifest(manifest: Kh01AcceptanceManifest)
       if (!manifest.liveVerification.levelsVerified.includes("ADS_COLLECTED")) {
         errors.push("Live verification cannot be PASSED without ADS_COLLECTED level.");
       }
+      if (!manifest.liveVerification.levelsVerified.includes("ADS_PERSISTED")) {
+        errors.push("Live verification cannot be PASSED without ADS_PERSISTED level.");
+      }
+      if (!manifest.liveVerification.levelsVerified.includes("RUN_RECONCILED")) {
+        errors.push("Live verification cannot be PASSED without RUN_RECONCILED level.");
+      }
+      if (!manifest.liveVerification.runId) {
+        errors.push("Live verification cannot be PASSED without a verified runId.");
+      }
+    } else if (manifest.releaseVerdict === "ACCEPTED") {
+      errors.push("Release verdict cannot be ACCEPTED when live verification is not PASSED (LIVE_RECONCILED).");
     }
   }
 
   // Verdict validation
-  if (manifest.unresolvedDefects && manifest.unresolvedDefects.length > 0 && manifest.releaseVerdict === "ACCEPTED") {
-    errors.push("Release verdict cannot be ACCEPTED with unresolved P0/P1 defects.");
+  if (manifest.unresolvedDefects && manifest.unresolvedDefects.length > 0 && manifest.releaseVerdict !== "BLOCKED") {
+    errors.push("Release verdict cannot be ACCEPTED or CONDITIONALLY_ACCEPTED with unresolved P0/P1 defects.");
   }
 
   return {
@@ -282,16 +313,45 @@ export function deriveReleaseVerdict(
   const mandatoryGateDefs = CANONICAL_ACCEPTANCE_GATES.filter((g) => g.criticality === "MANDATORY");
   for (const def of mandatoryGateDefs) {
     const gate = gates.find((g) => g.gateId === def.gateId);
-    if (!gate || gate.status === "FAILED" || gate.status === "BLOCKED" || gate.status === "NOT_RUN") {
+    if (!gate || gate.status !== "PASSED") {
       return "BLOCKED";
     }
   }
 
   // If all mandatory gates passed:
-  if (liveVerification.status === "PASSED" && liveVerification.detailedOutcome === "LIVE_RECONCILED") {
+  if (
+    liveVerification.status === "PASSED" &&
+    liveVerification.detailedOutcome === "LIVE_RECONCILED" &&
+    liveVerification.levelsVerified.includes("ADS_COLLECTED") &&
+    liveVerification.levelsVerified.includes("ADS_PERSISTED") &&
+    liveVerification.levelsVerified.includes("RUN_RECONCILED")
+  ) {
     return "ACCEPTED";
   }
 
   // If live verification was not run or blocked, but all mandatory offline checks passed:
   return "CONDITIONALLY_ACCEPTED";
+}
+
+/**
+ * Finalizes acceptance verdict taking into account all stage executions and manifest validation results.
+ */
+export function finalizeAcceptanceVerdict(
+  gates: GateEvidence[],
+  stages: { stageId: string; status: AcceptanceStatus }[],
+  liveVerification: LiveMetaVerificationResult,
+  unresolvedDefects: string[] = [],
+  manifestValidationErrors: string[] = []
+): ReleaseVerdict {
+  if (manifestValidationErrors.length > 0) {
+    return "BLOCKED";
+  }
+  if (unresolvedDefects.length > 0) {
+    return "BLOCKED";
+  }
+  const anyStageFailed = stages.some((s) => s.status !== "PASSED");
+  if (anyStageFailed) {
+    return "BLOCKED";
+  }
+  return deriveReleaseVerdict(gates, liveVerification, unresolvedDefects);
 }

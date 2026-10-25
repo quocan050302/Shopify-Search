@@ -39,32 +39,119 @@ function safeSecretCompare(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+export interface DeploymentSecurityConfig {
+  deploymentMode?: string;
+  remoteAccess?: string;
+  host?: string;
+  port?: string | number;
+  nodeEnv?: string;
+  cloudProviders?: {
+    isVercel?: boolean;
+    isRender?: boolean;
+    isFly?: boolean;
+    isKService?: boolean;
+  };
+}
+
+export interface DeploymentSecurityPolicy {
+  mode: "LOCAL_ONLY" | "AUTHENTICATED_REMOTE";
+  localBypassAllowed: boolean;
+  configurationValid: boolean;
+  reason: string;
+}
+
+/**
+ * Resolves the authoritative deployment security policy from server-side configuration.
+ * Disallows client-controlled bypass, ensures public listener bindings cannot claim local trust,
+ * and detects startup configuration conflicts.
+ */
+export function resolveDeploymentSecurityPolicy(
+  config?: DeploymentSecurityConfig
+): DeploymentSecurityPolicy {
+  const deploymentMode = (config?.deploymentMode ?? process.env.SWAI_DEPLOYMENT_MODE ?? "").trim().toUpperCase();
+  const remoteAccess = (config?.remoteAccess ?? process.env.SWAI_REMOTE_ACCESS ?? "").trim().toLowerCase();
+  const host = (config?.host ?? process.env.HOST ?? "").trim().toLowerCase();
+  const isCloud = config?.cloudProviders
+    ? Boolean(config.cloudProviders.isVercel || config.cloudProviders.isRender || config.cloudProviders.isFly || config.cloudProviders.isKService)
+    : Boolean(process.env.VERCEL || process.env.RENDER || process.env.FLY_APP_NAME || process.env.K_SERVICE);
+
+  // 1. Cloud container platforms are always authenticated remote
+  if (isCloud) {
+    return {
+      mode: "AUTHENTICATED_REMOTE",
+      localBypassAllowed: false,
+      configurationValid: true,
+      reason: "Public cloud container platform detected.",
+    };
+  }
+
+  // 2. Explicit REMOTE deployment mode
+  if (deploymentMode === "REMOTE") {
+    return {
+      mode: "AUTHENTICATED_REMOTE",
+      localBypassAllowed: false,
+      configurationValid: true,
+      reason: "Server explicitly configured in REMOTE deployment mode.",
+    };
+  }
+
+  // 3. Explicit remote access flag
+  if (remoteAccess === "true" || remoteAccess === "1") {
+    return {
+      mode: "AUTHENTICATED_REMOTE",
+      localBypassAllowed: false,
+      configurationValid: true,
+      reason: "Remote access flag enabled.",
+    };
+  }
+
+  // 4. Public listener binding (0.0.0.0) strictly prohibits local bypass
+  if (host === "0.0.0.0") {
+    const isDeclaredLocal =
+      deploymentMode === "LOCAL_DESKTOP" ||
+      process.env.SWAI_LOCAL_DESKTOP === "true";
+    return {
+      mode: "AUTHENTICATED_REMOTE",
+      localBypassAllowed: false,
+      configurationValid: !isDeclaredLocal, // Configuration conflict if declared local while bound to 0.0.0.0
+      reason: isDeclaredLocal
+        ? "Configuration conflict: Local desktop declared but listener bound publicly to 0.0.0.0."
+        : "Server listener bound publicly to 0.0.0.0.",
+    };
+  }
+
+  // 5. Non-loopback IP binding (e.g. LAN IP 192.168.x.x)
+  if (host && host !== "127.0.0.1" && host !== "localhost" && host !== "[::1]") {
+    return {
+      mode: "AUTHENTICATED_REMOTE",
+      localBypassAllowed: false,
+      configurationValid: true,
+      reason: `Server bound to non-loopback host interface: ${host}.`,
+    };
+  }
+
+  // 6. Loopback binding (127.0.0.1, localhost, or default unbound local desktop)
+  const isEnforcedAuth =
+    process.env.SWAI_REQUIRE_AUTH === "true" ||
+    process.env.SWAI_E2E_SERVER === "true";
+
+  return {
+    mode: "LOCAL_ONLY",
+    localBypassAllowed: !isEnforcedAuth,
+    configurationValid: true,
+    reason: isEnforcedAuth
+      ? "Local loopback listener with strict authentication required by environment."
+      : "Trusted local desktop deployment bound to loopback interface.",
+  };
+}
+
 /**
  * Verifies whether the server environment is explicitly configured and controlled as a
  * trusted local-first desktop application.
- *
- * Rules:
- * - If SWAI_DEPLOYMENT_MODE is explicitly set to "REMOTE", returns false.
- * - If SWAI_REMOTE_ACCESS is "true" or "1", returns false.
- * - If running on public cloud container platforms (VERCEL, RENDER, FLY, etc.), returns false.
- * - If server host is configured to public binding ("0.0.0.0") without local desktop enforcement, returns false.
- * - In development/test environments or local desktop app, returns true.
  */
-export function isTrustedLocalDeployment(): boolean {
-  if (process.env.SWAI_DEPLOYMENT_MODE === "REMOTE") return false;
-  if (process.env.SWAI_REMOTE_ACCESS === "true" || process.env.SWAI_REMOTE_ACCESS === "1") return false;
-  if (process.env.VERCEL || process.env.RENDER || process.env.FLY_APP_NAME || process.env.K_SERVICE) return false;
-
-  // Explicitly declared local desktop mode
-  if (process.env.SWAI_DEPLOYMENT_MODE === "LOCAL_DESKTOP" || process.env.SWAI_LOCAL_DESKTOP === "true") {
-    return true;
-  }
-
-  // Public server binding check
-  const host = (process.env.HOST || "").trim().toLowerCase();
-  if (host === "0.0.0.0") return false;
-
-  return process.env.NODE_ENV !== "production" || host === "127.0.0.1" || host === "localhost" || !process.env.PORT;
+export function isTrustedLocalDeployment(config?: DeploymentSecurityConfig): boolean {
+  const policy = resolveDeploymentSecurityPolicy(config);
+  return policy.configurationValid && policy.mode === "LOCAL_ONLY";
 }
 
 /**
@@ -72,15 +159,15 @@ export function isTrustedLocalDeployment(): boolean {
  * Evaluates transport boundaries, proxy headers, and local deployment policies.
  */
 export function resolveTrustedRequestContext(request: NextRequest): TrustedRequestContext {
-  const isLocalDeploy = isTrustedLocalDeployment();
+  const policy = resolveDeploymentSecurityPolicy();
 
-  // If server is not in trusted local deployment, it operates in remote mode
-  if (!isLocalDeploy) {
+  // If server is not in trusted local deployment or configuration is invalid, operate in remote mode
+  if (policy.mode !== "LOCAL_ONLY" || !policy.configurationValid) {
     return {
       deploymentMode: "REMOTE",
       authenticationRequired: true,
       trustEstablished: false,
-      reason: "Server operates in remote or publicly accessible deployment mode.",
+      reason: policy.reason,
     };
   }
 
@@ -146,17 +233,10 @@ export function resolveTrustedRequestContext(request: NextRequest): TrustedReque
     }
   }
 
-  // In local desktop deployment, genuine loopback requests are authorized unless an isolated
-  // test environment or remote access flag explicitly requires strict authentication.
-  const authRequired =
-    process.env.SWAI_REQUIRE_AUTH === "true" ||
-    process.env.SWAI_E2E_SERVER === "true" ||
-    process.env.SWAI_DEPLOYMENT_MODE === "REMOTE";
-
   // Genuine loopback request verified under local desktop deployment
   return {
     deploymentMode: "LOCAL_DESKTOP",
-    authenticationRequired: authRequired,
+    authenticationRequired: !policy.localBypassAllowed,
     trustEstablished: true,
     reason: "Genuine loopback request on local desktop deployment.",
   };

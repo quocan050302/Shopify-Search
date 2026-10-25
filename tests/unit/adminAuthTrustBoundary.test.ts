@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import {
   isTrustedLocalDeployment,
+  resolveDeploymentSecurityPolicy,
   resolveTrustedRequestContext,
   resolveAdminPrincipal,
   validateAdminRequest,
@@ -18,6 +19,9 @@ describe("Admin Authentication Trust Boundary & Deployment Verification", () => 
     delete process.env.ADMIN_SECRET;
     delete process.env.SWAI_DEPLOYMENT_MODE;
     delete process.env.SWAI_REMOTE_ACCESS;
+    delete process.env.SWAI_LOCAL_DESKTOP;
+    delete process.env.SWAI_REQUIRE_AUTH;
+    delete process.env.SWAI_E2E_SERVER;
     delete process.env.HOST;
     delete process.env.PORT;
   });
@@ -26,13 +30,54 @@ describe("Admin Authentication Trust Boundary & Deployment Verification", () => 
     process.env = { ...originalEnv };
   });
 
+  describe("resolveDeploymentSecurityPolicy", () => {
+    it("classifies default local desktop as LOCAL_ONLY with bypass allowed", () => {
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("LOCAL_ONLY");
+      expect(policy.localBypassAllowed).toBe(true);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("rejects public 0.0.0.0 binding even in development mode", () => {
+      process.env.HOST = "0.0.0.0";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "development";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.localBypassAllowed).toBe(false);
+    });
+
+    it("detects configuration conflict when SWAI_LOCAL_DESKTOP is true but HOST is 0.0.0.0", () => {
+      process.env.HOST = "0.0.0.0";
+      process.env.SWAI_LOCAL_DESKTOP = "true";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.configurationValid).toBe(false);
+      expect(policy.reason).toContain("Configuration conflict");
+    });
+
+    it("requires authentication on loopback when SWAI_REQUIRE_AUTH is true", () => {
+      process.env.SWAI_REQUIRE_AUTH = "true";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("LOCAL_ONLY");
+      expect(policy.localBypassAllowed).toBe(false);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("classifies non-loopback host interface as AUTHENTICATED_REMOTE", () => {
+      process.env.HOST = "192.168.1.119";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.localBypassAllowed).toBe(false);
+    });
+  });
+
   describe("isTrustedLocalDeployment", () => {
     it("returns true in default development/test desktop mode", () => {
       (process.env as Record<string, string | undefined>).NODE_ENV = "development";
       expect(isTrustedLocalDeployment()).toBe(true);
     });
 
-    it("returns true when SWAI_LOCAL_DESKTOP is explicitly true", () => {
+    it("returns true when SWAI_LOCAL_DESKTOP is explicitly true on loopback", () => {
       process.env.SWAI_LOCAL_DESKTOP = "true";
       (process.env as Record<string, string | undefined>).NODE_ENV = "production";
       expect(isTrustedLocalDeployment()).toBe(true);
@@ -48,8 +93,9 @@ describe("Admin Authentication Trust Boundary & Deployment Verification", () => 
       expect(isTrustedLocalDeployment()).toBe(false);
     });
 
-    it("returns false when server host is bound to public 0.0.0.0", () => {
+    it("returns false when server host is bound to public 0.0.0.0 even if SWAI_LOCAL_DESKTOP is set", () => {
       process.env.HOST = "0.0.0.0";
+      process.env.SWAI_LOCAL_DESKTOP = "true";
       expect(isTrustedLocalDeployment()).toBe(false);
     });
 
@@ -102,6 +148,14 @@ describe("Admin Authentication Trust Boundary & Deployment Verification", () => 
       expect(ctx.trustEstablished).toBe(false);
       expect(ctx.authenticationRequired).toBe(true);
       expect(ctx.reason).toContain("x-real-ip");
+    });
+
+    it("fails closed when host binding is 0.0.0.0 even if request says Host: localhost", () => {
+      process.env.HOST = "0.0.0.0";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
     });
   });
 

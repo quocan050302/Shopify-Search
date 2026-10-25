@@ -278,7 +278,7 @@ export const MetaJobsTable: React.FC<MetaJobsTableProps> = ({
                 const extraKeywordsCount = (job.keywords?.length || 1) - 1;
 
                 return (
-                  <TableRow key={job.id}>
+                  <TableRow key={job.id} data-testid="research-job-row">
                     {/* Research Query */}
                     <TableCell>
                       <div className="space-y-0.5">
@@ -298,7 +298,7 @@ export const MetaJobsTable: React.FC<MetaJobsTableProps> = ({
 
                     {/* Status */}
                     <TableCell>
-                      <Badge variant={statusPresentation.variant} size="sm" dot={!statusPresentation.isTerminal}>
+                      <Badge variant={statusPresentation.variant} size="sm" dot={!statusPresentation.isTerminal} data-testid="research-job-status">
                         {statusPresentation.label}
                       </Badge>
                     </TableCell>
@@ -339,6 +339,7 @@ export const MetaJobsTable: React.FC<MetaJobsTableProps> = ({
                         {job.validCount > 0 && (
                           <Link
                             href={buildExplorerUrlForRun(job.id, "META")}
+                            data-testid="research-job-view-ads"
                             className="p-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
                             title="View discovered ads in Explorer"
                             aria-label="View discovered ads in Explorer"

@@ -585,12 +585,37 @@ export async function upsertCompetitorAd(record: NormalizedAdRecord) {
 
   if (existingAd) {
     adId = existingAd.id;
+
+    // Section 11: Protect source-verified data from degradation.
+    // Only advance lastSeenAt if incoming observation is strictly newer.
+    const incomingLastSeenMs = new Date(record.lastSeenAt).getTime();
+    const existingLastSeenMs = new Date(existingAd.lastSeenAt).getTime();
+    const isNewerLastSeen = incomingLastSeenMs > existingLastSeenMs;
+    const effectiveLastSeen = isNewerLastSeen ? record.lastSeenAt : existingAd.lastSeenAt;
+
+    // Preserve earliest firstSeenAt
+    const incomingFirstSeenMs = new Date(record.firstSeenAt).getTime();
+    const existingFirstSeenMs = new Date(existingAd.firstSeenAt).getTime();
+    const effectiveFirstSeen = incomingFirstSeenMs < existingFirstSeenMs ? record.firstSeenAt : existingAd.firstSeenAt;
+
+    // Recalculate days running based on earliest firstSeen and latest lastSeen
+    const firstMs = new Date(effectiveFirstSeen).getTime();
+    const lastMs = new Date(effectiveLastSeen).getTime();
+    const updatedDaysRunning = lastMs > firstMs ? Math.round((lastMs - firstMs) / (1000 * 60 * 60 * 24)) + 1 : existingAd.daysRunning;
+
+    // Do not downgrade VERIFIED data confidence with weaker observations
+    const shouldUpdateConfidence =
+      record.dataConfidence === "VERIFIED" ||
+      (existingAd.dataConfidence !== "VERIFIED" && record.dataConfidence === "OBSERVED");
+
     await prisma.competitorAd.update({
       where: { id: adId },
       data: {
-        lastSeenAt: record.lastSeenAt,
-        daysRunning,
-        // Only update status if new record has a definitive status
+        firstSeenAt: effectiveFirstSeen,
+        lastSeenAt: effectiveLastSeen,
+        daysRunning: updatedDaysRunning,
+        ...(shouldUpdateConfidence ? { dataConfidence: record.dataConfidence } : {}),
+        // Only update status if new record has a definitive status and existing status is not VERIFIED active
         ...(record.status !== "UNKNOWN" ? { status: record.status } : {}),
       },
     });
@@ -699,6 +724,53 @@ export async function upsertCompetitorAd(record: NormalizedAdRecord) {
   });
 
   return await getAdvertisementDetails(adId);
+}
+
+export interface WorkspaceAdImportContext {
+  workspaceId: string;
+  runId?: string;
+  providerId?: string;
+  sourceConfidence?: "VERIFIED" | "OBSERVED" | "UNVERIFIED";
+}
+
+/**
+ * Context-aware advertisement import wrapper.
+ * Ensures canonical advertisement identity is preserved while workspace-specific
+ * associations and observations remain isolated to the designated workspace.
+ */
+export async function importAdvertisementForWorkspace(
+  context: WorkspaceAdImportContext,
+  record: NormalizedAdRecord
+) {
+  const adDetails = await upsertCompetitorAd(record);
+  if (!adDetails) return null;
+
+  if (context.runId) {
+    const existingRel = await prisma.discoveryRunAd.findUnique({
+      where: {
+        runId_adId: {
+          runId: context.runId,
+          adId: adDetails.id,
+        },
+      },
+    });
+
+    if (!existingRel) {
+      await prisma.discoveryRunAd.create({
+        data: {
+          runId: context.runId,
+          adId: adDetails.id,
+          workspaceId: context.workspaceId,
+          providerId: context.providerId || "META_COLLECTOR",
+          ingestOutcome: "NEW",
+          sourceUrl: record.originalAdUrl || null,
+          observedAt: new Date(record.lastSeenAt || Date.now()),
+        },
+      });
+    }
+  }
+
+  return adDetails;
 }
 
 /**
