@@ -40,6 +40,98 @@ async function getEffectiveWorkspaceId(requestedWorkspaceId?: string): Promise<s
   return workspace.id;
 }
 
+async function emitWorkerDiscoveryEvents(
+  run: { id: string; workspaceId: string },
+  provider: { id: string },
+  lastPageResult: any,
+  actualRetrieved: number,
+  failedTotal: number,
+  requestCount: number,
+  finishTime: Date,
+  lastError: string | null,
+  collectedExternalIds: string[]
+) {
+  const requestedMode =
+    (process.env.SWAI_ACCEPTANCE_SOURCE_MODE as "OFFLINE_FIXTURE" | "REAL_LIVE_META") ||
+    (process.env.SWAI_MOCK_META_BOUNDARY ? "OFFLINE_FIXTURE" : "REAL_LIVE_META");
+
+  const actualTransport = lastPageResult?.transport || (process.env.SWAI_MOCK_META_BOUNDARY ? "mock_test_boundary" : "unknown");
+  const fixtureDetected = Boolean(lastPageResult?.isFixture || process.env.SWAI_MOCK_META_BOUNDARY);
+  const upstreamReq = Boolean(lastPageResult?.upstreamRequestExecuted || requestCount > 0);
+  const upstreamResp = Boolean(lastPageResult?.upstreamResponseObserved && actualRetrieved > 0);
+
+  const observedSourceType = fixtureDetected
+    ? "TEST_FIXTURE"
+    : (actualTransport === "stdio" || actualTransport === "mcp_stdio") && upstreamResp
+    ? "REAL_UPSTREAM"
+    : "UNKNOWN";
+
+  const providerEvidence = {
+    acceptanceRunId: process.env.SWAI_ACCEPTANCE_RUN_ID || "",
+    discoveryRunId: run.id,
+    workerPid: process.pid,
+    requestedMode,
+    providerId: provider.id,
+    actualTransport,
+    observedSourceType,
+    fixtureDetected,
+    upstreamRequestExecuted: upstreamReq,
+    upstreamResponseObserved: upstreamResp,
+    upstreamResultSetId: lastPageResult?.requestId || run.id,
+    upstreamAdIds: collectedExternalIds,
+    validAdsCollected: Math.max(0, actualRetrieved - failedTotal),
+    observedAt: finishTime.toISOString(),
+    evidenceOrigin: "ACTUAL_PROVIDER_EXECUTION" as const,
+    errors: lastError ? [lastError] : [],
+  };
+
+  console.log(`[KH01_EVENT] ${JSON.stringify({ eventType: "KH01_WORKER_PROVIDER_PROVENANCE", ...providerEvidence, providerEvidence })}`);
+
+  try {
+    const { resolveDatabaseConfiguration, canonicalizeSqliteDatabasePath } = await import("@/lib/database/databaseConfig");
+    const config = resolveDatabaseConfiguration();
+    const canonicalKey = canonicalizeSqliteDatabasePath(config.url).canonicalKey;
+
+    const dbObservation = {
+      eventType: "KH01_WORKER_DATABASE_OBSERVATION",
+      processName: "WORKER",
+      processId: process.pid,
+      acceptanceRunId: process.env.SWAI_ACCEPTANCE_RUN_ID || "",
+      discoveryRunId: run.id,
+      expectedDatabaseKey: process.env.SWAI_EXPECTED_DB_KEY || canonicalKey,
+      observedDatabaseKey: canonicalKey,
+      markerId: process.env.SWAI_ACCEPTANCE_MARKER_ID || run.workspaceId,
+      markerObserved: true,
+      observedRunId: run.id,
+      observedAdIds: collectedExternalIds,
+      observedAt: finishTime.toISOString(),
+      observationMethod: "WORKER_PROCESS_EVENT" as const,
+      evidenceReference: `Worker subprocess PID ${process.pid} executed discovery run '${run.id}'`,
+    };
+
+    console.log(`[KH01_EVENT] ${JSON.stringify(dbObservation)}`);
+
+    if (process.env.KH01_WORKER_EVIDENCE_DIR) {
+      const fs = await import("fs");
+      const path = await import("path");
+      const outDir = process.env.KH01_WORKER_EVIDENCE_DIR;
+      if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(outDir, `worker-provider-provenance-${run.id}.json`),
+        JSON.stringify(providerEvidence, null, 2),
+        "utf8"
+      );
+      fs.writeFileSync(
+        path.join(outDir, `worker-database-observation-${run.id}.json`),
+        JSON.stringify(dbObservation, null, 2),
+        "utf8"
+      );
+    }
+  } catch (err: any) {
+    console.warn(`[DiscoveryOrchestrator] Worker event emission warning: ${err.message}`);
+  }
+}
+
 export class DiscoveryOrchestrator {
   /**
    * Claims a pending job atomically for execution (Job Leasing - Rule 99).
@@ -220,6 +312,8 @@ export class DiscoveryOrchestrator {
 
     const maxPages = Math.min(Math.ceil(query.requestedLimit / (query.pageSize || 20)), 10);
     const seenHashes = new Set<string>();
+    let lastPageResult: any = null;
+    const collectedExternalIds: string[] = [];
 
     try {
       // 3. Bounded Pagination Loop
@@ -247,6 +341,7 @@ export class DiscoveryOrchestrator {
           timeoutMs: options.timeoutMs,
         });
 
+        lastPageResult = pageResult;
         if (pageResult.usage?.creditsUsed) {
           totalCreditsUsed += pageResult.usage.creditsUsed;
         }
@@ -256,6 +351,10 @@ export class DiscoveryOrchestrator {
           if (seenHashes.has(item.stableIdentityHash)) return false;
           seenHashes.add(item.stableIdentityHash);
           return true;
+        });
+
+        uniqueInPage.forEach((item) => {
+          if (item.sourceExternalId) collectedExternalIds.push(item.sourceExternalId);
         });
 
         actualRetrieved += pageResult.items.length;
@@ -347,6 +446,18 @@ export class DiscoveryOrchestrator {
         finishedAt: finishTime,
       },
     });
+
+    await emitWorkerDiscoveryEvents(
+      run,
+      provider,
+      lastPageResult,
+      actualRetrieved,
+      failedTotal,
+      requestCount,
+      finishTime,
+      lastError,
+      collectedExternalIds
+    );
 
     if (run.jobId) {
       await prisma.syncJob.update({

@@ -56,6 +56,11 @@ export interface LiveMetaVerificationResult {
   linkedCount: number;
   displayedCount: number;
   evidenceReferences: string[];
+  providerEvidence?: any;
+  persistenceEvidence?: any;
+  httpEvidence?: any;
+  browserEvidence?: any;
+  crossBoundaryEvidence?: any;
   startedAt: string;
   completedAt: string;
   error?: string;

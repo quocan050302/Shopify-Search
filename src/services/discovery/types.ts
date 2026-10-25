@@ -239,6 +239,10 @@ export interface DiscoveryPageResult {
   nextCursor?: string | null;
   hasMore: boolean;
   requestId?: string | null;
+  transport?: string;
+  isFixture?: boolean;
+  upstreamRequestExecuted?: boolean;
+  upstreamResponseObserved?: boolean;
   usage?: {
     creditsUsed: number;
     costUsd?: number;

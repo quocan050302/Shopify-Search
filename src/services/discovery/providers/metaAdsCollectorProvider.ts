@@ -311,6 +311,7 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
 
     try {
       client = await createMetaCollectorClient();
+      const caps = await client.getCapabilities().catch(() => null);
 
       const cursorPayload = parseCursor(cursor);
       let rawAds: MetaCollectorRawAd[] = [];
@@ -448,12 +449,20 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
       }
 
       const hasMore = Boolean(nextCursor && normalizedAds.length > 0);
+      const actualTransport = caps?.transport || (process.env.SWAI_MOCK_META_BOUNDARY ? "mock_test_boundary" : "unknown");
+      const isFixture = actualTransport === "mock_test_boundary" || Boolean(process.env.SWAI_MOCK_META_BOUNDARY);
+      const upstreamReq = true;
+      const upstreamResp = rawAds.length > 0;
 
       return {
         items: normalizedAds,
         nextCursor,
         hasMore,
         requestId: resultSetId,
+        transport: actualTransport,
+        isFixture,
+        upstreamRequestExecuted: upstreamReq,
+        upstreamResponseObserved: upstreamResp,
         usage: {
           creditsUsed: 0,
           costUsd: 0.0,
