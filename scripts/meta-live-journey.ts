@@ -36,6 +36,7 @@ import {
   findDuplicateIds,
   reconcileExactAdIdSets,
   finalizeLiveJourneyVerdict,
+  verifyWorkerProvenance,
   LiveJourneyGateResults,
 } from "../src/services/discovery/metaCollector/metaExactReconciliation";
 import {
@@ -68,6 +69,7 @@ export interface MetaLiveJourneyResult {
   browserVerified: boolean;
   reconciliationVerified: boolean;
   evidencePublished: boolean;
+  cleanupVerified?: boolean;
   reasons: string[];
   artifactDirectory: string;
   reconciliation?: any;
@@ -142,6 +144,7 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
     browser: "NOT_VERIFIED",
     reconciliation: "NOT_VERIFIED",
     artifactIntegrity: "NOT_VERIFIED",
+    cleanup: "NOT_VERIFIED",
   };
 
   let finalRun: any = null;
@@ -150,6 +153,7 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
   let browserResult: BrowserAdCollectionResult | null = null;
   let reconciliationSummary: any = null;
   let cleanupReport: CleanupResult | undefined;
+  let returnResult: MetaLiveJourneyResult | null = null;
 
   try {
     // 1. Validate launch configuration & confirm no mock boundary in live mode
@@ -436,33 +440,7 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
 
     fs.writeFileSync(path.join(outDir, "discovery-run.json"), JSON.stringify(finalRun, null, 2));
 
-    // Match exact worker provider evidence by DiscoveryRun ID (Section 17)
-    const matchedProvEv = workerProviderEvidences.find(
-      (p) => p.discoveryRunId === discoveryRunId && p.providerId === "meta-ads-collector"
-    ) || null;
-
-    const workerExecution = {
-      workerPid,
-      discoveryRunId,
-      claimedAt: finalRun.startedAt?.toISOString() || null,
-      completedAt: finalRun.finishedAt?.toISOString() || null,
-      finalStatus: finalRun.status,
-      providerEvidence: matchedProvEv,
-      stdoutPreview: workerStdout.slice(0, 2000),
-      stderrPreview: workerStderr.slice(0, 1000),
-    };
-    fs.writeFileSync(path.join(outDir, "worker-execution.json"), JSON.stringify(workerExecution, null, 2));
-
-    if (finalRun.status === "COMPLETED" && finalRun.validCount > 0 && matchedProvEv !== null) {
-      gates.worker = "PASSED";
-    } else if (finalRun.status === "BLOCKED_SOURCE") {
-      gates.worker = "BLOCKED";
-    } else {
-      gates.worker = "FAILED";
-      if (!matchedProvEv) reasons.push("No exact-run provider evidence found from Discovery Worker.");
-    }
-
-    // 9. Inspect Database Persistence & Run-Ad Associations
+    // 9. Inspect Database Persistence & Run-Ad Associations early for full cross-verification
     console.log("\n[7/7] Verifying database persistence, HTTP readback & Chromium rendering...");
     const linkedRelations = await dbHandle.prisma.discoveryRunAd.findMany({
       where: { runId: discoveryRunId },
@@ -478,6 +456,38 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
 
     persistedAdIds = linkedRelations.map((r: any) => r.adId);
     const externalLibraryIds = linkedRelations.map((r: any) => r.ad.externalAdId);
+
+    // Match exact worker provider evidence by DiscoveryRun ID (Section 17)
+    const matchedProvEv = workerProviderEvidences.find(
+      (p) => p.discoveryRunId === discoveryRunId && p.providerId === "meta-ads-collector"
+    ) || null;
+
+    // Verify Worker Provenance thoroughly (FIX 2)
+    const workerProvVerification = verifyWorkerProvenance({
+      discoveryRunId: discoveryRunId!,
+      finalRunStatus: finalRun.status,
+      validCount: finalRun.validCount,
+      providerEvidence: matchedProvEv,
+      persistedLibraryIds: externalLibraryIds,
+    });
+
+    gates.worker = workerProvVerification.status;
+    if (workerProvVerification.errors.length > 0) {
+      reasons.push(...workerProvVerification.errors);
+    }
+
+    const workerExecution = {
+      workerPid,
+      discoveryRunId,
+      claimedAt: finalRun.startedAt?.toISOString() || null,
+      completedAt: finalRun.finishedAt?.toISOString() || null,
+      finalStatus: finalRun.status,
+      providerEvidence: matchedProvEv,
+      verification: workerProvVerification,
+      stdoutPreview: workerStdout.slice(0, 2000),
+      stderrPreview: workerStderr.slice(0, 1000),
+    };
+    fs.writeFileSync(path.join(outDir, "worker-execution.json"), JSON.stringify(workerExecution, null, 2));
 
     console.log(`  ✔ Retrieved Count:    ${finalRun.actualRetrievedCount}`);
     console.log(`  ✔ Valid Count:        ${finalRun.validCount}`);
@@ -775,7 +785,57 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
     reasons.push(errorMsg);
     console.error("\n[FATAL ERROR IN LIVE JOURNEY]", errorMsg);
   } finally {
-    // 14. Finalize Verdict & Emit Decision Artifacts (Sections 11, 21, 22)
+    // 14. Safe Unconditional Resource Cleanup (FIX 1)
+    console.log("\n[Teardown] Performing unconditional safe resource cleanup...");
+    try {
+      cleanupReport = await cleanupLiveJourneyResources({
+        page,
+        browserContext: context,
+        browser,
+        workerChild,
+        server,
+        mcpClient,
+        dbHandle,
+      });
+    } catch (cleanupErr: any) {
+      cleanupReport = {
+        browserClosed: false,
+        workerStopped: false,
+        nextServerStopped: false,
+        mcpClosed: false,
+        prismaDisconnected: false,
+        isolatedDatabaseDeleted: false,
+        errors: [`Unhandled exception during cleanup: ${cleanupErr?.message || String(cleanupErr)}`],
+      };
+    }
+
+    // Always persist cleanup results, even if previous stages failed
+    fs.writeFileSync(path.join(outDir, "cleanup-results.json"), JSON.stringify(cleanupReport, null, 2));
+    console.log(`  ✔ Teardown complete (Errors: ${cleanupReport.errors.length}).`);
+
+    const mandatoryResourcesClosed =
+      cleanupReport.browserClosed &&
+      cleanupReport.workerStopped &&
+      cleanupReport.nextServerStopped &&
+      cleanupReport.mcpClosed &&
+      cleanupReport.prismaDisconnected &&
+      cleanupReport.isolatedDatabaseDeleted;
+
+    if (cleanupReport.errors.length === 0 && mandatoryResourcesClosed) {
+      gates.cleanup = "PASSED";
+    } else {
+      gates.cleanup = "FAILED";
+      const failMsgs: string[] = [];
+      if (cleanupReport.errors.length > 0) {
+        failMsgs.push(...cleanupReport.errors);
+      }
+      if (!mandatoryResourcesClosed) {
+        failMsgs.push("One or more mandatory resources failed to close cleanly during teardown.");
+      }
+      reasons.push(...failMsgs);
+    }
+
+    // 15. Finalize Verdict & Emit Decision Artifacts ONLY AFTER CLEANUP
     const finalVerdict = finalizeLiveJourneyVerdict(gates);
 
     const stageResults = {
@@ -808,7 +868,7 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
       )
     );
 
-    // If journey succeeded, update latest pointer
+    // If journey succeeded, update latest pointer ONLY AFTER CLEANUP
     if (finalVerdict.success) {
       const latestPointerPath = path.resolve(process.cwd(), "artifacts/v11.6.1/latest.json");
       fs.writeFileSync(
@@ -837,45 +897,32 @@ export async function runMetaLiveJourney(options: JourneyOptions): Promise<MetaL
     console.log(`  Browser Gate:         ${gates.browser}`);
     console.log(`  Reconciliation Gate:  ${gates.reconciliation}`);
     console.log(`  Artifact Gate:        ${gates.artifactIntegrity}`);
+    console.log(`  Cleanup Gate:         ${gates.cleanup}`);
     console.log(`  Success:              ${finalVerdict.success}`);
     console.log(`  Evidence Directory:   ${outDir}`);
     console.log("==================================================================");
 
-    // 15. Safe Unconditional Resource Cleanup (Sections 18 & 19)
-    console.log("\n[Teardown] Performing unconditional safe resource cleanup...");
-    cleanupReport = await cleanupLiveJourneyResources({
-      page,
-      browserContext: context,
-      browser,
-      workerChild,
-      server,
-      mcpClient,
-      dbHandle,
-    });
-
-    fs.writeFileSync(path.join(outDir, "cleanup-results.json"), JSON.stringify(cleanupReport, null, 2));
-    console.log(`  ✔ Teardown complete (Errors: ${cleanupReport.errors.length}).`);
+    returnResult = {
+      success: finalVerdict.success,
+      verdict: finalVerdict.verdict,
+      journeyRunId,
+      discoveryRunId,
+      sourceVerified: gates.source === "PASSED",
+      workerVerified: gates.worker === "PASSED",
+      persistenceVerified: gates.persistence === "PASSED",
+      httpVerified: gates.http === "PASSED",
+      browserVerified: gates.browser === "PASSED",
+      reconciliationVerified: gates.reconciliation === "PASSED",
+      evidencePublished: gates.artifactIntegrity === "PASSED",
+      cleanupVerified: gates.cleanup === "PASSED",
+      reasons: [...finalVerdict.blockingReasons, ...reasons],
+      artifactDirectory: outDir,
+      reconciliation: reconciliationSummary,
+      cleanup: cleanupReport,
+    };
   }
 
-  const finalVerdict = finalizeLiveJourneyVerdict(gates);
-
-  return {
-    success: finalVerdict.success,
-    verdict: finalVerdict.verdict,
-    journeyRunId,
-    discoveryRunId,
-    sourceVerified: gates.source === "PASSED",
-    workerVerified: gates.worker === "PASSED",
-    persistenceVerified: gates.persistence === "PASSED",
-    httpVerified: gates.http === "PASSED",
-    browserVerified: gates.browser === "PASSED",
-    reconciliationVerified: gates.reconciliation === "PASSED",
-    evidencePublished: gates.artifactIntegrity === "PASSED",
-    reasons: [...finalVerdict.blockingReasons, ...reasons],
-    artifactDirectory: outDir,
-    reconciliation: reconciliationSummary,
-    cleanup: cleanupReport,
-  };
+  return returnResult!;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

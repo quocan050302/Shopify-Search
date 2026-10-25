@@ -124,4 +124,54 @@ describe("Live Journey Resource Management & Safe Cleanup (Sections 18, 19, 27)"
     expect(sourceBlockedVerdict.success).toBe(false);
     expect(sourceBlockedVerdict.verdict).toBe("BLOCKED");
   });
+
+  it("rejects verdict with FAILED when cleanup fails even if all operational gates passed", () => {
+    const verdict = finalizeLiveJourneyVerdict({
+      source: "PASSED",
+      worker: "PASSED",
+      persistence: "PASSED",
+      http: "PASSED",
+      browser: "PASSED",
+      reconciliation: "PASSED",
+      artifactIntegrity: "PASSED",
+      cleanup: "FAILED",
+    });
+
+    expect(verdict.success).toBe(false);
+    expect(verdict.verdict).toBe("FAILED");
+    expect(verdict.blockingReasons.some((r) => r.includes("cleanup teardown"))).toBe(true);
+  });
+
+  it("allows VERIFIED verdict only when all operational gates and cleanup succeed", () => {
+    const verdict = finalizeLiveJourneyVerdict({
+      source: "PASSED",
+      worker: "PASSED",
+      persistence: "PASSED",
+      http: "PASSED",
+      browser: "PASSED",
+      reconciliation: "PASSED",
+      artifactIntegrity: "PASSED",
+      cleanup: "PASSED",
+    });
+
+    expect(verdict.success).toBe(true);
+    expect(verdict.verdict).toBe("VERIFIED");
+    expect(verdict.blockingReasons).toHaveLength(0);
+  });
+
+  it("captures cleanup errors in CleanupResult when a resource throws during teardown", async () => {
+    const failingServer = {
+      stop: async () => {
+        throw new Error("Port release timeout");
+      },
+    };
+
+    const cleanupResult = await cleanupLiveJourneyResources({
+      server: failingServer,
+    });
+
+    expect(cleanupResult.nextServerStopped).toBe(false);
+    expect(cleanupResult.errors.length).toBeGreaterThan(0);
+    expect(cleanupResult.errors[0]).toContain("Port release timeout");
+  });
 });

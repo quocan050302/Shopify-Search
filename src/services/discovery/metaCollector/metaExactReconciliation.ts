@@ -43,12 +43,27 @@ export interface LiveJourneyGateResults {
   browser: AcceptanceStatus;
   reconciliation: AcceptanceStatus;
   artifactIntegrity: AcceptanceStatus;
+  cleanup?: AcceptanceStatus;
 }
 
 export interface LiveJourneyVerdict {
   success: boolean;
   verdict: "VERIFIED" | "FAILED" | "BLOCKED";
   blockingReasons: string[];
+}
+
+export interface WorkerProvenanceVerificationInput {
+  discoveryRunId: string;
+  finalRunStatus: string;
+  validCount: number;
+  providerEvidence: any | null;
+  persistedLibraryIds: string[];
+}
+
+export interface WorkerProvenanceVerificationResult {
+  status: "PASSED" | "FAILED" | "BLOCKED";
+  isValid: boolean;
+  errors: string[];
 }
 
 /**
@@ -219,6 +234,10 @@ export function finalizeLiveJourneyVerdict(gates: LiveJourneyGateResults): LiveJ
     blockingReasons.push(`Artifact integrity validation failed: status is '${gates.artifactIntegrity}'.`);
   }
 
+  if (gates.cleanup !== "PASSED") {
+    blockingReasons.push(`Resource cleanup teardown failed: status is '${gates.cleanup || "NOT_VERIFIED"}'.`);
+  }
+
   const isBlocked =
     gates.source === "BLOCKED" ||
     gates.worker === "BLOCKED" ||
@@ -231,7 +250,8 @@ export function finalizeLiveJourneyVerdict(gates: LiveJourneyGateResults): LiveJ
     gates.http === "PASSED" &&
     gates.browser === "PASSED" &&
     gates.reconciliation === "PASSED" &&
-    gates.artifactIntegrity === "PASSED";
+    gates.artifactIntegrity === "PASSED" &&
+    gates.cleanup === "PASSED";
 
   let verdict: "VERIFIED" | "FAILED" | "BLOCKED";
   if (success) {
@@ -246,5 +266,94 @@ export function finalizeLiveJourneyVerdict(gates: LiveJourneyGateResults): LiveJ
     success,
     verdict,
     blockingReasons,
+  };
+}
+
+/**
+ * Authoritatively verifies Discovery Worker execution provenance against live Meta contract.
+ * Fails closed if any invariant is violated or if provider evidence does not match
+ * the exact discoveryRunId or persisted library records.
+ */
+export function verifyWorkerProvenance(
+  input: WorkerProvenanceVerificationInput
+): WorkerProvenanceVerificationResult {
+  const errors: string[] = [];
+
+  if (input.finalRunStatus === "BLOCKED_SOURCE") {
+    return {
+      status: "BLOCKED",
+      isValid: false,
+      errors: ["Discovery run was blocked by upstream source (rate limited or access denied)."],
+    };
+  }
+
+  if (input.finalRunStatus !== "COMPLETED") {
+    errors.push(`Discovery run status is '${input.finalRunStatus}', expected 'COMPLETED'.`);
+  }
+
+  if (!(input.validCount > 0)) {
+    errors.push(`Discovery run validCount is ${input.validCount}, expected > 0.`);
+  }
+
+  const ev = input.providerEvidence;
+  if (!ev) {
+    errors.push("Missing exact-run provider evidence: no provenance event matched discoveryRunId.");
+  } else {
+    if (ev.discoveryRunId !== input.discoveryRunId) {
+      errors.push(`Provider evidence discoveryRunId '${ev.discoveryRunId}' does not match expected '${input.discoveryRunId}'.`);
+    }
+
+    if (ev.providerId !== "meta-ads-collector") {
+      errors.push(`Provider evidence providerId is '${ev.providerId}', expected 'meta-ads-collector'.`);
+    }
+
+    if (ev.requestedMode !== "REAL_LIVE_META") {
+      errors.push(`Provider evidence requestedMode is '${ev.requestedMode}', expected 'REAL_LIVE_META'.`);
+    }
+
+    if (ev.observedSourceType !== "REAL_UPSTREAM") {
+      errors.push(`Provider evidence observedSourceType is '${ev.observedSourceType}', expected 'REAL_UPSTREAM'.`);
+    }
+
+    if (ev.fixtureDetected !== false) {
+      errors.push(`Provider evidence fixtureDetected is ${ev.fixtureDetected}, expected false.`);
+    }
+
+    if (ev.upstreamRequestExecuted !== true) {
+      errors.push(`Provider evidence upstreamRequestExecuted is ${ev.upstreamRequestExecuted}, expected true.`);
+    }
+
+    if (ev.upstreamResponseObserved !== true) {
+      errors.push(`Provider evidence upstreamResponseObserved is ${ev.upstreamResponseObserved}, expected true.`);
+    }
+
+    const allowedTransports = ["stdio", "mcp_stdio"];
+    if (!allowedTransports.includes(ev.actualTransport)) {
+      errors.push(`Provider evidence actualTransport is '${ev.actualTransport}', expected 'stdio' or 'mcp_stdio'.`);
+    }
+
+    if (!Array.isArray(ev.upstreamAdIds) || ev.upstreamAdIds.length === 0) {
+      errors.push("Provider evidence upstreamAdIds is missing or empty.");
+    } else {
+      const upstreamSet = new Set<string>(ev.upstreamAdIds);
+      const persistedSet = new Set<string>(input.persistedLibraryIds);
+
+      const missingInPersisted = ev.upstreamAdIds.filter((id: string) => !persistedSet.has(id));
+      const unexpectedInPersisted = input.persistedLibraryIds.filter((id: string) => !upstreamSet.has(id));
+
+      if (missingInPersisted.length > 0) {
+        errors.push(`Upstream ad IDs missing from persisted library records (${missingInPersisted.length}): ${missingInPersisted.join(", ")}`);
+      }
+      if (unexpectedInPersisted.length > 0) {
+        errors.push(`Persisted library records missing from upstream ad IDs (${unexpectedInPersisted.length}): ${unexpectedInPersisted.join(", ")}`);
+      }
+    }
+  }
+
+  const isValid = errors.length === 0;
+  return {
+    status: isValid ? "PASSED" : "FAILED",
+    isValid,
+    errors,
   };
 }

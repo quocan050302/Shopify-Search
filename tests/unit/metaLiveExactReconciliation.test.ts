@@ -3,6 +3,7 @@ import {
   findDuplicateIds,
   reconcileExactAdIdSets,
   finalizeLiveJourneyVerdict,
+  verifyWorkerProvenance,
   ExactAdIdReconciliationInput,
   LiveJourneyGateResults,
 } from "@/services/discovery/metaCollector/metaExactReconciliation";
@@ -286,12 +287,49 @@ describe("Strict Ad ID Reconciliation & Live Verdict Helpers (Sections 07, 08, 2
         browser: "PASSED",
         reconciliation: "PASSED",
         artifactIntegrity: "FAILED",
+        cleanup: "PASSED",
       };
 
       const verdict = finalizeLiveJourneyVerdict(gates);
       expect(verdict.success).toBe(false);
       expect(verdict.verdict).toBe("FAILED");
       expect(verdict.blockingReasons.some((r) => r.includes("Artifact integrity"))).toBe(true);
+    });
+
+    it("REC-13 (FIX 1): rejects verdict with FAILED when cleanup fails even if all other gates passed", () => {
+      const gates: LiveJourneyGateResults = {
+        source: "PASSED",
+        worker: "PASSED",
+        persistence: "PASSED",
+        http: "PASSED",
+        browser: "PASSED",
+        reconciliation: "PASSED",
+        artifactIntegrity: "PASSED",
+        cleanup: "FAILED",
+      };
+
+      const verdict = finalizeLiveJourneyVerdict(gates);
+      expect(verdict.success).toBe(false);
+      expect(verdict.verdict).toBe("FAILED");
+      expect(verdict.blockingReasons.some((r) => r.includes("cleanup teardown"))).toBe(true);
+    });
+
+    it("REC-14 (FIX 1): grants VERIFIED verdict when all 7 gates and cleanup gate are PASSED", () => {
+      const gates: LiveJourneyGateResults = {
+        source: "PASSED",
+        worker: "PASSED",
+        persistence: "PASSED",
+        http: "PASSED",
+        browser: "PASSED",
+        reconciliation: "PASSED",
+        artifactIntegrity: "PASSED",
+        cleanup: "PASSED",
+      };
+
+      const verdict = finalizeLiveJourneyVerdict(gates);
+      expect(verdict.success).toBe(true);
+      expect(verdict.verdict).toBe("VERIFIED");
+      expect(verdict.blockingReasons).toHaveLength(0);
     });
   });
 
@@ -376,6 +414,174 @@ describe("Strict Ad ID Reconciliation & Live Verdict Helpers (Sections 07, 08, 2
       expect(result.missingFromBrowser).toEqual(["cmvnzhl6400432ig9x5xdyg1s"]);
       expect(result.unexpectedInBrowser).toHaveLength(0);
       expect(result.errors.some((e) => e.includes("cmvnzhl6400432ig9x5xdyg1s"))).toBe(true);
+    });
+  });
+
+  describe("verifyWorkerProvenance() — Worker Provenance Verification (FIX 2)", () => {
+    const validRunId = "run_prov_test_001";
+    const sampleLibraryIds = ["lib_001", "lib_002", "lib_003"];
+
+    const createValidEvidence = () => ({
+      acceptanceRunId: "test_acceptance_001",
+      discoveryRunId: validRunId,
+      workerPid: 12345,
+      requestedMode: "REAL_LIVE_META",
+      providerId: "meta-ads-collector",
+      actualTransport: "stdio",
+      observedSourceType: "REAL_UPSTREAM",
+      fixtureDetected: false,
+      upstreamRequestExecuted: true,
+      upstreamResponseObserved: true,
+      upstreamResultSetId: "rs_001",
+      upstreamAdIds: [...sampleLibraryIds],
+      validAdsCollected: 3,
+      observedAt: new Date().toISOString(),
+      evidenceOrigin: "ACTUAL_PROVIDER_EXECUTION",
+      errors: [],
+    });
+
+    it("passes worker gate when evidence is valid and matches persisted records", () => {
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: createValidEvidence(),
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("PASSED");
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("fails worker gate when fixtureDetected = true", () => {
+      const ev = createValidEvidence();
+      ev.fixtureDetected = true;
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("fixtureDetected"))).toBe(true);
+    });
+
+    it("fails worker gate when observedSourceType = UNKNOWN", () => {
+      const ev = createValidEvidence();
+      ev.observedSourceType = "UNKNOWN";
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("observedSourceType"))).toBe(true);
+    });
+
+    it("fails worker gate when upstreamRequestExecuted = false", () => {
+      const ev = createValidEvidence();
+      ev.upstreamRequestExecuted = false;
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("upstreamRequestExecuted"))).toBe(true);
+    });
+
+    it("fails worker gate when discoveryRunId is mismatched", () => {
+      const ev = createValidEvidence();
+      ev.discoveryRunId = "unrelated_other_run_999";
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("discoveryRunId"))).toBe(true);
+    });
+
+    it("fails worker gate when upstreamAdIds does not match persisted library records", () => {
+      const ev = createValidEvidence();
+      ev.upstreamAdIds = ["lib_001", "lib_002", "lib_DIFFERENT"];
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds], // lib_001, lib_002, lib_003
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("missing from persisted") || e.includes("missing from upstream"))).toBe(true);
+    });
+
+    it("marks worker gate BLOCKED when run status is BLOCKED_SOURCE", () => {
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "BLOCKED_SOURCE",
+        validCount: 0,
+        providerEvidence: null,
+        persistedLibraryIds: [],
+      });
+
+      expect(result.status).toBe("BLOCKED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("blocked"))).toBe(true);
+    });
+
+    it("fails worker gate when providerEvidence is null", () => {
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: null,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("Missing exact-run provider evidence"))).toBe(true);
+    });
+
+    it("fails worker gate when actualTransport is invalid", () => {
+      const ev = createValidEvidence();
+      ev.actualTransport = "mock_transport";
+
+      const result = verifyWorkerProvenance({
+        discoveryRunId: validRunId,
+        finalRunStatus: "COMPLETED",
+        validCount: 3,
+        providerEvidence: ev,
+        persistedLibraryIds: [...sampleLibraryIds],
+      });
+
+      expect(result.status).toBe("FAILED");
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes("actualTransport"))).toBe(true);
     });
   });
 });

@@ -1,0 +1,18 @@
+{
+  "journeyRunId": "live_journey_1792945242264_80f6b7b7",
+  "discoveryRunId": "cmvo1b3sv000182g931m985su",
+  "gates": {
+    "source": "PASSED",
+    "worker": "PASSED",
+    "persistence": "PASSED",
+    "http": "PASSED",
+    "browser": "PASSED",
+    "reconciliation": "PASSED",
+    "artifactIntegrity": "PASSED",
+    "cleanup": "PASSED"
+  },
+  "verdict": "VERIFIED",
+  "success": true,
+  "blockingReasons": [],
+  "evaluatedAt": "2026-10-25T16:21:12.524Z"
+}
