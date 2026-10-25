@@ -1,0 +1,75 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+  "verified": true,
+  "activeDatabaseProtected": true,
+  "observedKeys": [
+    "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db"
+  ],
+  "observedProcesses": [
+    {
+      "processName": "ACCEPTANCE_RUNNER",
+      "processId": 98447,
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "discoveryRunId": null,
+      "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "observedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "markerId": "ws_acceptance_kh01_rel_1792928286105_f08ae063",
+      "markerObserved": true,
+      "observedRunId": null,
+      "observedAdIds": [],
+      "observedAt": "2026-10-25T11:38:57.913Z",
+      "observationMethod": "PRISMA_QUERY",
+      "evidenceReference": "Parent acceptance runner Prisma query"
+    },
+    {
+      "processName": "PRISMA_VERIFIER",
+      "processId": 98447,
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "discoveryRunId": null,
+      "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "observedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "markerId": "ws_acceptance_kh01_rel_1792928286105_f08ae063",
+      "markerObserved": true,
+      "observedRunId": null,
+      "observedAdIds": [],
+      "observedAt": "2026-10-25T11:38:57.913Z",
+      "observationMethod": "PRISMA_QUERY",
+      "evidenceReference": "Isolated Prisma probe readback"
+    },
+    {
+      "processName": "WORKER",
+      "processId": 99286,
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "discoveryRunId": null,
+      "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "observedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "markerId": "ws_acceptance_kh01_rel_1792928286105_f08ae063",
+      "markerObserved": true,
+      "observedRunId": null,
+      "observedAdIds": [],
+      "observedAt": "2026-10-25T11:38:58.431Z",
+      "observationMethod": "WORKER_PROCESS_EVENT",
+      "evidenceReference": "Worker subprocess PID 99286 confirmed marker ws_acceptance_kh01_rel_1792928286105_f08ae063 observation"
+    },
+    {
+      "processName": "NEXTJS_SERVER",
+      "processId": 99297,
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "discoveryRunId": null,
+      "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "observedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+      "markerId": "ws_acceptance_kh01_rel_1792928286105_f08ae063",
+      "markerObserved": true,
+      "observedRunId": null,
+      "observedAdIds": [],
+      "observedAt": "2026-10-25T11:38:59.411Z",
+      "observationMethod": "HTTP_DATABASE_READBACK",
+      "evidenceReference": "Next.js test endpoint /api/v1/test/db-observation confirmed marker ws_acceptance_kh01_rel_1792928286105_f08ae063"
+    }
+  ],
+  "missingProcesses": [],
+  "mismatchedProcesses": [],
+  "sharedRunVerified": false,
+  "sharedMarkerVerified": true
+}

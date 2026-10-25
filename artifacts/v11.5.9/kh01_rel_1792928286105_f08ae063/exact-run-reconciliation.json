@@ -1,0 +1,17 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "runId": "run_reconcile_kh01_rel_1792928286105_f08ae063",
+  "retrieved": 5,
+  "valid": 5,
+  "linked": 5,
+  "displayed": 5,
+  "excluded": 0,
+  "consistent": true,
+  "reasons": [
+    "Run counts are fully consistent across ledger, relations, and display."
+  ],
+  "evidenceOrigin": "ACTUAL_DATABASE_QUERY",
+  "testedCommit": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+  "reconciliationDate": "2026-10-25T11:38:59.654Z",
+  "status": "PASSED"
+}

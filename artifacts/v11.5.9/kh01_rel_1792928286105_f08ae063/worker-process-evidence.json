@@ -1,0 +1,37 @@
+{
+  "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+  "name": "Execute Actual Worker Subprocess PID, Claim, Pipeline Execution, Cross-Process DB, and Provenance Tests",
+  "command": "npx vitest run tests/integration/kh01ActualWorkerProcess.test.ts tests/integration/kh01PersistenceReadback.test.ts tests/integration/kh01CrossProcessDatabaseIdentity.test.ts tests/integration/kh01WorkerProviderProvenance.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+  "status": "PASSED",
+  "exitCode": 0,
+  "durationMs": 7043,
+  "startedAt": "2026-10-25T11:38:19.048Z",
+  "completedAt": "2026-10-25T11:38:26.091Z",
+  "assertions": [
+    {
+      "assertionId": "ASSERTION_WORKER_SUBPROCESS_EXECUTION",
+      "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "status": "PASSED",
+      "startedAt": "2026-10-25T11:38:19.048Z",
+      "completedAt": "2026-10-25T11:38:26.091Z",
+      "evidenceType": "PROCESS_CONCURRENCY_TEST",
+      "evidenceReference": "Vitest: \"tests/integration/kh01ActualWorkerProcess.test.ts::KH-01 Actual Worker Process Execution (FINAL-FIX-01) launches real child discovery-worker.ts subprocess with genuine OS PID and isolated DB\" (PASSED, 973.593583ms)",
+      "error": null
+    }
+  ],
+  "envelope": {
+    "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+    "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+    "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+    "command": "npx vitest run tests/integration/kh01ActualWorkerProcess.test.ts tests/integration/kh01PersistenceReadback.test.ts tests/integration/kh01CrossProcessDatabaseIdentity.test.ts tests/integration/kh01WorkerProviderProvenance.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+    "startedAt": "2026-10-25T11:38:19.048Z",
+    "completedAt": "2026-10-25T11:38:26.091Z",
+    "processId": null,
+    "exitCode": 0,
+    "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+    "reportSha256": "7e41e72c6a0fa36277a50d97cbf0930e9fba0415ce576a6cda7e64344a5dc83c",
+    "reportCreatedDuringExecution": true,
+    "executionIdentityVerified": true
+  }
+}
