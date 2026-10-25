@@ -168,7 +168,7 @@ function ExactRunContextBanner({
       </div>
       <button
         onClick={onExit}
-        data-testid="exact-run-exit"
+        data-testid="exit-run-view-btn"
         className="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
       >
         Exit Run View ✕
@@ -192,12 +192,13 @@ function ExplorerContent() {
   const [category, setCategory] = useState("ALL");
   const [minAgeDays, setMinAgeDays] = useState("");
   const [launchWithinDays, setLaunchWithinDays] = useState("30");
+  const searchParams = useSearchParams();
+  const initialRequestId = searchParams?.get("requestId") || null;
+
   const [sortBy, setSortBy] = useState<"launch_date" | "first_seen" | "score">("launch_date");
   const [unknownDateCount, setUnknownDateCount] = useState(0);
-  const [requestId, setRequestId] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(initialRequestId);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  const searchParams = useSearchParams();
 
   // Read URL query parameters reactively
   useEffect(() => {
@@ -222,7 +223,7 @@ function ExplorerContent() {
     }
 
     const urlRequestId = searchParams.get("requestId");
-    if (urlRequestId) setRequestId(urlRequestId);
+    setRequestId(urlRequestId || null);
   }, [searchParams]);
 
   // Pagination
@@ -236,8 +237,9 @@ function ExplorerContent() {
       setError(null);
 
       // Exact Run Mode: Call canonical run-scoped API without 30-day age filtering or mode ranking
-      if (requestId) {
-        const exactRunUrl = `/api/v1/discovery/meta/requests/${encodeURIComponent(requestId)}/ads?page=${page}&pageSize=12`;
+      const effectiveRequestId = requestId || searchParams?.get("requestId");
+      if (effectiveRequestId) {
+        const exactRunUrl = `/api/v1/discovery/meta/requests/${encodeURIComponent(effectiveRequestId)}/ads?page=${page}&pageSize=12`;
         const res = await fetch(exactRunUrl);
         const json = await res.json();
 
@@ -252,7 +254,7 @@ function ExplorerContent() {
         setAds([]);
         setTotalPages(1);
         setTotalCount(0);
-        setError(json.message || json.error || `No advertisements found for research run '${requestId}'.`);
+        setError(json.message || json.error || `No advertisements found for research run '${effectiveRequestId}'.`);
         return;
       }
 

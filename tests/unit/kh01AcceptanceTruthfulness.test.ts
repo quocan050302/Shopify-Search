@@ -4,6 +4,7 @@ import path from "path";
 import os from "os";
 import {
   parseVitestJsonAssertions,
+  normalizeTestIdentity,
 } from "../../scripts/kh01/runFullAcceptance";
 import {
   CANONICAL_ACCEPTANCE_GATES,
@@ -49,8 +50,11 @@ describe("KH-01 Acceptance Runner Truthfulness & Adversarial Integrity (Section 
     });
 
     const parsed = parseVitestJsonAssertions(reportPath);
-    const entry = parsed.get("dbIsolation.test.ts::Database Safety > blocks test execution when databaseUrl contains production.db") ||
-                  parsed.get("Database Safety > blocks test execution when databaseUrl contains production.db");
+    const id = normalizeTestIdentity({
+      testFile: "tests/unit/dbIsolation.test.ts",
+      fullName: "Database Safety > blocks test execution when databaseUrl contains production.db",
+    });
+    const entry = parsed.get(id);
 
     expect(entry).toBeDefined();
     expect(entry?.status).toBe("PASSED");
@@ -76,7 +80,11 @@ describe("KH-01 Acceptance Runner Truthfulness & Adversarial Integrity (Section 
     });
 
     const parsed = parseVitestJsonAssertions(reportPath);
-    const entry = parsed.get("Admin Security > rejects spoofed Host header");
+    const id = normalizeTestIdentity({
+      testFile: "tests/unit/adminAuth.test.ts",
+      fullName: "Admin Security > rejects spoofed Host header",
+    });
+    const entry = parsed.get(id);
     expect(entry).toBeDefined();
     expect(entry?.status).toBe("FAILED");
     expect(entry?.failureMessages).toContain("Expected 401 but received 200");
@@ -100,7 +108,11 @@ describe("KH-01 Acceptance Runner Truthfulness & Adversarial Integrity (Section 
     });
 
     const parsed = parseVitestJsonAssertions(reportPath);
-    const entry = parsed.get("Feature > optional feature test");
+    const id = normalizeTestIdentity({
+      testFile: "tests/unit/skipped.test.ts",
+      fullName: "Feature > optional feature test",
+    });
+    const entry = parsed.get(id);
     expect(entry).toBeDefined();
     expect(entry?.status).toBe("SKIPPED");
   });

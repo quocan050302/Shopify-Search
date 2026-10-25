@@ -95,7 +95,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "DATABASE_QUERY",
     stageId: "STAGE_03_UNIT_SUITE",
     expectedTestFile: "tests/unit/dbIsolation.test.ts",
-    expectedTestName: "blocks test execution when databaseUrl contains production.db",
+    expectedTestName: "KH-01 — Checkpoint 1: Strict Database Isolation & Canonical Path Safety assertSafeTestDatabase blocks test execution when databaseUrl contains production.db",
   },
   {
     gateId: "GATE_03_AUTH_TRUST_BOUNDARY",
@@ -104,7 +104,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_03_SECURITY_SUITE",
     expectedTestFile: "tests/unit/adminAuthTrustBoundary.test.ts",
-    expectedTestName: "rejects spoofed x-forwarded-for header from remote client",
+    expectedTestName: "Admin Authentication Trust Boundary & Deployment Verification resolveTrustedRequestContext rejects spoofed x-forwarded-for header from remote client",
   },
   {
     gateId: "GATE_04_WORKSPACE_ISOLATION",
@@ -113,7 +113,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_03_SECURITY_SUITE",
     expectedTestFile: "tests/integration/legacyAdsWorkspaceIsolation.test.ts",
-    expectedTestName: "Workspace A caller querying GET /api/v1/ads receives ONLY Workspace A ads",
+    expectedTestName: "Legacy Ads API Workspace Scoping & Isolation Integration Workspace A caller querying GET /api/v1/ads receives ONLY Workspace A ads",
   },
   {
     gateId: "GATE_05_EXACT_RUN_COMPLETENESS",
@@ -122,7 +122,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_03_EXACT_RUN_SUITE",
     expectedTestFile: "tests/integration/exactRunCompleteness.test.ts",
-    expectedTestName: "retrieves all 25 linked ads across pagination without 30-day age filtering",
+    expectedTestName: "Exact Research Run Completeness & Canonical Scoping (/api/v1/discovery/meta/requests/:id/ads) retrieves all 25 linked ads across pagination without 30-day age filtering",
   },
   {
     gateId: "GATE_06_READINESS_SUBMISSION_POLICY",
@@ -131,7 +131,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_03_READINESS_SUITE",
     expectedTestFile: "tests/unit/researchActionPolicy.test.ts",
-    expectedTestName: "returns DIAGNOSTICS with non-submitting button when UNKNOWN",
+    expectedTestName: "Research Action Policy (deriveResearchAction) returns DIAGNOSTICS with non-submitting button when UNKNOWN",
   },
   {
     gateId: "GATE_07_PROVENANCE_INTEGRITY",
@@ -140,7 +140,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_05_UNIFIED_JOURNEY",
     expectedTestFile: "tests/integration/kh01UnifiedJourney.test.ts",
-    expectedTestName: "Step 3: Executes the research job via production worker and persists real snapshots",
+    expectedTestName: "KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Worker -> DB -> HTTP -> Browser) Step 3: Executes the research job via production worker and persists real snapshots",
   },
   {
     gateId: "GATE_08_GENUINE_CONCURRENCY_PROOF",
@@ -149,7 +149,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "PROCESS_CONCURRENCY_TEST",
     stageId: "STAGE_04_CONCURRENCY_RECOVERY",
     expectedTestFile: "tests/integration/kh01WorkerConcurrency.test.ts",
-    expectedTestName: "proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite (Section 31)",
+    expectedTestName: "KH-01 Checkpoint 4 & 5: Worker Capacity, Slot Lifecycle & Claim Fencing proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite (Section 31)",
   },
   {
     gateId: "GATE_09_GENUINE_CRASH_RECOVERY",
@@ -158,7 +158,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "PROCESS_CONCURRENCY_TEST",
     stageId: "STAGE_04_CONCURRENCY_RECOVERY",
     expectedTestFile: "tests/integration/kh01WorkerConcurrency.test.ts",
-    expectedTestName: "verifies full crash recovery scenario, immutable payload preservation, and stale rejection",
+    expectedTestName: "KH-01 Checkpoint 4 & 5: Worker Capacity, Slot Lifecycle & Claim Fencing verifies full crash recovery scenario, immutable payload preservation, and stale rejection",
   },
   {
     gateId: "GATE_10_TYPESCRIPT_PASSED",
@@ -181,7 +181,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "BROWSER_ACTION",
     stageId: "STAGE_05_UNIFIED_JOURNEY",
     expectedTestFile: "tests/integration/kh01UnifiedJourney.test.ts",
-    expectedTestName: "Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data",
+    expectedTestName: "KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Worker -> DB -> HTTP -> Browser) Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data",
   },
   {
     gateId: "GATE_13_TEST_TRUTHFULNESS_VERIFIED",
@@ -190,7 +190,7 @@ export const CANONICAL_ACCEPTANCE_GATES: AcceptanceGateDefinition[] = [
     evidenceType: "TEST_ASSERTION",
     stageId: "STAGE_03D_TRUTHFULNESS_SUITE",
     expectedTestFile: "tests/unit/kh01AcceptanceTruthfulness.test.ts",
-    expectedTestName: "accurately classifies SKIPPED test and does not report it as passed",
+    expectedTestName: "KH-01 Acceptance Runner Truthfulness & Adversarial Integrity (Section 24) accurately classifies SKIPPED test and does not report it as passed",
   },
   // Optional Live Source Gate
   {

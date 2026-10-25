@@ -25,12 +25,19 @@ describe("KH-01 Exact Test Assertion Matching & Identity (Section 10)", () => {
     return reportPath;
   }
 
-  it("normalizes test identity to basename and exact full name", () => {
+  it("normalizes test identity to repo-relative path and exact full name", () => {
     const id = normalizeTestIdentity({
       testFile: "src/services/security/tests/unit/adminAuthTrustBoundary.test.ts",
       fullName: "Admin Security > rejects remote client spoofing",
     });
-    expect(id).toBe("adminAuthTrustBoundary.test.ts::Admin Security > rejects remote client spoofing");
+    expect(id).toBe("src/services/security/tests/unit/adminAuthTrustBoundary.test.ts::Admin Security > rejects remote client spoofing");
+
+    const absPath = path.join(process.cwd(), "tests/unit/adminAuthTrustBoundary.test.ts");
+    const id2 = normalizeTestIdentity({
+      testFile: absPath,
+      fullName: "Admin Security > rejects remote client spoofing",
+    });
+    expect(id2).toBe("tests/unit/adminAuthTrustBoundary.test.ts::Admin Security > rejects remote client spoofing");
   });
 
   it("matches exact test identity and preserves PASSED status", () => {

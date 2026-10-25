@@ -35,6 +35,9 @@ export interface RunCountReconciliation {
   valid: number;
   linked: number;
   displayed: number;
+  eligibleForDisplayCount?: number;
+  httpObservedCount?: number | null;
+  browserObservedCount?: number | null;
   excluded: number;
   quarantined?: number;
   consistent: boolean;
@@ -220,6 +223,9 @@ export async function reconcileResearchRunCounts(
     valid: counts.valid,
     linked: counts.linked,
     displayed: counts.displayed,
+    eligibleForDisplayCount: linkedCount,
+    httpObservedCount: typeof options?.observedHttpCount === "number" ? options.observedHttpCount : null,
+    browserObservedCount: typeof options?.observedDisplayedCount === "number" ? options.observedDisplayedCount : null,
     excluded,
     quarantined: quarantinedCount,
     consistent: evaluation.consistent,

@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { compareEvidenceAcrossBoundaries } from "../../scripts/kh01/runFullAcceptance";
+import {
+  compareEvidenceAcrossBoundaries,
+  evaluateCrossBoundaryVerdict,
+} from "../../scripts/kh01/runFullAcceptance";
 import { evaluateRunCountInvariants, RunCounts } from "../../src/services/research/runReconciliationService";
 
 describe("KH-01 Cross-Boundary Reconciliation & Evidence Comparison (Section 12 & 17)", () => {
@@ -80,5 +83,56 @@ describe("KH-01 Cross-Boundary Reconciliation & Evidence Comparison (Section 12 
     const evalRes = evaluateRunCountInvariants(counts);
     expect(evalRes.consistent).toBe(false);
     expect(evalRes.violations.some((v) => v.code === "LINKED_DISPLAYED_MISMATCH")).toBe(true);
+  });
+
+  describe("PART 09 — Cross-Boundary Truth Table (FIX-06 & FIX-07)", () => {
+    it("Row 1: PASS + PASS + PASS -> Eligible for PASS & can award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("PASSED", "PASSED", true);
+      expect(v.eligibleForPass).toBe(true);
+      expect(v.status).toBe("PASSED");
+      expect(v.canAwardRunReconciled).toBe(true);
+    });
+
+    it("Row 2: PASS + PASS + FAIL -> FAILED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("PASSED", "PASSED", false);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("FAILED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
+
+    it("Row 3: PASS + FAIL + PASS -> FAILED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("PASSED", "FAILED", true);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("FAILED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
+
+    it("Row 4: FAIL + PASS + PASS -> FAILED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("FAILED", "PASSED", true);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("FAILED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
+
+    it("Row 5: FAIL + FAIL + FAIL -> FAILED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("FAILED", "FAILED", false);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("FAILED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
+
+    it("Row 6: NOT_RUN + PASS + PASS -> NOT_VERIFIED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("NOT_RUN", "PASSED", true);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("NOT_VERIFIED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
+
+    it("Row 7: PASS + NOT_RUN + PASS -> NOT_VERIFIED & cannot award RUN_RECONCILED", () => {
+      const v = evaluateCrossBoundaryVerdict("PASSED", "NOT_RUN", true);
+      expect(v.eligibleForPass).toBe(false);
+      expect(v.status).toBe("NOT_VERIFIED");
+      expect(v.canAwardRunReconciled).toBe(false);
+    });
   });
 });
