@@ -18,7 +18,11 @@ import {
   validateMetaResearchForm,
 } from "@/lib/meta/validateMetaResearchForm";
 import { getAllowedResearchLimits } from "@/lib/meta/getAllowedResearchLimits";
-import { deriveResearchAction } from "@/lib/meta/researchActionPolicy";
+import {
+  deriveAuthorizedResearchAction,
+  ResearchAuthorizationStatus,
+} from "@/lib/meta/researchActionPolicy";
+import { X } from "lucide-react";
 
 export type CreateResearchResult =
   | { ok: true; runId: string; queuedStatus?: string }
@@ -26,18 +30,22 @@ export type CreateResearchResult =
 
 export interface MetaResearchFormProps {
   readiness: NormalizedReadiness;
+  authorization?: ResearchAuthorizationStatus;
   maxBudget: number;
   isSubmitting: boolean;
   onSubmit: (formData: MetaResearchFormState) => Promise<CreateResearchResult>;
   onOpenSetupGuide?: () => void;
+  onRefreshAuth?: () => void;
 }
 
 export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
   readiness,
+  authorization,
   maxBudget,
   isSubmitting,
   onSubmit,
   onOpenSetupGuide,
+  onRefreshAuth,
 }) => {
   const [keywordsInput, setKeywordsInput] = useState("");
   const [market] = useState("US");
@@ -48,10 +56,20 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
   const [advertiserPageId, setAdvertiserPageId] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [formErrors, setFormErrors] = useState<{ keywords?: string; limit?: string }>({});
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
+  const defaultAuth: ResearchAuthorizationStatus = {
+    state: "AUTHORIZED_LOCAL",
+    authorized: true,
+  };
+  const effectiveAuth = authorization || defaultAuth;
+
   const allowedLimits = useMemo(() => getAllowedResearchLimits(maxBudget), [maxBudget]);
-  const researchAction = useMemo(() => deriveResearchAction(readiness), [readiness]);
+  const researchAction = useMemo(
+    () => deriveAuthorizedResearchAction(readiness, effectiveAuth),
+    [readiness, effectiveAuth]
+  );
 
   useEffect(() => {
     if (requestedLimit > maxBudget && maxBudget > 0) {
@@ -62,8 +80,18 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (researchAction.kind === "DIAGNOSTICS" && effectiveAuth.state === "UNAVAILABLE") {
+      onRefreshAuth?.();
+      return;
+    }
+
     // Prevent submission if readiness action policy disallows it (e.g. UNKNOWN, LOADING, SETUP)
     if (researchAction.kind !== "START" && researchAction.kind !== "QUEUE") {
+      return;
+    }
+
+    if (!effectiveAuth.authorized) {
+      setSubmissionError(effectiveAuth.message || "Administrator authorization required.");
       return;
     }
 
@@ -96,6 +124,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
     }
 
     setFormErrors({});
+    setSubmissionError(null);
     setIsSubmittingLocal(true);
     try {
       const result = await onSubmit(currentState);
@@ -104,12 +133,14 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
         setKeywordsInput("");
         setAdvertiserPageId("");
         setFormErrors({});
+        setSubmissionError(null);
       } else {
         // On failure: PRESERVE keywordsInput, advertiserPageId, and all filters!
-        setFormErrors({ keywords: result.error || "Failed to queue research task." });
+        // Never put auth/server errors into formErrors.keywords!
+        setSubmissionError(result.error || "Failed to queue research task.");
       }
     } catch (err: any) {
-      setFormErrors({ keywords: err.message || "Failed to submit research request." });
+      setSubmissionError(err.message || "Failed to submit research request.");
     } finally {
       setIsSubmittingLocal(false);
     }
@@ -138,6 +169,25 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
           Collector Budget: <strong className="text-slate-200">{maxBudget}</strong> ads/task
         </span>
       </div>
+
+      {submissionError && (
+        <div
+          data-testid="meta-submission-error"
+          className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-200 flex items-center justify-between gap-2"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+            <span>{submissionError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubmissionError(null)}
+            className="text-red-400 hover:text-red-200"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Main Grid: Keywords & Quick Options */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
@@ -291,7 +341,12 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
       {/* Footer: Smart Primary Action */}
       <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800/80">
         <div className="text-xs text-slate-400">
-          {readiness.state === "WORKER_OFFLINE" ? (
+          {!effectiveAuth.authorized ? (
+            <p className="text-amber-400/90 flex items-center gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{effectiveAuth.message || "Administrator authorization required to start research."}</span>
+            </p>
+          ) : readiness.state === "WORKER_OFFLINE" ? (
             <p className="text-amber-400/90 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 shrink-0" />
               <span>Worker offline: task will queue durably until worker is started.</span>
@@ -312,6 +367,7 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
             <Button
               type="button"
               variant="secondary"
+              disabled={!researchAction.enabled}
               onClick={onOpenSetupGuide}
               className="text-amber-300 border-amber-500/30"
             >
@@ -322,7 +378,14 @@ export const MetaResearchForm: React.FC<MetaResearchFormProps> = ({
               type="button"
               variant="secondary"
               data-testid="meta-diagnostics-open"
-              onClick={onOpenSetupGuide}
+              disabled={!researchAction.enabled}
+              onClick={() => {
+                if (effectiveAuth.state === "UNAVAILABLE" && onRefreshAuth) {
+                  onRefreshAuth();
+                } else if (onOpenSetupGuide) {
+                  onOpenSetupGuide();
+                }
+              }}
               className="text-slate-300 border-slate-700 hover:border-slate-500"
             >
               {researchAction.label}

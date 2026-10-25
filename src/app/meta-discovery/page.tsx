@@ -16,6 +16,7 @@ export default function MetaDiscoveryPage() {
     health,
     jobs,
     readiness,
+    authorization,
     pagination,
     searchQuery,
     statusFilter,
@@ -31,6 +32,7 @@ export default function MetaDiscoveryPage() {
     setSearchQuery,
     setStatusFilter,
     refreshWorkspace,
+    fetchAuthStatus,
     createJob,
     cancelJob,
     retryJob,
@@ -49,12 +51,31 @@ export default function MetaDiscoveryPage() {
         {/* Workspace Top Header */}
         <MetaWorkspaceHeader
           readiness={readiness}
+          authorization={authorization}
           isRefreshing={isRefreshing}
           onRefresh={() => refreshWorkspace(false)}
           onOpenDiagnostics={() => setDiagnosticsOpen(true)}
         />
 
         {/* Actionable Feedback Banners */}
+        {!authorization.authorized && authorization.state !== "CHECKING" && (
+          <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start justify-between gap-3 text-xs text-amber-200 animate-in fade-in-50 duration-150">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>Research Access:</strong>{" "}
+                {authorization.message || "Research submissions are unavailable until access is verified. Ensure server is started with local desktop binding or provide valid admin credentials."}
+              </span>
+            </div>
+            <button
+              onClick={() => fetchAuthStatus()}
+              className="px-2 py-0.5 rounded text-amber-300 hover:text-amber-100 hover:bg-amber-500/20 font-medium transition-colors"
+            >
+              Recheck
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start justify-between gap-3 text-xs text-red-200 animate-in fade-in-50 duration-150">
             <div className="flex items-center gap-2">
@@ -94,6 +115,8 @@ export default function MetaDiscoveryPage() {
         {/* Research Task Creation Form */}
         <MetaResearchForm
           readiness={readiness}
+          authorization={authorization}
+          onRefreshAuth={fetchAuthStatus}
           maxBudget={maxBudget}
           isSubmitting={isSubmitting}
           onSubmit={(formData) => createJob(formData)}

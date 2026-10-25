@@ -60,6 +60,130 @@ export interface DeploymentSecurityPolicy {
   reason: string;
 }
 
+export interface SwaiLaunchConfigInput {
+  mode?: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE" | "development" | "production";
+  exposure?: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE";
+  requestedMode?: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE";
+  host?: string;
+  requestedHost?: string;
+  port?: number | string;
+  requestedPort?: number | string;
+  allowPublicBypass?: boolean;
+}
+
+export interface SwaiLaunchConfiguration {
+  mode: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE";
+  listenerHost: string;
+  port: number;
+  authenticationRequired: boolean;
+  valid: boolean;
+  errors: string[];
+}
+
+/**
+ * Asserts that the server listener binding strictly matches the claimed deployment security policy.
+ * Throws an immediate error if a public interface claims LOCAL_ONLY or an unknown listener claims local bypass.
+ */
+export function assertLaunchBindingMatchesPolicy(
+  listenerHost: string,
+  policy: DeploymentSecurityPolicy
+): void {
+  const host = (listenerHost || "").trim().toLowerCase();
+  const isPublic =
+    host === "0.0.0.0" ||
+    (host.length > 0 && host !== "127.0.0.1" && host !== "localhost" && host !== "[::1]");
+
+  if (isPublic && policy.mode === "LOCAL_ONLY") {
+    throw new Error(
+      `CRITICAL SECURITY CONFLICT: Public or non-loopback listener '${listenerHost}' cannot operate in LOCAL_ONLY security mode.`
+    );
+  }
+
+  if (!host && policy.mode === "LOCAL_ONLY") {
+    throw new Error(
+      "CRITICAL SECURITY CONFLICT: Unspecified listener host cannot operate in LOCAL_ONLY security mode."
+    );
+  }
+}
+
+/**
+ * Resolves the trusted server launch configuration ensuring the Next.js listener
+ * interface and the server-side authentication policy share the exact same configuration.
+ */
+export function resolveSwaiLaunchConfiguration(
+  input?: SwaiLaunchConfigInput
+): SwaiLaunchConfiguration {
+  const errors: string[] = [];
+
+  const explicitExposure =
+    input?.exposure ??
+    input?.requestedMode ??
+    (input?.mode === "LOCAL_DESKTOP" || input?.mode === "AUTHENTICATED_REMOTE"
+      ? input.mode
+      : undefined);
+
+  const envMode = (process.env.SWAI_DEPLOYMENT_MODE || "").trim().toUpperCase();
+  const envRemoteAccess = (process.env.SWAI_REMOTE_ACCESS || "").trim().toLowerCase();
+  const rawHost = (
+    input?.requestedHost ??
+    input?.host ??
+    process.env.HOST ??
+    ""
+  ).trim().toLowerCase();
+
+  let mode: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE" = "LOCAL_DESKTOP";
+  if (explicitExposure) {
+    mode = explicitExposure;
+  } else if (envMode === "REMOTE" || envRemoteAccess === "true" || envRemoteAccess === "1") {
+    mode = "AUTHENTICATED_REMOTE";
+  } else if (
+    rawHost === "0.0.0.0" ||
+    (rawHost.length > 0 && rawHost !== "127.0.0.1" && rawHost !== "localhost" && rawHost !== "[::1]")
+  ) {
+    mode = "AUTHENTICATED_REMOTE";
+  }
+
+  let listenerHost: string;
+  if (mode === "LOCAL_DESKTOP") {
+    listenerHost = rawHost || "127.0.0.1";
+    const isLoopback =
+      listenerHost === "127.0.0.1" ||
+      listenerHost === "localhost" ||
+      listenerHost === "[::1]";
+
+    if (!isLoopback) {
+      errors.push(
+        `Configuration conflict: Requested LOCAL_DESKTOP exposure but listener host '${listenerHost}' is not a loopback address.`
+      );
+    }
+  } else {
+    listenerHost = rawHost || "0.0.0.0";
+  }
+
+  const rawPort = input?.port ?? process.env.PORT ?? 3000;
+  const port = typeof rawPort === "number" ? rawPort : parseInt(String(rawPort), 10);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    errors.push(`Invalid port configuration: '${rawPort}'. Port must be between 1 and 65535.`);
+  }
+
+  let authenticationRequired = true;
+  if (mode === "LOCAL_DESKTOP" && errors.length === 0) {
+    const isEnforcedAuth =
+      process.env.SWAI_REQUIRE_AUTH === "true" ||
+      process.env.SWAI_E2E_SERVER === "true";
+    authenticationRequired = isEnforcedAuth;
+  }
+
+  return {
+    mode,
+    listenerHost,
+    port: isNaN(port) ? 3000 : port,
+    authenticationRequired,
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
 /**
  * Resolves the authoritative deployment security policy from server-side configuration.
  * Disallows client-controlled bypass, ensures public listener bindings cannot claim local trust,
@@ -70,7 +194,7 @@ export function resolveDeploymentSecurityPolicy(
 ): DeploymentSecurityPolicy {
   const deploymentMode = (config?.deploymentMode ?? process.env.SWAI_DEPLOYMENT_MODE ?? "").trim().toUpperCase();
   const remoteAccess = (config?.remoteAccess ?? process.env.SWAI_REMOTE_ACCESS ?? "").trim().toLowerCase();
-  const host = (config?.host ?? process.env.HOST ?? "").trim().toLowerCase();
+  const host = (config?.host ?? process.env.HOST ?? process.env.HOSTNAME ?? "").trim().toLowerCase();
   const isCloud = config?.cloudProviders
     ? Boolean(config.cloudProviders.isVercel || config.cloudProviders.isRender || config.cloudProviders.isFly || config.cloudProviders.isKService)
     : Boolean(process.env.VERCEL || process.env.RENDER || process.env.FLY_APP_NAME || process.env.K_SERVICE);
@@ -137,7 +261,7 @@ export function resolveDeploymentSecurityPolicy(
       process.env.SWAI_REQUIRE_AUTH === "true" ||
       process.env.SWAI_E2E_SERVER === "true";
 
-    return {
+    const policy: DeploymentSecurityPolicy = {
       mode: "LOCAL_ONLY",
       localBypassAllowed: !isEnforcedAuth,
       configurationValid: true,
@@ -145,6 +269,8 @@ export function resolveDeploymentSecurityPolicy(
         ? "Local loopback listener with strict authentication required by environment."
         : "Trusted local desktop deployment bound to loopback interface.",
     };
+    assertLaunchBindingMatchesPolicy(host, policy);
+    return policy;
   }
 
   // 7. Unspecified or unverified host: cannot verify loopback isolation
@@ -523,3 +649,64 @@ export function requireAdminAuth(request: NextRequest): NextResponse | null {
   }
   return null;
 }
+
+export interface ResearchAuthorizationDiagnostics {
+  authorizationCode: string;
+  deploymentMode: "LOCAL_DESKTOP" | "REMOTE";
+  listenerConfigured: boolean;
+  listenerVerifiedLoopback: boolean;
+  authenticationRequired: boolean;
+  credentialsPresent: boolean;
+  credentialsValid: boolean;
+  authorized: boolean;
+  reasonCode: string;
+}
+
+/**
+ * Returns sanitized server-side authorization diagnostics without leaking secrets or tokens.
+ */
+export function getResearchAuthorizationDiagnostics(
+  request: NextRequest
+): ResearchAuthorizationDiagnostics {
+  const policy = resolveDeploymentSecurityPolicy();
+  const adminCheck = resolveAdminPrincipal(request);
+
+  const authHeader = request.headers.get("authorization") || "";
+  const tokenHeader = request.headers.get("x-admin-token") || "";
+  const cookieToken = request.cookies?.get?.("swai_admin_token")?.value || "";
+  const credentialsPresent = Boolean(
+    (authHeader.startsWith("Bearer ") && authHeader.slice(7).trim().length > 0) ||
+      tokenHeader.trim().length > 0 ||
+      cookieToken.trim().length > 0
+  );
+
+  const listenerHost = (process.env.HOST ?? process.env.HOSTNAME ?? "").trim().toLowerCase();
+  const isLoopback =
+    listenerHost === "127.0.0.1" || listenerHost === "localhost" || listenerHost === "[::1]";
+
+  let reasonCode = "UNKNOWN";
+  if (adminCheck.authorized) {
+    reasonCode = adminCheck.authMode === "LOCAL_DEV" ? "LOCAL_DEV" : "CREDENTIALS_VALID";
+  } else {
+    if (!isLoopback && policy.mode === "AUTHENTICATED_REMOTE") {
+      reasonCode = listenerHost ? "LISTENER_NON_LOOPBACK" : "LISTENER_BINDING_UNVERIFIED";
+    } else if (adminCheck.code === "INVALID_ADMIN_TOKEN") {
+      reasonCode = "INVALID_ADMIN_TOKEN";
+    } else {
+      reasonCode = adminCheck.code || "ADMIN_AUTH_REQUIRED";
+    }
+  }
+
+  return {
+    authorizationCode: adminCheck.authorized ? "AUTHORIZED" : (adminCheck.code || "DENIED"),
+    deploymentMode: policy.mode === "LOCAL_ONLY" ? "LOCAL_DESKTOP" : "REMOTE",
+    listenerConfigured: Boolean(listenerHost),
+    listenerVerifiedLoopback: isLoopback,
+    authenticationRequired: !policy.localBypassAllowed,
+    credentialsPresent,
+    credentialsValid: adminCheck.authorized && adminCheck.authMode === "OWNER_ADMIN",
+    authorized: adminCheck.authorized,
+    reasonCode,
+  };
+}
+

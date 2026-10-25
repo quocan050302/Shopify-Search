@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { NormalizedReadiness } from "@/lib/meta/normalizeMetaHealth";
 
+import { ResearchAuthorizationStatus } from "@/lib/meta/researchActionPolicy";
+
 export interface MetaWorkspaceHeaderProps {
   readiness: NormalizedReadiness;
+  authorization?: ResearchAuthorizationStatus;
   isRefreshing: boolean;
   onRefresh: () => void;
   onOpenDiagnostics: () => void;
@@ -16,6 +19,7 @@ export interface MetaWorkspaceHeaderProps {
 
 export const MetaWorkspaceHeader: React.FC<MetaWorkspaceHeaderProps> = ({
   readiness,
+  authorization,
   isRefreshing,
   onRefresh,
   onOpenDiagnostics,
@@ -29,8 +33,31 @@ export const MetaWorkspaceHeader: React.FC<MetaWorkspaceHeaderProps> = ({
             <span>Meta Ads Research</span>
           </h1>
           <Badge variant={readiness.badgeVariant} dot>
-            {readiness.title}
+            Collector: {readiness.title}
           </Badge>
+          {authorization && (
+            <Badge
+              variant={
+                authorization.authorized
+                  ? "success"
+                  : authorization.state === "CHECKING"
+                  ? "neutral"
+                  : "warning"
+              }
+              dot
+            >
+              Access:{" "}
+              {authorization.authorized
+                ? authorization.authMode === "LOCAL_DEV"
+                  ? "Local Desktop"
+                  : "Authorized"
+                : authorization.state === "CHECKING"
+                ? "Checking…"
+                : authorization.state === "INVALID_CREDENTIALS"
+                ? "Invalid Token"
+                : "Auth Required"}
+            </Badge>
+          )}
         </div>
         <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
           Discover, collect, and analyze US public advertisements from Meta Ad Library using your local collector.

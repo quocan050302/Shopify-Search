@@ -8,6 +8,8 @@ export interface SwaiTestServerOptions {
   databaseUrl: string;
   port?: number;
   mode?: "development" | "production";
+  deploymentMode?: "LOCAL_DESKTOP" | "REMOTE";
+  allowLocalBypass?: boolean;
   adminApiKey?: string;
   timeoutMs?: number;
   acceptanceRunId?: string;
@@ -90,7 +92,7 @@ export async function startSwaiTestServer(
   options: SwaiTestServerOptions
 ): Promise<SwaiTestServerHandle> {
   const mode = options.mode || "production";
-  const adminApiKey = options.adminApiKey || "test_admin_e2e_secret_token_12345";
+  const adminApiKey = options.adminApiKey || (options.allowLocalBypass ? "" : "test_admin_e2e_secret_token_12345");
   const timeoutMs = options.timeoutMs || 30000;
 
   // 1. Verify and enforce test database isolation
@@ -106,7 +108,6 @@ export async function startSwaiTestServer(
     TEST_DATABASE_URL: options.databaseUrl,
     SWAI_DB_ROLE: "INTEGRATION_TEST",
     SWAI_TEST_ISOLATION: "strict",
-    SWAI_E2E_SERVER: "true",
   };
   assertSafeTestDatabase(options.databaseUrl, testEnv);
 
@@ -132,13 +133,38 @@ export async function startSwaiTestServer(
     TEST_DATABASE_URL: options.databaseUrl,
     SWAI_DB_ROLE: "INTEGRATION_TEST",
     SWAI_TEST_ISOLATION: "strict",
-    SWAI_E2E_SERVER: "true",
-    ADMIN_API_KEY: adminApiKey,
-    SWAI_ADMIN_TOKEN: adminApiKey,
-    ADMIN_SECRET: adminApiKey,
     ...(options.acceptanceRunId ? { KH01_ACCEPTANCE_RUN_ID: options.acceptanceRunId } : {}),
     ...(dbObservationToken ? { KH01_DB_OBSERVATION_TOKEN: dbObservationToken } : {}),
   };
+
+  if (options.allowLocalBypass) {
+    serverEnv.SWAI_DEPLOYMENT_MODE = "LOCAL_DESKTOP";
+    serverEnv.SWAI_LOCAL_DESKTOP = "true";
+    serverEnv.SWAI_REMOTE_ACCESS = "false";
+    delete serverEnv.SWAI_E2E_SERVER;
+    delete serverEnv.SWAI_REQUIRE_AUTH;
+    if (!options.adminApiKey) {
+      delete serverEnv.ADMIN_API_KEY;
+      delete serverEnv.SWAI_ADMIN_TOKEN;
+      delete serverEnv.ADMIN_SECRET;
+    }
+  } else if (options.deploymentMode === "REMOTE") {
+    serverEnv.SWAI_DEPLOYMENT_MODE = "REMOTE";
+    serverEnv.SWAI_REMOTE_ACCESS = "true";
+    delete serverEnv.SWAI_E2E_SERVER;
+    if (!options.adminApiKey) {
+      delete serverEnv.ADMIN_API_KEY;
+      delete serverEnv.SWAI_ADMIN_TOKEN;
+      delete serverEnv.ADMIN_SECRET;
+    }
+  } else {
+    serverEnv.SWAI_E2E_SERVER = "true";
+    if (adminApiKey) {
+      serverEnv.ADMIN_API_KEY = adminApiKey;
+      serverEnv.SWAI_ADMIN_TOKEN = adminApiKey;
+      serverEnv.ADMIN_SECRET = adminApiKey;
+    }
+  }
 
 
   const serverArgs = [

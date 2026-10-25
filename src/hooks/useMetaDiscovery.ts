@@ -6,8 +6,14 @@ import {
   normalizeMetaHealth,
   NormalizedReadiness,
 } from "@/lib/meta/normalizeMetaHealth";
+import {
+  ResearchAuthorizationStatus,
+  ResearchAuthorizationState,
+} from "@/lib/meta/researchActionPolicy";
 import { MetaRequestItem } from "@/components/meta/MetaJobsTable";
 import { MetaResearchFormState } from "@/lib/meta/validateMetaResearchForm";
+
+export type { ResearchAuthorizationStatus, ResearchAuthorizationState };
 
 export type CreateResearchResult =
   | { ok: true; runId: string; queuedStatus?: string }
@@ -28,6 +34,10 @@ export interface ResearchJobsPagination {
 
 export function useMetaDiscovery() {
   const [health, setHealth] = useState<ProviderHealthResponse | null>(null);
+  const [authorization, setAuthorization] = useState<ResearchAuthorizationStatus>({
+    state: "CHECKING",
+    authorized: false,
+  });
   const [jobs, setJobs] = useState<MetaRequestItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -50,8 +60,67 @@ export function useMetaDiscovery() {
 
   const isMountedRef = useRef(true);
   const healthAbortRef = useRef<AbortController | null>(null);
+  const authAbortRef = useRef<AbortController | null>(null);
   const jobsAbortRef = useRef<AbortController | null>(null);
   const isRefreshingRef = useRef(false);
+
+  // 1. Fetch Authorization Status
+  const fetchAuthStatus = useCallback(async (): Promise<ResearchAuthorizationStatus> => {
+    authAbortRef.current?.abort();
+    const controller = new AbortController();
+    authAbortRef.current = controller;
+
+    try {
+      const res = await fetch("/api/v1/auth/status", {
+        signal: controller.signal,
+        headers: { "Cache-Control": "no-cache" },
+      });
+      if (!res.ok) {
+        const errorStatus: ResearchAuthorizationStatus = {
+          state: "UNAVAILABLE",
+          authorized: false,
+          code: `HTTP_${res.status}`,
+          message: `Authorization service returned HTTP ${res.status}`,
+        };
+        if (isMountedRef.current) setAuthorization(errorStatus);
+        return errorStatus;
+      }
+      const json = await res.json();
+      let state: ResearchAuthorizationState = "UNAVAILABLE";
+      if (json.authorized) {
+        state = json.authMode === "LOCAL_DEV" ? "AUTHORIZED_LOCAL" : "AUTHORIZED_SESSION";
+      } else {
+        if (json.code === "INVALID_ADMIN_TOKEN") {
+          state = "INVALID_CREDENTIALS";
+        } else if (json.code === "FORBIDDEN" || json.code === "UNAUTHORIZED_WORKSPACE") {
+          state = "FORBIDDEN";
+        } else {
+          state = "AUTH_REQUIRED";
+        }
+      }
+      const authResult: ResearchAuthorizationStatus = {
+        state,
+        authorized: Boolean(json.authorized),
+        authMode: json.authMode || null,
+        code: json.code,
+        message: json.message,
+      };
+      if (isMountedRef.current) {
+        setAuthorization(authResult);
+      }
+      return authResult;
+    } catch (err: any) {
+      if (err.name === "AbortError") return { state: "CHECKING", authorized: false };
+      const errorStatus: ResearchAuthorizationStatus = {
+        state: "UNAVAILABLE",
+        authorized: false,
+        code: "NETWORK_ERROR",
+        message: err.message || "Failed to contact authorization service",
+      };
+      if (isMountedRef.current) setAuthorization(errorStatus);
+      return errorStatus;
+    }
+  }, []);
 
   // 1. Fetch Health (with AbortController protection)
   const fetchHealth = useCallback(async (): Promise<ProviderHealthResponse | null> => {
@@ -109,7 +178,19 @@ export function useMetaDiscovery() {
         const res = await fetch(`/api/v1/discovery/meta/requests?${searchParams.toString()}`, {
           signal: controller.signal,
         });
-        if (!res.ok) throw new Error(`Jobs fetch failed (HTTP ${res.status})`);
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            if (isMountedRef.current) {
+              setErrors((prev) => ({
+                ...prev,
+                jobs: "Authentication required to view research jobs ledger.",
+              }));
+              setJobs([]);
+            }
+            return [];
+          }
+          throw new Error(`Jobs fetch failed (HTTP ${res.status})`);
+        }
         const json = await res.json();
         const items: MetaRequestItem[] = json.data || [];
         if (isMountedRef.current) {
@@ -144,7 +225,7 @@ export function useMetaDiscovery() {
       isRefreshingRef.current = true;
       if (!isBackground) setIsRefreshing(true);
       try {
-        await Promise.all([fetchHealth(), fetchJobs()]);
+        await Promise.all([fetchHealth(), fetchJobs(), fetchAuthStatus()]);
       } finally {
         isRefreshingRef.current = false;
         if (isMountedRef.current) {
@@ -153,12 +234,19 @@ export function useMetaDiscovery() {
         }
       }
     },
-    [fetchHealth, fetchJobs]
+    [fetchHealth, fetchJobs, fetchAuthStatus]
   );
 
   // 4. Create Research Request
   const createJob = useCallback(
     async (formData: MetaResearchFormState): Promise<CreateResearchResult> => {
+      if (!authorization.authorized) {
+        const errMsg =
+          authorization.message || "Administrator authorization required to start research.";
+        setErrors((prev) => ({ ...prev, mutation: errMsg }));
+        return { ok: false, error: errMsg };
+      }
+
       setIsSubmitting(true);
       setErrors((prev) => ({ ...prev, mutation: null }));
       setSuccessMessage(null);
@@ -185,6 +273,16 @@ export function useMetaDiscovery() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
+          if (res.status === 401 || res.status === 403) {
+            if (isMountedRef.current) {
+              setAuthorization({
+                state: res.status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
+                authorized: false,
+                code: json.error || "UNAUTHORIZED",
+                message: json.message || "Authorization required to create research tasks.",
+              });
+            }
+          }
           const errMsg =
             (typeof json.error === "string" ? json.error : json.error?.message) ||
             json.message ||
@@ -205,7 +303,7 @@ export function useMetaDiscovery() {
         if (isMountedRef.current) setIsSubmitting(false);
       }
     },
-    [refreshWorkspace]
+    [authorization, refreshWorkspace]
   );
 
   // 5. Cancel Job
@@ -324,6 +422,7 @@ export function useMetaDiscovery() {
 
   return {
     health,
+    authorization,
     jobs,
     readiness,
     pagination,
@@ -344,6 +443,7 @@ export function useMetaDiscovery() {
     setStatusFilter: handleStatusFilterChange,
     setSearchQuery: handleSearchQueryChange,
     refreshWorkspace,
+    fetchAuthStatus,
     createJob,
     cancelJob,
     retryJob,
