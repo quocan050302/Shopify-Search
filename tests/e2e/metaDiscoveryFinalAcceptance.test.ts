@@ -189,4 +189,52 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
     // No significant horizontal overflow
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 10);
   });
+
+  it("navigates to Explorer exact-run and verifies run-specific ad card and banner (Section 18)", async () => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${serverHandle.baseUrl}/explorer?platform=META&requestId=${runId}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 20000,
+    });
+
+    // Exact Run Banner is rendered
+    const banner = page.locator("[data-testid='exact-run-context-banner']");
+    await banner.waitFor({ state: "visible", timeout: 15000 });
+    expect(await banner.isVisible()).toBe(true);
+
+    const bannerText = await banner.innerText();
+    expect(bannerText).toContain(runId);
+
+    // Exact Run Ad Card is rendered with correct ad-id
+    const exactCard = page.locator("[data-testid='exact-run-ad-card']");
+    await exactCard.waitFor({ state: "visible", timeout: 15000 });
+    expect(await exactCard.count()).toBeGreaterThanOrEqual(1);
+
+    const cardAdId = await exactCard.first().getAttribute("data-ad-id");
+    expect(cardAdId).toBe("ad_e2e_exact_001");
+  }, 30000);
+
+  it("verifies layout responsiveness across all 6 canonical viewports without horizontal overflow (Section 18)", async () => {
+    const viewports = [
+      { width: 1920, height: 1080, name: "1920x1080 (FHD)" },
+      { width: 1440, height: 900, name: "1440x900 (Desktop)" },
+      { width: 1280, height: 800, name: "1280x800 (Laptop)" },
+      { width: 1024, height: 768, name: "1024x768 (Tablet Landscape)" },
+      { width: 768, height: 1024, name: "768x1024 (Tablet Portrait)" },
+      { width: 390, height: 844, name: "390x844 (Mobile)" },
+    ];
+
+    for (const vp of viewports) {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(`${serverHandle.baseUrl}/explorer?platform=META&requestId=${runId}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 15);
+    }
+  }, 45000);
 });

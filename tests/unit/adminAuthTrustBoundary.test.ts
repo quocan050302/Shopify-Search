@@ -189,12 +189,52 @@ describe("Admin Authentication Trust Boundary & Deployment Verification", () => 
       expect(result.code).toBe("INVALID_ADMIN_TOKEN");
     });
 
+    it("strictly rejects explicit arbitrary Bearer token even when no server secret is configured", () => {
+      // No ADMIN_API_KEY configured
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Authorization: "Bearer arbitrary_unconfigured_token_456" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("INVALID_ADMIN_TOKEN");
+      expect(result.message).toContain("cannot be verified");
+    });
+
+    it("strictly rejects explicit cookie token when no server secret is configured", () => {
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Cookie: "swai_admin_token=arbitrary_cookie_val" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("INVALID_ADMIN_TOKEN");
+    });
+
     it("fails closed for remote requests without credentials", () => {
       process.env.SWAI_DEPLOYMENT_MODE = "REMOTE";
       const req = new NextRequest("http://localhost:3000/api/v1/search");
       const result = resolveAdminPrincipal(req);
       expect(result.authorized).toBe(false);
       expect(result.code).toBe("ADMIN_AUTH_REQUIRED");
+    });
+  });
+
+  describe("validateServerBindingPolicy", () => {
+    it("rejects public 0.0.0.0 binding in local bypass mode", async () => {
+      const { validateServerBindingPolicy } = await import("@/services/security/adminAuth");
+      const res = validateServerBindingPolicy({ host: "0.0.0.0", allowLocalBypass: true });
+      expect(res.valid).toBe(false);
+      expect(res.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(res.localBypassAllowed).toBe(false);
+      expect(res.errors.length).toBeGreaterThan(0);
+    });
+
+    it("approves loopback 127.0.0.1 binding in local bypass mode", async () => {
+      const { validateServerBindingPolicy } = await import("@/services/security/adminAuth");
+      const res = validateServerBindingPolicy({ host: "127.0.0.1", allowLocalBypass: true });
+      expect(res.valid).toBe(true);
+      expect(res.mode).toBe("LOCAL_ONLY");
+      expect(res.localBypassAllowed).toBe(true);
+      expect(res.errors.length).toBe(0);
     });
   });
 

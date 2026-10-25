@@ -145,6 +145,79 @@ export function resolveDeploymentSecurityPolicy(
   };
 }
 
+export interface ServerStartupConfig {
+  host?: string;
+  port?: number | string;
+  nodeEnv?: string;
+  allowLocalBypass?: boolean;
+}
+
+export interface BindingPolicyResult {
+  valid: boolean;
+  mode: "LOCAL_ONLY" | "AUTHENTICATED_REMOTE";
+  listenerHost: string;
+  localBypassAllowed: boolean;
+  errors: string[];
+}
+
+/**
+ * Validates server listener binding policy at startup or request time.
+ * Rejects public binding (0.0.0.0 or LAN) in local-bypass mode.
+ * Fails closed when binding cannot be verified.
+ */
+export function validateServerBindingPolicy(
+  input: ServerStartupConfig
+): BindingPolicyResult {
+  const host = (input.host || "").trim().toLowerCase();
+  const errors: string[] = [];
+
+  const isPublic = host === "0.0.0.0" || (host.length > 0 && host !== "127.0.0.1" && host !== "localhost" && host !== "[::1]");
+  const isLoopback = host === "127.0.0.1" || host === "localhost" || host === "[::1]";
+
+  if (isPublic) {
+    if (input.allowLocalBypass) {
+      errors.push(`Public binding interface '${host}' is incompatible with local desktop authentication bypass.`);
+    }
+    return {
+      valid: errors.length === 0,
+      mode: "AUTHENTICATED_REMOTE",
+      listenerHost: host,
+      localBypassAllowed: false,
+      errors,
+    };
+  }
+
+  if (isLoopback) {
+    return {
+      valid: true,
+      mode: "LOCAL_ONLY",
+      listenerHost: host,
+      localBypassAllowed: input.allowLocalBypass !== false,
+      errors: [],
+    };
+  }
+
+  // If host is empty/unspecified, determine based on environment
+  const isExplicitDesktop = process.env.SWAI_LOCAL_DESKTOP === "true";
+  if (isExplicitDesktop) {
+    return {
+      valid: true,
+      mode: "LOCAL_ONLY",
+      listenerHost: "127.0.0.1",
+      localBypassAllowed: true,
+      errors: [],
+    };
+  }
+
+  return {
+    valid: true,
+    mode: "AUTHENTICATED_REMOTE",
+    listenerHost: host || "unspecified",
+    localBypassAllowed: false,
+    errors: ["Listener binding is unspecified and not explicitly declared as local desktop."],
+  };
+}
+
 /**
  * Verifies whether the server environment is explicitly configured and controlled as a
  * trusted local-first desktop application.
@@ -303,14 +376,13 @@ export function resolveAdminPrincipal(request: NextRequest): AdminAuthCheckResul
         message: "Invalid administrator credentials provided.",
       };
     } else {
-      // No secret configured, but an explicitly bad token was sent
-      if (providedToken.includes("invalid") || providedToken.includes("bad")) {
-        return {
-          authorized: false,
-          code: "INVALID_ADMIN_TOKEN",
-          message: "Provided administrator token is rejected.",
-        };
-      }
+      // Credential was provided by caller, but no secret is configured on the server to verify it.
+      // Explicit invalid/unverifiable credentials must NEVER implicitly authenticate.
+      return {
+        authorized: false,
+        code: "INVALID_ADMIN_TOKEN",
+        message: "Explicit administrator credentials provided but cannot be verified (no secret configured).",
+      };
     }
   }
 

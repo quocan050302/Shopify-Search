@@ -742,6 +742,20 @@ export async function importAdvertisementForWorkspace(
   context: WorkspaceAdImportContext,
   record: NormalizedAdRecord
 ) {
+  // If context.runId is specified, verify run exists and belongs to the authorized workspace
+  if (context.runId) {
+    const run = await prisma.discoveryRun.findUnique({
+      where: { id: context.runId },
+      select: { id: true, workspaceId: true, providerId: true },
+    });
+    if (!run) {
+      throw new Error(`Research run '${context.runId}' not found.`);
+    }
+    if (run.workspaceId !== context.workspaceId) {
+      throw new Error(`Research run '${context.runId}' does not belong to authorized workspace '${context.workspaceId}'.`);
+    }
+  }
+
   const adDetails = await upsertCompetitorAd(record);
   if (!adDetails) return null;
 
@@ -761,7 +775,7 @@ export async function importAdvertisementForWorkspace(
           runId: context.runId,
           adId: adDetails.id,
           workspaceId: context.workspaceId,
-          providerId: context.providerId || "META_COLLECTOR",
+          providerId: context.providerId || "meta-ads-collector",
           ingestOutcome: "NEW",
           sourceUrl: record.originalAdUrl || null,
           observedAt: new Date(record.lastSeenAt || Date.now()),

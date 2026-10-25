@@ -298,6 +298,43 @@ export function validateKh01AcceptanceManifest(manifest: Kh01AcceptanceManifest)
   };
 }
 
+export interface AcceptanceArtifactStatus {
+  artifactId: string;
+  required: boolean;
+  status: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+  evidencePath: string | null;
+  evidenceOrigin: string;
+  error?: string;
+}
+
+export interface RequiredArtifactEvaluation {
+  passed: boolean;
+  blockingArtifactIds: string[];
+  errors: string[];
+}
+
+export function evaluateRequiredArtifacts(
+  artifacts: AcceptanceArtifactStatus[]
+): RequiredArtifactEvaluation {
+  const errors: string[] = [];
+  const blockingArtifactIds: string[] = [];
+
+  for (const art of artifacts) {
+    if (art.required) {
+      if (art.status !== "PASSED") {
+        blockingArtifactIds.push(art.artifactId);
+        errors.push(`Required acceptance artifact '${art.artifactId}' has status '${art.status}' (${art.error || "incomplete or failed evidence"}).`);
+      }
+    }
+  }
+
+  return {
+    passed: blockingArtifactIds.length === 0,
+    blockingArtifactIds,
+    errors,
+  };
+}
+
 /**
  * Derives the exact release verdict from mandatory gates, optional checks, and unresolved defects.
  */
@@ -334,14 +371,17 @@ export function deriveReleaseVerdict(
 }
 
 /**
- * Finalizes acceptance verdict taking into account all stage executions and manifest validation results.
+ * Finalizes acceptance verdict taking into account all stage executions, required artifacts,
+ * requested scope, and manifest validation results.
  */
 export function finalizeAcceptanceVerdict(
   gates: GateEvidence[],
   stages: { stageId: string; status: AcceptanceStatus }[],
   liveVerification: LiveMetaVerificationResult,
   unresolvedDefects: string[] = [],
-  manifestValidationErrors: string[] = []
+  manifestValidationErrors: string[] = [],
+  artifacts?: AcceptanceArtifactStatus[],
+  requestedScope: "OFFLINE" | "FULL_LIVE" = "OFFLINE"
 ): ReleaseVerdict {
   if (manifestValidationErrors.length > 0) {
     return "BLOCKED";
@@ -353,5 +393,21 @@ export function finalizeAcceptanceVerdict(
   if (anyStageFailed) {
     return "BLOCKED";
   }
+
+  // Evaluate required artifacts if provided
+  if (artifacts && artifacts.length > 0) {
+    const artifactEval = evaluateRequiredArtifacts(artifacts);
+    if (!artifactEval.passed) {
+      return "BLOCKED";
+    }
+  }
+
+  // If full live scope was explicitly requested, live verification MUST have passed
+  if (requestedScope === "FULL_LIVE") {
+    if (liveVerification.status !== "PASSED" || liveVerification.detailedOutcome !== "LIVE_RECONCILED") {
+      return "BLOCKED";
+    }
+  }
+
   return deriveReleaseVerdict(gates, liveVerification, unresolvedDefects);
 }

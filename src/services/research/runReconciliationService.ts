@@ -133,13 +133,25 @@ export function evaluateRunCountInvariants(
   };
 }
 
+export interface ReconcileOptions {
+  observedDisplayedCount?: number;
+  observedHttpCount?: number;
+  rules?: RunCountRules;
+  prisma?: any;
+}
+
 /**
  * Reconciles research run counts by inspecting actual database tables.
  * Compares upstream retrieved, validated, linked relations (DiscoveryRunAd),
  * and displayable records without guessing.
  */
-export async function reconcileResearchRunCounts(runId: string): Promise<RunCountReconciliation> {
-  const run = await prisma.discoveryRun.findUnique({
+export async function reconcileResearchRunCounts(
+  runId: string,
+  options?: ReconcileOptions
+): Promise<RunCountReconciliation> {
+  const client = options?.prisma || prisma;
+
+  const run = await client.discoveryRun.findUnique({
     where: { id: runId },
     select: {
       id: true,
@@ -168,11 +180,11 @@ export async function reconcileResearchRunCounts(runId: string): Promise<RunCoun
     };
   }
 
-  const linkedCount = await prisma.discoveryRunAd.count({
+  const linkedCount = await client.discoveryRunAd.count({
     where: { runId },
   });
 
-  const quarantinedCount = await prisma.discoveryRunAd.count({
+  const quarantinedCount = await client.discoveryRunAd.count({
     where: {
       runId,
       ad: {
@@ -181,8 +193,11 @@ export async function reconcileResearchRunCounts(runId: string): Promise<RunCoun
     },
   });
 
-  // Under Option B, Exact-Run API returns all linked ads with explicit quarantine status
-  const displayedCount = linkedCount;
+  // If observed cross-boundary counts are provided, use them; otherwise use database linked count
+  const displayedCount =
+    typeof options?.observedDisplayedCount === "number"
+      ? options.observedDisplayedCount
+      : linkedCount;
   const excluded = run.rejectedCount + run.failedCount;
 
   const counts: RunCounts = {
@@ -197,7 +212,7 @@ export async function reconcileResearchRunCounts(runId: string): Promise<RunCoun
     quarantined: quarantinedCount,
   };
 
-  const evaluation = evaluateRunCountInvariants(counts);
+  const evaluation = evaluateRunCountInvariants(counts, options?.rules);
 
   return {
     runId,

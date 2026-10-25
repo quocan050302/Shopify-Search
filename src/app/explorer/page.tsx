@@ -622,6 +622,7 @@ function ExplorerContent() {
                   key={ad.id || ad.adId}
                   className="relative group"
                   data-testid={requestId ? "exact-run-ad-card" : "ad-card"}
+                  data-ad-id={ad.id || ad.adId}
                 >
                   <AdCard
                     ad={{

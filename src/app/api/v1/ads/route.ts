@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchCompetitorAds, upsertCompetitorAd } from "@/services/ads/adService";
+import {
+  searchCompetitorAds,
+  upsertCompetitorAd,
+  importAdvertisementForWorkspace,
+} from "@/services/ads/adService";
 import { resolveAdSourceUrl } from "@/services/providers/urlResolver";
 import { normalizeExternalAdRecord } from "@/services/providers/registry";
 import {
@@ -160,7 +164,10 @@ export async function POST(request: NextRequest) {
       thumbnailUrl: undefined,
     });
 
-    const savedAd = await upsertCompetitorAd(normalized);
+    const savedAd = await importAdvertisementForWorkspace(
+      { workspaceId: context.workspaceId },
+      normalized
+    );
     if (!savedAd) {
       throw new Error("Failed to retrieve saved competitor advertisement");
     }
