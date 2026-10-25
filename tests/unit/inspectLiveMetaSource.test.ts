@@ -162,4 +162,207 @@ describe("inspectLiveMetaSourceResult Helper (Section 09)", () => {
     expect(result.missingLibraryIds).toBe(2); // invalid-id-xyz and empty string
     expect(result.duplicateLibraryIds).toEqual(["123456789012345"]);
   });
+
+  describe("Provenance Negative Tests (Section 26: PROV-01 to PROV-07)", () => {
+    // PROV-01: transport = stdio, resultSetId exists, requests_made missing, ads present
+    it("PROV-01: rejects upstream request when requests_made is missing even if resultSetId exists", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "123456789012345", page: { id: "p1", name: "Real Advertiser" } },
+      ];
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_existing_cached_set",
+        job: {
+          id: "job_cached",
+          state: "COMPLETED",
+          count: 1,
+          stats: {}, // requests_made is MISSING!
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        resultSetId: "rs_existing_cached_set",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.upstreamRequestObserved).toBe(false);
+      expect(result.sourceClassification).toBe("UNKNOWN");
+      expect(result.status).toBe("FAILED");
+    });
+
+    // PROV-02: requests_made = 0, ads present
+    it("PROV-02: cannot claim fresh upstream request when requests_made = 0", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "123456789012345", page: { id: "p1", name: "Real Advertiser" } },
+      ];
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_cached_0_req",
+        job: {
+          id: "job_0_req",
+          state: "COMPLETED",
+          count: 1,
+          stats: { requests_made: 0, ads_collected: 1 },
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.upstreamRequestObserved).toBe(false);
+      expect(result.sourceClassification).toBe("UNKNOWN");
+      expect(result.status).toBe("FAILED");
+    });
+
+    // PROV-03: requests_made = 1, ads_collected = 2, real numeric IDs, transport = stdio
+    it("PROV-03: eligible for REAL_UPSTREAM when requests_made >= 1 and valid numeric IDs exist", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "123456789012345", page: { id: "p1", name: "Real Advertiser" } },
+        { id: "987654321098765", page: { id: "p2", name: "Real Advertiser 2" } },
+      ];
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_live_123",
+        job: {
+          id: "job_live_123",
+          state: "COMPLETED",
+          count: 2,
+          stats: { requests_made: 1, ads_collected: 2 },
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.upstreamRequestObserved).toBe(true);
+      expect(result.upstreamResponseObserved).toBe(true);
+      expect(result.sourceClassification).toBe("REAL_UPSTREAM");
+      expect(result.status).toBe("PASSED");
+    });
+
+    // PROV-04: mock_test_boundary, requests_made = 100
+    it("PROV-04: classifies mock_test_boundary as TEST_FIXTURE regardless of requests_made", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "mock_ad_1", page: { id: "p1", name: "Mock Advertiser" } },
+      ];
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_mock",
+        job: {
+          id: "job_mock",
+          state: "COMPLETED",
+          count: 1,
+          stats: { requests_made: 100, ads_collected: 1 },
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "mock_test_boundary",
+        requestedKeyword: "gadget",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.sourceClassification).toBe("TEST_FIXTURE");
+      expect(result.isFixture).toBe(true);
+      expect(result.upstreamRequestObserved).toBe(false);
+    });
+
+    // PROV-05: Stored/cached result page (no new upstream request)
+    it("PROV-05: does not falsely claim fresh upstream request on stored/cached results", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "123456789012345", page: { id: "p1", name: "Ad from cache" } },
+      ];
+      // Job with 0 requests made (read directly from local sqlite)
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_stored_cache",
+        job: {
+          id: "job_cache_read",
+          state: "COMPLETED",
+          count: 1,
+          stats: { requests_made: 0, ads_collected: 1 },
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.upstreamRequestObserved).toBe(false);
+      expect(result.sourceClassification).toBe("UNKNOWN");
+    });
+
+    // PROV-06: Non-numeric ID in real mode marks invalid
+    it("PROV-06: rejects non-numeric Meta Library IDs in real live mode", () => {
+      const rawAds: MetaCollectorRawAd[] = [
+        { id: "synthetic_fake_ad_123", page: { id: "p1", name: "Fake" } },
+      ];
+      const mcpResponse: MetaCollectorSearchResponse = {
+        result_set_id: "rs_fake",
+        job: {
+          id: "job_fake",
+          state: "COMPLETED",
+          count: 1,
+          stats: { requests_made: 1, ads_collected: 1 },
+        },
+        ads: rawAds,
+        retrieval_pending: false,
+        data_status: "partial",
+        untrusted_ad_content: false,
+      };
+
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        mcpResponse,
+        rawAds,
+      });
+
+      expect(result.validSourceIds).toBe(0);
+      expect(result.missingLibraryIds).toBe(1);
+      expect(result.status).toBe("FAILED");
+    });
+
+    // PROV-07: Error or rate limit leads to BLOCKED status
+    it("PROV-07: classifies upstream rate limiting or blocking as BLOCKED status", () => {
+      const result = inspectLiveMetaSourceResult({
+        transport: "stdio",
+        requestedKeyword: "gadget",
+        error: new Error("Rate limit exceeded: 429 Too Many Requests"),
+      });
+
+      expect(result.status).toBe("BLOCKED");
+      expect(result.sourceClassification).toBe("UNKNOWN");
+    });
+  });
 });

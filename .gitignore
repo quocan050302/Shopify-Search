@@ -61,4 +61,5 @@ skills-lock.json
 artifacts/
 !artifacts/v11.5.9/
 !artifacts/v11.6.0/
+!artifacts/v11.6.1/
 artifacts/**/.scratch*

@@ -49,13 +49,24 @@ export function inspectLiveMetaSourceResult(input: InspectLiveMetaSourceInput): 
     transport === "mock_test_boundary" ||
     Boolean(process.env.SWAI_MOCK_META_BOUNDARY && process.env.SWAI_MOCK_META_BOUNDARY !== "false");
 
-  // Authoritative MCP stats observation
+  // Authoritative MCP stats observation (Section 14)
   const stats = input.mcpResponse?.job?.stats as { requests_made?: number; ads_collected?: number } | undefined;
-  const requestsMade = typeof stats?.requests_made === "number" ? stats.requests_made : (resultSetId && !isFixture ? 1 : 0);
-  const adsCollectedStat = typeof stats?.ads_collected === "number" ? stats.ads_collected : rawAds.length;
+  const observedRequestsMade =
+    typeof stats?.requests_made === "number" &&
+    Number.isFinite(stats.requests_made) &&
+    stats.requests_made >= 0
+      ? stats.requests_made
+      : null;
 
-  const upstreamRequestObserved = !isFixture && requestsMade > 0;
-  const upstreamResponseObserved = !isFixture && upstreamRequestObserved && (adsCollectedStat > 0 || rawAds.length > 0);
+  const observedAdsCollected =
+    typeof stats?.ads_collected === "number" &&
+    Number.isFinite(stats.ads_collected) &&
+    stats.ads_collected >= 0
+      ? stats.ads_collected
+      : rawAds.length;
+
+  const upstreamRequestObserved = !isFixture && observedRequestsMade !== null && observedRequestsMade > 0;
+  const upstreamResponseObserved = !isFixture && upstreamRequestObserved && (observedAdsCollected > 0 || rawAds.length > 0);
 
   // Analyze raw ad identities
   const seenIds = new Set<string>();

@@ -464,15 +464,11 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
 
       if (!isFixture) {
         const stats = (mcpResponse?.job?.stats || continueRes?.job?.stats) as { requests_made?: number; ads_collected?: number } | undefined;
-        if (typeof stats?.requests_made === "number") {
+        if (typeof stats?.requests_made === "number" && Number.isFinite(stats.requests_made)) {
           upstreamReq = stats.requests_made > 0;
           upstreamResp = upstreamReq && ((typeof stats.ads_collected === "number" && stats.ads_collected > 0) || rawAds.length > 0);
-        } else if (mcpResponse || continueRes) {
-          // Fallback if stats is absent: search was executed and returned an active MCP response
-          upstreamReq = Boolean(mcpResponse?.result_set_id || continueRes?.result_set_id);
-          upstreamResp = upstreamReq && rawAds.length > 0;
-        } else if (isStoredRead) {
-          // Paginating through already cached results in local collector DB
+        } else {
+          // If authoritative requests_made is absent or non-numeric, do NOT infer fresh upstream execution (Section 15)
           upstreamReq = false;
           upstreamResp = rawAds.length > 0;
         }
