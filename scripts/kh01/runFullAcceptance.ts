@@ -981,6 +981,7 @@ export interface AcceptanceWorkerHandle {
   databaseIdentity: string;
   getDbObservations?(): ProcessDatabaseObservation[];
   getProviderEvidences?(): ProviderSourceEvidence[];
+  waitForDbObservation?(timeoutMs?: number): Promise<ProcessDatabaseObservation | null>;
 
   waitForClaim(
     runId: string,
@@ -1259,6 +1260,16 @@ export async function startIsolatedAcceptanceWorker(
     databaseIdentity: context.databaseUrl,
     getDbObservations: () => [...workerDbObservations],
     getProviderEvidences: () => [...workerProviderEvidences],
+    waitForDbObservation: async (timeoutMs: number = 8000): Promise<ProcessDatabaseObservation | null> => {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        if (workerDbObservations.length > 0) {
+          return workerDbObservations[0];
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      return null;
+    },
 
     async waitForClaim(runId: string, timeoutMs: number = 60000): Promise<WorkerClaimEvidence> {
       return waitForWorkerRunClaim(handle, runId, context.liveDbHandle.prisma, timeoutMs);
@@ -4010,6 +4021,7 @@ export interface DatabaseIsolationEvidence {
   errors: string[];
   observedAt: string;
   error?: string;
+  cleanup?: () => Promise<void>;
 }
 
 export async function createDatabaseIsolationProbe(context: {
@@ -4168,6 +4180,9 @@ export async function observeDatabaseIdentityFromWorker(
   context: LiveAcceptanceContext,
   markerId: string
 ): Promise<ProcessDatabaseObservation> {
+  if (worker.waitForDbObservation) {
+    await worker.waitForDbObservation(8000);
+  }
   const observations = worker.getDbObservations ? worker.getDbObservations() : [];
   const matching = observations.find(
     (o) => o.markerId === markerId || (context.acceptanceRunId && o.acceptanceRunId === context.acceptanceRunId)
@@ -4221,7 +4236,7 @@ export async function observeDatabaseIdentityFromNextServer(
   context: LiveAcceptanceContext,
   markerId: string
 ): Promise<ProcessDatabaseObservation> {
-  const serverUrl = server?.url || (server as any)?.baseUrl || "http://127.0.0.1:3000";
+  const serverUrl = server?.baseUrl || server?.url || (server as any)?.baseUrl || "http://127.0.0.1:3000";
   const acceptanceRunId = context.acceptanceRunId || "";
   const rawExpected = (context as any).expectedDatabaseKey || context.databaseUrl || "";
   const expectedDatabaseKey = rawExpected.startsWith("sqlite:")
@@ -4233,6 +4248,7 @@ export async function observeDatabaseIdentityFromNextServer(
     const res = await fetch(testUrl, {
       headers: {
         Authorization: "Bearer swai-acceptance-secret-token",
+        "x-acceptance-token": "swai-acceptance-secret-token",
       },
     });
 
@@ -4558,8 +4574,20 @@ export async function collectDatabaseIsolationEvidence(context: {
       errors,
       observedAt: new Date().toISOString(),
       error: errors.length > 0 ? errors.join("; ") : undefined,
+      cleanup: async () => {
+        if (probe) {
+          try {
+            await probe.cleanup();
+          } catch {}
+        }
+      },
     };
   } catch (err: any) {
+    if (probe) {
+      try {
+        await probe.cleanup();
+      } catch {}
+    }
     errors.push(`Database isolation probe exception: ${err.message}`);
     return {
       acceptanceRunId: context.acceptanceRunId,
@@ -4582,12 +4610,6 @@ export async function collectDatabaseIsolationEvidence(context: {
       observedAt: new Date().toISOString(),
       error: err.message,
     };
-  } finally {
-    if (probe) {
-      try {
-        await probe.cleanup();
-      } catch {}
-    }
   }
 }
 
@@ -5219,6 +5241,13 @@ export async function runFullKh01Acceptance(
     } catch (err: any) {
       console.warn(`[Acceptance] Next.js database observation failed: ${err.message}`);
     }
+  }
+
+  // Cleanup probe test database after observations from all processes are collected
+  if ((databaseIsolationEvidence as any).cleanup) {
+    try {
+      await (databaseIsolationEvidence as any).cleanup();
+    } catch {}
   }
 
   const crossProcessEvidence = verifyDatabaseIdentityAcrossProcesses(
