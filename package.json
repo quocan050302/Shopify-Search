@@ -24,6 +24,7 @@
     "meta:once": "tsx scripts/meta-once.ts",
     "meta:test": "tsx scripts/meta-test.ts",
     "meta:repair": "tsx scripts/meta-repair-media.ts",
+    "meta:journey": "tsx scripts/meta-live-journey.ts",
     "kh01:doctor": "tsx scripts/kh01Doctor.ts",
     "kh01:once": "tsx src/workers/kh01Worker.ts --once",
     "kh01:worker": "tsx src/workers/kh01Worker.ts",

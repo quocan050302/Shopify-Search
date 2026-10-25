@@ -115,14 +115,27 @@ export interface MetaCollectorJobState {
   id: string;
   state: "QUEUED" | "RUNNING" | "PAUSED" | "COMPLETED" | "FAILED" | "CANCELLED" | string;
   count: number;
-  stats?: Record<string, unknown>;
+  stats?: {
+    requests_made?: number;
+    ads_collected?: number;
+    duplicates_skipped?: number;
+    filtered_out?: number;
+    pages_fetched?: number;
+    errors?: number;
+    start_time?: string;
+    end_time?: string;
+    duration_seconds?: number;
+    ads_per_second?: number;
+    active_seconds?: number;
+    [key: string]: unknown;
+  };
   error?: {
     code: string;
     message: string;
     retryable?: boolean;
   } | null;
-  created?: string;
-  updated?: string;
+  created?: string | number;
+  updated?: string | number;
 }
 
 export interface MetaCollectorSearchResponse {

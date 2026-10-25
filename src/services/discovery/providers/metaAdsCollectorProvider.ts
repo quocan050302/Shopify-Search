@@ -26,7 +26,7 @@ import {
   getDetailedMetaAdsBatch,
 } from "../metaCollector/metaCollectorMcpClient";
 import { getMetaCollectorConfig } from "../metaCollector/metaCollectorConfig";
-import { MetaCollectorFilters, MetaCollectorRawAd } from "../metaCollector/metaCollectorTypes";
+import { MetaCollectorFilters, MetaCollectorRawAd, MetaCollectorSearchResponse } from "../metaCollector/metaCollectorTypes";
 import { normalizeMetaCollectorAd } from "../normalization/normalizeMetaCollectorAd";
 
 interface MetaCursorPayload {
@@ -318,6 +318,9 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
       let resultSetId = "";
       let nextCursor: string | null = null;
       const warnings: string[] = [];
+      let mcpResponse: MetaCollectorSearchResponse | null = null;
+      let continueRes: MetaCollectorSearchResponse | null = null;
+      let isStoredRead = false;
 
       let launchCutoffDate: Date | null = null;
       if (query.launchWithinDays) {
@@ -332,6 +335,9 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
           try {
             const stored = await client.getResults(resultSetId, cursorPayload.offset, pageSize, "detailed");
             rawAds = stored.ads || [];
+            if (rawAds.length > 0) {
+              isStoredRead = true;
+            }
             if (stored.next_offset) {
               nextCursor = encodeCursor(resultSetId, stored.next_offset, "stored");
             } else if (stored.continuation) {
@@ -344,7 +350,7 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
 
         if (rawAds.length === 0) {
           // Upstream continuation: continueSearch takes raw resultSetId
-          const continueRes = await client.continueSearch(resultSetId, pageSize);
+          continueRes = await client.continueSearch(resultSetId, pageSize);
           resultSetId = continueRes.result_set_id || resultSetId;
 
           try {
@@ -381,7 +387,7 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
             ? "INACTIVE"
             : "ACTIVE";
 
-        const mcpResponse = await client.searchAds({
+        mcpResponse = await client.searchAds({
           query: keyword,
           country: query.market || "US",
           status: searchStatus,
@@ -451,8 +457,26 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
       const hasMore = Boolean(nextCursor && normalizedAds.length > 0);
       const actualTransport = caps?.transport || (process.env.SWAI_MOCK_META_BOUNDARY ? "mock_test_boundary" : "unknown");
       const isFixture = actualTransport === "mock_test_boundary" || Boolean(process.env.SWAI_MOCK_META_BOUNDARY);
-      const upstreamReq = true;
-      const upstreamResp = rawAds.length > 0;
+
+      // Authoritative source execution determination (Section 10)
+      let upstreamReq = false;
+      let upstreamResp = false;
+
+      if (!isFixture) {
+        const stats = (mcpResponse?.job?.stats || continueRes?.job?.stats) as { requests_made?: number; ads_collected?: number } | undefined;
+        if (typeof stats?.requests_made === "number") {
+          upstreamReq = stats.requests_made > 0;
+          upstreamResp = upstreamReq && ((typeof stats.ads_collected === "number" && stats.ads_collected > 0) || rawAds.length > 0);
+        } else if (mcpResponse || continueRes) {
+          // Fallback if stats is absent: search was executed and returned an active MCP response
+          upstreamReq = Boolean(mcpResponse?.result_set_id || continueRes?.result_set_id);
+          upstreamResp = upstreamReq && rawAds.length > 0;
+        } else if (isStoredRead) {
+          // Paginating through already cached results in local collector DB
+          upstreamReq = false;
+          upstreamResp = rawAds.length > 0;
+        }
+      }
 
       return {
         items: normalizedAds,

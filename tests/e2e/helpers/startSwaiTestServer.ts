@@ -147,6 +147,10 @@ export async function startSwaiTestServer(
       delete serverEnv.ADMIN_API_KEY;
       delete serverEnv.SWAI_ADMIN_TOKEN;
       delete serverEnv.ADMIN_SECRET;
+    } else {
+      serverEnv.ADMIN_API_KEY = options.adminApiKey;
+      serverEnv.SWAI_ADMIN_TOKEN = options.adminApiKey;
+      serverEnv.ADMIN_SECRET = options.adminApiKey;
     }
   } else if (options.deploymentMode === "REMOTE") {
     serverEnv.SWAI_DEPLOYMENT_MODE = "REMOTE";
