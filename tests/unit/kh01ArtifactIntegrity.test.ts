@@ -291,31 +291,94 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
     expect(verdict).toBe("BLOCKED");
   });
 
+  function buildSampleOfflineArtifactSet(runId: string, sha: string, overrides: { releaseVerdict?: string; mismatchVerdict?: boolean } = {}) {
+    const verdictValue = overrides.releaseVerdict || "CONDITIONALLY_ACCEPTED";
+    const manifest = {
+      acceptanceRunId: runId,
+      testedCommitSha: sha,
+      releaseVerdict: verdictValue,
+    };
+    const verdict = {
+      verdict: overrides.mismatchVerdict ? "BLOCKED" : verdictValue,
+      requestedScope: "OFFLINE",
+    };
+    const metadata = {
+      acceptanceRunId: runId,
+      testedCommitSha: sha,
+      overallStatus: verdictValue,
+    };
+
+    const offlineFiles = [
+      { name: "acceptance-manifest.json", data: manifest },
+      { name: "gate-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "stage-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "security-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      {
+        name: "database-isolation.json",
+        data: {
+          acceptanceRunId: runId,
+          testedCommitSha: sha,
+          status: "PASSED",
+          prismaConnectionVerified: true,
+          markerWriteVerified: true,
+          markerReadVerified: true,
+          activeDatabaseProtected: true,
+        },
+      },
+      { name: "database-process-identity.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "exact-run-reconciliation.json", data: { acceptanceRunId: runId, testedCommitSha: sha, retrieved: 10, valid: 10, linked: 10 } },
+      { name: "offline-reconciliation.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      {
+        name: "browser-results.json",
+        data: {
+          acceptanceRunId: runId,
+          testedCommitSha: sha,
+          status: "PASSED",
+          viewportsTested: ["1920x1080", "1440x900", "1280x800", "1024x768", "768x1024", "390x844"],
+        },
+      },
+      { name: "browser-e2e-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "browser-viewport-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "worker-process-evidence.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "defect-register.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "artifact-validation.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "validation-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      { name: "release-verdict.json", data: verdict },
+      { name: "execution-metadata.json", data: metadata },
+      {
+        name: "suite-coverage.json",
+        data: {
+          acceptanceRunId: runId,
+          testedCommitSha: sha,
+          status: "PASSED",
+          passed: true,
+          missingSuites: [],
+          failedSuites: [],
+        },
+      },
+      {
+        name: "screenshot-manifest.json",
+        data: {
+          acceptanceRunId: runId,
+          testedCommitSha: sha,
+          screenshots: [
+            { relativePath: "screenshots/viewport_1920x1080.png", sha256: "abc1" },
+          ],
+        },
+      },
+      { name: "live-source-results.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "NOT_RUN", detailedOutcome: "NOT_RUN" } },
+      { name: "live-source-verification.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "NOT_RUN" } },
+    ];
+
+    return prepareAcceptanceArtifactSet(runId, sha, offlineFiles);
+  }
+
   it("publishAcceptanceArtifactsAtomically writes to staging, verifies disk readback, renames atomically, and updates latest.json", async () => {
     const tempBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), "swai-atomic-test-"));
     try {
       const runId = "run_atomic_001";
       const sha = "a1b2c3d4e5f6";
-      const manifest = {
-        acceptanceRunId: runId,
-        testedCommitSha: sha,
-        releaseVerdict: "CONDITIONALLY_ACCEPTED",
-      };
-      const verdict = {
-        verdict: "CONDITIONALLY_ACCEPTED",
-        requestedScope: "OFFLINE",
-      };
-      const metadata = {
-        acceptanceRunId: runId,
-        testedCommitSha: sha,
-        overallStatus: "CONDITIONALLY_ACCEPTED",
-      };
-
-      const set = prepareAcceptanceArtifactSet(runId, sha, [
-        { name: "acceptance-manifest.json", data: manifest },
-        { name: "release-verdict.json", data: verdict },
-        { name: "execution-metadata.json", data: metadata },
-      ]);
+      const set = buildSampleOfflineArtifactSet(runId, sha);
 
       const result = await publishAcceptanceArtifactsAtomically(set, { artifactsBaseDir: tempBaseDir });
       expect(result.success).toBe(true);
@@ -340,23 +403,16 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
       // First publish a valid initial run
       const initialRunId = "run_initial_valid";
       const initialSha = "sha_initial";
-      const validSet = prepareAcceptanceArtifactSet(initialRunId, initialSha, [
-        { name: "acceptance-manifest.json", data: { acceptanceRunId: initialRunId, testedCommitSha: initialSha, releaseVerdict: "ACCEPTED" } },
-        { name: "release-verdict.json", data: { verdict: "ACCEPTED" } },
-        { name: "execution-metadata.json", data: { acceptanceRunId: initialRunId, testedCommitSha: initialSha, overallStatus: "ACCEPTED" } },
-      ]);
-      await publishAcceptanceArtifactsAtomically(validSet, { artifactsBaseDir: tempBaseDir });
+      const validSet = buildSampleOfflineArtifactSet(initialRunId, initialSha, { releaseVerdict: "ACCEPTED" });
+      const initRes = await publishAcceptanceArtifactsAtomically(validSet, { artifactsBaseDir: tempBaseDir });
+      expect(initRes.success).toBe(true);
 
       const initialLatestPointer = JSON.parse(fs.readFileSync(path.join(tempBaseDir, "latest.json"), "utf8"));
       expect(initialLatestPointer.acceptanceRunId).toBe(initialRunId);
 
       // Now attempt to publish an invalid set (verdict mismatch between manifest and release-verdict)
       const invalidRunId = "run_invalid_002";
-      const invalidSet = prepareAcceptanceArtifactSet(invalidRunId, "sha_invalid", [
-        { name: "acceptance-manifest.json", data: { acceptanceRunId: invalidRunId, testedCommitSha: "sha_invalid", releaseVerdict: "ACCEPTED" } },
-        { name: "release-verdict.json", data: { verdict: "BLOCKED" } }, // MISMATCH
-        { name: "execution-metadata.json", data: { acceptanceRunId: invalidRunId, testedCommitSha: "sha_invalid", overallStatus: "ACCEPTED" } },
-      ]);
+      const invalidSet = buildSampleOfflineArtifactSet(invalidRunId, "sha_invalid", { releaseVerdict: "ACCEPTED", mismatchVerdict: true });
 
       const failResult = await publishAcceptanceArtifactsAtomically(invalidSet, { artifactsBaseDir: tempBaseDir });
       expect(failResult.success).toBe(false);
@@ -375,11 +431,7 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
     try {
       const runId = "run_immutable_001";
       const sha = "sha_immutable";
-      const set = prepareAcceptanceArtifactSet(runId, sha, [
-        { name: "acceptance-manifest.json", data: { acceptanceRunId: runId, testedCommitSha: sha, releaseVerdict: "ACCEPTED" } },
-        { name: "release-verdict.json", data: { verdict: "ACCEPTED" } },
-        { name: "execution-metadata.json", data: { acceptanceRunId: runId, testedCommitSha: sha, overallStatus: "ACCEPTED" } },
-      ]);
+      const set = buildSampleOfflineArtifactSet(runId, sha, { releaseVerdict: "ACCEPTED" });
 
       const res1 = await publishAcceptanceArtifactsAtomically(set, { artifactsBaseDir: tempBaseDir });
       expect(res1.success).toBe(true);

@@ -226,7 +226,9 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
     ];
 
     const executions: any[] = [];
-    const screenshotsDir = path.resolve(process.cwd(), "artifacts/v11.5.6/screenshots");
+    const screenshotsDir =
+      process.env.KH01_BROWSER_SCREENSHOT_DIR ||
+      path.resolve(process.cwd(), "artifacts/v11.5.7/screenshots");
     if (!fs.existsSync(screenshotsDir)) {
       fs.mkdirSync(screenshotsDir, { recursive: true });
     }
@@ -299,7 +301,7 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
     // Write structured viewport execution evidence
     const evidencePath =
       process.env.KH01_BROWSER_EVIDENCE_PATH ||
-      path.resolve(process.cwd(), "artifacts/v11.5.6/browser-viewport-results.json");
+      path.resolve(process.cwd(), "artifacts/v11.5.7/browser-viewport-results.json");
     const evidenceDir = path.dirname(evidencePath);
     if (!fs.existsSync(evidenceDir)) {
       fs.mkdirSync(evidenceDir, { recursive: true });

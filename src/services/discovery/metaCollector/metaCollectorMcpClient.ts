@@ -122,6 +122,21 @@ function mapUpstreamError(errorObj: unknown): Error {
 }
 
 export async function createMetaCollectorClient(): Promise<MetaCollectorClient> {
+  const mockRequested =
+    process.env.SWAI_MOCK_META_BOUNDARY === "true" ||
+    process.env.SWAI_MOCK_META_BOUNDARY === "fail";
+  const liveRequested =
+    process.env.SWAI_ACCEPTANCE_SOURCE_MODE === "REAL_LIVE_META";
+
+  if (mockRequested && liveRequested) {
+    throw new DiscoveryError({
+      code: "PROVIDER_RESPONSE_INVALID",
+      message:
+        "LIVE_ACCEPTANCE_MOCK_BOUNDARY_FORBIDDEN: Fixture Meta collector cannot be used for live verification",
+      providerId: "meta-ads-collector",
+    });
+  }
+
   if (process.env.SWAI_MOCK_META_BOUNDARY === "fail") {
     throw new DiscoveryError({
       code: "PROVIDER_PERMISSION_DENIED",

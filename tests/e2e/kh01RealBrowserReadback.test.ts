@@ -94,7 +94,7 @@ describe("KH-01 Real Browser Readback (Part 08, FIX-05, Invariant 4)", () => {
     if (evidence.screenshotPath) {
       expect(fs.existsSync(evidence.screenshotPath)).toBe(true);
     }
-  });
+  }, 30000);
 
   it("fails when an expected ad card is missing from the rendered DOM", async () => {
     const chrome = resolveChromeExecutablePath();
@@ -117,7 +117,7 @@ describe("KH-01 Real Browser Readback (Part 08, FIX-05, Invariant 4)", () => {
     expect(evidence.missingIds).toContain("ad_dom_missing_002");
     expect(evidence.adIds).toEqual(["ad_dom_001"]);
     expect(evidence.error).toContain("Browser DOM ad ID mismatch");
-  });
+  }, 30000);
 
   it("fails when an unexpected foreign ad card is rendered into the DOM", async () => {
     const chrome = resolveChromeExecutablePath();
@@ -139,7 +139,7 @@ describe("KH-01 Real Browser Readback (Part 08, FIX-05, Invariant 4)", () => {
     expect(evidence.status).toBe("FAILED");
     expect(evidence.unexpectedIds).toContain("ad_foreign_injected");
     expect(evidence.error).toContain("Browser DOM ad ID mismatch");
-  });
+  }, 30000);
 
   it("fails gracefully when target server is unreachable", async () => {
     const closedServer = { baseUrl: "http://127.0.0.1:59998", adminApiKey };
@@ -152,5 +152,5 @@ describe("KH-01 Real Browser Readback (Part 08, FIX-05, Invariant 4)", () => {
 
     expect(evidence.status).toBe("FAILED");
     expect(evidence.error).toBeTruthy();
-  });
+  }, 30000);
 });

@@ -116,6 +116,14 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
 
   getProviderConfigurationStatus(): ProviderAvailabilityResult {
     if (process.env.SWAI_MOCK_META_BOUNDARY === "true") {
+      if (process.env.SWAI_ACCEPTANCE_SOURCE_MODE === "REAL_LIVE_META") {
+        return {
+          status: "NOT_CONFIGURED",
+          isAuthorized: false,
+          requiresConfig: true,
+          message: "LIVE_ACCEPTANCE_MOCK_BOUNDARY_FORBIDDEN: Fixture Meta boundary is forbidden for live acceptance verification.",
+        };
+      }
       return {
         status: "READY_UNVERIFIED",
         isAuthorized: true,
@@ -197,6 +205,16 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
     try {
       const client = await createMetaCollectorClient();
       try {
+        const caps = await client.getCapabilities();
+        if (caps.transport === "mock_test_boundary") {
+          return {
+            status: "READY_UNVERIFIED",
+            isAuthorized: true,
+            requiresConfig: false,
+            message: "Mock test boundary verified for offline testing. Live upstream verification not performed.",
+          };
+        }
+
         // Run a small, bounded test search for a common commercial keyword
         const testRes = await client.searchAds({
           query: "pet hair remover",
