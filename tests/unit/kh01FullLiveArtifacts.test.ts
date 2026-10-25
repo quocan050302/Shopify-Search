@@ -112,8 +112,96 @@ describe("KH-01 Full-Live Artifacts & Cross-Boundary Reconciliation (FINAL-08-03
     });
 
     expect(artifact.status).toBe("FAILED");
-    expect(artifact.consistent).toBe(true);
+    expect(artifact.consistent).toBe(false);
     expect(artifact.errors.some((e) => e.includes("Source provenance is not REAL_UPSTREAM"))).toBe(true);
+  });
+
+  it("fails reconciliation when duplicate ad IDs exist in HTTP boundary (V1159-06)", () => {
+    const artifact = buildCrossBoundaryReconciliationArtifact({
+      acceptanceRunId: dummyRunId,
+      testedCommitSha: dummySha,
+      discoveryRunId: dummyDiscoveryRunId,
+      databaseEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+        linkedAdIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      httpEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_002", "ad_live_003"],
+      } as any,
+      browserEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      providerEvidence: realProviderEvidence,
+    });
+
+    expect(artifact.status).toBe("FAILED");
+    expect(artifact.consistent).toBe(false);
+    expect(artifact.duplicateIds).toContain("ad_live_002");
+    expect(artifact.errors.some((e) => e.includes("HTTP duplicate IDs detected"))).toBe(true);
+  });
+
+  it("fails reconciliation when a boundary status is not PASSED (V1159-06)", () => {
+    const artifact = buildCrossBoundaryReconciliationArtifact({
+      acceptanceRunId: dummyRunId,
+      testedCommitSha: dummySha,
+      discoveryRunId: dummyDiscoveryRunId,
+      databaseEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "FAILED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+        linkedAdIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      httpEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      browserEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      providerEvidence: realProviderEvidence,
+    });
+
+    expect(artifact.status).toBe("FAILED");
+    expect(artifact.consistent).toBe(false);
+    expect(artifact.errors.some((e) => e.includes("databaseEvidence status is not PASSED"))).toBe(true);
+  });
+
+  it("fails reconciliation when run IDs mismatch across boundaries (V1159-06)", () => {
+    const artifact = buildCrossBoundaryReconciliationArtifact({
+      acceptanceRunId: dummyRunId,
+      testedCommitSha: dummySha,
+      discoveryRunId: dummyDiscoveryRunId,
+      databaseEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+        linkedAdIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      httpEvidence: {
+        runId: "different_run_id",
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      browserEvidence: {
+        runId: dummyDiscoveryRunId,
+        status: "PASSED",
+        adIds: ["ad_live_001", "ad_live_002", "ad_live_003"],
+      } as any,
+      providerEvidence: realProviderEvidence,
+    });
+
+    expect(artifact.status).toBe("FAILED");
+    expect(artifact.consistent).toBe(false);
+    expect(artifact.errors.some((e) => e.includes("httpEvidence.runId"))).toBe(true);
   });
 
   it("fails reconciliation when HTTP readback is missing ad IDs present in database", () => {

@@ -252,7 +252,21 @@ export interface CrossBoundaryReconciliationArtifact {
   errors: string[];
 }
 
-export function buildCrossBoundaryReconciliationArtifact(input: {
+export function findDuplicateAdIds(ids: string[]): string[] {
+  if (!Array.isArray(ids)) return [];
+  const counts = new Map<string, number>();
+  const duplicates: string[] = [];
+  for (const id of ids) {
+    const c = (counts.get(id) || 0) + 1;
+    counts.set(id, c);
+    if (c === 2) {
+      duplicates.push(id);
+    }
+  }
+  return duplicates;
+}
+
+export interface CrossBoundaryEvidenceInput {
   acceptanceRunId: string;
   testedCommitSha: string;
   discoveryRunId: string;
@@ -273,10 +287,93 @@ export function buildCrossBoundaryReconciliationArtifact(input: {
     status?: string;
   };
   providerEvidence: ProviderSourceEvidence;
-}): CrossBoundaryReconciliationArtifact {
-  const dbAdIds = Array.from(new Set(input.databaseEvidence.linkedAdIds || input.databaseEvidence.adIds || []));
-  const httpAdIds = Array.from(new Set(input.httpEvidence.adIds || []));
-  const browserAdIds = Array.from(new Set(input.browserEvidence.adIds || []));
+}
+
+export function validateCrossBoundaryEvidenceInputs(
+  input: CrossBoundaryEvidenceInput
+): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (!input.acceptanceRunId) errors.push("Missing acceptanceRunId");
+  if (!input.testedCommitSha) errors.push("Missing testedCommitSha");
+  if (!input.discoveryRunId) errors.push("Missing discoveryRunId");
+
+  // Run ID alignment across all boundaries
+  if (input.databaseEvidence?.runId !== input.discoveryRunId) {
+    errors.push(`databaseEvidence.runId '${input.databaseEvidence?.runId}' does not match expected discoveryRunId '${input.discoveryRunId}'`);
+  }
+  if (input.httpEvidence?.runId !== input.discoveryRunId) {
+    errors.push(`httpEvidence.runId '${input.httpEvidence?.runId}' does not match expected discoveryRunId '${input.discoveryRunId}'`);
+  }
+  if (input.browserEvidence?.runId !== input.discoveryRunId) {
+    errors.push(`browserEvidence.runId '${input.browserEvidence?.runId}' does not match expected discoveryRunId '${input.discoveryRunId}'`);
+  }
+  if (input.providerEvidence?.discoveryRunId && input.providerEvidence.discoveryRunId !== input.discoveryRunId) {
+    errors.push(`providerEvidence.discoveryRunId '${input.providerEvidence.discoveryRunId}' does not match expected discoveryRunId '${input.discoveryRunId}'`);
+  }
+
+  // Status checks: all 3 must be PASSED
+  if (input.databaseEvidence?.status !== "PASSED") {
+    errors.push(`databaseEvidence status is not PASSED (got '${input.databaseEvidence?.status}')`);
+  }
+  if (input.httpEvidence?.status !== "PASSED") {
+    errors.push(`httpEvidence status is not PASSED (got '${input.httpEvidence?.status}')`);
+  }
+  if (input.browserEvidence?.status !== "PASSED") {
+    errors.push(`browserEvidence status is not PASSED (got '${input.browserEvidence?.status}')`);
+  }
+
+  // Provider provenance checks
+  if (input.providerEvidence?.observedSourceType !== "REAL_UPSTREAM") {
+    errors.push(`Source provenance is not REAL_UPSTREAM (got '${input.providerEvidence?.observedSourceType}')`);
+  }
+  if (input.providerEvidence?.fixtureDetected !== false) {
+    errors.push("providerEvidence detected fixture data in real live evidence");
+  }
+  if (input.providerEvidence?.upstreamRequestExecuted !== true) {
+    errors.push("providerEvidence upstream request was not executed");
+  }
+  if (input.providerEvidence?.upstreamResponseObserved !== true) {
+    errors.push("providerEvidence upstream response was not observed");
+  }
+
+  // ID arrays validity
+  const rawDb = input.databaseEvidence?.linkedAdIds || input.databaseEvidence?.adIds;
+  if (!Array.isArray(rawDb) || rawDb.length === 0) {
+    errors.push("databaseEvidence adIds is empty or not an array");
+  }
+  if (!Array.isArray(input.httpEvidence?.adIds) || input.httpEvidence.adIds.length === 0) {
+    errors.push("httpEvidence adIds is empty or not an array");
+  }
+  if (!Array.isArray(input.browserEvidence?.adIds) || input.browserEvidence.adIds.length === 0) {
+    errors.push("browserEvidence adIds is empty or not an array");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+export function buildCrossBoundaryReconciliationArtifact(
+  input: CrossBoundaryEvidenceInput
+): CrossBoundaryReconciliationArtifact {
+  const inputValidation = validateCrossBoundaryEvidenceInputs(input);
+
+  const rawDb = input.databaseEvidence?.linkedAdIds || input.databaseEvidence?.adIds || [];
+  const rawHttp = input.httpEvidence?.adIds || [];
+  const rawBrowser = input.browserEvidence?.adIds || [];
+
+  const dbDuplicates = findDuplicateAdIds(rawDb);
+  const httpDuplicates = findDuplicateAdIds(rawHttp);
+  const browserDuplicates = findDuplicateAdIds(rawBrowser);
+
+  const allDuplicateIds = Array.from(new Set([...dbDuplicates, ...httpDuplicates, ...browserDuplicates]));
+  const hasDuplicates = allDuplicateIds.length > 0;
+
+  const dbAdIds = Array.from(new Set(rawDb));
+  const httpAdIds = Array.from(new Set(rawHttp));
+  const browserAdIds = Array.from(new Set(rawBrowser));
 
   const missingInHttp = dbAdIds.filter((id) => !httpAdIds.includes(id));
   const unexpectedInHttp = httpAdIds.filter((id) => !dbAdIds.includes(id));
@@ -284,38 +381,51 @@ export function buildCrossBoundaryReconciliationArtifact(input: {
   const missingInBrowser = dbAdIds.filter((id) => !browserAdIds.includes(id));
   const unexpectedInBrowser = browserAdIds.filter((id) => !dbAdIds.includes(id));
 
-  const duplicateIds: string[] = [];
-  const rawDb = input.databaseEvidence.linkedAdIds || input.databaseEvidence.adIds || [];
-  const seenDb = new Set<string>();
-  for (const id of rawDb) {
-    if (seenDb.has(id)) duplicateIds.push(id);
-    seenDb.add(id);
-  }
-
-  const errors: string[] = [];
-  const consistent =
+  const exactIdSetsMatch =
     missingInHttp.length === 0 &&
     unexpectedInHttp.length === 0 &&
     missingInBrowser.length === 0 &&
     unexpectedInBrowser.length === 0 &&
     dbAdIds.length > 0;
 
-  if (!consistent) {
+  const allStatusesPassed =
+    input.databaseEvidence?.status === "PASSED" &&
+    input.httpEvidence?.status === "PASSED" &&
+    input.browserEvidence?.status === "PASSED";
+
+  const sameRun =
+    input.databaseEvidence?.runId === input.discoveryRunId &&
+    input.httpEvidence?.runId === input.discoveryRunId &&
+    input.browserEvidence?.runId === input.discoveryRunId &&
+    (!input.providerEvidence?.discoveryRunId || input.providerEvidence.discoveryRunId === input.discoveryRunId);
+
+  const isRealUpstream =
+    input.providerEvidence &&
+    input.providerEvidence.observedSourceType === "REAL_UPSTREAM" &&
+    !input.providerEvidence.fixtureDetected &&
+    input.providerEvidence.upstreamRequestExecuted === true &&
+    input.providerEvidence.upstreamResponseObserved === true;
+
+  const errors: string[] = [...inputValidation.errors];
+
+  if (hasDuplicates) {
+    if (dbDuplicates.length > 0) errors.push(`Database duplicate IDs detected: [${dbDuplicates.join(", ")}]`);
+    if (httpDuplicates.length > 0) errors.push(`HTTP duplicate IDs detected: [${httpDuplicates.join(", ")}]`);
+    if (browserDuplicates.length > 0) errors.push(`Browser duplicate IDs detected: [${browserDuplicates.join(", ")}]`);
+  }
+
+  if (!exactIdSetsMatch) {
     errors.push(
       `Cross-boundary ID discrepancy: missingInHttp=[${missingInHttp.join(",")}], unexpectedInHttp=[${unexpectedInHttp.join(",")}], missingInBrowser=[${missingInBrowser.join(",")}], unexpectedInBrowser=[${unexpectedInBrowser.join(",")}]`
     );
   }
 
-  const isRealUpstream =
-    input.providerEvidence &&
-    input.providerEvidence.observedSourceType === "REAL_UPSTREAM" &&
-    !input.providerEvidence.fixtureDetected;
-
-  if (!isRealUpstream) {
-    errors.push(
-      `Source provenance is not REAL_UPSTREAM: observedSourceType='${input.providerEvidence?.observedSourceType}', fixtureDetected=${input.providerEvidence?.fixtureDetected}`
-    );
-  }
+  const consistent =
+    inputValidation.valid &&
+    allStatusesPassed &&
+    sameRun &&
+    !hasDuplicates &&
+    exactIdSetsMatch;
 
   const status: "PASSED" | "FAILED" | "NOT_RUN" =
     consistent && isRealUpstream ? "PASSED" : "FAILED";
@@ -332,7 +442,7 @@ export function buildCrossBoundaryReconciliationArtifact(input: {
     unexpectedInHttp,
     missingInBrowser,
     unexpectedInBrowser,
-    duplicateIds,
+    duplicateIds: allDuplicateIds,
     consistent,
     providerEvidenceReference: `Provider: ${input.providerEvidence?.providerId} (transport: ${input.providerEvidence?.actualTransport}, source: ${input.providerEvidence?.observedSourceType})`,
     observedAt: new Date().toISOString(),
@@ -791,9 +901,9 @@ export interface Section14Manifest {
 
 export interface FullKh01AcceptanceReport {
   plan: "KH-01";
-  applicationReleaseVersion: "11.5.8" | "11.5.7" | "11.5.6" | "11.5.5" | "11.5.4" | "11.5.3" | "11.5.2" | "11.5.1";
-  kh01ProtocolVersion: "11.5.8" | "11.5.7" | "11.5.6" | "11.4.5";
-  version: "11.5.8" | "11.5.7" | "11.5.6" | "11.5.5" | "11.5.4" | "11.5.3" | "11.5.2" | "11.5.1";
+  applicationReleaseVersion: "11.5.9" | "11.5.8" | "11.5.7" | "11.5.6" | "11.5.5" | "11.5.4" | "11.5.3" | "11.5.2" | "11.5.1";
+  kh01ProtocolVersion: "11.5.9" | "11.5.8" | "11.5.7" | "11.5.6" | "11.4.5";
+  version: "11.5.9" | "11.5.8" | "11.5.7" | "11.5.6" | "11.5.5" | "11.5.4" | "11.5.3" | "11.5.2" | "11.5.1";
   acceptanceRunId: string;
   startedAt: string;
   completedAt: string;
@@ -3669,7 +3779,7 @@ export async function publishAcceptanceArtifactsAtomically(
   set: AcceptanceArtifactSet,
   options?: ArtifactPublicationOptions
 ): Promise<ArtifactPublicationResult> {
-  const baseDir = options?.artifactsBaseDir || path.resolve(process.cwd(), "artifacts/v11.5.8");
+  const baseDir = options?.artifactsBaseDir || path.resolve(process.cwd(), "artifacts/v11.5.9");
   const targetRunDir = path.join(baseDir, set.acceptanceRunId);
   const stagingDir = path.join(baseDir, `.staging-${set.acceptanceRunId}`);
   const checksums: Record<string, string> = {};
@@ -3770,7 +3880,7 @@ export async function publishAcceptanceArtifactsAtomically(
     // Update latest pointer atomically after successful publication
     const latestPointer = {
       acceptanceRunId: set.acceptanceRunId,
-      manifestPath: `artifacts/v11.5.8/${set.acceptanceRunId}/acceptance-manifest.json`,
+      manifestPath: `artifacts/v11.5.9/${set.acceptanceRunId}/acceptance-manifest.json`,
       testedCommitSha: set.testedCommitSha,
       publishedAt: new Date().toISOString(),
     };
@@ -3800,6 +3910,100 @@ export async function publishAcceptanceArtifactsAtomically(
       errors: [`Atomic artifact publication failed: ${err.message}`],
     };
   }
+}
+
+export async function verifyPublishedAcceptanceEvidence(
+  location: string,
+  expected: {
+    acceptanceRunId: string;
+    testedCommitSha: string;
+  }
+): Promise<{
+  verified: boolean;
+  errors: string[];
+}> {
+  const errors: string[] = [];
+  const targetDir = path.resolve(location);
+
+  if (!fs.existsSync(targetDir)) {
+    return { verified: false, errors: [`Evidence bundle directory not found: ${targetDir}`] };
+  }
+
+  const manifestPath = path.join(targetDir, "acceptance-manifest.json");
+  if (!fs.existsSync(manifestPath)) {
+    errors.push(`Mandatory acceptance-manifest.json missing in ${targetDir}`);
+    return { verified: false, errors };
+  }
+
+  let manifest: any;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (err: any) {
+    errors.push(`Failed to parse acceptance-manifest.json: ${err.message}`);
+    return { verified: false, errors };
+  }
+
+  if (manifest.acceptanceRunId !== expected.acceptanceRunId) {
+    errors.push(`Manifest acceptanceRunId '${manifest.acceptanceRunId}' != expected '${expected.acceptanceRunId}'`);
+  }
+  if (manifest.testedCommitSha !== expected.testedCommitSha) {
+    errors.push(`Manifest testedCommitSha '${manifest.testedCommitSha}' != expected '${expected.testedCommitSha}'`);
+  }
+
+  const requiredArtifacts = [
+    "acceptance-manifest.json",
+    "execution-metadata.json",
+    "gate-results.json",
+    "stage-results.json",
+    "security-results.json",
+    "database-isolation.json",
+    "database-process-identity.json",
+    "suite-coverage.json",
+    "screenshot-manifest.json",
+    "release-verdict.json",
+  ];
+
+  for (const reqArt of requiredArtifacts) {
+    const artPath = path.join(targetDir, reqArt);
+    if (!fs.existsSync(artPath)) {
+      errors.push(`Required evidence artifact missing: ${reqArt}`);
+    }
+  }
+
+  const dbProcPath = path.join(targetDir, "database-process-identity.json");
+  if (fs.existsSync(dbProcPath)) {
+    try {
+      const dbProc = JSON.parse(fs.readFileSync(dbProcPath, "utf8"));
+      if (dbProc.verified !== true) {
+        errors.push("database-process-identity.json verified is not true");
+      }
+      if (!Array.isArray(dbProc.observedProcesses)) {
+        errors.push("database-process-identity.json missing observedProcesses array");
+      }
+    } catch (err: any) {
+      errors.push(`Failed to parse database-process-identity.json: ${err.message}`);
+    }
+  }
+
+  const checksumsPath = path.join(targetDir, "artifact-checksums.json");
+  if (fs.existsSync(checksumsPath)) {
+    try {
+      const checksums = JSON.parse(fs.readFileSync(checksumsPath, "utf8"));
+      for (const [fname, expectedHash] of Object.entries(checksums)) {
+        const fpath = path.join(targetDir, fname);
+        if (fs.existsSync(fpath)) {
+          const actualHash = crypto.createHash("sha256").update(fs.readFileSync(fpath)).digest("hex");
+          if (actualHash !== expectedHash) {
+            errors.push(`Artifact checksum mismatch for ${fname}: computed ${actualHash} != manifest ${expectedHash}`);
+          }
+        }
+      }
+    } catch (err: any) {
+      errors.push(`Failed to parse artifact-checksums.json: ${err.message}`);
+    }
+  }
+
+  return { verified: errors.length === 0, errors };
 }
 
 export function validateAcceptanceArtifact(
@@ -3886,11 +4090,24 @@ export function validateAcceptanceArtifact(
 
   // FIX D: Database Process Identity Checks
   if (file.name === "database-process-identity.json") {
-    if (d.verified === true && Array.isArray(d.observedProcesses)) {
-      const hasWorker = d.observedProcesses.some((p: any) => p.processName === "WORKER" && p.markerObserved);
-      const hasNext = d.observedProcesses.some((p: any) => p.processName === "NEXTJS_SERVER" && p.markerObserved);
-      if (!hasWorker || !hasNext) {
-        errors.push(`database-process-identity.json claims verified true without observed Worker and Next.js boundaries`);
+    if (d.verified !== true) {
+      errors.push("Cross-process DB identity was not verified in database-process-identity.json");
+    }
+    if (!Array.isArray(d.observedProcesses)) {
+      errors.push("database-process-identity.json missing observedProcesses array");
+    } else {
+      const hasWorker = d.observedProcesses.some((p: any) => p.processName === "WORKER" && p.markerObserved && !p.error);
+      const hasNext = d.observedProcesses.some((p: any) => p.processName === "NEXTJS_SERVER" && p.markerObserved && !p.error);
+      if (!hasWorker) {
+        errors.push("database-process-identity.json missing verified Worker process observation");
+      }
+      if (!hasNext) {
+        errors.push("database-process-identity.json missing verified Next.js server process observation");
+      }
+      for (const p of d.observedProcesses) {
+        if (p.error) {
+          errors.push(`Process ${p.processName} has error: ${p.error}`);
+        }
       }
     }
   }
@@ -4004,7 +4221,7 @@ export interface DatabaseMarkerEvidence {
 export interface DatabaseIsolationEvidence {
   acceptanceRunId: string;
   testedCommitSha: string;
-  status: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN";
+  status: "PASSED" | "FAILED" | "BLOCKED" | "NOT_RUN" | "NOT_VERIFIED";
   expectedDatabaseKey: string;
   observedDatabaseKeys: string[];
   activeAppDb: string;
@@ -4236,39 +4453,80 @@ export async function observeDatabaseIdentityFromNextServer(
   context: LiveAcceptanceContext,
   markerId: string
 ): Promise<ProcessDatabaseObservation> {
-  const serverUrl = server?.baseUrl || server?.url || (server as any)?.baseUrl || "http://127.0.0.1:3000";
+  const serverUrl = server?.baseUrl || server?.url || (server as any)?.baseUrl;
   const acceptanceRunId = context.acceptanceRunId || "";
   const rawExpected = (context as any).expectedDatabaseKey || context.databaseUrl || "";
   const expectedDatabaseKey = rawExpected.startsWith("sqlite:")
     ? rawExpected
     : (rawExpected ? canonicalizeSqliteDatabasePath(rawExpected).canonicalKey : "");
 
+  if (!serverUrl) {
+    return {
+      processName: "NEXTJS_SERVER",
+      processId: null,
+      acceptanceRunId,
+      discoveryRunId: null,
+      expectedDatabaseKey,
+      observedDatabaseKey: null,
+      markerId,
+      markerObserved: false,
+      observedRunId: null,
+      observedAdIds: [],
+      observedAt: new Date().toISOString(),
+      observationMethod: "HTTP_DATABASE_READBACK",
+      evidenceReference: "Next.js server URL not available (missing handle or host)",
+      error: "NEXTJS_SERVER_URL_MISSING",
+    };
+  }
+
+  const token = server?.dbObservationToken || (context as any)?.dbObservationToken || process.env.KH01_DB_OBSERVATION_TOKEN;
+  if (!token) {
+    return {
+      processName: "NEXTJS_SERVER",
+      processId: null,
+      acceptanceRunId,
+      discoveryRunId: null,
+      expectedDatabaseKey,
+      observedDatabaseKey: null,
+      markerId,
+      markerObserved: false,
+      observedRunId: null,
+      observedAdIds: [],
+      observedAt: new Date().toISOString(),
+      observationMethod: "HTTP_DATABASE_READBACK",
+      evidenceReference: "Diagnostic observation token not configured",
+      error: "NEXTJS_OBSERVATION_TOKEN_MISSING",
+    };
+  }
+
   try {
-    const testUrl = `${serverUrl}/api/v1/test/db-observation?markerId=${encodeURIComponent(markerId)}`;
+    const testUrl = `${serverUrl}/api/v1/test/db-observation?markerId=${encodeURIComponent(markerId)}&acceptanceRunId=${encodeURIComponent(acceptanceRunId)}`;
     const res = await fetch(testUrl, {
       headers: {
-        Authorization: "Bearer swai-acceptance-secret-token",
-        "x-acceptance-token": "swai-acceptance-secret-token",
+        Authorization: `Bearer ${token}`,
+        "x-acceptance-token": token,
       },
     });
 
     if (res.ok) {
       const data = await res.json();
+      const observedKey = data.observedDatabaseKey || null;
+      const markerObs = Boolean(data.markerObserved);
       return {
         processName: "NEXTJS_SERVER",
         processId: data.processId || null,
         acceptanceRunId,
         discoveryRunId: data.observedRunId || null,
         expectedDatabaseKey,
-        observedDatabaseKey: data.observedDatabaseKey || expectedDatabaseKey,
+        observedDatabaseKey: observedKey,
         markerId,
-        markerObserved: Boolean(data.markerObserved),
+        markerObserved: markerObs,
         observedRunId: data.observedRunId || null,
         observedAdIds: data.observedAdIds || [],
         observedAt: data.observedAt || new Date().toISOString(),
         observationMethod: "HTTP_DATABASE_READBACK",
         evidenceReference: `Next.js test endpoint /api/v1/test/db-observation confirmed marker ${markerId}`,
-        error: data.markerObserved ? undefined : (data.error || "MARKER_NOT_FOUND"),
+        error: markerObs ? (observedKey ? undefined : "NEXTJS_DATABASE_IDENTITY_NOT_VERIFIED") : (data.error || "MARKER_NOT_FOUND"),
       };
     }
 
@@ -4365,6 +4623,8 @@ export async function verifyActiveDatabaseMarkerAbsent(
   }
 }
 
+export type DatabaseVerificationScope = "SHARED_MARKER" | "SHARED_DISCOVERY_RUN";
+
 export function verifyDatabaseIdentityAcrossProcesses(
   expectedOrProbe: any,
   processesOrObservations: any[]
@@ -4392,28 +4652,38 @@ export function verifyDatabaseIdentityAcrossProcesses(
     }
 
     return {
-      verified: allMatched,
-      status: allMatched ? "PASSED" : "FAILED",
+      verified: false,
+      status: "LEGACY_CONFIGURATION_ONLY",
       expectedKey: expectedOrProbe.expectedDatabaseKey,
       expectedDatabaseKey: expectedOrProbe.expectedDatabaseKey,
       observedProcesses,
       missingProcesses: [],
       mismatchedProcesses: allMatched ? [] : ["MISMATCH"],
-      sharedRunVerified: allMatched,
+      sharedRunVerified: false,
       sharedMarkerVerified: allMatched,
-      errors: allMatched ? [] : ["Cross-process database identity mismatch detected"],
-      error: allMatched ? undefined : "Cross-process database identity mismatch detected",
+      errors: ["Legacy string-only configuration comparison cannot satisfy mandatory multi-process acceptance gate"],
+      error: "Legacy string-only configuration comparison cannot satisfy mandatory multi-process acceptance gate",
     };
   }
 
-  // New contract: expected with acceptanceRunId, expectedDatabaseKey, markerId, discoveryRunId?, requiredProcesses?
+  // New contract: expected with acceptanceRunId, expectedDatabaseKey, markerId, discoveryRunId?, requiredProcesses?, verificationScope?
   const expected = expectedOrProbe || {};
   const observations: ProcessDatabaseObservation[] = Array.isArray(processesOrObservations) ? processesOrObservations : [];
   const requiredProcesses: string[] = expected.requiredProcesses || ["ACCEPTANCE_RUNNER", "WORKER", "NEXTJS_SERVER"];
+  const verificationScope: DatabaseVerificationScope =
+    expected.verificationScope || (expected.discoveryRunId ? "SHARED_DISCOVERY_RUN" : "SHARED_MARKER");
 
   const missingProcesses: string[] = [];
   const mismatchedProcesses: string[] = [];
   const errors: string[] = [];
+
+  const seenProcesses = new Set<string>();
+  for (const obs of observations) {
+    if (seenProcesses.has(obs.processName)) {
+      errors.push(`Duplicate database identity observation detected for process: ${obs.processName}`);
+    }
+    seenProcesses.add(obs.processName);
+  }
 
   for (const reqProc of requiredProcesses) {
     const matching = observations.find((o) => o.processName === reqProc);
@@ -4421,13 +4691,23 @@ export function verifyDatabaseIdentityAcrossProcesses(
       missingProcesses.push(reqProc);
       errors.push(`Missing database identity observation from process boundary: ${reqProc}`);
     } else {
+      if (matching.error) {
+        mismatchedProcesses.push(reqProc);
+        errors.push(`Process ${reqProc} reported error: ${matching.error}`);
+      }
       if (!matching.markerObserved) {
         mismatchedProcesses.push(reqProc);
         errors.push(`Process ${reqProc} failed to observe marker ${expected.markerId}`);
       }
-      if (matching.expectedDatabaseKey !== expected.expectedDatabaseKey || matching.observedDatabaseKey !== expected.expectedDatabaseKey) {
+      if (
+        !matching.observedDatabaseKey ||
+        matching.expectedDatabaseKey !== expected.expectedDatabaseKey ||
+        matching.observedDatabaseKey !== expected.expectedDatabaseKey
+      ) {
         mismatchedProcesses.push(reqProc);
-        errors.push(`Process ${reqProc} observed database key mismatch (got '${matching.observedDatabaseKey}', expected '${expected.expectedDatabaseKey}')`);
+        errors.push(
+          `Process ${reqProc} observed database key mismatch (got '${matching.observedDatabaseKey}', expected '${expected.expectedDatabaseKey}')`
+        );
       }
       if (matching.markerId !== expected.markerId) {
         mismatchedProcesses.push(reqProc);
@@ -4437,24 +4717,46 @@ export function verifyDatabaseIdentityAcrossProcesses(
         mismatchedProcesses.push(reqProc);
         errors.push(`Process ${reqProc} acceptanceRunId mismatch (got '${matching.acceptanceRunId}', expected '${expected.acceptanceRunId}')`);
       }
+      if (!matching.observationMethod || !["PRISMA_QUERY", "WORKER_PROCESS_EVENT", "HTTP_DATABASE_READBACK", "WORKER_IPC_STATUS"].includes(matching.observationMethod)) {
+        mismatchedProcesses.push(reqProc);
+        errors.push(`Process ${reqProc} invalid observationMethod: '${matching.observationMethod}'`);
+      }
     }
   }
 
-  let sharedRunVerified = true;
-  if (expected.discoveryRunId) {
-    for (const obs of observations) {
-      if (obs.discoveryRunId && obs.discoveryRunId !== expected.discoveryRunId) {
-        sharedRunVerified = false;
-        errors.push(`Process ${obs.processName} discoveryRunId mismatch (got '${obs.discoveryRunId}', expected '${expected.discoveryRunId}')`);
+  let sharedRunVerified = false;
+  if (verificationScope === "SHARED_DISCOVERY_RUN") {
+    if (!expected.discoveryRunId || expected.discoveryRunId.trim().length === 0) {
+      errors.push("SHARED_DISCOVERY_RUN scope requires a non-empty discoveryRunId in expected configuration");
+    } else {
+      let allReportedExpectedRun = true;
+      for (const reqProc of requiredProcesses) {
+        const obs = observations.find((o) => o.processName === reqProc);
+        if (!obs) {
+          allReportedExpectedRun = false;
+          continue;
+        }
+        const reportedRun = obs.discoveryRunId || obs.observedRunId;
+        if (!reportedRun) {
+          allReportedExpectedRun = false;
+          errors.push(`Process ${reqProc} omitted observed discoveryRunId under SHARED_DISCOVERY_RUN scope`);
+        } else if (reportedRun !== expected.discoveryRunId) {
+          allReportedExpectedRun = false;
+          errors.push(`Process ${reqProc} discoveryRunId mismatch (got '${reportedRun}', expected '${expected.discoveryRunId}')`);
+        }
       }
-      if (obs.observedRunId && obs.observedRunId !== expected.discoveryRunId) {
-        sharedRunVerified = false;
-      }
+      sharedRunVerified = allReportedExpectedRun;
     }
+  } else {
+    // SHARED_MARKER: sharedRunVerified remains false (or not claimed)
+    sharedRunVerified = false;
   }
 
   const sharedMarkerVerified = missingProcesses.length === 0 && mismatchedProcesses.length === 0;
-  const verified = sharedMarkerVerified && (!expected.discoveryRunId || sharedRunVerified) && errors.length === 0;
+  const verified =
+    sharedMarkerVerified &&
+    (verificationScope === "SHARED_MARKER" || sharedRunVerified) &&
+    errors.length === 0;
 
   return {
     status: verified ? "PASSED" : "FAILED",
@@ -4465,6 +4767,7 @@ export function verifyDatabaseIdentityAcrossProcesses(
     mismatchedProcesses,
     sharedRunVerified,
     sharedMarkerVerified,
+    verificationScope,
     errors,
     error: verified ? undefined : errors.join("; "),
   };
@@ -4475,12 +4778,59 @@ export function collectCrossProcessDatabaseEvidence(
     acceptanceRunId: string;
     expectedDatabaseKey: string;
     markerId: string;
+    verificationScope?: DatabaseVerificationScope;
     discoveryRunId?: string;
     requiredProcesses?: string[];
   },
   observations: ProcessDatabaseObservation[]
 ): CrossProcessDatabaseEvidence {
   return verifyDatabaseIdentityAcrossProcesses(expected, observations);
+}
+
+export interface DatabaseIsolationVerdictInput {
+  canonicalPathsDifferent: boolean;
+  prismaConnectionVerified: boolean;
+  markerWriteVerified: boolean;
+  markerReadVerified: boolean;
+  activeDatabaseStatus: "PASSED" | "FAILED" | "NOT_VERIFIED";
+  activeDatabaseProtected: boolean | null;
+  errors: string[];
+}
+
+export function evaluateDatabaseIsolationVerdict(
+  input: DatabaseIsolationVerdictInput
+): {
+  status: "PASSED" | "FAILED" | "NOT_VERIFIED";
+  eligibleForAcceptance: boolean;
+  reasons: string[];
+} {
+  const reasons: string[] = [...input.errors];
+
+  if (!input.canonicalPathsDifferent) {
+    reasons.push("Isolated test database resolves to active application database");
+    return { status: "FAILED", eligibleForAcceptance: false, reasons };
+  }
+
+  if (!input.prismaConnectionVerified || !input.markerWriteVerified || !input.markerReadVerified) {
+    reasons.push("Prisma marker write/readback verification in isolated test database failed");
+    return { status: "FAILED", eligibleForAcceptance: false, reasons };
+  }
+
+  if (input.activeDatabaseStatus === "FAILED" || input.activeDatabaseProtected === false) {
+    reasons.push("Active application database contains isolated test probe marker or was not protected");
+    return { status: "FAILED", eligibleForAcceptance: false, reasons };
+  }
+
+  if (input.activeDatabaseStatus === "NOT_VERIFIED" || input.activeDatabaseProtected === null) {
+    reasons.push("Active application database protection could not be verified (file absent or inaccessible)");
+    return { status: "NOT_VERIFIED", eligibleForAcceptance: false, reasons };
+  }
+
+  if (input.activeDatabaseStatus === "PASSED" && input.activeDatabaseProtected === true && input.errors.length === 0) {
+    return { status: "PASSED", eligibleForAcceptance: true, reasons: [] };
+  }
+
+  return { status: "FAILED", eligibleForAcceptance: false, reasons };
 }
 
 export async function collectDatabaseIsolationEvidence(context: {
@@ -4538,26 +4888,31 @@ export async function collectDatabaseIsolationEvidence(context: {
       observations.push(`Prisma marker ${probe.markerId} written and verified via readback`);
     }
 
-    // FINAL-08-05: Strict fail-closed active database protection check
+    // Strict fail-closed active database protection check
     const activeProt = await verifyActiveDatabaseMarkerAbsent(activeAppDbRaw, probe.markerId);
-    let activeDatabaseProtected: boolean | null = activeProt.activeDatabaseProtected;
 
     if (activeProt.status === "FAILED") {
-      activeDatabaseProtected = false;
       errors.push(activeProt.error || "Active application database contains isolated test probe marker!");
     } else if (activeProt.status === "PASSED") {
-      activeDatabaseProtected = true;
       observations.push(`Active application database (${activeAppDbPath}) verified protected from marker leakage`);
     } else {
       observations.push(`Active application database absence check: ${activeProt.status} (${activeProt.error})`);
     }
 
-    const isPassed = errors.length === 0 && markerRes.exactMatch && activeDatabaseProtected !== false;
+    const isolationVerdict = evaluateDatabaseIsolationVerdict({
+      canonicalPathsDifferent: activeAppDbLoc.canonicalKey !== probe.expectedDatabaseKey,
+      prismaConnectionVerified: markerRes.written && markerRes.readBack,
+      markerWriteVerified: markerRes.written,
+      markerReadVerified: markerRes.readBack && markerRes.exactMatch,
+      activeDatabaseStatus: activeProt.status,
+      activeDatabaseProtected: activeProt.activeDatabaseProtected,
+      errors: [...errors],
+    });
 
     return {
       acceptanceRunId: context.acceptanceRunId,
       testedCommitSha: context.commitSha,
-      status: isPassed ? "PASSED" : "FAILED",
+      status: isolationVerdict.status,
       expectedDatabaseKey: probe.expectedDatabaseKey,
       observedDatabaseKeys: [probe.expectedDatabaseKey],
       activeAppDb: activeAppDbPath,
@@ -4566,14 +4921,14 @@ export async function collectDatabaseIsolationEvidence(context: {
       markerWriteVerified: markerRes.written,
       markerReadVerified: markerRes.readBack && markerRes.exactMatch,
       crossProcessIdentityVerified: false, // Local isolation probe is separate from multi-process verification
-      activeDatabaseProtected: activeDatabaseProtected === true,
-      activeAppDbProtected: activeDatabaseProtected === true,
+      activeDatabaseProtected: activeProt.activeDatabaseProtected === true,
+      activeAppDbProtected: activeProt.activeDatabaseProtected === true,
       isolatedProbeVerified: markerRes.exactMatch,
       evidenceOrigin: "ACTUAL_DATABASE_QUERY",
       observations,
-      errors,
+      errors: isolationVerdict.reasons,
       observedAt: new Date().toISOString(),
-      error: errors.length > 0 ? errors.join("; ") : undefined,
+      error: isolationVerdict.reasons.length > 0 ? isolationVerdict.reasons.join("; ") : undefined,
       cleanup: async () => {
         if (probe) {
           try {
@@ -4715,6 +5070,18 @@ export const V11_5_8_DEFECT_DEFINITIONS: ReleaseDefectDefinition[] = [
   { id: "FINAL-08-08", severity: "P1", description: "Release verdict, manifest, and published artifacts agree", requiredTestFile: "tests/unit/kh01FinalVerdict.test.ts" },
 ];
 
+export const V11_5_9_DEFECT_DEFINITIONS: ReleaseDefectDefinition[] = [
+  ...V11_5_8_DEFECT_DEFINITIONS,
+  { id: "V1159-01", severity: "P1", description: "Diagnostic database endpoint accepts hard-coded credentials", requiredTestFile: "tests/integration/kh01FinalAcceptanceFailClosed.test.ts" },
+  { id: "V1159-02", severity: "P1", description: "collectDatabaseIsolationEvidence marks NOT_VERIFIED active database protection as PASSED", requiredTestFile: "tests/unit/kh01ActiveDatabaseProtection.test.ts" },
+  { id: "V1159-03", severity: "P1", description: "runFullKh01Acceptance strictly blocks release when cross-process database identity is unverified", requiredTestFile: "tests/integration/kh01FinalAcceptanceFailClosed.test.ts" },
+  { id: "V1159-04", severity: "P1", description: "validateAcceptanceArtifact rejects unverified or incomplete database-process-identity", requiredTestFile: "tests/unit/kh01ArtifactIntegrity.test.ts" },
+  { id: "V1159-05", severity: "P2", description: "verifyDatabaseIdentityAcrossProcesses requires independently observed run IDs for shared run", requiredTestFile: "tests/integration/kh01CrossProcessDatabaseIdentity.test.ts" },
+  { id: "V1159-06", severity: "P2", description: "buildCrossBoundaryReconciliationArtifact enforces status, run identity and duplicate-ID invariants", requiredTestFile: "tests/unit/kh01FullLiveArtifacts.test.ts" },
+  { id: "V1159-07", severity: "P2", description: "observeDatabaseIdentityFromNextServer removes expectedDatabaseKey fallback and requires run token", requiredTestFile: "tests/integration/kh01FinalAcceptanceFailClosed.test.ts" },
+  { id: "V1159-08", severity: "P1", description: "Raw acceptance evidence and final release consistency and fail-closed lock", requiredTestFile: "tests/unit/kh01FinalVerdict.test.ts" },
+];
+
 export function evaluateReleaseDefects(
   definitions: ReleaseDefectDefinition[],
   executedEvidence: {
@@ -4767,6 +5134,16 @@ export function evaluateReleaseDefects(
 export const V11_5_8_TRACKED_DEFECTS: ReleaseDefect[] = [
   ...V11_5_7_TRACKED_DEFECTS,
   ...V11_5_8_DEFECT_DEFINITIONS.filter((d) => d.id.startsWith("FINAL-08-")).map((d) => ({
+    id: d.id,
+    severity: d.severity,
+    status: "FIXED_VERIFIED" as const,
+    evidenceReference: `${d.requiredTestFile} (${d.description})`,
+  })),
+];
+
+export const V11_5_9_TRACKED_DEFECTS: ReleaseDefect[] = [
+  ...V11_5_8_TRACKED_DEFECTS,
+  ...V11_5_9_DEFECT_DEFINITIONS.filter((d) => d.id.startsWith("V1159-")).map((d) => ({
     id: d.id,
     severity: d.severity,
     status: "FIXED_VERIFIED" as const,
@@ -4837,11 +5214,13 @@ export function buildCanonicalAcceptanceExecutionPlan(
     "tests/unit/kh01FullLiveArtifacts.test.ts",
     "tests/integration/kh01CrossProcessDatabaseIdentity.test.ts",
     "tests/integration/kh01WorkerProviderProvenance.test.ts",
+    // V11.5.9 Security & Fail-Closed Regression Suite (1)
+    "tests/integration/kh01FinalAcceptanceFailClosed.test.ts",
   ];
 
   return {
-    planId: "KH-01-V11.5.8-PLAN",
-    applicationVersion: "11.5.8",
+    planId: "KH-01-V11.5.9-PLAN",
+    applicationVersion: "11.5.9",
     mandatoryGateCount: mandatoryGates.length,
     optionalGateCount: optionalGates.length,
     gates: registry,
@@ -4859,7 +5238,7 @@ export async function runFullKh01Acceptance(
 
   const gitInfo = resolveGitInfo();
   console.log(`\n######################################################`);
-  console.log(`KH-01 V11.5.8 — FINAL TECHNICAL ACCEPTANCE CLOSURE`);
+  console.log(`KH-01 V11.5.9 — FINAL KH-01 SECURITY & ACCEPTANCE CORRECTNESS LOCK`);
   console.log(`Run ID:     ${acceptanceRunId}`);
   console.log(`Branch:     ${gitInfo.branch}`);
   console.log(`Commit SHA: ${gitInfo.commitSha}`);
@@ -4869,7 +5248,7 @@ export async function runFullKh01Acceptance(
   const executionPlan = buildCanonicalAcceptanceExecutionPlan(CANONICAL_ACCEPTANCE_GATES, options);
   console.log(`[PLAN] Mandatory Gates: ${executionPlan.mandatoryGateCount}, Suites: ${executionPlan.requiredSuites.length}`);
 
-  const scratchDir = path.resolve(process.cwd(), `artifacts/v11.5.8/.scratch-${acceptanceRunId}`);
+  const scratchDir = path.resolve(process.cwd(), `artifacts/v11.5.9/.scratch-${acceptanceRunId}`);
   if (!fs.existsSync(scratchDir)) {
     fs.mkdirSync(scratchDir, { recursive: true });
   }
@@ -4971,12 +5350,12 @@ export async function runFullKh01Acceptance(
   );
   stages.push(stageReadiness);
 
-  // STAGE 3D: Acceptance Truthfulness & Assertion Identity + V11.5.7/V11.5.8 Hardening Tests
+  // STAGE 3D: Acceptance Truthfulness & Assertion Identity + V11.5.7/V11.5.8/V11.5.9 Hardening Tests
   const truthReportPath = path.join(scratchDir, `truth_${runUuid}.json`);
   const stageTruth = await executeAcceptanceStage(
     "STAGE_03D_TRUTHFULNESS_SUITE",
     "Execute KH-01 Acceptance Truthfulness, Assertion Identity, and Verification Tests",
-    `npx vitest run tests/unit/kh01AcceptanceTruthfulness.test.ts tests/integration/metaLiveReconciliation.test.ts tests/unit/runReconciliationInvariants.test.ts tests/unit/adServiceCrossWorkspace.test.ts tests/integration/kh01CrossBoundaryReconciliation.test.ts tests/unit/kh01AssertionIdentity.test.ts tests/unit/kh01ArtifactIntegrity.test.ts tests/unit/kh01FinalVerdict.test.ts tests/unit/kh01LiveSourceIntegrity.test.ts tests/unit/kh01RequiredArtifactInventory.test.ts tests/unit/kh01ScreenshotEvidence.test.ts tests/unit/kh01SuiteExecutionIdentity.test.ts tests/unit/kh01FullLiveArtifacts.test.ts --reporter=default --reporter=json --outputFile=${truthReportPath}`,
+    `npx vitest run tests/unit/kh01AcceptanceTruthfulness.test.ts tests/integration/metaLiveReconciliation.test.ts tests/unit/runReconciliationInvariants.test.ts tests/unit/adServiceCrossWorkspace.test.ts tests/integration/kh01CrossBoundaryReconciliation.test.ts tests/unit/kh01AssertionIdentity.test.ts tests/unit/kh01ArtifactIntegrity.test.ts tests/unit/kh01FinalVerdict.test.ts tests/unit/kh01LiveSourceIntegrity.test.ts tests/unit/kh01RequiredArtifactInventory.test.ts tests/unit/kh01ScreenshotEvidence.test.ts tests/unit/kh01SuiteExecutionIdentity.test.ts tests/unit/kh01FullLiveArtifacts.test.ts tests/integration/kh01FinalAcceptanceFailClosed.test.ts --reporter=default --reporter=json --outputFile=${truthReportPath}`,
     acceptanceRunId,
     [
       { id: "GATE_13_TEST_TRUTHFULNESS_VERIFIED", type: "TEST_ASSERTION" },
@@ -5215,9 +5594,12 @@ export async function runFullKh01Acceptance(
   if (!processObservations.some((p) => p.processName === "NEXTJS_SERVER")) {
     try {
       const { startSwaiTestServer } = await import("../../tests/e2e/helpers/startSwaiTestServer");
+      const dbObservationToken = crypto.randomBytes(32).toString("hex");
       const server = await startSwaiTestServer({
         databaseUrl: databaseIsolationEvidence.isolatedTestDb,
         adminApiKey: "swai-acceptance-secret-token",
+        acceptanceRunId,
+        dbObservationToken,
         mode: "production",
         timeoutMs: 30000,
       });
@@ -5317,12 +5699,53 @@ export async function runFullKh01Acceptance(
   const exactRunArtifact = await buildExactRunArtifact(acceptanceRunId, gitInfo.commitSha, liveSourceResult);
   const browserArtifact = buildBrowserArtifact(acceptanceRunId, stages, browserEvidence, screenshotEvidence);
 
+  const requestedScope = options.requestedScope || (options.runLiveSource ? "FULL_LIVE" : "OFFLINE");
+
+  const actualWorkerProviderEvidence: ProviderSourceEvidence = liveSourceResult.providerEvidence || {
+    acceptanceRunId,
+    discoveryRunId: liveSourceResult.runId || "",
+    workerPid: 0,
+    requestedMode: resolveAcceptanceSourceMode(options),
+    providerId: "meta-ads-collector",
+    actualTransport: "none_offline",
+    observedSourceType: options.runLiveSource ? "UNKNOWN" : "TEST_FIXTURE",
+    fixtureDetected: !options.runLiveSource,
+    upstreamRequestExecuted: false,
+    upstreamResponseObserved: false,
+    upstreamResultSetId: null,
+    upstreamAdIds: [],
+    validAdsCollected: liveSourceResult.validCount,
+    observedAt: new Date().toISOString(),
+    evidenceOrigin: options.runLiveSource ? "ACTUAL_PROVIDER_EXECUTION" : "SYNTHETIC_FALLBACK",
+    errors: options.runLiveSource ? ["No provider evidence captured from worker"] : [],
+  };
+
+  const actualCrossBoundaryEvidence = liveSourceResult.crossBoundaryEvidence || {
+    acceptanceRunId,
+    testedCommitSha: gitInfo.commitSha,
+    discoveryRunId: liveSourceResult.runId || "",
+    status: options.runLiveSource ? "FAILED" : "NOT_RUN",
+    databaseAdIds: [],
+    httpAdIds: [],
+    browserAdIds: [],
+    missingInHttp: [],
+    unexpectedInHttp: [],
+    missingInBrowser: [],
+    unexpectedInBrowser: [],
+    duplicateIds: [],
+    consistent: false,
+    providerEvidenceReference: "No cross boundary evidence",
+    observedAt: new Date().toISOString(),
+    evidenceOrigin: options.runLiveSource ? "ACTUAL_CROSS_BOUNDARY_COMPARISON" : "SYNTHETIC_FALLBACK",
+    errors: options.runLiveSource ? ["Cross boundary evidence not generated"] : [],
+  };
+
   const artifactStatuses: AcceptanceArtifactStatus[] = [
     {
       artifactId: "exact-run-reconciliation",
       required: true,
       status: exactRunArtifact.status,
-      evidencePath: `artifacts/v11.5.8/${acceptanceRunId}/exact-run-reconciliation.json`,
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/exact-run-reconciliation.json`,
       evidenceOrigin: exactRunArtifact.evidenceOrigin,
       error: exactRunArtifact.status !== "PASSED" ? (exactRunArtifact.reasons || []).join("; ") : undefined,
     },
@@ -5330,7 +5753,7 @@ export async function runFullKh01Acceptance(
       artifactId: "browser-results",
       required: true,
       status: browserArtifact.status,
-      evidencePath: `artifacts/v11.5.8/${acceptanceRunId}/browser-results.json`,
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/browser-results.json`,
       evidenceOrigin: browserArtifact.evidenceOrigin,
       error: browserArtifact.status !== "PASSED" ? `Browser assertions failed (${browserArtifact.failedAssertions}) or not run (${browserArtifact.notRunAssertions})` : undefined,
     },
@@ -5338,15 +5761,23 @@ export async function runFullKh01Acceptance(
       artifactId: "database-isolation",
       required: true,
       status: databaseIsolationEvidence.status,
-      evidencePath: `artifacts/v11.5.8/${acceptanceRunId}/database-isolation.json`,
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/database-isolation.json`,
       evidenceOrigin: databaseIsolationEvidence.evidenceOrigin,
       error: databaseIsolationEvidence.error,
+    },
+    {
+      artifactId: "database-process-identity",
+      required: true,
+      status: crossProcessEvidence.verified ? "PASSED" : "FAILED",
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/database-process-identity.json`,
+      evidenceOrigin: "ACTUAL_MULTI_PROCESS_QUERY",
+      error: crossProcessEvidence.verified ? undefined : (crossProcessEvidence.errors.length > 0 ? crossProcessEvidence.errors.join("; ") : "Cross-process database identity unverified"),
     },
     {
       artifactId: "suite-coverage",
       required: true,
       status: suiteCoverage.passed ? "PASSED" : "FAILED",
-      evidencePath: `artifacts/v11.5.8/${acceptanceRunId}/suite-coverage.json`,
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/suite-coverage.json`,
       evidenceOrigin: "ACTUAL_TEST_EXECUTION",
       error: !suiteCoverage.passed ? suiteCoverage.errors.join("; ") : undefined,
     },
@@ -5354,16 +5785,32 @@ export async function runFullKh01Acceptance(
       artifactId: "screenshot-manifest",
       required: true,
       status: screenshotEvidence.length === 6 && screenshotEvidence.every((s) => s.fileExists) ? "PASSED" : "FAILED",
-      evidencePath: `artifacts/v11.5.8/${acceptanceRunId}/screenshot-manifest.json`,
+      evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/screenshot-manifest.json`,
       evidenceOrigin: "ACTUAL_BROWSER_OBSERVATION",
       error: screenshotEvidence.some((s) => !s.fileExists) ? "One or more canonical screenshots missing or invalid" : undefined,
     },
+    ...(requestedScope === "FULL_LIVE" ? [
+      {
+        artifactId: "cross-boundary-reconciliation",
+        required: true,
+        status: actualCrossBoundaryEvidence.status,
+        evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/cross-boundary-reconciliation.json`,
+        evidenceOrigin: actualCrossBoundaryEvidence.evidenceOrigin,
+        error: actualCrossBoundaryEvidence.status !== "PASSED" ? (actualCrossBoundaryEvidence.errors || []).join("; ") : undefined,
+      },
+      {
+        artifactId: "provider-source-provenance",
+        required: true,
+        status: (actualWorkerProviderEvidence.observedSourceType === "REAL_UPSTREAM" && !actualWorkerProviderEvidence.fixtureDetected) ? "PASSED" : "FAILED",
+        evidencePath: `artifacts/v11.5.9/${acceptanceRunId}/provider-source-provenance.json`,
+        evidenceOrigin: actualWorkerProviderEvidence.evidenceOrigin,
+        error: actualWorkerProviderEvidence.observedSourceType !== "REAL_UPSTREAM" ? `Invalid provider source type: ${actualWorkerProviderEvidence.observedSourceType}` : undefined,
+      },
+    ] : []),
   ];
 
-  const requestedScope = options.requestedScope || (options.runLiveSource ? "FULL_LIVE" : "OFFLINE");
-
-  // Defect register check: verify all P0/P1 defects are resolved based on actual executed evidence (FINAL-08-08)
-  const evaluatedDefects = evaluateReleaseDefects(V11_5_8_DEFECT_DEFINITIONS, {
+  // Defect register check: verify all P0/P1 defects are resolved based on actual executed evidence
+  const evaluatedDefects = evaluateReleaseDefects(V11_5_9_DEFECT_DEFINITIONS, {
     executedSuites,
     testedCommitSha: gitInfo.commitSha,
   });
@@ -5377,6 +5824,9 @@ export async function runFullKh01Acceptance(
   }
   if (databaseIsolationEvidence.status !== "PASSED") {
     defectBlockingReasons.push(databaseIsolationEvidence.error || "Database isolation verification failed");
+  }
+  if (!crossProcessEvidence.verified) {
+    defectBlockingReasons.push(...(crossProcessEvidence.errors.length > 0 ? crossProcessEvidence.errors : ["Cross-process database identity was not verified across required boundaries"]));
   }
 
   // Evaluate provisional release verdict
@@ -5392,8 +5842,8 @@ export async function runFullKh01Acceptance(
   );
 
   const manifest: Kh01AcceptanceManifest = {
-    applicationVersion: "11.5.8",
-    protocolVersion: "11.5.8",
+    applicationVersion: "11.5.9",
+    protocolVersion: "11.5.9",
     acceptanceRunId,
     testedCommitSha: gitInfo.commitSha,
     branch: gitInfo.branch,
@@ -5443,45 +5893,6 @@ export async function runFullKh01Acceptance(
       sha256: s.sha256,
       status: s.associatedViewportStatus,
     })),
-  };
-
-  const actualWorkerProviderEvidence: ProviderSourceEvidence = liveSourceResult.providerEvidence || {
-    acceptanceRunId,
-    discoveryRunId: liveSourceResult.runId || "",
-    workerPid: 0,
-    requestedMode: resolveAcceptanceSourceMode(options),
-    providerId: "meta-ads-collector",
-    actualTransport: "none_offline",
-    observedSourceType: options.runLiveSource ? "UNKNOWN" : "TEST_FIXTURE",
-    fixtureDetected: !options.runLiveSource,
-    upstreamRequestExecuted: false,
-    upstreamResponseObserved: false,
-    upstreamResultSetId: null,
-    upstreamAdIds: [],
-    validAdsCollected: liveSourceResult.validCount,
-    observedAt: new Date().toISOString(),
-    evidenceOrigin: "ACTUAL_PROVIDER_EXECUTION",
-    errors: options.runLiveSource ? ["No provider evidence captured from worker"] : [],
-  };
-
-  const actualCrossBoundaryEvidence = liveSourceResult.crossBoundaryEvidence || {
-    acceptanceRunId,
-    testedCommitSha: gitInfo.commitSha,
-    discoveryRunId: liveSourceResult.runId || "",
-    status: options.runLiveSource ? "FAILED" : "NOT_RUN",
-    databaseAdIds: [],
-    httpAdIds: [],
-    browserAdIds: [],
-    missingInHttp: [],
-    unexpectedInHttp: [],
-    missingInBrowser: [],
-    unexpectedInBrowser: [],
-    duplicateIds: [],
-    consistent: false,
-    providerEvidenceReference: "No cross boundary evidence",
-    observedAt: new Date().toISOString(),
-    evidenceOrigin: "ACTUAL_CROSS_BOUNDARY_COMPARISON",
-    errors: options.runLiveSource ? ["Cross boundary evidence not generated"] : [],
   };
 
   const filesToWrite = [
@@ -5538,9 +5949,9 @@ export async function runFullKh01Acceptance(
   // Construct final report strictly after write and validation checks
   const report: FullKh01AcceptanceReport = {
     plan: "KH-01",
-    applicationReleaseVersion: "11.5.8",
-    kh01ProtocolVersion: "11.5.8",
-    version: "11.5.8",
+    applicationReleaseVersion: "11.5.9",
+    kh01ProtocolVersion: "11.5.9",
+    version: "11.5.9",
     acceptanceRunId,
     startedAt,
     completedAt,
@@ -5551,7 +5962,7 @@ export async function runFullKh01Acceptance(
 
   // Print summary report
   console.log(`\n======================================================`);
-  console.log(`SWAI V11.5.8 KH-01 — TECHNICAL ACCEPTANCE SUMMARY`);
+  console.log(`SWAI V11.5.9 KH-01 — TECHNICAL ACCEPTANCE SUMMARY`);
   console.log(`======================================================`);
   console.log(`Acceptance Run ID:    ${acceptanceRunId}`);
   console.log(`Git Commit SHA:       ${gitInfo.commitSha}`);

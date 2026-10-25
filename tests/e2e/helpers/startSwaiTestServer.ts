@@ -1,4 +1,5 @@
 import { spawn, ChildProcess } from "child_process";
+import crypto from "crypto";
 import net from "net";
 import path from "path";
 import { assertSafeTestDatabase } from "@/lib/database/databaseSafety";
@@ -9,6 +10,8 @@ export interface SwaiTestServerOptions {
   mode?: "development" | "production";
   adminApiKey?: string;
   timeoutMs?: number;
+  acceptanceRunId?: string;
+  dbObservationToken?: string;
 }
 
 export interface SwaiTestServerHandle {
@@ -18,6 +21,8 @@ export interface SwaiTestServerHandle {
   pid: number;
   databaseUrl: string;
   adminApiKey: string;
+  acceptanceRunId?: string;
+  dbObservationToken?: string;
   stop(): Promise<void>;
 }
 
@@ -113,6 +118,10 @@ export async function startSwaiTestServer(
   // 3. Resolve Next.js binary
   const nextBinPath = require.resolve("next/dist/bin/next");
 
+  const dbObservationToken =
+    options.dbObservationToken ||
+    (options.acceptanceRunId ? crypto.randomBytes(32).toString("hex") : undefined);
+
   const serverEnv: NodeJS.ProcessEnv = {
     ...process.env,
     PORT: String(port),
@@ -127,6 +136,8 @@ export async function startSwaiTestServer(
     ADMIN_API_KEY: adminApiKey,
     SWAI_ADMIN_TOKEN: adminApiKey,
     ADMIN_SECRET: adminApiKey,
+    ...(options.acceptanceRunId ? { KH01_ACCEPTANCE_RUN_ID: options.acceptanceRunId } : {}),
+    ...(dbObservationToken ? { KH01_DB_OBSERVATION_TOKEN: dbObservationToken } : {}),
   };
 
 
@@ -208,6 +219,8 @@ export async function startSwaiTestServer(
     pid,
     databaseUrl: options.databaseUrl,
     adminApiKey,
+    acceptanceRunId: options.acceptanceRunId,
+    dbObservationToken,
     stop,
   };
 }

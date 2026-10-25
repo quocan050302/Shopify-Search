@@ -13,7 +13,7 @@ import {
 import {
   buildBrowserArtifact,
   prepareAcceptanceArtifactSet,
-  validateAcceptanceArtifactSet,
+  validateAcceptanceArtifact,
   publishAcceptanceArtifactsAtomically,
   parseBrowserExecutionEvidence,
   BrowserExecutionEvidence,
@@ -171,6 +171,47 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
     expect(verdict).toBe("CONDITIONALLY_ACCEPTED");
   });
 
+  it("validateAcceptanceArtifact rejects database-process-identity.json when verified is false (V1159-04)", () => {
+    const res = validateAcceptanceArtifact(
+      {
+        name: "database-process-identity.json",
+        data: {
+          acceptanceRunId: "run_test_123",
+          testedCommitSha: "sha_test_123",
+          verified: false,
+          observedProcesses: [
+            { processName: "WORKER", markerObserved: true },
+            { processName: "NEXTJS_SERVER", markerObserved: true },
+          ],
+        },
+      },
+      "run_test_123",
+      "sha_test_123"
+    );
+    expect(res.valid).toBe(false);
+    expect(res.errors.some((e) => e.includes("verified"))).toBe(true);
+  });
+
+  it("validateAcceptanceArtifact rejects database-process-identity.json when required process is missing (V1159-04)", () => {
+    const res = validateAcceptanceArtifact(
+      {
+        name: "database-process-identity.json",
+        data: {
+          acceptanceRunId: "run_test_123",
+          testedCommitSha: "sha_test_123",
+          verified: true,
+          observedProcesses: [
+            { processName: "WORKER", markerObserved: true },
+          ],
+        },
+      },
+      "run_test_123",
+      "sha_test_123"
+    );
+    expect(res.valid).toBe(false);
+    expect(res.errors.some((e) => e.includes("Next.js"))).toBe(true);
+  });
+
   it("buildBrowserArtifact does not hardcode untested viewports when no tests ran", () => {
     const artifact = buildBrowserArtifact("run_empty_browser", []);
     expect(artifact.status).toBe("NOT_RUN");
@@ -325,7 +366,19 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
           activeDatabaseProtected: true,
         },
       },
-      { name: "database-process-identity.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
+      {
+        name: "database-process-identity.json",
+        data: {
+          acceptanceRunId: runId,
+          testedCommitSha: sha,
+          status: "PASSED",
+          verified: true,
+          observedProcesses: [
+            { processName: "WORKER", markerObserved: true },
+            { processName: "NEXTJS_SERVER", markerObserved: true },
+          ],
+        },
+      },
       { name: "exact-run-reconciliation.json", data: { acceptanceRunId: runId, testedCommitSha: sha, retrieved: 10, valid: 10, linked: 10 } },
       { name: "offline-reconciliation.json", data: { acceptanceRunId: runId, testedCommitSha: sha, status: "PASSED" } },
       {
