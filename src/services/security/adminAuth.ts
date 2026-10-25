@@ -146,9 +146,12 @@ export function resolveTrustedRequestContext(request: NextRequest): TrustedReque
     }
   }
 
-  // In production mode, authentication is strictly required unless explicitly running as local desktop
-  const isProduction = process.env.NODE_ENV === "production";
-  const authRequired = isProduction && process.env.SWAI_LOCAL_DESKTOP !== "true";
+  // In local desktop deployment, genuine loopback requests are authorized unless an isolated
+  // test environment or remote access flag explicitly requires strict authentication.
+  const authRequired =
+    process.env.SWAI_REQUIRE_AUTH === "true" ||
+    process.env.SWAI_E2E_SERVER === "true" ||
+    process.env.SWAI_DEPLOYMENT_MODE === "REMOTE";
 
   // Genuine loopback request verified under local desktop deployment
   return {
