@@ -3,6 +3,7 @@ import { createIsolatedTestDatabase, TestDatabaseHandle } from "../helpers/creat
 import { startSwaiTestServer, SwaiTestServerHandle } from "./helpers/startSwaiTestServer";
 import { chromium, Browser, BrowserContext, Page } from "playwright-core";
 import fs from "fs";
+import path from "path";
 
 function resolveChrome(): string {
   const candidates = [
@@ -224,17 +225,100 @@ describe("Meta Discovery Final Acceptance E2E (Section 18 & 25)", () => {
       { width: 390, height: 844, name: "390x844 (Mobile)" },
     ];
 
-    for (const vp of viewports) {
-      await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto(`${serverHandle.baseUrl}/explorer?platform=META&requestId=${runId}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-
-      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
-
-      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 15);
+    const executions: any[] = [];
+    const screenshotsDir = path.resolve(process.cwd(), "artifacts/v11.5.6/screenshots");
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true });
     }
+
+    const testUrl = `${serverHandle.baseUrl}/explorer?platform=META&requestId=${runId}`;
+
+    for (const vp of viewports) {
+      const startedAt = new Date().toISOString();
+      let status: "PASSED" | "FAILED" = "PASSED";
+      let error: string | undefined = undefined;
+      let pageNavigated = false;
+      let domAssertionsExecuted = 0;
+      let horizontalOverflowDetected = false;
+      const screenshotPath = path.join(screenshotsDir, `viewport_${vp.width}x${vp.height}.png`);
+
+      try {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(testUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        pageNavigated = true;
+
+        // Verify page url
+        const currentUrl = page.url();
+        expect(currentUrl).toContain("/explorer");
+        domAssertionsExecuted++;
+
+        // Verify exact-run context
+        const banner = page.locator("[data-testid='exact-run-context-banner']");
+        await banner.waitFor({ state: "visible", timeout: 10000 });
+        expect(await banner.isVisible()).toBe(true);
+        domAssertionsExecuted++;
+
+        // Verify horizontal overflow
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+        if (scrollWidth > clientWidth + 15) {
+          horizontalOverflowDetected = true;
+        }
+        expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 15);
+        domAssertionsExecuted++;
+
+        // Screenshot capture
+        await page.screenshot({ path: screenshotPath });
+      } catch (err: any) {
+        status = "FAILED";
+        error = err.message || String(err);
+      }
+
+      executions.push({
+        testId: `viewport_${vp.width}x${vp.height}`,
+        browserName: "chromium",
+        width: vp.width,
+        height: vp.height,
+        viewportLabel: vp.name,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        status,
+        pageUrl: testUrl,
+        browserLaunched: true,
+        pageNavigated,
+        domAssertionsExecuted,
+        horizontalOverflowDetected,
+        screenshotPath: fs.existsSync(screenshotPath) ? screenshotPath : null,
+        error,
+      });
+    }
+
+    // Write structured viewport execution evidence
+    const evidencePath =
+      process.env.KH01_BROWSER_EVIDENCE_PATH ||
+      path.resolve(process.cwd(), "artifacts/v11.5.6/browser-viewport-results.json");
+    const evidenceDir = path.dirname(evidencePath);
+    if (!fs.existsSync(evidenceDir)) {
+      fs.mkdirSync(evidenceDir, { recursive: true });
+    }
+
+    const failedCount = executions.filter((e) => e.status === "FAILED").length;
+    const payload = {
+      acceptanceRunId: process.env.KH01_ACCEPTANCE_RUN_ID || "run_discovery_e2e_001",
+      browserName: "chromium",
+      executedAt: new Date().toISOString(),
+      totalViewports: executions.length,
+      passedViewports: executions.filter((e) => e.status === "PASSED").length,
+      failedViewports: failedCount,
+      executions,
+      evidenceFile: evidencePath,
+      valid: true,
+    };
+    fs.writeFileSync(evidencePath, JSON.stringify(payload, null, 2), "utf8");
+
+    expect(failedCount).toBe(0);
   }, 45000);
 });

@@ -62,7 +62,7 @@ describe("KH-01 Database Isolation & Safety (Part 06, Invariant 7)", () => {
     const identity = verifyAcceptanceDatabaseIdentity(context as any);
     expect(identity.verified).toBe(false);
     expect(identity.isIsolated).toBe(false);
-    expect(identity.error).toContain("conflicts with active application database");
+    expect(identity.error).toMatch(/resolves to same file as active application database|conflicts with active application database/);
   });
 
   it("guarantees writes to isolated test database never touch dev.db", async () => {

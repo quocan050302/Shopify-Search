@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import os from "os";
 import { describe, it, expect } from "vitest";
 import {
   evaluateRequiredArtifacts,
@@ -7,7 +10,14 @@ import {
   GateEvidence,
   CANONICAL_ACCEPTANCE_GATES,
 } from "../../src/lib/kh01/acceptanceGateRegistry";
-import { buildBrowserArtifact } from "../../scripts/kh01/runFullAcceptance";
+import {
+  buildBrowserArtifact,
+  prepareAcceptanceArtifactSet,
+  validateAcceptanceArtifactSet,
+  publishAcceptanceArtifactsAtomically,
+  parseBrowserExecutionEvidence,
+  BrowserExecutionEvidence,
+} from "../../scripts/kh01/runFullAcceptance";
 
 describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
   function getBasePassingGates(): GateEvidence[] {
@@ -165,5 +175,221 @@ describe("KH-01 Artifact Integrity & Blocking (Section 07, 08, 11)", () => {
     const artifact = buildBrowserArtifact("run_empty_browser", []);
     expect(artifact.status).toBe("NOT_RUN");
     expect(artifact.viewportsTested).toEqual([]);
+  });
+
+  it("buildBrowserArtifact marks status FAILED when browser evidence contains only 2 of 6 viewports even if stage PASSED", () => {
+    const stages = [
+      {
+        stageId: "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+        status: "PASSED" as const,
+        exitCode: 0,
+        name: "Browser E2E",
+        command: "vitest",
+        durationMs: 100,
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        assertions: [
+          {
+            assertionId: "ASSERTION_STAGE_08_BROWSER_E2E",
+            stageId: "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+            acceptanceRunId: "run_test_vp",
+            status: "PASSED" as const,
+            startedAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            evidenceType: "BROWSER_ACTION" as const,
+            evidenceReference: "Passed viewport test",
+            error: null,
+          },
+        ],
+      },
+    ];
+
+    const partialEvidence: BrowserExecutionEvidence = {
+      acceptanceRunId: "run_test_vp",
+      browserName: "chromium",
+      totalViewports: 2,
+      passedViewports: 2,
+      failedViewports: 0,
+      valid: true,
+      executions: [
+        {
+          testId: "viewport_390x844",
+          browserName: "chromium",
+          width: 390,
+          height: 844,
+          viewportLabel: "Mobile",
+          startedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          status: "PASSED",
+          pageUrl: "http://127.0.0.1:3000/explorer",
+          browserLaunched: true,
+          pageNavigated: true,
+          domAssertionsExecuted: 3,
+          horizontalOverflowDetected: false,
+          screenshotPath: "/path/to/shot1.png",
+        },
+        {
+          testId: "viewport_1440x900",
+          browserName: "chromium",
+          width: 1440,
+          height: 900,
+          viewportLabel: "Desktop",
+          startedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          status: "PASSED",
+          pageUrl: "http://127.0.0.1:3000/explorer",
+          browserLaunched: true,
+          pageNavigated: true,
+          domAssertionsExecuted: 3,
+          horizontalOverflowDetected: false,
+          screenshotPath: "/path/to/shot2.png",
+        },
+      ],
+    };
+
+    const artifact = buildBrowserArtifact("run_test_vp", stages, partialEvidence);
+    expect(artifact.status).toBe("FAILED");
+    expect(artifact.viewportsTested).toEqual(["390x844", "1440x900"]);
+    expect(artifact.canonicalMissingViewports.length).toBe(4);
+    expect(artifact.canonicalMissingViewports).toContain("1920x1080");
+  });
+
+  it("buildBrowserArtifact marks status NOT_RUN when browser evidence file is missing and blocks release", () => {
+    const stages = [
+      {
+        stageId: "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+        status: "PASSED" as const,
+        exitCode: 0,
+        name: "Browser E2E",
+        command: "vitest",
+        durationMs: 100,
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        assertions: [],
+      },
+    ];
+
+    const missingEvidence = parseBrowserExecutionEvidence("/nonexistent/browser-results.json", "run_missing_evidence");
+    expect(missingEvidence.valid).toBe(false);
+
+    const artifact = buildBrowserArtifact("run_missing_evidence", stages, missingEvidence);
+    expect(artifact.status).toBe("NOT_RUN");
+
+    const gates = getBasePassingGates();
+    const live = getSampleLiveResult("NOT_RUN");
+    const artifactStatuses: AcceptanceArtifactStatus[] = [
+      {
+        artifactId: "browser-results",
+        required: true,
+        status: artifact.status,
+        evidencePath: null,
+        evidenceOrigin: "ACTUAL_BROWSER_OBSERVATION",
+      },
+    ];
+
+    const verdict = finalizeAcceptanceVerdict(gates, stages, live, [], [], artifactStatuses, "OFFLINE");
+    expect(verdict).toBe("BLOCKED");
+  });
+
+  it("publishAcceptanceArtifactsAtomically writes to staging, verifies disk readback, renames atomically, and updates latest.json", async () => {
+    const tempBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), "swai-atomic-test-"));
+    try {
+      const runId = "run_atomic_001";
+      const sha = "a1b2c3d4e5f6";
+      const manifest = {
+        acceptanceRunId: runId,
+        testedCommitSha: sha,
+        releaseVerdict: "CONDITIONALLY_ACCEPTED",
+      };
+      const verdict = {
+        verdict: "CONDITIONALLY_ACCEPTED",
+        requestedScope: "OFFLINE",
+      };
+      const metadata = {
+        acceptanceRunId: runId,
+        testedCommitSha: sha,
+        overallStatus: "CONDITIONALLY_ACCEPTED",
+      };
+
+      const set = prepareAcceptanceArtifactSet(runId, sha, [
+        { name: "acceptance-manifest.json", data: manifest },
+        { name: "release-verdict.json", data: verdict },
+        { name: "execution-metadata.json", data: metadata },
+      ]);
+
+      const result = await publishAcceptanceArtifactsAtomically(set, { artifactsBaseDir: tempBaseDir });
+      expect(result.success).toBe(true);
+      expect(fs.existsSync(result.publishedRunDir)).toBe(true);
+      expect(fs.existsSync(path.join(result.publishedRunDir, "acceptance-manifest.json"))).toBe(true);
+      expect(fs.existsSync(path.join(tempBaseDir, "latest.json"))).toBe(true);
+
+      const latestPointer = JSON.parse(fs.readFileSync(path.join(tempBaseDir, "latest.json"), "utf8"));
+      expect(latestPointer.acceptanceRunId).toBe(runId);
+      expect(latestPointer.testedCommitSha).toBe(sha);
+
+      // Verify checksums
+      expect(result.checksums["acceptance-manifest.json"]).toBeDefined();
+    } finally {
+      fs.rmSync(tempBaseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("publishAcceptanceArtifactsAtomically blocks publication and does not update latest.json when validation fails", async () => {
+    const tempBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), "swai-atomic-fail-"));
+    try {
+      // First publish a valid initial run
+      const initialRunId = "run_initial_valid";
+      const initialSha = "sha_initial";
+      const validSet = prepareAcceptanceArtifactSet(initialRunId, initialSha, [
+        { name: "acceptance-manifest.json", data: { acceptanceRunId: initialRunId, testedCommitSha: initialSha, releaseVerdict: "ACCEPTED" } },
+        { name: "release-verdict.json", data: { verdict: "ACCEPTED" } },
+        { name: "execution-metadata.json", data: { acceptanceRunId: initialRunId, testedCommitSha: initialSha, overallStatus: "ACCEPTED" } },
+      ]);
+      await publishAcceptanceArtifactsAtomically(validSet, { artifactsBaseDir: tempBaseDir });
+
+      const initialLatestPointer = JSON.parse(fs.readFileSync(path.join(tempBaseDir, "latest.json"), "utf8"));
+      expect(initialLatestPointer.acceptanceRunId).toBe(initialRunId);
+
+      // Now attempt to publish an invalid set (verdict mismatch between manifest and release-verdict)
+      const invalidRunId = "run_invalid_002";
+      const invalidSet = prepareAcceptanceArtifactSet(invalidRunId, "sha_invalid", [
+        { name: "acceptance-manifest.json", data: { acceptanceRunId: invalidRunId, testedCommitSha: "sha_invalid", releaseVerdict: "ACCEPTED" } },
+        { name: "release-verdict.json", data: { verdict: "BLOCKED" } }, // MISMATCH
+        { name: "execution-metadata.json", data: { acceptanceRunId: invalidRunId, testedCommitSha: "sha_invalid", overallStatus: "ACCEPTED" } },
+      ]);
+
+      const failResult = await publishAcceptanceArtifactsAtomically(invalidSet, { artifactsBaseDir: tempBaseDir });
+      expect(failResult.success).toBe(false);
+      expect(failResult.errors.some((e) => e.includes("Manifest verdict"))).toBe(true);
+
+      // Verify latest pointer was UNTOUCHED and still points to the initial run!
+      const currentLatestPointer = JSON.parse(fs.readFileSync(path.join(tempBaseDir, "latest.json"), "utf8"));
+      expect(currentLatestPointer.acceptanceRunId).toBe(initialRunId);
+    } finally {
+      fs.rmSync(tempBaseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("publishAcceptanceArtifactsAtomically rejects overwrite when target run directory already exists", async () => {
+    const tempBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), "swai-atomic-immutable-"));
+    try {
+      const runId = "run_immutable_001";
+      const sha = "sha_immutable";
+      const set = prepareAcceptanceArtifactSet(runId, sha, [
+        { name: "acceptance-manifest.json", data: { acceptanceRunId: runId, testedCommitSha: sha, releaseVerdict: "ACCEPTED" } },
+        { name: "release-verdict.json", data: { verdict: "ACCEPTED" } },
+        { name: "execution-metadata.json", data: { acceptanceRunId: runId, testedCommitSha: sha, overallStatus: "ACCEPTED" } },
+      ]);
+
+      const res1 = await publishAcceptanceArtifactsAtomically(set, { artifactsBaseDir: tempBaseDir });
+      expect(res1.success).toBe(true);
+
+      // Second attempt with same runId must be rejected
+      const res2 = await publishAcceptanceArtifactsAtomically(set, { artifactsBaseDir: tempBaseDir });
+      expect(res2.success).toBe(false);
+      expect(res2.errors[0]).toContain("already exists and is immutable");
+    } finally {
+      fs.rmSync(tempBaseDir, { recursive: true, force: true });
+    }
   });
 });

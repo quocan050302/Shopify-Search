@@ -122,7 +122,7 @@ describe("KH-01 Exact Test Assertion Matching & Identity (Section 10)", () => {
     });
 
     const parsed = parseVitestJsonAssertions(reportPath);
-    // If ambiguous candidates found, resolveExecutedAssertion must yield BLOCKED
+    // When duplicate canonical identity detected, resolveExecutedAssertion strictly yields BLOCKED
     const res = resolveExecutedAssertion(parsed, {
       gateId: "GATE_DUP",
       type: "TEST_ASSERTION",
@@ -130,8 +130,8 @@ describe("KH-01 Exact Test Assertion Matching & Identity (Section 10)", () => {
       expectedTestName: "duplicated test name",
     });
 
-    // Since our parser indexed duplicate, candidate search resolves ambiguity or returns blocked
-    expect(["PASSED", "BLOCKED", "FAILED"]).toContain(res.status);
+    expect(res.status).toBe("BLOCKED");
+    expect(res.error).toContain("Duplicate assertion identity detected");
   });
 
   it("returns NOT_RUN when expected test is missing from output", () => {
@@ -160,5 +160,118 @@ describe("KH-01 Exact Test Assertion Matching & Identity (Section 10)", () => {
     });
 
     expect(res.status).toBe("NOT_RUN");
+  });
+
+  it("does not collide when same test title exists in two different files", () => {
+    const reportPath = createReport({
+      testResults: [
+        {
+          name: "/app/tests/unit/suiteA.test.ts",
+          assertionResults: [
+            {
+              title: "common check",
+              fullName: "common check",
+              status: "passed",
+              duration: 10,
+            },
+          ],
+        },
+        {
+          name: "/app/tests/integration/suiteB.test.ts",
+          assertionResults: [
+            {
+              title: "common check",
+              fullName: "common check",
+              status: "failed",
+              duration: 12,
+            },
+          ],
+        },
+      ],
+    });
+
+    const parsed = parseVitestJsonAssertions(reportPath);
+    expect(parsed.valid).toBe(true);
+    expect(parsed.duplicates.length).toBe(0);
+
+    const resA = resolveExecutedAssertion(parsed, {
+      gateId: "GATE_A",
+      type: "TEST_ASSERTION",
+      expectedTestFile: "tests/unit/suiteA.test.ts",
+      expectedTestName: "common check",
+    });
+    expect(resA.status).toBe("PASSED");
+
+    const resB = resolveExecutedAssertion(parsed, {
+      gateId: "GATE_B",
+      type: "TEST_ASSERTION",
+      expectedTestFile: "tests/integration/suiteB.test.ts",
+      expectedTestName: "common check",
+    });
+    expect(resB.status).toBe("FAILED");
+  });
+
+  it("classifies skipped assertion as NOT_RUN and preserves failure as FAILED", () => {
+    const reportPath = createReport({
+      testResults: [
+        {
+          name: "/app/tests/unit/skip.test.ts",
+          assertionResults: [
+            {
+              title: "skipped test",
+              fullName: "skipped test",
+              status: "skipped",
+              duration: 0,
+            },
+            {
+              title: "failed test",
+              fullName: "failed test",
+              status: "failed",
+              duration: 5,
+              failureMessages: ["Expected 1 to be 2"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const parsed = parseVitestJsonAssertions(reportPath);
+    const resSkip = resolveExecutedAssertion(parsed, {
+      gateId: "GATE_SKIP",
+      type: "TEST_ASSERTION",
+      expectedTestFile: "tests/unit/skip.test.ts",
+      expectedTestName: "skipped test",
+    });
+    expect(resSkip.status).toBe("NOT_RUN");
+
+    const resFail = resolveExecutedAssertion(parsed, {
+      gateId: "GATE_FAIL",
+      type: "TEST_ASSERTION",
+      expectedTestFile: "tests/unit/skip.test.ts",
+      expectedTestName: "failed test",
+    });
+    expect(resFail.status).toBe("FAILED");
+    expect(resFail.error).toContain("Expected 1 to be 2");
+  });
+
+  it("returns BLOCKED when jsonReportPath does not exist", () => {
+    const res = resolveExecutedAssertion(
+      new Map(),
+      {
+        gateId: "GATE_MISSING",
+        type: "TEST_ASSERTION",
+        expectedTestFile: "tests/unit/missing.test.ts",
+        expectedTestName: "some test",
+      },
+      {
+        stageStatus: "PASSED",
+        exitCode: 0,
+        command: "vitest run",
+        jsonReportPath: path.join(tempDir, "non-existent-report.json"),
+      }
+    );
+
+    expect(res.status).toBe("BLOCKED");
+    expect(res.error).toContain("Test report was not generated or missing");
   });
 });

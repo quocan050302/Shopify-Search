@@ -115,6 +115,14 @@ export class MetaAdsCollectorProvider implements AdDiscoveryProvider {
   }
 
   getProviderConfigurationStatus(): ProviderAvailabilityResult {
+    if (process.env.SWAI_MOCK_META_BOUNDARY === "true") {
+      return {
+        status: "READY_UNVERIFIED",
+        isAuthorized: true,
+        requiresConfig: false,
+        message: "Approved mock Meta boundary enabled for testing.",
+      };
+    }
     const config = getMetaCollectorConfig();
 
     if (!config.enabled) {

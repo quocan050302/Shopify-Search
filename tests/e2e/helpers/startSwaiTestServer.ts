@@ -117,6 +117,7 @@ export async function startSwaiTestServer(
     ...process.env,
     PORT: String(port),
     HOSTNAME: host,
+    HOST: host,
     NODE_ENV: mode,
     DATABASE_URL: activeAppDb,
     TEST_DATABASE_URL: options.databaseUrl,

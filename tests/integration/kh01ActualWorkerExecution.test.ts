@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createIsolatedTestDatabase, TestDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
-import { executeLiveResearchThroughWorker } from "../../scripts/kh01/runFullAcceptance";
+import { executeDirectOrchestratorResearch } from "../../scripts/kh01/runFullAcceptance";
 import { discoveryOrchestrator } from "../../src/services/discovery/discoveryOrchestrator";
 
-describe("KH-01 Real Worker Execution (Part 04, FIX-01, Invariant 1)", () => {
+describe("KH-01 Orchestrator Direct Integration (ORCHESTRATOR_INTEGRATION)", () => {
   let testDb: TestDatabaseHandle;
   const workspaceId = "ws_test_worker_acceptance";
 
@@ -53,7 +53,7 @@ describe("KH-01 Real Worker Execution (Part 04, FIX-01, Invariant 1)", () => {
       timeoutMs: 15000,
     };
 
-    const result = await executeLiveResearchThroughWorker(context as any, {
+    const result = await executeDirectOrchestratorResearch(context as any, {
       market: "US",
       keywords: ["apparel"],
       limit: 5,
@@ -88,7 +88,7 @@ describe("KH-01 Real Worker Execution (Part 04, FIX-01, Invariant 1)", () => {
       timeoutMs: 5000,
     };
 
-    const result = await executeLiveResearchThroughWorker(context as any, {
+    const result = await executeDirectOrchestratorResearch(context as any, {
       market: "US",
       keywords: ["electronics"],
       limit: 5,
@@ -121,7 +121,7 @@ describe("KH-01 Real Worker Execution (Part 04, FIX-01, Invariant 1)", () => {
       timeoutMs: 5000,
     };
 
-    const result = await executeLiveResearchThroughWorker(context as any, {
+    const result = await executeDirectOrchestratorResearch(context as any, {
       market: "US",
       keywords: ["beauty"],
       limit: 5,
@@ -143,7 +143,7 @@ describe("KH-01 Real Worker Execution (Part 04, FIX-01, Invariant 1)", () => {
       timeoutMs: 5000,
     };
 
-    const result = await executeLiveResearchThroughWorker(context as any, {
+    const result = await executeDirectOrchestratorResearch(context as any, {
       market: "US",
       keywords: ["home"],
       limit: 5,

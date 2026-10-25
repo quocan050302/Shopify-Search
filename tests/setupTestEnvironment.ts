@@ -34,3 +34,7 @@ if (!process.env.TEST_DATABASE_URL) {
 
   assertSafeTestDatabase(testUrl, process.env);
 }
+
+if (!process.env.HOST) {
+  process.env.HOST = "127.0.0.1";
+}

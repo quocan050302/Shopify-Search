@@ -122,6 +122,153 @@ function mapUpstreamError(errorObj: unknown): Error {
 }
 
 export async function createMetaCollectorClient(): Promise<MetaCollectorClient> {
+  if (process.env.SWAI_MOCK_META_BOUNDARY === "fail") {
+    throw new DiscoveryError({
+      code: "PROVIDER_PERMISSION_DENIED",
+      message: "Meta Ad Library access restricted: challenge encountered",
+      providerId: "meta-ads-collector",
+    });
+  }
+
+  if (process.env.SWAI_MOCK_META_BOUNDARY === "true") {
+    const mockAds: MetaCollectorRawAd[] = [
+      {
+        id: "90000000001",
+        page: { id: "page_mock_001", name: "PupComfort Official" },
+        creatives: [
+          {
+            title: "Orthopedic Memory Foam Pet Bed",
+            body: "Give your pup the best sleep with our premium washable orthopedic pet bed.",
+            link_url: "https://pupcomfort.example.com/bed",
+            image_url: "https://pupcomfort.example.com/images/bed.jpg",
+            cta_text: "Shop Now",
+          },
+        ],
+        start_date: new Date().toISOString(),
+        is_active: true,
+        publisher_platforms: ["FACEBOOK", "INSTAGRAM"],
+      },
+      {
+        id: "90000000002",
+        page: { id: "page_mock_001", name: "PupComfort Official" },
+        creatives: [
+          {
+            title: "Calming Dog Donut Bed",
+            body: "Anti-anxiety faux fur dog bed with deep crevices for restful burrowing.",
+            link_url: "https://pupcomfort.example.com/donut",
+            image_url: "https://pupcomfort.example.com/images/donut.jpg",
+            cta_text: "Buy Now",
+          },
+        ],
+        start_date: new Date().toISOString(),
+        is_active: true,
+        publisher_platforms: ["INSTAGRAM"],
+      },
+      {
+        id: "90000000003",
+        page: { id: "page_mock_002", name: "SleepyPaws US" },
+        creatives: [
+          {
+            title: "Waterproof Pet Blanket & Furniture Cover",
+            body: "Protect your sofa and car seats from pet hair, drool, and accidental spills.",
+            link_url: "https://sleepypaws.example.com/blanket",
+            image_url: "https://sleepypaws.example.com/images/blanket.jpg",
+            cta_text: "Learn More",
+          },
+        ],
+        start_date: new Date().toISOString(),
+        is_active: true,
+        publisher_platforms: ["FACEBOOK"],
+      },
+    ];
+
+    const mockCapabilities: MetaCollectorCapabilities = {
+      extension_version: "1.7.0",
+      collector_version: "1.7.0",
+      transport: "mock_test_boundary",
+      persistent_worker_alive: true,
+      operations: ["discover", "search", "continue_search", "results", "inspect_ads"],
+      supported: {
+        ad_types: ["ALL"],
+        statuses: ["ACTIVE"],
+        search_types: ["KEYWORD_EXACT_PHRASE"],
+        sort_modes: ["relevance"],
+        export_formats: ["json"],
+        fields: ["id", "creative", "page"],
+        events: [],
+      },
+      limits: {
+        default_batch: 25,
+        maximum_batch: 50,
+        maximum_meta_page: 5,
+        max_concurrency: 1,
+        maximum_response_bytes: 10485760,
+        maximum_ad_batch: 50,
+      },
+    };
+
+    return {
+      isAlive: () => true,
+      async getCapabilities(): Promise<MetaCollectorCapabilities> {
+        return mockCapabilities;
+      },
+      async searchAds(input) {
+        const count = Math.min(input.maxResults || 25, mockAds.length);
+        const ads = mockAds.slice(0, count);
+        return {
+          result_set_id: "rs_mock_acceptance_1",
+          job: {
+            id: "job_mock_1",
+            state: "COMPLETED",
+            count: ads.length,
+          },
+          ads,
+          retrieval_pending: false,
+          data_status: "query_exhausted",
+          untrusted_ad_content: false,
+        };
+      },
+      async continueSearch() {
+        return {
+          result_set_id: "rs_mock_acceptance_1",
+          job: {
+            id: "job_mock_1",
+            state: "COMPLETED",
+            count: 0,
+          },
+          ads: [],
+          retrieval_pending: false,
+          data_status: "query_exhausted",
+          untrusted_ad_content: false,
+        };
+      },
+      async getResults(resultSetId, offset = 0, limit = 25) {
+        const slice = mockAds.slice(offset, offset + limit);
+        return {
+          result_set_id: resultSetId,
+          job: {
+            id: "job_mock_1",
+            state: "COMPLETED",
+            count: mockAds.length,
+          },
+          ads: slice,
+          retrieval_pending: false,
+          data_status: "query_exhausted",
+        };
+      },
+      async inspectAds(_resultSetId, libraryIds) {
+        return libraryIds.map((id) => {
+          const matchingAd = mockAds.find((a) => a.id === id) || mockAds[0];
+          return {
+            id,
+            ad: matchingAd,
+          };
+        });
+      },
+      async close(): Promise<void> {},
+    };
+  }
+
   const config = getMetaCollectorConfig();
 
   if (!config.enabled) {

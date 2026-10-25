@@ -24,7 +24,8 @@ console.log("  Heartbeat: Cross-process SQLite database persistence active");
 console.log("  Press Ctrl+C to terminate cleanly.");
 console.log("------------------------------------------------------------------");
 
-startDiscoveryWorker(30000); // 30s check interval
+const pollInterval = Number(process.env.SWAI_WORKER_POLL_INTERVAL_MS) || 30000;
+startDiscoveryWorker(pollInterval);
 
 process.on("SIGINT", async () => {
   console.log("\n[Worker] Caught SIGINT. Shutting down cleanly...");

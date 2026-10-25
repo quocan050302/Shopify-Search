@@ -130,18 +130,29 @@ export function resolveDeploymentSecurityPolicy(
     };
   }
 
-  // 6. Loopback binding (127.0.0.1, localhost, or default unbound local desktop)
-  const isEnforcedAuth =
-    process.env.SWAI_REQUIRE_AUTH === "true" ||
-    process.env.SWAI_E2E_SERVER === "true";
+  // 6. Verified loopback binding (127.0.0.1, localhost, [::1])
+  const isLoopback = host === "127.0.0.1" || host === "localhost" || host === "[::1]";
+  if (isLoopback) {
+    const isEnforcedAuth =
+      process.env.SWAI_REQUIRE_AUTH === "true" ||
+      process.env.SWAI_E2E_SERVER === "true";
 
+    return {
+      mode: "LOCAL_ONLY",
+      localBypassAllowed: !isEnforcedAuth,
+      configurationValid: true,
+      reason: isEnforcedAuth
+        ? "Local loopback listener with strict authentication required by environment."
+        : "Trusted local desktop deployment bound to loopback interface.",
+    };
+  }
+
+  // 7. Unspecified or unverified host: cannot verify loopback isolation
   return {
-    mode: "LOCAL_ONLY",
-    localBypassAllowed: !isEnforcedAuth,
+    mode: "AUTHENTICATED_REMOTE",
+    localBypassAllowed: false,
     configurationValid: true,
-    reason: isEnforcedAuth
-      ? "Local loopback listener with strict authentication required by environment."
-      : "Trusted local desktop deployment bound to loopback interface.",
+    reason: "Server listener binding is unspecified or unverified; authentication required.",
   };
 }
 
@@ -158,6 +169,44 @@ export interface BindingPolicyResult {
   listenerHost: string;
   localBypassAllowed: boolean;
   errors: string[];
+}
+
+export interface VerifiedBindingResult {
+  verifiedLoopback: boolean;
+  listenerHost: string;
+  mode: "LOCAL_ONLY" | "AUTHENTICATED_REMOTE";
+  localBypassAllowed: boolean;
+  reason: string;
+}
+
+/**
+ * Resolves verified server binding from startup configuration.
+ * Disallows treating unverified listeners as loopback.
+ */
+export function resolveVerifiedServerBinding(
+  config?: ServerStartupConfig
+): VerifiedBindingResult {
+  const host = (config?.host ?? process.env.HOST ?? "").trim().toLowerCase();
+  const isLoopback = host === "127.0.0.1" || host === "localhost" || host === "[::1]";
+  const isEnforcedAuth = process.env.SWAI_REQUIRE_AUTH === "true" || process.env.SWAI_E2E_SERVER === "true";
+
+  if (isLoopback) {
+    return {
+      verifiedLoopback: true,
+      listenerHost: host,
+      mode: "LOCAL_ONLY",
+      localBypassAllowed: !isEnforcedAuth && config?.allowLocalBypass !== false,
+      reason: "Verified loopback listener binding.",
+    };
+  }
+
+  return {
+    verifiedLoopback: false,
+    listenerHost: host || "unspecified",
+    mode: "AUTHENTICATED_REMOTE",
+    localBypassAllowed: false,
+    reason: host ? `Non-loopback listener binding: ${host}` : "Unspecified listener binding.",
+  };
 }
 
 /**
@@ -197,24 +246,13 @@ export function validateServerBindingPolicy(
     };
   }
 
-  // If host is empty/unspecified, determine based on environment
-  const isExplicitDesktop = process.env.SWAI_LOCAL_DESKTOP === "true";
-  if (isExplicitDesktop) {
-    return {
-      valid: true,
-      mode: "LOCAL_ONLY",
-      listenerHost: "127.0.0.1",
-      localBypassAllowed: true,
-      errors: [],
-    };
-  }
-
+  // Unspecified or unverified host
   return {
     valid: true,
     mode: "AUTHENTICATED_REMOTE",
     listenerHost: host || "unspecified",
     localBypassAllowed: false,
-    errors: ["Listener binding is unspecified and not explicitly declared as local desktop."],
+    errors: ["Listener binding is unspecified and not verified as loopback."],
   };
 }
 
