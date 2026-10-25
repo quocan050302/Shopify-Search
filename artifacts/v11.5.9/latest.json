@@ -1,6 +1,6 @@
 {
-  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
-  "manifestPath": "artifacts/v11.5.9/kh01_rel_1792928286105_f08ae063/acceptance-manifest.json",
-  "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
-  "publishedAt": "2026-10-25T11:38:59.663Z"
+  "acceptanceRunId": "kh01_rel_1792935044189_c15c5f20",
+  "manifestPath": "artifacts/v11.5.9/kh01_rel_1792935044189_c15c5f20/acceptance-manifest.json",
+  "testedCommitSha": "fa219e8fa981146a485e2211aca9f9f9d04d933d",
+  "publishedAt": "2026-10-25T13:31:26.249Z"
 }
