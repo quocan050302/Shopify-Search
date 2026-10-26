@@ -2,7 +2,7 @@
  * POST /api/v1/kh02/research
  *
  * Initiates cross-platform evergreen winning product research for a topic/niche.
- * Enforces workspace isolation and server-side authorization.
+ * Enforces workspace isolation, creates a persistent SyncJob run, and records immutable snapshots.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -12,6 +12,7 @@ import {
   ResearchAuthError,
 } from "@/services/research/researchAuthService";
 import { runEvergreenProductResearch } from "@/services/kh02/evergreenResearchOrchestrator";
+import { createKH02ResearchRun } from "@/services/kh02/persistence/kh02PersistenceService";
 
 const ResearchRequestSchema = z.object({
   topic: z.string().min(2, "Topic must be at least 2 characters").max(80),
@@ -51,12 +52,21 @@ export async function POST(request: NextRequest) {
 
     const { topic, market, lookbackDays, maxCandidates } = parseResult.data;
 
+    // Create persistent run record first
+    const runId = await createKH02ResearchRun({
+      workspaceId: context.workspaceId,
+      topic,
+      market,
+      lookbackDays,
+    });
+
     const result = await runEvergreenProductResearch({
       topic,
       market,
       lookbackDays,
       maxCandidates,
       workspaceId: context.workspaceId,
+      runId,
       signal: request.signal,
     });
 
@@ -64,6 +74,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result,
       meta: {
+        runId,
         workspaceId: context.workspaceId,
         actorId: context.actorId,
         timestamp: new Date().toISOString(),
