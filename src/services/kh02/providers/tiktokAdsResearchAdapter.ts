@@ -16,6 +16,7 @@ import {
   TikTokAdsSignals,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
+import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 
 /**
  * Collects TikTok advertising observations for a research topic.
@@ -28,7 +29,7 @@ export async function collectTikTokAdsSignals(
   const warnings: string[] = [];
 
   try {
-    // 1. Look for existing verified TikTok ads in database
+    // 1. Look for existing verified TikTok ads in database scoped strictly to workspace
     const lookbackThreshold = new Date(Date.now() - query.lookbackDays * 24 * 60 * 60 * 1000);
     const keywords = query.productKeywords && query.productKeywords.length > 0
       ? query.productKeywords
@@ -42,11 +43,14 @@ export async function collectTikTokAdsSignals(
       ],
     }));
 
+    const authorizedWhere = buildAuthorizedAdWhere(query.workspaceId);
+
     const matchingAds = await prisma.competitorAd.findMany({
       where: {
         platform: "TIKTOK",
         isSyntheticQuarantine: false,
         AND: [
+          authorizedWhere,
           { OR: searchClauses.map((sc) => sc.OR).flat() },
           { lastSeenAt: { gte: lookbackThreshold } },
         ],
@@ -63,10 +67,16 @@ export async function collectTikTokAdsSignals(
       const observations: SourceObservation[] = matchingAds.map((ad) => {
         const media = ad.mediaAssets[0];
         const domain = ad.landingPageUrl ? extractDomainFromUrl(ad.landingPageUrl) : null;
+        // Truthful market verification: check if ad record genuinely verified US target market
+        const isVerifiedUS = ad.targetMarket === "US";
+
         return {
           source: "TIKTOK_ADS",
           sourceRecordId: ad.id,
           sourceUrl: ad.originalAdUrl || null,
+          landingPageUrl: ad.landingPageUrl || null,
+          sourceExternalAdId: ad.externalAdId || ad.id,
+          storeDomainEvidence: domain,
           advertiserOrCreator: ad.advertiser?.name || null,
           advertiserDomain: domain,
           productMatchHint: ad.headline || null,
@@ -75,7 +85,7 @@ export async function collectTikTokAdsSignals(
           reportedLastShownAt: ad.lastSeenAt?.toISOString() || null,
           observedAt: ad.lastSeenAt?.toISOString() || new Date().toISOString(),
           requestedMarket: "US",
-          verifiedDeliveryMarket: "US",
+          verifiedDeliveryMarket: isVerifiedUS ? "US" : null,
           title: ad.headline,
           description: ad.bodyText,
           metrics: {

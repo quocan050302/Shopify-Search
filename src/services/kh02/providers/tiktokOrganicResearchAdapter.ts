@@ -8,8 +8,10 @@
  * 1. Video views must be source-observed values — never derived from likes.
  * 2. Engagement ratio = (likes + comments + shares) / views.
  * 3. Lifetime views/day is distinct from multi-observation growth velocity.
+ *    Single observation = no verified view velocity.
  * 4. Unless US region is verified, labels: Video popularity: OBSERVED, US popularity: NOT_VERIFIED.
- * 5. Respects paid credit limits and budget authorization.
+ * 5. Respects paid credit limits and budget authorization (AUTO_PAID_RESEARCH = false).
+ * 6. Hardens normalization against malformed dates, negative metrics, and integer overflows.
  */
 
 import {
@@ -20,15 +22,80 @@ import {
 } from "../types";
 import { estimateResearchProviderCost } from "./sourceRegistry";
 
+export interface ProviderCostPolicy {
+  creditsPerRequest: number;
+  pageSize: number;
+  maximumPages: number;
+  freeMonthlyAllowance?: number;
+  quotaVerifiedAt: string | null;
+}
+
+export const TIKTOK_ORGANIC_COST_POLICY: ProviderCostPolicy = {
+  creditsPerRequest: 1,
+  pageSize: 20,
+  maximumPages: 2,
+  freeMonthlyAllowance: 0,
+  quotaVerifiedAt: "2026-10-26T00:00:00.000Z",
+};
+
+function parseSafeMetric(val: unknown): number | null {
+  if (typeof val === "number" && Number.isFinite(val) && Number.isSafeInteger(val)) {
+    return val >= 0 ? val : null;
+  }
+  if (typeof val === "string" && /^\d+$/.test(val.trim())) {
+    const parsed = parseInt(val.trim(), 10);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
+  }
+  return null;
+}
+
+function parseSafeDate(raw: unknown): string | null {
+  if (!raw) return null;
+  try {
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      // Milliseconds or seconds
+      const ms = raw < 1e11 ? raw * 1000 : raw;
+      const d = new Date(ms);
+      return !isNaN(d.getTime()) ? d.toISOString() : null;
+    }
+    if (typeof raw === "string") {
+      const d = new Date(raw);
+      return !isNaN(d.getTime()) ? d.toISOString() : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function isValidHttpUrl(url: unknown): string | null {
+  if (typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return null;
+}
+
 /**
  * Normalizes raw TikTok organic video payload into typed TikTokOrganicVideo.
+ * Fail-safe against unexpected data shapes, corrupted timestamps, and metric overflows.
  */
 export function normalizeTikTokOrganicVideo(raw: any): TikTokOrganicVideo {
-  const views = typeof raw.views === "number" ? raw.views : (typeof raw.play_count === "number" ? raw.play_count : null);
-  const likes = typeof raw.likes === "number" ? raw.likes : (typeof raw.digg_count === "number" ? raw.digg_count : null);
-  const comments = typeof raw.comments === "number" ? raw.comments : (typeof raw.comment_count === "number" ? raw.comment_count : null);
-  const shares = typeof raw.shares === "number" ? raw.shares : (typeof raw.share_count === "number" ? raw.share_count : null);
-  const saves = typeof raw.saves === "number" ? raw.saves : (typeof raw.collect_count === "number" ? raw.collect_count : null);
+  if (!raw || typeof raw !== "object") {
+    throw new Error("Invalid TikTok video payload: object required");
+  }
+
+  const videoId = String(raw.id || raw.videoId || raw.aweme_id || "").trim();
+  if (!videoId) {
+    throw new Error("Invalid TikTok video payload: nonempty videoId required");
+  }
+
+  const views = parseSafeMetric(raw.views ?? raw.play_count);
+  const likes = parseSafeMetric(raw.likes ?? raw.digg_count);
+  const comments = parseSafeMetric(raw.comments ?? raw.comment_count);
+  const shares = parseSafeMetric(raw.shares ?? raw.share_count);
+  const saves = parseSafeMetric(raw.saves ?? raw.collect_count);
 
   // Calculate observed engagement ratio
   let observedEngagementRatio: number | null = null;
@@ -37,39 +104,59 @@ export function normalizeTikTokOrganicVideo(raw: any): TikTokOrganicVideo {
     observedEngagementRatio = Math.round((totalInteractions / views) * 10000) / 100; // e.g. 5.42%
   }
 
-  // Calculate lifetime views per day estimate
-  let lifetimeViewsPerDayEstimate: number | null = null;
-  const publishedAt = raw.publishedAt || raw.create_time ? new Date(raw.publishedAt || (raw.create_time * 1000)).toISOString() : null;
-  if (views && publishedAt) {
-    const ageDays = Math.max(1, (Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24));
-    lifetimeViewsPerDayEstimate = Math.round(views / ageDays);
+  // Parse published timestamp strictly without mixing branches
+  let publishedAt: string | null = null;
+  if (raw.publishedAt) {
+    publishedAt = parseSafeDate(raw.publishedAt);
+  } else if (raw.create_time) {
+    publishedAt = parseSafeDate(raw.create_time);
   }
 
-  const videoId = String(raw.id || raw.videoId || raw.aweme_id || "");
-  const creatorHandle = raw.author?.unique_id || raw.creatorHandle || raw.author_username || null;
-  const canonicalUrl = raw.canonicalUrl || (creatorHandle && videoId ? `https://www.tiktok.com/@${creatorHandle}/video/${videoId}` : `https://www.tiktok.com/video/${videoId}`);
+  // Calculate lifetime views per day estimate
+  let lifetimeViewsPerDayEstimate: number | null = null;
+  if (views && publishedAt) {
+    const pubTime = new Date(publishedAt).getTime();
+    if (!isNaN(pubTime)) {
+      const ageDays = Math.max(1, (Date.now() - pubTime) / (1000 * 60 * 60 * 24));
+      lifetimeViewsPerDayEstimate = Math.round(views / ageDays);
+    }
+  }
+
+  const creatorHandle = typeof raw.author?.unique_id === "string"
+    ? raw.author.unique_id
+    : (typeof raw.creatorHandle === "string" ? raw.creatorHandle : (typeof raw.author_username === "string" ? raw.author_username : null));
+
+  const canonicalUrl = isValidHttpUrl(raw.canonicalUrl) ||
+    (creatorHandle ? `https://www.tiktok.com/@${creatorHandle}/video/${videoId}` : `https://www.tiktok.com/video/${videoId}`);
+
+  const rawThumbnail = raw.video?.cover?.url_list?.[0] || raw.thumbnailUrl || raw.cover || null;
+  const rawVideoUrl = raw.video?.play_addr?.url_list?.[0] || raw.videoUrl || null;
 
   return {
     videoId,
     canonicalUrl,
-    creatorId: raw.author?.uid || raw.creatorId || null,
+    creatorId: raw.author?.uid ? String(raw.author.uid) : (raw.creatorId ? String(raw.creatorId) : null),
     creatorHandle,
-    caption: raw.desc || raw.caption || raw.title || null,
-    hashtags: Array.isArray(raw.hashtags) ? raw.hashtags : (raw.text_extra?.map((t: any) => t.hashtag_name).filter(Boolean) || []),
+    caption: typeof raw.desc === "string" ? raw.desc : (typeof raw.caption === "string" ? raw.caption : (typeof raw.title === "string" ? raw.title : null)),
+    hashtags: Array.isArray(raw.hashtags)
+      ? raw.hashtags.filter((h: any) => typeof h === "string")
+      : (Array.isArray(raw.text_extra)
+          ? raw.text_extra.map((t: any) => t?.hashtag_name).filter(Boolean)
+          : []),
     publishedAt,
     views,
     likes,
     comments,
     shares,
     saves,
-    thumbnailUrl: raw.video?.cover?.url_list?.[0] || raw.thumbnailUrl || raw.cover || null,
-    videoUrl: raw.video?.play_addr?.url_list?.[0] || raw.videoUrl || null,
+    thumbnailUrl: isValidHttpUrl(rawThumbnail),
+    videoUrl: isValidHttpUrl(rawVideoUrl),
     observedAt: new Date().toISOString(),
     observedEngagementRatio,
     lifetimeViewsPerDayEstimate,
     productMatchConfidence: raw.productMatchConfidence || "PROBABLE",
-    sourceProvenance: raw.sourceProvenance || "REAL_UPSTREAM",
-    targetMarketEvidence: raw.targetMarketEvidence || null, // e.g. "US" if verified, null if global
+    sourceProvenance: raw.sourceProvenance || "UNKNOWN",
+    targetMarketEvidence: raw.targetMarketEvidence === "US" ? "US" : null,
   };
 }
 
@@ -123,8 +210,9 @@ export async function collectTikTokOrganicSignals(
   }
 
   try {
-    // Call HasData TikTok search endpoint
-    const searchUrl = `https://api.hasdata.com/scrape/tiktok/search?keyword=${encodeURIComponent(query.topic)}&type=video&count=${Math.min(query.maxResults || 10, 20)}`;
+    const count = Math.min(query.maxResults || 10, TIKTOK_ORGANIC_COST_POLICY.pageSize);
+    const searchUrl = `https://api.hasdata.com/scrape/tiktok/search?keyword=${encodeURIComponent(query.topic)}&type=video&count=${count}`;
+    
     const response = await fetch(searchUrl, {
       method: "GET",
       headers: {
@@ -173,7 +261,19 @@ export async function collectTikTokOrganicSignals(
     const data = await response.json();
     const rawItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.data) ? data.data : []);
 
-    const videos: TikTokOrganicVideo[] = rawItems.map(normalizeTikTokOrganicVideo);
+    const videos: TikTokOrganicVideo[] = [];
+    for (const raw of rawItems) {
+      try {
+        const v = normalizeTikTokOrganicVideo({
+          ...raw,
+          sourceProvenance: "REAL_UPSTREAM",
+        });
+        videos.push(v);
+      } catch (normErr: any) {
+        warnings.push(`Skipped malformed TikTok video: ${normErr.message}`);
+      }
+    }
+
     const observations: SourceObservation[] = videos.map((v) => ({
       source: "TIKTOK_ORGANIC",
       sourceRecordId: v.videoId,
@@ -186,7 +286,7 @@ export async function collectTikTokOrganicSignals(
       reportedLastShownAt: null,
       observedAt: v.observedAt,
       requestedMarket: "US",
-      verifiedDeliveryMarket: v.targetMarketEvidence, // May be null if global
+      verifiedDeliveryMarket: v.targetMarketEvidence, // null unless US audience confirmed
       title: v.caption ? v.caption.slice(0, 80) : null,
       description: v.caption,
       metrics: {
@@ -214,9 +314,9 @@ export async function collectTikTokOrganicSignals(
       observations,
       retrievedCount: rawItems.length,
       acceptedCount: observations.length,
-      rejectedCount: 0,
+      rejectedCount: rawItems.length - observations.length,
       estimatedCredits: costEstimate.estimatedCredits,
-      consumedCredits: 1,
+      consumedCredits: TIKTOK_ORGANIC_COST_POLICY.creditsPerRequest,
       startedAt,
       completedAt: new Date().toISOString(),
       errors,
