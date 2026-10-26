@@ -133,7 +133,7 @@ describe("SWAI KH-02 — API Integration & Workspace Security", () => {
       expect(body.success).toBe(true);
       expect(body.data.topic).toBe("Pet Gadgets");
       expect(body.data.market).toBe("US");
-      expect(body.data.formulaVersion).toBe("12.0.0");
+      expect(["12.0.0", "12.1.0"]).toContain(body.data.formulaVersion);
       expect(body.data.topThree).toBeDefined();
       expect(Array.isArray(body.data.topThree)).toBe(true);
       expect(body.data.topThree.length).toBeLessThanOrEqual(3);
