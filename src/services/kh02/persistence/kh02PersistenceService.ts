@@ -50,16 +50,39 @@ export interface ProductEvidenceTrace {
   storeDomain?: string | null;
 }
 
+export interface BrowserReconciliationEvidence {
+  runId: string;
+  displayedCandidateIds: string[];
+  displayedRankOrder?: number[];
+  visibleScoreValues?: number[];
+  renderedSourceStatuses?: Record<string, string>;
+  terminalStatus?: string;
+  cardCount?: number;
+}
+
 export interface CrossLayerReconciliation {
   researchRunId: string;
   status: string;
   rawObservationsCount: number;
   candidatesCount: number;
   topThreeCount: number;
+  provisionalCount?: number;
+  candidateIds?: string[];
   persistedSnapshotMatchesHttp: boolean;
+  browserReconciled?: boolean;
+  productDiscoveryVerified?: boolean;
   reconciliationVerdict: "RECONCILED" | "MISMATCH";
   notes: string[];
 }
+
+export interface SchemaUpgradeResult {
+  upgraded: boolean;
+  addedColumns: string[];
+  alreadyPresentColumns: string[];
+  indicesVerified: boolean;
+  error?: string;
+}
+
 
 /**
  * Creates a new persistent KH-02 research run in PENDING status.
@@ -393,6 +416,7 @@ export interface TestFixtureRegistry {
   dataSourceIds?: string[];
   watchlistIds?: string[];
   watchlistItemIds?: string[];
+  productIds?: string[];
 }
 
 /**
@@ -461,10 +485,18 @@ export async function cleanupKH02TestFixtures(
     cleanedCount += res.count;
   }
 
-  // 5. Clean competitor ads
+  // 5. Clean competitor ads (cascades to adMediaAssets, adProductLinks, etc.)
   if (registry.adIds && registry.adIds.length > 0) {
     const res = await db.competitorAd.deleteMany({
       where: { id: { in: registry.adIds } },
+    });
+    cleanedCount += res.count;
+  }
+
+  // 5b. Clean research products (cascades to productDemandObservation, etc.)
+  if (registry.productIds && registry.productIds.length > 0) {
+    const res = await db.researchProduct.deleteMany({
+      where: { id: { in: registry.productIds } },
     });
     cleanedCount += res.count;
   }
@@ -569,6 +601,7 @@ export async function reconcileResearchAcrossLayers(
     workspaceId?: string;
     db?: any;
     browserDisplayedCount?: number;
+    browserEvidence?: BrowserReconciliationEvidence;
   }
 ): Promise<CrossLayerReconciliation> {
   const db = context?.db || prisma;
@@ -581,7 +614,11 @@ export async function reconcileResearchAcrossLayers(
       rawObservationsCount: 0,
       candidatesCount: 0,
       topThreeCount: 0,
+      provisionalCount: 0,
+      candidateIds: [],
       persistedSnapshotMatchesHttp: false,
+      browserReconciled: false,
+      productDiscoveryVerified: false,
       reconciliationVerdict: "MISMATCH",
       notes: [`Job '${researchJobId}' does not exist in database.`],
     };
@@ -594,7 +631,14 @@ export async function reconcileResearchAcrossLayers(
 
   const rawCount = (snapshot as any)?.totalObservationsCollected ?? (snapshot?.totalCandidatesDiscovered || 0);
   const candCount = snapshot?.totalCandidatesDiscovered || 0;
-  const topCount = snapshot?.topThree?.length || 0;
+  const topThreeList = Array.isArray(snapshot?.topThree) ? snapshot!.topThree : [];
+  const provList = Array.isArray(snapshot?.provisionalCandidates) ? snapshot!.provisionalCandidates : [];
+  const topCount = topThreeList.length;
+  const provCount = provList.length;
+
+  const topCandidateIds = topThreeList.map((t: any) => t.candidate?.candidateId).filter(Boolean);
+  const provCandidateIds = provList.map((p: any) => p.candidate?.candidateId).filter(Boolean);
+  const allCandidateIds = Array.from(new Set([...topCandidateIds, ...provCandidateIds]));
 
   const notes: string[] = [];
   let isConsistent = Boolean(snapshot);
@@ -603,7 +647,7 @@ export async function reconcileResearchAcrossLayers(
     notes.push("Missing or corrupted resultJson snapshot in database.");
     isConsistent = false;
   } else {
-    notes.push(`DB snapshot verified: ${candCount} candidates, ${topCount} podium winners.`);
+    notes.push(`DB snapshot verified: ${candCount} candidates (${topCount} ranked, ${provCount} provisional).`);
   }
 
   let httpMatched = false;
@@ -643,8 +687,39 @@ export async function reconcileResearchAcrossLayers(
     httpMatched = isConsistent;
   }
 
-  // Cross-layer verdict: must match DB and HTTP
-  const verdict: "RECONCILED" | "MISMATCH" = isConsistent && httpMatched ? "RECONCILED" : "MISMATCH";
+  // Browser reconciliation if evidence is provided
+  let browserReconciled = true;
+  if (context?.browserEvidence) {
+    const bEvidence = context.browserEvidence;
+    if (bEvidence.runId !== researchJobId) {
+      browserReconciled = false;
+      isConsistent = false;
+      notes.push(`Browser reconciliation mismatch: browser runId '${bEvidence.runId}' !== job '${researchJobId}'.`);
+    } else {
+      if (allCandidateIds.length > 0 && bEvidence.displayedCandidateIds.length > 0) {
+        const matchingIds = bEvidence.displayedCandidateIds.filter((id) => allCandidateIds.includes(id));
+        if (matchingIds.length > 0) {
+          notes.push(`Browser reconciled: rendered candidate IDs [${matchingIds.join(", ")}] match DB snapshot.`);
+        } else {
+          browserReconciled = false;
+          notes.push(`Browser candidate ID mismatch: rendered IDs do not match DB candidate IDs.`);
+        }
+      } else if (allCandidateIds.length === 0 && bEvidence.displayedCandidateIds.length === 0) {
+        notes.push("Browser reconciled: empty candidate state matches DB zero-discovery snapshot.");
+      }
+    }
+  } else if (context?.browserDisplayedCount !== undefined) {
+    if (context.browserDisplayedCount !== topCount + provCount) {
+      notes.push(`Browser count mismatch: ${context.browserDisplayedCount} rendered vs ${topCount + provCount} in DB.`);
+      browserReconciled = false;
+    } else {
+      notes.push(`Browser count matched: ${context.browserDisplayedCount} cards rendered.`);
+    }
+  }
+
+  const productDiscoveryVerified = allCandidateIds.length > 0;
+  const verdict: "RECONCILED" | "MISMATCH" =
+    isConsistent && httpMatched && browserReconciled ? "RECONCILED" : "MISMATCH";
 
   return {
     researchRunId: researchJobId,
@@ -652,8 +727,68 @@ export async function reconcileResearchAcrossLayers(
     rawObservationsCount: rawCount,
     candidatesCount: candCount,
     topThreeCount: topCount,
+    provisionalCount: provCount,
+    candidateIds: allCandidateIds,
     persistedSnapshotMatchesHttp: httpMatched,
+    browserReconciled,
+    productDiscoveryVerified,
     reconciliationVerdict: verdict,
     notes,
   };
+}
+
+/**
+ * Idempotently checks and upgrades preexisting SQLite databases to ensure all
+ * V12.1 dedicated KH-02 leasing and fencing columns exist without destructive table recreations.
+ */
+export async function ensureSyncJobSchemaUpgraded(
+  db: any = prisma
+): Promise<SchemaUpgradeResult> {
+  const addedColumns: string[] = [];
+  const alreadyPresentColumns: string[] = [];
+
+  try {
+    const rawCols: any = await db.$queryRawUnsafe(
+      'PRAGMA table_info("sync_jobs");'
+    );
+    const existingColNames = new Set((rawCols || []).map((c: any) => c.name));
+
+    const requiredColumns: Array<{ name: string; ddl: string }> = [
+      { name: "workerId", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "workerId" TEXT;' },
+      { name: "claimToken", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "claimToken" TEXT;' },
+      { name: "fencingToken", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "fencingToken" TEXT;' },
+      { name: "fencingGeneration", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "fencingGeneration" INTEGER NOT NULL DEFAULT 0;' },
+      { name: "recordVersion", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "recordVersion" INTEGER NOT NULL DEFAULT 0;' },
+      { name: "leaseExpiresAt", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "leaseExpiresAt" DATETIME;' },
+      { name: "attemptNumber", ddl: 'ALTER TABLE "sync_jobs" ADD COLUMN "attemptNumber" INTEGER NOT NULL DEFAULT 0;' },
+    ];
+
+    for (const col of requiredColumns) {
+      if (!existingColNames.has(col.name)) {
+        await db.$executeRawUnsafe(col.ddl);
+        addedColumns.push(col.name);
+      } else {
+        alreadyPresentColumns.push(col.name);
+      }
+    }
+
+    // Ensure dedicated performance and query indices exist
+    await db.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "sync_jobs_jobType_status_idx" ON "sync_jobs"("jobType", "status");');
+    await db.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "sync_jobs_workerId_status_idx" ON "sync_jobs"("workerId", "status");');
+
+    return {
+      upgraded: addedColumns.length > 0,
+      addedColumns,
+      alreadyPresentColumns,
+      indicesVerified: true,
+    };
+  } catch (err: any) {
+    return {
+      upgraded: false,
+      addedColumns,
+      alreadyPresentColumns,
+      indicesVerified: false,
+      error: err.message,
+    };
+  }
 }

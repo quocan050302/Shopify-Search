@@ -1,0 +1,16 @@
+{
+  "migrationType": "Additive, idempotent SQLite column & index verification",
+  "function": "ensureSyncJobSchemaUpgraded",
+  "alreadyPresentColumns": [
+    "workerId",
+    "claimToken",
+    "fencingToken",
+    "fencingGeneration",
+    "recordVersion",
+    "leaseExpiresAt",
+    "attemptNumber"
+  ],
+  "addedColumns": [],
+  "indicesVerified": true,
+  "destructiveRecreation": false
+}

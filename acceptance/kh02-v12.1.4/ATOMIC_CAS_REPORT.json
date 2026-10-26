@@ -1,0 +1,15 @@
+{
+  "predicateColumns": [
+    "id",
+    "status",
+    "workerId",
+    "claimToken",
+    "fencingGeneration",
+    "recordVersion",
+    "leaseExpiresAt"
+  ],
+  "casIncrementStrategy": "Monotonic recordVersion increment per authorized mutation",
+  "fencingGenerationBehavior": "Preserved during lease renewal; incremented only on new claim or recovery",
+  "atomicCasTestsPassed": 7,
+  "atomicCasExitCode": 0
+}

@@ -466,6 +466,9 @@ export default function ProductsPage() {
                     <div
                       key={item.candidate.candidateId}
                       data-testid="kh02-ranked-product-card"
+                      data-candidate-id={item.candidate.candidateId}
+                      data-opportunity-score={item.score?.opportunityScore ?? 0}
+                      data-rank={rank}
                       className={`p-5 rounded-2xl bg-[#1D1733] border-2 ${borderColor} transition-all flex flex-col md:flex-row items-center gap-6 justify-between`}
                     >
                       {/* Left: Thumbnail & Video Trigger */}
@@ -628,10 +631,13 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {leaderboard.provisionalCandidates.slice(0, 6).map((item) => (
+                  {leaderboard.provisionalCandidates.slice(0, 6).map((item, idx) => (
                     <div
                       key={item.candidate.candidateId}
                       data-testid="kh02-provisional-product-card"
+                      data-candidate-id={item.candidate.candidateId}
+                      data-opportunity-score={item.score?.opportunityScore ?? 0}
+                      data-rank={idx + 4}
                       className="p-4 rounded-xl bg-[#130f24] border border-[#2b214a] hover:border-purple-500/40 transition-all flex items-start justify-between gap-4"
                     >
                       <div className="flex items-start gap-3 flex-1">

@@ -25,6 +25,7 @@ export interface Kh02BrowserE2EOptions {
   screenshotDir?: string;
   headless?: boolean;
   topic?: string;
+  expectedMinCards?: number;
 }
 
 export interface KH02BrowserAcceptance {
@@ -206,12 +207,34 @@ export async function runKh02BrowserE2E(
     );
     if (analyzeBtn) {
       console.log(`[Chromium E2E] Triggering async research for '${searchTopic}'...`);
+
+      // Set up response listener for async research submission (HTTP 202)
+      const submitResponsePromise = page.waitForResponse(
+        (res) => res.url().includes("/api/v1/kh02/research") && res.request().method() === "POST",
+        { timeout: 15000 }
+      ).catch(() => null);
+
       await analyzeBtn.click();
       researchSubmitted = true;
 
+      const submitRes = await submitResponsePromise;
+      if (submitRes && submitRes.status() === 202) {
+        try {
+          const body = await submitRes.json();
+          if (body?.data?.runId || body?.data?.jobId) {
+            acceptedRunId = body.data.runId || body.data.jobId;
+          }
+        } catch {}
+      }
+
+      // Wait for loading spinner to appear
+      await page.waitForSelector('text=Aggregating cross-platform intelligence', { timeout: 3000 }).catch(() => null);
+
+      // Wait for loading spinner to detach once background worker completes and results render
+      await page.waitForSelector('text=Aggregating cross-platform intelligence', { state: "detached", timeout: 45000 }).catch(() => null);
+
       // Bounded polling for terminal UI state (either ranked cards, provisional cards, or explicit empty state)
-      // Max wait 30 seconds (checking every 500ms)
-      const maxWaitMs = 30000;
+      const maxWaitMs = 15000;
       const pollInterval = 500;
       const startPoll = Date.now();
 
@@ -220,13 +243,14 @@ export async function runKh02BrowserE2E(
           '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]'
         );
         const hasEmptyState = await page.$('[data-testid="kh02-empty-state"]');
-        const hasLeaderboard = await page.$('[data-testid="kh02-leaderboard-container"]');
 
-        if (hasCards || hasEmptyState || hasLeaderboard) {
+        if (hasCards) {
           terminalStateObserved = true;
-          if (hasEmptyState) {
-            emptyStateAccurate = true;
-          }
+          break;
+        }
+        if (hasEmptyState) {
+          terminalStateObserved = true;
+          emptyStateAccurate = true;
           break;
         }
         await page.waitForTimeout(pollInterval);
@@ -238,12 +262,20 @@ export async function runKh02BrowserE2E(
       cardCount = rankedCards.length + provCards.length;
       resultsRendered = cardCount > 0 || (await page.$('[data-testid="kh02-leaderboard-container"]')) !== null;
 
-      // Extract titles or identifiers if cards rendered
+      // Extract candidate IDs directly from data-candidate-id attributes
       for (const card of rankedCards) {
+        const cid = await card.getAttribute("data-candidate-id");
+        if (cid) displayedCandidateIds.push(cid);
         const titleEl = await card.$("h3");
-        if (titleEl) {
+        if (titleEl && !cid) {
           const text = await titleEl.innerText().catch(() => "");
           if (text) displayedCandidateIds.push(text.trim());
+        }
+      }
+      for (const card of provCards) {
+        const cid = await card.getAttribute("data-candidate-id");
+        if (cid && !displayedCandidateIds.includes(cid)) {
+          displayedCandidateIds.push(cid);
         }
       }
 
@@ -283,9 +315,13 @@ export async function runKh02BrowserE2E(
 
   // Determine truthful verdict:
   // Must have loaded, authorized, submitted research, observed terminal state, zero unexpected 500s
+  const minCards = options.expectedMinCards ?? 0;
   let verdict: "PASS" | "FAIL" | "BLOCKED" = "FAIL";
   if (!pageLoaded || !authorized) {
     verdict = "BLOCKED";
+  } else if (minCards > 0 && cardCount < minCards) {
+    verdict = "FAIL";
+    errors.push(`Expected at least ${minCards} rendered product card(s), but found ${cardCount}.`);
   } else if (
     researchSubmitted &&
     terminalStateObserved &&

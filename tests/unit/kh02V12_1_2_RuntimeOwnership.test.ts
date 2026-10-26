@@ -69,7 +69,7 @@ describe("SWAI KH-02 V12.1.2 — Runtime Ownership & Acceptance Truthfulness", (
           }),
         }),
         updateMany: vi.fn().mockImplementation(({ where }) => {
-          if (where.resultJson?.contains === "fencing-alpha") {
+          if (where.fencingToken === "fencing-alpha" || where.resultJson?.contains === "fencing-alpha") {
             return Promise.resolve({ count: 1 });
           }
           return Promise.resolve({ count: 0 });
@@ -118,7 +118,7 @@ describe("SWAI KH-02 V12.1.2 — Runtime Ownership & Acceptance Truthfulness", (
     const mockDb = {
       syncJob: {
         updateMany: vi.fn().mockImplementation(({ where }) => {
-          if (where.resultJson?.contains === "fence-valid") {
+          if (where.fencingToken === "fence-valid" || where.resultJson?.contains === "fence-valid") {
             return Promise.resolve({ count: 1 });
           }
           return Promise.resolve({ count: 0 });
@@ -155,7 +155,7 @@ describe("SWAI KH-02 V12.1.2 — Runtime Ownership & Acceptance Truthfulness", (
           }),
         }),
         updateMany: vi.fn().mockImplementation(({ where }) => {
-          if (where.resultJson?.contains === "token-active") {
+          if (where.fencingToken === "token-active" || where.resultJson?.contains === "token-active") {
             return Promise.resolve({ count: 1 });
           }
           return Promise.resolve({ count: 0 });
