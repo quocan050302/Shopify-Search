@@ -322,6 +322,7 @@ export default function ProductsPage() {
               <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400" />
               <input
                 type="text"
+                data-testid="kh02-research-input"
                 placeholder="Enter niche or topic (e.g. Pet Gadgets, Home Cleaning, Kitchen Organization)..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -353,6 +354,7 @@ export default function ProductsPage() {
             {/* Action Button */}
             <div className="md:col-span-3">
               <button
+                data-testid="kh02-analyze-button"
                 onClick={() => executeResearch()}
                 disabled={isResearching}
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs md:text-sm flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
@@ -373,7 +375,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Dynamic Source Status Bar */}
-          <div className="pt-3 border-t border-[#2e234d]/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div data-testid="kh02-source-status-bar" className="pt-3 border-t border-[#2e234d]/60 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2 text-slate-400 font-medium">
               <span>Source Status:</span>
               {getSourceBadge("META_ADS", "Meta Ads")}
@@ -427,7 +429,7 @@ export default function ProductsPage() {
                 </p>
               </div>
             ) : leaderboard && leaderboard.topThree.length > 0 ? (
-              <div className="space-y-4">
+              <div data-testid="kh02-leaderboard-container" className="space-y-4">
                 {leaderboard.topThree.map((item) => {
                   const rank = item.rank || 1;
                   const isGold = rank === 1;
@@ -450,6 +452,7 @@ export default function ProductsPage() {
                   return (
                     <div
                       key={item.candidate.candidateId}
+                      data-testid="kh02-ranked-product-card"
                       className={`p-5 rounded-2xl bg-[#1D1733] border-2 ${borderColor} transition-all flex flex-col md:flex-row items-center gap-6 justify-between`}
                     >
                       {/* Left: Thumbnail & Video Trigger */}
@@ -615,6 +618,7 @@ export default function ProductsPage() {
                   {leaderboard.provisionalCandidates.slice(0, 6).map((item) => (
                     <div
                       key={item.candidate.candidateId}
+                      data-testid="kh02-provisional-product-card"
                       className="p-4 rounded-xl bg-[#130f24] border border-[#2b214a] hover:border-purple-500/40 transition-all flex items-start justify-between gap-4"
                     >
                       <div className="flex items-start gap-3 flex-1">

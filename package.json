@@ -41,10 +41,11 @@
     "kh01:acceptance:full": "tsx scripts/kh01/runFullAcceptance.ts",
     "kh02:worker": "tsx src/workers/kh02Worker.ts",
     "kh02:once": "tsx src/workers/kh02Worker.ts --once",
-    "kh02:test:unit": "vitest run tests/unit/kh02*",
-    "kh02:test:integration": "vitest run tests/integration/kh02*",
+    "kh02:test:unit": "vitest run tests/unit/kh02",
+    "kh02:test:integration": "vitest run tests/integration/kh02",
     "kh02:test:browser": "vitest run tests/integration/kh02BrowserAcceptance.test.ts",
-    "acceptance:kh02:v12.1.1": "tsx scripts/kh02/runAcceptanceV12_1_1.ts"
+    "acceptance:kh02:v12.1.1": "tsx scripts/kh02/runAcceptanceV12_1_1.ts",
+    "acceptance:kh02:v12.1.2": "tsx scripts/kh02/runAcceptanceV12_1_2.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

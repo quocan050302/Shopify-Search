@@ -1,0 +1,34 @@
+{
+  "version": "12.1.2",
+  "generatedAt": "2026-10-26T06:53:54.653Z",
+  "files": [
+    "ACCEPTANCE_MATRIX.json",
+    "BASELINE_AUDIT.md",
+    "BROWSER_E2E_REPORT.json",
+    "CODE_CHANGE_REPORT.md",
+    "CROSS_LAYER_RECONCILIATION.json",
+    "DATABASE_ISOLATION_REPORT.json",
+    "DEMAND_HISTORY_REPORT.json",
+    "DUPLICATE_EXECUTION_REPORT.json",
+    "EVIDENCE_MANIFEST.json",
+    "FINAL_ACCEPTANCE_REPORT.md",
+    "HTTP_E2E_REPORT.json",
+    "KH01_REGRESSION_REPORT.json",
+    "META_PROVENANCE_REPORT.json",
+    "OWNERSHIP_FENCING_REPORT.json",
+    "PROVIDER_READINESS_REPORT.json",
+    "TEST_CLEANUP_SAFETY.json",
+    "WORKER_HEARTBEAT_REPORT.json",
+    "WORKER_RECOVERY_REPORT.json"
+  ],
+  "logs": [
+    "kh01_regression.log",
+    "kh02_integration.log",
+    "kh02_unit.log"
+  ],
+  "screenshots": [
+    "01_before_research.png",
+    "02_source_statuses.png",
+    "03_leaderboard_results.png"
+  ]
+}

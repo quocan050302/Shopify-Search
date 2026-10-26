@@ -126,8 +126,8 @@ export async function checkKH02ProviderReadiness(
     case "META_ADS": {
       return {
         ready: true,
-        status: "SOURCE_DATA_VERIFIED",
-        reason: "Meta competitor ads available via local database and verified collector.",
+        status: "SOURCE_ACCESS_VERIFIED",
+        reason: "Meta competitor ads indexed in database; live collection requires authorized collector.",
       };
     }
 
@@ -185,8 +185,8 @@ export async function checkKH02ProviderReadiness(
     case "DEMAND_HISTORY": {
       return {
         ready: true,
-        status: "SOURCE_DATA_VERIFIED",
-        reason: "Historical demand repository active; supports Google Trends time series.",
+        status: "CONFIGURED",
+        reason: "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
       };
     }
 
