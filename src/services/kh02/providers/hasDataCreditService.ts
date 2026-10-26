@@ -137,8 +137,8 @@ export async function fetchHasDataCreditStatus(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    // HasData account profile / balance endpoint
-    const res = await fetch(`${baseUrl}/account/balance`, {
+    // HasData account usage endpoint (docs: /user/me/usage)
+    let res = await fetch(`${baseUrl}/user/me/usage`, {
       method: "GET",
       headers: {
         "x-api-key": apiKey,
@@ -146,6 +146,18 @@ export async function fetchHasDataCreditStatus(
       },
       signal: controller.signal,
     }).catch(() => null);
+
+    // Fallback to /account/balance for compatibility with alternate proxies
+    if (!res || res.status === 404) {
+      res = await fetch(`${baseUrl}/account/balance`, {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+          "Accept": "application/json",
+        },
+        signal: controller.signal,
+      }).catch(() => null);
+    }
 
     clearTimeout(timer);
 
@@ -159,7 +171,7 @@ export async function fetchHasDataCreditStatus(
         unit: "CREDITS",
         authority: "UNSUPPORTED",
         verificationStatus: "UNVERIFIED",
-        errorMessage: "Network or transport error connecting to HasData balance endpoint.",
+        errorMessage: "Network or transport error connecting to HasData usage endpoint.",
       };
     }
 
@@ -188,7 +200,7 @@ export async function fetchHasDataCreditStatus(
         unit: "CREDITS",
         authority: "UNSUPPORTED",
         verificationStatus: "UNVERIFIED",
-        errorMessage: "Authoritative balance endpoint is not exposed by HasData API. Quota cannot be automatically verified.",
+        errorMessage: "Authoritative balance/usage endpoint is not exposed by HasData API route.",
       };
     }
 
@@ -207,9 +219,19 @@ export async function fetchHasDataCreditStatus(
     }
 
     const data = await res.json();
-    const remaining = typeof data?.remaining_credits === "number" ? data.remaining_credits : (typeof data?.credits === "number" ? data.credits : null);
-    const total = typeof data?.total_credits === "number" ? data.total_credits : null;
-    const used = typeof data?.used_credits === "number" ? data.used_credits : null;
+    const remaining = typeof data?.remaining_credits === "number"
+      ? data.remaining_credits
+      : (typeof data?.credits === "number"
+        ? data.credits
+        : (typeof data?.remainingCredits === "number" ? data.remainingCredits : null));
+    const total = typeof data?.total_credits === "number"
+      ? data.total_credits
+      : (typeof data?.limit === "number"
+        ? data.limit
+        : (typeof data?.totalCredits === "number" ? data.totalCredits : null));
+    const used = typeof data?.used_credits === "number"
+      ? data.used_credits
+      : (typeof data?.usedCredits === "number" ? data.usedCredits : null);
 
     return {
       totalCredits: total,

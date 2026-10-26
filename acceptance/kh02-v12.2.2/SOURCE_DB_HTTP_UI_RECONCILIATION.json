@@ -1,0 +1,31 @@
+{
+  "layer1_sourceToDb": {
+    "reconciled": true,
+    "metaUpstreamReturned": 10,
+    "metaNewInserted": 0,
+    "dbTotalRecords": 110
+  },
+  "layer2_dbToHttp": {
+    "reconciled": true,
+    "endpoint": "http://localhost:3000/api/v1/kh02/providers/status",
+    "sourcesReported": 5,
+    "expectedSources": 5
+  },
+  "layer3_httpToBrowser": {
+    "pageLoaded": true,
+    "researchSubmitted": true,
+    "acceptedRunId": null,
+    "terminalStateObserved": true,
+    "resultsRendered": false,
+    "displayedCardCount": 0,
+    "unexpectedHttpErrors": [
+      500,
+      500,
+      500,
+      500
+    ],
+    "hydrationErrors": [],
+    "verdict": "FAIL"
+  },
+  "executedAt": "2026-10-26T16:45:38.829Z"
+}

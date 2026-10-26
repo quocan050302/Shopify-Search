@@ -22,18 +22,33 @@ export type SourceRunStatus =
   | "NOT_INSTALLED"
   | "CREDENTIALS_REQUIRED"
   | "NOT_CONFIGURED"
+  | "NOT_PROBED"
   | "MCP_NOT_CONFIGURED"
   | "MCP_TRANSPORT_FAILURE"
   | "CONFIGURED"
   | "CONNECTING"
+  | "CONNECTED"
   | "TRANSPORT_CONNECTED"
+  | "TRANSPORT_FAILED"
   | "AUTHENTICATED"
+  | "AUTHENTICATION_FAILED"
+  | "AUTH_NOT_REQUIRED"
   | "CAPABILITY_VERIFIED"
+  | "UNSUPPORTED_CAPABILITY"
+  | "COST_BLOCKED"
+  | "QUOTA_UNKNOWN"
+  | "QUOTA_EXCEEDED"
   | "QUERY_EXECUTED"
+  | "QUERY_FAILED"
+  | "QUERY_SUCCEEDED_EMPTY"
+  | "LIVE_DATA_VERIFIED"
+  | "CACHE_ONLY"
+  | "MANUAL_ONLY"
   | "SOURCE_ACCESS_VERIFIED"
   | "SOURCE_DATA_VERIFIED"
   | "MANUAL_RESEARCH_ONLY"
   | "ENGINE_READY"
+  | "INSUFFICIENT_HISTORY"
   | "NOT_VERIFIED"
   | "UNSUPPORTED_REGION"
   | "BLOCKED"
@@ -53,6 +68,16 @@ export interface ProviderReadinessDimensions {
   sourceDataVerified: boolean;
   lastLiveQueryAt: string | null;
   blockerCode: string | null;
+
+  // V12.2.2 Explicit Separated Diagnostic Telemetry
+  storedRecordCount?: number | null;
+  lastLiveQueryRecordCount?: number | null;
+  currentRunRecordCount?: number | null;
+  lastSuccessfulLiveQueryAt?: string | null;
+  lastProbeAt?: string | null;
+  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED";
+  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED";
+  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED";
 }
 
 export type ObservationProvenance =

@@ -427,14 +427,58 @@ export default function ProductsPage() {
     const status = live?.diagnosticStatus || live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
     const reason = live?.readinessReason || live?.diagnostic?.reason || "";
 
-    if (status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
+    if (status === "LIVE_DATA_VERIFIED" || status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium"
           title={reason || "Verified: Valid ad observations retrieved"}
         >
           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel}: Verified
+          {defaultLabel ? `${defaultLabel}: Live Verified` : "Live Verified"}
+        </span>
+      );
+    }
+    if (status === "CACHE_ONLY" || status === "MANUAL_ONLY" || status === "MANUAL_RESEARCH_ONLY") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium"
+          title={reason || "Cache/Manual: Stored competitor ad search active"}
+        >
+          <AlertTriangle className="h-3 w-3 text-amber-400" />
+          {defaultLabel ? `${defaultLabel}: Cache / DB Only` : "Cache / DB Only"}
+        </span>
+      );
+    }
+    if (status === "AUTHENTICATION_FAILED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-950/70 border border-rose-500/40 text-rose-300 text-[11px] font-medium"
+          title={reason || "Authentication Failed: Check API Key"}
+        >
+          <AlertTriangle className="h-3 w-3 text-rose-400" />
+          {defaultLabel ? `${defaultLabel}: Auth Failed` : "Auth Failed"}
+        </span>
+      );
+    }
+    if (status === "COST_BLOCKED" || status === "QUOTA_EXCEEDED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-950/70 border border-rose-500/40 text-rose-300 text-[11px] font-medium"
+          title={reason || "Paid request prevented by zero-cost policy"}
+        >
+          <AlertTriangle className="h-3 w-3 text-rose-400" />
+          {defaultLabel ? `${defaultLabel}: Cost Blocked` : "Cost Blocked"}
+        </span>
+      );
+    }
+    if (status === "ENGINE_READY" || (sourceKey === "DEMAND_HISTORY" && (status === "CONFIGURED" || status === "INSUFFICIENT_HISTORY"))) {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
+          title={reason || "Engine Ready: Temporal demand policy active"}
+        >
+          <Clock className="h-3 w-3 text-blue-400" />
+          {defaultLabel ? `${defaultLabel}: Engine Ready` : "Engine Ready"}
         </span>
       );
     }
@@ -446,40 +490,7 @@ export default function ProductsPage() {
           title={reason || "Source Available: Indexed in database & collector reachable"}
         >
           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel}: {label}
-        </span>
-      );
-    }
-    if (status === "ENGINE_READY" || (sourceKey === "DEMAND_HISTORY" && status === "CONFIGURED")) {
-      return (
-        <span
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
-          title={reason || "Engine Ready: Temporal demand policy active"}
-        >
-          <Clock className="h-3 w-3 text-blue-400" />
-          {defaultLabel}: Engine Ready
-        </span>
-      );
-    }
-    if (status === "CONFIGURED") {
-      return (
-        <span
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
-          title={reason || "Configured: Adapter active"}
-        >
-          <Clock className="h-3 w-3 text-blue-400" />
-          {defaultLabel}: Configured
-        </span>
-      );
-    }
-    if (status === "MANUAL_RESEARCH_ONLY" || status === "NOT_VERIFIED") {
-      return (
-        <span
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium"
-          title={reason || "Manual Research Only: Database competitor ad search active"}
-        >
-          <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: Manual / DB Only
+          {defaultLabel ? `${defaultLabel}: ${label}` : label}
         </span>
       );
     }
@@ -487,21 +498,21 @@ export default function ProductsPage() {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30 text-amber-300 text-[11px] font-medium"
-          title={reason || "API Key Required: Configure HASDATA_API_KEY"}
+          title={reason || "Credentials Required: Configure API key"}
         >
           <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: API Key Required
+          {defaultLabel ? `${defaultLabel}: Key Required` : "Key Required"}
         </span>
       );
     }
-    if (status === "MCP_NOT_CONFIGURED" || status === "MCP_TRANSPORT_FAILURE") {
+    if (status === "SKIPPED") {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium"
-          title={reason || "MCP server endpoint missing or unreachable"}
+          title={reason || "Source unselected for this research run"}
         >
           <Clock className="h-3 w-3 text-slate-500" />
-          {defaultLabel}: MCP Server Missing
+          {defaultLabel ? `${defaultLabel}: Skipped` : "Skipped"}
         </span>
       );
     }
@@ -511,7 +522,7 @@ export default function ProductsPage() {
         title={reason || "Source not configured"}
       >
         <Clock className="h-3 w-3 text-slate-500" />
-        {defaultLabel}: Not Configured
+        {defaultLabel ? `${defaultLabel}: Not Configured` : "Not Configured"}
       </span>
     );
   };
@@ -681,13 +692,63 @@ export default function ProductsPage() {
                   const diag = sourceItem.diagnostic || {};
                   const dims = sourceItem.dimensions || diag.dimensions || {};
                   const cost = diag.estimatedQueryCost || {};
+                  const isMeta = sourceItem.source === "META_ADS";
+                  const isGoogle = sourceItem.source === "GOOGLE_ADS";
+                  const isDemand = sourceItem.source === "DEMAND_HISTORY";
+                  const isOrganic = sourceItem.source === "TIKTOK_ORGANIC";
+                  const isTikTokAds = sourceItem.source === "TIKTOK_ADS";
+
+                  // Check if tested just now
+                  const justTested = connectionTestResults?.some((t) => t.source === sourceItem.source);
+
+                  // Truthful auth rendering
+                  let authDisplay = "Not Tested";
+                  let authClass = "text-slate-400";
+                  if (dims.authStatus === "AUTH_NOT_REQUIRED" || isMeta || isGoogle || (isDemand && !process.env.SERPAPI_API_KEY)) {
+                    authDisplay = isMeta ? "Not Required (Local stdio)" : isGoogle ? "Not Required (MCP stdio)" : isDemand ? "Not Required (Engine)" : "Not Required";
+                    authClass = "text-slate-300";
+                  } else if (dims.authStatus === "CREDENTIALS_REQUIRED" || (!diag.configured && (isOrganic || isTikTokAds))) {
+                    authDisplay = "Credentials Required";
+                    authClass = "text-amber-400 font-medium";
+                  } else if (dims.authStatus === "AUTHENTICATION_FAILED" || (diag.configured && dims.authenticated === false)) {
+                    authDisplay = "Failed (Check Key)";
+                    authClass = "text-rose-400 font-medium";
+                  } else if (dims.authenticated === true || dims.authStatus === "AUTHENTICATED") {
+                    authDisplay = "Authenticated";
+                    authClass = "text-emerald-400";
+                  }
+
+                  // Truthful transport rendering
+                  let transportDisplay = "Not Tested";
+                  let transportClass = "text-slate-400";
+                  if (!diag.configured) {
+                    transportDisplay = isGoogle ? "Not Configured" : "Not Tested";
+                    transportClass = "text-slate-500";
+                  } else if (dims.transportStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true) {
+                    transportDisplay = "Connected";
+                    transportClass = "text-emerald-400";
+                  } else if (dims.transportStatus === "TRANSPORT_FAILED" || dims.transportConnected === false) {
+                    transportDisplay = "Connection Failed";
+                    transportClass = "text-rose-400";
+                  }
+
+                  const storedCount = typeof dims.storedRecordCount === "number" ? dims.storedRecordCount : (typeof diag.recordsReturned === "number" ? diag.recordsReturned : 0);
+                  const lastLiveCount = typeof dims.lastLiveQueryRecordCount === "number" ? dims.lastLiveQueryRecordCount : null;
+
                   return (
                     <div
                       key={sourceItem.source}
                       className="p-3 rounded-lg bg-[#141b2d] border border-slate-800/80 space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-200">{sourceItem.displayName || sourceItem.source}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-slate-200">{sourceItem.displayName || sourceItem.source}</span>
+                          {justTested && (
+                            <span className="text-[9px] px-1 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30">
+                              Tested Now
+                            </span>
+                          )}
+                        </div>
                         {getSourceBadge(sourceItem.source, "")}
                       </div>
 
@@ -700,20 +761,32 @@ export default function ProductsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span>Transport:</span>
-                          <span className={dims.transportConnected ? "text-emerald-400" : dims.transportConnected === false ? "text-rose-400" : "text-slate-400"}>
-                            {dims.transportConnected === true ? "Connected" : dims.transportConnected === false ? "Unreachable" : "Pending Probe"}
+                          <span className={transportClass}>
+                            {transportDisplay}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Authentication:</span>
-                          <span className={dims.authenticated ? "text-emerald-400" : dims.authenticated === false ? "text-rose-400" : "text-slate-400"}>
-                            {dims.authenticated === true ? "Authenticated" : dims.authenticated === false ? "Invalid Key" : "Unverified / Free"}
+                          <span className={authClass}>
+                            {authDisplay}
                           </span>
                         </div>
+                        {isDemand && (
+                          <div className="flex justify-between">
+                            <span>Engine:</span>
+                            <span className="text-blue-400 font-medium">Ready (Temporal Policy)</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span>Stored Records:</span>
                           <span className="text-slate-300 font-mono">
-                            {typeof diag.recordsReturned === "number" ? diag.recordsReturned : "0"}
+                            {storedCount}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Last Live Query:</span>
+                          <span className="text-slate-300 font-mono">
+                            {lastLiveCount !== null ? `${lastLiveCount} records` : "Not Run"}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -732,7 +805,7 @@ export default function ProductsPage() {
 
                       {diag.requiredAction && (
                         <p className="text-[10px] text-amber-300/90 font-medium">
-                          Action: {diag.requiredAction}
+                          Next Step: {diag.requiredAction}
                         </p>
                       )}
                     </div>

@@ -14,7 +14,7 @@ import {
   evaluateDemandHistoryEvidence,
 } from "./temporalDemandEngine";
 import { defaultDemandProvider, DemandQuery } from "./demandProviderRegistry";
-
+import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 
 export interface ProductDemandResolution {
   productId: string | null;
@@ -51,6 +51,7 @@ export function normalizeProductSearchTerm(productTitle: string): string {
 
 /**
  * Resolves historical demand for a product candidate, using stored time series or provider lookup.
+ * Strictly respects workspace authorization and never merges unrelated product series.
  */
 export async function resolveProductDemandHistory(
   candidate: {
@@ -58,43 +59,55 @@ export async function resolveProductDemandHistory(
     canonicalName: string;
     category?: string | null;
   },
-  options: { lookbackDays?: number; region?: string } = {}
+  options: {
+    lookbackDays?: number;
+    region?: string;
+    workspaceId?: string;
+    researchRunId?: string;
+    queryId?: string;
+  } = {}
 ): Promise<ProductDemandResolution> {
   const region = options.region || "US";
   const searchTerm = normalizeProductSearchTerm(candidate.canonicalName);
 
   let rawRecords: any[] = [];
+  let targetProductId = candidate.productId || null;
 
   // 1. First check if candidate has an existing linked ResearchProduct with demand observations
-  if (candidate.productId) {
+  if (targetProductId) {
     rawRecords = await prisma.productDemandObservation.findMany({
       where: {
-        productId: candidate.productId,
+        productId: targetProductId,
         region,
+        ...(options.workspaceId ? { product: buildAuthorizedProductWhere(options.workspaceId) } : {}),
       },
       orderBy: { periodStart: "asc" },
     });
   }
 
-  // 2. If not found by productId, check if observations exist matching the canonical product name or search term
+  // 2. If not found by productId, check if observations exist matching a single canonical product
+  // CRITICAL: NEVER merge multiple distinct products into one time series
   if (rawRecords.length === 0 && searchTerm.length > 2) {
-    const matchingProducts = await prisma.researchProduct.findMany({
+    const matchingProduct = await prisma.researchProduct.findFirst({
       where: {
-        OR: [
-          { title: { contains: searchTerm } },
-          { productUrl: { contains: searchTerm.toLowerCase().replace(/\s+/g, "-") } },
+        AND: [
+          ...(options.workspaceId ? [buildAuthorizedProductWhere(options.workspaceId)] : []),
+          {
+            OR: [
+              { title: { contains: searchTerm } },
+              { productUrl: { contains: searchTerm.toLowerCase().replace(/\s+/g, "-") } },
+            ],
+          },
         ],
       },
       select: { id: true },
-
-      take: 3,
     });
 
-    if (matchingProducts.length > 0) {
-      const productIds = matchingProducts.map((p) => p.id);
+    if (matchingProduct) {
+      targetProductId = matchingProduct.id;
       rawRecords = await prisma.productDemandObservation.findMany({
         where: {
-          productId: { in: productIds },
+          productId: matchingProduct.id,
           region,
         },
         orderBy: { periodStart: "asc" },
@@ -102,23 +115,92 @@ export async function resolveProductDemandHistory(
     }
   }
 
+  // 3. If no stored records exist, attempt real live provider query if configured
+  if (rawRecords.length === 0 && searchTerm.length > 2) {
+    try {
+      const now = new Date();
+      const lookbackDays = Math.max(options.lookbackDays || 90, 60);
+      const startDate = new Date(now.getTime() - lookbackDays * 86400000);
+
+      const seriesResult = await defaultDemandProvider.fetchSeries({
+        term: searchTerm,
+        canonicalProductName: candidate.canonicalName,
+        productId: targetProductId || undefined,
+        region,
+        startDate,
+        endDate: now,
+      });
+
+      if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
+        if (targetProductId) {
+          for (const pt of seriesResult.points) {
+            try {
+              await prisma.productDemandObservation.create({
+                data: {
+                  productId: targetProductId,
+                  source: pt.source || "PROVIDER_API",
+                  region: pt.region || region,
+                  keyword: searchTerm,
+                  periodStart: new Date(pt.periodStart),
+                  periodEnd: new Date(pt.periodEnd),
+                  demandValue: pt.demandValue,
+                  valueType: "RELATIVE_INTEREST",
+                  evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
+                  methodologyVersion: "12.2.2",
+                },
+              });
+            } catch {
+              // ignore duplicate key or constraint violation
+            }
+          }
+        }
+
+        const dataPoints: DemandDataPoint[] = seriesResult.points.map((p) => ({
+          periodStart: p.periodStart,
+          periodEnd: p.periodEnd,
+          demandValue: p.demandValue,
+          region: p.region,
+          source: p.source,
+          date: p.periodStart,
+          value: p.demandValue,
+        }));
+
+        const assessment = evaluateDemandHistoryEvidence(dataPoints, {
+          minimumDataPoints: 3,
+          minimumCoveredDays: 60,
+          requiredRegion: region,
+        });
+
+        return {
+          productId: targetProductId,
+          canonicalName: candidate.canonicalName,
+          searchTermUsed: searchTerm,
+          assessment,
+          dataPoints,
+          sourceStatus: assessment.status === "VERIFIED" ? "PRODUCT_HISTORY_VERIFIED" : "INSUFFICIENT_HISTORY",
+        };
+      }
+    } catch {
+      // Live provider lookup failed or unconfigured; proceed with local assessment
+    }
+  }
+
   const dataPoints: DemandDataPoint[] = rawRecords.map((r) => ({
-    periodStart: r.periodStart,
-    periodEnd: r.periodEnd,
+    periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
+    periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
     demandValue: r.demandValue,
     region: r.region,
     source: r.source,
-    date: r.periodStart,
+    date: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
     value: r.demandValue,
   }));
 
-  // 3. Evaluate demand history policy
+  // 4. Evaluate demand history policy (Strict 60-day requirement: never silently reduce)
   const assessment = evaluateDemandHistoryEvidence(dataPoints, {
     minimumDataPoints: 3,
-    minimumCoveredDays: Math.min(options.lookbackDays || 60, 60),
+    minimumCoveredDays: 60,
     requiredRegion: region,
   });
-
 
   const sourceStatus =
     assessment.status === "VERIFIED"
@@ -128,7 +210,7 @@ export async function resolveProductDemandHistory(
       : "ENGINE_READY";
 
   return {
-    productId: candidate.productId || null,
+    productId: targetProductId,
     canonicalName: candidate.canonicalName,
     searchTermUsed: searchTerm,
     assessment,

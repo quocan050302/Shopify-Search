@@ -20,6 +20,7 @@ import {
   SourceResearchResult,
   SourceObservation,
   TikTokOrganicVideo,
+  SourceRunStatus,
 } from "../types";
 import { estimateResearchProviderCost } from "./sourceRegistry";
 import {
@@ -28,6 +29,7 @@ import {
   ProviderOperationCost,
   getHasDataOperationCost,
 } from "./hasDataCreditService";
+import { evaluateProviderCostGuard } from "./providerCostPolicy";
 
 export interface ProviderCostPolicy {
   creditsPerRequest: number;
@@ -71,7 +73,7 @@ export interface TikTokOrganicQuery {
 
 export interface TikTokOrganicCollectionResult {
   success: boolean;
-  status: "PASSED" | "NO_RESULTS" | "BLOCKED" | "NOT_CONFIGURED" | "FAILED";
+  status: SourceRunStatus;
   videos: TikTokOrganicVideo[];
   observations: SourceObservation[];
   retrievedCount: number;
@@ -249,12 +251,28 @@ export async function collectTikTokOrganicEvidence(
     };
   }
 
+  // Authoritative provider cost guard directly at outbound execution point
+  const costDecision = evaluateProviderCostGuard("HASDATA", "TIKTOK_ORGANIC_SEARCH", 10);
+  if (!costDecision.allowed) {
+    warnings.push(costDecision.reason);
+    return {
+      success: false,
+      status: "COST_BLOCKED",
+      videos: [],
+      observations: [],
+      retrievedCount: 0,
+      creditsConsumed: 0,
+      errors: [costDecision.reason],
+      warnings,
+    };
+  }
+
   // Authoritative credit check
   const creditStatus = await fetchHasDataCreditStatus({ apiKey });
   const quotaDecision = evaluateHasDataQuota(creditStatus, {
     operationType: "TIKTOK_ORGANIC_SEARCH",
     estimatedRequests: 1,
-    creditsPerRequest: 1,
+    creditsPerRequest: 10,
   });
 
   if (!quotaDecision.isAllowed) {
@@ -285,11 +303,50 @@ export async function collectTikTokOrganicEvidence(
     });
 
     if (!res.ok) {
-      if (res.status === 402 || res.status === 429) {
-        errors.push(`TikTok Organic provider quota or rate limit exceeded (HTTP ${res.status}).`);
+      if (res.status === 401 || res.status === 403) {
+        errors.push(`HasData API key authentication failed (HTTP ${res.status}).`);
         return {
           success: false,
-          status: "BLOCKED",
+          status: "AUTHENTICATION_FAILED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status === 402) {
+        errors.push("TikTok Organic provider credit balance exhausted (HTTP 402 Payment Required).");
+        return {
+          success: false,
+          status: "COST_BLOCKED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status === 429) {
+        errors.push("TikTok Organic provider rate limit exceeded (HTTP 429).");
+        return {
+          success: false,
+          status: "RATE_LIMITED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status >= 500) {
+        errors.push(`HasData upstream server error (HTTP ${res.status}).`);
+        return {
+          success: false,
+          status: "FAILED",
           videos: [],
           observations: [],
           retrievedCount: 0,
@@ -302,6 +359,21 @@ export async function collectTikTokOrganicEvidence(
     }
 
     const json = await res.json();
+    if (json?.error || (json?.success === false && json?.message)) {
+      const errMsg = json.error || json.message || "HasData reported query failure";
+      errors.push(`TikTok Organic provider returned error: ${errMsg}`);
+      return {
+        success: false,
+        status: "QUERY_FAILED",
+        videos: [],
+        observations: [],
+        retrievedCount: 0,
+        creditsConsumed: 0,
+        errors,
+        warnings,
+      };
+    }
+
     const rawItems: any[] = Array.isArray(json.data)
       ? json.data
       : (Array.isArray(json.items) ? json.items : (Array.isArray(json.videos) ? json.videos : []));
@@ -349,11 +421,11 @@ export async function collectTikTokOrganicEvidence(
 
     return {
       success: true,
-      status: videos.length > 0 ? "PASSED" : "NO_RESULTS",
+      status: videos.length > 0 ? "PASSED" : "QUERY_SUCCEEDED_EMPTY",
       videos,
       observations,
       retrievedCount: videos.length,
-      creditsConsumed: 1,
+      creditsConsumed: 10,
       errors,
       warnings,
     };

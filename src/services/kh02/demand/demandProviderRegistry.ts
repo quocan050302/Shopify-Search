@@ -53,7 +53,7 @@ class GoogleTrendsDemandProvider implements HistoricalDemandProvider {
 
   async diagnose(): Promise<SourceDiagnosticResult> {
     const lastCheckedAt = new Date().toISOString();
-    const hasAlphaAccess = Boolean(process.env.GOOGLE_TRENDS_API_KEY);
+    const hasAlphaAccess = Boolean(process.env.GOOGLE_TRENDS_API_KEY || process.env.SERPAPI_API_KEY);
 
     if (!hasAlphaAccess) {
       return {
@@ -68,8 +68,8 @@ class GoogleTrendsDemandProvider implements HistoricalDemandProvider {
         provenanceVerified: false,
         lastCheckedAt,
         status: "NOT_CONFIGURED",
-        reason: "Google Trends official API credentials (GOOGLE_TRENDS_API_KEY) not configured; temporal policy engine ready for stored observations.",
-        missingRequirements: ["GOOGLE_TRENDS_API_KEY"],
+        reason: "Google Trends provider credentials (SERPAPI_API_KEY or GOOGLE_TRENDS_API_KEY) not configured; temporal policy engine ready for stored observations.",
+        missingRequirements: ["SERPAPI_API_KEY or GOOGLE_TRENDS_API_KEY"],
       };
     }
 
@@ -77,15 +77,15 @@ class GoogleTrendsDemandProvider implements HistoricalDemandProvider {
       source: "DEMAND_HISTORY",
       adapterInstalled: true,
       configured: true,
-      transportConnected: true,
+      transportConnected: null,
       authenticated: true,
       discoverySupported: true,
-      queryExecuted: true,
+      queryExecuted: false,
       recordsReturned: null,
       provenanceVerified: true,
       lastCheckedAt,
       status: "CONFIGURED",
-      reason: "Google Trends provider configured with authorized access.",
+      reason: "Google Trends provider configured with authorized upstream credentials.",
       missingRequirements: [],
     };
   }
@@ -102,11 +102,79 @@ class GoogleTrendsDemandProvider implements HistoricalDemandProvider {
         status: "BLOCKED",
         acquiredAt: new Date().toISOString(),
         provenance: "UNVERIFIED",
-        error: "Google Trends provider credentials not configured.",
+        error: "Google Trends provider credentials (SERPAPI_API_KEY or GOOGLE_TRENDS_API_KEY) not configured.",
       };
     }
 
-    // In a live configured environment, actual authorized provider query would execute here.
+    const serpApiKey = process.env.SERPAPI_API_KEY;
+    if (serpApiKey) {
+      try {
+        const url = new URL("https://serpapi.com/search.json");
+        url.searchParams.set("engine", "google_trends");
+        url.searchParams.set("q", query.term);
+        url.searchParams.set("geo", query.region || "US");
+        url.searchParams.set("api_key", serpApiKey);
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(url.toString(), { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+          return {
+            providerId: this.providerId,
+            term: query.term,
+            canonicalProductName: query.canonicalProductName || null,
+            region: query.region,
+            points: [],
+            status: "FAILED",
+            acquiredAt: new Date().toISOString(),
+            provenance: "UNVERIFIED",
+            error: `SerpApi returned HTTP ${res.status}`,
+          };
+        }
+
+        const data = (await res.json()) as any;
+        const timeline = data?.interest_over_time?.timeline_data;
+        if (Array.isArray(timeline) && timeline.length > 0) {
+          const points: DemandDataPointResult[] = timeline.map((entry: any) => {
+            const val = entry.values?.[0]?.extracted_value ?? entry.values?.[0]?.value ?? 0;
+            return {
+              periodStart: entry.date || entry.timestamp || new Date().toISOString(),
+              periodEnd: entry.date || entry.timestamp || new Date().toISOString(),
+              demandValue: typeof val === "number" ? val : Number(val) || 0,
+              region: query.region,
+              source: "Google Trends (SerpApi)",
+              scale: "GOOGLE_TRENDS_INDEX_0_100",
+            };
+          });
+
+          return {
+            providerId: this.providerId,
+            term: query.term,
+            canonicalProductName: query.canonicalProductName || null,
+            region: query.region,
+            points,
+            status: "SUCCESS",
+            acquiredAt: new Date().toISOString(),
+            provenance: "AUTHORITATIVE_PROVIDER",
+          };
+        }
+      } catch (err: any) {
+        return {
+          providerId: this.providerId,
+          term: query.term,
+          canonicalProductName: query.canonicalProductName || null,
+          region: query.region,
+          points: [],
+          status: "FAILED",
+          acquiredAt: new Date().toISOString(),
+          provenance: "UNVERIFIED",
+          error: err.message || "Failed to query SerpApi",
+        };
+      }
+    }
+
     return {
       providerId: this.providerId,
       term: query.term,

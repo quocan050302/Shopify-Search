@@ -37,13 +37,41 @@ export async function POST(request: NextRequest) {
 
     if (body.all === true || (!body.source && !body.provider)) {
       const allCapabilities = listKH02SourceCapabilities();
-      const results = await Promise.all(
+      const settled = await Promise.allSettled(
         allCapabilities.map((cap) =>
           testKH02SourceConnection(cap.source as IntelligenceSource, {
             workspaceId: context.workspaceId,
+            timeoutMs: 6000,
           })
         )
       );
+
+      const results = settled.map((s, idx) => {
+        if (s.status === "fulfilled") return s.value;
+        const cap = allCapabilities[idx];
+        return {
+          source: cap.source,
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: false,
+          authenticated: false,
+          discoverySupported: false,
+          queryExecuted: false,
+          recordsReturned: 0,
+          storedRecordCount: 0,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastProbeAt: new Date().toISOString(),
+          authStatus: "AUTHENTICATION_FAILED" as const,
+          transportStatus: "TRANSPORT_FAILED" as const,
+          capabilityStatus: "UNSUPPORTED" as const,
+          provenanceVerified: false,
+          lastCheckedAt: new Date().toISOString(),
+          status: "FAILED",
+          reason: (s as PromiseRejectedResult).reason?.message || "Connection probe failed",
+          missingRequirements: ["CONNECTION_FAILED"],
+        };
+      });
 
       return NextResponse.json({
         success: true,

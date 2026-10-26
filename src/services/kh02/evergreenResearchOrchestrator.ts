@@ -128,6 +128,9 @@ export async function runEvergreenProductResearch(
     DEMAND_HISTORY: "CONFIGURED",
   };
 
+  const isSelected = (source: IntelligenceSource) =>
+    !input.selectedSources || input.selectedSources.includes(source);
+
   const query: IntelligenceQuery = {
     workspaceId: input.workspaceId,
     researchRunId: runId,
@@ -140,54 +143,96 @@ export async function runEvergreenProductResearch(
 
   const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 20_000;
 
-  async function withStageTimeout<T>(
-    promise: Promise<T>,
+  function createStageSignal(timeoutMs: number, stageName: string): { signal: AbortSignal; cleanup: () => void } {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort(new Error(`Stage '${stageName}' exceeded deadline of ${timeoutMs}ms.`));
+    }, timeoutMs);
+
+    const onParentAbort = () => {
+      controller.abort(abortSignal?.reason || new Error("Parent execution aborted."));
+    };
+
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        controller.abort(abortSignal.reason);
+      } else {
+        abortSignal.addEventListener("abort", onParentAbort, { once: true });
+      }
+    }
+
+    return {
+      signal: controller.signal,
+      cleanup: () => {
+        clearTimeout(timer);
+        if (abortSignal) {
+          abortSignal.removeEventListener("abort", onParentAbort);
+        }
+      },
+    };
+  }
+
+  async function executeStageWithSignal<T>(
+    stageName: string,
     timeoutMs: number,
-    stageName: string
+    fn: (stageQuery: IntelligenceQuery) => Promise<T>
   ): Promise<T> {
+    const { signal: stageSignal, cleanup } = createStageSignal(timeoutMs, stageName);
+    const stageQuery: IntelligenceQuery = { ...query, signal: stageSignal };
+
     let timer: NodeJS.Timeout;
-    const timeoutPromise = new Promise<T>((_, reject) => {
+    const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
         reject(new Error(`Stage '${stageName}' exceeded deadline of ${timeoutMs}ms.`));
       }, timeoutMs);
     });
+
     try {
-      return await Promise.race([promise, timeoutPromise]);
+      return await Promise.race([fn(stageQuery), timeoutPromise]);
     } finally {
       clearTimeout(timer!);
+      cleanup();
     }
   }
 
   const adObservations: SourceObservation[] = [];
 
   // ── Stage 1: Meta Ads Discovery (Canonical Platform & Workspace Scoped) ────
-  try {
-    const metaResult = await withStageTimeout(
-      collectMetaProductSignals(query),
-      STAGE_TIMEOUT_MS,
-      "Meta Ads"
-    );
-    sourceStatuses.META_ADS = metaResult.status;
-    adObservations.push(...metaResult.observations);
-    if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
-  } catch (err: any) {
-    sourceStatuses.META_ADS = "FAILED";
-    errors.push(`Meta Ads collection failed: ${err.message}`);
+  if (!isSelected("META_ADS")) {
+    sourceStatuses.META_ADS = "SKIPPED";
+  } else {
+    try {
+      const metaResult = await executeStageWithSignal(
+        "Meta Ads",
+        STAGE_TIMEOUT_MS,
+        (q) => collectMetaProductSignals(q)
+      );
+      sourceStatuses.META_ADS = metaResult.status;
+      adObservations.push(...metaResult.observations);
+      if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
+    } catch (err: any) {
+      sourceStatuses.META_ADS = "FAILED";
+      errors.push(`Meta Ads collection failed: ${err.message}`);
+    }
   }
 
   // ── Stage 2: TikTok Ads US Discovery ──────────────────────────────────────
-  try {
-    const ttAdsResult = await withStageTimeout(
-      collectTikTokAdsSignals(query),
-      STAGE_TIMEOUT_MS,
-      "TikTok Ads"
-    );
-    sourceStatuses.TIKTOK_ADS = ttAdsResult.status;
-    adObservations.push(...ttAdsResult.observations);
-    if (ttAdsResult.warnings.length > 0) warnings.push(...ttAdsResult.warnings);
-  } catch (err: any) {
-    sourceStatuses.TIKTOK_ADS = "FAILED";
-    errors.push(`TikTok Ads collection failed: ${err.message}`);
+  if (!isSelected("TIKTOK_ADS")) {
+    sourceStatuses.TIKTOK_ADS = "SKIPPED";
+  } else {
+    try {
+      const ttAdsResult = await executeStageWithSignal(
+        "TikTok Ads",
+        STAGE_TIMEOUT_MS,
+        (q) => collectTikTokAdsSignals(q)
+      );
+      sourceStatuses.TIKTOK_ADS = ttAdsResult.status;
+      adObservations.push(...ttAdsResult.observations);
+      if (ttAdsResult.warnings.length > 0) warnings.push(...ttAdsResult.warnings);
+    } catch (err: any) {
+      sourceStatuses.TIKTOK_ADS = "FAILED";
+      errors.push(`TikTok Ads collection failed: ${err.message}`);
+    }
   }
 
   if (context?.reportProgress) {
@@ -229,54 +274,61 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
-  const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
-  if (!ttDiag.configured) {
-    sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
-    warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
+  if (!isSelected("TIKTOK_ORGANIC")) {
+    sourceStatuses.TIKTOK_ORGANIC = "SKIPPED";
   } else {
-    try {
-      const ttOrganicResult = await withStageTimeout(
-        collectTikTokOrganicSignals(query),
-        STAGE_TIMEOUT_MS,
-        "TikTok Organic"
-      );
-      sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
-      secondaryObservations.push(...ttOrganicResult.observations);
-      if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
-    } catch (err: any) {
-      sourceStatuses.TIKTOK_ORGANIC = "FAILED";
-      errors.push(`TikTok Organic collection failed: ${err.message}`);
+    const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
+    if (!ttDiag.configured) {
+      sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
+      warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
+    } else {
+      try {
+        const ttOrganicResult = await executeStageWithSignal(
+          "TikTok Organic",
+          STAGE_TIMEOUT_MS,
+          (q) => collectTikTokOrganicSignals(q)
+        );
+        sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
+        secondaryObservations.push(...ttOrganicResult.observations);
+        if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
+      } catch (err: any) {
+        sourceStatuses.TIKTOK_ORGANIC = "FAILED";
+        errors.push(`TikTok Organic collection failed: ${err.message}`);
+      }
     }
   }
 
   // ── Stage 6: Google Ads Transparency Enrichment ───────────────────────────
-  const googleDiag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: input.workspaceId });
-  if (!googleDiag.configured) {
-    sourceStatuses.GOOGLE_ADS = googleDiag.status as SourceRunStatus;
-    warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
+  if (!isSelected("GOOGLE_ADS")) {
+    sourceStatuses.GOOGLE_ADS = "SKIPPED";
   } else {
-    try {
-      // Extract identified advertiser domains from candidates
-      const discoveredDomains = candidates
-        .map((c) => c.storeDomain)
-        .filter((d): d is string => Boolean(d));
+    const googleDiag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: input.workspaceId });
+    if (!googleDiag.configured) {
+      sourceStatuses.GOOGLE_ADS = googleDiag.status as SourceRunStatus;
+      warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
+    } else {
+      try {
+        // Extract identified advertiser domains from candidates
+        const discoveredDomains = candidates
+          .map((c) => c.storeDomain)
+          .filter((d): d is string => Boolean(d));
 
-      const googleQuery: IntelligenceQuery = {
-        ...query,
-        advertiserDomains: Array.from(new Set(discoveredDomains)),
-      };
-
-      const googleResult = await withStageTimeout(
-        collectGoogleAdvertiserSignals(googleQuery),
-        STAGE_TIMEOUT_MS,
-        "Google Ads Transparency"
-      );
-      sourceStatuses.GOOGLE_ADS = googleResult.status;
-      secondaryObservations.push(...googleResult.observations);
-      if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
-    } catch (err: any) {
-      sourceStatuses.GOOGLE_ADS = "FAILED";
-      errors.push(`Google Ads collection failed: ${err.message}`);
+        const googleResult = await executeStageWithSignal(
+          "Google Ads Transparency",
+          STAGE_TIMEOUT_MS,
+          (q) =>
+            collectGoogleAdvertiserSignals({
+              ...q,
+              advertiserDomains: Array.from(new Set(discoveredDomains)),
+            })
+        );
+        sourceStatuses.GOOGLE_ADS = googleResult.status;
+        secondaryObservations.push(...googleResult.observations);
+        if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
+      } catch (err: any) {
+        sourceStatuses.GOOGLE_ADS = "FAILED";
+        errors.push(`Google Ads collection failed: ${err.message}`);
+      }
     }
   }
 
@@ -320,11 +372,39 @@ export async function runEvergreenProductResearch(
   const rankedItems: RankedLeaderboardItem[] = [];
 
   for (const candidate of candidates) {
-    const demandRes = await resolveProductDemandHistory({
-      productId: candidate.researchProductId,
-      canonicalName: candidate.title,
-      category: candidate.category,
-    }, { lookbackDays, region: market });
+    let demandRes;
+    if (isSelected("DEMAND_HISTORY")) {
+      demandRes = await resolveProductDemandHistory(
+        {
+          productId: candidate.researchProductId,
+          canonicalName: candidate.title,
+          category: candidate.category,
+        },
+        {
+          lookbackDays,
+          region: market,
+          workspaceId: input.workspaceId,
+          researchRunId: runId,
+          queryId: runId,
+        }
+      );
+    } else {
+      demandRes = {
+        productId: candidate.researchProductId || null,
+        canonicalName: candidate.title,
+        searchTermUsed: candidate.title,
+        assessment: {
+          status: "INSUFFICIENT_EVIDENCE" as const,
+          dataPointsCount: 0,
+          coveredDays: 0,
+          stabilityClassification: "INSUFFICIENT_DATA" as const,
+          confidence: 0,
+          reason: "Demand history unselected or skipped.",
+        },
+        dataPoints: [],
+        sourceStatus: "ENGINE_READY" as const,
+      };
+    }
 
     const score = calculateKH02EvergreenScore({
       candidate,
@@ -339,21 +419,24 @@ export async function runEvergreenProductResearch(
     });
   }
 
-
-  // Evaluate Demand History status truthfully: requires verified demand on at least 1 candidate
-  let hasVerifiedDemand = false;
-  for (const item of rankedItems) {
-    if (item.score.pillars.demandStability.status === "PASS") {
-      hasVerifiedDemand = true;
-      break;
-    }
-  }
-  if (hasVerifiedDemand) {
-    sourceStatuses.DEMAND_HISTORY = "SOURCE_DATA_VERIFIED";
-  } else if (rankedItems.length > 0) {
-    sourceStatuses.DEMAND_HISTORY = "NOT_VERIFIED";
+  // Evaluate Demand History status truthfully
+  if (!isSelected("DEMAND_HISTORY")) {
+    sourceStatuses.DEMAND_HISTORY = "SKIPPED";
   } else {
-    sourceStatuses.DEMAND_HISTORY = "CONFIGURED";
+    let hasVerifiedDemand = false;
+    for (const item of rankedItems) {
+      if (item.score.pillars.demandStability.status === "PASS") {
+        hasVerifiedDemand = true;
+        break;
+      }
+    }
+    if (hasVerifiedDemand) {
+      sourceStatuses.DEMAND_HISTORY = "SOURCE_DATA_VERIFIED";
+    } else if (rankedItems.length > 0) {
+      sourceStatuses.DEMAND_HISTORY = "NOT_VERIFIED";
+    } else {
+      sourceStatuses.DEMAND_HISTORY = "CONFIGURED";
+    }
   }
 
   // Sort by opportunityScore desc, then evidenceConfidence desc
@@ -389,10 +472,15 @@ export async function runEvergreenProductResearch(
 
   // Overall run status
   const anyPassed = Object.values(sourceStatuses).some(
-    (s) => s === "PASSED" || s === "SOURCE_DATA_VERIFIED"
+    (s) => s === "PASSED" || s === "SOURCE_DATA_VERIFIED" || s === "LIVE_DATA_VERIFIED"
   );
   const anyFailed = Object.values(sourceStatuses).some(
-    (s) => s === "FAILED" || s === "BLOCKED_SOURCE"
+    (s) =>
+      s === "FAILED" ||
+      s === "BLOCKED_SOURCE" ||
+      s === "QUERY_FAILED" ||
+      s === "TRANSPORT_FAILED" ||
+      s === "AUTHENTICATION_FAILED"
   );
   let overallRunStatus: SourceRunStatus = "PASSED";
   if (!anyPassed) overallRunStatus = "NO_RESULTS";

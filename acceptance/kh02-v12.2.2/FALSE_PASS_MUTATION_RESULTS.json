@@ -1,0 +1,42 @@
+{
+  "allMutationsPreventedFalsePass": true,
+  "mutationCount": 5,
+  "mutations": [
+    {
+      "name": "Strip Upstream Evidence",
+      "description": "When upstream returns 0 records, verdict must downgrade to FAIL.",
+      "baselineVerdict": "PASS",
+      "mutatedVerdict": "FAIL",
+      "verdictDowngraded": true
+    },
+    {
+      "name": "Fake Cache as Live Success",
+      "description": "When query is not executed and data is from cache, verdict must downgrade to CACHE_ONLY.",
+      "baselineVerdict": "LIVE_PASSED",
+      "mutatedVerdict": "CACHE_ONLY",
+      "verdictDowngraded": true
+    },
+    {
+      "name": "Unapproved Paid API Charge Gate",
+      "description": "When AUTO_PAID_RESEARCH=false, paid operations must be COST_BLOCKED.",
+      "baselineVerdict": "ALLOWED",
+      "mutatedVerdict": "COST_BLOCKED",
+      "verdictDowngraded": true
+    },
+    {
+      "name": "Ad ID as Product Title Leakage",
+      "description": "When Ad ID leaks into product title, identity validation must FAIL.",
+      "baselineVerdict": "PASS",
+      "mutatedVerdict": "FAIL",
+      "verdictDowngraded": true
+    },
+    {
+      "name": "Short Demand Window (< 60 Days)",
+      "description": "When demand time series spans < 60 days, status must downgrade to INSUFFICIENT_HISTORY.",
+      "baselineVerdict": "VERIFIED",
+      "mutatedVerdict": "INSUFFICIENT_HISTORY",
+      "verdictDowngraded": true
+    }
+  ],
+  "executedAt": "2026-10-26T16:45:38.830Z"
+}

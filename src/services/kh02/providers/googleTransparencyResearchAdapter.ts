@@ -21,6 +21,7 @@ import {
   IntelligenceQuery,
   SourceResearchResult,
   SourceObservation,
+  SourceRunStatus,
 } from "../types";
 
 export interface JsonSchemaProperty {
@@ -117,12 +118,51 @@ export interface GoogleTransparencyMcpClient {
   connect(): Promise<void>;
   listTools(): Promise<string[]>;
   listToolsWithSchemas?(): Promise<GoogleMcpToolDescriptor[]>;
+  callToolByName?(name: string, args: Record<string, unknown>): Promise<any>;
   searchAdvertisers(query: string): Promise<any>;
   searchAdvertiserByDomain(domain: string): Promise<any>;
   getAds(advertiserId: string, region?: string): Promise<any>;
   getAdDetail(creativeId: string): Promise<any>;
   close(): Promise<void>;
   isAlive(): boolean;
+}
+
+/**
+ * Decodes MCP CallToolResult payload:
+ * Handles structuredContent, content text JSON, isError, and raw responses.
+ */
+export function decodeCallToolResult(result: any): any {
+  if (!result) return null;
+
+  // Check if provider explicitly returned an MCP execution error
+  if (result.isError) {
+    const errorText = Array.isArray(result.content)
+      ? result.content.map((c: any) => c.text || JSON.stringify(c)).join("; ")
+      : result.error || "Google Ads Transparency MCP tool returned isError: true";
+    throw new Error(errorText);
+  }
+
+  // 1. Structured Content
+  if (result.structuredContent !== undefined && result.structuredContent !== null) {
+    return result.structuredContent;
+  }
+
+  // 2. Content array with JSON in text
+  if (Array.isArray(result.content)) {
+    for (const item of result.content) {
+      if (item && item.type === "text" && typeof item.text === "string") {
+        try {
+          return JSON.parse(item.text);
+        } catch {
+          if (result.content.length === 1) return item.text;
+        }
+      }
+    }
+  }
+
+  // 3. Fallback to direct data payload
+  if (result.data !== undefined) return result.data;
+  return result;
 }
 
 /**
@@ -207,20 +247,20 @@ export async function discoverGoogleAdsMcpCapabilities(
       toolDescriptors = toolNames.map((name) => ({ name, inputSchema: { type: "object" } }));
     }
 
-    const domainLookupTool = toolDescriptors.find((t) =>
-      /search.*advertiser.*domain|domain.*search/i.test(t.name)
+    const advertiserSearchTool = toolDescriptors.find((t) =>
+      /^search_advertiser$|^find_advertiser$|search.*advertiser/i.test(t.name)
     )?.name;
 
-    const advertiserSearchTool = toolDescriptors.find((t) =>
-      /search.*advertiser(?!.*domain)|find.*advertiser/i.test(t.name)
-    )?.name;
+    const domainLookupTool = toolDescriptors.find((t) =>
+      /domain/i.test(t.name)
+    )?.name || advertiserSearchTool; // In gads-transparency-mcp, search_advertiser handles domain lookups
 
     const adsRetrievalTool = toolDescriptors.find((t) =>
-      /(get|search|list).*ads/i.test(t.name)
+      /^get_advertiser_ads$|(get|search|list).*ads/i.test(t.name)
     )?.name;
 
     const adDetailTool = toolDescriptors.find((t) =>
-      /(get|find).*ad.*detail|creative.*detail/i.test(t.name)
+      /^get_ad_details?$|(get|find).*ad.*detail|creative.*detail/i.test(t.name)
     )?.name;
 
     return {
@@ -327,9 +367,14 @@ export function normalizeGoogleAdsResponse(
   rawResponse: unknown,
   metadata: GoogleSourceMetadata
 ): NormalizedAdsResult {
-  const adsArray: any[] = Array.isArray((rawResponse as any)?.ads)
-    ? (rawResponse as any).ads
-    : (Array.isArray(rawResponse) ? rawResponse : []);
+  const decoded = decodeCallToolResult(rawResponse);
+  const adsArray: any[] = Array.isArray(decoded?.ads)
+    ? decoded.ads
+    : (Array.isArray(decoded)
+      ? decoded
+      : (Array.isArray(decoded?.data)
+        ? decoded.data
+        : (Array.isArray(decoded?.creatives) ? decoded.creatives : [])));
 
   const normalizedAds: NormalizedGoogleAd[] = [];
   const observations: SourceObservation[] = [];
@@ -472,12 +517,19 @@ export function createGoogleTransparencyMcpClient(config?: {
           args,
         });
         mcpClient = new Client(
-          { name: "swai-google-transparency-client", version: "12.2.1" },
+          { name: "swai-google-transparency-client", version: "12.2.2" },
           { capabilities: {} }
         );
         await mcpClient.connect(transport);
         connected = true;
       } else if (mcpUrl) {
+        // Standard MCP initialize negotiation lifecycle
+        await sendMcpJsonRpc("initialize", {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: { name: "swai-google-transparency-client", version: "12.2.2" },
+        });
+        await sendMcpJsonRpc("notifications/initialized", {}).catch(() => {});
         await sendMcpJsonRpc("tools/list", {});
         connected = true;
       } else {
@@ -523,76 +575,43 @@ export function createGoogleTransparencyMcpClient(config?: {
       return [];
     },
 
-    async searchAdvertisers(queryText: string): Promise<any> {
+    async callToolByName(name: string, argsObj: Record<string, unknown>): Promise<any> {
       if (!connected) throw new Error("Client not connected");
+      let rawResult: any;
       if (mcpClient) {
-        return await mcpClient.callTool({
-          name: "search_advertisers",
-          arguments: { query: queryText },
+        rawResult = await mcpClient.callTool({
+          name,
+          arguments: argsObj,
         });
-      }
-      if (mcpUrl) {
-        const result = await sendMcpJsonRpc("tools/call", {
-          name: "search_advertisers",
-          arguments: { query: queryText },
+      } else if (mcpUrl) {
+        rawResult = await sendMcpJsonRpc("tools/call", {
+          name,
+          arguments: argsObj,
         });
-        return result?.content || result;
+      } else {
+        throw new Error("No transport available");
       }
-      throw new Error("No transport available");
+      return decodeCallToolResult(rawResult);
+    },
+
+    async searchAdvertisers(queryText: string): Promise<any> {
+      return this.callToolByName!("search_advertiser", { query: queryText })
+        .catch(() => this.callToolByName!("search_advertisers", { query: queryText }));
     },
 
     async searchAdvertiserByDomain(domain: string): Promise<any> {
-      if (!connected) throw new Error("Client not connected");
-      if (mcpClient) {
-        return await mcpClient.callTool({
-          name: "search_advertiser_by_domain",
-          arguments: { domain },
-        });
-      }
-      if (mcpUrl) {
-        const result = await sendMcpJsonRpc("tools/call", {
-          name: "search_advertiser_by_domain",
-          arguments: { domain },
-        });
-        return result?.content || result;
-      }
-      throw new Error("No transport available");
+      return this.callToolByName!("search_advertiser", { query: domain })
+        .catch(() => this.callToolByName!("search_advertiser_by_domain", { domain }));
     },
 
     async getAds(advertiserId: string, region?: string): Promise<any> {
-      if (!connected) throw new Error("Client not connected");
-      if (mcpClient) {
-        return await mcpClient.callTool({
-          name: "get_ads",
-          arguments: { advertiser_id: advertiserId, region: region || "US" },
-        });
-      }
-      if (mcpUrl) {
-        const result = await sendMcpJsonRpc("tools/call", {
-          name: "get_ads",
-          arguments: { advertiser_id: advertiserId, region: region || "US" },
-        });
-        return result?.content || result;
-      }
-      throw new Error("No transport available");
+      return this.callToolByName!("get_advertiser_ads", { advertiser_id: advertiserId, region: region || "US" })
+        .catch(() => this.callToolByName!("get_ads", { advertiser_id: advertiserId, region: region || "US" }));
     },
 
     async getAdDetail(creativeId: string): Promise<any> {
-      if (!connected) throw new Error("Client not connected");
-      if (mcpClient) {
-        return await mcpClient.callTool({
-          name: "get_ad_detail",
-          arguments: { creative_id: creativeId },
-        });
-      }
-      if (mcpUrl) {
-        const result = await sendMcpJsonRpc("tools/call", {
-          name: "get_ad_detail",
-          arguments: { creative_id: creativeId },
-        });
-        return result?.content || result;
-      }
-      throw new Error("No transport available");
+      return this.callToolByName!("get_ad_details", { creative_id: creativeId })
+        .catch(() => this.callToolByName!("get_ad_detail", { creative_id: creativeId }));
     },
 
     async close(): Promise<void> {
@@ -612,6 +631,7 @@ export function createGoogleTransparencyMcpClient(config?: {
 
 /**
  * Collects Google Ads Transparency observations for known advertiser domains.
+ * Executes full pipeline: Domain lookup -> Advertiser IDs -> Creatives -> Normalized Ad Observations.
  */
 export async function collectGoogleAdvertiserSignals(
   query: IntelligenceQuery,
@@ -689,27 +709,81 @@ export async function collectGoogleAdvertiserSignals(
 
   try {
     const observations: SourceObservation[] = [];
+    const caps = await discoverGoogleAdsMcpCapabilities({}, client);
+
+    const searchTool = caps.matchedTools.advertiserSearchTool || "search_advertiser";
+    const adsTool = caps.matchedTools.adsRetrievalTool || "get_advertiser_ads";
+
+    let anyLookupSucceeded = false;
+    let anyAdvertiserFound = false;
+
     for (const domain of targetDomains.slice(0, 5)) {
       if (query.signal?.aborted) break;
 
       try {
-        const result = await client.searchAdvertiserByDomain(domain);
-        const normResult = normalizeGoogleAdsResponse(result, {
-          requestedDomain: domain,
-          topic: query.topic,
-          observedAt: new Date().toISOString(),
-          toolName: "search_advertiser_by_domain",
-        });
+        // Step 1: Search advertiser by domain
+        const advResult = client.callToolByName
+          ? await client.callToolByName(searchTool, { query: domain })
+          : await client.searchAdvertiserByDomain(domain);
+        anyLookupSucceeded = true;
 
-        for (const obs of normResult.observations) {
-          observations.push(obs);
+        const rawAdvList = Array.isArray(advResult)
+          ? advResult
+          : (Array.isArray(advResult?.advertisers)
+            ? advResult.advertisers
+            : (Array.isArray(advResult?.data) ? advResult.data : []));
+
+        // Step 2: Extract advertiser ID(s)
+        const advertiserIds: string[] = [];
+        for (const adv of rawAdvList) {
+          const id = adv?.advertiser_id || adv?.id || adv?.advertiserId;
+          if (id) advertiserIds.push(String(id));
+        }
+
+        if (advertiserIds.length > 0) {
+          anyAdvertiserFound = true;
+        }
+
+        // Step 3: Retrieve actual ad creatives for the discovered advertiser(s)
+        for (const advId of advertiserIds.slice(0, 2)) {
+          if (query.signal?.aborted) break;
+          try {
+            const adsResult = client.callToolByName
+              ? await client.callToolByName(adsTool, {
+                  advertiser_id: advId,
+                  region: query.market || "US",
+                })
+              : await client.getAds(advId, query.market || "US");
+
+            const normResult = normalizeGoogleAdsResponse(adsResult, {
+              requestedDomain: domain,
+              topic: query.topic,
+              observedAt: new Date().toISOString(),
+              toolName: adsTool,
+            });
+
+            for (const obs of normResult.observations) {
+              observations.push(obs);
+            }
+          } catch (adsErr: any) {
+            warnings.push(`Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`);
+          }
         }
       } catch (domainErr: any) {
-        warnings.push(`Google Transparency lookup error for ${domain}: ${domainErr.message}`);
+        errors.push(`Google Transparency advertiser lookup failed for ${domain}: ${domainErr.message}`);
       }
     }
 
-    const status = observations.length > 0 ? "PASSED" : "NO_RESULTS";
+    let status: SourceRunStatus = "NOT_CONFIGURED";
+    if (observations.length > 0) {
+      status = "PASSED";
+    } else if (anyAdvertiserFound || anyLookupSucceeded) {
+      status = "QUERY_SUCCEEDED_EMPTY";
+    } else if (errors.length > 0) {
+      status = "QUERY_FAILED"; // Lookups genuinely failed with transport or server errors!
+    } else {
+      status = "NO_RESULTS";
+    }
 
     return {
       source: "GOOGLE_ADS",

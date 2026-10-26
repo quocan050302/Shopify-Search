@@ -19,6 +19,7 @@ import {
   SourceObservation,
   MetaResearchSignals,
   ObservationProvenance,
+  SourceRunStatus,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
 import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
@@ -231,7 +232,15 @@ export async function collectLiveMetaAds(
   const providerQueryTimestamp = new Date().toISOString();
   let dbCountBefore = 0;
   try {
-    dbCountBefore = await prisma.competitorAd.count({ where: { platform: "META" } });
+    if (query.workspaceId) {
+      dbCountBefore = await prisma.competitorAd.count({
+        where: {
+          platform: { in: ["META", "FACEBOOK"] },
+          isSyntheticQuarantine: false,
+          ...buildAuthorizedAdWhere(query.workspaceId),
+        },
+      });
+    }
   } catch {}
 
   const config = getMetaCollectorConfig();
@@ -295,7 +304,15 @@ export async function collectLiveMetaAds(
 
     let dbCountAfter = dbCountBefore;
     try {
-      dbCountAfter = await prisma.competitorAd.count({ where: { platform: "META" } });
+      if (query.workspaceId) {
+        dbCountAfter = await prisma.competitorAd.count({
+          where: {
+            platform: { in: ["META", "FACEBOOK"] },
+            isSyntheticQuarantine: false,
+            ...buildAuthorizedAdWhere(query.workspaceId),
+          },
+        });
+      }
     } catch {}
 
     const newInserted = ingestSummary.newUniqueCount || ingestSummary.newUniqueInserted || 0;
@@ -346,6 +363,8 @@ export async function collectMetaProductSignals(
   const errors: string[] = [];
   const warnings: string[] = [];
   const freshLiveAdIds = new Set<string>();
+  let liveAttempted = false;
+  let liveSucceeded = false;
 
   // 1. Attempt live collection if enabled and not in unit test execution boundary
   const allowLive =
@@ -356,7 +375,7 @@ export async function collectMetaProductSignals(
      process.env.VITEST !== "true");
 
   if (allowLive) {
-
+    liveAttempted = true;
     try {
       const liveRes = await collectLiveMetaAds(query);
       if (liveRes.newAdIds && liveRes.newAdIds.length > 0) {
@@ -364,6 +383,8 @@ export async function collectMetaProductSignals(
       }
       if (liveRes.error) {
         warnings.push(`Live Meta collector attempt reported: ${liveRes.error}. Falling back to cached SQLite observations.`);
+      } else {
+        liveSucceeded = true;
       }
     } catch (liveErr: any) {
       warnings.push(`Live Meta query bypassed: ${liveErr?.message || String(liveErr)}. Using cached database observations.`);
@@ -498,9 +519,12 @@ export async function collectMetaProductSignals(
       };
     });
 
+    // Truthful status: if live query was not attempted or failed, mark CACHE_ONLY
+    const status: SourceRunStatus = liveSucceeded ? "PASSED" : "CACHE_ONLY";
+
     return {
       source: "META_ADS",
-      status: "PASSED",
+      status,
       observations,
       retrievedCount: matchingAds.length,
       acceptedCount: observations.length,
