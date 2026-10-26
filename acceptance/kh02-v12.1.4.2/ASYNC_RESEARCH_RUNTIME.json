@@ -1,0 +1,16 @@
+{
+  "runId": "kh02_run_1793025869655_lxjae",
+  "workspaceId": "ws_acceptance_v12_1_4_2_1793025835502",
+  "httpAcceptedStatus": 202,
+  "claimWorkerId": "worker_acceptance_1793025869484",
+  "stageProgression": [
+    "QUEUED",
+    "COLLECTING_ADS",
+    "MATCHING_PRODUCTS",
+    "SCORING",
+    "COMPLETED"
+  ],
+  "executionDurationMs": 38,
+  "terminalStatus": "COMPLETED",
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

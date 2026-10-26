@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   listKH02SourceCapabilities,
   checkKH02ProviderReadiness,
+  diagnoseKH02Source,
 } from "@/services/kh02/providers/sourceRegistry";
 import {
   resolveAuthorizedResearchContext,
@@ -21,12 +22,16 @@ export async function GET(request: NextRequest) {
 
     const statuses = await Promise.all(
       capabilities.map(async (cap) => {
-        const readiness = await checkKH02ProviderReadiness(cap.source);
+        const [readiness, diagnostic] = await Promise.all([
+          checkKH02ProviderReadiness(cap.source, context.workspaceId),
+          diagnoseKH02Source(cap.source, { workspaceId: context.workspaceId }),
+        ]);
         return {
           ...cap,
           readiness: readiness.status,
           isReady: readiness.ready,
           readinessReason: readiness.reason,
+          diagnostic,
         };
       })
     );

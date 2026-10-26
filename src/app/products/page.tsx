@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   Trophy,
@@ -94,6 +94,19 @@ export default function ProductsPage() {
   const [researchError, setResearchError] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
 
+  // Active Research Tracking & Worker Health State
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [activeRunTopic, setActiveRunTopic] = useState<string>("");
+  const [activeRunLookback, setActiveRunLookback] = useState<number>(90);
+  const [runStage, setRunStage] = useState<string>("QUEUED");
+  const [runProgress, setRunProgress] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [isLongRunningNotice, setIsLongRunningNotice] = useState<boolean>(false);
+  const [workerStatus, setWorkerStatus] = useState<string>("UNKNOWN");
+  const [isTestingConnections, setIsTestingConnections] = useState<boolean>(false);
+
+  const currentTrackingRunIdRef = useRef<string | null>(null);
+
   // Live Provider Status State
   const [providerStatuses, setProviderStatuses] = useState<ProviderStatusItem[]>([]);
 
@@ -144,44 +157,129 @@ export default function ProductsPage() {
     }
   };
 
-  // Polling helper with bounded attempts and explicit terminal classification
+  // Test all connections on demand (zero-cost safe diagnostics)
+  const handleTestConnections = async () => {
+    try {
+      setIsTestingConnections(true);
+      const res = await fetch("/api/v1/kh02/providers/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      if (res.ok) {
+        await fetchProviderStatuses();
+      }
+    } catch (err) {
+      console.error("Failed to test source connections:", err);
+    } finally {
+      setIsTestingConnections(false);
+    }
+  };
+
+  // Resilient Research Job Tracking Hook / Poller
   const pollJobExecution = async (runId: string) => {
+    currentTrackingRunIdRef.current = runId;
+    setActiveRunId(runId);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("kh02_active_run_id", runId);
+    }
+
     let attempts = 0;
-    const maxAttempts = 60;
+    const maxAttempts = 300; // Resilient 5+ minute tracking window
+    const startTime = Date.now();
+
     while (attempts < maxAttempts) {
-      await new Promise((r) => setTimeout(r, 1000));
+      if (currentTrackingRunIdRef.current !== runId) {
+        return; // Superseded by a newer research run
+      }
+
+      await new Promise((r) => setTimeout(r, 1500));
       attempts++;
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      setElapsedSeconds(elapsed);
+
+      if (elapsed >= 45 && !isLongRunningNotice) {
+        setIsLongRunningNotice(true);
+      }
+
       try {
-        const runRes = await fetch(`/api/v1/kh02/research/runs/${runId}`);
+        const [runRes, workerRes] = await Promise.all([
+          fetch(`/api/v1/kh02/research/runs/${runId}`),
+          attempts % 5 === 1 ? fetch("/api/v1/kh02/worker/status").catch(() => null) : null,
+        ]);
+
+        if (workerRes && workerRes.ok) {
+          const workerJson = await workerRes.json();
+          if (workerJson.data?.worker?.status) {
+            setWorkerStatus(workerJson.data.worker.status);
+          }
+        }
+
         if (runRes.ok) {
           const runJson = await runRes.json();
-          const status = runJson.data?.status;
+          const jobData = runJson.data;
+          const status = jobData?.status;
+          const stage = jobData?.stage || status;
+          const progress = jobData?.progress || 0;
+
+          setRunStage(stage);
+          setRunProgress(progress);
+
           if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
-            if (runJson.data?.result) {
-              setLeaderboard(runJson.data.result);
-            } else {
-              await fetchLatestLeaderboard();
+            if (currentTrackingRunIdRef.current === runId) {
+              if (jobData?.result) {
+                setLeaderboard(jobData.result);
+              } else {
+                await fetchLatestLeaderboard();
+              }
+              setViewMode("LEADERBOARD");
+              if (typeof window !== "undefined") {
+                sessionStorage.removeItem("kh02_active_run_id");
+              }
+              setActiveRunId(null);
+              setIsResearching(false);
+              setIsLongRunningNotice(false);
             }
-            setViewMode("LEADERBOARD");
             return;
           } else if (status === "FAILED") {
-            throw new Error(runJson.data?.errorMessage || "Background research job failed.");
+            if (typeof window !== "undefined") {
+              sessionStorage.removeItem("kh02_active_run_id");
+            }
+            setActiveRunId(null);
+            setIsResearching(false);
+            setIsLongRunningNotice(false);
+            throw new Error(jobData?.errorMessage || "Background research job failed.");
           }
         }
       } catch (err: any) {
         if (err.message && err.message.includes("Background research job failed")) {
           throw err;
         }
+        // Transient network glitches do not fail the research execution
       }
     }
-    throw new Error("Research execution timed out waiting for worker snapshot.");
+
+    // After 300 attempts (~7.5 minutes), do not treat timeout as backend failure
+    setIsLongRunningNotice(true);
+    setResearchError(
+      "Research is taking longer than expected. The background worker is still actively processing your job. You can reload this page anytime to check for results."
+    );
+    setIsResearching(false);
   };
 
   // Explicit User-Triggered Asynchronous Research Execution
   const executeResearch = async (selectedTopic: string = topic, days: number = lookbackDays) => {
+    if (isResearching) return; // Prevent duplicate concurrent submissions
+
     try {
       setIsResearching(true);
       setResearchError(null);
+      setIsLongRunningNotice(false);
+      setElapsedSeconds(0);
+      setRunProgress(0);
+      setRunStage("QUEUED");
+      setActiveRunTopic(selectedTopic.trim() || "Pet Gadgets");
+      setActiveRunLookback(days);
 
       const res = await fetch("/api/v1/kh02/research", {
         method: "POST",
@@ -206,13 +304,14 @@ export default function ProductsPage() {
       } else if (json.data?.result) {
         setLeaderboard(json.data.result);
         setViewMode("LEADERBOARD");
+        setIsResearching(false);
       } else if (json.data) {
         setLeaderboard(json.data);
         setViewMode("LEADERBOARD");
+        setIsResearching(false);
       }
     } catch (err: any) {
       setResearchError(err.message || "Failed to conduct evergreen product research.");
-    } finally {
       setIsResearching(false);
     }
   };
@@ -237,43 +336,149 @@ export default function ProductsPage() {
     }
   };
 
-  // On page mount: Restore saved state (NO automatic network research)
+  // On page mount: Restore saved state and check active jobs (NO automatic network research)
   useEffect(() => {
     fetchLatestLeaderboard();
     fetchProviderStatuses();
     fetchStoredProducts();
+
+    // Check worker health status
+    fetch("/api/v1/kh02/worker/status")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.worker?.status) {
+          setWorkerStatus(json.data.worker.status);
+        }
+      })
+      .catch(() => {});
+
+    // Check for active running research run in workspace to restore tracking
+    const checkActiveRun = async () => {
+      try {
+        const res = await fetch("/api/v1/kh02/research/active");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const active = json.data;
+            setActiveRunId(active.runId);
+            if (active.topic) {
+              setTopic(active.topic);
+              setActiveRunTopic(active.topic);
+            }
+            if (active.lookbackDays) {
+              setLookbackDays(active.lookbackDays);
+              setActiveRunLookback(active.lookbackDays);
+            }
+            setRunStage(active.stage || active.status);
+            setRunProgress(active.progress || 0);
+            setIsResearching(true);
+            pollJobExecution(active.runId);
+            return;
+          }
+        }
+
+        // Fallback: check sessionStorage
+        if (typeof window !== "undefined") {
+          const savedRunId = sessionStorage.getItem("kh02_active_run_id");
+          if (savedRunId) {
+            const runRes = await fetch(`/api/v1/kh02/research/runs/${savedRunId}`);
+            if (runRes.ok) {
+              const runJson = await runRes.json();
+              const status = runJson.data?.status;
+              if (status === "PENDING" || status === "RUNNING") {
+                setActiveRunId(savedRunId);
+                setIsResearching(true);
+                pollJobExecution(savedRunId);
+              } else {
+                sessionStorage.removeItem("kh02_active_run_id");
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to check active research run:", err);
+      }
+    };
+
+    checkActiveRun();
   }, []);
 
   const getSourceBadge = (sourceKey: string, defaultLabel: string) => {
     const live = providerStatuses.find((p) => p.source === sourceKey);
     const status = live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
+    const reason = live?.readinessReason || "";
 
     if (status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium">
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium"
+          title={reason || "Verified: Valid ad observations retrieved"}
+        >
           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
           {defaultLabel}: Verified
         </span>
       );
     }
-    if (status === "CONFIGURED") {
+    if (status === "SOURCE_ACCESS_VERIFIED" || status === "CONNECTED") {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium">
-          <Clock className="h-3 w-3 text-blue-400" />
-          {defaultLabel}: Configured
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/50 border border-emerald-600/30 text-emerald-300 text-[11px] font-medium"
+          title={reason || "Source Available: Indexed in database & collector reachable"}
+        >
+          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+          {defaultLabel}: Source Available
         </span>
       );
     }
-    if (status === "NOT_VERIFIED") {
+    if (status === "CONFIGURED" || status === "ENGINE_READY") {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium">
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
+          title={reason || "Configured: Adapter active"}
+        >
+          <Clock className="h-3 w-3 text-blue-400" />
+          {defaultLabel}: {sourceKey === "DEMAND_HISTORY" ? "Engine Ready" : "Configured"}
+        </span>
+      );
+    }
+    if (status === "MANUAL_RESEARCH_ONLY" || status === "NOT_VERIFIED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium"
+          title={reason || "Manual Research Only: Database competitor ad search active"}
+        >
           <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: Not Verified
+          {defaultLabel}: {sourceKey === "TIKTOK_ADS" ? "Manual / DB Only" : "Not Verified"}
+        </span>
+      );
+    }
+    if (status === "CREDENTIALS_REQUIRED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30 text-amber-300 text-[11px] font-medium"
+          title={reason || "Credentials Required: Configure API key"}
+        >
+          <AlertTriangle className="h-3 w-3 text-amber-400" />
+          {defaultLabel}: Credentials Required
+        </span>
+      );
+    }
+    if (status === "MCP_NOT_CONFIGURED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium"
+          title={reason || "MCP server endpoint not configured"}
+        >
+          <Clock className="h-3 w-3 text-slate-500" />
+          {defaultLabel}: MCP Not Configured
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium">
+      <span
+        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium"
+        title={reason || "Source not configured"}
+      >
         <Clock className="h-3 w-3 text-slate-500" />
         {defaultLabel}: Not Configured
       </span>
@@ -396,12 +601,93 @@ export default function ProductsPage() {
               {getSourceBadge("TIKTOK_ORGANIC", "TikTok Organic")}
               {getSourceBadge("GOOGLE_ADS", "Google Ads")}
               {getSourceBadge("DEMAND_HISTORY", "Demand History")}
+              <button
+                onClick={handleTestConnections}
+                disabled={isTestingConnections}
+                className="px-2 py-0.5 rounded-md bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/30 text-purple-300 text-[11px] font-medium flex items-center gap-1 transition-all disabled:opacity-50"
+                title="Run non-metered connection checks across all sources"
+              >
+                <RefreshCw className={`h-3 w-3 ${isTestingConnections ? "animate-spin" : ""}`} />
+                <span>{isTestingConnections ? "Testing..." : "Test Connections"}</span>
+              </button>
             </div>
             <div className="text-slate-500 text-[11px]">
               Market: <span className="text-slate-300 font-semibold">United States</span> · Zero unapproved credit spend
             </div>
           </div>
         </div>
+
+        {/* Active Research Progress Panel */}
+        {isResearching && (
+          <div data-testid="kh02-research-progress-panel" className="p-5 rounded-2xl bg-[#161228] border border-purple-500/40 shadow-xl space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-[#2e234d] pb-3">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-purple-400 animate-spin" />
+                <span className="text-sm font-bold text-white">
+                  Researching: <span className="text-purple-300">{activeRunTopic || topic}</span>
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-900/60 border border-purple-500/40 text-purple-200">
+                  {activeRunLookback || lookbackDays}D Lookback · US
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-slate-400">
+                  Worker:{" "}
+                  <span
+                    className={`font-semibold ${
+                      workerStatus === "ALIVE"
+                        ? "text-emerald-400"
+                        : workerStatus === "OFFLINE"
+                        ? "text-amber-400"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {workerStatus}
+                  </span>
+                </span>
+                <span className="text-slate-400">
+                  Elapsed: <span className="text-white font-mono">{elapsedSeconds}s</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Stage tracker */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-300 font-medium">
+                  Stage: <span className="text-purple-300 uppercase font-semibold">{runStage || "INITIALIZING"}</span>
+                </span>
+                <span className="text-slate-400 font-mono">{runProgress}%</span>
+              </div>
+              <div className="w-full bg-[#0e0b1c] rounded-full h-2 border border-[#3b2d63]">
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(runProgress, 8)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Long running friendly notice */}
+            {isLongRunningNotice && (
+              <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-300 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-indigo-400 shrink-0" />
+                  <span>Research is continuing in the background. You can leave this page or switch tabs; your job is safely tracked.</span>
+                </div>
+              </div>
+            )}
+
+            {/* Worker offline warning */}
+            {workerStatus === "OFFLINE" && (runStage === "QUEUED" || runStage === "PENDING") && (
+              <div className="p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-xs text-amber-300 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                <span>
+                  Research is queued waiting for a worker. Start <code className="px-1.5 py-0.5 rounded bg-amber-900/60 font-mono text-amber-200">npm run kh02:worker</code> or <code className="px-1.5 py-0.5 rounded bg-amber-900/60 font-mono text-amber-200">npm run dev:all</code> to begin processing.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Error Notification */}
         {researchError && (
@@ -433,13 +719,25 @@ export default function ProductsPage() {
             </div>
 
             {/* TOP 3 PODIUM CONTAINER */}
-            {isResearching ? (
+            {isResearching && (!leaderboard || leaderboard.topThree.length === 0) ? (
               <div className="p-16 rounded-2xl bg-[#161228] border border-[#2e234d] text-center space-y-4">
-                <RefreshCw className="h-8 w-8 text-purple-400 animate-spin mx-auto" />
-                <p className="text-sm font-semibold text-white">Aggregating cross-platform intelligence...</p>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Inspecting Meta ad observations, TikTok video metrics, Google advertiser domains, and historical demand time series.
-                </p>
+                {isResearching ? (
+                  <>
+                    <RefreshCw className="h-8 w-8 text-purple-400 animate-spin mx-auto" />
+                    <p className="text-sm font-semibold text-white">Aggregating cross-platform intelligence...</p>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Inspecting Meta ad observations, TikTok video metrics, Google advertiser domains, and historical demand time series.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="h-8 w-8 text-slate-500 mx-auto" />
+                    <p className="text-sm font-semibold text-white">No Evergreen Winners Available Yet</p>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Select a niche above and click &quot;Analyze Evergreen Niche&quot; to discover top products.
+                    </p>
+                  </>
+                )}
               </div>
             ) : leaderboard && leaderboard.topThree.length > 0 ? (
               <div data-testid="kh02-leaderboard-container" className="space-y-4">

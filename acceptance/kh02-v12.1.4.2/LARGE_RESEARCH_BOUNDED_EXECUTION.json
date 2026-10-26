@@ -1,0 +1,11 @@
+{
+  "representativeNichesTested": [
+    "Pet Gadgets (90D)",
+    "Home Cleaning (180D)",
+    "Kitchen Organization (365D)"
+  ],
+  "maxCandidatesBounded": 15,
+  "perStageDeadlineMs": 20000,
+  "unboundedPromiseAllEliminated": true,
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

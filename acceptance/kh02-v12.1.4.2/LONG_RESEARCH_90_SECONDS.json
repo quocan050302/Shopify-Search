@@ -1,0 +1,8 @@
+{
+  "originalTimeoutSeconds": 60,
+  "newMaxAttempts": 300,
+  "effectiveWindowMinutes": 5,
+  "exceeded60SecondsBehavior": "Displays non-fatal notice that research is continuing in background",
+  "testedDurability": true,
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

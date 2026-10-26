@@ -1,0 +1,18 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:cas
+> vitest run tests/unit/kh02V12_1_4_AtomicCas.test.ts
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02V12_1_4_AtomicCas.test.ts (7 tests) 236ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  21:44:02
+   Duration  540ms (tests 51%, import 31%, transform 9%, setup 9%, worker 1%)
+
+
+
+=== STDERR ===

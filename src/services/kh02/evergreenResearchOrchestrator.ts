@@ -136,11 +136,35 @@ export async function runEvergreenProductResearch(
     signal: abortSignal,
   };
 
+  const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 20_000;
+
+  async function withStageTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    stageName: string
+  ): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(`Stage '${stageName}' exceeded deadline of ${timeoutMs}ms.`));
+      }, timeoutMs);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timer!);
+    }
+  }
+
   const adObservations: SourceObservation[] = [];
 
   // ── Stage 1: Meta Ads Discovery (Canonical Platform & Workspace Scoped) ────
   try {
-    const metaResult = await collectMetaProductSignals(query);
+    const metaResult = await withStageTimeout(
+      collectMetaProductSignals(query),
+      STAGE_TIMEOUT_MS,
+      "Meta Ads"
+    );
     sourceStatuses.META_ADS = metaResult.status;
     adObservations.push(...metaResult.observations);
     if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
@@ -151,7 +175,11 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 2: TikTok Ads US Discovery ──────────────────────────────────────
   try {
-    const ttAdsResult = await collectTikTokAdsSignals(query);
+    const ttAdsResult = await withStageTimeout(
+      collectTikTokAdsSignals(query),
+      STAGE_TIMEOUT_MS,
+      "TikTok Ads"
+    );
     sourceStatuses.TIKTOK_ADS = ttAdsResult.status;
     adObservations.push(...ttAdsResult.observations);
     if (ttAdsResult.warnings.length > 0) warnings.push(...ttAdsResult.warnings);
@@ -170,8 +198,9 @@ export async function runEvergreenProductResearch(
     });
   }
 
-  // ── Stage 3: Extract Consolidated Product Candidates ──────────────────────
-  const candidates = discoverProductCandidatesFromAds(adObservations, input.topic);
+  // ── Stage 3: Extract Consolidated Product Candidates (Bounded) ───────────
+  const rawCandidates = discoverProductCandidatesFromAds(adObservations, input.topic);
+  const candidates = rawCandidates.slice(0, maxCandidates);
 
   // ── Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs ─────
   for (const candidate of candidates) {
@@ -199,7 +228,11 @@ export async function runEvergreenProductResearch(
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
   try {
-    const ttOrganicResult = await collectTikTokOrganicSignals(query);
+    const ttOrganicResult = await withStageTimeout(
+      collectTikTokOrganicSignals(query),
+      STAGE_TIMEOUT_MS,
+      "TikTok Organic"
+    );
     sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
     secondaryObservations.push(...ttOrganicResult.observations);
     if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
@@ -220,7 +253,11 @@ export async function runEvergreenProductResearch(
       advertiserDomains: Array.from(new Set(discoveredDomains)),
     };
 
-    const googleResult = await collectGoogleAdvertiserSignals(googleQuery);
+    const googleResult = await withStageTimeout(
+      collectGoogleAdvertiserSignals(googleQuery),
+      STAGE_TIMEOUT_MS,
+      "Google Ads Transparency"
+    );
     sourceStatuses.GOOGLE_ADS = googleResult.status;
     secondaryObservations.push(...googleResult.observations);
     if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);

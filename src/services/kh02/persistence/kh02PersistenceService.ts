@@ -127,16 +127,19 @@ export interface SchemaUpgradeResult {
 /**
  * Creates a new persistent KH-02 research run in PENDING status.
  */
-export async function createKH02ResearchRun(params: {
-  workspaceId: string;
-  topic: string;
-  market?: string;
-  lookbackDays?: number;
-  maxCandidates?: number;
-}): Promise<string> {
+export async function createKH02ResearchRun(
+  params: {
+    workspaceId: string;
+    topic: string;
+    market?: string;
+    lookbackDays?: number;
+    maxCandidates?: number;
+  },
+  db: any = prisma
+): Promise<string> {
   const runId = `kh02_run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-  await prisma.syncJob.create({
+  await db.syncJob.create({
     data: {
       id: runId,
       workspaceId: params.workspaceId,
@@ -159,7 +162,8 @@ export async function createKH02ResearchRun(params: {
 
 export const createResearchJob = async (
   input: { topic: string; market?: string; lookbackDays?: number; maxCandidates?: number },
-  context: { workspaceId: string }
+  context: { workspaceId: string },
+  db: any = prisma
 ): Promise<string> => {
   return createKH02ResearchRun({
     workspaceId: context.workspaceId,
@@ -167,7 +171,7 @@ export const createResearchJob = async (
     market: input.market,
     lookbackDays: input.lookbackDays,
     maxCandidates: input.maxCandidates,
-  });
+  }, db);
 };
 
 /**
@@ -175,12 +179,13 @@ export const createResearchJob = async (
  */
 export async function enqueueResearchJob(
   jobId: string,
-  context?: { workspaceId?: string }
+  context?: { workspaceId?: string },
+  db: any = prisma
 ): Promise<{ enqueued: boolean; jobId: string }> {
   const where: any = { id: jobId, jobType: "KH02_RESEARCH" };
   if (context?.workspaceId) where.workspaceId = context.workspaceId;
 
-  const job = await prisma.syncJob.findFirst({ where });
+  const job = await db.syncJob.findFirst({ where });
   if (!job) {
     throw new Error(`Research job '${jobId}' not found for enqueue.`);
   }
@@ -320,16 +325,22 @@ export async function getKH02ResearchRuns(
  */
 export async function getKH02ResearchRunById(
   runId: string,
-  workspaceId: string
+  workspaceId: string,
+  db: any = prisma
 ): Promise<{
   runId: string;
   workspaceId: string;
   status: string;
   progress: number;
+  stage?: string;
   result: EvergreenLeaderboardResult | null;
+  errorMessage?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  leaseExpiresAt?: string | null;
   createdAt: string;
 } | null> {
-  const job = await prisma.syncJob.findFirst({
+  const job = await db.syncJob.findFirst({
     where: {
       id: runId,
       workspaceId,
@@ -340,19 +351,93 @@ export async function getKH02ResearchRunById(
   if (!job) return null;
 
   let result: EvergreenLeaderboardResult | null = null;
+  let meta: any = {};
   if (job.resultJson) {
     try {
-      result = JSON.parse(job.resultJson);
+      meta = JSON.parse(job.resultJson);
+      if (meta.topThree || meta.formulaVersion) {
+        result = meta;
+      }
     } catch {}
   }
+
+  const stage =
+    meta._runtime?.lastProgress?.stage ||
+    (job.status === "COMPLETED"
+      ? "COMPLETED"
+      : job.status === "FAILED"
+      ? "FAILED"
+      : job.status === "RUNNING"
+      ? "RUNNING"
+      : "QUEUED");
 
   return {
     runId: job.id,
     workspaceId: job.workspaceId,
     status: job.status,
     progress: job.progress,
+    stage,
     result,
+    errorMessage: job.errorMessage || null,
+    startedAt: job.startedAt ? job.startedAt.toISOString() : null,
+    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
+    leaseExpiresAt: job.leaseExpiresAt ? job.leaseExpiresAt.toISOString() : null,
     createdAt: job.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Retrieves the currently active (PENDING or RUNNING) KH-02 research job for a workspace,
+ * allowing instant re-attachment across browser reloads or page navigations.
+ */
+export async function getKH02ActiveResearchRun(
+  workspaceId: string,
+  db: any = prisma
+): Promise<{
+  runId: string;
+  workspaceId: string;
+  status: string;
+  progress: number;
+  stage: string;
+  topic?: string;
+  lookbackDays?: number;
+  market?: string;
+  startedAt: string | null;
+  createdAt: string;
+} | null> {
+  const activeJob = await db.syncJob.findFirst({
+    where: {
+      workspaceId,
+      jobType: "KH02_RESEARCH",
+      status: { in: ["PENDING", "RUNNING"] },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!activeJob) return null;
+
+  let meta: any = {};
+  if (activeJob.resultJson) {
+    try {
+      meta = JSON.parse(activeJob.resultJson);
+    } catch {}
+  }
+
+  const stage =
+    meta._runtime?.lastProgress?.stage ||
+    (activeJob.status === "RUNNING" ? "RUNNING" : "QUEUED");
+
+  return {
+    runId: activeJob.id,
+    workspaceId: activeJob.workspaceId,
+    status: activeJob.status,
+    progress: activeJob.progress,
+    stage,
+    topic: meta.topic,
+    lookbackDays: meta.lookbackDays,
+    market: meta.market || "US",
+    startedAt: activeJob.startedAt ? activeJob.startedAt.toISOString() : null,
+    createdAt: activeJob.createdAt.toISOString(),
   };
 }
 

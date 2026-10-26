@@ -1,0 +1,84 @@
+{
+  "metaAds": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": 131,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T14:44:29.561Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (131 records observed); live collection supported via local collector.",
+    "missingRequirements": []
+  },
+  "tiktokAds": {
+    "source": "TIKTOK_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": null,
+    "discoverySupported": false,
+    "queryExecuted": true,
+    "recordsReturned": 5,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+    "status": "MANUAL_RESEARCH_ONLY",
+    "reason": "Automated TikTok US ad provider is unconfigured; database competitor ad search active, manual Creative Center lookup & batch import available.",
+    "missingRequirements": [
+      "TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"
+    ]
+  },
+  "tiktokOrganic": {
+    "source": "TIKTOK_ORGANIC",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": null,
+    "authenticated": false,
+    "discoverySupported": false,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+    "status": "CREDENTIALS_REQUIRED",
+    "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment.",
+    "missingRequirements": [
+      "HASDATA_API_KEY"
+    ]
+  },
+  "googleAds": {
+    "source": "GOOGLE_ADS",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": false,
+    "authenticated": null,
+    "discoverySupported": false,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+    "status": "MCP_NOT_CONFIGURED",
+    "reason": "Google Ads Transparency MCP server is not configured in environment.",
+    "missingRequirements": [
+      "GOOGLE_TRANSPARENCY_MCP_URL"
+    ]
+  },
+  "demandHistory": {
+    "source": "DEMAND_HISTORY",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": null,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+    "status": "ENGINE_READY",
+    "reason": "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
+    "missingRequirements": []
+  },
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

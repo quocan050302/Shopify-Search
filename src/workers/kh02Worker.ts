@@ -114,6 +114,18 @@ export interface WorkerHealth {
   uptimeSeconds: number;
 }
 
+export interface KH02WorkerHealth {
+  workerId: string;
+  observedAt: string;
+  lastHeartbeatAt: string | null;
+  status: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN";
+  activeJobId: string | null;
+  processedCount: number;
+  failureCount: number;
+  processStartedAt: string | null;
+  uptimeSeconds?: number;
+}
+
 export interface RetryDecision {
   retryable: boolean;
   backoffMs: number;
@@ -686,7 +698,7 @@ export async function renewResearchJobLease(
       }
       if (refreshed.workerId) retryWhere.workerId = workerId;
       if (refreshed.claimToken && expectedClaim) retryWhere.claimToken = expectedClaim;
-      if (refreshed.fencingToken && expectedFencing) {
+      if (refreshed.fencingToken) {
         retryWhere.fencingToken = expectedFencing;
       } else if (expectedFencing) {
         retryWhere.resultJson = { contains: expectedFencing };
@@ -1144,6 +1156,163 @@ export async function executeResearchJob(
 }
 
 /**
+ * Persists worker heartbeat to SQLite via SyncJob with jobType: "KH02_WORKER_HEARTBEAT"
+ * so independent worker liveness can be observed across processes (Next.js server, API routes).
+ */
+export async function persistKh02WorkerHeartbeat(
+  workerId: string = WORKER_ID,
+  activeJob: string | null = null,
+  state: "RUNNING" | "STOPPED" | "IDLE" = "RUNNING",
+  telemetry: {
+    processedCount?: number;
+    failureCount?: number;
+    processStartedAt?: string;
+    uptimeSeconds?: number;
+  } = {},
+  db: any = prisma
+): Promise<void> {
+  try {
+    const now = new Date();
+    const existing = await db.syncJob.findFirst({
+      where: { jobType: "KH02_WORKER_HEARTBEAT" },
+    });
+
+    const resultPayload = {
+      workerId,
+      activeJobId: activeJob,
+      state,
+      lastHeartbeatAt: now.toISOString(),
+      processedCount: telemetry.processedCount ?? processedJobs,
+      failureCount: telemetry.failureCount ?? failedJobs,
+      processStartedAt: telemetry.processStartedAt ?? new Date(startTime).toISOString(),
+    };
+
+    if (existing) {
+      await db.syncJob.update({
+        where: { id: existing.id },
+        data: {
+          status: state === "STOPPED" ? "STOPPED" : "RUNNING",
+          startedAt: state === "RUNNING" ? (existing.startedAt || now) : existing.startedAt,
+          completedAt: state === "STOPPED" ? now : null,
+          workerId,
+          resultJson: JSON.stringify(resultPayload),
+        },
+      });
+    } else {
+      const workspace = await db.workspace.findFirst({ select: { id: true } });
+      if (workspace) {
+        await db.syncJob.create({
+          data: {
+            id: `kh02-heartbeat-${workerId}`,
+            workspaceId: workspace.id,
+            jobType: "KH02_WORKER_HEARTBEAT",
+            status: state === "STOPPED" ? "STOPPED" : "RUNNING",
+            startedAt: now,
+            completedAt: state === "STOPPED" ? now : null,
+            workerId,
+            resultJson: JSON.stringify(resultPayload),
+          },
+        });
+      }
+    }
+  } catch (err) {
+    // Non-fatal warning on worker heartbeat persistence
+  }
+}
+
+/**
+ * Reads shared worker health from authoritative database records across processes.
+ * Freshness threshold:
+ * - ALIVE: heartbeat within <= 30 seconds
+ * - STALE: heartbeat within <= 60 seconds
+ * - OFFLINE: heartbeat > 60 seconds, marked STOPPED, or missing
+ */
+export async function getSharedResearchWorkerHealth(db: any = prisma): Promise<KH02WorkerHealth> {
+  const now = new Date();
+  const observedAt = now.toISOString();
+
+  try {
+    const heartbeatJob = await db.syncJob.findFirst({
+      where: { jobType: "KH02_WORKER_HEARTBEAT" },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!heartbeatJob || !heartbeatJob.resultJson) {
+      if (isRunning) {
+        return {
+          workerId: WORKER_ID,
+          observedAt,
+          lastHeartbeatAt: lastHeartbeat,
+          status: "ALIVE",
+          activeJobId,
+          processedCount: processedJobs,
+          failureCount: failedJobs,
+          processStartedAt: new Date(startTime).toISOString(),
+          uptimeSeconds: Math.round((Date.now() - startTime) / 1000),
+        };
+      }
+      return {
+        workerId: "NONE",
+        observedAt,
+        lastHeartbeatAt: null,
+        status: "OFFLINE",
+        activeJobId: null,
+        processedCount: 0,
+        failureCount: 0,
+        processStartedAt: null,
+        uptimeSeconds: 0,
+      };
+    }
+
+    let meta: any = {};
+    try {
+      meta = JSON.parse(heartbeatJob.resultJson);
+    } catch {}
+
+    const lastHeartbeatTime = meta.lastHeartbeatAt ? new Date(meta.lastHeartbeatAt).getTime() : 0;
+    const diffMs = Date.now() - lastHeartbeatTime;
+
+    let status: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN" = "OFFLINE";
+    if (meta.state === "STOPPED" || heartbeatJob.status === "COMPLETED" || heartbeatJob.status === "STOPPED") {
+      status = "OFFLINE";
+    } else if (diffMs <= 30_000) {
+      status = "ALIVE";
+    } else if (diffMs <= 60_000) {
+      status = "STALE";
+    } else {
+      status = "OFFLINE";
+    }
+
+    const processStartedAt = meta.processStartedAt || (heartbeatJob.startedAt ? heartbeatJob.startedAt.toISOString() : null);
+    const uptimeSeconds = processStartedAt ? Math.max(0, Math.round((Date.now() - new Date(processStartedAt).getTime()) / 1000)) : 0;
+
+    return {
+      workerId: meta.workerId || heartbeatJob.workerId || "UNKNOWN",
+      observedAt,
+      lastHeartbeatAt: meta.lastHeartbeatAt || null,
+      status,
+      activeJobId: meta.activeJobId || null,
+      processedCount: meta.processedCount || 0,
+      failureCount: meta.failureCount || 0,
+      processStartedAt,
+      uptimeSeconds,
+    };
+  } catch (err) {
+    return {
+      workerId: "ERROR",
+      observedAt,
+      lastHeartbeatAt: null,
+      status: "UNKNOWN",
+      activeJobId: null,
+      processedCount: 0,
+      failureCount: 0,
+      processStartedAt: null,
+      uptimeSeconds: 0,
+    };
+  }
+}
+
+/**
  * Returns current health and telemetry of the research worker.
  */
 export function getResearchWorkerHealth(): WorkerHealth {
@@ -1167,6 +1336,17 @@ export async function runWorkerLoop(options: { once?: boolean; pollIntervalMs?: 
 
   console.log(`[KH-02 Worker] Initialized ${WORKER_ID}. Mode: ${options.once ? "ONCE" : "DAEMON"}`);
 
+  // Initial persisted heartbeat
+  await persistKh02WorkerHeartbeat(WORKER_ID, null, "RUNNING").catch(() => {});
+
+  // Idle heartbeat timer to keep worker observable across processes even with empty queue
+  const idleHeartbeatTimer = setInterval(() => {
+    if (isRunning) {
+      lastHeartbeat = new Date().toISOString();
+      persistKh02WorkerHeartbeat(WORKER_ID, activeJobId, "RUNNING").catch(() => {});
+    }
+  }, 5000);
+
   // 1. Recover any abandoned jobs at startup
   try {
     const recovery = await recoverStaleResearchJobs();
@@ -1177,22 +1357,29 @@ export async function runWorkerLoop(options: { once?: boolean; pollIntervalMs?: 
     console.warn(`[KH-02 Worker] Startup recovery error:`, recErr);
   }
 
-  do {
-    lastHeartbeat = new Date().toISOString();
-    try {
-      const job = await claimNextResearchJob(WORKER_ID);
-      if (job) {
-        console.log(`[KH-02 Worker] Claimed job ${job.id} for topic '${job.payload.topic}' (Workspace: ${job.workspaceId})`);
-        const outcome = await executeResearchJob(job);
-        console.log(`[KH-02 Worker] Finished job ${job.id}: ${outcome.success ? "COMPLETED" : "FAILED"}`);
+  try {
+    do {
+      lastHeartbeat = new Date().toISOString();
+      try {
+        const job = await claimNextResearchJob(WORKER_ID);
+        if (job) {
+          console.log(`[KH-02 Worker] Claimed job ${job.id} for topic '${job.payload.topic}' (Workspace: ${job.workspaceId})`);
+          await persistKh02WorkerHeartbeat(WORKER_ID, job.id, "RUNNING").catch(() => {});
+          const outcome = await executeResearchJob(job);
+          console.log(`[KH-02 Worker] Finished job ${job.id}: ${outcome.success ? "COMPLETED" : "FAILED"}`);
+          await persistKh02WorkerHeartbeat(WORKER_ID, null, "RUNNING").catch(() => {});
+        }
+      } catch (loopErr) {
+        console.error(`[KH-02 Worker] Loop execution error:`, loopErr);
       }
-    } catch (loopErr) {
-      console.error(`[KH-02 Worker] Loop execution error:`, loopErr);
-    }
 
-    if (options.once) break;
-    await new Promise((r) => setTimeout(r, pollInterval));
-  } while (isRunning);
+      if (options.once) break;
+      await new Promise((r) => setTimeout(r, pollInterval));
+    } while (isRunning);
+  } finally {
+    clearInterval(idleHeartbeatTimer);
+    await persistKh02WorkerHeartbeat(WORKER_ID, null, "STOPPED").catch(() => {});
+  }
 
   console.log(`[KH-02 Worker] Stopped.`);
 }

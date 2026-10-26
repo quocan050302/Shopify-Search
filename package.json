@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "tsx scripts/startSwaiServer.ts dev",
+    "dev:all": "tsx scripts/startSwaiServer.ts dev --with-worker",
     "dev:local": "tsx scripts/startSwaiServer.ts dev --local",
     "dev:remote": "tsx scripts/startSwaiServer.ts dev --remote",
     "build": "next build",
     "start": "tsx scripts/startSwaiServer.ts start",
+    "start:all": "tsx scripts/startSwaiServer.ts start --with-worker",
     "start:local": "tsx scripts/startSwaiServer.ts start --local",
     "start:remote": "tsx scripts/startSwaiServer.ts start --remote",
     "lint": "eslint",
@@ -54,7 +56,8 @@
     "acceptance:kh02:v12.1.2": "tsx scripts/kh02/runAcceptanceV12_1_2.ts",
     "acceptance:kh02:v12.1.3": "tsx scripts/kh02/runAcceptanceV12_1_3.ts",
     "acceptance:kh02:v12.1.4": "tsx scripts/kh02/runAcceptanceV12_1_4.ts",
-    "acceptance:kh02:v12.1.4.1": "tsx scripts/kh02/runAcceptanceV12_1_4_1.ts"
+    "acceptance:kh02:v12.1.4.1": "tsx scripts/kh02/runAcceptanceV12_1_4_1.ts",
+    "acceptance:kh02:v12.1.4.2": "tsx scripts/kh02/runAcceptanceV12_1_4_2.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
