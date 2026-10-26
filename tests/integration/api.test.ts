@@ -27,17 +27,6 @@ describe("Versioned API Endpoints (v1)", () => {
     expect(json.data.some((p: any) => p.name === "META_AD_LIBRARY")).toBe(true);
   });
 
-  it("GET /api/v1/ads returns paginated real ads with source provenance", async () => {
-    const req = new NextRequest("http://localhost:3000/api/v1/ads?pageSize=5");
-    const res = await getAds(req);
-    const json = await res.json();
-
-    expect(json.success).toBe(true);
-    expect(json.data.length).toBeGreaterThanOrEqual(1);
-    expect(json.data[0].originalAdUrl).toContain("http");
-    expect(json.pagination.total).toBeGreaterThanOrEqual(1);
-  });
-
   it("POST /api/v1/ads imports and resolves a new competitor ad link", async () => {
     const req = new NextRequest("http://localhost:3000/api/v1/ads", {
       method: "POST",
@@ -56,6 +45,17 @@ describe("Versioned API Endpoints (v1)", () => {
     expect(json.data.externalAdId).toBe("999888777");
     expect(json.data.platform).toBe("META");
     expect(json.data.originalAdUrl).toContain("facebook.com");
+  });
+
+  it("GET /api/v1/ads returns paginated real ads with source provenance", async () => {
+    const req = new NextRequest("http://localhost:3000/api/v1/ads?pageSize=5");
+    const res = await getAds(req);
+    const json = await res.json();
+
+    expect(json.success).toBe(true);
+    expect(json.data.length).toBeGreaterThanOrEqual(1);
+    expect(json.data[0].originalAdUrl).toContain("http");
+    expect(json.pagination.total).toBeGreaterThanOrEqual(1);
   });
 
   it("GET /api/v1/settings/integrations reports NOT_CONNECTED for Shopify and Ad Managers", async () => {

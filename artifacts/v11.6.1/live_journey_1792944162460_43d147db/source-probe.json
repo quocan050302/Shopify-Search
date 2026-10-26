@@ -1,0 +1,132 @@
+{
+  "result_set_id": "4b62f42d96b54f589483c37820e2ff0e",
+  "job": {
+    "id": "4b62f42d96b54f589483c37820e2ff0e",
+    "state": "LIMIT_REACHED",
+    "count": 2,
+    "stats": {
+      "requests_made": 1,
+      "ads_collected": 2,
+      "duplicates_skipped": 0,
+      "filtered_out": 0,
+      "pages_fetched": 1,
+      "errors": 0,
+      "start_time": "2026-10-25 16:02:43.125365+00:00",
+      "end_time": "2026-10-25 16:02:46.645984+00:00",
+      "duration_seconds": 3.520619,
+      "ads_per_second": 0.5680819196851463,
+      "active_seconds": 3.5252310000068974
+    },
+    "error": null,
+    "created": 1792944163.107714,
+    "updated": 1792944166.649508,
+    "schedule_id": null,
+    "recovery": "fresh",
+    "query": {
+      "query": "gadget",
+      "country": "US",
+      "ad_type": "ALL",
+      "status": "ACTIVE",
+      "search_type": "KEYWORD_UNORDERED",
+      "page_ids": null,
+      "sort_by": null,
+      "filters": {
+        "min_impressions": null,
+        "max_impressions": null,
+        "min_spend": null,
+        "max_spend": null,
+        "start_date": null,
+        "end_date": null,
+        "media_type": null,
+        "publisher_platforms": null,
+        "languages": null,
+        "has_video": null,
+        "has_image": null,
+        "missing_data": "include"
+      },
+      "max_results": 2,
+      "page_size": 2,
+      "max_requests": 2,
+      "max_seconds": 30,
+      "proxy_profile": null,
+      "timeout": 30,
+      "max_retries": 3,
+      "rate_limit_delay": 1,
+      "jitter": 0.5,
+      "cookie_env": null
+    },
+    "cancel_requested": false
+  },
+  "ads": [
+    {
+      "id": "908825735077255",
+      "page": {
+        "id": "106084268591637",
+        "name": "Health & Science",
+        "page_url": "https://www.facebook.com/healthescience/"
+      },
+      "is_active": true,
+      "delivery_start_time": "2026-08-02T07:00:00+00:00",
+      "delivery_stop_time": "2026-10-25T07:00:00+00:00",
+      "creatives": [
+        {
+          "body": "I dealt with this pain for years. Over time, I’ve tried everything under the sun to fix it, but this is by far the winner. I use FisioRest every evening for 15 minutes before bed, and the pain is gone. I can finally sleep through the night. It might sound unbelievable, but truly, FisioRest has changed my life.",
+          "title": "Pain Relief Backed By Science",
+          "caption": "artuvate.co",
+          "description": "Results or Refund",
+          "cta_text": "Shop now",
+          "has_image": true,
+          "has_video": true
+        }
+      ],
+      "publisher_platforms": [
+        "FACEBOOK",
+        "INSTAGRAM",
+        "AUDIENCE_NETWORK",
+        "MESSENGER",
+        "THREADS"
+      ],
+      "ad_type": null,
+      "creative_count": 1,
+      "creatives_truncated": false,
+      "collected_at": "2026-10-25T16:02:46.635069+00:00",
+      "source_url": "https://www.facebook.com/ads/library/?id=908825735077255"
+    },
+    {
+      "id": "378025798657980",
+      "page": {
+        "id": "513402742166460",
+        "name": "TubShroom",
+        "page_url": "https://www.facebook.com/TubShroom/"
+      },
+      "is_active": true,
+      "delivery_start_time": "2024-08-08T07:00:00+00:00",
+      "delivery_stop_time": "2026-10-25T07:00:00+00:00",
+      "creatives": [
+        {
+          "body": "I need one of these!\n\nLike... right now... http://bit.ly/_TubShroom",
+          "title": "2018 Gadget of the Year",
+          "caption": "www.amazon.com/tubshroom",
+          "cta_text": "Learn more",
+          "has_image": true,
+          "has_video": true
+        }
+      ],
+      "publisher_platforms": [
+        "FACEBOOK",
+        "INSTAGRAM",
+        "AUDIENCE_NETWORK"
+      ],
+      "ad_type": null,
+      "creative_count": 1,
+      "creatives_truncated": false,
+      "collected_at": "2026-10-25T16:02:46.641078+00:00",
+      "source_url": "https://www.facebook.com/ads/library/?id=378025798657980"
+    }
+  ],
+  "next_offset": null,
+  "continuation": null,
+  "retrieval_pending": false,
+  "data_status": "partial",
+  "untrusted_ad_content": true
+}

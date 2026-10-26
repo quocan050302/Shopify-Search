@@ -1,0 +1,325 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { NextRequest } from "next/server";
+import {
+  isTrustedLocalDeployment,
+  resolveDeploymentSecurityPolicy,
+  resolveTrustedRequestContext,
+  resolveVerifiedServerBinding,
+  resolveAdminPrincipal,
+  validateAdminRequest,
+  requireAdminAuth,
+} from "@/services/security/adminAuth";
+
+describe("Admin Authentication Trust Boundary & Deployment Verification", () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.ADMIN_API_KEY;
+    delete process.env.SWAI_ADMIN_TOKEN;
+    delete process.env.ADMIN_SECRET;
+    delete process.env.SWAI_DEPLOYMENT_MODE;
+    delete process.env.SWAI_REMOTE_ACCESS;
+    delete process.env.SWAI_LOCAL_DESKTOP;
+    delete process.env.SWAI_REQUIRE_AUTH;
+    delete process.env.SWAI_E2E_SERVER;
+    delete process.env.HOST;
+    delete process.env.PORT;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  describe("resolveDeploymentSecurityPolicy", () => {
+    it("requires authentication when listener HOST is unspecified", () => {
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.localBypassAllowed).toBe(false);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("classifies verified loopback binding (127.0.0.1) as LOCAL_ONLY with bypass allowed", () => {
+      process.env.HOST = "127.0.0.1";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("LOCAL_ONLY");
+      expect(policy.localBypassAllowed).toBe(true);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("classifies verified loopback binding (localhost) as LOCAL_ONLY with bypass allowed", () => {
+      process.env.HOST = "localhost";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("LOCAL_ONLY");
+      expect(policy.localBypassAllowed).toBe(true);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("rejects public 0.0.0.0 binding even in development mode", () => {
+      process.env.HOST = "0.0.0.0";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "development";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.localBypassAllowed).toBe(false);
+    });
+
+    it("detects configuration conflict when SWAI_LOCAL_DESKTOP is true but HOST is 0.0.0.0", () => {
+      process.env.HOST = "0.0.0.0";
+      process.env.SWAI_LOCAL_DESKTOP = "true";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.configurationValid).toBe(false);
+      expect(policy.reason).toContain("Configuration conflict");
+    });
+
+    it("requires authentication on loopback when SWAI_REQUIRE_AUTH is true", () => {
+      process.env.HOST = "127.0.0.1";
+      process.env.SWAI_REQUIRE_AUTH = "true";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("LOCAL_ONLY");
+      expect(policy.localBypassAllowed).toBe(false);
+      expect(policy.configurationValid).toBe(true);
+    });
+
+    it("classifies non-loopback host interface as AUTHENTICATED_REMOTE", () => {
+      process.env.HOST = "192.168.1.119";
+      const policy = resolveDeploymentSecurityPolicy();
+      expect(policy.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(policy.localBypassAllowed).toBe(false);
+    });
+  });
+
+  describe("isTrustedLocalDeployment", () => {
+    it("returns false when HOST is unspecified even in development mode", () => {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "development";
+      expect(isTrustedLocalDeployment()).toBe(false);
+    });
+
+    it("returns true when HOST is 127.0.0.1 on loopback", () => {
+      process.env.HOST = "127.0.0.1";
+      expect(isTrustedLocalDeployment()).toBe(true);
+    });
+
+    it("returns true when SWAI_LOCAL_DESKTOP is explicitly true on loopback", () => {
+      process.env.HOST = "127.0.0.1";
+      process.env.SWAI_LOCAL_DESKTOP = "true";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+      expect(isTrustedLocalDeployment()).toBe(true);
+    });
+
+    it("returns false when SWAI_DEPLOYMENT_MODE is REMOTE", () => {
+      process.env.HOST = "127.0.0.1";
+      process.env.SWAI_DEPLOYMENT_MODE = "REMOTE";
+      expect(isTrustedLocalDeployment()).toBe(false);
+    });
+
+    it("returns false when SWAI_REMOTE_ACCESS is true", () => {
+      process.env.HOST = "127.0.0.1";
+      process.env.SWAI_REMOTE_ACCESS = "true";
+      expect(isTrustedLocalDeployment()).toBe(false);
+    });
+
+    it("returns false when server host is bound to public 0.0.0.0 even if SWAI_LOCAL_DESKTOP is set", () => {
+      process.env.HOST = "0.0.0.0";
+      process.env.SWAI_LOCAL_DESKTOP = "true";
+      expect(isTrustedLocalDeployment()).toBe(false);
+    });
+
+    it("returns false on cloud container platforms (Vercel, Render, etc.)", () => {
+      process.env.HOST = "127.0.0.1";
+      process.env.VERCEL = "1";
+      expect(isTrustedLocalDeployment()).toBe(false);
+    });
+  });
+
+  describe("resolveTrustedRequestContext", () => {
+    it("classifies genuine loopback request as LOCAL_DESKTOP with trustEstablished when server bound to loopback", () => {
+      process.env.HOST = "127.0.0.1";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.deploymentMode).toBe("LOCAL_DESKTOP");
+      expect(ctx.trustEstablished).toBe(true);
+      expect(ctx.authenticationRequired).toBe(false);
+    });
+
+    it("rejects loopback request when remote deployment mode is active", () => {
+      process.env.SWAI_DEPLOYMENT_MODE = "REMOTE";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.deploymentMode).toBe("REMOTE");
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
+    });
+
+    it("rejects non-loopback destination host", () => {
+      const req = new NextRequest("http://192.168.1.50:3000/api/v1/search");
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
+    });
+
+    it("rejects spoofed x-forwarded-for header from remote client", () => {
+      process.env.HOST = "127.0.0.1";
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { "x-forwarded-for": "203.0.113.195, 127.0.0.1" },
+      });
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
+      expect(ctx.reason).toContain("remote IP");
+    });
+
+    it("rejects spoofed x-real-ip header from remote client", () => {
+      process.env.HOST = "127.0.0.1";
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { "x-real-ip": "198.51.100.10" },
+      });
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
+      expect(ctx.reason).toContain("x-real-ip");
+    });
+
+    it("fails closed when host binding is 0.0.0.0 even if request says Host: localhost", () => {
+      process.env.HOST = "0.0.0.0";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const ctx = resolveTrustedRequestContext(req);
+      expect(ctx.trustEstablished).toBe(false);
+      expect(ctx.authenticationRequired).toBe(true);
+    });
+  });
+
+  describe("resolveAdminPrincipal & validateAdminRequest", () => {
+    it("fails closed for uncredentialed requests when HOST is unspecified", () => {
+      // HOST is undefined/unspecified
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("ADMIN_AUTH_REQUIRED");
+    });
+
+    it("authorizes local desktop researcher on genuine loopback without credentials", () => {
+      process.env.HOST = "127.0.0.1";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(true);
+      expect(result.principalId).toBe("local_dev_admin");
+      expect(result.authMode).toBe("LOCAL_DEV");
+    });
+
+    it("authorizes verified administrator when matching secret Bearer token provided", () => {
+      process.env.ADMIN_API_KEY = "vault_secret_token_999";
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Authorization: "Bearer vault_secret_token_999" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(true);
+      expect(result.principalId).toBe("admin_owner");
+      expect(result.authMode).toBe("OWNER_ADMIN");
+    });
+
+    it("strictly rejects invalid Bearer token even on localhost", () => {
+      process.env.ADMIN_API_KEY = "vault_secret_token_999";
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Authorization: "Bearer wrong_secret" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("INVALID_ADMIN_TOKEN");
+    });
+
+    it("strictly rejects explicit arbitrary Bearer token even when no server secret is configured", () => {
+      // No ADMIN_API_KEY configured
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Authorization: "Bearer arbitrary_unconfigured_token_456" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("INVALID_ADMIN_TOKEN");
+      expect(result.message).toContain("cannot be verified");
+    });
+
+    it("strictly rejects explicit cookie token when no server secret is configured", () => {
+      const req = new NextRequest("http://localhost:3000/api/v1/search", {
+        headers: { Cookie: "swai_admin_token=arbitrary_cookie_val" },
+      });
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("INVALID_ADMIN_TOKEN");
+    });
+
+    it("fails closed for remote requests without credentials", () => {
+      process.env.SWAI_DEPLOYMENT_MODE = "REMOTE";
+      const req = new NextRequest("http://localhost:3000/api/v1/search");
+      const result = resolveAdminPrincipal(req);
+      expect(result.authorized).toBe(false);
+      expect(result.code).toBe("ADMIN_AUTH_REQUIRED");
+    });
+  });
+
+  describe("validateServerBindingPolicy", () => {
+    it("rejects public 0.0.0.0 binding in local bypass mode", async () => {
+      const { validateServerBindingPolicy } = await import("@/services/security/adminAuth");
+      const res = validateServerBindingPolicy({ host: "0.0.0.0", allowLocalBypass: true });
+      expect(res.valid).toBe(false);
+      expect(res.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(res.localBypassAllowed).toBe(false);
+      expect(res.errors.length).toBeGreaterThan(0);
+    });
+
+    it("approves loopback 127.0.0.1 binding in local bypass mode", async () => {
+      const { validateServerBindingPolicy } = await import("@/services/security/adminAuth");
+      const res = validateServerBindingPolicy({ host: "127.0.0.1", allowLocalBypass: true });
+      expect(res.valid).toBe(true);
+      expect(res.mode).toBe("LOCAL_ONLY");
+      expect(res.localBypassAllowed).toBe(true);
+      expect(res.errors.length).toBe(0);
+    });
+  });
+
+  describe("requireAdminAuth", () => {
+    it("requires credentials for sensitive operations when secret is configured", () => {
+      process.env.ADMIN_API_KEY = "vault_secret_token_999";
+      const req = new NextRequest("http://localhost:3000/api/v1/settings/credentials", {
+        method: "POST",
+      });
+      const res = requireAdminAuth(req);
+      expect(res).not.toBeNull();
+      expect(res?.status).toBe(401);
+    });
+
+    it("permits sensitive operation with matching Bearer token", () => {
+      process.env.ADMIN_API_KEY = "vault_secret_token_999";
+      const req = new NextRequest("http://localhost:3000/api/v1/settings/credentials", {
+        method: "POST",
+        headers: { Authorization: "Bearer vault_secret_token_999" },
+      });
+      const res = requireAdminAuth(req);
+      expect(res).toBeNull();
+    });
+  });
+
+  describe("resolveVerifiedServerBinding", () => {
+    it("approves 127.0.0.1 as verified loopback", () => {
+      const res = resolveVerifiedServerBinding({ host: "127.0.0.1" });
+      expect(res.verifiedLoopback).toBe(true);
+      expect(res.mode).toBe("LOCAL_ONLY");
+      expect(res.localBypassAllowed).toBe(true);
+    });
+
+    it("rejects unspecified host as unverified", () => {
+      const res = resolveVerifiedServerBinding({});
+      expect(res.verifiedLoopback).toBe(false);
+      expect(res.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(res.localBypassAllowed).toBe(false);
+    });
+
+    it("rejects public 0.0.0.0 as non-loopback", () => {
+      const res = resolveVerifiedServerBinding({ host: "0.0.0.0" });
+      expect(res.verifiedLoopback).toBe(false);
+      expect(res.mode).toBe("AUTHENTICATED_REMOTE");
+      expect(res.localBypassAllowed).toBe(false);
+    });
+  });
+});
+

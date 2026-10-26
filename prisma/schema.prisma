@@ -163,6 +163,9 @@ model CompetitorAd {
   notes            ResearchNote[]
   researchDecisions ResearchDecision[]
   sourceIdentities AdSourceIdentity[]
+  runAds           DiscoveryRunAd[]
+  offerSnapshots   CompetitorOfferSnapshot[]
+  landingPageSnapshots LandingPageSnapshot[]
 
   @@index([platform, status])
   @@index([platform, lifecycleStatus])
@@ -241,6 +244,8 @@ model CompetitorStore {
   updatedAt         DateTime          @updatedAt
   advertiser        Advertiser?       @relation(fields: [advertiserId], references: [id], onDelete: SetNull)
   products          ResearchProduct[]
+  offerSnapshots    CompetitorOfferSnapshot[]
+  landingPageSnapshots LandingPageSnapshot[]
 
   @@map("competitor_stores")
 }
@@ -265,6 +270,13 @@ model ResearchProduct {
   demandObservations ProductDemandObservation[]
   evergreenScores    EvergreenProductScore[]
   researchDecisions  ResearchDecision[]
+  evidence               ResearchEvidence[]
+  offerSnapshots         CompetitorOfferSnapshot[]
+  landingPageSnapshots   LandingPageSnapshot[]
+  economicsScenarios     ProductEconomicsScenario[]
+  supplierQuotes         SupplierQuote[]
+  fulfillmentAssessments FulfillmentAssessment[]
+  opportunityAssessments ProductOpportunityAssessment[]
 
   @@index([category])
   @@map("research_products")
@@ -667,6 +679,7 @@ model DiscoveryRun {
   updatedAt              DateTime                @updatedAt
   schedule               DiscoverySchedule?      @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
   requestLedgers         ProviderRequestLedger[]
+  runAds                 DiscoveryRunAd[]
 
   @@index([workspaceId, status])
   @@index([providerId, createdAt])
@@ -715,4 +728,198 @@ model AdSourceIdentity {
   @@index([adId])
   @@map("ad_source_identities")
 }
+
+model DiscoveryRunAd {
+  id            String       @id @default(cuid())
+  runId         String
+  adId          String
+  workspaceId   String       @default("default-workspace")
+  providerId    String
+  libraryId     String?
+  ingestOutcome String       // NEW or EXISTING
+  sourceUrl     String?
+  observedAt    DateTime     @default(now())
+
+  run           DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  ad            CompetitorAd @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, adId])
+  @@index([workspaceId, runId])
+  @@index([adId])
+  @@map("discovery_run_ads")
+}
+
+// -------------------------------------------------------------
+// KH-01 — Product, Offer & Funnel Intelligence Engine Models
+// -------------------------------------------------------------
+
+model ResearchEvidence {
+  id                String           @id @default(cuid())
+  workspaceId       String?          @default("default-workspace")
+  subjectType       String           // PRODUCT, AD, STORE, OFFER, FUNNEL
+  subjectId         String
+  pillar            String           // PRODUCT, CREATIVE, OFFER, LANDING_PAGE, ECONOMICS, FULFILLMENT
+  claim             String
+  observedValue     String?
+  sourceUrl         String?
+  observationMethod String           // STOREFRONT_HTTP, META_LIBRARY_API, DOM_INSPECTION, USER_INPUT, MODEL_INFERENCE
+  classification    String           @default("SOURCE_OBSERVED") // SOURCE_OBSERVED, USER_ENTERED, USER_ESTIMATED, MODEL_INFERRED, SOURCE_SUBMITTED, SOURCE_REVIEWED, VERIFIED, UNKNOWN
+  sourceContentRef  String?          // Hash or snippet of observed DOM / text
+  observedAt        DateTime         @default(now())
+  verifiedAt        DateTime?
+  verifierActorId   String?
+  createdAt         DateTime         @default(now())
+  productId         String?
+  product           ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([subjectType, subjectId])
+  @@index([pillar])
+  @@index([classification])
+  @@map("research_evidence")
+}
+
+model CompetitorOfferSnapshot {
+  id                String           @id @default(cuid())
+  workspaceId       String?          @default("default-workspace")
+  productId         String?
+  storeId           String?
+  adId              String?
+  sourceUrl         String
+  finalUrl          String?
+  currency          String           @default("USD")
+  sellingPrice      Float?
+  compareAtPrice    Float?
+  bundleQuantity    Int              @default(1)
+  hasFreeShipping   Boolean          @default(false)
+  shippingThreshold Float?
+  availability      String           @default("UNKNOWN")
+  offerDataJson     String           // JSON of variants, promotions, warranties, gifts
+  evidenceJson      String           // JSON of source claims & selectors
+  snapshotHash      String
+  observedAt        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  product           ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store             CompetitorStore? @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  ad                CompetitorAd?    @relation(fields: [adId], references: [id], onDelete: SetNull)
+
+  @@index([productId, observedAt])
+  @@index([storeId, observedAt])
+  @@index([snapshotHash])
+  @@map("competitor_offer_snapshots")
+}
+
+model LandingPageSnapshot {
+  id                String           @id @default(cuid())
+  workspaceId       String?          @default("default-workspace")
+  productId         String?
+  storeId           String?
+  adId              String?
+  originalUrl       String
+  finalUrl          String?
+  httpStatus        Int              @default(200)
+  accessStatus      String           @default("SUCCESS") // SUCCESS, ACCESS_RESTRICTED, RATE_LIMITED, NOT_FOUND, FAILED
+  pageTitle         String?
+  metaDescription   String?
+  contentHash       String
+  observationsJson  String           // JSON: structure, hero, CTA, reviews, FAQ, return policy
+  croSignalsJson    String           // JSON: above-the-fold, trust signals, friction points
+  messageMatchJson  String?          // JSON: ad vs landing page promise match
+  warningsJson      String?          // JSON: array of data limitations / warnings
+  analysisVersion   String           @default("11.4.0")
+  observedAt        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  product           ResearchProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store             CompetitorStore? @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  ad                CompetitorAd?    @relation(fields: [adId], references: [id], onDelete: SetNull)
+
+  @@index([productId, observedAt])
+  @@index([storeId, observedAt])
+  @@index([contentHash])
+  @@map("landing_page_snapshots")
+}
+
+model ProductEconomicsScenario {
+  id                       String          @id @default(cuid())
+  workspaceId              String?         @default("default-workspace")
+  productId                String
+  scenarioName             String          // Base, Conservative, Optimistic, Bundle, Custom
+  inputsJson               String          // JSON of financial assumptions
+  outputsJson              String          // JSON of calculated net revenue, contribution, breakEvenCpa, targetRoas
+  assumptionProvenanceJson String          // JSON tracking user estimate vs verified quote
+  calculationVersion       String          @default("11.4.0")
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  product                  ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@map("product_economics_scenarios")
+}
+
+model SupplierQuote {
+  id                   String          @id @default(cuid())
+  workspaceId          String?         @default("default-workspace")
+  productId            String
+  supplierName         String
+  productIdentifier    String?         // SKU or supplier URL
+  currency             String          @default("USD")
+  unitCost             Float
+  moq                  Int             @default(1)
+  processingTimeDays   Int?
+  shippingCostEstimate Float?
+  shippingLeadTimeDays Int?
+  destinationCountry   String          @default("US")
+  quoteSource          String          // SUPPLIER_INVOICE, DIRECT_CHAT, ALIBABA_LISTING, CJ_DROPSHIPPING, USER_ESTIMATE
+  quoteDate            DateTime        @default(now())
+  evidenceReference    String?         // File link or URL
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  product              ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, quoteDate])
+  @@map("supplier_quotes")
+}
+
+model FulfillmentAssessment {
+  id                  String          @id @default(cuid())
+  workspaceId         String?         @default("default-workspace")
+  productId           String
+  productWeightGrams  Float?
+  packageDimensionsCm String?         // LxWxH
+  isFragile           Boolean         @default(false)
+  hasBatteryOrLiquid  Boolean         @default(false)
+  regulatoryNotes     String?
+  overallRiskLevel    String          @default("UNKNOWN") // LOW, MODERATE, HIGH, UNKNOWN
+  risksJson           String          // JSON of identified risks
+  criticalGapsJson    String          // JSON of missing operational inputs
+  assessmentVersion   String          @default("11.4.0")
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  product             ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("fulfillment_assessments")
+}
+
+model ProductOpportunityAssessment {
+  id                          String          @id @default(cuid())
+  workspaceId                 String?         @default("default-workspace")
+  productId                   String
+  methodologyVersion          String          @default("11.4.0")
+  opportunityScore            Float?          // 0-100 or null if insufficient evidence
+  evidenceReadinessScore      Float?          // 0-100 completeness of factual evidence
+  pillarsJson                 String          // JSON containing product, creative, offer, landingPage, economics, fulfillment assessments
+  strengthsJson               String          // JSON array of strings
+  risksJson                   String          // JSON array of strings
+  missingCriticalEvidenceJson String          // JSON array of strings
+  recommendation              String          // RESEARCH_MORE, SHORTLIST, TEST_CANDIDATE, REJECT
+  recommendationRationale     String
+  testReadinessStatus         String          @default("BLOCKED_MISSING_DATA") // ELIGIBLE, BLOCKED_MISSING_DATA, USER_OVERRIDE
+  createdAt                   DateTime        @default(now())
+  updatedAt                   DateTime        @updatedAt
+  product                     ResearchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@map("product_opportunity_assessments")
+}
+
 

@@ -1,0 +1,86 @@
+[
+  {
+    "gateId": "GATE_01_CORRECT_BRANCH",
+    "description": "Acceptance executed strictly on feature/v11-meta-collector-remove-muse",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_02_ACTIVE_DB_PROTECTED",
+    "description": "Database isolation strictly protects active user/dev database",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_03_AUTH_TRUST_BOUNDARY",
+    "description": "Remote HTTP headers (Host, x-forwarded-for, x-real-ip) cannot spoof administrator access",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_04_WORKSPACE_ISOLATION",
+    "description": "Multi-tenant workspace isolation enforced across all Ads endpoints and fallback queries",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_05_EXACT_RUN_COMPLETENESS",
+    "description": "Exact research run displays 100% authentic run ads without 30-day age filtering",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_06_READINESS_SUBMISSION_POLICY",
+    "description": "Research submission strictly enforced; UNKNOWN and LOADING cannot create jobs",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_07_PROVENANCE_INTEGRITY",
+    "description": "Advertising provenance preserved without fabricated impressions, sales, or ROAS",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_08_GENUINE_CONCURRENCY_PROOF",
+    "description": "True multi-process mutual exclusion and lease renewal proven across independent workers",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_09_GENUINE_CRASH_RECOVERY",
+    "description": "Worker crash recovery and stale write protection verified under adversarial conditions",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_10_TYPESCRIPT_PASSED",
+    "description": "TypeScript compilation passes with zero errors under strict mode",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_11_PRODUCTION_BUILD_PASSED",
+    "description": "Next.js production build completes successfully with zero bundle errors",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_12_UNIFIED_JOURNEY_E2E",
+    "description": "Continuous research journey executed from creation through worker to browser UI",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_13_TEST_TRUTHFULNESS_VERIFIED",
+    "description": "Acceptance runner truthfulness verified; reports cannot inherit PASS from missing/skipped tests",
+    "status": "PASSED",
+    "criticality": "MANDATORY"
+  },
+  {
+    "gateId": "GATE_14_LIVE_META_SOURCE",
+    "description": "Live Meta Ad Library extraction verified via local MCP collector (optional opt-in)",
+    "status": "NOT_RUN",
+    "criticality": "OPTIONAL"
+  }
+]

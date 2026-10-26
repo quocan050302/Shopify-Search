@@ -112,20 +112,10 @@ export interface DiscoveryProviderCapabilities {
   lastVerificationError?: string | null;
 }
 
-// ─── Platforms & Execution Modes ─────────────────────────────────────────────
+// ─── Platforms ─────────────────────────────────────────────────────────────
 
 export const DISCOVERY_PLATFORMS = ["TIKTOK", "META"] as const;
 export type DiscoveryPlatform = (typeof DISCOVERY_PLATFORMS)[number];
-
-export const MUSE_EXECUTION_MODES = [
-  "MUSE_ASSISTED_ON_DEMAND",
-  "MUSE_CONNECTED_AGENT",
-  "MUSE_SCHEDULED_VERIFIED",
-  "META_OFFICIAL_API",
-  "MANUAL_IMPORT",
-  "LOCAL_DATABASE_SEARCH",
-] as const;
-export type MuseExecutionMode = (typeof MUSE_EXECUTION_MODES)[number];
 
 export interface SourceEvidence {
   sourceUrl: string;
@@ -137,6 +127,7 @@ export interface SourceEvidence {
   facebookPlacement?: "CONFIRMED" | "POSSIBLE" | "UNKNOWN";
   marketEvidence?: "QUERY_FILTER" | "CONFIRMED_DELIVERY" | "UNKNOWN";
   notes?: string | null;
+  creativeVariants?: unknown[];
 }
 
 export const SourceEvidenceSchema = z.object({
@@ -149,6 +140,7 @@ export const SourceEvidenceSchema = z.object({
   facebookPlacement: z.enum(["CONFIRMED", "POSSIBLE", "UNKNOWN"]).optional(),
   marketEvidence: z.enum(["QUERY_FILTER", "CONFIRMED_DELIVERY", "UNKNOWN"]).optional(),
   notes: z.string().nullable().optional(),
+  creativeVariants: z.array(z.any()).optional(),
 });
 
 // ─── Discovery Query ────────────────────────────────────────────────────────
@@ -161,6 +153,17 @@ export const DiscoveryQuerySchema = z.object({
   industries: z.array(z.string()).default([]),
   objectives: z.array(z.string()).default([]),
   searchWindowDays: z.union([z.literal(7), z.literal(30), z.literal(180)]).default(30),
+  launchWithinDays: z.union([
+    z.literal(7),
+    z.literal(14),
+    z.literal(30),
+    z.literal(60),
+    z.literal(90),
+    z.literal(180),
+  ]).optional(),
+  creativePreference: z.enum(["VIDEO", "IMAGE", "ALL"]).default("ALL").optional(),
+  activeStatus: z.enum(["ACTIVE", "INACTIVE", "ALL"]).default("ACTIVE").optional(),
+  advertiserPageId: z.string().optional(),
   sortBy: z.enum(["relevance", "likes", "ctr", "first_seen"]).default("relevance"),
   requestedLimit: z.number().int().min(1).max(500).default(50),
   pageSize: z.number().int().min(5).max(100).default(20),
@@ -236,6 +239,10 @@ export interface DiscoveryPageResult {
   nextCursor?: string | null;
   hasMore: boolean;
   requestId?: string | null;
+  transport?: string;
+  isFixture?: boolean;
+  upstreamRequestExecuted?: boolean;
+  upstreamResponseObserved?: boolean;
   usage?: {
     creditsUsed: number;
     costUsd?: number;

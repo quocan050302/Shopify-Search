@@ -1,0 +1,16 @@
+{
+  "status": "NOT_RUN",
+  "detailedOutcome": "NOT_RUN",
+  "levelsVerified": [],
+  "runId": null,
+  "source": "https://www.facebook.com/ads/library/",
+  "retrievedCount": 0,
+  "validCount": 0,
+  "linkedCount": 0,
+  "displayedCount": 0,
+  "evidenceReferences": [
+    "Live source testing not requested (opt-in only via --live-meta)"
+  ],
+  "startedAt": "2026-10-25T11:38:57.667Z",
+  "completedAt": "2026-10-25T11:38:57.667Z"
+}

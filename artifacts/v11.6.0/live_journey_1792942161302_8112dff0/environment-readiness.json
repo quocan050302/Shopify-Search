@@ -1,0 +1,11 @@
+{
+  "pythonBinary": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+  "collectorDataDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/data",
+  "collectorVersion": "1.7.0",
+  "extensionVersion": "0.1.0",
+  "transport": "stdio",
+  "persistentWorkerAlive": false,
+  "sourceMode": "REAL_LIVE_META",
+  "mockBoundaryEnabled": false,
+  "timestamp": "2026-10-25T15:29:22.022Z"
+}

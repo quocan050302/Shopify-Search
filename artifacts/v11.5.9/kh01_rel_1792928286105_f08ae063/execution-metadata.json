@@ -1,0 +1,11 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+  "branch": "feature/v11-meta-collector-remove-muse",
+  "startedAt": "2026-10-25T11:38:06.105Z",
+  "completedAt": "2026-10-25T11:38:57.667Z",
+  "requestedScope": "OFFLINE",
+  "overallStatus": "CONDITIONALLY_ACCEPTED",
+  "targetMarket": "US",
+  "operatingMode": "RESEARCH_ONLY"
+}

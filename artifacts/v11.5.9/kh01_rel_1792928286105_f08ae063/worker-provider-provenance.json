@@ -1,0 +1,18 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "discoveryRunId": "",
+  "workerPid": 0,
+  "requestedMode": "OFFLINE_FIXTURE",
+  "providerId": "meta-ads-collector",
+  "actualTransport": "none_offline",
+  "observedSourceType": "TEST_FIXTURE",
+  "fixtureDetected": true,
+  "upstreamRequestExecuted": false,
+  "upstreamResponseObserved": false,
+  "upstreamResultSetId": null,
+  "upstreamAdIds": [],
+  "validAdsCollected": 0,
+  "observedAt": "2026-10-25T11:38:59.654Z",
+  "evidenceOrigin": "SYNTHETIC_FALLBACK",
+  "errors": []
+}

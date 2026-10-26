@@ -20,6 +20,7 @@ import {
 } from "@/services/video/videoSourceResolver";
 
 interface AdVideoPlayerProps {
+  mediaType?: "VIDEO" | "IMAGE" | "CAROUSEL" | "UNKNOWN";
   videoUrl?: string | null;
   embedUrl?: string | null;
   thumbnailUrl?: string | null;
@@ -68,7 +69,7 @@ function UnavailablePanel({
     NO_VIDEO_SOURCE:
       "No video source is available for this advertisement record.",
     EXPIRED_OR_UNAVAILABLE:
-      "This video has been removed or is no longer available.",
+      "This media has expired or is no longer available from the platform CDN.",
   };
 
   const msg =
@@ -86,7 +87,7 @@ function UnavailablePanel({
           ? "Demo Video — Not Real Ad"
           : resolution.restriction === "SYNTHETIC_SOURCE"
           ? "Demonstration Record"
-          : "Video Not Available Inline"}
+          : "Media Unavailable Inline"}
       </p>
       <p className="text-[10px] text-slate-500 mb-3 max-w-xs leading-relaxed">{msg}</p>
 
@@ -96,6 +97,7 @@ function UnavailablePanel({
             href={resolution.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-[11px] font-medium hover:bg-indigo-600/30 transition-colors"
           >
             <span>Open on {label}</span>
@@ -104,7 +106,10 @@ function UnavailablePanel({
         )}
         {onRetry && (
           <button
-            onClick={onRetry}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRetry();
+            }}
             className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-md bg-slate-800 text-slate-400 text-[10px] hover:bg-slate-700 transition-colors"
           >
             <RefreshCw className="h-2.5 w-2.5" />
@@ -162,7 +167,6 @@ function TikTokOEmbedPlayer({
         sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-same-origin allow-top-navigation"
         onError={() => setFailed(true)}
       />
-      {/* Reliable external fallback — iframe onError is unreliable in browsers */}
       <div className="absolute bottom-1.5 right-1.5">
         <a
           href={sourceUrl || playbackUrl}
@@ -237,7 +241,6 @@ function DirectVideoPlayer({
         }}
         className="w-full h-full object-cover"
       />
-      {/* Mute toggle */}
       <button
         onClick={() => setMuted((m) => !m)}
         className="absolute top-2 left-2 p-1 rounded-full bg-black/70 text-white hover:bg-black/90 transition-colors"
@@ -249,54 +252,70 @@ function DirectVideoPlayer({
   );
 }
 
-// ─── Idle Thumbnail / Preview State ──────────────────────────────────────────
+// ─── Idle Thumbnail / Image Creative State ─────────────────────────────────────
 
 function IdleThumbnail({
   resolution,
   thumbnailUrl,
   aspectClass,
   platform,
+  mediaType,
   onPlay,
 }: {
   resolution: VideoSourceResult;
   thumbnailUrl?: string | null;
   aspectClass: string;
   platform: string;
+  mediaType?: "VIDEO" | "IMAGE" | "CAROUSEL" | "UNKNOWN";
   onPlay: () => void;
 }) {
-  const validThumb = thumbnailUrl && !isStockImage(thumbnailUrl) ? thumbnailUrl : null;
+  const [imageError, setImageError] = useState(false);
+  const validThumb = thumbnailUrl && !isStockImage(thumbnailUrl) && !imageError ? thumbnailUrl : null;
+
+  const isImageOrCarousel = mediaType === "IMAGE" || mediaType === "CAROUSEL";
   const canPlayInline =
-    resolution.strategy === "TIKTOK_OEMBED" ||
-    resolution.strategy === "DIRECT_VIDEO";
+    !isImageOrCarousel &&
+    (resolution.strategy === "TIKTOK_OEMBED" || resolution.strategy === "DIRECT_VIDEO");
 
   const isUnavailable =
-    resolution.strategy === "OPEN_SOURCE" ||
-    resolution.strategy === "UNAVAILABLE";
+    !canPlayInline &&
+    (resolution.strategy === "OPEN_SOURCE" || resolution.strategy === "UNAVAILABLE");
 
-  const handleClick = () => {
-    if (isUnavailable && resolution.sourceUrl) {
-      window.open(resolution.sourceUrl, "_blank", "noopener,noreferrer");
-    } else if (canPlayInline) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (canPlayInline) {
       onPlay();
+    } else if (resolution.sourceUrl) {
+      window.open(resolution.sourceUrl, "_blank", "noopener,noreferrer");
     }
   };
 
   return (
     <div
       onClick={handleClick}
-      className={`relative w-full ${aspectClass} bg-slate-900 rounded-lg overflow-hidden border border-slate-800 group cursor-pointer`}
+      className={`relative w-full ${aspectClass} bg-slate-900 rounded-lg overflow-hidden border border-slate-800 group cursor-pointer transition-all`}
     >
-      {/* Thumbnail */}
+      {/* Thumbnail or Creative Image */}
       {validThumb ? (
         <img
           src={validThumb}
-          alt="Ad creative thumbnail"
+          alt="Ad creative preview"
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageError(true)}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 gap-1">
-          <Film className="h-8 w-8 text-slate-700" />
-          <span className="text-[9px] text-slate-600">No thumbnail</span>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-3 text-center gap-1.5">
+          <Film className="h-7 w-7 text-slate-700" />
+          <span className="text-[10px] font-medium text-slate-500">
+            {imageError ? "Media Unavailable" : "No preview available"}
+          </span>
+          {resolution.sourceUrl && (
+            <span className="text-[9px] text-indigo-400 hover:underline">
+              Inspect on {getPlatformLabel(platform)}
+            </span>
+          )}
         </div>
       )}
 
@@ -308,43 +327,41 @@ function IdleThumbnail({
       )}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-slate-950/30 group-hover:bg-slate-950/10 transition-colors" />
+      {validThumb && (
+        <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/5 transition-colors" />
+      )}
 
-      {/* Play / External button */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {canPlayInline ? (
-          <div className="h-12 w-12 rounded-full bg-indigo-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-indigo-500 transition-all">
-            <Play className="h-5 w-5 ml-0.5 fill-current" />
-          </div>
-        ) : (
-          <div className="h-12 w-12 rounded-full bg-slate-700/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-slate-600 transition-all">
-            <ExternalLink className="h-4 w-4" />
-          </div>
-        )}
-      </div>
-
-      {/* Restriction notice */}
-      {isUnavailable && (
-        <div className="absolute top-2 inset-x-2 flex items-center gap-1 px-2 py-0.5 rounded bg-amber-900/80 backdrop-blur-sm text-[9px] font-medium text-amber-300 border border-amber-700/30">
-          <AlertCircle className="h-2.5 w-2.5 shrink-0" />
-          <span className="truncate">
-            {resolution.restriction === "META_RENDER_AD_REQUIRES_AUTH"
-              ? "Opens on Meta Ad Library"
-              : resolution.restriction === "TIKTOK_TOPADS_NOT_EMBEDDABLE"
-              ? "Opens on TikTok Creative Center"
-              : resolution.restriction === "SYNTHETIC_SOURCE"
-              ? "Demo record"
-              : resolution.restriction === "SAMPLE_MEDIA_REJECTED"
-              ? "Demo video — not real ad"
-              : `Opens on ${getPlatformLabel(platform)}`}
-          </span>
+      {/* Play Icon (Video only) vs External Link / Creative Badge */}
+      {validThumb && !isImageOrCarousel && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {canPlayInline ? (
+            <div className="h-10 w-10 rounded-full bg-indigo-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-indigo-500 transition-all">
+              <Play className="h-4 w-4 ml-0.5 fill-current" />
+            </div>
+          ) : (
+            <div className="h-9 w-9 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center shadow-md group-hover:scale-110 group-hover:bg-black/80 transition-all">
+              <ExternalLink className="h-4 w-4 text-slate-200" />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Strategy badge */}
-      {canPlayInline && (
-        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-semibold text-white uppercase border border-white/10">
-          {resolution.strategy === "TIKTOK_OEMBED" ? "TIKTOK" : platform}
+      {/* Format badge in top-right */}
+      <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[9px] font-semibold text-white uppercase border border-white/10 flex items-center gap-1 pointer-events-none">
+        {mediaType === "IMAGE"
+          ? "IMAGE"
+          : mediaType === "CAROUSEL"
+          ? "CAROUSEL"
+          : mediaType === "VIDEO"
+          ? "VIDEO"
+          : platform}
+      </div>
+
+      {/* Open on source badge in bottom-left */}
+      {validThumb && (
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+          <ExternalLink className="h-2.5 w-2.5" />
+          <span>{getPlatformLabel(platform)}</span>
         </div>
       )}
     </div>
@@ -354,24 +371,32 @@ function IdleThumbnail({
 // ─── Main AdVideoPlayer Component ────────────────────────────────────────────
 
 export function AdVideoPlayer({
+  mediaType = "UNKNOWN",
   videoUrl,
   embedUrl,
   thumbnailUrl,
   originalAdUrl,
   externalAdId,
   platform,
-  aspectRatio = "9:16",
+  aspectRatio,
   autoplay = false,
   status,
 }: AdVideoPlayerProps) {
   const [phase, setPhase] = useState<PlayerPhase>(autoplay ? "PLAYING" : "IDLE");
 
+  // Determine aspect ratio class honestly (Phase 7, Item 82)
   const aspectClass =
     aspectRatio === "1:1"
       ? "aspect-square"
       : aspectRatio === "16:9"
       ? "aspect-video"
-      : "aspect-[9/16]";
+      : aspectRatio === "4:5"
+      ? "aspect-[4/5]"
+      : aspectRatio === "9:16"
+      ? "aspect-[9/16]"
+      : mediaType === "IMAGE"
+      ? "aspect-square"
+      : "aspect-[4/5]";
 
   const resolution = resolveVideoSource({
     platform,
@@ -388,6 +413,7 @@ export function AdVideoPlayer({
         thumbnailUrl={thumbnailUrl}
         aspectClass={aspectClass}
         platform={platform}
+        mediaType={mediaType}
         onPlay={() => setPhase("PLAYING")}
       />
     );

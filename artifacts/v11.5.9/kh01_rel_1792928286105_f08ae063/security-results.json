@@ -1,0 +1,48 @@
+{
+  "stageId": "STAGE_03A_SECURITY_SUITE",
+  "name": "Execute Admin Auth & Multi-Tenant Scoping Security Tests",
+  "command": "npx vitest run tests/unit/adminAuthTrustBoundary.test.ts tests/integration/legacyAdsWorkspaceIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+  "status": "PASSED",
+  "exitCode": 0,
+  "durationMs": 1132,
+  "startedAt": "2026-10-25T11:38:08.273Z",
+  "completedAt": "2026-10-25T11:38:09.405Z",
+  "assertions": [
+    {
+      "assertionId": "GATE_03_AUTH_TRUST_BOUNDARY",
+      "stageId": "STAGE_03A_SECURITY_SUITE",
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "status": "PASSED",
+      "startedAt": "2026-10-25T11:38:08.273Z",
+      "completedAt": "2026-10-25T11:38:09.405Z",
+      "evidenceType": "TEST_ASSERTION",
+      "evidenceReference": "Vitest: \"tests/unit/adminAuthTrustBoundary.test.ts::Admin Authentication Trust Boundary & Deployment Verification resolveTrustedRequestContext rejects spoofed x-forwarded-for header from remote client\" (PASSED, 0.3832079999999962ms)",
+      "error": null
+    },
+    {
+      "assertionId": "GATE_04_WORKSPACE_ISOLATION",
+      "stageId": "STAGE_03A_SECURITY_SUITE",
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "status": "PASSED",
+      "startedAt": "2026-10-25T11:38:08.273Z",
+      "completedAt": "2026-10-25T11:38:09.405Z",
+      "evidenceType": "TEST_ASSERTION",
+      "evidenceReference": "Vitest: \"tests/integration/legacyAdsWorkspaceIsolation.test.ts::Legacy Ads API Workspace Scoping & Isolation Integration Workspace A caller querying GET /api/v1/ads receives ONLY Workspace A ads\" (PASSED, 19.00875000000002ms)",
+      "error": null
+    }
+  ],
+  "envelope": {
+    "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+    "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+    "stageId": "STAGE_03A_SECURITY_SUITE",
+    "command": "npx vitest run tests/unit/adminAuthTrustBoundary.test.ts tests/integration/legacyAdsWorkspaceIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+    "startedAt": "2026-10-25T11:38:08.273Z",
+    "completedAt": "2026-10-25T11:38:09.405Z",
+    "processId": null,
+    "exitCode": 0,
+    "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+    "reportSha256": "0570f69abf7f0aa2e8f3818a0c91662112698788ff69919134b0135c49143cb3",
+    "reportCreatedDuringExecution": true,
+    "executionIdentityVerified": true
+  }
+}

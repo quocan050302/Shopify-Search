@@ -1,0 +1,92 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "status": "PASSED",
+  "totalBrowserAssertions": 2,
+  "passedAssertions": 2,
+  "failedAssertions": 0,
+  "notRunAssertions": 0,
+  "suites": [
+    {
+      "name": "tests/integration/kh01UnifiedJourney.test.ts (Browser UI)",
+      "status": "PASSED",
+      "exitCode": 0
+    },
+    {
+      "name": "tests/e2e/metaDiscoveryFinalAcceptance.test.ts (6 Viewports)",
+      "status": "PASSED",
+      "exitCode": 0
+    }
+  ],
+  "browserAssertions": [
+    {
+      "assertionId": "GATE_12_UNIFIED_JOURNEY_E2E",
+      "stageId": "STAGE_05_UNIFIED_JOURNEY",
+      "status": "PASSED",
+      "evidenceReference": "Vitest: \"tests/integration/kh01UnifiedJourney.test.ts::KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Worker -> DB -> HTTP -> Browser) Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data\" (PASSED, 7966.493208ms)",
+      "observedAt": "2026-10-25T11:38:36.749Z"
+    },
+    {
+      "assertionId": "ASSERTION_STAGE_08_BROWSER_E2E",
+      "stageId": "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+      "status": "PASSED",
+      "evidenceReference": "Vitest: \"tests/e2e/metaDiscoveryFinalAcceptance.test.ts::Meta Discovery Final Acceptance E2E (Section 18 & 25) verifies layout responsiveness across all 6 canonical viewports without horizontal overflow (Section 18)\" (PASSED, 1046.0033750000002ms)",
+      "observedAt": "2026-10-25T11:38:57.665Z"
+    }
+  ],
+  "viewportsTested": [
+    "1920x1080",
+    "1440x900",
+    "1280x800",
+    "1024x768",
+    "768x1024",
+    "390x844"
+  ],
+  "canonicalMissingViewports": [],
+  "screenshots": [
+    {
+      "viewport": "1920x1080",
+      "relativePath": "screenshots/viewport_1920x1080.png",
+      "fileSizeBytes": 159569,
+      "sha256": "bfbc16c2c8f500f4788672d6a6f007d106173a0a22b08bdbc38547d30f4a9037",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1440x900",
+      "relativePath": "screenshots/viewport_1440x900.png",
+      "fileSizeBytes": 153118,
+      "sha256": "29fb51a0049320e7c1246a173e489d9257697f402794c9c286d598544143bbce",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1280x800",
+      "relativePath": "screenshots/viewport_1280x800.png",
+      "fileSizeBytes": 138873,
+      "sha256": "c946b0784a01f07dc73738379a40c1481c90bee80ef0823a5bc64ee7f80b1f4c",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1024x768",
+      "relativePath": "screenshots/viewport_1024x768.png",
+      "fileSizeBytes": 127699,
+      "sha256": "d339d0b8cd99164df9c73600e0db5eebf026ba857b0c28b94595d7a76fd9b9b8",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "768x1024",
+      "relativePath": "screenshots/viewport_768x1024.png",
+      "fileSizeBytes": 143126,
+      "sha256": "511f08b4988a51f85b34c0aefa019249eed0b70d4f9fa37bcf85261c7cb0f872",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "390x844",
+      "relativePath": "screenshots/viewport_390x844.png",
+      "fileSizeBytes": 70629,
+      "sha256": "f38aae7fe8090d2154b431a4de1bdddafe2fe94b3e24dc001c73ccef829f24f3",
+      "status": "PASSED"
+    }
+  ],
+  "evidenceFile": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/browser-viewport-results.json",
+  "evidenceOrigin": "ACTUAL_BROWSER_OBSERVATION",
+  "observedAt": "2026-10-25T11:38:59.654Z"
+}

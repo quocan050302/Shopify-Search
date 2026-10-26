@@ -1,0 +1,49 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "capturedAt": "2026-10-25T11:38:59.655Z",
+  "totalScreenshots": 6,
+  "screenshots": [
+    {
+      "viewport": "1920x1080",
+      "relativePath": "screenshots/viewport_1920x1080.png",
+      "fileSizeBytes": 159569,
+      "sha256": "bfbc16c2c8f500f4788672d6a6f007d106173a0a22b08bdbc38547d30f4a9037",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1440x900",
+      "relativePath": "screenshots/viewport_1440x900.png",
+      "fileSizeBytes": 153118,
+      "sha256": "29fb51a0049320e7c1246a173e489d9257697f402794c9c286d598544143bbce",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1280x800",
+      "relativePath": "screenshots/viewport_1280x800.png",
+      "fileSizeBytes": 138873,
+      "sha256": "c946b0784a01f07dc73738379a40c1481c90bee80ef0823a5bc64ee7f80b1f4c",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "1024x768",
+      "relativePath": "screenshots/viewport_1024x768.png",
+      "fileSizeBytes": 127699,
+      "sha256": "d339d0b8cd99164df9c73600e0db5eebf026ba857b0c28b94595d7a76fd9b9b8",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "768x1024",
+      "relativePath": "screenshots/viewport_768x1024.png",
+      "fileSizeBytes": 143126,
+      "sha256": "511f08b4988a51f85b34c0aefa019249eed0b70d4f9fa37bcf85261c7cb0f872",
+      "status": "PASSED"
+    },
+    {
+      "viewport": "390x844",
+      "relativePath": "screenshots/viewport_390x844.png",
+      "fileSizeBytes": 70629,
+      "sha256": "f38aae7fe8090d2154b431a4de1bdddafe2fe94b3e24dc001c73ccef829f24f3",
+      "status": "PASSED"
+    }
+  ]
+}

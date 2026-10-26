@@ -1,0 +1,15 @@
+{
+  "journeyRunId": "live_journey_1792944162460_43d147db",
+  "discoveryRunId": "cmvo0nyy10001bug9tq1tsrtu",
+  "startedAt": "2026-10-25T16:02:42.460Z",
+  "completedAt": "2026-10-25T16:03:14.668Z",
+  "options": {
+    "keyword": "gadget",
+    "market": "US",
+    "limit": 25,
+    "isolatedDb": true,
+    "realSource": true
+  },
+  "verdict": "VERIFIED",
+  "success": true
+}

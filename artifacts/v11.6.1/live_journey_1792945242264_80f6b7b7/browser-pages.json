@@ -1,0 +1,57 @@
+[
+  {
+    "pageNumber": 1,
+    "reportedTotalPages": 3,
+    "reportedTotalCount": 25,
+    "adIds": [
+      "cmvo1bjn8008l89g93gawqp5p",
+      "cmvo1bjn3008e89g9cj4q6ygv",
+      "cmvo1bjmz008789g93vpzqom3",
+      "cmvo1bjmv008189g9ufnsq559",
+      "cmvo1bjmq007v89g9dt8tgfsh",
+      "cmvo1bjmm007o89g974z8036a",
+      "cmvo1bjmh007h89g9l3i29gci",
+      "cmvo1bjmd007a89g9rtojb0du",
+      "cmvo1bjm8007389g9e5nzzbis",
+      "cmvo1bjm3006w89g9txd6xmfp",
+      "cmvo1bjly006p89g9rzbh71hv",
+      "cmvo1bjlt006i89g9u4x7x9g6"
+    ],
+    "screenshotPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.6.1/live_journey_1792945242264_80f6b7b7/explorer-page-1.png",
+    "requestUrl": "http://127.0.0.1:56018/explorer?platform=META&requestId=cmvo1b3sv000182g931m985su",
+    "errors": []
+  },
+  {
+    "pageNumber": 2,
+    "reportedTotalPages": 3,
+    "reportedTotalCount": 25,
+    "adIds": [
+      "cmvo1bjlo006b89g9pye7obq7",
+      "cmvo1bjlj006489g9t1gm0fhq",
+      "cmvo1bjle005x89g99zs1qp7u",
+      "cmvo1bjl9005r89g90kef8lbq",
+      "cmvo1bjl4005l89g9mpksb1b5",
+      "cmvo1bjkw005e89g9103fkxn0",
+      "cmvo1bjkr005789g94q0h5ug1",
+      "cmvo1bjkm005189g9ebz83ssv",
+      "cmvo1bjkh004u89g9o5fb2yai",
+      "cmvo1bjka004n89g9cp1a0jjp",
+      "cmvo1bjk5004h89g9k7dh1151",
+      "cmvo1bjjz004a89g9ivmoq4u8"
+    ],
+    "screenshotPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.6.1/live_journey_1792945242264_80f6b7b7/explorer-page-2.png",
+    "requestUrl": "http://127.0.0.1:56018/explorer?platform=META&requestId=cmvo1b3sv000182g931m985su",
+    "errors": []
+  },
+  {
+    "pageNumber": 3,
+    "reportedTotalPages": 3,
+    "reportedTotalCount": 25,
+    "adIds": [
+      "cmvo1bjjs004389g92edt484m"
+    ],
+    "screenshotPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.6.1/live_journey_1792945242264_80f6b7b7/explorer-page-3.png",
+    "requestUrl": "http://127.0.0.1:56018/explorer?platform=META&requestId=cmvo1b3sv000182g931m985su",
+    "errors": []
+  }
+]
