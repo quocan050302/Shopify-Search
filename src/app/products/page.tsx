@@ -166,8 +166,38 @@ export default function ProductsPage() {
         throw new Error(json.error?.message || "Failed to execute evergreen product research.");
       }
 
-      setLeaderboard(json.data);
-      setViewMode("LEADERBOARD");
+      if (res.status === 202 && json.data?.runId) {
+        const runId = json.data.runId;
+        let isDone = false;
+        let attempts = 0;
+        while (!isDone && attempts < 60) {
+          await new Promise((r) => setTimeout(r, 1000));
+          attempts++;
+          const runRes = await fetch(`/api/v1/kh02/research/runs/${runId}`);
+          if (runRes.ok) {
+            const runJson = await runRes.json();
+            const status = runJson.data?.status;
+            if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
+              isDone = true;
+              if (runJson.data?.result) {
+                setLeaderboard(runJson.data.result);
+              } else {
+                await fetchLatestLeaderboard();
+              }
+              setViewMode("LEADERBOARD");
+              break;
+            } else if (status === "FAILED") {
+              throw new Error(runJson.data?.errorMessage || "Background research job failed.");
+            }
+          }
+        }
+        if (!isDone) {
+          throw new Error("Research execution timed out waiting for worker snapshot.");
+        }
+      } else {
+        setLeaderboard(json.data);
+        setViewMode("LEADERBOARD");
+      }
     } catch (err: any) {
       setResearchError(err.message || "Failed to conduct evergreen product research.");
     } finally {

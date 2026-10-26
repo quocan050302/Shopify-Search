@@ -1,0 +1,18 @@
+{
+  "version": "12.1.1",
+  "readbackAt": "2026-10-26T06:21:18.978Z",
+  "runId": "run_acc_1792995678984",
+  "workspaceId": "ws_acc_run_1792995678984",
+  "reconciliation": {
+    "researchRunId": "run_acc_1792995678984",
+    "status": "COMPLETED",
+    "rawObservationsCount": 3,
+    "candidatesCount": 3,
+    "topThreeCount": 1,
+    "persistedSnapshotMatchesHttp": true,
+    "reconciliationVerdict": "RECONCILED",
+    "notes": [
+      "Snapshot confirmed: 3 candidates discovered, 1 ranked winners."
+    ]
+  }
+}

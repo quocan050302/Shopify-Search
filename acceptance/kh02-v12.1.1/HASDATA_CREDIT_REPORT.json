@@ -1,0 +1,27 @@
+{
+  "version": "12.1.1",
+  "inspectedAt": "2026-10-26T06:21:18.978Z",
+  "creditStatus": {
+    "totalCredits": null,
+    "usedCredits": null,
+    "remainingCredits": null,
+    "billingPeriod": null,
+    "retrievedAt": "2026-10-26T06:21:18.982Z",
+    "unit": "CREDITS",
+    "authority": "UNCONFIGURED",
+    "verificationStatus": "UNVERIFIED",
+    "errorMessage": "HASDATA_API_KEY is not configured in environment."
+  },
+  "quotaDecision": {
+    "decision": "QUOTA_UNAVAILABLE",
+    "isAllowed": false,
+    "requiredCredits": 1,
+    "availableCredits": null,
+    "reason": "HasData API key not configured.",
+    "evaluatedAt": "2026-10-26T06:21:18.983Z"
+  },
+  "policyEnforcement": {
+    "failClosedOnUnknownQuota": true,
+    "unapprovedPaidSpendBlocked": true
+  }
+}

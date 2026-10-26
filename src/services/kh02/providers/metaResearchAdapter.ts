@@ -4,6 +4,11 @@
  * Connects to verified Meta competitor advertisements in SQLite,
  * applies diminishing returns for creative volume, and extracts
  * independent advertiser signals for product candidate identification.
+ *
+ * Geographic Market Rule:
+ * Never assume "US" delivery market merely because the query requested US.
+ * Deliver truthful geographic provenance: separate requested_market from
+ * verified_delivery_market.
  */
 
 import { prisma } from "@/lib/db";
@@ -15,6 +20,75 @@ import {
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
 import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
+
+export interface MarketProvenance {
+  requestedMarket: string;
+  sourceReportedMarket: string | null;
+  observedMarket: string | null;
+  advertiserLocation: string | null;
+  inferredMarket: string | null;
+  marketVerification: "VERIFIED" | "INFERRED" | "UNKNOWN";
+  verifiedDeliveryMarket: string | null;
+}
+
+export interface MetaQueryContext {
+  requestedMarket?: string;
+  topic?: string;
+}
+
+/**
+ * Resolves truthful geographic delivery market provenance for a Meta ad.
+ * Never assumes "US" delivery market merely because the user requested US.
+ */
+export function resolveMetaMarketProvenance(
+  rawAd: any,
+  queryContext: MetaQueryContext = {}
+): MarketProvenance {
+  const requestedMarket = queryContext.requestedMarket || "US";
+  const rawMarket = rawAd?.targetMarket || rawAd?.region || null;
+
+  // Check if provider explicitly reported US delivery market
+  const isExplicitUS =
+    rawMarket === "US" ||
+    rawMarket === "USA" ||
+    (rawAd?.dataSource?.supportedRegions && String(rawAd.dataSource.supportedRegions).includes("US"));
+
+  if (isExplicitUS) {
+    return {
+      requestedMarket,
+      sourceReportedMarket: "US",
+      observedMarket: "US",
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: null,
+      marketVerification: "VERIFIED",
+      verifiedDeliveryMarket: "US",
+    };
+  }
+
+  // Explicit non-US
+  if (rawMarket && rawMarket !== "UNKNOWN") {
+    return {
+      requestedMarket,
+      sourceReportedMarket: String(rawMarket),
+      observedMarket: String(rawMarket),
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: null,
+      marketVerification: "VERIFIED",
+      verifiedDeliveryMarket: null,
+    };
+  }
+
+  // Unknown market provenance
+  return {
+    requestedMarket,
+    sourceReportedMarket: null,
+    observedMarket: null,
+    advertiserLocation: rawAd?.advertiser?.country || null,
+    inferredMarket: null,
+    marketVerification: "UNKNOWN",
+    verifiedDeliveryMarket: null,
+  };
+}
 
 /**
  * Collects Meta advertising observations for a research topic in the US market.
@@ -58,6 +132,7 @@ export async function collectMetaProductSignals(
       },
       include: {
         advertiser: true,
+        dataSource: true,
         mediaAssets: { take: 2 },
         observations: { orderBy: { observedAt: "desc" }, take: 10 },
       },
@@ -87,6 +162,7 @@ export async function collectMetaProductSignals(
     const observations: SourceObservation[] = matchingAds.map((ad) => {
       const media = ad.mediaAssets[0];
       const domain = ad.landingPageUrl ? extractDomainFromUrl(ad.landingPageUrl) : null;
+      const marketProv = resolveMetaMarketProvenance(ad, { requestedMarket: query.market || "US", topic: query.topic });
 
       const signals: MetaResearchSignals = {
         adId: ad.id,
@@ -123,8 +199,8 @@ export async function collectMetaProductSignals(
         reportedFirstShownAt: ad.firstSeenAt?.toISOString() || null,
         reportedLastShownAt: ad.lastSeenAt?.toISOString() || null,
         observedAt: ad.lastSeenAt?.toISOString() || new Date().toISOString(),
-        requestedMarket: "US",
-        verifiedDeliveryMarket: "US",
+        requestedMarket: marketProv.requestedMarket,
+        verifiedDeliveryMarket: marketProv.verifiedDeliveryMarket,
         title: ad.headline,
         description: ad.bodyText,
         metrics: {
@@ -132,6 +208,7 @@ export async function collectMetaProductSignals(
           status: ad.status,
           observationsCount: ad.observations.length,
           dataConfidence: ad.dataConfidence,
+          marketVerification: marketProv.marketVerification,
         },
         media: {
           thumbnailUrl: media?.thumbnailUrl || null,

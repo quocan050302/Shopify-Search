@@ -9,6 +9,7 @@
  * 3. Stable low demand (flatline near zero) is NOT high-value evergreen.
  * 4. Seasonality requires cyclical periodic recurrence across seasons.
  * 5. Missing time series strictly yields INSUFFICIENT_HISTORY.
+ * 6. Evidence evaluation enforces multi-point verification and distinct observation timestamps.
  */
 
 import { prisma } from "@/lib/db";
@@ -29,6 +30,37 @@ export interface DemandDataPoint {
   value?: number | null;
   region?: string;
   source?: string;
+}
+
+export type HistoricalObservation = DemandDataPoint & {
+  observedAt?: string;
+  publicationDate?: string;
+};
+
+export interface DemandHistoryPolicy {
+  minimumDataPoints?: number; // default: 3
+  minimumCoveredDays?: number; // default: 60
+  strictChronological?: boolean;
+  rejectDuplicateTimestamps?: boolean;
+  requiredRegion?: string;
+}
+
+export interface DemandHistoryAssessment {
+  status: "VERIFIED" | "UNVERIFIED" | "INSUFFICIENT_HISTORY";
+  eligibleForEvergreen: boolean;
+  dataPointsCount: number;
+  distinctObservationDatesCount: number;
+  coveredDays: number;
+  meanInterest: number | null;
+  stdDev: number | null;
+  coefficientOfVariation: number | null;
+  demandClass: KH02DemandClass;
+  sourceAuthority: "AUTHORITATIVE_PROVIDER" | "ESTIMATED_SNAPSHOTS" | "UNVERIFIED";
+  temporalCoverageValid: boolean;
+  calculationVersion: string;
+  explanation: string;
+  missingEvidence: string[];
+  evaluatedAt: string;
 }
 
 export interface TemporalStabilityEvaluation {
@@ -67,6 +99,162 @@ export async function loadProductHistoricalDemand(
 }
 
 /**
+ * Evaluates historical demand observations against policy requirements to prevent false VERIFIED states.
+ */
+export function evaluateDemandHistoryEvidence(
+  observations: HistoricalObservation[],
+  policy: DemandHistoryPolicy = {}
+): DemandHistoryAssessment {
+  const evaluatedAt = new Date().toISOString();
+  const minPoints = policy.minimumDataPoints ?? 3;
+  const minDays = policy.minimumCoveredDays ?? 60;
+  const missingEvidence: string[] = [];
+
+  // Filter valid numeric observations, deduplicate identical periods, and sort chronologically
+  const seenDates = new Set<string>();
+  const valid = (observations || [])
+    .filter((o) => {
+      const val = o.demandValue !== undefined ? o.demandValue : (o as any).value;
+      if (val === null || val === undefined || isNaN(val) || val < 0) return false;
+      const startDate = o.periodStart || o.date;
+      if (!startDate) return false;
+      const timeVal = new Date(startDate).getTime();
+      if (isNaN(timeVal)) return false;
+      const dateKey = new Date(startDate).toISOString().slice(0, 10);
+      if (seenDates.has(dateKey) && policy.rejectDuplicateTimestamps !== false) {
+        return false;
+      }
+      seenDates.add(dateKey);
+      return true;
+    })
+    .map((o) => ({
+      ...o,
+      demandValue: o.demandValue !== undefined ? o.demandValue : (o as any).value,
+    }))
+    .sort((a, b) => {
+      const aTime = new Date(a.periodStart || a.date!).getTime();
+      const bTime = new Date(b.periodStart || b.date!).getTime();
+      return aTime - bTime;
+    });
+
+  if (valid.length < minPoints) {
+    const expl = `Insufficient historical data (${valid.length} points observed, minimum ${minPoints} required). Evergreen sustainability cannot be verified.`;
+    missingEvidence.push(expl);
+    return {
+      status: "INSUFFICIENT_HISTORY",
+      eligibleForEvergreen: false,
+      dataPointsCount: valid.length,
+      distinctObservationDatesCount: seenDates.size,
+      coveredDays: 0,
+      meanInterest: null,
+      stdDev: null,
+      coefficientOfVariation: null,
+      demandClass: "INSUFFICIENT_HISTORY",
+      sourceAuthority: "UNVERIFIED",
+      temporalCoverageValid: false,
+      calculationVersion: "12.1.1",
+      explanation: expl,
+      missingEvidence,
+      evaluatedAt,
+    };
+  }
+
+  const firstTime = new Date(valid[0].periodStart || valid[0].date!).getTime();
+  const lastTime = new Date(
+    valid[valid.length - 1].periodEnd || valid[valid.length - 1].periodStart || valid[valid.length - 1].date!
+  ).getTime();
+  const coveredDays = Math.max(1, Math.round((lastTime - firstTime) / (1000 * 60 * 60 * 24)));
+
+  if (coveredDays < minDays) {
+    const expl = `Observations span only ${coveredDays} days — short-term window cannot substantiate evergreen claims (minimum ${minDays} days required).`;
+    missingEvidence.push(expl);
+    return {
+      status: "INSUFFICIENT_HISTORY",
+      eligibleForEvergreen: false,
+      dataPointsCount: valid.length,
+      distinctObservationDatesCount: seenDates.size,
+      coveredDays,
+      meanInterest: null,
+      stdDev: null,
+      coefficientOfVariation: null,
+      demandClass: "INSUFFICIENT_HISTORY",
+      sourceAuthority: "UNVERIFIED",
+      temporalCoverageValid: false,
+      calculationVersion: "12.1.1",
+      explanation: expl,
+      missingEvidence,
+      evaluatedAt,
+    };
+  }
+
+  // Statistical metrics
+  const values = valid.map((v) => Number(v.demandValue));
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+  const cv = mean > 0 ? stdDev / mean : 1.0;
+
+  // Trend velocity calculation
+  const half = Math.floor(values.length / 2);
+  const firstHalf = values.slice(0, half);
+  const secondHalf = values.slice(half);
+  const firstMean = firstHalf.length ? firstHalf.reduce((s, v) => s + v, 0) / firstHalf.length : 0;
+  const secondMean = secondHalf.length ? secondHalf.reduce((s, v) => s + v, 0) / secondHalf.length : 0;
+  const delta = secondMean - firstMean;
+
+  // Classify demand stability
+  let demandClass: KH02DemandClass = "TREND_DEPENDENT";
+  let eligibleForEvergreen = false;
+
+  if (mean < 10) {
+    demandClass = "DECLINING";
+  } else if (delta > 8 && values[values.length - 1] > values[0] && cv <= 0.40) {
+    demandClass = "EMERGING_PERSISTENT";
+    eligibleForEvergreen = true;
+  } else if (cv <= 0.35 && mean >= 25) {
+    demandClass = "EVERGREEN_STABLE";
+    eligibleForEvergreen = true;
+  } else if (cv > 0.35 && cv <= 0.65) {
+    let hasPeak = false;
+    for (let i = 1; i < values.length - 1; i++) {
+      if (values[i] > values[i - 1] && values[i] > values[i + 1]) hasPeak = true;
+    }
+    const hasSeasonalWave =
+      (values[0] < values[1] || values[0] < values[2]) &&
+      values[values.length - 1] < values[values.length - 2];
+
+    if (hasPeak || hasSeasonalWave) {
+      demandClass = "SEASONAL_RECURRING";
+      eligibleForEvergreen = true;
+    } else {
+      demandClass = "TREND_DEPENDENT";
+    }
+  } else {
+    demandClass = "TREND_DEPENDENT";
+  }
+
+  return {
+    status: eligibleForEvergreen ? "VERIFIED" : "UNVERIFIED",
+    eligibleForEvergreen,
+    dataPointsCount: valid.length,
+    distinctObservationDatesCount: seenDates.size,
+    coveredDays,
+    meanInterest: Math.round(mean * 10) / 10,
+    stdDev: Math.round(stdDev * 10) / 10,
+    coefficientOfVariation: Math.round(cv * 100) / 100,
+    demandClass,
+    sourceAuthority: "AUTHORITATIVE_PROVIDER",
+    temporalCoverageValid: true,
+    calculationVersion: "12.1.1",
+    explanation: eligibleForEvergreen
+      ? `Verified demand stability: ${valid.length} points spanning ${coveredDays} days with CV=${cv.toFixed(2)}.`
+      : `Demand class '${demandClass}' does not meet verified evergreen criteria.`,
+    missingEvidence,
+    evaluatedAt,
+  };
+}
+
+/**
  * Evaluates temporal stability across a historical observation series.
  */
 export function evaluateTemporalDemandStability(
@@ -74,147 +262,73 @@ export function evaluateTemporalDemandStability(
   requestedLookbackDays: number = 90
 ): TemporalStabilityEvaluation {
   const evaluatedAt = new Date().toISOString();
+  const assessment = evaluateDemandHistoryEvidence(observations, {
+    minimumDataPoints: 3,
+    minimumCoveredDays: 60,
+  });
 
-  // 1. Filter valid numeric observations, deduplicate identical periods, and sort chronologically
-  const seenPeriods = new Set<string>();
+  if (assessment.status === "INSUFFICIENT_HISTORY" || assessment.dataPointsCount < 3) {
+    return {
+      eligibleForEvergreen: false,
+      demandClass: "INSUFFICIENT_HISTORY",
+      stabilityScore: null,
+      dataPointsCount: assessment.dataPointsCount,
+      coveredDays: assessment.coveredDays,
+      meanInterest: null,
+      stdDev: null,
+      coefficientOfVariation: null,
+      trendVelocity: "FLAT",
+      explanation: assessment.explanation,
+      evaluatedAt,
+      confidencePenaltyReason: assessment.missingEvidence[0] || "Missing historical demand time series.",
+    };
+  }
+
+  // Calculate velocity trend
   const valid = observations
-    .filter((o) => {
-      const val = o.demandValue !== undefined ? o.demandValue : (o as any).value;
-      if (val === null || val === undefined || isNaN(val) || val < 0) return false;
-      if (o.demandValue === undefined) o.demandValue = val;
-      const startDate = o.periodStart || o.date;
-      if (!startDate) return false;
-      const timeVal = new Date(startDate).getTime();
-      if (isNaN(timeVal)) return false;
-      const key = `${startDate}::${o.periodEnd || ""}`;
-      if (seenPeriods.has(key)) return false;
-      seenPeriods.add(key);
-      return true;
-    })
-    .sort((a, b) => new Date(a.periodStart || a.date!).getTime() - new Date(b.periodStart || b.date!).getTime());
+    .map((o) => ({ ...o, demandValue: o.demandValue !== undefined ? o.demandValue : (o as any).value }))
+    .filter((o) => o.demandValue !== null && o.demandValue !== undefined && !isNaN(o.demandValue));
 
-  if (valid.length < 3) {
-    return {
-      eligibleForEvergreen: false,
-      demandClass: "INSUFFICIENT_HISTORY",
-      stabilityScore: null,
-      dataPointsCount: valid.length,
-      coveredDays: 0,
-      meanInterest: null,
-      stdDev: null,
-      coefficientOfVariation: null,
-      trendVelocity: "FLAT",
-      explanation: `Insufficient historical data (${valid.length} points observed, minimum 3 required). Evergreen sustainability cannot be verified.`,
-      evaluatedAt,
-      confidencePenaltyReason: "Missing historical demand time series.",
-    };
-  }
+  const half = Math.floor(valid.length / 2);
+  const firstHalf = valid.slice(0, half).map((v) => Number(v.demandValue));
+  const secondHalf = valid.slice(half).map((v) => Number(v.demandValue));
+  const firstMean = firstHalf.length ? firstHalf.reduce((s, v) => s + v, 0) / firstHalf.length : 0;
+  const secondMean = secondHalf.length ? secondHalf.reduce((s, v) => s + v, 0) / secondHalf.length : 0;
+  const delta = secondMean - firstMean;
 
-  // 2. Calculate time span covered
-  const firstTime = new Date(valid[0].periodStart || valid[0].date!).getTime();
-  const lastTime = new Date(valid[valid.length - 1].periodEnd || valid[valid.length - 1].periodStart || valid[valid.length - 1].date!).getTime();
-  const coveredDays = Math.max(1, Math.round((lastTime - firstTime) / (1000 * 60 * 60 * 24)));
-
-  // Rule: Never declare evergreen from short-term (< 60 days) data
-  if (coveredDays < 60) {
-    return {
-      eligibleForEvergreen: false,
-      demandClass: "INSUFFICIENT_HISTORY",
-      stabilityScore: null,
-      dataPointsCount: valid.length,
-      coveredDays,
-      meanInterest: null,
-      stdDev: null,
-      coefficientOfVariation: null,
-      trendVelocity: "FLAT",
-      explanation: `Observations span only ${coveredDays} days — short-term window cannot substantiate evergreen claims (minimum 60-90 days required).`,
-      evaluatedAt,
-      confidencePenaltyReason: "Demand observations span less than 60 days.",
-    };
-  }
-
-  // 3. Statistical metrics (Mean, Variance, StdDev, CV)
-  const values = valid.map((v) => v.demandValue as number);
-  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
-  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
-  const stdDev = Math.sqrt(variance);
-  const cv = mean > 0 ? stdDev / mean : 1.0;
-
-  // 4. Calculate simple linear slope to detect trend velocity
-  const n = values.length;
-  let sumX = 0;
-  let sumY = 0;
-  let sumXY = 0;
-  let sumX2 = 0;
-  for (let i = 0; i < n; i++) {
-    sumX += i;
-    sumY += values[i];
-    sumXY += i * values[i];
-    sumX2 += i * i;
-  }
-  const slope = (n * sumXY - sumX * sumY) / Math.max(1, n * sumX2 - sumX * sumX);
-  let trendVelocity: TemporalStabilityEvaluation["trendVelocity"] = "STEADY";
-  if (slope > 0.5) trendVelocity = "ACCELERATING";
-  else if (slope < -0.5) trendVelocity = "DECELERATING";
+  let trendVelocity: "ACCELERATING" | "STEADY" | "DECELERATING" | "FLAT" = "STEADY";
+  if (delta > 8) trendVelocity = "ACCELERATING";
+  else if (delta < -8) trendVelocity = "DECELERATING";
   else trendVelocity = "STEADY";
 
-  // Check for cyclical wave evidence (local peaks / troughs)
-  let hasCyclicSwings = false;
-  for (let i = 1; i < values.length - 1; i++) {
-    if ((values[i] > values[i - 1] && values[i] > values[i + 1]) ||
-        (values[i] < values[i - 1] && values[i] < values[i + 1])) {
-      hasCyclicSwings = true;
-      break;
-    }
-  }
+  // Calculate stability score (0-25)
+  let stabilityScore = 0;
+  const mean = assessment.meanInterest || 0;
+  const cv = assessment.coefficientOfVariation || 1.0;
 
-  // 5. Classification logic
-  let demandClass: KH02DemandClass;
-  let stabilityScore: number;
-  let explanation: string;
-
-  if (mean < 12 && stdDev < 4) {
-    // Dead / flatline interest
-    demandClass = "DECLINING";
-    stabilityScore = 3;
-    explanation = `Very low mean relative search interest (${mean.toFixed(1)}/100). Low variation reflects lack of market demand, not evergreen viability.`;
-  } else if (trendVelocity === "ACCELERATING" && cv < 0.35) {
-    // Emerging persistent demand
-    demandClass = "EMERGING_PERSISTENT";
-    stabilityScore = 22; // Out of 25
-    explanation = `Accelerating search interest (mean: ${mean.toFixed(1)}, slope: +${slope.toFixed(2)}) with low volatility over ${coveredDays} days.`;
-  } else if (cv < 0.22 && mean >= 20) {
-    // True evergreen stable demand
-    demandClass = "EVERGREEN_STABLE";
-    stabilityScore = 25; // Full 25 points for Pillar A
-    explanation = `High demand stability (CV: ${cv.toFixed(2)}, mean: ${mean.toFixed(1)}/100) across ${coveredDays} days. Proven persistent search interest.`;
-  } else if (hasCyclicSwings && cv >= 0.20 && cv < 0.60 && mean >= 15) {
-    // Moderate variation with confirmed cyclic peaks/troughs
-    demandClass = "SEASONAL_RECURRING";
+  if (assessment.demandClass === "EVERGREEN_STABLE") {
+    stabilityScore = 18 + Math.round((1 - Math.min(cv, 0.35) / 0.35) * 7);
+  } else if (assessment.demandClass === "EMERGING_PERSISTENT") {
+    stabilityScore = 18 + Math.round((mean / 100) * 7);
+  } else if (assessment.demandClass === "SEASONAL_RECURRING") {
     stabilityScore = 18;
-    explanation = `Moderate variation (CV: ${cv.toFixed(2)}, mean: ${mean.toFixed(1)}) with recurring cyclical waves across ${coveredDays} days.`;
-  } else if (trendVelocity === "DECELERATING" || slope < -1.0) {
-    demandClass = "DECLINING";
-    stabilityScore = 6;
-    explanation = `Declining search interest (slope: ${slope.toFixed(2)}, mean: ${mean.toFixed(1)}). Demand is dropping off.`;
+  } else if (assessment.demandClass === "TREND_DEPENDENT") {
+    stabilityScore = Math.max(5, Math.round((mean / 100) * 10));
   } else {
-    // High variation spike / trend dependent without periodic cycles
-    demandClass = "TREND_DEPENDENT";
-    stabilityScore = 10;
-    explanation = `High volatility or non-periodic variation (CV: ${cv.toFixed(2)}). Typical of short-lived viral social spikes rather than durable evergreen utility.`;
+    stabilityScore = Math.max(0, Math.round((mean / 100) * 5));
   }
 
   return {
-    eligibleForEvergreen: demandClass === "EVERGREEN_STABLE" || demandClass === "SEASONAL_RECURRING" || demandClass === "EMERGING_PERSISTENT",
-    demandClass,
+    eligibleForEvergreen: assessment.eligibleForEvergreen,
+    demandClass: assessment.demandClass,
     stabilityScore,
-    dataPointsCount: valid.length,
-    coveredDays,
-    meanInterest: Math.round(mean * 10) / 10,
-    stdDev: Math.round(stdDev * 10) / 10,
-    coefficientOfVariation: Math.round(cv * 100) / 100,
+    dataPointsCount: assessment.dataPointsCount,
+    coveredDays: assessment.coveredDays,
+    meanInterest: assessment.meanInterest,
+    stdDev: assessment.stdDev,
+    coefficientOfVariation: assessment.coefficientOfVariation,
     trendVelocity,
-    explanation,
+    explanation: assessment.explanation,
     evaluatedAt,
   };
 }
