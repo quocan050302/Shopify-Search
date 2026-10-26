@@ -141,7 +141,7 @@ export function matchCrossPlatformProductEvidence(
 }
 
 /**
- * Persists an operator review decision for a cross-store product match hypothesis.
+ * In-memory operator review update (for unit testing and pure updates).
  */
 export function submitProductMatchReview(
   hypothesis: ProductMatchHypothesis,
@@ -156,4 +156,80 @@ export function submitProductMatchReview(
     confidence: decision === "CONFIRMED" ? "HIGH_CONFIDENCE" : (decision === "REJECTED" ? "REJECTED" : "AMBIGUOUS"),
     requiresManualReview: false,
   };
+}
+
+/**
+ * Persists an operator review decision for a cross-store product match hypothesis in SQLite.
+ * Strictly scoped to the authorized workspace.
+ */
+export async function persistProductMatchReview(
+  matchOrHypothesis: string | ProductMatchHypothesis,
+  decision: "CONFIRMED" | "REJECTED" | "UNCERTAIN",
+  reviewerId: string = "system_operator",
+  workspaceId: string = "default-workspace",
+  notes?: string
+): Promise<ProductMatchHypothesis> {
+  const hypothesis: ProductMatchHypothesis =
+    typeof matchOrHypothesis === "string"
+      ? {
+          matchId: matchOrHypothesis,
+          sourceCandidateId: "manual_review",
+          matchedEntityTitle: notes || "Operator Review Decision",
+          matchedPlatform: "CROSS_PLATFORM",
+          confidence: decision === "CONFIRMED" ? "HIGH_CONFIDENCE" : (decision === "REJECTED" ? "REJECTED" : "AMBIGUOUS"),
+          matchReasons: [notes || `Operator marked match as ${decision}`],
+          requiresManualReview: false,
+        }
+      : matchOrHypothesis;
+
+  const updatedHypothesis = submitProductMatchReview(hypothesis, decision, reviewerId);
+
+  try {
+    const { prisma } = await import("@/lib/db");
+    await prisma.researchEvidence.create({
+      data: {
+        workspaceId,
+        subjectType: "PRODUCT_MATCH_REVIEW",
+        subjectId: updatedHypothesis.matchId,
+        pillar: "PRODUCT",
+        claim: decision,
+        observedValue: JSON.stringify({ ...updatedHypothesis, notes }),
+        observationMethod: "USER_INPUT",
+        classification: "SOURCE_REVIEWED",
+        verifierActorId: reviewerId,
+        verifiedAt: new Date(),
+      },
+    });
+  } catch (err: any) {
+    console.error("Failed to persist product match review to SQLite:", err.message);
+  }
+
+  return updatedHypothesis;
+}
+
+/**
+ * Retrieves a stored review decision for a matchId from the authorized workspace.
+ */
+export async function getStoredProductMatchReview(
+  matchId: string,
+  workspaceId: string
+): Promise<ProductMatchHypothesis | null> {
+  try {
+    const { prisma } = await import("@/lib/db");
+    const evidence = await prisma.researchEvidence.findFirst({
+      where: {
+        workspaceId,
+        subjectType: "PRODUCT_MATCH_REVIEW",
+        subjectId: matchId,
+      },
+      orderBy: { observedAt: "desc" },
+    });
+
+    if (evidence?.observedValue) {
+      return JSON.parse(evidence.observedValue) as ProductMatchHypothesis;
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return null;
 }

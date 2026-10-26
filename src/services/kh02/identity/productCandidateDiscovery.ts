@@ -9,14 +9,17 @@
  * not 60 separate products.
  */
 
+import { prisma } from "@/lib/db";
 import { SourceObservation, ProductMatchConfidence } from "../types";
 import {
   canonicalizeProductUrl,
   extractDomainFromUrl,
+  matchExistingResearchProduct,
 } from "@/services/products/productService";
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
+  researchProductId?: string | null;
   title: string;
   category: string;
   problemStatement: string | null;
@@ -34,6 +37,75 @@ export interface DiscoveredProductCandidate {
   latestObservationDate: string | null;
   identityConfidence: ProductMatchConfidence;
   sourceObservations: SourceObservation[];
+}
+
+export interface KH02ResolvedCandidate {
+  candidateId: string;
+  researchProductId: string | null;
+  canonicalProductUrl: string | null;
+  identityStatus: "CONFIRMED" | "PROBABLE" | "AMBIGUOUS";
+  matchedAdIds: string[];
+  requiresManualReview: boolean;
+  matchReason?: string;
+}
+
+/**
+ * Resolves a candidate to an existing database ResearchProduct or marks as provisional.
+ */
+export async function resolveCandidateResearchProduct(
+  candidate: DiscoveredProductCandidate,
+  workspaceId: string
+): Promise<KH02ResolvedCandidate> {
+  // 1. Priority 1: Check existing AdProductLink for any supporting ad ID
+  if (candidate.supportingAdIds.length > 0) {
+    const existingLink = await prisma.adProductLink.findFirst({
+      where: { adId: { in: candidate.supportingAdIds } },
+      include: { product: true },
+    });
+    if (existingLink?.product) {
+      return {
+        candidateId: candidate.candidateId,
+        researchProductId: existingLink.product.id,
+        canonicalProductUrl: existingLink.product.productUrl || candidate.canonicalProductUrl,
+        identityStatus: "CONFIRMED",
+        matchedAdIds: candidate.supportingAdIds,
+        requiresManualReview: false,
+        matchReason: `Linked via existing AdProductLink to ResearchProduct ${existingLink.product.id}`,
+      };
+    }
+  }
+
+  // 2. Priority 2: Match by canonical product URL or same store domain
+  if (candidate.canonicalProductUrl || candidate.storeDomain) {
+    const match = await matchExistingResearchProduct({
+      landingPageUrl: candidate.canonicalProductUrl,
+      canonicalProductUrl: candidate.canonicalProductUrl,
+      candidateTitle: candidate.title,
+      storeDomain: candidate.storeDomain,
+    });
+    if (match.matchedProduct) {
+      return {
+        candidateId: candidate.candidateId,
+        researchProductId: match.matchedProduct.id,
+        canonicalProductUrl: match.matchedProduct.productUrl || candidate.canonicalProductUrl,
+        identityStatus: match.confidence === "EXACT_MATCH" ? "CONFIRMED" : "PROBABLE",
+        matchedAdIds: candidate.supportingAdIds,
+        requiresManualReview: match.confidence !== "EXACT_MATCH",
+        matchReason: match.matchReason,
+      };
+    }
+  }
+
+  // 3. Fallback: Not yet linked to a persistent ResearchProduct
+  return {
+    candidateId: candidate.candidateId,
+    researchProductId: null,
+    canonicalProductUrl: candidate.canonicalProductUrl,
+    identityStatus: candidate.canonicalProductUrl ? "PROBABLE" : "AMBIGUOUS",
+    matchedAdIds: candidate.supportingAdIds,
+    requiresManualReview: true,
+    matchReason: "No existing ResearchProduct record found for candidate destination URL.",
+  };
 }
 
 /**
@@ -95,15 +167,16 @@ export function discoverProductCandidatesFromAds(
   }>();
 
   for (const obs of observations) {
-    const rawUrl = obs.sourceUrl || obs.advertiserDomain || "";
+    // Priority 1: Destination landingPageUrl (product URL) over ad library sourceUrl
+    const destinationUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
     let canonicalUrl: string | null = null;
-    let storeDomain: string | null = obs.advertiserDomain || null;
+    let storeDomain: string | null = obs.storeDomainEvidence || obs.advertiserDomain || null;
     let groupKey: string;
 
-    if (rawUrl.startsWith("http")) {
-      const canonical = canonicalizeProductUrl(rawUrl);
+    if (destinationUrl && destinationUrl.startsWith("http")) {
+      const canonical = canonicalizeProductUrl(destinationUrl);
       canonicalUrl = canonical.canonicalUrl;
-      storeDomain = extractDomainFromUrl(rawUrl) || canonical.hostname;
+      storeDomain = extractDomainFromUrl(destinationUrl) || canonical.hostname;
       groupKey = canonical.comparisonKey;
     } else if (storeDomain) {
       groupKey = `${storeDomain}::${cleanCandidateTitle(obs.title || topic)}`;

@@ -1,0 +1,34 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:integration
+> vitest run tests/integration/kh02
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Navigating to: http://localhost:3000/products
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Triggering research for 'Pet Hair Remover'...
+
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 4932[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance [2m(1)[22m
+     [33m[2m✓[22m[39m launches Chromium, interacts with /products, and captures visual artifacts[33m 4930[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02HttpServerE2E.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1586[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance [2m(6)[22m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/providers/status reports live capability and truthful readiness[33m 321[2mms[22m[39m
+     [33m[2m✓[22m[39m POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot[33m 308[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_Persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 493[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — Persistence & Workspace Isolation [2m(4)[22m
+     [33m[2m✓[22m[39m creates a persistent research run with PENDING status and tracks progress[33m 307[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02ResearchApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 330[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 13:54:23
+[2m   Duration [22m 15.19s[2m (tests 51%, setup 39%, import 9%, worker 1%, transform 1%)[22m
+
+
+
+=== STDERR ===

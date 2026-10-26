@@ -1,5 +1,5 @@
 /**
- * SWAI KH-02 — Evergreen Opportunity Scoring Service (V12.0.0)
+ * SWAI KH-02 — Evergreen Opportunity Scoring Service (V12.1.0)
  *
  * Evaluates product candidates across 6 balanced pillars (100 points total)
  * and produces a strictly segregated Evidence Confidence Score (0-100).
@@ -11,6 +11,12 @@
  * 4. Brandability & Store Fit (15 pts) — Niche coherence, SKU expansion, bundling, branding.
  * 5. Creative Depth (10 pts) — Distinct creative hooks, video demonstrations, UGC feasibility.
  * 6. Competition Sustainability (10 pts) — Advertiser breadth without commodity saturation.
+ *
+ * V12.1 INVARIANTS:
+ * - Zero ungrounded baseline points: Points accumulate strictly from observed evidence.
+ * - Opportunity Score and Evidence Confidence are distinct metrics.
+ * - Primary Top 3 Evergreen Leaderboard requires verified eligible candidates.
+ * - Provisional candidates are routed to a separate provisional shortlist.
  */
 
 import { DiscoveredProductCandidate } from "../identity/productCandidateDiscovery";
@@ -20,7 +26,14 @@ import {
   KH02DemandClass,
 } from "../demand/temporalDemandEngine";
 
-export const KH02_SCORE_VERSION = "12.0.0";
+export const KH02_SCORE_VERSION = "12.1.0";
+
+export type KH02ProductTier =
+  | "VERIFIED_EVERGREEN"
+  | "PROVISIONAL_OPPORTUNITY"
+  | "INSUFFICIENT_EVIDENCE"
+  | "REQUIRES_MANUAL_REVIEW"
+  | "REJECTED";
 
 export interface PillarScoreDetail {
   score: number | null;
@@ -34,6 +47,7 @@ export interface KH02ScoreResult {
   opportunityScore: number | null;
   evidenceConfidence: number; // 0-100 completeness score
   scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE";
+  tier: KH02ProductTier;
   formulaVersion: string;
   demandClass: KH02DemandClass;
   pillars: {
@@ -61,8 +75,92 @@ export interface ProductScoringContext {
   fragileOrHeavyShipping?: boolean;
 }
 
+export interface EligibilityGateResult {
+  tier: KH02ProductTier;
+  isTop3Eligible: boolean;
+  gateReasons: string[];
+}
+
 /**
- * Calculates authoritative V12.0 Evergreen Opportunity Score.
+ * Evaluates whether a candidate qualifies for the primary Top 3 Evergreen Winners
+ * versus the secondary Provisional Opportunities shortlist.
+ */
+export function applyKH02EligibilityGates(
+  scoreResult: Omit<KH02ScoreResult, "tier"> & { tier?: KH02ProductTier }
+): EligibilityGateResult {
+  const gateReasons: string[] = [];
+
+  // Gate 1: Compliance / trademark block
+  if (scoreResult.recommendation === "REQUIRES_MANUAL_REVIEW") {
+    gateReasons.push("Compliance, trademark, or safety risk flagged; requires manual operator review.");
+    return {
+      tier: "REQUIRES_MANUAL_REVIEW",
+      isTop3Eligible: false,
+      gateReasons,
+    };
+  }
+
+  // Gate 2: Demand Stability Check
+  const demandScore = scoreResult.pillars.demandStability.score;
+  const isDemandDeclining =
+    scoreResult.demandClass === "DECLINING" ||
+    scoreResult.demandClass === "TREND_DEPENDENT" ||
+    scoreResult.demandClass === "INSUFFICIENT_HISTORY";
+
+  if (demandScore === null || isDemandDeclining || demandScore < 15) {
+    gateReasons.push(
+      demandScore === null
+        ? "Lacks verified multi-month historical demand time series."
+        : `Demand stability inadequate (${scoreResult.demandClass}, score: ${demandScore}/25).`
+    );
+  }
+
+  // Gate 3: Evidence Confidence
+  if (scoreResult.evidenceConfidence < 65) {
+    gateReasons.push(`Evidence confidence (${scoreResult.evidenceConfidence}/100) below verified threshold (65/100).`);
+  }
+
+  // Gate 4: Overall Opportunity Score
+  const oppScore = scoreResult.opportunityScore || 0;
+  if (oppScore < 65) {
+    gateReasons.push(`Opportunity score (${oppScore}/100) below verified evergreen threshold (65/100).`);
+  }
+
+  // Final Qualification Decision
+  if (
+    scoreResult.scoreStatus === "VERIFIED" &&
+    demandScore !== null &&
+    demandScore >= 15 &&
+    !isDemandDeclining &&
+    scoreResult.evidenceConfidence >= 65 &&
+    oppScore >= 65
+  ) {
+    return {
+      tier: "VERIFIED_EVERGREEN",
+      isTop3Eligible: true,
+      gateReasons: ["Passed all evidence, stability, and confidence gates for evergreen qualification."],
+    };
+  }
+
+  // Distinguish provisional opportunities from dead / insufficient data
+  if (oppScore >= 40 && scoreResult.evidenceConfidence >= 30 && scoreResult.demandClass !== "DECLINING") {
+    return {
+      tier: "PROVISIONAL_OPPORTUNITY",
+      isTop3Eligible: false,
+      gateReasons,
+    };
+  }
+
+  return {
+    tier: "INSUFFICIENT_EVIDENCE",
+    isTop3Eligible: false,
+    gateReasons,
+  };
+}
+
+/**
+ * Calculates authoritative V12.1 Evergreen Opportunity Score.
+ * Strictly avoids ungrounded point inflation.
  */
 export function calculateKH02EvergreenScore(
   ctx: ProductScoringContext
@@ -97,86 +195,105 @@ export function calculateKH02EvergreenScore(
   }
 
   // ── Pillar B: Problem-Solution Fit (20 pts) ───────────────────────────────
-  let pillarB_Score = 6; // Base plausible utility
-  let pillarB_Status: PillarScoreDetail["status"] = "MODERATE";
+  // Grounded: 0 base points
+  let pillarB_Score = 0;
+  let pillarB_Status: PillarScoreDetail["status"] = "FAIL";
 
   if (c.problemStatement && c.problemStatement.length > 10) {
-    pillarB_Score += 8;
+    pillarB_Score += 12;
     confidencePoints += 15;
     strengths.push(`Clear customer problem addressed: "${c.problemStatement}"`);
   } else {
     missingEvidence.push("Explicit customer pain point statement is not verified in ad copy.");
-    confidencePoints += 5;
   }
 
   if (c.totalObservationCount >= 5) {
-    pillarB_Score += 6;
+    pillarB_Score += 8;
+  } else if (c.totalObservationCount >= 2) {
+    pillarB_Score += 4;
   }
 
   pillarB_Score = Math.min(20, pillarB_Score);
-  if (pillarB_Score >= 16) pillarB_Status = "PASS";
+  if (pillarB_Score >= 15) pillarB_Status = "PASS";
+  else if (pillarB_Score >= 8) pillarB_Status = "MODERATE";
 
   // ── Pillar C: Multi-Platform Validation (20 pts) ───────────────────────────
-  let pillarC_Score = 4; // Base platform signal
+  // Grounded: 0 base points
+  let pillarC_Score = 0;
   const sourceSet = new Set(c.supportingSourceTypes);
   const platformCount = sourceSet.size;
 
   if (sourceSet.has("META_ADS")) {
-    pillarC_Score += 6;
+    pillarC_Score += 8;
     confidencePoints += 15;
   }
   if (sourceSet.has("TIKTOK_ADS") || sourceSet.has("TIKTOK_ORGANIC")) {
-    pillarC_Score += 5;
+    pillarC_Score += 6;
     confidencePoints += 15;
   }
   if (sourceSet.has("GOOGLE_ADS")) {
-    pillarC_Score += 5;
+    pillarC_Score += 6;
     confidencePoints += 10;
   }
 
   pillarC_Score = Math.min(20, pillarC_Score);
-  const pillarC_Status: PillarScoreDetail["status"] = pillarC_Score >= 14 ? "PASS" : "MODERATE";
+  let pillarC_Status: PillarScoreDetail["status"] = "FAIL";
+  if (pillarC_Score >= 14) pillarC_Status = "PASS";
+  else if (pillarC_Score >= 6) pillarC_Status = "MODERATE";
+
   if (platformCount > 1) {
     strengths.push(`Cross-platform validation: Confirmed across ${platformCount} independent media channels.`);
-  } else {
+  } else if (platformCount === 1) {
     missingEvidence.push("Single-platform evidence: Lacks corroboration on secondary ad or social channels.");
   }
 
   // ── Pillar D: Brandability / Store Fit (15 pts) ─────────────────────────────
-  let pillarD_Score = 8; // Good baseline fit for niche e-commerce
-  let pillarD_Status: PillarScoreDetail["status"] = "PASS";
+  // Grounded: 0 base points
+  let pillarD_Score = 0;
+  let pillarD_Status: PillarScoreDetail["status"] = "FAIL";
 
   if (c.storeDomain) {
-    pillarD_Score += 4;
+    pillarD_Score += 8;
     confidencePoints += 10;
     strengths.push(`Identified commercial domain: ${c.storeDomain} with branded catalog potential.`);
   } else {
-    confidencePoints += 5;
+    missingEvidence.push("No independent store domain confirmed; domain evidence missing.");
   }
 
-  if (c.category && c.category !== "General") {
-    pillarD_Score += 3;
+  if (c.category && c.category !== "General" && c.category !== "Other") {
+    pillarD_Score += 7;
+  } else {
+    pillarD_Score += 2;
   }
   pillarD_Score = Math.min(15, pillarD_Score);
+  if (pillarD_Score >= 11) pillarD_Status = "PASS";
+  else if (pillarD_Score >= 6) pillarD_Status = "MODERATE";
 
   // ── Pillar E: Creative Depth (10 pts) ─────────────────────────────────────
-  let pillarE_Score = 2;
+  // Grounded: 0 base points
+  let pillarE_Score = 0;
   const uniqueAds = c.supportingAdIds.length;
 
   if (uniqueAds >= 5) pillarE_Score += 5;
   else if (uniqueAds >= 2) pillarE_Score += 3;
+  else if (uniqueAds === 1) pillarE_Score += 1;
 
   if (c.videoUrl || c.sourceObservations.some((o) => o.media.mediaType === "VIDEO")) {
-    pillarE_Score += 3;
+    pillarE_Score += 5;
     confidencePoints += 10;
     strengths.push("Video demonstration creative available for product hook evaluation.");
+  } else {
+    missingEvidence.push("No verified video creative available for hook analysis.");
   }
 
   pillarE_Score = Math.min(10, pillarE_Score);
-  const pillarE_Status: PillarScoreDetail["status"] = pillarE_Score >= 7 ? "PASS" : "MODERATE";
+  let pillarE_Status: PillarScoreDetail["status"] = "FAIL";
+  if (pillarE_Score >= 7) pillarE_Status = "PASS";
+  else if (pillarE_Score >= 4) pillarE_Status = "MODERATE";
 
   // ── Pillar F: Competition Sustainability (10 pts) ──────────────────────────
-  let pillarF_Score = 5;
+  // Grounded: 0 base points
+  let pillarF_Score = 0;
   const distinctAdvertisers = c.distinctAdvertisersCount;
 
   if (distinctAdvertisers >= 2 && distinctAdvertisers <= 8) {
@@ -189,13 +306,18 @@ export function calculateKH02EvergreenScore(
     pillarF_Score = 6;
     risks.push(`High competitive saturation: ${distinctAdvertisers}+ advertisers competing in identical niche.`);
     confidencePoints += 10;
-  } else {
+  } else if (distinctAdvertisers === 1) {
     // Single advertiser
-    pillarF_Score = 4;
+    pillarF_Score = 3;
     risks.push("Concentration risk: Evidence currently limited to a single advertiser.");
     confidencePoints += 5;
+  } else {
+    pillarF_Score = 0;
   }
-  const pillarF_Status: PillarScoreDetail["status"] = pillarF_Score >= 8 ? "PASS" : "MODERATE";
+
+  let pillarF_Status: PillarScoreDetail["status"] = "FAIL";
+  if (pillarF_Score >= 8) pillarF_Status = "PASS";
+  else if (pillarF_Score >= 3) pillarF_Status = "MODERATE";
 
   // ── Total Score & Status Determination ─────────────────────────────────────
   let totalScore: number | null = null;
@@ -225,15 +347,17 @@ export function calculateKH02EvergreenScore(
 
   if (recommendation !== "REQUIRES_MANUAL_REVIEW") {
     // Rule: Declining demand, trend-dependent volatility, or failing demand stability can NEVER be a TEST_CANDIDATE
-    const isDemandEligible = demandEval.demandClass !== "DECLINING" &&
-                             demandEval.demandClass !== "TREND_DEPENDENT" &&
-                             pillarA_Score !== null &&
-                             pillarA_Score >= 15;
+    const isDemandEligible =
+      demandEval.demandClass !== "DECLINING" &&
+      demandEval.demandClass !== "TREND_DEPENDENT" &&
+      demandEval.demandClass !== "INSUFFICIENT_HISTORY" &&
+      pillarA_Score !== null &&
+      pillarA_Score >= 15;
 
     if (scoreStatus === "VERIFIED" && totalScore !== null && totalScore >= 75 && confidencePoints >= 70 && isDemandEligible) {
       recommendation = "TEST_CANDIDATE";
       rationale = `High evergreen opportunity score (${totalScore}/100) with verified demand stability and multi-source evidence.`;
-    } else if (totalScore !== null && totalScore >= 60 && demandEval.demandClass !== "DECLINING") {
+    } else if (totalScore !== null && totalScore >= 50 && demandEval.demandClass !== "DECLINING") {
       recommendation = "SHORTLIST";
       rationale = `Promising candidate (${totalScore}/100). Valid candidate for niche store catalog, recommend supplier quote verification.`;
     } else {
@@ -244,7 +368,7 @@ export function calculateKH02EvergreenScore(
     }
   }
 
-  return {
+  const prelimResult = {
     candidateId: c.candidateId,
     opportunityScore: totalScore,
     evidenceConfidence: Math.min(100, confidencePoints),
@@ -274,7 +398,9 @@ export function calculateKH02EvergreenScore(
         score: pillarD_Score,
         maxWeight: 15,
         status: pillarD_Status,
-        explanation: `Well-suited for dedicated ${c.category} branded store. Compatible with complementary SKU expansion.`,
+        explanation: c.storeDomain
+          ? `Well-suited for dedicated ${c.category} branded store (${c.storeDomain}).`
+          : `Generic ${c.category} product without confirmed storefront domain.`,
       },
       creativeDepth: {
         score: pillarE_Score,
@@ -295,5 +421,12 @@ export function calculateKH02EvergreenScore(
     recommendation,
     recommendationRationale: rationale,
     evaluatedAt,
+  };
+
+  const gateResult = applyKH02EligibilityGates(prelimResult);
+
+  return {
+    ...prelimResult,
+    tier: gateResult.tier,
   };
 }

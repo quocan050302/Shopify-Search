@@ -1,0 +1,19 @@
+{
+  "version": "12.1.1",
+  "verifiedAt": "2026-10-26T06:21:18.978Z",
+  "sampleProvenance": {
+    "requestedMarket": "US",
+    "sourceReportedMarket": "US",
+    "observedMarket": "US",
+    "advertiserLocation": null,
+    "inferredMarket": null,
+    "marketVerification": "VERIFIED",
+    "verifiedDeliveryMarket": "US"
+  },
+  "marketIsolationRules": {
+    "requestedMarketDistinctFromDelivery": true,
+    "implicitUSDefaultEliminated": true,
+    "workspaceScopedReadsEnforced": true,
+    "landingPageUrlSeparatedFromAdLibraryUrl": true
+  }
+}

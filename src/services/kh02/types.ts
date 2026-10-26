@@ -20,8 +20,13 @@ export type SourceRunStatus =
   | "PASSED"
   | "PARTIAL"
   | "NOT_CONFIGURED"
+  | "CONFIGURED"
+  | "TRANSPORT_CONNECTED"
+  | "SOURCE_ACCESS_VERIFIED"
+  | "SOURCE_DATA_VERIFIED"
   | "NOT_VERIFIED"
   | "UNSUPPORTED_REGION"
+  | "BLOCKED"
   | "BLOCKED_SOURCE"
   | "RATE_LIMITED"
   | "NO_RESULTS"
@@ -77,18 +82,21 @@ export interface SourceObservation {
   source: IntelligenceSource;
   sourceRecordId: string;
   sourceUrl: string | null;
+  landingPageUrl?: string | null;
+  sourceExternalAdId?: string | null;
+  storeDomainEvidence?: string | null;
   advertiserOrCreator: string | null;
   advertiserDomain: string | null;
-  productMatchHint: string | null;
-  reportedPublishedAt: string | null;
-  reportedFirstShownAt: string | null;
-  reportedLastShownAt: string | null;
+  productMatchHint?: string | null;
+  reportedPublishedAt?: string | null;
+  reportedFirstShownAt?: string | null;
+  reportedLastShownAt?: string | null;
   observedAt: string;
   requestedMarket: string;
   verifiedDeliveryMarket: string | null;
   title: string | null;
-  description: string | null;
-  metrics: Record<string, unknown>;
+  description?: string | null;
+  metrics?: Record<string, unknown>;
   media: {
     thumbnailUrl?: string | null;
     videoUrl?: string | null;
@@ -96,7 +104,8 @@ export interface SourceObservation {
     mediaType?: string | null;
   };
   provenance: ObservationProvenance;
-  evidenceReference: string | null;
+  evidenceReference?: string | null;
+  researchProductId?: string | null;
 }
 
 export interface SourceResearchResult {
@@ -189,3 +198,26 @@ export interface TikTokAdsSignals {
   isUSVerified: boolean;
   sourceStatus: SourceRunStatus;
 }
+
+export interface ProductEvidenceMatchResult {
+  candidateId: string;
+  sourceRecordId: string;
+  source: IntelligenceSource;
+  matchConfidence:
+    | "EXACT"
+    | "HIGH_CONFIDENCE"
+    | "PROBABLE"
+    | "AMBIGUOUS"
+    | "REJECTED";
+  relevance:
+    | "PRODUCT_SPECIFIC"
+    | "BRAND_RELATED"
+    | "CATEGORY_RELATED"
+    | "UNRELATED"
+    | "UNKNOWN";
+  acceptedForScoring: boolean;
+  requiresManualReview: boolean;
+  matchReasons: string[];
+  evidenceReference: string | null;
+}
+

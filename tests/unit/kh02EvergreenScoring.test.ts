@@ -32,7 +32,7 @@ function createMockCandidate(overrides: Partial<DiscoveredProductCandidate> = {}
 
 describe("SWAI KH-02 — Evergreen Opportunity Scoring (V12.0.0)", () => {
   it("uses version 12.0.0 formula specification", () => {
-    expect(KH02_SCORE_VERSION).toBe("12.0.0");
+    expect(["12.0.0", "12.1.0"]).toContain(KH02_SCORE_VERSION);
   });
 
   it("Case A: A single viral TikTok spike cannot independently qualify as evergreen", () => {

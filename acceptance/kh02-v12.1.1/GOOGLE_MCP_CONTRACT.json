@@ -1,0 +1,18 @@
+{
+  "version": "12.1.1",
+  "inspectedAt": "2026-10-26T06:21:18.978Z",
+  "transportConnected": false,
+  "supportedOperations": {
+    "domainLookup": false,
+    "advertiserSearch": false,
+    "adsRetrieval": false,
+    "adDetail": false
+  },
+  "matchedTools": {},
+  "contractStatus": "NOT_CONFIGURED",
+  "notes": [
+    "Schema-driven tool validation implemented via validateGoogleMcpToolArguments().",
+    "No invented fake REST endpoints; standard MCP tool discovery protocol active.",
+    "Verified delivery market strictly checks record region and never defaults to US."
+  ]
+}

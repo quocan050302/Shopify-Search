@@ -1,0 +1,17 @@
+{
+  "version": "12.1.1",
+  "evaluatedAt": "2026-10-26T06:21:18.978Z",
+  "policy": {
+    "minimumDataPoints": 3,
+    "minimumCoveredDays": 60,
+    "cvThresholdEvergreen": 0.35,
+    "cvThresholdSeasonal": 0.65,
+    "requiresCyclicSwingsForSeasonality": true,
+    "flatlineDeadInterestThreshold": 10
+  },
+  "verificationIntegrity": {
+    "insufficientDataPointsRejection": true,
+    "shortSpanWindowRejection": true,
+    "multiPointTimestampVerification": true
+  }
+}

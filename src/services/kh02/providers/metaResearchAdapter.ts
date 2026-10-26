@@ -4,6 +4,11 @@
  * Connects to verified Meta competitor advertisements in SQLite,
  * applies diminishing returns for creative volume, and extracts
  * independent advertiser signals for product candidate identification.
+ *
+ * Geographic Market Rule:
+ * Never assume "US" delivery market merely because the query requested US.
+ * Deliver truthful geographic provenance: separate requested_market from
+ * verified_delivery_market.
  */
 
 import { prisma } from "@/lib/db";
@@ -14,6 +19,91 @@ import {
   MetaResearchSignals,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
+import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
+
+export interface MarketProvenance {
+  requestedMarket: string;
+  sourceReportedMarket: string | null;
+  observedMarket: string | null;
+  advertiserLocation: string | null;
+  inferredMarket: string | null;
+  marketVerification: "VERIFIED" | "INFERRED" | "UNKNOWN";
+  verifiedDeliveryMarket: string | null;
+}
+
+export interface MetaQueryContext {
+  requestedMarket?: string;
+  topic?: string;
+}
+
+/**
+ * Resolves truthful geographic delivery market provenance for a Meta ad.
+ * Never assumes "US" delivery market merely because the user requested US.
+ */
+export function resolveMetaMarketProvenance(
+  rawAd: any,
+  queryContext: MetaQueryContext = {}
+): MarketProvenance {
+  const requestedMarket = queryContext.requestedMarket || "US";
+  const rawMarket = rawAd?.targetMarket || rawAd?.region || null;
+
+  // Check if provider explicitly reported US delivery market on the ad itself
+  const isExplicitUS = rawMarket === "US" || rawMarket === "USA";
+
+  if (isExplicitUS) {
+    return {
+      requestedMarket,
+      sourceReportedMarket: "US",
+      observedMarket: "US",
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: null,
+      marketVerification: "VERIFIED",
+      verifiedDeliveryMarket: "US",
+    };
+  }
+
+  // Explicit non-US
+  if (rawMarket && rawMarket !== "UNKNOWN") {
+    return {
+      requestedMarket,
+      sourceReportedMarket: String(rawMarket),
+      observedMarket: String(rawMarket),
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: null,
+      marketVerification: "VERIFIED",
+      verifiedDeliveryMarket: null,
+    };
+  }
+
+  // If dataSource supports US but ad itself does not specify region, it is INFERRED, NOT VERIFIED
+  const dataSourceSupportsUS = Boolean(
+    rawAd?.dataSource?.supportedRegions &&
+    String(rawAd.dataSource.supportedRegions).includes("US")
+  );
+
+  if (dataSourceSupportsUS) {
+    return {
+      requestedMarket,
+      sourceReportedMarket: null,
+      observedMarket: null,
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: "US",
+      marketVerification: "INFERRED",
+      verifiedDeliveryMarket: null,
+    };
+  }
+
+  // Unknown market provenance
+  return {
+    requestedMarket,
+    sourceReportedMarket: null,
+    observedMarket: null,
+    advertiserLocation: rawAd?.advertiser?.country || null,
+    inferredMarket: null,
+    marketVerification: "UNKNOWN",
+    verifiedDeliveryMarket: null,
+  };
+}
 
 /**
  * Collects Meta advertising observations for a research topic in the US market.
@@ -42,18 +132,22 @@ export async function collectMetaProductSignals(
       ],
     }));
 
-    // Find competitor ads backed by real observation records
+    // Find competitor ads backed by real observation records, strictly scoped to caller's workspace
+    const authorizedWhere = buildAuthorizedAdWhere(query.workspaceId);
+
     const matchingAds = await prisma.competitorAd.findMany({
       where: {
-        platform: "FACEBOOK",
+        platform: { in: ["META", "FACEBOOK"] },
         isSyntheticQuarantine: false,
         AND: [
+          authorizedWhere,
           { OR: searchClauses.map((sc) => sc.OR).flat() },
           { lastSeenAt: { gte: lookbackThreshold } },
         ],
       },
       include: {
         advertiser: true,
+        dataSource: true,
         mediaAssets: { take: 2 },
         observations: { orderBy: { observedAt: "desc" }, take: 10 },
       },
@@ -83,6 +177,7 @@ export async function collectMetaProductSignals(
     const observations: SourceObservation[] = matchingAds.map((ad) => {
       const media = ad.mediaAssets[0];
       const domain = ad.landingPageUrl ? extractDomainFromUrl(ad.landingPageUrl) : null;
+      const marketProv = resolveMetaMarketProvenance(ad, { requestedMarket: query.market || "US", topic: query.topic });
 
       const signals: MetaResearchSignals = {
         adId: ad.id,
@@ -108,7 +203,10 @@ export async function collectMetaProductSignals(
       return {
         source: "META_ADS",
         sourceRecordId: ad.id,
-        sourceUrl: ad.originalAdUrl || `https://www.facebook.com/ads/library/?id=${ad.externalAdId}`,
+        sourceUrl: ad.originalAdUrl || (ad.externalAdId ? `https://www.facebook.com/ads/library/?id=${ad.externalAdId}` : null),
+        landingPageUrl: ad.landingPageUrl || null,
+        sourceExternalAdId: ad.externalAdId || ad.id,
+        storeDomainEvidence: domain,
         advertiserOrCreator: ad.advertiser?.name || null,
         advertiserDomain: domain,
         productMatchHint: ad.headline || null,
@@ -116,8 +214,8 @@ export async function collectMetaProductSignals(
         reportedFirstShownAt: ad.firstSeenAt?.toISOString() || null,
         reportedLastShownAt: ad.lastSeenAt?.toISOString() || null,
         observedAt: ad.lastSeenAt?.toISOString() || new Date().toISOString(),
-        requestedMarket: "US",
-        verifiedDeliveryMarket: "US",
+        requestedMarket: marketProv.requestedMarket,
+        verifiedDeliveryMarket: marketProv.verifiedDeliveryMarket,
         title: ad.headline,
         description: ad.bodyText,
         metrics: {
@@ -125,6 +223,7 @@ export async function collectMetaProductSignals(
           status: ad.status,
           observationsCount: ad.observations.length,
           dataConfidence: ad.dataConfidence,
+          marketVerification: marketProv.marketVerification,
         },
         media: {
           thumbnailUrl: media?.thumbnailUrl || null,

@@ -1,0 +1,12 @@
+{
+  "version": "12.1.1",
+  "verifiedAt": "2026-10-26T06:21:18.978Z",
+  "endpoints": {
+    "GET /api/v1/kh02/providers/status": "PASS (200 OK)",
+    "POST /api/v1/kh02/research": "PASS (202 ACCEPTED / 200 OK)",
+    "GET /api/v1/kh02/leaderboard": "PASS (200 OK)",
+    "GET /api/v1/kh02/research/runs": "PASS (200 OK)",
+    "GET /api/v1/kh02/research/runs/[runId]": "PASS (200 OK)",
+    "POST /api/v1/kh02/product-matches/[matchId]/review": "PASS (200 OK)"
+  }
+}

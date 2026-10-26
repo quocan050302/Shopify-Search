@@ -119,15 +119,15 @@ export function listKH02SourceCapabilities(): SourceCapabilities[] {
  * Evaluates live configuration and readiness of a source without initiating expensive calls.
  */
 export async function checkKH02ProviderReadiness(
-  source: IntelligenceSource
+  source: IntelligenceSource,
+  workspaceId?: string
 ): Promise<{ ready: boolean; status: SourceRunStatus; reason: string }> {
   switch (source) {
     case "META_ADS": {
-      // Meta is always available through existing stored observations or local MCP
       return {
         ready: true,
-        status: "PASSED",
-        reason: "Meta competitor ads available via local database and verified collector.",
+        status: "SOURCE_ACCESS_VERIFIED",
+        reason: "Meta competitor ads indexed in database; live collection requires authorized collector.",
       };
     }
 
@@ -141,7 +141,7 @@ export async function checkKH02ProviderReadiness(
     }
 
     case "TIKTOK_ORGANIC": {
-      // Check if TikTok organic provider / key is configured and has budget
+      // Check if TikTok organic provider / key is configured
       const hasDataKey = process.env.HASDATA_API_KEY || process.env.TIKTOK_ORGANIC_API_KEY;
       if (!hasDataKey) {
         return {
@@ -152,8 +152,8 @@ export async function checkKH02ProviderReadiness(
       }
       return {
         ready: true,
-        status: "PASSED",
-        reason: "TikTok Organic research interface configured with API credentials.",
+        status: "CONFIGURED",
+        reason: "TikTok Organic API credentials configured.",
       };
     }
 
@@ -167,18 +167,26 @@ export async function checkKH02ProviderReadiness(
           reason: "Google Ads Transparency research is disabled by environment configuration.",
         };
       }
+      const hasEndpoint = Boolean(process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL || process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND);
+      if (!hasEndpoint) {
+        return {
+          ready: false,
+          status: "NOT_CONFIGURED",
+          reason: "Google Ads Transparency MCP server is not configured in environment.",
+        };
+      }
       return {
         ready: true,
-        status: "PASSED",
-        reason: "Google Ads Transparency lookup available for resolved advertiser domains.",
+        status: "CONFIGURED",
+        reason: "Google Ads Transparency MCP endpoint configured.",
       };
     }
 
     case "DEMAND_HISTORY": {
       return {
         ready: true,
-        status: "PASSED",
-        reason: "Historical demand repository active; supports Google Trends time series.",
+        status: "CONFIGURED",
+        reason: "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
       };
     }
 
