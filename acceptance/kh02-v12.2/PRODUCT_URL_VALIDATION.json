@@ -1,0 +1,13 @@
+{
+  "testedUrl": "https://shop.com/products/ultrasonic-anti-barking-device?ref=fb",
+  "extractedMetadata": {
+    "isValidEcommerceUrl": true,
+    "isShopifyProductUrl": true,
+    "cleanCanonicalUrl": "https://shop.com/products/ultrasonic-anti-barking-device",
+    "storeDomain": "shop.com",
+    "productHandle": "ultrasonic-anti-barking-device",
+    "derivedTitleFromSlug": "Ultrasonic Anti Barking Device"
+  },
+  "ssrfProtectionTested": true,
+  "localhostBlocked": true
+}

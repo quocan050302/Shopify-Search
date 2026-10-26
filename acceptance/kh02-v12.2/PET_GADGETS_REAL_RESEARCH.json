@@ -1,0 +1,52 @@
+{
+  "topic": "Pet Gadgets",
+  "market": "US",
+  "lookbackDays": 90,
+  "totalDiscovered": 6,
+  "topThreeCount": 0,
+  "provisionalCount": 5,
+  "sourceStatuses": {
+    "META_ADS": "PASSED",
+    "TIKTOK_ADS": "NOT_VERIFIED",
+    "TIKTOK_ORGANIC": "CREDENTIALS_REQUIRED",
+    "GOOGLE_ADS": "MCP_NOT_CONFIGURED",
+    "DEMAND_HISTORY": "NOT_VERIFIED"
+  },
+  "candidateSample": [
+    {
+      "id": "cand_1226045733_1",
+      "title": "Hidden Dangers",
+      "identityStatus": "PROBABLE",
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "score": 60
+    },
+    {
+      "id": "cand_1300676686_3",
+      "title": "Grooming Gloves Gg002 L1",
+      "identityStatus": "PROBABLE",
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "score": 60
+    },
+    {
+      "id": "cand_1613504636_4",
+      "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+      "identityStatus": "PROBABLE",
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "score": 60
+    },
+    {
+      "id": "cand_1099592370_5",
+      "title": "Ad50fb",
+      "identityStatus": "PROBABLE",
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "score": 42
+    },
+    {
+      "id": "cand_272373715_2",
+      "title": "Wmt004 1",
+      "identityStatus": "PROBABLE",
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "score": 41
+    }
+  ]
+}

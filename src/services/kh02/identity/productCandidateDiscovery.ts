@@ -16,6 +16,12 @@ import {
   extractDomainFromUrl,
   matchExistingResearchProduct,
 } from "@/services/products/productService";
+import {
+  resolveProductIdentity,
+  ProductIdentityStatus,
+} from "./productIdentityResolver";
+import { extractProductUrlMetadata } from "./productMetadataExtractor";
+import { evaluateProductRelevance } from "./productRelevanceEvaluator";
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
@@ -37,7 +43,11 @@ export interface DiscoveredProductCandidate {
   latestObservationDate: string | null;
   identityConfidence: ProductMatchConfidence;
   sourceObservations: SourceObservation[];
+  identityStatus?: ProductIdentityStatus;
+  resolutionSource?: string;
+  isEligibleAsEvergreenWinner?: boolean;
 }
+
 
 export interface KH02ResolvedCandidate {
   candidateId: string;
@@ -148,7 +158,7 @@ export function discoverProductCandidatesFromAds(
   observations: SourceObservation[],
   topic: string
 ): DiscoveredProductCandidate[] {
-  // Map keyed by canonical product URL or fallback domain+slug
+  // Map keyed by canonical product identity or secure product handle
   const candidateMap = new Map<string, {
     key: string;
     titles: string[];
@@ -167,22 +177,26 @@ export function discoverProductCandidatesFromAds(
   }>();
 
   for (const obs of observations) {
-    // Priority 1: Destination landingPageUrl (product URL) over ad library sourceUrl
-    const destinationUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
-    let canonicalUrl: string | null = null;
-    let storeDomain: string | null = obs.storeDomainEvidence || obs.advertiserDomain || null;
+    const rawDestUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
+    const urlMeta = extractProductUrlMetadata(rawDestUrl);
+
+    let canonicalUrl: string | null = urlMeta.cleanCanonicalUrl || null;
+    let storeDomain: string | null = urlMeta.storeDomain || obs.storeDomainEvidence || obs.advertiserDomain || null;
     let groupKey: string;
 
-    if (destinationUrl && destinationUrl.startsWith("http")) {
-      const canonical = canonicalizeProductUrl(destinationUrl);
-      canonicalUrl = canonical.canonicalUrl;
-      storeDomain = extractDomainFromUrl(destinationUrl) || canonical.hostname;
-      groupKey = canonical.comparisonKey;
-    } else if (storeDomain) {
-      groupKey = `${storeDomain}::${cleanCandidateTitle(obs.title || topic)}`;
+    if (urlMeta.isShopifyProductUrl && urlMeta.productHandle) {
+      // Group ads for the exact same Shopify product together across all creatives
+      groupKey = `shopify::${storeDomain || "store"}::${urlMeta.productHandle}`;
+    } else if (urlMeta.isValidEcommerceUrl && urlMeta.cleanCanonicalUrl) {
+      groupKey = `url::${urlMeta.cleanCanonicalUrl}`;
+    } else if (storeDomain && obs.title) {
+      // Group by store and clean title
+      groupKey = `domain::${storeDomain}::${cleanCandidateTitle(obs.title)}`;
+    } else if (obs.sourceRecordId) {
+      // Unidentified ad creative: separate group so different unknown ads don't collapse into one
+      groupKey = `unidentified::${obs.source}::${obs.sourceRecordId}`;
     } else {
-      // Fallback: group by title similarity
-      groupKey = `GENERIC::${cleanCandidateTitle(obs.title || topic).toLowerCase()}`;
+      groupKey = `generic::${cleanCandidateTitle(obs.title || topic).toLowerCase()}`;
     }
 
     let candidate = candidateMap.get(groupKey);
@@ -201,7 +215,7 @@ export function discoverProductCandidatesFromAds(
         observations: [],
         earliest: null,
         latest: null,
-        confidence: canonicalUrl && canonicalUrl.includes("/products/") ? "EXACT" : (storeDomain ? "PROBABLE" : "AMBIGUOUS"),
+        confidence: urlMeta.isShopifyProductUrl ? "EXACT" : (storeDomain ? "PROBABLE" : "AMBIGUOUS"),
       };
       candidateMap.set(groupKey, candidate);
     }
@@ -227,23 +241,38 @@ export function discoverProductCandidatesFromAds(
     }
   }
 
-  // Convert map into clean DiscoveredProductCandidate list
+  // Convert map into clean DiscoveredProductCandidate list with resolved identities
   const candidates: DiscoveredProductCandidate[] = [];
   let index = 1;
 
   for (const [key, c] of candidateMap.entries()) {
-    // Select most representative title (shortest non-empty clean title)
-    const sortedTitles = c.titles
-      .map(cleanCandidateTitle)
-      .filter((t) => t.length > 5)
-      .sort((a, b) => a.length - b.length);
+    const firstObs = c.observations[0];
+    const sourceRef = firstObs
+      ? `${firstObs.source === "META_ADS" ? "Facebook Ad" : firstObs.source} #${firstObs.sourceExternalAdId || firstObs.sourceRecordId}`
+      : undefined;
 
-    const title = sortedTitles[0] || `${topic} Solution #${index}`;
+    // Resolve factual product identity through 7-level hierarchy
+    const resolvedIdentity = resolveProductIdentity({
+      landingPageUrl: c.canonicalUrl,
+      storeDomain: c.storeDomain,
+      brandOrAdvertiser: Array.from(c.advertisers)[0] || null,
+      rawHeadlines: c.titles,
+      rawDescriptions: c.descriptions,
+      sourceReference: sourceRef,
+    });
+
+    // Check product relevance against niche
+    const relevance = evaluateProductRelevance(resolvedIdentity.displayTitle, topic);
+    if (relevance.relevanceStatus === "IRRELEVANT" && !resolvedIdentity.isEligibleAsEvergreenWinner) {
+      // Discard completely irrelevant spam / unrelated categories
+      continue;
+    }
+
     const problemStatement = inferProblemStatement(c.titles[0] || null, c.descriptions[0] || null);
 
     candidates.push({
       candidateId: `cand_${Math.abs(hashCode(key))}_${index}`,
-      title,
+      title: resolvedIdentity.displayTitle,
       category: topic,
       problemStatement,
       targetAudience: "Homeowners, Pet Owners & Everyday Problem Solvers",
@@ -258,8 +287,11 @@ export function discoverProductCandidatesFromAds(
       distinctAdvertisersCount: c.advertisers.size,
       earliestObservationDate: c.earliest,
       latestObservationDate: c.latest,
-      identityConfidence: c.confidence,
+      identityConfidence: resolvedIdentity.identityStatus === "VERIFIED" ? "EXACT" : (resolvedIdentity.identityStatus === "PROBABLE" ? "HIGH_CONFIDENCE" : "AMBIGUOUS"),
       sourceObservations: c.observations,
+      identityStatus: resolvedIdentity.identityStatus,
+      resolutionSource: resolvedIdentity.resolutionSource,
+      isEligibleAsEvergreenWinner: resolvedIdentity.isEligibleAsEvergreenWinner && relevance.isAccepted,
     });
 
     index++;

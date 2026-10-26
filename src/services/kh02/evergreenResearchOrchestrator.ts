@@ -24,6 +24,7 @@ import { collectMetaProductSignals } from "./providers/metaResearchAdapter";
 import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
 import { collectTikTokOrganicSignals } from "./providers/tiktokOrganicResearchAdapter";
 import { collectGoogleAdvertiserSignals } from "./providers/googleTransparencyResearchAdapter";
+import { diagnoseKH02Source } from "./providers/sourceRegistry";
 import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
@@ -34,6 +35,7 @@ import {
   loadProductHistoricalDemand,
   DemandDataPoint,
 } from "./demand/temporalDemandEngine";
+import { resolveProductDemandHistory } from "./demand/historicalDemandIngestion";
 import {
   calculateKH02EvergreenScore,
   KH02ScoreResult,
@@ -227,43 +229,55 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
-  try {
-    const ttOrganicResult = await withStageTimeout(
-      collectTikTokOrganicSignals(query),
-      STAGE_TIMEOUT_MS,
-      "TikTok Organic"
-    );
-    sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
-    secondaryObservations.push(...ttOrganicResult.observations);
-    if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
-  } catch (err: any) {
-    sourceStatuses.TIKTOK_ORGANIC = "FAILED";
-    errors.push(`TikTok Organic collection failed: ${err.message}`);
+  const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
+  if (!ttDiag.configured) {
+    sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
+    warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
+  } else {
+    try {
+      const ttOrganicResult = await withStageTimeout(
+        collectTikTokOrganicSignals(query),
+        STAGE_TIMEOUT_MS,
+        "TikTok Organic"
+      );
+      sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
+      secondaryObservations.push(...ttOrganicResult.observations);
+      if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
+    } catch (err: any) {
+      sourceStatuses.TIKTOK_ORGANIC = "FAILED";
+      errors.push(`TikTok Organic collection failed: ${err.message}`);
+    }
   }
 
   // ── Stage 6: Google Ads Transparency Enrichment ───────────────────────────
-  try {
-    // Extract identified advertiser domains from candidates
-    const discoveredDomains = candidates
-      .map((c) => c.storeDomain)
-      .filter((d): d is string => Boolean(d));
+  const googleDiag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: input.workspaceId });
+  if (!googleDiag.configured) {
+    sourceStatuses.GOOGLE_ADS = googleDiag.status as SourceRunStatus;
+    warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
+  } else {
+    try {
+      // Extract identified advertiser domains from candidates
+      const discoveredDomains = candidates
+        .map((c) => c.storeDomain)
+        .filter((d): d is string => Boolean(d));
 
-    const googleQuery: IntelligenceQuery = {
-      ...query,
-      advertiserDomains: Array.from(new Set(discoveredDomains)),
-    };
+      const googleQuery: IntelligenceQuery = {
+        ...query,
+        advertiserDomains: Array.from(new Set(discoveredDomains)),
+      };
 
-    const googleResult = await withStageTimeout(
-      collectGoogleAdvertiserSignals(googleQuery),
-      STAGE_TIMEOUT_MS,
-      "Google Ads Transparency"
-    );
-    sourceStatuses.GOOGLE_ADS = googleResult.status;
-    secondaryObservations.push(...googleResult.observations);
-    if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
-  } catch (err: any) {
-    sourceStatuses.GOOGLE_ADS = "FAILED";
-    errors.push(`Google Ads collection failed: ${err.message}`);
+      const googleResult = await withStageTimeout(
+        collectGoogleAdvertiserSignals(googleQuery),
+        STAGE_TIMEOUT_MS,
+        "Google Ads Transparency"
+      );
+      sourceStatuses.GOOGLE_ADS = googleResult.status;
+      secondaryObservations.push(...googleResult.observations);
+      if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
+    } catch (err: any) {
+      sourceStatuses.GOOGLE_ADS = "FAILED";
+      errors.push(`Google Ads collection failed: ${err.message}`);
+    }
   }
 
   // ── Stage 7: Product-Specific Cross-Platform Evidence Association ─────────
@@ -306,16 +320,15 @@ export async function runEvergreenProductResearch(
   const rankedItems: RankedLeaderboardItem[] = [];
 
   for (const candidate of candidates) {
-    let demandSeries: DemandDataPoint[] = [];
-
-    // Grounded: Only query historical demand if a real ResearchProduct.id was resolved
-    if (candidate.researchProductId) {
-      demandSeries = await loadProductHistoricalDemand(candidate.researchProductId);
-    }
+    const demandRes = await resolveProductDemandHistory({
+      productId: candidate.researchProductId,
+      canonicalName: candidate.title,
+      category: candidate.category,
+    }, { lookbackDays, region: market });
 
     const score = calculateKH02EvergreenScore({
       candidate,
-      demandSeries,
+      demandSeries: demandRes.dataPoints,
       hasVerifiedSupplierQuote: false,
     });
 
@@ -325,6 +338,7 @@ export async function runEvergreenProductResearch(
       score,
     });
   }
+
 
   // Evaluate Demand History status truthfully: requires verified demand on at least 1 candidate
   let hasVerifiedDemand = false;

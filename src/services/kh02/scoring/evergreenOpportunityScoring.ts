@@ -86,7 +86,7 @@ export interface EligibilityGateResult {
  * versus the secondary Provisional Opportunities shortlist.
  */
 export function applyKH02EligibilityGates(
-  scoreResult: Omit<KH02ScoreResult, "tier"> & { tier?: KH02ProductTier }
+  scoreResult: Omit<KH02ScoreResult, "tier"> & { tier?: KH02ProductTier; isProductIdentityVerified?: boolean }
 ): EligibilityGateResult {
   const gateReasons: string[] = [];
 
@@ -126,9 +126,16 @@ export function applyKH02EligibilityGates(
     gateReasons.push(`Opportunity score (${oppScore}/100) below verified evergreen threshold (65/100).`);
   }
 
+  // Gate 5: Product Identity Verification (Section 95: Ambiguous identity cannot become verified evergreen winner)
+  const isIdentityVerified = (scoreResult as any).isProductIdentityVerified !== false;
+  if (!isIdentityVerified) {
+    gateReasons.push("Product identity is unconfirmed, provisional, or ambiguous; cannot qualify as verified evergreen winner.");
+  }
+
   // Final Qualification Decision
   if (
     scoreResult.scoreStatus === "VERIFIED" &&
+    isIdentityVerified &&
     demandScore !== null &&
     demandScore >= 15 &&
     !isDemandDeclining &&
@@ -423,7 +430,10 @@ export function calculateKH02EvergreenScore(
     evaluatedAt,
   };
 
-  const gateResult = applyKH02EligibilityGates(prelimResult);
+  const gateResult = applyKH02EligibilityGates({
+    ...prelimResult,
+    isProductIdentityVerified: c.identityStatus === "VERIFIED",
+  });
 
   return {
     ...prelimResult,

@@ -45,6 +45,8 @@ interface RankedItem {
     supportingSourceTypes: string[];
     totalObservationCount: number;
     distinctAdvertisersCount: number;
+    identityStatus?: "VERIFIED" | "PROBABLE" | "AMBIGUOUS" | "UNRESOLVED";
+    rawAdIdentifier?: string | null;
     sourceObservations?: any[];
   };
   score: {
@@ -823,10 +825,30 @@ export default function ProductsPage() {
                             <span className="text-[11px] text-slate-400 font-medium">
                               {item.candidate.category}
                             </span>
+                            {item.candidate.identityStatus && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${
+                                item.candidate.identityStatus === "VERIFIED"
+                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/40"
+                                  : item.candidate.identityStatus === "PROBABLE"
+                                  ? "bg-blue-950/60 text-blue-300 border-blue-800/40"
+                                  : "bg-amber-950/60 text-amber-300 border-amber-800/40"
+                              }`}>
+                                {item.candidate.identityStatus === "VERIFIED"
+                                  ? "Verified Product"
+                                  : item.candidate.identityStatus === "PROBABLE"
+                                  ? "Probable Product"
+                                  : "Needs Review"}
+                              </span>
+                            )}
                           </div>
-                          <h3 className="text-base md:text-lg font-bold text-white leading-tight">
+                          <h3 className={`text-base md:text-lg font-bold leading-tight ${
+                            item.candidate.identityStatus === "UNRESOLVED" || item.candidate.title.startsWith("Unidentified Product")
+                              ? "text-amber-200/90 font-mono text-sm"
+                              : "text-white"
+                          }`}>
                             {item.candidate.title}
                           </h3>
+
                           {item.candidate.problemStatement && (
                             <p className="text-xs text-slate-300 line-clamp-2">
                               <span className="text-purple-400 font-semibold">Problem:</span> {item.candidate.problemStatement}
@@ -966,10 +988,24 @@ export default function ProductsPage() {
                         </div>
 
                         <div className="space-y-1 flex-1">
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800/40">
-                            PROVISIONAL
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800/40">
+                              PROVISIONAL
+                            </span>
+                            {item.candidate.identityStatus && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium border ${
+                                item.candidate.identityStatus === "VERIFIED"
+                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/40"
+                                  : item.candidate.identityStatus === "PROBABLE"
+                                  ? "bg-blue-950/60 text-blue-300 border-blue-800/40"
+                                  : "bg-amber-950/60 text-amber-300 border-amber-800/40"
+                              }`}>
+                                {item.candidate.identityStatus === "VERIFIED" ? "Verified" : item.candidate.identityStatus === "PROBABLE" ? "Probable" : "Review Required"}
+                              </span>
+                            )}
+                          </div>
                           <h4 className="text-xs font-bold text-white line-clamp-1">{item.candidate.title}</h4>
+
                           <p className="text-[11px] text-slate-400 line-clamp-1">
                             {item.candidate.storeDomain || "Multi-store"} · {item.candidate.distinctAdvertisersCount} advertiser(s)
                           </p>

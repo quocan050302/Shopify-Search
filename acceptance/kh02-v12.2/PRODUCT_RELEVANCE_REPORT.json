@@ -1,0 +1,13 @@
+{
+  "targetNiche": "Pet Gadgets",
+  "testedProduct": "Ultrasonic Dog Grooming Vacuum",
+  "evaluation": {
+    "relevanceStatus": "RELEVANT",
+    "isAccepted": true,
+    "score": 0.95,
+    "reasons": [
+      "Strong niche match on terms: dog, grooming."
+    ],
+    "topic": "Pet Gadgets"
+  }
+}

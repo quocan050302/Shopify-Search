@@ -1,0 +1,12 @@
+{
+  "source": "META_ADS",
+  "freshCollectionProvenance": "LIVE_PROVIDER",
+  "cachedDatabaseProvenance": "CACHED_SOURCE",
+  "explicitVerifiedProvenance": "VERIFIED_SOURCE",
+  "geographicMarketVerification": {
+    "requested": "US",
+    "providerSupportsUS": true,
+    "reportedMarketRule": "Ad-level region verification required for VERIFIED delivery status"
+  },
+  "status": "LIVE_VERIFIED"
+}

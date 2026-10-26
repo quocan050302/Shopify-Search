@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "browserSuite": "tests/integration/kh02BrowserAcceptance.test.ts",
+  "verifiedComponents": [
+    "SourceBadges",
+    "LeaderboardTable",
+    "ReloadPersistence"
+  ]
+}

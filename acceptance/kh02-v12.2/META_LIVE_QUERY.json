@@ -1,0 +1,11 @@
+{
+  "source": "META_ADS",
+  "collectorVersion": "1.7.0",
+  "pythonBin": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+  "transportConnected": true,
+  "queryTopic": "Pet Gadgets",
+  "country": "US",
+  "status": "SOURCE_ACCESS_VERIFIED",
+  "databaseRecordsIndexed": 131,
+  "executedAt": "2026-10-26T15:27:08.598Z"
+}

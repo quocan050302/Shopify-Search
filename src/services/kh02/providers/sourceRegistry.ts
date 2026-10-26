@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { getProviderBudget } from "@/services/providers/budgetService";
 import { prisma } from "@/lib/db";
+import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
 
 export const KH02_SOURCE_CAPABILITIES: Record<IntelligenceSource, SourceCapabilities> = {
   META_ADS: {
@@ -154,32 +155,7 @@ export async function diagnoseKH02Source(
 
   switch (source) {
     case "META_ADS": {
-      let recordCount = 0;
-      let hasDb = false;
-      try {
-        recordCount = await prisma.competitorAd.count({ where: { platform: "META" } });
-        hasDb = true;
-      } catch {
-        hasDb = false;
-      }
-
-      return {
-        source: "META_ADS",
-        adapterInstalled: true,
-        configured: true,
-        transportConnected: hasDb,
-        authenticated: true,
-        discoverySupported: true,
-        queryExecuted: recordCount > 0,
-        recordsReturned: recordCount,
-        provenanceVerified: recordCount > 0,
-        lastCheckedAt,
-        status: "SOURCE_ACCESS_VERIFIED",
-        reason: recordCount > 0
-          ? `Meta competitor ads indexed in database (${recordCount} records observed); live collection supported via local collector.`
-          : "Meta competitor ads adapter configured; live collection available via local collector.",
-        missingRequirements: [],
-      };
+      return diagnoseMetaLiveCollector(context);
     }
 
     case "TIKTOK_ADS": {
@@ -191,8 +167,8 @@ export async function diagnoseKH02Source(
       return {
         source: "TIKTOK_ADS",
         adapterInstalled: true,
-        configured: true,
-        transportConnected: true,
+        configured: false,
+        transportConnected: false,
         authenticated: null,
         discoverySupported: false,
         queryExecuted: recordCount > 0,
@@ -200,7 +176,7 @@ export async function diagnoseKH02Source(
         provenanceVerified: recordCount > 0,
         lastCheckedAt,
         status: "MANUAL_RESEARCH_ONLY",
-        reason: "Automated TikTok US ad provider is unconfigured; database competitor ad search active, manual Creative Center lookup & batch import available.",
+        reason: "Automated TikTok US ad provider is unconfigured (TIKTOK_ADS_US_LIVE: BLOCKED); database competitor ad search active, manual Creative Center lookup & batch import available.",
         missingRequirements: ["TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"],
       };
     }
@@ -220,7 +196,7 @@ export async function diagnoseKH02Source(
           provenanceVerified: false,
           lastCheckedAt,
           status: "CREDENTIALS_REQUIRED",
-          reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment.",
+          reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment (TIKTOK_ORGANIC_LIVE: BLOCKED). Configure HASDATA_API_KEY to enable live organic search.",
           missingRequirements: ["HASDATA_API_KEY"],
         };
       }
@@ -278,7 +254,7 @@ export async function diagnoseKH02Source(
           provenanceVerified: false,
           lastCheckedAt,
           status: "MCP_NOT_CONFIGURED",
-          reason: "Google Ads Transparency MCP server is not configured in environment.",
+          reason: "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_LIVE: BLOCKED).",
           missingRequirements: ["GOOGLE_TRANSPARENCY_MCP_URL"],
         };
       }
@@ -300,6 +276,11 @@ export async function diagnoseKH02Source(
     }
 
     case "DEMAND_HISTORY": {
+      let demandCount = 0;
+      try {
+        demandCount = await prisma.productDemandObservation.count();
+      } catch {}
+
       return {
         source: "DEMAND_HISTORY",
         adapterInstalled: true,
@@ -307,12 +288,14 @@ export async function diagnoseKH02Source(
         transportConnected: true,
         authenticated: true,
         discoverySupported: true,
-        queryExecuted: true,
-        recordsReturned: null,
-        provenanceVerified: true,
+        queryExecuted: demandCount > 0,
+        recordsReturned: demandCount,
+        provenanceVerified: demandCount > 0,
         lastCheckedAt,
         status: "ENGINE_READY",
-        reason: "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
+        reason: demandCount > 0
+          ? `Demand history policy engine active; ${demandCount} observation points stored in SQLite.`
+          : "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
         missingRequirements: [],
       };
     }

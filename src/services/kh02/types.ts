@@ -38,7 +38,14 @@ export type ObservationProvenance =
   | "USER_IMPORTED"
   | "VERIFIED_SOURCE"
   | "UNKNOWN"
-  | "TEST_FIXTURE";
+  | "TEST_FIXTURE"
+  | "LIVE_PROVIDER"
+  | "VERIFIED_IMPORTED"
+  | "MANUAL_IMPORT"
+  | "CACHED_SOURCE"
+  | "CONTROLLED_FIXTURE"
+  | "UNVERIFIED";
+
 
 export type ProductMatchConfidence =
   | "EXACT"
