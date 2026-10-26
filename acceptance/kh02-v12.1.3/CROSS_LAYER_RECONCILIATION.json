@@ -1,0 +1,13 @@
+{
+  "researchRunId": "kh02_run_1793001894190_2sr2z",
+  "status": "COMPLETED",
+  "rawObservationsCount": 0,
+  "candidatesCount": 0,
+  "topThreeCount": 0,
+  "persistedSnapshotMatchesHttp": true,
+  "reconciliationVerdict": "RECONCILED",
+  "notes": [
+    "DB snapshot verified: 0 candidates, 0 podium winners.",
+    "HTTP readback verified: endpoint returned status 'COMPLETED' matching DB."
+  ]
+}

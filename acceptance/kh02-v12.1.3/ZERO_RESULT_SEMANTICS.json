@@ -1,0 +1,5 @@
+{
+  "zeroResultTreatedAsCompleted": true,
+  "distinctFromSoftwareFailure": true,
+  "emptyStateUserMessageAccurate": true
+}

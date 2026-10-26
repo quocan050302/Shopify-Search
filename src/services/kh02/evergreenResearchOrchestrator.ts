@@ -39,10 +39,6 @@ import {
   KH02ScoreResult,
   KH02_SCORE_VERSION,
 } from "./scoring/evergreenOpportunityScoring";
-import {
-  updateKH02ResearchRunStatus,
-  persistKH02RankingSnapshot,
-} from "./persistence/kh02PersistenceService";
 
 export interface RankedLeaderboardItem {
   rank: number | null;
@@ -68,6 +64,19 @@ export interface EvergreenLeaderboardResult {
   errors: string[];
 }
 
+export interface ResearchProgressPayload {
+  stage: "DISCOVERY" | "NORMALIZATION" | "ENRICHMENT" | "SCORING" | "COMPLETION";
+  percent: number;
+  message?: string;
+}
+
+export interface KH02ResearchExecutionContext {
+  workspaceId: string;
+  runId: string;
+  signal?: AbortSignal;
+  reportProgress?: (progress: ResearchProgressPayload) => Promise<void>;
+}
+
 export interface RunEvergreenResearchInput {
   topic: string;
   market?: "US";
@@ -81,33 +90,40 @@ export interface RunEvergreenResearchInput {
 
 /**
  * Executes end-to-end evergreen product research for a given topic/niche.
+ * Pure research orchestrator: does NOT bypass worker ownership by writing directly to SyncJob.
  */
 export async function runEvergreenProductResearch(
-  input: RunEvergreenResearchInput
+  input: RunEvergreenResearchInput,
+  context?: KH02ResearchExecutionContext
 ): Promise<EvergreenLeaderboardResult> {
   const generatedAt = new Date().toISOString();
-  const runId = input.runId || `kh02_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const runId = context?.runId || input.runId || `kh02_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const market = input.market || "US";
   const lookbackDays = input.lookbackDays || 90;
   const maxCandidates = input.maxCandidates || 15;
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  // Update status to RUNNING if persistent run exists
-  await updateKH02ResearchRunStatus({
-    runId,
-    workspaceId: input.workspaceId,
-    status: "RUNNING",
-    progress: 10,
-    startedAt: new Date(),
-  }).catch(() => {});
+  const abortSignal = context?.signal || input.signal;
 
+  // Report initial discovery progress via worker context if provided
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "DISCOVERY",
+      percent: 10,
+      message: "Initiating multi-source product discovery",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
+
+  // Demand history starts as CONFIGURED policy engine until actual temporal points are verified
   const sourceStatuses: Record<IntelligenceSource, SourceRunStatus> = {
     META_ADS: "NOT_CONFIGURED",
     TIKTOK_ADS: "NOT_CONFIGURED",
     TIKTOK_ORGANIC: "NOT_CONFIGURED",
     GOOGLE_ADS: "NOT_CONFIGURED",
-    DEMAND_HISTORY: "SOURCE_DATA_VERIFIED",
+    DEMAND_HISTORY: "CONFIGURED",
   };
 
   const query: IntelligenceQuery = {
@@ -117,7 +133,7 @@ export async function runEvergreenProductResearch(
     market,
     lookbackDays,
     maxResults: 30,
-    signal: input.signal,
+    signal: abortSignal,
   };
 
   const adObservations: SourceObservation[] = [];
@@ -144,12 +160,15 @@ export async function runEvergreenProductResearch(
     errors.push(`TikTok Ads collection failed: ${err.message}`);
   }
 
-  await updateKH02ResearchRunStatus({
-    runId,
-    workspaceId: input.workspaceId,
-    status: "RUNNING",
-    progress: 35,
-  }).catch(() => {});
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "NORMALIZATION",
+      percent: 35,
+      message: "Consolidating product landing pages",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
 
   // ── Stage 3: Extract Consolidated Product Candidates ──────────────────────
   const candidates = discoverProductCandidatesFromAds(adObservations, input.topic);
@@ -167,12 +186,15 @@ export async function runEvergreenProductResearch(
     }
   }
 
-  await updateKH02ResearchRunStatus({
-    runId,
-    workspaceId: input.workspaceId,
-    status: "RUNNING",
-    progress: 50,
-  }).catch(() => {});
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "ENRICHMENT",
+      percent: 50,
+      message: "Resolved candidates; gathering cross-platform video & ad intelligence",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
 
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
@@ -233,12 +255,15 @@ export async function runEvergreenProductResearch(
     }
   }
 
-  await updateKH02ResearchRunStatus({
-    runId,
-    workspaceId: input.workspaceId,
-    status: "RUNNING",
-    progress: 75,
-  }).catch(() => {});
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "SCORING",
+      percent: 75,
+      message: "Scoring candidate evergreen potential & demand stability",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
 
   // ── Stage 8 & 9: Demand Loading, Scoring & Eligibility Gating ─────────────
   const rankedItems: RankedLeaderboardItem[] = [];
@@ -262,6 +287,22 @@ export async function runEvergreenProductResearch(
       candidate,
       score,
     });
+  }
+
+  // Evaluate Demand History status truthfully: requires verified demand on at least 1 candidate
+  let hasVerifiedDemand = false;
+  for (const item of rankedItems) {
+    if (item.score.pillars.demandStability.status === "PASS") {
+      hasVerifiedDemand = true;
+      break;
+    }
+  }
+  if (hasVerifiedDemand) {
+    sourceStatuses.DEMAND_HISTORY = "SOURCE_DATA_VERIFIED";
+  } else if (rankedItems.length > 0) {
+    sourceStatuses.DEMAND_HISTORY = "NOT_VERIFIED";
+  } else {
+    sourceStatuses.DEMAND_HISTORY = "CONFIGURED";
   }
 
   // Sort by opportunityScore desc, then evidenceConfidence desc
@@ -324,10 +365,6 @@ export async function runEvergreenProductResearch(
     errors,
   };
 
-  // ── Stage 11: Persist Snapshot to Database ────────────────────────────────
-  await persistKH02RankingSnapshot(runId, input.workspaceId, result).catch((persistErr) => {
-    warnings.push(`Ranking snapshot persistence warning: ${persistErr.message}`);
-  });
-
+  // Pure orchestrator: returns result without unowned writes to SyncJob
   return result;
 }

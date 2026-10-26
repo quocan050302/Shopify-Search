@@ -144,7 +144,40 @@ export default function ProductsPage() {
     }
   };
 
-  // Explicit User-Triggered Research Execution
+  // Polling helper with bounded attempts and explicit terminal classification
+  const pollJobExecution = async (runId: string) => {
+    let attempts = 0;
+    const maxAttempts = 60;
+    while (attempts < maxAttempts) {
+      await new Promise((r) => setTimeout(r, 1000));
+      attempts++;
+      try {
+        const runRes = await fetch(`/api/v1/kh02/research/runs/${runId}`);
+        if (runRes.ok) {
+          const runJson = await runRes.json();
+          const status = runJson.data?.status;
+          if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
+            if (runJson.data?.result) {
+              setLeaderboard(runJson.data.result);
+            } else {
+              await fetchLatestLeaderboard();
+            }
+            setViewMode("LEADERBOARD");
+            return;
+          } else if (status === "FAILED") {
+            throw new Error(runJson.data?.errorMessage || "Background research job failed.");
+          }
+        }
+      } catch (err: any) {
+        if (err.message && err.message.includes("Background research job failed")) {
+          throw err;
+        }
+      }
+    }
+    throw new Error("Research execution timed out waiting for worker snapshot.");
+  };
+
+  // Explicit User-Triggered Asynchronous Research Execution
   const executeResearch = async (selectedTopic: string = topic, days: number = lookbackDays) => {
     try {
       setIsResearching(true);
@@ -158,6 +191,7 @@ export default function ProductsPage() {
           market: "US",
           lookbackDays: days,
           maxCandidates: 15,
+          mode: "async",
         }),
       });
 
@@ -166,35 +200,13 @@ export default function ProductsPage() {
         throw new Error(json.error?.message || "Failed to execute evergreen product research.");
       }
 
-      if (res.status === 202 && json.data?.runId) {
-        const runId = json.data.runId;
-        let isDone = false;
-        let attempts = 0;
-        while (!isDone && attempts < 60) {
-          await new Promise((r) => setTimeout(r, 1000));
-          attempts++;
-          const runRes = await fetch(`/api/v1/kh02/research/runs/${runId}`);
-          if (runRes.ok) {
-            const runJson = await runRes.json();
-            const status = runJson.data?.status;
-            if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
-              isDone = true;
-              if (runJson.data?.result) {
-                setLeaderboard(runJson.data.result);
-              } else {
-                await fetchLatestLeaderboard();
-              }
-              setViewMode("LEADERBOARD");
-              break;
-            } else if (status === "FAILED") {
-              throw new Error(runJson.data?.errorMessage || "Background research job failed.");
-            }
-          }
-        }
-        if (!isDone) {
-          throw new Error("Research execution timed out waiting for worker snapshot.");
-        }
-      } else {
+      if (res.status === 202 && (json.data?.runId || json.data?.jobId)) {
+        const runId = json.data.runId || json.data.jobId;
+        await pollJobExecution(runId);
+      } else if (json.data?.result) {
+        setLeaderboard(json.data.result);
+        setViewMode("LEADERBOARD");
+      } else if (json.data) {
         setLeaderboard(json.data);
         setViewMode("LEADERBOARD");
       }
@@ -327,6 +339,7 @@ export default function ProductsPage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && executeResearch()}
+                suppressHydrationWarning
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0e0b1c] border border-[#3b2d63] text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder-slate-500"
               />
             </div>
@@ -587,7 +600,7 @@ export default function ProductsPage() {
                 })}
               </div>
             ) : (
-              <div className="p-8 rounded-2xl bg-[#161228] border border-amber-500/30 text-center space-y-3">
+              <div data-testid="kh02-empty-state" className="p-8 rounded-2xl bg-[#161228] border border-amber-500/30 text-center space-y-3">
                 <AlertTriangle className="h-7 w-7 text-amber-400 mx-auto" />
                 <h3 className="text-sm font-bold text-white">No verified evergreen winners yet for &quot;{topic}&quot;</h3>
                 <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">

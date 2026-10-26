@@ -1,0 +1,31 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02V12_1_1_Runtime.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 2222[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.1 — Runtime Hardening & Provider Contract Suite [2m(20)[22m
+     [32m✓[39m 1. Google Ads MCP Contract & Schema Validation [2m(3)[22m
+       [33m[2m✓[22m[39m validates tool arguments against advertised JSON schema[33m 1450[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_3_Ownership.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 327[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_P0.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02SourceAdapters.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02EvergreenScoring.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductIdentity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02TemporalDemand.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m59 passed[39m[22m[90m (59)[39m
+[2m   Start at [22m 15:04:12
+[2m   Duration [22m 15.51s[2m (setup 69%, tests 18%, import 11%, transform 1%, worker 1%)[22m
+
+[2m    Isolate [22m [33m8 workers spawned[39m[2m · ~151ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~1.06s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+
+
+=== STDERR ===

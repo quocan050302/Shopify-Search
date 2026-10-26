@@ -1,0 +1,5 @@
+{
+  "trackADeterministicDiscoveryVerified": true,
+  "trackBLiveProviderAccess": "BLOCKED (Unconfigured external credentials)",
+  "distinguishesPipelineFunctionFromProviderAccess": true
+}

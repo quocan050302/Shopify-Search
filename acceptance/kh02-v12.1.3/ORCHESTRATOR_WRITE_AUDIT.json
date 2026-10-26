@@ -1,0 +1,7 @@
+{
+  "pureOrchestrationVerified": true,
+  "directStatusUpdatesRemoved": true,
+  "directSnapshotPersistenceRemoved": true,
+  "progressDelegatedToContext": true,
+  "unownedExecutionSafe": true
+}

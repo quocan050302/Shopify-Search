@@ -431,8 +431,19 @@ model SyncJob {
   startedAt   DateTime?
   completedAt DateTime?
   createdAt   DateTime  @default(now())
+  // KH-02 Worker Leasing & Monotonic Fencing fields (Additive & Backwards-Compatible)
+  workerId          String?
+  claimToken        String?
+  fencingToken      String?
+  fencingGeneration Int       @default(0)
+  recordVersion     Int       @default(0)
+  leaseExpiresAt    DateTime?
+  attemptNumber     Int       @default(0)
+
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  @@index([jobType, status])
+  @@index([workerId, status])
   @@map("sync_jobs")
 }
 

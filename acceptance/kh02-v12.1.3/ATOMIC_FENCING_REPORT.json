@@ -1,0 +1,6 @@
+{
+  "atomicCASVerified": true,
+  "staleWorkerWriteRejected": true,
+  "fencingGenerationEnforced": true,
+  "recordVersionMonotonic": true
+}

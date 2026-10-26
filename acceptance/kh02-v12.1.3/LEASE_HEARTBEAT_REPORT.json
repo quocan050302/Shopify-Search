@@ -1,0 +1,6 @@
+{
+  "heartbeatManagerActive": true,
+  "inFlightGuardActive": true,
+  "advancesRecordVersion": true,
+  "preservesFencingGeneration": true
+}
