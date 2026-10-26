@@ -25,11 +25,27 @@ import {
   GET as getMatchReview,
 } from "@/app/api/v1/kh02/product-matches/[matchId]/review/route";
 
+import {
+  cleanupKH02TestFixtures,
+  TestFixtureRegistry,
+} from "@/services/kh02/persistence/kh02PersistenceService";
+
 describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
   const WORKSPACE_A = `ws_http_acc_${Date.now()}`;
   const WORKSPACE_B = `ws_http_other_${Date.now()}`;
+  let fixtureRegistry: TestFixtureRegistry = {};
 
   beforeEach(async () => {
+    fixtureRegistry = {
+      workspaceIds: [WORKSPACE_A, WORKSPACE_B],
+      advertiserIds: [],
+      adIds: [],
+      dataSourceIds: [],
+      watchlistIds: [],
+      watchlistItemIds: [],
+      jobIds: [],
+    };
+
     // Seed test workspaces
     await prisma.workspace.createMany({
       data: [
@@ -46,6 +62,7 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
         domain: "pawpure.com",
       },
     });
+    fixtureRegistry.advertiserIds!.push(adv.id);
 
     const ds = await prisma.dataSource.create({
       data: {
@@ -56,6 +73,7 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
         supportedRegions: JSON.stringify(["US"]),
       },
     });
+    fixtureRegistry.dataSourceIds!.push(ds.id);
 
     const ad = await prisma.competitorAd.create({
       data: {
@@ -71,6 +89,7 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
         targetMarket: "US",
       },
     });
+    fixtureRegistry.adIds!.push(ad.id);
 
     const watchlist = await prisma.watchlist.create({
       data: {
@@ -78,32 +97,21 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
         name: "Alpha Watchlist",
       },
     });
+    fixtureRegistry.watchlistIds!.push(watchlist.id);
 
-    await prisma.watchlistItem.create({
+    const item = await prisma.watchlistItem.create({
       data: {
         watchlistId: watchlist.id,
         adId: ad.id,
         itemType: "AD",
       },
     });
+    fixtureRegistry.watchlistItemIds!.push(item.id);
   });
 
   afterEach(async () => {
-    await prisma.syncJob.deleteMany({
-      where: { workspaceId: { in: [WORKSPACE_A, WORKSPACE_B] } },
-    });
-    await prisma.researchEvidence.deleteMany({
-      where: { workspaceId: { in: [WORKSPACE_A, WORKSPACE_B] } },
-    });
-    await prisma.watchlistItem.deleteMany({});
-    await prisma.watchlist.deleteMany({
-      where: { workspaceId: { in: [WORKSPACE_A, WORKSPACE_B] } },
-    });
-    await prisma.competitorAd.deleteMany({});
-    await prisma.advertiser.deleteMany({});
-    await prisma.workspace.deleteMany({
-      where: { id: { in: [WORKSPACE_A, WORKSPACE_B] } },
-    });
+    // Non-destructive scoped cleanup: deletes ONLY tracked fixture IDs
+    await cleanupKH02TestFixtures(fixtureRegistry, prisma);
   });
 
   function createRequest(
@@ -141,7 +149,7 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
 
     const meta = json.data.find((d: any) => d.source === "META_ADS");
     expect(meta.isReady).toBe(true);
-    expect(meta.readiness).toBe("SOURCE_DATA_VERIFIED");
+    expect(meta.readiness).toBe("SOURCE_ACCESS_VERIFIED");
 
     const ttAds = json.data.find((d: any) => d.source === "TIKTOK_ADS");
     expect(ttAds.readiness).toBe("NOT_VERIFIED");
@@ -249,5 +257,32 @@ describe("SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance", () => {
     expect(getResB.status).toBe(200);
     const getJsonB = await getResB.json();
     expect(getJsonB.data).toBeNull();
+  });
+
+  it("proves cleanupKH02TestFixtures preserves unrelated sentinel records (Rule 61)", async () => {
+    // 1. Seed unrelated sentinel record outside the test registry
+    const sentinelAdv = await prisma.advertiser.create({
+      data: {
+        platform: "META",
+        name: `Sentinel Brand ${Date.now()}`,
+        domain: "sentinel-brand.com",
+      },
+    });
+
+    try {
+      // 2. Perform test fixture cleanup for fixtureRegistry
+      const { cleanedCount } = await cleanupKH02TestFixtures(fixtureRegistry, prisma);
+      expect(cleanedCount).toBeGreaterThanOrEqual(1);
+
+      // 3. Assert sentinel record remains untouched and intact
+      const foundSentinel = await prisma.advertiser.findUnique({
+        where: { id: sentinelAdv.id },
+      });
+      expect(foundSentinel).not.toBeNull();
+      expect(foundSentinel?.name).toBe(sentinelAdv.name);
+    } finally {
+      // Clean up sentinel directly
+      await prisma.advertiser.delete({ where: { id: sentinelAdv.id } }).catch(() => {});
+    }
   });
 });

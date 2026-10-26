@@ -47,11 +47,8 @@ export function resolveMetaMarketProvenance(
   const requestedMarket = queryContext.requestedMarket || "US";
   const rawMarket = rawAd?.targetMarket || rawAd?.region || null;
 
-  // Check if provider explicitly reported US delivery market
-  const isExplicitUS =
-    rawMarket === "US" ||
-    rawMarket === "USA" ||
-    (rawAd?.dataSource?.supportedRegions && String(rawAd.dataSource.supportedRegions).includes("US"));
+  // Check if provider explicitly reported US delivery market on the ad itself
+  const isExplicitUS = rawMarket === "US" || rawMarket === "USA";
 
   if (isExplicitUS) {
     return {
@@ -74,6 +71,24 @@ export function resolveMetaMarketProvenance(
       advertiserLocation: rawAd?.advertiser?.country || null,
       inferredMarket: null,
       marketVerification: "VERIFIED",
+      verifiedDeliveryMarket: null,
+    };
+  }
+
+  // If dataSource supports US but ad itself does not specify region, it is INFERRED, NOT VERIFIED
+  const dataSourceSupportsUS = Boolean(
+    rawAd?.dataSource?.supportedRegions &&
+    String(rawAd.dataSource.supportedRegions).includes("US")
+  );
+
+  if (dataSourceSupportsUS) {
+    return {
+      requestedMarket,
+      sourceReportedMarket: null,
+      observedMarket: null,
+      advertiserLocation: rawAd?.advertiser?.country || null,
+      inferredMarket: "US",
+      marketVerification: "INFERRED",
       verifiedDeliveryMarket: null,
     };
   }

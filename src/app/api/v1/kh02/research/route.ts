@@ -66,50 +66,19 @@ export async function POST(request: NextRequest) {
       request.headers.get("prefer") === "respond-async" ||
       request.nextUrl.searchParams.get("async") === "true";
 
-    // 1. Create durable persistent run record in PENDING state
-    const runId = await createKH02ResearchRun({
-      workspaceId: context.workspaceId,
-      topic,
-      market,
-      lookbackDays,
-      maxCandidates,
-    });
-
-    await enqueueResearchJob(runId, { workspaceId: context.workspaceId });
-
     // 2. Asynchronous execution path (HTTP 202 Accepted)
     if (isAsync) {
-      // Launch background execution asynchronously
-      (async () => {
-        try {
-          await updateKH02ResearchRunStatus({
-            runId,
-            workspaceId: context.workspaceId,
-            status: "RUNNING",
-            progress: 15,
-            startedAt: new Date(),
-          });
+      // 1. Create durable persistent run record in PENDING state
+      const runId = await createKH02ResearchRun({
+        workspaceId: context.workspaceId,
+        topic,
+        market,
+        lookbackDays,
+        maxCandidates,
+      });
 
-          const res = await runEvergreenProductResearch({
-            topic,
-            market,
-            lookbackDays,
-            maxCandidates,
-            workspaceId: context.workspaceId,
-            runId,
-          });
-
-          await persistKH02RankingSnapshot(runId, context.workspaceId, res);
-        } catch (execErr: any) {
-          await updateKH02ResearchRunStatus({
-            runId,
-            workspaceId: context.workspaceId,
-            status: "FAILED",
-            errorMessage: execErr.message || "Asynchronous research run failed.",
-            completedAt: new Date(),
-          });
-        }
-      })();
+      // Enqueue job for background worker consumption (Single Executor Invariant)
+      await enqueueResearchJob(runId, { workspaceId: context.workspaceId });
 
       return NextResponse.json(
         {
@@ -134,15 +103,46 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Synchronous execution path (HTTP 200 OK) for backwards compatibility
-    const result = await runEvergreenProductResearch({
+    // In synchronous mode, the request handler acts as exclusive executor without enqueuing
+    const runId = await createKH02ResearchRun({
+      workspaceId: context.workspaceId,
       topic,
       market,
       lookbackDays,
       maxCandidates,
-      workspaceId: context.workspaceId,
-      runId,
-      signal: request.signal,
     });
+
+    await updateKH02ResearchRunStatus({
+      runId,
+      workspaceId: context.workspaceId,
+      status: "RUNNING",
+      progress: 10,
+      startedAt: new Date(),
+    });
+
+    let result;
+    try {
+      result = await runEvergreenProductResearch({
+        topic,
+        market,
+        lookbackDays,
+        maxCandidates,
+        workspaceId: context.workspaceId,
+        runId,
+        signal: request.signal,
+      });
+
+      await persistKH02RankingSnapshot(runId, context.workspaceId, result);
+    } catch (execErr: any) {
+      await updateKH02ResearchRunStatus({
+        runId,
+        workspaceId: context.workspaceId,
+        status: "FAILED",
+        errorMessage: execErr.message || "Synchronous research run failed.",
+        completedAt: new Date(),
+      });
+      throw execErr;
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,0 +1,8 @@
+{
+  "version": "12.1.2",
+  "evaluatedAt": "2026-10-26T06:53:54.653Z",
+  "resolveFunction": "resolveMetaMarketProvenance",
+  "adLevelRegionRequiredForVerified": true,
+  "supportedRegionsOnlyTreatedAsInferred": true,
+  "verdict": "PASS"
+}

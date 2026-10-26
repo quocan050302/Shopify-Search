@@ -124,10 +124,9 @@ export async function runKh02BrowserE2E(
       sourceStatusBarVerified = true;
     }
 
-    // Set search topic in input
+    // Set search topic in input using stable semantic selector
     const searchTopic = options.topic || "Pet Gadgets";
-    const inputSelector = 'input[type="text"]';
-    const topicInput = await page.$(inputSelector);
+    const topicInput = await page.$('input[data-testid="kh02-research-input"], input[type="text"]');
     if (topicInput) {
       await topicInput.fill(searchTopic);
     }
@@ -137,20 +136,24 @@ export async function runKh02BrowserE2E(
     await page.screenshot({ path: shot2, fullPage: false });
     screenshots.push(shot2);
 
-    // Trigger Research by clicking "Analyze Opportunity" button
-    const analyzeBtn = await page.$('button:has-text("Analyze Opportunity"), button:has-text("Analyze")');
+    // Trigger Research by clicking "Analyze Opportunity" button with semantic selector
+    const analyzeBtn = await page.$(
+      'button[data-testid="kh02-analyze-button"], button:has-text("Analyze Opportunity"), button:has-text("Analyze")'
+    );
     if (analyzeBtn) {
       console.log(`[Chromium E2E] Triggering research for '${searchTopic}'...`);
       await analyzeBtn.click();
       researchTriggered = true;
 
-      // Wait for either results or completed cards
+      // Poll/wait for either terminal leaderboard or completed cards
       await page.waitForTimeout(3000);
 
-      // Check if candidate cards appear
-      const cards = await page.$$('[class*="border"], [class*="card"], [class*="rounded"]');
+      // Check if actual candidate product cards appear using semantic selectors
+      const cards = await page.$$(
+        '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]'
+      );
       cardCount = cards.length;
-      resultsRendered = true;
+      resultsRendered = cardCount > 0 || (await page.$('[data-testid="kh02-leaderboard-container"]')) !== null;
 
       // Screenshot 3: Leaderboard Results
       const shot3 = path.join(screenshotDir, "03_leaderboard_results.png");
