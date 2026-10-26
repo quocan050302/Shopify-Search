@@ -14,6 +14,7 @@ import {
   MetaResearchSignals,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
+import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 
 /**
  * Collects Meta advertising observations for a research topic in the US market.
@@ -42,12 +43,15 @@ export async function collectMetaProductSignals(
       ],
     }));
 
-    // Find competitor ads backed by real observation records
+    // Find competitor ads backed by real observation records, strictly scoped to caller's workspace
+    const authorizedWhere = buildAuthorizedAdWhere(query.workspaceId);
+
     const matchingAds = await prisma.competitorAd.findMany({
       where: {
-        platform: "FACEBOOK",
+        platform: { in: ["META", "FACEBOOK"] },
         isSyntheticQuarantine: false,
         AND: [
+          authorizedWhere,
           { OR: searchClauses.map((sc) => sc.OR).flat() },
           { lastSeenAt: { gte: lookbackThreshold } },
         ],
@@ -108,7 +112,10 @@ export async function collectMetaProductSignals(
       return {
         source: "META_ADS",
         sourceRecordId: ad.id,
-        sourceUrl: ad.originalAdUrl || `https://www.facebook.com/ads/library/?id=${ad.externalAdId}`,
+        sourceUrl: ad.originalAdUrl || (ad.externalAdId ? `https://www.facebook.com/ads/library/?id=${ad.externalAdId}` : null),
+        landingPageUrl: ad.landingPageUrl || null,
+        sourceExternalAdId: ad.externalAdId || ad.id,
+        storeDomainEvidence: domain,
         advertiserOrCreator: ad.advertiser?.name || null,
         advertiserDomain: domain,
         productMatchHint: ad.headline || null,
