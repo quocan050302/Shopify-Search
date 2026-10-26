@@ -1,0 +1,10 @@
+{
+  "source": "GOOGLE_ADS",
+  "toolsDiscovered": [],
+  "supportedOperations": {
+    "domainLookup": false,
+    "advertiserSearch": false,
+    "adsRetrieval": false
+  },
+  "status": "BLOCKED_MCP_NOT_CONFIGURED"
+}

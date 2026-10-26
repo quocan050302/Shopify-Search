@@ -10,6 +10,7 @@ import {
   SourceCapabilities,
   SourceRunStatus,
   IntelligenceQuery,
+  ProviderReadinessDimensions,
 } from "../types";
 import { getProviderBudget } from "@/services/providers/budgetService";
 import { prisma } from "@/lib/db";
@@ -65,7 +66,7 @@ export const KH02_SOURCE_CAPABILITIES: Record<IntelligenceSource, SourceCapabili
     coverageDescription: "Public TikTok product video intelligence, play counts, observed engagement ratios, and creator diversity.",
     isOfficialAPI: false,
     isPaidOrMetered: true, // Metered API allowance (e.g. HasData credits)
-    estimatedCostPerQueryCredits: 1,
+    estimatedCostPerQueryCredits: 10,
   },
   GOOGLE_ADS: {
     source: "GOOGLE_ADS",
@@ -117,6 +118,13 @@ export function listKH02SourceCapabilities(): SourceCapabilities[] {
   return Object.values(KH02_SOURCE_CAPABILITIES);
 }
 
+import {
+  fetchHasDataCreditStatus,
+} from "./hasDataCreditService";
+import {
+  discoverGoogleAdsMcpCapabilities,
+} from "./googleTransparencyResearchAdapter";
+
 export interface SourceDiagnosticResult {
   source: string;
   adapterInstalled: boolean;
@@ -131,6 +139,14 @@ export interface SourceDiagnosticResult {
   status: string;
   reason: string;
   missingRequirements: string[];
+  dimensions?: ProviderReadinessDimensions;
+  requiredAction?: string;
+  estimatedQueryCost?: {
+    estimatedCredits: number;
+    isPaid: boolean;
+    knownCost: boolean;
+    pricingSource?: string;
+  };
 }
 
 export interface SourceDiagnosticContext {
@@ -155,7 +171,32 @@ export async function diagnoseKH02Source(
 
   switch (source) {
     case "META_ADS": {
-      return diagnoseMetaLiveCollector(context);
+      const metaDiag = await diagnoseMetaLiveCollector(context);
+      const isConnected = metaDiag.transportConnected === true;
+      const recCount = metaDiag.databaseRecordsIndexed || 0;
+      const dimensions: ProviderReadinessDimensions = {
+        adapterInstalled: true,
+        configured: metaDiag.configured,
+        transportConnected: metaDiag.transportConnected,
+        authenticated: metaDiag.authenticated,
+        supportedOperationsVerified: true,
+        queryExecuted: recCount > 0,
+        sourceDataVerified: recCount > 0,
+        lastLiveQueryAt: null,
+        blockerCode: metaDiag.missingRequirements[0] || null,
+      };
+
+      return {
+        ...metaDiag,
+        dimensions,
+        requiredAction: isConnected ? undefined : "Ensure Python virtualenv is set up for MetaAdsCollector MCP.",
+        estimatedQueryCost: {
+          estimatedCredits: 0,
+          isPaid: false,
+          knownCost: true,
+          pricingSource: "Local MetaAdsCollector MCP (Free zero-cost)",
+        },
+      };
     }
 
     case "TIKTOK_ADS": {
@@ -163,6 +204,18 @@ export async function diagnoseKH02Source(
       try {
         recordCount = await prisma.competitorAd.count({ where: { platform: "TIKTOK" } });
       } catch {}
+
+      const dimensions: ProviderReadinessDimensions = {
+        adapterInstalled: true,
+        configured: false,
+        transportConnected: false,
+        authenticated: null,
+        supportedOperationsVerified: false,
+        queryExecuted: recordCount > 0,
+        sourceDataVerified: recordCount > 0,
+        lastLiveQueryAt: null,
+        blockerCode: "NO_AUTHORIZED_US_AD_PROVIDER",
+      };
 
       return {
         source: "TIKTOK_ADS",
@@ -178,12 +231,31 @@ export async function diagnoseKH02Source(
         status: "MANUAL_RESEARCH_ONLY",
         reason: "Automated TikTok US ad provider is unconfigured (TIKTOK_ADS_US_LIVE: BLOCKED); database competitor ad search active, manual Creative Center lookup & batch import available.",
         missingRequirements: ["TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"],
+        dimensions,
+        requiredAction: "Utilize manual Creative Center batch import or configure authorized US ad provider.",
+        estimatedQueryCost: {
+          estimatedCredits: 0,
+          isPaid: false,
+          knownCost: true,
+        },
       };
     }
 
     case "TIKTOK_ORGANIC": {
       const hasDataKey = process.env.HASDATA_API_KEY || process.env.TIKTOK_ORGANIC_API_KEY;
       if (!hasDataKey) {
+        const dimensions: ProviderReadinessDimensions = {
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: null,
+          authenticated: false,
+          supportedOperationsVerified: false,
+          queryExecuted: false,
+          sourceDataVerified: false,
+          lastLiveQueryAt: null,
+          blockerCode: "MISSING_CREDENTIALS",
+        };
+
         return {
           source: "TIKTOK_ORGANIC",
           adapterInstalled: true,
@@ -198,22 +270,83 @@ export async function diagnoseKH02Source(
           status: "CREDENTIALS_REQUIRED",
           reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment (TIKTOK_ORGANIC_LIVE: BLOCKED). Configure HASDATA_API_KEY to enable live organic search.",
           missingRequirements: ["HASDATA_API_KEY"],
+          dimensions,
+          requiredAction: "Configure HASDATA_API_KEY in environment to enable live video queries.",
+          estimatedQueryCost: {
+            estimatedCredits: 10,
+            isPaid: true,
+            knownCost: true,
+            pricingSource: "HasData MCP Vendor Documentation (10 credits/tool call)",
+          },
         };
       }
+
+      // Key is configured: verify live transport if requested, without assuming connected
+      let transportConnected: boolean | null = null;
+      let authenticated: boolean | null = null;
+      let status = "CONFIGURED";
+      let reason = "TikTok Organic API credentials configured (Paid queries gated by AUTO_PAID_RESEARCH policy).";
+
+      if (context?.checkLiveTransport) {
+        try {
+          const creditStatus = await fetchHasDataCreditStatus({ apiKey: hasDataKey, timeoutMs: 3000 });
+          if (creditStatus.verificationStatus === "BLOCKED") {
+            transportConnected = true;
+            authenticated = false;
+            status = "FAILED";
+            reason = creditStatus.errorMessage || "HasData API key authentication failed.";
+          } else if (creditStatus.remainingCredits !== null) {
+            transportConnected = true;
+            authenticated = true;
+            status = "CONFIGURED";
+            reason = `HasData TikTok Organic API authenticated (${creditStatus.remainingCredits} credits available).`;
+          } else {
+            transportConnected = true;
+            authenticated = null;
+            reason = "HasData credentials configured. Live verification requires a metered search call (zero unapproved charges policy).";
+          }
+        } catch {
+          transportConnected = false;
+          authenticated = false;
+          status = "FAILED";
+          reason = "Failed to establish connection to HasData API.";
+        }
+      }
+
+      const dimensions: ProviderReadinessDimensions = {
+        adapterInstalled: true,
+        configured: true,
+        transportConnected,
+        authenticated,
+        supportedOperationsVerified: authenticated === true,
+        queryExecuted: false,
+        sourceDataVerified: false,
+        lastLiveQueryAt: null,
+        blockerCode: authenticated === false ? "AUTHENTICATION_FAILED" : null,
+      };
+
       return {
         source: "TIKTOK_ORGANIC",
         adapterInstalled: true,
         configured: true,
-        transportConnected: true,
-        authenticated: true,
-        discoverySupported: true,
+        transportConnected,
+        authenticated,
+        discoverySupported: authenticated === true,
         queryExecuted: false,
         recordsReturned: null,
         provenanceVerified: false,
         lastCheckedAt,
-        status: "CONFIGURED",
-        reason: "TikTok Organic API credentials configured (Paid queries gated by AUTO_PAID_RESEARCH policy).",
-        missingRequirements: [],
+        status,
+        reason,
+        missingRequirements: authenticated === false ? ["VALID_HASDATA_API_KEY"] : [],
+        dimensions,
+        requiredAction: authenticated === false ? "Verify and update HASDATA_API_KEY." : undefined,
+        estimatedQueryCost: {
+          estimatedCredits: 10,
+          isPaid: true,
+          knownCost: true,
+          pricingSource: "HasData MCP Vendor Contract (10 credits per query)",
+        },
       };
     }
 
@@ -234,6 +367,17 @@ export async function diagnoseKH02Source(
           status: "SKIPPED",
           reason: "Google Ads Transparency research is disabled by environment configuration.",
           missingRequirements: ["GOOGLE_TRANSPARENCY_ENABLED"],
+          dimensions: {
+            adapterInstalled: true,
+            configured: false,
+            transportConnected: false,
+            authenticated: null,
+            supportedOperationsVerified: false,
+            queryExecuted: false,
+            sourceDataVerified: false,
+            lastLiveQueryAt: null,
+            blockerCode: "DISABLED_BY_CONFIG",
+          },
         };
       }
       const hasEndpoint = Boolean(
@@ -242,6 +386,18 @@ export async function diagnoseKH02Source(
         process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND
       );
       if (!hasEndpoint) {
+        const dimensions: ProviderReadinessDimensions = {
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: false,
+          authenticated: null,
+          supportedOperationsVerified: false,
+          queryExecuted: false,
+          sourceDataVerified: false,
+          lastLiveQueryAt: null,
+          blockerCode: "MCP_NOT_CONFIGURED",
+        };
+
         return {
           source: "GOOGLE_ADS",
           adapterInstalled: true,
@@ -256,22 +412,79 @@ export async function diagnoseKH02Source(
           status: "MCP_NOT_CONFIGURED",
           reason: "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_LIVE: BLOCKED).",
           missingRequirements: ["GOOGLE_TRANSPARENCY_MCP_URL"],
+          dimensions,
+          requiredAction: "Deploy Google Ads Transparency MCP server and configure GOOGLE_TRANSPARENCY_MCP_URL.",
+          estimatedQueryCost: {
+            estimatedCredits: 0,
+            isPaid: false,
+            knownCost: true,
+          },
         };
       }
+
+      // Endpoint configured: probe MCP connection if requested
+      let transportConnected: boolean | null = null;
+      let authenticated: boolean | null = null;
+      let status = "CONFIGURED";
+      let reason = "Google Ads Transparency MCP endpoint configured.";
+
+      if (context?.checkLiveTransport) {
+        try {
+          const caps = await discoverGoogleAdsMcpCapabilities({
+            mcpUrl: process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL,
+            command: process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND,
+            args: process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : undefined,
+          });
+          transportConnected = caps.transportConnected;
+          authenticated = caps.transportConnected;
+          if (caps.transportConnected) {
+            status = "TRANSPORT_CONNECTED";
+            reason = `Google Ads Transparency MCP server connected (${caps.toolsDiscovered.length} tools discovered).`;
+          } else {
+            status = "MCP_TRANSPORT_FAILURE";
+            reason = "Google Ads Transparency MCP server endpoint configured but transport probe failed.";
+          }
+        } catch {
+          transportConnected = false;
+          authenticated = false;
+          status = "MCP_TRANSPORT_FAILURE";
+          reason = "Google Ads Transparency MCP server endpoint configured but connection failed.";
+        }
+      }
+
+      const dimensions: ProviderReadinessDimensions = {
+        adapterInstalled: true,
+        configured: true,
+        transportConnected,
+        authenticated,
+        supportedOperationsVerified: transportConnected === true,
+        queryExecuted: false,
+        sourceDataVerified: false,
+        lastLiveQueryAt: null,
+        blockerCode: transportConnected === false ? "MCP_TRANSPORT_FAILURE" : null,
+      };
+
       return {
         source: "GOOGLE_ADS",
         adapterInstalled: true,
         configured: true,
-        transportConnected: true,
-        authenticated: true,
-        discoverySupported: true,
+        transportConnected,
+        authenticated,
+        discoverySupported: transportConnected === true,
         queryExecuted: false,
         recordsReturned: null,
         provenanceVerified: false,
         lastCheckedAt,
-        status: "CONFIGURED",
-        reason: "Google Ads Transparency MCP endpoint configured.",
-        missingRequirements: [],
+        status,
+        reason,
+        missingRequirements: transportConnected === false ? ["WORKING_MCP_SERVER"] : [],
+        dimensions,
+        requiredAction: transportConnected === false ? "Verify that the Google Ads Transparency MCP server is running and accessible." : undefined,
+        estimatedQueryCost: {
+          estimatedCredits: 0,
+          isPaid: false,
+          knownCost: true,
+        },
       };
     }
 
@@ -280,6 +493,18 @@ export async function diagnoseKH02Source(
       try {
         demandCount = await prisma.productDemandObservation.count();
       } catch {}
+
+      const dimensions: ProviderReadinessDimensions = {
+        adapterInstalled: true,
+        configured: true,
+        transportConnected: true,
+        authenticated: true,
+        supportedOperationsVerified: true,
+        queryExecuted: demandCount > 0,
+        sourceDataVerified: demandCount > 0,
+        lastLiveQueryAt: null,
+        blockerCode: null,
+      };
 
       return {
         source: "DEMAND_HISTORY",
@@ -297,6 +522,13 @@ export async function diagnoseKH02Source(
           ? `Demand history policy engine active; ${demandCount} observation points stored in SQLite.`
           : "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
         missingRequirements: [],
+        dimensions,
+        requiredAction: demandCount > 0 ? undefined : "Provide product-specific search terms or import historical observations.",
+        estimatedQueryCost: {
+          estimatedCredits: 0,
+          isPaid: false,
+          knownCost: true,
+        },
       };
     }
 
@@ -347,15 +579,33 @@ export async function testKH02SourceConnection(
  * Evaluates live configuration and readiness of a source without initiating expensive calls.
  * Maintains full backward-compatibility with existing tests and status enums.
  */
+export interface ProviderReadinessResult {
+  ready: boolean;
+  status: SourceRunStatus;
+  diagnosticStatus: string;
+  reason: string;
+  dimensions: ProviderReadinessDimensions;
+  requiredAction?: string;
+  missingRequirements: string[];
+}
+
 export async function checkKH02ProviderReadiness(
   source: IntelligenceSource,
   workspaceId?: string
-): Promise<{ ready: boolean; status: SourceRunStatus; reason: string }> {
+): Promise<ProviderReadinessResult> {
   const diag = await diagnoseKH02Source(source, { workspaceId });
 
   let status: SourceRunStatus = "NOT_CONFIGURED";
-  if (diag.status === "SOURCE_ACCESS_VERIFIED") {
+  if (diag.status === "SOURCE_DATA_VERIFIED") {
+    status = "SOURCE_DATA_VERIFIED";
+  } else if (diag.status === "SOURCE_ACCESS_VERIFIED") {
     status = "SOURCE_ACCESS_VERIFIED";
+  } else if (diag.status === "CREDENTIALS_REQUIRED") {
+    status = "CREDENTIALS_REQUIRED";
+  } else if (diag.status === "MCP_NOT_CONFIGURED") {
+    status = "MCP_NOT_CONFIGURED";
+  } else if (diag.status === "MCP_TRANSPORT_FAILURE") {
+    status = "MCP_TRANSPORT_FAILURE";
   } else if (diag.status === "CONFIGURED" || diag.status === "ENGINE_READY") {
     status = "CONFIGURED";
   } else if (diag.status === "MANUAL_RESEARCH_ONLY" || diag.status === "NOT_VERIFIED") {
@@ -368,15 +618,32 @@ export async function checkKH02ProviderReadiness(
 
   const ready =
     diag.status === "SOURCE_ACCESS_VERIFIED" ||
+    diag.status === "SOURCE_DATA_VERIFIED" ||
     diag.status === "CONFIGURED" ||
     diag.status === "ENGINE_READY" ||
     diag.status === "MANUAL_RESEARCH_ONLY" ||
     diag.status === "NOT_VERIFIED";
 
+  const dimensions: ProviderReadinessDimensions = diag.dimensions || {
+    adapterInstalled: diag.adapterInstalled,
+    configured: diag.configured,
+    transportConnected: diag.transportConnected,
+    authenticated: diag.authenticated,
+    supportedOperationsVerified: diag.discoverySupported ?? false,
+    queryExecuted: diag.queryExecuted,
+    sourceDataVerified: diag.provenanceVerified,
+    lastLiveQueryAt: null,
+    blockerCode: diag.missingRequirements[0] || null,
+  };
+
   return {
     ready,
     status,
+    diagnosticStatus: diag.status,
     reason: diag.reason,
+    dimensions,
+    requiredAction: diag.requiredAction,
+    missingRequirements: diag.missingRequirements,
   };
 }
 

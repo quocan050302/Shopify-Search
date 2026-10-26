@@ -1,0 +1,11 @@
+{
+  "source": "TIKTOK_ORGANIC",
+  "provider": "HasData TikTok MCP (mcp.hasdata.com/mcp?apis=tiktok)",
+  "authHeaderRequired": "x-api-key",
+  "configured": false,
+  "transportConnected": null,
+  "authenticated": false,
+  "status": "CREDENTIALS_REQUIRED",
+  "blockerCode": "MISSING_CREDENTIALS",
+  "checkedAt": "2026-10-26T16:00:34.623Z"
+}

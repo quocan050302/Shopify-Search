@@ -1,0 +1,9 @@
+{
+  "source": "GOOGLE_ADS",
+  "protocol": "JSON-RPC 2.0 MCP",
+  "configured": false,
+  "transportConnected": false,
+  "status": "MCP_NOT_CONFIGURED",
+  "blockerCode": "MCP_NOT_CONFIGURED",
+  "requiredAction": "Deploy Google Ads Transparency MCP server and configure GOOGLE_TRANSPARENCY_MCP_URL."
+}

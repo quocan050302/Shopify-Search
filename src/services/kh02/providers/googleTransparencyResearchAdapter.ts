@@ -16,6 +16,7 @@
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { isSafePublicUrl } from "@/services/kh02/identity/productMetadataExtractor";
 import {
   IntelligenceQuery,
   SourceResearchResult,
@@ -58,6 +59,7 @@ export interface GoogleMcpCapabilities {
     adDetailTool?: string;
   };
   discoveredAt: string;
+  errorMessage?: string;
 }
 
 export interface GoogleMcpContext {
@@ -238,7 +240,7 @@ export async function discoverGoogleAdsMcpCapabilities(
       },
       discoveredAt,
     };
-  } catch (err) {
+  } catch (err: any) {
     return {
       transportConnected: false,
       toolsDiscovered: [],
@@ -250,6 +252,7 @@ export async function discoverGoogleAdsMcpCapabilities(
       },
       matchedTools: {},
       discoveredAt,
+      errorMessage: err?.message || String(err),
     };
   }
 }
@@ -422,30 +425,61 @@ export function createGoogleTransparencyMcpClient(config?: {
   let transport: StdioClientTransport | null = null;
   let connected = false;
 
+  async function sendMcpJsonRpc(method: string, params: any = {}): Promise<any> {
+    if (!mcpUrl) throw new Error("No MCP URL configured");
+    const isSafe = isSafePublicUrl(mcpUrl);
+    if (!isSafe) {
+      throw new Error(`SSRF Security Guard: Blocked potential SSRF endpoint '${mcpUrl}'`);
+    }
+
+    const res = await fetch(mcpUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: Date.now(),
+        method,
+        params,
+      }),
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Google Ads Transparency MCP transport error: HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(json.error.message || `MCP Error ${json.error.code || ""}`);
+    }
+
+    return json.result;
+  }
+
   return {
     async connect(): Promise<void> {
       if (connected) return;
 
       if (command) {
+        if (/[;&|`$\n]/.test(command)) {
+          throw new Error("Security Exception: Command contains forbidden shell metacharacters in MCP command");
+        }
         transport = new StdioClientTransport({
           command,
           args,
         });
         mcpClient = new Client(
-          { name: "swai-google-transparency-client", version: "12.1.0" },
+          { name: "swai-google-transparency-client", version: "12.2.1" },
           { capabilities: {} }
         );
         await mcpClient.connect(transport);
         connected = true;
       } else if (mcpUrl) {
-        // HTTP endpoint check / ping
-        const res = await fetch(`${mcpUrl}/health`, { method: "GET" }).catch(() => null);
-        if (res && (res.status === 200 || res.status === 404)) {
-          connected = true;
-        } else {
-          // Attempt standard probe
-          connected = true;
-        }
+        await sendMcpJsonRpc("tools/list", {});
+        connected = true;
       } else {
         throw new Error("No Google Transparency MCP URL or command configured");
       }
@@ -458,12 +492,9 @@ export function createGoogleTransparencyMcpClient(config?: {
         return toolsResult.tools.map((t) => t.name);
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/tools`, { method: "GET" });
-        if (res.ok) {
-          const json = await res.json();
-          return Array.isArray(json.tools) ? json.tools.map((t: any) => t.name || t) : [];
-        }
-        return ["search_advertiser_by_domain", "get_ads", "get_ad_detail"];
+        const result = await sendMcpJsonRpc("tools/list", {});
+        const tools = result?.tools || [];
+        return Array.isArray(tools) ? tools.map((t: any) => t.name || t) : [];
       }
       return [];
     },
@@ -479,22 +510,15 @@ export function createGoogleTransparencyMcpClient(config?: {
         }));
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/tools`, { method: "GET" });
-        if (res.ok) {
-          const json = await res.json();
-          if (Array.isArray(json.tools)) {
-            return json.tools.map((t: any) => ({
-              name: t.name || String(t),
+        const result = await sendMcpJsonRpc("tools/list", {});
+        const tools = result?.tools || [];
+        return Array.isArray(tools)
+          ? tools.map((t: any) => ({
+              name: t.name,
               description: t.description,
               inputSchema: t.inputSchema || { type: "object" },
-            }));
-          }
-        }
-        return [
-          { name: "search_advertiser_by_domain", inputSchema: { type: "object", properties: { domain: { type: "string" } }, required: ["domain"] } },
-          { name: "get_ads", inputSchema: { type: "object", properties: { advertiser_id: { type: "string" }, region: { type: "string" } }, required: ["advertiser_id"] } },
-          { name: "get_ad_detail", inputSchema: { type: "object", properties: { creative_id: { type: "string" } }, required: ["creative_id"] } },
-        ];
+            }))
+          : [];
       }
       return [];
     },
@@ -508,13 +532,11 @@ export function createGoogleTransparencyMcpClient(config?: {
         });
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/search_advertisers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: queryText }),
+        const result = await sendMcpJsonRpc("tools/call", {
+          name: "search_advertisers",
+          arguments: { query: queryText },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status} from search_advertisers`);
-        return await res.json();
+        return result?.content || result;
       }
       throw new Error("No transport available");
     },
@@ -528,13 +550,11 @@ export function createGoogleTransparencyMcpClient(config?: {
         });
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/search_advertiser_by_domain`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ domain }),
+        const result = await sendMcpJsonRpc("tools/call", {
+          name: "search_advertiser_by_domain",
+          arguments: { domain },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status} from search_advertiser_by_domain`);
-        return await res.json();
+        return result?.content || result;
       }
       throw new Error("No transport available");
     },
@@ -548,13 +568,11 @@ export function createGoogleTransparencyMcpClient(config?: {
         });
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/get_ads`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ advertiser_id: advertiserId, region }),
+        const result = await sendMcpJsonRpc("tools/call", {
+          name: "get_ads",
+          arguments: { advertiser_id: advertiserId, region: region || "US" },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status} from get_ads`);
-        return await res.json();
+        return result?.content || result;
       }
       throw new Error("No transport available");
     },
@@ -568,13 +586,11 @@ export function createGoogleTransparencyMcpClient(config?: {
         });
       }
       if (mcpUrl) {
-        const res = await fetch(`${mcpUrl}/get_ad_detail`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ creative_id: creativeId }),
+        const result = await sendMcpJsonRpc("tools/call", {
+          name: "get_ad_detail",
+          arguments: { creative_id: creativeId },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status} from get_ad_detail`);
-        return await res.json();
+        return result?.content || result;
       }
       throw new Error("No transport available");
     },

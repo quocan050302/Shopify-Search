@@ -209,18 +209,47 @@ export async function diagnoseMetaLiveCollector(
 /**
  * Executes a real live query against public Meta Ad Library via the local MetaAdsCollector MCP server.
  */
+export interface MetaLiveCollectionBreakdown {
+  recordsInDbBeforeQuery: number;
+  sourceRecordsReturned: number;
+  recordsNormalized: number;
+  newUniqueInserted: number;
+  existingUpdated: number;
+  recordsRejected: number;
+  recordsInDbAfterQuery: number;
+  providerQueryTimestamp: string;
+  newAdIds: string[];
+  totalCollected: number;
+  newlyIngestedCount: number;
+  error?: string;
+}
+
 export async function collectLiveMetaAds(
   query: IntelligenceQuery,
   options: { maxLiveResults?: number; timeoutMs?: number } = {}
-): Promise<{
-  newlyIngestedCount: number;
-  newAdIds: string[];
-  totalCollected: number;
-  error?: string;
-}> {
+): Promise<MetaLiveCollectionBreakdown> {
+  const providerQueryTimestamp = new Date().toISOString();
+  let dbCountBefore = 0;
+  try {
+    dbCountBefore = await prisma.competitorAd.count({ where: { platform: "META" } });
+  } catch {}
+
   const config = getMetaCollectorConfig();
   if (!config.enabled || !fs.existsSync(config.pythonBin)) {
-    return { newlyIngestedCount: 0, newAdIds: [], totalCollected: 0, error: "Meta collector not configured" };
+    return {
+      recordsInDbBeforeQuery: dbCountBefore,
+      sourceRecordsReturned: 0,
+      recordsNormalized: 0,
+      newUniqueInserted: 0,
+      existingUpdated: 0,
+      recordsRejected: 0,
+      recordsInDbAfterQuery: dbCountBefore,
+      providerQueryTimestamp,
+      newAdIds: [],
+      totalCollected: 0,
+      newlyIngestedCount: 0,
+      error: "Meta collector not configured",
+    };
   }
 
   let client: any = null;
@@ -238,7 +267,19 @@ export async function collectLiveMetaAds(
 
     const rawAds = searchRes.ads || [];
     if (rawAds.length === 0) {
-      return { newlyIngestedCount: 0, newAdIds: [], totalCollected: 0 };
+      return {
+        recordsInDbBeforeQuery: dbCountBefore,
+        sourceRecordsReturned: 0,
+        recordsNormalized: 0,
+        newUniqueInserted: 0,
+        existingUpdated: 0,
+        recordsRejected: 0,
+        recordsInDbAfterQuery: dbCountBefore,
+        providerQueryTimestamp,
+        newlyIngestedCount: 0,
+        newAdIds: [],
+        totalCollected: 0,
+      };
     }
 
     const normalizedAds = rawAds.map((ad: any) =>
@@ -252,13 +293,37 @@ export async function collectLiveMetaAds(
       isQuarantined: false,
     });
 
+    let dbCountAfter = dbCountBefore;
+    try {
+      dbCountAfter = await prisma.competitorAd.count({ where: { platform: "META" } });
+    } catch {}
+
+    const newInserted = ingestSummary.newUniqueCount || ingestSummary.newUniqueInserted || 0;
+    const existingUp = ingestSummary.existingCount || ingestSummary.existingUpdated || 0;
+
     return {
-      newlyIngestedCount: ingestSummary.newUniqueCount || ingestSummary.newUniqueInserted || 0,
+      recordsInDbBeforeQuery: dbCountBefore,
+      sourceRecordsReturned: rawAds.length,
+      recordsNormalized: normalizedAds.length,
+      newUniqueInserted: newInserted,
+      existingUpdated: existingUp,
+      recordsRejected: ingestSummary.rejectedCount || 0,
+      recordsInDbAfterQuery: dbCountAfter,
+      providerQueryTimestamp,
+      newlyIngestedCount: newInserted,
       newAdIds: ingestSummary.adIds || [],
       totalCollected: rawAds.length,
     };
   } catch (err: any) {
     return {
+      recordsInDbBeforeQuery: dbCountBefore,
+      sourceRecordsReturned: 0,
+      recordsNormalized: 0,
+      newUniqueInserted: 0,
+      existingUpdated: 0,
+      recordsRejected: 0,
+      recordsInDbAfterQuery: dbCountBefore,
+      providerQueryTimestamp,
       newlyIngestedCount: 0,
       newAdIds: [],
       totalCollected: 0,

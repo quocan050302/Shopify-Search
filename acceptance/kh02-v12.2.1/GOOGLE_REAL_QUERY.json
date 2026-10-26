@@ -1,0 +1,6 @@
+{
+  "source": "GOOGLE_ADS",
+  "liveQueryStatus": "BLOCKED",
+  "reason": "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_LIVE: BLOCKED).",
+  "blockerCode": "MCP_NOT_CONFIGURED"
+}

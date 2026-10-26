@@ -19,11 +19,21 @@ export type IntelligenceSource =
 export type SourceRunStatus =
   | "PASSED"
   | "PARTIAL"
+  | "NOT_INSTALLED"
+  | "CREDENTIALS_REQUIRED"
   | "NOT_CONFIGURED"
+  | "MCP_NOT_CONFIGURED"
+  | "MCP_TRANSPORT_FAILURE"
   | "CONFIGURED"
+  | "CONNECTING"
   | "TRANSPORT_CONNECTED"
+  | "AUTHENTICATED"
+  | "CAPABILITY_VERIFIED"
+  | "QUERY_EXECUTED"
   | "SOURCE_ACCESS_VERIFIED"
   | "SOURCE_DATA_VERIFIED"
+  | "MANUAL_RESEARCH_ONLY"
+  | "ENGINE_READY"
   | "NOT_VERIFIED"
   | "UNSUPPORTED_REGION"
   | "BLOCKED"
@@ -32,6 +42,18 @@ export type SourceRunStatus =
   | "NO_RESULTS"
   | "FAILED"
   | "SKIPPED";
+
+export interface ProviderReadinessDimensions {
+  adapterInstalled: boolean;
+  configured: boolean;
+  transportConnected: boolean | null;
+  authenticated: boolean | null;
+  supportedOperationsVerified: boolean;
+  queryExecuted: boolean;
+  sourceDataVerified: boolean;
+  lastLiveQueryAt: string | null;
+  blockerCode: string | null;
+}
 
 export type ObservationProvenance =
   | "REAL_UPSTREAM"

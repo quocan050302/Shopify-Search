@@ -49,6 +49,8 @@ export async function getKH02AggregateHealthReport(
   for (const diag of Object.values(sourceMap)) {
     if (
       diag.status === "SOURCE_ACCESS_VERIFIED" ||
+      diag.status === "SOURCE_DATA_VERIFIED" ||
+      diag.status === "TRANSPORT_CONNECTED" ||
       diag.status === "CONFIGURED" ||
       diag.status === "ENGINE_READY"
     ) {
@@ -56,10 +58,12 @@ export async function getKH02AggregateHealthReport(
     } else if (
       diag.status === "CREDENTIALS_REQUIRED" ||
       diag.status === "MCP_NOT_CONFIGURED" ||
-      diag.status === "BLOCKED"
+      diag.status === "MCP_TRANSPORT_FAILURE" ||
+      diag.status === "BLOCKED" ||
+      diag.status === "FAILED"
     ) {
       blockedOrCredentialsRequired++;
-    } else if (diag.status === "MANUAL_RESEARCH_ONLY") {
+    } else if (diag.status === "MANUAL_RESEARCH_ONLY" || diag.status === "NOT_VERIFIED") {
       manualOnly++;
     }
   }

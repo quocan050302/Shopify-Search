@@ -23,6 +23,11 @@ import {
   X,
   Eye,
   SlidersHorizontal,
+  Server,
+  Info,
+  Database,
+  Globe,
+  KeyRound,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { isStockImage } from "@/services/video/videoSourceResolver";
@@ -86,6 +91,11 @@ interface ProviderStatusItem {
   readiness: string;
   isReady: boolean;
   readinessReason: string;
+  diagnosticStatus?: string;
+  diagnostic?: any;
+  dimensions?: any;
+  requiredAction?: string;
+  estimatedQueryCost?: any;
 }
 
 export default function ProductsPage() {
@@ -130,6 +140,8 @@ export default function ProductsPage() {
 
   // Candidate Inspection Modal State (for unlinked candidates)
   const [inspectCandidate, setInspectCandidate] = useState<RankedItem | null>(null);
+  const [showConnectionDetails, setShowConnectionDetails] = useState<boolean>(false);
+  const [connectionTestResults, setConnectionTestResults] = useState<any[] | null>(null);
 
   // Fetch Latest Leaderboard Snapshot from DB (No network research on reload)
   const fetchLatestLeaderboard = async () => {
@@ -169,6 +181,11 @@ export default function ProductsPage() {
         body: JSON.stringify({ all: true }),
       });
       if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setConnectionTestResults(json.data);
+          setShowConnectionDetails(true);
+        }
         await fetchProviderStatuses();
       }
     } catch (err) {
@@ -407,8 +424,8 @@ export default function ProductsPage() {
 
   const getSourceBadge = (sourceKey: string, defaultLabel: string) => {
     const live = providerStatuses.find((p) => p.source === sourceKey);
-    const status = live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
-    const reason = live?.readinessReason || "";
+    const status = live?.diagnosticStatus || live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
+    const reason = live?.readinessReason || live?.diagnostic?.reason || "";
 
     if (status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
       return (
@@ -421,25 +438,37 @@ export default function ProductsPage() {
         </span>
       );
     }
-    if (status === "SOURCE_ACCESS_VERIFIED" || status === "CONNECTED") {
+    if (status === "SOURCE_ACCESS_VERIFIED" || status === "CONNECTED" || status === "TRANSPORT_CONNECTED") {
+      const label = sourceKey === "META_ADS" ? "Collector Connected" : "Source Available";
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/50 border border-emerald-600/30 text-emerald-300 text-[11px] font-medium"
           title={reason || "Source Available: Indexed in database & collector reachable"}
         >
           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel}: Source Available
+          {defaultLabel}: {label}
         </span>
       );
     }
-    if (status === "CONFIGURED" || status === "ENGINE_READY") {
+    if (status === "ENGINE_READY" || (sourceKey === "DEMAND_HISTORY" && status === "CONFIGURED")) {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
+          title={reason || "Engine Ready: Temporal demand policy active"}
+        >
+          <Clock className="h-3 w-3 text-blue-400" />
+          {defaultLabel}: Engine Ready
+        </span>
+      );
+    }
+    if (status === "CONFIGURED") {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium"
           title={reason || "Configured: Adapter active"}
         >
           <Clock className="h-3 w-3 text-blue-400" />
-          {defaultLabel}: {sourceKey === "DEMAND_HISTORY" ? "Engine Ready" : "Configured"}
+          {defaultLabel}: Configured
         </span>
       );
     }
@@ -450,7 +479,7 @@ export default function ProductsPage() {
           title={reason || "Manual Research Only: Database competitor ad search active"}
         >
           <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: {sourceKey === "TIKTOK_ADS" ? "Manual / DB Only" : "Not Verified"}
+          {defaultLabel}: Manual / DB Only
         </span>
       );
     }
@@ -458,21 +487,21 @@ export default function ProductsPage() {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/30 text-amber-300 text-[11px] font-medium"
-          title={reason || "Credentials Required: Configure API key"}
+          title={reason || "API Key Required: Configure HASDATA_API_KEY"}
         >
           <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: Credentials Required
+          {defaultLabel}: API Key Required
         </span>
       );
     }
-    if (status === "MCP_NOT_CONFIGURED") {
+    if (status === "MCP_NOT_CONFIGURED" || status === "MCP_TRANSPORT_FAILURE") {
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium"
-          title={reason || "MCP server endpoint not configured"}
+          title={reason || "MCP server endpoint missing or unreachable"}
         >
           <Clock className="h-3 w-3 text-slate-500" />
-          {defaultLabel}: MCP Not Configured
+          {defaultLabel}: MCP Server Missing
         </span>
       );
     }
@@ -612,11 +641,106 @@ export default function ProductsPage() {
                 <RefreshCw className={`h-3 w-3 ${isTestingConnections ? "animate-spin" : ""}`} />
                 <span>{isTestingConnections ? "Testing..." : "Test Connections"}</span>
               </button>
+              <button
+                onClick={() => setShowConnectionDetails(!showConnectionDetails)}
+                className="px-2 py-0.5 rounded-md bg-[#1f293d] hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-[11px] font-medium flex items-center gap-1 transition-all"
+                title="Toggle detailed source connection diagnostic panel"
+              >
+                <Info className="h-3 w-3 text-slate-400" />
+                <span>{showConnectionDetails ? "Hide Details" : "Connection Details"}</span>
+              </button>
             </div>
             <div className="text-slate-500 text-[11px]">
               Market: <span className="text-slate-300 font-semibold">United States</span> · Zero unapproved credit spend
             </div>
           </div>
+
+          {/* Connection Diagnostics Details Panel */}
+          {showConnectionDetails && (
+            <div data-testid="kh02-connection-details-panel" className="mt-3 p-4 rounded-xl bg-[#0d1222] border border-purple-500/30 space-y-3 text-xs animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-[#1f293d] pb-2">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-purple-400" />
+                  <span className="font-bold text-white text-xs md:text-sm">Source Intelligence Connection Diagnostics</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                    Non-Metered Diagnostics
+                  </span>
+                  <button
+                    onClick={() => setShowConnectionDetails(false)}
+                    className="text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 text-[10px]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {providerStatuses.map((sourceItem) => {
+                  const diag = sourceItem.diagnostic || {};
+                  const dims = sourceItem.dimensions || diag.dimensions || {};
+                  const cost = diag.estimatedQueryCost || {};
+                  return (
+                    <div
+                      key={sourceItem.source}
+                      className="p-3 rounded-lg bg-[#141b2d] border border-slate-800/80 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-200">{sourceItem.displayName || sourceItem.source}</span>
+                        {getSourceBadge(sourceItem.source, "")}
+                      </div>
+
+                      <div className="space-y-1 text-[11px] text-slate-400">
+                        <div className="flex justify-between">
+                          <span>Configuration:</span>
+                          <span className={diag.configured ? "text-emerald-400" : "text-amber-400 font-medium"}>
+                            {diag.configured ? "Configured" : "Missing"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Transport:</span>
+                          <span className={dims.transportConnected ? "text-emerald-400" : dims.transportConnected === false ? "text-rose-400" : "text-slate-400"}>
+                            {dims.transportConnected === true ? "Connected" : dims.transportConnected === false ? "Unreachable" : "Pending Probe"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Authentication:</span>
+                          <span className={dims.authenticated ? "text-emerald-400" : dims.authenticated === false ? "text-rose-400" : "text-slate-400"}>
+                            {dims.authenticated === true ? "Authenticated" : dims.authenticated === false ? "Invalid Key" : "Unverified / Free"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Stored Records:</span>
+                          <span className="text-slate-300 font-mono">
+                            {typeof diag.recordsReturned === "number" ? diag.recordsReturned : "0"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Query Cost:</span>
+                          <span className="text-slate-300">
+                            {cost.isPaid ? `${cost.estimatedCredits || 10} Credits/query` : "Free Zero-Cost"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {diag.reason && (
+                        <p className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
+                          {diag.reason}
+                        </p>
+                      )}
+
+                      {diag.requiredAction && (
+                        <p className="text-[10px] text-amber-300/90 font-medium">
+                          Action: {diag.requiredAction}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Active Research Progress Panel */}

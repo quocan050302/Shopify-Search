@@ -1,0 +1,27 @@
+{
+  "engineStatus": "ENGINE_READY",
+  "recordsStoredInDb": 0,
+  "productDisambiguatedTerm": "Ultrasonic Anti-Barking Device",
+  "pointsRetrieved": 0,
+  "policyStatus": "ENGINE_READY",
+  "assessment": {
+    "status": "INSUFFICIENT_HISTORY",
+    "eligibleForEvergreen": false,
+    "dataPointsCount": 0,
+    "distinctObservationDatesCount": 0,
+    "coveredDays": 0,
+    "meanInterest": null,
+    "stdDev": null,
+    "coefficientOfVariation": null,
+    "demandClass": "INSUFFICIENT_HISTORY",
+    "sourceAuthority": "UNVERIFIED",
+    "temporalCoverageValid": false,
+    "calculationVersion": "12.1.1",
+    "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+    "missingEvidence": [
+      "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+    ],
+    "evaluatedAt": "2026-10-26T16:00:34.635Z"
+  },
+  "distinction": "Engine is ready (ENGINE_READY); individual products require 3+ observations across 60+ days for verified qualification."
+}

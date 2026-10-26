@@ -1,0 +1,6 @@
+{
+  "apiKeyPresent": false,
+  "authenticationVerified": false,
+  "verificationMechanism": "Metered test required; zero unauthorized paid calls policy enforced",
+  "status": "MISSING_CREDENTIALS"
+}

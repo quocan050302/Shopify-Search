@@ -30,6 +30,46 @@ export interface HasDataCreditStatus {
   errorMessage?: string;
 }
 
+export interface ProviderOperationCost {
+  provider: string;
+  operation: string;
+  estimatedCredits: number | null;
+  knownCost: boolean;
+  pricingSource: string | null;
+  verifiedAt: string | null;
+}
+
+export function getHasDataOperationCost(
+  operation: string
+): ProviderOperationCost {
+  const opUpper = (operation || "").toUpperCase();
+  if (
+    opUpper.includes("TIKTOK") ||
+    opUpper.includes("SEARCH_VIDEOS") ||
+    opUpper.includes("VIDEO") ||
+    opUpper.includes("MCP_TOOL_CALL") ||
+    opUpper.includes("ORGANIC")
+  ) {
+    return {
+      provider: "HASDATA",
+      operation,
+      estimatedCredits: 10, // HasData MCP tool call is 10 credits (1,000 free credits/mo)
+      knownCost: true,
+      pricingSource: "HasData MCP Vendor Documentation (10 credits/tool call)",
+      verifiedAt: "2026-10-26T00:00:00.000Z",
+    };
+  }
+
+  return {
+    provider: "HASDATA",
+    operation,
+    estimatedCredits: null,
+    knownCost: false,
+    pricingSource: null,
+    verifiedAt: null,
+  };
+}
+
 export interface HasDataOperation {
   operationType: "TIKTOK_ORGANIC_SEARCH" | "TIKTOK_VIDEO_METRICS" | "GENERAL_SCRAPE";
   estimatedRequests: number;

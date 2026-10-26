@@ -22,7 +22,12 @@ import {
   TikTokOrganicVideo,
 } from "../types";
 import { estimateResearchProviderCost } from "./sourceRegistry";
-import { fetchHasDataCreditStatus, evaluateHasDataQuota } from "./hasDataCreditService";
+import {
+  fetchHasDataCreditStatus,
+  evaluateHasDataQuota,
+  ProviderOperationCost,
+  getHasDataOperationCost,
+} from "./hasDataCreditService";
 
 export interface ProviderCostPolicy {
   creditsPerRequest: number;
@@ -33,10 +38,10 @@ export interface ProviderCostPolicy {
 }
 
 export const TIKTOK_ORGANIC_COST_POLICY: ProviderCostPolicy = {
-  creditsPerRequest: 1,
+  creditsPerRequest: 10, // HasData MCP tool call costs 10 credits per query
   pageSize: 20,
   maximumPages: 2,
-  freeMonthlyAllowance: 0,
+  freeMonthlyAllowance: 1000, // HasData free monthly allowance is 1,000 credits
   quotaVerifiedAt: "2026-10-26T00:00:00.000Z",
 };
 

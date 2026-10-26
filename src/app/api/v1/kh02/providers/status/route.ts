@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
         return {
           ...cap,
           readiness: readiness.status,
+          diagnosticStatus: readiness.diagnosticStatus,
           isReady: readiness.ready,
           readinessReason: readiness.reason,
+          dimensions: readiness.dimensions,
           diagnostic,
         };
       })

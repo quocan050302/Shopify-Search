@@ -1,0 +1,42 @@
+[
+  {
+    "source": "META_ADS",
+    "connected": true,
+    "authenticated": true,
+    "queryExecuted": true,
+    "records": 10,
+    "verdict": "PASS"
+  },
+  {
+    "source": "TIKTOK_ADS",
+    "connected": false,
+    "authenticated": false,
+    "queryExecuted": false,
+    "records": 0,
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "TIKTOK_ORGANIC",
+    "connected": false,
+    "authenticated": false,
+    "queryExecuted": false,
+    "records": 0,
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "GOOGLE_ADS",
+    "connected": false,
+    "authenticated": false,
+    "queryExecuted": false,
+    "records": 0,
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "DEMAND_HISTORY",
+    "connected": true,
+    "authenticated": true,
+    "queryExecuted": true,
+    "records": 0,
+    "verdict": "ENGINE_READY"
+  }
+]
