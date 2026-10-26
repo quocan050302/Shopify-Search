@@ -1,0 +1,20 @@
+{
+  "mutation": "Injected missing candidate ('cand_3' omitted from browser)",
+  "detected": true,
+  "mismatches": [
+    {
+      "field": "displayedCandidateIds",
+      "expected": [
+        "cand_1",
+        "cand_2",
+        "cand_3"
+      ],
+      "actual": [
+        "cand_1",
+        "cand_2"
+      ],
+      "reason": "Browser candidate set mismatch: missing in browser [cand_3], extra in browser []"
+    }
+  ],
+  "testOutcome": "PASS"
+}

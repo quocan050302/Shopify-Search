@@ -33,13 +33,18 @@ export interface KH02BrowserAcceptance {
   authorized: boolean;
   researchSubmitted: boolean;
   acceptedRunId: string | null;
+  terminalStatus?: string | null;
   terminalStateObserved: boolean;
   resultsRendered: boolean;
   emptyStateAccurate: boolean;
   displayedCandidateIds: string[];
+  displayedRankOrder?: string[];
+  displayedScores?: Record<string, number>;
+  displayedConfidence?: Record<string, string>;
   unexpectedHttpErrors: number[];
   hydrationErrors: string[];
   databaseMatch: boolean;
+  httpMatch?: boolean;
   cardCount: number;
   screenshots: string[];
   consoleLogs: string[];
@@ -91,11 +96,15 @@ export async function runKh02BrowserE2E(
   let authorized = false;
   let researchSubmitted = false;
   let acceptedRunId: string | null = null;
+  let terminalStatus: string | null = null;
   let terminalStateObserved = false;
   let resultsRendered = false;
   let emptyStateAccurate = false;
   let cardCount = 0;
   let databaseMatch = true;
+  const displayedRankOrder: string[] = [];
+  const displayedScores: Record<string, number> = {};
+  const displayedConfidence: Record<string, string> = {};
 
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
@@ -227,11 +236,42 @@ export async function runKh02BrowserE2E(
         } catch {}
       }
 
-      // Wait for loading spinner to appear
-      await page.waitForSelector('text=Aggregating cross-platform intelligence', { timeout: 3000 }).catch(() => null);
+      if (!acceptedRunId) {
+        errors.push("Async research submission failed to return valid acceptedRunId in HTTP 202 response.");
+      }
+
+      // ── Poll authoritative job status via API first (Directive 77) ──
+      if (acceptedRunId) {
+        console.log(`[Chromium E2E] Polling authoritative job status for run '${acceptedRunId}'...`);
+        const pollStart = Date.now();
+        const maxPollMs = 45000;
+        while (Date.now() - pollStart < maxPollMs) {
+          try {
+            const statusRes = await context.request.get(
+              `${options.baseUrl}/api/v1/kh02/research/runs/${acceptedRunId}`,
+              {
+                headers: {
+                  "x-workspace-id": options.workspaceId,
+                  ...(options.adminApiKey ? { authorization: `Bearer ${options.adminApiKey}` } : {}),
+                },
+              }
+            );
+            if (statusRes.ok()) {
+              const runData = await statusRes.json().catch(() => null);
+              const curStatus = runData?.data?.status;
+              if (curStatus === "COMPLETED" || curStatus === "PARTIALLY_COMPLETED" || curStatus === "FAILED") {
+                terminalStatus = curStatus;
+                terminalStateObserved = true;
+                break;
+              }
+            }
+          } catch {}
+          await page.waitForTimeout(1000);
+        }
+      }
 
       // Wait for loading spinner to detach once background worker completes and results render
-      await page.waitForSelector('text=Aggregating cross-platform intelligence', { state: "detached", timeout: 45000 }).catch(() => null);
+      await page.waitForSelector('text=Aggregating cross-platform intelligence', { state: "detached", timeout: 20000 }).catch(() => null);
 
       // Bounded polling for terminal UI state (either ranked cards, provisional cards, or explicit empty state)
       const maxWaitMs = 15000;
@@ -261,21 +301,41 @@ export async function runKh02BrowserE2E(
       const provCards = await page.$$('[data-testid="kh02-provisional-product-card"]');
       cardCount = rankedCards.length + provCards.length;
       resultsRendered = cardCount > 0 || (await page.$('[data-testid="kh02-leaderboard-container"]')) !== null;
+      displayedRankOrder.length = 0;
 
-      // Extract candidate IDs directly from data-candidate-id attributes
+      // Extract candidate IDs directly from data-candidate-id attributes (NO title fallback! Directive 83)
       for (const card of rankedCards) {
         const cid = await card.getAttribute("data-candidate-id");
-        if (cid) displayedCandidateIds.push(cid);
-        const titleEl = await card.$("h3");
-        if (titleEl && !cid) {
-          const text = await titleEl.innerText().catch(() => "");
-          if (text) displayedCandidateIds.push(text.trim());
+        if (cid) {
+          displayedCandidateIds.push(cid);
+          displayedRankOrder.push(cid);
+
+          const scoreAttr = await card.getAttribute("data-opportunity-score");
+          if (scoreAttr) {
+            displayedScores[cid] = parseFloat(scoreAttr);
+          }
+          const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
+          if (confText) {
+            displayedConfidence[cid] = confText;
+          }
+        } else {
+          errors.push("Rendered ranked product card is missing required data-candidate-id attribute.");
         }
       }
+
       for (const card of provCards) {
         const cid = await card.getAttribute("data-candidate-id");
-        if (cid && !displayedCandidateIds.includes(cid)) {
-          displayedCandidateIds.push(cid);
+        if (cid) {
+          if (!displayedCandidateIds.includes(cid)) {
+            displayedCandidateIds.push(cid);
+          }
+          const scoreAttr = await card.getAttribute("data-opportunity-score");
+          if (scoreAttr) {
+            displayedScores[cid] = parseFloat(scoreAttr);
+          }
+          displayedConfidence[cid] = "PROVISIONAL";
+        } else {
+          errors.push("Rendered provisional product card is missing required data-candidate-id attribute.");
         }
       }
 
@@ -284,7 +344,7 @@ export async function runKh02BrowserE2E(
       await page.screenshot({ path: shot3, fullPage: true });
       screenshots.push(shot3);
 
-      // Verify persistence across page reload
+      // Verify persistence across page reload (Directive 82)
       console.log("[Chromium E2E] Testing reload persistence...");
       await page.reload({ waitUntil: "domcontentloaded", timeout: 15000 });
       await page.waitForSelector("h1", { timeout: 10000 });
@@ -295,8 +355,11 @@ export async function runKh02BrowserE2E(
         '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]'
       );
       if (emptyStateAccurate && !postReloadEmpty && postReloadCards.length === 0) {
-        // Did not preserve empty state or cards
         databaseMatch = false;
+        errors.push("Empty state was not preserved across page reload.");
+      } else if (cardCount > 0 && postReloadCards.length === 0) {
+        databaseMatch = false;
+        errors.push("Product candidate cards were lost after page reload.");
       }
     } else {
       errors.push("Analyze button not found on page.");
@@ -314,7 +377,7 @@ export async function runKh02BrowserE2E(
   const durationMs = Date.now() - start;
 
   // Determine truthful verdict:
-  // Must have loaded, authorized, submitted research, observed terminal state, zero unexpected 500s
+  // Must have loaded, authorized, submitted research, observed terminal state, zero unexpected 500s, zero hydration errors, and databaseMatch
   const minCards = options.expectedMinCards ?? 0;
   let verdict: "PASS" | "FAIL" | "BLOCKED" = "FAIL";
   if (!pageLoaded || !authorized) {
@@ -324,13 +387,14 @@ export async function runKh02BrowserE2E(
     errors.push(`Expected at least ${minCards} rendered product card(s), but found ${cardCount}.`);
   } else if (
     researchSubmitted &&
+    acceptedRunId !== null &&
     terminalStateObserved &&
     unexpectedHttpErrors.length === 0 &&
+    hydrationErrors.length === 0 &&
+    databaseMatch &&
     errors.length === 0
   ) {
     verdict = "PASS";
-  } else if (unexpectedHttpErrors.length > 0) {
-    verdict = "FAIL";
   } else {
     verdict = "FAIL";
   }
@@ -340,13 +404,18 @@ export async function runKh02BrowserE2E(
     authorized,
     researchSubmitted,
     acceptedRunId,
+    terminalStatus,
     terminalStateObserved,
     resultsRendered,
     emptyStateAccurate,
     displayedCandidateIds,
+    displayedRankOrder,
+    displayedScores,
+    displayedConfidence,
     unexpectedHttpErrors,
     hydrationErrors,
     databaseMatch,
+    httpMatch: unexpectedHttpErrors.length === 0,
     cardCount,
     screenshots,
     consoleLogs,

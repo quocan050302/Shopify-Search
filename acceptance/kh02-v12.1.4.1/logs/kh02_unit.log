@@ -1,0 +1,31 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02V12_1_3_Ownership.test.ts (5 tests) 263ms
+ ✓ tests/unit/kh02V12_1_4_AtomicCas.test.ts (7 tests) 265ms
+ ✓ tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts (7 tests) 300ms
+ ✓ tests/unit/kh02V12_1_1_Runtime.test.ts (20 tests) 159ms
+ ✓ tests/unit/kh02V12_1_P0.test.ts (8 tests) 13ms
+ ✓ tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts (9 tests) 6ms
+ ✓ tests/unit/kh02V12_1_4_1_Reconciliation.test.ts (16 tests) 6ms
+ ✓ tests/unit/kh02SourceAdapters.test.ts (4 tests) 5ms
+ ✓ tests/unit/kh02ProductIdentity.test.ts (2 tests) 5ms
+ ✓ tests/unit/kh02EvergreenScoring.test.ts (6 tests) 5ms
+ ✓ tests/unit/kh02TemporalDemand.test.ts (5 tests) 4ms
+
+ Test Files  11 passed (11)
+      Tests  89 passed (89)
+   Start at  20:52:31
+   Duration  3.65s (tests 38%, import 38%, setup 17%, transform 5%, worker 2%)
+
+    Isolate  11 workers spawned · ~80ms startup each (spawn + environment, per file)
+             at least ~798ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+
+=== STDERR ===

@@ -1,0 +1,29 @@
+{
+  "mutation": "Injected duplicate candidate ('cand_1' repeated)",
+  "detected": true,
+  "mismatches": [
+    {
+      "field": "displayedCandidateIds",
+      "expected": [
+        "cand_1",
+        "cand_2",
+        "cand_3"
+      ],
+      "actual": [
+        "cand_1",
+        "cand_1",
+        "cand_2"
+      ],
+      "reason": "Browser candidate set mismatch: missing in browser [cand_3], extra in browser []"
+    },
+    {
+      "field": "duplicateBrowserCandidates",
+      "expected": [],
+      "actual": [
+        "cand_1"
+      ],
+      "reason": "Browser rendered duplicate candidate IDs: [cand_1]"
+    }
+  ],
+  "testOutcome": "PASS"
+}

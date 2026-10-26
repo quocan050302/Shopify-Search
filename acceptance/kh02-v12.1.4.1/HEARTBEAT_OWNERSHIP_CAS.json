@@ -1,0 +1,15 @@
+{
+  "retryPredicate": {
+    "jobId": "Exact match",
+    "status": "RUNNING",
+    "workerId": "Exact match with current owner",
+    "claimToken": "Exact match with active claim",
+    "fencingToken": "Exact match with stored fencing token",
+    "fencingGeneration": "Preserved exactly; never incremented on heartbeat",
+    "recordVersion": "Refreshed recordVersion from DB",
+    "leaseExpiresAt": "Must be > now at write time"
+  },
+  "maxRetryAttempts": 3,
+  "testedIn": "tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts",
+  "testOutcome": "PASS"
+}

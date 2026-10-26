@@ -1,0 +1,15 @@
+{
+  "reconciled": true,
+  "browserStatus": "PASS",
+  "displayedCandidateIds": [
+    "cand_282145610_1"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_282145610_1": 42
+  },
+  "displayedConfidence": {
+    "cand_282145610_1": "PROVISIONAL"
+  },
+  "cardCount": 1
+}

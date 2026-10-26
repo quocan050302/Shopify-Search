@@ -1,0 +1,18 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:ownership
+> vitest run tests/unit/kh02V12_1_3_Ownership.test.ts
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02V12_1_3_Ownership.test.ts (5 tests) 279ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  20:52:38
+   Duration  593ms (tests 53%, import 28%, transform 9%, setup 9%, worker 1%)
+
+
+
+=== STDERR ===

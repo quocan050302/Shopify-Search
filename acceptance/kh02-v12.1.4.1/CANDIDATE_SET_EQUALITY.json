@@ -1,0 +1,76 @@
+{
+  "rules": [
+    {
+      "db": [
+        "A",
+        "B",
+        "C"
+      ],
+      "browser": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected": "PASS"
+    },
+    {
+      "db": [
+        "A",
+        "B",
+        "C"
+      ],
+      "browser": [
+        "A"
+      ],
+      "expected": "FAIL (missing B, C)"
+    },
+    {
+      "db": [
+        "A",
+        "B",
+        "C"
+      ],
+      "browser": [
+        "A",
+        "B"
+      ],
+      "expected": "FAIL (missing C)"
+    },
+    {
+      "db": [
+        "A",
+        "B"
+      ],
+      "browser": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected": "FAIL (extra C)"
+    },
+    {
+      "db": [
+        "A",
+        "B"
+      ],
+      "browser": [
+        "A",
+        "A"
+      ],
+      "expected": "FAIL (duplicate A)"
+    },
+    {
+      "db": [
+        "A",
+        "B"
+      ],
+      "browser": [
+        "B",
+        "A"
+      ],
+      "expected": "FAIL (rank inverted)"
+    }
+  ],
+  "unitTestsVerified": 16,
+  "testOutcome": "PASS"
+}

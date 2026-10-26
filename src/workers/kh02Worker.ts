@@ -386,18 +386,43 @@ export async function updateJobIfClaimOwned(
       claimToken: ownership.claimToken,
       fencingGeneration: fencingGen,
       recordVersion: current.recordVersion,
+      leaseExpiresAt: { gt: new Date() },
     };
     if (ownership.fencingToken) {
       retryWhere.fencingToken = ownership.fencingToken;
     }
-    if (current.leaseExpiresAt) retryWhere.leaseExpiresAt = { gt: new Date() };
+
+    // Merge fresh resultJson with patch.resultJson if applicable to preserve heartbeat telemetry
+    let retryResultJson = patch.resultJson;
+    if (patch.resultJson && current.resultJson) {
+      try {
+        const currentMeta = JSON.parse(current.resultJson);
+        const patchMeta = JSON.parse(patch.resultJson);
+        const mergedMeta = {
+          ...currentMeta,
+          ...patchMeta,
+          _runtime: {
+            ...(currentMeta._runtime || {}),
+            ...(patchMeta._runtime || {}),
+          },
+        };
+        retryResultJson = JSON.stringify(mergedMeta);
+      } catch {
+        retryResultJson = patch.resultJson;
+      }
+    }
+
+    const retryData: any = {
+      ...updateData,
+      recordVersion: retryVersion,
+    };
+    if (retryResultJson !== undefined) {
+      retryData.resultJson = retryResultJson;
+    }
 
     const retryRes = await db.syncJob.updateMany({
       where: retryWhere,
-      data: {
-        ...updateData,
-        recordVersion: retryVersion,
-      },
+      data: retryData,
     });
     if (retryRes.count > 0) {
       ownership.recordVersion = retryVersion;
@@ -406,6 +431,64 @@ export async function updateJobIfClaimOwned(
   }
 
   return { success: false, rowsAffected: 0, reason: "VERSION_CONFLICT" };
+}
+
+export interface HeartbeatPayloadResult {
+  valid: boolean;
+  resultJson: string;
+  error?: string;
+}
+
+/**
+ * Builds the heartbeat payload on CAS retry by parsing the fresh database record,
+ * preserving all non-heartbeat fields (e.g. lastProgress, sourceStatuses, topic, raw counts),
+ * and updating only authoritative lease/version telemetry.
+ */
+export function buildHeartbeatRetryPayload(
+  freshPersistedRecord: any,
+  heartbeatUpdate: {
+    nextLeaseExpiresAt: Date;
+    fencingGeneration: number;
+    returnedFencingVersion: number;
+    recordVersion: number;
+    lastHeartbeatAt: Date;
+  }
+): HeartbeatPayloadResult {
+  if (!freshPersistedRecord) {
+    return { valid: false, resultJson: "", error: "Missing persisted record for heartbeat retry." };
+  }
+
+  let freshMeta: any = {};
+  if (freshPersistedRecord.resultJson) {
+    try {
+      freshMeta = JSON.parse(freshPersistedRecord.resultJson);
+    } catch {
+      return { valid: false, resultJson: "", error: "Malformed fresh resultJson in persisted record." };
+    }
+  }
+
+  // Preserve all existing fields in freshMeta (topic, sourceStatuses, raw observations, etc.)
+  // Under _runtime, preserve existing fields (lastProgress, workerId, claimToken, etc.)
+  const freshRuntime =
+    freshMeta && typeof freshMeta._runtime === "object" && freshMeta._runtime !== null
+      ? { ...freshMeta._runtime }
+      : {};
+
+  freshRuntime.leaseExpiresAt = heartbeatUpdate.nextLeaseExpiresAt.toISOString();
+  freshRuntime.fencingGeneration = heartbeatUpdate.fencingGeneration;
+  freshRuntime.fencingVersion = heartbeatUpdate.returnedFencingVersion;
+  freshRuntime.recordVersion = heartbeatUpdate.recordVersion;
+  freshRuntime.lastHeartbeatAt = heartbeatUpdate.lastHeartbeatAt.toISOString();
+
+  const mergedMeta = {
+    ...freshMeta,
+    _runtime: freshRuntime,
+  };
+
+  return {
+    valid: true,
+    resultJson: JSON.stringify(mergedMeta),
+  };
 }
 
 /**
@@ -428,7 +511,7 @@ export async function renewResearchJobLease(
     ownership = ownershipOrWorkerId;
     workerId = ownership.workerId;
     fencingToken = ownership.fencingToken;
-    db = fencingTokenOrDb || prisma;
+    db = (fencingTokenOrDb && typeof fencingTokenOrDb !== "string" ? fencingTokenOrDb : undefined) || dbParam || prisma;
   } else {
     workerId = ownershipOrWorkerId;
     fencingToken = fencingTokenOrDb as string;
@@ -451,12 +534,16 @@ export async function renewResearchJobLease(
     const runtime = meta._runtime || {};
     const expectedWorker = job.workerId || runtime.workerId;
     const expectedToken = job.fencingToken || runtime.fencingToken;
+    const expectedClaim = job.claimToken || runtime.claimToken;
 
-    if (
-      (expectedWorker && expectedWorker !== workerId) ||
-      (expectedToken && fencingToken && expectedToken !== fencingToken)
-    ) {
+    if (expectedWorker && expectedWorker !== workerId) {
       return { renewed: false, error: "Fencing token or worker mismatch." };
+    }
+    if (expectedClaim && ownership?.claimToken && expectedClaim !== ownership.claimToken) {
+      return { renewed: false, error: "Claim token mismatch." };
+    }
+    if (expectedToken && fencingToken && expectedToken !== fencingToken) {
+      return { renewed: false, error: "Fencing token mismatch." };
     }
 
     const now = new Date();
@@ -474,10 +561,13 @@ export async function renewResearchJobLease(
         ? job.fencingGeneration
         : ownership?.fencingGeneration ?? ownership?.fencingVersion ?? runtime.fencingVersion ?? 0;
 
+    // Use caller's expected recordVersion if provided to test CAS; fallback to database version
     const currentRecordVersion =
-      job.recordVersion !== undefined && job.recordVersion !== null
+      ownership?.recordVersion !== undefined && ownership.recordVersion !== null
+        ? ownership.recordVersion
+        : job.recordVersion !== undefined && job.recordVersion !== null
         ? job.recordVersion
-        : ownership?.recordVersion ?? 0;
+        : 0;
     const nextRecordVersion = currentRecordVersion + 1;
 
     const returnedFencingVersion = isLegacyCaller
@@ -497,14 +587,19 @@ export async function renewResearchJobLease(
     if (job.fencingGeneration !== undefined && job.fencingGeneration !== null && job.fencingGeneration > 0) {
       where.fencingGeneration = job.fencingGeneration;
     }
-    if (job.recordVersion !== undefined && job.recordVersion !== null && job.recordVersion > 0) {
-      where.recordVersion = job.recordVersion;
+    if (currentRecordVersion !== undefined && currentRecordVersion !== null && currentRecordVersion > 0) {
+      where.recordVersion = currentRecordVersion;
     }
     if (job.workerId) {
       where.workerId = job.workerId;
     }
-    if (fencingToken || job.fencingToken) {
+    if (job.fencingToken) {
       where.fencingToken = fencingToken || job.fencingToken;
+    } else if (fencingToken) {
+      where.resultJson = { contains: fencingToken };
+    }
+    if (job.claimToken) {
+      where.claimToken = ownership?.claimToken || job.claimToken;
     }
     if (job.leaseExpiresAt) {
       where.leaseExpiresAt = { gt: now };
@@ -520,52 +615,111 @@ export async function renewResearchJobLease(
     });
 
     // If update failed due to same-owner version contention with progress write:
-    if (updateRes.count === 0) {
+    // Bounded CAS retry loop with FRESH payload reload (never reusing stale meta)
+    const MAX_HEARTBEAT_RETRIES = 3;
+    let retryAttempt = 0;
+    while (updateRes.count === 0 && retryAttempt < MAX_HEARTBEAT_RETRIES) {
+      retryAttempt++;
       const refreshed =
         typeof db.syncJob?.findUnique === "function"
           ? await db.syncJob.findUnique({ where: { id: jobId } })
           : null;
-      if (
-        refreshed &&
-        refreshed.status === "RUNNING" &&
-        (!refreshed.workerId || refreshed.workerId === workerId) &&
-        (!refreshed.fencingGeneration || refreshed.fencingGeneration === currentFencingGen) &&
-        (!refreshed.leaseExpiresAt || new Date(refreshed.leaseExpiresAt).getTime() > now.getTime())
-      ) {
-        // Safe retry with refreshed recordVersion
-        const retryRecordVersion = (refreshed.recordVersion || 0) + 1;
-        runtime.recordVersion = retryRecordVersion;
-        const retryWhere: any = {
-          id: jobId,
-          status: "RUNNING",
-          recordVersion: refreshed.recordVersion,
-        };
-        if (refreshed.fencingGeneration !== undefined) retryWhere.fencingGeneration = refreshed.fencingGeneration;
-        if (refreshed.workerId) retryWhere.workerId = refreshed.workerId;
-        if (refreshed.leaseExpiresAt) retryWhere.leaseExpiresAt = { gt: new Date() };
 
-        updateRes = await db.syncJob.updateMany({
-          where: retryWhere,
-          data: {
-            leaseExpiresAt: nextLeaseExpiresAt,
-            recordVersion: retryRecordVersion,
-            resultJson: JSON.stringify({ ...meta, _runtime: runtime }),
-          },
-        });
-        if (updateRes.count > 0) {
-          if (ownership) {
-            ownership.recordVersion = retryRecordVersion;
-            ownership.leaseExpiresAt = nextLeaseExpiresAtStr;
-            ownership.fencingGeneration = currentFencingGen;
-            ownership.fencingVersion = currentFencingGen;
-          }
-          return {
-            renewed: true,
-            leaseExpiresAt: nextLeaseExpiresAtStr,
-            fencingVersion: returnedFencingVersion,
-          };
-        }
+      if (!refreshed || refreshed.status !== "RUNNING") {
+        return { renewed: false, error: "Lease renewal failed: job is no longer in RUNNING state." };
       }
+
+      // Parse fresh metadata for runtime check
+      let refreshedMeta: any = {};
+      try {
+        refreshedMeta = JSON.parse(refreshed.resultJson || "{}");
+      } catch {}
+
+      const effectiveWorker = refreshed.workerId || refreshedMeta?._runtime?.workerId;
+      if (!effectiveWorker || effectiveWorker !== workerId) {
+        return { renewed: false, error: "Lease renewal failed: worker ownership lost." };
+      }
+
+      const expectedClaim = ownership?.claimToken || job.claimToken || runtime.claimToken;
+      const effectiveClaim = refreshed.claimToken || refreshedMeta?._runtime?.claimToken;
+      if (expectedClaim && effectiveClaim && effectiveClaim !== expectedClaim) {
+        return { renewed: false, error: "Lease renewal failed: claim token mismatch." };
+      }
+
+      const expectedFencing = fencingToken || ownership?.fencingToken || job.fencingToken || runtime.fencingToken;
+      const effectiveFencing = refreshed.fencingToken || refreshedMeta?._runtime?.fencingToken;
+      if (expectedFencing && effectiveFencing && effectiveFencing !== expectedFencing) {
+        return { renewed: false, error: "Lease renewal failed: fencing token mismatch." };
+      }
+
+      if (refreshed.fencingGeneration !== undefined && refreshed.fencingGeneration !== currentFencingGen) {
+        return { renewed: false, error: "Lease renewal failed: fencing generation changed." };
+      }
+
+      if (refreshed.leaseExpiresAt && new Date(refreshed.leaseExpiresAt).getTime() <= now.getTime()) {
+        return { renewed: false, error: "Lease renewal failed: lease already expired in database." };
+      }
+
+      // Build retry payload from freshly parsed resultJson (preserving concurrent progress updates!)
+      const retryRecordVersion = (refreshed.recordVersion || 0) + 1;
+      const retryPayload = buildHeartbeatRetryPayload(refreshed, {
+        nextLeaseExpiresAt,
+        fencingGeneration: currentFencingGen,
+        returnedFencingVersion,
+        recordVersion: retryRecordVersion,
+        lastHeartbeatAt: now,
+      });
+
+      if (!retryPayload.valid) {
+        return { renewed: false, error: retryPayload.error || "Failed to build heartbeat retry payload." };
+      }
+
+      const retryWhere: any = {
+        id: jobId,
+        status: "RUNNING",
+      };
+      if (refreshed.fencingGeneration !== undefined && refreshed.fencingGeneration !== null && refreshed.fencingGeneration > 0) {
+        retryWhere.fencingGeneration = refreshed.fencingGeneration;
+      }
+      if (refreshed.recordVersion !== undefined && refreshed.recordVersion !== null) {
+        retryWhere.recordVersion = refreshed.recordVersion;
+      }
+      if (refreshed.workerId) retryWhere.workerId = workerId;
+      if (refreshed.claimToken && expectedClaim) retryWhere.claimToken = expectedClaim;
+      if (refreshed.fencingToken && expectedFencing) {
+        retryWhere.fencingToken = expectedFencing;
+      } else if (expectedFencing) {
+        retryWhere.resultJson = { contains: expectedFencing };
+      }
+      if (refreshed.leaseExpiresAt) {
+        retryWhere.leaseExpiresAt = { gt: new Date() };
+      }
+
+      updateRes = await db.syncJob.updateMany({
+        where: retryWhere,
+        data: {
+          leaseExpiresAt: nextLeaseExpiresAt,
+          recordVersion: retryRecordVersion,
+          resultJson: retryPayload.resultJson,
+        },
+      });
+
+      if (updateRes.count > 0) {
+        if (ownership) {
+          ownership.recordVersion = retryRecordVersion;
+          ownership.leaseExpiresAt = nextLeaseExpiresAtStr;
+          ownership.fencingGeneration = currentFencingGen;
+          ownership.fencingVersion = currentFencingGen;
+        }
+        return {
+          renewed: true,
+          leaseExpiresAt: nextLeaseExpiresAtStr,
+          fencingVersion: returnedFencingVersion,
+        };
+      }
+    }
+
+    if (updateRes.count === 0) {
       return { renewed: false, error: "Lease renewal failed atomic CAS: ownership lost or state changed." };
     }
 

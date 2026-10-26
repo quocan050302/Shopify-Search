@@ -1,0 +1,9 @@
+{
+  "reconciled": true,
+  "httpStatus": "PASS",
+  "runIdMatch": true,
+  "workspaceIdMatch": true,
+  "statusMatch": true,
+  "rankedCandidatesMatch": true,
+  "scoresMatch": true
+}

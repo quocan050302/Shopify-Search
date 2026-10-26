@@ -45,12 +45,16 @@
     "kh02:test:integration": "vitest run tests/integration/kh02",
     "kh02:test:ownership": "vitest run tests/unit/kh02V12_1_3_Ownership.test.ts",
     "kh02:test:cas": "vitest run tests/unit/kh02V12_1_4_AtomicCas.test.ts",
+    "kh02:test:heartbeat": "vitest run tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts",
+    "kh02:test:reconcile": "vitest run tests/unit/kh02V12_1_4_1_Reconciliation.test.ts",
+    "kh02:test:migration": "vitest run tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
     "kh02:test:acceptance": "vitest run tests/integration/kh02V12_1_3_Acceptance.test.ts",
     "kh02:test:browser": "vitest run tests/integration/kh02BrowserAcceptance.test.ts",
     "acceptance:kh02:v12.1.1": "tsx scripts/kh02/runAcceptanceV12_1_1.ts",
     "acceptance:kh02:v12.1.2": "tsx scripts/kh02/runAcceptanceV12_1_2.ts",
     "acceptance:kh02:v12.1.3": "tsx scripts/kh02/runAcceptanceV12_1_3.ts",
-    "acceptance:kh02:v12.1.4": "tsx scripts/kh02/runAcceptanceV12_1_4.ts"
+    "acceptance:kh02:v12.1.4": "tsx scripts/kh02/runAcceptanceV12_1_4.ts",
+    "acceptance:kh02:v12.1.4.1": "tsx scripts/kh02/runAcceptanceV12_1_4_1.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
