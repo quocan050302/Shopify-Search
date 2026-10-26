@@ -22,9 +22,11 @@ export type KH02DemandClass =
   | "INSUFFICIENT_HISTORY";
 
 export interface DemandDataPoint {
-  periodStart: Date | string;
-  periodEnd: Date | string;
-  demandValue: number | null; // 0-100 relative index (Google Trends)
+  periodStart?: Date | string;
+  periodEnd?: Date | string;
+  demandValue?: number | null; // 0-100 relative index (Google Trends)
+  date?: Date | string;
+  value?: number | null;
   region?: string;
   source?: string;
 }
@@ -73,10 +75,23 @@ export function evaluateTemporalDemandStability(
 ): TemporalStabilityEvaluation {
   const evaluatedAt = new Date().toISOString();
 
-  // 1. Filter valid numeric observations
+  // 1. Filter valid numeric observations, deduplicate identical periods, and sort chronologically
+  const seenPeriods = new Set<string>();
   const valid = observations
-    .filter((o) => o.demandValue !== null && o.demandValue !== undefined && !isNaN(o.demandValue) && o.demandValue >= 0)
-    .sort((a, b) => new Date(a.periodStart).getTime() - new Date(b.periodStart).getTime());
+    .filter((o) => {
+      const val = o.demandValue !== undefined ? o.demandValue : (o as any).value;
+      if (val === null || val === undefined || isNaN(val) || val < 0) return false;
+      if (o.demandValue === undefined) o.demandValue = val;
+      const startDate = o.periodStart || o.date;
+      if (!startDate) return false;
+      const timeVal = new Date(startDate).getTime();
+      if (isNaN(timeVal)) return false;
+      const key = `${startDate}::${o.periodEnd || ""}`;
+      if (seenPeriods.has(key)) return false;
+      seenPeriods.add(key);
+      return true;
+    })
+    .sort((a, b) => new Date(a.periodStart || a.date!).getTime() - new Date(b.periodStart || b.date!).getTime());
 
   if (valid.length < 3) {
     return {
@@ -96,8 +111,8 @@ export function evaluateTemporalDemandStability(
   }
 
   // 2. Calculate time span covered
-  const firstTime = new Date(valid[0].periodStart).getTime();
-  const lastTime = new Date(valid[valid.length - 1].periodEnd).getTime();
+  const firstTime = new Date(valid[0].periodStart || valid[0].date!).getTime();
+  const lastTime = new Date(valid[valid.length - 1].periodEnd || valid[valid.length - 1].periodStart || valid[valid.length - 1].date!).getTime();
   const coveredDays = Math.max(1, Math.round((lastTime - firstTime) / (1000 * 60 * 60 * 24)));
 
   // Rule: Never declare evergreen from short-term (< 60 days) data
@@ -143,6 +158,16 @@ export function evaluateTemporalDemandStability(
   else if (slope < -0.5) trendVelocity = "DECELERATING";
   else trendVelocity = "STEADY";
 
+  // Check for cyclical wave evidence (local peaks / troughs)
+  let hasCyclicSwings = false;
+  for (let i = 1; i < values.length - 1; i++) {
+    if ((values[i] > values[i - 1] && values[i] > values[i + 1]) ||
+        (values[i] < values[i - 1] && values[i] < values[i + 1])) {
+      hasCyclicSwings = true;
+      break;
+    }
+  }
+
   // 5. Classification logic
   let demandClass: KH02DemandClass;
   let stabilityScore: number;
@@ -163,20 +188,20 @@ export function evaluateTemporalDemandStability(
     demandClass = "EVERGREEN_STABLE";
     stabilityScore = 25; // Full 25 points for Pillar A
     explanation = `High demand stability (CV: ${cv.toFixed(2)}, mean: ${mean.toFixed(1)}/100) across ${coveredDays} days. Proven persistent search interest.`;
-  } else if (cv >= 0.20 && cv < 0.60 && mean >= 15) {
-    // Moderate variation — seasonal or cyclical
+  } else if (hasCyclicSwings && cv >= 0.20 && cv < 0.60 && mean >= 15) {
+    // Moderate variation with confirmed cyclic peaks/troughs
     demandClass = "SEASONAL_RECURRING";
     stabilityScore = 18;
-    explanation = `Moderate variation (CV: ${cv.toFixed(2)}, mean: ${mean.toFixed(1)}) across ${coveredDays} days — exhibits recurring demand waves.`;
+    explanation = `Moderate variation (CV: ${cv.toFixed(2)}, mean: ${mean.toFixed(1)}) with recurring cyclical waves across ${coveredDays} days.`;
   } else if (trendVelocity === "DECELERATING" || slope < -1.0) {
     demandClass = "DECLINING";
     stabilityScore = 6;
     explanation = `Declining search interest (slope: ${slope.toFixed(2)}, mean: ${mean.toFixed(1)}). Demand is dropping off.`;
   } else {
-    // High variation spike / trend dependent
+    // High variation spike / trend dependent without periodic cycles
     demandClass = "TREND_DEPENDENT";
     stabilityScore = 10;
-    explanation = `High volatility (CV: ${cv.toFixed(2)}). Typical of short-lived viral social spikes rather than durable evergreen utility.`;
+    explanation = `High volatility or non-periodic variation (CV: ${cv.toFixed(2)}). Typical of short-lived viral social spikes rather than durable evergreen utility.`;
   }
 
   return {
