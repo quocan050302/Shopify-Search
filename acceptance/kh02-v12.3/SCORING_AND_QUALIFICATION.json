@@ -1,0 +1,19 @@
+{
+  "formulaVersion": "KH02_V12.3",
+  "pillarWeights": {
+    "adDemandBreadth": 25,
+    "engagementVelocity": 25,
+    "demandStability": 25,
+    "commercialMaturity": 15,
+    "marketRelevance": 10
+  },
+  "qualificationGates": [
+    "Gate 1: Minimum Identity & Commercial Niche Relevance",
+    "Gate 2: Minimum Demand Breadth & Multi-Source Evidence",
+    "Gate 3: Commercial Validation & Real Ecommerce Destination",
+    "Gate 4: Demand Stability & Temporal History Coverage",
+    "Gate 5: Non-Degrading Evergreen Distinctness"
+  ],
+  "evaluatedCandidates": [],
+  "timestamp": "2026-10-27T13:28:51.674Z"
+}

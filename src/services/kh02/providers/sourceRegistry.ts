@@ -127,6 +127,7 @@ import {
   discoverGoogleAdsMcpCapabilities,
   resolveGoogleMcpConfig,
 } from "./googleTransparencyResearchAdapter";
+import { isSourceTemporarilyDisabled } from "./sourcePolicy";
 import { getWorkspaceProviderTelemetry } from "../persistence/kh02PersistenceService";
 import { ProviderSourceTelemetry } from "../types";
 
@@ -210,9 +211,9 @@ export interface SourceDiagnosticResult {
   currentRunRecordCount?: number | null;
   lastSuccessfulLiveQueryAt?: string | null;
   lastProbeAt?: string | null;
-  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED";
-  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED";
-  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED";
+  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" | "DISABLED";
+  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" | "DISABLED";
+  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED" | "DISABLED";
 }
 
 export interface SourceDiagnosticContext {
@@ -367,6 +368,73 @@ export async function diagnoseKH02Source(
     }
 
     case "TIKTOK_ADS": {
+      if (isSourceTemporarilyDisabled("TIKTOK_ADS")) {
+        let recordCount = 0;
+        try {
+          if (context?.workspaceId) {
+            recordCount = await prisma.competitorAd.count({
+              where: {
+                platform: "TIKTOK",
+                isSyntheticQuarantine: false,
+                ...buildAuthorizedAdWhere(context.workspaceId),
+              },
+            });
+          }
+        } catch {}
+
+        const dimensions: ProviderReadinessDimensions = applyTelemetry({
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: null,
+          authenticated: null,
+          supportedOperationsVerified: false,
+          queryExecuted: false,
+          sourceDataVerified: recordCount > 0,
+          lastLiveQueryAt: null,
+          blockerCode: null,
+          storedRecordCount: recordCount,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: null,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "DISABLED",
+          transportStatus: "DISABLED",
+          capabilityStatus: "DISABLED",
+        }, "TIKTOK_ADS");
+
+        return {
+          source: "TIKTOK_ADS",
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: null,
+          authenticated: null,
+          discoverySupported: false,
+          queryExecuted: dimensions.queryExecuted,
+          recordsReturned: recordCount,
+          storedRecordCount: recordCount,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "DISABLED",
+          transportStatus: "DISABLED",
+          capabilityStatus: "DISABLED",
+          provenanceVerified: recordCount > 0,
+          lastCheckedAt,
+          status: "TEMPORARILY_DISABLED",
+          reason: "TikTok Ads US is temporarily disabled in KH-02 V12.3. No outbound requests or session cookie required.",
+          missingRequirements: [],
+          dimensions,
+          requiredAction: undefined,
+          estimatedQueryCost: {
+            estimatedCredits: 0,
+            isPaid: false,
+            knownCost: true,
+            pricingSource: "Temporarily disabled by source policy",
+          },
+        };
+      }
+
       let recordCount = 0;
       try {
         if (context?.workspaceId) {
@@ -447,6 +515,73 @@ export async function diagnoseKH02Source(
     }
 
     case "TIKTOK_ORGANIC": {
+      if (isSourceTemporarilyDisabled("TIKTOK_ORGANIC")) {
+        let recordCount = 0;
+        try {
+          if (context?.workspaceId) {
+            recordCount = await prisma.competitorAd.count({
+              where: {
+                platform: "TIKTOK_ORGANIC",
+                isSyntheticQuarantine: false,
+                ...buildAuthorizedAdWhere(context.workspaceId),
+              },
+            });
+          }
+        } catch {}
+
+        const dimensions: ProviderReadinessDimensions = applyTelemetry({
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: null,
+          authenticated: null,
+          supportedOperationsVerified: false,
+          queryExecuted: false,
+          sourceDataVerified: recordCount > 0,
+          lastLiveQueryAt: null,
+          blockerCode: null,
+          storedRecordCount: recordCount,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: null,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "DISABLED",
+          transportStatus: "DISABLED",
+          capabilityStatus: "DISABLED",
+        }, "TIKTOK_ORGANIC");
+
+        return {
+          source: "TIKTOK_ORGANIC",
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: null,
+          authenticated: null,
+          discoverySupported: false,
+          queryExecuted: dimensions.queryExecuted,
+          recordsReturned: recordCount,
+          storedRecordCount: recordCount,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "DISABLED",
+          transportStatus: "DISABLED",
+          capabilityStatus: "DISABLED",
+          provenanceVerified: recordCount > 0,
+          lastCheckedAt,
+          status: "TEMPORARILY_DISABLED",
+          reason: "TikTok Organic Video Research is temporarily disabled in KH-02 V12.3. No HasData API calls, quota checks, or credentials required.",
+          missingRequirements: [],
+          dimensions,
+          requiredAction: undefined,
+          estimatedQueryCost: {
+            estimatedCredits: 0,
+            isPaid: false,
+            knownCost: true,
+            pricingSource: "Temporarily disabled by source policy",
+          },
+        };
+      }
+
       const hasDataKey = process.env.HASDATA_API_KEY || process.env.TIKTOK_ORGANIC_API_KEY;
       if (!hasDataKey) {
         const dimensions: ProviderReadinessDimensions = {
@@ -929,6 +1064,12 @@ export async function testKH02SourceConnection(
     throw new Error(`Invalid or unsupported intelligence source for connection test: ${source}`);
   }
 
+  if (isSourceTemporarilyDisabled(source)) {
+    const diag = await diagnoseKH02Source(source, { workspaceId: context?.workspaceId });
+    recordLatestProbe(source, diag, context?.workspaceId);
+    return diag;
+  }
+
   const timeoutMs = context?.timeoutMs || 8000;
   let timeoutTimer: NodeJS.Timeout | null = null;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -1019,7 +1160,9 @@ export async function checkKH02ProviderReadiness(
   const diag = await diagnoseKH02Source(source, { workspaceId });
 
   let status: SourceRunStatus = "NOT_CONFIGURED";
-  if (diag.status === "SOURCE_DATA_VERIFIED") {
+  if (diag.status === "TEMPORARILY_DISABLED") {
+    status = "TEMPORARILY_DISABLED";
+  } else if (diag.status === "SOURCE_DATA_VERIFIED") {
     status = "SOURCE_DATA_VERIFIED";
   } else if (diag.status === "SOURCE_ACCESS_VERIFIED") {
     status = "SOURCE_ACCESS_VERIFIED";

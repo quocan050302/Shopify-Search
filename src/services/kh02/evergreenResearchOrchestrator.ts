@@ -27,6 +27,7 @@ import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
 import { collectTikTokOrganicSignals } from "./providers/tiktokOrganicResearchAdapter";
 import { collectGoogleAdvertiserSignals } from "./providers/googleTransparencyResearchAdapter";
 import { diagnoseKH02Source } from "./providers/sourceRegistry";
+import { isSourceTemporarilyDisabled } from "./providers/sourcePolicy";
 import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
@@ -127,8 +128,8 @@ export async function runEvergreenProductResearch(
   // Demand history starts as CONFIGURED policy engine until actual temporal points are verified
   const sourceStatuses: Record<IntelligenceSource, SourceRunStatus> = {
     META_ADS: "NOT_CONFIGURED",
-    TIKTOK_ADS: "NOT_CONFIGURED",
-    TIKTOK_ORGANIC: "NOT_CONFIGURED",
+    TIKTOK_ADS: isSourceTemporarilyDisabled("TIKTOK_ADS") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
+    TIKTOK_ORGANIC: isSourceTemporarilyDisabled("TIKTOK_ORGANIC") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
     GOOGLE_ADS: "NOT_CONFIGURED",
     DEMAND_HISTORY: "CONFIGURED",
   };
@@ -150,7 +151,7 @@ export async function runEvergreenProductResearch(
     TIKTOK_ADS: {
       source: "TIKTOK_ADS",
       queryExecuted: false,
-      queryStatus: "NOT_CONFIGURED",
+      queryStatus: isSourceTemporarilyDisabled("TIKTOK_ADS") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -163,7 +164,7 @@ export async function runEvergreenProductResearch(
     TIKTOK_ORGANIC: {
       source: "TIKTOK_ORGANIC",
       queryExecuted: false,
-      queryStatus: "NOT_CONFIGURED",
+      queryStatus: isSourceTemporarilyDisabled("TIKTOK_ORGANIC") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -201,8 +202,10 @@ export async function runEvergreenProductResearch(
     },
   };
 
-  const isSelected = (source: IntelligenceSource) =>
-    !input.selectedSources || input.selectedSources.includes(source);
+  const isSelected = (source: IntelligenceSource) => {
+    if (isSourceTemporarilyDisabled(source)) return false;
+    return !input.selectedSources || input.selectedSources.includes(source);
+  };
 
   const query: IntelligenceQuery = {
     workspaceId: input.workspaceId,
@@ -369,8 +372,10 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 2: TikTok Ads US Discovery ──────────────────────────────────────
   if (!isSelected("TIKTOK_ADS")) {
-    sourceStatuses.TIKTOK_ADS = "SKIPPED";
-    providerTelemetry.TIKTOK_ADS.queryStatus = "SKIPPED";
+    const isTempDisabled = isSourceTemporarilyDisabled("TIKTOK_ADS");
+    sourceStatuses.TIKTOK_ADS = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    providerTelemetry.TIKTOK_ADS.queryStatus = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    providerTelemetry.TIKTOK_ADS.queryExecuted = false;
   } else {
     try {
       const ttAdsResult = await executeStageWithSignal(
@@ -457,8 +462,10 @@ export async function runEvergreenProductResearch(
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
   if (!isSelected("TIKTOK_ORGANIC")) {
-    sourceStatuses.TIKTOK_ORGANIC = "SKIPPED";
-    providerTelemetry.TIKTOK_ORGANIC.queryStatus = "SKIPPED";
+    const isTempDisabled = isSourceTemporarilyDisabled("TIKTOK_ORGANIC");
+    sourceStatuses.TIKTOK_ORGANIC = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    providerTelemetry.TIKTOK_ORGANIC.queryStatus = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    providerTelemetry.TIKTOK_ORGANIC.queryExecuted = false;
   } else {
     const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
     if (!ttDiag.configured) {
@@ -775,20 +782,52 @@ export async function runEvergreenProductResearch(
     }
   }
 
-  // Assign ranks strictly to verified eligible candidates
-  verifiedWinners.forEach((item, idx) => {
+  // Distinctness filter: Ensure Top 3 never contains duplicate canonical product identities
+  const distinctVerifiedWinners: RankedLeaderboardItem[] = [];
+  const seenCanonicalIdentities = new Set<string>();
+
+  for (const item of verifiedWinners) {
+    const canonicalKey = (
+      item.candidate.canonicalProductName ||
+      item.candidate.displayName ||
+      item.candidate.title ||
+      item.candidate.candidateId
+    ).toLowerCase().trim();
+
+    if (!seenCanonicalIdentities.has(canonicalKey)) {
+      seenCanonicalIdentities.add(canonicalKey);
+      distinctVerifiedWinners.push(item);
+    } else {
+      provisionalCandidates.push({
+        ...item,
+        rank: null,
+      });
+    }
+  }
+
+  // Assign ranks strictly to distinct verified eligible candidates
+  distinctVerifiedWinners.forEach((item, idx) => {
     item.rank = idx + 1;
   });
 
-  const topThree = verifiedWinners.slice(0, 3);
-  const remainingCandidates = verifiedWinners.slice(3, maxCandidates);
+  const topThree = distinctVerifiedWinners.slice(0, 3);
+  const remainingCandidates = distinctVerifiedWinners.slice(3, maxCandidates);
 
-  // Overall run status
-  const anyPassed = Object.values(sourceStatuses).some(
-    (s) => s === "PASSED" || s === "SOURCE_DATA_VERIFIED" || s === "LIVE_DATA_VERIFIED"
+  // Ensure non-winner candidate groups have explicit null rank
+  provisionalCandidates.forEach((item) => { item.rank = null; });
+  insufficientEvidenceCandidates.forEach((item) => { item.rank = null; });
+  remainingCandidates.forEach((item) => { item.rank = null; });
+  rejectedCandidates.forEach((item) => { item.rank = null; });
+
+  // Overall run status: exclude disabled sources from failing the run
+  const activeSources = Object.entries(sourceStatuses).filter(
+    ([src]) => !isSourceTemporarilyDisabled(src as IntelligenceSource)
   );
-  const anyFailed = Object.values(sourceStatuses).some(
-    (s) =>
+  const anyPassed = activeSources.some(
+    ([_, s]) => s === "PASSED" || s === "SOURCE_DATA_VERIFIED" || s === "LIVE_DATA_VERIFIED"
+  );
+  const anyFailed = activeSources.some(
+    ([_, s]) =>
       s === "FAILED" ||
       s === "BLOCKED_SOURCE" ||
       s === "QUERY_FAILED" ||

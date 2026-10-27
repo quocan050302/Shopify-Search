@@ -507,6 +507,18 @@ export default function ProductsPage() {
     const status = probe?.status || live?.diagnosticStatus || live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
     const reason = probe?.reason || live?.readinessReason || live?.diagnostic?.reason || "";
 
+    if (status === "TEMPORARILY_DISABLED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/60 text-slate-400 text-[11px] font-medium"
+          title={reason || "Temporarily disabled in KH-02 V12.3; no outbound calls or credentials required"}
+        >
+          <Clock className="h-3 w-3 text-slate-500" />
+          {defaultLabel ? `${defaultLabel}: Tạm tắt` : "Tạm tắt"}
+        </span>
+      );
+    }
+
     if (status === "TIMEOUT") {
       return (
         <span
@@ -732,6 +744,7 @@ export default function ProductsPage() {
             {/* Action Button */}
             <div className="md:col-span-3">
               <button
+                type="button"
                 data-testid="kh02-analyze-button"
                 onClick={() => {
                   isInputDirtyRef.current = true;
@@ -1301,6 +1314,27 @@ export default function ProductsPage() {
                               <span className="text-purple-400 font-semibold">Problem:</span> {item.candidate.problemStatement}
                             </p>
                           )}
+
+                          {(item.candidate as any)?.psychologyProfile && (
+                            <div className="mt-2 p-2.5 rounded-lg bg-purple-950/30 border border-purple-800/30 text-[11px] space-y-1">
+                              <div className="flex items-center justify-between text-purple-300 font-semibold text-[10px]">
+                                <span>Customer Psychology & Angle</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200">
+                                  {(item.candidate as any).psychologyProfile?.functionalProblem?.status}
+                                </span>
+                              </div>
+                              <p className="text-slate-300 text-[11px]">
+                                <span className="text-purple-400 font-medium">Target:</span> {(item.candidate as any).psychologyProfile?.targetCustomer?.claimText}
+                              </p>
+                              <p className="text-slate-300 text-[11px]">
+                                <span className="text-purple-400 font-medium">Hook:</span> {(item.candidate as any).psychologyProfile?.suggestedMessagingAngle?.claimText}
+                              </p>
+                              <p className="text-slate-500 text-[9px] italic pt-0.5">
+                                * {(item.candidate as any).psychologyProfile?.unverifiedBusinessMetricsDisclaimer}
+                              </p>
+                            </div>
+                          )}
+
                           <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
                             {item.candidate.storeDomain && (
                               <span className="inline-flex items-center gap-1 text-slate-400">
@@ -1404,7 +1438,8 @@ export default function ProductsPage() {
                       data-testid="kh02-provisional-product-card"
                       data-candidate-id={item.candidate.candidateId}
                       data-opportunity-score={item.score?.opportunityScore ?? 0}
-                      data-rank={idx + 4}
+                      data-rank={item.rank ?? ""}
+                      data-display-order={idx + 1}
                       data-confidence={item.score?.evidenceConfidence ?? ""}
                       data-confidence-status={item.score?.scoreStatus ?? "PROVISIONAL"}
                       className="p-4 rounded-xl bg-[#130f24] border border-[#2b214a] hover:border-purple-500/40 transition-all flex items-start justify-between gap-4"

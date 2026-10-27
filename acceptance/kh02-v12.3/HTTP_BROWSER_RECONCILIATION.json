@@ -1,0 +1,46 @@
+{
+  "browserExecution": {
+    "pageLoaded": true,
+    "authorized": true,
+    "researchSubmitted": true,
+    "acceptedRunId": "kh02_run_1793107736822_br9mw",
+    "terminalStatus": "COMPLETED",
+    "terminalStateObserved": true,
+    "resultsRendered": false,
+    "emptyStateAccurate": true,
+    "displayedCandidateIds": [],
+    "displayedRankOrder": [],
+    "displayedScores": {},
+    "displayedConfidence": {},
+    "renderedCards": [],
+    "postReloadCandidateIds": [],
+    "postReloadScores": {},
+    "postReloadCards": [],
+    "postReloadConsistent": true,
+    "unexpectedHttpErrors": [],
+    "hydrationErrors": [],
+    "databaseMatch": true,
+    "httpMatch": true,
+    "cardCount": 0,
+    "screenshots": [
+      "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.3/screenshots/01_before_research.png",
+      "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.3/screenshots/02_source_statuses.png",
+      "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.3/screenshots/03_leaderboard_results.png"
+    ],
+    "consoleLogs": [
+      "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "[log] [HMR] connected",
+      "[log] [Fast Refresh] rebuilding",
+      "[log] [Fast Refresh] done in 106ms",
+      "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "[log] [HMR] connected"
+    ],
+    "errors": [],
+    "durationMs": 19351,
+    "verdict": "PASS"
+  },
+  "exactMatch": true,
+  "renderedCardCount": 0,
+  "verdict": "PASS",
+  "timestamp": "2026-10-27T13:29:11.027Z"
+}

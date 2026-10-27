@@ -22,16 +22,28 @@ import {
 } from "./productIdentityResolver";
 import { extractProductUrlMetadata } from "./productMetadataExtractor";
 import { evaluateProductRelevance } from "./productRelevanceEvaluator";
+import {
+  analyzeCustomerPsychology,
+  CustomerPsychologyProfile,
+} from "../psychology/customerPsychologyService";
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
   researchProductId?: string | null;
   title: string;
+  canonicalProductName?: string | null;
+  displayName?: string;
+  originalAdHeadline?: string | null;
+  originalCreativeCode?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  sku?: string | null;
   category: string;
   problemStatement: string | null;
   targetAudience: string | null;
   thumbnailUrl: string | null;
   videoUrl: string | null;
+  mediaSourceAdId?: string | null;
   canonicalProductUrl: string | null;
   storeDomain: string | null;
   advertiserNames: string[];
@@ -45,10 +57,13 @@ export interface DiscoveredProductCandidate {
   sourceObservations: SourceObservation[];
   identityStatus?: ProductIdentityStatus;
   resolutionSource?: string;
+  requiresManualReview?: boolean;
+  identityEvidenceReferences?: string[];
   isEligibleAsEvergreenWinner?: boolean;
   relevanceStatus?: "RELEVANT" | "PROBABLY_RELEVANT" | "AMBIGUOUS" | "IRRELEVANT";
   relevanceScore?: number;
   relevanceReasons?: string[];
+  psychologyProfile?: CustomerPsychologyProfile | null;
 }
 
 
@@ -195,17 +210,23 @@ export function discoverProductCandidatesFromAds(
 
     if (urlMeta.isShopifyProductUrl && urlMeta.productHandle) {
       // Group ads for the exact same Shopify product together across all creatives
-      groupKey = `shopify::${storeDomain || "store"}::${urlMeta.productHandle}`;
+      groupKey = `shopify::${storeDomain || "store"}::${urlMeta.productHandle.toLowerCase()}`;
     } else if (urlMeta.isValidEcommerceUrl && urlMeta.cleanCanonicalUrl) {
-      groupKey = `url::${urlMeta.cleanCanonicalUrl}`;
-    } else if (storeDomain && obs.title) {
-      // Group by store and clean title
-      groupKey = `domain::${storeDomain}::${cleanCandidateTitle(obs.title)}`;
+      groupKey = `url::${urlMeta.cleanCanonicalUrl.toLowerCase()}`;
+    } else if (storeDomain && obs.title && obs.title.trim().length > 3) {
+      const cleanTitle = cleanCandidateTitle(obs.title);
+      if (cleanTitle.length > 3) {
+        groupKey = `domain::${storeDomain}::${cleanTitle.toLowerCase()}`;
+      } else {
+        groupKey = `ad::${obs.source}::${obs.sourceRecordId || Math.abs(hashCode(obs.title))}`;
+      }
     } else if (obs.sourceRecordId) {
       // Unidentified ad creative: separate group so different unknown ads don't collapse into one
       groupKey = `unidentified::${obs.source}::${obs.sourceRecordId}`;
     } else {
-      groupKey = `generic::${cleanCandidateTitle(obs.title || topic).toLowerCase()}`;
+      const rawTitle = obs.title ? cleanCandidateTitle(obs.title) : "";
+      const seed = rawTitle || obs.description?.slice(0, 30) || topic;
+      groupKey = `creative::${Math.abs(hashCode(seed + "_" + (obs.sourceUrl || "")))}`;
     }
 
     let candidate = candidateMap.get(groupKey);
@@ -256,9 +277,10 @@ export function discoverProductCandidatesFromAds(
   let index = 1;
 
   for (const [key, c] of candidateMap.entries()) {
-    const firstObs = c.observations[0];
-    const sourceRef = firstObs
-      ? `${firstObs.source === "META_ADS" ? "Facebook Ad" : firstObs.source} #${firstObs.sourceExternalAdId || firstObs.sourceRecordId}`
+    // Find representative observation for media attachment integrity
+    const repObs = c.observations.find((o) => o.media?.thumbnailUrl) || c.observations[0];
+    const sourceRef = repObs
+      ? `${repObs.source === "META_ADS" ? "Facebook Ad" : repObs.source} #${repObs.sourceExternalAdId || repObs.sourceRecordId}`
       : undefined;
 
     // Resolve factual product identity through 7-level hierarchy
@@ -281,17 +303,39 @@ export function discoverProductCandidatesFromAds(
     ].filter(Boolean).join(" ");
 
     const relevance = evaluateProductRelevance(candidateContext, topic);
-
     const problemStatement = inferProblemStatement(c.titles[0] || null, c.descriptions[0] || null);
+
+    // Analyze customer psychology grounded strictly in observed evidence
+    const psychProfile = analyzeCustomerPsychology({
+      candidateTitle: resolvedIdentity.displayName || resolvedIdentity.displayTitle,
+      categoryOrTopic: topic,
+      rawHeadlines: c.titles,
+      rawDescriptions: c.descriptions,
+      landingPageUrl: c.canonicalUrl,
+      advertiserName: Array.from(c.advertisers)[0] || null,
+      sourceReference: sourceRef,
+    });
+
+    const chosenThumbnail = repObs?.media?.thumbnailUrl || c.thumbnails[0] || null;
+    const chosenVideo = repObs?.media?.videoUrl || c.videos[0] || null;
+    const mediaSourceAdId = repObs?.sourceRecordId || repObs?.sourceExternalAdId || null;
 
     candidates.push({
       candidateId: `cand_${Math.abs(hashCode(key))}_${index}`,
       title: resolvedIdentity.displayTitle,
+      canonicalProductName: resolvedIdentity.canonicalProductName,
+      displayName: resolvedIdentity.displayName,
+      originalAdHeadline: resolvedIdentity.originalAdHeadline || c.titles[0] || null,
+      originalCreativeCode: resolvedIdentity.originalCreativeCode,
+      brand: resolvedIdentity.brand,
+      model: resolvedIdentity.model,
+      sku: resolvedIdentity.sku,
       category: topic,
       problemStatement,
       targetAudience: "Homeowners, Pet Owners & Everyday Problem Solvers",
-      thumbnailUrl: c.thumbnails[0] || null,
-      videoUrl: c.videos[0] || null,
+      thumbnailUrl: chosenThumbnail,
+      videoUrl: chosenVideo,
+      mediaSourceAdId,
       canonicalProductUrl: c.canonicalUrl,
       storeDomain: c.storeDomain,
       advertiserNames: Array.from(c.advertisers),
@@ -305,10 +349,13 @@ export function discoverProductCandidatesFromAds(
       sourceObservations: c.observations,
       identityStatus: resolvedIdentity.identityStatus,
       resolutionSource: resolvedIdentity.resolutionSource,
+      requiresManualReview: resolvedIdentity.requiresManualReview,
+      identityEvidenceReferences: resolvedIdentity.identityEvidenceReferences,
       isEligibleAsEvergreenWinner: resolvedIdentity.isEligibleAsEvergreenWinner && relevance.isAccepted && relevance.relevanceStatus !== "IRRELEVANT",
       relevanceStatus: relevance.relevanceStatus,
       relevanceScore: relevance.score,
       relevanceReasons: relevance.reasons,
+      psychologyProfile: psychProfile,
     });
 
     index++;

@@ -473,7 +473,10 @@ export async function collectMetaProductSignals(
 
   try {
     // 2. Determine lookback threshold
-    const lookbackThreshold = new Date(Date.now() - query.lookbackDays * 24 * 60 * 60 * 1000);
+    const lookbackDays = query.lookbackDays && !isNaN(Number(query.lookbackDays))
+      ? Number(query.lookbackDays)
+      : (query.timeWindow === "90D" ? 90 : (query.timeWindow === "180D" ? 180 : (query.timeWindow === "365D" ? 365 : 30)));
+    const lookbackThreshold = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
     // 3. Build search filter matching topic or product keywords
     const keywords = query.productKeywords && query.productKeywords.length > 0

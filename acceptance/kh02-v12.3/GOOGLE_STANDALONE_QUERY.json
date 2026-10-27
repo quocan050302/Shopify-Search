@@ -1,0 +1,5 @@
+{
+  "query": "chewy.com",
+  "status": "FAILED",
+  "error": "googleClient.searchAdvertiser is not a function"
+}

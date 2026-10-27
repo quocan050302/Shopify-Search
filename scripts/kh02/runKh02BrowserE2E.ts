@@ -117,6 +117,7 @@ export async function runKh02BrowserE2E(
   const displayedRankOrder: string[] = [];
   const displayedScores: Record<string, number> = {};
   const displayedConfidence: Record<string, string> = {};
+  const renderedCards: BrowserCardDetail[] = [];
   const postReloadCandidateIds: string[] = [];
   const postReloadScores: Record<string, number> = {};
   const postReloadConfidence: Record<string, string> = {};
@@ -202,40 +203,36 @@ export async function runKh02BrowserE2E(
       authorized = navResponse.status() !== 401 && navResponse.status() !== 403;
     }
 
-    // Wait for header and initial UI elements
-    await page.waitForSelector("h1", { timeout: 10000 });
+    // Allow initial load to stabilize
+    await page.waitForLoadState("networkidle").catch(() => null);
+    await page.waitForTimeout(1000);
+
+    // Wait for header and initial UI elements using Locator
+    await page.locator("h1").first().waitFor({ state: "visible", timeout: 15000 });
 
     // Screenshot 1: Initial Page Load
     const shot1 = path.join(screenshotDir, "01_before_research.png");
-    await page.screenshot({ path: shot1, fullPage: true });
+    await page.screenshot({ path: shot1, fullPage: true }).catch(() => {});
     screenshots.push(shot1);
 
-    // Verify source status bar presence
-    const statusBar = await page.$('[data-testid="kh02-source-status-bar"], text=Meta Ads').catch(() => null);
-
-    // Set search topic in input using stable semantic selector
+    // Set search topic in input using stable semantic locator
     const searchTopic = options.topic || "Pet Gadgets";
-    const topicInput = await page.$(
-      'input[data-testid="kh02-research-input"], input[placeholder*="niche or topic"]'
-    );
-    if (topicInput) {
-      await page.waitForLoadState("domcontentloaded").catch(() => null);
-      await topicInput.click();
-      await topicInput.fill("");
-      await topicInput.fill(searchTopic);
+    const topicLocator = page.locator('input[data-testid="kh02-research-input"]').first();
+    await topicLocator.waitFor({ state: "visible", timeout: 10000 }).catch(() => null);
+    if (await topicLocator.isVisible().catch(() => false)) {
+      await topicLocator.fill(searchTopic);
       await page.waitForTimeout(500);
     }
 
     // Screenshot 2: Source Statuses and Input
     const shot2 = path.join(screenshotDir, "02_source_statuses.png");
-    await page.screenshot({ path: shot2, fullPage: false });
+    await page.screenshot({ path: shot2, fullPage: false }).catch(() => {});
     screenshots.push(shot2);
 
-    // Trigger Research by clicking "Analyze Opportunity" button with semantic selector
-    const analyzeBtn = await page.$(
-      'button[data-testid="kh02-analyze-button"], button:has-text("Analyze Evergreen Niche"), button:has-text("Analyze")'
-    );
-    if (analyzeBtn) {
+    // Trigger Research by clicking "Analyze Opportunity" button with semantic locator
+    const analyzeLocator = page.locator('button[data-testid="kh02-analyze-button"]').first();
+    const isBtnVisible = await analyzeLocator.waitFor({ state: "visible", timeout: 10000 }).then(() => true).catch(() => false);
+    if (isBtnVisible) {
       console.log(`[Chromium E2E] Triggering async research for '${searchTopic}'...`);
 
       // Set up response listener for async research submission (HTTP 202)
@@ -244,7 +241,7 @@ export async function runKh02BrowserE2E(
         { timeout: 15000 }
       ).catch(() => null);
 
-      await analyzeBtn.click();
+      await analyzeLocator.dispatchEvent("click");
       researchSubmitted = true;
 
       const submitRes = await submitResponsePromise;
@@ -300,10 +297,8 @@ export async function runKh02BrowserE2E(
       const startPoll = Date.now();
 
       while (Date.now() - startPoll < maxWaitMs) {
-        const hasCards = await page.$(
-          '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]'
-        );
-        const hasEmptyState = await page.$('[data-testid="kh02-empty-state"]');
+        const hasCards = (await page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').count()) > 0;
+        const hasEmptyState = (await page.locator('[data-testid="kh02-empty-state"]').count()) > 0;
 
         if (hasCards) {
           terminalStateObserved = true;
@@ -318,50 +313,71 @@ export async function runKh02BrowserE2E(
       }
 
       // Check candidate product cards
-      const rankedCards = await page.$$('[data-testid="kh02-ranked-product-card"]');
-      const provCards = await page.$$('[data-testid="kh02-provisional-product-card"]');
-      cardCount = rankedCards.length + provCards.length;
-      resultsRendered = cardCount > 0 || (await page.$('[data-testid="kh02-leaderboard-container"]')) !== null;
+      const rankedCardsLoc = page.locator('[data-testid="kh02-ranked-product-card"]');
+      const provCardsLoc = page.locator('[data-testid="kh02-provisional-product-card"]');
+      const rankedCount = await rankedCardsLoc.count();
+      const provCount = await provCardsLoc.count();
+      cardCount = rankedCount + provCount;
+      resultsRendered = cardCount > 0 || (await page.locator('[data-testid="kh02-leaderboard-container"]').count()) > 0;
       displayedRankOrder.length = 0;
 
       // Extract candidate IDs directly from data-candidate-id attributes (NO title fallback! Directive 83)
-      for (let i = 0; i < rankedCards.length; i++) {
-        const card = rankedCards[i];
+      for (let i = 0; i < rankedCount; i++) {
+        const card = rankedCardsLoc.nth(i);
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           displayedCandidateIds.push(cid);
           displayedRankOrder.push(cid);
 
           const scoreAttr = await card.getAttribute("data-opportunity-score");
-          if (scoreAttr) {
-            displayedScores[cid] = parseFloat(scoreAttr);
+          const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
+          if (scoreVal !== null) {
+            displayedScores[cid] = scoreVal;
           }
           const confAttr = await card.getAttribute("data-confidence");
           const confStatusAttr = await card.getAttribute("data-confidence-status");
-          const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
-          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText || confStatusAttr || null);
+          const confText = await card.locator(".text-emerald-400, .text-purple-300").first().textContent().catch(() => null);
+          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText?.trim() || confStatusAttr || null);
           if (finalConfidence !== null) {
             displayedConfidence[cid] = String(finalConfidence);
           }
+          const rankAttr = await card.getAttribute("data-rank");
+          const rankVal = rankAttr && rankAttr.trim() !== "" && !isNaN(parseInt(rankAttr, 10)) ? parseInt(rankAttr, 10) : null;
+          renderedCards.push({
+            candidateId: cid,
+            rank: rankVal as any,
+            score: scoreVal,
+            confidence: finalConfidence !== null ? String(finalConfidence) : null,
+          });
         } else {
           errors.push("Rendered ranked product card is missing required data-candidate-id attribute.");
         }
       }
 
-      for (let i = 0; i < provCards.length; i++) {
-        const card = provCards[i];
+      for (let i = 0; i < provCount; i++) {
+        const card = provCardsLoc.nth(i);
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           if (!displayedCandidateIds.includes(cid)) {
             displayedCandidateIds.push(cid);
           }
           const scoreAttr = await card.getAttribute("data-opportunity-score");
-          if (scoreAttr) {
-            displayedScores[cid] = parseFloat(scoreAttr);
+          const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
+          if (scoreVal !== null) {
+            displayedScores[cid] = scoreVal;
           }
           const confAttr = await card.getAttribute("data-confidence");
           const confStatusAttr = await card.getAttribute("data-confidence-status");
-          displayedConfidence[cid] = confAttr ? String(parseFloat(confAttr)) : (confStatusAttr || "PROVISIONAL");
+          const finalConfidence = confAttr ? String(parseFloat(confAttr)) : (confStatusAttr || "PROVISIONAL");
+          displayedConfidence[cid] = finalConfidence;
+          const rankAttr = await card.getAttribute("data-rank");
+          const rankVal = rankAttr && rankAttr.trim() !== "" && !isNaN(parseInt(rankAttr, 10)) ? parseInt(rankAttr, 10) : null;
+          renderedCards.push({
+            candidateId: cid,
+            rank: rankVal as any,
+            score: scoreVal,
+            confidence: finalConfidence,
+          });
         } else {
           errors.push("Rendered provisional product card is missing required data-candidate-id attribute.");
         }
@@ -369,31 +385,32 @@ export async function runKh02BrowserE2E(
 
       // Screenshot 3: Terminal Results / Empty State
       const shot3 = path.join(screenshotDir, "03_leaderboard_results.png");
-      await page.screenshot({ path: shot3, fullPage: true });
+      await page.screenshot({ path: shot3, fullPage: true }).catch(() => {});
       screenshots.push(shot3);
 
       // Verify persistence across page reload (Directive 82)
       console.log("[Chromium E2E] Testing reload persistence...");
-      await page.reload({ waitUntil: "domcontentloaded", timeout: 15000 });
-      await page.waitForSelector("h1", { timeout: 10000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 20000 });
+      await page.waitForLoadState("networkidle").catch(() => null);
+      await page.waitForTimeout(1000);
+      await page.locator("h1").first().waitFor({ state: "visible", timeout: 15000 });
 
       // Allow client-side useEffect (fetchLatestLeaderboard) to populate state
       if (cardCount > 0) {
-        await page.waitForSelector(
-          '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]',
-          { timeout: 8000 }
-        ).catch(() => {});
+        await page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').first().waitFor({ timeout: 8000 }).catch(() => {});
       } else if (emptyStateAccurate) {
-        await page.waitForSelector('[data-testid="kh02-empty-state"]', { timeout: 8000 }).catch(() => {});
+        await page.locator('[data-testid="kh02-empty-state"]').first().waitFor({ timeout: 8000 }).catch(() => {});
       }
 
       // After reload, leaderboard or saved state should remain consistent
-      const postReloadEmpty = await page.$('[data-testid="kh02-empty-state"]');
-      const postReloadRanked = await page.$$('[data-testid="kh02-ranked-product-card"]');
-      const postReloadProv = await page.$$('[data-testid="kh02-provisional-product-card"]');
+      const postReloadEmpty = (await page.locator('[data-testid="kh02-empty-state"]').count()) > 0;
+      const postRankedLoc = page.locator('[data-testid="kh02-ranked-product-card"]');
+      const postProvLoc = page.locator('[data-testid="kh02-provisional-product-card"]');
+      const postRankedCount = await postRankedLoc.count();
+      const postProvCount = await postProvLoc.count();
 
-      for (let i = 0; i < postReloadRanked.length; i++) {
-        const card = postReloadRanked[i];
+      for (let i = 0; i < postRankedCount; i++) {
+        const card = postRankedLoc.nth(i);
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           postReloadCandidateIds.push(cid);
@@ -401,23 +418,23 @@ export async function runKh02BrowserE2E(
           const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
           if (scoreVal !== null) postReloadScores[cid] = scoreVal;
           const rankAttr = await card.getAttribute("data-rank");
-          const rankVal = rankAttr ? parseInt(rankAttr, 10) : (i + 1);
+          const rankVal = rankAttr && rankAttr.trim() !== "" && !isNaN(parseInt(rankAttr, 10)) ? parseInt(rankAttr, 10) : null;
           const confAttr = await card.getAttribute("data-confidence");
           const confStatusAttr = await card.getAttribute("data-confidence-status");
-          const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
-          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText || confStatusAttr || null);
+          const confText = await card.locator(".text-emerald-400, .text-purple-300").first().textContent().catch(() => null);
+          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText?.trim() || confStatusAttr || null);
           if (finalConfidence !== null) postReloadConfidence[cid] = String(finalConfidence);
           postReloadCards.push({
             candidateId: cid,
-            rank: rankVal,
+            rank: rankVal as any,
             score: scoreVal,
             confidence: finalConfidence !== null ? String(finalConfidence) : null,
           });
         }
       }
 
-      for (let i = 0; i < postReloadProv.length; i++) {
-        const card = postReloadProv[i];
+      for (let i = 0; i < postProvCount; i++) {
+        const card = postProvLoc.nth(i);
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           if (!postReloadCandidateIds.includes(cid)) postReloadCandidateIds.push(cid);
@@ -425,14 +442,14 @@ export async function runKh02BrowserE2E(
           const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
           if (scoreVal !== null) postReloadScores[cid] = scoreVal;
           const rankAttr = await card.getAttribute("data-rank");
-          const rankVal = rankAttr ? parseInt(rankAttr, 10) : (postReloadRanked.length + i + 1);
+          const rankVal = rankAttr && rankAttr.trim() !== "" && !isNaN(parseInt(rankAttr, 10)) ? parseInt(rankAttr, 10) : null;
           const confAttr = await card.getAttribute("data-confidence");
           const confStatusAttr = await card.getAttribute("data-confidence-status");
           const finalConfidence = confAttr ? parseFloat(confAttr) : (confStatusAttr || "PROVISIONAL");
           postReloadConfidence[cid] = String(finalConfidence);
           postReloadCards.push({
             candidateId: cid,
-            rank: rankVal,
+            rank: rankVal as any,
             score: scoreVal,
             confidence: String(finalConfidence),
           });
@@ -482,14 +499,6 @@ export async function runKh02BrowserE2E(
   }
 
   const durationMs = Date.now() - start;
-
-  // Build renderedCards array
-  const renderedCards: BrowserCardDetail[] = displayedCandidateIds.map((cid, idx) => ({
-    candidateId: cid,
-    rank: idx + 1,
-    score: displayedScores[cid] ?? null,
-    confidence: displayedConfidence[cid] ?? null,
-  }));
 
   // Determine truthful verdict:
   const minCards = options.expectedMinCards ?? 0;

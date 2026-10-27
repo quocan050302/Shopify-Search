@@ -56,7 +56,9 @@ export type SourceRunStatus =
   | "RATE_LIMITED"
   | "NO_RESULTS"
   | "FAILED"
-  | "SKIPPED";
+  | "SKIPPED"
+  | "TEMPORARILY_DISABLED"
+  | "DISABLED";
 
 export type ProviderAccessClass =
   | "ZERO_KEY_AUTHORIZED"
@@ -143,9 +145,9 @@ export interface ProviderReadinessDimensions {
   lastSuccessfulLiveQueryAt?: string | null;
   lastSuccessfulQueryAt?: string | null;
   lastProbeAt?: string | null;
-  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED";
-  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED";
-  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED";
+  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" | "DISABLED";
+  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" | "DISABLED";
+  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED" | "DISABLED";
 
   // KH-02 Truthful Query Provenance & Failure Trace
   queryStatus?: SourceRunStatus | string | null;
@@ -245,6 +247,7 @@ export interface IntelligenceQuery {
   advertiserNames?: string[];
   advertiserDomains?: string[];
   lookbackDays: number;
+  timeWindow?: string;
   maxResults: number;
   signal?: AbortSignal;
 }

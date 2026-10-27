@@ -1,0 +1,32 @@
+{
+  "CASE_1_UNAUDITED_TRACES_FAIL": {
+    "exactMatch": false,
+    "expectedExactMatch": false,
+    "passed": true
+  },
+  "CASE_2_MISMATCHED_RUN_ID_FAILS": {
+    "verdict": "FAIL",
+    "expectedVerdict": "FAIL",
+    "passed": true
+  },
+  "CASE_3_CONFIDENCE_MUTATION_FAILS": {
+    "exactMatch": false,
+    "expectedExactMatch": false,
+    "passed": true
+  },
+  "CASE_4_MISSING_DOM_RANK_FAILS": {
+    "exactMatch": false,
+    "expectedExactMatch": false,
+    "passed": true
+  },
+  "CASE_5_MISSING_EXPLICIT_RANK_FAILS": {
+    "verdict": "FAIL",
+    "expectedVerdict": "FAIL",
+    "passed": true
+  },
+  "CASE_7_GOOGLE_SKIPPED_NOT_CLAIMED_EXECUTED": {
+    "googleSameRunStatus": "SKIPPED_NO_CONFIRMED_DOMAIN",
+    "notClaimedExecuted": true,
+    "passed": true
+  }
+}

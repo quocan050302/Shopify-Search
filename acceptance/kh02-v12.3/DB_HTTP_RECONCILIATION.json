@@ -1,0 +1,19 @@
+{
+  "gateId": "D07",
+  "verdict": "PASS",
+  "assertion": "HTTP API readback matches evaluated candidate dataset",
+  "executed": true,
+  "evidencePaths": [
+    "DB_HTTP_EXACT_RECONCILIATION.json"
+  ],
+  "observedValues": {
+    "dbCandidateCount": 0,
+    "httpCandidateCount": 0,
+    "exactMatch": true,
+    "idsExactMatch": true,
+    "scoreDiffsCount": 0,
+    "diffsCount": 0,
+    "reconciled": true
+  },
+  "reason": null
+}

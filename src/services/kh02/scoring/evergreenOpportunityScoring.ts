@@ -162,6 +162,18 @@ export function applyKH02EligibilityGates(
     };
   }
 
+  // SECTION 11.E: Do NOT place unresolved identity into provisional with badge "Probable"
+  if (
+    (scoreResult as any).identityStatus === "UNRESOLVED" ||
+    (scoreResult as any).isEligibleAsEvergreenWinner === false
+  ) {
+    return {
+      tier: "INSUFFICIENT_EVIDENCE",
+      isTop3Eligible: false,
+      gateReasons: [...gateReasons, "Product identity is unresolved or non-product creative; classified as Insufficient Evidence."],
+    };
+  }
+
   // Distinguish provisional opportunities from dead / insufficient data
   if (
     oppScore >= 40 &&
@@ -461,6 +473,8 @@ export function calculateKH02EvergreenScore(
   const gateResult = applyKH02EligibilityGates({
     ...prelimResult,
     isProductIdentityVerified: c.identityStatus === "VERIFIED",
+    identityStatus: c.identityStatus,
+    isEligibleAsEvergreenWinner: c.isEligibleAsEvergreenWinner,
     relevanceStatus: c.relevanceStatus,
     relevanceReasons: c.relevanceReasons,
   } as any);

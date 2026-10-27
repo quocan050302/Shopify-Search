@@ -281,10 +281,10 @@ export function evaluateGateD07(dbResultJson: any, httpResultJson: any): Accepta
   }
 
   const diffs: string[] = [];
-  const dbRunId = dbRoot.runId || dbResultJson?.id || dbResultJson?.data?.id;
-  const httpRunId = httpRoot.runId || httpResultJson?.id || httpResultJson?.data?.id;
-  if (dbRunId && httpRunId && dbRunId !== httpRunId) {
-    diffs.push(`Run ID mismatch: DB=${dbRunId} vs HTTP=${httpRunId}`);
+  const dbRunId = dbRoot.researchRunId || dbRoot.runId || dbResultJson?.researchRunId || dbResultJson?.id || dbResultJson?.data?.id;
+  const httpRunId = httpRoot.researchRunId || httpRoot.runId || httpResultJson?.researchRunId || httpResultJson?.id || httpResultJson?.data?.id;
+  if ((dbRunId || httpRunId) && dbRunId !== httpRunId) {
+    diffs.push(`Run ID mismatch: DB=${dbRunId || "MISSING"} vs HTTP=${httpRunId || "MISSING"}`);
   }
 
   const parseCanonical = (root: any): Record<string, CanonicalCandidateRecord[]> => {
@@ -308,7 +308,7 @@ export function evaluateGateD07(dbResultJson: any, httpResultJson: any): Accepta
         return {
           group: g,
           candidateId: String(cand.candidateId || cand.id || `unknown_${idx}`),
-          rank: explicitRank !== null ? explicitRank : idx + 1,
+          rank: explicitRank,
           opportunityScore: typeof score.opportunityScore === "number" ? score.opportunityScore : null,
           evidenceConfidence: typeof score.evidenceConfidence === "number" ? score.evidenceConfidence : (typeof cand.confidence === "number" ? cand.confidence : null),
           demandClass: score.demandClass || cand.demandClass || null,
@@ -465,7 +465,8 @@ export interface UpstreamRecordTrace {
 export function evaluateSourceDbReconciliation(
   runId: string,
   expectedSourceRecords: UpstreamRecordTrace[] | string[],
-  dbRecords: any[]
+  dbRecords: any[],
+  isAudited?: boolean
 ): {
   layer: string;
   runId: string;
@@ -555,7 +556,8 @@ export function evaluateSourceDbReconciliation(
     .filter((r) => !expectedPersistedIds.has(r.id))
     .map((r) => r.id);
 
-  const exactMatch = unexplainedLostCount === 0 && missingInDb.length === 0 && extraInDb.length === 0;
+  const isAuditedExplicit = isAudited !== undefined ? isAudited : ((expectedSourceRecords as any)?.isAudited !== false);
+  const exactMatch = isAuditedExplicit && unexplainedLostCount === 0 && missingInDb.length === 0 && extraInDb.length === 0;
 
   return {
     layer: "Source to Database",
@@ -574,7 +576,9 @@ export function evaluateSourceDbReconciliation(
     verifiedAt: new Date().toISOString(),
     reason: exactMatch
       ? null
-      : `Source to Database Reconciliation Mismatch: lost=${unexplainedLostCount}, missing=[${missingInDb.join(", ")}], extra=[${extraInDb.join(", ")}]`,
+      : (!isAuditedExplicit
+          ? "Source to Database Reconciliation Unverified: missing upstream audit trace envelope. Upstream query audit is required."
+          : `Source to Database Reconciliation Mismatch: lost=${unexplainedLostCount}, missing=[${missingInDb.join(", ")}], extra=[${extraInDb.join(", ")}]`),
   };
 }
 
@@ -622,6 +626,8 @@ export function resolveRunUpstreamTraces(
       }
     }
   }
+
+  (traces as any).isAudited = isAudited;
 
   return { traces, isAudited, unaccountedCount };
 }
@@ -750,10 +756,12 @@ export function evaluateHttpBrowserReconciliation(
             }
           }
 
-          // Compare rank if available
-          const expectedRank = typeof exp.rank === "number" ? exp.rank : (typeof cand.rank === "number" ? cand.rank : idx + 1);
+          // Compare rank
+          const expectedRank = typeof exp.rank === "number" ? exp.rank : (typeof cand.rank === "number" ? cand.rank : null);
           const renderedRank = typeof rend.rank === "number" ? rend.rank : null;
-          if (renderedRank !== null && expectedRank !== renderedRank) {
+          if (expectedRank !== null && (renderedRank === null || isNaN(renderedRank))) {
+            diffs.push(`Rank missing on DOM for '${cid}': expected ${expectedRank}`);
+          } else if (expectedRank !== null && renderedRank !== null && expectedRank !== renderedRank) {
             diffs.push(`Rank mismatch for '${cid}': HTTP=${expectedRank} vs DOM=${renderedRank}`);
           }
         }
@@ -790,6 +798,14 @@ export function evaluateHttpBrowserReconciliation(
               if (typeof pre.score === "number" && typeof post.score === "number" && pre.score !== post.score) {
                 reloadConsistent = false;
                 diffs.push(`Post-reload score mismatch for '${cid}': pre=${pre.score} vs post=${post.score}`);
+              }
+              if (pre.confidence !== undefined && post.confidence !== undefined && String(pre.confidence) !== String(post.confidence)) {
+                reloadConsistent = false;
+                diffs.push(`Post-reload confidence mismatch for '${cid}': pre=${pre.confidence} vs post=${post.confidence}`);
+              }
+              if (pre.rank !== undefined && post.rank !== undefined && pre.rank !== post.rank) {
+                reloadConsistent = false;
+                diffs.push(`Post-reload rank mismatch for '${cid}': pre=${pre.rank} vs post=${post.rank}`);
               }
             }
           }
@@ -3097,7 +3113,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
   console.log("================================================================================\n");
 }
 
-if (process.env.VITEST !== "true" && process.env.NODE_ENV !== "test") {
+if (process.argv[1] && process.argv[1].endsWith("runAcceptanceV12_2_4.ts") && process.env.VITEST !== "true" && process.env.NODE_ENV !== "test") {
   main().catch((err) => {
     console.error("FATAL: Acceptance runner failed:", err);
     process.exit(1);

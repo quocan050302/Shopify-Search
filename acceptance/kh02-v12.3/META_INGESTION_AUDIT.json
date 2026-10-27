@@ -1,0 +1,109 @@
+{
+  "upstreamCount": 10,
+  "acceptedCount": 10,
+  "duplicateCount": 0,
+  "rejectedCount": 0,
+  "normalizationOutcomes": [
+    {
+      "index": 1,
+      "sourceRecordId": "cmvpeu1xa001ahug9c0mw6npf",
+      "outcome": "ACCEPTED",
+      "title": "Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 2,
+      "sourceRecordId": "cmvpeu1wx0015hug9k61oe5vo",
+      "outcome": "ACCEPTED",
+      "title": "Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 3,
+      "sourceRecordId": "cmvpeu1wn0010hug9qzy85er5",
+      "outcome": "ACCEPTED",
+      "title": "Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 4,
+      "sourceRecordId": "cmvpeu1w6000vhug92tnxal5e",
+      "outcome": "ACCEPTED",
+      "title": "New Year's Decorations: Transparent Christmas Ball with Clear Fil",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 5,
+      "sourceRecordId": "cmvpeu1vg000qhug9k3x1wdw2",
+      "outcome": "ACCEPTED",
+      "title": "Sunflower Kids Sunglasses — Fun & Protective Eyewear",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 6,
+      "sourceRecordId": "cmvpeu1v0000lhug9hkcct0c0",
+      "outcome": "ACCEPTED",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 7,
+      "sourceRecordId": "cmvpeu1u8000ghug9j83tfnrm",
+      "outcome": "ACCEPTED",
+      "title": "Brushless PC Case Cooler — 2 Pin 2 Wire, 12V, 40x40x10mm",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 8,
+      "sourceRecordId": "cmvpeu1qv000bhug9o0b05bga",
+      "outcome": "ACCEPTED",
+      "title": "Explore a New World — 3D Wooden Jigsaw Puzzle Toy",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 9,
+      "sourceRecordId": "cmvpeu1qi0006hug9bfctf5rx",
+      "outcome": "ACCEPTED",
+      "title": "Sunflower Kids Sunglasses — Fun & Protective Eyewear",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "index": 10,
+      "sourceRecordId": "cmvpeu1oh0001hug9g9lvdm82",
+      "outcome": "ACCEPTED",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "storeDomain": null,
+      "landingPageUrl": null,
+      "mediaUrlPresent": false,
+      "provenance": "LIVE_PROVIDER"
+    }
+  ],
+  "timestamp": "2026-10-27T13:28:46.945Z"
+}

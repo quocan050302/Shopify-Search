@@ -1,0 +1,17 @@
+{
+  "layer": "Source to Database",
+  "runId": "kh02_1793107727890_lzsoa",
+  "upstreamRecordsCount": 10,
+  "persistedRecordsCount": 10,
+  "acceptedCount": 10,
+  "updatedCount": 0,
+  "deduplicatedCount": 0,
+  "rejectedCount": 0,
+  "unexplainedLostCount": 0,
+  "exactMatch": true,
+  "missingInDb": [],
+  "extraInDb": [],
+  "rejectionAudit": [],
+  "verifiedAt": "2026-10-27T13:28:51.675Z",
+  "reason": null
+}

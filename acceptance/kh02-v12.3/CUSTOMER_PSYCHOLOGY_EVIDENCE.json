@@ -1,0 +1,287 @@
+[
+  {
+    "candidateId": "cand_386111280_1",
+    "candidateTitle": "Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Enthusiasts and consumers actively seeking practical pet gadgets solutions",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Regular pet care sessions at home when managing twist-out bluetooth speaker with fm radio — wireless audio & musi routines",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Inconvenience and friction in everyday pet management addressed by Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.7,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from enjoyable time spent with the pet",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Effortless, quick resolution of the pet care issue with visible satisfaction and zero distress for the animal",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.88,
+        "status": "OBSERVED"
+      },
+      "purchaseTrigger": {
+        "claimText": "A striking visual demonstration in the video ad showing an immediate 'before and after' transformation that makes current tools look obsolete",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Skepticism about durability: 'Will this actually work on my specific pet's fur type or furniture fabric without damaging it?' and fear of cheap plastic breakage",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection observed across consumer ecommerce reviews in this category."
+      },
+      "trustRequirements": {
+        "claimText": "Uncut video proof on different textured fabrics (velvet, carpet, car interior) and a clear 30-day money-back satisfaction guarantee",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Extremely high: Physical problem with instantaneous visual contrast (split-screen before/after swipe) perfect for 3-second hook ads",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.92,
+        "status": "OBSERVED"
+      },
+      "existingAlternatives": {
+        "claimText": "Disposable sticky adhesive lint rollers (costly over time), bulky heavy vacuums (loud and cumbersome), and rubber squeegees",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.9,
+        "status": "OBSERVED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Reusability with self-cleaning chamber or electrostatic/copper-blade mechanism, offering an eco-friendly 'buy once, use forever' value proposition",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Angle 1 (Efficiency): 'Stop buying lint roller refills every month — clean your entire couch in 30 seconds.' Angle 2 (Empathy): 'Keep your pet close without keeping their fur on everything you own.'",
+        "evidenceReference": "Ad Creative (Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad spend to measure CTR and conversion rate."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  },
+  {
+    "candidateId": "cand_2060987401_2",
+    "candidateTitle": "Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Enthusiasts and consumers actively seeking practical pet gadgets solutions",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Regular pet care sessions at home when managing jazz dance shoes for women — vibrant colors & versatile fit routines",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Inconvenience and friction in everyday pet management addressed by Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.7,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from enjoyable time spent with the pet",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Effortless, quick resolution of the pet care issue with visible satisfaction and zero distress for the animal",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.88,
+        "status": "OBSERVED"
+      },
+      "purchaseTrigger": {
+        "claimText": "A striking visual demonstration in the video ad showing an immediate 'before and after' transformation that makes current tools look obsolete",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Skepticism about durability: 'Will this actually work on my specific pet's fur type or furniture fabric without damaging it?' and fear of cheap plastic breakage",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection observed across consumer ecommerce reviews in this category."
+      },
+      "trustRequirements": {
+        "claimText": "Uncut video proof on different textured fabrics (velvet, carpet, car interior) and a clear 30-day money-back satisfaction guarantee",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Extremely high: Physical problem with instantaneous visual contrast (split-screen before/after swipe) perfect for 3-second hook ads",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.92,
+        "status": "OBSERVED"
+      },
+      "existingAlternatives": {
+        "claimText": "Disposable sticky adhesive lint rollers (costly over time), bulky heavy vacuums (loud and cumbersome), and rubber squeegees",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.9,
+        "status": "OBSERVED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Reusability with self-cleaning chamber or electrostatic/copper-blade mechanism, offering an eco-friendly 'buy once, use forever' value proposition",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Angle 1 (Efficiency): 'Stop buying lint roller refills every month — clean your entire couch in 30 seconds.' Angle 2 (Empathy): 'Keep your pet close without keeping their fur on everything you own.'",
+        "evidenceReference": "Ad Creative (Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad spend to measure CTR and conversion rate."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  },
+  {
+    "candidateId": "cand_1613370461_3",
+    "candidateTitle": "Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Enthusiasts and consumers actively seeking practical pet gadgets solutions",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Regular pet care sessions at home when managing hot selling mirror mp3 fm speaker for motorbike rearview mirror routines",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Inconvenience and friction in everyday pet management addressed by Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.7,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from enjoyable time spent with the pet",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Effortless, quick resolution of the pet care issue with visible satisfaction and zero distress for the animal",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.88,
+        "status": "OBSERVED"
+      },
+      "purchaseTrigger": {
+        "claimText": "A striking visual demonstration in the video ad showing an immediate 'before and after' transformation that makes current tools look obsolete",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Skepticism about durability: 'Will this actually work on my specific pet's fur type or furniture fabric without damaging it?' and fear of cheap plastic breakage",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection observed across consumer ecommerce reviews in this category."
+      },
+      "trustRequirements": {
+        "claimText": "Uncut video proof on different textured fabrics (velvet, carpet, car interior) and a clear 30-day money-back satisfaction guarantee",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Extremely high: Physical problem with instantaneous visual contrast (split-screen before/after swipe) perfect for 3-second hook ads",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.92,
+        "status": "OBSERVED"
+      },
+      "existingAlternatives": {
+        "claimText": "Disposable sticky adhesive lint rollers (costly over time), bulky heavy vacuums (loud and cumbersome), and rubber squeegees",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.9,
+        "status": "OBSERVED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Reusability with self-cleaning chamber or electrostatic/copper-blade mechanism, offering an eco-friendly 'buy once, use forever' value proposition",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Angle 1 (Efficiency): 'Stop buying lint roller refills every month — clean your entire couch in 30 seconds.' Angle 2 (Empathy): 'Keep your pet close without keeping their fur on everything you own.'",
+        "evidenceReference": "Ad Creative (Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad spend to measure CTR and conversion rate."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  }
+]
