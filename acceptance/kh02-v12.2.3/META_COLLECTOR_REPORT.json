@@ -1,0 +1,24 @@
+{
+  "collectorInstalled": true,
+  "transportConnected": true,
+  "authStatus": "AUTH_NOT_REQUIRED",
+  "costCredits": 0,
+  "diagnostics": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": 63,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-27T01:59:18.859Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (63 records observed); live collection active via local collector (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "D:\\Project_github\\Running-Ads\\services\\meta-ads-collector\\.venv\\Scripts\\python.exe",
+    "collectorVersion": null,
+    "databaseRecordsIndexed": 63
+  }
+}

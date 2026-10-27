@@ -1,0 +1,50 @@
+{
+  "source": "DEMAND_HISTORY",
+  "adapterInstalled": true,
+  "configured": true,
+  "transportConnected": false,
+  "authenticated": false,
+  "discoverySupported": true,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "storedRecordCount": 0,
+  "lastLiveQueryRecordCount": null,
+  "currentRunRecordCount": null,
+  "lastProbeAt": "2026-10-27T01:59:25.012Z",
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "transportStatus": "NOT_CONFIGURED",
+  "capabilityStatus": "VERIFIED",
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-27T01:59:25.012Z",
+  "status": "ENGINE_READY",
+  "reason": "Demand stability policy engine is active (ENGINE_READY). Upstream live provider: Not configured. Workspace stored observations: 0. Individual product policy requires 3+ temporal observations across 60+ days.",
+  "missingRequirements": [
+    "LIVE_TRENDS_PROVIDER_API_KEY"
+  ],
+  "dimensions": {
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": false,
+    "authenticated": false,
+    "supportedOperationsVerified": true,
+    "queryExecuted": false,
+    "sourceDataVerified": false,
+    "lastLiveQueryAt": null,
+    "blockerCode": "UPSTREAM_PROVIDER_NOT_CONFIGURED",
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-27T01:59:25.012Z",
+    "authStatus": "CREDENTIALS_REQUIRED",
+    "transportStatus": "NOT_CONFIGURED",
+    "capabilityStatus": "VERIFIED"
+  },
+  "requiredAction": "Configure SERPAPI_API_KEY / GOOGLE_TRENDS_API_KEY or import product demand observations via CSV.",
+  "estimatedQueryCost": {
+    "estimatedCredits": 0,
+    "isPaid": false,
+    "knownCost": true,
+    "pricingSource": "Internal Demand History & Policy Engine"
+  }
+}

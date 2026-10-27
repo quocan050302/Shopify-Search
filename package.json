@@ -60,7 +60,8 @@
     "acceptance:kh02:v12.1.4.2": "tsx scripts/kh02/runAcceptanceV12_1_4_2.ts",
     "acceptance:kh02:v12.2": "tsx scripts/kh02/runAcceptanceV12_2.ts",
     "acceptance:kh02:v12.2.1": "tsx scripts/kh02/runAcceptanceV12_2_1.ts",
-    "acceptance:kh02:v12.2.2": "tsx scripts/kh02/runAcceptanceV12_2_2.ts"
+    "acceptance:kh02:v12.2.2": "tsx scripts/kh02/runAcceptanceV12_2_2.ts",
+    "acceptance:kh02:v12.2.3": "tsx scripts/kh02/runAcceptanceV12_2_3.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

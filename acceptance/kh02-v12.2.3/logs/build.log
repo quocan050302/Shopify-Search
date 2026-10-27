@@ -1,0 +1,33 @@
+
+> shopify-winning-ads-intelligence@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local, .env
+✓ Running next.config.ts took 39ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1676ms
+  Running TypeScript ...
+scripts/kh02/runAcceptanceV12_2_3.ts(250,44): error TS2339: Property 'toolsDiscovered' does not exist on type 'MetaCollectorDiagnostic'.
+scripts/kh02/runAcceptanceV12_2_3.ts(270,39): error TS2339: Property 'cachedUpdated' does not exist on type 'MetaLiveCollectionBreakdown'.
+src/services/kh02/providers/providerDiscoveryService.ts(336,22): error TS2353: Object literal may only specify known properties, and 'observedAt' does not exist in type 'CompetitorAdOrderByWithRelationInput | CompetitorAdOrderByWithRelationInput[]'.
+src/services/kh02/providers/providerDiscoveryService.ts(337,21): error TS2353: Object literal may only specify known properties, and 'observedAt' does not exist in type 'CompetitorAdSelect<DefaultArgs>'.
+src/services/kh02/providers/providerDiscoveryService.ts(339,23): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(340,36): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(341,44): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(357,22): error TS2353: Object literal may only specify known properties, and 'observedAt' does not exist in type 'CompetitorAdOrderByWithRelationInput | CompetitorAdOrderByWithRelationInput[]'.
+src/services/kh02/providers/providerDiscoveryService.ts(358,21): error TS2353: Object literal may only specify known properties, and 'observedAt' does not exist in type 'CompetitorAdSelect<DefaultArgs>'.
+src/services/kh02/providers/providerDiscoveryService.ts(360,23): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(361,36): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(362,44): error TS2339: Property 'observedAt' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; targetMarket: string; status: string; dataSourceId: string; platform: string; advertiserId: string; externalAdId: string | null; ... 20 more ...; isSyntheticQuarantine: boolean; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(374,22): error TS2353: Object literal may only specify known properties, and 'observationDate' does not exist in type 'ProductDemandObservationOrderByWithRelationInput | ProductDemandObservationOrderByWithRelationInput[]'.
+src/services/kh02/providers/providerDiscoveryService.ts(375,21): error TS2353: Object literal may only specify known properties, and 'observationDate' does not exist in type 'ProductDemandObservationSelect<DefaultArgs>'.
+src/services/kh02/providers/providerDiscoveryService.ts(377,24): error TS2339: Property 'observationDate' does not exist on type '{ id: string; source: string; observedAt: Date; evidenceReference: string | null; productId: string; region: string; keyword: string; periodStart: Date; periodEnd: Date; demandValue: number | null; valueType: string; demandStabilityClass: string | null; methodologyVersion: string; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(378,37): error TS2339: Property 'observationDate' does not exist on type '{ id: string; source: string; observedAt: Date; evidenceReference: string | null; productId: string; region: string; keyword: string; periodStart: Date; periodEnd: Date; demandValue: number | null; valueType: string; demandStabilityClass: string | null; methodologyVersion: string; }'.
+src/services/kh02/providers/providerDiscoveryService.ts(379,45): error TS2339: Property 'observationDate' does not exist on type '{ id: string; source: string; observedAt: Date; evidenceReference: string | null; productId: string; region: string; keyword: string; periodStart: Date; periodEnd: Date; demandValue: number | null; valueType: string; demandStabilityClass: string | null; methodologyVersion: string; }'.
+
+Failed to type check.
+

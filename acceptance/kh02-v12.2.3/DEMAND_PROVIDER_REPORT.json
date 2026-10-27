@@ -1,0 +1,6 @@
+{
+  "provider": "DEMAND_HISTORY",
+  "engineStatus": "ENGINE_READY",
+  "upstreamProviderStatus": "NOT_CONFIGURED",
+  "recordsObserved": 0
+}

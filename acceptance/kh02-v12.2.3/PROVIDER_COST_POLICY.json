@@ -1,0 +1,10 @@
+{
+  "autoPaidResearchAllowed": false,
+  "defaultExternalBudgetDollars": 0,
+  "knownPaidCallsExecuted": 0,
+  "knownCreditsConsumed": 0,
+  "operationsSkippedDueToBudget": [
+    "TIKTOK_ORGANIC"
+  ],
+  "complianceStatus": "STRICT_ZERO_UNAPPROVED_SPEND"
+}

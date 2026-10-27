@@ -116,6 +116,8 @@ export default function ProductsPage() {
   const [isLongRunningNotice, setIsLongRunningNotice] = useState<boolean>(false);
   const [workerStatus, setWorkerStatus] = useState<string>("UNKNOWN");
   const [isTestingConnections, setIsTestingConnections] = useState<boolean>(false);
+  const [isDiscoveringSources, setIsDiscoveringSources] = useState<boolean>(false);
+  const [discoveryMeta, setDiscoveryMeta] = useState<any | null>(null);
 
   const currentTrackingRunIdRef = useRef<string | null>(null);
 
@@ -168,6 +170,29 @@ export default function ProductsPage() {
       }
     } catch (err) {
       console.error("Failed to load provider statuses:", err);
+    }
+  };
+
+  // Auto-discover available zero-key and configured sources (safe, zero cost)
+  const handleDiscoverSources = async () => {
+    try {
+      setIsDiscoveringSources(true);
+      const res = await fetch("/api/v1/kh02/providers/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          setDiscoveryMeta(json.meta);
+          setShowConnectionDetails(true);
+        }
+        await fetchProviderStatuses();
+      }
+    } catch (err) {
+      console.error("Failed to discover provider sources:", err);
+    } finally {
+      setIsDiscoveringSources(false);
     }
   };
 
@@ -644,6 +669,17 @@ export default function ProductsPage() {
               {getSourceBadge("GOOGLE_ADS", "Google Ads")}
               {getSourceBadge("DEMAND_HISTORY", "Demand History")}
               <button
+                data-testid="kh02-discover-sources-button"
+                onClick={handleDiscoverSources}
+                disabled={isDiscoveringSources}
+                className="px-2 py-0.5 rounded-md bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-500/30 text-indigo-300 text-[11px] font-medium flex items-center gap-1 transition-all disabled:opacity-50"
+                title="Auto-discover zero-key and configured providers without cost"
+              >
+                <Sparkles className={`h-3 w-3 ${isDiscoveringSources ? "animate-spin" : ""}`} />
+                <span>{isDiscoveringSources ? "Discovering..." : "Discover Sources"}</span>
+              </button>
+              <button
+                data-testid="kh02-test-connections-button"
                 onClick={handleTestConnections}
                 disabled={isTestingConnections}
                 className="px-2 py-0.5 rounded-md bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/30 text-purple-300 text-[11px] font-medium flex items-center gap-1 transition-all disabled:opacity-50"

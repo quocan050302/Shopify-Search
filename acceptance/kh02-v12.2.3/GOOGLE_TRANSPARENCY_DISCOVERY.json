@@ -1,0 +1,50 @@
+{
+  "source": "GOOGLE_ADS",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": false,
+  "authenticated": null,
+  "discoverySupported": false,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "storedRecordCount": 0,
+  "lastLiveQueryRecordCount": null,
+  "currentRunRecordCount": null,
+  "lastProbeAt": "2026-10-27T01:59:25.012Z",
+  "authStatus": "NOT_PROBED",
+  "transportStatus": "NOT_CONFIGURED",
+  "capabilityStatus": "NOT_TESTED",
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-27T01:59:25.012Z",
+  "status": "MCP_NOT_CONFIGURED",
+  "reason": "Google Ads Transparency MCP server is not configured in environment. Configuration: Missing, Transport: Not configured.",
+  "missingRequirements": [
+    "GOOGLE_TRANSPARENCY_MCP_URL"
+  ],
+  "dimensions": {
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": false,
+    "authenticated": null,
+    "supportedOperationsVerified": false,
+    "queryExecuted": false,
+    "sourceDataVerified": false,
+    "lastLiveQueryAt": null,
+    "blockerCode": "MCP_NOT_CONFIGURED",
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-27T01:59:25.012Z",
+    "authStatus": "NOT_PROBED",
+    "transportStatus": "NOT_CONFIGURED",
+    "capabilityStatus": "NOT_TESTED"
+  },
+  "requiredAction": "Configure GOOGLE_TRANSPARENCY_MCP_URL or GOOGLE_TRANSPARENCY_MCP_COMMAND in .env.local.",
+  "estimatedQueryCost": {
+    "estimatedCredits": 0,
+    "isPaid": false,
+    "knownCost": true,
+    "pricingSource": "Google Ads Transparency MCP (Free public transparency index)"
+  }
+}

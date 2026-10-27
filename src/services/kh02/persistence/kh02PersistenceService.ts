@@ -139,6 +139,24 @@ export async function createKH02ResearchRun(
 ): Promise<string> {
   const runId = `kh02_run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
+  // Ensure workspace exists to prevent SQLite P2003 foreign key constraint violation
+  try {
+    const ws = await db.workspace.findUnique({
+      where: { id: params.workspaceId },
+      select: { id: true },
+    });
+    if (!ws) {
+      await db.workspace.create({
+        data: {
+          id: params.workspaceId,
+          name: params.workspaceId,
+        },
+      });
+    }
+  } catch {
+    // If concurrent insert occurred, proceed safely
+  }
+
   await db.syncJob.create({
     data: {
       id: runId,

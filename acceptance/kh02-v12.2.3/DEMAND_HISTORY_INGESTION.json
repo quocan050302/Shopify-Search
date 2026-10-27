@@ -1,0 +1,5 @@
+{
+  "provider": "DEMAND_HISTORY",
+  "timeSeriesEvaluationActive": true,
+  "temporalRule": "Requires 3+ observations across 60+ days for EVERGREEN_VERIFIED classification"
+}

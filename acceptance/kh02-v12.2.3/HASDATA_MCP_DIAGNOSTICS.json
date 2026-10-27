@@ -1,0 +1,8 @@
+{
+  "provider": "HasData",
+  "configured": false,
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "estimatedCostCredits": 10,
+  "freeAllowanceMonthly": 1000,
+  "creditsConsumed": 0
+}

@@ -58,6 +58,72 @@ export type SourceRunStatus =
   | "FAILED"
   | "SKIPPED";
 
+export type ProviderAccessClass =
+  | "ZERO_KEY_AUTHORIZED"
+  | "FREE_ACCOUNT_REQUIRED"
+  | "FREE_API_KEY_REQUIRED"
+  | "PAID_CREDENTIAL_REQUIRED"
+  | "LOCAL_COLLECTOR_AVAILABLE"
+  | "MANUAL_IMPORT_ONLY"
+  | "UNSUPPORTED";
+
+export interface ProviderReadiness {
+  providerId: string;
+  accessClass: ProviderAccessClass;
+
+  installed: boolean;
+  configured: boolean;
+  transportConnected: boolean;
+  authenticated: boolean | null;
+  requiredCapabilityAvailable: boolean;
+
+  realQueryExecuted: boolean;
+  realQuerySucceeded: boolean;
+  realRecordsObserved: number;
+
+  lastSuccessfulQueryAt: string | null;
+  dataFreshness: string | null;
+
+  costApprovalRequired: boolean;
+  blockerCode: string | null;
+  blockerReason: string | null;
+}
+
+export interface ProviderDiscoveryContext {
+  workspaceId?: string;
+  allowPaidOperations?: boolean;
+}
+
+export interface ProviderProbeContext {
+  workspaceId?: string;
+  timeoutMs?: number;
+  allowPaidOperations?: boolean;
+}
+
+export interface ProviderCapabilities {
+  providerId: string;
+  accessClass: ProviderAccessClass;
+  installed: boolean;
+  configured: boolean;
+  transportConnected: boolean;
+  supportedTools: string[];
+  supportsUS: boolean;
+  supportsKeywordSearch: boolean;
+  supportsDateFiltering: boolean;
+  estimatedCostPerQueryCredits: number;
+  pricingSource: string;
+  blockerReason: string | null;
+}
+
+export interface ProviderDiscoveryResult {
+  providerId: string;
+  displayName: string;
+  accessClass: ProviderAccessClass;
+  readiness: ProviderReadiness;
+  capabilities: ProviderCapabilities;
+  recommendedAction?: string;
+}
+
 export interface ProviderReadinessDimensions {
   adapterInstalled: boolean;
   configured: boolean;

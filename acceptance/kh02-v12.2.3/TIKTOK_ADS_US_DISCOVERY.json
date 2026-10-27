@@ -1,0 +1,51 @@
+{
+  "source": "TIKTOK_ADS",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": false,
+  "authenticated": false,
+  "discoverySupported": false,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "storedRecordCount": 0,
+  "lastLiveQueryRecordCount": null,
+  "currentRunRecordCount": null,
+  "lastProbeAt": "2026-10-27T01:59:25.011Z",
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "transportStatus": "NOT_CONFIGURED",
+  "capabilityStatus": "UNSUPPORTED",
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-27T01:59:25.011Z",
+  "status": "MANUAL_RESEARCH_ONLY",
+  "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available.",
+  "missingRequirements": [
+    "TIKTOK_CC_COOKIE_OR_APIFY_TOKEN",
+    "TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"
+  ],
+  "dimensions": {
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": false,
+    "authenticated": false,
+    "supportedOperationsVerified": false,
+    "queryExecuted": false,
+    "sourceDataVerified": false,
+    "lastLiveQueryAt": null,
+    "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-27T01:59:25.011Z",
+    "authStatus": "CREDENTIALS_REQUIRED",
+    "transportStatus": "NOT_CONFIGURED",
+    "capabilityStatus": "UNSUPPORTED"
+  },
+  "requiredAction": "Configure TIKTOK_CC_COOKIE in .env.local or import verified TikTok ad creatives manually.",
+  "estimatedQueryCost": {
+    "estimatedCredits": 0,
+    "isPaid": false,
+    "knownCost": true,
+    "pricingSource": "Manual / Cached"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "testType": "CONTROLLED_FIXTURE_TRACK",
+  "verdict": "PASS",
+  "acceptedRunId": "kh02_run_1793066373487_x3d0d",
+  "unexpectedHttpErrors": [],
+  "unexpected500sCount": 0,
+  "pageLoaded": true,
+  "cardCount": 1,
+  "displayedCandidateIds": [
+    "cand_1653014828_1"
+  ],
+  "durationMs": 14894,
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.3\\screenshots\\track1_fixture\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.3\\screenshots\\track1_fixture\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.3\\screenshots\\track1_fixture\\03_leaderboard_results.png"
+  ]
+}

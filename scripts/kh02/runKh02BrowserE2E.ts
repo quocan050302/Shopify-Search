@@ -349,6 +349,16 @@ export async function runKh02BrowserE2E(
       await page.reload({ waitUntil: "domcontentloaded", timeout: 15000 });
       await page.waitForSelector("h1", { timeout: 10000 });
 
+      // Allow client-side useEffect (fetchLatestLeaderboard) to populate state
+      if (cardCount > 0) {
+        await page.waitForSelector(
+          '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]',
+          { timeout: 8000 }
+        ).catch(() => {});
+      } else if (emptyStateAccurate) {
+        await page.waitForSelector('[data-testid="kh02-empty-state"]', { timeout: 8000 }).catch(() => {});
+      }
+
       // After reload, leaderboard or saved state should remain consistent
       const postReloadEmpty = await page.$('[data-testid="kh02-empty-state"]');
       const postReloadCards = await page.$$(

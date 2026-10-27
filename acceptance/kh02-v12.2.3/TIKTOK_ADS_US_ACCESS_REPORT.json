@@ -1,0 +1,6 @@
+{
+  "provider": "TIKTOK_ADS",
+  "accessClass": "MANUAL_IMPORT_ONLY",
+  "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+  "recommendation": "Manual import of verified TikTok Creative Center URLs or configure TIKTOK_CC_COOKIE."
+}

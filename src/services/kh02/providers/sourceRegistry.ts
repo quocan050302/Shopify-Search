@@ -973,3 +973,8 @@ export function estimateResearchProviderCost(
     isAllowed: true,
   };
 }
+
+export {
+  discoverAvailableKH02Providers,
+  probeKH02ProviderCapabilities,
+} from "./providerDiscoveryService";
