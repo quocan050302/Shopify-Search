@@ -28,6 +28,7 @@ export interface MetaCollectorClient {
     query: string;
     country?: "US" | string;
     status?: "ACTIVE" | "INACTIVE" | "ALL";
+    searchType?: "KEYWORD_EXACT_PHRASE" | "KEYWORD_UNORDERED" | string;
     maxResults?: number;
     maxRequests?: number;
     maxSeconds?: number;
@@ -384,6 +385,7 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       query: string;
       country?: "US" | string;
       status?: "ACTIVE" | "INACTIVE" | "ALL";
+      searchType?: "KEYWORD_EXACT_PHRASE" | "KEYWORD_UNORDERED" | string;
       maxResults?: number;
       maxRequests?: number;
       maxSeconds?: number;
@@ -394,6 +396,7 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
       const cleanQuery = (input.query || "").trim().slice(0, 1000);
       const country = (input.country || config.defaultCountry || "US").toUpperCase().slice(0, 2);
       const status = input.status || "ACTIVE";
+      const searchType = input.searchType || "KEYWORD_EXACT_PHRASE";
       const pageSize = Math.min(30, Math.max(1, input.pageSize || 20));
       const maxResults = Math.min(config.maxResults, Math.max(1, input.maxResults || 25));
       const maxRequests = Math.min(config.maxRequests, Math.max(1, input.maxRequests || 10));
@@ -404,7 +407,7 @@ export async function createMetaCollectorClient(): Promise<MetaCollectorClient> 
         country,
         ad_type: "ALL",
         status,
-        search_type: "KEYWORD_UNORDERED",
+        search_type: searchType,
         page_size: pageSize,
         max_results: maxResults,
         max_requests: maxRequests,

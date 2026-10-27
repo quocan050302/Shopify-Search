@@ -7,8 +7,8 @@
     "DB_HTTP_EXACT_RECONCILIATION.json"
   ],
   "observedValues": {
-    "dbCandidateCount": 0,
-    "httpCandidateCount": 0,
+    "dbCandidateCount": 13,
+    "httpCandidateCount": 13,
     "exactMatch": true,
     "idsExactMatch": true,
     "scoreDiffsCount": 0,

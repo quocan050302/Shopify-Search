@@ -1,17 +1,17 @@
 {
   "layer": "Source to Database",
-  "runId": "kh02_1793107727890_lzsoa",
-  "upstreamRecordsCount": 10,
-  "persistedRecordsCount": 10,
-  "acceptedCount": 10,
+  "runId": "kh02_run_1793112545799_v1gs9",
+  "upstreamRecordsCount": 0,
+  "persistedRecordsCount": 0,
+  "acceptedCount": 0,
   "updatedCount": 0,
   "deduplicatedCount": 0,
   "rejectedCount": 0,
   "unexplainedLostCount": 0,
-  "exactMatch": true,
+  "exactMatch": false,
   "missingInDb": [],
   "extraInDb": [],
   "rejectionAudit": [],
-  "verifiedAt": "2026-10-27T13:28:51.675Z",
-  "reason": null
+  "verifiedAt": "2026-10-27T14:49:16.051Z",
+  "reason": "Source to Database Reconciliation Unverified: missing upstream audit trace envelope. Upstream query audit is required."
 }

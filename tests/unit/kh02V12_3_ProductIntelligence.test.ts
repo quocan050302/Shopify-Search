@@ -28,6 +28,12 @@ import {
   discoverProductCandidatesFromAds,
 } from "../../src/services/kh02/identity/productCandidateDiscovery";
 import {
+  evaluateProductRelevance,
+} from "../../src/services/kh02/identity/productRelevanceEvaluator";
+import {
+  buildKH02DiscoveryQueryPlan,
+} from "../../src/services/kh02/discovery/discoveryQueryPlanner";
+import {
   evaluateGateD07,
   evaluateGateG10,
   evaluateSourceDbReconciliation,
@@ -308,6 +314,108 @@ describe("SWAI KH-02 V12.3 — Product Intelligence & Integrity Suite", () => {
       ];
       const result = evaluateGateG10(candidates, { googleQueryExecuted: false });
       expect(result.observedValues.queryExecuted).toBe(false);
+    });
+  });
+
+  // ── 6. Negative Controls & Grounded Niche Relevance ─────────────────────
+  describe("Negative Controls & Niche Relevance", () => {
+    it("Rejects non-pet products from DHgate / Gadgets catalog ads as IRRELEVANT", () => {
+      const topic = "Pet Gadgets";
+
+      const speaker = evaluateProductRelevance("Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi", topic);
+      expect(speaker.relevanceStatus).toBe("IRRELEVANT");
+      expect(speaker.isAccepted).toBe(false);
+
+      const shoes = evaluateProductRelevance("Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit", topic);
+      expect(shoes.relevanceStatus).toBe("IRRELEVANT");
+      expect(shoes.isAccepted).toBe(false);
+
+      const sunglasses = evaluateProductRelevance("Sunflower Kids Sunglasses — Fun & Protective Eyewear", topic);
+      expect(sunglasses.relevanceStatus).toBe("IRRELEVANT");
+      expect(sunglasses.isAccepted).toBe(false);
+
+      const christmas = evaluateProductRelevance("New Year's Decorations: Transparent Christmas Ball with Clear Fil", topic);
+      expect(christmas.relevanceStatus).toBe("IRRELEVANT");
+      expect(christmas.isAccepted).toBe(false);
+
+      const puzzle = evaluateProductRelevance("Explore a New World — 3D Wooden Jigsaw Puzzle Toy", topic);
+      expect(puzzle.relevanceStatus).toBe("IRRELEVANT");
+      expect(puzzle.isAccepted).toBe(false);
+    });
+
+    it("Accepts legitimate pet products as RELEVANT without requiring exact query string match", () => {
+      const topic = "Pet Gadgets";
+
+      const bed = evaluateProductRelevance("Orthopedic Memory Foam Pet Bed with Washable Cover", topic);
+      expect(bed.relevanceStatus).toBe("RELEVANT");
+      expect(bed.isAccepted).toBe(true);
+
+      const seatBelt = evaluateProductRelevance("Two-in-One Pet Car Seat Belt — Adjustable Safety Harness", topic);
+      expect(seatBelt.relevanceStatus).toBe("RELEVANT");
+      expect(seatBelt.isAccepted).toBe(true);
+
+      const feeder = evaluateProductRelevance("Smart Automatic Cat Feeder with Timer & Camera", topic);
+      expect(feeder.relevanceStatus).toBe("RELEVANT");
+      expect(feeder.isAccepted).toBe(true);
+    });
+  });
+
+  // ── 7. Sparse & Non-Pet Customer Psychology Grounding ───────────────────
+  describe("Customer Psychology — Minimal & Non-Pet Grounding", () => {
+    it("Does NOT apply hair-removal or heavy-shedding template to minimal 'Dog bed' input", () => {
+      const profile = analyzeCustomerPsychology({
+        candidateTitle: "Dog bed",
+        categoryOrTopic: "Pet Gadgets",
+        rawHeadlines: [],
+        rawDescriptions: [],
+      });
+
+      // Target customer must not hallucinate heavy shedding or high energy behavior
+      expect(profile.targetCustomer.claimText).not.toContain("heavy shedding");
+      expect(profile.targetCustomer.claimText).not.toContain("high-energy behavior");
+      expect(profile.targetCustomer.status).toBe("INFERRED");
+
+      // Demonstration potential must not claim split-screen before/after is OBSERVED
+      expect(profile.demonstrationPotential.status).not.toBe("OBSERVED");
+      expect(profile.demonstrationPotential.claimText).not.toContain("split-screen before/after");
+
+      // Alternatives must not list lint rollers for a bed
+      expect(profile.existingAlternatives.claimText).not.toContain("lint roller");
+
+      // Messaging angle must not mention couch cleanup in 30 seconds
+      expect(profile.suggestedMessagingAngle.claimText).not.toContain("30 seconds");
+      expect(profile.suggestedMessagingAngle.claimText).not.toContain("lint roller");
+    });
+
+    it("Does NOT generate pet-care claims for audio electronics (Bluetooth Speaker)", () => {
+      const profile = analyzeCustomerPsychology({
+        candidateTitle: "Twist-out Bluetooth Speaker with FM Radio",
+        categoryOrTopic: "Pet Gadgets",
+        rawHeadlines: ["Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Music"],
+        rawDescriptions: ["High-power portable speaker with FM tuner and rechargeable battery."],
+      });
+
+      expect(profile.targetCustomer.claimText).not.toContain("Pet owner");
+      expect(profile.targetCustomer.claimText).toContain("audio");
+      expect(profile.functionalProblem.claimText).not.toContain("shedding");
+      expect(profile.functionalProblem.claimText).toContain("sound");
+    });
+  });
+
+  // ── 8. Discovery Query Plan Bounded Expansion ───────────────────────────
+  describe("Discovery Query Plan", () => {
+    it("Generates exact-phrase primary query and bounded subqueries for Pet Gadgets", () => {
+      const plan = buildKH02DiscoveryQueryPlan("Pet Gadgets", "US");
+
+      expect(plan.primaryQuery.searchType).toBe("KEYWORD_EXACT_PHRASE");
+      expect(plan.primaryQuery.subquery).toBe("Pet Gadgets");
+      expect(plan.subqueries.length).toBeGreaterThan(0);
+      expect(plan.subqueries.length).toBeLessThanOrEqual(3);
+      for (const sub of plan.subqueries) {
+        expect(sub.searchType).toBe("KEYWORD_EXACT_PHRASE");
+        expect(sub.rationale).toBeTruthy();
+        expect(sub.maxResults).toBeLessThanOrEqual(10);
+      }
     });
   });
 });

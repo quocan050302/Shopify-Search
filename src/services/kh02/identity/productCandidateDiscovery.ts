@@ -220,6 +220,14 @@ export function discoverProductCandidatesFromAds(
       } else {
         groupKey = `ad::${obs.source}::${obs.sourceRecordId || Math.abs(hashCode(obs.title))}`;
       }
+    } else if (obs.advertiserOrCreator && obs.title && obs.title.trim().length > 3) {
+      const cleanTitle = cleanCandidateTitle(obs.title);
+      if (cleanTitle.length > 3) {
+        // Multiple ads from the same advertiser promoting the same product title
+        groupKey = `advertiser::${obs.advertiserOrCreator.toLowerCase()}::${cleanTitle.toLowerCase()}`;
+      } else {
+        groupKey = `ad::${obs.source}::${obs.sourceRecordId || Math.abs(hashCode(obs.title))}`;
+      }
     } else if (obs.sourceRecordId) {
       // Unidentified ad creative: separate group so different unknown ads don't collapse into one
       groupKey = `unidentified::${obs.source}::${obs.sourceRecordId}`;
@@ -321,7 +329,7 @@ export function discoverProductCandidatesFromAds(
     const mediaSourceAdId = repObs?.sourceRecordId || repObs?.sourceExternalAdId || null;
 
     candidates.push({
-      candidateId: `cand_${Math.abs(hashCode(key))}_${index}`,
+      candidateId: `cand_${Math.abs(hashCode(key))}`,
       title: resolvedIdentity.displayTitle,
       canonicalProductName: resolvedIdentity.canonicalProductName,
       displayName: resolvedIdentity.displayName,

@@ -93,7 +93,20 @@ export function normalizeMetaCollectorAd(
 
   // 3. Extract Creative Content & Variants across all creative objects
   const creatives = (Array.isArray(anyRaw.creatives) ? anyRaw.creatives : []) as Array<Record<string, unknown>>;
-  const primaryCreative = creatives[0] || {};
+  let primaryCreative = creatives[0] || {};
+
+  // If multiple creatives are present (e.g. multi-product carousel ads),
+  // select the creative that matches the research topic keyword if available
+  if (creatives.length > 1 && context.keyword) {
+    const kwTokens = context.keyword.toLowerCase().split(/\s+/).filter((t) => t.length > 2);
+    const matching = creatives.find((c) => {
+      const text = `${c.title || ""} ${c.body || ""}`.toLowerCase();
+      return kwTokens.some((t) => text.includes(t));
+    });
+    if (matching) {
+      primaryCreative = matching;
+    }
+  }
 
   const headline = String(
     primaryCreative.title ||
@@ -219,9 +232,11 @@ export function normalizeMetaCollectorAd(
 
   // Thumbnail extraction with explicit priority
   let thumbnailUrl: string | null = null;
+  const orderedCreatives = [primaryCreative, ...creatives.filter((c) => c !== primaryCreative)];
+
   if (mediaType === "VIDEO") {
     // For video ads, prioritize genuine video poster/thumbnail preview
-    for (const c of creatives) {
+    for (const c of orderedCreatives) {
       const candidate =
         c.thumbnail_url ||
         c.image_url ||
@@ -246,7 +261,7 @@ export function normalizeMetaCollectorAd(
     }
   } else {
     // For image or carousel ads, prioritize high-quality genuine creative image
-    for (const c of creatives) {
+    for (const c of orderedCreatives) {
       const candidate =
         c.original_image_url ||
         c.image_url ||

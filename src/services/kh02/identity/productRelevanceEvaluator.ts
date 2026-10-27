@@ -35,7 +35,9 @@ const NICHE_SIGNATURES: Record<string, { include: string[]; exclude: string[] }>
       "grooming vacuum", "dog grooming vacuum", "pet vacuum",
       "pet tracker", "gps pet tracker", "dog tracker", "cat tracker",
       "smart pet collar", "bark collar", "pet collar", "dog collar", "cat collar",
-      "pet camera", "dog camera", "cat camera", "pet gadget", "pet gadgets"
+      "pet camera", "dog camera", "cat camera", "pet gadget", "pet gadgets",
+      "pet bed", "dog bed", "cat bed", "pet car seat belt", "pet seat belt", "dog car harness",
+      "pet headdress", "pet clothes", "pet coat", "dog coat", "cat tree", "scratching post"
     ],
     exclude: [
       "casino", "crypto", "dating", "adult", "loan", "mortgage", "real estate",
@@ -52,7 +54,14 @@ const NICHE_SIGNATURES: Record<string, { include: string[]; exclude: string[] }>
       "facial hair", "beard trimmer", "epilator", "depilatory", "laser hair",
       "human hair", "dead skin", "painless hair removal", "hair removal cream",
       "hair removal spray", "body hair", "wax strips", "waxing kit", "shaving cream",
-      "lipstick", "eyeliner", "mascara", "serum", "anti-aging", "wrinkle"
+      "lipstick", "eyeliner", "mascara", "serum", "anti-aging", "wrinkle",
+      // Unrelated electronics / fashion / holiday / toys negative controls
+      "bluetooth speaker", "fm radio", "wireless audio", "rearview mirror", "motorbike", "motorcycle speaker",
+      "dance shoes", "jazz dance shoes", "women's shoes", "high heels",
+      "christmas ball", "tree pendant", "holiday decor",
+      "kids sunglasses", "sunglasses", "protective eyewear",
+      "wooden jigsaw puzzle", "3d wooden jigsaw", "jigsaw puzzle",
+      "pc case cooler", "case cooler", "tin decor", "metal door sign"
     ],
   },
   beauty: {

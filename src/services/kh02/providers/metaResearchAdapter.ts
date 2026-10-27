@@ -141,9 +141,23 @@ export async function diagnoseMetaLiveCollector(
   context?: { workspaceId?: string; checkLiveTransport?: boolean }
 ): Promise<MetaCollectorDiagnostic> {
   const lastCheckedAt = new Date().toISOString();
-  let recordCount = 0;
+  let workspaceRecordCount = 0;
+  let globalRecordCount = 0;
   try {
-    recordCount = await prisma.competitorAd.count({ where: { platform: "META" } });
+    globalRecordCount = await prisma.competitorAd.count({
+      where: { platform: { in: ["META", "FACEBOOK"] }, isSyntheticQuarantine: false },
+    });
+    if (context?.workspaceId) {
+      workspaceRecordCount = await prisma.competitorAd.count({
+        where: {
+          platform: { in: ["META", "FACEBOOK"] },
+          isSyntheticQuarantine: false,
+          ...buildAuthorizedAdWhere(context.workspaceId),
+        },
+      });
+    } else {
+      workspaceRecordCount = globalRecordCount;
+    }
   } catch {}
 
   const config = getMetaCollectorConfig();
@@ -157,16 +171,16 @@ export async function diagnoseMetaLiveCollector(
       transportConnected: false,
       authenticated: false,
       discoverySupported: false,
-      queryExecuted: recordCount > 0,
-      recordsReturned: recordCount,
-      provenanceVerified: recordCount > 0,
+      queryExecuted: false,
+      recordsReturned: workspaceRecordCount,
+      provenanceVerified: workspaceRecordCount > 0,
       lastCheckedAt,
       status: "NOT_CONFIGURED",
       reason: `MetaAdsCollector Python environment not found at '${config.pythonBin}'. Run python virtualenv setup.`,
       missingRequirements: ["META_COLLECTOR_PYTHON_VENV"],
       pythonBin: config.pythonBin,
       collectorVersion: null,
-      databaseRecordsIndexed: recordCount,
+      databaseRecordsIndexed: workspaceRecordCount,
     };
   }
 
@@ -188,6 +202,12 @@ export async function diagnoseMetaLiveCollector(
     }
   }
 
+  const reason = transportConnected
+    ? context?.workspaceId
+      ? `Workspace has ${workspaceRecordCount} Meta ad records stored (Global: ${globalRecordCount}); live collector active (v${collectorVersion || "1.7.0"}).`
+      : `Meta competitor ads indexed in database (${globalRecordCount} records); live collector active (v${collectorVersion || "1.7.0"}).`
+    : "MetaAdsCollector Python virtualenv present but MCP stdio handshake failed.";
+
   return {
     source: "META_ADS",
     adapterInstalled: true,
@@ -195,18 +215,16 @@ export async function diagnoseMetaLiveCollector(
     transportConnected,
     authenticated: true,
     discoverySupported: true,
-    queryExecuted: recordCount > 0,
-    recordsReturned: recordCount,
-    provenanceVerified: recordCount > 0,
+    queryExecuted: false, // Never infer query execution from stored count
+    recordsReturned: workspaceRecordCount,
+    provenanceVerified: workspaceRecordCount > 0,
     lastCheckedAt,
     status: transportConnected ? "SOURCE_ACCESS_VERIFIED" : "FAILED",
-    reason: transportConnected
-      ? `Meta competitor ads indexed in database (${recordCount} records observed); live collection active via local collector (v${collectorVersion || "1.7.0"}).`
-      : "MetaAdsCollector Python virtualenv present but MCP stdio handshake failed.",
+    reason,
     missingRequirements: transportConnected ? [] : ["MCP_TRANSPORT_FAILED"],
     pythonBin: config.pythonBin,
     collectorVersion,
-    databaseRecordsIndexed: recordCount,
+    databaseRecordsIndexed: workspaceRecordCount,
   };
 }
 

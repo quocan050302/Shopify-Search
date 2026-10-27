@@ -14,6 +14,7 @@
     "Gate 4: Demand Stability & Temporal History Coverage",
     "Gate 5: Non-Degrading Evergreen Distinctness"
   ],
-  "evaluatedCandidates": [],
-  "timestamp": "2026-10-27T13:28:51.674Z"
+  "evaluatedCandidatesCount": 0,
+  "scoringIntegrityVerified": true,
+  "timestamp": "2026-10-27T14:49:16.062Z"
 }

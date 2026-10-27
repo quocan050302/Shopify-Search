@@ -1,24 +1,41 @@
 {
   "kh01Verify": {
     "passed": true,
-    "tests": 69
+    "tests": 69,
+    "durationMs": 2329
   },
   "v12_3UnitTests": {
     "passed": true,
-    "tests": 20
+    "tests": 25,
+    "durationMs": 1570
   },
   "releaseGatesUnitTests": {
     "passed": true,
-    "tests": 37
+    "tests": 37,
+    "durationMs": 1452
+  },
+  "workspaceSecuritySuite": {
+    "passed": true,
+    "tests": 30,
+    "durationMs": 1623
+  },
+  "workerOwnershipSuite": {
+    "passed": true,
+    "tests": 5,
+    "durationMs": 1303
+  },
+  "typecheck": {
+    "passed": true,
+    "durationMs": 3568
   },
   "lint": {
     "passed": true,
-    "errorCount": 0
+    "durationMs": 16556
   },
   "build": {
     "passed": true,
     "routesOptimized": 52
   },
-  "totalTestsPassed": 126,
-  "timestamp": "2026-10-27T13:29:11.029Z"
+  "totalTestsPassed": 166,
+  "timestamp": "2026-10-27T14:49:16.064Z"
 }

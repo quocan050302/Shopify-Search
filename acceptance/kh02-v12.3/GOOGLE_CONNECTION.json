@@ -12,12 +12,12 @@
     "lastLiveQueryRecordCount": null,
     "currentRunRecordCount": null,
     "lastSuccessfulLiveQueryAt": null,
-    "lastProbeAt": "2026-10-27T13:28:46.945Z",
+    "lastProbeAt": "2026-10-27T14:48:45.684Z",
     "authStatus": "AUTH_NOT_REQUIRED",
     "transportStatus": "NOT_TESTED",
     "capabilityStatus": "NOT_TESTED",
     "provenanceVerified": false,
-    "lastCheckedAt": "2026-10-27T13:28:46.945Z",
+    "lastCheckedAt": "2026-10-27T14:48:45.684Z",
     "status": "CONFIGURED",
     "reason": "Google Ads Transparency MCP endpoint configured (Connection not tested).",
     "missingRequirements": [],
@@ -35,7 +35,7 @@
       "lastLiveQueryRecordCount": null,
       "currentRunRecordCount": null,
       "lastSuccessfulLiveQueryAt": null,
-      "lastProbeAt": "2026-10-27T13:28:46.945Z",
+      "lastProbeAt": "2026-10-27T14:48:45.684Z",
       "authStatus": "AUTH_NOT_REQUIRED",
       "transportStatus": "NOT_TESTED",
       "capabilityStatus": "NOT_TESTED"
@@ -60,12 +60,12 @@
     "lastLiveQueryRecordCount": null,
     "currentRunRecordCount": null,
     "lastSuccessfulLiveQueryAt": null,
-    "lastProbeAt": "2026-10-27T13:28:46.945Z",
+    "lastProbeAt": "2026-10-27T14:48:45.684Z",
     "authStatus": "AUTH_NOT_REQUIRED",
     "transportStatus": "CONNECTED",
     "capabilityStatus": "VERIFIED",
     "provenanceVerified": false,
-    "lastCheckedAt": "2026-10-27T13:28:46.945Z",
+    "lastCheckedAt": "2026-10-27T14:48:45.684Z",
     "status": "CONNECTED",
     "reason": "Google Ads Transparency MCP server connected (2 tools discovered). Operations verified.",
     "missingRequirements": [],
@@ -83,7 +83,7 @@
       "lastLiveQueryRecordCount": null,
       "currentRunRecordCount": null,
       "lastSuccessfulLiveQueryAt": null,
-      "lastProbeAt": "2026-10-27T13:28:46.945Z",
+      "lastProbeAt": "2026-10-27T14:48:45.684Z",
       "authStatus": "AUTH_NOT_REQUIRED",
       "transportStatus": "CONNECTED",
       "capabilityStatus": "VERIFIED"
@@ -100,5 +100,5 @@
     "get_advertiser_ads"
   ],
   "connected": true,
-  "timestamp": "2026-10-27T13:28:47.875Z"
+  "timestamp": "2026-10-27T14:49:02.154Z"
 }

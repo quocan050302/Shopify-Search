@@ -867,16 +867,20 @@ export default function ProductsPage() {
                   const isDemand = sourceItem.source === "DEMAND_HISTORY";
                   const isOrganic = sourceItem.source === "TIKTOK_ORGANIC";
                   const isTikTokAds = sourceItem.source === "TIKTOK_ADS";
+                  const isTikTok = isOrganic || isTikTokAds;
                   const sourceConfigured = isDemand ? diag.upstreamConfigured === true : diag.configured;
 
-                  // Check if tested just now
-                  const justTested = Boolean(latestProbe);
+                  // Check if tested just now (exclude disabled TikTok)
+                  const justTested = Boolean(latestProbe) && !isTikTok;
 
                   // Truthful auth rendering
                   let authDisplay = "Not Tested";
                   let authClass = "text-slate-400";
                   const aStatus = latestProbe?.authStatus || dims.authStatus;
-                  if (aStatus === "AUTH_NOT_REQUIRED" || (dims.authenticated === null && (isMeta || isGoogle || isDemand))) {
+                  if (isTikTok) {
+                    authDisplay = "Tạm tắt (Chính sách)";
+                    authClass = "text-slate-500 font-medium";
+                  } else if (aStatus === "AUTH_NOT_REQUIRED" || (dims.authenticated === null && (isMeta || isGoogle || isDemand))) {
                     authDisplay = isMeta ? "Not Required (Local stdio)" : isGoogle ? "Not Required (MCP stdio)" : isDemand ? "Not Required (Engine)" : "Not Required";
                     authClass = "text-slate-300";
                   } else if (aStatus === "CREDENTIALS_REQUIRED" || (!diag.configured && (isOrganic || isTikTokAds))) {
@@ -890,12 +894,15 @@ export default function ProductsPage() {
                     authClass = "text-emerald-400 font-medium";
                   }
 
-                  // Truthful transport rendering: Connected, Failed, Timeout, Not Configured, Not Tested
+                  // Truthful transport rendering: Connected, Failed, Timeout, Not Configured, Not Tested, Tạm tắt
                   let transportDisplay = "Not Tested";
                   let transportClass = "text-slate-400";
                   const tStatus = latestProbe?.status === "TIMEOUT" ? "TIMEOUT" : (dims.transportStatus || latestProbe?.transportStatus);
 
-                  if (tStatus === "TIMEOUT" || latestProbe?.status === "TIMEOUT") {
+                  if (isTikTok) {
+                    transportDisplay = "Tạm tắt";
+                    transportClass = "text-slate-500 font-medium";
+                  } else if (tStatus === "TIMEOUT" || latestProbe?.status === "TIMEOUT") {
                     transportDisplay = "Timeout";
                     transportClass = "text-rose-400 font-semibold";
                   } else if (tStatus === "CONNECTED" || tStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true || (latestProbe && (latestProbe.status === "CONNECTED" || latestProbe.status === "SOURCE_ACCESS_VERIFIED"))) {
@@ -946,8 +953,8 @@ export default function ProductsPage() {
                       <div className="space-y-1 text-[11px] text-slate-400">
                         <div className="flex justify-between">
                           <span>{isDemand ? "Live provider:" : "Configuration:"}</span>
-                          <span className={sourceConfigured ? "text-emerald-400" : "text-amber-400 font-medium"}>
-                            {sourceConfigured ? "Configured" : "Missing"}
+                          <span className={isTikTok ? "text-slate-500 font-medium" : sourceConfigured ? "text-emerald-400" : "text-amber-400 font-medium"}>
+                            {isTikTok ? "Tạm tắt" : sourceConfigured ? "Configured" : "Missing"}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -977,7 +984,9 @@ export default function ProductsPage() {
                         <div className="flex justify-between">
                           <span>Last Live Query:</span>
                           <span className="font-mono">
-                            {(() => {
+                            {isTikTok ? (
+                              <span className="text-slate-500 font-medium">Tạm tắt</span>
+                            ) : (() => {
                               // 1. Live attempt failed
                               const liveFailed =
                                 dims.liveSucceeded === false ||
@@ -1057,18 +1066,25 @@ export default function ProductsPage() {
                         </div>
                       </div>
 
-                      {diag.reason && (
-                        <p className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
-                          {diag.reason}
+                      {isTikTok ? (
+                        <p className="text-[10px] text-slate-500 bg-slate-900/40 p-1.5 rounded border border-slate-800/60">
+                          Tạm tắt trong bản phát hành KH-02 V12.3 theo chính sách. Không yêu cầu key hay cookie.
                         </p>
+                      ) : (
+                        <>
+                          {diag.reason && (
+                            <p className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
+                              {diag.reason}
+                            </p>
+                          )}
+                          {diag.requiredAction && (
+                            <p className="text-[10px] text-amber-300/90 font-medium">
+                              Next Step: {diag.requiredAction}
+                            </p>
+                          )}
+                          <ProviderSetupGuide source={sourceItem.source} />
+                        </>
                       )}
-
-                      {diag.requiredAction && (
-                        <p className="text-[10px] text-amber-300/90 font-medium">
-                          Next Step: {diag.requiredAction}
-                        </p>
-                      )}
-                      <ProviderSetupGuide source={sourceItem.source} />
                     </div>
                   );
                 })}

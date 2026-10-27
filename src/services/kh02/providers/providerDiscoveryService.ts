@@ -22,6 +22,7 @@ import {
 } from "./googleTransparencyResearchAdapter";
 import { fetchHasDataCreditStatus } from "./hasDataCreditService";
 import { buildAuthorizedAdWhere, buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
+import { isSourceTemporarilyDisabled } from "./sourcePolicy";
 
 /**
  * Discovers and inspects all available KH-02 intelligence providers without incurring costs.
@@ -39,6 +40,50 @@ export async function discoverAvailableKH02Providers(
 
   const results = await Promise.all(
     providerIds.map(async (providerId) => {
+      if (isSourceTemporarilyDisabled(providerId)) {
+        const capabilities: ProviderCapabilities = {
+          providerId,
+          accessClass: "UNSUPPORTED",
+          installed: true,
+          configured: false,
+          transportConnected: false,
+          supportedTools: [],
+          supportsUS: false,
+          supportsKeywordSearch: false,
+          supportsDateFiltering: false,
+          estimatedCostPerQueryCredits: 0,
+          pricingSource: "Temporarily disabled in KH-02 V12.3",
+          blockerReason: null,
+        };
+
+        const readiness: ProviderReadiness = {
+          providerId,
+          accessClass: "UNSUPPORTED",
+          installed: true,
+          configured: false,
+          transportConnected: false,
+          authenticated: null,
+          requiredCapabilityAvailable: false,
+          realQueryExecuted: false,
+          realQuerySucceeded: false,
+          realRecordsObserved: 0,
+          lastSuccessfulQueryAt: null,
+          dataFreshness: null,
+          costApprovalRequired: false,
+          blockerCode: null,
+          blockerReason: null,
+        };
+
+        return {
+          providerId,
+          displayName: providerId === "TIKTOK_ADS" ? "TikTok Ads US (Tạm tắt)" : "TikTok Organic Video Research (Tạm tắt)",
+          accessClass: "UNSUPPORTED" as ProviderAccessClass,
+          readiness,
+          capabilities,
+          recommendedAction: undefined,
+        };
+      }
+
       const capabilities = await probeKH02ProviderCapabilities(providerId, {
         workspaceId: context.workspaceId,
         allowPaidOperations: context.allowPaidOperations,
@@ -59,15 +104,9 @@ export async function discoverAvailableKH02Providers(
           break;
         case "TIKTOK_ADS":
           displayName = "TikTok Ads US (Creative Center)";
-          if (!readiness.configured) {
-            recommendedAction = "Configure TIKTOK_CC_COOKIE in .env.local or import verified creative URLs manually.";
-          }
           break;
         case "TIKTOK_ORGANIC":
           displayName = "TikTok Organic Video Research (HasData)";
-          if (!readiness.configured) {
-            recommendedAction = "Configure HASDATA_API_KEY in .env.local (free tier includes 1,000 credits/mo at hasdata.com).";
-          }
           break;
         case "GOOGLE_ADS":
           displayName = "Google Ads Transparency Center";
@@ -105,6 +144,23 @@ export async function probeKH02ProviderCapabilities(
   context: ProviderProbeContext = {}
 ): Promise<ProviderCapabilities> {
   const normId = providerId.toUpperCase() as IntelligenceSource;
+
+  if (isSourceTemporarilyDisabled(normId)) {
+    return {
+      providerId: normId,
+      accessClass: "UNSUPPORTED",
+      installed: true,
+      configured: false,
+      transportConnected: false,
+      supportedTools: [],
+      supportsUS: false,
+      supportsKeywordSearch: false,
+      supportsDateFiltering: false,
+      estimatedCostPerQueryCredits: 0,
+      pricingSource: "Temporarily disabled in KH-02 V12.3",
+      blockerReason: null,
+    };
+  }
 
   switch (normId) {
     case "META_ADS": {
@@ -315,6 +371,26 @@ async function evaluateProviderReadiness(
   capabilities: ProviderCapabilities,
   context: ProviderDiscoveryContext
 ): Promise<ProviderReadiness> {
+  if (isSourceTemporarilyDisabled(providerId)) {
+    return {
+      providerId,
+      accessClass: "UNSUPPORTED",
+      installed: true,
+      configured: false,
+      transportConnected: false,
+      authenticated: null,
+      requiredCapabilityAvailable: false,
+      realQueryExecuted: false,
+      realQuerySucceeded: false,
+      realRecordsObserved: 0,
+      lastSuccessfulQueryAt: null,
+      dataFreshness: null,
+      costApprovalRequired: false,
+      blockerCode: null,
+      blockerReason: null,
+    };
+  }
+
   let realRecordsObserved = 0;
   let dataFreshness: string | null = null;
   let lastSuccessfulQueryAt: string | null = null;
