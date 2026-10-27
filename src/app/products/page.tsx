@@ -82,7 +82,9 @@ interface LeaderboardData {
   provisionalCandidates?: RankedItem[];
   remainingCandidates: RankedItem[];
   insufficientEvidenceCandidates: RankedItem[];
+  rejectedCandidates?: RankedItem[];
   totalCandidatesDiscovered: number;
+  totalObservationsCollected?: number;
   generatedAt?: string;
 }
 
@@ -218,17 +220,41 @@ export default function ProductsPage() {
             return prevStatuses.map((item) => {
               const probe = json.data.find((p: any) => p.source === item.source);
               if (!probe) return item;
+              const mergedDims = {
+                ...item.dimensions,
+                ...probe.dimensions,
+                // Crucial invariant: Never wipe actual research live query history with a diagnostic transport probe
+                lastLiveQueryRecordCount:
+                  item.dimensions?.lastLiveQueryRecordCount !== null && item.dimensions?.lastLiveQueryRecordCount !== undefined
+                    ? item.dimensions.lastLiveQueryRecordCount
+                    : probe.dimensions?.lastLiveQueryRecordCount ?? null,
+                lastLiveQueryAt: item.dimensions?.lastLiveQueryAt || probe.dimensions?.lastLiveQueryAt || null,
+                lastSuccessfulLiveQueryAt:
+                  item.dimensions?.lastSuccessfulLiveQueryAt || probe.dimensions?.lastSuccessfulLiveQueryAt || null,
+                lastSuccessfulRecordCount:
+                  item.dimensions?.lastSuccessfulRecordCount !== null && item.dimensions?.lastSuccessfulRecordCount !== undefined
+                    ? item.dimensions.lastSuccessfulRecordCount
+                    : probe.dimensions?.lastSuccessfulRecordCount ?? null,
+                queryProvenance: item.dimensions?.queryProvenance || probe.dimensions?.queryProvenance || "NONE",
+                isLive: item.dimensions?.isLive ?? probe.dimensions?.isLive ?? false,
+                queryExecuted: Boolean(item.dimensions?.queryExecuted || probe.dimensions?.queryExecuted),
+                queryStatus: item.dimensions?.queryStatus || probe.dimensions?.queryStatus,
+                queryError: item.dimensions?.queryError || probe.dimensions?.queryError,
+              };
               return {
                 ...item,
                 readiness: probe.status,
                 diagnosticStatus: probe.status,
-                isReady: probe.status === "CONNECTED" || probe.status === "SOURCE_ACCESS_VERIFIED" || probe.status === "LIVE_DATA_VERIFIED",
+                isReady:
+                  probe.status === "CONNECTED" ||
+                  probe.status === "SOURCE_ACCESS_VERIFIED" ||
+                  probe.status === "LIVE_DATA_VERIFIED",
                 readinessReason: probe.reason,
-                dimensions: probe.dimensions || item.dimensions,
+                dimensions: mergedDims,
                 diagnostic: {
                   ...item.diagnostic,
                   ...probe,
-                  dimensions: probe.dimensions || item.diagnostic?.dimensions,
+                  dimensions: mergedDims,
                 },
                 latestProbe: probe,
               };
@@ -833,8 +859,19 @@ export default function ProductsPage() {
                     transportClass = "text-slate-400";
                   }
 
-                  const storedCount = typeof dims.storedRecordCount === "number" ? dims.storedRecordCount : (typeof diag.recordsReturned === "number" ? diag.recordsReturned : 0);
-                  const lastLiveCount = typeof dims.lastLiveQueryRecordCount === "number" ? dims.lastLiveQueryRecordCount : null;
+                  const storedCount =
+                    typeof dims.storedRecordCount === "number"
+                      ? dims.storedRecordCount
+                      : typeof diag.recordsReturned === "number"
+                      ? diag.recordsReturned
+                      : 0;
+
+                  const lastLiveCount =
+                    typeof dims.lastLiveQueryRecordCount === "number"
+                      ? dims.lastLiveQueryRecordCount
+                      : typeof (sourceItem as any).lastLiveQueryRecordCount === "number"
+                      ? (sourceItem as any).lastLiveQueryRecordCount
+                      : null;
 
                   return (
                     <div
@@ -886,8 +923,49 @@ export default function ProductsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span>Last Live Query:</span>
-                          <span className="text-slate-300 font-mono">
-                            {lastLiveCount !== null ? `${lastLiveCount} records` : "Not Run"}
+                          <span className="font-mono">
+                            {(() => {
+                              const isFailed =
+                                dims.queryStatus === "FAILED" ||
+                                dims.queryStatus === "QUERY_FAILED" ||
+                                dims.queryStatus === "BLOCKED_SOURCE" ||
+                                dims.queryStatus === "TRANSPORT_FAILED" ||
+                                dims.queryStatus === "AUTHENTICATION_FAILED";
+                              if (isFailed) {
+                                return (
+                                  <span
+                                    className="text-rose-400"
+                                    title={dims.queryError || "Query failed"}
+                                  >
+                                    Failed{dims.queryError ? `: ${dims.queryError.slice(0, 20)}...` : ""}
+                                  </span>
+                                );
+                              }
+                              if (dims.queryProvenance === "CACHED_SOURCE" || (!dims.isLive && dims.queryExecuted && storedCount > 0)) {
+                                return (
+                                  <span
+                                    className="text-amber-300"
+                                    title="Retrieved from persistent SQLite cache"
+                                  >
+                                    Cache ({storedCount} records)
+                                  </span>
+                                );
+                              }
+                              if (lastLiveCount !== null && lastLiveCount > 0) {
+                                return (
+                                  <span
+                                    className="text-emerald-400 font-semibold"
+                                    title={dims.lastLiveQueryAt ? `Executed at ${dims.lastLiveQueryAt}` : undefined}
+                                  >
+                                    {lastLiveCount} records
+                                  </span>
+                                );
+                              }
+                              if (dims.queryExecuted && lastLiveCount === 0) {
+                                return <span className="text-slate-300">0 records</span>;
+                              }
+                              return <span className="text-slate-500">Not Run</span>;
+                            })()}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -1386,6 +1464,52 @@ export default function ProductsPage() {
                           </button>
                         )}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* REJECTED / DISQUALIFIED CANDIDATES (AUDIT & RELEVANCE GATE) */}
+            {leaderboard && leaderboard.rejectedCandidates && leaderboard.rejectedCandidates.length > 0 && (
+              <div data-testid="kh02-rejected-candidates-section" className="space-y-4 pt-6 border-t border-[#1f293d]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-rose-400" />
+                      <span>Excluded / Disqualified Candidates (Relevance & Market Identity Audit)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Candidates identified in raw ad data but blocked by relevance gating (e.g. human body depilatories or non-pet products for pet hair remover queries).
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-mono text-rose-400">
+                    {leaderboard.rejectedCandidates.length} excluded
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {leaderboard.rejectedCandidates.map((item) => (
+                    <div
+                      key={item.candidate.candidateId}
+                      data-testid="kh02-rejected-product-card"
+                      className="p-3 rounded-xl bg-rose-950/20 border border-rose-900/40 text-xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-rose-200 line-clamp-1">{item.candidate.title}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-rose-900/60 text-rose-300 text-[10px] font-bold">
+                          REJECTED
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        {item.candidate.storeDomain || "Domain unverified"} · Score: {item.score?.opportunityScore ?? 0}/100
+                      </p>
+                      <p className="text-[10px] text-rose-300/80 bg-rose-950/40 p-1.5 rounded border border-rose-900/30">
+                        <span className="font-semibold">Reason:</span>{" "}
+                        {item.score?.recommendationRationale ||
+                          item.candidate.relevanceReasons?.join("; ") ||
+                          "Failed product relevance filter for requested research topic"}
+                      </p>
                     </div>
                   ))}
                 </div>

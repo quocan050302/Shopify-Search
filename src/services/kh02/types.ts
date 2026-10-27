@@ -144,6 +144,30 @@ export interface ProviderReadinessDimensions {
   authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED";
   transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED";
   capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED";
+
+  // KH-02 Truthful Query Provenance & Failure Trace
+  queryStatus?: SourceRunStatus | string | null;
+  queryProvenance?: ObservationProvenance | null;
+  isLive?: boolean | null;
+  queryError?: string | null;
+  lastSuccessfulRecordCount?: number | null;
+}
+
+export interface ProviderSourceTelemetry {
+  source: IntelligenceSource;
+  status: SourceRunStatus;
+  queryExecuted: boolean;
+  isLive: boolean;
+  retrievedCount: number | null;
+  acceptedCount: number | null;
+  productAssociatedCount?: number | null;
+  storedRecordCount?: number | null;
+  provenance: ObservationProvenance;
+  lastLiveQueryAt: string | null;
+  lastSuccessfulLiveQueryAt: string | null;
+  lastSuccessfulRecordCount?: number | null;
+  error?: string | null;
+  warning?: string | null;
 }
 
 export type ObservationProvenance =

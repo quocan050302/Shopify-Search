@@ -90,6 +90,19 @@ export function applyKH02EligibilityGates(
 ): EligibilityGateResult {
   const gateReasons: string[] = [];
 
+  // Gate 0: Irrelevant Category / Reject Gate
+  if ((scoreResult as any).relevanceStatus === "IRRELEVANT" || scoreResult.recommendation === "REJECT") {
+    gateReasons.push(
+      (scoreResult as any).relevanceReasons?.[0] ||
+      "Product category is verified to be IRRELEVANT to the target research niche."
+    );
+    return {
+      tier: "INSUFFICIENT_EVIDENCE",
+      isTop3Eligible: false,
+      gateReasons,
+    };
+  }
+
   // Gate 1: Compliance / trademark block
   if (scoreResult.recommendation === "REQUIRES_MANUAL_REVIEW") {
     gateReasons.push("Compliance, trademark, or safety risk flagged; requires manual operator review.");
@@ -150,7 +163,13 @@ export function applyKH02EligibilityGates(
   }
 
   // Distinguish provisional opportunities from dead / insufficient data
-  if (oppScore >= 40 && scoreResult.evidenceConfidence >= 30 && scoreResult.demandClass !== "DECLINING") {
+  if (
+    oppScore >= 40 &&
+    scoreResult.evidenceConfidence >= 30 &&
+    scoreResult.demandClass !== "DECLINING" &&
+    (scoreResult as any).relevanceStatus !== "IRRELEVANT" &&
+    scoreResult.recommendation !== "REJECT"
+  ) {
     return {
       tier: "PROVISIONAL_OPPORTUNITY",
       isTop3Eligible: false,
@@ -344,7 +363,17 @@ export function calculateKH02EvergreenScore(
   let recommendation: KH02ScoreResult["recommendation"] = "RESEARCH_MORE";
   let rationale = "Further data required to confirm evergreen stability and economics viability.";
 
-  if (ctx.complianceRiskDetected) {
+  if (c.relevanceStatus === "IRRELEVANT") {
+    recommendation = "REJECT";
+    rationale = c.relevanceReasons?.[0] || "Product is verified to be irrelevant to the target niche topic.";
+    risks.push("Category mismatch: Product does not address the target search topic.");
+    totalScore = 0;
+    scoreStatus = "REJECTED" as any;
+  } else if (c.relevanceStatus === "AMBIGUOUS") {
+    recommendation = "REQUIRES_MANUAL_REVIEW";
+    rationale = c.relevanceReasons?.[0] || "Ambiguous niche alignment; manual review required to confirm applicability.";
+    risks.push("Niche relevance is ambiguous or unverified.");
+  } else if (ctx.complianceRiskDetected) {
     recommendation = "REQUIRES_MANUAL_REVIEW";
     rationale = "Compliance or trademark/safety risk flagged. Manual inspection required before promotion.";
     risks.push("Compliance/safety risk flagged on product candidate.");
@@ -352,7 +381,7 @@ export function calculateKH02EvergreenScore(
     risks.push("Shipping & fulfillment fragility risk: Potentially high return or damage rate.");
   }
 
-  if (recommendation !== "REQUIRES_MANUAL_REVIEW") {
+  if (recommendation !== "REQUIRES_MANUAL_REVIEW" && recommendation !== "REJECT") {
     // Rule: Declining demand, trend-dependent volatility, or failing demand stability can NEVER be a TEST_CANDIDATE
     const isDemandEligible =
       demandEval.demandClass !== "DECLINING" &&
@@ -433,7 +462,9 @@ export function calculateKH02EvergreenScore(
   const gateResult = applyKH02EligibilityGates({
     ...prelimResult,
     isProductIdentityVerified: c.identityStatus === "VERIFIED",
-  });
+    relevanceStatus: c.relevanceStatus,
+    relevanceReasons: c.relevanceReasons,
+  } as any);
 
   return {
     ...prelimResult,

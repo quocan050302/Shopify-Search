@@ -415,6 +415,9 @@ export async function collectMetaProductSignals(
       where: {
         platform: { in: ["META", "FACEBOOK"] },
         isSyntheticQuarantine: false,
+        NOT: {
+          headline: { startsWith: "[SYNTHETIC_DEMO]" },
+        },
         AND: [
           authorizedWhere,
           { OR: searchClauses.map((sc) => sc.OR).flat() },

@@ -46,6 +46,9 @@ export interface DiscoveredProductCandidate {
   identityStatus?: ProductIdentityStatus;
   resolutionSource?: string;
   isEligibleAsEvergreenWinner?: boolean;
+  relevanceStatus?: "RELEVANT" | "PROBABLY_RELEVANT" | "AMBIGUOUS" | "IRRELEVANT";
+  relevanceScore?: number;
+  relevanceReasons?: string[];
 }
 
 
@@ -177,7 +180,13 @@ export function discoverProductCandidatesFromAds(
   }>();
 
   for (const obs of observations) {
-    const rawDestUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
+    let rawDestUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
+    if (!rawDestUrl && obs.description) {
+      const urlMatch = obs.description.match(/https?:\/\/[^\s"'<>]+/i);
+      if (urlMatch) {
+        rawDestUrl = urlMatch[0];
+      }
+    }
     const urlMeta = extractProductUrlMetadata(rawDestUrl);
 
     let canonicalUrl: string | null = urlMeta.cleanCanonicalUrl || null;
@@ -221,7 +230,8 @@ export function discoverProductCandidatesFromAds(
     }
 
     if (obs.title) candidate.titles.push(obs.title);
-    if (obs.description) candidate.descriptions.push(obs.description);
+    const desc = obs.description || obs.observedContent;
+    if (desc) candidate.descriptions.push(desc);
     if (obs.advertiserOrCreator) candidate.advertisers.add(obs.advertiserOrCreator);
     if (obs.media?.thumbnailUrl) candidate.thumbnails.push(obs.media.thumbnailUrl);
     if (obs.media?.videoUrl) candidate.videos.push(obs.media.videoUrl);
@@ -261,12 +271,16 @@ export function discoverProductCandidatesFromAds(
       sourceReference: sourceRef,
     });
 
-    // Check product relevance against niche
-    const relevance = evaluateProductRelevance(resolvedIdentity.displayTitle, topic);
-    if (relevance.relevanceStatus === "IRRELEVANT" && !resolvedIdentity.isEligibleAsEvergreenWinner) {
-      // Discard completely irrelevant spam / unrelated categories
-      continue;
-    }
+    // Check product relevance against niche using full product context
+    const candidateContext = [
+      resolvedIdentity.displayTitle,
+      resolvedIdentity.canonicalName || "",
+      c.canonicalUrl || "",
+      ...c.titles,
+      ...c.descriptions,
+    ].filter(Boolean).join(" ");
+
+    const relevance = evaluateProductRelevance(candidateContext, topic);
 
     const problemStatement = inferProblemStatement(c.titles[0] || null, c.descriptions[0] || null);
 
@@ -291,7 +305,10 @@ export function discoverProductCandidatesFromAds(
       sourceObservations: c.observations,
       identityStatus: resolvedIdentity.identityStatus,
       resolutionSource: resolvedIdentity.resolutionSource,
-      isEligibleAsEvergreenWinner: resolvedIdentity.isEligibleAsEvergreenWinner && relevance.isAccepted,
+      isEligibleAsEvergreenWinner: resolvedIdentity.isEligibleAsEvergreenWinner && relevance.isAccepted && relevance.relevanceStatus !== "IRRELEVANT",
+      relevanceStatus: relevance.relevanceStatus,
+      relevanceScore: relevance.score,
+      relevanceReasons: relevance.reasons,
     });
 
     index++;

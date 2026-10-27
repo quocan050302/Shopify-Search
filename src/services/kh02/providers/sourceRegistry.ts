@@ -127,6 +127,8 @@ import {
   discoverGoogleAdsMcpCapabilities,
   resolveGoogleMcpConfig,
 } from "./googleTransparencyResearchAdapter";
+import { getWorkspaceProviderTelemetry } from "../persistence/kh02PersistenceService";
+import { ProviderSourceTelemetry } from "../types";
 
 /**
  * Strips secrets, API tokens, and cookies from diagnostic error messages and log outputs.
@@ -204,6 +206,31 @@ export async function diagnoseKH02Source(
 ): Promise<SourceDiagnosticResult> {
   const lastCheckedAt = new Date().toISOString();
 
+  let workspaceTelemetry: Record<IntelligenceSource, ProviderSourceTelemetry> | null = null;
+  if (context?.workspaceId) {
+    try {
+      workspaceTelemetry = await getWorkspaceProviderTelemetry(context.workspaceId);
+    } catch {
+      // Graceful fallback
+    }
+  }
+
+  const applyTelemetry = (dims: ProviderReadinessDimensions, src: IntelligenceSource): ProviderReadinessDimensions => {
+    const t = workspaceTelemetry?.[src];
+    if (t && t.queryExecuted) {
+      dims.queryExecuted = true;
+      dims.queryStatus = t.queryStatus;
+      dims.queryProvenance = t.queryProvenance;
+      dims.isLive = t.isLive;
+      dims.lastLiveQueryAt = t.queryTimestamp;
+      dims.lastLiveQueryRecordCount = t.retrievedCount;
+      dims.lastSuccessfulLiveQueryAt = t.lastSuccessfulQueryAt;
+      dims.lastSuccessfulRecordCount = t.lastSuccessfulRecordCount;
+      dims.queryError = t.queryError;
+    }
+    return dims;
+  };
+
   switch (source) {
     case "META_ADS": {
       const metaDiag = await diagnoseMetaLiveCollector(context);
@@ -229,7 +256,7 @@ export async function diagnoseKH02Source(
       const authStatus = "AUTH_NOT_REQUIRED";
       const transportStatus = isConnected ? "CONNECTED" : "NOT_TESTED";
 
-      const dimensions: ProviderReadinessDimensions = {
+      const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
         configured: metaDiag.configured,
         transportConnected: metaDiag.transportConnected,
@@ -247,16 +274,17 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus,
         capabilityStatus: isConnected ? "VERIFIED" : "NOT_TESTED",
-      };
+      }, "META_ADS");
 
       return {
         ...metaDiag,
         authenticated: null,
-        queryExecuted: false,
+        queryExecuted: dimensions.queryExecuted,
         recordsReturned: recCount,
         storedRecordCount: recCount,
-        lastLiveQueryRecordCount: null,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus,
@@ -299,7 +327,7 @@ export async function diagnoseKH02Source(
         ? (hasCcCookie ? "TikTok Creative Center session cookie configured." : "Apify Top Ads provider configured.")
         : "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available.";
 
-      const dimensions: ProviderReadinessDimensions = {
+      const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
         configured: isConfigured,
         transportConnected,
@@ -317,7 +345,7 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus,
         capabilityStatus: isConfigured ? "VERIFIED" : "UNSUPPORTED",
-      };
+      }, "TIKTOK_ADS");
 
       return {
         source: "TIKTOK_ADS",
@@ -326,11 +354,12 @@ export async function diagnoseKH02Source(
         transportConnected,
         authenticated: isConfigured ? null : false,
         discoverySupported: isConfigured,
-        queryExecuted: false,
+        queryExecuted: dimensions.queryExecuted,
         recordsReturned: recordCount,
         storedRecordCount: recordCount,
-        lastLiveQueryRecordCount: null,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus,
@@ -448,7 +477,7 @@ export async function diagnoseKH02Source(
         }
       }
 
-      const dimensions: ProviderReadinessDimensions = {
+      const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
         configured: true,
         transportConnected,
@@ -466,7 +495,7 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus,
         capabilityStatus: authenticated === true ? "VERIFIED" : "NOT_TESTED",
-      };
+      }, "TIKTOK_ORGANIC");
 
       return {
         source: "TIKTOK_ORGANIC",
@@ -475,11 +504,12 @@ export async function diagnoseKH02Source(
         transportConnected,
         authenticated,
         discoverySupported: authenticated === true,
-        queryExecuted: false,
+        queryExecuted: dimensions.queryExecuted,
         recordsReturned: null,
         storedRecordCount: 0,
-        lastLiveQueryRecordCount: null,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus,
@@ -503,6 +533,26 @@ export async function diagnoseKH02Source(
     case "GOOGLE_ADS": {
       const googleEnabled = process.env.GOOGLE_TRANSPARENCY_ENABLED !== "false";
       if (!googleEnabled) {
+        const dimensions: ProviderReadinessDimensions = applyTelemetry({
+          adapterInstalled: true,
+          configured: false,
+          transportConnected: false,
+          authenticated: null,
+          supportedOperationsVerified: false,
+          queryExecuted: false,
+          sourceDataVerified: false,
+          lastLiveQueryAt: null,
+          blockerCode: "DISABLED_BY_CONFIG",
+          storedRecordCount: 0,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: null,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "NOT_PROBED",
+          transportStatus: "NOT_CONFIGURED",
+          capabilityStatus: "UNSUPPORTED",
+        }, "GOOGLE_ADS");
+
         return {
           source: "GOOGLE_ADS",
           adapterInstalled: true,
@@ -510,39 +560,22 @@ export async function diagnoseKH02Source(
           transportConnected: false,
           authenticated: null,
           discoverySupported: false,
-          queryExecuted: false,
-          recordsReturned: 0,
+          queryExecuted: dimensions.queryExecuted,
+          recordsReturned: dimensions.lastLiveQueryRecordCount || 0,
           storedRecordCount: 0,
-          lastLiveQueryRecordCount: null,
+          lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
           currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
           lastProbeAt: lastCheckedAt,
           authStatus: "NOT_PROBED",
           transportStatus: "NOT_CONFIGURED",
           capabilityStatus: "UNSUPPORTED",
-          provenanceVerified: false,
+          provenanceVerified: dimensions.queryExecuted,
           lastCheckedAt,
           status: "SKIPPED",
           reason: "Google Ads Transparency research is disabled by environment configuration.",
           missingRequirements: ["GOOGLE_TRANSPARENCY_ENABLED"],
-          dimensions: {
-            adapterInstalled: true,
-            configured: false,
-            transportConnected: false,
-            authenticated: null,
-            supportedOperationsVerified: false,
-            queryExecuted: false,
-            sourceDataVerified: false,
-            lastLiveQueryAt: null,
-            blockerCode: "DISABLED_BY_CONFIG",
-            storedRecordCount: 0,
-            lastLiveQueryRecordCount: null,
-            currentRunRecordCount: null,
-            lastSuccessfulLiveQueryAt: null,
-            lastProbeAt: lastCheckedAt,
-            authStatus: "NOT_PROBED",
-            transportStatus: "NOT_CONFIGURED",
-            capabilityStatus: "UNSUPPORTED",
-          },
+          dimensions,
         };
       }
 
@@ -553,7 +586,7 @@ export async function diagnoseKH02Source(
       );
 
       if (!hasEndpoint) {
-        const dimensions: ProviderReadinessDimensions = {
+        const dimensions: ProviderReadinessDimensions = applyTelemetry({
           adapterInstalled: true,
           configured: false,
           transportConnected: false,
@@ -571,7 +604,7 @@ export async function diagnoseKH02Source(
           authStatus: "NOT_PROBED",
           transportStatus: "NOT_CONFIGURED",
           capabilityStatus: "NOT_TESTED",
-        };
+        }, "GOOGLE_ADS");
 
         return {
           source: "GOOGLE_ADS",
@@ -580,16 +613,17 @@ export async function diagnoseKH02Source(
           transportConnected: false,
           authenticated: null,
           discoverySupported: false,
-          queryExecuted: false,
-          recordsReturned: 0,
+          queryExecuted: dimensions.queryExecuted,
+          recordsReturned: dimensions.lastLiveQueryRecordCount || 0,
           storedRecordCount: 0,
-          lastLiveQueryRecordCount: null,
+          lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
           currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
           lastProbeAt: lastCheckedAt,
           authStatus: "NOT_PROBED",
           transportStatus: "NOT_CONFIGURED",
           capabilityStatus: "NOT_TESTED",
-          provenanceVerified: false,
+          provenanceVerified: dimensions.queryExecuted,
           lastCheckedAt,
           status: "MCP_NOT_CONFIGURED",
           reason: "Google Ads Transparency MCP server is not configured in environment. Configuration: Missing, Transport: Not configured.",
@@ -649,7 +683,7 @@ export async function diagnoseKH02Source(
         }
       }
 
-      const dimensions: ProviderReadinessDimensions = {
+      const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
         configured: true,
         transportConnected,
@@ -667,7 +701,7 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus,
         capabilityStatus: supportedOperationsVerified ? "VERIFIED" : (transportConnected ? "UNSUPPORTED" : "NOT_TESTED"),
-      };
+      }, "GOOGLE_ADS");
 
       return {
         source: "GOOGLE_ADS",
@@ -676,16 +710,17 @@ export async function diagnoseKH02Source(
         transportConnected,
         authenticated,
         discoverySupported: supportedOperationsVerified,
-        queryExecuted: false,
-        recordsReturned: null,
+        queryExecuted: dimensions.queryExecuted,
+        recordsReturned: dimensions.lastLiveQueryRecordCount,
         storedRecordCount: 0,
-        lastLiveQueryRecordCount: null,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus,
         capabilityStatus: dimensions.capabilityStatus,
-        provenanceVerified: false,
+        provenanceVerified: dimensions.queryExecuted,
         lastCheckedAt,
         status,
         reason,
@@ -730,7 +765,7 @@ export async function diagnoseKH02Source(
       }
       const liveConnected = upstreamStatus === "CONNECTED" ? true : upstreamStatus === "TRANSPORT_FAILED" ? false : null;
 
-      const dimensions: ProviderReadinessDimensions = {
+      const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
         configured: true, // Local demand evaluation engine is installed and ready
         transportConnected: liveConnected,
@@ -748,7 +783,7 @@ export async function diagnoseKH02Source(
         authStatus,
         transportStatus: upstreamStatus,
         capabilityStatus: "VERIFIED",
-      };
+      }, "DEMAND_HISTORY");
 
       return {
         source: "DEMAND_HISTORY",
@@ -758,11 +793,12 @@ export async function diagnoseKH02Source(
         transportConnected: liveConnected,
         authenticated: authStatus === "AUTHENTICATED" ? true : null,
         discoverySupported: true,
-        queryExecuted: false,
+        queryExecuted: dimensions.queryExecuted,
         recordsReturned: demandCount,
         storedRecordCount: demandCount,
-        lastLiveQueryRecordCount: null,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
         currentRunRecordCount: null,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus: upstreamStatus,

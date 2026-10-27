@@ -19,6 +19,7 @@ import {
   SourceRunStatus,
   IntelligenceQuery,
   SourceObservation,
+  ProviderSourceTelemetry,
 } from "./types";
 import { collectMetaProductSignals } from "./providers/metaResearchAdapter";
 import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
@@ -60,7 +61,10 @@ export interface EvergreenLeaderboardResult {
   provisionalCandidates: RankedLeaderboardItem[];
   remainingCandidates: RankedLeaderboardItem[];
   insufficientEvidenceCandidates: RankedLeaderboardItem[];
+  rejectedCandidates?: RankedLeaderboardItem[];
+  providerTelemetry?: Record<IntelligenceSource, ProviderSourceTelemetry>;
   totalCandidatesDiscovered: number;
+  totalObservationsCollected?: number;
   generatedAt: string;
   warnings: string[];
   errors: string[];
@@ -126,6 +130,74 @@ export async function runEvergreenProductResearch(
     TIKTOK_ORGANIC: "NOT_CONFIGURED",
     GOOGLE_ADS: "NOT_CONFIGURED",
     DEMAND_HISTORY: "CONFIGURED",
+  };
+
+  const providerTelemetry: Record<IntelligenceSource, ProviderSourceTelemetry> = {
+    META_ADS: {
+      source: "META_ADS",
+      queryExecuted: false,
+      queryStatus: "NOT_CONFIGURED",
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
+    },
+    TIKTOK_ADS: {
+      source: "TIKTOK_ADS",
+      queryExecuted: false,
+      queryStatus: "NOT_CONFIGURED",
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
+    },
+    TIKTOK_ORGANIC: {
+      source: "TIKTOK_ORGANIC",
+      queryExecuted: false,
+      queryStatus: "NOT_CONFIGURED",
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
+    },
+    GOOGLE_ADS: {
+      source: "GOOGLE_ADS",
+      queryExecuted: false,
+      queryStatus: "NOT_CONFIGURED",
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
+    },
+    DEMAND_HISTORY: {
+      source: "DEMAND_HISTORY",
+      queryExecuted: false,
+      queryStatus: "CONFIGURED",
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
+    },
   };
 
   const isSelected = (source: IntelligenceSource) =>
@@ -200,6 +272,7 @@ export async function runEvergreenProductResearch(
   // ── Stage 1: Meta Ads Discovery (Canonical Platform & Workspace Scoped) ────
   if (!isSelected("META_ADS")) {
     sourceStatuses.META_ADS = "SKIPPED";
+    providerTelemetry.META_ADS.queryStatus = "SKIPPED";
   } else {
     try {
       const metaResult = await executeStageWithSignal(
@@ -210,15 +283,45 @@ export async function runEvergreenProductResearch(
       sourceStatuses.META_ADS = metaResult.status;
       adObservations.push(...metaResult.observations);
       if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
+
+      const isLiveMeta = metaResult.observations.some((o) => o.provenance === "LIVE_PROVIDER");
+      const metaNow = new Date().toISOString();
+      providerTelemetry.META_ADS = {
+        source: "META_ADS",
+        queryExecuted: true,
+        queryStatus: metaResult.status,
+        queryTimestamp: metaNow,
+        retrievedCount: metaResult.retrievedCount,
+        acceptedCount: metaResult.acceptedCount,
+        queryProvenance: isLiveMeta ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+        isLive: isLiveMeta,
+        queryError: metaResult.errors.length > 0 ? metaResult.errors.join("; ") : null,
+        lastSuccessfulRecordCount: metaResult.retrievedCount,
+        lastSuccessfulQueryAt: metaResult.retrievedCount > 0 ? metaNow : null,
+      };
     } catch (err: any) {
       sourceStatuses.META_ADS = "FAILED";
       errors.push(`Meta Ads collection failed: ${err.message}`);
+      providerTelemetry.META_ADS = {
+        source: "META_ADS",
+        queryExecuted: true,
+        queryStatus: "FAILED",
+        queryTimestamp: new Date().toISOString(),
+        retrievedCount: 0,
+        acceptedCount: 0,
+        queryProvenance: "NONE",
+        isLive: false,
+        queryError: err.message,
+        lastSuccessfulRecordCount: null,
+        lastSuccessfulQueryAt: null,
+      };
     }
   }
 
   // ── Stage 2: TikTok Ads US Discovery ──────────────────────────────────────
   if (!isSelected("TIKTOK_ADS")) {
     sourceStatuses.TIKTOK_ADS = "SKIPPED";
+    providerTelemetry.TIKTOK_ADS.queryStatus = "SKIPPED";
   } else {
     try {
       const ttAdsResult = await executeStageWithSignal(
@@ -229,9 +332,37 @@ export async function runEvergreenProductResearch(
       sourceStatuses.TIKTOK_ADS = ttAdsResult.status;
       adObservations.push(...ttAdsResult.observations);
       if (ttAdsResult.warnings.length > 0) warnings.push(...ttAdsResult.warnings);
+
+      const ttNow = new Date().toISOString();
+      providerTelemetry.TIKTOK_ADS = {
+        source: "TIKTOK_ADS",
+        queryExecuted: true,
+        queryStatus: ttAdsResult.status,
+        queryTimestamp: ttNow,
+        retrievedCount: ttAdsResult.retrievedCount,
+        acceptedCount: ttAdsResult.acceptedCount,
+        queryProvenance: ttAdsResult.observations.some((o) => o.provenance === "LIVE_PROVIDER") ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+        isLive: ttAdsResult.observations.some((o) => o.provenance === "LIVE_PROVIDER"),
+        queryError: ttAdsResult.errors.length > 0 ? ttAdsResult.errors.join("; ") : null,
+        lastSuccessfulRecordCount: ttAdsResult.retrievedCount,
+        lastSuccessfulQueryAt: ttAdsResult.retrievedCount > 0 ? ttNow : null,
+      };
     } catch (err: any) {
       sourceStatuses.TIKTOK_ADS = "FAILED";
       errors.push(`TikTok Ads collection failed: ${err.message}`);
+      providerTelemetry.TIKTOK_ADS = {
+        source: "TIKTOK_ADS",
+        queryExecuted: true,
+        queryStatus: "FAILED",
+        queryTimestamp: new Date().toISOString(),
+        retrievedCount: 0,
+        acceptedCount: 0,
+        queryProvenance: "NONE",
+        isLive: false,
+        queryError: err.message,
+        lastSuccessfulRecordCount: null,
+        lastSuccessfulQueryAt: null,
+      };
     }
   }
 
@@ -276,10 +407,12 @@ export async function runEvergreenProductResearch(
   const secondaryObservations: SourceObservation[] = [];
   if (!isSelected("TIKTOK_ORGANIC")) {
     sourceStatuses.TIKTOK_ORGANIC = "SKIPPED";
+    providerTelemetry.TIKTOK_ORGANIC.queryStatus = "SKIPPED";
   } else {
     const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
     if (!ttDiag.configured) {
       sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
+      providerTelemetry.TIKTOK_ORGANIC.queryStatus = ttDiag.status as SourceRunStatus;
       warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
     } else {
       try {
@@ -291,9 +424,37 @@ export async function runEvergreenProductResearch(
         sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
         secondaryObservations.push(...ttOrganicResult.observations);
         if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
+
+        const ttOrgNow = new Date().toISOString();
+        providerTelemetry.TIKTOK_ORGANIC = {
+          source: "TIKTOK_ORGANIC",
+          queryExecuted: true,
+          queryStatus: ttOrganicResult.status,
+          queryTimestamp: ttOrgNow,
+          retrievedCount: ttOrganicResult.retrievedCount,
+          acceptedCount: ttOrganicResult.acceptedCount,
+          queryProvenance: "LIVE_PROVIDER",
+          isLive: true,
+          queryError: ttOrganicResult.errors.length > 0 ? ttOrganicResult.errors.join("; ") : null,
+          lastSuccessfulRecordCount: ttOrganicResult.retrievedCount,
+          lastSuccessfulQueryAt: ttOrganicResult.retrievedCount > 0 ? ttOrgNow : null,
+        };
       } catch (err: any) {
         sourceStatuses.TIKTOK_ORGANIC = "FAILED";
         errors.push(`TikTok Organic collection failed: ${err.message}`);
+        providerTelemetry.TIKTOK_ORGANIC = {
+          source: "TIKTOK_ORGANIC",
+          queryExecuted: true,
+          queryStatus: "FAILED",
+          queryTimestamp: new Date().toISOString(),
+          retrievedCount: 0,
+          acceptedCount: 0,
+          queryProvenance: "NONE",
+          isLive: false,
+          queryError: err.message,
+          lastSuccessfulRecordCount: null,
+          lastSuccessfulQueryAt: null,
+        };
       }
     }
   }
@@ -301,17 +462,23 @@ export async function runEvergreenProductResearch(
   // ── Stage 6: Google Ads Transparency Enrichment ───────────────────────────
   if (!isSelected("GOOGLE_ADS")) {
     sourceStatuses.GOOGLE_ADS = "SKIPPED";
+    providerTelemetry.GOOGLE_ADS.queryStatus = "SKIPPED";
   } else {
     const googleDiag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: input.workspaceId });
     if (!googleDiag.configured) {
       sourceStatuses.GOOGLE_ADS = googleDiag.status as SourceRunStatus;
+      providerTelemetry.GOOGLE_ADS.queryStatus = googleDiag.status as SourceRunStatus;
       warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
     } else {
       try {
-        // Extract identified advertiser domains from candidates
-        const discoveredDomains = candidates
+        // Extract identified advertiser domains from candidates and observations
+        const candidateDomains = candidates
           .map((c) => c.storeDomain)
           .filter((d): d is string => Boolean(d));
+        const obsDomains = adObservations
+          .map((o) => o.advertiserDomain)
+          .filter((d): d is string => Boolean(d));
+        const discoveredDomains = Array.from(new Set([...candidateDomains, ...obsDomains]));
 
         const googleResult = await executeStageWithSignal(
           "Google Ads Transparency",
@@ -319,15 +486,44 @@ export async function runEvergreenProductResearch(
           (q) =>
             collectGoogleAdvertiserSignals({
               ...q,
-              advertiserDomains: Array.from(new Set(discoveredDomains)),
+              advertiserDomains: discoveredDomains,
             })
         );
         sourceStatuses.GOOGLE_ADS = googleResult.status;
         secondaryObservations.push(...googleResult.observations);
         if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
+
+        const googleNow = new Date().toISOString();
+        const googleError = googleResult.errors.length > 0 ? googleResult.errors.join("; ") : null;
+        providerTelemetry.GOOGLE_ADS = {
+          source: "GOOGLE_ADS",
+          queryExecuted: true,
+          queryStatus: googleResult.status,
+          queryTimestamp: googleNow,
+          retrievedCount: googleResult.retrievedCount,
+          acceptedCount: googleResult.acceptedCount,
+          queryProvenance: "LIVE_PROVIDER",
+          isLive: true,
+          queryError: googleError,
+          lastSuccessfulRecordCount: googleResult.retrievedCount,
+          lastSuccessfulQueryAt: googleResult.retrievedCount > 0 ? googleNow : null,
+        };
       } catch (err: any) {
         sourceStatuses.GOOGLE_ADS = "FAILED";
         errors.push(`Google Ads collection failed: ${err.message}`);
+        providerTelemetry.GOOGLE_ADS = {
+          source: "GOOGLE_ADS",
+          queryExecuted: true,
+          queryStatus: "FAILED",
+          queryTimestamp: new Date().toISOString(),
+          retrievedCount: 0,
+          acceptedCount: 0,
+          queryProvenance: "NONE",
+          isLive: false,
+          queryError: err.message,
+          lastSuccessfulRecordCount: null,
+          lastSuccessfulQueryAt: null,
+        };
       }
     }
   }
@@ -422,6 +618,7 @@ export async function runEvergreenProductResearch(
   // Evaluate Demand History status truthfully
   if (!isSelected("DEMAND_HISTORY")) {
     sourceStatuses.DEMAND_HISTORY = "SKIPPED";
+    providerTelemetry.DEMAND_HISTORY.queryStatus = "SKIPPED";
   } else {
     let hasVerifiedDemand = false;
     for (const item of rankedItems) {
@@ -437,6 +634,21 @@ export async function runEvergreenProductResearch(
     } else {
       sourceStatuses.DEMAND_HISTORY = "CONFIGURED";
     }
+
+    const demandNow = new Date().toISOString();
+    providerTelemetry.DEMAND_HISTORY = {
+      source: "DEMAND_HISTORY",
+      queryExecuted: true,
+      queryStatus: sourceStatuses.DEMAND_HISTORY,
+      queryTimestamp: demandNow,
+      retrievedCount: hasVerifiedDemand ? 1 : 0,
+      acceptedCount: hasVerifiedDemand ? 1 : 0,
+      queryProvenance: "NONE",
+      isLive: false,
+      queryError: null,
+      lastSuccessfulRecordCount: hasVerifiedDemand ? 1 : 0,
+      lastSuccessfulQueryAt: hasVerifiedDemand ? demandNow : null,
+    };
   }
 
   // Sort by opportunityScore desc, then evidenceConfidence desc
@@ -447,13 +659,20 @@ export async function runEvergreenProductResearch(
     return b.score.evidenceConfidence - a.score.evidenceConfidence;
   });
 
-  // ── Stage 10: Partition into Verified Winners vs Provisional Opportunities ─
+  // ── Stage 10: Partition into Verified Winners, Provisional, Insufficient & Rejected ─
   const verifiedWinners: RankedLeaderboardItem[] = [];
   const provisionalCandidates: RankedLeaderboardItem[] = [];
   const insufficientEvidenceCandidates: RankedLeaderboardItem[] = [];
+  const rejectedCandidates: RankedLeaderboardItem[] = [];
 
   for (const item of rankedItems) {
-    if (item.score.tier === "VERIFIED_EVERGREEN") {
+    if (
+      item.candidate.relevanceStatus === "IRRELEVANT" ||
+      item.score.recommendation === "REJECT" ||
+      item.score.scoreStatus === "REJECTED"
+    ) {
+      rejectedCandidates.push(item);
+    } else if (item.score.tier === "VERIFIED_EVERGREEN") {
       verifiedWinners.push(item);
     } else if (item.score.tier === "PROVISIONAL_OPPORTUNITY") {
       provisionalCandidates.push(item);
@@ -498,7 +717,10 @@ export async function runEvergreenProductResearch(
     provisionalCandidates,
     remainingCandidates,
     insufficientEvidenceCandidates,
+    rejectedCandidates,
+    providerTelemetry,
     totalCandidatesDiscovered: candidates.length,
+    totalObservationsCollected: adObservations.length + secondaryObservations.length,
     generatedAt,
     warnings,
     errors,
