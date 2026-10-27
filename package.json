@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "kh02:setup:free": "tsx scripts/setupKh02FreeProviders.ts",
     "dev": "tsx scripts/startSwaiServer.ts dev",
     "dev:all": "tsx scripts/startSwaiServer.ts dev --with-worker",
     "dev:local": "tsx scripts/startSwaiServer.ts dev --local",

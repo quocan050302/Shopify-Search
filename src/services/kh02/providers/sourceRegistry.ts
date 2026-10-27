@@ -12,6 +12,7 @@ import {
   IntelligenceQuery,
   ProviderReadinessDimensions,
 } from "../types";
+import { inspectSerpApiAccount } from "../demand/demandProviderRegistry";
 import { getProviderBudget } from "@/services/providers/budgetService";
 import { prisma } from "@/lib/db";
 import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
@@ -130,6 +131,7 @@ export interface SourceDiagnosticResult {
   source: string;
   adapterInstalled: boolean;
   configured: boolean;
+  upstreamConfigured?: boolean;
   transportConnected: boolean | null;
   authenticated: boolean | null;
   discoverySupported: boolean | null;
@@ -370,7 +372,7 @@ export async function diagnoseKH02Source(
           reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment. Configuration: Missing, Authentication: Credentials required, Transport: Not tested.",
           missingRequirements: ["HASDATA_API_KEY"],
           dimensions,
-          requiredAction: "Configure HASDATA_API_KEY in environment to enable live video queries.",
+          requiredAction: "Get your own free-tier key at https://app.hasdata.com and set HASDATA_API_KEY. Search costs 10 credits; quota and spend authorization are checked separately.",
           estimatedQueryCost: {
             estimatedCredits: 10,
             isPaid: true,
@@ -570,7 +572,7 @@ export async function diagnoseKH02Source(
           reason: "Google Ads Transparency MCP server is not configured in environment. Configuration: Missing, Transport: Not configured.",
           missingRequirements: ["GOOGLE_TRANSPARENCY_MCP_URL"],
           dimensions,
-          requiredAction: "Configure GOOGLE_TRANSPARENCY_MCP_URL or GOOGLE_TRANSPARENCY_MCP_COMMAND in .env.local.",
+          requiredAction: "Run npm run kh02:setup:free to install the free local Google Ads MCP, or configure GOOGLE_TRANSPARENCY_MCP_URL. Restart web server and worker.",
           estimatedQueryCost: {
             estimatedCredits: 0,
             isPaid: false,
@@ -686,15 +688,28 @@ export async function diagnoseKH02Source(
         }
       } catch {}
 
-      const hasUpstreamApiKey = Boolean(process.env.SERPAPI_API_KEY || process.env.GOOGLE_TRENDS_API_KEY);
-      const upstreamStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = hasUpstreamApiKey ? "NOT_TESTED" : "NOT_CONFIGURED";
-      const authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = hasUpstreamApiKey ? "NOT_PROBED" : "CREDENTIALS_REQUIRED";
+      const hasUpstreamApiKey = Boolean(process.env.SERPAPI_API_KEY?.trim());
+      let upstreamStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = hasUpstreamApiKey ? "NOT_TESTED" : "NOT_CONFIGURED";
+      let authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = hasUpstreamApiKey ? "NOT_PROBED" : "CREDENTIALS_REQUIRED";
+      let accountNote = "";
+      if (hasUpstreamApiKey && context?.checkLiveTransport) {
+        try {
+          const account = await inspectSerpApiAccount(process.env.SERPAPI_API_KEY!.trim());
+          upstreamStatus = "CONNECTED";
+          authStatus = "AUTHENTICATED";
+          accountNote = ` Account verified: ${account.free ? "Free" : "non-Free/unverified plan"}; searches remaining: ${account.remaining ?? "unknown"}. No search executed.`;
+        } catch {
+          upstreamStatus = "TRANSPORT_FAILED";
+          accountNote = " Account verification failed; check key and network. No search executed.";
+        }
+      }
+      const liveConnected = upstreamStatus === "CONNECTED" ? true : upstreamStatus === "TRANSPORT_FAILED" ? false : null;
 
       const dimensions: ProviderReadinessDimensions = {
         adapterInstalled: true,
         configured: true, // Local demand evaluation engine is installed and ready
-        transportConnected: hasUpstreamApiKey ? null : false,
-        authenticated: hasUpstreamApiKey ? null : false,
+        transportConnected: liveConnected,
+        authenticated: authStatus === "AUTHENTICATED" ? true : null,
         supportedOperationsVerified: true, // Evaluation engine algorithms are verified
         queryExecuted: false, // Do not infer from DB count!
         sourceDataVerified: demandCount > 0,
@@ -712,10 +727,11 @@ export async function diagnoseKH02Source(
 
       return {
         source: "DEMAND_HISTORY",
+        upstreamConfigured: hasUpstreamApiKey,
         adapterInstalled: true,
         configured: true,
-        transportConnected: hasUpstreamApiKey ? null : false,
-        authenticated: hasUpstreamApiKey ? null : false,
+        transportConnected: liveConnected,
+        authenticated: authStatus === "AUTHENTICATED" ? true : null,
         discoverySupported: true,
         queryExecuted: false,
         recordsReturned: demandCount,
@@ -729,15 +745,15 @@ export async function diagnoseKH02Source(
         provenanceVerified: demandCount > 0,
         lastCheckedAt,
         status: "ENGINE_READY",
-        reason: `Demand stability policy engine is active (ENGINE_READY). Upstream live provider: ${hasUpstreamApiKey ? "Configured (Not tested)" : "Not configured"}. Workspace stored observations: ${demandCount}. Individual product policy requires 3+ temporal observations across 60+ days.`,
-        missingRequirements: hasUpstreamApiKey ? [] : ["LIVE_TRENDS_PROVIDER_API_KEY"],
+        reason: `Demand stability policy engine is active (ENGINE_READY). Upstream live provider: ${hasUpstreamApiKey ? (upstreamStatus === "CONNECTED" ? "Account verified (no data query)" : "Configured (not verified)") : "Not configured"}. Workspace stored observations: ${demandCount}. Individual product policy requires 3+ temporal observations across 60+ days.${accountNote}`,
+        missingRequirements: hasUpstreamApiKey ? [] : ["SERPAPI_API_KEY"],
         dimensions,
-        requiredAction: demandCount === 0 && !hasUpstreamApiKey ? "Configure SERPAPI_API_KEY / GOOGLE_TRENDS_API_KEY or import product demand observations via CSV." : undefined,
+        requiredAction: demandCount === 0 && !hasUpstreamApiKey ? "Get a Free plan key from https://serpapi.com/manage-api-key and set SERPAPI_API_KEY, or import Google Trends CSV. GOOGLE_TRENDS_API_KEY alone is not implemented." : undefined,
         estimatedQueryCost: {
-          estimatedCredits: 0,
-          isPaid: false,
+          estimatedCredits: hasUpstreamApiKey ? 1 : 0,
+          isPaid: hasUpstreamApiKey,
           knownCost: true,
-          pricingSource: "Internal Demand History & Policy Engine",
+          pricingSource: hasUpstreamApiKey ? "SerpApi: 1 search per product series; verified Free plan quota required" : "Local engine only; no upstream query",
         },
       };
     }

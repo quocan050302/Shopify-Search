@@ -294,6 +294,9 @@ export async function discoverGoogleAdsMcpCapabilities(
       discoveredAt,
       errorMessage: err?.message || String(err),
     };
+  } finally {
+    // Probes own their subprocess; research callers retain their shared client.
+    if (!clientArg) await client.close().catch(() => {});
   }
 }
 
@@ -386,7 +389,9 @@ export function normalizeGoogleAdsResponse(
     const format = ad.format === "video" ? "VIDEO" : (ad.format === "image" ? "IMAGE" : "TEXT");
 
     // Evaluate product relevance against topic
-    const textContent = `${ad.headline || ""} ${ad.body || ""}`.toLowerCase();
+    const headline = ad.headline || ad.content?.headline || "";
+    const body = ad.body || ad.content?.description || "";
+    const textContent = `${headline} ${body}`.toLowerCase();
     const topicWords = metadata.topic
       ? metadata.topic.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
       : [];
@@ -403,7 +408,7 @@ export function normalizeGoogleAdsResponse(
       domain: metadata.requestedDomain,
       creativeId,
       adFormat: format,
-      observedContent: ad.headline || ad.body || null,
+      observedContent: [headline, body].filter(Boolean).join(" ") || null,
       lastShownDate: ad.last_shown || null,
       googleSourceUrl: ad.source_url || `https://adstransparency.google.com/advertiser/${ad.advertiser_id || ""}`,
       observedAt: metadata.observedAt,
@@ -430,16 +435,16 @@ export function normalizeGoogleAdsResponse(
       observedAt: metadata.observedAt,
       requestedMarket: "US",
       verifiedDeliveryMarket,
-      title: ad.headline || null,
-      description: ad.body || null,
+      title: headline || null,
+      description: body || null,
       metrics: {
         lastShown: normAd.lastShownDate,
         format,
         productRelevance: relevance,
       },
       media: {
-        thumbnailUrl: ad.thumbnail_url || null,
-        videoUrl: ad.video_url || null,
+        thumbnailUrl: ad.thumbnail_url || ad.content?.image_url || null,
+        videoUrl: ad.video_url || ad.content?.video_url || null,
         mediaType: format,
       },
       provenance: "REAL_UPSTREAM",
@@ -716,6 +721,7 @@ export async function collectGoogleAdvertiserSignals(
 
     let anyLookupSucceeded = false;
     let anyAdvertiserFound = false;
+    let adsRetrievalFailed = false;
 
     for (const domain of targetDomains.slice(0, 5)) {
       if (query.signal?.aborted) break;
@@ -766,7 +772,8 @@ export async function collectGoogleAdvertiserSignals(
               observations.push(obs);
             }
           } catch (adsErr: any) {
-            warnings.push(`Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`);
+            adsRetrievalFailed = true;
+            errors.push(`Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`);
           }
         }
       } catch (domainErr: any) {
@@ -777,6 +784,8 @@ export async function collectGoogleAdvertiserSignals(
     let status: SourceRunStatus = "NOT_CONFIGURED";
     if (observations.length > 0) {
       status = "PASSED";
+    } else if (adsRetrievalFailed || errors.length > 0) {
+      status = "QUERY_FAILED";
     } else if (anyAdvertiserFound || anyLookupSucceeded) {
       status = "QUERY_SUCCEEDED_EMPTY";
     } else if (errors.length > 0) {

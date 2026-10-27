@@ -29,6 +29,7 @@ import {
   Globe,
   KeyRound,
 } from "lucide-react";
+import { ProviderSetupGuide } from "@/components/products/ProviderSetupGuide";
 import { Header } from "@/components/layout/Header";
 import { isStockImage } from "@/services/video/videoSourceResolver";
 
@@ -507,6 +508,14 @@ export default function ProductsPage() {
         </span>
       );
     }
+    if (status === "CONFIGURED") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium" title={reason || "Configured; connection not tested"}>
+          <Clock className="h-3 w-3 text-blue-400" />
+          {defaultLabel ? `${defaultLabel}: Configured (Not Tested)` : "Configured (Not Tested)"}
+        </span>
+      );
+    }
     if (status === "SOURCE_ACCESS_VERIFIED" || status === "CONNECTED" || status === "TRANSPORT_CONNECTED") {
       const label = sourceKey === "META_ADS" ? "Collector Connected" : "Source Available";
       return (
@@ -732,6 +741,7 @@ export default function ProductsPage() {
                   const isGoogle = sourceItem.source === "GOOGLE_ADS";
                   const isDemand = sourceItem.source === "DEMAND_HISTORY";
                   const isOrganic = sourceItem.source === "TIKTOK_ORGANIC";
+                  const sourceConfigured = isDemand ? diag.upstreamConfigured === true : diag.configured;
                   const isTikTokAds = sourceItem.source === "TIKTOK_ADS";
 
                   // Check if tested just now
@@ -740,7 +750,7 @@ export default function ProductsPage() {
                   // Truthful auth rendering
                   let authDisplay = "Not Tested";
                   let authClass = "text-slate-400";
-                  if (dims.authStatus === "AUTH_NOT_REQUIRED" || isMeta || isGoogle || (isDemand && !process.env.SERPAPI_API_KEY)) {
+                  if (dims.authStatus === "AUTH_NOT_REQUIRED" || isMeta || isGoogle) {
                     authDisplay = isMeta ? "Not Required (Local stdio)" : isGoogle ? "Not Required (MCP stdio)" : isDemand ? "Not Required (Engine)" : "Not Required";
                     authClass = "text-slate-300";
                   } else if (dims.authStatus === "CREDENTIALS_REQUIRED" || (!diag.configured && (isOrganic || isTikTokAds))) {
@@ -760,9 +770,12 @@ export default function ProductsPage() {
                   if (!diag.configured) {
                     transportDisplay = isGoogle ? "Not Configured" : "Not Tested";
                     transportClass = "text-slate-500";
-                  } else if (dims.transportStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true) {
+                  } else if (dims.transportStatus === "CONNECTED" || dims.transportStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true) {
                     transportDisplay = "Connected";
                     transportClass = "text-emerald-400";
+                  } else if (dims.transportStatus === "NOT_CONFIGURED") {
+                    transportDisplay = "Not Configured";
+                    transportClass = "text-slate-500";
                   } else if (dims.transportStatus === "TRANSPORT_FAILED" || dims.transportConnected === false) {
                     transportDisplay = "Connection Failed";
                     transportClass = "text-rose-400";
@@ -790,9 +803,9 @@ export default function ProductsPage() {
 
                       <div className="space-y-1 text-[11px] text-slate-400">
                         <div className="flex justify-between">
-                          <span>Configuration:</span>
-                          <span className={diag.configured ? "text-emerald-400" : "text-amber-400 font-medium"}>
-                            {diag.configured ? "Configured" : "Missing"}
+                          <span>{isDemand ? "Live provider:" : "Configuration:"}</span>
+                          <span className={sourceConfigured ? "text-emerald-400" : "text-amber-400 font-medium"}>
+                            {sourceConfigured ? "Configured" : "Missing"}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -828,7 +841,7 @@ export default function ProductsPage() {
                         <div className="flex justify-between">
                           <span>Query Cost:</span>
                           <span className="text-slate-300">
-                            {cost.isPaid ? `${cost.estimatedCredits || 10} Credits/query` : "Free Zero-Cost"}
+                            {cost.isPaid ? `${cost.estimatedCredits || 10} ${isDemand ? "Searches" : "Credits"}/query` : "Free Zero-Cost"}
                           </span>
                         </div>
                       </div>
@@ -844,6 +857,7 @@ export default function ProductsPage() {
                           Next Step: {diag.requiredAction}
                         </p>
                       )}
+                      <ProviderSetupGuide source={sourceItem.source} />
                     </div>
                   );
                 })}

@@ -259,6 +259,14 @@ export async function fetchHasDataCreditStatus(
   }
 }
 
+/** A credit balance alone does not prove that the account has no paid billing. */
+export function hasVerifiedFreeAllowance(status: HasDataCreditStatus, requiredCredits: number): boolean {
+  return status.authority === "AUTHORITATIVE_API" && status.verificationStatus === "VERIFIED" &&
+    typeof status.accountPlan === "string" && /^free(?: plan)?$/i.test(status.accountPlan.trim()) &&
+    typeof status.remainingCredits === "number" && Number.isFinite(status.remainingCredits) &&
+    status.remainingCredits >= requiredCredits;
+}
+
 /**
  * Evaluates whether an intended operation is authorized within remaining credit quota.
  */
@@ -295,7 +303,7 @@ export function evaluateHasDataQuota(
   }
 
   // If AUTO_PAID_RESEARCH is disabled, refuse paid spend unless free allowance is confirmed
-  if (!autoPaidAllowed) {
+  if (!autoPaidAllowed && !hasVerifiedFreeAllowance(creditStatus, reqCredits)) {
     return {
       decision: "QUOTA_UNAVAILABLE",
       isAllowed: false,

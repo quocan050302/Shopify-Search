@@ -46,6 +46,7 @@ describe("SWAI KH-02 V12.2.3 — Zero-Key Provider Discovery Engine", () => {
     delete process.env.APIFY_TOKEN;
     delete process.env.GOOGLE_TRANSPARENCY_MCP_URL;
     delete process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND;
+    delete process.env.SERPAPI_API_KEY;
 
     const results = await discoverAvailableKH02Providers({ allowPaidOperations: false });
     const byId = Object.fromEntries(results.map((r) => [r.providerId, r]));
@@ -62,8 +63,8 @@ describe("SWAI KH-02 V12.2.3 — Zero-Key Provider Discovery Engine", () => {
     // Google Ads Transparency is unsupported without configured MCP
     expect(byId.GOOGLE_ADS.accessClass).toBe<ProviderAccessClass>("UNSUPPORTED");
 
-    // Demand History has internal engine ready
-    expect(byId.DEMAND_HISTORY.accessClass).toBe<ProviderAccessClass>("ZERO_KEY_AUTHORIZED");
+    // Local calculation is not a keyless upstream history feed.
+    expect(byId.DEMAND_HISTORY.accessClass).toBe<ProviderAccessClass>("MANUAL_IMPORT_ONLY");
   });
 
   it("promotes TikTok Ads access class when free Creative Center session cookie is provided", async () => {
@@ -99,6 +100,7 @@ describe("SWAI KH-02 V12.2.3 — Zero-Key Provider Discovery Engine", () => {
     delete process.env.APIFY_TOKEN;
     delete process.env.GOOGLE_TRANSPARENCY_MCP_URL;
     delete process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND;
+    delete process.env.SERPAPI_API_KEY;
 
     const results = await discoverAvailableKH02Providers({ allowPaidOperations: false });
     const byId = Object.fromEntries(results.map((r) => [r.providerId, r]));
@@ -115,8 +117,8 @@ describe("SWAI KH-02 V12.2.3 — Zero-Key Provider Discovery Engine", () => {
     expect(byId.GOOGLE_ADS.readiness.blockerCode).toBe("MCP_NOT_CONFIGURED");
     expect(byId.GOOGLE_ADS.readiness.blockerReason).toContain("GOOGLE_TRANSPARENCY_MCP_URL");
 
-    // Demand History should have no blocker
-    expect(byId.DEMAND_HISTORY.readiness.blockerCode).toBeNull();
+    // The internal policy engine does not constitute a live history source.
+    expect(byId.DEMAND_HISTORY.readiness.blockerCode).toBe("UPSTREAM_PROVIDER_NOT_CONFIGURED");
   });
 
   it("strictly enforces zero unapproved credit spend on all discovered providers", async () => {
