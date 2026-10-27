@@ -1,0 +1,26 @@
+{
+  "metaAds": {
+    "lastQueryAttempted": true,
+    "lastQuerySucceeded": true,
+    "freshRecordsIngested": 0,
+    "provenance": "LIVE_PROVIDER"
+  },
+  "googleAds": {
+    "lastQueryAttempted": true,
+    "lastQuerySucceeded": true,
+    "freshRecordsRetrieved": 5,
+    "provenance": "LIVE_PROVIDER"
+  },
+  "tiktokAds": {
+    "lastQueryAttempted": false,
+    "blocker": "NO_AUTHORIZED_US_AD_PROVIDER"
+  },
+  "tiktokOrganic": {
+    "lastQueryAttempted": false,
+    "blocker": "CREDENTIALS_REQUIRED"
+  },
+  "demandHistory": {
+    "status": "ENGINE_READY",
+    "upstreamStatus": "NOT_CONFIGURED"
+  }
+}

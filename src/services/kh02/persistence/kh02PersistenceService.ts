@@ -125,8 +125,25 @@ export interface SchemaUpgradeResult {
 }
 
 
+export class WorkspacePersistenceError extends Error {
+  code: "WORKSPACE_NOT_FOUND" | "UNAUTHORIZED_WORKSPACE" | "NO_WORKSPACE_CONFIGURED";
+  statusCode: number;
+
+  constructor(
+    message: string,
+    code: "WORKSPACE_NOT_FOUND" | "UNAUTHORIZED_WORKSPACE" | "NO_WORKSPACE_CONFIGURED",
+    statusCode: number = 404
+  ) {
+    super(message);
+    this.name = "WorkspacePersistenceError";
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
+
 /**
  * Creates a new persistent KH-02 research run in PENDING status.
+ * Requires a pre-existing authorized workspace. Never auto-creates arbitrary workspaces.
  */
 export async function createKH02ResearchRun(
   params: {
@@ -138,30 +155,35 @@ export async function createKH02ResearchRun(
   },
   db: any = prisma
 ): Promise<string> {
-  const runId = `kh02_run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-  // Ensure workspace exists to prevent SQLite P2003 foreign key constraint violation
-  try {
-    const ws = await db.workspace.findUnique({
-      where: { id: params.workspaceId },
-      select: { id: true },
-    });
-    if (!ws) {
-      await db.workspace.create({
-        data: {
-          id: params.workspaceId,
-          name: params.workspaceId,
-        },
-      });
-    }
-  } catch {
-    // If concurrent insert occurred, proceed safely
+  const cleanWsId = (params.workspaceId || "").trim();
+  if (!cleanWsId) {
+    throw new WorkspacePersistenceError(
+      "No workspace configured for research run.",
+      "NO_WORKSPACE_CONFIGURED",
+      400
+    );
   }
+
+  // Validate workspace exists - do NOT silently auto-create unauthorized workspaces
+  const ws = await db.workspace.findUnique({
+    where: { id: cleanWsId },
+    select: { id: true },
+  });
+
+  if (!ws) {
+    throw new WorkspacePersistenceError(
+      `Workspace '${cleanWsId}' not found. Research persistence requires an existing authorized workspace.`,
+      "WORKSPACE_NOT_FOUND",
+      404
+    );
+  }
+
+  const runId = `kh02_run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
   await db.syncJob.create({
     data: {
       id: runId,
-      workspaceId: params.workspaceId,
+      workspaceId: cleanWsId,
       jobType: "KH02_RESEARCH",
       status: "PENDING",
       progress: 0,

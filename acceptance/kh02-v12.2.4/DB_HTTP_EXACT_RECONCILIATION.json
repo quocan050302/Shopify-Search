@@ -1,0 +1,9 @@
+{
+  "layer": "Database to HTTP API",
+  "researchRunId": "kh02_run_1793087333110_metalive",
+  "candidatesExtractedFromDb": 10,
+  "relevantCount": 3,
+  "rejectedCount": 7,
+  "httpMatchesDbExactSet": true,
+  "verifiedAt": "2026-10-27T07:49:39.762Z"
+}

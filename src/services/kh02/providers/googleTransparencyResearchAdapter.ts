@@ -83,12 +83,27 @@ export interface McpToolResult {
   durationMs: number;
 }
 
+export interface AdMarketProvenance {
+  requestedMarket: string | null;
+  providerFilterMarket: string | null;
+  providerReportedMarket: string | null;
+  verifiedDeliveryMarket: string | null;
+  verificationStatus:
+    | "VERIFIED"
+    | "FILTER_ONLY"
+    | "INFERRED"
+    | "UNVERIFIED";
+  evidenceReference: string | null;
+}
+
 export interface GoogleSourceMetadata {
   requestedDomain: string;
   topic?: string;
   observedAt: string;
   toolName: string;
   sourceUrl?: string;
+  requestedMarket?: string;
+  providerFilterMarket?: string;
 }
 
 export interface NormalizedGoogleAd {
@@ -106,6 +121,7 @@ export interface NormalizedGoogleAd {
   sourceProvenance: string;
   sourceMarket: string | null;
   verifiedDeliveryMarket: string | null;
+  marketProvenance: AdMarketProvenance;
 }
 
 export interface NormalizedAdsResult {
@@ -380,6 +396,9 @@ export function normalizeGoogleAdsResponse(
         ? decoded.data
         : (Array.isArray(decoded?.creatives) ? decoded.creatives : [])));
 
+  const requestedMarket = decoded?.requested_region || metadata.requestedMarket || "US";
+  const providerFilterMarket = decoded?.provider_filter_region || metadata.providerFilterMarket || (decoded?.requested_region ? decoded.requested_region : "US");
+
   const normalizedAds: NormalizedGoogleAd[] = [];
   const observations: SourceObservation[] = [];
 
@@ -399,9 +418,46 @@ export function normalizeGoogleAdsResponse(
     const hasTopicMatch = topicWords.length > 0 && topicWords.some((w) => textContent.includes(w));
     const relevance = hasTopicMatch ? "PRODUCT_SPECIFIC" : "BRAND_RELATED";
 
-    // Strict market verification: do not default to US unless source proves it
-    const deliveryRegion = ad.region || ad.delivery_region || ad.target_country || null;
-    const verifiedDeliveryMarket = (deliveryRegion === "US" || deliveryRegion === "USA") ? "US" : null;
+    // Strict market verification:
+    // A request filter or query parameter ("US") is FILTER_ONLY.
+    // verifiedDeliveryMarket is ONLY populated if the upstream provider explicitly and independently
+    // reports delivery geography for this specific ad (e.g. reported_delivery_region, delivery_country, verified_region).
+    const providerReportedMarket: string | null =
+      ad.reported_delivery_region ||
+      ad.delivery_region ||
+      ad.delivery_country ||
+      ad.verified_region ||
+      ad.region ||
+      null;
+
+    let verifiedDeliveryMarket: string | null = null;
+    let verificationStatus: "VERIFIED" | "FILTER_ONLY" | "INFERRED" | "UNVERIFIED" = "UNVERIFIED";
+
+    if (providerReportedMarket === "US" || providerReportedMarket === "USA") {
+      verifiedDeliveryMarket = "US";
+      verificationStatus = "VERIFIED";
+    } else if (providerReportedMarket && providerReportedMarket !== "US" && providerReportedMarket !== "USA") {
+      verifiedDeliveryMarket = null;
+      verificationStatus = "UNVERIFIED";
+    } else if (providerFilterMarket === "US" || requestedMarket === "US") {
+      // Query filter requested US delivery, but ad-level delivery evidence was not reported by upstream
+      verifiedDeliveryMarket = null;
+      verificationStatus = "FILTER_ONLY";
+    } else {
+      verifiedDeliveryMarket = null;
+      verificationStatus = "UNVERIFIED";
+    }
+
+    const marketProvenance: AdMarketProvenance = {
+      requestedMarket: requestedMarket || "US",
+      providerFilterMarket: providerFilterMarket || (requestedMarket || "US"),
+      providerReportedMarket,
+      verifiedDeliveryMarket,
+      verificationStatus,
+      evidenceReference: verifiedDeliveryMarket
+        ? `GoogleReportedDelivery:${creativeId}`
+        : `GoogleQueryFilter:${creativeId}`,
+    };
 
     const normAd: NormalizedGoogleAd = {
       advertiserId: String(ad.advertiser_id || ""),
@@ -418,8 +474,9 @@ export function normalizeGoogleAdsResponse(
         ? `Matched topic keywords in Google ad copy`
         : `Domain verified but creative has brand-level focus`,
       sourceProvenance: "REAL_UPSTREAM",
-      sourceMarket: deliveryRegion,
+      sourceMarket: providerReportedMarket,
       verifiedDeliveryMarket,
+      marketProvenance,
     };
     normalizedAds.push(normAd);
 
@@ -434,7 +491,7 @@ export function normalizeGoogleAdsResponse(
       reportedFirstShownAt: ad.first_shown || null,
       reportedLastShownAt: normAd.lastShownDate,
       observedAt: metadata.observedAt,
-      requestedMarket: "US",
+      requestedMarket: requestedMarket || "US",
       verifiedDeliveryMarket,
       title: headline || null,
       description: body || null,
@@ -442,6 +499,7 @@ export function normalizeGoogleAdsResponse(
         lastShown: normAd.lastShownDate,
         format,
         productRelevance: relevance,
+        marketProvenance,
       },
       media: {
         thumbnailUrl: ad.thumbnail_url || ad.content?.image_url || null,
@@ -581,6 +639,10 @@ export function createGoogleTransparencyMcpClient(config?: {
         transport = new StdioClientTransport({
           command,
           args,
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: "1",
+          },
         });
         mcpClient = new Client(
           { name: "swai-google-transparency-client", version: "12.2.2" },
@@ -827,6 +889,8 @@ export async function collectGoogleAdvertiserSignals(
               topic: query.topic,
               observedAt: new Date().toISOString(),
               toolName: adsTool,
+              requestedMarket: query.market || "US",
+              providerFilterMarket: query.market || "US",
             });
 
             for (const obs of normResult.observations) {

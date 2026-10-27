@@ -26,9 +26,13 @@ def get_advertiser_ads(advertiser_id: str, region: str = "US", count: int = 5) -
     ads = []
     for creative_id in client.get_creative_ids(advertiser_id, max(1, min(count, 10))):
         ad = client.get_ad_detail(advertiser_id, creative_id)
-        ad["delivery_region"] = region
+        # Preserve original upstream response as-is. Never inject request filter into ad delivery fields.
         ads.append(ad)
-    return {"ads": ads}
+    return {
+        "requested_region": region,
+        "provider_filter_region": region,
+        "ads": ads,
+    }
 
 
 if __name__ == "__main__":

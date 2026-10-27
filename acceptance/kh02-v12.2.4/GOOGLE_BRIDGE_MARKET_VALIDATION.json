@@ -1,0 +1,11 @@
+{
+  "bridgeScript": "scripts/googleTransparencyServer.py",
+  "syntheticInjectionRemoved": true,
+  "upstreamRawAdsPreserved": true,
+  "bridgeReturnedStructure": {
+    "requested_region": "US",
+    "provider_filter_region": "US",
+    "adsCount": 5
+  },
+  "verifiedAt": "2026-10-27T07:48:53.096Z"
+}

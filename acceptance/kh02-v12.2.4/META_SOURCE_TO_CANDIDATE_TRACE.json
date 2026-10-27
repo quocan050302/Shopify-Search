@@ -1,0 +1,80 @@
+{
+  "rawUpstreamRecords": 10,
+  "normalizedObservations": 10,
+  "candidateGroupsFormed": 10,
+  "relevantCount": 3,
+  "ambiguousCount": 0,
+  "rejectedCount": 7,
+  "observationsTrace": [
+    {
+      "recordId": "cmvpzrmwm001asworhmbu6nxx",
+      "title": "Artistic Poster Tin Decor — Metal Door Sign Clusters",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmw60015swore5xk4xbc",
+      "title": "Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmvm0010sworww8aw5j3",
+      "title": "New Year's Decorations: Transparent Christmas Ball with Clear Fil",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmv5000vsworl564terq",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmum000qsworgm666qfy",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmu5000lswor00cyk071",
+      "title": "New Year's Decorations: Transparent Christmas Ball with Clear Fil",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmtm000gsworser7majz",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmt7000bsworj0quv9sx",
+      "title": "Spray Paint Foam Sponge for Sports — Soft & Durable Ball Net",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmsq0006sworikrc2vzj",
+      "title": "Sunflower Kids Sunglasses — Fun & Protective Eyewear",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    },
+    {
+      "recordId": "cmvpzrmrx0001swor8zickelb",
+      "title": "Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi",
+      "domain": null,
+      "url": null,
+      "provenance": "LIVE_PROVIDER"
+    }
+  ]
+}

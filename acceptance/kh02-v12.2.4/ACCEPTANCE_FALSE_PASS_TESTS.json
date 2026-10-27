@@ -1,0 +1,77 @@
+{
+  "totalMutationTests": 14,
+  "passedMutationTests": 14,
+  "allMutationsPassed": true,
+  "results": [
+    {
+      "mutationId": "MUT_01_GOOGLE_CREATIVE_MISMATCH",
+      "description": "Detect mismatch between creative ID in query and returned payload",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_02_WRONG_DELIVERY_REGION",
+      "description": "Assert that US filter alone CANNOT produce verifiedDeliveryMarket = 'US'",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_03_MISSING_SOURCE_ID",
+      "description": "Reject ads without creative ID or source record ID",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_04_HTTP_CANDIDATE_MISSING_FROM_BROWSER",
+      "description": "Detect discrepancy if candidate returned by HTTP is missing from browser DOM",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_05_ADDITIONAL_BROWSER_CANDIDATE",
+      "description": "Detect unauthenticated or phantom candidate rendered in browser DOM",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_06_WRONG_RUN_ID",
+      "description": "Detect mismatched or non-durable research run ID",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_07_WORKER_NEVER_CLAIMED_JOB",
+      "description": "Detect job stuck in QUEUED or unassigned lease state",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_08_DIFFERENT_SQLITE_DB",
+      "description": "Detect if app and worker point to different database file locations",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_09_WRONG_WORKSPACE_REJECTION",
+      "description": "Prevent cross-tenant access to unauthorized workspace ID",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_10_BROWSER_CRASH_DETECTION",
+      "description": "Detect browser launch or navigation failure truthfully",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_11_BUILD_FAILED_DETECTION",
+      "description": "Reject release GO if build exit code is non-zero",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_12_LIVE_QUERY_SKIPPED_CLASSIFICATION",
+      "description": "Truthfully classify skipped query when domain is unavailable",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_13_PRODUCT_IDENTITY_UNRESOLVED",
+      "description": "Classify ad lacking product name as UNRESOLVED or PROBABLE, never verified winner",
+      "passed": true
+    },
+    {
+      "mutationId": "MUT_14_MISSING_PROVIDER_CREDENTIALS",
+      "description": "Truthfully report BLOCKED or CREDENTIALS_REQUIRED for unconfigured paid sources",
+      "passed": true
+    }
+  ]
+}

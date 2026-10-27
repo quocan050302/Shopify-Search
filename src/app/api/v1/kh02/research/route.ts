@@ -18,6 +18,7 @@ import {
   enqueueResearchJob,
   persistKH02RankingSnapshot,
   updateKH02ResearchRunStatus,
+  WorkspacePersistenceError,
 } from "@/services/kh02/persistence/kh02PersistenceService";
 
 const ResearchRequestSchema = z.object({
@@ -159,6 +160,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: { code: err.code, message: err.message } },
         { status: err.statusCode }
+      );
+    }
+
+    if (
+      err instanceof WorkspacePersistenceError ||
+      err?.code === "WORKSPACE_NOT_FOUND" ||
+      err?.code === "UNAUTHORIZED_WORKSPACE" ||
+      err?.code === "NO_WORKSPACE_CONFIGURED"
+    ) {
+      return NextResponse.json(
+        { success: false, error: { code: err.code, message: err.message } },
+        { status: err.statusCode || (err.code === "WORKSPACE_NOT_FOUND" ? 404 : 400) }
       );
     }
 

@@ -295,8 +295,38 @@ export async function collectLiveMetaAds(
       normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: query.topic })
     );
 
+    // Ensure discoveryRun exists so DiscoveryRunAd can link ingested ads to this research run & workspace
+    let discoveryRunId: string | undefined = undefined;
+    if (query.workspaceId) {
+      try {
+        const runId = query.researchRunId || `run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        let dRun = await prisma.discoveryRun.findUnique({
+          where: { id: runId },
+        });
+        if (!dRun) {
+          dRun = await prisma.discoveryRun.create({
+            data: {
+              id: runId,
+              workspaceId: query.workspaceId,
+              providerId: "meta-ads-collector",
+              status: "COMPLETED",
+              runMode: "MANUAL",
+              queryConfigJson: JSON.stringify({ topic: query.topic, market: query.market || "US" }),
+              startedAt: new Date(),
+              finishedAt: new Date(),
+            },
+          });
+        }
+        discoveryRunId = dRun.id;
+      } catch {
+        // Fallback safely if discoveryRun creation encountered non-fatal issue
+      }
+    }
+
     const ingestSummary = await ingestDiscoveredAds(normalizedAds, {
       workspaceId: query.workspaceId,
+      discoveryRunId,
+      runId: discoveryRunId,
       providerId: "meta-ads-collector",
       runMode: "MANUAL",
       isQuarantined: false,
@@ -410,6 +440,14 @@ export async function collectMetaProductSignals(
 
     // Find competitor ads backed by real observation records, strictly scoped to caller's workspace
     const authorizedWhere = buildAuthorizedAdWhere(query.workspaceId);
+    const scopeClause = freshLiveAdIds.size > 0
+      ? {
+          OR: [
+            authorizedWhere,
+            { id: { in: Array.from(freshLiveAdIds) } },
+          ],
+        }
+      : authorizedWhere;
 
     const matchingAds = await prisma.competitorAd.findMany({
       where: {
@@ -419,7 +457,7 @@ export async function collectMetaProductSignals(
           headline: { startsWith: "[SYNTHETIC_DEMO]" },
         },
         AND: [
-          authorizedWhere,
+          scopeClause,
           { OR: searchClauses.map((sc) => sc.OR).flat() },
           { lastSeenAt: { gte: lookbackThreshold } },
         ],

@@ -28,7 +28,10 @@ const NICHE_SIGNATURES: Record<string, { include: string[]; exclude: string[] }>
       "pet", "dog", "puppy", "cat", "kitten", "paw", "paws", "fur", "leash", "collar",
       "grooming", "litter", "aquarium", "deshedding", "shedding", "lint roller", "chomchom",
       "fur zapper", "grooming glove", "pet comb", "undercoat rake", "dog toy", "cat toy",
-      "pet feeder", "pet harness", "pet brush", "pet hair remover"
+      "pet feeder", "pet harness", "pet brush", "pet hair remover", "automatic pet feeder",
+      "feeder", "water fountain", "fountain", "cat water fountain", "pet water fountain",
+      "grooming vacuum", "dog grooming vacuum", "pet vacuum", "pet tracker", "gps pet tracker",
+      "gps", "tracker", "smart collar", "bark collar", "pet camera", "pet gadget"
     ],
     exclude: [
       "casino", "crypto", "dating", "adult", "loan", "mortgage", "real estate",
@@ -141,6 +144,27 @@ export function evaluateProductRelevance(
           relevanceStatus: "IRRELEVANT",
           isAccepted: false,
           score: 0.1,
+          reasons,
+          topic,
+        };
+      }
+    }
+
+    // Generic household tools/gadgets without explicit pet context are AMBIGUOUS
+    const petContextTerms = ["pet", "pets", "dog", "dogs", "puppy", "puppies", "cat", "cats", "kitten", "kittens", "fur", "paw", "paws", "canine", "feline", "animal"];
+    const hasCorePetContext = petContextTerms.some((term) => hasWordMatch(normalizedText, term));
+
+    if (nicheKey === "pet" && !hasCorePetContext) {
+      const isGenericHouseholdItem = [
+        "lint roller", "cleaning brush", "vacuum", "multi-purpose", "household", "brush", "roller", "broom"
+      ].some((term) => normalizedText.includes(term) || hasWordMatch(normalizedText, term));
+
+      if (isGenericHouseholdItem) {
+        reasons.push("Product has generic cleaning or household utility attributes but lacks explicit pet intent.");
+        return {
+          relevanceStatus: "AMBIGUOUS",
+          isAccepted: false,
+          score: 0.35,
           reasons,
           topic,
         };

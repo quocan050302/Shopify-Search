@@ -1,0 +1,41 @@
+{
+  "pageLoaded": true,
+  "authorized": true,
+  "researchSubmitted": true,
+  "acceptedRunId": "kh02_run_1793087354564_x87xe",
+  "terminalStatus": "COMPLETED",
+  "terminalStateObserved": true,
+  "resultsRendered": true,
+  "emptyStateAccurate": false,
+  "displayedCandidateIds": [
+    "cand_1653014828_9"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_1653014828_9": 47
+  },
+  "displayedConfidence": {
+    "cand_1653014828_9": "PROVISIONAL"
+  },
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "httpMatch": true,
+  "cardCount": 1,
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track1_fixture\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track1_fixture\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track1_fixture\\03_leaderboard_results.png"
+  ],
+  "consoleLogs": [
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[log] [HMR] connected",
+    "[log] [Fast Refresh] rebuilding",
+    "[log] [Fast Refresh] done in 139ms",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[log] [HMR] connected"
+  ],
+  "errors": [],
+  "durationMs": 21633,
+  "verdict": "PASS"
+}

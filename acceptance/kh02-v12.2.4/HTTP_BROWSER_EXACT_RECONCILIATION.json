@@ -1,0 +1,15 @@
+{
+  "layer": "HTTP to Chromium Browser",
+  "track1_fixture": {
+    "acceptedRunId": "kh02_run_1793087354564_x87xe",
+    "cardsRendered": 1,
+    "reconciled": true
+  },
+  "track2_live": {
+    "acceptedRunId": "kh02_run_1793087372868_hpeee",
+    "cardsRendered": 0,
+    "unexpectedHttp500s": 0,
+    "reconciled": true
+  },
+  "verifiedAt": "2026-10-27T07:49:39.763Z"
+}

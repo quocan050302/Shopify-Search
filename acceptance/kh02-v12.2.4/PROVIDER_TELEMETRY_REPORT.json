@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-10-27T07:49:09.786Z",
+  "workspaceId": "acceptance_v12_2_4_ws",
+  "providers": [
+    {
+      "providerId": "META_ADS",
+      "displayName": "Meta Ad Library (Facebook / Instagram)",
+      "accessClass": "LOCAL_COLLECTOR_AVAILABLE",
+      "installed": true,
+      "configured": true,
+      "transportConnected": true,
+      "blockerCode": null,
+      "blockerReason": null
+    },
+    {
+      "providerId": "TIKTOK_ADS",
+      "displayName": "TikTok Ads US (Creative Center)",
+      "accessClass": "MANUAL_IMPORT_ONLY",
+      "installed": true,
+      "configured": false,
+      "transportConnected": false,
+      "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+      "blockerReason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); manual import available."
+    },
+    {
+      "providerId": "TIKTOK_ORGANIC",
+      "displayName": "TikTok Organic Video Research (HasData)",
+      "accessClass": "FREE_API_KEY_REQUIRED",
+      "installed": true,
+      "configured": false,
+      "transportConnected": false,
+      "blockerCode": "MISSING_CREDENTIALS",
+      "blockerReason": "HASDATA_API_KEY not configured in environment (1,000 free monthly credits available)."
+    },
+    {
+      "providerId": "GOOGLE_ADS",
+      "displayName": "Google Ads Transparency Center",
+      "accessClass": "ZERO_KEY_AUTHORIZED",
+      "installed": true,
+      "configured": true,
+      "transportConnected": true,
+      "blockerCode": null,
+      "blockerReason": null
+    },
+    {
+      "providerId": "DEMAND_HISTORY",
+      "displayName": "Historical Demand & Trend Stability (Google Trends)",
+      "accessClass": "MANUAL_IMPORT_ONLY",
+      "installed": true,
+      "configured": false,
+      "transportConnected": false,
+      "blockerCode": "UPSTREAM_PROVIDER_NOT_CONFIGURED",
+      "blockerReason": "No live demand provider configured. Set SERPAPI_API_KEY or import Trends CSV."
+    }
+  ]
+}

@@ -1,0 +1,521 @@
+[
+  {
+    "gateId": "P0-01",
+    "verdict": "PASS",
+    "assertion": "Google requested market and provider-reported delivery market are separated",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MARKET_PROVENANCE.json"
+    ],
+    "observedValues": {
+      "googleProvenanceValid": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-02",
+    "verdict": "PASS",
+    "assertion": "No synthetic US delivery verification without provider-reported delivery evidence",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MARKET_PROVENANCE.json"
+    ],
+    "observedValues": {
+      "creativesCount": 5,
+      "allVerifiedDeliveryMarketsNull": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-03",
+    "verdict": "PASS",
+    "assertion": "Google MCP real tool invocation and capability discovery verified",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MCP_TOOL_DISCOVERY.json"
+    ],
+    "observedValues": {
+      "googleMcpConnected": true,
+      "toolsCount": 2
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-04",
+    "verdict": "PASS",
+    "assertion": "Google actual creative normalization executed without fabricated fields",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_STANDALONE_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "creativesExtracted": 5
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-05",
+    "verdict": "PASS",
+    "assertion": "Product Discovery rejection trace recorded with explicit reasons",
+    "executed": true,
+    "evidencePaths": [
+      "PRODUCT_CANDIDATE_REJECTION_REPORT.json"
+    ],
+    "observedValues": {
+      "totalDiscovered": 10,
+      "rejectedCount": 7
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-06",
+    "verdict": "PASS",
+    "assertion": "No false Product Identity: zero ads used generic ad IDs as product titles",
+    "executed": true,
+    "evidencePaths": [
+      "PRODUCT_IDENTITY_REPORT.json"
+    ],
+    "observedValues": {
+      "cleanTitleCount": 10,
+      "totalCandidates": 10
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-07",
+    "verdict": "PASS",
+    "assertion": "No unauthorized workspace auto-creation in persistence layer",
+    "executed": true,
+    "evidencePaths": [
+      "WORKSPACE_AUTHORIZATION_TESTS.json"
+    ],
+    "observedValues": {
+      "wsNoAutoCreatePassed": true,
+      "ws404Passed": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-08",
+    "verdict": "PASS",
+    "assertion": "No hardcoded PASS values: all gates computed dynamically from runtime assertions",
+    "executed": true,
+    "evidencePaths": [
+      "ACCEPTANCE_FALSE_PASS_TESTS.json"
+    ],
+    "observedValues": {
+      "mutationsPassed": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-09",
+    "verdict": "PASS",
+    "assertion": "Current build and lint succeed with exit code 0",
+    "executed": true,
+    "evidencePaths": [
+      "BUILD_LINT_REPORT.json"
+    ],
+    "observedValues": {
+      "buildExitCode": 0,
+      "lintExitCode": 0
+    },
+    "reason": null
+  },
+  {
+    "gateId": "P0-10",
+    "verdict": "PASS",
+    "assertion": "KH-01 regression preserved with 100% pass on kh01:verify",
+    "executed": true,
+    "evidencePaths": [
+      "KH01_REGRESSION_REPORT.json"
+    ],
+    "observedValues": {
+      "kh01ExitCode": 0
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R01",
+    "verdict": "PASS",
+    "assertion": "HTTP 202 Accepted on POST /api/v1/kh02/research",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "track1Submitted": true,
+      "track2Submitted": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R02",
+    "verdict": "PASS",
+    "assertion": "Valid durable run ID returned and accepted",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "acceptedRunId": "kh02_run_1793087372868_hpeee"
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R03",
+    "verdict": "PASS",
+    "assertion": "Worker claimed job and transitioned status out of QUEUED",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "terminalStateObserved": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R04",
+    "verdict": "PASS",
+    "assertion": "Worker completed or truthfully finalized research run",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "terminalStateObserved": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R05",
+    "verdict": "PASS",
+    "assertion": "Same intended database shared between app and worker",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_FIXTURE_NONZERO_E2E.json"
+    ],
+    "observedValues": {
+      "databaseMatch": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R06",
+    "verdict": "PASS",
+    "assertion": "Workspace isolation strictly enforced across tenants",
+    "executed": true,
+    "evidencePaths": [
+      "WORKSPACE_AUTHORIZATION_TESTS.json"
+    ],
+    "observedValues": {
+      "wsNoAutoCreatePassed": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R07",
+    "verdict": "PASS",
+    "assertion": "Chromium browser loaded products leaderboard interface",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_FIXTURE_NONZERO_E2E.json",
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "track1Loaded": true,
+      "track2Loaded": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R08",
+    "verdict": "PASS",
+    "assertion": "Exact candidate readback rendered in Chromium cards",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_FIXTURE_NONZERO_E2E.json"
+    ],
+    "observedValues": {
+      "cardCount": 1
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R09",
+    "verdict": "PASS",
+    "assertion": "Zero unexpected HTTP 500 errors across all browser journeys",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_META_LIVE_E2E.json"
+    ],
+    "observedValues": {
+      "track1Errors": [],
+      "track2Errors": []
+    },
+    "reason": null
+  },
+  {
+    "gateId": "R10",
+    "verdict": "PASS",
+    "assertion": "Browser state consistency verified across rendering lifecycle",
+    "executed": true,
+    "evidencePaths": [
+      "CHROMIUM_FIXTURE_NONZERO_E2E.json"
+    ],
+    "observedValues": {
+      "track1Verdict": "PASS"
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G01",
+    "verdict": "PASS",
+    "assertion": "Google Ads Transparency MCP installed and configured",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MCP_CONNECTION.json"
+    ],
+    "observedValues": {
+      "connected": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G02",
+    "verdict": "PASS",
+    "assertion": "Google MCP transport initialized via stdio",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MCP_CONNECTION.json"
+    ],
+    "observedValues": {
+      "transport": "STDIO_JSONRPC"
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G03",
+    "verdict": "PASS",
+    "assertion": "Correct tools discovered (search_advertiser, get_advertiser_ads)",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MCP_TOOL_DISCOVERY.json"
+    ],
+    "observedValues": {
+      "toolsCount": 2
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G04",
+    "verdict": "PASS",
+    "assertion": "Advertiser domain lookup executed on Google MCP",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_STANDALONE_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "executed": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G05",
+    "verdict": "PASS",
+    "assertion": "Advertiser identity validated from upstream Google response",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_STANDALONE_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "advertiserFound": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G06",
+    "verdict": "PASS",
+    "assertion": "Creative retrieval query executed for confirmed advertiser",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_STANDALONE_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "creativeQueryExecuted": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G07",
+    "verdict": "PASS",
+    "assertion": "Creative ID validated from upstream creative records",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_STANDALONE_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "firstCreativeId": "CR05549845903965159425"
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G08",
+    "verdict": "PASS",
+    "assertion": "Market provenance validated: request filter does not falsely verify US delivery",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_MARKET_PROVENANCE.json"
+    ],
+    "observedValues": {
+      "googleProvenanceValid": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G09",
+    "verdict": "PASS",
+    "assertion": "Candidate matching executed: brand-level creatives separated from product SKUs",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_PRODUCT_MATCHING.json"
+    ],
+    "observedValues": {
+      "matchingResultsCount": 5
+    },
+    "reason": null
+  },
+  {
+    "gateId": "G10",
+    "verdict": "PASS",
+    "assertion": "Research pipeline reconciliation: no orphan or fabricated Google candidates",
+    "executed": true,
+    "evidencePaths": [
+      "GOOGLE_RESEARCH_ENRICHMENT.json"
+    ],
+    "observedValues": {
+      "candidateSkuAssociationsCount": 0
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D01",
+    "verdict": "PASS",
+    "assertion": "Upstream Meta ads accounted for in research run",
+    "executed": true,
+    "evidencePaths": [
+      "META_LIVE_QUERY.json"
+    ],
+    "observedValues": {
+      "recordsReturned": 10
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D02",
+    "verdict": "PASS",
+    "assertion": "Normalization decisions recorded for all observed ads",
+    "executed": true,
+    "evidencePaths": [
+      "META_SOURCE_TO_CANDIDATE_TRACE.json"
+    ],
+    "observedValues": {
+      "normalizedCount": 10
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D03",
+    "verdict": "PASS",
+    "assertion": "Candidate grouping performed from normalized observations",
+    "executed": true,
+    "evidencePaths": [
+      "META_SOURCE_TO_CANDIDATE_TRACE.json"
+    ],
+    "observedValues": {
+      "groupsCount": 10
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D04",
+    "verdict": "PASS",
+    "assertion": "Product identity decisions recorded with clean titles",
+    "executed": true,
+    "evidencePaths": [
+      "PRODUCT_IDENTITY_REPORT.json"
+    ],
+    "observedValues": {
+      "cleanTitleCount": 10
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D05",
+    "verdict": "PASS",
+    "assertion": "Relevance decisions recorded separating pet gadgets from irrelevant products",
+    "executed": true,
+    "evidencePaths": [
+      "PRODUCT_RELEVANCE_REPORT.json"
+    ],
+    "observedValues": {
+      "relevantCount": 3,
+      "rejectedCount": 7
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D06",
+    "verdict": "PASS",
+    "assertion": "Eligible candidate source observations persisted in database",
+    "executed": true,
+    "evidencePaths": [
+      "SOURCE_DB_EXACT_RECONCILIATION.json"
+    ],
+    "observedValues": {
+      "persistedAdsCount": 21
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D07",
+    "verdict": "PASS",
+    "assertion": "HTTP API readback matches evaluated candidate dataset",
+    "executed": true,
+    "evidencePaths": [
+      "DB_HTTP_EXACT_RECONCILIATION.json"
+    ],
+    "observedValues": {
+      "reconciled": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D08",
+    "verdict": "PASS",
+    "assertion": "Browser renders expected candidate set truthfully across tracks",
+    "executed": true,
+    "evidencePaths": [
+      "HTTP_BROWSER_EXACT_RECONCILIATION.json"
+    ],
+    "observedValues": {
+      "track1Cards": 1,
+      "track2Terminal": true
+    },
+    "reason": null
+  },
+  {
+    "gateId": "D09",
+    "verdict": "PASS",
+    "assertion": "Evergreen thresholds preserved: zero synthetic winners promoted without demand history",
+    "executed": true,
+    "evidencePaths": [
+      "FINAL_ACCEPTANCE_REPORT.md"
+    ],
+    "observedValues": {
+      "evergreenGatingStrict": true
+    },
+    "reason": null
+  }
+]

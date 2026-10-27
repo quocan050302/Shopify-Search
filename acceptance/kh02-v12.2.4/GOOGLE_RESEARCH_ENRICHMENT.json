@@ -1,0 +1,10 @@
+{
+  "enrichmentTriggerRule": "Confirmed store domain required from relevant product candidate",
+  "liveAdvertiserDomainsTested": [
+    "chewy.com"
+  ],
+  "queriesExecutedCount": 1,
+  "creativesRetrievedCount": 5,
+  "candidateSkuAssociationsCount": 0,
+  "separationOfBrandVsSkuEvidenceVerified": true
+}

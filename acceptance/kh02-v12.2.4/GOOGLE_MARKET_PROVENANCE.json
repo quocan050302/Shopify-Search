@@ -1,0 +1,17 @@
+{
+  "requestedMarket": "US",
+  "providerFilterMarket": "US",
+  "upstreamReportsAdDeliveryGeography": false,
+  "derivedVerifiedDeliveryMarket": null,
+  "derivedVerificationStatus": "FILTER_ONLY",
+  "provenanceIntegrityVerified": true,
+  "sampleCreativeProvenance": {
+    "requestedMarket": "US",
+    "providerFilterMarket": "US",
+    "providerReportedMarket": null,
+    "verifiedDeliveryMarket": null,
+    "verificationStatus": "FILTER_ONLY",
+    "evidenceReference": "GoogleQueryFilter:CR05549845903965159425"
+  },
+  "verifiedAt": "2026-10-27T07:48:53.093Z"
+}
