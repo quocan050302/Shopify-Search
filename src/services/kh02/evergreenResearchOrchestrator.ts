@@ -378,7 +378,9 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 3: Extract Consolidated Product Candidates (Bounded) ───────────
   const rawCandidates = discoverProductCandidatesFromAds(adObservations, input.topic);
-  const candidates = rawCandidates.slice(0, maxCandidates);
+  const eligibleCandidates = rawCandidates.filter((c) => c.relevanceStatus !== "IRRELEVANT");
+  const preRejectedCandidates = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT");
+  const candidates = eligibleCandidates.slice(0, maxCandidates);
 
   // ── Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs ─────
   for (const candidate of candidates) {
@@ -426,18 +428,24 @@ export async function runEvergreenProductResearch(
         if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
 
         const ttOrgNow = new Date().toISOString();
+        const isExecuted =
+          ttOrganicResult.status === "PASSED" ||
+          ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY" ||
+          ttOrganicResult.status === "QUERY_FAILED";
+        const isSuccess = ttOrganicResult.status === "PASSED" || ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY";
+
         providerTelemetry.TIKTOK_ORGANIC = {
           source: "TIKTOK_ORGANIC",
-          queryExecuted: true,
+          queryExecuted: isExecuted,
           queryStatus: ttOrganicResult.status,
-          queryTimestamp: ttOrgNow,
-          retrievedCount: ttOrganicResult.retrievedCount,
-          acceptedCount: ttOrganicResult.acceptedCount,
-          queryProvenance: "LIVE_PROVIDER",
-          isLive: true,
+          queryTimestamp: isExecuted ? ttOrgNow : null,
+          retrievedCount: isSuccess ? ttOrganicResult.retrievedCount : null,
+          acceptedCount: isSuccess ? ttOrganicResult.acceptedCount : null,
+          queryProvenance: isExecuted ? "LIVE_PROVIDER" : "NONE",
+          isLive: isExecuted,
           queryError: ttOrganicResult.errors.length > 0 ? ttOrganicResult.errors.join("; ") : null,
-          lastSuccessfulRecordCount: ttOrganicResult.retrievedCount,
-          lastSuccessfulQueryAt: ttOrganicResult.retrievedCount > 0 ? ttOrgNow : null,
+          lastSuccessfulRecordCount: isSuccess ? ttOrganicResult.retrievedCount : null,
+          lastSuccessfulQueryAt: isSuccess ? ttOrgNow : null,
         };
       } catch (err: any) {
         sourceStatuses.TIKTOK_ORGANIC = "FAILED";
@@ -471,43 +479,67 @@ export async function runEvergreenProductResearch(
       warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
     } else {
       try {
-        // Extract identified advertiser domains from candidates and observations
-        const candidateDomains = candidates
-          .map((c) => c.storeDomain)
-          .filter((d): d is string => Boolean(d));
-        const obsDomains = adObservations
-          .map((o) => o.advertiserDomain)
-          .filter((d): d is string => Boolean(d));
-        const discoveredDomains = Array.from(new Set([...candidateDomains, ...obsDomains]));
-
-        const googleResult = await executeStageWithSignal(
-          "Google Ads Transparency",
-          STAGE_TIMEOUT_MS,
-          (q) =>
-            collectGoogleAdvertiserSignals({
-              ...q,
-              advertiserDomains: discoveredDomains,
-            })
+        // Extract identified advertiser domains only from eligible research candidates
+        const discoveredDomains = Array.from(
+          new Set(
+            candidates
+              .map((c) => c.storeDomain)
+              .filter((d): d is string => Boolean(d))
+          )
         );
-        sourceStatuses.GOOGLE_ADS = googleResult.status;
-        secondaryObservations.push(...googleResult.observations);
-        if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
 
-        const googleNow = new Date().toISOString();
-        const googleError = googleResult.errors.length > 0 ? googleResult.errors.join("; ") : null;
-        providerTelemetry.GOOGLE_ADS = {
-          source: "GOOGLE_ADS",
-          queryExecuted: true,
-          queryStatus: googleResult.status,
-          queryTimestamp: googleNow,
-          retrievedCount: googleResult.retrievedCount,
-          acceptedCount: googleResult.acceptedCount,
-          queryProvenance: "LIVE_PROVIDER",
-          isLive: true,
-          queryError: googleError,
-          lastSuccessfulRecordCount: googleResult.retrievedCount,
-          lastSuccessfulQueryAt: googleResult.retrievedCount > 0 ? googleNow : null,
-        };
+        if (discoveredDomains.length === 0) {
+          sourceStatuses.GOOGLE_ADS = "SKIPPED";
+          providerTelemetry.GOOGLE_ADS = {
+            source: "GOOGLE_ADS",
+            queryExecuted: false,
+            queryStatus: "SKIPPED",
+            queryTimestamp: null,
+            retrievedCount: null,
+            acceptedCount: null,
+            queryProvenance: "NONE",
+            isLive: false,
+            queryError: null,
+            lastSuccessfulRecordCount: null,
+            lastSuccessfulQueryAt: null,
+          };
+          warnings.push("Google Ads Transparency: No confirmed advertiser domains discovered from relevant candidates. Domain required.");
+        } else {
+          const googleResult = await executeStageWithSignal(
+            "Google Ads Transparency",
+            STAGE_TIMEOUT_MS,
+            (q) =>
+              collectGoogleAdvertiserSignals({
+                ...q,
+                advertiserDomains: discoveredDomains,
+              })
+          );
+          sourceStatuses.GOOGLE_ADS = googleResult.status;
+          secondaryObservations.push(...googleResult.observations);
+          if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
+
+          const googleNow = new Date().toISOString();
+          const googleError = googleResult.errors.length > 0 ? googleResult.errors.join("; ") : null;
+          const isExecuted =
+            googleResult.status === "PASSED" ||
+            googleResult.status === "QUERY_SUCCEEDED_EMPTY" ||
+            googleResult.status === "QUERY_FAILED";
+          const isSuccess = googleResult.status === "PASSED" || googleResult.status === "QUERY_SUCCEEDED_EMPTY";
+
+          providerTelemetry.GOOGLE_ADS = {
+            source: "GOOGLE_ADS",
+            queryExecuted: isExecuted,
+            queryStatus: googleResult.status,
+            queryTimestamp: isExecuted ? googleNow : null,
+            retrievedCount: isSuccess ? googleResult.retrievedCount : null,
+            acceptedCount: isSuccess ? googleResult.acceptedCount : null,
+            queryProvenance: isExecuted ? "LIVE_PROVIDER" : "NONE",
+            isLive: isExecuted,
+            queryError: googleError,
+            lastSuccessfulRecordCount: isSuccess ? googleResult.retrievedCount : null,
+            lastSuccessfulQueryAt: isSuccess ? googleNow : null,
+          };
+        }
       } catch (err: any) {
         sourceStatuses.GOOGLE_ADS = "FAILED";
         errors.push(`Google Ads collection failed: ${err.message}`);
@@ -635,19 +667,18 @@ export async function runEvergreenProductResearch(
       sourceStatuses.DEMAND_HISTORY = "CONFIGURED";
     }
 
-    const demandNow = new Date().toISOString();
     providerTelemetry.DEMAND_HISTORY = {
       source: "DEMAND_HISTORY",
-      queryExecuted: true,
+      queryExecuted: false,
       queryStatus: sourceStatuses.DEMAND_HISTORY,
-      queryTimestamp: demandNow,
-      retrievedCount: hasVerifiedDemand ? 1 : 0,
-      acceptedCount: hasVerifiedDemand ? 1 : 0,
+      queryTimestamp: null,
+      retrievedCount: null,
+      acceptedCount: null,
       queryProvenance: "NONE",
       isLive: false,
       queryError: null,
-      lastSuccessfulRecordCount: hasVerifiedDemand ? 1 : 0,
-      lastSuccessfulQueryAt: hasVerifiedDemand ? demandNow : null,
+      lastSuccessfulRecordCount: null,
+      lastSuccessfulQueryAt: null,
     };
   }
 
@@ -664,6 +695,20 @@ export async function runEvergreenProductResearch(
   const provisionalCandidates: RankedLeaderboardItem[] = [];
   const insufficientEvidenceCandidates: RankedLeaderboardItem[] = [];
   const rejectedCandidates: RankedLeaderboardItem[] = [];
+
+  // Add pre-rejected candidates from discovery stage to audit log
+  for (const c of preRejectedCandidates) {
+    const preScore = calculateKH02EvergreenScore({
+      candidate: c,
+      demandSeries: [],
+      hasVerifiedSupplierQuote: false,
+    });
+    rejectedCandidates.push({
+      rank: null,
+      candidate: c,
+      score: preScore,
+    });
+  }
 
   for (const item of rankedItems) {
     if (
@@ -719,7 +764,7 @@ export async function runEvergreenProductResearch(
     insufficientEvidenceCandidates,
     rejectedCandidates,
     providerTelemetry,
-    totalCandidatesDiscovered: candidates.length,
+    totalCandidatesDiscovered: rawCandidates.length,
     totalObservationsCollected: adObservations.length + secondaryObservations.length,
     generatedAt,
     warnings,

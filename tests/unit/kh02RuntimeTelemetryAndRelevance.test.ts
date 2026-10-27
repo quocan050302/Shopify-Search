@@ -14,7 +14,7 @@ import { evaluateProductRelevance } from "@/services/kh02/identity/productReleva
 import { discoverProductCandidatesFromAds } from "@/services/kh02/identity/productCandidateDiscovery";
 import { calculateKH02EvergreenScore } from "@/services/kh02/scoring/evergreenOpportunityScoring";
 import { getWorkspaceProviderTelemetry } from "@/services/kh02/persistence/kh02PersistenceService";
-import { diagnoseKH02Source } from "@/services/kh02/providers/sourceRegistry";
+import { diagnoseKH02Source, recordLatestProbe, getLatestProbe } from "@/services/kh02/providers/sourceRegistry";
 import { SourceObservation } from "@/services/kh02/types";
 
 describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
@@ -276,6 +276,14 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
         supportingAdIds: ["ad1"],
         totalObservationCount: 2,
         distinctAdvertisersCount: 1,
+        problemStatement: "Painless hair removal",
+        targetAudience: "Adults",
+        thumbnailUrl: null,
+        videoUrl: null,
+        advertiserNames: ["Bleame"],
+        earliestObservationDate: null,
+        latestObservationDate: null,
+        identityConfidence: "EXACT" as const,
         sourceObservations: [],
         relevanceStatus: "IRRELEVANT" as const,
         relevanceScore: 0,
@@ -294,6 +302,651 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(score.scoreStatus).toBe("REJECTED");
       expect(score.tier).toBe("INSUFFICIENT_EVIDENCE");
       expect(score.recommendationRationale).toContain("Explicit human body hair removal");
+    });
+  });
+
+  describe("Required 11 Verifications — Runtime Telemetry & Relevance Truth", () => {
+    it("1. Legacy PASSED without record counts reports unknown (null), never hardcoded 5", async () => {
+      const legacyWs = "test-ws-legacy-google";
+      const legacyJobId = `job_legacy_google_${Date.now()}`;
+      await prisma.workspace.upsert({
+        where: { id: legacyWs },
+        update: {},
+        create: { id: legacyWs, name: "Legacy WS", operatingMode: "RESEARCH_ONLY" },
+      });
+      await prisma.syncJob.create({
+        data: {
+          id: legacyJobId,
+          workspaceId: legacyWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            sourceStatuses: { GOOGLE_ADS: "PASSED" },
+          }),
+        },
+      });
+
+      const telemetry = await getWorkspaceProviderTelemetry(legacyWs);
+      expect(telemetry.GOOGLE_ADS.queryExecuted).toBe(true);
+      expect(telemetry.GOOGLE_ADS.retrievedCount).toBeNull();
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulRecordCount).toBeNull();
+      expect(telemetry.GOOGLE_ADS.retrievedCount).not.toBe(5);
+
+      await prisma.syncJob.deleteMany({ where: { id: legacyJobId } });
+      await prisma.workspace.deleteMany({ where: { id: legacyWs } });
+    });
+
+    it("2. Legacy Meta FAILED without observations does not invent 8 records or success timestamp", async () => {
+      const legacyFailedWs = "test-ws-legacy-failed";
+      const legacyFailedJobId = `job_legacy_failed_${Date.now()}`;
+      await prisma.workspace.upsert({
+        where: { id: legacyFailedWs },
+        update: {},
+        create: { id: legacyFailedWs, name: "Legacy Failed WS", operatingMode: "RESEARCH_ONLY" },
+      });
+      await prisma.syncJob.create({
+        data: {
+          id: legacyFailedJobId,
+          workspaceId: legacyFailedWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            sourceStatuses: { META_ADS: "FAILED" },
+          }),
+        },
+      });
+
+      const telemetry = await getWorkspaceProviderTelemetry(legacyFailedWs);
+      expect(telemetry.META_ADS.queryStatus).toBe("FAILED");
+      expect(telemetry.META_ADS.lastSuccessfulQueryAt).toBeNull();
+      expect(telemetry.META_ADS.lastSuccessfulRecordCount).toBeNull();
+      expect(telemetry.META_ADS.retrievedCount).toBeNull();
+      expect(telemetry.META_ADS.retrievedCount).not.toBe(8);
+
+      await prisma.syncJob.deleteMany({ where: { id: legacyFailedJobId } });
+      await prisma.workspace.deleteMany({ where: { id: legacyFailedWs } });
+    });
+
+    it("3. Successful query returning 0 records records count 0 and valid success timestamp", async () => {
+      const zeroWs = "test-ws-zero-records";
+      const zeroJobId = `job_zero_records_${Date.now()}`;
+      const successTime = new Date().toISOString();
+      await prisma.workspace.upsert({
+        where: { id: zeroWs },
+        update: {},
+        create: { id: zeroWs, name: "Zero WS", operatingMode: "RESEARCH_ONLY" },
+      });
+      await prisma.syncJob.create({
+        data: {
+          id: zeroJobId,
+          workspaceId: zeroWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "niche query",
+            sourceStatuses: { GOOGLE_ADS: "QUERY_SUCCEEDED_EMPTY" },
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "QUERY_SUCCEEDED_EMPTY",
+                queryTimestamp: successTime,
+                retrievedCount: 0,
+                acceptedCount: 0,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: true,
+                queryError: null,
+                lastSuccessfulRecordCount: 0,
+                lastSuccessfulQueryAt: successTime,
+              },
+            },
+          }),
+        },
+      });
+
+      const telemetry = await getWorkspaceProviderTelemetry(zeroWs);
+      expect(telemetry.GOOGLE_ADS.queryExecuted).toBe(true);
+      expect(telemetry.GOOGLE_ADS.retrievedCount).toBe(0);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulRecordCount).toBe(0);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulQueryAt).toBe(successTime);
+
+      await prisma.syncJob.deleteMany({ where: { id: zeroJobId } });
+      await prisma.workspace.deleteMany({ where: { id: zeroWs } });
+    });
+
+    it("4. Probe executed before research does not block newer research telemetry from appearing", async () => {
+      const probeFirstWs = "test-ws-probe-first";
+      const researchJobId = `job_research_${Date.now()}`;
+      await prisma.workspace.upsert({
+        where: { id: probeFirstWs },
+        update: {},
+        create: { id: probeFirstWs, name: "Probe First WS", operatingMode: "RESEARCH_ONLY" },
+      });
+
+      recordLatestProbe(
+        "GOOGLE_ADS",
+        {
+          source: "GOOGLE_ADS",
+          adapterInstalled: true,
+          configured: true,
+          transportConnected: true,
+          authenticated: true,
+          discoverySupported: true,
+          queryExecuted: false,
+          recordsReturned: null,
+          provenanceVerified: false,
+          lastCheckedAt: new Date(Date.now() - 60000).toISOString(),
+          status: "CONNECTED",
+          reason: "MCP connected",
+          missingRequirements: [],
+          dimensions: {
+            adapterInstalled: true,
+            configured: true,
+            transportConnected: true,
+            authenticated: true,
+            supportedOperationsVerified: true,
+            requiredCapabilityAvailable: true,
+            queryExecuted: false,
+            sourceDataVerified: false,
+            lastLiveQueryAt: null,
+            blockerCode: null,
+            lastLiveQueryRecordCount: null,
+          },
+        },
+        probeFirstWs
+      );
+
+      const queryTime = new Date().toISOString();
+      await prisma.syncJob.create({
+        data: {
+          id: researchJobId,
+          workspaceId: probeFirstWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "PASSED",
+                queryTimestamp: queryTime,
+                retrievedCount: 7,
+                acceptedCount: 7,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: true,
+                queryError: null,
+                lastSuccessfulRecordCount: 7,
+                lastSuccessfulQueryAt: queryTime,
+              },
+            },
+          }),
+        },
+      });
+
+      const diag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: probeFirstWs });
+      expect(diag.dimensions?.lastLiveQueryRecordCount).toBe(7);
+      expect(diag.dimensions?.queryExecuted).toBe(true);
+
+      await prisma.syncJob.deleteMany({ where: { id: researchJobId } });
+      await prisma.workspace.deleteMany({ where: { id: probeFirstWs } });
+    });
+
+    it("5. Probe executed after research preserves persisted research query history", async () => {
+      const researchFirstWs = "test-ws-research-first";
+      const researchJobId = `job_research_hist_${Date.now()}`;
+      await prisma.workspace.upsert({
+        where: { id: researchFirstWs },
+        update: {},
+        create: { id: researchFirstWs, name: "Research First WS", operatingMode: "RESEARCH_ONLY" },
+      });
+
+      const queryTime = new Date().toISOString();
+      await prisma.syncJob.create({
+        data: {
+          id: researchJobId,
+          workspaceId: researchFirstWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "PASSED",
+                queryTimestamp: queryTime,
+                retrievedCount: 6,
+                acceptedCount: 6,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: true,
+                queryError: null,
+                lastSuccessfulRecordCount: 6,
+                lastSuccessfulQueryAt: queryTime,
+              },
+            },
+          }),
+        },
+      });
+
+      recordLatestProbe(
+        "GOOGLE_ADS",
+        {
+          source: "GOOGLE_ADS",
+          adapterInstalled: true,
+          configured: true,
+          transportConnected: true,
+          authenticated: true,
+          discoverySupported: true,
+          queryExecuted: false,
+          recordsReturned: null,
+          provenanceVerified: false,
+          lastCheckedAt: new Date().toISOString(),
+          status: "CONNECTED",
+          reason: "Connection probe succeeded",
+          missingRequirements: [],
+          dimensions: {
+            adapterInstalled: true,
+            configured: true,
+            transportConnected: true,
+            authenticated: true,
+            supportedOperationsVerified: true,
+            requiredCapabilityAvailable: true,
+            queryExecuted: false,
+            sourceDataVerified: false,
+            lastLiveQueryAt: null,
+            blockerCode: null,
+            lastLiveQueryRecordCount: null,
+          },
+        },
+        researchFirstWs
+      );
+
+      const diag = await diagnoseKH02Source("GOOGLE_ADS", { workspaceId: researchFirstWs });
+      expect(diag.dimensions?.lastLiveQueryRecordCount).toBe(6);
+      expect(diag.dimensions?.queryExecuted).toBe(true);
+      expect(diag.dimensions?.lastSuccessfulQueryAt).toBe(queryTime);
+
+      await prisma.syncJob.deleteMany({ where: { id: researchJobId } });
+      await prisma.workspace.deleteMany({ where: { id: researchFirstWs } });
+    });
+
+    it("6. Probe results for workspace A are isolated and invisible to workspace B", () => {
+      recordLatestProbe(
+        "META_ADS",
+        {
+          source: "META_ADS",
+          adapterInstalled: true,
+          configured: true,
+          transportConnected: true,
+          authenticated: true,
+          discoverySupported: true,
+          queryExecuted: false,
+          recordsReturned: null,
+          provenanceVerified: false,
+          lastCheckedAt: new Date().toISOString(),
+          status: "CONNECTED",
+          reason: "Probe in WS A",
+          missingRequirements: [],
+          dimensions: {
+            adapterInstalled: true,
+            configured: true,
+            transportConnected: true,
+            authenticated: true,
+            supportedOperationsVerified: true,
+            requiredCapabilityAvailable: true,
+            queryExecuted: false,
+            sourceDataVerified: false,
+            lastLiveQueryAt: null,
+            blockerCode: null,
+            lastLiveQueryRecordCount: null,
+          },
+        },
+        "workspace-alpha"
+      );
+
+      const probeA = getLatestProbe("META_ADS", "workspace-alpha");
+      const probeB = getLatestProbe("META_ADS", "workspace-beta");
+
+      expect(probeA).toBeDefined();
+      expect(probeA?.reason).toBe("Probe in WS A");
+      expect(probeB).toBeUndefined();
+    });
+
+    it("7. COST_BLOCKED or no-domain SKIPPED is not recorded as live executed", async () => {
+      const skipWs = "test-ws-cost-blocked";
+      const skipJobId = `job_skip_${Date.now()}`;
+      await prisma.workspace.upsert({
+        where: { id: skipWs },
+        update: {},
+        create: { id: skipWs, name: "Skip WS", operatingMode: "RESEARCH_ONLY" },
+      });
+      await prisma.syncJob.create({
+        data: {
+          id: skipJobId,
+          workspaceId: skipWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          resultJson: JSON.stringify({
+            topic: "test",
+            providerTelemetry: {
+              TIKTOK_ADS: {
+                source: "TIKTOK_ADS",
+                queryExecuted: false,
+                queryStatus: "COST_BLOCKED",
+                queryTimestamp: null,
+                retrievedCount: null,
+                acceptedCount: null,
+                queryProvenance: "NONE",
+                isLive: false,
+                queryError: "Cost approval required",
+                lastSuccessfulRecordCount: null,
+                lastSuccessfulQueryAt: null,
+              },
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: false,
+                queryStatus: "SKIPPED",
+                queryTimestamp: null,
+                retrievedCount: null,
+                acceptedCount: null,
+                queryProvenance: "NONE",
+                isLive: false,
+                queryError: null,
+                lastSuccessfulRecordCount: null,
+                lastSuccessfulQueryAt: null,
+              },
+            },
+          }),
+        },
+      });
+
+      const telemetry = await getWorkspaceProviderTelemetry(skipWs);
+      expect(telemetry.TIKTOK_ADS.queryExecuted).toBe(false);
+      expect(telemetry.TIKTOK_ADS.isLive).toBe(false);
+      expect(telemetry.TIKTOK_ADS.queryStatus).toBe("COST_BLOCKED");
+      expect(telemetry.GOOGLE_ADS.queryExecuted).toBe(false);
+      expect(telemetry.GOOGLE_ADS.isLive).toBe(false);
+      expect(telemetry.GOOGLE_ADS.queryStatus).toBe("SKIPPED");
+
+      await prisma.syncJob.deleteMany({ where: { id: skipJobId } });
+      await prisma.workspace.deleteMany({ where: { id: skipWs } });
+    });
+
+    it("8. Newer failed query preserves historical lastSuccessfulQueryAt and record count", async () => {
+      const histWs = "test-ws-history-fail";
+      const oldJobId = `job_old_success_${Date.now()}`;
+      const newJobId = `job_new_fail_${Date.now()}`;
+      const oldSuccessTime = "2026-10-01T10:00:00.000Z";
+      const newFailTime = "2026-10-15T12:00:00.000Z";
+
+      await prisma.workspace.upsert({
+        where: { id: histWs },
+        update: {},
+        create: { id: histWs, name: "History WS", operatingMode: "RESEARCH_ONLY" },
+      });
+
+      await prisma.syncJob.create({
+        data: {
+          id: oldJobId,
+          workspaceId: histWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          createdAt: new Date(oldSuccessTime),
+          completedAt: new Date(oldSuccessTime),
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "PASSED",
+                queryTimestamp: oldSuccessTime,
+                retrievedCount: 14,
+                acceptedCount: 14,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: true,
+                queryError: null,
+                lastSuccessfulRecordCount: 14,
+                lastSuccessfulQueryAt: oldSuccessTime,
+              },
+            },
+          }),
+        },
+      });
+
+      await prisma.syncJob.create({
+        data: {
+          id: newJobId,
+          workspaceId: histWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          createdAt: new Date(newFailTime),
+          completedAt: new Date(newFailTime),
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "QUERY_FAILED",
+                queryTimestamp: newFailTime,
+                retrievedCount: 0,
+                acceptedCount: 0,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: false,
+                queryError: "Rate limit exceeded",
+                lastSuccessfulRecordCount: 14,
+                lastSuccessfulQueryAt: oldSuccessTime,
+              },
+            },
+          }),
+        },
+      });
+
+      const telemetry = await getWorkspaceProviderTelemetry(histWs);
+      expect(telemetry.GOOGLE_ADS.queryStatus).toBe("QUERY_FAILED");
+      expect(telemetry.GOOGLE_ADS.queryTimestamp).toBe(newFailTime);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulQueryAt).toBe(oldSuccessTime);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulRecordCount).toBe(14);
+
+      await prisma.syncJob.deleteMany({ where: { workspaceId: histWs } });
+      await prisma.workspace.deleteMany({ where: { id: histWs } });
+    });
+
+    it("9. Provider skipped over 15+ consecutive runs still reconciles earlier successful query", async () => {
+      const deepWs = "test-ws-deep-history";
+      const oldSuccessTime = "2026-10-01T08:00:00.000Z";
+      const oldJobId = `job_deep_success_${Date.now()}`;
+
+      await prisma.workspace.upsert({
+        where: { id: deepWs },
+        update: {},
+        create: { id: deepWs, name: "Deep History WS", operatingMode: "RESEARCH_ONLY" },
+      });
+
+      await prisma.syncJob.create({
+        data: {
+          id: oldJobId,
+          workspaceId: deepWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          createdAt: new Date(oldSuccessTime),
+          completedAt: new Date(oldSuccessTime),
+          resultJson: JSON.stringify({
+            topic: "pet hair remover",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: true,
+                queryStatus: "PASSED",
+                queryTimestamp: oldSuccessTime,
+                retrievedCount: 11,
+                acceptedCount: 11,
+                queryProvenance: "LIVE_PROVIDER",
+                isLive: true,
+                queryError: null,
+                lastSuccessfulRecordCount: 11,
+                lastSuccessfulQueryAt: oldSuccessTime,
+              },
+            },
+          }),
+        },
+      });
+
+      const skipJobs = [];
+      for (let i = 1; i <= 18; i++) {
+        const time = new Date(Date.now() - (20 - i) * 60000);
+        skipJobs.push({
+          id: `job_skip_${i}_${Date.now()}`,
+          workspaceId: deepWs,
+          jobType: "KH02_RESEARCH",
+          status: "COMPLETED",
+          progress: 100,
+          createdAt: time,
+          completedAt: time,
+          resultJson: JSON.stringify({
+            topic: "other topic",
+            providerTelemetry: {
+              GOOGLE_ADS: {
+                source: "GOOGLE_ADS",
+                queryExecuted: false,
+                queryStatus: "SKIPPED",
+                queryTimestamp: null,
+                retrievedCount: null,
+                acceptedCount: null,
+                queryProvenance: "NONE",
+                isLive: false,
+                queryError: null,
+                lastSuccessfulRecordCount: null,
+                lastSuccessfulQueryAt: null,
+              },
+            },
+          }),
+        });
+      }
+      await prisma.syncJob.createMany({ data: skipJobs });
+
+      const telemetry = await getWorkspaceProviderTelemetry(deepWs);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulQueryAt).toBe(oldSuccessTime);
+      expect(telemetry.GOOGLE_ADS.lastSuccessfulRecordCount).toBe(11);
+
+      await prisma.syncJob.deleteMany({ where: { workspaceId: deepWs } });
+      await prisma.workspace.deleteMany({ where: { id: deepWs } });
+    });
+
+    it("10. Relevance rules correctly classify pet vs non-pet and hair eraser context", () => {
+      // 1. "Carpet stain remover for sofa and furniture" must be IRRELEVANT (no pet hair/fur proof)
+      const carpetStain = evaluateProductRelevance(
+        "Carpet stain remover for sofa and furniture",
+        "pet hair remover"
+      );
+      expect(carpetStain.relevanceStatus).toBe("IRRELEVANT");
+      expect(carpetStain.isAccepted).toBe(false);
+
+      // 2. "Pet Hair Eraser roller for dog fur on couch" must be RELEVANT (dog fur / pet context overrides eraser)
+      const petHairEraser = evaluateProductRelevance(
+        "Pet Hair Eraser roller for dog fur on couch",
+        "pet hair remover"
+      );
+      expect(petHairEraser.relevanceStatus).toBe("RELEVANT");
+      expect(petHairEraser.isAccepted).toBe(true);
+
+      // 3. Human hair eraser must be IRRELEVANT
+      const crystalHumanEraser = evaluateProductRelevance(
+        "Bleame Crystal Hair Eraser for silky smooth hairless arms and legs",
+        "pet hair remover"
+      );
+      expect(crystalHumanEraser.relevanceStatus).toBe("IRRELEVANT");
+      expect(crystalHumanEraser.isAccepted).toBe(false);
+
+      // 4. Genuine pet lint / fur brush must be RELEVANT
+      const petBrush = evaluateProductRelevance(
+        "Reusable Pet Fur & Lint Remover Brush with Self-Cleaning Base for Dogs and Cats",
+        "pet hair remover"
+      );
+      expect(petBrush.relevanceStatus).toBe("RELEVANT");
+      expect(petBrush.isAccepted).toBe(true);
+
+      // 5. Generic stain cleaner must be IRRELEVANT
+      const stainCleaner = evaluateProductRelevance(
+        "OxiClean Carpet & Area Rug Stain Remover Spray",
+        "pet hair remover"
+      );
+      expect(stainCleaner.relevanceStatus).toBe("IRRELEVANT");
+      expect(stainCleaner.isAccepted).toBe(false);
+    });
+
+    it("11. Pre-gating relevance prevents irrelevant products from consuming candidate quota", () => {
+      const mockAds: SourceObservation[] = [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_bleame_01",
+          landingPageUrl: "https://bleame.com/products/crystal-hair-eraser",
+          title: "Crystal Hair Eraser",
+          description: "Painless exfoliation and body hair removal for strawberry legs and arms.",
+          observedContent: "Painless exfoliation and body hair removal for strawberry legs and arms.",
+          advertiserDomain: "bleame.com",
+          advertiserName: "Bleame",
+          observedAt: new Date().toISOString(),
+          provenance: "CACHED_SOURCE",
+        },
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_stain_02",
+          landingPageUrl: "https://staincleaner.com/products/carpet-stain-remover",
+          title: "Carpet stain remover for sofa and furniture",
+          description: "Carpet stain remover for sofa and furniture stains.",
+          observedContent: "Carpet stain remover for sofa and furniture stains.",
+          advertiserDomain: "staincleaner.com",
+          advertiserName: "Stain Cleaner Co",
+          observedAt: new Date().toISOString(),
+          provenance: "CACHED_SOURCE",
+        },
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_pet_hair_03",
+          landingPageUrl: "https://chomchom.com/products/pet-hair-roller",
+          title: "ChomChom Roller Pet Hair Remover",
+          description: "Removes dog and cat hair, fur and lint from couch and sofa.",
+          observedContent: "Removes dog and cat hair, fur and lint from couch and sofa.",
+          advertiserDomain: "chomchom.com",
+          advertiserName: "ChomChom",
+          observedAt: new Date().toISOString(),
+          provenance: "CACHED_SOURCE",
+        },
+      ];
+
+      const rawCandidates = discoverProductCandidatesFromAds(mockAds, "pet hair remover");
+      
+      const eligibleCandidates = rawCandidates.filter(
+        (c) => c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT"
+      );
+      const preRejectedCandidates = rawCandidates.filter(
+        (c) => c.relevanceStatus === "IRRELEVANT"
+      );
+      const maxCandidates = 1;
+      const candidates = eligibleCandidates.slice(0, maxCandidates);
+
+      expect(candidates.length).toBe(1);
+      expect(candidates[0].title).toBe("Pet Hair Roller");
+      expect(candidates[0].storeDomain).toBe("chomchom.com");
+      expect(candidates[0].isEligibleAsEvergreenWinner).toBe(true);
+
+      expect(preRejectedCandidates.length).toBe(2);
+      expect(preRejectedCandidates.some((c) => c.title.toLowerCase().includes("crystal hair eraser"))).toBe(true);
+      expect(preRejectedCandidates.some((c) => c.title.toLowerCase().includes("carpet stain remover"))).toBe(true);
     });
   });
 });

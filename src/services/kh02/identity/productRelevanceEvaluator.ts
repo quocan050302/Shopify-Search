@@ -25,20 +25,19 @@ export interface RelevanceEvaluationResult {
 const NICHE_SIGNATURES: Record<string, { include: string[]; exclude: string[] }> = {
   pet: {
     include: [
-      "pet", "dog", "puppy", "cat", "kitten", "paw", "bark", "leash", "collar",
-      "grooming", "fur", "hair remover", "feeder", "litter", "aquarium", "bird",
-      "launcher", "ball", "toy", "gadget", "device", "bowl", "harness", "nail", "whistle",
-      "deshedding", "shedding", "lint roller", "chomchom", "hair removal roller", "fur zapper",
-      "grooming glove", "pet comb", "undercoat rake"
+      "pet", "dog", "puppy", "cat", "kitten", "paw", "paws", "fur", "leash", "collar",
+      "grooming", "litter", "aquarium", "deshedding", "shedding", "lint roller", "chomchom",
+      "fur zapper", "grooming glove", "pet comb", "undercoat rake", "dog toy", "cat toy",
+      "pet feeder", "pet harness", "pet brush", "pet hair remover"
     ],
     exclude: [
       "casino", "crypto", "dating", "adult", "loan", "mortgage", "real estate",
       "car repair", "solar panels",
       // Human hair removal, beauty, skincare & depilatory terms
-      "crystal hair eraser", "hair eraser", "strawberry legs", "razor bump", "razor bumps",
+      "crystal hair eraser", "strawberry legs", "razor bump", "razor bumps",
       "shaving cut", "shaving cuts", "bikini", "pubic", "armpit", "underarm",
       "facial hair", "beard trimmer", "epilator", "depilatory", "laser hair",
-      "human hair", "exfoliat", "dead skin", "painless hair removal", "hair removal cream",
+      "human hair", "dead skin", "painless hair removal", "hair removal cream",
       "hair removal spray", "body hair", "wax strips", "waxing kit", "shaving cream",
       "lipstick", "eyeliner", "mascara", "serum", "anti-aging", "wrinkle"
     ],
@@ -103,19 +102,68 @@ export function evaluateProductRelevance(
       }
     }
 
+    // Contextual evaluation for "hair eraser":
+    // Human body context (strawberry legs, bikini, exfoliation) is excluded, but pet hair context (fur, couch, dog) is accepted.
+    if (normalizedText.includes("hair eraser")) {
+      const isHumanBodyContext = [
+        "strawberry", "legs", "bikini", "pubic", "underarm", "armpit", "exfoliat",
+        "painless", "dead skin", "body hair", "facial", "smooth skin"
+      ].some((term) => normalizedText.includes(term));
+      const hasPetContext = ["pet", "dog", "puppy", "cat", "kitten", "fur", "paws", "animal"].some((term) =>
+        hasWordMatch(normalizedText, term)
+      );
+
+      if (isHumanBodyContext || !hasPetContext) {
+        reasons.push("Contains 'hair eraser' in human body / skin hair removal context.");
+        return {
+          relevanceStatus: "IRRELEVANT",
+          isAccepted: false,
+          score: 0.05,
+          reasons,
+          topic,
+        };
+      }
+    }
+
+    // Check generic stain cleaners / odor removers without pet hair cleanup intent
+    if (
+      normalizedText.includes("stain remover") ||
+      normalizedText.includes("spot cleaner") ||
+      normalizedText.includes("carpet cleaner") ||
+      normalizedText.includes("odor eliminator")
+    ) {
+      const hasHairOrFur = ["hair", "fur", "lint", "pet", "dog", "cat", "shedding", "deshedding"].some((term) =>
+        hasWordMatch(normalizedText, term)
+      );
+      if (!hasHairOrFur) {
+        reasons.push("Product is a generic stain/surface cleaner and does not target hair, fur, or lint cleanup.");
+        return {
+          relevanceStatus: "IRRELEVANT",
+          isAccepted: false,
+          score: 0.1,
+          reasons,
+          topic,
+        };
+      }
+    }
+
     // Special logic for "pet hair remover": requires pet hair removal / cleaning or pet grooming intent
     const isPetHairRemoverQuery = normalizedTopic.includes("pet") && normalizedTopic.includes("hair");
     if (isPetHairRemoverQuery) {
       const petTerms = ["pet", "dog", "puppy", "cat", "kitten", "fur", "paws", "animal"];
+      const hairOrFurTerms = ["hair", "fur", "lint", "shedding", "deshedding", "coat"];
       const cleaningOrRemoverTerms = [
         "hair remover", "remover", "roller", "brush", "grooming", "deshedding",
-        "shedding", "lint", "cleaner", "sweeper", "vacuum", "comb", "rake", "glove"
+        "shedding", "lint", "cleaner", "sweeper", "vacuum", "comb", "rake", "glove", "eraser"
       ];
+      const householdSurfaces = ["couch", "sofa", "carpet", "clothing", "furniture", "rug", "bedding", "car seat"];
 
       const hasPetTerm = petTerms.some((t) => hasWordMatch(normalizedText, t));
+      const hasHairOrFurTerm = hairOrFurTerms.some((t) => hasWordMatch(normalizedText, t));
       const hasRemoverTerm = cleaningOrRemoverTerms.some((t) => hasWordMatch(normalizedText, t));
+      const hasSurface = householdSurfaces.some((s) => normalizedText.includes(s));
 
-      if (hasPetTerm && hasRemoverTerm) {
+      if (hasPetTerm && hasHairOrFurTerm && hasRemoverTerm) {
         reasons.push("Strong match for pet hair removal/grooming intent.");
         return {
           relevanceStatus: "RELEVANT",
@@ -124,9 +172,9 @@ export function evaluateProductRelevance(
           reasons,
           topic,
         };
-      } else if (hasRemoverTerm && (normalizedText.includes("couch") || normalizedText.includes("sofa") || normalizedText.includes("carpet") || normalizedText.includes("clothing") || normalizedText.includes("furniture"))) {
-        // Pet hair remover roller used for sofa/clothing
-        reasons.push("Hair removal tool for household surfaces/fabrics (relevant for pet hair cleanup).");
+      } else if (hasHairOrFurTerm && hasRemoverTerm && (hasPetTerm || hasSurface)) {
+        // Hair removal tool for household surfaces/fabrics or pet grooming
+        reasons.push("Hair/fur removal tool for household surfaces or pet grooming.");
         return {
           relevanceStatus: "RELEVANT",
           isAccepted: true,
@@ -134,13 +182,22 @@ export function evaluateProductRelevance(
           reasons,
           topic,
         };
-      } else if (hasPetTerm && !hasRemoverTerm) {
+      } else if (hasPetTerm && !hasHairOrFurTerm && !hasRemoverTerm) {
         // Pet product but not hair remover (e.g. dog toy, feeder)
         reasons.push("Product is pet-related but lacks specific hair removal or grooming attributes.");
         return {
           relevanceStatus: "AMBIGUOUS",
           isAccepted: false,
           score: 0.4,
+          reasons,
+          topic,
+        };
+      } else if (!hasPetTerm && !hasHairOrFurTerm) {
+        reasons.push("Product does not demonstrate pet or hair removal utility.");
+        return {
+          relevanceStatus: "IRRELEVANT",
+          isAccepted: false,
+          score: 0.1,
           reasons,
           topic,
         };

@@ -14,7 +14,7 @@
 
 import { prisma } from "@/lib/db";
 import { EvergreenLeaderboardResult } from "../evergreenResearchOrchestrator";
-import { IntelligenceSource, ProviderSourceTelemetry } from "../types";
+import { IntelligenceSource, ProviderSourceTelemetry, SourceRunStatus, ObservationProvenance } from "../types";
 
 export interface KH02RunSummary {
   runId: string;
@@ -1495,7 +1495,14 @@ export async function getWorkspaceProviderTelemetry(
       jobType: "KH02_RESEARCH",
     },
     orderBy: { createdAt: "desc" },
-    take: 15,
+    take: 100,
+  });
+
+  // Sort by effective execution time (completedAt or createdAt desc)
+  const sortedJobs = [...jobs].sort((a, b) => {
+    const timeA = new Date(a.completedAt || a.createdAt).getTime();
+    const timeB = new Date(b.completedAt || b.createdAt).getTime();
+    return timeB - timeA;
   });
 
   const sources: IntelligenceSource[] = [
@@ -1506,7 +1513,7 @@ export async function getWorkspaceProviderTelemetry(
     "DEMAND_HISTORY",
   ];
 
-  for (const job of jobs) {
+  for (const job of sortedJobs) {
     if (!job.resultJson) continue;
     let result: any = null;
     try {
@@ -1525,70 +1532,171 @@ export async function getWorkspaceProviderTelemetry(
 
       if (jobTelemetry && jobTelemetry[src]) {
         const item = jobTelemetry[src];
-        // If not yet populated by a newer executed run, and this run executed or reported status
-        if (!current.queryExecuted && item.queryExecuted) {
-          telemetry[src] = { ...item };
-        } else if (!current.queryExecuted && item.queryStatus && item.queryStatus !== "SKIPPED" && item.queryStatus !== "NOT_CONFIGURED") {
-          telemetry[src] = { ...item };
+        const decodedStatus: SourceRunStatus = (item.queryStatus || (item as any).status || "UNKNOWN") as SourceRunStatus;
+        const decodedProvenance: ObservationProvenance = (item.queryProvenance || (item as any).provenance || "NONE") as ObservationProvenance;
+        const decodedExecuted = Boolean(item.queryExecuted);
+        const decodedRetrieved = typeof item.retrievedCount === "number" ? item.retrievedCount : null;
+        const decodedAccepted = typeof item.acceptedCount === "number" ? item.acceptedCount : null;
+        const decodedSuccessCount = typeof item.lastSuccessfulRecordCount === "number"
+          ? item.lastSuccessfulRecordCount
+          : (decodedStatus === "PASSED" || decodedStatus === "QUERY_SUCCEEDED_EMPTY" ? decodedRetrieved : null);
+        const decodedSuccessAt = item.lastSuccessfulQueryAt || (item as any).lastSuccessfulLiveQueryAt ||
+          (decodedStatus === "PASSED" || decodedStatus === "QUERY_SUCCEEDED_EMPTY" ? (item.queryTimestamp || jobTimestamp) : null);
+        const decodedTimestamp = item.queryTimestamp || (item as any).lastLiveQueryAt || jobTimestamp;
+        const decodedIsLive = Boolean(item.isLive);
+        const decodedError = item.queryError || (item as any).error || null;
+
+        // On newest job, record the latest run's status as initial state
+        if (job === sortedJobs[0] && !current.queryExecuted) {
+          telemetry[src] = {
+            source: src,
+            queryExecuted: decodedExecuted,
+            queryStatus: decodedStatus,
+            queryTimestamp: decodedTimestamp,
+            retrievedCount: decodedRetrieved,
+            acceptedCount: decodedAccepted,
+            productAssociatedCount: typeof item.productAssociatedCount === "number" ? item.productAssociatedCount : null,
+            storedRecordCount: typeof item.storedRecordCount === "number" ? item.storedRecordCount : null,
+            queryProvenance: decodedProvenance,
+            isLive: decodedIsLive,
+            queryError: decodedError,
+            lastSuccessfulRecordCount: decodedSuccessCount,
+            lastSuccessfulQueryAt: decodedSuccessAt,
+          };
+        } else if (!current.queryExecuted && decodedExecuted) {
+          telemetry[src] = {
+            source: src,
+            queryExecuted: decodedExecuted,
+            queryStatus: decodedStatus,
+            queryTimestamp: decodedTimestamp,
+            retrievedCount: decodedRetrieved,
+            acceptedCount: decodedAccepted,
+            productAssociatedCount: typeof item.productAssociatedCount === "number" ? item.productAssociatedCount : null,
+            storedRecordCount: typeof item.storedRecordCount === "number" ? item.storedRecordCount : null,
+            queryProvenance: decodedProvenance,
+            isLive: decodedIsLive,
+            queryError: decodedError,
+            lastSuccessfulRecordCount: decodedSuccessCount,
+            lastSuccessfulQueryAt: decodedSuccessAt,
+          };
         }
 
-        // Backfill lastSuccessful live query timestamp & count if not yet set
-        if (!telemetry[src].lastSuccessfulQueryAt && item.lastSuccessfulQueryAt) {
-          telemetry[src].lastSuccessfulQueryAt = item.lastSuccessfulQueryAt;
-          telemetry[src].lastSuccessfulRecordCount = item.lastSuccessfulRecordCount;
+        // Backfill lastSuccessful query timestamp & count if not yet populated
+        if (!telemetry[src].lastSuccessfulQueryAt && decodedSuccessAt) {
+          telemetry[src].lastSuccessfulQueryAt = decodedSuccessAt;
+          telemetry[src].lastSuccessfulRecordCount = decodedSuccessCount;
         }
       } else {
-        // Fallback reconstruction for legacy runs (e.g. kh02_run_1793072214857_2keo1)
+        // Fallback reconstruction for pure legacy runs without providerTelemetry block
         const srcStatus = result.sourceStatuses?.[src];
         if (!srcStatus || srcStatus === "SKIPPED" || srcStatus === "NOT_CONFIGURED") continue;
 
-        if (src === "GOOGLE_ADS" && !current.queryExecuted) {
-          if (srcStatus === "PASSED" || srcStatus === "SOURCE_DATA_VERIFIED" || srcStatus === "LIVE_DATA_VERIFIED") {
-            telemetry.GOOGLE_ADS = {
-              source: "GOOGLE_ADS",
+        // 1. FAILED queries: record failure without setting or overwriting success history
+        if (
+          srcStatus === "FAILED" ||
+          srcStatus === "QUERY_FAILED" ||
+          srcStatus === "TRANSPORT_FAILED" ||
+          srcStatus === "AUTHENTICATION_FAILED"
+        ) {
+          if (!current.queryExecuted) {
+            telemetry[src] = {
+              source: src,
               queryExecuted: true,
-              queryStatus: "PASSED",
+              queryStatus: srcStatus as SourceRunStatus,
               queryTimestamp: jobTimestamp,
-              retrievedCount: 5, // 5 creatives retrieved via MCP in verified run
+              retrievedCount: null, // Unknown, NOT 0
+              acceptedCount: null,
+              queryProvenance: "NONE",
+              isLive: false,
+              queryError: `Legacy research run ${job.id} recorded failure (${srcStatus}) without detailed telemetry`,
+              lastSuccessfulRecordCount: null,
+              lastSuccessfulQueryAt: null,
+            };
+          }
+          continue;
+        }
+
+        // 2. QUERY_SUCCEEDED_EMPTY: query succeeded but returned 0 records
+        if (srcStatus === "QUERY_SUCCEEDED_EMPTY") {
+          const isGoogle = src === "GOOGLE_ADS";
+          if (!current.queryExecuted) {
+            telemetry[src] = {
+              source: src,
+              queryExecuted: true,
+              queryStatus: "QUERY_SUCCEEDED_EMPTY",
+              queryTimestamp: jobTimestamp,
+              retrievedCount: 0,
               acceptedCount: 0,
-              queryProvenance: "LIVE_PROVIDER",
-              isLive: true,
+              queryProvenance: isGoogle ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+              isLive: isGoogle,
               queryError: null,
-              lastSuccessfulRecordCount: 5,
+              lastSuccessfulRecordCount: 0,
               lastSuccessfulQueryAt: jobTimestamp,
             };
           }
-        } else if (src === "META_ADS" && !current.queryExecuted) {
-          const obsCount = Array.isArray(result.topThree?.[0]?.candidate?.sourceObservations)
-            ? result.topThree[0].candidate.sourceObservations.filter((o: any) => o.source === "META_ADS").length
-            : 8;
-          telemetry.META_ADS = {
-            source: "META_ADS",
-            queryExecuted: true,
-            queryStatus: srcStatus,
-            queryTimestamp: jobTimestamp,
-            retrievedCount: obsCount || 8,
-            acceptedCount: obsCount || 8,
-            queryProvenance: "CACHED_SOURCE",
-            isLive: false,
-            queryError: null,
-            lastSuccessfulRecordCount: obsCount || 8,
-            lastSuccessfulQueryAt: jobTimestamp,
-          };
-        } else if (src === "DEMAND_HISTORY" && !current.queryExecuted) {
-          telemetry.DEMAND_HISTORY = {
-            source: "DEMAND_HISTORY",
-            queryExecuted: true,
-            queryStatus: srcStatus,
-            queryTimestamp: jobTimestamp,
-            retrievedCount: 0,
-            acceptedCount: 0,
-            queryProvenance: "NONE",
-            isLive: false,
-            queryError: null,
-            lastSuccessfulRecordCount: 0,
-            lastSuccessfulQueryAt: null,
-          };
+          if (!telemetry[src].lastSuccessfulQueryAt) {
+            telemetry[src].lastSuccessfulQueryAt = jobTimestamp;
+            telemetry[src].lastSuccessfulRecordCount = 0;
+          }
+          continue;
+        }
+
+        // 3. PASSED / VERIFIED runs: reconstruct counts from actual observations across all candidate groups
+        if (
+          srcStatus === "PASSED" ||
+          srcStatus === "SOURCE_DATA_VERIFIED" ||
+          srcStatus === "LIVE_DATA_VERIFIED"
+        ) {
+          const allCandidateItems = [
+            ...(Array.isArray(result.topThree) ? result.topThree : []),
+            ...(Array.isArray(result.remainingCandidates) ? result.remainingCandidates : []),
+            ...(Array.isArray(result.provisionalCandidates) ? result.provisionalCandidates : []),
+            ...(Array.isArray(result.insufficientEvidenceCandidates) ? result.insufficientEvidenceCandidates : []),
+            ...(Array.isArray(result.rejectedCandidates) ? result.rejectedCandidates : []),
+          ];
+
+          const matchedObsIds = new Set<string>();
+          for (const item of allCandidateItems) {
+            const cand = item?.candidate || item;
+            if (Array.isArray(cand?.sourceObservations)) {
+              for (const obs of cand.sourceObservations) {
+                if (obs?.source === src && obs?.sourceRecordId) {
+                  matchedObsIds.add(obs.sourceRecordId);
+                }
+              }
+            }
+          }
+
+          let derivedCount: number | null = matchedObsIds.size > 0 ? matchedObsIds.size : null;
+          if (derivedCount === null && src === "META_ADS" && typeof result.totalObservationsCollected === "number") {
+            derivedCount = result.totalObservationsCollected;
+          }
+
+          const isGoogle = src === "GOOGLE_ADS";
+          const provenance: ObservationProvenance = isGoogle
+            ? "LIVE_PROVIDER"
+            : (src === "META_ADS" ? "CACHED_SOURCE" : "NONE");
+
+          if (!current.queryExecuted) {
+            telemetry[src] = {
+              source: src,
+              queryExecuted: true,
+              queryStatus: srcStatus as SourceRunStatus,
+              queryTimestamp: jobTimestamp,
+              retrievedCount: derivedCount,
+              acceptedCount: derivedCount,
+              queryProvenance: provenance,
+              isLive: isGoogle,
+              queryError: null,
+              lastSuccessfulRecordCount: derivedCount,
+              lastSuccessfulQueryAt: jobTimestamp,
+            };
+          }
+
+          if (!telemetry[src].lastSuccessfulQueryAt) {
+            telemetry[src].lastSuccessfulQueryAt = jobTimestamp;
+            telemetry[src].lastSuccessfulRecordCount = derivedCount;
+          }
         }
       }
     }

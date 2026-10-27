@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     const statuses = await Promise.all(
       capabilities.map(async (cap) => {
-        const latestProbe = getLatestProbe(cap.source);
+        const latestProbe = getLatestProbe(cap.source, context.workspaceId);
         const [readiness, diagnostic] = await Promise.all([
           checkKH02ProviderReadiness(cap.source, context.workspaceId),
           diagnoseKH02Source(cap.source, { workspaceId: context.workspaceId }),

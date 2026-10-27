@@ -142,15 +142,44 @@ export function sanitizeSecretPatterns(text: string): string {
     .replace(/(APIFY_TOKEN|HASDATA_API_KEY|SERPAPI_API_KEY|GEMINI_API_KEY|ADMIN_API_KEY)=[^\s]+/gi, "$1=[REDACTED]");
 }
 
-// In-memory cache for latest probe results by source (truthful runtime diagnostics)
-const latestProbesBySource = new Map<IntelligenceSource, SourceDiagnosticResult>();
-
-export function recordLatestProbe(source: IntelligenceSource, result: SourceDiagnosticResult): void {
-  latestProbesBySource.set(source, result);
+interface ScopedProbeEntry {
+  result: SourceDiagnosticResult;
+  recordedAt: number;
+  workspaceId: string;
 }
 
-export function getLatestProbe(source: IntelligenceSource): SourceDiagnosticResult | undefined {
-  return latestProbesBySource.get(source);
+const PROBE_CACHE_TTL_MS = 5 * 60 * 1000;
+const latestProbesByWorkspaceAndSource = new Map<string, ScopedProbeEntry>();
+
+function buildProbeKey(workspaceId: string = "default", source: IntelligenceSource): string {
+  return `${workspaceId || "default"}::${source}`;
+}
+
+export function recordLatestProbe(
+  source: IntelligenceSource,
+  result: SourceDiagnosticResult,
+  workspaceId: string = "default"
+): void {
+  const key = buildProbeKey(workspaceId, source);
+  latestProbesByWorkspaceAndSource.set(key, {
+    result,
+    recordedAt: Date.now(),
+    workspaceId: workspaceId || "default",
+  });
+}
+
+export function getLatestProbe(
+  source: IntelligenceSource,
+  workspaceId: string = "default"
+): SourceDiagnosticResult | undefined {
+  const key = buildProbeKey(workspaceId, source);
+  const entry = latestProbesByWorkspaceAndSource.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.recordedAt > PROBE_CACHE_TTL_MS) {
+    latestProbesByWorkspaceAndSource.delete(key);
+    return undefined;
+  }
+  return entry.result;
 }
 
 export interface SourceDiagnosticResult {
@@ -225,6 +254,7 @@ export async function diagnoseKH02Source(
       dims.lastLiveQueryAt = t.queryTimestamp;
       dims.lastLiveQueryRecordCount = t.retrievedCount;
       dims.lastSuccessfulLiveQueryAt = t.lastSuccessfulQueryAt;
+      dims.lastSuccessfulQueryAt = t.lastSuccessfulQueryAt;
       dims.lastSuccessfulRecordCount = t.lastSuccessfulRecordCount;
       dims.queryError = t.queryError;
     }
@@ -711,11 +741,11 @@ export async function diagnoseKH02Source(
         authenticated,
         discoverySupported: supportedOperationsVerified,
         queryExecuted: dimensions.queryExecuted,
-        recordsReturned: dimensions.lastLiveQueryRecordCount,
+        recordsReturned: dimensions.lastLiveQueryRecordCount ?? null,
         storedRecordCount: 0,
-        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
+        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount ?? null,
         currentRunRecordCount: null,
-        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
+        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt ?? null,
         lastProbeAt: lastCheckedAt,
         authStatus,
         transportStatus,
@@ -877,7 +907,7 @@ export async function testKH02SourceConnection(
       checkLiveTransport: true,
     });
     const result = await Promise.race([diagPromise, timeoutPromise]);
-    recordLatestProbe(source, result);
+    recordLatestProbe(source, result, context?.workspaceId);
     return result;
   } catch (err: any) {
     const isTimeout = err?.message?.toLowerCase().includes("timed out") || err?.message?.toLowerCase().includes("timeout");
@@ -925,7 +955,7 @@ export async function testKH02SourceConnection(
         capabilityStatus: "UNSUPPORTED",
       },
     };
-    recordLatestProbe(source, failedResult);
+    recordLatestProbe(source, failedResult, context?.workspaceId);
     return failedResult;
   } finally {
     if (timeoutTimer) clearTimeout(timeoutTimer);

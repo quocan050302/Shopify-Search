@@ -54,11 +54,15 @@ interface RankedItem {
     identityStatus?: "VERIFIED" | "PROBABLE" | "AMBIGUOUS" | "UNRESOLVED";
     rawAdIdentifier?: string | null;
     sourceObservations?: any[];
+    relevanceStatus?: "RELEVANT" | "PROBABLY_RELEVANT" | "AMBIGUOUS" | "IRRELEVANT";
+    relevanceReasons?: string[];
+    relevanceScore?: number;
+    isEligibleAsEvergreenWinner?: boolean;
   };
   score: {
     opportunityScore: number | null;
     evidenceConfidence: number;
-    scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE";
+    scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE" | "REJECTED";
     tier?: string;
     demandClass: string;
     strengths: string[];
@@ -807,7 +811,31 @@ export default function ProductsPage() {
                 {providerStatuses.map((sourceItem) => {
                   const latestProbe = connectionTestResults?.find((t) => t.source === sourceItem.source) || (sourceItem as any).latestProbe;
                   const diag = latestProbe || sourceItem.diagnostic || {};
-                  const dims = latestProbe?.dimensions || sourceItem.dimensions || diag.dimensions || {};
+                  const persistedDims = sourceItem.dimensions || diag.dimensions || {};
+                  const probeDims = latestProbe?.dimensions;
+
+                  // Safely merge probe connection/transport/auth diagnostics with persisted research query telemetry
+                  const dims = {
+                    ...persistedDims,
+                    ...(probeDims ? {
+                      transportConnected: probeDims.transportConnected ?? persistedDims.transportConnected,
+                      transportStatus: probeDims.transportStatus ?? persistedDims.transportStatus,
+                      authenticated: probeDims.authenticated ?? persistedDims.authenticated,
+                      authStatus: probeDims.authStatus ?? persistedDims.authStatus,
+                      capabilityStatus: probeDims.capabilityStatus ?? persistedDims.capabilityStatus,
+                      lastProbeAt: probeDims.lastProbeAt ?? persistedDims.lastProbeAt,
+                    } : {}),
+                    // Always preserve query telemetry from the latest research runs of this workspace:
+                    lastLiveQueryRecordCount: persistedDims.lastLiveQueryRecordCount ?? null,
+                    lastSuccessfulRecordCount: persistedDims.lastSuccessfulRecordCount ?? null,
+                    lastLiveQueryAt: persistedDims.lastLiveQueryAt ?? null,
+                    lastSuccessfulLiveQueryAt: persistedDims.lastSuccessfulLiveQueryAt ?? null,
+                    queryExecuted: Boolean(persistedDims.queryExecuted),
+                    queryStatus: persistedDims.queryStatus,
+                    queryProvenance: persistedDims.queryProvenance,
+                    isLive: persistedDims.isLive,
+                    queryError: persistedDims.queryError,
+                  };
                   const cost = diag.estimatedQueryCost || sourceItem.diagnostic?.estimatedQueryCost || {};
                   const isMeta = sourceItem.source === "META_ADS";
                   const isGoogle = sourceItem.source === "GOOGLE_ADS";
@@ -941,13 +969,19 @@ export default function ProductsPage() {
                                   </span>
                                 );
                               }
-                              if (dims.queryProvenance === "CACHED_SOURCE" || (!dims.isLive && dims.queryExecuted && storedCount > 0)) {
+                              if (dims.queryProvenance === "CACHED_SOURCE" || (!dims.isLive && dims.queryExecuted)) {
+                                const cacheCount =
+                                  typeof dims.lastLiveQueryRecordCount === "number"
+                                    ? dims.lastLiveQueryRecordCount
+                                    : typeof dims.lastSuccessfulRecordCount === "number"
+                                    ? dims.lastSuccessfulRecordCount
+                                    : storedCount;
                                 return (
                                   <span
                                     className="text-amber-300"
                                     title="Retrieved from persistent SQLite cache"
                                   >
-                                    Cache ({storedCount} records)
+                                    Cache ({cacheCount} records)
                                   </span>
                                 );
                               }

@@ -130,6 +130,7 @@ export interface ProviderReadinessDimensions {
   transportConnected: boolean | null;
   authenticated: boolean | null;
   supportedOperationsVerified: boolean;
+  requiredCapabilityAvailable?: boolean;
   queryExecuted: boolean;
   sourceDataVerified: boolean;
   lastLiveQueryAt: string | null;
@@ -140,6 +141,7 @@ export interface ProviderReadinessDimensions {
   lastLiveQueryRecordCount?: number | null;
   currentRunRecordCount?: number | null;
   lastSuccessfulLiveQueryAt?: string | null;
+  lastSuccessfulQueryAt?: string | null;
   lastProbeAt?: string | null;
   authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED";
   transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED";
@@ -155,17 +157,24 @@ export interface ProviderReadinessDimensions {
 
 export interface ProviderSourceTelemetry {
   source: IntelligenceSource;
-  status: SourceRunStatus;
   queryExecuted: boolean;
-  isLive: boolean;
+  queryStatus: SourceRunStatus;
+  queryTimestamp: string | null;
   retrievedCount: number | null;
   acceptedCount: number | null;
   productAssociatedCount?: number | null;
   storedRecordCount?: number | null;
-  provenance: ObservationProvenance;
-  lastLiveQueryAt: string | null;
-  lastSuccessfulLiveQueryAt: string | null;
-  lastSuccessfulRecordCount?: number | null;
+  queryProvenance: ObservationProvenance;
+  isLive: boolean;
+  queryError: string | null;
+  lastSuccessfulRecordCount: number | null;
+  lastSuccessfulQueryAt: string | null;
+
+  // Canonical compatibility aliases
+  status?: SourceRunStatus;
+  provenance?: ObservationProvenance;
+  lastLiveQueryAt?: string | null;
+  lastSuccessfulLiveQueryAt?: string | null;
   error?: string | null;
   warning?: string | null;
 }
@@ -181,7 +190,8 @@ export type ObservationProvenance =
   | "MANUAL_IMPORT"
   | "CACHED_SOURCE"
   | "CONTROLLED_FIXTURE"
-  | "UNVERIFIED";
+  | "UNVERIFIED"
+  | "NONE";
 
 
 export type ProductMatchConfidence =
@@ -225,23 +235,25 @@ export interface IntelligenceQuery {
 export interface SourceObservation {
   source: IntelligenceSource;
   sourceRecordId: string;
-  sourceUrl: string | null;
+  sourceUrl?: string | null;
   landingPageUrl?: string | null;
   sourceExternalAdId?: string | null;
   storeDomainEvidence?: string | null;
-  advertiserOrCreator: string | null;
-  advertiserDomain: string | null;
+  advertiserOrCreator?: string | null;
+  advertiserName?: string | null;
+  advertiserDomain?: string | null;
   productMatchHint?: string | null;
   reportedPublishedAt?: string | null;
   reportedFirstShownAt?: string | null;
   reportedLastShownAt?: string | null;
   observedAt: string;
-  requestedMarket: string;
-  verifiedDeliveryMarket: string | null;
+  requestedMarket?: string;
+  verifiedDeliveryMarket?: string | null;
   title: string | null;
   description?: string | null;
+  observedContent?: string | null;
   metrics?: Record<string, unknown>;
-  media: {
+  media?: {
     thumbnailUrl?: string | null;
     videoUrl?: string | null;
     embedUrl?: string | null;

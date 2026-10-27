@@ -46,7 +46,7 @@ export interface KH02ScoreResult {
   candidateId: string;
   opportunityScore: number | null;
   evidenceConfidence: number; // 0-100 completeness score
-  scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE";
+  scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE" | "REJECTED";
   tier: KH02ProductTier;
   formulaVersion: string;
   demandClass: KH02DemandClass;
@@ -167,8 +167,7 @@ export function applyKH02EligibilityGates(
     oppScore >= 40 &&
     scoreResult.evidenceConfidence >= 30 &&
     scoreResult.demandClass !== "DECLINING" &&
-    (scoreResult as any).relevanceStatus !== "IRRELEVANT" &&
-    scoreResult.recommendation !== "REJECT"
+    (scoreResult as any).relevanceStatus !== "IRRELEVANT"
   ) {
     return {
       tier: "PROVISIONAL_OPPORTUNITY",
@@ -304,7 +303,7 @@ export function calculateKH02EvergreenScore(
   else if (uniqueAds >= 2) pillarE_Score += 3;
   else if (uniqueAds === 1) pillarE_Score += 1;
 
-  if (c.videoUrl || c.sourceObservations.some((o) => o.media.mediaType === "VIDEO")) {
+  if (c.videoUrl || c.sourceObservations.some((o) => o.media?.mediaType === "VIDEO")) {
     pillarE_Score += 5;
     confidencePoints += 10;
     strengths.push("Video demonstration creative available for product hook evaluation.");
@@ -368,7 +367,7 @@ export function calculateKH02EvergreenScore(
     rationale = c.relevanceReasons?.[0] || "Product is verified to be irrelevant to the target niche topic.";
     risks.push("Category mismatch: Product does not address the target search topic.");
     totalScore = 0;
-    scoreStatus = "REJECTED" as any;
+    scoreStatus = "REJECTED";
   } else if (c.relevanceStatus === "AMBIGUOUS") {
     recommendation = "REQUIRES_MANUAL_REVIEW";
     rationale = c.relevanceReasons?.[0] || "Ambiguous niche alignment; manual review required to confirm applicability.";
