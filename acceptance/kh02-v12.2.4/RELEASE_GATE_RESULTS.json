@@ -62,7 +62,8 @@
       "PRODUCT_CANDIDATE_REJECTION_REPORT.json"
     ],
     "observedValues": {
-      "totalDiscovered": 10,
+      "totalDiscovered": 11,
+      "relevantCount": 4,
       "rejectedCount": 7
     },
     "reason": null
@@ -76,8 +77,8 @@
       "PRODUCT_IDENTITY_REPORT.json"
     ],
     "observedValues": {
-      "cleanTitleCount": 10,
-      "totalCandidates": 10
+      "cleanTitleCount": 11,
+      "totalCandidates": 11
     },
     "reason": null
   },
@@ -158,7 +159,7 @@
       "CHROMIUM_META_LIVE_E2E.json"
     ],
     "observedValues": {
-      "acceptedRunId": "kh02_run_1793087372868_hpeee"
+      "acceptedRunId": "kh02_run_1793090618422_mb5oc"
     },
     "reason": null
   },
@@ -171,7 +172,8 @@
       "CHROMIUM_META_LIVE_E2E.json"
     ],
     "observedValues": {
-      "terminalStateObserved": true
+      "terminalStateObserved": true,
+      "dbJobStatus": "COMPLETED"
     },
     "reason": null
   },
@@ -184,7 +186,8 @@
       "CHROMIUM_META_LIVE_E2E.json"
     ],
     "observedValues": {
-      "terminalStateObserved": true
+      "terminalStateObserved": true,
+      "dbJobStatus": "COMPLETED"
     },
     "reason": null
   },
@@ -356,7 +359,7 @@
       "GOOGLE_STANDALONE_LIVE_QUERY.json"
     ],
     "observedValues": {
-      "firstCreativeId": "CR05549845903965159425"
+      "firstCreativeId": "CR02371010109909237761"
     },
     "reason": null
   },
@@ -382,7 +385,8 @@
       "GOOGLE_PRODUCT_MATCHING.json"
     ],
     "observedValues": {
-      "matchingResultsCount": 5
+      "matchingResultsCount": 0,
+      "status": "SKIPPED"
     },
     "reason": null
   },
@@ -392,10 +396,14 @@
     "assertion": "Research pipeline reconciliation: no orphan or fabricated Google candidates",
     "executed": true,
     "evidencePaths": [
-      "GOOGLE_RESEARCH_ENRICHMENT.json"
+      "GOOGLE_RESEARCH_ENRICHMENT.json",
+      "GOOGLE_PRODUCT_MATCHING.json"
     ],
     "observedValues": {
-      "candidateSkuAssociationsCount": 0
+      "totalGoogleObservations": 0,
+      "orphanAssociationsCount": 0,
+      "brandLevelAsSkuViolationsCount": 0,
+      "reconciled": true
     },
     "reason": null
   },
@@ -408,7 +416,7 @@
       "META_LIVE_QUERY.json"
     ],
     "observedValues": {
-      "recordsReturned": 10
+      "recordsReturned": 11
     },
     "reason": null
   },
@@ -434,7 +442,7 @@
       "META_SOURCE_TO_CANDIDATE_TRACE.json"
     ],
     "observedValues": {
-      "groupsCount": 10
+      "groupsCount": 11
     },
     "reason": null
   },
@@ -447,7 +455,7 @@
       "PRODUCT_IDENTITY_REPORT.json"
     ],
     "observedValues": {
-      "cleanTitleCount": 10
+      "cleanTitleCount": 11
     },
     "reason": null
   },
@@ -460,7 +468,7 @@
       "PRODUCT_RELEVANCE_REPORT.json"
     ],
     "observedValues": {
-      "relevantCount": 3,
+      "relevantCount": 4,
       "rejectedCount": 7
     },
     "reason": null
@@ -474,7 +482,9 @@
       "SOURCE_DB_EXACT_RECONCILIATION.json"
     ],
     "observedValues": {
-      "persistedAdsCount": 21
+      "runSourceRecordsCount": 10,
+      "persistedRecordsCount": 10,
+      "exactMatch": true
     },
     "reason": null
   },
@@ -487,6 +497,11 @@
       "DB_HTTP_EXACT_RECONCILIATION.json"
     ],
     "observedValues": {
+      "dbCandidateCount": 11,
+      "httpCandidateCount": 11,
+      "exactMatch": true,
+      "idsExactMatch": true,
+      "scoreDiffsCount": 0,
       "reconciled": true
     },
     "reason": null
@@ -501,7 +516,10 @@
     ],
     "observedValues": {
       "track1Cards": 1,
-      "track2Terminal": true
+      "track2Cards": 0,
+      "track2Terminal": true,
+      "emptyStateAccurate": true,
+      "exactMatch": true
     },
     "reason": null
   },
@@ -514,6 +532,8 @@
       "FINAL_ACCEPTANCE_REPORT.md"
     ],
     "observedValues": {
+      "topThreeWinnersCount": 0,
+      "ungroundedWinnersCount": 0,
       "evergreenGatingStrict": true
     },
     "reason": null

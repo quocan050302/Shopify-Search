@@ -170,6 +170,13 @@ export interface ProviderSourceTelemetry {
   lastSuccessfulRecordCount: number | null;
   lastSuccessfulQueryAt: string | null;
 
+  // Detailed live vs cache execution breakdown
+  upstreamReturnedCount?: number | null;
+  freshLiveCount?: number | null;
+  cachedRecordsCount?: number | null;
+  persistedInsertedCount?: number | null;
+  persistedUpdatedCount?: number | null;
+
   // Canonical compatibility aliases
   status?: SourceRunStatus;
   provenance?: ObservationProvenance;
@@ -264,6 +271,20 @@ export interface SourceObservation {
   researchProductId?: string | null;
 }
 
+export interface ProviderExecutionMetadata {
+  attempted: boolean;
+  executed: boolean;
+  liveSucceeded: boolean;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  upstreamReturnedCount?: number | null;
+  freshLiveObservedCount?: number | null;
+  persistedInsertedCount?: number | null;
+  persistedUpdatedCount?: number | null;
+  cachedRecordsUsedCount?: number | null;
+  fallbackToCache?: boolean;
+}
+
 export interface SourceResearchResult {
   source: IntelligenceSource;
   status: SourceRunStatus;
@@ -278,6 +299,7 @@ export interface SourceResearchResult {
   completedAt: string;
   errors: string[];
   warnings: string[];
+  executionMetadata?: ProviderExecutionMetadata;
 }
 
 // ─── Source-Specific Normalized Models ────────────────────────────────────────

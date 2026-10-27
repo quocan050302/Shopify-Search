@@ -8,7 +8,7 @@
  *    disqualified and excluded from scoring/winners, ambiguous items marked for manual review.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import { evaluateProductRelevance } from "@/services/kh02/identity/productRelevanceEvaluator";
 import { discoverProductCandidatesFromAds } from "@/services/kh02/identity/productCandidateDiscovery";
@@ -947,6 +947,115 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(preRejectedCandidates.length).toBe(2);
       expect(preRejectedCandidates.some((c) => c.title.toLowerCase().includes("crystal hair eraser"))).toBe(true);
       expect(preRejectedCandidates.some((c) => c.title.toLowerCase().includes("carpet stain remover"))).toBe(true);
+    });
+
+    it("12. Niche Relevance Precision rejects polysemous hardware devices and chemical stain removers", () => {
+      // 1. Car fleet tracker must NOT be accepted as Pet Gadgets
+      const carTracker = evaluateProductRelevance("GPS tracker for car fleet", "Pet Gadgets");
+      expect(carTracker.isAccepted).toBe(false);
+      expect(carTracker.relevanceStatus).not.toBe("RELEVANT");
+      expect(carTracker.score).toBeLessThanOrEqual(0.4);
+
+      // 2. Garden water fountain outdoor decoration must NOT be accepted as Pet Gadgets
+      const gardenFountain = evaluateProductRelevance("Garden water fountain outdoor decoration", "Pet Gadgets");
+      expect(gardenFountain.isAccepted).toBe(false);
+      expect(gardenFountain.relevanceStatus).not.toBe("RELEVANT");
+      expect(gardenFountain.score).toBeLessThanOrEqual(0.4);
+
+      // 3. Pet stain remover for sofa must NOT be accepted for pet hair remover
+      const petStainRemover = evaluateProductRelevance("Pet stain remover for sofa", "pet hair remover");
+      expect(petStainRemover.isAccepted).toBe(false);
+      expect(petStainRemover.relevanceStatus).not.toBe("RELEVANT");
+      expect(petStainRemover.score).toBeLessThanOrEqual(0.4);
+
+      // 4. Positive cases must be RELEVANT
+      const petGps = evaluateProductRelevance("GPS pet tracker collar", "Pet Gadgets");
+      expect(petGps.isAccepted).toBe(true);
+      expect(petGps.relevanceStatus).toBe("RELEVANT");
+
+      const catFountain = evaluateProductRelevance("Cat water fountain", "Pet Gadgets");
+      expect(catFountain.isAccepted).toBe(true);
+      expect(catFountain.relevanceStatus).toBe("RELEVANT");
+
+      const dogFeeder = evaluateProductRelevance("Automatic dog feeder", "Pet Gadgets");
+      expect(dogFeeder.isAccepted).toBe(true);
+      expect(dogFeeder.relevanceStatus).toBe("RELEVANT");
+
+      const furRoller = evaluateProductRelevance("Dog fur roller on couch", "pet hair remover");
+      expect(furRoller.isAccepted).toBe(true);
+      expect(furRoller.relevanceStatus).toBe("RELEVANT");
+
+      const petBrush = evaluateProductRelevance("Pet grooming/deshedding brush", "pet hair remover");
+      expect(petBrush.isAccepted).toBe(true);
+      expect(petBrush.relevanceStatus).toBe("RELEVANT");
+    });
+
+    it("13. Legacy Telemetry Reconstruction does NOT fabricate multi-source total as Meta count", async () => {
+      // Mock DB with legacy snapshot: sourceStatuses PASSED, totalObservationsCollected: 15, NO per-source observations
+      const fakeLegacyDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "legacy_job_multisource_15",
+              createdAt: new Date("2026-03-01T12:00:00Z"),
+              resultJson: JSON.stringify({
+                sourceStatuses: {
+                  META_ADS: "PASSED",
+                  GOOGLE_ADS: "PASSED",
+                },
+                totalObservationsCollected: 15,
+                topThree: [],
+                remainingCandidates: [],
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry("test-ws-legacy-15", fakeLegacyDb);
+
+      // Meta count MUST be null (Unknown), NOT 15!
+      expect(telemetry.META_ADS.retrievedCount).toBeNull();
+      expect(telemetry.META_ADS.acceptedCount).toBeNull();
+      expect(telemetry.META_ADS.lastSuccessfulRecordCount).toBeNull();
+      expect(telemetry.META_ADS.isLive).toBe(false);
+      expect(telemetry.META_ADS.queryProvenance).toBe("UNKNOWN");
+
+      // Now test with verified per-source candidate observations
+      const fakeObsLegacyDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "legacy_job_with_obs",
+              createdAt: new Date("2026-03-01T12:00:00Z"),
+              resultJson: JSON.stringify({
+                sourceStatuses: {
+                  META_ADS: "PASSED",
+                },
+                totalObservationsCollected: 15,
+                topThree: [
+                  {
+                    candidate: {
+                      sourceObservations: [
+                        { source: "META_ADS", sourceRecordId: "meta_rec_1", provenance: "CACHED_SOURCE" },
+                        { source: "META_ADS", sourceRecordId: "meta_rec_2", provenance: "CACHED_SOURCE" },
+                        { source: "GOOGLE_ADS", sourceRecordId: "google_rec_1", provenance: "LIVE_PROVIDER" },
+                      ],
+                    },
+                  },
+                ],
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetryWithObs = await getWorkspaceProviderTelemetry("test-ws-obs", fakeObsLegacyDb);
+      // Meta count should only reflect the 2 proven Meta observations, NOT 15
+      expect(telemetryWithObs.META_ADS.retrievedCount).toBe(2);
+      expect(telemetryWithObs.META_ADS.acceptedCount).toBe(2);
+      expect(telemetryWithObs.META_ADS.isLive).toBe(false);
+      expect(telemetryWithObs.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
     });
   });
 });

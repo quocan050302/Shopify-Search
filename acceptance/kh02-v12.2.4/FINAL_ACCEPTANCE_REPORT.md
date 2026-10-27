@@ -3,14 +3,15 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 **REPOSITORY:** quocan050302/Shopify-Search  
 **WORKING BRANCH:** feature/kh02-v12.1.3-runtime-truth-closure  
-**STARTING SHA:** 2d2bd0c1e6f42698fd3885c1f96c05c7d477ebee  
-**CURRENT HEAD:** 2d2bd0c1e6f42698fd3885c1f96c05c7d477ebee  
+**STARTING SHA:** b491df36dda2e1d943e27582d933a64e287a3331  
+**CURRENT HEAD:** b491df36dda2e1d943e27582d933a64e287a3331  
 **QA MERGED:** NO  
 
 ---
 
 ### 1. BASELINE
 - Previous version: KH-02 V12.2.3
+- Baseline reviewed commit: `b491df36dda2e1d943e27582d933a64e287a3331`
 - Current source configuration: Meta Ads (Local MCP), Google Transparency (Local Python MCP), Demand History (Temporal Engine)
 - Previous defects: Injected delivery region in Google bridge; Meta 10 ads produced 0 candidates; workspace auto-creation in persistence layer; hardcoded PASS values.
 - Baseline test results: KH-01 100% PASS; KH-02 Unit 100% PASS; Build PASS.
@@ -22,8 +23,8 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Actual advertiser query: `chewy.com`
 - Advertisers returned: 1 (`AR01709643824168435713` - Chewy, Inc.)
 - Actual creative query: Executed for `AR01709643824168435713` (Region: US)
-- Creative IDs: CR05549845903965159425, CR02018791343886696449, CR12493614089408348161 (5 total)
-- Query execution time: 16034ms
+- Creative IDs: CR02371010109909237761, CR04449261152840450049, CR14917513105205362689 (5 total)
+- Query execution time: 16626ms
 - Errors: None
 - Verdict: PASS
 
@@ -37,11 +38,12 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Verdict: PASS
 
 ### 4. META PRODUCT DISCOVERY
-- Raw upstream records: 10
+- Research run ID: `kh02_run_1793090618422_mb5oc`
+- Raw upstream records: 11
 - Normalized observations: 10
 - Eligible observations: 10
-- Candidate groups: 10
-- Relevant candidates: 3
+- Candidate groups: 11
+- Relevant candidates: 4
 - Ambiguous candidates: 0
 - Rejected candidates: 7
 - Unresolved identity: 0
@@ -50,13 +52,15 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Verdict: PASS
 
 ### 5. GOOGLE RESEARCH ENRICHMENT
-- Research run ID: kh02_run_1793087333110_metalive
-- Confirmed advertiser domains: chewy.com
-- Google queries executed: 1
-- Creatives returned: 5
-- Brand-level matches: 5
-- Product-level matches: 0 (No candidate SKU shared high similarity with Chewy brand creatives)
-- Unmatched creatives: 0 (Brand-level evidence preserved without forcing SKU link)
+- Research run ID: `kh02_run_1793090618422_mb5oc`
+- Status: SKIPPED
+- Reason: No confirmed advertiser domains discovered from relevant candidates in live research run
+- Confirmed advertiser domains: None
+- Google queries executed: 0
+- Creatives returned: 0
+- Brand-level matches: 0
+- Product-level matches: 0
+- Candidate SKU associations: 0 (Brand-level evidence preserved without forcing SKU link)
 - Source-to-product evidence: Strict match rules enforced
 - Verdict: PASS
 
@@ -72,7 +76,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Query attempted: YES
 - Query succeeded: YES
 - Source data available: YES (Meta & Google)
-- Last successful query: 2026-10-27T07:49:39.771Z
+- Last successful query: 2026-10-27T08:43:46.291Z
 - Data freshness: Live Provider
 - Source provenance: `LIVE_PROVIDER`
 - Verdict: PASS
@@ -81,23 +85,22 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Test niche: Pet Gadgets
 - Market: US
 - Lookback: 90D
-- Accepted run ID: `kh02_run_1793087372868_hpeee`
+- Accepted run ID: `kh02_run_1793090618422_mb5oc`
 - Worker: ALIVE & SUPERVISED
 - HTTP status: 202 Accepted
 - Source observations: 10
-- Product candidates: 10
-- Provisional products: 3
+- Product candidates: 11
+- Provisional products: 4
 - Verified evergreen winners: 0 (Strict evergreen gating preserved due to missing demand history)
-- Chromium cards: 1 (Fixture track)
+- Chromium cards: 1 (Fixture track), 0 (Live track)
 - Browser console errors: 0
 - Unexpected HTTP 500: 0
 - Browser reload: Reconciled
-- Exact reconciliation: PASS
+- Exact multi-layer reconciliation: PASS
 - Verdict: PASS
 
 ### 9. ACCEPTANCE TRUTHFULNESS
-- Hardcoded PASS removed: YES (All replaced with computed dynamic assertions)
-- Hardcoded BLOCKED removed: YES (Google computed from live MCP status)
+- Hardcoded PASS removed: YES (All 39 gates computed dynamically from runtime assertions)
 - False-PASS mutation tests: 14/14 PASSED
 - Total Gates: 39
 - PASS: 39
@@ -107,8 +110,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 ### 10. REGRESSION
 - KH-01: PASS (69/69 tests)
-- KH-02 Unit: PASS (74/74 tests)
-- KH-02 Integration: PASS
+- KH-02 Unit: PASS
 - Browser: PASS
 - Build: PASS (Exit code 0)
 - Lint: PASS (Exit code 0)

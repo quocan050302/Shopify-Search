@@ -18,4 +18,4 @@ Previously inspected runs reported:
 1. `collectLiveMetaAds()` now upserts a `DiscoveryRun` and supplies its ID to `ingestDiscoveredAds()`.
 2. `matchingAds` query includes `freshLiveAdIds`.
 3. `productRelevanceEvaluator.ts` recognizes pet gadgets (e.g. "Two-in-One Pet Car Seat Belt") as `RELEVANT` (score 0.95).
-4. Live query now discovers 10 candidates, correctly evaluates relevance, and renders cards without fabrication.
+4. Live query now discovers candidates, correctly evaluates relevance, and renders cards without fabrication.

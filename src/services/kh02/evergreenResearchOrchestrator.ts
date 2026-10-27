@@ -20,6 +20,7 @@ import {
   IntelligenceQuery,
   SourceObservation,
   ProviderSourceTelemetry,
+  ObservationProvenance,
 } from "./types";
 import { collectMetaProductSignals } from "./providers/metaResearchAdapter";
 import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
@@ -284,20 +285,50 @@ export async function runEvergreenProductResearch(
       adObservations.push(...metaResult.observations);
       if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
 
-      const isLiveMeta = metaResult.observations.some((o) => o.provenance === "LIVE_PROVIDER");
+      const metaLiveObservations = metaResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
+      const freshLiveCount = metaLiveObservations.length;
+      const cachedObservationsCount = metaResult.observations.length - freshLiveCount;
+      const execMeta = metaResult.executionMetadata;
+      const upstreamReturned = execMeta?.upstreamReturnedCount ?? (freshLiveCount > 0 ? freshLiveCount : null);
+
+      const liveAttempted = Boolean(execMeta?.attempted);
+      const liveSucceeded = Boolean(execMeta?.liveSucceeded);
+
+      // A query is truly live ONLY if live query executed, succeeded, and is not purely cached fallback
+      const isTrulyLive = liveSucceeded && (freshLiveCount > 0 || (upstreamReturned === 0 && cachedObservationsCount === 0));
+
       const metaNow = new Date().toISOString();
+      const liveProvenance: ObservationProvenance = freshLiveCount > 0
+        ? "LIVE_PROVIDER"
+        : (cachedObservationsCount > 0 ? "CACHED_SOURCE" : "NONE");
+
+      // Last Live Query record count reflects actual live records (not mixed cache)
+      const liveRecordCount = isTrulyLive
+        ? (upstreamReturned ?? freshLiveCount)
+        : (liveSucceeded && upstreamReturned === 0 ? 0 : null);
+
+      const querySuccessAt = (isTrulyLive || metaResult.status === "PASSED" || metaResult.status === "CACHE_ONLY") ? metaNow : null;
+      const successCount = liveRecordCount ?? (metaResult.status === "PASSED" || metaResult.status === "CACHE_ONLY" ? metaResult.acceptedCount : null);
+
       providerTelemetry.META_ADS = {
         source: "META_ADS",
         queryExecuted: true,
         queryStatus: metaResult.status,
         queryTimestamp: metaNow,
-        retrievedCount: metaResult.retrievedCount,
+        retrievedCount: isTrulyLive ? (upstreamReturned ?? freshLiveCount) : cachedObservationsCount,
         acceptedCount: metaResult.acceptedCount,
-        queryProvenance: isLiveMeta ? "LIVE_PROVIDER" : "CACHED_SOURCE",
-        isLive: isLiveMeta,
-        queryError: metaResult.errors.length > 0 ? metaResult.errors.join("; ") : null,
-        lastSuccessfulRecordCount: metaResult.retrievedCount,
-        lastSuccessfulQueryAt: metaResult.retrievedCount > 0 ? metaNow : null,
+        queryProvenance: liveProvenance,
+        isLive: isTrulyLive,
+        queryError: metaResult.errors.length > 0
+          ? metaResult.errors.join("; ")
+          : (execMeta?.fallbackToCache && metaResult.warnings.length > 0 ? metaResult.warnings[0] : null),
+        lastSuccessfulRecordCount: successCount,
+        lastSuccessfulQueryAt: querySuccessAt,
+        upstreamReturnedCount: upstreamReturned,
+        freshLiveCount,
+        cachedRecordsCount: cachedObservationsCount,
+        persistedInsertedCount: execMeta?.persistedInsertedCount ?? null,
+        persistedUpdatedCount: execMeta?.persistedUpdatedCount ?? null,
       };
     } catch (err: any) {
       sourceStatuses.META_ADS = "FAILED";
@@ -314,6 +345,11 @@ export async function runEvergreenProductResearch(
         queryError: err.message,
         lastSuccessfulRecordCount: null,
         lastSuccessfulQueryAt: null,
+        upstreamReturnedCount: 0,
+        freshLiveCount: 0,
+        cachedRecordsCount: 0,
+        persistedInsertedCount: 0,
+        persistedUpdatedCount: 0,
       };
     }
   }

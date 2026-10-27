@@ -4,73 +4,73 @@
   "allMutationsPassed": true,
   "results": [
     {
-      "mutationId": "MUT_01_GOOGLE_CREATIVE_MISMATCH",
-      "description": "Detect mismatch between creative ID in query and returned payload",
+      "mutationId": "MUT_01_ORPHAN_GOOGLE_ASSOCIATION_DETECTED",
+      "description": "Detect orphan Google observation without valid sourceRecordId and fail G10",
       "passed": true
     },
     {
-      "mutationId": "MUT_02_WRONG_DELIVERY_REGION",
-      "description": "Assert that US filter alone CANNOT produce verifiedDeliveryMarket = 'US'",
+      "mutationId": "MUT_02_BRAND_LEVEL_AS_SKU_VIOLATION_DETECTED",
+      "description": "Detect brand-level Google ad attached directly as SKU evidence and fail G10",
       "passed": true
     },
     {
-      "mutationId": "MUT_03_MISSING_SOURCE_ID",
-      "description": "Reject ads without creative ID or source record ID",
+      "mutationId": "MUT_03_MISSING_HTTP_READBACK_DETECTED",
+      "description": "Fail D07 when HTTP readback is missing or null",
       "passed": true
     },
     {
-      "mutationId": "MUT_04_HTTP_CANDIDATE_MISSING_FROM_BROWSER",
-      "description": "Detect discrepancy if candidate returned by HTTP is missing from browser DOM",
+      "mutationId": "MUT_04_HTTP_DROPPED_CANDIDATE_DETECTED",
+      "description": "Fail D07 when candidate list differs between DB and HTTP API",
       "passed": true
     },
     {
-      "mutationId": "MUT_05_ADDITIONAL_BROWSER_CANDIDATE",
-      "description": "Detect unauthenticated or phantom candidate rendered in browser DOM",
+      "mutationId": "MUT_05_HTTP_SCORE_MISMATCH_DETECTED",
+      "description": "Fail D07 when candidate score differs between DB and HTTP API",
       "passed": true
     },
     {
-      "mutationId": "MUT_06_WRONG_RUN_ID",
-      "description": "Detect mismatched or non-durable research run ID",
+      "mutationId": "MUT_06_EVERGREEN_WINNER_WITHOUT_DEMAND_HISTORY_DETECTED",
+      "description": "Fail D09 when candidate lacking demand history is promoted to topThree winner",
       "passed": true
     },
     {
-      "mutationId": "MUT_07_WORKER_NEVER_CLAIMED_JOB",
-      "description": "Detect job stuck in QUEUED or unassigned lease state",
+      "mutationId": "MUT_07_SOURCE_DB_MISSING_RUN_RECORDS_DETECTED",
+      "description": "Detect discrepancy when DB has old records but is missing run records",
       "passed": true
     },
     {
-      "mutationId": "MUT_08_DIFFERENT_SQLITE_DB",
-      "description": "Detect if app and worker point to different database file locations",
+      "mutationId": "MUT_08_BROWSER_MISSING_CARD_DETECTED",
+      "description": "Detect discrepancy when HTTP returns candidates but browser DOM is missing a card",
       "passed": true
     },
     {
-      "mutationId": "MUT_09_WRONG_WORKSPACE_REJECTION",
-      "description": "Prevent cross-tenant access to unauthorized workspace ID",
+      "mutationId": "MUT_09_BROWSER_EMPTY_STATE_MISMATCH_DETECTED",
+      "description": "Detect discrepancy when HTTP has 0 candidates but browser does not show valid empty state",
       "passed": true
     },
     {
-      "mutationId": "MUT_10_BROWSER_CRASH_DETECTION",
-      "description": "Detect browser launch or navigation failure truthfully",
+      "mutationId": "MUT_10_RELEVANCE_CAR_FLEET_TRACKER_REJECTED",
+      "description": "Reject 'GPS tracker for car fleet' as non-pet (score <= 0.4, isAccepted false)",
       "passed": true
     },
     {
-      "mutationId": "MUT_11_BUILD_FAILED_DETECTION",
-      "description": "Reject release GO if build exit code is non-zero",
+      "mutationId": "MUT_11_RELEVANCE_GARDEN_WATER_FOUNTAIN_REJECTED",
+      "description": "Reject 'Garden water fountain outdoor decoration' as non-pet (score <= 0.4, isAccepted false)",
       "passed": true
     },
     {
-      "mutationId": "MUT_12_LIVE_QUERY_SKIPPED_CLASSIFICATION",
-      "description": "Truthfully classify skipped query when domain is unavailable",
+      "mutationId": "MUT_12_RELEVANCE_PET_STAIN_REMOVER_REJECTED",
+      "description": "Reject 'Pet stain remover for sofa' without hair/fur context (score <= 0.4, isAccepted false)",
       "passed": true
     },
     {
-      "mutationId": "MUT_13_PRODUCT_IDENTITY_UNRESOLVED",
-      "description": "Classify ad lacking product name as UNRESOLVED or PROBABLE, never verified winner",
+      "mutationId": "MUT_13_GOOGLE_MARKET_FILTER_PROVENANCE_INTEGRITY",
+      "description": "Verify that US query filter produces FILTER_ONLY and verifiedDeliveryMarket null",
       "passed": true
     },
     {
-      "mutationId": "MUT_14_MISSING_PROVIDER_CREDENTIALS",
-      "description": "Truthfully report BLOCKED or CREDENTIALS_REQUIRED for unconfigured paid sources",
+      "mutationId": "MUT_14_UNAUTHORIZED_WORKSPACE_REJECTION_INTEGRITY",
+      "description": "Reject unauthorized workspace without auto-creating it in database",
       "passed": true
     }
   ]

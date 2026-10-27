@@ -20,6 +20,7 @@ import {
   MetaResearchSignals,
   ObservationProvenance,
   SourceRunStatus,
+  ProviderExecutionMetadata,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
 import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
@@ -395,6 +396,7 @@ export async function collectMetaProductSignals(
   const freshLiveAdIds = new Set<string>();
   let liveAttempted = false;
   let liveSucceeded = false;
+  let liveCollectorResult: any = null;
 
   // 1. Attempt live collection if enabled and not in unit test execution boundary
   const allowLive =
@@ -408,6 +410,7 @@ export async function collectMetaProductSignals(
     liveAttempted = true;
     try {
       const liveRes = await collectLiveMetaAds(query);
+      liveCollectorResult = liveRes;
       if (liveRes.newAdIds && liveRes.newAdIds.length > 0) {
         liveRes.newAdIds.forEach((id) => freshLiveAdIds.add(id));
       }
@@ -474,9 +477,10 @@ export async function collectMetaProductSignals(
 
     if (matchingAds.length === 0) {
       warnings.push(`No active Meta ads found for topic '${query.topic}' within ${query.lookbackDays} days.`);
+      const emptyStatus: SourceRunStatus = liveSucceeded ? "QUERY_SUCCEEDED_EMPTY" : "NO_RESULTS";
       return {
         source: "META_ADS",
-        status: "NO_RESULTS",
+        status: emptyStatus,
         observations: [],
         retrievedCount: 0,
         acceptedCount: 0,
@@ -487,6 +491,19 @@ export async function collectMetaProductSignals(
         completedAt: new Date().toISOString(),
         errors,
         warnings,
+        executionMetadata: {
+          attempted: liveAttempted,
+          executed: liveAttempted,
+          liveSucceeded,
+          startedAt,
+          completedAt: new Date().toISOString(),
+          upstreamReturnedCount: 0,
+          freshLiveObservedCount: 0,
+          persistedInsertedCount: 0,
+          persistedUpdatedCount: 0,
+          cachedRecordsUsedCount: 0,
+          fallbackToCache: false,
+        },
       };
     }
 
@@ -560,22 +577,43 @@ export async function collectMetaProductSignals(
       };
     });
 
+    const freshLiveCount = observations.filter((o) => o.provenance === "LIVE_PROVIDER").length;
+    const cachedCount = observations.length - freshLiveCount;
+    const upstreamReturned = liveCollectorResult ? (liveCollectorResult.sourceRecordsReturned ?? freshLiveCount) : (freshLiveCount > 0 ? freshLiveCount : 0);
+    const persistedInserted = liveCollectorResult ? (liveCollectorResult.newUniqueInserted ?? 0) : freshLiveCount;
+    const persistedUpdated = liveCollectorResult ? (liveCollectorResult.existingUpdated ?? 0) : 0;
+
     // Truthful status: if live query was not attempted or failed, mark CACHE_ONLY
     const status: SourceRunStatus = liveSucceeded ? "PASSED" : "CACHE_ONLY";
+
+    const executionMetadata: ProviderExecutionMetadata = {
+      attempted: liveAttempted,
+      executed: liveAttempted,
+      liveSucceeded,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      upstreamReturnedCount: liveAttempted ? upstreamReturned : null,
+      freshLiveObservedCount: freshLiveCount,
+      persistedInsertedCount: persistedInserted,
+      persistedUpdatedCount: persistedUpdated,
+      cachedRecordsUsedCount: cachedCount,
+      fallbackToCache: !liveSucceeded && cachedCount > 0,
+    };
 
     return {
       source: "META_ADS",
       status,
       observations,
-      retrievedCount: matchingAds.length,
+      retrievedCount: liveSucceeded ? upstreamReturned : observations.length,
       acceptedCount: observations.length,
-      rejectedCount: 0,
+      rejectedCount: liveCollectorResult?.recordsRejected || 0,
       estimatedCredits: 0,
       consumedCredits: 0,
       startedAt,
       completedAt: new Date().toISOString(),
       errors,
       warnings,
+      executionMetadata,
     };
   } catch (err: any) {
     errors.push(err.message || "Failed to collect Meta product signals.");
@@ -592,6 +630,19 @@ export async function collectMetaProductSignals(
       completedAt: new Date().toISOString(),
       errors,
       warnings,
+      executionMetadata: {
+        attempted: liveAttempted,
+        executed: liveAttempted,
+        liveSucceeded: false,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        upstreamReturnedCount: 0,
+        freshLiveObservedCount: 0,
+        persistedInsertedCount: 0,
+        persistedUpdatedCount: 0,
+        cachedRecordsUsedCount: 0,
+        fallbackToCache: false,
+      },
     };
   }
 }

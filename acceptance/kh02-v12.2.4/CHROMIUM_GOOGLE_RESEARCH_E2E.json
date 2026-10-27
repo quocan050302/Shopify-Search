@@ -1,7 +1,10 @@
 {
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
   "googleMcpAvailable": true,
   "googleCreativesCount": 5,
   "googleLiveProvenancedVerified": true,
+  "enrichmentStatus": "SKIPPED",
+  "enrichmentReason": "No confirmed advertiser domains discovered from relevant candidates in live research run",
   "browserObservedGoogleStatus": "DISCOVERED_AND_READY",
   "noFakeAssociationInCards": true
 }

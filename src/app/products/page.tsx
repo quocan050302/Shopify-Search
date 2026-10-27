@@ -151,6 +151,7 @@ export default function ProductsPage() {
   const [inspectCandidate, setInspectCandidate] = useState<RankedItem | null>(null);
   const [showConnectionDetails, setShowConnectionDetails] = useState<boolean>(false);
   const [connectionTestResults, setConnectionTestResults] = useState<any[] | null>(null);
+  const isInputDirtyRef = useRef<boolean>(false);
 
   // Fetch Latest Leaderboard Snapshot from DB (No network research on reload)
   const fetchLatestLeaderboard = async () => {
@@ -159,7 +160,7 @@ export default function ProductsPage() {
       const json = await res.json();
       if (json.success && json.data) {
         setLeaderboard(json.data);
-        if (json.data.topic) setTopic(json.data.topic);
+        if (json.data.topic && !isInputDirtyRef.current) setTopic(json.data.topic);
         if (json.data.lookbackDays) setLookbackDays(json.data.lookbackDays);
       }
     } catch (err) {
@@ -693,8 +694,16 @@ export default function ProductsPage() {
                 data-testid="kh02-research-input"
                 placeholder="Enter niche or topic (e.g. Pet Gadgets, Home Cleaning, Kitchen Organization)..."
                 value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && executeResearch()}
+                onChange={(e) => {
+                  isInputDirtyRef.current = true;
+                  setTopic(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    isInputDirtyRef.current = true;
+                    executeResearch(e.currentTarget.value, lookbackDays);
+                  }
+                }}
                 suppressHydrationWarning
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0e0b1c] border border-[#3b2d63] text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder-slate-500"
               />
@@ -724,7 +733,10 @@ export default function ProductsPage() {
             <div className="md:col-span-3">
               <button
                 data-testid="kh02-analyze-button"
-                onClick={() => executeResearch()}
+                onClick={() => {
+                  isInputDirtyRef.current = true;
+                  executeResearch(topic, lookbackDays);
+                }}
                 disabled={isResearching}
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs md:text-sm flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
               >
@@ -1143,13 +1155,13 @@ export default function ProductsPage() {
                     </p>
                   </>
                 ) : (
-                  <>
+                  <div data-testid="kh02-empty-state">
                     <ShoppingBag className="h-8 w-8 text-slate-500 mx-auto" />
                     <p className="text-sm font-semibold text-white">No Evergreen Winners Available Yet</p>
                     <p className="text-xs text-slate-500 max-w-md mx-auto">
                       Select a niche above and click &quot;Analyze Evergreen Niche&quot; to discover top products.
                     </p>
-                  </>
+                  </div>
                 )}
               </div>
             ) : leaderboard && leaderboard.topThree.length > 0 ? (

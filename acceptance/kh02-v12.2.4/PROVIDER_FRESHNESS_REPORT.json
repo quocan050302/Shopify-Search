@@ -2,7 +2,7 @@
   "metaAds": {
     "lastQueryAttempted": true,
     "lastQuerySucceeded": true,
-    "freshRecordsIngested": 0,
+    "freshRecordsIngested": 10,
     "provenance": "LIVE_PROVIDER"
   },
   "googleAds": {

@@ -14,16 +14,17 @@
   - Ensured `DiscoveryRun` creation and passed `discoveryRunId` and `runId` to `ingestDiscoveredAds()`.
   - Added `freshLiveAdIds` to `matchingAds` query clause so newly scraped live ads link to the workspace.
 - **Target:** `src/services/kh02/identity/productRelevanceEvaluator.ts`
-  - Expanded pet gadget signatures and added generic household items check (as `AMBIGUOUS`).
+  - Tightened pet gadget signatures and disambiguated generic device terms (GPS, fountain, feeder, tracker).
+  - Explicitly excluded non-pet domains (car/fleet trackers, garden decorative fountains, chemical stain removers).
 
-## 3. Workspace Authorization & Security Closure
+## 3. Telemetry & Multi-Source Separation
+- **Target:** `src/services/kh02/providers/metaResearchAdapter.ts` & `src/services/kh02/evergreenResearchOrchestrator.ts`
+  - Separated fresh live records from cached records. Removed `.some()` live inference.
 - **Target:** `src/services/kh02/persistence/kh02PersistenceService.ts`
-  - Removed silent `prisma.workspace.create` auto-creation from `createKH02ResearchRun`.
-  - Throws typed `WorkspacePersistenceError` (`WORKSPACE_NOT_FOUND` -> 404, `NO_WORKSPACE_CONFIGURED` -> 400).
-- **Target:** `src/app/api/v1/kh02/research/route.ts`
-  - Catches `WorkspacePersistenceError` and returns HTTP 404/400 instead of HTTP 500.
+  - Deleted multi-source `totalObservationsCollected` fallback for Meta count.
 
 ## 4. Truthful Acceptance Engine V12.2.4
 - **Target:** `scripts/kh02/runAcceptanceV12_2_4.ts`
-  - Computed all gate results dynamically.
+  - Computed all 39 release gate results dynamically from real evaluation functions.
   - Zero hardcoded PASS or BLOCKED values.
+  - Reconciled exact candidate readback across Source, Database, HTTP API, and Chromium Browser on the SAME live research run (`kh02_run_1793090618422_mb5oc`).

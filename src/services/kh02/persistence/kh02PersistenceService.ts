@@ -1678,26 +1678,30 @@ export async function getWorkspaceProviderTelemetry(
           ];
 
           const matchedObsIds = new Set<string>();
+          let hasLiveProvenanceInObs = false;
           for (const item of allCandidateItems) {
             const cand = item?.candidate || item;
             if (Array.isArray(cand?.sourceObservations)) {
               for (const obs of cand.sourceObservations) {
                 if (obs?.source === src && obs?.sourceRecordId) {
                   matchedObsIds.add(obs.sourceRecordId);
+                  if (obs.provenance === "LIVE_PROVIDER") {
+                    hasLiveProvenanceInObs = true;
+                  }
                 }
               }
             }
           }
 
-          let derivedCount: number | null = matchedObsIds.size > 0 ? matchedObsIds.size : null;
-          if (derivedCount === null && src === "META_ADS" && typeof result.totalObservationsCollected === "number") {
-            derivedCount = result.totalObservationsCollected;
-          }
+          // Count derived from candidate-associated observations ONLY proves the number of recovered observations.
+          // It must NEVER fall back to totalObservationsCollected (which is a multi-source sum).
+          const derivedCount: number | null = matchedObsIds.size > 0 ? matchedObsIds.size : null;
 
-          const isGoogle = src === "GOOGLE_ADS";
-          const provenance: ObservationProvenance = isGoogle
+          // Do NOT infer LIVE_PROVIDER solely from legacy status PASSED if there is no verified live metadata
+          const isLiveVerified = hasLiveProvenanceInObs || srcStatus === "LIVE_DATA_VERIFIED";
+          const provenance: ObservationProvenance = isLiveVerified
             ? "LIVE_PROVIDER"
-            : (src === "META_ADS" ? "CACHED_SOURCE" : "NONE");
+            : (derivedCount !== null ? "CACHED_SOURCE" : "UNKNOWN");
 
           if (!current.queryExecuted) {
             telemetry[src] = {
@@ -1707,15 +1711,16 @@ export async function getWorkspaceProviderTelemetry(
               queryTimestamp: jobTimestamp,
               retrievedCount: derivedCount,
               acceptedCount: derivedCount,
+              productAssociatedCount: derivedCount,
               queryProvenance: provenance,
-              isLive: isGoogle,
+              isLive: isLiveVerified,
               queryError: null,
               lastSuccessfulRecordCount: derivedCount,
-              lastSuccessfulQueryAt: jobTimestamp,
+              lastSuccessfulQueryAt: derivedCount !== null ? jobTimestamp : null,
             };
           }
 
-          if (!telemetry[src].lastSuccessfulQueryAt) {
+          if (!telemetry[src].lastSuccessfulQueryAt && derivedCount !== null) {
             telemetry[src].lastSuccessfulQueryAt = jobTimestamp;
             telemetry[src].lastSuccessfulRecordCount = derivedCount;
           }

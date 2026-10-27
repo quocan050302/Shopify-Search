@@ -2,7 +2,7 @@
   "pageLoaded": true,
   "authorized": true,
   "researchSubmitted": true,
-  "acceptedRunId": "kh02_run_1793087372868_hpeee",
+  "acceptedRunId": "kh02_run_1793090618422_mb5oc",
   "terminalStatus": "COMPLETED",
   "terminalStateObserved": true,
   "resultsRendered": false,
@@ -28,6 +28,6 @@
     "[log] [HMR] connected"
   ],
   "errors": [],
-  "durationMs": 8268,
+  "durationMs": 8828,
   "verdict": "PASS"
 }

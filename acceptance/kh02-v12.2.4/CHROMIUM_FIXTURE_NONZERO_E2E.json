@@ -2,7 +2,7 @@
   "pageLoaded": true,
   "authorized": true,
   "researchSubmitted": true,
-  "acceptedRunId": "kh02_run_1793087354564_x87xe",
+  "acceptedRunId": "kh02_run_1793090600974_hgpw9",
   "terminalStatus": "COMPLETED",
   "terminalStateObserved": true,
   "resultsRendered": true,
@@ -12,7 +12,7 @@
   ],
   "displayedRankOrder": [],
   "displayedScores": {
-    "cand_1653014828_9": 47
+    "cand_1653014828_9": 53
   },
   "displayedConfidence": {
     "cand_1653014828_9": "PROVISIONAL"
@@ -30,12 +30,10 @@
   "consoleLogs": [
     "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
     "[log] [HMR] connected",
-    "[log] [Fast Refresh] rebuilding",
-    "[log] [Fast Refresh] done in 139ms",
     "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
     "[log] [HMR] connected"
   ],
   "errors": [],
-  "durationMs": 21633,
+  "durationMs": 17651,
   "verdict": "PASS"
 }

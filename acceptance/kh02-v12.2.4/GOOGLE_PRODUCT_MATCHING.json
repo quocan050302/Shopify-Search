@@ -1,45 +1,11 @@
 {
-  "targetCandidate": "Orthopedic Memory Foam Dog Bed",
-  "candidateStoreDomain": "chewy.com",
-  "totalCreativesEvaluated": 5,
-  "brandLevelCount": 5,
+  "targetCandidate": null,
+  "candidateStoreDomain": null,
+  "totalCreativesEvaluated": 0,
+  "brandLevelCount": 0,
   "productSpecificCount": 0,
   "brandAdsRequireManualReview": true,
-  "matches": [
-    {
-      "creativeId": "CR05549845903965159425",
-      "confidence": "PROBABLE",
-      "requiresManualReview": true,
-      "productRelevance": "BRAND_RELATED",
-      "relevanceReason": "Domain verified but creative has brand-level focus"
-    },
-    {
-      "creativeId": "CR02018791343886696449",
-      "confidence": "PROBABLE",
-      "requiresManualReview": true,
-      "productRelevance": "BRAND_RELATED",
-      "relevanceReason": "Domain verified but creative has brand-level focus"
-    },
-    {
-      "creativeId": "CR12493614089408348161",
-      "confidence": "PROBABLE",
-      "requiresManualReview": true,
-      "productRelevance": "BRAND_RELATED",
-      "relevanceReason": "Domain verified but creative has brand-level focus"
-    },
-    {
-      "creativeId": "CR15482496811540676609",
-      "confidence": "PROBABLE",
-      "requiresManualReview": true,
-      "productRelevance": "BRAND_RELATED",
-      "relevanceReason": "Domain verified but creative has brand-level focus"
-    },
-    {
-      "creativeId": "CR12666940690094096385",
-      "confidence": "PROBABLE",
-      "requiresManualReview": true,
-      "productRelevance": "BRAND_RELATED",
-      "relevanceReason": "Domain verified but creative has brand-level focus"
-    }
-  ]
+  "matches": [],
+  "status": "SKIPPED",
+  "reason": "No confirmed advertiser domains discovered from relevant candidates in live research run"
 }

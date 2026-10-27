@@ -3,10 +3,10 @@
   "command": "npm run kh01:verify",
   "passed": true,
   "exitCode": 0,
-  "verifiedAt": "2026-10-27T07:48:05.530Z",
+  "verifiedAt": "2026-10-27T08:42:27.364Z",
   "testFilesCount": 5,
   "totalTestsCount": 69,
   "passedTestsCount": 69,
   "zeroRegressions": true,
-  "outputSnippet": "m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m69 passed\u001b[39m\u001b[22m\u001b[90m (69)\u001b[39m\n\u001b[2m   Start at \u001b[22m 14:47:55\n\u001b[2m   Duration \u001b[22m 9.75s\u001b[2m (setup 70%, tests 18%, import 10%, transform 2%, worker 1%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m5 workers spawned\u001b[39m\u001b[2m · ~159ms startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~634ms faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n"
+  "outputSnippet": " \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m69 passed\u001b[39m\u001b[22m\u001b[90m (69)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:42:16\n\u001b[2m   Duration \u001b[22m 10.63s\u001b[2m (setup 69%, tests 18%, import 11%, transform 1%, worker 1%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m5 workers spawned\u001b[39m\u001b[2m · ~185ms startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~742ms faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n"
 }

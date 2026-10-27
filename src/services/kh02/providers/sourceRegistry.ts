@@ -250,10 +250,12 @@ export async function diagnoseKH02Source(
       dims.queryExecuted = true;
       dims.queryStatus = t.queryStatus;
       dims.queryProvenance = t.queryProvenance;
-      dims.isLive = t.isLive;
-      dims.lastLiveQueryAt = t.queryTimestamp;
-      dims.lastLiveQueryRecordCount = t.retrievedCount;
-      dims.lastSuccessfulLiveQueryAt = t.lastSuccessfulQueryAt;
+      dims.isLive = Boolean(t.isLive);
+      dims.lastLiveQueryAt = t.isLive ? t.queryTimestamp : null;
+      dims.lastLiveQueryRecordCount = t.isLive
+        ? (t.freshLiveCount ?? t.upstreamReturnedCount ?? t.retrievedCount ?? 0)
+        : null;
+      dims.lastSuccessfulLiveQueryAt = t.isLive ? t.lastSuccessfulQueryAt : null;
       dims.lastSuccessfulQueryAt = t.lastSuccessfulQueryAt;
       dims.lastSuccessfulRecordCount = t.lastSuccessfulRecordCount;
       dims.queryError = t.queryError;

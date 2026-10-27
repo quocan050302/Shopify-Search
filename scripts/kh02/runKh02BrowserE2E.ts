@@ -202,7 +202,11 @@ export async function runKh02BrowserE2E(
       'input[data-testid="kh02-research-input"], input[placeholder*="niche or topic"]'
     );
     if (topicInput) {
+      await page.waitForLoadState("domcontentloaded").catch(() => null);
+      await topicInput.click();
+      await topicInput.fill("");
       await topicInput.fill(searchTopic);
+      await page.waitForTimeout(500);
     }
 
     // Screenshot 2: Source Statuses and Input

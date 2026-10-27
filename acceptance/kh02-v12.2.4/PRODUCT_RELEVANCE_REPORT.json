@@ -1,10 +1,47 @@
 {
   "topic": "Pet Gadgets",
-  "totalEvaluated": 10,
-  "relevantCount": 3,
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
+  "totalEvaluated": 11,
+  "relevantCount": 4,
   "ambiguousCount": 0,
   "rejectedCount": 7,
   "evaluations": [
+    {
+      "candidateId": "cand_688692874_4",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "relevanceStatus": "RELEVANT",
+      "relevanceScore": 0.95,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet."
+      ]
+    },
+    {
+      "candidateId": "cand_334795365_5",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "relevanceStatus": "RELEVANT",
+      "relevanceScore": 0.95,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet."
+      ]
+    },
+    {
+      "candidateId": "cand_1424880279_11",
+      "title": "Breathable Pet Soccer Jerseys",
+      "relevanceStatus": "RELEVANT",
+      "relevanceScore": 0.95,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet."
+      ]
+    },
+    {
+      "candidateId": "cand_1950428281_7",
+      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
+      "relevanceStatus": "RELEVANT",
+      "relevanceScore": 0.95,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet."
+      ]
+    },
     {
       "candidateId": "cand_625654596_1",
       "title": "Artistic Poster Tin Decor — Metal Door Sign Clusters",
@@ -33,39 +70,12 @@
       ]
     },
     {
-      "candidateId": "cand_688692874_4",
-      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
-      "relevanceStatus": "RELEVANT",
-      "relevanceScore": 0.95,
-      "relevanceReasons": [
-        "Strong niche match on terms: pet."
-      ]
-    },
-    {
-      "candidateId": "cand_334795365_5",
-      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
-      "relevanceStatus": "RELEVANT",
-      "relevanceScore": 0.95,
-      "relevanceReasons": [
-        "Strong niche match on terms: pet."
-      ]
-    },
-    {
       "candidateId": "cand_44585695_6",
       "title": "New Year's Decorations: Transparent Christmas Ball with Clear Fil",
       "relevanceStatus": "IRRELEVANT",
       "relevanceScore": 0.1,
       "relevanceReasons": [
         "No keyword or niche alignment found with topic 'Pet Gadgets'."
-      ]
-    },
-    {
-      "candidateId": "cand_1950428281_7",
-      "title": "Two-in-One Pet Car Seat Belt — Adjustable Safety Harness",
-      "relevanceStatus": "RELEVANT",
-      "relevanceScore": 0.95,
-      "relevanceReasons": [
-        "Strong niche match on terms: pet."
       ]
     },
     {
