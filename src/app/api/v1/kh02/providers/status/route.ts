@@ -9,6 +9,7 @@ import {
   listKH02SourceCapabilities,
   checkKH02ProviderReadiness,
   diagnoseKH02Source,
+  getLatestProbe,
 } from "@/services/kh02/providers/sourceRegistry";
 import {
   resolveAuthorizedResearchContext,
@@ -22,18 +23,28 @@ export async function GET(request: NextRequest) {
 
     const statuses = await Promise.all(
       capabilities.map(async (cap) => {
+        const latestProbe = getLatestProbe(cap.source);
         const [readiness, diagnostic] = await Promise.all([
           checkKH02ProviderReadiness(cap.source, context.workspaceId),
           diagnoseKH02Source(cap.source, { workspaceId: context.workspaceId }),
         ]);
+
+        const effectiveDiagnostic = latestProbe ? { ...diagnostic, ...latestProbe } : diagnostic;
+        const effectiveReadiness = latestProbe ? latestProbe.status : readiness.status;
+        const effectiveReason = latestProbe?.reason || readiness.reason;
+        const effectiveDimensions = latestProbe?.dimensions || readiness.dimensions;
+
         return {
           ...cap,
-          readiness: readiness.status,
-          diagnosticStatus: readiness.diagnosticStatus,
-          isReady: readiness.ready,
-          readinessReason: readiness.reason,
-          dimensions: readiness.dimensions,
-          diagnostic,
+          readiness: effectiveReadiness,
+          diagnosticStatus: latestProbe?.status || readiness.diagnosticStatus,
+          isReady: latestProbe
+            ? (latestProbe.status === "CONNECTED" || latestProbe.status === "SOURCE_ACCESS_VERIFIED" || latestProbe.status === "LIVE_DATA_VERIFIED")
+            : readiness.ready,
+          readinessReason: effectiveReason,
+          dimensions: effectiveDimensions,
+          diagnostic: effectiveDiagnostic,
+          latestProbe: latestProbe || null,
         };
       })
     );

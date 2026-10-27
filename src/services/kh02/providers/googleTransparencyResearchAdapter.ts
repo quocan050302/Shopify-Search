@@ -229,10 +229,11 @@ export async function discoverGoogleAdsMcpCapabilities(
   clientArg?: GoogleTransparencyMcpClient
 ): Promise<GoogleMcpCapabilities> {
   const discoveredAt = new Date().toISOString();
+  const resolved = resolveGoogleMcpConfig();
   const client = clientArg || createGoogleTransparencyMcpClient({
-    mcpUrl: context.mcpUrl,
-    command: context.command,
-    args: context.args,
+    mcpUrl: context.mcpUrl || resolved.mcpUrl,
+    command: context.command || resolved.command,
+    args: context.args || resolved.args,
   });
 
   try {
@@ -460,6 +461,65 @@ export function normalizeGoogleAdsResponse(
 }
 
 /**
+ * Resolves Google MCP configuration from environment or parameters safely,
+ * stripping outer quotes from executable paths and parsing JSON or bracketed arguments.
+ */
+export function resolveGoogleMcpConfig(): { command?: string; args?: string[]; mcpUrl?: string } {
+  const mcpUrl = process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL || undefined;
+
+  let rawCommand = process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND;
+  let command: string | undefined = undefined;
+  if (rawCommand && typeof rawCommand === "string") {
+    let trimmed = rawCommand.trim();
+    if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    if (trimmed.length > 0) command = trimmed;
+  }
+
+  let args: string[] | undefined = undefined;
+  const rawArgs = process.env.GOOGLE_TRANSPARENCY_MCP_ARGS;
+  if (rawArgs && typeof rawArgs === "string") {
+    const trimmed = rawArgs.trim();
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        args = parsed.map((item) => {
+          let s = String(item).trim();
+          if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+            s = s.slice(1, -1).trim();
+          }
+          return s;
+        });
+      } else if (typeof parsed === "string") {
+        let s = parsed.trim();
+        if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+          s = s.slice(1, -1).trim();
+        }
+        args = [s];
+      }
+    } catch {
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const cleaned = trimmed.slice(1, -1).replace(/'/g, '"');
+          const parsed = JSON.parse(`[${cleaned}]`);
+          if (Array.isArray(parsed)) args = parsed.map(String);
+        } catch {}
+      }
+      if (!args && trimmed.length > 0) {
+        let clean = trimmed;
+        if ((clean.startsWith("'") && clean.endsWith("'")) || (clean.startsWith('"') && clean.endsWith('"'))) {
+          clean = clean.slice(1, -1).trim();
+        }
+        args = [clean];
+      }
+    }
+  }
+
+  return { command, args, mcpUrl };
+}
+
+/**
  * Creates a Google Ads Transparency MCP client supporting stdio or HTTP MCP gateway.
  */
 export function createGoogleTransparencyMcpClient(config?: {
@@ -467,9 +527,10 @@ export function createGoogleTransparencyMcpClient(config?: {
   command?: string;
   args?: string[];
 }): GoogleTransparencyMcpClient {
-  const mcpUrl = config?.mcpUrl || process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL;
-  const command = config?.command || process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND;
-  const args = config?.args || (process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : []);
+  const resolved = resolveGoogleMcpConfig();
+  const mcpUrl = config?.mcpUrl || resolved.mcpUrl;
+  const command = config?.command || resolved.command;
+  const args = config?.args || resolved.args || [];
 
   let mcpClient: Client | null = null;
   let transport: StdioClientTransport | null = null;

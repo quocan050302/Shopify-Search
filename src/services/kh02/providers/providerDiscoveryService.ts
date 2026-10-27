@@ -16,7 +16,10 @@ import {
 } from "../types";
 import { prisma } from "@/lib/db";
 import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
-import { discoverGoogleAdsMcpCapabilities } from "./googleTransparencyResearchAdapter";
+import {
+  discoverGoogleAdsMcpCapabilities,
+  resolveGoogleMcpConfig,
+} from "./googleTransparencyResearchAdapter";
 import { fetchHasDataCreditStatus } from "./hasDataCreditService";
 import { buildAuthorizedAdWhere, buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 
@@ -220,10 +223,9 @@ export async function probeKH02ProviderCapabilities(
     }
 
     case "GOOGLE_ADS": {
+      const googleMcpConfig = resolveGoogleMcpConfig();
       const hasEndpoint = Boolean(
-        process.env.GOOGLE_TRANSPARENCY_MCP_URL ||
-        process.env.GOOGLE_ADS_MCP_URL ||
-        process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND
+        googleMcpConfig.mcpUrl || googleMcpConfig.command
       );
 
       let transportConnected = false;
@@ -235,9 +237,9 @@ export async function probeKH02ProviderCapabilities(
       } else {
         try {
           const caps = await discoverGoogleAdsMcpCapabilities({
-            mcpUrl: process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL,
-            command: process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND,
-            args: process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : undefined,
+            mcpUrl: googleMcpConfig.mcpUrl,
+            command: googleMcpConfig.command,
+            args: googleMcpConfig.args,
           });
           transportConnected = caps.transportConnected;
           supportedTools = caps.toolsDiscovered.map((t) => t.name);

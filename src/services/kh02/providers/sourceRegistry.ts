@@ -125,7 +125,31 @@ import {
 } from "./hasDataCreditService";
 import {
   discoverGoogleAdsMcpCapabilities,
+  resolveGoogleMcpConfig,
 } from "./googleTransparencyResearchAdapter";
+
+/**
+ * Strips secrets, API tokens, and cookies from diagnostic error messages and log outputs.
+ */
+export function sanitizeSecretPatterns(text: string): string {
+  if (!text || typeof text !== "string") return "";
+  return text
+    .replace(/(AQ\.[A-Za-z0-9_-]{20,})/g, "[REDACTED_TOKEN]")
+    .replace(/(Bearer\s+)[A-Za-z0-9._~+/-]+=*/gi, "$1[REDACTED]")
+    .replace(/(session_id|sessionid|cookie|token|key|secret)=[^;&\s]+/gi, "$1=[REDACTED]")
+    .replace(/(APIFY_TOKEN|HASDATA_API_KEY|SERPAPI_API_KEY|GEMINI_API_KEY|ADMIN_API_KEY)=[^\s]+/gi, "$1=[REDACTED]");
+}
+
+// In-memory cache for latest probe results by source (truthful runtime diagnostics)
+const latestProbesBySource = new Map<IntelligenceSource, SourceDiagnosticResult>();
+
+export function recordLatestProbe(source: IntelligenceSource, result: SourceDiagnosticResult): void {
+  latestProbesBySource.set(source, result);
+}
+
+export function getLatestProbe(source: IntelligenceSource): SourceDiagnosticResult | undefined {
+  return latestProbesBySource.get(source);
+}
 
 export interface SourceDiagnosticResult {
   source: string;
@@ -523,10 +547,9 @@ export async function diagnoseKH02Source(
       }
 
       // Check if MCP URL or stdio command is configured
+      const googleMcpConfig = resolveGoogleMcpConfig();
       const hasEndpoint = Boolean(
-        process.env.GOOGLE_TRANSPARENCY_MCP_URL ||
-        process.env.GOOGLE_ADS_MCP_URL ||
-        process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND
+        googleMcpConfig.mcpUrl || googleMcpConfig.command
       );
 
       if (!hasEndpoint) {
@@ -589,14 +612,14 @@ export async function diagnoseKH02Source(
       let transportStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = "NOT_TESTED";
       let supportedOperationsVerified = false;
       let status = "CONFIGURED";
-      let reason = "Google Ads Transparency MCP endpoint configured.";
+      let reason = "Google Ads Transparency MCP endpoint configured (Connection not tested).";
 
       if (context?.checkLiveTransport) {
         try {
           const caps = await discoverGoogleAdsMcpCapabilities({
-            mcpUrl: process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL,
-            command: process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND,
-            args: process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : undefined,
+            mcpUrl: googleMcpConfig.mcpUrl,
+            command: googleMcpConfig.command,
+            args: googleMcpConfig.args,
           });
           transportConnected = caps.transportConnected;
           transportStatus = caps.transportConnected ? "CONNECTED" : "TRANSPORT_FAILED";
@@ -611,16 +634,18 @@ export async function diagnoseKH02Source(
             status = "UNSUPPORTED_CAPABILITY";
             reason = `Google Ads Transparency MCP server connected, but advertiser/ads discovery tools were not found among discovered tools (${caps.toolsDiscovered.map((t) => t.name).join(", ")}).`;
           } else {
-            status = "TRANSPORT_FAILED";
-            reason = caps.errorMessage || "Google Ads Transparency MCP server endpoint configured but transport probe failed.";
+            const isTimeout = caps.errorMessage?.toLowerCase().includes("timed out") || caps.errorMessage?.toLowerCase().includes("timeout");
+            status = isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED";
+            reason = sanitizeSecretPatterns(caps.errorMessage || "Google Ads Transparency MCP server endpoint configured but transport probe failed.");
           }
         } catch (mcpErr: any) {
           transportConnected = false;
           transportStatus = "TRANSPORT_FAILED";
           authenticated = false;
           authStatus = "NOT_PROBED";
-          status = "TRANSPORT_FAILED";
-          reason = `Google Ads Transparency MCP server connection failed: ${mcpErr.message || String(mcpErr)}`;
+          const isTimeout = mcpErr.message?.toLowerCase().includes("timed out") || mcpErr.message?.toLowerCase().includes("timeout");
+          status = isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED";
+          reason = sanitizeSecretPatterns(`Google Ads Transparency MCP server connection failed: ${mcpErr.message || String(mcpErr)}`);
         }
       }
 
@@ -815,9 +840,15 @@ export async function testKH02SourceConnection(
       workspaceId: context?.workspaceId,
       checkLiveTransport: true,
     });
-    return await Promise.race([diagPromise, timeoutPromise]);
+    const result = await Promise.race([diagPromise, timeoutPromise]);
+    recordLatestProbe(source, result);
+    return result;
   } catch (err: any) {
-    return {
+    const isTimeout = err?.message?.toLowerCase().includes("timed out") || err?.message?.toLowerCase().includes("timeout");
+    const failureStatus = isTimeout ? "TIMEOUT" : "FAILED";
+    const failureReason = sanitizeSecretPatterns(err?.message || `Connection probe failed for ${source}`);
+
+    const failedResult: SourceDiagnosticResult = {
       source,
       adapterInstalled: true,
       configured: false,
@@ -830,14 +861,14 @@ export async function testKH02SourceConnection(
       lastLiveQueryRecordCount: null,
       currentRunRecordCount: null,
       lastProbeAt: new Date().toISOString(),
-      authStatus: "AUTHENTICATION_FAILED",
+      authStatus: isTimeout ? "NOT_PROBED" : "AUTHENTICATION_FAILED",
       transportStatus: "TRANSPORT_FAILED",
       capabilityStatus: "UNSUPPORTED",
       provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
-      status: "FAILED",
-      reason: err?.message || `Connection probe failed for ${source}`,
-      missingRequirements: ["CONNECTION_FAILED"],
+      status: failureStatus,
+      reason: failureReason,
+      missingRequirements: [isTimeout ? "TIMEOUT" : "CONNECTION_FAILED"],
       dimensions: {
         adapterInstalled: true,
         configured: false,
@@ -847,17 +878,19 @@ export async function testKH02SourceConnection(
         queryExecuted: false,
         sourceDataVerified: false,
         lastLiveQueryAt: null,
-        blockerCode: "TRANSPORT_FAILED",
+        blockerCode: isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED",
         storedRecordCount: 0,
         lastLiveQueryRecordCount: null,
         currentRunRecordCount: null,
         lastSuccessfulLiveQueryAt: null,
         lastProbeAt: new Date().toISOString(),
-        authStatus: "AUTHENTICATION_FAILED",
+        authStatus: isTimeout ? "NOT_PROBED" : "AUTHENTICATION_FAILED",
         transportStatus: "TRANSPORT_FAILED",
         capabilityStatus: "UNSUPPORTED",
       },
     };
+    recordLatestProbe(source, failedResult);
+    return failedResult;
   } finally {
     if (timeoutTimer) clearTimeout(timeoutTimer);
   }
