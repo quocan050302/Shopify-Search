@@ -29,6 +29,7 @@ import {
   Globe,
   KeyRound,
 } from "lucide-react";
+import { ProviderSetupGuide } from "@/components/products/ProviderSetupGuide";
 import { Header } from "@/components/layout/Header";
 import { isStockImage } from "@/services/video/videoSourceResolver";
 
@@ -210,8 +211,30 @@ export default function ProductsPage() {
         if (json.success && Array.isArray(json.data)) {
           setConnectionTestResults(json.data);
           setShowConnectionDetails(true);
+
+          // Update providerStatuses directly with the latest probe results
+          setProviderStatuses((prevStatuses) => {
+            if (!prevStatuses || prevStatuses.length === 0) return prevStatuses;
+            return prevStatuses.map((item) => {
+              const probe = json.data.find((p: any) => p.source === item.source);
+              if (!probe) return item;
+              return {
+                ...item,
+                readiness: probe.status,
+                diagnosticStatus: probe.status,
+                isReady: probe.status === "CONNECTED" || probe.status === "SOURCE_ACCESS_VERIFIED" || probe.status === "LIVE_DATA_VERIFIED",
+                readinessReason: probe.reason,
+                dimensions: probe.dimensions || item.dimensions,
+                diagnostic: {
+                  ...item.diagnostic,
+                  ...probe,
+                  dimensions: probe.dimensions || item.diagnostic?.dimensions,
+                },
+                latestProbe: probe,
+              };
+            });
+          });
         }
-        await fetchProviderStatuses();
       }
     } catch (err) {
       console.error("Failed to test source connections:", err);
@@ -448,18 +471,53 @@ export default function ProductsPage() {
   }, []);
 
   const getSourceBadge = (sourceKey: string, defaultLabel: string) => {
+    const probe = connectionTestResults?.find((p) => p.source === sourceKey);
     const live = providerStatuses.find((p) => p.source === sourceKey);
-    const status = live?.diagnosticStatus || live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
-    const reason = live?.readinessReason || live?.diagnostic?.reason || "";
+    const status = probe?.status || live?.diagnosticStatus || live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
+    const reason = probe?.reason || live?.readinessReason || live?.diagnostic?.reason || "";
 
-    if (status === "LIVE_DATA_VERIFIED" || status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
+    if (status === "TIMEOUT") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-950/70 border border-rose-500/40 text-rose-300 text-[11px] font-medium"
+          title={reason || "Connection probe timed out"}
+        >
+          <AlertTriangle className="h-3 w-3 text-rose-400" />
+          {defaultLabel ? `${defaultLabel}: Timeout` : "Timeout"}
+        </span>
+      );
+    }
+    if (status === "FAILED" || status === "TRANSPORT_FAILED" || status === "CONNECTION_FAILED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-950/70 border border-rose-500/40 text-rose-300 text-[11px] font-medium"
+          title={reason || "Connection probe failed"}
+        >
+          <AlertTriangle className="h-3 w-3 text-rose-400" />
+          {defaultLabel ? `${defaultLabel}: Failed` : "Failed"}
+        </span>
+      );
+    }
+    if (status === "CONNECTED" || status === "TRANSPORT_CONNECTED") {
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium"
+          title={reason || "Connected: Live connection verified"}
+        >
+          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+          {defaultLabel ? `${defaultLabel}: Connected` : "Connected"}
+        </span>
+      );
+    }
+    if (status === "LIVE_DATA_VERIFIED" || status === "SOURCE_DATA_VERIFIED" || status === "SOURCE_ACCESS_VERIFIED" || status === "PASSED") {
+      const label = sourceKey === "META_ADS" ? "Collector Connected" : "Live Verified";
       return (
         <span
           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium"
           title={reason || "Verified: Valid ad observations retrieved"}
         >
           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel ? `${defaultLabel}: Live Verified` : "Live Verified"}
+          {defaultLabel ? `${defaultLabel}: ${label}` : label}
         </span>
       );
     }
@@ -507,15 +565,11 @@ export default function ProductsPage() {
         </span>
       );
     }
-    if (status === "SOURCE_ACCESS_VERIFIED" || status === "CONNECTED" || status === "TRANSPORT_CONNECTED") {
-      const label = sourceKey === "META_ADS" ? "Collector Connected" : "Source Available";
+    if (status === "CONFIGURED") {
       return (
-        <span
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/50 border border-emerald-600/30 text-emerald-300 text-[11px] font-medium"
-          title={reason || "Source Available: Indexed in database & collector reachable"}
-        >
-          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel ? `${defaultLabel}: ${label}` : label}
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium" title={reason || "Configured; connection not tested"}>
+          <Clock className="h-3 w-3 text-blue-400" />
+          {defaultLabel ? `${defaultLabel}: Configured (Not Tested)` : "Configured (Not Tested)"}
         </span>
       );
     }
@@ -725,47 +779,58 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {providerStatuses.map((sourceItem) => {
-                  const diag = sourceItem.diagnostic || {};
-                  const dims = sourceItem.dimensions || diag.dimensions || {};
-                  const cost = diag.estimatedQueryCost || {};
+                  const latestProbe = connectionTestResults?.find((t) => t.source === sourceItem.source) || (sourceItem as any).latestProbe;
+                  const diag = latestProbe || sourceItem.diagnostic || {};
+                  const dims = latestProbe?.dimensions || sourceItem.dimensions || diag.dimensions || {};
+                  const cost = diag.estimatedQueryCost || sourceItem.diagnostic?.estimatedQueryCost || {};
                   const isMeta = sourceItem.source === "META_ADS";
                   const isGoogle = sourceItem.source === "GOOGLE_ADS";
                   const isDemand = sourceItem.source === "DEMAND_HISTORY";
                   const isOrganic = sourceItem.source === "TIKTOK_ORGANIC";
                   const isTikTokAds = sourceItem.source === "TIKTOK_ADS";
+                  const sourceConfigured = isDemand ? diag.upstreamConfigured === true : diag.configured;
 
                   // Check if tested just now
-                  const justTested = connectionTestResults?.some((t) => t.source === sourceItem.source);
+                  const justTested = Boolean(latestProbe);
 
                   // Truthful auth rendering
                   let authDisplay = "Not Tested";
                   let authClass = "text-slate-400";
-                  if (dims.authStatus === "AUTH_NOT_REQUIRED" || isMeta || isGoogle || (isDemand && !process.env.SERPAPI_API_KEY)) {
+                  const aStatus = latestProbe?.authStatus || dims.authStatus;
+                  if (aStatus === "AUTH_NOT_REQUIRED" || (dims.authenticated === null && (isMeta || isGoogle || isDemand))) {
                     authDisplay = isMeta ? "Not Required (Local stdio)" : isGoogle ? "Not Required (MCP stdio)" : isDemand ? "Not Required (Engine)" : "Not Required";
                     authClass = "text-slate-300";
-                  } else if (dims.authStatus === "CREDENTIALS_REQUIRED" || (!diag.configured && (isOrganic || isTikTokAds))) {
+                  } else if (aStatus === "CREDENTIALS_REQUIRED" || (!diag.configured && (isOrganic || isTikTokAds))) {
                     authDisplay = "Credentials Required";
                     authClass = "text-amber-400 font-medium";
-                  } else if (dims.authStatus === "AUTHENTICATION_FAILED" || (diag.configured && dims.authenticated === false)) {
+                  } else if (aStatus === "AUTHENTICATION_FAILED" || dims.authenticated === false || latestProbe?.status === "FAILED") {
                     authDisplay = "Failed (Check Key)";
                     authClass = "text-rose-400 font-medium";
-                  } else if (dims.authenticated === true || dims.authStatus === "AUTHENTICATED") {
+                  } else if (dims.authenticated === true || aStatus === "AUTHENTICATED") {
                     authDisplay = "Authenticated";
-                    authClass = "text-emerald-400";
+                    authClass = "text-emerald-400 font-medium";
                   }
 
-                  // Truthful transport rendering
+                  // Truthful transport rendering: Connected, Failed, Timeout, Not Configured, Not Tested
                   let transportDisplay = "Not Tested";
                   let transportClass = "text-slate-400";
-                  if (!diag.configured) {
-                    transportDisplay = isGoogle ? "Not Configured" : "Not Tested";
-                    transportClass = "text-slate-500";
-                  } else if (dims.transportStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true) {
+                  const tStatus = latestProbe?.status === "TIMEOUT" ? "TIMEOUT" : (dims.transportStatus || latestProbe?.transportStatus);
+
+                  if (tStatus === "TIMEOUT" || latestProbe?.status === "TIMEOUT") {
+                    transportDisplay = "Timeout";
+                    transportClass = "text-rose-400 font-semibold";
+                  } else if (tStatus === "CONNECTED" || tStatus === "TRANSPORT_CONNECTED" || dims.transportConnected === true || (latestProbe && (latestProbe.status === "CONNECTED" || latestProbe.status === "SOURCE_ACCESS_VERIFIED"))) {
                     transportDisplay = "Connected";
-                    transportClass = "text-emerald-400";
-                  } else if (dims.transportStatus === "TRANSPORT_FAILED" || dims.transportConnected === false) {
-                    transportDisplay = "Connection Failed";
-                    transportClass = "text-rose-400";
+                    transportClass = "text-emerald-400 font-medium";
+                  } else if (tStatus === "TRANSPORT_FAILED" || dims.transportConnected === false || latestProbe?.status === "FAILED") {
+                    transportDisplay = "Failed";
+                    transportClass = "text-rose-400 font-medium";
+                  } else if (!diag.configured || tStatus === "NOT_CONFIGURED") {
+                    transportDisplay = "Not Configured";
+                    transportClass = "text-slate-500";
+                  } else {
+                    transportDisplay = "Not Tested";
+                    transportClass = "text-slate-400";
                   }
 
                   const storedCount = typeof dims.storedRecordCount === "number" ? dims.storedRecordCount : (typeof diag.recordsReturned === "number" ? diag.recordsReturned : 0);
@@ -790,9 +855,9 @@ export default function ProductsPage() {
 
                       <div className="space-y-1 text-[11px] text-slate-400">
                         <div className="flex justify-between">
-                          <span>Configuration:</span>
-                          <span className={diag.configured ? "text-emerald-400" : "text-amber-400 font-medium"}>
-                            {diag.configured ? "Configured" : "Missing"}
+                          <span>{isDemand ? "Live provider:" : "Configuration:"}</span>
+                          <span className={sourceConfigured ? "text-emerald-400" : "text-amber-400 font-medium"}>
+                            {sourceConfigured ? "Configured" : "Missing"}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -828,7 +893,7 @@ export default function ProductsPage() {
                         <div className="flex justify-between">
                           <span>Query Cost:</span>
                           <span className="text-slate-300">
-                            {cost.isPaid ? `${cost.estimatedCredits || 10} Credits/query` : "Free Zero-Cost"}
+                            {cost.isPaid ? `${cost.estimatedCredits || 10} ${isDemand ? "Searches" : "Credits"}/query` : "Free Zero-Cost"}
                           </span>
                         </div>
                       </div>
@@ -844,6 +909,7 @@ export default function ProductsPage() {
                           Next Step: {diag.requiredAction}
                         </p>
                       )}
+                      <ProviderSetupGuide source={sourceItem.source} />
                     </div>
                   );
                 })}

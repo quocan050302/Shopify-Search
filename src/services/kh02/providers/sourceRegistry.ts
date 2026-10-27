@@ -12,6 +12,7 @@ import {
   IntelligenceQuery,
   ProviderReadinessDimensions,
 } from "../types";
+import { inspectSerpApiAccount } from "../demand/demandProviderRegistry";
 import { getProviderBudget } from "@/services/providers/budgetService";
 import { prisma } from "@/lib/db";
 import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
@@ -124,12 +125,37 @@ import {
 } from "./hasDataCreditService";
 import {
   discoverGoogleAdsMcpCapabilities,
+  resolveGoogleMcpConfig,
 } from "./googleTransparencyResearchAdapter";
+
+/**
+ * Strips secrets, API tokens, and cookies from diagnostic error messages and log outputs.
+ */
+export function sanitizeSecretPatterns(text: string): string {
+  if (!text || typeof text !== "string") return "";
+  return text
+    .replace(/(AQ\.[A-Za-z0-9_-]{20,})/g, "[REDACTED_TOKEN]")
+    .replace(/(Bearer\s+)[A-Za-z0-9._~+/-]+=*/gi, "$1[REDACTED]")
+    .replace(/(session_id|sessionid|cookie|token|key|secret)=[^;&\s]+/gi, "$1=[REDACTED]")
+    .replace(/(APIFY_TOKEN|HASDATA_API_KEY|SERPAPI_API_KEY|GEMINI_API_KEY|ADMIN_API_KEY)=[^\s]+/gi, "$1=[REDACTED]");
+}
+
+// In-memory cache for latest probe results by source (truthful runtime diagnostics)
+const latestProbesBySource = new Map<IntelligenceSource, SourceDiagnosticResult>();
+
+export function recordLatestProbe(source: IntelligenceSource, result: SourceDiagnosticResult): void {
+  latestProbesBySource.set(source, result);
+}
+
+export function getLatestProbe(source: IntelligenceSource): SourceDiagnosticResult | undefined {
+  return latestProbesBySource.get(source);
+}
 
 export interface SourceDiagnosticResult {
   source: string;
   adapterInstalled: boolean;
   configured: boolean;
+  upstreamConfigured?: boolean;
   transportConnected: boolean | null;
   authenticated: boolean | null;
   discoverySupported: boolean | null;
@@ -370,7 +396,7 @@ export async function diagnoseKH02Source(
           reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment. Configuration: Missing, Authentication: Credentials required, Transport: Not tested.",
           missingRequirements: ["HASDATA_API_KEY"],
           dimensions,
-          requiredAction: "Configure HASDATA_API_KEY in environment to enable live video queries.",
+          requiredAction: "Get your own free-tier key at https://app.hasdata.com and set HASDATA_API_KEY. Search costs 10 credits; quota and spend authorization are checked separately.",
           estimatedQueryCost: {
             estimatedCredits: 10,
             isPaid: true,
@@ -521,10 +547,9 @@ export async function diagnoseKH02Source(
       }
 
       // Check if MCP URL or stdio command is configured
+      const googleMcpConfig = resolveGoogleMcpConfig();
       const hasEndpoint = Boolean(
-        process.env.GOOGLE_TRANSPARENCY_MCP_URL ||
-        process.env.GOOGLE_ADS_MCP_URL ||
-        process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND
+        googleMcpConfig.mcpUrl || googleMcpConfig.command
       );
 
       if (!hasEndpoint) {
@@ -570,7 +595,7 @@ export async function diagnoseKH02Source(
           reason: "Google Ads Transparency MCP server is not configured in environment. Configuration: Missing, Transport: Not configured.",
           missingRequirements: ["GOOGLE_TRANSPARENCY_MCP_URL"],
           dimensions,
-          requiredAction: "Configure GOOGLE_TRANSPARENCY_MCP_URL or GOOGLE_TRANSPARENCY_MCP_COMMAND in .env.local.",
+          requiredAction: "Run npm run kh02:setup:free to install the free local Google Ads MCP, or configure GOOGLE_TRANSPARENCY_MCP_URL. Restart web server and worker.",
           estimatedQueryCost: {
             estimatedCredits: 0,
             isPaid: false,
@@ -587,14 +612,14 @@ export async function diagnoseKH02Source(
       let transportStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = "NOT_TESTED";
       let supportedOperationsVerified = false;
       let status = "CONFIGURED";
-      let reason = "Google Ads Transparency MCP endpoint configured.";
+      let reason = "Google Ads Transparency MCP endpoint configured (Connection not tested).";
 
       if (context?.checkLiveTransport) {
         try {
           const caps = await discoverGoogleAdsMcpCapabilities({
-            mcpUrl: process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL,
-            command: process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND,
-            args: process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : undefined,
+            mcpUrl: googleMcpConfig.mcpUrl,
+            command: googleMcpConfig.command,
+            args: googleMcpConfig.args,
           });
           transportConnected = caps.transportConnected;
           transportStatus = caps.transportConnected ? "CONNECTED" : "TRANSPORT_FAILED";
@@ -609,16 +634,18 @@ export async function diagnoseKH02Source(
             status = "UNSUPPORTED_CAPABILITY";
             reason = `Google Ads Transparency MCP server connected, but advertiser/ads discovery tools were not found among discovered tools (${caps.toolsDiscovered.map((t) => t.name).join(", ")}).`;
           } else {
-            status = "TRANSPORT_FAILED";
-            reason = caps.errorMessage || "Google Ads Transparency MCP server endpoint configured but transport probe failed.";
+            const isTimeout = caps.errorMessage?.toLowerCase().includes("timed out") || caps.errorMessage?.toLowerCase().includes("timeout");
+            status = isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED";
+            reason = sanitizeSecretPatterns(caps.errorMessage || "Google Ads Transparency MCP server endpoint configured but transport probe failed.");
           }
         } catch (mcpErr: any) {
           transportConnected = false;
           transportStatus = "TRANSPORT_FAILED";
           authenticated = false;
           authStatus = "NOT_PROBED";
-          status = "TRANSPORT_FAILED";
-          reason = `Google Ads Transparency MCP server connection failed: ${mcpErr.message || String(mcpErr)}`;
+          const isTimeout = mcpErr.message?.toLowerCase().includes("timed out") || mcpErr.message?.toLowerCase().includes("timeout");
+          status = isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED";
+          reason = sanitizeSecretPatterns(`Google Ads Transparency MCP server connection failed: ${mcpErr.message || String(mcpErr)}`);
         }
       }
 
@@ -686,15 +713,28 @@ export async function diagnoseKH02Source(
         }
       } catch {}
 
-      const hasUpstreamApiKey = Boolean(process.env.SERPAPI_API_KEY || process.env.GOOGLE_TRENDS_API_KEY);
-      const upstreamStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = hasUpstreamApiKey ? "NOT_TESTED" : "NOT_CONFIGURED";
-      const authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = hasUpstreamApiKey ? "NOT_PROBED" : "CREDENTIALS_REQUIRED";
+      const hasUpstreamApiKey = Boolean(process.env.SERPAPI_API_KEY?.trim());
+      let upstreamStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = hasUpstreamApiKey ? "NOT_TESTED" : "NOT_CONFIGURED";
+      let authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = hasUpstreamApiKey ? "NOT_PROBED" : "CREDENTIALS_REQUIRED";
+      let accountNote = "";
+      if (hasUpstreamApiKey && context?.checkLiveTransport) {
+        try {
+          const account = await inspectSerpApiAccount(process.env.SERPAPI_API_KEY!.trim());
+          upstreamStatus = "CONNECTED";
+          authStatus = "AUTHENTICATED";
+          accountNote = ` Account verified: ${account.free ? "Free" : "non-Free/unverified plan"}; searches remaining: ${account.remaining ?? "unknown"}. No search executed.`;
+        } catch {
+          upstreamStatus = "TRANSPORT_FAILED";
+          accountNote = " Account verification failed; check key and network. No search executed.";
+        }
+      }
+      const liveConnected = upstreamStatus === "CONNECTED" ? true : upstreamStatus === "TRANSPORT_FAILED" ? false : null;
 
       const dimensions: ProviderReadinessDimensions = {
         adapterInstalled: true,
         configured: true, // Local demand evaluation engine is installed and ready
-        transportConnected: hasUpstreamApiKey ? null : false,
-        authenticated: hasUpstreamApiKey ? null : false,
+        transportConnected: liveConnected,
+        authenticated: authStatus === "AUTHENTICATED" ? true : null,
         supportedOperationsVerified: true, // Evaluation engine algorithms are verified
         queryExecuted: false, // Do not infer from DB count!
         sourceDataVerified: demandCount > 0,
@@ -712,10 +752,11 @@ export async function diagnoseKH02Source(
 
       return {
         source: "DEMAND_HISTORY",
+        upstreamConfigured: hasUpstreamApiKey,
         adapterInstalled: true,
         configured: true,
-        transportConnected: hasUpstreamApiKey ? null : false,
-        authenticated: hasUpstreamApiKey ? null : false,
+        transportConnected: liveConnected,
+        authenticated: authStatus === "AUTHENTICATED" ? true : null,
         discoverySupported: true,
         queryExecuted: false,
         recordsReturned: demandCount,
@@ -729,15 +770,15 @@ export async function diagnoseKH02Source(
         provenanceVerified: demandCount > 0,
         lastCheckedAt,
         status: "ENGINE_READY",
-        reason: `Demand stability policy engine is active (ENGINE_READY). Upstream live provider: ${hasUpstreamApiKey ? "Configured (Not tested)" : "Not configured"}. Workspace stored observations: ${demandCount}. Individual product policy requires 3+ temporal observations across 60+ days.`,
-        missingRequirements: hasUpstreamApiKey ? [] : ["LIVE_TRENDS_PROVIDER_API_KEY"],
+        reason: `Demand stability policy engine is active (ENGINE_READY). Upstream live provider: ${hasUpstreamApiKey ? (upstreamStatus === "CONNECTED" ? "Account verified (no data query)" : "Configured (not verified)") : "Not configured"}. Workspace stored observations: ${demandCount}. Individual product policy requires 3+ temporal observations across 60+ days.${accountNote}`,
+        missingRequirements: hasUpstreamApiKey ? [] : ["SERPAPI_API_KEY"],
         dimensions,
-        requiredAction: demandCount === 0 && !hasUpstreamApiKey ? "Configure SERPAPI_API_KEY / GOOGLE_TRENDS_API_KEY or import product demand observations via CSV." : undefined,
+        requiredAction: demandCount === 0 && !hasUpstreamApiKey ? "Get a Free plan key from https://serpapi.com/manage-api-key and set SERPAPI_API_KEY, or import Google Trends CSV. GOOGLE_TRENDS_API_KEY alone is not implemented." : undefined,
         estimatedQueryCost: {
-          estimatedCredits: 0,
-          isPaid: false,
+          estimatedCredits: hasUpstreamApiKey ? 1 : 0,
+          isPaid: hasUpstreamApiKey,
           knownCost: true,
-          pricingSource: "Internal Demand History & Policy Engine",
+          pricingSource: hasUpstreamApiKey ? "SerpApi: 1 search per product series; verified Free plan quota required" : "Local engine only; no upstream query",
         },
       };
     }
@@ -799,9 +840,15 @@ export async function testKH02SourceConnection(
       workspaceId: context?.workspaceId,
       checkLiveTransport: true,
     });
-    return await Promise.race([diagPromise, timeoutPromise]);
+    const result = await Promise.race([diagPromise, timeoutPromise]);
+    recordLatestProbe(source, result);
+    return result;
   } catch (err: any) {
-    return {
+    const isTimeout = err?.message?.toLowerCase().includes("timed out") || err?.message?.toLowerCase().includes("timeout");
+    const failureStatus = isTimeout ? "TIMEOUT" : "FAILED";
+    const failureReason = sanitizeSecretPatterns(err?.message || `Connection probe failed for ${source}`);
+
+    const failedResult: SourceDiagnosticResult = {
       source,
       adapterInstalled: true,
       configured: false,
@@ -814,14 +861,14 @@ export async function testKH02SourceConnection(
       lastLiveQueryRecordCount: null,
       currentRunRecordCount: null,
       lastProbeAt: new Date().toISOString(),
-      authStatus: "AUTHENTICATION_FAILED",
+      authStatus: isTimeout ? "NOT_PROBED" : "AUTHENTICATION_FAILED",
       transportStatus: "TRANSPORT_FAILED",
       capabilityStatus: "UNSUPPORTED",
       provenanceVerified: false,
       lastCheckedAt: new Date().toISOString(),
-      status: "FAILED",
-      reason: err?.message || `Connection probe failed for ${source}`,
-      missingRequirements: ["CONNECTION_FAILED"],
+      status: failureStatus,
+      reason: failureReason,
+      missingRequirements: [isTimeout ? "TIMEOUT" : "CONNECTION_FAILED"],
       dimensions: {
         adapterInstalled: true,
         configured: false,
@@ -831,17 +878,19 @@ export async function testKH02SourceConnection(
         queryExecuted: false,
         sourceDataVerified: false,
         lastLiveQueryAt: null,
-        blockerCode: "TRANSPORT_FAILED",
+        blockerCode: isTimeout ? "TIMEOUT" : "TRANSPORT_FAILED",
         storedRecordCount: 0,
         lastLiveQueryRecordCount: null,
         currentRunRecordCount: null,
         lastSuccessfulLiveQueryAt: null,
         lastProbeAt: new Date().toISOString(),
-        authStatus: "AUTHENTICATION_FAILED",
+        authStatus: isTimeout ? "NOT_PROBED" : "AUTHENTICATION_FAILED",
         transportStatus: "TRANSPORT_FAILED",
         capabilityStatus: "UNSUPPORTED",
       },
     };
+    recordLatestProbe(source, failedResult);
+    return failedResult;
   } finally {
     if (timeoutTimer) clearTimeout(timeoutTimer);
   }

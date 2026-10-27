@@ -16,7 +16,10 @@ import {
 } from "../types";
 import { prisma } from "@/lib/db";
 import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
-import { discoverGoogleAdsMcpCapabilities } from "./googleTransparencyResearchAdapter";
+import {
+  discoverGoogleAdsMcpCapabilities,
+  resolveGoogleMcpConfig,
+} from "./googleTransparencyResearchAdapter";
 import { fetchHasDataCreditStatus } from "./hasDataCreditService";
 import { buildAuthorizedAdWhere, buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 
@@ -69,13 +72,13 @@ export async function discoverAvailableKH02Providers(
         case "GOOGLE_ADS":
           displayName = "Google Ads Transparency Center";
           if (!readiness.configured) {
-            recommendedAction = "Configure GOOGLE_TRANSPARENCY_MCP_URL or command in .env.local for competitor transparency.";
+            recommendedAction = "Run npm run kh02:setup:free for the free local Google Ads MCP, then restart web server and worker.";
           }
           break;
         case "DEMAND_HISTORY":
           displayName = "Historical Demand & Trend Stability (Google Trends)";
           if (readiness.realRecordsObserved === 0) {
-            recommendedAction = "Import product demand CSV or execute evergreen research to build temporal history.";
+            recommendedAction = "Get a SerpApi Free plan key at https://serpapi.com/manage-api-key, set SERPAPI_API_KEY, or import Google Trends CSV. The local engine does not fetch history.";
           }
           break;
       }
@@ -220,10 +223,9 @@ export async function probeKH02ProviderCapabilities(
     }
 
     case "GOOGLE_ADS": {
+      const googleMcpConfig = resolveGoogleMcpConfig();
       const hasEndpoint = Boolean(
-        process.env.GOOGLE_TRANSPARENCY_MCP_URL ||
-        process.env.GOOGLE_ADS_MCP_URL ||
-        process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND
+        googleMcpConfig.mcpUrl || googleMcpConfig.command
       );
 
       let transportConnected = false;
@@ -235,9 +237,9 @@ export async function probeKH02ProviderCapabilities(
       } else {
         try {
           const caps = await discoverGoogleAdsMcpCapabilities({
-            mcpUrl: process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL,
-            command: process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND,
-            args: process.env.GOOGLE_TRANSPARENCY_MCP_ARGS ? JSON.parse(process.env.GOOGLE_TRANSPARENCY_MCP_ARGS) : undefined,
+            mcpUrl: googleMcpConfig.mcpUrl,
+            command: googleMcpConfig.command,
+            args: googleMcpConfig.args,
           });
           transportConnected = caps.transportConnected;
           supportedTools = caps.toolsDiscovered.map((t) => t.name);
@@ -269,10 +271,10 @@ export async function probeKH02ProviderCapabilities(
     case "DEMAND_HISTORY": {
       return {
         providerId: "DEMAND_HISTORY",
-        accessClass: "ZERO_KEY_AUTHORIZED",
+        accessClass: process.env.SERPAPI_API_KEY?.trim() ? "FREE_API_KEY_REQUIRED" : "MANUAL_IMPORT_ONLY",
         installed: true,
-        configured: true,
-        transportConnected: true,
+        configured: Boolean(process.env.SERPAPI_API_KEY?.trim()),
+        transportConnected: false, // Account and data endpoints have not been probed
         supportedTools: [
           "temporal_demand_analysis",
           "stability_scoring",
@@ -281,9 +283,9 @@ export async function probeKH02ProviderCapabilities(
         supportsUS: true,
         supportsKeywordSearch: true,
         supportsDateFiltering: true,
-        estimatedCostPerQueryCredits: 0,
-        pricingSource: "Internal Demand History & Temporal Stability Policy Engine",
-        blockerReason: null,
+        estimatedCostPerQueryCredits: process.env.SERPAPI_API_KEY?.trim() ? 1 : 0,
+        pricingSource: "Local engine only; SerpApi upstream uses search quota",
+        blockerReason: process.env.SERPAPI_API_KEY?.trim() ? null : "No live demand provider configured. Set SERPAPI_API_KEY or import Trends CSV.",
       };
     }
 
@@ -401,6 +403,8 @@ async function evaluateProviderReadiness(
       ? "MISSING_CREDENTIALS"
       : capabilities.providerId === "TIKTOK_ADS" && !capabilities.configured
       ? "NO_AUTHORIZED_US_AD_PROVIDER"
+      : capabilities.providerId === "DEMAND_HISTORY" && !capabilities.configured
+      ? "UPSTREAM_PROVIDER_NOT_CONFIGURED"
       : capabilities.providerId === "GOOGLE_ADS" && !capabilities.configured
       ? "MCP_NOT_CONFIGURED"
       : "CONFIGURATION_REQUIRED"
