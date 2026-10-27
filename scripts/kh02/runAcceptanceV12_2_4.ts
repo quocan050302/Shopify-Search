@@ -136,11 +136,32 @@ export function evaluateGateG10(allCandidates: any[], context?: GateG10Context):
 
   for (const item of allCandidates) {
     const cand = item?.candidate || item || {};
+    const candRunId = cand.runId || cand.researchRunId;
+    if (context?.runId && candRunId && candRunId !== context.runId) {
+      orphanAssociationsCount++;
+      violationDetails.push(`Candidate '${cand.title || cand.candidateId}' linked to foreign runId '${candRunId}' (expected '${context.runId}')`);
+    }
+    const candWsId = cand.workspaceId;
+    if (context?.workspaceId && candWsId && candWsId !== context.workspaceId) {
+      orphanAssociationsCount++;
+      violationDetails.push(`Candidate '${cand.title || cand.candidateId}' linked to foreign workspaceId '${candWsId}' (expected '${context.workspaceId}')`);
+    }
+
     const obsList = Array.isArray(cand?.sourceObservations) ? cand.sourceObservations : [];
     for (const obs of obsList) {
       if (obs?.source === "GOOGLE_ADS") {
         totalGoogleObsCount++;
         const sId = obs.sourceRecordId;
+
+        // Context validation on observation
+        if (context?.runId && obs.runId && obs.runId !== context.runId) {
+          nonExistentRecordCount++;
+          violationDetails.push(`Google observation '${sId}' has foreign runId '${obs.runId}' (expected '${context.runId}')`);
+        }
+        if (context?.workspaceId && obs.workspaceId && obs.workspaceId !== context.workspaceId) {
+          nonExistentRecordCount++;
+          violationDetails.push(`Google observation '${sId}' has foreign workspaceId '${obs.workspaceId}' (expected '${context.workspaceId}')`);
+        }
 
         // 1. Source record verification: must have valid non-empty source record id
         if (!sId || typeof sId !== "string" || sId.trim() === "" || sId.startsWith("orphan_")) {
@@ -193,6 +214,8 @@ export function evaluateGateG10(allCandidates: any[], context?: GateG10Context):
       brandLevelAsSkuViolationsCount,
       ungroundedMatchCount,
       queryExecuted: Boolean(context?.googleQueryExecuted),
+      runIdVerified: Boolean(context?.runId),
+      workspaceIdVerified: Boolean(context?.workspaceId),
       reconciled: passed,
     },
     reason: passed
@@ -278,16 +301,28 @@ export function evaluateGateD07(dbResultJson: any, httpResultJson: any): Accepta
           platform: o?.platform ? String(o.platform) : null,
         })).sort((a: any, b: any) => `${a.source}:${a.sourceRecordId}`.localeCompare(`${b.source}:${b.sourceRecordId}`));
 
+        const explicitRank = typeof item?.rank === "number"
+          ? item.rank
+          : (typeof cand?.rank === "number" ? cand.rank : null);
+
         return {
           group: g,
           candidateId: String(cand.candidateId || cand.id || `unknown_${idx}`),
-          rank: typeof cand.rank === "number" ? cand.rank : idx + 1,
+          rank: explicitRank !== null ? explicitRank : idx + 1,
           opportunityScore: typeof score.opportunityScore === "number" ? score.opportunityScore : null,
           evidenceConfidence: typeof score.evidenceConfidence === "number" ? score.evidenceConfidence : (typeof cand.confidence === "number" ? cand.confidence : null),
           demandClass: score.demandClass || cand.demandClass || null,
           sourceAssociations,
         };
       });
+
+      if (g === "topThree") {
+        for (const rec of res[g]) {
+          if (typeof rec.rank !== "number" || rec.rank < 1) {
+            diffs.push(`Candidate '${rec.candidateId}' in topThree missing valid rank`);
+          }
+        }
+      }
     }
     return res;
   };
@@ -438,6 +473,7 @@ export function evaluateSourceDbReconciliation(
   persistedRecordsCount: number;
   acceptedCount: number;
   updatedCount: number;
+  deduplicatedCount: number;
   rejectedCount: number;
   unexplainedLostCount: number;
   exactMatch: boolean;
@@ -465,6 +501,7 @@ export function evaluateSourceDbReconciliation(
   const rejectionAudit: Array<{ rawId: string; reason: string }> = [];
   let acceptedCount = 0;
   let updatedCount = 0;
+  let deduplicatedCount = 0;
   let rejectedCount = 0;
   let unexplainedLostCount = 0;
 
@@ -478,6 +515,9 @@ export function evaluateSourceDbReconciliation(
       }
     } else if (trace.decision === "UPDATED" || trace.decision === "DUPLICATE") {
       updatedCount++;
+      if (trace.decision === "DUPLICATE") {
+        deduplicatedCount++;
+      }
       const pid = trace.persistedId || trace.rawId;
       if (pid && !dbRecordIds.has(pid)) {
         missingInDb.push(pid);
@@ -485,9 +525,13 @@ export function evaluateSourceDbReconciliation(
       }
     } else if (trace.decision === "REJECTED") {
       rejectedCount++;
-      if (!trace.rejectionReason || trace.rejectionReason.trim() === "") {
+      if (
+        !trace.rejectionReason ||
+        trace.rejectionReason.trim() === "" ||
+        trace.rejectionReason.startsWith("UNEXPLAINED")
+      ) {
         unexplainedLostCount++;
-        rejectionAudit.push({ rawId: trace.rawId, reason: "MISSING_REJECTION_REASON" });
+        rejectionAudit.push({ rawId: trace.rawId, reason: trace.rejectionReason || "MISSING_REJECTION_REASON" });
       } else {
         rejectionAudit.push({ rawId: trace.rawId, reason: trace.rejectionReason });
       }
@@ -498,7 +542,7 @@ export function evaluateSourceDbReconciliation(
       }
     } else {
       unexplainedLostCount++;
-      missingInDb.push(`Unknown ingestion decision for raw record: ${trace.rawId}`);
+      missingInDb.push(`Unknown or unaccounted ingestion decision for raw record: ${trace.rawId}`);
     }
   }
 
@@ -520,6 +564,7 @@ export function evaluateSourceDbReconciliation(
     persistedRecordsCount: dbRecords.length,
     acceptedCount,
     updatedCount,
+    deduplicatedCount,
     rejectedCount,
     unexplainedLostCount,
     exactMatch,
@@ -531,6 +576,54 @@ export function evaluateSourceDbReconciliation(
       ? null
       : `Source to Database Reconciliation Mismatch: lost=${unexplainedLostCount}, missing=[${missingInDb.join(", ")}], extra=[${extraInDb.join(", ")}]`,
   };
+}
+
+export function resolveRunUpstreamTraces(
+  auditTraces: UpstreamRecordTrace[] | null | undefined,
+  upstreamCount: number,
+  persistedIds: string[]
+): {
+  traces: UpstreamRecordTrace[];
+  isAudited: boolean;
+  unaccountedCount: number;
+} {
+  const traces: UpstreamRecordTrace[] = [];
+  const isAudited = Array.isArray(auditTraces) && auditTraces.length > 0;
+  let unaccountedCount = 0;
+
+  if (isAudited) {
+    traces.push(...auditTraces!);
+    if (upstreamCount > traces.length) {
+      unaccountedCount = upstreamCount - traces.length;
+      for (let i = 0; i < unaccountedCount; i++) {
+        traces.push({
+          rawId: `unaccounted_upstream_${i + 1}`,
+          decision: "UNKNOWN" as any,
+          rejectionReason: "UNEXPLAINED_LOST_BEFORE_INGESTION",
+        });
+      }
+    }
+  } else {
+    for (const id of persistedIds) {
+      traces.push({
+        rawId: id,
+        decision: "ACCEPTED",
+        persistedId: id,
+      });
+    }
+    if (upstreamCount > persistedIds.length) {
+      unaccountedCount = upstreamCount - persistedIds.length;
+      for (let i = 0; i < unaccountedCount; i++) {
+        traces.push({
+          rawId: `unaudited_upstream_${i + 1}`,
+          decision: "UNKNOWN" as any,
+          rejectionReason: "UNEXPLAINED_LOST_WITHOUT_AUDIT",
+        });
+      }
+    }
+  }
+
+  return { traces, isAudited, unaccountedCount };
 }
 
 export function evaluateHttpBrowserReconciliation(
@@ -603,23 +696,65 @@ export function evaluateHttpBrowserReconciliation(
     }
   }
 
-  // 3. Compare scores and confidence if available on objects
+  // 3. Compare scores, ranks, and confidence if available on objects
   if (Array.isArray(browserRendered) && typeof browserRendered[0] === "object") {
     const renderedMap = new Map<string, any>();
     for (const b of browserRendered) {
       if (b && typeof b === "object") renderedMap.set(b.candidateId, b);
     }
-    for (const exp of expectedList) {
+    for (let idx = 0; idx < expectedList.length; idx++) {
+      const exp = expectedList[idx];
       if (typeof exp === "object") {
         const cand = exp?.candidate || exp || {};
         const score = exp?.score || {};
         const cid = String(cand.candidateId || cand.id || "");
         const rend = renderedMap.get(cid);
         if (rend) {
-          if (typeof score.opportunityScore === "number" && typeof rend.score === "number") {
-            if (score.opportunityScore !== rend.score) {
-              diffs.push(`Score mismatch for '${cid}': HTTP=${score.opportunityScore} vs DOM=${rend.score}`);
+          // Compare score
+          const expectedScore = typeof score.opportunityScore === "number"
+            ? score.opportunityScore
+            : (typeof exp.opportunityScore === "number" ? exp.opportunityScore : null);
+          const renderedScore = typeof rend.score === "number"
+            ? rend.score
+            : (typeof rend.opportunityScore === "number" ? rend.opportunityScore : null);
+
+          if (expectedScore !== null) {
+            if (renderedScore === null || isNaN(renderedScore)) {
+              diffs.push(`Score missing on DOM for '${cid}': expected ${expectedScore}`);
+            } else if (expectedScore !== renderedScore) {
+              diffs.push(`Score mismatch for '${cid}': HTTP=${expectedScore} vs DOM=${renderedScore}`);
             }
+          }
+
+          // Compare confidence
+          const expectedConfidence = typeof score.evidenceConfidence === "number"
+            ? score.evidenceConfidence
+            : (cand.confidence !== undefined ? cand.confidence : (exp.confidence !== undefined ? exp.confidence : null));
+          const renderedConfidence = rend.confidence !== undefined ? rend.confidence : rend.evidenceConfidence;
+
+          if (expectedConfidence !== null) {
+            if (renderedConfidence === undefined || renderedConfidence === null) {
+              diffs.push(`Confidence missing on DOM for '${cid}': expected ${expectedConfidence}`);
+            } else {
+              const expectedStr = String(expectedConfidence).trim();
+              const renderedStr = String(renderedConfidence).trim();
+              const expectedNum = parseFloat(expectedStr);
+              const renderedNum = parseFloat(renderedStr);
+              if (!isNaN(expectedNum) && !isNaN(renderedNum)) {
+                if (expectedNum !== renderedNum) {
+                  diffs.push(`Confidence mismatch for '${cid}': HTTP=${expectedStr} vs DOM=${renderedStr}`);
+                }
+              } else if (expectedStr !== renderedStr) {
+                diffs.push(`Confidence mismatch for '${cid}': HTTP=${expectedStr} vs DOM=${renderedStr}`);
+              }
+            }
+          }
+
+          // Compare rank if available
+          const expectedRank = typeof exp.rank === "number" ? exp.rank : (typeof cand.rank === "number" ? cand.rank : idx + 1);
+          const renderedRank = typeof rend.rank === "number" ? rend.rank : null;
+          if (renderedRank !== null && expectedRank !== renderedRank) {
+            diffs.push(`Rank mismatch for '${cid}': HTTP=${expectedRank} vs DOM=${renderedRank}`);
           }
         }
       }
@@ -628,8 +763,11 @@ export function evaluateHttpBrowserReconciliation(
 
   // 4. Reload consistency
   let reloadConsistent = true;
-  if (postReloadCards.length > 0) {
-    if (postReloadIds.length !== renderedIds.length) {
+  if (Array.isArray(postReloadInput)) {
+    if (expectedIds.length > 0 && postReloadCards.length === 0) {
+      reloadConsistent = false;
+      diffs.push(`Post-reload cards is empty [] while expected ${expectedIds.length} cards`);
+    } else if (postReloadIds.length !== renderedIds.length) {
       reloadConsistent = false;
       diffs.push(`Post-reload count mismatch: pre-reload ${renderedIds.length} vs post-reload ${postReloadIds.length}`);
     } else {
@@ -637,6 +775,24 @@ export function evaluateHttpBrowserReconciliation(
         if (renderedIds[i] !== postReloadIds[i]) {
           reloadConsistent = false;
           diffs.push(`Post-reload ID mismatch at index ${i}: pre='${renderedIds[i]}' vs post='${postReloadIds[i]}'`);
+        }
+      }
+      if (typeof postReloadCards[0] === "object") {
+        const postMap = new Map<string, any>();
+        for (const p of postReloadCards) {
+          if (p && typeof p === "object") postMap.set(p.candidateId, p);
+        }
+        for (const pre of (Array.isArray(browserRendered) ? browserRendered : [])) {
+          if (pre && typeof pre === "object") {
+            const cid = pre.candidateId;
+            const post = postMap.get(cid);
+            if (post) {
+              if (typeof pre.score === "number" && typeof post.score === "number" && pre.score !== post.score) {
+                reloadConsistent = false;
+                diffs.push(`Post-reload score mismatch for '${cid}': pre=${pre.score} vs post=${post.score}`);
+              }
+            }
+          }
         }
       }
     }
@@ -652,7 +808,7 @@ export function evaluateHttpBrowserReconciliation(
     }
   }
 
-  const exactMatch = diffs.length === 0 && (postReloadCards.length === 0 || reloadConsistent);
+  const exactMatch = diffs.length === 0 && (Array.isArray(postReloadInput) ? reloadConsistent : true);
 
   return {
     exactMatch,
@@ -1624,22 +1780,24 @@ async function main() {
   // 9. Phase 7: Exact Multi-Layer Reconciliation
   console.log("\n[Phase 7] Executing Exact Multi-Layer Reconciliation...");
 
-  // Layer 1: Source to Database exact set reconciliation (Expected from upstream traces, NOT persisted IDs!)
-  const upstreamTraces: UpstreamRecordTrace[] = runSourceRecordIds.map((id) => ({
-    rawId: id,
-    decision: "ACCEPTED" as const,
-    persistedId: id,
-  }));
-  if (metaUpstreamReturned > runSourceRecordIds.length) {
-    const diffCount = metaUpstreamReturned - runSourceRecordIds.length;
-    for (let i = 0; i < diffCount; i++) {
-      upstreamTraces.push({
-        rawId: `meta_upstream_filtered_${i + 1}`,
-        decision: "REJECTED",
-        rejectionReason: "AD_OUTSIDE_LOOKBACK_WINDOW_OR_DUPLICATE",
-      });
-    }
+  // Layer 1: Source to Database exact set reconciliation (Expected from independent upstream audit traces, NOT fabricated IDs!)
+  let rawAuditTraces: UpstreamRecordTrace[] = [];
+  if (Array.isArray(dbLiveResult?.providerTelemetry?.META_ADS?.auditTraces)) {
+    rawAuditTraces = dbLiveResult.providerTelemetry.META_ADS.auditTraces;
+  } else if (discRun?.queryConfigJson) {
+    try {
+      const parsedConfig = JSON.parse(discRun.queryConfigJson);
+      if (Array.isArray(parsedConfig?.auditTraces)) {
+        rawAuditTraces = parsedConfig.auditTraces;
+      }
+    } catch {}
   }
+
+  const { traces: upstreamTraces, isAudited, unaccountedCount } = resolveRunUpstreamTraces(
+    rawAuditTraces.length > 0 ? rawAuditTraces : null,
+    metaUpstreamReturned,
+    runSourceRecordIds
+  );
 
   const sourceDbReconcile = evaluateSourceDbReconciliation(
     liveRunId,
@@ -2111,6 +2269,69 @@ async function main() {
         return ws404Passed && wsNoAutoCreatePassed;
       },
     },
+    {
+      mutationId: "MUT_D07_ITEM_RANK_MUTATION_DETECTED",
+      description: "Fail D07 when topThree item rank changes (e.g. 1 to 99) even if candidate is identical",
+      test: () => {
+        const item = {
+          candidate: { candidateId: "c1" },
+          rank: 1,
+          score: { opportunityScore: 88, evidenceConfidence: 80 },
+        };
+        const gate = evaluateGateD07(
+          { topThree: [item] },
+          { topThree: [{ ...item, rank: 99 }] }
+        );
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("rank changed");
+      },
+    },
+    {
+      mutationId: "MUT_HTTP_BROWSER_CONFIDENCE_MUTATION_DETECTED",
+      description: "Fail HTTP->Browser reconciliation when candidate confidence on DOM is 'WRONG' or mismatched",
+      test: () => {
+        const httpResult = {
+          topThree: [{ candidate: { candidateId: "c1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+        };
+        const browserCards = [{ candidateId: "c1", score: 88, confidence: "WRONG" }];
+        const rec = evaluateHttpBrowserReconciliation(httpResult, browserCards, browserCards, false);
+        return rec.exactMatch === false && (rec.reason || "").includes("Confidence mismatch");
+      },
+    },
+    {
+      mutationId: "MUT_HTTP_BROWSER_POST_RELOAD_EMPTY_DETECTED",
+      description: "Fail HTTP->Browser reconciliation when pre-reload has cards but postReloadCards is empty []",
+      test: () => {
+        const httpResult = {
+          topThree: [{ candidate: { candidateId: "c1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+        };
+        const preReload = [{ candidateId: "c1", score: 88, confidence: 80 }];
+        const postReload: any[] = [];
+        const rec = evaluateHttpBrowserReconciliation(httpResult, preReload, postReload, false);
+        return rec.exactMatch === false && rec.reloadConsistent === false && (rec.reason || "").includes("Post-reload");
+      },
+    },
+    {
+      mutationId: "MUT_HTTP_BROWSER_POST_RELOAD_SCORE_MUTATION_DETECTED",
+      description: "Fail HTTP->Browser reconciliation when card score mutates after page reload",
+      test: () => {
+        const httpResult = {
+          topThree: [{ candidate: { candidateId: "c1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+        };
+        const preReload = [{ candidateId: "c1", score: 88, confidence: 80 }];
+        const postReload = [{ candidateId: "c1", score: 40, confidence: 80 }];
+        const rec = evaluateHttpBrowserReconciliation(httpResult, preReload, postReload, false);
+        return rec.exactMatch === false && rec.reloadConsistent === false && (rec.reason || "").includes("score mismatch");
+      },
+    },
+    {
+      mutationId: "MUT_SOURCE_DB_UNACCOUNTED_UPSTREAM_RECORD_DETECTED",
+      description: "Fail Source->DB reconciliation when upstream count exceeds DB without audit rejection trace",
+      test: () => {
+        const { traces, unaccountedCount } = resolveRunUpstreamTraces([], 2, ["rec_1"]);
+        const rec = evaluateSourceDbReconciliation("test_run", traces, [{ id: "rec_1" }]);
+        return unaccountedCount === 1 && rec.exactMatch === false && rec.unexplainedLostCount > 0;
+      },
+    },
   ];
 
   const mutationResults = falsePassMutations.map((m) => {
@@ -2142,12 +2363,12 @@ async function main() {
   // 11. Phase 8: Dynamic Release Gate Calculations (Zero Hardcoded PASS/BLOCKED)
   console.log("\n[Phase 8] Computing Dynamic Release Gate Results (Zero Hardcoded PASS/BLOCKED)...");
 
-  const validCreativeIds = new Set(googleCreatives.map((c) => c.creativeId));
+  const validCreativeIds = new Set(googleEnrichmentCreatives.map((c) => c.creativeId));
   const g10GateResult = evaluateGateG10(allLiveCandidates, {
     validCreativeIds,
     runId: liveRunId,
     workspaceId: testWorkspace,
-    googleQueryExecuted: googleCreativeQueryExecuted,
+    googleQueryExecuted: googleEnrichmentQueryExecuted,
   });
   const d09GateResult = evaluateGateD09(dbLiveResult);
 
@@ -2710,7 +2931,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 **REPOSITORY:** quocan050302/Shopify-Search  
 **WORKING BRANCH:** ${gitBranch}  
-**STARTING SHA:** 5f8dc4675a4b1332eba28b32b18e3f9d8022f4d4  
+**STARTING SHA:** 5bb1ec3e563558060f392e59d3820e398d810f5d  
 **CURRENT HEAD:** ${gitHead}  
 **QA MERGED:** NO  
 
@@ -2718,7 +2939,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 ### 1. BASELINE
 - Previous version: KH-02 V12.2.3
-- Baseline reviewed commit: \`5f8dc4675a4b1332eba28b32b18e3f9d8022f4d4\`
+- Baseline reviewed commit: \`5bb1ec3e563558060f392e59d3820e398d810f5d\`
 - Current source configuration: Meta Ads (Local MCP), Google Transparency (Local Python MCP), Demand History (Temporal Engine)
 - Previous defects: Injected delivery region in Google bridge; Meta 10 ads produced 0 candidates; workspace auto-creation in persistence layer; hardcoded PASS values.
 - Baseline test results: KH-01 100% PASS; KH-02 Unit 100% PASS; Build PASS.
@@ -2747,8 +2968,13 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 ### 4. META PRODUCT DISCOVERY
 - Research run ID: \`${liveRunId}\`
 - Raw upstream records: ${metaUpstreamReturned}
+- Ingestion accepted records: ${sourceDbReconcile.acceptedCount}
+- Ingestion updated records: ${sourceDbReconcile.updatedCount}
+- Ingestion deduplicated records: ${sourceDbReconcile.deduplicatedCount}
+- Ingestion rejected records: ${sourceDbReconcile.rejectedCount}
+- Records persisted to database: ${sourceDbReconcile.persistedRecordsCount}
+- Records used for candidate discovery: ${runSourceRecordIds.length}
 - Normalized observations: ${runSourceRecordIds.length}
-- Eligible observations: ${runSourceRecordIds.length}
 - Candidate groups: ${discoveredCandidates.length}
 - Relevant candidates: ${relevantCandidates.length}
 - Ambiguous candidates: ${ambiguousCandidates.length}
@@ -2761,7 +2987,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 ### 5. GOOGLE RESEARCH ENRICHMENT
 - Research run ID: \`${liveRunId}\`
 - Status: ${googleEnrichmentStatus}
-- Test Execution Note: Standalone adapter candidate association test executed separately; does NOT prove background worker automated live enrichment.
+- Test Execution Note: ${googleEnrichmentStatus === "SKIPPED" ? "Google product matching live was SKIPPED (" + (googleEnrichmentReason || "No confirmed advertiser domains") + "); strictly NOT claimed as proven live product matching." : "Enrichment executed on confirmed advertiser domain of the research run."}
 - Reason: ${googleEnrichmentReason || "Enrichment executed on confirmed advertiser domain"}
 - Confirmed advertiser domains: ${candidatesWithDomain.map((c: any) => c.storeDomain).join(", ") || "None"}
 - Google queries executed: ${googleEnrichmentQueryExecuted ? 1 : 0}

@@ -325,7 +325,8 @@ export async function runKh02BrowserE2E(
       displayedRankOrder.length = 0;
 
       // Extract candidate IDs directly from data-candidate-id attributes (NO title fallback! Directive 83)
-      for (const card of rankedCards) {
+      for (let i = 0; i < rankedCards.length; i++) {
+        const card = rankedCards[i];
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           displayedCandidateIds.push(cid);
@@ -335,16 +336,20 @@ export async function runKh02BrowserE2E(
           if (scoreAttr) {
             displayedScores[cid] = parseFloat(scoreAttr);
           }
+          const confAttr = await card.getAttribute("data-confidence");
+          const confStatusAttr = await card.getAttribute("data-confidence-status");
           const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
-          if (confText) {
-            displayedConfidence[cid] = confText;
+          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText || confStatusAttr || null);
+          if (finalConfidence !== null) {
+            displayedConfidence[cid] = String(finalConfidence);
           }
         } else {
           errors.push("Rendered ranked product card is missing required data-candidate-id attribute.");
         }
       }
 
-      for (const card of provCards) {
+      for (let i = 0; i < provCards.length; i++) {
+        const card = provCards[i];
         const cid = await card.getAttribute("data-candidate-id");
         if (cid) {
           if (!displayedCandidateIds.includes(cid)) {
@@ -354,7 +359,9 @@ export async function runKh02BrowserE2E(
           if (scoreAttr) {
             displayedScores[cid] = parseFloat(scoreAttr);
           }
-          displayedConfidence[cid] = "PROVISIONAL";
+          const confAttr = await card.getAttribute("data-confidence");
+          const confStatusAttr = await card.getAttribute("data-confidence-status");
+          displayedConfidence[cid] = confAttr ? String(parseFloat(confAttr)) : (confStatusAttr || "PROVISIONAL");
         } else {
           errors.push("Rendered provisional product card is missing required data-candidate-id attribute.");
         }
@@ -393,13 +400,18 @@ export async function runKh02BrowserE2E(
           const scoreAttr = await card.getAttribute("data-opportunity-score");
           const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
           if (scoreVal !== null) postReloadScores[cid] = scoreVal;
+          const rankAttr = await card.getAttribute("data-rank");
+          const rankVal = rankAttr ? parseInt(rankAttr, 10) : (i + 1);
+          const confAttr = await card.getAttribute("data-confidence");
+          const confStatusAttr = await card.getAttribute("data-confidence-status");
           const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
-          if (confText) postReloadConfidence[cid] = confText;
+          const finalConfidence = confAttr ? parseFloat(confAttr) : (confText || confStatusAttr || null);
+          if (finalConfidence !== null) postReloadConfidence[cid] = String(finalConfidence);
           postReloadCards.push({
             candidateId: cid,
-            rank: i + 1,
+            rank: rankVal,
             score: scoreVal,
-            confidence: confText,
+            confidence: finalConfidence !== null ? String(finalConfidence) : null,
           });
         }
       }
@@ -412,12 +424,17 @@ export async function runKh02BrowserE2E(
           const scoreAttr = await card.getAttribute("data-opportunity-score");
           const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
           if (scoreVal !== null) postReloadScores[cid] = scoreVal;
-          postReloadConfidence[cid] = "PROVISIONAL";
+          const rankAttr = await card.getAttribute("data-rank");
+          const rankVal = rankAttr ? parseInt(rankAttr, 10) : (postReloadRanked.length + i + 1);
+          const confAttr = await card.getAttribute("data-confidence");
+          const confStatusAttr = await card.getAttribute("data-confidence-status");
+          const finalConfidence = confAttr ? parseFloat(confAttr) : (confStatusAttr || "PROVISIONAL");
+          postReloadConfidence[cid] = String(finalConfidence);
           postReloadCards.push({
             candidateId: cid,
-            rank: postReloadRanked.length + i + 1,
+            rank: rankVal,
             score: scoreVal,
-            confidence: "PROVISIONAL",
+            confidence: String(finalConfidence),
           });
         }
       }

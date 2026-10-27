@@ -5,6 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { runKh02BrowserE2E } from "../../scripts/kh02/runKh02BrowserE2E";
 import fs from "fs";
+import path from "path";
 
 describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
   it("launches Chromium, interacts with /products, and captures visual artifacts", async () => {
@@ -17,11 +18,17 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
       return;
     }
 
+    const testScreenshotDir = path.resolve(process.cwd(), "test-results/browser-screenshots");
+    if (!fs.existsSync(testScreenshotDir)) {
+      fs.mkdirSync(testScreenshotDir, { recursive: true });
+    }
+
     const result = await runKh02BrowserE2E({
       baseUrl: "http://localhost:3000",
-      workspaceId: "default-workspace",
+      workspaceId: "test-integration-browser-ws",
       headless: true,
       topic: "Pet Hair Remover",
+      screenshotDir: testScreenshotDir,
     });
 
     expect(result.pageLoaded).toBe(true);

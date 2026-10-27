@@ -218,6 +218,7 @@ export interface SourceDiagnosticResult {
 export interface SourceDiagnosticContext {
   workspaceId?: string;
   checkLiveTransport?: boolean;
+  db?: any;
 }
 
 export interface TestConnectionContext {
@@ -238,7 +239,7 @@ export async function diagnoseKH02Source(
   let workspaceTelemetry: Record<IntelligenceSource, ProviderSourceTelemetry> | null = null;
   if (context?.workspaceId) {
     try {
-      workspaceTelemetry = await getWorkspaceProviderTelemetry(context.workspaceId);
+      workspaceTelemetry = await getWorkspaceProviderTelemetry(context.workspaceId, context.db);
     } catch {
       // Graceful fallback
     }
@@ -286,6 +287,12 @@ export async function diagnoseKH02Source(
       if (err) {
         dims.queryError = err;
       }
+
+      dims.liveAttempted = typeof t.liveAttempted === "boolean" ? t.liveAttempted : (hasLiveAttempt ? true : undefined);
+      dims.liveSucceeded = typeof t.liveSucceeded === "boolean" ? t.liveSucceeded : (t.liveAttempted ? false : (t.isLive ? true : undefined));
+      dims.liveError = t.liveError ?? (t.liveAttempted && !t.liveSucceeded ? t.queryError : null);
+      dims.cachedRecordsCount = typeof t.cachedRecordsCount === "number" ? t.cachedRecordsCount : null;
+      dims.freshLiveCount = typeof t.freshLiveCount === "number" ? t.freshLiveCount : null;
     }
     return dims;
   };

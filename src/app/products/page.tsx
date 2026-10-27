@@ -965,55 +965,77 @@ export default function ProductsPage() {
                           <span>Last Live Query:</span>
                           <span className="font-mono">
                             {(() => {
-                              const isFailed =
-                                dims.queryStatus === "FAILED" ||
-                                dims.queryStatus === "QUERY_FAILED" ||
-                                dims.queryStatus === "BLOCKED_SOURCE" ||
-                                dims.queryStatus === "TRANSPORT_FAILED" ||
-                                dims.queryStatus === "AUTHENTICATION_FAILED";
-                              if (isFailed) {
+                              // 1. Live attempt failed
+                              const liveFailed =
+                                dims.liveSucceeded === false ||
+                                (Boolean(dims.liveAttempted) && Boolean(dims.liveError || dims.queryError)) ||
+                                ((dims.queryStatus === "FAILED" ||
+                                  dims.queryStatus === "QUERY_FAILED" ||
+                                  dims.queryStatus === "BLOCKED_SOURCE" ||
+                                  dims.queryStatus === "TRANSPORT_FAILED" ||
+                                  dims.queryStatus === "AUTHENTICATION_FAILED") &&
+                                  !dims.lastSuccessfulLiveQueryAt &&
+                                  dims.lastLiveQueryRecordCount === null);
+
+                              if (liveFailed) {
+                                const err = dims.liveError || dims.queryError || "Query failed";
                                 return (
                                   <span
                                     className="text-rose-400"
-                                    title={dims.queryError || "Query failed"}
+                                    title={dims.lastLiveQueryAt ? `Failed at ${dims.lastLiveQueryAt}: ${err}` : err}
                                   >
-                                    Failed{dims.queryError ? `: ${dims.queryError.slice(0, 20)}...` : ""}
+                                    Failed{err ? `: ${err.slice(0, 20)}...` : ""}
                                   </span>
                                 );
                               }
-                              if (dims.queryProvenance === "CACHED_SOURCE" || (!dims.isLive && dims.queryExecuted)) {
-                                const cacheCount =
-                                  typeof dims.lastLiveQueryRecordCount === "number"
-                                    ? dims.lastLiveQueryRecordCount
-                                    : typeof dims.lastSuccessfulRecordCount === "number"
-                                    ? dims.lastSuccessfulRecordCount
-                                    : storedCount;
+
+                              // 2. Upstream live event record count (truthfully reported)
+                              const liveCount =
+                                typeof dims.lastLiveQueryRecordCount === "number"
+                                  ? dims.lastLiveQueryRecordCount
+                                  : null;
+
+                              if (liveCount !== null) {
+                                if (liveCount > 0) {
+                                  return (
+                                    <span
+                                      className="text-emerald-400 font-semibold"
+                                      title={dims.lastLiveQueryAt ? `Executed at ${dims.lastLiveQueryAt}` : undefined}
+                                    >
+                                      {liveCount} records
+                                    </span>
+                                  );
+                                }
                                 return (
                                   <span
-                                    className="text-amber-300"
-                                    title="Retrieved from persistent SQLite cache"
+                                    className="text-slate-300"
+                                    title={dims.lastLiveQueryAt ? `Executed at ${dims.lastLiveQueryAt} (0 records returned)` : "0 records returned"}
                                   >
-                                    Cache ({cacheCount} records)
+                                    0 records
                                   </span>
                                 );
                               }
-                              if (lastLiveCount !== null && lastLiveCount > 0) {
-                                return (
-                                  <span
-                                    className="text-emerald-400 font-semibold"
-                                    title={dims.lastLiveQueryAt ? `Executed at ${dims.lastLiveQueryAt}` : undefined}
-                                  >
-                                    {lastLiveCount} records
-                                  </span>
-                                );
-                              }
-                              if (dims.queryExecuted && lastLiveCount === 0) {
+
+                              // 3. Fallback: queryExecuted with isLive
+                              if (dims.isLive && dims.queryExecuted) {
                                 return <span className="text-slate-300">0 records</span>;
                               }
+
                               return <span className="text-slate-500">Not Run</span>;
                             })()}
                           </span>
                         </div>
+                        {((typeof dims.cachedRecordsCount === "number" && dims.cachedRecordsCount > 0) || dims.queryProvenance === "CACHED_SOURCE") && (
+                          <div className="flex justify-between text-xs text-amber-400/90 pt-0.5">
+                            <span>Cache Used:</span>
+                            <span
+                              className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 text-amber-300"
+                              title="Retrieved from persistent SQLite cache for research discovery"
+                            >
+                              Cache ({dims.cachedRecordsCount ?? storedCount} records)
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span>Query Cost:</span>
                           <span className="text-slate-300">
@@ -1192,6 +1214,8 @@ export default function ProductsPage() {
                       data-candidate-id={item.candidate.candidateId}
                       data-opportunity-score={item.score?.opportunityScore ?? 0}
                       data-rank={rank}
+                      data-confidence={item.score?.evidenceConfidence ?? ""}
+                      data-confidence-status={item.score?.scoreStatus ?? ""}
                       className={`p-5 rounded-2xl bg-[#1D1733] border-2 ${borderColor} transition-all flex flex-col md:flex-row items-center gap-6 justify-between`}
                     >
                       {/* Left: Thumbnail & Video Trigger */}
@@ -1381,6 +1405,8 @@ export default function ProductsPage() {
                       data-candidate-id={item.candidate.candidateId}
                       data-opportunity-score={item.score?.opportunityScore ?? 0}
                       data-rank={idx + 4}
+                      data-confidence={item.score?.evidenceConfidence ?? ""}
+                      data-confidence-status={item.score?.scoreStatus ?? "PROVISIONAL"}
                       className="p-4 rounded-xl bg-[#130f24] border border-[#2b214a] hover:border-purple-500/40 transition-all flex items-start justify-between gap-4"
                     >
                       <div className="flex items-start gap-3 flex-1">

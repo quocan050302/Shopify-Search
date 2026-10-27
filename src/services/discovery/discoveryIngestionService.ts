@@ -39,6 +39,13 @@ export interface IngestionResultSummary {
   failedCount: number;
   adIds: string[];
   errors: Array<{ identityHash: string; error: string }>;
+  recordTraces?: Array<{
+    rawId: string;
+    digest?: string;
+    decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+    rejectionReason?: string | null;
+    persistedId?: string | null;
+  }>;
 }
 
 export interface MediaUpsertResult {
@@ -300,6 +307,7 @@ export async function ingestDiscoveredAds(
     failedCount: 0,
     adIds: [],
     errors: [],
+    recordTraces: [],
   };
 
   if (records.length === 0) return summary;
@@ -568,13 +576,25 @@ export async function ingestDiscoveredAds(
         return { adId: targetAd.id, isNew };
       });
 
-      // Post-transaction outcome updates (transaction-safe)
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
       if (txResult.isNew) {
         summary.newUniqueInserted++;
         summary.newUniqueCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "ACCEPTED",
+          persistedId: txResult.adId,
+        });
       } else {
         summary.existingUpdated++;
         summary.existingCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "UPDATED",
+          persistedId: txResult.adId,
+        });
       }
       summary.adIds.push(txResult.adId);
     } catch (err: unknown) {
@@ -583,6 +603,14 @@ export async function ingestDiscoveredAds(
       summary.errors.push({
         identityHash: stableIdentityHash,
         error: msg,
+      });
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
+      summary.recordTraces?.push({
+        rawId: rawExternalId,
+        digest: stableIdentityHash,
+        decision: "REJECTED",
+        rejectionReason: msg,
+        persistedId: null,
       });
       console.warn(`Failed to ingest discovered ad [${stableIdentityHash}]:`, msg);
     }

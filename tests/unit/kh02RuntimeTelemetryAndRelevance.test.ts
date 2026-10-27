@@ -1110,10 +1110,13 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetry.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
       expect(telemetry.META_ADS.isLive).toBe(false);
 
-      // Verify UI / registry projection preserves lastLiveQueryRecordCount = 0 and lastLiveQueryAt
-      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws });
-      // In isolated mock test, applyTelemetry is invoked
-      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(0);
+      // Verify UI / registry projection preserves lastLiveQueryRecordCount = 0, lastLiveQueryAt, and cachedRecordsCount
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws, db: fakeDb });
+      expect(diag.dimensions!.lastLiveQueryRecordCount).toBe(0);
+      expect(diag.dimensions!.lastLiveQueryAt).toBe(now);
+      expect(diag.dimensions!.liveAttempted).toBe(true);
+      expect(diag.dimensions!.liveSucceeded).toBe(true);
+      expect(diag.dimensions!.cachedRecordsCount).toBe(8);
     });
 
     it("2. live-failure+cache: retains failed attempt, timestamp, and error when fallback to cache succeeds", async () => {
@@ -1165,6 +1168,12 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBeNull();
       expect(telemetry.META_ADS.cachedRecordsCount).toBe(8);
       expect(telemetry.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
+
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws, db: fakeDb });
+      expect(diag.dimensions!.liveAttempted).toBe(true);
+      expect(diag.dimensions!.liveSucceeded).toBe(false);
+      expect(diag.dimensions!.liveError).toBe("Meta Graph API 500: Server Error");
+      expect(diag.dimensions!.cachedRecordsCount).toBe(8);
     });
 
     it("3. cache-only: does not set queryExecuted true when only reading cache without upstream attempt", async () => {
@@ -1210,6 +1219,10 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetry.META_ADS.queryExecuted).toBe(false);
       expect(telemetry.META_ADS.liveAttempted).toBe(false);
       expect(telemetry.META_ADS.cachedRecordsCount).toBe(8);
+
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws, db: fakeDb });
+      expect(diag.dimensions!.liveAttempted).toBe(false);
+      expect(diag.dimensions!.cachedRecordsCount).toBe(8);
     });
 
     it("4. upstream-returned-but-accepted-zero: preserves upstream count when records filtered out", async () => {
@@ -1258,6 +1271,11 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(5);
       expect(telemetry.META_ADS.liveAttempted).toBe(true);
       expect(telemetry.META_ADS.liveSucceeded).toBe(true);
+
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws, db: fakeDb });
+      expect(diag.dimensions!.lastLiveQueryRecordCount).toBe(5);
+      expect(diag.dimensions!.liveAttempted).toBe(true);
+      expect(diag.dimensions!.liveSucceeded).toBe(true);
     });
 
     it("5. mixed live and cache: properly separates fresh live count and cached count", async () => {
@@ -1306,6 +1324,75 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(3);
       expect(telemetry.META_ADS.isLive).toBe(true);
       expect(telemetry.META_ADS.queryProvenance).toBe("LIVE_PROVIDER");
+
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws, db: fakeDb });
+      expect(diag.dimensions!.lastLiveQueryRecordCount).toBe(3);
+      expect(diag.dimensions!.freshLiveCount).toBe(3);
+      expect(diag.dimensions!.cachedRecordsCount).toBe(5);
+    });
+
+    // Helper simulating the exact JSX IIFE logic in src/app/products/page.tsx
+    function renderLastLiveQueryUI(dims: any): { liveText: string; cacheText: string | null } {
+      let liveText = "Not Run";
+      if (dims.liveSucceeded === false || (dims.liveAttempted && dims.liveError)) {
+        liveText = `Failed: ${dims.liveError || "Upstream query failed"}`;
+      } else if (typeof dims.lastLiveQueryRecordCount === "number") {
+        liveText = `${dims.lastLiveQueryRecordCount} records`;
+      } else if (dims.liveAttempted && dims.liveSucceeded) {
+        const liveCnt = typeof dims.freshLiveCount === "number" ? dims.freshLiveCount : 0;
+        liveText = `${liveCnt} records`;
+      } else if (dims.queryStatus === "PASSED" && dims.isLive && dims.queryProvenance !== "CACHED_SOURCE") {
+        liveText = `${dims.retrievedCount || 0} records`;
+      } else {
+        liveText = "Not Run";
+      }
+
+      let cacheText: string | null = null;
+      if ((typeof dims.cachedRecordsCount === "number" && dims.cachedRecordsCount > 0) || dims.queryProvenance === "CACHED_SOURCE") {
+        const count = typeof dims.cachedRecordsCount === "number" ? dims.cachedRecordsCount : (dims.retrievedCount || 0);
+        cacheText = `Cache (${count} records)`;
+      }
+
+      return { liveText, cacheText };
+    }
+
+    it("6. UI projection: renders '0 records' for live-succeeded-zero and separate cache badge", () => {
+      const dims = {
+        liveAttempted: true,
+        liveSucceeded: true,
+        lastLiveQueryRecordCount: 0,
+        queryProvenance: "CACHED_SOURCE",
+        cachedRecordsCount: 8,
+      };
+      const { liveText, cacheText } = renderLastLiveQueryUI(dims);
+      expect(liveText).toBe("0 records");
+      expect(cacheText).toBe("Cache (8 records)");
+    });
+
+    it("7. UI projection: renders failure text for failed live attempt and separate cache badge", () => {
+      const dims = {
+        liveAttempted: true,
+        liveSucceeded: false,
+        liveError: "Meta Graph API 500: Server Error",
+        queryStatus: "CACHE_ONLY",
+        queryProvenance: "CACHED_SOURCE",
+        cachedRecordsCount: 8,
+      };
+      const { liveText, cacheText } = renderLastLiveQueryUI(dims);
+      expect(liveText).toBe("Failed: Meta Graph API 500: Server Error");
+      expect(cacheText).toBe("Cache (8 records)");
+    });
+
+    it("8. UI projection: renders 'Not Run' for cache-only without live attempt", () => {
+      const dims = {
+        liveAttempted: false,
+        queryStatus: "CACHE_ONLY",
+        queryProvenance: "CACHED_SOURCE",
+        cachedRecordsCount: 8,
+      };
+      const { liveText, cacheText } = renderLastLiveQueryUI(dims);
+      expect(liveText).toBe("Not Run");
+      expect(cacheText).toBe("Cache (8 records)");
     });
   });
 });

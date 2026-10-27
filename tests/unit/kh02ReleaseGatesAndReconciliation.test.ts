@@ -4,6 +4,7 @@ import {
   evaluateGateD07,
   evaluateGateD09,
   evaluateSourceDbReconciliation,
+  resolveRunUpstreamTraces,
   evaluateHttpBrowserReconciliation,
   UpstreamRecordTrace,
 } from "../../scripts/kh02/runAcceptanceV12_2_4";
@@ -281,6 +282,20 @@ describe("SWAI KH-02 V12.2.4 — Dynamic Release Gates & Exact Multi-Layer Recon
       expect(result.reason).toContain("sourceAssociations mismatch");
     });
 
+    it("D07 FAILS when item.rank changes (e.g. 1 to 99) under the RankedLeaderboardItem contract", () => {
+      const item = {
+        candidate: { candidateId: "c1" },
+        rank: 1,
+        score: { opportunityScore: 88, evidenceConfidence: 80 },
+      };
+      const result = evaluateGateD07(
+        { topThree: [item] },
+        { topThree: [{ ...item, rank: 99 }] }
+      );
+      expect(result.verdict).toBe("FAIL");
+      expect(result.reason).toContain("rank changed: DB=1 vs HTTP=99");
+    });
+
     it("D07 FAILS when inputs have invalid schema shape without candidate containers", () => {
       const dbSnapshot = { notACandidateList: true };
       const httpReadback = { alsoInvalid: "no_candidates" };
@@ -475,6 +490,34 @@ describe("SWAI KH-02 V12.2.4 — Dynamic Release Gates & Exact Multi-Layer Recon
       expect(result.exactMatch).toBe(false);
       expect(result.extraInDb).toContain("foreign_ad_from_other_run");
     });
+
+    it("FAILS when upstream count is 2 and DB is 1 without audit trace decision for the 2nd record", () => {
+      const runId = "kh02_run_test_unaccounted";
+      const { traces, unaccountedCount } = resolveRunUpstreamTraces([], 2, ["ad_rec_01"]);
+      expect(unaccountedCount).toBe(1);
+
+      const dbRecords = [{ id: "ad_rec_01" }];
+      const result = evaluateSourceDbReconciliation(runId, traces, dbRecords);
+      expect(result.exactMatch).toBe(false);
+      expect(result.unexplainedLostCount).toBe(1);
+    });
+
+    it("PASSES when upstream record has real duplicate/rejection audit trace with raw identity", () => {
+      const runId = "kh02_run_test_audited_rejection";
+      const auditTraces: UpstreamRecordTrace[] = [
+        { rawId: "meta_raw_01", digest: "hash1", decision: "ACCEPTED", persistedId: "ad_rec_01" },
+        { rawId: "meta_raw_02", digest: "hash2", decision: "REJECTED", rejectionReason: "AD_OUTSIDE_LOOKBACK_WINDOW" },
+      ];
+      const { traces, unaccountedCount } = resolveRunUpstreamTraces(auditTraces, 2, ["ad_rec_01"]);
+      expect(unaccountedCount).toBe(0);
+
+      const dbRecords = [{ id: "ad_rec_01" }];
+      const result = evaluateSourceDbReconciliation(runId, traces, dbRecords);
+      expect(result.exactMatch).toBe(true);
+      expect(result.acceptedCount).toBe(1);
+      expect(result.rejectedCount).toBe(1);
+      expect(result.unexplainedLostCount).toBe(0);
+    });
   });
 
   describe("Layer 3 Reconciliation — HTTP API to Browser DOM", () => {
@@ -542,6 +585,40 @@ describe("SWAI KH-02 V12.2.4 — Dynamic Release Gates & Exact Multi-Layer Recon
       const result = evaluateHttpBrowserReconciliation(httpResult, browserCards, browserCards, false);
       expect(result.exactMatch).toBe(false);
       expect(result.reason).toContain("Score mismatch for 'cand_1': HTTP=88 vs DOM=65");
+    });
+
+    it("FAILS when candidate card confidence on DOM is 'WRONG' or does not match HTTP", () => {
+      const httpResult = {
+        topThree: [{ candidate: { candidateId: "cand_1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+      };
+      const browserCards = [{ candidateId: "cand_1", score: 88, confidence: "WRONG" }];
+      const result = evaluateHttpBrowserReconciliation(httpResult, browserCards, browserCards, false);
+      expect(result.exactMatch).toBe(false);
+      expect(result.reason).toContain("Confidence mismatch for 'cand_1': HTTP=80 vs DOM=WRONG");
+    });
+
+    it("FAILS when expected has cards but postReloadCards is empty []", () => {
+      const httpResult = {
+        topThree: [{ candidate: { candidateId: "cand_1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+      };
+      const preReload = [{ candidateId: "cand_1", score: 88, confidence: 80 }];
+      const postReload: any[] = [];
+      const result = evaluateHttpBrowserReconciliation(httpResult, preReload, postReload, false);
+      expect(result.exactMatch).toBe(false);
+      expect(result.reloadConsistent).toBe(false);
+      expect(result.reason).toContain("Post-reload cards is empty [] while expected 1 cards");
+    });
+
+    it("FAILS when card score mutates after page reload", () => {
+      const httpResult = {
+        topThree: [{ candidate: { candidateId: "cand_1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } }],
+      };
+      const preReload = [{ candidateId: "cand_1", score: 88, confidence: 80 }];
+      const postReload = [{ candidateId: "cand_1", score: 40, confidence: 80 }];
+      const result = evaluateHttpBrowserReconciliation(httpResult, preReload, postReload, false);
+      expect(result.exactMatch).toBe(false);
+      expect(result.reloadConsistent).toBe(false);
+      expect(result.reason).toContain("Post-reload score mismatch for 'cand_1': pre=88 vs post=40");
     });
 
     it("Passes empty state truthfully when HTTP has 0 candidates and empty state is rendered", () => {

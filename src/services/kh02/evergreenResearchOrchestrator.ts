@@ -341,6 +341,7 @@ export async function runEvergreenProductResearch(
         lastLiveQueryAt: liveAttempted ? metaNow : null,
         lastLiveQueryRecordCount,
         lastSuccessfulLiveQueryAt: (liveAttempted && liveSucceeded) ? metaNow : null,
+        auditTraces: execMeta?.auditTraces || [],
       };
     } catch (err: any) {
       sourceStatuses.META_ADS = "FAILED";

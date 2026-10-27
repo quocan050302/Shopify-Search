@@ -21,12 +21,14 @@ import {
   ObservationProvenance,
   SourceRunStatus,
   ProviderExecutionMetadata,
+  UpstreamRecordTrace,
 } from "../types";
 import { extractDomainFromUrl } from "@/services/products/productService";
 import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 import { getMetaCollectorConfig } from "@/services/discovery/metaCollector/metaCollectorConfig";
 import { createMetaCollectorClient } from "@/services/discovery/metaCollector/metaCollectorMcpClient";
 import { normalizeMetaCollectorAd } from "@/services/discovery/normalization/normalizeMetaCollectorAd";
+import { NormalizedDiscoveredAd } from "@/services/discovery/types";
 import { ingestDiscoveredAds } from "@/services/discovery/discoveryIngestionService";
 
 export interface MarketProvenance {
@@ -223,6 +225,7 @@ export interface MetaLiveCollectionBreakdown {
   newAdIds: string[];
   totalCollected: number;
   newlyIngestedCount: number;
+  auditTraces?: UpstreamRecordTrace[];
   error?: string;
 }
 
@@ -289,12 +292,30 @@ export async function collectLiveMetaAds(
         newlyIngestedCount: 0,
         newAdIds: [],
         totalCollected: 0,
+        auditTraces: [],
       };
     }
 
-    const normalizedAds = rawAds.map((ad: any) =>
-      normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: query.topic })
-    );
+    const auditTraces: UpstreamRecordTrace[] = [];
+    const normalizedAds: NormalizedDiscoveredAd[] = [];
+
+    for (let i = 0; i < rawAds.length; i++) {
+      const ad = rawAds[i];
+      const anyRaw = ad as Record<string, unknown>;
+      const rawId = String(anyRaw?.id ?? anyRaw?.library_id ?? anyRaw?.libraryId ?? `raw_meta_${i + 1}`);
+      try {
+        const norm = normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: query.topic });
+        normalizedAds.push(norm);
+      } catch (normErr: any) {
+        auditTraces.push({
+          rawId,
+          digest: anyRaw?.digest ? String(anyRaw.digest) : undefined,
+          decision: "REJECTED",
+          rejectionReason: `NORMALIZATION_REJECTED: ${normErr?.message || String(normErr)}`,
+          persistedId: null,
+        });
+      }
+    }
 
     // Ensure discoveryRun exists so DiscoveryRunAd can link ingested ads to this research run & workspace
     let discoveryRunId: string | undefined = undefined;
@@ -333,6 +354,31 @@ export async function collectLiveMetaAds(
       isQuarantined: false,
     });
 
+    if (ingestSummary.recordTraces) {
+      auditTraces.push(...ingestSummary.recordTraces);
+    }
+
+    if (discoveryRunId) {
+      try {
+        await prisma.discoveryRun.update({
+          where: { id: discoveryRunId },
+          data: {
+            queryConfigJson: JSON.stringify({
+              topic: query.topic,
+              market: query.market || "US",
+              upstreamReturnedCount: rawAds.length,
+              auditTraces,
+            }),
+            actualRetrievedCount: rawAds.length,
+            validCount: normalizedAds.length,
+            newUniqueCount: ingestSummary.newUniqueCount || ingestSummary.newUniqueInserted || 0,
+            existingDuplicateCount: ingestSummary.existingCount || ingestSummary.existingUpdated || 0,
+            rejectedCount: auditTraces.filter((t) => t.decision === "REJECTED").length,
+          },
+        });
+      } catch {}
+    }
+
     let dbCountAfter = dbCountBefore;
     try {
       if (query.workspaceId) {
@@ -355,12 +401,13 @@ export async function collectLiveMetaAds(
       recordsNormalized: normalizedAds.length,
       newUniqueInserted: newInserted,
       existingUpdated: existingUp,
-      recordsRejected: ingestSummary.rejectedCount || 0,
+      recordsRejected: auditTraces.filter((t) => t.decision === "REJECTED").length,
       recordsInDbAfterQuery: dbCountAfter,
       providerQueryTimestamp,
       newlyIngestedCount: newInserted,
       newAdIds: ingestSummary.adIds || [],
       totalCollected: rawAds.length,
+      auditTraces,
     };
   } catch (err: any) {
     return {
@@ -509,6 +556,7 @@ export async function collectMetaProductSignals(
           persistedUpdatedCount: persistedUpdatedOnEmpty,
           cachedRecordsUsedCount: 0,
           fallbackToCache: false,
+          auditTraces: liveCollectorResult?.auditTraces || [],
         },
       };
     }
@@ -604,6 +652,7 @@ export async function collectMetaProductSignals(
       persistedUpdatedCount: persistedUpdated,
       cachedRecordsUsedCount: cachedCount,
       fallbackToCache: !liveSucceeded && cachedCount > 0,
+      auditTraces: liveCollectorResult?.auditTraces || [],
     };
 
     return {

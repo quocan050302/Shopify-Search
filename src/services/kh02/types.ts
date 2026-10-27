@@ -153,6 +153,11 @@ export interface ProviderReadinessDimensions {
   isLive?: boolean | null;
   queryError?: string | null;
   lastSuccessfulRecordCount?: number | null;
+  liveAttempted?: boolean;
+  liveSucceeded?: boolean;
+  liveError?: string | null;
+  cachedRecordsCount?: number | null;
+  freshLiveCount?: number | null;
 }
 
 export interface ProviderSourceTelemetry {
@@ -180,6 +185,7 @@ export interface ProviderSourceTelemetry {
   liveSucceeded?: boolean;
   liveError?: string | null;
   lastLiveQueryRecordCount?: number | null;
+  auditTraces?: UpstreamRecordTrace[];
 
   // Canonical compatibility aliases
   status?: SourceRunStatus;
@@ -287,6 +293,15 @@ export interface ProviderExecutionMetadata {
   persistedUpdatedCount?: number | null;
   cachedRecordsUsedCount?: number | null;
   fallbackToCache?: boolean;
+  auditTraces?: UpstreamRecordTrace[];
+}
+
+export interface UpstreamRecordTrace {
+  rawId: string;
+  digest?: string;
+  decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+  rejectionReason?: string | null;
+  persistedId?: string | null;
 }
 
 export interface SourceResearchResult {

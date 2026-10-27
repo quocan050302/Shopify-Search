@@ -1581,6 +1581,7 @@ export async function getWorkspaceProviderTelemetry(
           upstreamReturnedCount: typeof item.upstreamReturnedCount === "number" ? item.upstreamReturnedCount : null,
           freshLiveCount: typeof item.freshLiveCount === "number" ? item.freshLiveCount : null,
           cachedRecordsCount: typeof item.cachedRecordsCount === "number" ? item.cachedRecordsCount : null,
+          auditTraces: Array.isArray(item.auditTraces) ? item.auditTraces : undefined,
         };
 
         if (job === sortedJobs[0] && !current.queryExecuted) {
