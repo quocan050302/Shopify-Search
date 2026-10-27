@@ -176,6 +176,10 @@ export interface ProviderSourceTelemetry {
   cachedRecordsCount?: number | null;
   persistedInsertedCount?: number | null;
   persistedUpdatedCount?: number | null;
+  liveAttempted?: boolean;
+  liveSucceeded?: boolean;
+  liveError?: string | null;
+  lastLiveQueryRecordCount?: number | null;
 
   // Canonical compatibility aliases
   status?: SourceRunStatus;

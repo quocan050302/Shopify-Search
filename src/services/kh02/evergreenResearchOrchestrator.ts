@@ -289,39 +289,45 @@ export async function runEvergreenProductResearch(
       const freshLiveCount = metaLiveObservations.length;
       const cachedObservationsCount = metaResult.observations.length - freshLiveCount;
       const execMeta = metaResult.executionMetadata;
-      const upstreamReturned = execMeta?.upstreamReturnedCount ?? (freshLiveCount > 0 ? freshLiveCount : null);
 
       const liveAttempted = Boolean(execMeta?.attempted);
       const liveSucceeded = Boolean(execMeta?.liveSucceeded);
+      const upstreamReturned = execMeta?.upstreamReturnedCount ?? (freshLiveCount > 0 ? freshLiveCount : (liveSucceeded ? 0 : null));
 
-      // A query is truly live ONLY if live query executed, succeeded, and is not purely cached fallback
-      const isTrulyLive = liveSucceeded && (freshLiveCount > 0 || (upstreamReturned === 0 && cachedObservationsCount === 0));
+      // A discovery dataset is live ONLY if fresh live observations were yielded
+      const isTrulyLive = liveSucceeded && freshLiveCount > 0;
 
       const metaNow = new Date().toISOString();
       const liveProvenance: ObservationProvenance = freshLiveCount > 0
         ? "LIVE_PROVIDER"
         : (cachedObservationsCount > 0 ? "CACHED_SOURCE" : "NONE");
 
-      // Last Live Query record count reflects actual live records (not mixed cache)
-      const liveRecordCount = isTrulyLive
-        ? (upstreamReturned ?? freshLiveCount)
-        : (liveSucceeded && upstreamReturned === 0 ? 0 : null);
+      const liveQueryError = metaResult.errors.length > 0
+        ? metaResult.errors.join("; ")
+        : (liveAttempted && !liveSucceeded && metaResult.warnings.length > 0 ? metaResult.warnings[0] : null);
 
-      const querySuccessAt = (isTrulyLive || metaResult.status === "PASSED" || metaResult.status === "CACHE_ONLY") ? metaNow : null;
-      const successCount = liveRecordCount ?? (metaResult.status === "PASSED" || metaResult.status === "CACHE_ONLY" ? metaResult.acceptedCount : null);
+      // Last Live Query record count reflects actual live records returned (not mixed cache)
+      const lastLiveQueryRecordCount = liveAttempted
+        ? (liveSucceeded ? (upstreamReturned ?? freshLiveCount) : null)
+        : null;
+
+      const querySuccessAt = (liveSucceeded || metaResult.status === "PASSED" || metaResult.status === "CACHE_ONLY") ? metaNow : null;
+      const successCount = liveSucceeded
+        ? (upstreamReturned ?? freshLiveCount)
+        : (metaResult.acceptedCount > 0 ? metaResult.acceptedCount : null);
 
       providerTelemetry.META_ADS = {
         source: "META_ADS",
-        queryExecuted: true,
+        queryExecuted: liveAttempted, // Truthfully indicates if upstream query was executed
         queryStatus: metaResult.status,
         queryTimestamp: metaNow,
-        retrievedCount: isTrulyLive ? (upstreamReturned ?? freshLiveCount) : cachedObservationsCount,
+        retrievedCount: liveAttempted
+          ? (upstreamReturned ?? freshLiveCount) + cachedObservationsCount
+          : cachedObservationsCount,
         acceptedCount: metaResult.acceptedCount,
         queryProvenance: liveProvenance,
         isLive: isTrulyLive,
-        queryError: metaResult.errors.length > 0
-          ? metaResult.errors.join("; ")
-          : (execMeta?.fallbackToCache && metaResult.warnings.length > 0 ? metaResult.warnings[0] : null),
+        queryError: liveQueryError,
         lastSuccessfulRecordCount: successCount,
         lastSuccessfulQueryAt: querySuccessAt,
         upstreamReturnedCount: upstreamReturned,
@@ -329,6 +335,12 @@ export async function runEvergreenProductResearch(
         cachedRecordsCount: cachedObservationsCount,
         persistedInsertedCount: execMeta?.persistedInsertedCount ?? null,
         persistedUpdatedCount: execMeta?.persistedUpdatedCount ?? null,
+        liveAttempted,
+        liveSucceeded,
+        liveError: liveQueryError,
+        lastLiveQueryAt: liveAttempted ? metaNow : null,
+        lastLiveQueryRecordCount,
+        lastSuccessfulLiveQueryAt: (liveAttempted && liveSucceeded) ? metaNow : null,
       };
     } catch (err: any) {
       sourceStatuses.META_ADS = "FAILED";

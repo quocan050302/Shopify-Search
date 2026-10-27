@@ -1569,6 +1569,20 @@ export async function getWorkspaceProviderTelemetry(
         const decodedError = item.queryError || (item as any).error || null;
 
         // On newest job, record the latest run's status as initial state
+        const liveFields = {
+          liveAttempted: typeof item.liveAttempted === "boolean" ? item.liveAttempted : undefined,
+          liveSucceeded: typeof item.liveSucceeded === "boolean" ? item.liveSucceeded : undefined,
+          liveError: item.liveError || null,
+          lastLiveQueryRecordCount: typeof item.lastLiveQueryRecordCount === "number"
+            ? item.lastLiveQueryRecordCount
+            : (item.isLive && typeof item.retrievedCount === "number" ? item.retrievedCount : null),
+          lastLiveQueryAt: item.lastLiveQueryAt || null,
+          lastSuccessfulLiveQueryAt: item.lastSuccessfulLiveQueryAt || null,
+          upstreamReturnedCount: typeof item.upstreamReturnedCount === "number" ? item.upstreamReturnedCount : null,
+          freshLiveCount: typeof item.freshLiveCount === "number" ? item.freshLiveCount : null,
+          cachedRecordsCount: typeof item.cachedRecordsCount === "number" ? item.cachedRecordsCount : null,
+        };
+
         if (job === sortedJobs[0] && !current.queryExecuted) {
           telemetry[src] = {
             source: src,
@@ -1584,6 +1598,7 @@ export async function getWorkspaceProviderTelemetry(
             queryError: decodedError,
             lastSuccessfulRecordCount: decodedSuccessCount,
             lastSuccessfulQueryAt: decodedSuccessAt,
+            ...liveFields,
           };
         } else if (!current.queryExecuted && decodedExecuted) {
           telemetry[src] = {
@@ -1600,6 +1615,7 @@ export async function getWorkspaceProviderTelemetry(
             queryError: decodedError,
             lastSuccessfulRecordCount: decodedSuccessCount,
             lastSuccessfulQueryAt: decodedSuccessAt,
+            ...liveFields,
           };
         }
 
@@ -1607,6 +1623,12 @@ export async function getWorkspaceProviderTelemetry(
         if (!telemetry[src].lastSuccessfulQueryAt && decodedSuccessAt) {
           telemetry[src].lastSuccessfulQueryAt = decodedSuccessAt;
           telemetry[src].lastSuccessfulRecordCount = decodedSuccessCount;
+        }
+        if (!telemetry[src].lastLiveQueryAt && (item.lastLiveQueryAt || (item.isLive && item.queryTimestamp))) {
+          telemetry[src].lastLiveQueryAt = item.lastLiveQueryAt || item.queryTimestamp;
+          telemetry[src].lastLiveQueryRecordCount = typeof item.lastLiveQueryRecordCount === "number"
+            ? item.lastLiveQueryRecordCount
+            : (item.upstreamReturnedCount ?? item.freshLiveCount ?? (item.isLive ? item.retrievedCount : null));
         }
       } else {
         // Fallback reconstruction for pure legacy runs without providerTelemetry block

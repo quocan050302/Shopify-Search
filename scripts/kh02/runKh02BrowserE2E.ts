@@ -28,6 +28,13 @@ export interface Kh02BrowserE2EOptions {
   expectedMinCards?: number;
 }
 
+export interface BrowserCardDetail {
+  candidateId: string;
+  rank: number;
+  score: number | null;
+  confidence: string | null;
+}
+
 export interface KH02BrowserAcceptance {
   pageLoaded: boolean;
   authorized: boolean;
@@ -41,6 +48,11 @@ export interface KH02BrowserAcceptance {
   displayedRankOrder?: string[];
   displayedScores?: Record<string, number>;
   displayedConfidence?: Record<string, string>;
+  renderedCards?: BrowserCardDetail[];
+  postReloadCandidateIds?: string[];
+  postReloadScores?: Record<string, number>;
+  postReloadCards?: BrowserCardDetail[];
+  postReloadConsistent?: boolean;
   unexpectedHttpErrors: number[];
   hydrationErrors: string[];
   databaseMatch: boolean;
@@ -105,6 +117,11 @@ export async function runKh02BrowserE2E(
   const displayedRankOrder: string[] = [];
   const displayedScores: Record<string, number> = {};
   const displayedConfidence: Record<string, string> = {};
+  const postReloadCandidateIds: string[] = [];
+  const postReloadScores: Record<string, number> = {};
+  const postReloadConfidence: Record<string, string> = {};
+  const postReloadCards: BrowserCardDetail[] = [];
+  let postReloadConsistent = true;
 
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
@@ -365,15 +382,74 @@ export async function runKh02BrowserE2E(
 
       // After reload, leaderboard or saved state should remain consistent
       const postReloadEmpty = await page.$('[data-testid="kh02-empty-state"]');
-      const postReloadCards = await page.$$(
-        '[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]'
-      );
-      if (emptyStateAccurate && !postReloadEmpty && postReloadCards.length === 0) {
+      const postReloadRanked = await page.$$('[data-testid="kh02-ranked-product-card"]');
+      const postReloadProv = await page.$$('[data-testid="kh02-provisional-product-card"]');
+
+      for (let i = 0; i < postReloadRanked.length; i++) {
+        const card = postReloadRanked[i];
+        const cid = await card.getAttribute("data-candidate-id");
+        if (cid) {
+          postReloadCandidateIds.push(cid);
+          const scoreAttr = await card.getAttribute("data-opportunity-score");
+          const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
+          if (scoreVal !== null) postReloadScores[cid] = scoreVal;
+          const confText = await card.$eval(".text-emerald-400, .text-purple-300", (el) => el.textContent?.trim()).catch(() => null);
+          if (confText) postReloadConfidence[cid] = confText;
+          postReloadCards.push({
+            candidateId: cid,
+            rank: i + 1,
+            score: scoreVal,
+            confidence: confText,
+          });
+        }
+      }
+
+      for (let i = 0; i < postReloadProv.length; i++) {
+        const card = postReloadProv[i];
+        const cid = await card.getAttribute("data-candidate-id");
+        if (cid) {
+          if (!postReloadCandidateIds.includes(cid)) postReloadCandidateIds.push(cid);
+          const scoreAttr = await card.getAttribute("data-opportunity-score");
+          const scoreVal = scoreAttr ? parseFloat(scoreAttr) : null;
+          if (scoreVal !== null) postReloadScores[cid] = scoreVal;
+          postReloadConfidence[cid] = "PROVISIONAL";
+          postReloadCards.push({
+            candidateId: cid,
+            rank: postReloadRanked.length + i + 1,
+            score: scoreVal,
+            confidence: "PROVISIONAL",
+          });
+        }
+      }
+
+      postReloadConsistent = true;
+      if (emptyStateAccurate && !postReloadEmpty && postReloadCandidateIds.length === 0) {
         databaseMatch = false;
+        postReloadConsistent = false;
         errors.push("Empty state was not preserved across page reload.");
-      } else if (cardCount > 0 && postReloadCards.length === 0) {
-        databaseMatch = false;
-        errors.push("Product candidate cards were lost after page reload.");
+      } else if (cardCount > 0) {
+        if (postReloadCandidateIds.length !== displayedCandidateIds.length) {
+          databaseMatch = false;
+          postReloadConsistent = false;
+          errors.push(`Reload card count mismatch: pre-reload ${displayedCandidateIds.length} vs post-reload ${postReloadCandidateIds.length}`);
+        } else {
+          for (let i = 0; i < displayedCandidateIds.length; i++) {
+            if (displayedCandidateIds[i] !== postReloadCandidateIds[i]) {
+              databaseMatch = false;
+              postReloadConsistent = false;
+              errors.push(`Reload candidate ID mismatch at index ${i}: pre-reload ${displayedCandidateIds[i]} vs post-reload ${postReloadCandidateIds[i]}`);
+            }
+          }
+          for (const cid of displayedCandidateIds) {
+            if (displayedScores[cid] !== undefined && postReloadScores[cid] !== undefined) {
+              if (displayedScores[cid] !== postReloadScores[cid]) {
+                databaseMatch = false;
+                postReloadConsistent = false;
+                errors.push(`Reload score mismatch for '${cid}': pre-reload ${displayedScores[cid]} vs post-reload ${postReloadScores[cid]}`);
+              }
+            }
+          }
+        }
       }
     } else {
       errors.push("Analyze button not found on page.");
@@ -390,8 +466,15 @@ export async function runKh02BrowserE2E(
 
   const durationMs = Date.now() - start;
 
+  // Build renderedCards array
+  const renderedCards: BrowserCardDetail[] = displayedCandidateIds.map((cid, idx) => ({
+    candidateId: cid,
+    rank: idx + 1,
+    score: displayedScores[cid] ?? null,
+    confidence: displayedConfidence[cid] ?? null,
+  }));
+
   // Determine truthful verdict:
-  // Must have loaded, authorized, submitted research, observed terminal state, zero unexpected 500s, zero hydration errors, and databaseMatch
   const minCards = options.expectedMinCards ?? 0;
   let verdict: "PASS" | "FAIL" | "BLOCKED" = "FAIL";
   if (!pageLoaded || !authorized) {
@@ -426,6 +509,11 @@ export async function runKh02BrowserE2E(
     displayedRankOrder,
     displayedScores,
     displayedConfidence,
+    renderedCards,
+    postReloadCandidateIds,
+    postReloadScores,
+    postReloadCards,
+    postReloadConsistent,
     unexpectedHttpErrors,
     hydrationErrors,
     databaseMatch,

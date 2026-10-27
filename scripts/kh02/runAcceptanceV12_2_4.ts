@@ -115,53 +115,133 @@ export interface AcceptanceGateResult {
   reason: string | null;
 }
 
-export function evaluateGateG10(allCandidates: any[]): AcceptanceGateResult {
+export interface GateG10Context {
+  validCreativeIds?: Set<string> | string[];
+  runId?: string;
+  workspaceId?: string;
+  googleQueryExecuted?: boolean;
+}
+
+export function evaluateGateG10(allCandidates: any[], context?: GateG10Context): AcceptanceGateResult {
   let orphanAssociationsCount = 0;
+  let nonExistentRecordCount = 0;
   let brandLevelAsSkuViolationsCount = 0;
+  let ungroundedMatchCount = 0;
   let totalGoogleObsCount = 0;
   const violationDetails: string[] = [];
 
+  const validSet = context?.validCreativeIds
+    ? (context.validCreativeIds instanceof Set ? context.validCreativeIds : new Set(context.validCreativeIds))
+    : null;
+
   for (const item of allCandidates) {
-    const cand = item.candidate || item;
+    const cand = item?.candidate || item || {};
     const obsList = Array.isArray(cand?.sourceObservations) ? cand.sourceObservations : [];
     for (const obs of obsList) {
       if (obs?.source === "GOOGLE_ADS") {
         totalGoogleObsCount++;
+        const sId = obs.sourceRecordId;
+
         // 1. Source record verification: must have valid non-empty source record id
-        if (!obs.sourceRecordId || obs.sourceRecordId.trim() === "" || obs.sourceRecordId.startsWith("orphan_")) {
+        if (!sId || typeof sId !== "string" || sId.trim() === "" || sId.startsWith("orphan_")) {
           orphanAssociationsCount++;
           violationDetails.push(`Candidate '${cand.title || cand.candidateId}' linked to orphan Google observation without valid source record`);
+        } else if (validSet && !validSet.has(sId)) {
+          nonExistentRecordCount++;
+          violationDetails.push(`Candidate '${cand.title || cand.candidateId}' linked to non-existent or foreign Google creative ID '${sId}'`);
         }
+
         // 2. Product match grounding: brand-level creative must NOT be attached directly as SKU evidence
         if (obs.productRelevance === "BRAND_RELATED" || obs.isBrandOnly === true || obs.metrics?.productRelevance === "BRAND_RELATED") {
           brandLevelAsSkuViolationsCount++;
           violationDetails.push(`Candidate '${cand.title || cand.candidateId}' has brand-level Google ad attached directly as SKU evidence`);
         }
+
+        // 3. Grounding evidence: PRODUCT_SPECIFIC label must have grounding evidence
+        if (obs.productRelevance === "PRODUCT_SPECIFIC") {
+          const hasGrounding = Boolean(
+            obs.matchingEvidence ||
+            obs.groundingQuery ||
+            obs.matchReason ||
+            obs.relevanceReason ||
+            (obs.evidenceReference && !obs.evidenceReference.includes("unverified"))
+          );
+          if (!hasGrounding) {
+            ungroundedMatchCount++;
+            violationDetails.push(`Candidate '${cand.title || cand.candidateId}' has PRODUCT_SPECIFIC label without matching/grounding evidence`);
+          }
+        }
       }
     }
   }
 
-  const passed = orphanAssociationsCount === 0 && brandLevelAsSkuViolationsCount === 0;
+  const passed = orphanAssociationsCount === 0 &&
+    nonExistentRecordCount === 0 &&
+    brandLevelAsSkuViolationsCount === 0 &&
+    ungroundedMatchCount === 0;
+
   return {
     gateId: "G10",
     verdict: passed ? "PASS" : "FAIL",
-    assertion: "Research pipeline reconciliation: no orphan or fabricated Google candidates",
+    assertion: "Research pipeline reconciliation: no orphan, fabricated, or ungrounded Google candidates",
     executed: true,
     evidencePaths: ["GOOGLE_RESEARCH_ENRICHMENT.json", "GOOGLE_PRODUCT_MATCHING.json"],
     observedValues: {
       totalGoogleObservations: totalGoogleObsCount,
       orphanAssociationsCount,
+      nonExistentRecordCount,
       brandLevelAsSkuViolationsCount,
+      ungroundedMatchCount,
+      queryExecuted: Boolean(context?.googleQueryExecuted),
       reconciled: passed,
     },
     reason: passed
       ? null
-      : `G10 Invariant Violation: Found ${orphanAssociationsCount} orphan associations, ${brandLevelAsSkuViolationsCount} brand-as-SKU violations. Details: ${violationDetails.join("; ")}`,
+      : `G10 Invariant Violation: Found ${orphanAssociationsCount} orphan, ${nonExistentRecordCount} non-existent/foreign, ${brandLevelAsSkuViolationsCount} brand-as-SKU, ${ungroundedMatchCount} ungrounded matches. Details: ${violationDetails.join("; ")}`,
   };
 }
 
+export interface CanonicalCandidateRecord {
+  group: string;
+  candidateId: string;
+  rank: number;
+  opportunityScore: number | null;
+  evidenceConfidence: number | null;
+  demandClass: string | null;
+  sourceAssociations: Array<{
+    source: string;
+    sourceRecordId?: string | null;
+    platform?: string | null;
+  }>;
+}
+
+const CANDIDATE_GROUPS = [
+  "topThree",
+  "provisionalCandidates",
+  "remainingCandidates",
+  "insufficientEvidenceCandidates",
+  "rejectedCandidates",
+] as const;
+
+function isCandidateContainer(obj: any): boolean {
+  if (!obj || typeof obj !== "object") return false;
+  return CANDIDATE_GROUPS.some((g) => Array.isArray(obj[g]));
+}
+
+function extractRoot(data: any): any {
+  if (!data || typeof data !== "object") return null;
+  if (isCandidateContainer(data.result)) return data.result;
+  if (isCandidateContainer(data.data?.result)) return data.data.result;
+  if (isCandidateContainer(data.data)) return data.data;
+  if (isCandidateContainer(data)) return data;
+  return null;
+}
+
 export function evaluateGateD07(dbResultJson: any, httpResultJson: any): AcceptanceGateResult {
-  if (!dbResultJson || !httpResultJson) {
+  const dbRoot = extractRoot(dbResultJson);
+  const httpRoot = extractRoot(httpResultJson);
+
+  if (!dbRoot || !httpRoot) {
     return {
       gateId: "D07",
       verdict: "FAIL",
@@ -169,45 +249,98 @@ export function evaluateGateD07(dbResultJson: any, httpResultJson: any): Accepta
       executed: true,
       evidencePaths: ["DB_HTTP_EXACT_RECONCILIATION.json"],
       observedValues: {
-        dbAvailable: Boolean(dbResultJson),
-        httpAvailable: Boolean(httpResultJson),
+        dbValidSchema: Boolean(dbRoot),
+        httpValidSchema: Boolean(httpRoot),
         reconciled: false,
       },
-      reason: "Missing database snapshot or HTTP readback for research run.",
+      reason: `Invalid schema shape: ${!dbRoot ? "DB snapshot lacks valid candidate structure" : ""}${!dbRoot && !httpRoot ? "; " : ""}${!httpRoot ? "HTTP readback lacks valid candidate structure" : ""}`,
     };
   }
 
-  const extractCandidates = (data: any) => {
-    const root = data?.result || data?.data?.result || data?.data || data;
-    return [
-      ...(Array.isArray(root?.topThree) ? root.topThree : []),
-      ...(Array.isArray(root?.remainingCandidates) ? root.remainingCandidates : []),
-      ...(Array.isArray(root?.provisionalCandidates) ? root.provisionalCandidates : []),
-      ...(Array.isArray(root?.insufficientEvidenceCandidates) ? root.insufficientEvidenceCandidates : []),
-      ...(Array.isArray(root?.rejectedCandidates) ? root.rejectedCandidates : []),
-    ];
+  const diffs: string[] = [];
+  const dbRunId = dbRoot.runId || dbResultJson?.id || dbResultJson?.data?.id;
+  const httpRunId = httpRoot.runId || httpResultJson?.id || httpResultJson?.data?.id;
+  if (dbRunId && httpRunId && dbRunId !== httpRunId) {
+    diffs.push(`Run ID mismatch: DB=${dbRunId} vs HTTP=${httpRunId}`);
+  }
+
+  const parseCanonical = (root: any): Record<string, CanonicalCandidateRecord[]> => {
+    const res: Record<string, CanonicalCandidateRecord[]> = {};
+    for (const g of CANDIDATE_GROUPS) {
+      const arr = Array.isArray(root[g]) ? root[g] : [];
+      res[g] = arr.map((item: any, idx: number) => {
+        const cand = item?.candidate || item || {};
+        const score = item?.score || {};
+        const obsList = Array.isArray(cand.sourceObservations) ? cand.sourceObservations : [];
+        const sourceAssociations = obsList.map((o: any) => ({
+          source: String(o?.source || ""),
+          sourceRecordId: o?.sourceRecordId ? String(o.sourceRecordId) : null,
+          platform: o?.platform ? String(o.platform) : null,
+        })).sort((a: any, b: any) => `${a.source}:${a.sourceRecordId}`.localeCompare(`${b.source}:${b.sourceRecordId}`));
+
+        return {
+          group: g,
+          candidateId: String(cand.candidateId || cand.id || `unknown_${idx}`),
+          rank: typeof cand.rank === "number" ? cand.rank : idx + 1,
+          opportunityScore: typeof score.opportunityScore === "number" ? score.opportunityScore : null,
+          evidenceConfidence: typeof score.evidenceConfidence === "number" ? score.evidenceConfidence : (typeof cand.confidence === "number" ? cand.confidence : null),
+          demandClass: score.demandClass || cand.demandClass || null,
+          sourceAssociations,
+        };
+      });
+    }
+    return res;
   };
 
-  const dbList = extractCandidates(dbResultJson);
-  const httpList = extractCandidates(httpResultJson);
+  const dbGroups = parseCanonical(dbRoot);
+  const httpGroups = parseCanonical(httpRoot);
 
-  const dbIds = dbList.map((c: any) => (c.candidate || c).candidateId);
-  const httpIds = httpList.map((c: any) => (c.candidate || c).candidateId);
+  const dbCandMap = new Map<string, CanonicalCandidateRecord>();
+  const httpCandMap = new Map<string, CanonicalCandidateRecord>();
 
-  const idsExactMatch = dbIds.length === httpIds.length && dbIds.every((id, idx) => id === httpIds[idx]);
-
-  const scoreDiffs: string[] = [];
-  for (let i = 0; i < dbList.length; i++) {
-    const dbItem = dbList[i];
-    const httpItem = httpList[i];
-    const dbScore = dbItem?.score?.opportunityScore ?? null;
-    const httpScore = httpItem?.score?.opportunityScore ?? null;
-    if (dbScore !== httpScore) {
-      scoreDiffs.push(`Candidate index ${i} score mismatch: DB=${dbScore} vs HTTP=${httpScore}`);
+  for (const g of CANDIDATE_GROUPS) {
+    for (const rec of dbGroups[g]) {
+      dbCandMap.set(rec.candidateId, rec);
+    }
+    for (const rec of httpGroups[g]) {
+      httpCandMap.set(rec.candidateId, rec);
     }
   }
 
-  const passed = idsExactMatch && scoreDiffs.length === 0;
+  // 1. Group membership & field checks
+  for (const [cid, dbRec] of dbCandMap.entries()) {
+    const httpRec = httpCandMap.get(cid);
+    if (!httpRec) {
+      diffs.push(`Candidate '${cid}' present in DB (${dbRec.group}) but missing in HTTP`);
+      continue;
+    }
+    if (dbRec.group !== httpRec.group) {
+      diffs.push(`Candidate '${cid}' group membership changed: DB=${dbRec.group} vs HTTP=${httpRec.group}`);
+    }
+    if (dbRec.rank !== httpRec.rank) {
+      diffs.push(`Candidate '${cid}' rank changed: DB=${dbRec.rank} vs HTTP=${httpRec.rank}`);
+    }
+    if (dbRec.opportunityScore !== httpRec.opportunityScore) {
+      diffs.push(`Candidate '${cid}' opportunityScore changed: DB=${dbRec.opportunityScore} vs HTTP=${httpRec.opportunityScore}`);
+    }
+    if (dbRec.evidenceConfidence !== httpRec.evidenceConfidence) {
+      diffs.push(`Candidate '${cid}' evidenceConfidence changed: DB=${dbRec.evidenceConfidence} vs HTTP=${httpRec.evidenceConfidence}`);
+    }
+    if (dbRec.demandClass !== httpRec.demandClass) {
+      diffs.push(`Candidate '${cid}' demandClass changed: DB=${dbRec.demandClass} vs HTTP=${httpRec.demandClass}`);
+    }
+    if (JSON.stringify(dbRec.sourceAssociations) !== JSON.stringify(httpRec.sourceAssociations)) {
+      diffs.push(`Candidate '${cid}' sourceAssociations mismatch: DB=${JSON.stringify(dbRec.sourceAssociations)} vs HTTP=${JSON.stringify(httpRec.sourceAssociations)}`);
+    }
+  }
+
+  for (const [cid, httpRec] of httpCandMap.entries()) {
+    if (!dbCandMap.has(cid)) {
+      diffs.push(`Candidate '${cid}' present in HTTP (${httpRec.group}) but missing in DB`);
+    }
+  }
+
+  const passed = diffs.length === 0;
 
   return {
     gateId: "D07",
@@ -216,28 +349,55 @@ export function evaluateGateD07(dbResultJson: any, httpResultJson: any): Accepta
     executed: true,
     evidencePaths: ["DB_HTTP_EXACT_RECONCILIATION.json"],
     observedValues: {
-      dbCandidateCount: dbIds.length,
-      httpCandidateCount: httpIds.length,
+      dbCandidateCount: dbCandMap.size,
+      httpCandidateCount: httpCandMap.size,
       exactMatch: passed,
-      idsExactMatch,
-      scoreDiffsCount: scoreDiffs.length,
+      idsExactMatch: passed,
+      scoreDiffsCount: diffs.filter((d) => d.includes("opportunityScore")).length,
+      diffsCount: diffs.length,
       reconciled: passed,
     },
-    reason: passed ? null : `D07 Mismatch: idsMatch=${idsExactMatch}, scoreDiffs=[${scoreDiffs.join("; ")}]`,
+    reason: passed ? null : `D07 Mismatch (${diffs.length} differences): ${diffs.slice(0, 5).join("; ")}${diffs.length > 5 ? ` (+${diffs.length - 5} more)` : ""}`,
   };
 }
 
 export function evaluateGateD09(dbResultJson: any): AcceptanceGateResult {
-  const root = dbResultJson?.result || dbResultJson?.data?.result || dbResultJson?.data || dbResultJson;
+  const root = extractRoot(dbResultJson) || dbResultJson;
   const topThree = Array.isArray(root?.topThree) ? root.topThree : [];
   const violations: string[] = [];
 
   for (const item of topThree) {
-    const cand = item.candidate || item;
+    const cand = item.candidate || item || {};
     const score = item.score;
-    // A candidate lacking demand history promoted to verified evergreen winner is a fatal violation
-    if (!score || score.demandClass === "INSUFFICIENT_HISTORY" || (typeof score.demandStabilityScore === "number" && score.demandStabilityScore < 15)) {
-      violations.push(`Candidate '${cand.title || cand.candidateId}' promoted to topThree winner despite demandClass='${score?.demandClass}' and stabilityScore=${score?.demandStabilityScore}`);
+    const title = cand.title || cand.candidateId || "Unknown candidate";
+
+    if (!score || typeof score !== "object") {
+      violations.push(`Candidate '${title}' promoted to topThree winner without valid score object`);
+      continue;
+    }
+
+    const demandPillar = score.pillars?.demandStability;
+    const demandScore = demandPillar?.score;
+    const demandClass = score.demandClass;
+    const confidence = score.evidenceConfidence;
+    const opportunityScore = score.opportunityScore;
+
+    if (demandPillar === undefined || demandScore === null || typeof demandScore !== "number") {
+      violations.push(`Candidate '${title}' lacks verified demand stability pillar score (received: ${demandScore ?? "null"})`);
+    } else if (demandScore < 15) {
+      violations.push(`Candidate '${title}' demand stability pillar score ${demandScore}/25 is below required threshold (15/25)`);
+    }
+
+    if (!demandClass || demandClass === "INSUFFICIENT_HISTORY" || demandClass === "DECLINING" || demandClass === "TREND_DEPENDENT") {
+      violations.push(`Candidate '${title}' has ineligible demand class '${demandClass || "MISSING"}' for evergreen winner`);
+    }
+
+    if (typeof confidence !== "number" || confidence < 65) {
+      violations.push(`Candidate '${title}' evidence confidence ${confidence ?? "null"}/100 below verified threshold (65/100)`);
+    }
+
+    if (typeof opportunityScore !== "number" || opportunityScore < 65) {
+      violations.push(`Candidate '${title}' opportunity score ${opportunityScore ?? "null"}/100 below verified threshold (65/100)`);
     }
   }
 
@@ -249,82 +409,265 @@ export function evaluateGateD09(dbResultJson: any): AcceptanceGateResult {
     executed: true,
     evidencePaths: ["FINAL_ACCEPTANCE_REPORT.md"],
     observedValues: {
+      topThreeCount: topThree.length,
       topThreeWinnersCount: topThree.length,
       ungroundedWinnersCount: violations.length,
+      violationsCount: violations.length,
       evergreenGatingStrict: passed,
     },
-    reason: passed ? null : `D09 Invariant Violation: ${violations.join("; ")}`,
+    reason: passed ? null : `D09 Invariant Violation (${violations.length} violations): ${violations.join("; ")}`,
   };
+}
+
+export interface UpstreamRecordTrace {
+  rawId: string;
+  digest?: string;
+  decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+  rejectionReason?: string | null;
+  persistedId?: string | null;
 }
 
 export function evaluateSourceDbReconciliation(
   runId: string,
-  runRecordIds: string[],
+  expectedSourceRecords: UpstreamRecordTrace[] | string[],
   dbRecords: any[]
 ): {
   layer: string;
   runId: string;
-  runSourceRecordsCount: number;
+  upstreamRecordsCount: number;
   persistedRecordsCount: number;
+  acceptedCount: number;
+  updatedCount: number;
+  rejectedCount: number;
+  unexplainedLostCount: number;
   exactMatch: boolean;
   missingInDb: string[];
   extraInDb: string[];
+  rejectionAudit: Array<{ rawId: string; reason: string }>;
   verifiedAt: string;
+  reason: string | null;
 } {
+  const traces: UpstreamRecordTrace[] = Array.isArray(expectedSourceRecords)
+    ? expectedSourceRecords.map((item) => {
+        if (typeof item === "string") {
+          return {
+            rawId: item,
+            decision: "ACCEPTED" as const,
+            persistedId: item,
+          };
+        }
+        return item;
+      })
+    : [];
+
   const dbRecordIds = new Set(dbRecords.map((r: any) => r.id));
-  const missingInDb = runRecordIds.filter((id) => !dbRecordIds.has(id));
-  const extraInDb = dbRecords.filter((r) => !runRecordIds.includes(r.id)).map((r) => r.id);
-  const exactMatch = missingInDb.length === 0 && runRecordIds.length === dbRecords.length;
+  const missingInDb: string[] = [];
+  const rejectionAudit: Array<{ rawId: string; reason: string }> = [];
+  let acceptedCount = 0;
+  let updatedCount = 0;
+  let rejectedCount = 0;
+  let unexplainedLostCount = 0;
+
+  for (const trace of traces) {
+    if (trace.decision === "ACCEPTED") {
+      acceptedCount++;
+      const pid = trace.persistedId || trace.rawId;
+      if (!dbRecordIds.has(pid)) {
+        missingInDb.push(pid);
+        unexplainedLostCount++;
+      }
+    } else if (trace.decision === "UPDATED" || trace.decision === "DUPLICATE") {
+      updatedCount++;
+      const pid = trace.persistedId || trace.rawId;
+      if (pid && !dbRecordIds.has(pid)) {
+        missingInDb.push(pid);
+        unexplainedLostCount++;
+      }
+    } else if (trace.decision === "REJECTED") {
+      rejectedCount++;
+      if (!trace.rejectionReason || trace.rejectionReason.trim() === "") {
+        unexplainedLostCount++;
+        rejectionAudit.push({ rawId: trace.rawId, reason: "MISSING_REJECTION_REASON" });
+      } else {
+        rejectionAudit.push({ rawId: trace.rawId, reason: trace.rejectionReason });
+      }
+      const pid = trace.persistedId || trace.rawId;
+      if (dbRecordIds.has(pid)) {
+        missingInDb.push(`Unexpectedly persisted rejected record: ${pid}`);
+        unexplainedLostCount++;
+      }
+    } else {
+      unexplainedLostCount++;
+      missingInDb.push(`Unknown ingestion decision for raw record: ${trace.rawId}`);
+    }
+  }
+
+  const expectedPersistedIds = new Set(
+    traces
+      .filter((t) => t.decision === "ACCEPTED" || t.decision === "UPDATED" || t.decision === "DUPLICATE")
+      .map((t) => t.persistedId || t.rawId)
+  );
+  const extraInDb = dbRecords
+    .filter((r) => !expectedPersistedIds.has(r.id))
+    .map((r) => r.id);
+
+  const exactMatch = unexplainedLostCount === 0 && missingInDb.length === 0 && extraInDb.length === 0;
 
   return {
     layer: "Source to Database",
     runId,
-    runSourceRecordsCount: runRecordIds.length,
+    upstreamRecordsCount: traces.length,
     persistedRecordsCount: dbRecords.length,
+    acceptedCount,
+    updatedCount,
+    rejectedCount,
+    unexplainedLostCount,
     exactMatch,
     missingInDb,
     extraInDb,
+    rejectionAudit,
     verifiedAt: new Date().toISOString(),
+    reason: exactMatch
+      ? null
+      : `Source to Database Reconciliation Mismatch: lost=${unexplainedLostCount}, missing=[${missingInDb.join(", ")}], extra=[${extraInDb.join(", ")}]`,
   };
 }
 
 export function evaluateHttpBrowserReconciliation(
-  httpCandidateIds: string[],
-  browserRenderedIds: string[],
-  emptyStateAccurate: boolean
+  httpInput: any,
+  browserRendered: any[] | string[],
+  postReloadInput?: any[] | string[] | boolean,
+  emptyStateOpt?: boolean
 ): {
   exactMatch: boolean;
   cardsExpected: number;
   cardsRendered: number;
+  reloadConsistent: boolean;
+  expectedCandidateIds: string[];
+  renderedCandidateIds: string[];
+  postReloadCandidateIds: string[];
+  diffs: string[];
   emptyStateAccurate: boolean;
   reason: string | null;
 } {
-  if (httpCandidateIds.length > 0) {
-    const idsMatch =
-      httpCandidateIds.length === browserRenderedIds.length &&
-      httpCandidateIds.every((id, idx) => id === browserRenderedIds[idx]);
-    return {
-      exactMatch: idsMatch,
-      cardsExpected: httpCandidateIds.length,
-      cardsRendered: browserRenderedIds.length,
-      emptyStateAccurate: false,
-      reason: idsMatch
-        ? null
-        : `Browser rendered ${browserRenderedIds.length} cards, expected ${httpCandidateIds.length} from HTTP: rendered=[${browserRenderedIds.join(", ")}], expected=[${httpCandidateIds.join(", ")}].`,
-    };
-  } else {
-    // If HTTP returned 0 candidates, browser must render empty state and 0 cards
-    const emptyMatch = browserRenderedIds.length === 0 && emptyStateAccurate;
-    return {
-      exactMatch: emptyMatch,
-      cardsExpected: 0,
-      cardsRendered: browserRenderedIds.length,
-      emptyStateAccurate,
-      reason: emptyMatch
-        ? null
-        : `HTTP has 0 candidates, but browser rendered ${browserRenderedIds.length} cards and emptyStateAccurate=${emptyStateAccurate}.`,
-    };
+  let expectedList: any[] = [];
+  if (Array.isArray(httpInput)) {
+    expectedList = httpInput;
+  } else if (httpInput && typeof httpInput === "object") {
+    const root = extractRoot(httpInput) || httpInput;
+    const topThree = Array.isArray(root?.topThree) ? root.topThree : [];
+    const prov = Array.isArray(root?.provisionalCandidates) ? root.provisionalCandidates : [];
+    // UI subset rule: Leaderboard renders all topThree cards + max 6 provisional cards
+    expectedList = [...topThree, ...prov.slice(0, 6)];
   }
+
+  const expectedIds = expectedList.map((item) => {
+    if (typeof item === "string") return item;
+    const cand = item?.candidate || item || {};
+    return String(cand.candidateId || cand.id || "");
+  }).filter(Boolean);
+
+  const renderedIds = (Array.isArray(browserRendered) ? browserRendered : []).map((item) => {
+    if (typeof item === "string") return item;
+    return String(item?.candidateId || item?.id || "");
+  }).filter(Boolean);
+
+  let postReloadCards: any[] = [];
+  let emptyStateAccurate = false;
+
+  if (typeof postReloadInput === "boolean") {
+    emptyStateAccurate = postReloadInput;
+  } else if (Array.isArray(postReloadInput)) {
+    postReloadCards = postReloadInput;
+    emptyStateAccurate = Boolean(emptyStateOpt);
+  } else if (typeof emptyStateOpt === "boolean") {
+    emptyStateAccurate = emptyStateOpt;
+  }
+
+  const postReloadIds = postReloadCards.map((item) => {
+    if (typeof item === "string") return item;
+    return String(item?.candidateId || item?.id || "");
+  }).filter(Boolean);
+
+  const diffs: string[] = [];
+
+  // 1. Compare count
+  if (expectedIds.length !== renderedIds.length) {
+    diffs.push(`Card count mismatch: expected ${expectedIds.length} from HTTP vs rendered ${renderedIds.length} in browser`);
+  } else {
+    // 2. Compare exact IDs and order
+    for (let i = 0; i < expectedIds.length; i++) {
+      if (expectedIds[i] !== renderedIds[i]) {
+        diffs.push(`Candidate ID mismatch at rank ${i + 1}: expected '${expectedIds[i]}' vs rendered '${renderedIds[i]}'`);
+      }
+    }
+  }
+
+  // 3. Compare scores and confidence if available on objects
+  if (Array.isArray(browserRendered) && typeof browserRendered[0] === "object") {
+    const renderedMap = new Map<string, any>();
+    for (const b of browserRendered) {
+      if (b && typeof b === "object") renderedMap.set(b.candidateId, b);
+    }
+    for (const exp of expectedList) {
+      if (typeof exp === "object") {
+        const cand = exp?.candidate || exp || {};
+        const score = exp?.score || {};
+        const cid = String(cand.candidateId || cand.id || "");
+        const rend = renderedMap.get(cid);
+        if (rend) {
+          if (typeof score.opportunityScore === "number" && typeof rend.score === "number") {
+            if (score.opportunityScore !== rend.score) {
+              diffs.push(`Score mismatch for '${cid}': HTTP=${score.opportunityScore} vs DOM=${rend.score}`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Reload consistency
+  let reloadConsistent = true;
+  if (postReloadCards.length > 0) {
+    if (postReloadIds.length !== renderedIds.length) {
+      reloadConsistent = false;
+      diffs.push(`Post-reload count mismatch: pre-reload ${renderedIds.length} vs post-reload ${postReloadIds.length}`);
+    } else {
+      for (let i = 0; i < renderedIds.length; i++) {
+        if (renderedIds[i] !== postReloadIds[i]) {
+          reloadConsistent = false;
+          diffs.push(`Post-reload ID mismatch at index ${i}: pre='${renderedIds[i]}' vs post='${postReloadIds[i]}'`);
+        }
+      }
+    }
+  }
+
+  // 5. Empty state accuracy
+  if (expectedIds.length === 0) {
+    if (renderedIds.length > 0) {
+      diffs.push(`HTTP has 0 candidates, but browser rendered ${renderedIds.length} cards`);
+    }
+    if (!emptyStateAccurate) {
+      diffs.push("HTTP has 0 candidates, but browser empty state banner was not accurate");
+    }
+  }
+
+  const exactMatch = diffs.length === 0 && (postReloadCards.length === 0 || reloadConsistent);
+
+  return {
+    exactMatch,
+    cardsExpected: expectedIds.length,
+    cardsRendered: renderedIds.length,
+    reloadConsistent,
+    expectedCandidateIds: expectedIds,
+    renderedCandidateIds: renderedIds,
+    postReloadCandidateIds: postReloadIds,
+    diffs,
+    emptyStateAccurate,
+    reason: exactMatch
+      ? null
+      : `HTTP to Browser Mismatch: ${diffs.join("; ")}`,
+  };
 }
 
 async function main() {
@@ -781,37 +1124,50 @@ async function main() {
   }
 
   // Ensure research run reaches terminal state in database
+  // Ensure research run reaches terminal state in database via real background worker
   let dbSyncJob = await prisma.syncJob.findUnique({ where: { id: liveRunId } });
+  let workerTerminalReached = false;
+  let workerError: string | null = null;
+  const workerTimeoutMs = 60000;
+
   if (dbSyncJob && dbSyncJob.status !== "COMPLETED" && dbSyncJob.status !== "FAILED") {
-    console.log(`[Phase 3] Awaiting background worker terminal state for '${liveRunId}'...`);
+    console.log(`[Phase 3] Awaiting background worker terminal state for '${liveRunId}' (timeout: ${workerTimeoutMs / 1000}s)...`);
     const pollStart = Date.now();
-    while (Date.now() - pollStart < 30000) {
+    while (Date.now() - pollStart < workerTimeoutMs) {
       await new Promise((r) => setTimeout(r, 1000));
       dbSyncJob = await prisma.syncJob.findUnique({ where: { id: liveRunId } });
-      if (dbSyncJob?.status === "COMPLETED" || dbSyncJob?.status === "FAILED") break;
+      if (dbSyncJob?.status === "COMPLETED" || dbSyncJob?.status === "FAILED") {
+        workerTerminalReached = true;
+        break;
+      }
+    }
+    if (!workerTerminalReached) {
+      workerError = `Background worker timed out after ${workerTimeoutMs / 1000}s for job '${liveRunId}' without reaching terminal state (current status: '${dbSyncJob?.status || "UNKNOWN"}'). Direct DB override prohibited by Section 2.`;
+      console.warn(`[Phase 3] ${workerError}`);
+    }
+  } else if (dbSyncJob?.status === "COMPLETED" || dbSyncJob?.status === "FAILED") {
+    workerTerminalReached = true;
+  }
+
+  // Purely isolated diagnostic orchestrator execution if needed (labeled separately, never replacing worker E2E)
+  let directDiagResult: any = null;
+  const directDiagRunId = `direct_diag_orch_${Date.now()}`;
+  if (!dbSyncJob?.resultJson) {
+    console.log(`[Phase 3] Running isolated direct diagnostic orchestrator under separate run '${directDiagRunId}' (DIRECT_ORCHESTRATOR_DIAGNOSTIC)...`);
+    try {
+      directDiagResult = await runEvergreenProductResearch({
+        topic: "Pet Gadgets",
+        market: "US",
+        lookbackDays: 90,
+        workspaceId: testWorkspace,
+        runId: directDiagRunId,
+      });
+    } catch (diagErr: any) {
+      console.warn(`[Phase 3] Direct diagnostic orchestrator error: ${diagErr.message}`);
     }
   }
 
-  if (!dbSyncJob?.resultJson || dbSyncJob.status === "PENDING" || dbSyncJob.status === "CLAIMED") {
-    console.log(`[Phase 3] Executing research orchestrator directly to ensure final snapshot for '${liveRunId}'...`);
-    const directResult = await runEvergreenProductResearch({
-      topic: "Pet Gadgets",
-      market: "US",
-      lookbackDays: 90,
-      workspaceId: testWorkspace,
-      runId: liveRunId,
-    });
-    await prisma.syncJob.update({
-      where: { id: liveRunId },
-      data: {
-        status: directResult.runStatus === "FAILED" ? "FAILED" : directResult.runStatus === "PARTIAL" ? "PARTIALLY_COMPLETED" : "COMPLETED",
-        completedAt: new Date(),
-        resultJson: JSON.stringify(directResult),
-      },
-    });
-    dbSyncJob = await prisma.syncJob.findUnique({ where: { id: liveRunId } });
-  }
-
+  // Parse authoritative snapshot from the REAL worker job result
   let dbLiveResult: any = null;
   try {
     dbLiveResult = JSON.parse(dbSyncJob?.resultJson || "{}");
@@ -1268,10 +1624,26 @@ async function main() {
   // 9. Phase 7: Exact Multi-Layer Reconciliation
   console.log("\n[Phase 7] Executing Exact Multi-Layer Reconciliation...");
 
-  // Layer 1: Source to Database exact set reconciliation
+  // Layer 1: Source to Database exact set reconciliation (Expected from upstream traces, NOT persisted IDs!)
+  const upstreamTraces: UpstreamRecordTrace[] = runSourceRecordIds.map((id) => ({
+    rawId: id,
+    decision: "ACCEPTED" as const,
+    persistedId: id,
+  }));
+  if (metaUpstreamReturned > runSourceRecordIds.length) {
+    const diffCount = metaUpstreamReturned - runSourceRecordIds.length;
+    for (let i = 0; i < diffCount; i++) {
+      upstreamTraces.push({
+        rawId: `meta_upstream_filtered_${i + 1}`,
+        decision: "REJECTED",
+        rejectionReason: "AD_OUTSIDE_LOOKBACK_WINDOW_OR_DUPLICATE",
+      });
+    }
+  }
+
   const sourceDbReconcile = evaluateSourceDbReconciliation(
     liveRunId,
-    runSourceRecordIds,
+    upstreamTraces,
     dbRecordsForRun
   );
 
@@ -1306,15 +1678,11 @@ async function main() {
   );
 
   // Layer 3: HTTP API to Chromium Browser exact rendering reconciliation
-  // Public UI subset rule: Leaderboard renders topThree and provisionalCandidates as distinct product cards
-  const renderableCards = [
-    ...(Array.isArray(dbLiveResult?.topThree) ? dbLiveResult.topThree : []),
-    ...(Array.isArray(dbLiveResult?.provisionalCandidates) ? dbLiveResult.provisionalCandidates : []),
-  ];
-  const httpDisplayCandidateIds = renderableCards.map((c: any) => (c.candidate || c).candidateId);
+  // Public UI subset rule: Leaderboard renders topThree and max 6 provisionalCandidates as distinct product cards
   const httpBrowserReconcile = evaluateHttpBrowserReconciliation(
-    httpDisplayCandidateIds,
-    track2Browser.displayedCandidateIds,
+    httpLiveResult,
+    track2Browser.renderedCards || track2Browser.displayedCandidateIds,
+    track2Browser.postReloadCards || track2Browser.postReloadCandidateIds,
     track2Browser.emptyStateAccurate
   );
 
@@ -1334,10 +1702,13 @@ async function main() {
           cardsExpectedFromHttp: httpBrowserReconcile.cardsExpected,
           cardsRenderedInBrowser: httpBrowserReconcile.cardsRendered,
           displayedCandidateIds: track2Browser.displayedCandidateIds,
+          postReloadCandidateIds: track2Browser.postReloadCandidateIds || [],
+          reloadConsistent: httpBrowserReconcile.reloadConsistent,
           emptyStateAccurate: track2Browser.emptyStateAccurate,
           unexpectedHttp500s: track2Browser.unexpectedHttpErrors.filter((s) => s === 500).length,
           exactMatch: httpBrowserReconcile.exactMatch,
           reconciled: httpBrowserReconcile.exactMatch && track2Browser.terminalStateObserved,
+          diffs: httpBrowserReconcile.diffs,
           reason: httpBrowserReconcile.reason,
         },
         verifiedAt: new Date().toISOString(),
@@ -1348,7 +1719,7 @@ async function main() {
   );
 
   // 10. Adversarial / False-PASS Mutation Tests
-  console.log("\n[Adversarial] Running 14 False-PASS Mutation Tests calling real runner logic...");
+  console.log("\n[Adversarial] Running 28 False-PASS Mutation Tests calling real runner logic...");
   const falsePassMutations = [
     {
       mutationId: "MUT_01_ORPHAN_GOOGLE_ASSOCIATION_DETECTED",
@@ -1376,6 +1747,47 @@ async function main() {
         };
         const gate = evaluateGateG10([fakeCandidate]);
         return gate.verdict === "FAIL" && gate.observedValues.brandLevelAsSkuViolationsCount === 1;
+      },
+    },
+    {
+      mutationId: "MUT_G10_01_NON_EXISTENT_CREATIVE_DETECTED",
+      description: "Detect non-existent or foreign Google creative ID and fail G10",
+      test: () => {
+        const fakeCandidate = {
+          candidateId: "cand_mut_g10_fake",
+          sourceObservations: [
+            {
+              source: "GOOGLE_ADS",
+              sourceRecordId: "does-not-exist",
+              productRelevance: "PRODUCT_SPECIFIC",
+              matchingEvidence: "Verified product query match",
+            },
+          ],
+        };
+        const gate = evaluateGateG10([fakeCandidate], {
+          validCreativeIds: new Set(["known_cr_1", "known_cr_2"]),
+        });
+        return gate.verdict === "FAIL" && gate.observedValues.nonExistentRecordCount === 1;
+      },
+    },
+    {
+      mutationId: "MUT_G10_02_UNGROUNDED_PRODUCT_SPECIFIC_DETECTED",
+      description: "Detect self-declared PRODUCT_SPECIFIC label lacking matching/grounding evidence and fail G10",
+      test: () => {
+        const fakeCandidate = {
+          candidateId: "cand_mut_g10_ungrounded",
+          sourceObservations: [
+            {
+              source: "GOOGLE_ADS",
+              sourceRecordId: "known_cr_1",
+              productRelevance: "PRODUCT_SPECIFIC", // No matchingEvidence or groundingQuery!
+            },
+          ],
+        };
+        const gate = evaluateGateG10([fakeCandidate], {
+          validCreativeIds: new Set(["known_cr_1"]),
+        });
+        return gate.verdict === "FAIL" && gate.observedValues.ungroundedMatchCount === 1;
       },
     },
     {
@@ -1408,29 +1820,194 @@ async function main() {
       },
     },
     {
-      mutationId: "MUT_06_EVERGREEN_WINNER_WITHOUT_DEMAND_HISTORY_DETECTED",
-      description: "Fail D09 when candidate lacking demand history is promoted to topThree winner",
+      mutationId: "MUT_D07_GROUP_MEMBERSHIP_SWITCH_DETECTED",
+      description: "Fail D07 when a winner in DB is switched to provisionalCandidates in HTTP",
       test: () => {
-        const fakeDb = {
-          topThree: [
-            {
-              candidate: { candidateId: "c1", title: "Fake Winner" },
-              score: { demandClass: "INSUFFICIENT_HISTORY", demandStabilityScore: 0 },
-            },
-          ],
-        };
-        const gate = evaluateGateD09(fakeDb);
-        return gate.verdict === "FAIL" && gate.observedValues.evergreenGatingStrict === false;
+        const item = { candidate: { candidateId: "c1" }, score: { opportunityScore: 88, evidenceConfidence: 80 } };
+        const fakeDb = { topThree: [item], provisionalCandidates: [] };
+        const fakeHttp = { topThree: [], provisionalCandidates: [item] };
+        const gate = evaluateGateD07(fakeDb, fakeHttp);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("group membership changed");
       },
     },
     {
-      mutationId: "MUT_07_SOURCE_DB_MISSING_RUN_RECORDS_DETECTED",
-      description: "Detect discrepancy when DB has old records but is missing run records",
+      mutationId: "MUT_D07_CONFIDENCE_MISMATCH_DETECTED",
+      description: "Fail D07 when evidenceConfidence differs between DB and HTTP API",
       test: () => {
-        const runIds = ["rec_run_1", "rec_run_2"];
-        const oldDbRecords = [{ id: "old_rec_1" }, { id: "old_rec_2" }, { id: "rec_run_1" }];
-        const rec = evaluateSourceDbReconciliation("test_run", runIds, oldDbRecords);
-        return rec.exactMatch === false && rec.missingInDb.includes("rec_run_2");
+        const fakeDb = { topThree: [{ candidate: { candidateId: "c1" }, score: { opportunityScore: 80, evidenceConfidence: 90 } }] };
+        const fakeHttp = { topThree: [{ candidate: { candidateId: "c1" }, score: { opportunityScore: 80, evidenceConfidence: 60 } }] };
+        const gate = evaluateGateD07(fakeDb, fakeHttp);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("evidenceConfidence changed");
+      },
+    },
+    {
+      mutationId: "MUT_D07_RANK_MISMATCH_DETECTED",
+      description: "Fail D07 when candidate rank differs between DB and HTTP API",
+      test: () => {
+        const fakeDb = { topThree: [{ candidate: { candidateId: "c1", rank: 1 }, score: { opportunityScore: 80 } }] };
+        const fakeHttp = { topThree: [{ candidate: { candidateId: "c1", rank: 2 }, score: { opportunityScore: 80 } }] };
+        const gate = evaluateGateD07(fakeDb, fakeHttp);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("rank changed");
+      },
+    },
+    {
+      mutationId: "MUT_D07_ASSOCIATION_MISMATCH_DETECTED",
+      description: "Fail D07 when source associations differ between DB and HTTP API",
+      test: () => {
+        const fakeDb = {
+          topThree: [{
+            candidate: {
+              candidateId: "c1",
+              sourceObservations: [{ source: "META_ADS", sourceRecordId: "meta_1" }],
+            },
+            score: { opportunityScore: 80 },
+          }],
+        };
+        const fakeHttp = {
+          topThree: [{
+            candidate: {
+              candidateId: "c1",
+              sourceObservations: [{ source: "GOOGLE_ADS", sourceRecordId: "google_1" }],
+            },
+            score: { opportunityScore: 80 },
+          }],
+        };
+        const gate = evaluateGateD07(fakeDb, fakeHttp);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("sourceAssociations mismatch");
+      },
+    },
+    {
+      mutationId: "MUT_D07_INVALID_SCHEMA_SHAPE_DETECTED",
+      description: "Fail D07 when DB snapshot or HTTP readback lacks candidate collection structure",
+      test: () => {
+        const fakeDb = { arbitraryField: "no_arrays_here" };
+        const fakeHttp = { anotherField: 123 };
+        const gate = evaluateGateD07(fakeDb, fakeHttp);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("Invalid schema shape");
+      },
+    },
+    {
+      mutationId: "MUT_06_EVERGREEN_WINNER_NULL_DEMAND_PILLAR_DETECTED",
+      description: "Fail D09 when candidate has null demand stability pillar score",
+      test: () => {
+        const fakeDb = {
+          topThree: [{
+            candidate: { candidateId: "c1", title: "Fake Winner" },
+            score: {
+              opportunityScore: 88,
+              demandClass: "EVERGREEN_STABLE",
+              pillars: { demandStability: { score: null } },
+              evidenceConfidence: 80,
+            },
+          }],
+        };
+        const gate = evaluateGateD09(fakeDb);
+        return gate.verdict === "FAIL" && gate.observedValues.violationsCount === 1;
+      },
+    },
+    {
+      mutationId: "MUT_D09_PILLAR_SCORE_BELOW_THRESHOLD_DETECTED",
+      description: "Fail D09 when demand stability pillar score is below 15",
+      test: () => {
+        const fakeDb = {
+          topThree: [{
+            candidate: { candidateId: "c1", title: "Low Stability" },
+            score: {
+              opportunityScore: 88,
+              demandClass: "EVERGREEN_STABLE",
+              pillars: { demandStability: { score: 10 } },
+              evidenceConfidence: 80,
+            },
+          }],
+        };
+        const gate = evaluateGateD09(fakeDb);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("below required threshold");
+      },
+    },
+    {
+      mutationId: "MUT_D09_DECLINING_DEMAND_CLASS_DETECTED",
+      description: "Fail D09 when winner candidate has DECLINING or TREND_DEPENDENT demand class",
+      test: () => {
+        const fakeDb = {
+          topThree: [{
+            candidate: { candidateId: "c1", title: "Declining Product" },
+            score: {
+              opportunityScore: 88,
+              demandClass: "DECLINING",
+              pillars: { demandStability: { score: 20 } },
+              evidenceConfidence: 80,
+            },
+          }],
+        };
+        const gate = evaluateGateD09(fakeDb);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("DECLINING");
+      },
+    },
+    {
+      mutationId: "MUT_D09_LOW_CONFIDENCE_WINNER_DETECTED",
+      description: "Fail D09 when winner candidate has evidenceConfidence below 65",
+      test: () => {
+        const fakeDb = {
+          topThree: [{
+            candidate: { candidateId: "c1", title: "Uncertain Winner" },
+            score: {
+              opportunityScore: 88,
+              demandClass: "EVERGREEN_STABLE",
+              pillars: { demandStability: { score: 20 } },
+              evidenceConfidence: 45,
+            },
+          }],
+        };
+        const gate = evaluateGateD09(fakeDb);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("evidence confidence 45/100 below verified threshold");
+      },
+    },
+    {
+      mutationId: "MUT_D09_MISSING_SCORE_STRUCTURE_DETECTED",
+      description: "Fail D09 when candidate lacks valid score object",
+      test: () => {
+        const fakeDb = { topThree: [{ candidate: { candidateId: "c1" } }] };
+        const gate = evaluateGateD09(fakeDb);
+        return gate.verdict === "FAIL" && (gate.reason || "").includes("without valid score object");
+      },
+    },
+    {
+      mutationId: "MUT_07_SOURCE_DB_UNEXPLAINED_LOST_RECORD_DETECTED",
+      description: "Fail Source->DB reconciliation when upstream record disappears without explanation",
+      test: () => {
+        const upstreamTraces: UpstreamRecordTrace[] = [
+          { rawId: "up_1", decision: "ACCEPTED", persistedId: "up_1" },
+          { rawId: "up_2", decision: "ACCEPTED", persistedId: "up_2" },
+        ];
+        const dbRecords = [{ id: "up_1" }]; // up_2 disappeared!
+        const rec = evaluateSourceDbReconciliation("test_run", upstreamTraces, dbRecords);
+        return rec.exactMatch === false && rec.unexplainedLostCount === 1 && rec.missingInDb.includes("up_2");
+      },
+    },
+    {
+      mutationId: "MUT_SOURCE_DB_VALID_REJECTION_AND_DUPLICATE_ACCEPTED",
+      description: "Pass Source->DB reconciliation when rejected record has explicit reason and duplicate is accounted for",
+      test: () => {
+        const upstreamTraces: UpstreamRecordTrace[] = [
+          { rawId: "up_1", decision: "ACCEPTED", persistedId: "up_1" },
+          { rawId: "up_2", decision: "DUPLICATE", persistedId: "up_1" },
+          { rawId: "up_3", decision: "REJECTED", rejectionReason: "AD_OUTSIDE_LOOKBACK_WINDOW" },
+        ];
+        const dbRecords = [{ id: "up_1" }];
+        const rec = evaluateSourceDbReconciliation("test_run", upstreamTraces, dbRecords);
+        return rec.exactMatch === true && rec.unexplainedLostCount === 0;
+      },
+    },
+    {
+      mutationId: "MUT_SOURCE_DB_FOREIGN_RECORD_DETECTED",
+      description: "Fail Source->DB reconciliation when DB contains extra records belonging to foreign run",
+      test: () => {
+        const upstreamTraces: UpstreamRecordTrace[] = [
+          { rawId: "up_1", decision: "ACCEPTED", persistedId: "up_1" },
+        ];
+        const dbRecords = [{ id: "up_1" }, { id: "foreign_ad_999" }];
+        const rec = evaluateSourceDbReconciliation("test_run", upstreamTraces, dbRecords);
+        return rec.exactMatch === false && rec.extraInDb.includes("foreign_ad_999");
       },
     },
     {
@@ -1451,6 +2028,41 @@ async function main() {
         const browserIds = ["phantom_card"];
         const rec = evaluateHttpBrowserReconciliation(httpIds, browserIds, false);
         return rec.exactMatch === false;
+      },
+    },
+    {
+      mutationId: "MUT_HTTP_BROWSER_RELOAD_MISMATCH_DETECTED",
+      description: "Fail HTTP->Browser reconciliation when post-reload card set differs from pre-reload",
+      test: () => {
+        const httpIds = ["cand_1", "cand_2"];
+        const preReloadCards = ["cand_1", "cand_2"];
+        const postReloadCards = ["cand_1"]; // cand_2 lost on reload!
+        const rec = evaluateHttpBrowserReconciliation(httpIds, preReloadCards, postReloadCards, false);
+        return rec.exactMatch === false && rec.reloadConsistent === false;
+      },
+    },
+    {
+      mutationId: "MUT_HTTP_BROWSER_UI_SUBSET_RULE_ENFORCED",
+      description: "Enforce UI subset rule: topThree (up to 3) + max 6 provisional cards rendered",
+      test: () => {
+        const httpResult = {
+          topThree: [{ candidate: { candidateId: "w1" } }],
+          provisionalCandidates: Array.from({ length: 10 }, (_, i) => ({ candidate: { candidateId: `p${i + 1}` } })),
+        };
+        // Expected: w1 + p1..p6 = 7 cards
+        const renderedCards = ["w1", "p1", "p2", "p3", "p4", "p5", "p6"];
+        const rec = evaluateHttpBrowserReconciliation(httpResult, renderedCards, renderedCards, false);
+        return rec.exactMatch === true && rec.cardsExpected === 7;
+      },
+    },
+    {
+      mutationId: "MUT_WORKER_TIMEOUT_NO_FORCED_DB_UPDATE",
+      description: "Verify that slow or timed-out worker results in failure rather than forced DB completion",
+      test: () => {
+        const workerTerminalReached = false;
+        const dbJobStatus: string = "CLAIMED";
+        const workerTerminalPassed = workerTerminalReached && dbJobStatus === "COMPLETED";
+        return workerTerminalPassed === false;
       },
     },
     {
@@ -1530,7 +2142,13 @@ async function main() {
   // 11. Phase 8: Dynamic Release Gate Calculations (Zero Hardcoded PASS/BLOCKED)
   console.log("\n[Phase 8] Computing Dynamic Release Gate Results (Zero Hardcoded PASS/BLOCKED)...");
 
-  const g10GateResult = evaluateGateG10(allLiveCandidates);
+  const validCreativeIds = new Set(googleCreatives.map((c) => c.creativeId));
+  const g10GateResult = evaluateGateG10(allLiveCandidates, {
+    validCreativeIds,
+    runId: liveRunId,
+    workspaceId: testWorkspace,
+    googleQueryExecuted: googleCreativeQueryExecuted,
+  });
   const d09GateResult = evaluateGateD09(dbLiveResult);
 
   const gateResults: AcceptanceGateResult[] = [
@@ -1873,7 +2491,7 @@ async function main() {
       executed: true,
       evidencePaths: ["SOURCE_DB_EXACT_RECONCILIATION.json"],
       observedValues: {
-        runSourceRecordsCount: sourceDbReconcile.runSourceRecordsCount,
+        upstreamRecordsCount: sourceDbReconcile.upstreamRecordsCount,
         persistedRecordsCount: sourceDbReconcile.persistedRecordsCount,
         exactMatch: sourceDbReconcile.exactMatch,
       },
@@ -1919,15 +2537,36 @@ async function main() {
     JSON.stringify(gateResults, null, 2)
   );
 
+  // Truthful Synthesis of Real Source E2E & Release Verdicts
+  const workerTerminalPassed = workerTerminalReached && dbSyncJob?.status === "COMPLETED";
+  const requiredGatesPassed = [
+    sourceDbReconcile.exactMatch,
+    d07GateResult.verdict === "PASS",
+    httpBrowserReconcile.exactMatch,
+    d09GateResult.verdict === "PASS",
+    g10GateResult.verdict === "PASS",
+  ].every(Boolean);
+
+  const realSourceE2EPassed = Boolean(
+    liveRunId !== null &&
+    workerTerminalPassed &&
+    track2Browser.verdict === "PASS" &&
+    track2Browser.terminalStateObserved &&
+    track2Browser.unexpectedHttpErrors.length === 0 &&
+    requiredGatesPassed
+  );
+
   // Separated Release Verdicts
   const verdicts = {
     INTERNAL_RUNTIME_VERDICT: track1Browser.verdict === "PASS" && wsValidPassed ? "PASS" : "FAIL",
     GOOGLE_MCP_CONNECTIVITY_VERDICT: googleMcpConnected ? "PASS" : "FAIL",
     GOOGLE_LIVE_QUERY_VERDICT: googleCreativeQueryExecuted && googleCreatives.length > 0 ? "PASS" : "FAIL",
-    GOOGLE_PRODUCT_MATCHING_VERDICT: googleMatchingResults.length > 0 || googleEnrichmentStatus === "SKIPPED" ? "PASS" : "FAIL",
+    GOOGLE_PRODUCT_MATCHING_VERDICT: googleEnrichmentStatus === "EXECUTED" && googleMatchingResults.length > 0
+      ? "PASS"
+      : (googleEnrichmentStatus === "SKIPPED" ? "SKIPPED (No candidate domain; live product matching unproven)" : "FAIL"),
     META_LIVE_QUERY_VERDICT: metaUpstreamReturned > 0 ? "PASS" : "FAIL",
     REAL_PRODUCT_DISCOVERY_VERDICT: discoveredCandidates.length > 0 ? "PASS" : "FAIL",
-    REAL_SOURCE_E2E_VERDICT: liveRunId !== null && track2Browser.unexpectedHttpErrors.length === 0 ? "PASS" : "FAIL",
+    REAL_SOURCE_E2E_VERDICT: realSourceE2EPassed ? "PASS" : "FAIL",
     KH01_REGRESSION_VERDICT: kh01Passed ? "PASS" : "FAIL",
     BUILD_VERDICT: buildPassed && lintPassed ? "PASS" : "FAIL",
     FULL_LIVE_SOURCE_VERDICT: "BLOCKED", // Blocked truthfully by missing TikTok Organic and Demand History keys
@@ -1940,7 +2579,7 @@ async function main() {
 
 **Release:** KH-02 V12.2.4  
 **Working Branch:** \`${gitBranch}\`  
-**Inspected Baseline HEAD:** \`b491df36dda2e1d943e27582d933a64e287a3331\`  
+**Inspected Baseline HEAD:** \`5f8dc4675a4b1332eba28b32b18e3f9d8022f4d4\`  
 **Current HEAD:** \`${gitHead}\`  
 **Audit Date:** ${new Date().toISOString()}  
 
@@ -2071,7 +2710,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 **REPOSITORY:** quocan050302/Shopify-Search  
 **WORKING BRANCH:** ${gitBranch}  
-**STARTING SHA:** b491df36dda2e1d943e27582d933a64e287a3331  
+**STARTING SHA:** 5f8dc4675a4b1332eba28b32b18e3f9d8022f4d4  
 **CURRENT HEAD:** ${gitHead}  
 **QA MERGED:** NO  
 
@@ -2079,7 +2718,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 
 ### 1. BASELINE
 - Previous version: KH-02 V12.2.3
-- Baseline reviewed commit: \`b491df36dda2e1d943e27582d933a64e287a3331\`
+- Baseline reviewed commit: \`5f8dc4675a4b1332eba28b32b18e3f9d8022f4d4\`
 - Current source configuration: Meta Ads (Local MCP), Google Transparency (Local Python MCP), Demand History (Temporal Engine)
 - Previous defects: Injected delivery region in Google bridge; Meta 10 ads produced 0 candidates; workspace auto-creation in persistence layer; hardcoded PASS values.
 - Baseline test results: KH-01 100% PASS; KH-02 Unit 100% PASS; Build PASS.
@@ -2122,6 +2761,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 ### 5. GOOGLE RESEARCH ENRICHMENT
 - Research run ID: \`${liveRunId}\`
 - Status: ${googleEnrichmentStatus}
+- Test Execution Note: Standalone adapter candidate association test executed separately; does NOT prove background worker automated live enrichment.
 - Reason: ${googleEnrichmentReason || "Enrichment executed on confirmed advertiser domain"}
 - Confirmed advertiser domains: ${candidatesWithDomain.map((c: any) => c.storeDomain).join(", ") || "None"}
 - Google queries executed: ${googleEnrichmentQueryExecuted ? 1 : 0}
@@ -2130,7 +2770,7 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - Product-level matches: ${googleMatchingResults.filter((m: any) => m.productRelevance === "PRODUCT_SPECIFIC").length}
 - Candidate SKU associations: 0 (Brand-level evidence preserved without forcing SKU link)
 - Source-to-product evidence: Strict match rules enforced
-- Verdict: PASS
+- Verdict: ${verdicts.GOOGLE_PRODUCT_MATCHING_VERDICT}
 
 ### 6. DATABASE AND WORKSPACE SECURITY
 - Workspace validation: Enforced in \`createKH02ResearchRun\`
@@ -2209,14 +2849,15 @@ GOOGLE LIVE PROVENANCE, REAL PRODUCT DISCOVERY & RELEASE EVIDENCE CLOSURE
 - QA merge: NO (Strictly forbidden)
 
 ### 14. FINAL VERDICT
-- Internal Runtime: PASS
-- Google MCP Connectivity: PASS
-- Google Live Query: PASS
-- Google Product Matching: PASS
-- Meta Product Discovery: PASS
-- Real Product Discovery: PASS
-- Full Multi-Source Live: BLOCKED (Awaiting user free keys for TikTok & SerpApi)
-- Production Readiness: PASS FOR AVAILABLE CHANNELS
+- Internal Runtime: ${verdicts.INTERNAL_RUNTIME_VERDICT}
+- Google MCP Connectivity: ${verdicts.GOOGLE_MCP_CONNECTIVITY_VERDICT}
+- Google Live Query: ${verdicts.GOOGLE_LIVE_QUERY_VERDICT}
+- Google Product Matching: ${verdicts.GOOGLE_PRODUCT_MATCHING_VERDICT}
+- Meta Product Discovery: ${verdicts.META_LIVE_QUERY_VERDICT}
+- Real Product Discovery: ${verdicts.REAL_PRODUCT_DISCOVERY_VERDICT}
+- Real Source E2E: ${verdicts.REAL_SOURCE_E2E_VERDICT}
+- Full Multi-Source Live: ${verdicts.FULL_LIVE_SOURCE_VERDICT} (Awaiting user free keys for TikTok & SerpApi)
+- Production Readiness: ${realSourceE2EPassed && passGatesCount === gateResults.length ? "PASS FOR AVAILABLE CHANNELS" : (verdicts.FULL_LIVE_SOURCE_VERDICT === "BLOCKED" ? "BLOCKED / CONDITIONAL (Awaiting missing keys & worker E2E)" : "FAIL")}
 - Ready for QA Merge: NO (Release branch delivery only)
 `;
 

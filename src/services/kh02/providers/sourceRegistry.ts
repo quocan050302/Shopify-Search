@@ -246,19 +246,46 @@ export async function diagnoseKH02Source(
 
   const applyTelemetry = (dims: ProviderReadinessDimensions, src: IntelligenceSource): ProviderReadinessDimensions => {
     const t = workspaceTelemetry?.[src];
-    if (t && t.queryExecuted) {
-      dims.queryExecuted = true;
-      dims.queryStatus = t.queryStatus;
-      dims.queryProvenance = t.queryProvenance;
+    if (t) {
+      const hasLiveAttempt = Boolean(t.liveAttempted ?? (t.isLive && t.queryExecuted));
+      dims.queryExecuted = Boolean(t.liveAttempted ?? t.queryExecuted);
+      if (t.queryStatus) {
+        dims.queryStatus = t.queryStatus;
+      }
+      if (t.queryProvenance) {
+        dims.queryProvenance = t.queryProvenance;
+      }
       dims.isLive = Boolean(t.isLive);
-      dims.lastLiveQueryAt = t.isLive ? t.queryTimestamp : null;
-      dims.lastLiveQueryRecordCount = t.isLive
-        ? (t.freshLiveCount ?? t.upstreamReturnedCount ?? t.retrievedCount ?? 0)
-        : null;
-      dims.lastSuccessfulLiveQueryAt = t.isLive ? t.lastSuccessfulQueryAt : null;
-      dims.lastSuccessfulQueryAt = t.lastSuccessfulQueryAt;
-      dims.lastSuccessfulRecordCount = t.lastSuccessfulRecordCount;
-      dims.queryError = t.queryError;
+
+      if (hasLiveAttempt) {
+        dims.lastLiveQueryAt = t.lastLiveQueryAt ?? t.queryTimestamp ?? dims.lastLiveQueryAt;
+        if (t.liveSucceeded || (t.liveSucceeded === undefined && t.isLive)) {
+          dims.lastLiveQueryRecordCount = typeof t.lastLiveQueryRecordCount === "number"
+            ? t.lastLiveQueryRecordCount
+            : (t.upstreamReturnedCount ?? t.freshLiveCount ?? (t.isLive ? t.retrievedCount : null) ?? 0);
+          dims.lastSuccessfulLiveQueryAt = t.lastSuccessfulLiveQueryAt ?? t.lastSuccessfulQueryAt ?? dims.lastLiveQueryAt;
+        } else {
+          // Live attempt failed - do not attribute count to failed query, but record failure
+          dims.lastLiveQueryRecordCount = null;
+        }
+      } else if (t.isLive) {
+        dims.lastLiveQueryAt = t.queryTimestamp ?? dims.lastLiveQueryAt;
+        dims.lastLiveQueryRecordCount = typeof t.lastLiveQueryRecordCount === "number"
+          ? t.lastLiveQueryRecordCount
+          : (t.freshLiveCount ?? t.upstreamReturnedCount ?? t.retrievedCount ?? 0);
+        dims.lastSuccessfulLiveQueryAt = t.lastSuccessfulQueryAt ?? dims.lastSuccessfulLiveQueryAt;
+      }
+
+      if (t.lastSuccessfulQueryAt) {
+        dims.lastSuccessfulQueryAt = t.lastSuccessfulQueryAt;
+      }
+      if (t.lastSuccessfulRecordCount !== undefined && t.lastSuccessfulRecordCount !== null) {
+        dims.lastSuccessfulRecordCount = t.lastSuccessfulRecordCount;
+      }
+      const err = t.queryError ?? t.liveError;
+      if (err) {
+        dims.queryError = err;
+      }
     }
     return dims;
   };

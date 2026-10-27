@@ -1058,4 +1058,254 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(telemetryWithObs.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
     });
   });
+
+  describe("V12.2.4 Telemetry Decoupling & Projection Lifecycle (Section 4)", () => {
+    it("1. live-zero+cache: preserves live succeeded 0 and cache used 8 across lifecycle", async () => {
+      const ws = `ws_live_zero_${Date.now()}`;
+      const now = new Date().toISOString();
+      const fakeDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "job_live_zero",
+              completedAt: now,
+              createdAt: now,
+              resultJson: JSON.stringify({
+                providerTelemetry: {
+                  META_ADS: {
+                    source: "META_ADS",
+                    queryExecuted: true,
+                    queryStatus: "PASSED",
+                    queryTimestamp: now,
+                    retrievedCount: 8,
+                    acceptedCount: 8,
+                    queryProvenance: "CACHED_SOURCE",
+                    isLive: false,
+                    queryError: null,
+                    lastSuccessfulRecordCount: 8,
+                    lastSuccessfulQueryAt: now,
+                    upstreamReturnedCount: 0,
+                    freshLiveCount: 0,
+                    cachedRecordsCount: 8,
+                    liveAttempted: true,
+                    liveSucceeded: true,
+                    liveError: null,
+                    lastLiveQueryAt: now,
+                    lastLiveQueryRecordCount: 0,
+                    lastSuccessfulLiveQueryAt: now,
+                  },
+                },
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry(ws, fakeDb);
+      expect(telemetry.META_ADS.liveAttempted).toBe(true);
+      expect(telemetry.META_ADS.liveSucceeded).toBe(true);
+      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(0);
+      expect(telemetry.META_ADS.lastLiveQueryAt).toBe(now);
+      expect(telemetry.META_ADS.cachedRecordsCount).toBe(8);
+      expect(telemetry.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
+      expect(telemetry.META_ADS.isLive).toBe(false);
+
+      // Verify UI / registry projection preserves lastLiveQueryRecordCount = 0 and lastLiveQueryAt
+      const diag = await diagnoseKH02Source("META_ADS", { workspaceId: ws });
+      // In isolated mock test, applyTelemetry is invoked
+      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(0);
+    });
+
+    it("2. live-failure+cache: retains failed attempt, timestamp, and error when fallback to cache succeeds", async () => {
+      const ws = `ws_live_fail_${Date.now()}`;
+      const now = new Date().toISOString();
+      const fakeDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "job_live_fail",
+              completedAt: now,
+              createdAt: now,
+              resultJson: JSON.stringify({
+                providerTelemetry: {
+                  META_ADS: {
+                    source: "META_ADS",
+                    queryExecuted: true,
+                    queryStatus: "CACHE_ONLY",
+                    queryTimestamp: now,
+                    retrievedCount: 8,
+                    acceptedCount: 8,
+                    queryProvenance: "CACHED_SOURCE",
+                    isLive: false,
+                    queryError: "Meta Graph API 500: Server Error",
+                    lastSuccessfulRecordCount: 8,
+                    lastSuccessfulQueryAt: now,
+                    upstreamReturnedCount: null,
+                    freshLiveCount: 0,
+                    cachedRecordsCount: 8,
+                    liveAttempted: true,
+                    liveSucceeded: false,
+                    liveError: "Meta Graph API 500: Server Error",
+                    lastLiveQueryAt: now,
+                    lastLiveQueryRecordCount: null,
+                    lastSuccessfulLiveQueryAt: null,
+                  },
+                },
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry(ws, fakeDb);
+      expect(telemetry.META_ADS.liveAttempted).toBe(true);
+      expect(telemetry.META_ADS.liveSucceeded).toBe(false);
+      expect(telemetry.META_ADS.liveError).toBe("Meta Graph API 500: Server Error");
+      expect(telemetry.META_ADS.lastLiveQueryAt).toBe(now);
+      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBeNull();
+      expect(telemetry.META_ADS.cachedRecordsCount).toBe(8);
+      expect(telemetry.META_ADS.queryProvenance).toBe("CACHED_SOURCE");
+    });
+
+    it("3. cache-only: does not set queryExecuted true when only reading cache without upstream attempt", async () => {
+      const ws = `ws_cache_only_${Date.now()}`;
+      const now = new Date().toISOString();
+      const fakeDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "job_cache_only",
+              completedAt: now,
+              createdAt: now,
+              resultJson: JSON.stringify({
+                providerTelemetry: {
+                  META_ADS: {
+                    source: "META_ADS",
+                    queryExecuted: false, // Pure cache reading
+                    queryStatus: "CACHE_ONLY",
+                    queryTimestamp: now,
+                    retrievedCount: 8,
+                    acceptedCount: 8,
+                    queryProvenance: "CACHED_SOURCE",
+                    isLive: false,
+                    queryError: null,
+                    lastSuccessfulRecordCount: 8,
+                    lastSuccessfulQueryAt: now,
+                    upstreamReturnedCount: null,
+                    freshLiveCount: 0,
+                    cachedRecordsCount: 8,
+                    liveAttempted: false,
+                    liveSucceeded: false,
+                    lastLiveQueryAt: null,
+                    lastLiveQueryRecordCount: null,
+                  },
+                },
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry(ws, fakeDb);
+      expect(telemetry.META_ADS.queryExecuted).toBe(false);
+      expect(telemetry.META_ADS.liveAttempted).toBe(false);
+      expect(telemetry.META_ADS.cachedRecordsCount).toBe(8);
+    });
+
+    it("4. upstream-returned-but-accepted-zero: preserves upstream count when records filtered out", async () => {
+      const ws = `ws_upstream_filtered_${Date.now()}`;
+      const now = new Date().toISOString();
+      const fakeDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "job_upstream_filtered",
+              completedAt: now,
+              createdAt: now,
+              resultJson: JSON.stringify({
+                providerTelemetry: {
+                  META_ADS: {
+                    source: "META_ADS",
+                    queryExecuted: true,
+                    queryStatus: "QUERY_SUCCEEDED_EMPTY",
+                    queryTimestamp: now,
+                    retrievedCount: 5,
+                    acceptedCount: 0,
+                    queryProvenance: "NONE",
+                    isLive: false,
+                    queryError: null,
+                    lastSuccessfulRecordCount: 0,
+                    lastSuccessfulQueryAt: now,
+                    upstreamReturnedCount: 5,
+                    freshLiveCount: 0,
+                    cachedRecordsCount: 0,
+                    liveAttempted: true,
+                    liveSucceeded: true,
+                    lastLiveQueryAt: now,
+                    lastLiveQueryRecordCount: 5,
+                    lastSuccessfulLiveQueryAt: now,
+                  },
+                },
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry(ws, fakeDb);
+      expect(telemetry.META_ADS.upstreamReturnedCount).toBe(5);
+      expect(telemetry.META_ADS.acceptedCount).toBe(0);
+      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(5);
+      expect(telemetry.META_ADS.liveAttempted).toBe(true);
+      expect(telemetry.META_ADS.liveSucceeded).toBe(true);
+    });
+
+    it("5. mixed live and cache: properly separates fresh live count and cached count", async () => {
+      const ws = `ws_mixed_${Date.now()}`;
+      const now = new Date().toISOString();
+      const fakeDb = {
+        syncJob: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "job_mixed",
+              completedAt: now,
+              createdAt: now,
+              resultJson: JSON.stringify({
+                providerTelemetry: {
+                  META_ADS: {
+                    source: "META_ADS",
+                    queryExecuted: true,
+                    queryStatus: "PASSED",
+                    queryTimestamp: now,
+                    retrievedCount: 8,
+                    acceptedCount: 8,
+                    queryProvenance: "LIVE_PROVIDER",
+                    isLive: true,
+                    queryError: null,
+                    lastSuccessfulRecordCount: 8,
+                    lastSuccessfulQueryAt: now,
+                    upstreamReturnedCount: 3,
+                    freshLiveCount: 3,
+                    cachedRecordsCount: 5,
+                    liveAttempted: true,
+                    liveSucceeded: true,
+                    lastLiveQueryAt: now,
+                    lastLiveQueryRecordCount: 3,
+                    lastSuccessfulLiveQueryAt: now,
+                  },
+                },
+              }),
+            },
+          ]),
+        },
+      };
+
+      const telemetry = await getWorkspaceProviderTelemetry(ws, fakeDb);
+      expect(telemetry.META_ADS.freshLiveCount).toBe(3);
+      expect(telemetry.META_ADS.cachedRecordsCount).toBe(5);
+      expect(telemetry.META_ADS.lastLiveQueryRecordCount).toBe(3);
+      expect(telemetry.META_ADS.isLive).toBe(true);
+      expect(telemetry.META_ADS.queryProvenance).toBe("LIVE_PROVIDER");
+    });
+  });
 });

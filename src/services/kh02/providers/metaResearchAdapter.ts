@@ -478,13 +478,19 @@ export async function collectMetaProductSignals(
     if (matchingAds.length === 0) {
       warnings.push(`No active Meta ads found for topic '${query.topic}' within ${query.lookbackDays} days.`);
       const emptyStatus: SourceRunStatus = liveSucceeded ? "QUERY_SUCCEEDED_EMPTY" : "NO_RESULTS";
+      const upstreamReturnedOnEmpty = liveCollectorResult
+        ? (liveCollectorResult.sourceRecordsReturned ?? freshLiveAdIds.size)
+        : (freshLiveAdIds.size > 0 ? freshLiveAdIds.size : 0);
+      const persistedInsertedOnEmpty = liveCollectorResult ? (liveCollectorResult.newUniqueInserted ?? 0) : freshLiveAdIds.size;
+      const persistedUpdatedOnEmpty = liveCollectorResult ? (liveCollectorResult.existingUpdated ?? 0) : 0;
+
       return {
         source: "META_ADS",
         status: emptyStatus,
         observations: [],
-        retrievedCount: 0,
+        retrievedCount: liveAttempted ? upstreamReturnedOnEmpty : 0,
         acceptedCount: 0,
-        rejectedCount: 0,
+        rejectedCount: liveCollectorResult?.recordsRejected || 0,
         estimatedCredits: 0,
         consumedCredits: 0,
         startedAt,
@@ -497,10 +503,10 @@ export async function collectMetaProductSignals(
           liveSucceeded,
           startedAt,
           completedAt: new Date().toISOString(),
-          upstreamReturnedCount: 0,
-          freshLiveObservedCount: 0,
-          persistedInsertedCount: 0,
-          persistedUpdatedCount: 0,
+          upstreamReturnedCount: liveAttempted ? upstreamReturnedOnEmpty : null,
+          freshLiveObservedCount: freshLiveAdIds.size,
+          persistedInsertedCount: persistedInsertedOnEmpty,
+          persistedUpdatedCount: persistedUpdatedOnEmpty,
           cachedRecordsUsedCount: 0,
           fallbackToCache: false,
         },
