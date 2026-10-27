@@ -25,7 +25,7 @@
     "passed": true
   },
   "CASE_7_GOOGLE_SKIPPED_NOT_CLAIMED_EXECUTED": {
-    "googleSameRunStatus": "SKIPPED_NO_CONFIRMED_DOMAIN",
+    "googleSameRunStatus": "SUCCEEDED_EMPTY",
     "notClaimedExecuted": true,
     "passed": true
   }

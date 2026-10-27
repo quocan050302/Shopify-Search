@@ -128,6 +128,8 @@ export interface SourceEvidence {
   marketEvidence?: "QUERY_FILTER" | "CONFIRMED_DELIVERY" | "UNKNOWN";
   notes?: string | null;
   creativeVariants?: unknown[];
+  parentAdExternalId?: string | null;
+  selectedCreativeIndex?: number | null;
 }
 
 export const SourceEvidenceSchema = z.object({
@@ -141,6 +143,8 @@ export const SourceEvidenceSchema = z.object({
   marketEvidence: z.enum(["QUERY_FILTER", "CONFIRMED_DELIVERY", "UNKNOWN"]).optional(),
   notes: z.string().nullable().optional(),
   creativeVariants: z.array(z.any()).optional(),
+  parentAdExternalId: z.string().nullable().optional(),
+  selectedCreativeIndex: z.number().nullable().optional(),
 });
 
 // ─── Discovery Query ────────────────────────────────────────────────────────

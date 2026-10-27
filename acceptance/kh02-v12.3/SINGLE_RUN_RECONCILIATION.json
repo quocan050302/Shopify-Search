@@ -1,11 +1,11 @@
 {
-  "authoritativeRunId": "kh02_run_1793112545799_v1gs9",
+  "authoritativeRunId": "kh02_run_1793117384742_eqabj",
   "workspaceId": "acceptance_v12_3_ws",
   "layers": {
     "layer1_source_to_db": {
-      "reconciled": false,
-      "upstreamCount": 0,
-      "dbRecordCount": 0
+      "reconciled": true,
+      "upstreamCount": 25,
+      "dbRecordCount": 25
     },
     "layer2_db_to_http": {
       "reconciled": true,
@@ -15,11 +15,11 @@
     },
     "layer3_http_to_dom": {
       "reconciled": true,
-      "httpCandidateCount": 0,
-      "renderedCardCount": 0,
+      "httpCandidateCount": 2,
+      "renderedCardCount": 2,
       "postReloadConsistent": true
     }
   },
-  "reconciliationVerdict": "FAIL",
-  "timestamp": "2026-10-27T14:49:16.064Z"
+  "reconciliationVerdict": "PASS",
+  "timestamp": "2026-10-27T16:10:08.371Z"
 }

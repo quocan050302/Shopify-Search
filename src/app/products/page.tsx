@@ -369,6 +369,12 @@ export default function ProductsPage() {
   const executeResearch = async (selectedTopic: string = topic, days: number = lookbackDays) => {
     if (isResearching) return; // Prevent duplicate concurrent submissions
 
+    const cleanTopic = (selectedTopic || "").trim();
+    if (!cleanTopic || cleanTopic.length < 2) {
+      setResearchError("Please enter a research topic (at least 2 characters).");
+      return;
+    }
+
     try {
       setIsResearching(true);
       setResearchError(null);
@@ -376,14 +382,14 @@ export default function ProductsPage() {
       setElapsedSeconds(0);
       setRunProgress(0);
       setRunStage("QUEUED");
-      setActiveRunTopic(selectedTopic.trim() || "Pet Gadgets");
+      setActiveRunTopic(cleanTopic);
       setActiveRunLookback(days);
 
       const res = await fetch("/api/v1/kh02/research", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic: selectedTopic.trim() || "Pet Gadgets",
+          topic: cleanTopic,
           market: "US",
           lookbackDays: days,
           maxCandidates: 15,
@@ -712,8 +718,11 @@ export default function ProductsPage() {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    isInputDirtyRef.current = true;
-                    executeResearch(e.currentTarget.value, lookbackDays);
+                    const val = e.currentTarget.value.trim();
+                    if (val.length >= 2 && !isResearching) {
+                      isInputDirtyRef.current = true;
+                      executeResearch(val, lookbackDays);
+                    }
                   }
                 }}
                 suppressHydrationWarning
@@ -747,10 +756,13 @@ export default function ProductsPage() {
                 type="button"
                 data-testid="kh02-analyze-button"
                 onClick={() => {
-                  isInputDirtyRef.current = true;
-                  executeResearch(topic, lookbackDays);
+                  const clean = topic.trim();
+                  if (clean.length >= 2) {
+                    isInputDirtyRef.current = true;
+                    executeResearch(clean, lookbackDays);
+                  }
                 }}
-                disabled={isResearching}
+                disabled={isResearching || !topic.trim() || topic.trim().length < 2}
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs md:text-sm flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
               >
                 {isResearching ? (
@@ -1422,7 +1434,14 @@ export default function ProductsPage() {
             ) : (
               <div data-testid="kh02-empty-state" className="p-8 rounded-2xl bg-[#161228] border border-amber-500/30 text-center space-y-3">
                 <AlertTriangle className="h-7 w-7 text-amber-400 mx-auto" />
-                <h3 className="text-sm font-bold text-white">No verified evergreen winners yet for &quot;{topic}&quot;</h3>
+                <h3 className="text-sm font-bold text-white">
+                  No verified evergreen winners yet for &quot;{leaderboard?.topic || activeRunTopic || topic.trim() || "Pet Gadgets"}&quot;
+                </h3>
+                {Boolean(topic.trim() && leaderboard?.topic && topic.trim().toLowerCase() !== leaderboard.topic.toLowerCase()) && (
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    (Kết quả lần tìm trước: &quot;{leaderboard?.topic}&quot;)
+                  </p>
+                )}
                 <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
                   To protect against false evergreen claims, candidates require proven non-declining multi-month historical demand stability (≥15/25 pts) and high evidence confidence (≥65%). Promising products are shown under Provisional Opportunities below.
                 </p>

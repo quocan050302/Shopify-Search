@@ -86,7 +86,7 @@ export function analyzeCustomerPsychology(
     .toLowerCase();
 
   const ref = input.sourceReference || `Ad Creative (${input.rawHeadlines[0] || input.candidateTitle || "Unknown"})`;
-  const hasExplicitCopy = descriptionsJoined.trim().length > 15 || headlinesJoined.trim().length > 20;
+  const copyText = [headlinesJoined, descriptionsJoined].filter(Boolean).join(" ");
 
   // Determine Product Archetype
   const isAudioItem = /speaker|bluetooth|fm radio|soundbox|headphone|earbud/i.test(combinedText);
@@ -97,6 +97,10 @@ export function analyzeCustomerPsychology(
   const isTravelSafety = /seat belt|car harness|safety harness|leash|collar|tracker|gps/i.test(combinedText);
 
   // 1. Target Customer
+  const catMatch = findPatternMatch(copyText, [/(cat\b|kitten|feline)/i]);
+  const dogMatch = findPatternMatch(copyText, [/(dog\b|puppy|canine)/i]);
+  const multiPetMatch = catMatch && dogMatch;
+
   let targetCustomerClaim: PsychologyClaim;
   if (isAudioItem) {
     targetCustomerClaim = {
@@ -116,34 +120,41 @@ export function analyzeCustomerPsychology(
       status: "INFERRED",
       uncertaintyNote: "Lifestyle apparel product.",
     };
-  } else if (/cat\b|feline|kitty/i.test(combinedText) && /dog\b|puppy|canine/i.test(combinedText)) {
+  } else if (multiPetMatch) {
     targetCustomerClaim = {
       claimText: "Pet owners with multiple animals (cats and dogs) dealing with everyday pet care challenges",
-      evidenceReference: ref,
-      evidenceType: hasExplicitCopy ? "AD_COPY" : "MARKET_KNOWLEDGE",
+      evidenceReference: `Observed quotes: "${catMatch}", "${dogMatch}" in ${ref}`,
+      evidenceType: "AD_COPY",
       confidence: 0.88,
-      status: hasExplicitCopy ? "OBSERVED" : "INFERRED",
-      uncertaintyNote: hasExplicitCopy ? undefined : "Copy mentions multi-pet context without detailed breakdown.",
+      status: "OBSERVED",
     };
-  } else if (/cat\b|feline|kitty/i.test(combinedText)) {
+  } else if (catMatch) {
     targetCustomerClaim = {
       claimText: "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
-      evidenceReference: ref,
-      evidenceType: hasExplicitCopy ? "AD_COPY" : "MARKET_KNOWLEDGE",
+      evidenceReference: `Observed quote: "${catMatch}" in ${ref}`,
+      evidenceType: "AD_COPY",
       confidence: 0.85,
-      status: hasExplicitCopy ? "OBSERVED" : "INFERRED",
+      status: "OBSERVED",
     };
-  } else if (/dog\b|puppy|canine/i.test(combinedText)) {
+  } else if (dogMatch) {
     targetCustomerClaim = {
       claimText: isBedding
-        ? "Dog owners seeking comfortable, supportive bedding or joint relief for their pets"
+        ? "Dog owners seeking dedicated, supportive resting space for their pets"
         : isHairRemoval
         ? "Dog owners managing shedding and fur accumulation on furniture and clothes"
         : "Dog owners seeking practical care, feeding, or safety solutions for their pets",
-      evidenceReference: ref,
-      evidenceType: hasExplicitCopy ? "AD_COPY" : "MARKET_KNOWLEDGE",
+      evidenceReference: `Observed quote: "${dogMatch}" in ${ref}`,
+      evidenceType: "AD_COPY",
       confidence: 0.85,
-      status: hasExplicitCopy ? "OBSERVED" : "INFERRED",
+      status: "OBSERVED",
+    };
+  } else if (isBedding && /dog/i.test(combinedText)) {
+    targetCustomerClaim = {
+      claimText: "Dog owners seeking dedicated, supportive resting space for their pets",
+      evidenceReference: ref,
+      evidenceType: "HEADLINE",
+      confidence: 0.75,
+      status: "INFERRED",
     };
   } else {
     targetCustomerClaim = {
@@ -158,13 +169,13 @@ export function analyzeCustomerPsychology(
 
   // 2. Functional Problem
   let functionalProblemClaim: PsychologyClaim;
-  const hairMatch = findPatternMatch(combinedText, [
-    /(pet hair|shedding|fur on (?:furniture|clothes|couch)|lint|embedded hair)/i,
+  const hairMatch = findPatternMatch(copyText, [
+    /(pet hair|shedding|fur on (?:furniture|clothes|couch)|lint|embedded hair|stubborn (?:cat and dog )?fur)/i,
   ]);
-  const groomingMatch = findPatternMatch(combinedText, [
+  const groomingMatch = findPatternMatch(copyText, [
     /(matted fur|tangled hair|brushing stress|nail clipping|bath time)/i,
   ]);
-  const hydrationMatch = findPatternMatch(combinedText, [
+  const hydrationMatch = findPatternMatch(copyText, [
     /(stagnant water|dehydration|dirty water bowl|drinking from toilet)/i,
   ]);
 
@@ -187,7 +198,7 @@ export function analyzeCustomerPsychology(
   } else if (hairMatch) {
     functionalProblemClaim = {
       claimText: `Excessive ${hairMatch} accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently`,
-      evidenceReference: ref,
+      evidenceReference: `Observed quote: "${hairMatch}" in ${ref}`,
       evidenceType: "AD_COPY",
       confidence: 0.90,
       status: "OBSERVED",
@@ -195,7 +206,7 @@ export function analyzeCustomerPsychology(
   } else if (groomingMatch) {
     functionalProblemClaim = {
       claimText: `Stressful grooming sessions (${groomingMatch}) causing resistance and discomfort for the pet`,
-      evidenceReference: ref,
+      evidenceReference: `Observed quote: "${groomingMatch}" in ${ref}`,
       evidenceType: "AD_COPY",
       confidence: 0.88,
       status: "OBSERVED",
@@ -203,20 +214,31 @@ export function analyzeCustomerPsychology(
   } else if (hydrationMatch) {
     functionalProblemClaim = {
       claimText: `Reluctance of pets to drink stale, still water from traditional bowls (${hydrationMatch})`,
-      evidenceReference: ref,
+      evidenceReference: `Observed quote: "${hydrationMatch}" in ${ref}`,
       evidenceType: "AD_COPY",
       confidence: 0.85,
       status: "OBSERVED",
     };
   } else if (isBedding) {
-    functionalProblemClaim = {
-      claimText: "Hard floor contact, joint stiffness, or lack of secure resting space causing restless sleep for pets",
-      evidenceReference: ref,
-      evidenceType: "MARKET_KNOWLEDGE",
-      confidence: 0.75,
-      status: "INFERRED",
-      uncertaintyNote: "Derived from bedding category context; specific orthopedic claims not explicit in copy.",
-    };
+    const jointMatch = findPatternMatch(copyText, [/(joint relief|orthopedic|arthritis|hip dysplasia|memory foam)/i]);
+    if (jointMatch) {
+      functionalProblemClaim = {
+        claimText: `Pet resting discomfort and ${jointMatch} support needed during sleep`,
+        evidenceReference: `Observed quote: "${jointMatch}" in ${ref}`,
+        evidenceType: "AD_COPY",
+        confidence: 0.85,
+        status: "OBSERVED",
+      };
+    } else {
+      functionalProblemClaim = {
+        claimText: "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
+        evidenceReference: ref,
+        evidenceType: "MARKET_KNOWLEDGE",
+        confidence: 0.75,
+        status: "INFERRED",
+        uncertaintyNote: "Derived from bedding category context; specific orthopedic claims not explicit in copy.",
+      };
+    }
   } else if (isFeedingFountain) {
     functionalProblemClaim = {
       claimText: "Inconvenience of manual daily feeding schedules and concerns about pet hydration when away from home",
@@ -292,24 +314,28 @@ export function analyzeCustomerPsychology(
       ? "Daily automated hydration and feeding, especially during work hours or short travel"
       : `Regular routine use in the home when utilizing ${input.candidateTitle.toLowerCase()}`,
     evidenceReference: ref,
-    evidenceType: hasExplicitCopy ? "AD_COPY" : "MARKET_KNOWLEDGE",
+    evidenceType: "MARKET_KNOWLEDGE",
     confidence: 0.80,
     status: "INFERRED",
   };
 
   // 5. Desired Outcome
+  const explicitOutcomeMatch = findPatternMatch(combinedText, [
+    /(washable|machine wash|joint support|fur-free|remov(?:e|ing) fur|clean furniture|reusable)/i,
+  ]);
+
   const desiredOutcomeClaim: PsychologyClaim = {
     claimText: isAudioItem
       ? "Convenient, crisp audio playback with reliable battery life and simple device pairing"
       : isBedding
-      ? "A calm, well-rested pet sleeping comfortably with adequate joint cushioning and washable cover ease"
+      ? "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease"
       : isHairRemoval
       ? "Fur-free surfaces in minutes with zero disposable sticky tape refills and minimal physical effort"
       : "Quick, dependable resolution of the task with noticeable ease and peace of mind",
-    evidenceReference: ref,
-    evidenceType: hasExplicitCopy ? "AD_COPY" : "MARKET_KNOWLEDGE",
-    confidence: 0.85,
-    status: hasExplicitCopy ? "OBSERVED" : "INFERRED",
+    evidenceReference: explicitOutcomeMatch ? `Observed quote: "${explicitOutcomeMatch}" in ${ref}` : ref,
+    evidenceType: explicitOutcomeMatch ? "AD_COPY" : "MARKET_KNOWLEDGE",
+    confidence: explicitOutcomeMatch ? 0.85 : 0.75,
+    status: explicitOutcomeMatch ? "OBSERVED" : "INFERRED",
   };
 
   // 6. Purchase Trigger
@@ -369,8 +395,8 @@ export function analyzeCustomerPsychology(
       : "Moderate: Clear functional demonstration highlighting practical ease of use",
     evidenceReference: ref,
     evidenceType: "MARKET_KNOWLEDGE",
-    confidence: isHairRemoval ? 0.90 : 0.75,
-    status: isHairRemoval && hasExplicitCopy ? "OBSERVED" : "INFERRED",
+    confidence: isHairRemoval ? 0.85 : 0.75,
+    status: "INFERRED",
   };
 
   // 10. Existing Alternatives

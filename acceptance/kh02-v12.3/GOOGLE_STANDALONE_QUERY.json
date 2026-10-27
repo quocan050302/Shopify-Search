@@ -6,20 +6,20 @@
   "creativesSample": [
     {
       "advertiser_id": "AR01709643824168435713",
-      "creative_id": "CR01487766638290796545",
+      "creative_id": "CR13823576757296431105",
       "format": "image",
       "last_shown": "2026-10-27",
       "content": {
-        "image_url": "https://tpc.googlesyndication.com/archive/sadbundle/$csp%3Darchive$/237821417465974922/index.html"
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/5395440296760085063"
       }
     },
     {
       "advertiser_id": "AR01709643824168435713",
-      "creative_id": "CR14360812982034759681",
+      "creative_id": "CR04701057974255222785",
       "format": "text",
       "last_shown": "2026-10-27",
       "content": {
-        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2893298971&creativeId=813005735965&uiFeatures=12&adGroupId=198262798755&sig=ACiVB_yvJLgeaU8D0PUTeR0QKw6VYvOHYA&htmlParentId=fletch-render-9116226132018051362&responseCallback=fletchCallback9116226132018051362"
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2893298971&creativeId=813005709754&uiFeatures=12&adGroupId=198262805235&sig=ACiVB_xbL_ZuahxFM-WNPpv37MrUumlnPQ&htmlParentId=fletch-render-15223417697248776029&responseCallback=fletchCallback15223417697248776029"
       }
     }
   ],

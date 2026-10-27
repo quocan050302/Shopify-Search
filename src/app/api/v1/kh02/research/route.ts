@@ -22,7 +22,7 @@ import {
 } from "@/services/kh02/persistence/kh02PersistenceService";
 
 const ResearchRequestSchema = z.object({
-  topic: z.string().min(2, "Topic must be at least 2 characters").max(80),
+  topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
   market: z.literal("US").default("US"),
   lookbackDays: z.number().int().min(7).max(730).default(90),
   maxCandidates: z.number().int().min(3).max(50).default(15),

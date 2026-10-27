@@ -3,25 +3,66 @@
     "pageLoaded": true,
     "authorized": true,
     "researchSubmitted": true,
-    "acceptedRunId": "kh02_run_1793112545799_v1gs9",
+    "acceptedRunId": "kh02_run_1793117384742_eqabj",
     "terminalStatus": "COMPLETED",
     "terminalStateObserved": true,
-    "resultsRendered": false,
-    "emptyStateAccurate": true,
-    "displayedCandidateIds": [],
+    "resultsRendered": true,
+    "emptyStateAccurate": false,
+    "displayedCandidateIds": [
+      "cand_1613504636",
+      "cand_2132024804"
+    ],
     "displayedRankOrder": [],
-    "displayedScores": {},
-    "displayedConfidence": {},
-    "renderedCards": [],
-    "postReloadCandidateIds": [],
-    "postReloadScores": {},
-    "postReloadCards": [],
+    "displayedScores": {
+      "cand_1613504636": 60,
+      "cand_2132024804": 42
+    },
+    "displayedConfidence": {
+      "cand_1613504636": "55",
+      "cand_2132024804": "45"
+    },
+    "renderedCards": [
+      {
+        "candidateId": "cand_1613504636",
+        "rank": null,
+        "score": 60,
+        "confidence": "55"
+      },
+      {
+        "candidateId": "cand_2132024804",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      }
+    ],
+    "postReloadCandidateIds": [
+      "cand_1613504636",
+      "cand_2132024804"
+    ],
+    "postReloadScores": {
+      "cand_1613504636": 60,
+      "cand_2132024804": 42
+    },
+    "postReloadCards": [
+      {
+        "candidateId": "cand_1613504636",
+        "rank": null,
+        "score": 60,
+        "confidence": "55"
+      },
+      {
+        "candidateId": "cand_2132024804",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      }
+    ],
     "postReloadConsistent": true,
     "unexpectedHttpErrors": [],
     "hydrationErrors": [],
     "databaseMatch": true,
     "httpMatch": true,
-    "cardCount": 0,
+    "cardCount": 2,
     "screenshots": [
       "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.3/screenshots/01_before_research.png",
       "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.3/screenshots/02_source_statuses.png",
@@ -29,22 +70,31 @@
     ],
     "consoleLogs": [],
     "errors": [],
-    "durationMs": 13858,
+    "durationMs": 25932,
     "verdict": "PASS"
   },
   "reconciliation": {
     "exactMatch": true,
-    "cardsExpected": 0,
-    "cardsRendered": 0,
+    "cardsExpected": 2,
+    "cardsRendered": 2,
     "reloadConsistent": true,
-    "expectedCandidateIds": [],
-    "renderedCandidateIds": [],
-    "postReloadCandidateIds": [],
+    "expectedCandidateIds": [
+      "cand_1613504636",
+      "cand_2132024804"
+    ],
+    "renderedCandidateIds": [
+      "cand_1613504636",
+      "cand_2132024804"
+    ],
+    "postReloadCandidateIds": [
+      "cand_1613504636",
+      "cand_2132024804"
+    ],
     "diffs": [],
-    "emptyStateAccurate": true,
+    "emptyStateAccurate": false,
     "reason": null
   },
-  "renderedCardCount": 0,
+  "renderedCardCount": 2,
   "verdict": "PASS",
-  "timestamp": "2026-10-27T14:49:16.061Z"
+  "timestamp": "2026-10-27T16:10:06.870Z"
 }

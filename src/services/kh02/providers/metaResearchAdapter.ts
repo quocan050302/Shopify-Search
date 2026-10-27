@@ -30,6 +30,7 @@ import { createMetaCollectorClient } from "@/services/discovery/metaCollector/me
 import { normalizeMetaCollectorAd } from "@/services/discovery/normalization/normalizeMetaCollectorAd";
 import { NormalizedDiscoveredAd } from "@/services/discovery/types";
 import { ingestDiscoveredAds } from "@/services/discovery/discoveryIngestionService";
+import { buildKH02DiscoveryQueryPlan } from "@/services/kh02/discovery/discoveryQueryPlanner";
 
 export interface MarketProvenance {
   requestedMarket: string;
@@ -286,17 +287,75 @@ export async function collectLiveMetaAds(
   let client: any = null;
   try {
     client = await createMetaCollectorClient();
-    const searchRes = await client.searchAds({
-      query: query.topic,
-      country: query.market || "US",
-      status: "ACTIVE",
-      maxResults: options.maxLiveResults || Math.min(query.maxResults || 20, 25),
-      maxRequests: 2,
-      maxSeconds: 25,
-      pageSize: 10,
+
+    const plan = buildKH02DiscoveryQueryPlan(query.topic, query.market || "US", {
+      maxTotalResults: options.maxLiveResults || Math.min(query.maxResults || 25, 25),
+      maxRequests: 3,
     });
 
-    const rawAds = searchRes.ads || [];
+    const rawAds: any[] = [];
+    const seenRawIds = new Set<string>();
+    const subqueryBindingMap = new Map<string, { queryKeyword: string; queryId: string }>();
+
+    // 1. Primary Query Execution (Preserves user topic with exact phrase constraint)
+    try {
+      const primaryRes = await client.searchAds({
+        query: plan.primaryQuery.subquery,
+        country: plan.market,
+        status: "ACTIVE",
+        searchType: plan.primaryQuery.searchType,
+        maxResults: plan.primaryQuery.maxResults,
+        maxRequests: 2,
+        maxSeconds: 20,
+        pageSize: 10,
+      });
+
+      const primaryAds = primaryRes.ads || [];
+      for (const ad of primaryAds) {
+        const id = String(ad.id || ad.library_id || ad.libraryId);
+        if (id && !seenRawIds.has(id)) {
+          seenRawIds.add(id);
+          rawAds.push(ad);
+          subqueryBindingMap.set(id, { queryKeyword: plan.primaryQuery.subquery, queryId: "primary" });
+        }
+      }
+    } catch (primaryErr: any) {
+      console.warn(`[META_COLLECTOR] Primary query notice for '${plan.primaryQuery.subquery}':`, primaryErr.message);
+    }
+
+    // 2. Bounded Subquery Expansion (Only expands relevant domain subqueries within budget)
+    const maxSubqueriesToRun = Math.min(plan.subqueries.length, 2);
+    for (let sIdx = 0; sIdx < maxSubqueriesToRun; sIdx++) {
+      if (rawAds.length >= plan.maxTotalResults) break;
+      if (query.signal?.aborted) break;
+
+      const subplan = plan.subqueries[sIdx];
+      try {
+        const subRes = await client.searchAds({
+          query: subplan.subquery,
+          country: plan.market,
+          status: "ACTIVE",
+          searchType: subplan.searchType,
+          maxResults: Math.min(subplan.maxResults, plan.maxTotalResults - rawAds.length),
+          maxRequests: 2,
+          maxSeconds: 20,
+          pageSize: 10,
+        });
+
+        const subAds = subRes.ads || [];
+        for (const ad of subAds) {
+          const id = String(ad.id || ad.library_id || ad.libraryId);
+          if (id && !seenRawIds.has(id)) {
+            seenRawIds.add(id);
+            rawAds.push(ad);
+            subqueryBindingMap.set(id, { queryKeyword: subplan.subquery, queryId: `subquery_${sIdx + 1}` });
+          }
+        }
+      } catch (subErr: any) {
+        console.warn(`[META_COLLECTOR] Subquery notice for '${subplan.subquery}':`, subErr.message);
+      }
+    }
+
     if (rawAds.length === 0) {
       return {
         recordsInDbBeforeQuery: dbCountBefore,
@@ -321,8 +380,10 @@ export async function collectLiveMetaAds(
       const ad = rawAds[i];
       const anyRaw = ad as Record<string, unknown>;
       const rawId = String(anyRaw?.id ?? anyRaw?.library_id ?? anyRaw?.libraryId ?? `raw_meta_${i + 1}`);
+      const binding = subqueryBindingMap.get(rawId);
+      const queryKeyword = binding?.queryKeyword || query.topic;
       try {
-        const norm = normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: query.topic });
+        const norm = normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: queryKeyword });
         normalizedAds.push(norm);
       } catch (normErr: any) {
         auditTraces.push({

@@ -2,10 +2,10 @@
   "release": "KH-02 V12.3",
   "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
   "startingSha": "28c184c9032ff4a436cd100cf980f26a24380216",
-  "testedSha": "d0cc3c8b759b26eab803d0db67b346a23f2cfeaf",
+  "testedSha": "e078893fa09148c8f95140d2f465af2ca74fb294",
   "isDirty": true,
-  "startedAt": "2026-10-27T14:48:17.102Z",
-  "completedAt": "2026-10-27T14:49:16.065Z",
+  "startedAt": "2026-10-27T16:09:01.548Z",
+  "completedAt": "2026-10-27T16:10:08.371Z",
   "primaryScenario": {
     "niche": "Pet Gadgets",
     "market": "US",
@@ -13,7 +13,7 @@
       "30D",
       "90D"
     ],
-    "authoritativeRunId": "kh02_run_1793112545799_v1gs9"
+    "authoritativeRunId": "kh02_run_1793117384742_eqabj"
   },
   "artifacts": [
     {
@@ -24,62 +24,57 @@
     {
       "fileName": "CUSTOMER_PSYCHOLOGY_EVIDENCE.json",
       "path": "acceptance/kh02-v12.3/CUSTOMER_PSYCHOLOGY_EVIDENCE.json",
-      "sha256": "239008060700ac21777e361bea4e0e00e44226e7e2ac19961de8019606b4fb18"
+      "sha256": "f0df2f8fbabb333c64a49bfcb62aa0a8a42dfbb0a2d200e2f3137f39d1785001"
     },
     {
       "fileName": "DB_HTTP_RECONCILIATION.json",
       "path": "acceptance/kh02-v12.3/DB_HTTP_RECONCILIATION.json",
-      "sha256": "b2f6bafe2c0878e20bc18b31caf3c32370a9168e79ebaac39c8786e0341f2b2f"
+      "sha256": "f356b8653a6fcb6fbefc0deed35df19101e1f07422d3aa6e03f0e2bfe6aa5f7b"
     },
     {
       "fileName": "DEMAND_HISTORY_REPORT.json",
       "path": "acceptance/kh02-v12.3/DEMAND_HISTORY_REPORT.json",
-      "sha256": "f404ac72bc5e7fdad70baf07b04835291d9a2a655266c9881fa5811c9987b453"
-    },
-    {
-      "fileName": "EVIDENCE_MANIFEST.json",
-      "path": "acceptance/kh02-v12.3/EVIDENCE_MANIFEST.json",
-      "sha256": "ce0fdbca5f267d135fb5cc9945c5496248175aff7ecc97c5c9a3b52860b93dc6"
+      "sha256": "ff24386bc9f1b1ac02def0f1212193f9f1a4a217e507070985b7a818c7f90a1e"
     },
     {
       "fileName": "FALSE_PASS_MUTATIONS.json",
       "path": "acceptance/kh02-v12.3/FALSE_PASS_MUTATIONS.json",
-      "sha256": "4684dd01d7bd17f42b37df79c2640a5bb9e5e64f098cc3a419135a595e4d9670"
+      "sha256": "486df5d946c7060cfa3fdaef2281975f9ceecbee7915e4474542b81643246004"
     },
     {
       "fileName": "FINAL_ACCEPTANCE_REPORT.md",
       "path": "acceptance/kh02-v12.3/FINAL_ACCEPTANCE_REPORT.md",
-      "sha256": "35e84e1b58088d69ca73df95fa9677d7377b857f040de7f76d0110ef12a14e53"
+      "sha256": "c6462709732e35afaf77abc72ee7302993abe5ab3736a79a77bd3277263e5d7b"
     },
     {
       "fileName": "GOOGLE_CONNECTION.json",
       "path": "acceptance/kh02-v12.3/GOOGLE_CONNECTION.json",
-      "sha256": "24d4a6bbbf6106db5053d1b00c0f888027482d3b2b8be3c76b7088b04c6a527f"
+      "sha256": "eb89aa222013949e57422ff070f45e39104a482c21563a9bfad479a45f0051f0"
     },
     {
       "fileName": "GOOGLE_SAME_RUN_ENRICHMENT.json",
       "path": "acceptance/kh02-v12.3/GOOGLE_SAME_RUN_ENRICHMENT.json",
-      "sha256": "9c3c106c50b58f52275f008404507854c3b841d24572b4ecb26d80ea20bdfa42"
+      "sha256": "83dd8fe89ed46cad276f6a89741e0e44b29e6be6d2f7eac3234704d820d7d662"
     },
     {
       "fileName": "GOOGLE_STANDALONE_QUERY.json",
       "path": "acceptance/kh02-v12.3/GOOGLE_STANDALONE_QUERY.json",
-      "sha256": "0a95f72f6ff7b5dddcd770d6a47a39399ddcdca466257e73819de0c3fe12eb40"
+      "sha256": "720bc84de73d16b28faad77949d474b35b68c8740c8aa30118abdf1575f9a50e"
     },
     {
       "fileName": "HTTP_BROWSER_RECONCILIATION.json",
       "path": "acceptance/kh02-v12.3/HTTP_BROWSER_RECONCILIATION.json",
-      "sha256": "94af4a84eaa162f64c0adb350544bb97e2c84adf809ba701b856f06dfa166319"
+      "sha256": "5605d8370c70d4aec2ded1b3172b0c757c171b3efd1872a2f52b971a489b7329"
     },
     {
       "fileName": "MEDIA_MAPPING_REPORT.json",
       "path": "acceptance/kh02-v12.3/MEDIA_MAPPING_REPORT.json",
-      "sha256": "a9b547608a148c0597f947ddf609c20e58df64034618d2734fe9968418e26e6a"
+      "sha256": "8979e72b650af9f85bedf18b080014559ef64b791755fdbdf44bcea37f8cea32"
     },
     {
       "fileName": "META_CONNECTION.json",
       "path": "acceptance/kh02-v12.3/META_CONNECTION.json",
-      "sha256": "633a696691e404ac07d491349af8f93efd9fee9d89ff422c6894efde9d3aedf6"
+      "sha256": "236d55c4c129ed9e44df853e5679eab0e6352d8e23e2483073149e940aff8fc3"
     },
     {
       "fileName": "META_INGESTION_AUDIT.json",
@@ -99,12 +94,12 @@
     {
       "fileName": "PRODUCT_IDENTITY_REPORT.json",
       "path": "acceptance/kh02-v12.3/PRODUCT_IDENTITY_REPORT.json",
-      "sha256": "f13600db8839b9c2886252b49144abe28eaa65cbbc166bd0a80ea3589d6d594d"
+      "sha256": "ff84a09018b1c94922fa4fc438e2769d7eaa1df395af1558ef5ab430b7b12002"
     },
     {
       "fileName": "PRODUCT_INTELLIGENCE_EVIDENCE.json",
       "path": "acceptance/kh02-v12.3/PRODUCT_INTELLIGENCE_EVIDENCE.json",
-      "sha256": "f4911c0f61d52b4715d5b06045daf604fc6c6319b8c6c503c075659775fbd00e"
+      "sha256": "cdda842a9fc07f16e8f38d6108d4fea88404a678c6f05ad904416f4c88215e25"
     },
     {
       "fileName": "PROVIDER_CONTRACTS.md",
@@ -114,12 +109,12 @@
     {
       "fileName": "RELEASE_GATE_RESULTS.json",
       "path": "acceptance/kh02-v12.3/RELEASE_GATE_RESULTS.json",
-      "sha256": "7637bc970980da8b3621b257badee983de69a51e0a1e2af16ebbcf8fdd09c1bb"
+      "sha256": "afd1f3b0f5c1605bf8a8fecc5e6eb62b2616b2705f654ac4a7d4e1a1dc9d734e"
     },
     {
       "fileName": "ROOT_CAUSE_AND_FUNCTION_CHANGES.md",
       "path": "acceptance/kh02-v12.3/ROOT_CAUSE_AND_FUNCTION_CHANGES.md",
-      "sha256": "a406dbfe9ecbf18717c0eaf1d938cbc231ff2a3b5763541ceb2b007e6d4ad43c"
+      "sha256": "a7fc57b8e8d79de71f7b9338d8bf20af0189aed558b81ed789a769b69175e008"
     },
     {
       "fileName": "ROOT_CAUSE_REPORT.md",
@@ -129,17 +124,17 @@
     {
       "fileName": "SCORING_AND_QUALIFICATION.json",
       "path": "acceptance/kh02-v12.3/SCORING_AND_QUALIFICATION.json",
-      "sha256": "301502c5ded828578ec18347184f5b1fdc3f728ee466885135af7eb1ebbfe07c"
+      "sha256": "474af7e5aba64cfd9c90672abfa51032e8a56f9bd2f7dbd8608b7498a4985e5d"
     },
     {
       "fileName": "SINGLE_RUN_RECONCILIATION.json",
       "path": "acceptance/kh02-v12.3/SINGLE_RUN_RECONCILIATION.json",
-      "sha256": "7e94a175057eb1c6d5aed523dda7419ead40aeb96c294b6b07ed101deea9b538"
+      "sha256": "4346ff598f8203bca941b96e9aeafed6029e26162c239aa274204e0907001c5a"
     },
     {
       "fileName": "SOURCE_DB_RECONCILIATION.json",
       "path": "acceptance/kh02-v12.3/SOURCE_DB_RECONCILIATION.json",
-      "sha256": "1c15a2ec05251fe4a7d8f64eb29e98dd0ad249363ed8acc4ec98ecb46abe95ef"
+      "sha256": "1e7a9f417098e1c91bd22053e40ee39b2d3bff5a1568311c56d15ddfecf7ef5d"
     },
     {
       "fileName": "SOURCE_POLICY.json",
@@ -149,22 +144,22 @@
     {
       "fileName": "SOURCE_QUERY_EVIDENCE.json",
       "path": "acceptance/kh02-v12.3/SOURCE_QUERY_EVIDENCE.json",
-      "sha256": "95250488aab7b5ce64291f9a32ebcaebd9597f1043e1dcc6be1faf5f257a9388"
+      "sha256": "a72494a743fd74cebde4ad121eeaf674920962c7982d45581d595bd649282ca5"
     },
     {
       "fileName": "TEST_RESULTS.json",
       "path": "acceptance/kh02-v12.3/TEST_RESULTS.json",
-      "sha256": "44fcc0d801bea25bf5be92992e7639d7bc2c405b6a141f1fd8be7f82c2e4b884"
+      "sha256": "90a723a113413835a2157025d6b59e3b7d87d8fc20b515160ae198bad27b5aac"
     },
     {
       "fileName": "TIKTOK_DISABLED_VERIFICATION.json",
       "path": "acceptance/kh02-v12.3/TIKTOK_DISABLED_VERIFICATION.json",
-      "sha256": "9c6dc9e955418f3b77db5a07abb2cbc9e8b547c2e14a30c8d55f33d21ae82d3f"
+      "sha256": "68bfd15ac6a1e09f7624725ef4f22026491b4910cd5af86acd76952b3fa09862"
     },
     {
       "fileName": "TOP3_DISTINCTNESS_REPORT.json",
       "path": "acceptance/kh02-v12.3/TOP3_DISTINCTNESS_REPORT.json",
-      "sha256": "23522ac0b4c92251ca1084b0cfdcd3650561c2118a6fa57bbcb79d620e352857"
+      "sha256": "6f2211a78e1665788868a28096aebd9606c819c2c640614406780532877da773"
     }
   ]
 }

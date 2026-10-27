@@ -4,10 +4,10 @@
     "expectedArchetype": "bedding",
     "profile": {
       "targetCustomer": {
-        "claimText": "Dog owners seeking comfortable, supportive bedding or joint relief for their pets",
+        "claimText": "Dog owners seeking dedicated, supportive resting space for their pets",
         "evidenceReference": "Ad Creative (Dog bed)",
-        "evidenceType": "MARKET_KNOWLEDGE",
-        "confidence": 0.85,
+        "evidenceType": "HEADLINE",
+        "confidence": 0.75,
         "status": "INFERRED"
       },
       "situationOrUseCase": {
@@ -18,7 +18,7 @@
         "status": "INFERRED"
       },
       "functionalProblem": {
-        "claimText": "Hard floor contact, joint stiffness, or lack of secure resting space causing restless sleep for pets",
+        "claimText": "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
         "evidenceReference": "Ad Creative (Dog bed)",
         "evidenceType": "MARKET_KNOWLEDGE",
         "confidence": 0.75,
@@ -33,10 +33,10 @@
         "status": "INFERRED"
       },
       "desiredOutcome": {
-        "claimText": "A calm, well-rested pet sleeping comfortably with adequate joint cushioning and washable cover ease",
+        "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
         "evidenceReference": "Ad Creative (Dog bed)",
         "evidenceType": "MARKET_KNOWLEDGE",
-        "confidence": 0.85,
+        "confidence": 0.75,
         "status": "INFERRED"
       },
       "purchaseTrigger": {
@@ -108,16 +108,17 @@
       "situationOrUseCase": {
         "claimText": "Quick surface touch-ups before heading out, before guests arrive, or maintaining couches/car seats",
         "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
-        "evidenceType": "AD_COPY",
+        "evidenceType": "MARKET_KNOWLEDGE",
         "confidence": 0.8,
         "status": "INFERRED"
       },
       "functionalProblem": {
-        "claimText": "Excessive pet hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+        "claimText": "Everyday inconvenience and friction addressed by Pet Hair Remover Roller",
         "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
-        "evidenceType": "AD_COPY",
-        "confidence": 0.9,
-        "status": "OBSERVED"
+        "evidenceType": "HEADLINE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
       },
       "emotionalPain": {
         "claimText": "Social embarrassment when hosting guests or leaving home in fur-covered clothes; fatigue from non-stop cleaning",
@@ -129,9 +130,9 @@
       "desiredOutcome": {
         "claimText": "Fur-free surfaces in minutes with zero disposable sticky tape refills and minimal physical effort",
         "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
-        "evidenceType": "AD_COPY",
-        "confidence": 0.85,
-        "status": "OBSERVED"
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
       },
       "purchaseTrigger": {
         "claimText": "A striking visual demonstration showing an effortless before-and-after fur extraction from a couch",
@@ -159,8 +160,8 @@
         "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
         "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
         "evidenceType": "MARKET_KNOWLEDGE",
-        "confidence": 0.9,
-        "status": "OBSERVED"
+        "confidence": 0.85,
+        "status": "INFERRED"
       },
       "existingAlternatives": {
         "claimText": "Disposable sticky adhesive lint rollers, heavy domestic vacuums, and rubber squeegees",
@@ -202,7 +203,7 @@
       "situationOrUseCase": {
         "claimText": "Outdoor leisure, motorbike trips, personal workouts, or casual social get-togethers",
         "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
-        "evidenceType": "AD_COPY",
+        "evidenceType": "MARKET_KNOWLEDGE",
         "confidence": 0.8,
         "status": "INFERRED"
       },
@@ -223,9 +224,9 @@
       "desiredOutcome": {
         "claimText": "Convenient, crisp audio playback with reliable battery life and simple device pairing",
         "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
-        "evidenceType": "AD_COPY",
-        "confidence": 0.85,
-        "status": "OBSERVED"
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
       },
       "purchaseTrigger": {
         "claimText": "Upcoming outdoor event, personal travel, or finding an affordable multi-function audio gadget",

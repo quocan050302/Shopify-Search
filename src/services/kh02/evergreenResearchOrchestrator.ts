@@ -67,6 +67,7 @@ export interface EvergreenLeaderboardResult {
   providerTelemetry?: Record<IntelligenceSource, ProviderSourceTelemetry>;
   totalCandidatesDiscovered: number;
   totalObservationsCollected?: number;
+  sourceObservations?: SourceObservation[];
   generatedAt: string;
   warnings: string[];
   errors: string[];
@@ -854,6 +855,7 @@ export async function runEvergreenProductResearch(
     providerTelemetry,
     totalCandidatesDiscovered: rawCandidates.length,
     totalObservationsCollected: adObservations.length + secondaryObservations.length,
+    sourceObservations: adObservations.concat(secondaryObservations),
     generatedAt,
     warnings,
     errors,
@@ -861,4 +863,8 @@ export async function runEvergreenProductResearch(
 
   // Pure orchestrator: returns result without unowned writes to SyncJob
   return result;
+}
+
+export function extractResearchRunEvidence(result: EvergreenLeaderboardResult): SourceObservation[] {
+  return result.sourceObservations || [];
 }

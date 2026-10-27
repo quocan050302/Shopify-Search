@@ -1,5 +1,5 @@
 {
-  "authoritativeRunId": "kh02_run_1793112545799_v1gs9",
+  "authoritativeRunId": "kh02_run_1793117384742_eqabj",
   "topic": "Pet Gadgets",
   "identityValidation": {
     "editorialHooksRejected": [
@@ -17,7 +17,7 @@
     ]
   },
   "deduplication": {
-    "distinctCandidatesFormed": 0,
+    "distinctCandidatesFormed": 2,
     "distinctnessPreserved": true,
     "duplicateSunglassesConsolidated": true
   },
@@ -25,12 +25,12 @@
     "archetypesIdentified": [
       {
         "input": "Dog bed",
-        "functionalProblem": "Hard floor contact, joint stiffness, or lack of secure resting space causing restless sleep for pets",
+        "functionalProblem": "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
         "expectedArchetype": "bedding"
       },
       {
         "input": "Pet Hair Remover Roller",
-        "functionalProblem": "Excessive pet hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+        "functionalProblem": "Everyday inconvenience and friction addressed by Pet Hair Remover Roller",
         "expectedArchetype": "hair_removal"
       },
       {
@@ -43,9 +43,9 @@
   },
   "qualificationSummary": {
     "qualifiedWinnersCount": 0,
-    "provisionalCount": 0,
-    "rejectedCount": 7,
+    "provisionalCount": 2,
+    "rejectedCount": 8,
     "winnersForced": false
   },
-  "timestamp": "2026-10-27T14:49:16.064Z"
+  "timestamp": "2026-10-27T16:10:08.371Z"
 }
