@@ -1,0 +1,75 @@
+{
+  "demandNormSample": {
+    "rawTerm": "Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping",
+    "normalizedTerm": "Stainless Steel Cat Water Fountain",
+    "mappingReason": "Normalized 'Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping' -> 'Stainless Steel Cat Water Fountain' (stripped promotional suffixes/campaign codes/capacities)"
+  },
+  "lookbackCoverages": {
+    "petGadgets90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-28T16:54:24.892Z",
+      "earliestAdFirstSeen": "2026-10-24T16:16:14.355Z",
+      "latestAdLastSeen": "2026-10-28T16:54:33.060Z",
+      "activeAdsCount": 18,
+      "historicalCachedAdsCount": 33,
+      "freshLiveAdsCount": 18,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "diy180D": {
+      "requestedLookbackDays": 180,
+      "queryExecutionTime": "2026-10-28T16:55:14.332Z",
+      "earliestAdFirstSeen": "2026-10-24T16:16:14.395Z",
+      "latestAdLastSeen": "2026-10-28T16:55:22.501Z",
+      "activeAdsCount": 5,
+      "historicalCachedAdsCount": 45,
+      "freshLiveAdsCount": 5,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "kitchen30D": {
+      "requestedLookbackDays": 30,
+      "queryExecutionTime": "2026-10-28T16:55:51.468Z",
+      "earliestAdFirstSeen": "2026-10-24T16:16:14.401Z",
+      "latestAdLastSeen": "2026-10-28T16:56:04.412Z",
+      "activeAdsCount": 18,
+      "historicalCachedAdsCount": 25,
+      "freshLiveAdsCount": 18,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "homeDecor90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-28T16:56:11.551Z",
+      "earliestAdFirstSeen": "2026-10-24T16:16:14.395Z",
+      "latestAdLastSeen": "2026-10-28T16:56:23.018Z",
+      "activeAdsCount": 4,
+      "historicalCachedAdsCount": 46,
+      "freshLiveAdsCount": 4,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "gardening90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-28T16:56:24.391Z",
+      "earliestAdFirstSeen": "2026-10-24T16:16:14.380Z",
+      "latestAdLastSeen": "2026-10-28T16:56:33.188Z",
+      "activeAdsCount": 4,
+      "historicalCachedAdsCount": 22,
+      "freshLiveAdsCount": 4,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "cleaning90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-28T16:56:37.520Z",
+      "earliestAdFirstSeen": "2026-10-23T17:52:11.593Z",
+      "latestAdLastSeen": "2026-10-28T16:56:48.154Z",
+      "activeAdsCount": 20,
+      "historicalCachedAdsCount": 31,
+      "freshLiveAdsCount": 20,
+      "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    }
+  }
+}

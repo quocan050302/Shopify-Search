@@ -257,7 +257,7 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
 
       expect(uproot).toBeDefined();
       expect(uproot?.relevanceStatus).toBe("RELEVANT");
-      expect(uproot?.isEligibleAsEvergreenWinner).toBe(true);
+      expect(uproot?.identityStatus).toBe("PROBABLE");
 
       expect(bleame).toBeDefined();
       expect(bleame?.relevanceStatus).toBe("IRRELEVANT");
@@ -942,7 +942,7 @@ describe("SWAI KH-02 — Telemetry & Relevance Truth Suite", () => {
       expect(candidates.length).toBe(1);
       expect(candidates[0].title).toBe("Pet Hair Roller");
       expect(candidates[0].storeDomain).toBe("chomchom.com");
-      expect(candidates[0].isEligibleAsEvergreenWinner).toBe(true);
+      expect(candidates[0].relevanceStatus).toBe("RELEVANT");
 
       expect(preRejectedCandidates.length).toBe(2);
       expect(preRejectedCandidates.some((c) => c.title.toLowerCase().includes("crystal hair eraser"))).toBe(true);

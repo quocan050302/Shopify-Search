@@ -141,6 +141,7 @@ export interface KH02CandidateFunnel {
 
   identitiesVerified: number;
   identitiesProbable: number;
+  identitiesAmbiguous?: number;
   identitiesUnresolved: number;
 
   candidatesActuallyScored: number;
@@ -237,6 +238,8 @@ export interface ProviderSourceTelemetry {
   retrievedCount: number | null;
   acceptedCount: number | null;
   productAssociatedCount?: number | null;
+  brandAssociatedCount?: number | null;
+  enrichmentExecution?: any;
   storedRecordCount?: number | null;
   queryProvenance: ObservationProvenance;
   isLive: boolean;

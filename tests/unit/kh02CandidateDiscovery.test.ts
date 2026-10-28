@@ -33,9 +33,9 @@ describe("SWAI KH-02 — Product Candidate Discovery & Relevance Unit Tests", ()
     const candidates = discoverProductCandidatesFromAds([obs], topic);
     expect(candidates.length).toBe(1);
     expect(candidates[0].title).toBe("Automatic Pet Feeder");
-    expect(candidates[0].identityStatus).toBe("VERIFIED");
+    expect(candidates[0].identityStatus).toBe("PROBABLE");
     expect(candidates[0].relevanceStatus).toBe("RELEVANT");
-    expect(candidates[0].isEligibleAsEvergreenWinner).toBe(true);
+    expect(candidates[0].isEligibleAsEvergreenWinner).toBe(false);
   });
 
   it("extracts candidate from descriptive headline when landing URL is missing", () => {

@@ -30,7 +30,10 @@ import {
 } from "./providers/metaResearchAdapter";
 import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
 import { collectTikTokOrganicSignals } from "./providers/tiktokOrganicResearchAdapter";
-import { collectGoogleAdvertiserSignals } from "./providers/googleTransparencyResearchAdapter";
+import {
+  collectGoogleAdvertiserSignals,
+  extractRegistrableDomain,
+} from "./providers/googleTransparencyResearchAdapter";
 import { diagnoseKH02Source } from "./providers/sourceRegistry";
 import { isSourceTemporarilyDisabled } from "./providers/sourcePolicy";
 import {
@@ -41,6 +44,10 @@ import {
   selectTopResearchShortlist,
   ResearchShortlistResult,
   evaluateCandidateProductReality,
+  buildProductIdentityFingerprint,
+  compareProductIdentity,
+  clusterProductCandidates,
+  mergeDuplicateCandidateRecords,
 } from "./identity/productCandidateDiscovery";
 import { matchCrossPlatformProductEvidence } from "./identity/crossPlatformProductMatcher";
 import {
@@ -260,7 +267,7 @@ export async function runEvergreenProductResearch(
     topic: input.topic,
     market,
     lookbackDays,
-    maxResults: 30,
+    maxResults: 50,
     signal: abortSignal,
   };
 
@@ -564,173 +571,64 @@ export async function runEvergreenProductResearch(
     }
   }
 
-  // ── Stage 2b: Bounded Adaptive Search Recovery — Round 2 (V12.4.2 Phase C & H) ──
-  if (
-    isSelected("META_ADS") &&
-    providerTelemetry.META_ADS.liveAttempted &&
-    sharedMetaBudgetTracker.canExecuteSubquery() &&
-    sharedMetaBudgetTracker.remainingRequests > 0 &&
-    !abortSignal?.aborted
-  ) {
-    const prelimCandidates = discoverProductCandidatesFromAds(
-      adObservations,
-      input.topic,
-      { plannedArchetypes: discoveryPlan?.productArchetypes }
-    );
-    const prelimIdentifiableCount = prelimCandidates.filter(
-      (c) =>
-        c.relevanceStatus !== "IRRELEVANT" &&
-        c.productRealityStatus !== "NON_PHYSICAL" &&
-        c.productRealityStatus !== "REJECTED" &&
-        Boolean(c.storeDomain || c.canonicalProductUrl)
-    ).length;
-
-    if (prelimIdentifiableCount < 3) {
-      const round2Queries = selectQueriesForSearchRound(
-        validatedQueries,
-        sharedMetaBudgetTracker.remainingRequests,
-        executedNormalizedPhrases,
-        coveredArchetypeIds,
-        2
-      );
-      if (round2Queries.length > 0) {
-        for (const r2q of round2Queries) {
-          executedNormalizedPhrases.add(r2q.normalizedPhrase);
-          if (r2q.archetypeId) coveredArchetypeIds.add(r2q.archetypeId);
-        }
-        try {
-          const metaRound2Result = await executeStageWithSignal(
-            "Meta Ads Adaptive Round 2",
-            STAGE_TIMEOUT_MS,
-            (q) =>
-              collectMetaProductSignals({
-                ...q,
-                productKeywords: plannedProductKeywords.length > 0 ? plannedProductKeywords : undefined,
-                plannedQueries: round2Queries,
-                sharedMetaBudgetTracker,
-                searchRoundNumber: 2,
-                maxLiveRequestsForRound: sharedMetaBudgetTracker.remainingRequests,
-              })
-          );
-          addUniqueObservations(metaRound2Result.observations);
-          const execMetaR2 = metaRound2Result.executionMetadata;
-          if (Array.isArray(execMetaR2?.queryOutcomes)) {
-            allMetaQueryOutcomes.push(...execMetaR2.queryOutcomes);
-          }
-          // Reconcile Meta telemetry with Round 2 additions
-          const allMetaObs = adObservations.filter((o) => o.source === "META_ADS");
-          const freshLiveAfterR2 = allMetaObs.filter((o) => o.provenance === "LIVE_PROVIDER").length;
-          const cachedAfterR2 = allMetaObs.length - freshLiveAfterR2;
-          providerTelemetry.META_ADS.acceptedCount = allMetaObs.length;
-          providerTelemetry.META_ADS.freshLiveCount = freshLiveAfterR2;
-          providerTelemetry.META_ADS.cachedRecordsCount = cachedAfterR2;
-          providerTelemetry.META_ADS.upstreamReturnedCount =
-            (providerTelemetry.META_ADS.upstreamReturnedCount || 0) +
-            (execMetaR2?.upstreamReturnedCount || 0);
-          providerTelemetry.META_ADS.retrievedCount =
-            (providerTelemetry.META_ADS.upstreamReturnedCount || freshLiveAfterR2) +
-            cachedAfterR2;
-          if (metaRound2Result.status === "PASSED") {
-            sourceStatuses.META_ADS = "PASSED";
-            providerTelemetry.META_ADS.queryStatus = "PASSED";
-            providerTelemetry.META_ADS.liveSucceeded = true;
-            providerTelemetry.META_ADS.isLive = freshLiveAfterR2 > 0;
-          }
-        } catch (r2Err: any) {
-          warnings.push(`Adaptive Meta search round 2 warning: ${r2Err.message}`);
-        }
-      }
-    }
-  }
-
   if (context?.reportProgress) {
     await context.reportProgress({
       stage: "NORMALIZATION",
       percent: 35,
-      message: "Consolidating product landing pages",
+      message: "Consolidating product landing pages & prioritizing diverse families",
     }).catch((err) => {
       warnings.push(`Progress reporting warning: ${err.message}`);
     });
   }
 
-  // ── Stage 3: Extract Consolidated Product Candidates (Bounded) ───────────
-  const rawCandidates = discoverProductCandidatesFromAds(
-    adObservations,
-    input.topic,
-    { plannedArchetypes: discoveryPlan?.productArchetypes }
-  );
-
-  // Capture pre-AI discovery relevance counts BEFORE Stage 4c mutates candidate.relevanceStatus in place
-  const preAiRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "RELEVANT").length;
-  const preAiProbablyRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "PROBABLY_RELEVANT").length;
-  const preAiAmbiguousCount = rawCandidates.filter((c) => c.relevanceStatus === "AMBIGUOUS").length;
-  const preAiIrrelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT").length;
-
-  const eligibleCandidates = rawCandidates.filter((c) => c.relevanceStatus !== "IRRELEVANT");
-  const preRejectedCandidates = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT");
-
-  // Prioritize eligible candidates based on relevance score, evidence count, and valid canonical URL
-  eligibleCandidates.sort((a, b) => {
-    const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
-    if (relDiff !== 0) return relDiff;
-    const obsDiff = b.totalObservationCount - a.totalObservationCount;
-    if (obsDiff !== 0) return obsDiff;
-    const aHasUrl = Boolean(a.canonicalProductUrl);
-    const bHasUrl = Boolean(b.canonicalProductUrl);
-    if (aHasUrl !== bHasUrl) return aHasUrl ? -1 : 1;
-    return 0;
-  });
-
-  const candidatesToProcess = eligibleCandidates.slice(0, maxCandidates);
-  const excludedByMaxCandidates = eligibleCandidates.slice(maxCandidates);
-
-  // ── Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs ─────
-  for (const candidate of candidatesToProcess) {
-    try {
-      const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
-      candidate.researchProductId = resolved.researchProductId;
-      if (resolved.canonicalProductUrl && !candidate.canonicalProductUrl) {
-        candidate.canonicalProductUrl = resolved.canonicalProductUrl;
-      }
-    } catch (resErr: any) {
-      warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
-    }
-  }
-
-  // ── Stage 4b: Async Metadata Enrichment with Real Evidence (Phase 6) ────────
-  let enrichedCandidates = candidatesToProcess;
-  try {
-    const enrichmentResult = await enrichProductCandidatesWithEvidence(
-      candidatesToProcess,
-      {
-        workspaceId: input.workspaceId,
-        topic: input.topic,
-        timeoutMs: 4000,
-        maxConcurrency: 3,
-        signal: abortSignal,
-        plannedArchetypes: discoveryPlan?.productArchetypes,
-      }
-    );
-    enrichedCandidates = enrichmentResult.candidates;
-    if (enrichmentResult.errors.length > 0) {
-      warnings.push(...enrichmentResult.errors.slice(0, 3));
-    }
-  } catch (enrichErr: any) {
-    warnings.push(`Product metadata enrichment stage error: ${enrichErr.message}`);
-  }
-
-  const candidates = enrichedCandidates;
-
-  // ── Stage 4c: Gemini AI Semantic Product Intelligence (V12.4) ────────────
-  if (context?.reportProgress) {
-    await context.reportProgress({
-      stage: "ENRICHMENT",
-      percent: 48,
-      message: "Analyzing candidate product intelligence & commercial reality with Gemini AI",
-    }).catch((err) => {
-      warnings.push(`Progress reporting warning: ${err.message}`);
+  // Helper: Interleave eligible candidates by product family / archetype so a single dominant
+  // family (e.g. 10 oil dispenser ads) never starves other discovered families in the queue (Section 6.3, F05).
+  // Always prioritize candidates that possess merchant URL/domain evidence ahead of URL-less ad hooks.
+  const prioritizeCandidatesByFamilyAndEvidence = (
+    list: DiscoveredProductCandidate[]
+  ): DiscoveredProductCandidate[] => {
+    const sorted = [...list].sort((a, b) => {
+      const aShopify = Boolean(a.canonicalProductUrl && /\/products\//i.test(a.canonicalProductUrl));
+      const bShopify = Boolean(b.canonicalProductUrl && /\/products\//i.test(b.canonicalProductUrl));
+      if (aShopify !== bShopify) return aShopify ? -1 : 1;
+      const aMerchant = Boolean(a.canonicalProductUrl || a.storeDomain);
+      const bMerchant = Boolean(b.canonicalProductUrl || b.storeDomain);
+      if (aMerchant !== bMerchant) return aMerchant ? -1 : 1;
+      const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+      if (relDiff !== 0) return relDiff;
+      const obsDiff = b.totalObservationCount - a.totalObservationCount;
+      if (obsDiff !== 0) return obsDiff;
+      return 0;
     });
-  }
+
+    const interleaveGroup = (group: DiscoveredProductCandidate[]) => {
+      const buckets = new Map<string, DiscoveredProductCandidate[]>();
+      for (const c of group) {
+        const fp = buildProductIdentityFingerprint(c);
+        const key = fp.familyKey || c.matchedArchetypeId || "general_family";
+        const arr = buckets.get(key) || [];
+        arr.push(c);
+        buckets.set(key, arr);
+      }
+
+      const interleaved: DiscoveredProductCandidate[] = [];
+      let added = true;
+      while (added) {
+        added = false;
+        for (const [, arr] of buckets.entries()) {
+          if (arr.length > 0) {
+            interleaved.push(arr.shift()!);
+            added = true;
+          }
+        }
+      }
+      return interleaved;
+    };
+
+    const withMerchant = sorted.filter((c) => Boolean(c.canonicalProductUrl || c.storeDomain));
+    const withoutMerchant = sorted.filter((c) => !c.canonicalProductUrl && !c.storeDomain);
+    return [...interleaveGroup(withMerchant), ...interleaveGroup(withoutMerchant)];
+  };
 
   let aiTelemetry: GeminiAITelemetry = {
     provider: "GOOGLE_GEMINI",
@@ -754,45 +652,324 @@ export async function runEvergreenProductResearch(
     invalidAIOutputsRejectedCount: 0,
   };
 
-  if (candidates.length > 0) {
+  // Helper: Executes Stage 4 (DB link), Stage 4b (Merchant Metadata Fetch), and Stage 4c (Gemini AI + Reality Gate)
+  // on a batch of candidates, accumulating AI telemetry across batches/rounds.
+  const verifyAndEnrichCandidateBatch = async (
+    batch: DiscoveredProductCandidate[]
+  ): Promise<DiscoveredProductCandidate[]> => {
+    if (batch.length === 0) return [];
+
+    // Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs (respecting Section 4.6 provenance)
+    for (const candidate of batch) {
+      try {
+        const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
+        candidate.researchProductId = resolved.researchProductId;
+        candidate.existingProductVerified = resolved.existingProductVerified;
+        if (resolved.canonicalProductUrl && !candidate.canonicalProductUrl) {
+          candidate.canonicalProductUrl = resolved.canonicalProductUrl;
+        }
+      } catch (resErr: any) {
+        warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
+      }
+    }
+
+    // Stage 4b: Async Metadata Enrichment with Real Evidence
+    let enrichedBatch = batch;
     try {
-      const aiResult = await analyzeProductCandidatesWithAI(
-        candidates,
-        {
+      const enrichmentResult = await enrichProductCandidatesWithEvidence(batch, {
+        workspaceId: input.workspaceId,
+        topic: input.topic,
+        timeoutMs: 4000,
+        maxConcurrency: 3,
+        signal: abortSignal,
+        plannedArchetypes: discoveryPlan?.productArchetypes,
+      });
+      enrichedBatch = enrichmentResult.candidates;
+      if (enrichmentResult.errors.length > 0) {
+        warnings.push(...enrichmentResult.errors.slice(0, 3));
+      }
+    } catch (enrichErr: any) {
+      warnings.push(`Product metadata enrichment stage error: ${enrichErr.message}`);
+    }
+
+    // Stage 4c: Gemini AI Semantic Product Intelligence
+    if (enrichedBatch.length > 0) {
+      try {
+        const aiResult = await analyzeProductCandidatesWithAI(enrichedBatch, {
           researchRunId: runId,
           topic: input.topic,
           market: market,
           maxConcurrency: 2,
           budgetTracker: sharedGeminiBudgetTracker,
           signal: abortSignal,
+        });
+        const t = aiResult.telemetry;
+        aiTelemetry = {
+          ...t,
+          totalAnalysesAttempted: aiTelemetry.totalAnalysesAttempted + t.totalAnalysesAttempted,
+          totalAnalysesCompleted: aiTelemetry.totalAnalysesCompleted + t.totalAnalysesCompleted,
+          totalAnalysesFailed: aiTelemetry.totalAnalysesFailed + t.totalAnalysesFailed,
+          physicalProductsCount: aiTelemetry.physicalProductsCount + t.physicalProductsCount,
+          servicesRejectedCount: aiTelemetry.servicesRejectedCount + t.servicesRejectedCount,
+          contentRejectedCount: aiTelemetry.contentRejectedCount + t.contentRejectedCount,
+          insuranceLeadGenRejectedCount:
+            aiTelemetry.insuranceLeadGenRejectedCount + t.insuranceLeadGenRejectedCount,
+          unknownClassificationsCount:
+            aiTelemetry.unknownClassificationsCount + t.unknownClassificationsCount,
+          evidenceContradictionsCount:
+            aiTelemetry.evidenceContradictionsCount + t.evidenceContradictionsCount,
+          invalidAIOutputsRejectedCount:
+            aiTelemetry.invalidAIOutputsRejectedCount + t.invalidAIOutputsRejectedCount,
+        };
+        if (t.aiStatus === "PARTIAL" || t.aiStatus === "UNAVAILABLE") {
+          warnings.push(`Gemini AI status: ${t.aiStatus}. Using conservative deterministic classification.`);
         }
-      );
-      aiTelemetry = aiResult.telemetry;
-      if (aiResult.telemetry.aiStatus === "PARTIAL" || aiResult.telemetry.aiStatus === "UNAVAILABLE") {
-        warnings.push(`Gemini AI status: ${aiResult.telemetry.aiStatus}. Using conservative deterministic classification.`);
+      } catch (aiErr: any) {
+        warnings.push(`Gemini AI product intelligence stage warning: ${aiErr.message}`);
       }
-    } catch (aiErr: any) {
-      warnings.push(`Gemini AI product intelligence stage warning: ${aiErr.message}`);
+
+      for (const c of enrichedBatch) {
+        const reality = evaluateCandidateProductReality(c);
+        c.productRealityStatus = reality.productRealityStatus;
+        c.sourcePageClassification = reality.sourcePageClassification;
+        c.productRealityReason = reality.reason;
+        if (!reality.isPhysicalProductRealityEligible || c.hasUnresolvedContradiction) {
+          c.isEligibleAsEvergreenWinner = false;
+        } else if (
+          c.identityStatus === "VERIFIED" &&
+          !c.requiresManualReview &&
+          reality.productRealityStatus === "VERIFIED_PHYSICAL_PRODUCT"
+        ) {
+          c.isEligibleAsEvergreenWinner = true;
+        } else {
+          c.isEligibleAsEvergreenWinner = false;
+        }
+      }
     }
 
-    // Re-evaluate mandatory Product Reality Gate after AI analysis (or fallback)
-    for (const c of candidates) {
-      const reality = evaluateCandidateProductReality(c);
-      c.productRealityStatus = reality.productRealityStatus;
-      c.sourcePageClassification = reality.sourcePageClassification;
-      if (!reality.isPhysicalProductRealityEligible) {
-        c.isEligibleAsEvergreenWinner = false;
-      } else if (
-        c.identityStatus === "VERIFIED" &&
-        !c.requiresManualReview &&
-        reality.productRealityStatus === "VERIFIED_PHYSICAL_PRODUCT"
-      ) {
-        c.isEligibleAsEvergreenWinner = true;
-      } else {
-        c.isEligibleAsEvergreenWinner = false;
+    return enrichedBatch;
+  };
+
+  // ── Stage 3: Extract Consolidated Product Candidates (Round 1) ───────────
+  let rawCandidates = discoverProductCandidatesFromAds(
+    adObservations,
+    input.topic,
+    { plannedArchetypes: discoveryPlan?.productArchetypes }
+  );
+
+  // Capture pre-AI discovery relevance counts BEFORE Stage 4c mutates candidate.relevanceStatus in place
+  let preAiRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "RELEVANT").length;
+  let preAiProbablyRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "PROBABLY_RELEVANT").length;
+  let preAiAmbiguousCount = rawCandidates.filter((c) => c.relevanceStatus === "AMBIGUOUS").length;
+  let preAiIrrelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT").length;
+
+  let eligibleCandidates = prioritizeCandidatesByFamilyAndEvidence(
+    rawCandidates.filter((c) => c.relevanceStatus !== "IRRELEVANT")
+  );
+  const preRejectedCandidates = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT");
+
+  const initialBatch = eligibleCandidates.slice(0, maxCandidates);
+  const unverifiedQueue = eligibleCandidates.slice(maxCandidates);
+  let totalProcessedForAI = initialBatch.length;
+
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "ENRICHMENT",
+      percent: 45,
+      message: "Verifying merchant metadata & analyzing product reality with Gemini AI",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
+
+  let verifiedPool = await verifyAndEnrichCandidateBatch(initialBatch);
+
+  // ── Stage 4d: Post-Gate Queue Refill from unverifiedQueue (Section 6.3, F05, C23) ──
+  // If top candidates in the initial batch were rejected by metadata/AI/Product Reality Gate or merged as duplicates,
+  // refill from `unverifiedQueue` before declaring shortlist shortfall.
+  let currentShortlistEval = selectTopResearchShortlist(verifiedPool, 3, {
+    nicheIntent: hybridPlan.nicheIntent,
+    topic: input.topic,
+  });
+
+  while (
+    (currentShortlistEval.qualifiedCount < 3 ||
+      (hybridPlan.nicheIntent !== "SPECIFIC_PRODUCT" &&
+        (currentShortlistEval.opportunityDiversity?.distinctFamilyCount || 0) <
+          Math.min(3, currentShortlistEval.qualifiedCount + 1))) &&
+    unverifiedQueue.length > 0 &&
+    !abortSignal?.aborted &&
+    sharedGeminiBudgetTracker.getRemainingRequests() > 0
+  ) {
+    const needed = Math.max(2, (3 - currentShortlistEval.qualifiedCount) * 2);
+    const refillBatch = unverifiedQueue.splice(0, Math.min(maxCandidates, needed));
+    if (refillBatch.length === 0) break;
+    totalProcessedForAI += refillBatch.length;
+
+    const enrichedRefill = await verifyAndEnrichCandidateBatch(refillBatch);
+    verifiedPool = clusterProductCandidates(
+      [...verifiedPool, ...enrichedRefill],
+      mergeDuplicateCandidateRecords
+    ).consolidatedCandidates;
+
+    currentShortlistEval = selectTopResearchShortlist(verifiedPool, 3, {
+      nicheIntent: hybridPlan.nicheIntent,
+      topic: input.topic,
+    });
+  }
+
+  // ── Stage 4e: Post-Gate Bounded Adaptive Search Recovery — Round 2 (Section 6.1–6.5, F04, C22, C24, C25, C26) ──
+  // Evaluate post-gate shortlist coverage AFTER merchant metadata, AI verification, Reality Gate, and distinctness/family clustering.
+  const postGateQualifiedCount = currentShortlistEval.qualifiedCount;
+  const postGateDistinctFamilies =
+    currentShortlistEval.opportunityDiversity?.distinctFamilyCount || 0;
+  const needsRound2Recovery =
+    postGateQualifiedCount < 3 ||
+    (hybridPlan.nicheIntent !== "SPECIFIC_PRODUCT" &&
+      postGateQualifiedCount >= 1 &&
+      postGateDistinctFamilies < Math.min(2, postGateQualifiedCount));
+
+  if (
+    needsRound2Recovery &&
+    isSelected("META_ADS") &&
+    providerTelemetry.META_ADS.liveAttempted &&
+    sharedMetaBudgetTracker.canExecuteSubquery() &&
+    sharedMetaBudgetTracker.remainingRequests > 0 &&
+    !abortSignal?.aborted
+  ) {
+    // Only mark an archetype as covered if it actually produced a post-gate qualified shortlist candidate
+    const postGateCoveredArchetypes = new Set<string>(
+      currentShortlistEval.shortlist
+        .map((c) => c.matchedArchetypeId)
+        .filter((id): id is string => Boolean(id))
+    );
+
+    // Identify Round 1 exact phrase queries that returned 0 ads (C26 fallback support)
+    const zeroResultQueryIds = new Set(
+      allMetaQueryOutcomes
+        .filter((qo) => qo.returnedCount === 0)
+        .map((qo) => qo.queryId)
+    );
+    const zeroResultQueries = round1Queries.filter((rq) =>
+      zeroResultQueryIds.has(rq.queryId)
+    );
+
+    const round2Queries = selectQueriesForSearchRound(
+      validatedQueries,
+      sharedMetaBudgetTracker.remainingRequests,
+      executedNormalizedPhrases,
+      postGateCoveredArchetypes,
+      2,
+      { zeroResultQueries }
+    );
+
+    if (round2Queries.length > 0) {
+      for (const r2q of round2Queries) {
+        executedNormalizedPhrases.add(r2q.normalizedPhrase);
+        executedNormalizedPhrases.add(`${r2q.normalizedPhrase}::${r2q.searchType}`);
+        if (r2q.archetypeId) coveredArchetypeIds.add(r2q.archetypeId);
+      }
+      try {
+        const prevObsCount = adObservations.length;
+        const metaRound2Result = await executeStageWithSignal(
+          "Meta Ads Post-Gate Adaptive Round 2",
+          STAGE_TIMEOUT_MS,
+          (q) =>
+            collectMetaProductSignals({
+              ...q,
+              productKeywords:
+                plannedProductKeywords.length > 0 ? plannedProductKeywords : undefined,
+              plannedQueries: round2Queries,
+              sharedMetaBudgetTracker,
+              searchRoundNumber: 2,
+              maxLiveRequestsForRound: sharedMetaBudgetTracker.remainingRequests,
+            })
+        );
+        addUniqueObservations(metaRound2Result.observations);
+        const execMetaR2 = metaRound2Result.executionMetadata;
+        if (Array.isArray(execMetaR2?.queryOutcomes)) {
+          allMetaQueryOutcomes.push(...execMetaR2.queryOutcomes);
+        }
+
+        // Reconcile Meta telemetry with Round 2 additions
+        const allMetaObs = adObservations.filter((o) => o.source === "META_ADS");
+        const freshLiveAfterR2 = allMetaObs.filter(
+          (o) => o.provenance === "LIVE_PROVIDER"
+        ).length;
+        const cachedAfterR2 = allMetaObs.length - freshLiveAfterR2;
+        providerTelemetry.META_ADS.acceptedCount = allMetaObs.length;
+        providerTelemetry.META_ADS.freshLiveCount = freshLiveAfterR2;
+        providerTelemetry.META_ADS.cachedRecordsCount = cachedAfterR2;
+        providerTelemetry.META_ADS.upstreamReturnedCount =
+          (providerTelemetry.META_ADS.upstreamReturnedCount || 0) +
+          (execMetaR2?.upstreamReturnedCount || 0);
+        providerTelemetry.META_ADS.retrievedCount =
+          (providerTelemetry.META_ADS.upstreamReturnedCount || freshLiveAfterR2) +
+          cachedAfterR2;
+        if (metaRound2Result.status === "PASSED") {
+          sourceStatuses.META_ADS = "PASSED";
+          providerTelemetry.META_ADS.queryStatus = "PASSED";
+          providerTelemetry.META_ADS.liveSucceeded = true;
+          providerTelemetry.META_ADS.isLive = freshLiveAfterR2 > 0;
+        }
+
+        // Extract and verify newly discovered Round 2 candidates
+        const newObsFromR2 = adObservations.slice(prevObsCount);
+        if (newObsFromR2.length > 0) {
+          rawCandidates = discoverProductCandidatesFromAds(
+            adObservations,
+            input.topic,
+            { plannedArchetypes: discoveryPlan?.productArchetypes }
+          );
+          preAiRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "RELEVANT").length;
+          preAiProbablyRelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "PROBABLY_RELEVANT").length;
+          preAiAmbiguousCount = rawCandidates.filter((c) => c.relevanceStatus === "AMBIGUOUS").length;
+          preAiIrrelevantCount = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT").length;
+          eligibleCandidates = prioritizeCandidatesByFamilyAndEvidence(
+            rawCandidates.filter((c) => c.relevanceStatus !== "IRRELEVANT")
+          );
+
+          const r2RawCandidates = discoverProductCandidatesFromAds(
+            newObsFromR2,
+            input.topic,
+            { plannedArchetypes: discoveryPlan?.productArchetypes }
+          );
+          const r2Irrelevant = r2RawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT");
+          for (const irr of r2Irrelevant) {
+            if (!preRejectedCandidates.some((p) => p.candidateId === irr.candidateId)) {
+              preRejectedCandidates.push(irr);
+            }
+          }
+
+          const r2NewEligible = prioritizeCandidatesByFamilyAndEvidence(
+            r2RawCandidates
+              .filter((c) => c.relevanceStatus !== "IRRELEVANT")
+              .filter(
+                (c) =>
+                  !verifiedPool.some(
+                    (existing) =>
+                      compareProductIdentity(existing, c).areSameActualProduct === true
+                  )
+              )
+          );
+
+          const r2Batch = r2NewEligible.slice(0, maxCandidates);
+          totalProcessedForAI += r2Batch.length;
+          const r2Verified = await verifyAndEnrichCandidateBatch(r2Batch);
+
+          verifiedPool = clusterProductCandidates(
+            [...verifiedPool, ...r2Verified],
+            mergeDuplicateCandidateRecords
+          ).consolidatedCandidates;
+        }
+      } catch (r2Err: any) {
+        warnings.push(`Adaptive Meta search round 2 warning: ${r2Err.message}`);
       }
     }
   }
+
+  const candidates = verifiedPool;
+  const excludedByMaxCandidates = unverifiedQueue;
 
   if (context?.reportProgress) {
     await context.reportProgress({
@@ -885,14 +1062,36 @@ export async function runEvergreenProductResearch(
       warnings.push(`Google Ads skipped promptly: ${googleDiag.reason}`);
     } else {
       try {
-        // Extract identified advertiser domains only from eligible research candidates
+        // Extract identified advertiser domains only from eligible merchant candidates (excluding social/redirect platforms)
+        const nonMerchantHosts = new Set([
+          "facebook.com",
+          "l.facebook.com",
+          "m.facebook.com",
+          "fb.com",
+          "fb.me",
+          "instagram.com",
+          "l.instagram.com",
+          "tiktok.com",
+          "google.com",
+          "ad.doubleclick.net",
+          "doubleclick.net",
+          "tinyurl.com",
+          "tiny.cc",
+          "bit.ly",
+          "ampd.to",
+          "walmrt.us",
+        ]);
         const discoveredDomains = Array.from(
           new Set(
             candidates
-              .map((c) => c.storeDomain)
-              .filter((d): d is string => Boolean(d))
+              .filter((c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE")
+              .map((c) => c.storeDomain?.toLowerCase().trim())
+              .filter(
+                (d): d is string =>
+                  Boolean(d && d.includes(".") && !nonMerchantHosts.has(d))
+              )
           )
-        );
+        ).slice(0, 3);
 
         if (discoveredDomains.length === 0) {
           sourceStatuses.GOOGLE_ADS = "SKIPPED";
@@ -949,6 +1148,7 @@ export async function runEvergreenProductResearch(
             queryError: googleError,
             lastSuccessfulRecordCount: isSuccess ? googleResult.retrievedCount : null,
             lastSuccessfulQueryAt: isSuccess ? googleNow : null,
+            enrichmentExecution: googleResult.enrichmentExecution,
           };
         }
       } catch (err: any) {
@@ -974,6 +1174,7 @@ export async function runEvergreenProductResearch(
   // ── Stage 7: Product-Specific Cross-Platform Evidence Association ─────────
   let googleProductMatches = 0;
   let googleBrandMatches = 0;
+  const googleProductEvidenceIds: string[] = [];
 
   for (const candidate of candidates) {
     for (const obs of secondaryObservations) {
@@ -992,6 +1193,10 @@ export async function runEvergreenProductResearch(
         }
         if (obs.source === "GOOGLE_ADS") {
           googleProductMatches++;
+          const evId = obs.sourceExternalAdId || obs.sourceRecordId;
+          if (evId && !googleProductEvidenceIds.includes(evId)) {
+            googleProductEvidenceIds.push(evId);
+          }
         }
         if (!candidate.videoUrl && obs.media?.videoUrl) {
           candidate.videoUrl = obs.media.videoUrl;
@@ -999,7 +1204,14 @@ export async function runEvergreenProductResearch(
             candidate.thumbnailUrl = obs.media.thumbnailUrl;
           }
         }
-      } else if (obs.source === "GOOGLE_ADS" && obs.advertiserDomain && candidate.storeDomain && obs.advertiserDomain === candidate.storeDomain) {
+      } else if (
+        obs.source === "GOOGLE_ADS" &&
+        (match.confidence === "PROBABLE" ||
+          (obs.advertiserDomain &&
+            candidate.storeDomain &&
+            extractRegistrableDomain(obs.advertiserDomain) ===
+              extractRegistrableDomain(candidate.storeDomain)))
+      ) {
         googleBrandMatches++;
       }
     }
@@ -1007,6 +1219,16 @@ export async function runEvergreenProductResearch(
 
   if (providerTelemetry.GOOGLE_ADS) {
     providerTelemetry.GOOGLE_ADS.productAssociatedCount = googleProductMatches;
+    providerTelemetry.GOOGLE_ADS.brandAssociatedCount = googleBrandMatches;
+    if (providerTelemetry.GOOGLE_ADS.enrichmentExecution) {
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = googleProductMatches;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = googleBrandMatches;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productEvidenceIds = googleProductEvidenceIds;
+      if (providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown) {
+        providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown.productAssociatedEvidence =
+          googleProductMatches > 0;
+      }
+    }
   }
 
   if (context?.reportProgress) {
@@ -1150,26 +1372,50 @@ export async function runEvergreenProductResearch(
   }
 
   // Distinctness filter: Ensure Top 3 never contains duplicate canonical product identities
+  // Uses the unified productDistinctnessEngine rather than title/name string comparison (F01 / B21).
   const distinctVerifiedWinners: RankedLeaderboardItem[] = [];
-  const seenCanonicalIdentities = new Set<string>();
+  const deferredSameFamilyWinners: RankedLeaderboardItem[] = [];
+  const seenWinnerFamilyKeys = new Set<string>();
+  const isBroadCategoryNiche =
+    (hybridPlan.nicheIntent || "BROAD_CATEGORY") === "BROAD_CATEGORY";
 
   for (const item of verifiedWinners) {
-    const canonicalKey = (
-      item.candidate.canonicalProductName ||
-      item.candidate.displayName ||
-      item.candidate.title ||
-      item.candidate.candidateId
-    ).toLowerCase().trim();
+    const fp = buildProductIdentityFingerprint(item.candidate);
+    if (!item.candidate.familyKey) item.candidate.familyKey = fp.familyKey;
+    if (!item.candidate.productKey) item.candidate.productKey = fp.productKey;
 
-    if (!seenCanonicalIdentities.has(canonicalKey)) {
-      seenCanonicalIdentities.add(canonicalKey);
-      distinctVerifiedWinners.push(item);
-    } else {
+    let isDuplicateProduct = false;
+    for (const existing of [...distinctVerifiedWinners, ...deferredSameFamilyWinners]) {
+      const cmp = compareProductIdentity(existing.candidate, item.candidate);
+      if (cmp.areSameActualProduct === true) {
+        isDuplicateProduct = true;
+        break;
+      }
+    }
+
+    if (isDuplicateProduct) {
       provisionalCandidates.push({
         ...item,
         rank: null,
       });
+      continue;
     }
+
+    const famKey = fp.familyKey;
+    if (isBroadCategoryNiche && seenWinnerFamilyKeys.has(famKey)) {
+      deferredSameFamilyWinners.push(item);
+    } else {
+      seenWinnerFamilyKeys.add(famKey);
+      distinctVerifiedWinners.push(item);
+    }
+  }
+
+  // If distinct families < 3, allow distinct verified models from same family as labeled alternatives
+  for (const deferred of deferredSameFamilyWinners) {
+    deferred.candidate.distinctnessStatus = "HOMOGENEOUS_FAMILY";
+    deferred.candidate.distinctnessReason =
+      "Same product family — distinct verified model/merchant alternative";
+    distinctVerifiedWinners.push(deferred);
   }
 
   // Assign ranks strictly to distinct verified eligible candidates
@@ -1208,7 +1454,11 @@ export async function runEvergreenProductResearch(
   // Top 3 Research Shortlist (for business evaluation, separate from Verified Evergreen)
   const researchShortlist = selectTopResearchShortlist(
     candidates,
-    3
+    3,
+    {
+      nicheIntent: hybridPlan.nicheIntent,
+      topic: input.topic,
+    }
   );
 
   const shortlistedIdSet = new Set(
@@ -1308,6 +1558,11 @@ export async function runEvergreenProductResearch(
   const shortlistCoverage = evaluateShortlistCoverage({
     requestedCount: 3,
     qualifiedProducts: researchShortlist.qualifiedCount,
+    distinctFamiliesCount:
+      researchShortlist.distinctFamiliesCount ??
+      new Set(researchShortlist.shortlist.map((s) => s.familyKey).filter(Boolean)).size,
+    nicheIntent: hybridPlan.nicheIntent,
+    unverifiedQueueRemaining: unverifiedQueue.length,
     observedArchetypeIds,
     plannedArchetypes: discoveryPlan?.productArchetypes || [],
     unresolvedCandidates: candidates.filter((c) => c.identityStatus === "UNRESOLVED").length,
@@ -1380,6 +1635,7 @@ export async function runEvergreenProductResearch(
     irrelevantCandidates: preAiIrrelevantCount,
     identitiesVerified: candidates.filter((c) => c.identityStatus === "VERIFIED").length,
     identitiesProbable: candidates.filter((c) => c.identityStatus === "PROBABLE").length,
+    identitiesAmbiguous: candidates.filter((c) => c.identityStatus === "AMBIGUOUS").length,
     identitiesUnresolved: candidates.filter((c) => c.identityStatus === "UNRESOLVED").length,
     candidatesActuallyScored: rankedItems.length,
     verifiedEvergreenCandidates: distinctVerifiedWinners.length,
@@ -1399,7 +1655,7 @@ export async function runEvergreenProductResearch(
     uniqueAds: adObservations.length,
     clearlyUnrelated: preAiIrrelevantCount,
     potentiallyRelevant: eligibleCandidates.length,
-    selectedForAI: candidatesToProcess.length,
+    selectedForAI: totalProcessedForAI,
     aiAnalyzed: aiTelemetry?.totalAnalysesCompleted ?? 0,
     physicalProductsSupported: physicalProductsSupportedCount,
     identityResolved: identityResolvedCount,

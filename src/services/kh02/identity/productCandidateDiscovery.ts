@@ -1,12 +1,9 @@
 /**
- * SWAI KH-02 — Product Candidate Discovery Service
+ * SWAI KH-02 — Product Candidate Discovery Service (V12.4.3)
  *
- * Extracts consolidated product candidates from raw advertisement observations.
- * Prevents ad fragmentation by grouping multiple creatives promoting the same item.
- *
- * Invariant:
- * 50 Meta ads and 10 TikTok ads for the same product must become 1 Candidate,
- * not 60 separate products.
+ * Extracts consolidated product candidates from raw advertisement observations,
+ * preserves full merchant/product identity provenance (Section 4), and applies
+ * the unified 6-level Product Distinctness & Family Engine (Section 5).
  */
 
 import { prisma } from "@/lib/db";
@@ -21,7 +18,10 @@ import {
   resolveProductIdentityWithEvidence,
   ProductIdentityStatus,
 } from "./productIdentityResolver";
-import { extractProductUrlMetadata } from "./productMetadataExtractor";
+import {
+  extractProductUrlMetadata,
+  NON_MERCHANT_PLATFORM_DOMAINS,
+} from "./productMetadataExtractor";
 import {
   DiscoveryRelevanceDecision,
   evaluateProductRelevance,
@@ -39,26 +39,52 @@ import {
   classifySourcePage,
   evaluateDeterministicEntityReality,
 } from "../ai/aiEvidenceVerifier";
+import {
+  buildProductIdentityFingerprint,
+  compareProductIdentity,
+  clusterProductCandidates,
+  evaluateOpportunityDiversity,
+  PairwiseIdentityComparison,
+  OpportunityDiversityEvaluation,
+} from "./productDistinctnessEngine";
+
+export {
+  buildProductIdentityFingerprint,
+  compareProductIdentity,
+  clusterProductCandidates,
+  evaluateOpportunityDiversity,
+};
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
   researchProductId?: string | null;
+  existingProductVerified?: boolean;
   title: string;
   canonicalProductName?: string | null;
   displayName?: string;
   originalAdHeadline?: string | null;
   originalCreativeCode?: string | null;
+  adClaimedProductName?: string | null;
+  merchantVerifiedProductName?: string | null;
   brand?: string | null;
   model?: string | null;
   sku?: string | null;
+  gtin?: string | null;
+  merchantProductId?: string | null;
+  variantId?: string | null;
   category: string;
   problemStatement: string | null;
   targetAudience: string | null;
   thumbnailUrl: string | null;
   videoUrl: string | null;
   mediaSourceAdId?: string | null;
+  requestedUrl?: string | null;
+  resolvedFinalUrl?: string | null;
+  declaredCanonicalUrl?: string | null;
+  normalizedProductUrl?: string | null;
   canonicalProductUrl: string | null;
   storeDomain: string | null;
+  imageReferences?: string[];
   advertiserNames: string[];
   supportingAdIds: string[];
   supportingSourceTypes: string[];
@@ -72,6 +98,12 @@ export interface DiscoveredProductCandidate {
   resolutionSource?: string;
   requiresManualReview?: boolean;
   identityEvidenceReferences?: string[];
+  fetchOutcome?: string;
+  evidenceTimestamp?: string | null;
+  verificationReason?: string;
+  verificationLimitations?: string[];
+  contradictions?: string[];
+  hasUnresolvedContradiction?: boolean;
   isEligibleAsEvergreenWinner?: boolean;
   relevanceStatus?: "RELEVANT" | "PROBABLY_RELEVANT" | "AMBIGUOUS" | "IRRELEVANT";
   discoveryRelevanceDecision?: DiscoveryRelevanceDecision;
@@ -89,21 +121,48 @@ export interface DiscoveredProductCandidate {
   productRealityStatus?: ProductRealityStatus;
   sourcePageClassification?: SourcePageClassification;
   productRealityReason?: string | null;
+  // Section 5: Unified Distinctness & Family fields
+  listingKey?: string;
+  productKey?: string;
+  variantKey?: string | null;
+  familyKey?: string;
+  familyLabel?: string;
+  distinctnessRole?:
+    | "PRIMARY_FAMILY_REPRESENTATIVE"
+    | "SAME_FAMILY_MODEL_ALTERNATIVE"
+    | "DUPLICATE_MERGED";
+  distinctnessStatus?: string;
+  distinctnessReason?: string;
+  crossMerchantUncertainty?: string | null;
+  mergedCandidateIds?: string[];
+  mergeReasons?: string[];
 }
-
 
 export interface KH02ResolvedCandidate {
   candidateId: string;
   researchProductId: string | null;
   canonicalProductUrl: string | null;
   identityStatus: "CONFIRMED" | "PROBABLE" | "AMBIGUOUS";
+  existingProductVerified: boolean;
   matchedAdIds: string[];
   requiresManualReview: boolean;
   matchReason?: string;
 }
 
+function hasVerifiedResearchProductProvenance(product: any): boolean {
+  if (!product) return false;
+  const meta = (product.metadata as Record<string, any>) || {};
+  return Boolean(
+    meta.verificationProvenance === "MERCHANT_PAGE_VERIFIED" ||
+      (meta.identityStatus === "VERIFIED" &&
+        (meta.verifiedMerchantTitle || meta.merchantProductId || meta.gtin))
+  );
+}
+
 /**
  * Resolves a candidate to an existing database ResearchProduct or marks as provisional.
+ * Section 4.6: Never auto-upgrades an unverified legacy ResearchProduct link to CONFIRMED/VERIFIED
+ * unless the stored record carries verified merchant provenance.
  */
 export async function resolveCandidateResearchProduct(
   candidate: DiscoveredProductCandidate,
@@ -116,14 +175,21 @@ export async function resolveCandidateResearchProduct(
       include: { product: true },
     });
     if (existingLink?.product) {
+      const verifiedProvenance = hasVerifiedResearchProductProvenance(
+        existingLink.product
+      );
       return {
         candidateId: candidate.candidateId,
         researchProductId: existingLink.product.id,
-        canonicalProductUrl: existingLink.product.productUrl || candidate.canonicalProductUrl,
-        identityStatus: "CONFIRMED",
+        canonicalProductUrl:
+          existingLink.product.productUrl || candidate.canonicalProductUrl,
+        identityStatus: verifiedProvenance ? "CONFIRMED" : "PROBABLE",
+        existingProductVerified: verifiedProvenance,
         matchedAdIds: candidate.supportingAdIds,
-        requiresManualReview: false,
-        matchReason: `Linked via existing AdProductLink to ResearchProduct ${existingLink.product.id}`,
+        requiresManualReview: !verifiedProvenance,
+        matchReason: verifiedProvenance
+          ? `Linked via existing AdProductLink to verified ResearchProduct ${existingLink.product.id}`
+          : `Linked via existing AdProductLink to unverified ResearchProduct ${existingLink.product.id} (requires merchant page verification)`,
       };
     }
   }
@@ -137,14 +203,23 @@ export async function resolveCandidateResearchProduct(
       storeDomain: candidate.storeDomain,
     });
     if (match.matchedProduct) {
+      const verifiedProvenance = hasVerifiedResearchProductProvenance(
+        match.matchedProduct
+      );
+      const isConfirmed =
+        match.confidence === "EXACT_MATCH" && verifiedProvenance;
       return {
         candidateId: candidate.candidateId,
         researchProductId: match.matchedProduct.id,
-        canonicalProductUrl: match.matchedProduct.productUrl || candidate.canonicalProductUrl,
-        identityStatus: match.confidence === "EXACT_MATCH" ? "CONFIRMED" : "PROBABLE",
+        canonicalProductUrl:
+          match.matchedProduct.productUrl || candidate.canonicalProductUrl,
+        identityStatus: isConfirmed ? "CONFIRMED" : "PROBABLE",
+        existingProductVerified: verifiedProvenance,
         matchedAdIds: candidate.supportingAdIds,
-        requiresManualReview: match.confidence !== "EXACT_MATCH",
-        matchReason: match.matchReason,
+        requiresManualReview: !isConfirmed,
+        matchReason: verifiedProvenance
+          ? match.matchReason
+          : `${match.matchReason} (existing record lacks verified merchant provenance)`,
       };
     }
   }
@@ -155,9 +230,11 @@ export async function resolveCandidateResearchProduct(
     researchProductId: null,
     canonicalProductUrl: candidate.canonicalProductUrl,
     identityStatus: candidate.canonicalProductUrl ? "PROBABLE" : "AMBIGUOUS",
+    existingProductVerified: false,
     matchedAdIds: candidate.supportingAdIds,
     requiresManualReview: true,
-    matchReason: "No existing ResearchProduct record found for candidate destination URL.",
+    matchReason:
+      "No existing ResearchProduct record found for candidate destination URL.",
   };
 }
 
@@ -166,8 +243,10 @@ export async function resolveCandidateResearchProduct(
  */
 function cleanCandidateTitle(rawTitle: string): string {
   let title = rawTitle.trim();
-  // Strip trailing punctuation and common ad hook slogans
-  title = title.replace(/\s*[-–|:]\s*(Buy Now|Shop Now|50% Off|Free Shipping|Sale|Official Store).*$/i, "");
+  title = title.replace(
+    /\s*[-–|:]\s*(Buy Now|Shop Now|50% Off|Free Shipping|Sale|Official Store).*$/i,
+    ""
+  );
   title = title.replace(/^(NEW|HOT|MUST HAVE|VIRAL)\s*[:!-]\s*/i, "");
   return title.slice(0, 100);
 }
@@ -175,53 +254,224 @@ function cleanCandidateTitle(rawTitle: string): string {
 /**
  * Extracts a concise problem statement from ad copy or headline.
  */
-function inferProblemStatement(headline: string | null, body: string | null): string | null {
+function inferProblemStatement(
+  headline: string | null,
+  body: string | null
+): string | null {
   const combined = `${headline || ""} ${body || ""}`.trim();
   if (!combined) return null;
 
-  // Look for problem-solution indicators
-  const problemMatches = combined.match(/(tired of|say goodbye to|struggling with|stop wasting|easily remove|helps you|designed to solve|eliminates|protect your|keep your)\s+([^.!?]+)/i);
+  const problemMatches = combined.match(
+    /(tired of|say goodbye to|struggling with|stop wasting|easily remove|helps you|designed to solve|eliminates|protect your|keep your)\s+([^.!?]+)/i
+  );
   if (problemMatches && problemMatches[0]) {
     return problemMatches[0].trim();
   }
 
-  // Fallback to first coherent sentence if short
   const firstSentence = combined.split(/[.!?]/)[0];
-  if (firstSentence && firstSentence.length > 15 && firstSentence.length < 120) {
+  if (
+    firstSentence &&
+    firstSentence.length > 15 &&
+    firstSentence.length < 120
+  ) {
     return firstSentence.trim();
   }
 
   return null;
 }
 
+function attachDistinctnessFingerprint(
+  cand: DiscoveredProductCandidate
+): DiscoveredProductCandidate {
+  const fp = buildProductIdentityFingerprint(cand);
+  cand.listingKey = fp.listingKey;
+  cand.productKey = fp.productKey;
+  cand.variantKey = fp.variantKey;
+  cand.familyKey = fp.familyKey;
+  cand.familyLabel = fp.familyLabel;
+  if (fp.normalizedCanonicalUrl && !cand.normalizedProductUrl) {
+    cand.normalizedProductUrl = fp.normalizedCanonicalUrl;
+  }
+  return cand;
+}
+
+export function mergeDuplicateCandidateRecords(
+  primary: DiscoveredProductCandidate,
+  duplicate: DiscoveredProductCandidate,
+  comparison: PairwiseIdentityComparison
+): DiscoveredProductCandidate {
+  primary.totalObservationCount += duplicate.totalObservationCount;
+  for (const adId of duplicate.supportingAdIds) {
+    if (!primary.supportingAdIds.includes(adId)) {
+      primary.supportingAdIds.push(adId);
+    }
+  }
+  for (const src of duplicate.supportingSourceTypes) {
+    if (!primary.supportingSourceTypes.includes(src)) {
+      primary.supportingSourceTypes.push(src);
+    }
+  }
+  for (const adv of duplicate.advertiserNames) {
+    if (!primary.advertiserNames.includes(adv)) {
+      primary.advertiserNames.push(adv);
+    }
+  }
+  primary.distinctAdvertisersCount = primary.advertiserNames.length;
+  for (const obs of duplicate.sourceObservations) {
+    if (
+      !primary.sourceObservations.some(
+        (existing) =>
+          existing.sourceRecordId &&
+          obs.sourceRecordId &&
+          existing.sourceRecordId === obs.sourceRecordId
+      )
+    ) {
+      primary.sourceObservations.push(obs);
+    }
+  }
+  if (duplicate.earliestObservationDate) {
+    if (
+      !primary.earliestObservationDate ||
+      new Date(duplicate.earliestObservationDate) <
+        new Date(primary.earliestObservationDate)
+    ) {
+      primary.earliestObservationDate = duplicate.earliestObservationDate;
+    }
+  }
+  if (duplicate.latestObservationDate) {
+    if (
+      !primary.latestObservationDate ||
+      new Date(duplicate.latestObservationDate) >
+        new Date(primary.latestObservationDate)
+    ) {
+      primary.latestObservationDate = duplicate.latestObservationDate;
+    }
+  }
+  if (duplicate.matchedQueryIds) {
+    primary.matchedQueryIds = Array.from(
+      new Set([...(primary.matchedQueryIds || []), ...duplicate.matchedQueryIds])
+    );
+  }
+  if (duplicate.identityEvidenceReferences) {
+    primary.identityEvidenceReferences = Array.from(
+      new Set([
+        ...(primary.identityEvidenceReferences || []),
+        ...duplicate.identityEvidenceReferences,
+      ])
+    );
+  }
+  // Prefer verified identity/metadata if duplicate was verified and primary wasn't
+  if (
+    duplicate.identityStatus === "VERIFIED" &&
+    primary.identityStatus !== "VERIFIED"
+  ) {
+    primary.identityStatus = "VERIFIED";
+    primary.identityConfidence = "EXACT";
+    primary.title = duplicate.title;
+    primary.canonicalProductName = duplicate.canonicalProductName;
+    primary.displayName = duplicate.displayName;
+    primary.merchantVerifiedProductName = duplicate.merchantVerifiedProductName;
+    primary.verificationReason = duplicate.verificationReason;
+    primary.fetchOutcome = duplicate.fetchOutcome;
+  }
+  if (!primary.sku && duplicate.sku) primary.sku = duplicate.sku;
+  if (!primary.gtin && duplicate.gtin) primary.gtin = duplicate.gtin;
+  if (!primary.model && duplicate.model) primary.model = duplicate.model;
+  if (!primary.brand && duplicate.brand) primary.brand = duplicate.brand;
+  if (!primary.merchantProductId && duplicate.merchantProductId) {
+    primary.merchantProductId = duplicate.merchantProductId;
+  }
+  if (!primary.thumbnailUrl && duplicate.thumbnailUrl) {
+    primary.thumbnailUrl = duplicate.thumbnailUrl;
+    primary.mediaSourceAdId = duplicate.mediaSourceAdId;
+  }
+
+  primary.mergedCandidateIds = Array.from(
+    new Set([
+      ...(primary.mergedCandidateIds || [primary.candidateId]),
+      duplicate.candidateId,
+      ...(duplicate.mergedCandidateIds || []),
+    ])
+  );
+  primary.mergeReasons = Array.from(
+    new Set([...(primary.mergeReasons || []), comparison.reason])
+  );
+
+  return attachDistinctnessFingerprint(primary);
+}
+
 /**
  * Extracts consolidated product candidates from multi-source ad observations.
  */
 export function discoverProductCandidatesFromAds(
-  observations: SourceObservation[],
-  topic: string,
+  rawObservations: Array<SourceObservation | Record<string, any>>,
+  topic: string = "general",
   options?: { plannedArchetypes?: PlannedProductArchetype[] }
 ): DiscoveredProductCandidate[] {
-  // Map keyed by canonical product identity or secure product handle
-  const candidateMap = new Map<string, {
-    key: string;
-    titles: string[];
-    descriptions: string[];
-    canonicalUrl: string | null;
-    storeDomain: string | null;
-    advertisers: Set<string>;
-    thumbnails: string[];
-    videos: string[];
-    adIds: string[];
-    sources: Set<string>;
-    observations: SourceObservation[];
-    earliest: string | null;
-    latest: string | null;
-    confidence: ProductMatchConfidence;
-  }>();
+  const observations: SourceObservation[] = rawObservations.map((raw: any) => {
+    if (raw && typeof raw.source === "string" && ("sourceRecordId" in raw || "title" in raw)) {
+      return raw as SourceObservation;
+    }
+    return {
+      source: raw.source || "META_ADS",
+      sourceRecordId: raw.sourceRecordId || raw.id || raw.metaAdId || `ad_${Math.random().toString(36).slice(2, 8)}`,
+      sourceExternalAdId: raw.sourceExternalAdId || raw.metaAdId || raw.id || null,
+      sourceUrl: raw.sourceUrl || null,
+      landingPageUrl: raw.landingPageUrl || raw.landingUrl || raw.landingPage?.url || null,
+      storeDomainEvidence: raw.storeDomainEvidence || raw.advertiser?.domain || null,
+      advertiserOrCreator: raw.advertiserOrCreator || raw.advertiser?.name || null,
+      advertiserDomain: raw.advertiserDomain || raw.advertiser?.domain || null,
+      productMatchHint: raw.productMatchHint || raw.headline || raw.title || null,
+      reportedPublishedAt: null,
+      reportedFirstShownAt: raw.startedAt instanceof Date ? raw.startedAt.toISOString() : raw.startedAt || null,
+      reportedLastShownAt: raw.lastSeenAt instanceof Date ? raw.lastSeenAt.toISOString() : raw.lastSeenAt || null,
+      observedAt: raw.observedAt || new Date().toISOString(),
+      requestedMarket: raw.requestedMarket || "US",
+      verifiedDeliveryMarket: raw.verifiedDeliveryMarket || "US",
+      title: raw.title ?? raw.headline ?? null,
+      description: raw.description ?? raw.bodyText ?? null,
+      metrics: raw.metrics || {},
+      media: raw.media || {
+        thumbnailUrl: raw.thumbnailUrl || null,
+        videoUrl: raw.videoUrl || null,
+        mediaType: raw.mediaType || null,
+      },
+      provenance: raw.provenance || "LIVE_PROVIDER",
+      evidenceReference: raw.evidenceReference || `Ad:${raw.id || "raw"}`,
+    } as SourceObservation;
+  });
+
+  const candidateMap = new Map<
+    string,
+    {
+      key: string;
+      titles: string[];
+      descriptions: string[];
+      requestedUrl: string | null;
+      canonicalUrl: string | null;
+      normalizedBaseUrl: string | null;
+      variantId: string | null;
+      storeDomain: string | null;
+      advertisers: Set<string>;
+      thumbnails: string[];
+      videos: string[];
+      adIds: string[];
+      sources: Set<string>;
+      observations: SourceObservation[];
+      earliest: string | null;
+      latest: string | null;
+      confidence: ProductMatchConfidence;
+    }
+  >();
 
   for (const obs of observations) {
-    let rawDestUrl = obs.landingPageUrl || (obs.sourceUrl && !obs.sourceUrl.includes("facebook.com/ads/library") && !obs.sourceUrl.includes("tiktok.com") ? obs.sourceUrl : null);
+    let rawDestUrl =
+      obs.landingPageUrl ||
+      (obs.sourceUrl &&
+      !obs.sourceUrl.includes("facebook.com/ads/library") &&
+      !obs.sourceUrl.includes("tiktok.com")
+        ? obs.sourceUrl
+        : null);
     if (!rawDestUrl && obs.description) {
       const urlMatch = obs.description.match(/https?:\/\/[^\s"'<>]+/i);
       if (urlMatch) {
@@ -230,32 +480,46 @@ export function discoverProductCandidatesFromAds(
     }
     const urlMeta = extractProductUrlMetadata(rawDestUrl);
 
-    let canonicalUrl: string | null = urlMeta.cleanCanonicalUrl || null;
-    let storeDomain: string | null = urlMeta.storeDomain || obs.storeDomainEvidence || obs.advertiserDomain || null;
+    const canonicalUrl: string | null =
+      urlMeta.normalizedBaseProductUrl || urlMeta.cleanCanonicalUrl || null;
+    const rawDomainCandidate: string | null =
+      urlMeta.storeDomain ||
+      obs.storeDomainEvidence ||
+      obs.advertiserDomain ||
+      null;
+    const cleanDomainCandidate = rawDomainCandidate
+      ? rawDomainCandidate.toLowerCase().replace(/^www\./, "")
+      : null;
+    const storeDomain: string | null =
+      cleanDomainCandidate &&
+      !NON_MERCHANT_PLATFORM_DOMAINS.has(cleanDomainCandidate)
+        ? cleanDomainCandidate
+        : null;
     let groupKey: string;
 
     if (urlMeta.isShopifyProductUrl && urlMeta.productHandle) {
-      // Group ads for the exact same Shopify product together across all creatives
       groupKey = `shopify::${storeDomain || "store"}::${urlMeta.productHandle.toLowerCase()}`;
-    } else if (urlMeta.isValidEcommerceUrl && urlMeta.cleanCanonicalUrl) {
-      groupKey = `url::${urlMeta.cleanCanonicalUrl.toLowerCase()}`;
+    } else if (urlMeta.isValidEcommerceUrl && canonicalUrl) {
+      groupKey = `url::${canonicalUrl.toLowerCase()}`;
     } else if (storeDomain && obs.title && obs.title.trim().length > 3) {
       const cleanTitle = cleanCandidateTitle(obs.title);
       if (cleanTitle.length > 3) {
-        groupKey = `domain::${storeDomain}::${cleanTitle.toLowerCase()}`;
+        groupKey = `domain::${storeDomain.toLowerCase()}::${cleanTitle.toLowerCase()}`;
       } else {
         groupKey = `ad::${obs.source}::${obs.sourceRecordId || Math.abs(hashCode(obs.title))}`;
       }
-    } else if (obs.advertiserOrCreator && obs.title && obs.title.trim().length > 3) {
+    } else if (
+      obs.advertiserOrCreator &&
+      obs.title &&
+      obs.title.trim().length > 3
+    ) {
       const cleanTitle = cleanCandidateTitle(obs.title);
       if (cleanTitle.length > 3) {
-        // Multiple ads from the same advertiser promoting the same product title
         groupKey = `advertiser::${obs.advertiserOrCreator.toLowerCase()}::${cleanTitle.toLowerCase()}`;
       } else {
         groupKey = `ad::${obs.source}::${obs.sourceRecordId || Math.abs(hashCode(obs.title))}`;
       }
     } else if (obs.sourceRecordId) {
-      // Unidentified ad creative: separate group so different unknown ads don't collapse into one
       groupKey = `unidentified::${obs.source}::${obs.sourceRecordId}`;
     } else {
       const rawTitle = obs.title ? cleanCandidateTitle(obs.title) : "";
@@ -269,7 +533,10 @@ export function discoverProductCandidatesFromAds(
         key: groupKey,
         titles: [],
         descriptions: [],
+        requestedUrl: rawDestUrl || null,
         canonicalUrl,
+        normalizedBaseUrl: urlMeta.normalizedBaseProductUrl || canonicalUrl,
+        variantId: urlMeta.variantId || null,
         storeDomain,
         advertisers: new Set<string>(),
         thumbnails: [],
@@ -279,7 +546,11 @@ export function discoverProductCandidatesFromAds(
         observations: [],
         earliest: null,
         latest: null,
-        confidence: urlMeta.isShopifyProductUrl ? "EXACT" : (storeDomain ? "PROBABLE" : "AMBIGUOUS"),
+        confidence: urlMeta.isShopifyProductUrl
+          ? "HIGH_CONFIDENCE"
+          : storeDomain
+          ? "PROBABLE"
+          : "AMBIGUOUS",
       };
       candidateMap.set(groupKey, candidate);
     }
@@ -287,17 +558,26 @@ export function discoverProductCandidatesFromAds(
     if (obs.title) candidate.titles.push(obs.title);
     const desc = obs.description || obs.observedContent;
     if (desc) candidate.descriptions.push(desc);
-    if (obs.advertiserOrCreator) candidate.advertisers.add(obs.advertiserOrCreator);
-    if (obs.media?.thumbnailUrl) candidate.thumbnails.push(obs.media.thumbnailUrl);
-    if (obs.media?.videoUrl) candidate.videos.push(obs.media.videoUrl);
+    if (obs.advertiserOrCreator) {
+      candidate.advertisers.add(obs.advertiserOrCreator);
+    }
+    if (obs.media?.thumbnailUrl) {
+      candidate.thumbnails.push(obs.media.thumbnailUrl);
+    }
+    if (obs.media?.videoUrl) {
+      candidate.videos.push(obs.media.videoUrl);
+    }
     if (obs.sourceRecordId) candidate.adIds.push(obs.sourceRecordId);
     candidate.sources.add(obs.source);
     candidate.observations.push(obs);
 
-    // Update earliest/latest observation dates
-    const obsDate = obs.observedAt || obs.reportedLastShownAt || obs.reportedFirstShownAt;
+    const obsDate =
+      obs.observedAt || obs.reportedLastShownAt || obs.reportedFirstShownAt;
     if (obsDate) {
-      if (!candidate.earliest || new Date(obsDate) < new Date(candidate.earliest)) {
+      if (
+        !candidate.earliest ||
+        new Date(obsDate) < new Date(candidate.earliest)
+      ) {
         candidate.earliest = obsDate;
       }
       if (!candidate.latest || new Date(obsDate) > new Date(candidate.latest)) {
@@ -306,18 +586,17 @@ export function discoverProductCandidatesFromAds(
     }
   }
 
-  // Convert map into clean DiscoveredProductCandidate list with resolved identities
-  const candidates: DiscoveredProductCandidate[] = [];
-  let index = 1;
+  const rawCandidates: DiscoveredProductCandidate[] = [];
 
   for (const [key, c] of candidateMap.entries()) {
-    // Find representative observation for media attachment integrity
-    const repObs = c.observations.find((o) => o.media?.thumbnailUrl) || c.observations[0];
+    const repObs =
+      c.observations.find((o) => o.media?.thumbnailUrl) || c.observations[0];
     const sourceRef = repObs
-      ? `${repObs.source === "META_ADS" ? "Facebook Ad" : repObs.source} #${repObs.sourceExternalAdId || repObs.sourceRecordId}`
+      ? `${repObs.source === "META_ADS" ? "Facebook Ad" : repObs.source} #${
+          repObs.sourceExternalAdId || repObs.sourceRecordId
+        }`
       : undefined;
 
-    // Resolve factual product identity through 7-level hierarchy
     const resolvedIdentity = resolveProductIdentity({
       landingPageUrl: c.canonicalUrl,
       storeDomain: c.storeDomain,
@@ -327,14 +606,15 @@ export function discoverProductCandidatesFromAds(
       sourceReference: sourceRef,
     });
 
-    // Check product relevance against niche using full product context
     const candidateContext = [
       resolvedIdentity.displayTitle,
       resolvedIdentity.canonicalName || "",
       c.canonicalUrl || "",
       ...c.titles,
       ...c.descriptions,
-    ].filter(Boolean).join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const matchedQueryIds = Array.from(
       new Set(
@@ -346,15 +626,18 @@ export function discoverProductCandidatesFromAds(
     const matchedQueryPhrase =
       c.observations
         .map((o) => (o.metrics as any)?.queryKeyword)
-        .find((kw): kw is string => typeof kw === "string" && kw.length > 0) || null;
+        .find((kw): kw is string => typeof kw === "string" && kw.length > 0) ||
+      null;
 
     const relevance = evaluateProductRelevance(candidateContext, topic, {
       plannedArchetypes: options?.plannedArchetypes,
       matchedQueryPhrase,
     });
-    const problemStatement = inferProblemStatement(c.titles[0] || null, c.descriptions[0] || null);
+    const problemStatement = inferProblemStatement(
+      c.titles[0] || null,
+      c.descriptions[0] || null
+    );
 
-    // Analyze customer psychology grounded strictly in observed evidence
     const psychProfile = analyzeCustomerPsychology({
       candidateTitle: resolvedIdentity.displayName || resolvedIdentity.displayTitle,
       categoryOrTopic: topic,
@@ -365,19 +648,23 @@ export function discoverProductCandidatesFromAds(
       sourceReference: sourceRef,
     });
 
-    const chosenThumbnail = repObs?.media?.thumbnailUrl || c.thumbnails[0] || null;
+    const chosenThumbnail =
+      repObs?.media?.thumbnailUrl || c.thumbnails[0] || null;
     const chosenVideo = repObs?.media?.videoUrl || c.videos[0] || null;
-    const mediaSourceAdId = repObs?.sourceRecordId || repObs?.sourceExternalAdId || null;
+    const mediaSourceAdId =
+      repObs?.sourceRecordId || repObs?.sourceExternalAdId || null;
 
-    // Section 6.5: A /collections/... URL is not an actual SKU-specific product page.
-    // Do not mark a collection listing as VERIFIED product identity without an independently associated SKU page.
     const pageClass = classifySourcePage(
       c.canonicalUrl,
       c.storeDomain ? "SHOPIFY_STORE" : "UNKNOWN",
       candidateContext
     );
     let effectiveIdentityStatus = resolvedIdentity.identityStatus;
-    if (pageClass === "COLLECTION_PAGE" && effectiveIdentityStatus === "VERIFIED" && !resolvedIdentity.sku) {
+    if (
+      pageClass === "COLLECTION_PAGE" &&
+      effectiveIdentityStatus === "VERIFIED" &&
+      !resolvedIdentity.sku
+    ) {
       effectiveIdentityStatus = "PROBABLE";
     }
     if (
@@ -395,19 +682,32 @@ export function discoverProductCandidatesFromAds(
       title: resolvedIdentity.displayTitle,
       canonicalProductName: resolvedIdentity.canonicalProductName,
       displayName: resolvedIdentity.displayName,
-      originalAdHeadline: resolvedIdentity.originalAdHeadline || c.titles[0] || null,
+      originalAdHeadline:
+        resolvedIdentity.originalAdHeadline || c.titles[0] || null,
       originalCreativeCode: resolvedIdentity.originalCreativeCode,
+      adClaimedProductName: resolvedIdentity.adClaimedProductName || null,
+      merchantVerifiedProductName:
+        resolvedIdentity.merchantVerifiedProductName || null,
       brand: resolvedIdentity.brand,
       model: resolvedIdentity.model,
       sku: resolvedIdentity.sku,
+      gtin: resolvedIdentity.gtin || null,
+      merchantProductId: resolvedIdentity.merchantProductId || null,
+      variantId: resolvedIdentity.variantId || c.variantId || null,
       category: topic,
       problemStatement,
       targetAudience: "Homeowners, Pet Owners & Everyday Problem Solvers",
       thumbnailUrl: chosenThumbnail,
       videoUrl: chosenVideo,
       mediaSourceAdId,
+      requestedUrl: resolvedIdentity.requestedUrl || c.requestedUrl || null,
+      resolvedFinalUrl: resolvedIdentity.resolvedFinalUrl || null,
+      declaredCanonicalUrl: resolvedIdentity.declaredCanonicalUrl || null,
+      normalizedProductUrl:
+        resolvedIdentity.normalizedProductUrl || c.normalizedBaseUrl || null,
       canonicalProductUrl: c.canonicalUrl,
-      storeDomain: c.storeDomain,
+      storeDomain: resolvedIdentity.storeDomain || c.storeDomain,
+      imageReferences: resolvedIdentity.imageReferences || [],
       advertiserNames: Array.from(c.advertisers),
       supportingAdIds: Array.from(new Set(c.adIds)),
       supportingSourceTypes: Array.from(c.sources),
@@ -424,8 +724,17 @@ export function discoverProductCandidatesFromAds(
       sourceObservations: c.observations,
       identityStatus: effectiveIdentityStatus,
       resolutionSource: resolvedIdentity.resolutionSource,
-      requiresManualReview: resolvedIdentity.requiresManualReview || pageClass === "COLLECTION_PAGE",
+      requiresManualReview:
+        resolvedIdentity.requiresManualReview ||
+        pageClass === "COLLECTION_PAGE",
       identityEvidenceReferences: resolvedIdentity.identityEvidenceReferences,
+      fetchOutcome: resolvedIdentity.fetchOutcome || "NOT_ATTEMPTED",
+      evidenceTimestamp: resolvedIdentity.evidenceTimestamp,
+      verificationReason: resolvedIdentity.verificationReason,
+      verificationLimitations: resolvedIdentity.verificationLimitations || [],
+      contradictions: resolvedIdentity.contradictions || [],
+      hasUnresolvedContradiction:
+        resolvedIdentity.hasUnresolvedContradiction || false,
       isEligibleAsEvergreenWinner:
         effectiveIdentityStatus === "VERIFIED" &&
         resolvedIdentity.isEligibleAsEvergreenWinner &&
@@ -441,6 +750,8 @@ export function discoverProductCandidatesFromAds(
       sourcePageClassification: pageClass,
     };
 
+    attachDistinctnessFingerprint(candObj);
+
     const realityEval = evaluateCandidateProductReality(candObj);
     candObj.productRealityStatus = realityEval.status;
     candObj.sourcePageClassification = realityEval.sourcePageClassification;
@@ -449,12 +760,17 @@ export function discoverProductCandidatesFromAds(
       candObj.isEligibleAsEvergreenWinner = false;
     }
 
-    candidates.push(candObj);
-
-    index++;
+    rawCandidates.push(candObj);
   }
 
-  return candidates;
+  // Section 5: Consolidate duplicate candidates that share the same actual product
+  // (e.g., same canonical URL, same merchantProductId, same GTIN, or same brand+model)
+  const clustered = clusterProductCandidates(
+    rawCandidates,
+    mergeDuplicateCandidateRecords
+  );
+
+  return clustered.consolidatedCandidates;
 }
 
 function hashCode(str: string): number {
@@ -468,16 +784,33 @@ function hashCode(str: string): number {
 
 export interface DistinctnessEvaluation {
   isDistinct: boolean;
+  isFamilyDiverse?: boolean;
   totalCandidatesEvaluated: number;
   distinctCount: number;
+  distinctProductCount?: number;
+  distinctFamilyCount?: number;
+  distinctListingCount?: number;
+  independentOpportunityCount?: number;
+  homogeneousFamilyDetected?: boolean;
+  dominantFamilyKey?: string | null;
+  dominantFamilyLabel?: string | null;
   duplicateGroupsCount: number;
+  uncertainties?: string[];
+  pairwiseDecisions?: PairwiseIdentityComparison[];
   details: Array<{
     candidateId: string;
     title: string;
     canonicalKey: string;
+    listingKey?: string;
+    productKey?: string;
+    variantKey?: string | null;
+    familyKey?: string;
+    familyLabel?: string;
     storeDomain: string | null;
     isDuplicate: boolean;
     duplicateOf?: string;
+    decision?: string;
+    reason?: string;
   }>;
 }
 
@@ -485,55 +818,95 @@ export interface ResearchShortlistResult {
   shortlist: DiscoveredProductCandidate[];
   requestedCount: number;
   qualifiedCount: number;
+  distinctFamiliesCount?: number;
   shortfallReason: string | null;
   distinctnessSummary: string;
   distinctnessEvaluation: DistinctnessEvaluation;
+  opportunityDiversity?: OpportunityDiversityEvaluation;
 }
 
 /**
- * Evaluates distinctness across product candidates, identifying shared canonical keys or duplicates.
+ * Evaluates distinctness across product candidates using the unified 6-level Product Distinctness Engine (Section 5, F01, F07).
+ * Never relies on display title alone: two candidates with the same canonical URL, merchant product ID, GTIN,
+ * or brand+model are always flagged as duplicates even when their ad titles differ completely.
  */
 export function evaluateShortlistDistinctness(
-  candidates: DiscoveredProductCandidate[]
+  candidates: DiscoveredProductCandidate[],
+  options?: {
+    nicheIntent?:
+      | "BROAD_CATEGORY"
+      | "SPECIFIC_PRODUCT"
+      | "FUNCTIONAL_NEED"
+      | "AMBIGUOUS"
+      | "UNSUPPORTED"
+      | string;
+    topic?: string;
+  }
 ): DistinctnessEvaluation {
-  const seenCanonicalKeys = new Map<string, string>(); // canonicalKey -> candidateId
+  const diversity = evaluateOpportunityDiversity(candidates, options);
   const details: DistinctnessEvaluation["details"] = [];
   let duplicateCount = 0;
 
-  for (const c of candidates) {
-    const rawKey = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
-    // Normalize key: remove model numbers or minor punctuation
-    const normalizedKey = rawKey.replace(/[-_.,;:]+/g, " ").trim();
-    const existing = seenCanonicalKeys.get(normalizedKey);
+  for (let i = 0; i < candidates.length; i++) {
+    const c = candidates[i];
+    const fp = buildProductIdentityFingerprint(c);
+    let isDuplicate = false;
+    let duplicateOf: string | undefined;
+    let duplicateDecision: string | undefined;
+    let duplicateReason: string | undefined;
 
-    if (existing) {
-      duplicateCount++;
-      details.push({
-        candidateId: c.candidateId,
-        title: c.title,
-        canonicalKey: normalizedKey,
-        storeDomain: c.storeDomain,
-        isDuplicate: true,
-        duplicateOf: existing,
-      });
-    } else {
-      seenCanonicalKeys.set(normalizedKey, c.candidateId);
-      details.push({
-        candidateId: c.candidateId,
-        title: c.title,
-        canonicalKey: normalizedKey,
-        storeDomain: c.storeDomain,
-        isDuplicate: false,
-      });
+    for (let j = 0; j < i; j++) {
+      const comp = compareProductIdentity(candidates[j], c);
+      if (comp.areSameActualProduct === true) {
+        isDuplicate = true;
+        duplicateOf = candidates[j].candidateId;
+        duplicateDecision = comp.decision;
+        duplicateReason = comp.reason;
+        break;
+      }
     }
+
+    if (isDuplicate) {
+      duplicateCount++;
+    }
+
+    details.push({
+      candidateId: c.candidateId,
+      title: c.title,
+      canonicalKey: duplicateOf
+        ? buildProductIdentityFingerprint(
+            candidates.find((x) => x.candidateId === duplicateOf) || c
+          ).productKey
+        : fp.productKey,
+      listingKey: fp.listingKey,
+      productKey: fp.productKey,
+      variantKey: fp.variantKey,
+      familyKey: fp.familyKey,
+      familyLabel: fp.familyLabel,
+      storeDomain: c.storeDomain,
+      isDuplicate,
+      duplicateOf,
+      decision: duplicateDecision,
+      reason: duplicateReason,
+    });
   }
 
   const distinctCount = candidates.length - duplicateCount;
   return {
-    isDistinct: duplicateCount === 0,
+    isDistinct: duplicateCount === 0 && diversity.isDistinct,
+    isFamilyDiverse: diversity.isFamilyDiverse,
     totalCandidatesEvaluated: candidates.length,
     distinctCount,
+    distinctProductCount: diversity.distinctProductCount,
+    distinctFamilyCount: diversity.distinctFamilyCount,
+    distinctListingCount: diversity.distinctListingCount,
+    independentOpportunityCount: diversity.independentOpportunityCount,
+    homogeneousFamilyDetected: diversity.homogeneousFamilyDetected,
+    dominantFamilyKey: diversity.dominantFamilyKey,
+    dominantFamilyLabel: diversity.dominantFamilyLabel,
     duplicateGroupsCount: duplicateCount,
+    uncertainties: diversity.uncertainties,
+    pairwiseDecisions: diversity.pairwiseDecisions,
     details,
   };
 }
@@ -559,7 +932,7 @@ export interface ProductRealityGateEvaluation {
 }
 
 /**
- * Evaluates a candidate against the mandatory 9-condition Product Reality Gate (Section 6).
+ * Evaluates a candidate against the mandatory Product Reality Gate (Section 4 & Section 6).
  * Operates deterministically even when Gemini is unavailable, timed out, or faulted.
  */
 export function evaluateCandidateProductReality(
@@ -571,7 +944,9 @@ export function evaluateCandidateProductReality(
   ].filter(Boolean);
   const descriptions = [
     c.problemStatement || "",
-    ...(c.sourceObservations || []).map((o) => o.description || o.observedContent || ""),
+    ...(c.sourceObservations || []).map(
+      (o) => o.description || o.observedContent || ""
+    ),
   ].filter(Boolean);
   const landingUrls = (c.sourceObservations || [])
     .map((o) => o.landingPageUrl || o.sourceUrl || "")
@@ -583,15 +958,29 @@ export function evaluateCandidateProductReality(
     descriptions,
     canonicalUrl: c.canonicalProductUrl,
     landingUrls,
-    pageTypeHint: c.storeDomain ? "SHOPIFY_STORE" : "UNKNOWN",
+    pageTypeHint:
+      c.sourcePageClassification === "ACTUAL_PRODUCT_PAGE"
+        ? "ACTUAL_PRODUCT_PAGE"
+        : c.storeDomain
+        ? "SHOPIFY_STORE"
+        : "UNKNOWN",
   });
 
-  const sourcePageClassification =
+  let sourcePageClassification: SourcePageClassification =
     c.sourcePageClassification || deterministic.sourcePageClassification;
+
+  if (c.fetchOutcome === "COLLECTION_PAGE") {
+    sourcePageClassification = "COLLECTION_PAGE";
+  } else if (c.fetchOutcome === "HOMEPAGE") {
+    sourcePageClassification = "CAMPAIGN_PAGE";
+  } else if (c.fetchOutcome === "NON_PRODUCT_PAGE") {
+    sourcePageClassification = "ARTICLE_PAGE";
+  }
 
   // Condition 1: Correct niche
   const correctNiche =
-    (c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT") &&
+    (c.relevanceStatus === "RELEVANT" ||
+      c.relevanceStatus === "PROBABLY_RELEVANT") &&
     (!c.aiIntelligence ||
       (c.aiIntelligence.nicheRelevance !== "UNRELATED" &&
         c.aiIntelligence.nicheRelevance !== "LOW"));
@@ -602,16 +991,18 @@ export function evaluateCandidateProductReality(
     (Boolean(aiEntity) && aiEntity !== "PHYSICAL_PRODUCT") ||
     c.aiIntelligence?.isLikelySellableProduct === false;
   const notServiceArticleInsuranceLeadGen =
-    !deterministic.isNonPhysical && !aiSaysNonPhysical;
+    !deterministic.isNonPhysical &&
+    !aiSaysNonPhysical &&
+    c.fetchOutcome !== "NON_PRODUCT_PAGE" &&
+    sourcePageClassification !== "ARTICLE_PAGE";
 
   // Condition 7: Not a campaign title masquerading as a product
   const notCampaignTitle =
     sourcePageClassification !== "CAMPAIGN_PAGE" &&
+    c.fetchOutcome !== "HOMEPAGE" &&
     deterministic.detectedEntityType !== "ADVERTISING_CAMPAIGN";
 
   // Condition 3: Product identity defensible
-  // Note: Collection pages cannot claim VERIFIED SKU identity without an SKU,
-  // but can have PROBABLE category/brand product identity if backed by physical product evidence.
   const productIdentityDefensible =
     c.identityStatus !== "UNRESOLVED" &&
     c.identityStatus !== "AMBIGUOUS" &&
@@ -623,11 +1014,12 @@ export function evaluateCandidateProductReality(
     Boolean(c.supportingAdIds && c.supportingAdIds.length > 0) ||
     Boolean(c.sourceObservations && c.sourceObservations.length > 0);
 
-  // Condition 5: Merchant/product evidence sufficient
+  // Condition 5: Merchant/product evidence sufficient (HTTP_404 dead page is not sufficient)
   const merchantEvidenceSufficient =
-    Boolean(c.storeDomain) ||
-    Boolean(c.canonicalProductUrl) ||
-    (c.identityStatus === "VERIFIED" && c.identityConfidence === "EXACT");
+    c.fetchOutcome !== "HTTP_404" &&
+    (Boolean(c.storeDomain) ||
+      Boolean(c.canonicalProductUrl) ||
+      (c.identityStatus === "VERIFIED" && c.identityConfidence === "EXACT"));
 
   // Condition 2: Physical ecommerce product supported
   const aiConfirmedPhysical =
@@ -643,9 +1035,10 @@ export function evaluateCandidateProductReality(
   const physicalProductSupported =
     notServiceArticleInsuranceLeadGen &&
     merchantEvidenceSufficient &&
-    (aiConfirmedPhysical || (c.aiShortlistEligible !== false && deterministicPhysicalSupported));
+    (aiConfirmedPhysical ||
+      (c.aiShortlistEligible !== false && deterministicPhysicalSupported));
 
-  // Condition 9: No unresolved evidence contradiction
+  // Condition 9: No unresolved evidence contradiction (includes Section 4.7 ad vs merchant contradiction)
   const ver = c.aiVerification;
   const hasVerifierViolation =
     Boolean(ver) &&
@@ -655,8 +1048,14 @@ export function evaluateCandidateProductReality(
       !ver.productIdentityConsistent ||
       ver.promptInjectionDetected ||
       (Array.isArray(ver.contradictions) && ver.contradictions.length > 0));
+  const hasMerchantContradiction =
+    c.hasUnresolvedContradiction === true ||
+    c.fetchOutcome === "CONTRADICTORY_METADATA" ||
+    (Array.isArray(c.contradictions) && c.contradictions.length > 0);
   const noUnresolvedContradiction =
-    !hasVerifierViolation && c.aiShortlistEligible !== false;
+    !hasVerifierViolation &&
+    !hasMerchantContradiction &&
+    c.aiShortlistEligible !== false;
 
   const conditions = {
     correctNiche,
@@ -690,7 +1089,9 @@ export function evaluateCandidateProductReality(
       false,
       c.aiExclusionReason ||
         deterministic.reason ||
-        `Excluded: Classified as non-physical entity (${aiEntity || deterministic.detectedEntityType || "NON_PHYSICAL"}).`
+        `Excluded: Classified as non-physical entity (${
+          aiEntity || deterministic.detectedEntityType || "NON_PHYSICAL"
+        }).`
     );
   }
 
@@ -698,7 +1099,10 @@ export function evaluateCandidateProductReality(
     return buildGateResult(
       "REJECTED",
       false,
-      deterministic.reason || "Excluded: Campaign code or internal ad identifier."
+      c.fetchOutcome === "HOMEPAGE"
+        ? "Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page."
+        : deterministic.reason ||
+            "Excluded: Campaign code or internal ad identifier."
     );
   }
 
@@ -716,8 +1120,9 @@ export function evaluateCandidateProductReality(
     return buildGateResult(
       "UNRESOLVED",
       false,
-      c.aiExclusionReason ||
-        "Excluded: Unresolved AI evidence contradiction or unverified source reference."
+      (c.contradictions && c.contradictions[0]) ||
+        c.aiExclusionReason ||
+        "Excluded: Unresolved contradiction between ad claim and merchant page or unverified source reference."
     );
   }
 
@@ -730,7 +1135,9 @@ export function evaluateCandidateProductReality(
     return buildGateResult(
       "UNRESOLVED",
       false,
-      !merchantEvidenceSufficient
+      c.fetchOutcome === "HTTP_404"
+        ? "Excluded: Merchant landing page returned HTTP 404 (dead product link)."
+        : !merchantEvidenceSufficient
         ? "Excluded: Lacks verified merchant domain or product landing URL evidence."
         : !productIdentityDefensible
         ? "Excluded: Product identity is unresolved."
@@ -740,9 +1147,13 @@ export function evaluateCandidateProductReality(
     );
   }
 
+  // Section 4.1–4.4: Only mark VERIFIED_PHYSICAL_PRODUCT when identityStatus === "VERIFIED"
+  // AND the destination is a verified actual product page (not a collection page or unverified URL slug).
   const isVerifiedSkuPage =
-    sourcePageClassification === "ACTUAL_PRODUCT_PAGE" ||
-    (c.identityStatus === "VERIFIED" && sourcePageClassification !== "COLLECTION_PAGE");
+    c.identityStatus === "VERIFIED" &&
+    sourcePageClassification === "ACTUAL_PRODUCT_PAGE" &&
+    c.fetchOutcome !== "COLLECTION_PAGE" &&
+    c.fetchOutcome !== "HOMEPAGE";
 
   return buildGateResult(
     isVerifiedSkuPage
@@ -753,17 +1164,76 @@ export function evaluateCandidateProductReality(
   );
 }
 
+function inferNicheIntentFromTopic(
+  topic?: string
+): "BROAD_CATEGORY" | "SPECIFIC_PRODUCT" {
+  if (!topic) return "BROAD_CATEGORY";
+  const lower = topic.trim().toLowerCase();
+  const broadTopics = new Set([
+    "pet",
+    "pets",
+    "pet gadgets",
+    "pet supplies",
+    "pet accessories",
+    "diy",
+    "diy tools",
+    "home improvement",
+    "kitchen",
+    "kitchen gadgets",
+    "kitchen tools",
+    "home decor",
+    "decor",
+    "gardening",
+    "garden",
+    "garden tools",
+    "cleaning",
+    "cleaning gadgets",
+    "cleaning tools",
+  ]);
+  if (broadTopics.has(lower)) return "BROAD_CATEGORY";
+  for (const b of broadTopics) {
+    if (lower === b) return "BROAD_CATEGORY";
+  }
+  const words = lower.split(/\s+/).filter(Boolean);
+  if (
+    words.length >= 2 &&
+    !words.some((w) =>
+      ["gadgets", "tools", "supplies", "accessories", "products", "items", "decor"].includes(w)
+    )
+  ) {
+    return "SPECIFIC_PRODUCT";
+  }
+  return "BROAD_CATEGORY";
+}
+
 /**
  * Selects up to `limit` (default 3) distinct, genuine, niche-relevant products for human evaluation.
- * Enforces the mandatory Product Reality Gate even when Gemini is unavailable or failed.
- * Returns explicit shortfall reason if authorized source data yields fewer than 3 products.
+ * Enforces:
+ * - Mandatory Product Reality Gate
+ * - Unified 6-level Product Distinctness (deduplicating identical URLs, merchantProductIds, GTINs, and models)
+ * - Section 5.6 Niche-Intent-Aware Opportunity Diversity:
+ *   * Broad niche queries prioritize up to 3 distinct product families.
+ *   * Specific product queries allow up to 3 distinct models/merchants in the same family when backed by
+ *     distinguishing evidence, explicitly labeling them as "Same product family — model/merchant alternative".
  */
 export function selectTopResearchShortlist(
   candidates: DiscoveredProductCandidate[],
-  limit: number = 3
+  limit: number = 3,
+  options?: {
+    nicheIntent?:
+      | "BROAD_CATEGORY"
+      | "SPECIFIC_PRODUCT"
+      | "FUNCTIONAL_NEED"
+      | "AMBIGUOUS"
+      | "UNSUPPORTED"
+      | string;
+    topic?: string;
+    allowSameFamilyAlternativesOnShortfall?: boolean;
+  }
 ): ResearchShortlistResult {
-  // 1. Filter candidates through the mandatory Product Reality Gate (Section 6):
-  const eligible = candidates.filter((c) => {
+  // 1. Filter candidates through the mandatory Product Reality Gate
+  const realityPassed = candidates.filter((c) => {
+    attachDistinctnessFingerprint(c);
     const reality = evaluateCandidateProductReality(c);
     c.productRealityStatus = reality.status;
     c.sourcePageClassification = reality.sourcePageClassification;
@@ -782,48 +1252,156 @@ export function selectTopResearchShortlist(
     );
   });
 
-  // 2. Sort eligible candidates: prefer higher relevance score, then observation count
-  eligible.sort((a, b) => {
+  // 2. Sort eligible candidates: prefer VERIFIED identity, then higher relevance score, then observation count
+  realityPassed.sort((a, b) => {
+    const verA = a.identityStatus === "VERIFIED" ? 1 : 0;
+    const verB = b.identityStatus === "VERIFIED" ? 1 : 0;
+    if (verA !== verB) return verB - verA;
     const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
     if (relDiff !== 0) return relDiff;
     return b.totalObservationCount - a.totalObservationCount;
   });
 
-  // 3. Apply distinctness filtering to prevent duplicate product opportunities
-  const distinctShortlist: DiscoveredProductCandidate[] = [];
-  const seenKeys = new Set<string>();
+  // 3. Consolidate actual product duplicates via clusterProductCandidates (F01, B11–B17)
+  const clustered = clusterProductCandidates(
+    realityPassed,
+    mergeDuplicateCandidateRecords
+  );
+  const uniqueProducts = clustered.consolidatedCandidates;
 
-  for (const c of eligible) {
-    const canonicalKey = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
-    if (!seenKeys.has(canonicalKey)) {
-      seenKeys.add(canonicalKey);
-      distinctShortlist.push(c);
+  const inferredIntent =
+    options?.nicheIntent === "SPECIFIC_PRODUCT" ||
+    options?.nicheIntent === "BROAD_CATEGORY"
+      ? options.nicheIntent
+      : inferNicheIntentFromTopic(options?.topic || uniqueProducts[0]?.category);
+
+  // 4. Pass 1: Select primary representatives from DISTINCT product families first (Section 5.6, B20)
+  const distinctShortlist: DiscoveredProductCandidate[] = [];
+  const selectedFamilies = new Map<string, DiscoveredProductCandidate>();
+  const deferredSameFamily: DiscoveredProductCandidate[] = [];
+
+  for (const c of uniqueProducts) {
+    const fp = buildProductIdentityFingerprint(c);
+    attachDistinctnessFingerprint(c);
+
+    // Double-check against already selected candidates that this is not the same actual product
+    const duplicateInShortlist = distinctShortlist.find(
+      (sel) => compareProductIdentity(sel, c).areSameActualProduct === true
+    );
+    if (duplicateInShortlist) {
+      mergeDuplicateCandidateRecords(
+        duplicateInShortlist,
+        c,
+        compareProductIdentity(duplicateInShortlist, c)
+      );
+      continue;
     }
+
+    if (!selectedFamilies.has(fp.familyKey)) {
+      c.distinctnessRole = "PRIMARY_FAMILY_REPRESENTATIVE";
+      c.distinctnessReason = `Primary product representative for family '${fp.familyLabel}' (productKey=${fp.productKey}).`;
+      c.crossMerchantUncertainty = null;
+      selectedFamilies.set(fp.familyKey, c);
+      distinctShortlist.push(c);
+    } else {
+      deferredSameFamily.push(c);
+    }
+
     if (distinctShortlist.length >= limit) break;
   }
 
-  const distinctnessEvaluation = evaluateShortlistDistinctness(distinctShortlist);
-  const shortfallReason = distinctShortlist.length < limit
-    ? `Only ${distinctShortlist.length} independently identifiable, niche-relevant product(s) were supported by available source evidence (requested ${limit}).`
-    : null;
+  // 5. Pass 2: If fewer than `limit` distinct families exist, evaluate remaining candidates in the same family
+  if (distinctShortlist.length < limit && deferredSameFamily.length > 0) {
+    for (const c of deferredSameFamily) {
+      if (distinctShortlist.length >= limit) break;
+      const fp = buildProductIdentityFingerprint(c);
+      const primaryInFamily = selectedFamilies.get(fp.familyKey);
+      if (!primaryInFamily) continue;
 
-  const distinctnessSummary = distinctShortlist.length > 0
-    ? `${distinctShortlist.length} distinct products identified: ${distinctShortlist.map((c) => c.title).join(", ")}`
-    : "No distinct products qualified for shortlist";
+      const comp = compareProductIdentity(primaryInFamily, c);
+      if (comp.areSameActualProduct === true) {
+        continue;
+      }
+
+      // Section 5.6 & B18 & B19:
+      // - If SPECIFIC_PRODUCT query: allow distinct models or brand/capacity alternatives in the same family.
+      // - If BROAD_CATEGORY query: only allow a second candidate in the same family if it is an explicitly
+      //   differentiated model (comp.decision === "DIFFERENT_MODELS_SAME_FAMILY") AND options allow same-family alternatives on shortfall.
+      //   Never include unverified generic cross-merchant clones (UNKNOWN_CROSS_MERCHANT_SAME_FAMILY) as independent broad-niche opportunities.
+      const isExplicitlyDifferentiatedModel =
+        comp.decision === "DIFFERENT_MODELS_SAME_FAMILY";
+      const allowForSpecificQuery =
+        inferredIntent === "SPECIFIC_PRODUCT" &&
+        (isExplicitlyDifferentiatedModel ||
+          comp.areDistinctOpportunitiesForSpecificQuery);
+      const allowForBroadShortfall =
+        inferredIntent === "BROAD_CATEGORY" &&
+        options?.allowSameFamilyAlternativesOnShortfall === true &&
+        isExplicitlyDifferentiatedModel;
+
+      if (allowForSpecificQuery || allowForBroadShortfall) {
+        c.distinctnessRole = "SAME_FAMILY_MODEL_ALTERNATIVE";
+        c.distinctnessReason = `Same product family — model/merchant alternative (${comp.reason})`;
+        c.crossMerchantUncertainty = comp.uncertainty;
+        distinctShortlist.push(c);
+      }
+    }
+  }
+
+  const distinctnessEvaluation = evaluateShortlistDistinctness(
+    distinctShortlist,
+    {
+      nicheIntent: inferredIntent,
+      topic: options?.topic || uniqueProducts[0]?.category,
+    }
+  );
+  const opportunityDiversity = evaluateOpportunityDiversity(distinctShortlist, {
+    nicheIntent: inferredIntent,
+    topic: options?.topic || uniqueProducts[0]?.category,
+  });
+
+  let shortfallReason: string | null = null;
+  if (distinctShortlist.length < limit) {
+    const familyConcentrationNote =
+      deferredSameFamily.length > 0 && inferredIntent === "BROAD_CATEGORY"
+        ? ` (${deferredSameFamily.length} additional candidate(s) belonged to already-selected product family '${
+            distinctShortlist[0]?.familyLabel || "same family"
+          }' without independent family/model differentiation and were not counted as separate category opportunities.)`
+        : "";
+    shortfallReason = `Only ${distinctShortlist.length} independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested ${limit}).${familyConcentrationNote}`;
+  }
+
+  const distinctnessSummary =
+    distinctShortlist.length > 0
+      ? `${distinctShortlist.length} distinct product(s) across ${
+          opportunityDiversity.distinctFamilyCount
+        } product family(s): ${distinctShortlist
+          .map(
+            (c) =>
+              `${c.title}${
+                c.distinctnessRole === "SAME_FAMILY_MODEL_ALTERNATIVE"
+                  ? " [Same product family — model/merchant alternative]"
+                  : ""
+              }`
+          )
+          .join(", ")}`
+      : "No distinct products qualified for shortlist";
 
   return {
     shortlist: distinctShortlist,
     requestedCount: limit,
     qualifiedCount: distinctShortlist.length,
+    distinctFamiliesCount: opportunityDiversity.distinctFamilyCount,
     shortfallReason,
     distinctnessSummary,
     distinctnessEvaluation,
+    opportunityDiversity,
   };
 }
 
 export interface ProductEnrichmentContext {
-  workspaceId: string;
-  topic: string;
+  workspaceId?: string;
+  topic?: string;
   timeoutMs?: number;
   maxConcurrency?: number;
   signal?: AbortSignal;
@@ -843,7 +1421,7 @@ export interface ProductEnrichmentResult {
 
 /**
  * Asynchronously enriches product candidates with verified merchant landing page evidence.
- * Bounded concurrency, per-page timeouts, contradiction detection, and canonical deduplication.
+ * Preserves all Section 4.5 identity fields and deduplicates via Section 5 clusterProductCandidates.
  */
 export async function enrichProductCandidatesWithEvidence(
   candidates: DiscoveredProductCandidate[],
@@ -859,7 +1437,6 @@ export async function enrichProductCandidatesWithEvidence(
   let unresolvedCount = 0;
   let contradictionCount = 0;
 
-  // Process candidates in bounded concurrent chunks
   const enrichedList: DiscoveredProductCandidate[] = [];
 
   for (let i = 0; i < candidates.length; i += maxConcurrency) {
@@ -870,6 +1447,7 @@ export async function enrichProductCandidatesWithEvidence(
       chunk.map(async (candidate) => {
         try {
           if (!candidate.canonicalProductUrl) {
+            attachDistinctnessFingerprint(candidate);
             if (candidate.identityStatus === "VERIFIED") verifiedCount++;
             else if (candidate.identityStatus === "PROBABLE") probableCount++;
             else unresolvedCount++;
@@ -882,11 +1460,21 @@ export async function enrichProductCandidatesWithEvidence(
               landingPageUrl: candidate.canonicalProductUrl,
               storeDomain: candidate.storeDomain,
               brandOrAdvertiser: candidate.advertiserNames[0] || null,
-              rawHeadlines: candidate.originalAdHeadline ? [candidate.originalAdHeadline] : [],
+              rawHeadlines: Array.from(
+                new Set(
+                  [
+                    candidate.originalAdHeadline,
+                    ...candidate.sourceObservations.map((o) => o.title),
+                  ].filter((t): t is string => Boolean(t && t.trim().length > 0))
+                )
+              ),
               rawDescriptions: candidate.sourceObservations
                 .map((o) => o.description || o.observedContent)
                 .filter(Boolean) as string[],
               existingResearchProductId: candidate.researchProductId,
+              existingProductVerified: Boolean(
+                candidate.existingProductVerified
+              ),
               sourceReference: candidate.mediaSourceAdId
                 ? `Ad #${candidate.mediaSourceAdId}`
                 : undefined,
@@ -902,12 +1490,63 @@ export async function enrichProductCandidatesWithEvidence(
           candidate.title = resolved.displayTitle;
           candidate.canonicalProductName = resolved.canonicalProductName;
           candidate.displayName = resolved.displayName;
+          candidate.adClaimedProductName = resolved.adClaimedProductName;
+          candidate.merchantVerifiedProductName =
+            resolved.merchantVerifiedProductName;
           candidate.brand = resolved.brand;
           candidate.model = resolved.model;
           candidate.sku = resolved.sku;
-          const enrichedPageClass = classifySourcePage(candidate.canonicalProductUrl);
-          candidate.sourcePageClassification = enrichedPageClass;
-          if (enrichedPageClass === "COLLECTION_PAGE" && resolved.identityStatus === "VERIFIED" && !resolved.sku) {
+          candidate.gtin = resolved.gtin;
+          candidate.merchantProductId = resolved.merchantProductId;
+          candidate.variantId = resolved.variantId || candidate.variantId;
+          candidate.requestedUrl =
+            resolved.requestedUrl || candidate.requestedUrl;
+          candidate.resolvedFinalUrl = resolved.resolvedFinalUrl;
+          candidate.declaredCanonicalUrl = resolved.declaredCanonicalUrl;
+          candidate.normalizedProductUrl =
+            resolved.normalizedProductUrl || candidate.normalizedProductUrl;
+          if (resolved.normalizedProductUrl) {
+            candidate.canonicalProductUrl = resolved.normalizedProductUrl;
+          }
+          if (resolved.storeDomain) {
+            candidate.storeDomain = resolved.storeDomain;
+          }
+          if (
+            resolved.imageReferences &&
+            resolved.imageReferences.length > 0
+          ) {
+            candidate.imageReferences = resolved.imageReferences;
+            if (!candidate.thumbnailUrl) {
+              candidate.thumbnailUrl = resolved.imageReferences[0];
+            }
+          }
+          candidate.fetchOutcome = resolved.fetchOutcome;
+          candidate.evidenceTimestamp = resolved.evidenceTimestamp;
+          candidate.verificationReason = resolved.verificationReason;
+          candidate.verificationLimitations = resolved.verificationLimitations;
+          candidate.contradictions = resolved.contradictions;
+          candidate.hasUnresolvedContradiction =
+            resolved.hasUnresolvedContradiction;
+
+          const urlBasedPageClass = classifySourcePage(
+            candidate.canonicalProductUrl
+          );
+          const effectivePageClass: SourcePageClassification =
+            resolved.pageClassification === "COLLECTION_PAGE"
+              ? "COLLECTION_PAGE"
+              : resolved.pageClassification === "HOMEPAGE"
+              ? "CAMPAIGN_PAGE"
+              : resolved.pageClassification === "ACTUAL_PRODUCT_PAGE"
+              ? "ACTUAL_PRODUCT_PAGE"
+              : urlBasedPageClass;
+
+          candidate.sourcePageClassification = effectivePageClass;
+
+          if (
+            effectivePageClass === "COLLECTION_PAGE" &&
+            resolved.identityStatus === "VERIFIED" &&
+            !resolved.sku
+          ) {
             candidate.identityStatus = "PROBABLE";
             candidate.identityConfidence = "HIGH_CONFIDENCE";
           } else {
@@ -921,9 +1560,14 @@ export async function enrichProductCandidatesWithEvidence(
           }
           candidate.resolutionSource = resolved.resolutionSource;
           candidate.requiresManualReview = resolved.requiresManualReview;
-          candidate.identityEvidenceReferences = resolved.identityEvidenceReferences;
+          candidate.identityEvidenceReferences =
+            resolved.identityEvidenceReferences;
 
-          if (resolved.identityStatus === "AMBIGUOUS" && resolved.requiresManualReview) {
+          if (
+            resolved.hasUnresolvedContradiction ||
+            (resolved.identityStatus === "AMBIGUOUS" &&
+              resolved.requiresManualReview)
+          ) {
             contradictionCount++;
             candidate.isEligibleAsEvergreenWinner = false;
           }
@@ -934,28 +1578,40 @@ export async function enrichProductCandidatesWithEvidence(
             resolved.canonicalName || "",
             candidate.canonicalProductUrl || "",
             candidate.originalAdHeadline || "",
-            ...candidate.sourceObservations.map((o) => o.title || o.description || "").slice(0, 3),
+            ...candidate.sourceObservations
+              .map((o) => o.title || o.description || "")
+              .slice(0, 3),
           ]
             .filter(Boolean)
             .join(" ");
 
-          const relevance = evaluateProductRelevance(candidateContext, context.topic, {
-            plannedArchetypes: context.plannedArchetypes,
-          });
+          const relevance = evaluateProductRelevance(
+            candidateContext,
+            context.topic || candidate.category || "general",
+            {
+              plannedArchetypes: context.plannedArchetypes,
+            }
+          );
           candidate.relevanceStatus = relevance.relevanceStatus;
           candidate.discoveryRelevanceDecision = relevance.discoveryDecision;
-          candidate.matchedArchetypeId = relevance.matchedArchetypeId ?? candidate.matchedArchetypeId;
+          candidate.matchedArchetypeId =
+            relevance.matchedArchetypeId ?? candidate.matchedArchetypeId;
           candidate.relevanceScore = relevance.score;
           candidate.relevanceReasons = relevance.reasons;
 
+          attachDistinctnessFingerprint(candidate);
+
           const enrichedReality = evaluateCandidateProductReality(candidate);
           candidate.productRealityStatus = enrichedReality.productRealityStatus;
-          candidate.sourcePageClassification = enrichedReality.sourcePageClassification;
+          candidate.sourcePageClassification =
+            enrichedReality.sourcePageClassification;
+          candidate.productRealityReason = enrichedReality.reason;
 
           if (
             !relevance.isAccepted ||
             relevance.relevanceStatus === "IRRELEVANT" ||
-            !enrichedReality.isPhysicalProductRealityEligible
+            !enrichedReality.isPhysicalProductRealityEligible ||
+            resolved.hasUnresolvedContradiction
           ) {
             candidate.isEligibleAsEvergreenWinner = false;
           } else if (
@@ -974,42 +1630,25 @@ export async function enrichProductCandidatesWithEvidence(
 
           enrichedList.push(candidate);
         } catch (err: any) {
-          errors.push(`Enrichment failed for ${candidate.candidateId}: ${err.message}`);
+          errors.push(
+            `Enrichment failed for ${candidate.candidateId}: ${err.message}`
+          );
+          attachDistinctnessFingerprint(candidate);
           enrichedList.push(candidate);
         }
       })
     );
   }
 
-  // Canonical Product Deduplication across enriched candidates
-  const deduplicated: DiscoveredProductCandidate[] = [];
-  const seenCanonicalKeys = new Map<string, DiscoveredProductCandidate>();
-
-  for (const c of enrichedList) {
-    const rawName = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
-    const domainKey = c.storeDomain ? c.storeDomain.toLowerCase().trim() : "";
-    const dedupeKey = domainKey ? `${domainKey}::${rawName}` : rawName;
-
-    const existing = seenCanonicalKeys.get(dedupeKey);
-    if (existing) {
-      existing.totalObservationCount += c.totalObservationCount;
-      for (const adId of c.supportingAdIds) {
-        if (!existing.supportingAdIds.includes(adId)) existing.supportingAdIds.push(adId);
-      }
-      for (const src of c.supportingSourceTypes) {
-        if (!existing.supportingSourceTypes.includes(src)) existing.supportingSourceTypes.push(src);
-      }
-      for (const obs of c.sourceObservations) {
-        existing.sourceObservations.push(obs);
-      }
-    } else {
-      seenCanonicalKeys.set(dedupeKey, c);
-      deduplicated.push(c);
-    }
-  }
+  // Canonical Product Deduplication across enriched candidates via Section 5 engine
+  // (merges candidates whose redirects/metadata resolved to the same canonical URL, merchantProductId, GTIN, or brand+model)
+  const clustered = clusterProductCandidates(
+    enrichedList,
+    mergeDuplicateCandidateRecords
+  );
 
   return {
-    candidates: deduplicated,
+    candidates: clustered.consolidatedCandidates,
     enrichedCount,
     verifiedCount,
     probableCount,

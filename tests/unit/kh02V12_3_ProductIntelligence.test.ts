@@ -119,15 +119,24 @@ describe("SWAI KH-02 V12.3 — Product Intelligence & Integrity Suite", () => {
       expect(identity.originalCreativeCode).toBe("ad50fb");
     });
 
-    it("Resolves legitimate Shopify product URL /products/pet-hair-roller to VERIFIED", () => {
+    it("Resolves legitimate Shopify product URL /products/pet-hair-roller to PROBABLE without merchant fetch and VERIFIED with merchant title", () => {
       const identity = resolveProductIdentity({
         landingPageUrl: "https://puppystore.com/products/pet-hair-roller",
         storeDomain: "puppystore.com",
         rawHeadlines: ["Reusable Pet Hair Roller"],
       });
-      expect(identity.identityStatus).toBe("VERIFIED");
-      expect(identity.isEligibleAsEvergreenWinner).toBe(true);
+      expect(identity.identityStatus).toBe("PROBABLE");
+      expect(identity.isEligibleAsEvergreenWinner).toBe(false);
       expect(identity.canonicalProductName).toBe("Reusable Pet Hair Roller");
+
+      const verifiedIdentity = resolveProductIdentity({
+        landingPageUrl: "https://puppystore.com/products/pet-hair-roller",
+        storeDomain: "puppystore.com",
+        verifiedLandingPageTitle: "Reusable Pet Hair Roller",
+        rawHeadlines: ["Reusable Pet Hair Roller"],
+      });
+      expect(verifiedIdentity.identityStatus).toBe("VERIFIED");
+      expect(verifiedIdentity.isEligibleAsEvergreenWinner).toBe(true);
     });
   });
 

@@ -39,6 +39,25 @@ interface RankedItem {
     candidateId: string;
     researchProductId?: string | null;
     title: string;
+    canonicalProductName?: string | null;
+    displayName?: string | null;
+    adClaimedProductName?: string | null;
+    merchantVerifiedProductName?: string | null;
+    brand?: string | null;
+    model?: string | null;
+    sku?: string | null;
+    gtin?: string | null;
+    merchantProductId?: string | null;
+    variantId?: string | null;
+    familyKey?: string | null;
+    familyLabel?: string | null;
+    productKey?: string | null;
+    distinctnessRole?: string | null;
+    distinctnessStatus?: string | null;
+    distinctnessReason?: string | null;
+    verificationReason?: string | null;
+    fetchOutcome?: string | null;
+    productRealityStatus?: string | null;
     category: string;
     problemStatement: string | null;
     targetAudience: string | null;
@@ -175,7 +194,7 @@ export default function ProductsPage() {
   const [runtimeVersion, setRuntimeVersion] = useState<any | null>(null);
 
   const compileTimeFrontendSha = process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA || "";
-  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.2";
+  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.3";
   const [showQueryCoverage, setShowQueryCoverage] = useState<boolean>(false);
 
   useEffect(() => {
@@ -826,7 +845,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>SWAI KH-02 V12.4.2 — AI-Powered Product Intelligence</span>
+                <span>SWAI KH-02 V12.4.3 — AI-Powered Product Intelligence</span>
               </div>
               {(runtimeVersion?.frontendBuildSha || runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || compileTimeFrontendSha) && (
                 <span
@@ -909,7 +928,7 @@ export default function ProductsPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     const val = e.currentTarget.value.trim();
-                    if (val.length >= 2 && !isResearching) {
+                    if (!isResearching) {
                       isInputDirtyRef.current = true;
                       executeResearch(val, lookbackDays);
                     }
@@ -1734,7 +1753,7 @@ export default function ProductsPage() {
 
                         {/* Title & Core Problem */}
                         <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/40">
                               {rankLabel}
                             </span>
@@ -1742,20 +1761,34 @@ export default function ProductsPage() {
                               {item.candidate.category}
                             </span>
                             {item.candidate.identityStatus && (
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${
-                                item.candidate.identityStatus === "VERIFIED"
-                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/40"
-                                  : item.candidate.identityStatus === "PROBABLE"
-                                  ? "bg-blue-950/60 text-blue-300 border-blue-800/40"
-                                  : "bg-amber-950/60 text-amber-300 border-amber-800/40"
-                              }`}>
-                                {item.candidate.identityStatus === "VERIFIED"
-                                  ? "Verified Product"
-                                  : item.candidate.identityStatus === "PROBABLE"
-                                  ? "Probable Product"
-                                  : "Needs Review"}
+                              <span
+                                data-testid="kh02-badge-identity-status"
+                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${
+                                  item.candidate.identityStatus === "VERIFIED"
+                                    ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/40"
+                                    : item.candidate.identityStatus === "PROBABLE"
+                                    ? "bg-blue-950/60 text-blue-300 border-blue-800/40"
+                                    : "bg-amber-950/60 text-amber-300 border-amber-800/40"
+                                }`}
+                                title={item.candidate.verificationReason || undefined}
+                              >
+                                Identity: {item.candidate.identityStatus}
                               </span>
                             )}
+                            {item.candidate.productRealityStatus && (
+                              <span
+                                data-testid="kh02-badge-reality-status"
+                                className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-indigo-950/60 text-indigo-300 border border-indigo-800/40"
+                              >
+                                Reality: {item.candidate.productRealityStatus}
+                              </span>
+                            )}
+                            <span
+                              data-testid="kh02-badge-evergreen-status"
+                              className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
+                            >
+                              Evergreen: {item.score.tier || item.score.scoreStatus}
+                            </span>
                             {item.candidate.aiIntelligence && (
                               <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40">
                                 AI: {item.candidate.aiIntelligence.commercialEntityType}
@@ -1767,8 +1800,38 @@ export default function ProductsPage() {
                               ? "text-amber-200/90 font-mono text-sm"
                               : "text-white"
                           }`}>
-                            {item.candidate.title}
+                            {item.candidate.merchantVerifiedProductName || item.candidate.title}
                           </h3>
+                          <div className="text-[11px] text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span>
+                              Name Source:{" "}
+                              <strong className="text-slate-200">
+                                {item.candidate.merchantVerifiedProductName ? "Merchant Verified" : "Ad Claimed"}
+                              </strong>
+                            </span>
+                            {(item.candidate.familyLabel || item.candidate.familyKey) && (
+                              <span>
+                                Family: <strong className="text-purple-300">{item.candidate.familyLabel || item.candidate.familyKey}</strong>
+                              </span>
+                            )}
+                            {(item.candidate.model || item.candidate.sku || item.candidate.gtin) && (
+                              <span className="font-mono text-[10px] text-slate-300">
+                                {[
+                                  item.candidate.model ? `Model: ${item.candidate.model}` : null,
+                                  item.candidate.sku ? `SKU: ${item.candidate.sku}` : null,
+                                  item.candidate.gtin ? `GTIN: ${item.candidate.gtin}` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                            )}
+                          </div>
+                          {(item.candidate.distinctnessRole === "SAME_FAMILY_MODEL_ALTERNATIVE" ||
+                            item.candidate.distinctnessStatus === "HOMOGENEOUS_FAMILY") && (
+                            <div className="text-[10px] px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/40 text-amber-300 inline-block">
+                              Same product family — model/merchant alternative
+                            </div>
+                          )}
 
                           {item.candidate.problemStatement && (
                             <p className="text-xs text-slate-300 line-clamp-2">
@@ -1805,7 +1868,7 @@ export default function ProductsPage() {
                             )}
                             <span className="text-slate-600">•</span>
                             <span className="text-slate-400">
-                              {item.candidate.distinctAdvertisersCount} active advertiser(s)
+                              {item.candidate.totalObservationCount} observation(s) · {item.candidate.distinctAdvertisersCount} active advertiser(s)
                             </span>
                             <span className="text-slate-600">•</span>
                             <span className="text-purple-300">
@@ -1867,8 +1930,8 @@ export default function ProductsPage() {
             ) : (
               <div data-testid="kh02-empty-state" className="p-8 rounded-2xl bg-[#161228] border border-amber-500/30 text-center space-y-3">
                 <AlertTriangle className="h-7 w-7 text-amber-400 mx-auto" />
-                <h3 className="text-sm font-bold text-white">
-                  No verified evergreen winners yet for &quot;{leaderboard?.topic || activeRunTopic || topic.trim() || "Pet Gadgets"}&quot;
+                <h3 data-testid="kh02-snapshot-topic-heading" className="text-sm font-bold text-white">
+                  No verified evergreen winners yet for &quot;{leaderboard?.topic || activeRunTopic || "Pet Gadgets"}&quot;
                 </h3>
                 {Boolean(topic.trim() && leaderboard?.topic && topic.trim().toLowerCase() !== leaderboard.topic.toLowerCase()) && (
                   <p className="text-[11px] text-slate-400 font-normal">
@@ -1886,14 +1949,25 @@ export default function ProductsPage() {
               <div data-testid="kh02-research-shortlist-section" className="space-y-4 pt-6 border-t border-[#1f293d]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Sparkles className="h-4 w-4 text-amber-400" />
                       <h3 className="text-sm font-bold text-white">
                         Top 3 Products to Evaluate
                       </h3>
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                      <span
+                        data-testid="kh02-badge-shortlist-status"
+                        className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold"
+                      >
                         Research Shortlist — Further Validation Required
                       </span>
+                      {leaderboard.lookbackCoverage?.historicalCoverageMode && (
+                        <span
+                          data-testid="kh02-badge-source-freshness"
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700/60 font-mono"
+                        >
+                          Coverage: {leaderboard.lookbackCoverage.historicalCoverageMode}
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5">
                       Identifiable, niche-relevant product candidates discovered from current advertising evidence for business evaluation. Does not imply verified evergreen demand.
@@ -1916,102 +1990,187 @@ export default function ProductsPage() {
 
                 {leaderboard.researchShortlist?.shortlist && leaderboard.researchShortlist.shortlist.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {leaderboard.researchShortlist.shortlist.map((candidate: any, idx: number) => (
-                      <div
-                        key={candidate.candidateId}
-                        data-testid="kh02-research-shortlist-card"
-                        data-candidate-id={candidate.candidateId}
-                        data-shortlist-rank={idx + 1}
-                        className="p-4 rounded-xl bg-[#161228] border border-amber-500/30 hover:border-amber-400/60 transition-all flex flex-col justify-between space-y-3"
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-3">
-                            <div
-                              onClick={() => {
-                                if (candidate.videoUrl || candidate.thumbnailUrl) {
-                                  setActiveMediaItem({
-                                    title: candidate.title,
-                                    videoUrl: candidate.videoUrl,
-                                    thumbnailUrl: candidate.thumbnailUrl,
-                                    sourceUrl: candidate.canonicalProductUrl,
-                                    platform: candidate.supportingSourceTypes?.[0] || "Meta",
-                                  });
-                                }
-                              }}
-                              className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer"
-                            >
-                              {candidate.thumbnailUrl && !isStockImage(candidate.thumbnailUrl) ? (
-                                <img src={candidate.thumbnailUrl} alt={candidate.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <ShoppingBag className="h-6 w-6 text-amber-400 m-auto mt-5" />
-                              )}
-                              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-amber-500/90 text-black font-black text-[9px]">
-                                #{idx + 1}
-                              </span>
-                            </div>
+                    {leaderboard.researchShortlist.shortlist.map((candidate: any, idx: number) => {
+                      const matchedScoredItem = [
+                        ...(leaderboard.topThree || []),
+                        ...(leaderboard.provisionalCandidates || []),
+                        ...(leaderboard.remainingCandidates || []),
+                        ...(leaderboard.insufficientEvidenceCandidates || []),
+                      ].find((r) => r.candidate?.candidateId === candidate.candidateId);
+                      const candScore = matchedScoredItem?.score;
 
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                                  {candidate.identityStatus || "PROVISIONAL"}
+                      return (
+                        <div
+                          key={candidate.candidateId}
+                          data-testid="kh02-research-shortlist-card"
+                          data-candidate-id={candidate.candidateId}
+                          data-shortlist-rank={idx + 1}
+                          data-identity-status={candidate.identityStatus || "PROBABLE"}
+                          data-reality-status={candidate.productRealityStatus || "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"}
+                          data-family-key={candidate.familyKey || ""}
+                          className="p-4 rounded-xl bg-[#161228] border border-amber-500/30 hover:border-amber-400/60 transition-all flex flex-col justify-between space-y-3"
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              <div
+                                onClick={() => {
+                                  if (candidate.videoUrl || candidate.thumbnailUrl) {
+                                    setActiveMediaItem({
+                                      title: candidate.title,
+                                      videoUrl: candidate.videoUrl,
+                                      thumbnailUrl: candidate.thumbnailUrl,
+                                      sourceUrl: candidate.canonicalProductUrl,
+                                      platform: candidate.supportingSourceTypes?.[0] || "Meta",
+                                    });
+                                  }
+                                }}
+                                className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer"
+                              >
+                                {candidate.thumbnailUrl && !isStockImage(candidate.thumbnailUrl) ? (
+                                  <img src={candidate.thumbnailUrl} alt={candidate.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <ShoppingBag className="h-6 w-6 text-amber-400 m-auto mt-5" />
+                                )}
+                                <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-amber-500/90 text-black font-black text-[9px]">
+                                  #{idx + 1}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-medium">
-                                  {candidate.relevanceStatus || "RELEVANT"}
-                                </span>
-                                {candidate.aiIntelligence && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 font-medium">
-                                    AI: {candidate.aiIntelligence.commercialEntityType}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span
+                                    data-testid="kh02-badge-identity-status"
+                                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                                      candidate.identityStatus === "VERIFIED"
+                                        ? "bg-emerald-950/80 text-emerald-300 border border-emerald-700/40"
+                                        : "bg-slate-800 text-slate-300"
+                                    }`}
+                                    title={candidate.verificationReason || undefined}
+                                  >
+                                    {candidate.identityStatus || "PROBABLE"}
                                   </span>
+                                  {candidate.productRealityStatus && (
+                                    <span
+                                      data-testid="kh02-badge-reality-status"
+                                      className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 font-mono"
+                                    >
+                                      {candidate.productRealityStatus === "VERIFIED_PHYSICAL_PRODUCT"
+                                        ? "VERIFIED_PHYSICAL"
+                                        : "EVIDENCE_PHYSICAL"}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-medium">
+                                    {candidate.relevanceStatus || "RELEVANT"}
+                                  </span>
+                                  {candidate.aiIntelligence && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 font-medium">
+                                      AI: {candidate.aiIntelligence.commercialEntityType}
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className="text-xs font-bold text-white mt-1 line-clamp-2">
+                                  {candidate.merchantVerifiedProductName || candidate.canonicalProductName || candidate.displayName || candidate.title}
+                                </h4>
+                                <span className="text-[9px] text-slate-400 block">
+                                  {candidate.merchantVerifiedProductName
+                                    ? "Merchant-Verified Title"
+                                    : "Ad-Claimed Product Name"}
+                                </span>
+                                {candidate.storeDomain && (
+                                  <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                                    <Store className="h-3 w-3 text-amber-400 shrink-0" />
+                                    <span>{candidate.storeDomain}</span>
+                                  </p>
                                 )}
                               </div>
-                              <h4 className="text-xs font-bold text-white mt-1 line-clamp-2">
-                                {candidate.canonicalProductName || candidate.displayName || candidate.title}
-                              </h4>
-                              {candidate.storeDomain && (
-                                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
-                                  <Store className="h-3 w-3 text-amber-400 shrink-0" />
-                                  <span>{candidate.storeDomain}</span>
-                                </p>
+                            </div>
+
+                            {candidate.distinctnessRole === "SAME_FAMILY_MODEL_ALTERNATIVE" && (
+                              <div
+                                data-testid="kh02-same-family-alternative-badge"
+                                className="text-[10px] px-2 py-1 rounded bg-amber-950/60 border border-amber-500/40 text-amber-200 font-medium"
+                              >
+                                Same product family — model/merchant alternative
+                              </div>
+                            )}
+
+                            <div className="space-y-1.5 text-[11px] bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
+                              <div className="flex items-center justify-between text-slate-400">
+                                <span className="text-slate-500">Product Family:</span>
+                                <span className="text-purple-300 font-medium truncate max-w-[180px]">
+                                  {candidate.familyLabel || candidate.familyKey || candidate.category || "Physical Product"}
+                                </span>
+                              </div>
+                              {(candidate.model || candidate.sku || candidate.gtin) && (
+                                <div className="flex items-center justify-between text-slate-400">
+                                  <span className="text-slate-500">Model / SKU:</span>
+                                  <span className="font-mono text-[10px] text-slate-300 truncate max-w-[180px]">
+                                    {[candidate.model, candidate.sku, candidate.gtin].filter(Boolean).join(" / ")}
+                                  </span>
+                                </div>
+                              )}
+                              {candidate.canonicalProductUrl && (
+                                <div className="flex items-center justify-between text-slate-400">
+                                  <span className="text-slate-500">URL:</span>
+                                  <a
+                                    href={candidate.canonicalProductUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-amber-400 hover:underline flex items-center gap-1 truncate max-w-[180px]"
+                                  >
+                                    <span className="truncate">{candidate.canonicalProductUrl.replace(/^https?:\/\//, "")}</span>
+                                    <ExternalLink className="h-3 w-3 shrink-0" />
+                                  </a>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between text-slate-400">
+                                <span className="text-slate-500">Observations:</span>
+                                <span className="font-mono text-slate-300">
+                                  {candidate.totalObservationCount || candidate.supportingAdIds?.length || 1} obs · {candidate.supportingAdIds?.length || 1} ads ({candidate.supportingSourceTypes?.join(", ") || "Meta"})
+                                </span>
+                              </div>
+                              {candidate.verificationReason && (
+                                <div className="text-[10px] text-slate-400 pt-0.5 border-t border-slate-800/60 line-clamp-2" title={candidate.verificationReason}>
+                                  <span className="text-slate-500">Identity Reason:</span> {candidate.verificationReason}
+                                </div>
+                              )}
+                              {candidate.distinctnessReason && (
+                                <div className="text-[10px] text-slate-400 line-clamp-2" title={candidate.distinctnessReason}>
+                                  <span className="text-slate-500">Distinctness:</span> {candidate.distinctnessReason}
+                                </div>
+                              )}
+                              {candScore && (
+                                <div className="flex items-center justify-between text-slate-400 pt-0.5 border-t border-slate-800/60">
+                                  <span className="text-slate-500">Score / Conf:</span>
+                                  <span className="font-mono text-slate-200">
+                                    {candScore.opportunityScore ?? "—"}/100 · {candScore.evidenceConfidence}% ({candScore.demandClass})
+                                  </span>
+                                </div>
+                              )}
+                              {candScore?.missingEvidence && candScore.missingEvidence.length > 0 && (
+                                <div className="text-[10px] text-amber-300/90 line-clamp-2" title={candScore.missingEvidence.join("; ")}>
+                                  <span className="text-slate-500">Missing:</span> {candScore.missingEvidence[0]}
+                                </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="space-y-1.5 text-[11px] bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
-                            {candidate.canonicalProductUrl && (
-                              <div className="flex items-center justify-between text-slate-400">
-                                <span className="text-slate-500">URL:</span>
-                                <a
-                                  href={candidate.canonicalProductUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-amber-400 hover:underline flex items-center gap-1 truncate max-w-[180px]"
-                                >
-                                  <span className="truncate">{candidate.canonicalProductUrl.replace(/^https?:\/\//, '')}</span>
-                                  <ExternalLink className="h-3 w-3 shrink-0" />
-                                </a>
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-slate-400">
-                              <span className="text-slate-500">Ad Evidence:</span>
-                              <span className="font-mono text-slate-300">
-                                {candidate.supportingAdIds?.length || 0} ads ({candidate.supportingSourceTypes?.join(", ") || "Meta"})
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-slate-400">
-                              <span className="text-slate-500">Distinctness:</span>
-                              <span className="text-slate-300 truncate max-w-[180px]">
-                                {candidate.category || "Unique Product Type"}
-                              </span>
-                            </div>
+                          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                            <span
+                              data-testid="kh02-badge-evergreen-status"
+                              className="text-amber-400/90 font-medium"
+                            >
+                              {candScore?.tier === "VERIFIED_EVERGREEN"
+                                ? "Verified Evergreen"
+                                : "Provisional Shortlist Candidate"}
+                            </span>
+                            <span className="text-slate-500 text-[10px]">
+                              {candScore?.scoreStatus || "Pending Long-Term Demand"}
+                            </span>
                           </div>
                         </div>
-
-                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
-                          <span className="text-amber-400/90 font-medium">Evaluation Candidate</span>
-                          <span className="text-slate-500 text-[10px]">Pending Long-Term Demand</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div

@@ -1,0 +1,51 @@
+
+> shopify-winning-ads-intelligence@0.1.0 kh01:verify
+> vitest run tests/unit/kh01Security.test.ts tests/unit/kh01ProductOffer.test.ts tests/unit/kh01LandingPage.test.ts tests/unit/kh01EconomicsOpportunity.test.ts tests/integration/kh01ProductIntelligenceWorkspace.test.ts
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Starting Step 1...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 1
+Starting Step 2...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 2
+Starting Step 3...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 3
+Starting Step 4...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 4
+Starting Step 5...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 5
+Starting Step 6...
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Passed Step 6
+
+stdout | tests/integration/kh01ProductIntelligenceWorkspace.test.ts > KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow > executes complete end-to-end product research workflow without data fabrication
+Starting Step 7...
+
+ ✓ tests/integration/kh01ProductIntelligenceWorkspace.test.ts (2 tests) 231ms
+ ✓ tests/unit/kh01Security.test.ts (30 tests) 175ms
+ ✓ tests/unit/kh01EconomicsOpportunity.test.ts (18 tests) 20ms
+ ✓ tests/unit/kh01LandingPage.test.ts (8 tests) 18ms
+ ✓ tests/unit/kh01ProductOffer.test.ts (11 tests) 5ms
+
+ Test Files  5 passed (5)
+      Tests  69 passed (69)
+   Start at  23:53:40
+   Duration  1.54s (tests 38%, import 33%, setup 21%, transform 6%, worker 2%)
+
+    Isolate  5 workers spawned · ~65ms startup each (spawn + environment, per file)
+             at least ~262ms faster with isolate: false — reuses workers across files instead of one per file
+
+

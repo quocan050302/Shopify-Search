@@ -268,6 +268,7 @@ describe("SWAI KH-02 V12.3.1 — Meta & Google Evidence-True Closure Suite", () 
         const id = resolveProductIdentity({
           rawLandingUrl: `https://store.com/products/${pos.headline.toLowerCase().replace(/\s+/g, "-")}`,
           storeDomain: "store.com",
+          verifiedLandingPageTitle: pos.headline,
           rawHeadlines: [pos.headline],
         });
         expect(id.identityStatus).toBe("VERIFIED");

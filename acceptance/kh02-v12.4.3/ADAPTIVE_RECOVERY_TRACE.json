@@ -1,0 +1,176 @@
+{
+  "controlledPostGateTests": {
+    "postGateCoverageShortfall": {
+      "requestedCount": 3,
+      "qualifiedProducts": 1,
+      "distinctProductArchetypesObserved": 0,
+      "distinctFamiliesObserved": 1,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 0,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 1,
+      "remainingAIRequests": 5,
+      "missingArchetypes": [],
+      "recoveryRecommended": true,
+      "recoveryTriggerReason": "Post-gate qualified distinct products (1/3) below target.",
+      "stopReason": "CONTINUE"
+    },
+    "postGateHomogeneousFamily": {
+      "requestedCount": 3,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 0,
+      "distinctFamiliesObserved": 1,
+      "homogeneousFamilyDetected": true,
+      "unresolvedCandidates": 0,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 1,
+      "remainingAIRequests": 5,
+      "missingArchetypes": [],
+      "recoveryRecommended": true,
+      "recoveryTriggerReason": "Homogeneous product family detected (1 family across 3 products); expanding to uncovered archetype.",
+      "stopReason": "CONTINUE"
+    },
+    "refillVerifiedCount": 3
+  },
+  "liveRunsAdaptiveCoverage": {
+    "petGadgets": {
+      "requestedCount": 3,
+      "qualifiedProducts": 2,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 2,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 17,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Pet Cleaning",
+        "Pet Safety"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "diy": {
+      "requestedCount": 3,
+      "qualifiedProducts": 1,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 1,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 1,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Woodworking",
+        "Furniture Repair"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "kitchen": {
+      "requestedCount": 3,
+      "qualifiedProducts": 2,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 2,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 11,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Food Storage"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "homeDecor": {
+      "requestedCount": 3,
+      "qualifiedProducts": 0,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 0,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 8,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Decorative Textiles"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "gardening": {
+      "requestedCount": 3,
+      "qualifiedProducts": 0,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 0,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 0,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Plant Supports",
+        "Soil Monitoring"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "cleaning": {
+      "requestedCount": 3,
+      "qualifiedProducts": 1,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 1,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 12,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Floor Care"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "specificProduct": {
+      "requestedCount": 3,
+      "qualifiedProducts": 2,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 2,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 17,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "Pet Cleaning"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    },
+    "outOfSample": {
+      "requestedCount": 3,
+      "qualifiedProducts": 2,
+      "distinctProductArchetypesObserved": 3,
+      "distinctFamiliesObserved": 2,
+      "homogeneousFamilyDetected": false,
+      "unresolvedCandidates": 9,
+      "unverifiedQueueRemaining": 0,
+      "remainingSourceQueries": 0,
+      "remainingAIRequests": 25,
+      "missingArchetypes": [
+        "car Essential Accessories"
+      ],
+      "recoveryRecommended": false,
+      "recoveryTriggerReason": null,
+      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+    }
+  }
+}

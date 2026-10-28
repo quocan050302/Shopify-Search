@@ -1,0 +1,1125 @@
+{
+  "releaseVersion": "12.4.3",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "gitHead": "05657392bc7dfcc96fd62803b468fbdf04a84679",
+  "startedAt": "2026-10-28T16:53:24.016Z",
+  "completedAt": "2026-10-28T16:57:42.424Z",
+  "summary": {
+    "totalGates": 15,
+    "PASS": 11,
+    "FAIL": 0,
+    "INSUFFICIENT_EVIDENCE": 4,
+    "BLOCKED": 0,
+    "NOT_RUN": 0
+  },
+  "verdicts": {
+    "G01_ENGINEERING_HEALTH": "PASS",
+    "G02_EVIDENCE_TRUE_IDENTITY": "PASS",
+    "G03_UNIFIED_PRODUCT_DISTINCTNESS": "PASS",
+    "G04_PRODUCT_FAMILY_DIVERSITY": "PASS",
+    "G05_ADAPTIVE_POST_GATE_RECOVERY": "PASS",
+    "G13_BACKTEST_DEV_AND_HOLDOUT": "PASS",
+    "G06_META_REAL_DISCOVERY": "PASS",
+    "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE": "PASS",
+    "G08_DEMAND_HISTORY_COVERAGE": "PASS",
+    "G09_SHORTLIST_QUALITY_PET_GADGETS": "INSUFFICIENT_EVIDENCE",
+    "G10_SHORTLIST_QUALITY_DIY": "INSUFFICIENT_EVIDENCE",
+    "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES": "INSUFFICIENT_EVIDENCE",
+    "G12_VERIFIED_EVERGREEN_QUALIFICATION": "INSUFFICIENT_EVIDENCE",
+    "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION": "PASS",
+    "G15_DISABLED_TIKTOK_ISOLATION": "PASS"
+  },
+  "gates": {
+    "G01_ENGINEERING_HEALTH": {
+      "gateId": "G01_ENGINEERING_HEALTH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "TypeScript (0 errors), ESLint (0 errors), KH-01 (69/69), V12.4.3 Mandatory Regression Suite (50/50), KH-02 Unit (426/426), KH-02 Integration (27/27), and Next.js Production Build all succeed",
+      "expected": {
+        "tscExitCode": 0,
+        "lintExitCode": 0,
+        "kh01Passed": 69,
+        "v12_4_3RegressionPassed": 50,
+        "kh02UnitPassed": ">= 420",
+        "kh02IntegrationPassed": ">= 27",
+        "buildExitCode": 0
+      },
+      "observed": {
+        "tscExitCode": 0,
+        "lintExitCode": 0,
+        "kh01": {
+          "passed": 69,
+          "total": 69,
+          "failed": 0
+        },
+        "v12_4_3Regression50": {
+          "passed": 50,
+          "total": 50,
+          "failed": 0
+        },
+        "kh02Unit": {
+          "passed": 426,
+          "total": 426,
+          "failed": 0
+        },
+        "kh02Integration": {
+          "passed": 27,
+          "total": 27,
+          "failed": 0
+        },
+        "buildExitCode": 0,
+        "buildId": "sSusuFuGPBscW_X7UuyRB"
+      },
+      "executionCommand": "npx tsc --noEmit && npm run lint && npm run kh01:verify && npm run kh02:test:unit && npm run kh02:test:integration && npm run build",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/tsc.log",
+        "logs/lint.log",
+        "logs/kh01_verify.log",
+        "logs/v12_4_3_regression50.log",
+        "logs/kh02_unit.log",
+        "logs/kh02_integration.log",
+        "logs/next_build.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/GATE_VERIFICATION_MATRIX.json",
+      "reason": "All engineering health suites passed (Unit=426, Reg50=50/50, Int=27, KH01=69, BUILD_ID=sSusuFuGPBscW_X7UuyRB)",
+      "executedAt": "2026-10-28T16:54:17.805Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G02_EVIDENCE_TRUE_IDENTITY": {
+      "gateId": "G02_EVIDENCE_TRUE_IDENTITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "URL /products/<handle> is treated as locator only; HTTP 403/404/challenge and raw 'Facebook Ad: <id>' never return VERIFIED; JSON-LD SKU/GTIN/model/brand/variantId propagate intact; ad-vs-merchant contradictions become AMBIGUOUS",
+      "expected": {
+        "http403Status": "PROBABLE",
+        "fbRawHeadlineStatus": "PROBABLE",
+        "challengeStatus": "PROBABLE",
+        "verifiedJsonLdStatus": "VERIFIED",
+        "skuPropagated": "PS-FOUNTAIN-25L",
+        "contradictionStatus": "AMBIGUOUS"
+      },
+      "observed": {
+        "id403": {
+          "identityStatus": "PROBABLE",
+          "fetchOutcome": "HTTP_403",
+          "isEligibleAsEvergreenWinner": false
+        },
+        "idFbRawHeadline": {
+          "identityStatus": "PROBABLE",
+          "fetchOutcome": "HTTP_404",
+          "canonicalProductName": "Stainless Cat Water Fountain"
+        },
+        "idChallenge": {
+          "identityStatus": "PROBABLE",
+          "fetchOutcome": "CAPTCHA_OR_CHALLENGE"
+        },
+        "idVerifiedJsonLd": {
+          "identityStatus": "VERIFIED",
+          "sku": "PS-FOUNTAIN-25L",
+          "gtin": "0085001122334",
+          "model": "PS-2500",
+          "brand": "PetStream",
+          "variantId": "445566"
+        },
+        "idContradiction": {
+          "identityStatus": "AMBIGUOUS",
+          "contradictions": [
+            "Ad creative claims product 'Automatic WiFi Smart Pet Feeder with Camera' whereas merchant page sells 'Heavy Duty Reflective Nylon Dog Leash 6ft' (zero shared product tokens)."
+          ],
+          "isEligibleAsEvergreenWinner": false
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "IDENTITY_VERIFICATION_EVIDENCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/IDENTITY_VERIFICATION_EVIDENCE.json",
+      "reason": "All Section 4 evidence-true identity & metadata propagation invariants verified (Fixes F02 & F03)",
+      "executedAt": "2026-10-28T16:54:17.823Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G03_UNIFIED_PRODUCT_DISTINCTNESS": {
+      "gateId": "G03_UNIFIED_PRODUCT_DISTINCTNESS",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Candidate consolidation, evaluateShortlistDistinctness(), and shortlist selection use the unified 6-level identity engine; same canonicalProductUrl with different titles merges to 1; local SKU is strictly merchant-scoped",
+      "expected": {
+        "f01ConsolidatedCount": 1,
+        "f01ManualPairDistinctCount": 1,
+        "f01ManualPairIsDistinct": false,
+        "localSkuMergedAcrossMerchants": false
+      },
+      "observed": {
+        "f01ConsolidatedCount": 1,
+        "f01SupportingAdIds": [
+          "f01_ad_1",
+          "f01_ad_2"
+        ],
+        "f01ManualPairDistinctCount": 1,
+        "f01ManualPairIsDistinct": false,
+        "localSkuDecision": "DIFFERENT_PRODUCTS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json",
+      "reason": "Unified 6-level product distinctness verified across discovery, shortlist, and pairwise comparison (Fixes F01)",
+      "executedAt": "2026-10-28T16:54:17.837Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G04_PRODUCT_FAMILY_DIVERSITY": {
+      "gateId": "G04_PRODUCT_FAMILY_DIVERSITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Three oil dispenser listings are classified into 1 homogeneous family (OIL_DISPENSER_SPRAYER, distinctFamilyCount=1); when diverse families exist, BROAD_CATEGORY shortlist selects 3 distinct families first (Fixes F07)",
+      "expected": {
+        "oilOnlyDistinctFamilies": 1,
+        "oilOnlyHomogeneous": true,
+        "mixedPoolSelectedFamilies": 3
+      },
+      "observed": {
+        "oilOnlyDiversity": {
+          "isDistinct": true,
+          "isFamilyDiverse": false,
+          "distinctCount": 3,
+          "distinctProductCount": 3,
+          "distinctFamilyCount": 1,
+          "distinctListingCount": 3,
+          "independentOpportunityCount": 1,
+          "homogeneousFamilyDetected": true,
+          "dominantFamilyKey": "oil_dispenser_sprayer",
+          "dominantFamilyLabel": "Oil Dispenser & Sprayer Bottle",
+          "duplicateKeys": [],
+          "familyKeys": [
+            "oil_dispenser_sprayer",
+            "oil_dispenser_sprayer",
+            "oil_dispenser_sprayer"
+          ],
+          "productKeys": [
+            "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+            "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+            "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+          ],
+          "uncertainties": [
+            "[cand_985549029 vs cand_1382030795]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+            "[cand_985549029 vs cand_957268311]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+            "[cand_1382030795 vs cand_957268311]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models."
+          ],
+          "pairwiseDecisions": [
+            {
+              "candidateIds": [
+                "cand_985549029",
+                "cand_1382030795"
+              ],
+              "listingKeys": [
+                "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+                "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser"
+              ],
+              "productKeys": [
+                "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+                "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser"
+              ],
+              "familyKeys": [
+                "oil_dispenser_sprayer",
+                "oil_dispenser_sprayer"
+              ],
+              "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+              "areSameListing": false,
+              "areSameActualProduct": null,
+              "areSameVariant": false,
+              "areSameFamily": true,
+              "areDistinctOpportunitiesForBroadNiche": false,
+              "areDistinctOpportunitiesForSpecificQuery": true,
+              "confidence": "AMBIGUOUS",
+              "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+              "supportingEvidence": [
+                "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.50."
+              ],
+              "conflictingEvidence": [
+                "Different physical capacities ('470ml' vs '500ml')."
+              ],
+              "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+            },
+            {
+              "candidateIds": [
+                "cand_985549029",
+                "cand_957268311"
+              ],
+              "listingKeys": [
+                "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+                "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+              ],
+              "productKeys": [
+                "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+                "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+              ],
+              "familyKeys": [
+                "oil_dispenser_sprayer",
+                "oil_dispenser_sprayer"
+              ],
+              "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+              "areSameListing": false,
+              "areSameActualProduct": null,
+              "areSameVariant": false,
+              "areSameFamily": true,
+              "areDistinctOpportunitiesForBroadNiche": false,
+              "areDistinctOpportunitiesForSpecificQuery": false,
+              "confidence": "AMBIGUOUS",
+              "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+              "supportingEvidence": [
+                "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.50."
+              ],
+              "conflictingEvidence": [],
+              "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+            },
+            {
+              "candidateIds": [
+                "cand_1382030795",
+                "cand_957268311"
+              ],
+              "listingKeys": [
+                "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+                "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+              ],
+              "productKeys": [
+                "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+                "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+              ],
+              "familyKeys": [
+                "oil_dispenser_sprayer",
+                "oil_dispenser_sprayer"
+              ],
+              "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+              "areSameListing": false,
+              "areSameActualProduct": null,
+              "areSameVariant": false,
+              "areSameFamily": true,
+              "areDistinctOpportunitiesForBroadNiche": false,
+              "areDistinctOpportunitiesForSpecificQuery": false,
+              "confidence": "AMBIGUOUS",
+              "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+              "supportingEvidence": [
+                "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.33."
+              ],
+              "conflictingEvidence": [],
+              "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+            }
+          ],
+          "diversitySummary": "All 3 listings belong to a single product family ('Oil Dispenser & Sprayer Bottle', familykey=REDACTED They represent 3 listing(s) within 1 functional family (1 independent category opportunity)."
+        },
+        "mixedPoolSelectedFamilies": [
+          "oil_dispenser_sprayer",
+          "vegetable_food_chopper",
+          "cutting_board_defroster"
+        ],
+        "mixedPoolSelectedTitles": [
+          "2 In 1 Glass Oil Sprayer",
+          "Rotary Mandoline Cheese Grater",
+          "Rapid Meat Defrosting Tray"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json",
+      "reason": "Product family clustering & broad-niche diversity prioritization verified (Fixes F07)",
+      "executedAt": "2026-10-28T16:54:17.936Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G05_ADAPTIVE_POST_GATE_RECOVERY": {
+      "gateId": "G05_ADAPTIVE_POST_GATE_RECOVERY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Adaptive Round 2 triggers on post-gate distinct product shortfall (<3) or broad-niche homogeneous single family; candidate enrichment refills from unverified queue when top candidates fail verification (Fixes F04 & F05)",
+      "expected": {
+        "shortfallTriggersRound2": true,
+        "homogeneousFamilyTriggersRound2": true,
+        "refillVerifiedCount": 3
+      },
+      "observed": {
+        "postGateCoverageShortfall": {
+          "requestedCount": 3,
+          "qualifiedProducts": 1,
+          "distinctProductArchetypesObserved": 0,
+          "distinctFamiliesObserved": 1,
+          "homogeneousFamilyDetected": false,
+          "unresolvedCandidates": 0,
+          "unverifiedQueueRemaining": 0,
+          "remainingSourceQueries": 1,
+          "remainingAIRequests": 5,
+          "missingArchetypes": [],
+          "recoveryRecommended": true,
+          "recoveryTriggerReason": "Post-gate qualified distinct products (1/3) below target.",
+          "stopReason": "CONTINUE"
+        },
+        "postGateHomogeneousFamily": {
+          "requestedCount": 3,
+          "qualifiedProducts": 3,
+          "distinctProductArchetypesObserved": 0,
+          "distinctFamiliesObserved": 1,
+          "homogeneousFamilyDetected": true,
+          "unresolvedCandidates": 0,
+          "unverifiedQueueRemaining": 0,
+          "remainingSourceQueries": 1,
+          "remainingAIRequests": 5,
+          "missingArchetypes": [],
+          "recoveryRecommended": true,
+          "recoveryTriggerReason": "Homogeneous product family detected (1 family across 3 products); expanding to uncovered archetype.",
+          "stopReason": "CONTINUE"
+        },
+        "refillVerifiedCount": 3,
+        "refillStatuses": [
+          {
+            "id": "cand_197919100",
+            "status": "AMBIGUOUS",
+            "title": "Heavy Duty Reflective Nylon Dog Leash"
+          },
+          {
+            "id": "cand_65805960",
+            "status": "VERIFIED",
+            "title": "Stainless Steel Cat Water Fountain 2.5L"
+          },
+          {
+            "id": "cand_624735358",
+            "status": "VERIFIED",
+            "title": "Reusable Pet Hair Remover Roller"
+          },
+          {
+            "id": "cand_566025844",
+            "status": "VERIFIED",
+            "title": "Smart Self-Cleaning Cat Litter Box"
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "ADAPTIVE_RECOVERY_TRACE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/ADAPTIVE_RECOVERY_TRACE.json",
+      "reason": "Post-gate adaptive recovery and unverified candidate queue refill verified (Fixes F04 & F05)",
+      "executedAt": "2026-10-28T16:54:17.941Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G13_BACKTEST_DEV_AND_HOLDOUT": {
+      "gateId": "G13_BACKTEST_DEV_AND_HOLDOUT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Multi-layer DEV/HOLDOUT backtest executes with disjoint product/merchant/family groups, 0 gold-label leakage, 0 false VERIFIED, 0 duplicate false-splits, 0 distinct false-merges, and 0 evergreen false-positives",
+      "expected": {
+        "verdict": "PASS",
+        "antiOverfittingVerdict": "PASS",
+        "fixedFalseVerified": 0,
+        "fixedDupFalseSplit": 0,
+        "fixedEvergreenFP": 0
+      },
+      "observed": {
+        "verdict": "PASS",
+        "antiOverfittingAudit": {
+          "labelLeakageDetected": false,
+          "leakageViolations": [],
+          "devCaseCount": 9,
+          "holdoutCaseCount": 7,
+          "overlappingGroups": [],
+          "overlappingProducts": [],
+          "overlappingDomains": [],
+          "groupSplitDisjoint": true,
+          "verdict": "PASS"
+        },
+        "baselineOverall": {
+          "splitName": "OVERALL",
+          "totalCases": 16,
+          "nicheRelevancePrecision": 1,
+          "nicheRelevanceRecall": 1,
+          "productIdentityVerificationPrecision": 0.3333,
+          "productIdentityVerificationRecall": 1,
+          "falseVerifiedCount": 10,
+          "skuPropagationRecall": 0,
+          "duplicateProductFalseSplitCount": 2,
+          "distinctProductFalseMergeCount": 0,
+          "unknownCrossMerchantAccuracy": 0,
+          "qualifiedDistinctProductYieldPerRequest": 1.0833,
+          "top3ShortlistCompletionRatePerNiche": 1,
+          "top3ProductFamilyDiversityRate": 0.6667,
+          "productRealityPrecision": 0.9286,
+          "googleProductAssociationPrecision": 0.6667,
+          "demandMappingAccuracy": 1,
+          "evergreenQualificationPrecision": 1,
+          "evergreenFalsePositiveCount": 0
+        },
+        "fixedOverall": {
+          "splitName": "OVERALL",
+          "totalCases": 16,
+          "nicheRelevancePrecision": 1,
+          "nicheRelevanceRecall": 1,
+          "productIdentityVerificationPrecision": 1,
+          "productIdentityVerificationRecall": 1,
+          "falseVerifiedCount": 0,
+          "skuPropagationRecall": 1,
+          "duplicateProductFalseSplitCount": 0,
+          "distinctProductFalseMergeCount": 0,
+          "unknownCrossMerchantAccuracy": 1,
+          "qualifiedDistinctProductYieldPerRequest": 1.0833,
+          "top3ShortlistCompletionRatePerNiche": 1,
+          "top3ProductFamilyDiversityRate": 1,
+          "productRealityPrecision": 1,
+          "googleProductAssociationPrecision": 1,
+          "demandMappingAccuracy": 1,
+          "evergreenQualificationPrecision": 1,
+          "evergreenFalsePositiveCount": 0
+        },
+        "fixedHoldout": {
+          "splitName": "HOLDOUT",
+          "totalCases": 7,
+          "nicheRelevancePrecision": 1,
+          "nicheRelevanceRecall": 1,
+          "productIdentityVerificationPrecision": 1,
+          "productIdentityVerificationRecall": 1,
+          "falseVerifiedCount": 0,
+          "skuPropagationRecall": 1,
+          "duplicateProductFalseSplitCount": 0,
+          "distinctProductFalseMergeCount": 0,
+          "unknownCrossMerchantAccuracy": 1,
+          "qualifiedDistinctProductYieldPerRequest": 0.6,
+          "top3ShortlistCompletionRatePerNiche": 1,
+          "top3ProductFamilyDiversityRate": 1,
+          "productRealityPrecision": 1,
+          "googleProductAssociationPrecision": 1,
+          "demandMappingAccuracy": 1,
+          "evergreenQualificationPrecision": 1,
+          "evergreenFalsePositiveCount": 0
+        },
+        "deltas": {
+          "falseVerifiedReduction": 10,
+          "duplicateFalseSplitReduction": 2,
+          "identityVerificationPrecisionGain": 0.6667,
+          "skuPropagationRecallGain": 1,
+          "familyDiversityGain": 0.3333,
+          "googleAssociationPrecisionGain": 0.3333
+        }
+      },
+      "executionCommand": "npx tsx scripts/kh02/runBacktestV12_4_3.ts",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "BACKTEST_DEV_VS_HOLDOUT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/BACKTEST_DEV_VS_HOLDOUT.json",
+      "reason": "V12.4.3 Backtest PASS (FalseVerified: 10 -> 0, DupFalseSplit: 2 -> 0)",
+      "executedAt": "2026-10-28T16:54:18.127Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G06_META_REAL_DISCOVERY": {
+      "gateId": "G06_META_REAL_DISCOVERY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 8 real research runs execute planned Meta queries within the 3-request global cap and separate fresh live vs historical cached SQLite provenance",
+      "expected": {
+        "allRunsWithin3RequestCap": true,
+        "separatesLiveAndCached": true
+      },
+      "observed": [
+        {
+          "topic": "pet gadgets",
+          "runId": "kh02_run_1793206464699_2unqo",
+          "queriesExecuted": 3,
+          "freshLiveAds": 18,
+          "cachedAds": 33
+        },
+        {
+          "topic": "diy",
+          "runId": "kh02_run_1793206513125_wtb9p",
+          "queriesExecuted": 3,
+          "freshLiveAds": 5,
+          "cachedAds": 45
+        },
+        {
+          "topic": "kitchen",
+          "runId": "kh02_1793206551468_v07jl",
+          "queriesExecuted": 3,
+          "freshLiveAds": 18,
+          "cachedAds": 25
+        },
+        {
+          "topic": "home decor",
+          "runId": "kh02_1793206571551_wxtb0",
+          "queriesExecuted": 3,
+          "freshLiveAds": 4,
+          "cachedAds": 46
+        },
+        {
+          "topic": "gardening",
+          "runId": "kh02_1793206584391_z0umd",
+          "queriesExecuted": 3,
+          "freshLiveAds": 4,
+          "cachedAds": 22
+        },
+        {
+          "topic": "cleaning",
+          "runId": "kh02_1793206597520_vs35k",
+          "queriesExecuted": 3,
+          "freshLiveAds": 20,
+          "cachedAds": 31
+        },
+        {
+          "topic": "automatic pet feeder",
+          "runId": "kh02_1793206616251_6my1r",
+          "queriesExecuted": 3,
+          "freshLiveAds": 19,
+          "cachedAds": 32
+        },
+        {
+          "topic": "car accessories",
+          "runId": "kh02_1793206637372_j2at0",
+          "queriesExecuted": 3,
+          "freshLiveAds": 27,
+          "cachedAds": 31
+        }
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "REGRESSION_NICHES_SUMMARY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
+      "reason": "Meta query execution and provenance separation verified across all 8 runs",
+      "executedAt": "2026-10-28T16:57:41.143Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE": {
+      "gateId": "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency MCP separates diagnostic states (transportConnected, advertiserFound, adsRetrieved, productAssociatedEvidence) and never claims product enrichment when productAssociatedCount === 0 (Fixes F06)",
+      "expected": {
+        "transportConnected": true,
+        "hasStateBreakdown": true,
+        "truthfulProductAssociationState": true
+      },
+      "observed": {
+        "googleDiag": {
+          "status": "CONNECTED",
+          "transportConnected": true
+        },
+        "controlledLivePetlibroProbe": {
+          "status": "QUERY_FAILED",
+          "retrievedCount": 0,
+          "productAssociatedCount": 0,
+          "brandAssociatedCount": 0,
+          "enrichmentExecution": {
+            "attemptedDomains": [
+              "petlibro.com"
+            ],
+            "advertiserLookupSucceeded": false,
+            "advertisersFound": 0,
+            "creativeQuerySucceeded": false,
+            "creativesReturned": 0,
+            "normalizedObservations": 0,
+            "productLevelMatches": 0,
+            "brandLevelMatches": 0,
+            "productEvidenceIds": [],
+            "queryErrors": [
+              "Google Transparency advertiser lookup failed for petlibro.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGIbTiNcGIjAUpAeXMjgbaCC-87qcw6mNCXSmQi7Pmuqp7dpHdVyazOUzkhZ4TJf08cb-iz0VC5YyAVJaAUNg2_3ynPnW5KRQ. The endpoint itself is up — wait the block out or route the session through another IP."
+            ],
+            "queryTimestamp": "2026-10-28T16:57:41.502Z",
+            "stateBreakdown": {
+              "configured": true,
+              "transportConnected": true,
+              "toolDiscovered": true,
+              "operationSupported": true,
+              "advertiserLookupAttempted": true,
+              "advertiserFound": false,
+              "adsRetrieved": false,
+              "productAssociatedEvidence": false,
+              "empty": false,
+              "failed": true,
+              "cached": false
+            }
+          },
+          "sampleObservations": []
+        },
+        "controlledMcpProductMatchProbe": {
+          "status": "PASSED",
+          "retrievedCount": 2,
+          "enrichmentExecution": {
+            "attemptedDomains": [
+              "petlibro.com"
+            ],
+            "advertiserLookupSucceeded": true,
+            "advertisersFound": 1,
+            "creativeQuerySucceeded": true,
+            "creativesReturned": 2,
+            "normalizedObservations": 2,
+            "productLevelMatches": 1,
+            "brandLevelMatches": 1,
+            "productEvidenceIds": [
+              "CR_LUMA_01"
+            ],
+            "queryErrors": [],
+            "queryTimestamp": "2026-10-28T16:57:42.381Z",
+            "stateBreakdown": {
+              "configured": true,
+              "transportConnected": true,
+              "toolDiscovered": true,
+              "operationSupported": true,
+              "advertiserLookupAttempted": true,
+              "advertiserFound": true,
+              "adsRetrieved": true,
+              "productAssociatedEvidence": true,
+              "empty": false,
+              "failed": false,
+              "cached": false
+            }
+          }
+        },
+        "nicheRunsGoogleTelemetry": {
+          "petGadgets": {
+            "source": "GOOGLE_ADS",
+            "queryExecuted": true,
+            "queryStatus": "FAILED",
+            "queryTimestamp": "2026-10-28T16:55:04.267Z",
+            "retrievedCount": 0,
+            "acceptedCount": 0,
+            "queryProvenance": "NONE",
+            "isLive": false,
+            "queryError": "Stage 'Google Ads Transparency' exceeded deadline of 20000ms.",
+            "lastSuccessfulRecordCount": null,
+            "lastSuccessfulQueryAt": null,
+            "productAssociatedCount": 0,
+            "brandAssociatedCount": 0
+          },
+          "diy": {
+            "source": "GOOGLE_ADS",
+            "queryExecuted": true,
+            "queryStatus": "FAILED",
+            "queryTimestamp": "2026-10-28T16:55:47.821Z",
+            "retrievedCount": 0,
+            "acceptedCount": 0,
+            "queryProvenance": "NONE",
+            "isLive": false,
+            "queryError": "Stage 'Google Ads Transparency' exceeded deadline of 20000ms.",
+            "lastSuccessfulRecordCount": null,
+            "lastSuccessfulQueryAt": null,
+            "productAssociatedCount": 0,
+            "brandAssociatedCount": 0
+          },
+          "kitchen": {
+            "source": "GOOGLE_ADS",
+            "queryExecuted": true,
+            "queryStatus": "QUERY_FAILED",
+            "queryTimestamp": "2026-10-28T16:56:11.534Z",
+            "retrievedCount": null,
+            "acceptedCount": null,
+            "queryProvenance": "NONE",
+            "isLive": false,
+            "queryError": "Google Transparency advertiser lookup failed for allfound.co.uk: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjCUwLJikj1TP917fbCDjWgTuxOo4V20DbUAO-zDbovJb4CqjevA-FziBWIzFGPsjJ4yAVJaAUNg_rH2sc779M9W. The endpoint itself is up — wait the block out or route the session through another IP.; Google Transparency advertiser lookup failed for lumeppo.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjDU3InFN2qVXfZhpTsMArj8Lqa4phF7K822H8JIwKT5G5NsOxsAgO18QPtzZiSFiKkyAVJaAUNg4oGupMP3_7SNAQ. The endpoint itself is up — wait the block out or route the session through another IP.",
+            "lastSuccessfulRecordCount": null,
+            "lastSuccessfulQueryAt": null,
+            "enrichmentExecution": {
+              "attemptedDomains": [
+                "allfound.co.uk",
+                "lumeppo.com"
+              ],
+              "advertiserLookupSucceeded": false,
+              "advertisersFound": 0,
+              "creativeQuerySucceeded": false,
+              "creativesReturned": 0,
+              "normalizedObservations": 0,
+              "productLevelMatches": 0,
+              "brandLevelMatches": 0,
+              "productEvidenceIds": [],
+              "queryErrors": [
+                "Google Transparency advertiser lookup failed for allfound.co.uk: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjCUwLJikj1TP917fbCDjWgTuxOo4V20DbUAO-zDbovJb4CqjevA-FziBWIzFGPsjJ4yAVJaAUNg_rH2sc779M9W. The endpoint itself is up — wait the block out or route the session through another IP.",
+                "Google Transparency advertiser lookup failed for lumeppo.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjDU3InFN2qVXfZhpTsMArj8Lqa4phF7K822H8JIwKT5G5NsOxsAgO18QPtzZiSFiKkyAVJaAUNg4oGupMP3_7SNAQ. The endpoint itself is up — wait the block out or route the session through another IP."
+              ],
+              "queryTimestamp": "2026-10-28T16:56:09.690Z",
+              "stateBreakdown": {
+                "configured": true,
+                "transportConnected": true,
+                "toolDiscovered": true,
+                "operationSupported": true,
+                "advertiserLookupAttempted": true,
+                "advertiserFound": false,
+                "adsRetrieved": false,
+                "productAssociatedEvidence": false,
+                "empty": false,
+                "failed": true,
+                "cached": false
+              }
+            },
+            "productAssociatedCount": 0,
+            "brandAssociatedCount": 0
+          }
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE.json",
+      "reason": "Google MCP diagnostic states and product-level evidence verified (Live MCP transportConnected=true, Petlibro live status=QUERY_FAILED, controlled MCP productLevelMatches=1, brandLevelMatches=1)",
+      "executedAt": "2026-10-28T16:57:42.381Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G08_DEMAND_HISTORY_COVERAGE": {
+      "gateId": "G08_DEMAND_HISTORY_COVERAGE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Demand history normalization records rawTerm, normalizedTerm, mappingReason, and preserves requested lookback (30D, 90D, 180D) vs actual covered days without fabricating points",
+      "expected": {
+        "normalizesAdNoise": true,
+        "petLookback": 90,
+        "diyLookback": 180,
+        "kitchenLookback": 30
+      },
+      "observed": {
+        "demandNormSample": {
+          "rawTerm": "Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping",
+          "normalizedTerm": "Stainless Steel Cat Water Fountain",
+          "mappingReason": "Normalized 'Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping' -> 'Stainless Steel Cat Water Fountain' (stripped promotional suffixes/campaign codes/capacities)"
+        },
+        "petLookbackCoverage": {
+          "requestedLookbackDays": 90,
+          "queryExecutionTime": "2026-10-28T16:54:24.892Z",
+          "earliestAdFirstSeen": "2026-10-24T16:16:14.355Z",
+          "latestAdLastSeen": "2026-10-28T16:54:33.060Z",
+          "activeAdsCount": 18,
+          "historicalCachedAdsCount": 33,
+          "freshLiveAdsCount": 18,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "diyLookbackCoverage": {
+          "requestedLookbackDays": 180,
+          "queryExecutionTime": "2026-10-28T16:55:14.332Z",
+          "earliestAdFirstSeen": "2026-10-24T16:16:14.395Z",
+          "latestAdLastSeen": "2026-10-28T16:55:22.501Z",
+          "activeAdsCount": 5,
+          "historicalCachedAdsCount": 45,
+          "freshLiveAdsCount": 5,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "kitchenLookbackCoverage": {
+          "requestedLookbackDays": 30,
+          "queryExecutionTime": "2026-10-28T16:55:51.468Z",
+          "earliestAdFirstSeen": "2026-10-24T16:16:14.401Z",
+          "latestAdLastSeen": "2026-10-28T16:56:04.412Z",
+          "activeAdsCount": 18,
+          "historicalCachedAdsCount": 25,
+          "freshLiveAdsCount": 18,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "DEMAND_HISTORY_COVERAGE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/DEMAND_HISTORY_COVERAGE.json",
+      "reason": "Demand query normalization and lookback coverage verified across 30D, 90D, and 180D",
+      "executedAt": "2026-10-28T16:57:42.383Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G09_SHORTLIST_QUALITY_PET_GADGETS": {
+      "gateId": "G09_SHORTLIST_QUALITY_PET_GADGETS",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Pet Gadgets / US / 90D real run returns 3 distinct physical products with verified/probable identity and 0 non-product noise; reports INSUFFICIENT_EVIDENCE honestly if source observations yield <3 distinct products",
+      "expected": {
+        "distinctPhysicalProducts": 3,
+        "nonProductNoise": 0
+      },
+      "observed": {
+        "runId": "kh02_run_1793206464699_2unqo",
+        "shortlistCount": 2,
+        "distinctProducts": 2,
+        "distinctFamilies": 2,
+        "titles": [
+          "Pet Hair/Lint/Dust Cleaner",
+          "Grooming Gloves"
+        ],
+        "shortfallReason": "Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3)."
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "PET_GADGETS_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/PET_GADGETS_US_90D_REAL_RUN.json",
+      "reason": "Pet Gadgets / US / 90D yielded 2/3 distinct physical products from current real source observations (Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3).)",
+      "executedAt": "2026-10-28T16:57:42.383Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G10_SHORTLIST_QUALITY_DIY": {
+      "gateId": "G10_SHORTLIST_QUALITY_DIY",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "DIY / US / 180D real run returns 3 distinct physical products with verified/probable identity and 0 B2B/app noise; reports INSUFFICIENT_EVIDENCE honestly if source observations yield <3 distinct products",
+      "expected": {
+        "distinctPhysicalProducts": 3,
+        "nonProductNoise": 0
+      },
+      "observed": {
+        "runId": "kh02_run_1793206513125_wtb9p",
+        "shortlistCount": 1,
+        "distinctProducts": 1,
+        "distinctFamilies": 1,
+        "titles": [
+          "Hot Melt Glue Gun"
+        ],
+        "shortfallReason": "Only 1 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3). (1 additional candidate(s) belonged to already-selected product family 'Cordless & Hot Melt Glue Gun' without independent family/model differentiation and were not counted as separate category opportunities.)"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206513125_wtb9p",
+      "evidenceRefs": [
+        "DIY_US_180D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/DIY_US_180D_REAL_RUN.json",
+      "reason": "DIY / US / 180D yielded 1/3 distinct physical products from current real source observations after filtering B2B/app/seasonal noise (Only 1 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3). (1 additional candidate(s) belonged to already-selected product family 'Cordless & Hot Melt Glue Gun' without independent family/model differentiation and were not counted as separate category opportunities.))",
+      "executedAt": "2026-10-28T16:57:42.383Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES": {
+      "gateId": "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Kitchen (30D), Home Decor (90D), Gardening (90D), Cleaning (90D), Specific Product ('automatic pet feeder'), Out-of-Sample ('car accessories'), and Empty/Whitespace HTTP 400 validation all execute and aggregate consistently (Fixes F07 & F08)",
+      "expected": {
+        "kitchenDistinctProducts": 3,
+        "emptyQueryHttpStatus": 400,
+        "whitespaceQueryHttpStatus": 400,
+        "outOfSamplePlannedQueries": ">= 3"
+      },
+      "observed": {
+        "allNicheSummaries": {
+          "petGadgets90D": {
+            "qualified": 2,
+            "distinctProducts": 2,
+            "distinctFamilies": 2,
+            "isHomogeneousSingleFamily": false
+          },
+          "diy180D": {
+            "qualified": 1,
+            "distinctProducts": 1,
+            "distinctFamilies": 1,
+            "isHomogeneousSingleFamily": false
+          },
+          "kitchen30D": {
+            "qualified": 2,
+            "distinctProducts": 2,
+            "distinctFamilies": 2,
+            "isHomogeneousSingleFamily": false
+          },
+          "homeDecor90D": {
+            "qualified": 0,
+            "distinctProducts": 0,
+            "distinctFamilies": 0,
+            "isHomogeneousSingleFamily": false
+          },
+          "gardening90D": {
+            "qualified": 0,
+            "distinctProducts": 0,
+            "distinctFamilies": 0,
+            "isHomogeneousSingleFamily": false
+          },
+          "cleaning90D": {
+            "qualified": 1,
+            "distinctProducts": 1,
+            "distinctFamilies": 1,
+            "isHomogeneousSingleFamily": false
+          },
+          "specificProductAutomaticPetFeeder90D": {
+            "qualified": 2,
+            "distinctProducts": 2,
+            "distinctFamilies": 2
+          },
+          "outOfSampleCarAccessories90D": {
+            "qualified": 2,
+            "distinctProducts": 2,
+            "distinctFamilies": 2
+          }
+        },
+        "emptyQueryHttpStatus": 400,
+        "whitespaceQueryHttpStatus": 400
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_1793206551468_v07jl",
+      "evidenceRefs": [
+        "KITCHEN_US_30D_REAL_RUN.json",
+        "REGRESSION_NICHES_SUMMARY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
+      "reason": "All 8 scenarios executed and aggregated consistently with Empty/Whitespace=HTTP 400 and Out-of-Sample plannedQueries=4; Kitchen yielded 2/3 distinct products after rejecting unverified/social-only ad URLs (Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3).)",
+      "executedAt": "2026-10-28T16:57:42.383Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G12_VERIFIED_EVERGREEN_QUALIFICATION": {
+      "gateId": "G12_VERIFIED_EVERGREEN_QUALIFICATION",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Verified Evergreen Top 3 strictly requires VERIFIED identity, 0 contradictions, >=60D non-declining demand coverage, Score >= 65, Confidence >= 65%, and Demand Stability >= 15/25; reports INSUFFICIENT_EVIDENCE honestly when 0 live candidates meet all gates",
+      "expected": {
+        "verifiedEvergreenWinners": 3,
+        "thresholdsLowered": false
+      },
+      "observed": {
+        "maxVerifiedEvergreenAcrossAllRuns": 0,
+        "perRunVerifiedEvergreen": [
+          {
+            "topic": "pet gadgets",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "diy",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "kitchen",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "home decor",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "gardening",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "cleaning",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "automatic pet feeder",
+            "verifiedEvergreenCount": 0
+          },
+          {
+            "topic": "car accessories",
+            "verifiedEvergreenCount": 0
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "REGRESSION_NICHES_SUMMARY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
+      "reason": "0/3 live candidates met both verified merchant identity and >=60D historical demand stability; Evergreen thresholds were strictly preserved without false promotion",
+      "executedAt": "2026-10-28T16:57:42.384Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION": {
+      "gateId": "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Production Next.js server, KH-02 worker, SQLite snapshot, HTTP API, and headless Chromium DOM reconcile before and after browser reload with releaseVersion=12.4.3 and 0 HTTP 500/hydration errors",
+      "expected": {
+        "releaseVersion": "12.4.3",
+        "petReloadReconciled": true,
+        "diyReloadReconciled": true,
+        "emptyQueryHttpStatus": 400
+      },
+      "observed": {
+        "releaseVersion": "12.4.3",
+        "pet": {
+          "runId": "kh02_run_1793206464699_2unqo",
+          "httpRunId": "kh02_run_1793206464699_2unqo",
+          "domRunIdBeforeReload": "kh02_run_1793206464699_2unqo",
+          "domRunIdAfterReload": "kh02_run_1793206464699_2unqo",
+          "domShortlistIdsBeforeReload": [
+            "cand_1613504636",
+            "cand_1300676686"
+          ],
+          "domShortlistIdsAfterReload": [
+            "cand_1613504636",
+            "cand_1300676686"
+          ],
+          "verdict": "PASS"
+        },
+        "diy": {
+          "runId": "kh02_run_1793206513125_wtb9p",
+          "httpRunId": "kh02_run_1793206513125_wtb9p",
+          "domRunIdBeforeReload": "kh02_run_1793206513125_wtb9p",
+          "domRunIdAfterReload": "kh02_run_1793206513125_wtb9p",
+          "domShortlistIdsBeforeReload": [
+            "cand_1453640471"
+          ],
+          "domShortlistIdsAfterReload": [
+            "cand_1453640471"
+          ],
+          "verdict": "PASS"
+        },
+        "emptyQueryHttpStatus": 400,
+        "whitespaceQueryHttpStatus": 400
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793206464699_2unqo",
+      "evidenceRefs": [
+        "BROWSER_RELOAD_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/BROWSER_RELOAD_RECONCILIATION.json",
+      "reason": "SQLite -> HTTP API -> Chromium DOM before & after reload reconciled for both Pet Gadgets (90D) and DIY (180D)",
+      "executedAt": "2026-10-28T16:57:42.384Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    },
+    "G15_DISABLED_TIKTOK_ISOLATION": {
+      "gateId": "G15_DISABLED_TIKTOK_ISOLATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "TIKTOK_ADS / TIKTOK_ADS_US and TIKTOK_ORGANIC remain TEMPORARILY_DISABLED across all runs with 0 outbound calls, 0 credential requirements, and 0 score/confidence contribution",
+      "expected": {
+        "tiktokAdsStatus": "TEMPORARILY_DISABLED",
+        "tiktokOrganicStatus": "TEMPORARILY_DISABLED",
+        "outboundCalls": 0
+      },
+      "observed": {
+        "disabledSummary": [
+          "TIKTOK_ADS",
+          "TIKTOK_ADS_US",
+          "TIKTOK_ORGANIC"
+        ],
+        "tiktokAdsDiag": {
+          "status": "TEMPORARILY_DISABLED",
+          "queryExecuted": false
+        },
+        "tiktokOrgDiag": {
+          "status": "TEMPORARILY_DISABLED",
+          "queryExecuted": false
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "GATE_VERIFICATION_MATRIX.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3/GATE_VERIFICATION_MATRIX.json",
+      "reason": "Disabled TikTok sources strictly isolated with 0 outbound calls and 0 score impact",
+      "executedAt": "2026-10-28T16:57:42.423Z",
+      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+    }
+  }
+}

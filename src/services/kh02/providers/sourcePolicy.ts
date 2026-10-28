@@ -36,8 +36,8 @@ export interface SourcePolicy {
  * Evaluates whether an intelligence source is temporarily disabled in KH-02 V12.3.
  * Server-side authoritative flag: default true for both TikTok sources.
  */
-export function isSourceTemporarilyDisabled(source: IntelligenceSource): boolean {
-  if (source === "TIKTOK_ADS") {
+export function isSourceTemporarilyDisabled(source: IntelligenceSource | string): boolean {
+  if (source === "TIKTOK_ADS" || source === "TIKTOK_ADS_US") {
     return process.env.ENABLE_TIKTOK_RESEARCH !== "true" && process.env.ENABLE_TIKTOK_ADS_RESEARCH !== "true";
   }
   if (source === "TIKTOK_ORGANIC") {

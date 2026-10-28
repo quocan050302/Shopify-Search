@@ -95,10 +95,23 @@ export class MetaQueryBudgetTracker {
     return Math.max(0, this.budget.maxUniqueAds - this.uniqueAdsObserved);
   }
 
+  isExpired(): boolean {
+    return Date.now() - this.startTime >= this.budget.maxDurationMs;
+  }
+
+  canFetchMorePages(): boolean {
+    return !this.isExhausted && this.consumedPages < this.budget.maxPages && this.remainingRequests > 0;
+  }
+
+  recordPageFetched(): void {
+    this.consumedPages += 1;
+  }
+
   get isExhausted(): boolean {
     if (this.consumedRequests >= this.budget.maxProviderRequests) return true;
+    if (this.consumedPages >= this.budget.maxPages) return true;
     if (this.uniqueAdsObserved >= this.budget.maxUniqueAds) return true;
-    if (Date.now() - this.startTime >= this.budget.maxDurationMs) return true;
+    if (this.isExpired()) return true;
     return false;
   }
 
@@ -184,13 +197,24 @@ export class MetaQueryBudgetTracker {
     uniqueAdsObserved: number;
     elapsedMs: number;
     isBudgetExhausted: boolean;
+    stopReason: string;
   } {
+    const stopReason = this.isExpired()
+      ? "DEADLINE_EXCEEDED"
+      : this.consumedRequests >= this.budget.maxProviderRequests
+      ? "PROVIDER_REQUEST_CAP_REACHED"
+      : this.consumedPages >= this.budget.maxPages
+      ? "PAGE_CAP_REACHED"
+      : this.uniqueAdsObserved >= this.budget.maxUniqueAds
+      ? "UNIQUE_ADS_CAP_REACHED"
+      : "ACTIVE";
     return {
       consumedRequests: this.consumedRequests,
       consumedPages: this.consumedPages,
       uniqueAdsObserved: this.uniqueAdsObserved,
       elapsedMs: Date.now() - this.startTime,
       isBudgetExhausted: this.isExhausted,
+      stopReason,
     };
   }
 }
@@ -249,8 +273,11 @@ export interface ShortlistCoverageState {
   qualifiedProducts: number;
 
   distinctProductArchetypesObserved: number;
+  distinctFamiliesObserved?: number;
+  homogeneousFamilyDetected?: boolean;
 
   unresolvedCandidates: number;
+  unverifiedQueueRemaining?: number;
 
   remainingSourceQueries: number;
   remainingAIRequests: number;
@@ -258,6 +285,7 @@ export interface ShortlistCoverageState {
   missingArchetypes: string[];
 
   recoveryRecommended: boolean;
+  recoveryTriggerReason?: string | null;
 
   stopReason: ShortlistCoverageStopReason;
 }
@@ -683,30 +711,75 @@ export async function buildHybridKH02DiscoveryQueryPlan(
 
 /**
  * Selects the bounded set of queries to execute in a search round,
- * ensuring distinct archetype diversity and avoiding any already-executed phrase.
+ * ensuring distinct archetype diversity, avoiding any already-executed phrase,
+ * and supporting fallback to shorter/unordered queries when an exact phrase returns 0 ads (C26, C28).
  */
 export function selectQueriesForSearchRound(
   validatedQueries: DiscoveryQuery[],
   maxQueriesForRound: number,
   executedNormalizedPhrases: Set<string>,
   coveredArchetypeIds: Set<string>,
-  roundNumber: number
+  roundNumber: number,
+  options?: {
+    zeroResultQueries?: DiscoveryQuery[];
+  }
 ): DiscoveryQuery[] {
-  if (maxQueriesForRound <= 0 || validatedQueries.length === 0) {
+  if (maxQueriesForRound <= 0) {
     return [];
   }
 
-  const available = validatedQueries.filter(
-    (q) => !executedNormalizedPhrases.has(q.normalizedPhrase)
+  const available = (validatedQueries || []).filter(
+    (q) =>
+      !executedNormalizedPhrases.has(q.normalizedPhrase) &&
+      !executedNormalizedPhrases.has(`${q.normalizedPhrase}::${q.searchType}`)
   );
-  if (available.length === 0) {
+
+  // C26: If exact phrase queries returned 0 ads, synthesize shorter phrase or KEYWORD_UNORDERED fallbacks
+  const synthesizedFallbacks: DiscoveryQuery[] = [];
+  if (options?.zeroResultQueries && options.zeroResultQueries.length > 0) {
+    for (const zq of options.zeroResultQueries) {
+      const normPhrase = (zq.normalizedPhrase || zq.phrase || "").trim().toLowerCase();
+      const words = normPhrase.split(/\s+/).filter(Boolean);
+      if (words.length >= 3) {
+        const shorterPhrase = words.slice(-2).join(" ");
+        if (!executedNormalizedPhrases.has(shorterPhrase)) {
+          synthesizedFallbacks.push({
+            ...zq,
+            queryId: `${zq.queryId || "zq"}_short_fb`,
+            phrase: shorterPhrase,
+            normalizedPhrase: shorterPhrase,
+            searchType: "KEYWORD_UNORDERED",
+            roundNumber,
+            origin: "ADAPTIVE_RECOVERY",
+            rationale: `Shorter unordered fallback for zero-result exact phrase '${zq.phrase}'`,
+          });
+        }
+      } else if (
+        zq.searchType === "KEYWORD_EXACT_PHRASE" &&
+        !executedNormalizedPhrases.has(`${normPhrase}::KEYWORD_UNORDERED`)
+      ) {
+        synthesizedFallbacks.push({
+          ...zq,
+          queryId: `${zq.queryId || "zq"}_unordered_fb`,
+          normalizedPhrase: normPhrase,
+          searchType: "KEYWORD_UNORDERED",
+          roundNumber,
+          origin: "ADAPTIVE_RECOVERY",
+          rationale: `Unordered keyword fallback for zero-result exact phrase '${zq.phrase}'`,
+        });
+      }
+    }
+  }
+
+  const allCandidates = [...available, ...synthesizedFallbacks];
+  if (allCandidates.length === 0) {
     return [];
   }
 
-  const uncovered = available.filter(
+  const uncovered = allCandidates.filter(
     (q) => !q.archetypeId || !coveredArchetypeIds.has(q.archetypeId)
   );
-  const covered = available.filter(
+  const covered = allCandidates.filter(
     (q) => q.archetypeId && coveredArchetypeIds.has(q.archetypeId)
   );
 
@@ -734,10 +807,20 @@ export function selectQueriesForSearchRound(
 
   for (const q of prioritized) {
     if (selected.length >= maxQueriesForRound) break;
-    if (!selected.some((s) => s.normalizedPhrase === q.normalizedPhrase)) {
+    if (
+      !selected.some(
+        (s) =>
+          s.normalizedPhrase === q.normalizedPhrase &&
+          s.searchType === q.searchType
+      )
+    ) {
       selected.push({
         ...q,
         roundNumber,
+        origin:
+          roundNumber > 1 && q.origin !== "GEMINI_PLANNER"
+            ? "ADAPTIVE_RECOVERY"
+            : q.origin,
       });
     }
   }
@@ -746,15 +829,18 @@ export function selectQueriesForSearchRound(
 }
 
 /**
- * Evaluates shortlist coverage after a discovery/enrichment round and determines
- * whether bounded adaptive search recovery should continue or stop.
+ * Evaluates shortlist coverage after a discovery/enrichment/verification round and determines
+ * whether bounded adaptive search recovery should continue or stop (Section 6.1–6.5).
  */
 export function evaluateShortlistCoverage(params: {
   requestedCount?: number;
   qualifiedProducts: number;
+  distinctFamiliesCount?: number;
+  nicheIntent?: NicheIntentType;
   observedArchetypeIds: string[];
   plannedArchetypes: PlannedProductArchetype[];
   unresolvedCandidates: number;
+  unverifiedQueueRemaining?: number;
   remainingSourceQueries: number;
   remainingAIRequests: number;
   remainingUnusedQueriesCount: number;
@@ -768,12 +854,31 @@ export function evaluateShortlistCoverage(params: {
     .filter((a) => !observedSet.has(a.archetypeId))
     .map((a) => a.productCategory || a.archetypeId);
 
+  const distinctFamilies =
+    params.distinctFamiliesCount ?? observedSet.size;
+  const isBroadCategory =
+    !params.nicheIntent || params.nicheIntent === "BROAD_CATEGORY";
+  const homogeneousFamilyDetected =
+    isBroadCategory &&
+    params.qualifiedProducts >= 2 &&
+    distinctFamilies <= 1;
+
+  const needsMoreProducts = params.qualifiedProducts < requestedCount;
+  const needsFamilyDiversification =
+    isBroadCategory &&
+    params.qualifiedProducts >= 1 &&
+    distinctFamilies < Math.min(2, requestedCount) &&
+    (missingArchetypes.length > 0 ||
+      !params.plannedArchetypes ||
+      params.plannedArchetypes.length === 0);
+
   let stopReason: ShortlistCoverageStopReason = "CONTINUE";
   let recoveryRecommended = false;
+  let recoveryTriggerReason: string | null = null;
 
   if (params.cancelled) {
     stopReason = "CANCELLED";
-  } else if (params.qualifiedProducts >= requestedCount) {
+  } else if (!needsMoreProducts && !needsFamilyDiversification) {
     stopReason = "TARGET_REACHED";
   } else if (params.timeDeadlineReached) {
     stopReason = "TIME_DEADLINE";
@@ -788,17 +893,24 @@ export function evaluateShortlistCoverage(params: {
   } else {
     stopReason = "CONTINUE";
     recoveryRecommended = true;
+    recoveryTriggerReason = needsMoreProducts
+      ? `Post-gate qualified distinct products (${params.qualifiedProducts}/${requestedCount}) below target.`
+      : `Homogeneous product family detected (${distinctFamilies} family across ${params.qualifiedProducts} products); expanding to uncovered archetype.`;
   }
 
   return {
     requestedCount,
     qualifiedProducts: params.qualifiedProducts,
     distinctProductArchetypesObserved: observedSet.size,
+    distinctFamiliesObserved: distinctFamilies,
+    homogeneousFamilyDetected,
     unresolvedCandidates: params.unresolvedCandidates,
+    unverifiedQueueRemaining: params.unverifiedQueueRemaining ?? 0,
     remainingSourceQueries: Math.max(0, params.remainingSourceQueries),
     remainingAIRequests: Math.max(0, params.remainingAIRequests),
     missingArchetypes,
     recoveryRecommended,
+    recoveryTriggerReason,
     stopReason,
   };
 }

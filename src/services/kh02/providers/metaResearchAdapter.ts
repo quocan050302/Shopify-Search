@@ -1023,10 +1023,26 @@ export async function collectMetaProductSignals(
         ? query.productKeywords
         : query.topic.split(/\s+/).filter((w) => w.length > 2);
 
+      const topicWords = query.topic
+        .split(/\s+/)
+        .map((w) => w.trim())
+        .filter((w) => w.length >= 3);
+
+      const phraseTokens = [...baseKeywords, ...plannedQueryKeywords]
+        .flatMap((phrase) => String(phrase).split(/\s+/))
+        .map((w) => w.trim().toLowerCase())
+        .filter(
+          (w) =>
+            w.length >= 4 &&
+            !["with", "from", "that", "this", "your", "free", "best", "portable", "electric", "automatic"].includes(w)
+        );
+
       const combinedKeywords = Array.from(
         new Set([
           ...baseKeywords,
           ...plannedQueryKeywords,
+          ...topicWords,
+          ...phraseTokens,
           query.topic.trim(),
         ])
       ).filter((w) => w.length >= 2);
@@ -1035,6 +1051,7 @@ export async function collectMetaProductSignals(
         OR: [
           { headline: { contains: k } },
           { bodyText: { contains: k } },
+          { landingPageUrl: { contains: k } },
           { advertiser: { name: { contains: k } } },
         ],
       }));
@@ -1058,7 +1075,7 @@ export async function collectMetaProductSignals(
           observations: { orderBy: { observedAt: "desc" }, take: 10 },
         },
         take: remainingSlots,
-        orderBy: { lastSeenAt: "desc" },
+        orderBy: [{ landingPageUrl: "desc" }, { lastSeenAt: "desc" }],
       });
     }
 

@@ -75,6 +75,7 @@ export function classifySourcePage(
   const text = (textContext || "").toLowerCase();
   const rawUrl = (url || "").trim();
 
+  if (hint === "ACTUAL_PRODUCT_PAGE") return "ACTUAL_PRODUCT_PAGE";
   if (hint === "BLOG_ARTICLE" || hint === "ARTICLE") return "ARTICLE_PAGE";
   if (hint === "LOCAL_SERVICE" || hint === "SERVICE") return "SERVICE_PAGE";
   if (hint === "INSURANCE") return "INSURANCE_PAGE";
@@ -149,7 +150,6 @@ export function classifySourcePage(
         const headlineCheck = classifyAdvertisingHeadline(slug);
         if (
           headlineCheck.classification === "CAMPAIGN_CODE" ||
-          headlineCheck.classification === "INTERNAL_SKU_CODE" ||
           headlineCheck.classification === "AD_IDENTIFIER" ||
           headlineCheck.classification === "PROMOTIONAL_CTA" ||
           headlineCheck.classification === "CLICKBAIT_HOOK"

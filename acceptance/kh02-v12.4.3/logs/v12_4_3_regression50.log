@@ -1,0 +1,11 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 64ms
+
+ Test Files  1 passed (1)
+      Tests  50 passed (50)
+   Start at  23:53:42
+   Duration  565ms (import 56%, transform 21%, tests 13%, setup 10%, worker 1%)
+
+

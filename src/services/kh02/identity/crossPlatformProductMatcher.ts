@@ -12,6 +12,9 @@
 import { ProductMatchConfidence } from "../types";
 import { DiscoveredProductCandidate } from "./productCandidateDiscovery";
 import { canonicalizeProductUrl, extractDomainFromUrl } from "@/services/products/productService";
+import { extractRegistrableDomain } from "../providers/googleTransparencyResearchAdapter";
+
+export { extractRegistrableDomain };
 
 export interface ProductMatchHypothesis {
   matchId: string;
@@ -41,9 +44,9 @@ function normalizeWord(w: string): string {
 /**
  * Calculates string word-overlap Jaccard similarity and token coverage.
  */
-function wordSimilarity(a: string, b: string): { jaccard: number; coverage: number } {
-  const wordsA = new Set(a.toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
-  const wordsB = new Set(b.toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
+function wordSimilarity(a?: string | null, b?: string | null): { jaccard: number; coverage: number } {
+  const wordsA = new Set((a || "").toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
+  const wordsB = new Set((b || "").toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
   if (wordsA.size === 0 || wordsB.size === 0) return { jaccard: 0, coverage: 0 };
 
   let intersection = 0;
@@ -90,15 +93,60 @@ export function matchCrossPlatformProductEvidence(
     };
   }
 
-  // 2. Same store domain with strong title match
-  if (candidate.storeDomain && evidenceDomain && candidate.storeDomain === evidenceDomain) {
-    const { jaccard, coverage } = wordSimilarity(candidate.title, incomingEvidence.title || "");
-    if (jaccard > 0.5 || coverage > 0.7) {
+  // 2. Same store domain (including registrable subdomain match) with strong product-specific title/model match
+  const candRegDomain = candidate.storeDomain ? extractRegistrableDomain(candidate.storeDomain) : null;
+  const evRegDomain = evidenceDomain ? extractRegistrableDomain(evidenceDomain) : null;
+
+  if (candRegDomain && evRegDomain && candRegDomain === evRegDomain) {
+    const candidateProductText = candidate.canonicalProductName || candidate.displayName || candidate.title || "";
+    const incomingText = incomingEvidence.title || "";
+    const { jaccard, coverage } = wordSimilarity(candidateProductText, incomingText);
+
+    // Strip store/brand tokens to verify whether the ad matches the actual product vs brand-only
+    const brandTokens = new Set(
+      [
+        ...(candidate.brand ? candidate.brand.toLowerCase().split(/\W+/) : []),
+        ...candRegDomain.split(".")[0].split(/[-_]+/),
+        "official", "store", "shop", "sale", "free", "shipping", "online", "best", "new",
+      ]
+        .filter((w) => w.length > 1)
+        .map(normalizeWord)
+    );
+    const nonBrandCandWords = new Set(
+      candidateProductText
+        .toLowerCase()
+        .split(/\W+/)
+        .filter((w) => w.length > 2)
+        .map(normalizeWord)
+        .filter((w) => !brandTokens.has(w))
+    );
+    const nonBrandEvWords = new Set(
+      incomingText
+        .toLowerCase()
+        .split(/\W+/)
+        .filter((w) => w.length > 2)
+        .map(normalizeWord)
+        .filter((w) => !brandTokens.has(w))
+    );
+    let nonBrandOverlap = 0;
+    for (const w of nonBrandCandWords) {
+      if (nonBrandEvWords.has(w)) nonBrandOverlap++;
+    }
+    const hasModelMatch = Boolean(
+      candidate.model &&
+        incomingText.toLowerCase().includes(candidate.model.toLowerCase())
+    );
+
+    if ((jaccard > 0.5 || coverage > 0.7 || hasModelMatch) && (nonBrandOverlap >= 1 || hasModelMatch)) {
       confidence = "HIGH_CONFIDENCE";
-      matchReasons.push(`Same verified store domain (${candidate.storeDomain}) and high title similarity (${Math.round(Math.max(jaccard, coverage) * 100)}%).`);
+      matchReasons.push(
+        `Same verified store domain (${candRegDomain}) and product-specific creative match (${Math.round(Math.max(jaccard, coverage) * 100)}% overlap).`
+      );
     } else {
       confidence = "PROBABLE";
-      matchReasons.push(`Same verified store domain (${candidate.storeDomain}) with related catalog offering.`);
+      matchReasons.push(
+        `Same verified store domain (${candRegDomain}) with brand-level or general catalog creative (no product-specific match).`
+      );
     }
     return {
       matchId: `match_${candidate.candidateId}_domain`,

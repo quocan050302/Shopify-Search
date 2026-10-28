@@ -120,16 +120,23 @@ describe("SWAI KH-02 V12.2 — Product Relevance Validation (Section 90)", () =>
 });
 
 describe("SWAI KH-02 V12.2 — 7-Level Product Identity Hierarchy (Section 81 & 96)", () => {
-  it("Level 1: Uses verified Shopify landing page slug when available", () => {
+  it("Level 1: Uses verified Shopify landing page slug as PROBABLE until merchant page title is verified", () => {
     const identity = resolveProductIdentity({
       landingPageUrl: "https://barkshield.com/products/silent-dog-whistle",
       rawHeadlines: ["Sign up now for 50% off", "Facebook Ad: 9812739123"],
     });
 
-    expect(identity.identityStatus).toBe("VERIFIED");
+    expect(identity.identityStatus).toBe("PROBABLE");
     expect(identity.canonicalName).toBe("Silent Dog Whistle");
-    expect(identity.resolutionHierarchyLevel).toBe(1);
-    expect(identity.isEligibleAsEvergreenWinner).toBe(true);
+    expect(identity.isEligibleAsEvergreenWinner).toBe(false);
+
+    const verifiedIdentity = resolveProductIdentity({
+      landingPageUrl: "https://barkshield.com/products/silent-dog-whistle",
+      verifiedLandingPageTitle: "Silent Dog Whistle",
+      rawHeadlines: ["Sign up now for 50% off", "Facebook Ad: 9812739123"],
+    });
+    expect(verifiedIdentity.identityStatus).toBe("VERIFIED");
+    expect(verifiedIdentity.isEligibleAsEvergreenWinner).toBe(true);
   });
 
   it("Level 6: Uses classified product headline when landing page is missing but copy is descriptive", () => {

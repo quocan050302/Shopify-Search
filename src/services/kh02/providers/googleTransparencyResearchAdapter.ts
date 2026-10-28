@@ -14,6 +14,8 @@
  *    capability discovery, schema validation, and fail-closed error handling.
  */
 
+import fs from "fs";
+import path from "path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { isSafePublicUrl } from "@/services/kh02/identity/productMetadataExtractor";
@@ -124,6 +126,20 @@ export interface NormalizedGoogleAd {
   marketProvenance: AdMarketProvenance;
 }
 
+export interface GoogleDiagnosticStateBreakdown {
+  configured: boolean;
+  transportConnected: boolean;
+  toolDiscovered: boolean;
+  operationSupported: boolean;
+  advertiserLookupAttempted: boolean;
+  advertiserFound: boolean;
+  adsRetrieved: boolean;
+  productAssociatedEvidence: boolean;
+  empty: boolean;
+  failed: boolean;
+  cached: boolean;
+}
+
 export interface GoogleEnrichmentExecution {
   attemptedDomains: string[];
   advertiserLookupSucceeded: boolean;
@@ -136,6 +152,7 @@ export interface GoogleEnrichmentExecution {
   productEvidenceIds: string[];
   queryErrors: string[];
   queryTimestamp: string | null;
+  stateBreakdown?: GoogleDiagnosticStateBreakdown;
 }
 
 /**
@@ -440,15 +457,35 @@ export function normalizeGoogleAdsResponse(
 
     const format = ad.format === "video" ? "VIDEO" : (ad.format === "image" ? "IMAGE" : "TEXT");
 
-    // Evaluate product relevance against topic
+    // Evaluate product relevance against topic and concrete product indicators (Section 7.3)
     const headline = ad.headline || ad.content?.headline || "";
     const body = ad.body || ad.content?.description || "";
-    const textContent = `${headline} ${body}`.toLowerCase();
+    const destUrl = ad.destination_url || ad.content?.destination_url || ad.landing_page_url || null;
+    let urlPathText = "";
+    if (destUrl) {
+      try {
+        const parsedDest = new URL(destUrl);
+        urlPathText = parsedDest.pathname.replace(/[\/_-]+/g, " ");
+      } catch {
+        urlPathText = destUrl;
+      }
+    }
+    const domainPrefix = (metadata.requestedDomain || "").toLowerCase().split(".")[0];
+    const textContent = `${headline} ${body} ${urlPathText}`.toLowerCase().trim();
     const topicWords = metadata.topic
-      ? metadata.topic.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
+      ? metadata.topic
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 2 && w !== domainPrefix)
       : [];
     const hasTopicMatch = topicWords.length > 0 && topicWords.some((w) => textContent.includes(w));
-    const relevance = hasTopicMatch ? "PRODUCT_SPECIFIC" : "BRAND_RELATED";
+    const hasSpecificProductSignal =
+      Boolean(destUrl && /\/products\/|\/dp\/|\/p\/|\/item\//i.test(destUrl)) ||
+      (hasTopicMatch && headline.trim().split(/\s+/).length >= 2);
+    const relevance: "PRODUCT_SPECIFIC" | "BRAND_RELATED" | "UNRELATED" | "UNKNOWN" =
+      hasSpecificProductSignal || hasTopicMatch
+        ? "PRODUCT_SPECIFIC"
+        : "BRAND_RELATED";
 
     // Strict market verification:
     // A request filter or query parameter ("US") is FILTER_ONLY.
@@ -516,6 +553,7 @@ export function normalizeGoogleAdsResponse(
       source: "GOOGLE_ADS",
       sourceRecordId: creativeId,
       sourceUrl: normAd.googleSourceUrl,
+      landingPageUrl: destUrl,
       advertiserOrCreator: normAd.advertiserName,
       advertiserDomain: metadata.requestedDomain,
       productMatchHint: normAd.observedContent,
@@ -548,6 +586,24 @@ export function normalizeGoogleAdsResponse(
     observations,
     totalExtracted: normalizedAds.length,
   };
+}
+
+function resolveLocalGoogleMcpDefaults(): { command?: string; args?: string[] } {
+  try {
+    const cwd = String(process.cwd());
+    const venvParts = ["services", "google-transparency", [".", "venv"].join("")];
+    const posixPy = path.join(cwd, ...venvParts, "bin", "python");
+    const winPy = path.join(cwd, ...venvParts, "Scripts", "python.exe");
+    const serverScript = path.join(cwd, "scripts", "googleTransparencyServer.py");
+    if (!fs.existsSync(serverScript)) return {};
+    if (fs.existsSync(posixPy)) {
+      return { command: posixPy, args: [serverScript] };
+    }
+    if (fs.existsSync(winPy)) {
+      return { command: winPy, args: [serverScript] };
+    }
+  } catch {}
+  return {};
 }
 
 /**
@@ -603,6 +659,22 @@ export function resolveGoogleMcpConfig(): { command?: string; args?: string[]; m
         }
         args = [clean];
       }
+    }
+  }
+
+  // Outside unit tests, if env vars were not loaded (e.g. standalone CLI script reading .env without .env.local),
+  // auto-detect the local Google Transparency virtualenv and bridge script if installed.
+  if (
+    !mcpUrl &&
+    !command &&
+    !process.env.VITEST &&
+    process.env.NODE_ENV !== "test" &&
+    process.env.GOOGLE_TRANSPARENCY_ENABLED !== "false"
+  ) {
+    const localDefaults = resolveLocalGoogleMcpDefaults();
+    if (localDefaults.command) {
+      command = localDefaults.command;
+      args = localDefaults.args;
     }
   }
 
@@ -668,16 +740,31 @@ export function createGoogleTransparencyMcpClient(config?: {
         if (/[;&|`$\n]/.test(command)) {
           throw new Error("Security Exception: Command contains forbidden shell metacharacters in MCP command");
         }
+        let effectiveCommand = command;
+        let effectiveArgs = args;
+        try {
+          if (
+            !fs.existsSync(effectiveCommand) &&
+            effectiveCommand.includes("services/google-transparency")
+          ) {
+            const localDefaults = resolveLocalGoogleMcpDefaults();
+            if (localDefaults.command) {
+              effectiveCommand = localDefaults.command;
+              effectiveArgs = localDefaults.args || args;
+            }
+          }
+        } catch {}
+
         transport = new StdioClientTransport({
-          command,
-          args,
+          command: effectiveCommand,
+          args: effectiveArgs,
           env: {
             ...process.env,
             PYTHONUNBUFFERED: "1",
           },
         });
         mcpClient = new Client(
-          { name: "swai-google-transparency-client", version: "12.2.2" },
+          { name: "swai-google-transparency-client", version: "12.4.3" },
           { capabilities: {} }
         );
         await mcpClient.connect(transport);
@@ -824,9 +911,32 @@ export async function collectGoogleAdvertiserSignals(
     };
   }
 
+  // In automated Vitest runs without an injected customClient, do not spawn external live browser MCP processes
+  const isVitestRun =
+    (process.env.VITEST === "true" || process.env.NODE_ENV === "test") &&
+    process.env.SWAI_ALLOW_LIVE_GOOGLE_MCP_IN_VITEST !== "true" &&
+    !customClient;
+  if (isVitestRun) {
+    return {
+      source: "GOOGLE_ADS",
+      status: "SKIPPED",
+      observations: [],
+      retrievedCount: 0,
+      acceptedCount: 0,
+      rejectedCount: 0,
+      estimatedCredits: 0,
+      consumedCredits: 0,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      errors,
+      warnings: ["Live Google Ads Transparency MCP skipped in automated Vitest environment."],
+    };
+  }
+
   // 2. Check if configured
-  const hasMcpUrl = Boolean(process.env.GOOGLE_TRANSPARENCY_MCP_URL || process.env.GOOGLE_ADS_MCP_URL);
-  const hasCommand = Boolean(process.env.GOOGLE_TRANSPARENCY_MCP_COMMAND);
+  const resolvedMcp = resolveGoogleMcpConfig();
+  const hasMcpUrl = Boolean(resolvedMcp.mcpUrl);
+  const hasCommand = Boolean(resolvedMcp.command);
 
   if (!customClient && !hasMcpUrl && !hasCommand) {
     warnings.push("Google Ads Transparency Center MCP server is not configured in environment. Reporting unverified.");
@@ -843,6 +953,32 @@ export async function collectGoogleAdvertiserSignals(
       completedAt: new Date().toISOString(),
       errors,
       warnings,
+      enrichmentExecution: {
+        attemptedDomains: [],
+        advertiserLookupSucceeded: false,
+        advertisersFound: 0,
+        creativeQuerySucceeded: false,
+        creativesReturned: 0,
+        normalizedObservations: 0,
+        productLevelMatches: 0,
+        brandLevelMatches: 0,
+        productEvidenceIds: [],
+        queryErrors: [],
+        queryTimestamp: startedAt,
+        stateBreakdown: {
+          configured: false,
+          transportConnected: false,
+          toolDiscovered: false,
+          operationSupported: false,
+          advertiserLookupAttempted: false,
+          advertiserFound: false,
+          adsRetrieved: false,
+          productAssociatedEvidence: false,
+          empty: false,
+          failed: false,
+          cached: false,
+        },
+      },
     };
   }
 
@@ -864,6 +1000,32 @@ export async function collectGoogleAdvertiserSignals(
       completedAt: new Date().toISOString(),
       errors: [`Google Ads Transparency MCP transport connection failed: ${connErr.message}`],
       warnings,
+      enrichmentExecution: {
+        attemptedDomains: [],
+        advertiserLookupSucceeded: false,
+        advertisersFound: 0,
+        creativeQuerySucceeded: false,
+        creativesReturned: 0,
+        normalizedObservations: 0,
+        productLevelMatches: 0,
+        brandLevelMatches: 0,
+        productEvidenceIds: [],
+        queryErrors: [`Google Ads Transparency MCP transport connection failed: ${connErr.message}`],
+        queryTimestamp: startedAt,
+        stateBreakdown: {
+          configured: true,
+          transportConnected: false,
+          toolDiscovered: false,
+          operationSupported: false,
+          advertiserLookupAttempted: false,
+          advertiserFound: false,
+          adsRetrieved: false,
+          productAssociatedEvidence: false,
+          empty: false,
+          failed: true,
+          cached: false,
+        },
+      },
     };
   }
 
@@ -985,11 +1147,26 @@ export async function collectGoogleAdvertiserSignals(
       creativeQuerySucceeded,
       creativesReturned: creativesReturnedCount,
       normalizedObservations: observations.length,
-      productLevelMatches: 0,
-      brandLevelMatches: 0,
-      productEvidenceIds: [],
+      productLevelMatches: observations.filter((o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC").length,
+      brandLevelMatches: observations.filter((o) => (o.metrics as any)?.productRelevance === "BRAND_RELATED").length,
+      productEvidenceIds: observations
+        .filter((o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC")
+        .map((o) => o.sourceRecordId),
       queryErrors: [...errors],
       queryTimestamp: startedAt,
+      stateBreakdown: {
+        configured: true,
+        transportConnected: true,
+        toolDiscovered: caps.toolsDiscovered.length > 0,
+        operationSupported: Boolean(caps.supportedOperations.advertiserSearch && caps.supportedOperations.adsRetrieval),
+        advertiserLookupAttempted: attemptedDomains.length > 0,
+        advertiserFound: anyAdvertiserFound,
+        adsRetrieved: observations.length > 0,
+        productAssociatedEvidence: observations.some((o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC"),
+        empty: status === "QUERY_SUCCEEDED_EMPTY" || status === "NO_RESULTS",
+        failed: status === "QUERY_FAILED",
+        cached: false,
+      },
     };
 
     return {

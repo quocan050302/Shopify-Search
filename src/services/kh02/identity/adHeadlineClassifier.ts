@@ -116,7 +116,13 @@ const KNOWN_PRODUCT_NOUNS = new Set([
   "tiles", "gun", "cutter", "jig", "clamp", "marker", "markers", "spikes",
   "shears", "tray", "trellis", "meter", "chopper", "slicer", "sprayer",
   "strainer", "sealer", "mop", "sconce", "slipcover", "mask", "patch",
-  "curler", "wand", "multimeter"
+  "curler", "wand", "multimeter", "grinder", "opener", "sharpener", "board",
+  "liner", "rack", "duster", "hose", "nozzle", "planter", "pot", "bin",
+  "level", "drill", "driver", "saw", "wrench", "pliers", "sander", "tape",
+  "throw", "rug", "curtain", "vase", "mirror", "clock", "frame", "shelf",
+  "basket", "jar", "canister", "tongs", "whisk", "spatula", "peeler",
+  "grater", "colander", "kettle", "mug", "tumbler", "thermos", "coaster",
+  "apron", "pan", "skillet", "launcher"
 ]);
 
 // Generic non-product category terms (including versioned generic terms e.g. "Pet Product V4")
@@ -297,8 +303,11 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
   let cleaned = raw;
   cleaned = cleaned.replace(/\s*[-–|:]\s*(Buy Now|Shop Now|\d+%\s*Off|Free Shipping|Sale|Official Store|Best Seller).*$/i, "");
   cleaned = cleaned.replace(/^(NEW|HOT|MUST HAVE|VIRAL|SALE)\s*[:!-]\s*/i, "");
-  // Strip leading "#1", "The #1", "Top Rated"
-  cleaned = cleaned.replace(/^(the\s+)?#?\d+(\s+in\s+the\s+world|\s+rated|\s+best|\s+top)?\s*[-–:]?\s*/i, "");
+  // Strip leading "#1", "The #1", "Top 10 Rated" without stripping capacity/dimension numbers like "500ml", "16oz", "2-in-1"
+  cleaned = cleaned.replace(
+    /^(?:(?:the\s+)?#\d+(?:\s+in\s+the\s+world|\s+rated|\s+best|\s+top)?|(?:the\s+)?\d+\s+(?:in\s+the\s+world|rated|best|top))\b\s*[-–:]?\s*/i,
+    ""
+  );
   cleaned = cleaned.replace(/[!]{2,}/g, "!");
   cleaned = cleaned.trim();
 
