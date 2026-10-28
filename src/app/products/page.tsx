@@ -58,6 +58,8 @@ interface RankedItem {
     relevanceReasons?: string[];
     relevanceScore?: number;
     isEligibleAsEvergreenWinner?: boolean;
+    aiIntelligence?: any;
+    aiExclusionReason?: string | null;
   };
   score: {
     opportunityScore: number | null;
@@ -100,6 +102,22 @@ interface LeaderboardData {
   };
   shortfallReason?: string | null;
   candidateFunnel?: any;
+  aiTelemetry?: {
+    provider: string;
+    aiStatus: string;
+    authStatus: string;
+    modelsDiscoveredCount: number;
+    eligibleModelsCount: number;
+    primaryModelId: string | null;
+    actualModelUsed: string | null;
+    fallbackUsed: boolean;
+    totalAnalysesAttempted: number;
+    totalAnalysesCompleted: number;
+    totalAnalysesFailed: number;
+    physicalProductsCount: number;
+    servicesRejectedCount: number;
+    contentRejectedCount: number;
+  };
 }
 
 interface ProviderStatusItem {
@@ -675,6 +693,47 @@ export default function ProductsPage() {
     );
   };
 
+  const getGeminiAIBadge = () => {
+    const ai = leaderboard?.aiTelemetry;
+    if (!ai) return null;
+    if (ai.aiStatus === "COMPLETED") {
+      const modelLabel = ai.actualModelUsed || ai.primaryModelId || "Gemini";
+      return (
+        <span
+          data-testid="kh02-gemini-ai-badge"
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-950/70 border border-purple-500/40 text-purple-300 text-[11px] font-medium"
+          title={`Gemini AI: ${modelLabel} (${ai.totalAnalysesCompleted}/${ai.totalAnalysesAttempted} analyzed)`}
+        >
+          <Sparkles className="h-3 w-3 text-purple-400" />
+          <span>Gemini AI: {modelLabel}</span>
+          <span className="text-[10px] text-purple-400 font-mono">({ai.totalAnalysesCompleted}/{ai.totalAnalysesAttempted})</span>
+        </span>
+      );
+    }
+    if (ai.aiStatus === "PARTIAL") {
+      return (
+        <span
+          data-testid="kh02-gemini-ai-badge"
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium"
+          title={`Gemini AI Partial: ${ai.totalAnalysesCompleted}/${ai.totalAnalysesAttempted}`}
+        >
+          <AlertTriangle className="h-3 w-3 text-amber-400" />
+          <span>Gemini AI: Partial</span>
+        </span>
+      );
+    }
+    return (
+      <span
+        data-testid="kh02-gemini-ai-badge"
+        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium"
+        title="Gemini AI: Unavailable; rule-based fallback active"
+      >
+        <Clock className="h-3 w-3 text-slate-500" />
+        <span>Gemini AI: Fallback</span>
+      </span>
+    );
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020] text-slate-100">
       <Header onImportSuccess={() => fetchStoredProducts()} />
@@ -686,7 +745,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>SWAI KH-02 V12.3.2 — Evidence-Driven Evergreen Product Intelligence</span>
+                <span>SWAI KH-02 V12.4 — AI-Powered Product Intelligence</span>
               </div>
               {runtimeVersion?.buildSha && (
                 <span data-testid="kh02-runtime-version-badge" className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
@@ -816,6 +875,7 @@ export default function ProductsPage() {
               {getSourceBadge("TIKTOK_ORGANIC", "TikTok Organic")}
               {getSourceBadge("GOOGLE_ADS", "Google Ads")}
               {getSourceBadge("DEMAND_HISTORY", "Demand History")}
+              {getGeminiAIBadge()}
               <button
                 data-testid="kh02-discover-sources-button"
                 onClick={handleDiscoverSources}
@@ -1366,6 +1426,11 @@ export default function ProductsPage() {
                                   : "Needs Review"}
                               </span>
                             )}
+                            {item.candidate.aiIntelligence && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40">
+                                AI: {item.candidate.aiIntelligence.commercialEntityType}
+                              </span>
+                            )}
                           </div>
                           <h3 className={`text-base md:text-lg font-bold leading-tight ${
                             item.candidate.identityStatus === "UNRESOLVED" || item.candidate.title.startsWith("Unidentified Product")
@@ -1563,6 +1628,11 @@ export default function ProductsPage() {
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-medium">
                                   {candidate.relevanceStatus || "RELEVANT"}
                                 </span>
+                                {candidate.aiIntelligence && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 font-medium">
+                                    AI: {candidate.aiIntelligence.commercialEntityType}
+                                  </span>
+                                )}
                               </div>
                               <h4 className="text-xs font-bold text-white mt-1 line-clamp-2">
                                 {candidate.canonicalProductName || candidate.displayName || candidate.title}
@@ -1704,6 +1774,12 @@ export default function ProductsPage() {
                           <div className="text-[10px] text-purple-300 font-mono pt-1">
                             Score: {item.score.opportunityScore ?? "—"}/100 · Conf: {item.score.evidenceConfidence}%
                           </div>
+                          {item.candidate.aiExclusionReason && (
+                            <div className="text-[10px] text-rose-300 bg-rose-950/40 border border-rose-800/30 rounded px-1.5 py-0.5 mt-1 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3 text-rose-400 shrink-0" />
+                              <span className="truncate">{item.candidate.aiExclusionReason}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

@@ -1,0 +1,18 @@
+{
+  "totalRecords": 20,
+  "physicalProductPrecision": 1,
+  "physicalProductRecall": 1,
+  "falseProductPositiveCount": 0,
+  "serviceToProductFalsePositives": 0,
+  "contentToProductFalsePositives": 0,
+  "nicheRelevancePrecision": 1,
+  "nicheRelevanceRecall": 1,
+  "identityAccuracy": 1,
+  "shortlistEligibilityAccuracy": 1,
+  "criticalFalsePositivesCount": 0,
+  "aiAbstentionRate": 0,
+  "modelFallbackSuccessRate": 1,
+  "averageLatencyMs": 1,
+  "totalRealApiCalls": 0,
+  "estimatedCostCredits": 0
+}

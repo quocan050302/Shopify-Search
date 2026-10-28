@@ -1,0 +1,34 @@
+{
+  "targetCase": "ER Vet bill cost factors",
+  "passed": true,
+  "criticalCasesTested": [
+    {
+      "recordId": "gold_neg_01_er_vet_bill",
+      "headline": "ER Vet bill cost factors — What to expect in an emergency",
+      "goldEntity": "INFORMATIONAL_CONTENT",
+      "shortlistEligible": false,
+      "verdict": "PASSED"
+    },
+    {
+      "recordId": "gold_neg_02_er_vet_paraphrase",
+      "headline": "Average Emergency Vet Bill Rates and Hospital Costs",
+      "goldEntity": "INFORMATIONAL_CONTENT",
+      "shortlistEligible": false,
+      "verdict": "PASSED"
+    },
+    {
+      "recordId": "gold_neg_03_vet_clinic_service",
+      "headline": "24/7 Emergency Veterinary Clinic & Pet Hospital",
+      "goldEntity": "SERVICE",
+      "shortlistEligible": false,
+      "verdict": "PASSED"
+    },
+    {
+      "recordId": "gold_neg_04_pet_insurance",
+      "headline": "Comprehensive Pet Health Insurance Plans",
+      "goldEntity": "INSURANCE",
+      "shortlistEligible": false,
+      "verdict": "PASSED"
+    }
+  ]
+}

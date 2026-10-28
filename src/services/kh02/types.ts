@@ -154,6 +154,14 @@ export interface KH02CandidateFunnel {
   researchShortlistSelected: number;
 
   excludedByMaxCandidates: number;
+
+  // V12.4 AI Product Intelligence Funnel Telemetry
+  aiAnalysesAttempted?: number;
+  aiAnalysesCompleted?: number;
+  aiPhysicalProductsIdentified?: number;
+  aiServicesRejected?: number;
+  aiContentRejected?: number;
+  aiInsuranceLeadGenRejected?: number;
 }
 
 export interface ProviderReadinessDimensions {

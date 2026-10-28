@@ -48,6 +48,8 @@ import {
   KH02ScoreResult,
   KH02_SCORE_VERSION,
 } from "./scoring/evergreenOpportunityScoring";
+import { analyzeProductCandidatesWithAI } from "./ai/geminiProductIntelligenceService";
+import { GeminiAITelemetry } from "./ai/aiProductIntelligenceTypes";
 
 export interface RankedLeaderboardItem {
   rank: number | null;
@@ -78,6 +80,7 @@ export interface EvergreenLeaderboardResult {
   researchShortlist?: ResearchShortlistResult;
   shortfallReason?: string | null;
   candidateFunnel?: KH02CandidateFunnel;
+  aiTelemetry?: GeminiAITelemetry;
 }
 
 export interface ResearchProgressPayload {
@@ -504,6 +507,60 @@ export async function runEvergreenProductResearch(
   }
 
   const candidates = enrichedCandidates;
+
+  // ── Stage 4c: Gemini AI Semantic Product Intelligence (V12.4) ────────────
+  if (context?.reportProgress) {
+    await context.reportProgress({
+      stage: "ENRICHMENT",
+      percent: 48,
+      message: "Analyzing candidate product intelligence & commercial reality with Gemini AI",
+    }).catch((err) => {
+      warnings.push(`Progress reporting warning: ${err.message}`);
+    });
+  }
+
+  let aiTelemetry: GeminiAITelemetry = {
+    provider: "GOOGLE_GEMINI",
+    aiStatus: "UNAVAILABLE",
+    authStatus: "KEY_NOT_FOUND",
+    modelsDiscoveredCount: 0,
+    eligibleModelsCount: 0,
+    primaryModelId: null,
+    fallbackModels: [],
+    actualModelUsed: null,
+    fallbackUsed: false,
+    totalAnalysesAttempted: 0,
+    totalAnalysesCompleted: 0,
+    totalAnalysesFailed: 0,
+    physicalProductsCount: 0,
+    servicesRejectedCount: 0,
+    contentRejectedCount: 0,
+    insuranceLeadGenRejectedCount: 0,
+    unknownClassificationsCount: 0,
+    evidenceContradictionsCount: 0,
+    invalidAIOutputsRejectedCount: 0,
+  };
+
+  if (candidates.length > 0) {
+    try {
+      const aiResult = await analyzeProductCandidatesWithAI(
+        candidates,
+        {
+          researchRunId: runId,
+          topic: input.topic,
+          market: market,
+          maxConcurrency: 2,
+          signal: abortSignal,
+        }
+      );
+      aiTelemetry = aiResult.telemetry;
+      if (aiResult.telemetry.aiStatus === "PARTIAL" || aiResult.telemetry.aiStatus === "UNAVAILABLE") {
+        warnings.push(`Gemini AI status: ${aiResult.telemetry.aiStatus}. Using conservative deterministic classification.`);
+      }
+    } catch (aiErr: any) {
+      warnings.push(`Gemini AI product intelligence stage warning: ${aiErr.message}`);
+    }
+  }
 
   if (context?.reportProgress) {
     await context.reportProgress({
@@ -941,6 +998,12 @@ export async function runEvergreenProductResearch(
     researchShortlistEligible: researchShortlist.qualifiedCount,
     researchShortlistSelected: researchShortlist.shortlist.length,
     excludedByMaxCandidates: excludedByMaxCandidates.length,
+    aiAnalysesAttempted: aiTelemetry?.totalAnalysesAttempted ?? 0,
+    aiAnalysesCompleted: aiTelemetry?.totalAnalysesCompleted ?? 0,
+    aiPhysicalProductsIdentified: aiTelemetry?.physicalProductsCount ?? 0,
+    aiServicesRejected: aiTelemetry?.servicesRejectedCount ?? 0,
+    aiContentRejected: aiTelemetry?.contentRejectedCount ?? 0,
+    aiInsuranceLeadGenRejected: aiTelemetry?.insuranceLeadGenRejectedCount ?? 0,
   };
 
   const result: EvergreenLeaderboardResult = {
@@ -966,6 +1029,7 @@ export async function runEvergreenProductResearch(
     researchShortlist,
     shortfallReason: researchShortlist.shortfallReason,
     candidateFunnel,
+    aiTelemetry,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

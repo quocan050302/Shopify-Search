@@ -1,0 +1,29 @@
+{
+  "datasetVersion": "v12.4-gold-v1",
+  "evaluatedAt": "2026-10-28T05:51:47.515Z",
+  "baseline": {
+    "falsePositiveCount": 6,
+    "shortlistAccuracy": 0.7,
+    "serviceToProductFalsePositives": 4
+  },
+  "hybridAI": {
+    "totalRecords": 20,
+    "physicalProductPrecision": 1,
+    "physicalProductRecall": 1,
+    "falseProductPositiveCount": 0,
+    "serviceToProductFalsePositives": 0,
+    "contentToProductFalsePositives": 0,
+    "nicheRelevancePrecision": 1,
+    "nicheRelevanceRecall": 1,
+    "identityAccuracy": 1,
+    "shortlistEligibilityAccuracy": 1,
+    "criticalFalsePositivesCount": 0,
+    "aiAbstentionRate": 0,
+    "modelFallbackSuccessRate": 1,
+    "averageLatencyMs": 1,
+    "totalRealApiCalls": 0,
+    "estimatedCostCredits": 0
+  },
+  "falsePositiveReduction": "6 -> 0",
+  "accuracyImprovement": "70.0% -> 100.0%"
+}

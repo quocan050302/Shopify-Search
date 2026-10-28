@@ -65,6 +65,9 @@ export interface DiscoveredProductCandidate {
   relevanceScore?: number;
   relevanceReasons?: string[];
   psychologyProfile?: CustomerPsychologyProfile | null;
+  aiIntelligence?: any;
+  aiShortlistEligible?: boolean;
+  aiExclusionReason?: string | null;
 }
 
 
@@ -470,6 +473,22 @@ export function selectTopResearchShortlist(
     const isRelevant = c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT";
     const hasResolvedIdentity = c.identityStatus !== "UNRESOLVED" && Boolean(c.canonicalProductName || c.displayName);
     const hasEvidence = (c.supportingAdIds && c.supportingAdIds.length > 0) || (c.sourceObservations && c.sourceObservations.length > 0);
+
+    // V12.4 AI Product Intelligence Reality Gate:
+    // Exclude candidates explicitly evaluated as non-sellable, service, or informational content
+    if (c.aiShortlistEligible === false) {
+      return false;
+    }
+    if (c.aiIntelligence) {
+      const entity = c.aiIntelligence.commercialEntityType;
+      if (entity && entity !== "PHYSICAL_PRODUCT") {
+        return false;
+      }
+      if (c.aiIntelligence.isLikelySellableProduct === false) {
+        return false;
+      }
+    }
+
     return isRelevant && hasResolvedIdentity && hasEvidence;
   });
 

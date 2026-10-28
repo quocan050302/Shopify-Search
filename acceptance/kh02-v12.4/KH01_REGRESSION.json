@@ -1,0 +1,22 @@
+{
+  "gateId": "A04_KH01_REGRESSION_PASS",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "npm run kh01:verify passes 100% of KH-01 protection tests",
+  "expected": {
+    "exitCode": 0,
+    "testsPassed": 69
+  },
+  "observed": {
+    "exitCode": 0,
+    "testsPassed": 69,
+    "totalTests": 69
+  },
+  "executionCommand": "npm run kh01:verify",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "Passed: 69/69"
+  ],
+  "reason": "KH-01 verified: 69/69 tests passed without regressions"
+}

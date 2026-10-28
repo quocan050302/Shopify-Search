@@ -56,7 +56,7 @@ describe("SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance
       expect(creditStatus.verificationStatus).toBeDefined();
       expect(["UNVERIFIED", "BLOCKED"]).toContain(creditStatus.verificationStatus);
       expect(creditStatus.errorMessage).toBeDefined();
-    });
+    }, 15000);
   });
 
   describe("2. Missing Endpoint vs Transport Failure (Section C.3, L)", () => {

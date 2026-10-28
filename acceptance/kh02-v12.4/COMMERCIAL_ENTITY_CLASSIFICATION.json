@@ -1,0 +1,8 @@
+{
+  "verified": true,
+  "typesSupported": [
+    "PHYSICAL_PRODUCT",
+    "SERVICE",
+    "INFORMATIONAL_CONTENT"
+  ]
+}

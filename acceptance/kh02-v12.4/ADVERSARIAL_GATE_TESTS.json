@@ -1,0 +1,14 @@
+{
+  "promptInjectionTested": true,
+  "promptInjectionBlocked": true,
+  "erVetBillCostFactorsTested": true,
+  "erVetBillCostFactorsExcluded": true,
+  "serviceAdTested": true,
+  "serviceAdExcluded": true,
+  "campaignSlugTested": true,
+  "campaignSlugRejected": true,
+  "retry503ExhaustionTested": true,
+  "retry503ExhaustionPassed": true,
+  "modelDowngradeTested": true,
+  "modelDowngradePassed": true
+}
