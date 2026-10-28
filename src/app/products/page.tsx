@@ -102,6 +102,13 @@ interface LeaderboardData {
   };
   shortfallReason?: string | null;
   candidateFunnel?: any;
+  discoveryPlan?: any;
+  discoveryPlannerTelemetry?: any;
+  plannedQueries?: any[];
+  queryExecutions?: any[];
+  queryYields?: any[];
+  shortlistCoverage?: any;
+  lookbackCoverage?: any;
   aiTelemetry?: {
     provider: string;
     aiStatus: string;
@@ -168,7 +175,8 @@ export default function ProductsPage() {
   const [runtimeVersion, setRuntimeVersion] = useState<any | null>(null);
 
   const compileTimeFrontendSha = process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA || "";
-  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.1";
+  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.2";
+  const [showQueryCoverage, setShowQueryCoverage] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -818,7 +826,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>SWAI KH-02 V12.4.1 — AI-Powered Product Intelligence</span>
+                <span>SWAI KH-02 V12.4.2 — AI-Powered Product Intelligence</span>
               </div>
               {(runtimeVersion?.frontendBuildSha || runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || compileTimeFrontendSha) && (
                 <span
@@ -1431,7 +1439,7 @@ export default function ProductsPage() {
                   <div data-testid="kh02-candidate-funnel-summary" className="text-xs text-purple-400 font-mono">
                     {leaderboard.candidateFunnel ? (
                       <span>
-                        {leaderboard.candidateFunnel.rawCandidateGroups} raw groups · {leaderboard.candidateFunnel.relevantCandidates + (leaderboard.candidateFunnel.probablyRelevantCandidates || 0)} eligible · {leaderboard.candidateFunnel.candidatesActuallyScored} scored · {leaderboard.candidateFunnel.identitiesVerified} verified
+                        {leaderboard.candidateFunnel.rawCandidateGroups} raw groups · {leaderboard.candidateFunnel.potentiallyRelevant ?? (leaderboard.candidateFunnel.relevantCandidates + (leaderboard.candidateFunnel.probablyRelevantCandidates || 0))} potentially relevant · {leaderboard.candidateFunnel.aiAnalyzed ?? leaderboard.aiTelemetry?.totalAnalysesCompleted ?? 0} AI reviewed · {leaderboard.candidateFunnel.candidatesActuallyScored} scored · {leaderboard.candidateFunnel.identitiesVerified} verified
                       </span>
                     ) : (
                       <span>{leaderboard.totalCandidatesDiscovered} candidate groups discovered</span>
@@ -1447,6 +1455,184 @@ export default function ProductsPage() {
                 </div>
               )}
             </div>
+
+            {/* V12.4.2 DISCOVERY INTELLIGENCE & COHERENT 13-STAGE FUNNEL */}
+            {leaderboard && (leaderboard.discoveryPlannerTelemetry || leaderboard.candidateFunnel) && (
+              <div
+                data-testid="kh02-discovery-intelligence-panel"
+                data-research-run-id={leaderboard.researchRunId}
+                className="p-4 rounded-2xl bg-[#130f24] border border-purple-500/30 space-y-3 text-xs"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#261d40] pb-2.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                    <span className="font-bold text-white">Discovery Intelligence & Search Recall Diagnostics</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-700/40 font-mono">
+                      Gemini Discovery Planner:{" "}
+                      {leaderboard.discoveryPlannerTelemetry?.status === "COMPLETED_GEMINI" ||
+                      leaderboard.discoveryPlannerTelemetry?.status === "COMPLETED_CACHE" ||
+                      leaderboard.discoveryPlannerTelemetry?.plannerStatus === "COMPLETED"
+                        ? `Completed (${leaderboard.discoveryPlannerTelemetry?.modelUsed || leaderboard.discoveryPlannerTelemetry?.actualModelUsed || "Gemini"})`
+                        : leaderboard.discoveryPlannerTelemetry?.status === "FALLBACK_DETERMINISTIC" ||
+                          leaderboard.discoveryPlannerTelemetry?.plannerStatus === "FALLBACK_DETERMINISTIC"
+                        ? "Deterministic Fallback"
+                        : leaderboard.aiTelemetry?.aiStatus === "COMPLETED"
+                        ? "Completed"
+                        : "Rule-Based"}
+                    </span>
+                    {leaderboard.lookbackCoverage && (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700/60 font-mono">
+                        Lookback: {leaderboard.lookbackCoverage.requestedLookbackDays}D ({leaderboard.lookbackCoverage.historicalCoverageMode || leaderboard.lookbackCoverage.historicalCoverageScope || "Active Ads Snapshot"})
+                      </span>
+                    )}
+                  </div>
+                  {(leaderboard.queryYields?.length || leaderboard.queryExecutions?.length) ? (
+                    <button
+                      type="button"
+                      data-testid="kh02-query-coverage-toggle"
+                      onClick={() => setShowQueryCoverage(!showQueryCoverage)}
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 text-purple-200 border border-purple-500/30 font-medium transition-all self-start sm:self-auto"
+                    >
+                      {showQueryCoverage ? "Hide Query Coverage" : `View Query Coverage (${leaderboard.queryYields?.length || leaderboard.queryExecutions?.length || 0} queries)`}
+                    </button>
+                  ) : null}
+                </div>
+
+                {/* Summary Strip (J2) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-[11px]">
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Discovery Planner</span>
+                    <span className="font-bold text-purple-300 font-mono">
+                      {leaderboard.discoveryPlannerTelemetry?.status === "COMPLETED_GEMINI" ||
+                      leaderboard.discoveryPlannerTelemetry?.status === "COMPLETED_CACHE" ||
+                      leaderboard.discoveryPlannerTelemetry?.plannerStatus === "COMPLETED"
+                        ? "Completed"
+                        : "Deterministic"}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Planned Archetypes</span>
+                    <span className="font-bold text-white font-mono">
+                      {leaderboard.discoveryPlan?.productArchetypes?.length ?? leaderboard.discoveryPlannerTelemetry?.plannedArchetypesCount ?? leaderboard.discoveryPlannerTelemetry?.archetypesCount ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Queries Executed</span>
+                    <span className="font-bold text-white font-mono">
+                      {leaderboard.queryExecutions?.filter((q: any) => q.status !== "QUERY_SKIPPED_BUDGET").length ?? leaderboard.queryYields?.length ?? 0}/
+                      {leaderboard.plannedQueries?.length ?? leaderboard.queryExecutions?.length ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Unique Ads Retrieved</span>
+                    <span className="font-bold text-white font-mono">
+                      {leaderboard.candidateFunnel?.uniqueAds ?? leaderboard.candidateFunnel?.uniqueAdsDeduplicated ?? leaderboard.candidateFunnel?.rawSourceObservations ?? leaderboard.totalObservationsCollected ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Potentially Relevant</span>
+                    <span className="font-bold text-emerald-300 font-mono">
+                      {leaderboard.candidateFunnel?.potentiallyRelevant ?? ((leaderboard.candidateFunnel?.relevantCandidates || 0) + (leaderboard.candidateFunnel?.probablyRelevantCandidates || 0))}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">AI-Reviewed</span>
+                    <span className="font-bold text-purple-300 font-mono">
+                      {leaderboard.candidateFunnel?.aiAnalyzed ?? leaderboard.aiTelemetry?.totalAnalysesCompleted ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Verified Identities</span>
+                    <span className="font-bold text-emerald-400 font-mono">
+                      {leaderboard.candidateFunnel?.identitiesVerified ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#0d0a1a] border border-[#231b3a]">
+                    <span className="text-slate-400 block text-[10px]">Research Shortlist</span>
+                    <span className="font-bold text-amber-300 font-mono">
+                      {leaderboard.researchShortlist?.qualifiedCount ?? 0}/{leaderboard.researchShortlist?.requestedCount ?? 3}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Coherent 13-Stage Candidate Funnel (J3) */}
+                {leaderboard.candidateFunnel && (
+                  <div
+                    data-testid="kh02-coherent-funnel-grid"
+                    className="pt-2 border-t border-[#231b3a] flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px] font-mono text-slate-400"
+                  >
+                    <span className="text-slate-300 font-semibold">Funnel Stages:</span>
+                    <span>Raw Observations: <strong className="text-white">{leaderboard.candidateFunnel.rawSourceObservations ?? 0}</strong></span>
+                    <span>→ Unique Ads: <strong className="text-white">{leaderboard.candidateFunnel.uniqueAdsDeduplicated ?? leaderboard.candidateFunnel.rawSourceObservations ?? 0}</strong></span>
+                    <span>→ Raw Candidate Groups: <strong className="text-white">{leaderboard.candidateFunnel.rawCandidateGroups ?? 0}</strong></span>
+                    <span>→ Clearly Unrelated: <strong className="text-rose-400">{leaderboard.candidateFunnel.clearlyUnrelated ?? leaderboard.candidateFunnel.irrelevantCandidatesExcluded ?? 0}</strong></span>
+                    <span>→ Potentially Relevant: <strong className="text-emerald-300">{leaderboard.candidateFunnel.potentiallyRelevant ?? 0}</strong></span>
+                    <span>→ Selected for AI: <strong className="text-purple-300">{leaderboard.candidateFunnel.selectedForAI ?? 0}</strong></span>
+                    <span>→ AI Analyzed: <strong className="text-purple-300">{leaderboard.candidateFunnel.aiAnalyzed ?? 0}</strong></span>
+                    <span>→ Physical Products Supported: <strong className="text-emerald-300">{leaderboard.candidateFunnel.physicalProductsSupported ?? 0}</strong></span>
+                    <span>→ Identity Resolved: <strong className="text-blue-300">{leaderboard.candidateFunnel.identityResolved ?? 0}</strong></span>
+                    <span>→ Scored: <strong className="text-white">{leaderboard.candidateFunnel.candidatesActuallyScored ?? 0}</strong></span>
+                    <span>→ Shortlist Eligible: <strong className="text-amber-300">{leaderboard.candidateFunnel.shortlistEligible ?? 0}</strong></span>
+                    <span>→ Shortlisted: <strong className="text-amber-400">{leaderboard.candidateFunnel.shortlisted ?? leaderboard.researchShortlist?.qualifiedCount ?? 0}</strong></span>
+                    <span>→ Verified Evergreen: <strong className="text-emerald-400">{leaderboard.candidateFunnel.verifiedEvergreen ?? leaderboard.candidateFunnel.evergreenWinnersQualified ?? 0}</strong></span>
+                  </div>
+                )}
+
+                {/* Expandable Query Coverage View (J4) */}
+                {showQueryCoverage && (leaderboard.queryYields?.length || leaderboard.queryExecutions?.length) && (
+                  <div data-testid="kh02-query-coverage-table" className="pt-2 border-t border-[#231b3a] overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-[11px]">
+                      <thead>
+                        <tr className="text-slate-400 border-b border-slate-800">
+                          <th className="py-1.5 pr-3">Query</th>
+                          <th className="py-1.5 pr-3">Source</th>
+                          <th className="py-1.5 pr-3">Round</th>
+                          <th className="py-1.5 pr-3">Origin</th>
+                          <th className="py-1.5 pr-3">Actual Status</th>
+                          <th className="py-1.5 pr-3 text-right">Ads Returned</th>
+                          <th className="py-1.5 pr-3 text-right">Unique Candidates</th>
+                          <th className="py-1.5 text-right">Useful Product Candidates</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono">
+                        {(leaderboard.queryYields || leaderboard.queryExecutions || []).map((q: any, idx: number) => {
+                          const execMatch = leaderboard.queryExecutions?.find((e: any) => e.queryId === q.queryId && e.roundNumber === (q.roundNumber || 1));
+                          const planMatch = leaderboard.plannedQueries?.find((p: any) => p.queryId === q.queryId);
+                          const status = q.sourceStatus || q.status || execMatch?.status || "QUERY_SUCCEEDED";
+                          const adsReturned = q.actualAdsReturned ?? q.adsReturned ?? execMatch?.recordsReturned ?? 0;
+                          const uniqueCandidates = q.uniqueAdsReturned ?? q.uniqueCandidateCount ?? q.uniqueAdsContributed ?? 0;
+                          const usefulCandidates = q.identifiableProducts ?? q.usefulProductCandidateCount ?? q.identifiableProductCandidatesContributed ?? 0;
+                          return (
+                            <tr key={`${q.queryId || idx}_${idx}`} className="text-slate-300">
+                              <td className="py-1.5 pr-3 font-sans font-medium text-white">{q.phrase || q.queryText}</td>
+                              <td className="py-1.5 pr-3 text-slate-400">{q.source || execMatch?.source || "META_ADS"}</td>
+                              <td className="py-1.5 pr-3 text-slate-400">#{q.roundNumber ?? execMatch?.roundNumber ?? 1}</td>
+                              <td className="py-1.5 pr-3 text-purple-300">{q.origin || execMatch?.origin || planMatch?.origin || "GEMINI_PLANNER"}</td>
+                              <td className="py-1.5 pr-3">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] ${
+                                    status === "QUERY_SUCCEEDED"
+                                      ? "bg-emerald-950/60 text-emerald-300 border border-emerald-700/40"
+                                      : status === "QUERY_SUCCEEDED_EMPTY"
+                                      ? "bg-amber-950/60 text-amber-300 border border-amber-700/40"
+                                      : "bg-slate-800 text-slate-400"
+                                  }`}
+                                >
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="py-1.5 pr-3 text-right">{adsReturned}</td>
+                              <td className="py-1.5 pr-3 text-right">{uniqueCandidates}</td>
+                              <td className="py-1.5 text-right text-emerald-300">{usefulCandidates}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* TOP 3 PODIUM CONTAINER */}
             {isResearching && (!leaderboard || leaderboard.topThree.length === 0) ? (
@@ -1828,8 +2014,30 @@ export default function ProductsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
-                    No shortlist products currently qualified for evaluation.
+                  <div
+                    data-testid="kh02-empty-shortlist-explanation"
+                    className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-xs text-slate-300 space-y-2"
+                  >
+                    <p className="font-bold text-amber-300">
+                      Search completed with insufficient product evidence.
+                    </p>
+                    {(() => {
+                      const execs = leaderboard.queryExecutions || [];
+                      const attempted = execs.filter((q: any) => q.status !== "QUERY_SKIPPED_BUDGET").length;
+                      const succeeded = execs.filter((q: any) => q.status === "QUERY_SUCCEEDED").length;
+                      const empty = execs.filter((q: any) => q.status === "QUERY_SUCCEEDED_EMPTY").length;
+                      return attempted > 0 ? (
+                        <p className="font-mono text-[11px] text-slate-400">
+                          {attempted} source queries attempted · {succeeded} succeeded with ads · {empty} returned no results.
+                        </p>
+                      ) : null;
+                    })()}
+                    <p className="text-slate-400 max-w-xl mx-auto">
+                      Most returned ads lacked usable merchant product pages or were unrelated to the requested niche.
+                    </p>
+                    <p className="font-mono text-[11px] text-amber-400">
+                      Research Shortlist: {leaderboard.researchShortlist?.qualifiedCount ?? 0}/{leaderboard.researchShortlist?.requestedCount ?? 3}
+                    </p>
                   </div>
                 )}
               </div>

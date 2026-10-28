@@ -1,0 +1,11 @@
+{
+  "tsc": {
+    "exitCode": 0,
+    "durationMs": 3747
+  },
+  "lint": {
+    "exitCode": 0,
+    "durationMs": 17093
+  },
+  "verdict": "PASS"
+}

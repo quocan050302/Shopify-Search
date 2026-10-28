@@ -1,0 +1,29 @@
+{
+  "gateId": "Q02_KH02_REGRESSION",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "KH-02 unit (>=370 tests including V12.4.2 Discovery Recall suite) and integration (>=26 tests) pass with 0 failures",
+  "expected": {
+    "unitExitCode": 0,
+    "intExitCode": 0,
+    "minUnitPassed": 370,
+    "minIntPassed": 26
+  },
+  "observed": {
+    "unitExitCode": 0,
+    "unitPassed": 376,
+    "intExitCode": 0,
+    "intPassed": 27
+  },
+  "executionCommand": "npm run kh02:test:unit && npm run kh02:test:integration",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "logs/kh02_unit.log",
+    "logs/kh02_integration.log"
+  ],
+  "evidenceLocation": "acceptance/kh02-v12.4.2/KH02_REGRESSION.json",
+  "reason": "KH-02 verified: 376 unit + 27 integration tests passed",
+  "executedAt": "2026-10-28T10:52:46.275Z",
+  "environment": "win32-node-v22.14.0-db-6530562482a2"
+}

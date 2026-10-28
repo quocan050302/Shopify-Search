@@ -162,6 +162,35 @@ export interface KH02CandidateFunnel {
   aiServicesRejected?: number;
   aiContentRejected?: number;
   aiInsuranceLeadGenRejected?: number;
+
+  // V12.4.2 Coherent 13-Stage Discovery & Reality Funnel
+  uniqueAds?: number;
+  clearlyUnrelated?: number;
+  potentiallyRelevant?: number;
+  selectedForAI?: number;
+  aiAnalyzed?: number;
+  physicalProductsSupported?: number;
+  identityResolved?: number;
+  scored?: number;
+  shortlistEligible?: number;
+  shortlisted?: number;
+  verifiedEvergreen?: number;
+}
+
+export interface KH02LookbackCoverage {
+  requestedLookbackDays: number;
+  queryExecutionTime: string;
+  earliestAdFirstSeen: string | null;
+  latestAdLastSeen: string | null;
+  activeAdsCount: number;
+  historicalCachedAdsCount: number;
+  freshLiveAdsCount: number;
+  historicalCoverageMode:
+    | "ACTIVE_LIVE_AND_CACHE"
+    | "ACTIVE_LIVE_ONLY"
+    | "HISTORICAL_CACHE_ONLY"
+    | "EMPTY";
+  providerLimitationNote: string;
 }
 
 export interface ProviderReadinessDimensions {
@@ -288,6 +317,11 @@ export interface IntelligenceQuery {
   timeWindow?: string;
   maxResults: number;
   signal?: AbortSignal;
+  // V12.4.2 Adaptive Discovery Planner & Shared Budget Context
+  plannedQueries?: any[];
+  sharedMetaBudgetTracker?: any;
+  searchRoundNumber?: number;
+  maxLiveRequestsForRound?: number;
 }
 
 export interface SourceObservation {
@@ -335,6 +369,7 @@ export interface ProviderExecutionMetadata {
   cachedRecordsUsedCount?: number | null;
   fallbackToCache?: boolean;
   auditTraces?: UpstreamRecordTrace[];
+  queryOutcomes?: any[];
 }
 
 export interface UpstreamRecordTrace {

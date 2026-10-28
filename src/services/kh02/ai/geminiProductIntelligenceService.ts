@@ -328,6 +328,7 @@ export async function analyzeProductCandidatesWithAI(
     perCandidateDeadlineMs?: number;
     perAttemptDeadlineMs?: number;
     maxGlobalRequests?: number;
+    budgetTracker?: GeminiRunBudgetTracker;
     signal?: AbortSignal;
   }
 ): Promise<CandidateBatchAnalysisResult> {
@@ -350,10 +351,12 @@ export async function analyzeProductCandidatesWithAI(
 
   const stageDeadlineMs = options.stageDeadlineMs ?? 45_000;
   const stageDeadlineAt = Date.now() + stageDeadlineMs;
-  const budgetTracker = createGeminiRunBudgetTracker({
-    maxGlobalRequests: options.maxGlobalRequests ?? 25,
-    maxGlobalTokens: 100_000,
-  });
+  const budgetTracker =
+    options.budgetTracker ||
+    createGeminiRunBudgetTracker({
+      maxGlobalRequests: options.maxGlobalRequests ?? 25,
+      maxGlobalTokens: 100_000,
+    });
 
   // In Vitest test runs, do not consume live external Gemini quota unless explicitly authorized
   const isVitestRun =

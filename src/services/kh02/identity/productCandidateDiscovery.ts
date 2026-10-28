@@ -22,7 +22,11 @@ import {
   ProductIdentityStatus,
 } from "./productIdentityResolver";
 import { extractProductUrlMetadata } from "./productMetadataExtractor";
-import { evaluateProductRelevance } from "./productRelevanceEvaluator";
+import {
+  DiscoveryRelevanceDecision,
+  evaluateProductRelevance,
+} from "./productRelevanceEvaluator";
+import { PlannedProductArchetype } from "../discovery/geminiDiscoveryPlanner";
 import {
   analyzeCustomerPsychology,
   CustomerPsychologyProfile,
@@ -70,6 +74,9 @@ export interface DiscoveredProductCandidate {
   identityEvidenceReferences?: string[];
   isEligibleAsEvergreenWinner?: boolean;
   relevanceStatus?: "RELEVANT" | "PROBABLY_RELEVANT" | "AMBIGUOUS" | "IRRELEVANT";
+  discoveryRelevanceDecision?: DiscoveryRelevanceDecision;
+  matchedArchetypeId?: string | null;
+  matchedQueryIds?: string[];
   relevanceScore?: number;
   relevanceReasons?: string[];
   psychologyProfile?: CustomerPsychologyProfile | null;
@@ -192,7 +199,8 @@ function inferProblemStatement(headline: string | null, body: string | null): st
  */
 export function discoverProductCandidatesFromAds(
   observations: SourceObservation[],
-  topic: string
+  topic: string,
+  options?: { plannedArchetypes?: PlannedProductArchetype[] }
 ): DiscoveredProductCandidate[] {
   // Map keyed by canonical product identity or secure product handle
   const candidateMap = new Map<string, {
@@ -328,7 +336,22 @@ export function discoverProductCandidatesFromAds(
       ...c.descriptions,
     ].filter(Boolean).join(" ");
 
-    const relevance = evaluateProductRelevance(candidateContext, topic);
+    const matchedQueryIds = Array.from(
+      new Set(
+        c.observations
+          .map((o) => (o.metrics as any)?.queryId)
+          .filter((qid): qid is string => typeof qid === "string" && qid.length > 0)
+      )
+    );
+    const matchedQueryPhrase =
+      c.observations
+        .map((o) => (o.metrics as any)?.queryKeyword)
+        .find((kw): kw is string => typeof kw === "string" && kw.length > 0) || null;
+
+    const relevance = evaluateProductRelevance(candidateContext, topic, {
+      plannedArchetypes: options?.plannedArchetypes,
+      matchedQueryPhrase,
+    });
     const problemStatement = inferProblemStatement(c.titles[0] || null, c.descriptions[0] || null);
 
     // Analyze customer psychology grounded strictly in observed evidence
@@ -409,6 +432,9 @@ export function discoverProductCandidatesFromAds(
         relevance.isAccepted &&
         relevance.relevanceStatus !== "IRRELEVANT",
       relevanceStatus: relevance.relevanceStatus,
+      discoveryRelevanceDecision: relevance.discoveryDecision,
+      matchedArchetypeId: relevance.matchedArchetypeId ?? null,
+      matchedQueryIds,
       relevanceScore: relevance.score,
       relevanceReasons: relevance.reasons,
       psychologyProfile: psychProfile,
@@ -802,6 +828,7 @@ export interface ProductEnrichmentContext {
   maxConcurrency?: number;
   signal?: AbortSignal;
   metadataFetcher?: (url: string) => Promise<any>;
+  plannedArchetypes?: PlannedProductArchetype[];
 }
 
 export interface ProductEnrichmentResult {
@@ -912,8 +939,12 @@ export async function enrichProductCandidatesWithEvidence(
             .filter(Boolean)
             .join(" ");
 
-          const relevance = evaluateProductRelevance(candidateContext, context.topic);
+          const relevance = evaluateProductRelevance(candidateContext, context.topic, {
+            plannedArchetypes: context.plannedArchetypes,
+          });
           candidate.relevanceStatus = relevance.relevanceStatus;
+          candidate.discoveryRelevanceDecision = relevance.discoveryDecision;
+          candidate.matchedArchetypeId = relevance.matchedArchetypeId ?? candidate.matchedArchetypeId;
           candidate.relevanceScore = relevance.score;
           candidate.relevanceReasons = relevance.reasons;
 

@@ -184,7 +184,7 @@ export function classifySourcePage(
 }
 
 const PHYSICAL_PRODUCT_INDICATORS =
-  /\b(roller|remover|brush|comb|vacuum|clipper|trimmer|feeder|fountain|dispenser|bowl|collar|leash|harness|bed|mat|crate|carrier|kennel|toy|chew|ball|launcher|litter|box|scoop|deodorizer|camera|tracker|gps|tag|door|flap|gate|ramp|stairs|stroller|seat cover|hammock|wiper|glove|mitt|shampoo|spray|balm|wipe|pad|diaper|cone|vest|jacket|sweater|boot|paw cleaner|nail grinder|scratcher|tree|perch|aquarium|filter|pump|heater|terrarium)\b/i;
+  /\b(roller|remover|brush|comb|vacuum|clipper|trimmer|feeder|fountain|dispenser|bowl|collar|leash|harness|bed|mat|crate|carrier|kennel|toy|chew|ball|launcher|litter|box|scoop|deodorizer|camera|tracker|gps|tag|door|flap|gate|ramp|stairs|stroller|seat cover|hammock|wiper|glove|mitt|shampoo|spray|balm|wipe|pad|diaper|cone|vest|jacket|sweater|boot|paw cleaner|nail grinder|scratcher|tree|perch|aquarium|filter|pump|heater|terrarium|kit|glue gun|cutter|switch plate|switch cover|switch sticker|outlet plate|wall panel|wall tile|jig|clamp|marker|markers|spikes|shears|secateurs|tray|trellis|meter|chopper|slicer|sprayer|strainer|sealer|scrubber|cleaner|mop|sconce|lamp|slipcover|sofa cover|mask|patch|curler|wand|tool|organizer|holder|rack|multimeter|paint by numbers)\b/i;
 
 const NON_PHYSICAL_PATTERNS: Array<{
   type: CommercialEntityType;
@@ -206,14 +206,20 @@ const NON_PHYSICAL_PATTERNS: Array<{
   {
     type: "SERVICE",
     regex:
-      /\b(24\/7 emergency vet|veterinary care|veterinary clinic|animal hospital|pet hospital|overnight hospitalization|vet consultation|consultation pricing|dog grooming booking|grooming salon|grooming appointment|pet boarding service|dog walking service|vet appointment|spay and neuter clinic|pet cremation)\b/i,
-    reason: "Describes a veterinary, clinical, grooming, or local service rather than a physical product.",
+      /\b(24\/7 emergency vet|veterinary care|veterinary clinic|animal hospital|pet hospital|overnight hospitalization|vet consultation|consultation pricing|dog grooming booking|grooming salon|grooming appointment|pet boarding service|dog walking service|vet appointment|spay and neuter clinic|pet cremation|gardening service|landscaping service|tree trimming|lawn care|schedule a consultation|virtual consultation|interior design consultation|handyman service|contractor installation)\b/i,
+    reason: "Describes a veterinary, clinical, grooming, landscaping, consultation, or local service rather than a physical product.",
+  },
+  {
+    type: "DIGITAL_PRODUCT",
+    regex:
+      /\b(icontrol|easy widgets themes|widgets? themes?|phone widget|home screen widget|wallpaper app|download on the app store|ios app|android app)\b/i,
+    reason: "Describes a digital mobile app or phone widget theme rather than a physical ecommerce product.",
   },
   {
     type: "LEAD_GENERATION",
     regex:
-      /\b(charity donation|donate to help|sponsor a rescue|animal shelter donation|coupon lead form|enter to win|free quote form|sign up for alerts)\b/i,
-    reason: "Describes a lead generation form, coupon signup, or charity donation rather than a physical product.",
+      /\b(charity donation|donate to help|sponsor a rescue|animal shelter donation|coupon lead form|enter to win|free quote form|request a quote|free estimate|sign up for alerts|get latest price|alibaba\.com|b2b app|pos thermal printer|80mm pos|casino bonus|free spins|welcome bonus)\b/i,
+    reason: "Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
   },
 ];
 

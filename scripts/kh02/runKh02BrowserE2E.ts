@@ -28,6 +28,7 @@ export interface Kh02BrowserE2EOptions {
   topic?: string;
   lookbackDays?: number;
   expectedMinCards?: number;
+  screenshotPrefix?: string;
 }
 
 export interface BrowserCardDetail {
@@ -67,6 +68,10 @@ export interface KH02BrowserAcceptance {
   erVetBillInShortlist?: boolean;
   erVetBillInTopThree?: boolean;
   erVetBillInProvisional?: boolean;
+  nonPhysicalNoiseInShortlist?: boolean;
+  discoveryIntelligencePanelRendered?: boolean;
+  coherentFunnelRendered?: boolean;
+  queryCoverageTableRendered?: boolean;
   runtimeVersionBadgeText?: string | null;
   runtimeParityStatus?: string | null;
   frontendBuildSha?: string | null;
@@ -138,7 +143,12 @@ export async function runKh02BrowserE2E(
   let erVetBillInShortlist = false;
   let erVetBillInTopThree = false;
   let erVetBillInProvisional = false;
+  let nonPhysicalNoiseInShortlist = false;
+  let discoveryIntelligencePanelRendered = false;
+  let coherentFunnelRendered = false;
+  let queryCoverageTableRendered = false;
   let runtimeVersionBadgeText: string | null = null;
+  const prefix = options.screenshotPrefix ? `${options.screenshotPrefix}_` : "";
   let runtimeParityStatus: string | null = null;
   let frontendBuildSha: string | null = null;
   let backendBuildSha: string | null = null;
@@ -265,7 +275,7 @@ export async function runKh02BrowserE2E(
     }
 
     // Screenshot 1: Initial Page Load
-    const shot1 = path.join(screenshotDir, "01_before_research.png");
+    const shot1 = path.join(screenshotDir, `${prefix}01_before_research.png`);
     await page.screenshot({ path: shot1, fullPage: true }).catch(() => {});
     screenshots.push(shot1);
 
@@ -291,7 +301,7 @@ export async function runKh02BrowserE2E(
     }
 
     // Screenshot 2: Source Statuses and Input
-    const shot2 = path.join(screenshotDir, "02_source_statuses.png");
+    const shot2 = path.join(screenshotDir, `${prefix}02_source_statuses.png`);
     await page.screenshot({ path: shot2, fullPage: false }).catch(() => {});
     screenshots.push(shot2);
 
@@ -397,6 +407,25 @@ export async function runKh02BrowserE2E(
         if (scTitle.toLowerCase().includes("er vet")) {
           erVetBillInShortlist = true;
         }
+        if (
+          /\b(er vet|pos thermal printer|80mm pos|get latest price|icontrol|widgets themes|pet insurance|casino)\b/i.test(
+            scTitle
+          )
+        ) {
+          nonPhysicalNoiseInShortlist = true;
+        }
+      }
+
+      const discPanelLoc = page.locator('[data-testid="kh02-discovery-intelligence-panel"]').first();
+      discoveryIntelligencePanelRendered = (await discPanelLoc.count()) > 0;
+      const funnelGridLoc = page.locator('[data-testid="kh02-coherent-funnel-grid"]').first();
+      coherentFunnelRendered = (await funnelGridLoc.count()) > 0;
+      const queryCovToggleLoc = page.locator('[data-testid="kh02-query-coverage-toggle"]').first();
+      if ((await queryCovToggleLoc.count()) > 0) {
+        await queryCovToggleLoc.click().catch(() => {});
+        await page.waitForTimeout(200);
+        queryCoverageTableRendered =
+          (await page.locator('[data-testid="kh02-query-coverage-table"]').count()) > 0;
       }
 
       const rejectedCardsLoc = page.locator('[data-testid="kh02-rejected-product-card"]');
@@ -478,7 +507,7 @@ export async function runKh02BrowserE2E(
       }
 
       // Screenshot 3: Terminal Results / Empty State
-      const shot3 = path.join(screenshotDir, "03_leaderboard_results.png");
+      const shot3 = path.join(screenshotDir, `${prefix}03_leaderboard_results.png`);
       await page.screenshot({ path: shot3, fullPage: true }).catch(() => {});
       screenshots.push(shot3);
 
@@ -560,7 +589,7 @@ export async function runKh02BrowserE2E(
       if (await postAuthRunMetaLoc.count() > 0) {
         postReloadRunIdInDom = await postAuthRunMetaLoc.getAttribute("data-research-run-id").catch(() => null);
       }
-      const shot4 = path.join(screenshotDir, "04_after_reload.png");
+      const shot4 = path.join(screenshotDir, `${prefix}04_after_reload.png`);
       await page.screenshot({ path: shot4, fullPage: true }).catch(() => {});
       screenshots.push(shot4);
 
@@ -663,6 +692,10 @@ export async function runKh02BrowserE2E(
     erVetBillInShortlist,
     erVetBillInTopThree,
     erVetBillInProvisional,
+    nonPhysicalNoiseInShortlist,
+    discoveryIntelligencePanelRendered,
+    coherentFunnelRendered,
+    queryCoverageTableRendered,
     runtimeVersionBadgeText,
     runtimeParityStatus,
     frontendBuildSha,

@@ -1,0 +1,1043 @@
+{
+  "anyNonPhysicalInShortlists": false,
+  "diyShortlist": {
+    "shortlist": [
+      {
+        "candidateId": "cand_1453640471",
+        "title": "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+        "canonicalProductName": "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+        "displayName": "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+        "originalAdHeadline": "Facebook Ad: 1130206796253630",
+        "originalCreativeCode": "hot-glue-lt",
+        "brand": "Snappory",
+        "model": null,
+        "sku": null,
+        "category": "Craft Tools",
+        "problemStatement": "Facebook Ad: 1130206796253630 🛠️ For all those little projects you've been meaning to finish",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "cmvrzxmdc000t6cor21mzofqu",
+        "canonicalProductUrl": "https://snappory.com/products/hot-glue-lt",
+        "storeDomain": "snappory.com",
+        "advertiserNames": [
+          "Snappory"
+        ],
+        "supportingAdIds": [
+          "cmvrzxmdc000t6cor21mzofqu"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-28T10:53:24.622Z",
+        "latestObservationDate": "2026-10-28T10:53:24.622Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzxmdc000t6cor21mzofqu",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=1130206796253630",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "1130206796253630",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Snappory",
+            "advertiserDomain": null,
+            "productMatchHint": "Facebook Ad: 1130206796253630",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:53:24.479Z",
+            "reportedLastShownAt": "2026-10-28T10:53:24.479Z",
+            "observedAt": "2026-10-28T10:53:24.622Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "Facebook Ad: 1130206796253630",
+            "description": "🛠️ For all those little projects you've been meaning to finish.\n\nFrom handmade decorations and creative crafts to quick repairs around the house: a hot glue gun is one of those handy tools you'll reach for again and again.\n\nApply the glue exactly where you need it, press your pieces together, and get back to creating.\n\n✨ Great for crafts and DIY projects\n🏠 Handy for everyday repairs around the house\n🎨 Ideal for decorations and creative projects\n👌 Simple, practical, and easy to keep within reach\n\nWhether you're making something new or giving an old favorite a quick makeover, make your next little project a whole lot easier.\n\n👉 Add one to your DIY drawer and be ready whenever inspiration — or a small repair — strikes.\nhttps://snappory.com/products/hot-glue-lt\n\n#DIYProjects #HotGlueGun #CraftIdeas #HomeDIY #CreativeProjects",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzxmdc000t6cor21mzofqu"
+          }
+        ],
+        "identityStatus": "VERIFIED",
+        "resolutionSource": "Verified Merchant Product Page Metadata (JSON-LD / OG Title)",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Merchant Title: 🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+          "Canonical URL: https://snappory.com/products/hot-glue-lt"
+        ],
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: glue gun."
+        ],
+        "psychologyProfile": {
+          "targetCustomer": {
+            "claimText": "Consumers actively seeking solutions related to diy",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+          },
+          "situationOrUseCase": {
+            "claimText": "Regular routine use in the home when utilizing hot glue lt",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Everyday inconvenience and friction addressed by Hot Glue Lt",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Facebook Ad #1130206796253630",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "researchProductId": null,
+        "aiIntelligence": {
+          "candidateId": "cand_1453640471",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Hot Melt Glue Gun",
+          "suggestedProductType": "Craft Tools",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "cmvrzxmdc000t6cor21mzofqu"
+          ],
+          "relevanceEvidenceRefs": [
+            "cmvrzxmdc000t6cor21mzofqu"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The product is a hot melt glue gun used for crafts, DIY projects, and everyday repairs.",
+              "sourceRef": "cmvrzxmdc000t6cor21mzofqu",
+              "supportingQuote": "Hot Melt Glue Gun – Quick, Precise Bonding f"
+            }
+          ],
+          "inferredClaims": [
+            "The product is shipped to customers as a tangible tool for DIY and crafting purposes."
+          ],
+          "contradictions": [],
+          "uncertainties": [
+            "Exact power specifications, voltage, or whether glue sticks are included in the package are not explicitly detailed in the snippet."
+          ],
+          "aiConfidence": 0.99,
+          "needsHumanReview": false
+        },
+        "aiVerification": {
+          "verified": true,
+          "evidenceDecision": "ACCEPT_WITH_UNCERTAINTY",
+          "validAiResponse": true,
+          "correctCandidateId": true,
+          "validSourceReferences": true,
+          "accurateQuotations": true,
+          "actualMerchantEvidence": true,
+          "productIdentityConsistent": true,
+          "productRealityEligible": true,
+          "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+          "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+          "sanitizedResult": {
+            "candidateId": "cand_1453640471",
+            "commercialEntityType": "PHYSICAL_PRODUCT",
+            "suggestedProductName": "Hot Melt Glue Gun",
+            "suggestedProductType": "Craft Tools",
+            "nicheRelevance": "HIGH",
+            "isLikelySellableProduct": true,
+            "identityEvidenceRefs": [
+              "cmvrzxmdc000t6cor21mzofqu"
+            ],
+            "relevanceEvidenceRefs": [
+              "cmvrzxmdc000t6cor21mzofqu"
+            ],
+            "directlyObservedClaims": [
+              {
+                "claim": "The product is a hot melt glue gun used for crafts, DIY projects, and everyday repairs.",
+                "sourceRef": "cmvrzxmdc000t6cor21mzofqu",
+                "supportingQuote": "Hot Melt Glue Gun – Quick, Precise Bonding f"
+              }
+            ],
+            "inferredClaims": [
+              "The product is shipped to customers as a tangible tool for DIY and crafting purposes."
+            ],
+            "contradictions": [],
+            "uncertainties": [
+              "Exact power specifications, voltage, or whether glue sticks are included in the package are not explicitly detailed in the snippet."
+            ],
+            "aiConfidence": 0.99,
+            "needsHumanReview": false
+          },
+          "contradictions": [],
+          "unsupportedClaims": [],
+          "hallucinatedSourceRefs": [],
+          "quoteMismatches": [],
+          "promptInjectionDetected": false,
+          "shortlistEligible": true,
+          "exclusionReason": null
+        },
+        "aiShortlistEligible": true,
+        "aiExclusionReason": null,
+        "aiFromCache": false,
+        "aiModelUsed": "gemini-3.5-flash-lite"
+      },
+      {
+        "candidateId": "cand_1316890495",
+        "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "canonicalProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "displayName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "originalAdHeadline": "Facebook Ad: 2395948977822279",
+        "originalCreativeCode": "hot-glue-lt-1",
+        "brand": "Vipbu home",
+        "model": null,
+        "sku": null,
+        "category": "Craft Tools & Equipment",
+        "problemStatement": "Facebook Ad: 2395948977822279 ✨ CREATE MORE",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "cmvrzxmcv000m6cor8w1qwnhy",
+        "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+        "storeDomain": "vipbugo.com",
+        "advertiserNames": [
+          "Vipbu home"
+        ],
+        "supportingAdIds": [
+          "cmvrzxmcv000m6cor8w1qwnhy"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-28T10:53:24.622Z",
+        "latestObservationDate": "2026-10-28T10:53:24.622Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzxmcv000m6cor8w1qwnhy",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=2395948977822279",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "2395948977822279",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Vipbu home",
+            "advertiserDomain": null,
+            "productMatchHint": "Facebook Ad: 2395948977822279",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:53:24.462Z",
+            "reportedLastShownAt": "2026-10-28T10:53:24.462Z",
+            "observedAt": "2026-10-28T10:53:24.622Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "Facebook Ad: 2395948977822279",
+            "description": "✨ CREATE MORE. REPAIR FASTER. 🔥\n\nWhether you love crafting or need quick home fixes, this cordless hot glue gun makes everyday projects simpler and more convenient.\n\n🔧 No tangled cords while working\n🔋 Rechargeable for easy portability\n🎀 Great for crafts, decorations & repairs\n📦 Compact size for easy storage\n💡 Simple operation for beginners & DIY lovers\n\nA must-have tool for every creative home. 💕\n\nhttps://vipbugo.com/products/hot-glue-lt-1\n\n#DIYCrafts #GlueGun #CreativeTools #HomeGadgets #CraftSupplies",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzxmcv000m6cor8w1qwnhy"
+          }
+        ],
+        "identityStatus": "VERIFIED",
+        "resolutionSource": "Verified Merchant Product Page Metadata (JSON-LD / OG Title)",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Merchant Title: Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "Canonical URL: https://vipbugo.com/products/hot-glue-lt-1"
+        ],
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: glue gun."
+        ],
+        "psychologyProfile": {
+          "targetCustomer": {
+            "claimText": "Consumers actively seeking solutions related to diy",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+          },
+          "situationOrUseCase": {
+            "claimText": "Regular routine use in the home when utilizing hot glue lt 1",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Everyday inconvenience and friction addressed by Hot Glue Lt 1",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Facebook Ad #2395948977822279",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "researchProductId": null,
+        "aiIntelligence": {
+          "candidateId": "cand_1316890495",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "suggestedProductType": "Craft Tools & Equipment",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "cmvrzxmcv000m6cor8w1qwnhy"
+          ],
+          "relevanceEvidenceRefs": [
+            "cmvrzxmcv000m6cor8w1qwnhy"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks is offered for sale.",
+              "sourceRef": "cmvrzxmcv000m6cor8w1qwnhy",
+              "supportingQuote": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks"
+            },
+            {
+              "claim": "Cordless hot glue gun makes everyday projects simpler and more convenient.",
+              "sourceRef": "cmvrzxmcv000m6cor8w1qwnhy",
+              "supportingQuote": "Whether you love crafting or need quick home fixes, this cordless hot glue gun makes everyday projects simpler and more convenient."
+            }
+          ],
+          "inferredClaims": [
+            "The product is suitable for Shopify e-commerce stores focusing on DIY and craft tools."
+          ],
+          "contradictions": [],
+          "uncertainties": [],
+          "aiConfidence": 0.99,
+          "needsHumanReview": false
+        },
+        "aiVerification": {
+          "verified": true,
+          "evidenceDecision": "ACCEPT",
+          "validAiResponse": true,
+          "correctCandidateId": true,
+          "validSourceReferences": true,
+          "accurateQuotations": true,
+          "actualMerchantEvidence": true,
+          "productIdentityConsistent": true,
+          "productRealityEligible": true,
+          "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+          "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+          "sanitizedResult": {
+            "candidateId": "cand_1316890495",
+            "commercialEntityType": "PHYSICAL_PRODUCT",
+            "suggestedProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+            "suggestedProductType": "Craft Tools & Equipment",
+            "nicheRelevance": "HIGH",
+            "isLikelySellableProduct": true,
+            "identityEvidenceRefs": [
+              "cmvrzxmcv000m6cor8w1qwnhy"
+            ],
+            "relevanceEvidenceRefs": [
+              "cmvrzxmcv000m6cor8w1qwnhy"
+            ],
+            "directlyObservedClaims": [
+              {
+                "claim": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks is offered for sale.",
+                "sourceRef": "cmvrzxmcv000m6cor8w1qwnhy",
+                "supportingQuote": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks"
+              },
+              {
+                "claim": "Cordless hot glue gun makes everyday projects simpler and more convenient.",
+                "sourceRef": "cmvrzxmcv000m6cor8w1qwnhy",
+                "supportingQuote": "Whether you love crafting or need quick home fixes, this cordless hot glue gun makes everyday projects simpler and more convenient."
+              }
+            ],
+            "inferredClaims": [
+              "The product is suitable for Shopify e-commerce stores focusing on DIY and craft tools."
+            ],
+            "contradictions": [],
+            "uncertainties": [],
+            "aiConfidence": 0.99,
+            "needsHumanReview": false
+          },
+          "contradictions": [],
+          "unsupportedClaims": [],
+          "hallucinatedSourceRefs": [],
+          "quoteMismatches": [],
+          "promptInjectionDetected": false,
+          "shortlistEligible": true,
+          "exclusionReason": null
+        },
+        "aiShortlistEligible": true,
+        "aiExclusionReason": null,
+        "aiFromCache": false,
+        "aiModelUsed": "gemini-3.5-flash-lite"
+      }
+    ],
+    "requestedCount": 3,
+    "qualifiedCount": 2,
+    "shortfallReason": "Only 2 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "2 distinct products identified: 🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f, Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "totalCandidatesEvaluated": 2,
+      "distinctCount": 2,
+      "duplicateGroupsCount": 0,
+      "details": [
+        {
+          "candidateId": "cand_1453640471",
+          "title": "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+          "canonicalKey": "🎃halloween deal 50% off!🛠️hot melt glue gun – quick  precise bonding f",
+          "storeDomain": "snappory.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "cand_1316890495",
+          "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "canonicalKey": "rechargeable hot melt glue gun with stand and 10 glue sticks",
+          "storeDomain": "vipbugo.com",
+          "isDuplicate": false
+        }
+      ]
+    }
+  },
+  "petShortlist": {
+    "shortlist": [
+      {
+        "candidateId": "cand_14769098",
+        "title": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+        "canonicalProductName": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+        "displayName": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+        "originalAdHeadline": "Facebook Ad: 1655139552269207",
+        "originalCreativeCode": "pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+        "brand": "Aureluxe",
+        "model": null,
+        "sku": null,
+        "category": "Pet Grooming and Cleaning Supplies",
+        "problemStatement": "Facebook Ad: 1655139552269207 🐶🐱 Pet Hair All Over Your Couch",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "cmvrzyiuh001k6cornssodcug",
+        "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+        "storeDomain": "aureluxe.ch",
+        "advertiserNames": [
+          "Aureluxe"
+        ],
+        "supportingAdIds": [
+          "cmvrzyiuh001k6cornssodcug",
+          "cmvrzyiuz001q6cor6xmxn375",
+          "cmvrzyive001w6cor4iz3t27o",
+          "cmvrzyivt00226cor6zknkllm",
+          "cmvrzyiw800286coryen6tdi4"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 5,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-28T10:54:06.951Z",
+        "latestObservationDate": "2026-10-28T10:54:06.951Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzyiuh001k6cornssodcug",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=1655139552269207",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "1655139552269207",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Aureluxe",
+            "advertiserDomain": null,
+            "productMatchHint": "Facebook Ad: 1655139552269207",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:54:06.569Z",
+            "reportedLastShownAt": "2026-10-28T10:54:06.569Z",
+            "observedAt": "2026-10-28T10:54:06.951Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "Facebook Ad: 1655139552269207",
+            "description": "🐶🐱 Pet Hair All Over Your Couch? Not Anymore! ✨\nOur Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless.\n✅ Removes stubborn pet hair in seconds\n✅ Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills\n✅ Reusable & eco-friendly\n✅ Easy to empty and use again\nSpend less time cleaning and more time enjoying life with your pets. ❤️\n🎉 Limited Time Offer – Order Yours Today!\nhttps://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni?fbclid=fbclid",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzyiuh001k6cornssodcug"
+          },
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzyiuz001q6cor6xmxn375",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=27409053148688133",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "27409053148688133",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Aureluxe",
+            "advertiserDomain": null,
+            "productMatchHint": "Facebook Ad: 27409053148688133",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:54:06.586Z",
+            "reportedLastShownAt": "2026-10-28T10:54:06.586Z",
+            "observedAt": "2026-10-28T10:54:06.951Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "Facebook Ad: 27409053148688133",
+            "description": "🐶🐱 Pet Hair All Over Your Couch? Not Anymore! ✨\nOur Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless.\n✅ Removes stubborn pet hair in seconds\n✅ Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills\n✅ Reusable & eco-friendly\n✅ Easy to empty and use again\nSpend less time cleaning and more time enjoying life with your pets. ❤️\n🎉 Limited Time Offer – Order Yours Today!\nhttps://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni?fbclid=fbclid",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzyiuz001q6cor6xmxn375"
+          },
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzyive001w6cor4iz3t27o",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=1652686075964972",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "1652686075964972",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Aureluxe",
+            "advertiserDomain": null,
+            "productMatchHint": "Facebook Ad: 1652686075964972",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:54:06.601Z",
+            "reportedLastShownAt": "2026-10-28T10:54:06.601Z",
+            "observedAt": "2026-10-28T10:54:06.951Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "Facebook Ad: 1652686075964972",
+            "description": "🐶🐱 Pet Hair All Over Your Couch? Not Anymore! ✨\nOur Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless.\n✅ Removes stubborn pet hair in seconds\n✅ Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills\n✅ Reusable & eco-friendly\n✅ Easy to empty and use again\nSpend less time cleaning and more time enjoying life with your pets. ❤️\n🎉 Limited Time Offer – Order Yours Today!\nhttps://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni?fbclid=fbclid",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzyive001w6cor4iz3t27o"
+          },
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzyivt00226cor6zknkllm",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=1328426295348377",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "1328426295348377",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Aureluxe",
+            "advertiserDomain": null,
+            "productMatchHint": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:54:06.616Z",
+            "reportedLastShownAt": "2026-10-28T10:54:06.616Z",
+            "observedAt": "2026-10-28T10:54:06.951Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+            "description": "🐶🐱 Pet Hair All Over Your Couch? Not Anymore! ✨\nOur Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless.\n✅ Removes stubborn pet hair in seconds\n✅ Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills\n✅ Reusable & eco-friendly\n✅ Easy to empty and use again\nSpend less time cleaning and more time enjoying life with your pets. ❤️\n🎉 Limited Time Offer – Order Yours Today!\nhttps://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni?fbclid=fbclid",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzyivt00226cor6zknkllm"
+          },
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvrzyiw800286coryen6tdi4",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=27106880412256326",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "27106880412256326",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Aureluxe",
+            "advertiserDomain": null,
+            "productMatchHint": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-28T10:54:06.632Z",
+            "reportedLastShownAt": "2026-10-28T10:54:06.632Z",
+            "observedAt": "2026-10-28T10:54:06.951Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+            "description": "🐶🐱 Pet Hair All Over Your Couch? Not Anymore! ✨\nOur Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless.\n✅ Removes stubborn pet hair in seconds\n✅ Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills\n✅ Reusable & eco-friendly\n✅ Easy to empty and use again\nSpend less time cleaning and more time enjoying life with your pets. ❤️\n🎉 Limited Time Offer – Order Yours Today!\nhttps://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni?fbclid=fbclid",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 1,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": "UNKNOWN"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvrzyiw800286coryen6tdi4"
+          }
+        ],
+        "identityStatus": "VERIFIED",
+        "resolutionSource": "Verified Shopify Product URL (/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni)",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Shopify Handle: pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+          "Canonical URL: https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni"
+        ],
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, dog, cat."
+        ],
+        "psychologyProfile": {
+          "targetCustomer": {
+            "claimText": "Pet owners with multiple animals (cats and dogs) dealing with everyday pet care challenges",
+            "evidenceReference": "Observed quotes: \"cat\", \"dog\" in Facebook Ad #1655139552269207",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.88,
+            "status": "OBSERVED"
+          },
+          "situationOrUseCase": {
+            "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Excessive pet hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+            "evidenceReference": "Observed quote: \"pet hair\" in Facebook Ad #1655139552269207",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.9,
+            "status": "OBSERVED"
+          },
+          "emotionalPain": {
+            "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+            "evidenceReference": "Observed quote: \"reusable\" in Facebook Ad #1655139552269207",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Single-word quote \"reusable\" does not directly substantiate the full claim assertion (10 terms)."
+          },
+          "purchaseTrigger": {
+            "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+            "evidenceReference": "Facebook Ad #1655139552269207",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "researchProductId": null,
+        "aiIntelligence": {
+          "candidateId": "cand_14769098",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Reusable Pet Hair Remover Roller with Self-Cleaning Base",
+          "suggestedProductType": "Pet Grooming and Cleaning Supplies",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "cmvrzyiuh001k6cornssodcug",
+            "cmvrzyivt00226cor6zknkllm"
+          ],
+          "relevanceEvidenceRefs": [
+            "cmvrzyiuh001k6cornssodcug",
+            "cmvrzyiuz001q6cor6xmxn375",
+            "cmvrzyive001w6cor4iz3t27o",
+            "cmvrzyivt00226cor6zknkllm",
+            "cmvrzyiw800286coryen6tdi4"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The product is a reusable pet hair remover roller with a self-cleaning base.",
+              "sourceRef": "cmvrzyiuh001k6cornssodcug",
+              "supportingQuote": "Our Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless."
+            },
+            {
+              "claim": "It works on sofas, carpets, beds, and car seats without sticky sheets or expensive refills.",
+              "sourceRef": "cmvrzyiuh001k6cornssodcug",
+              "supportingQuote": "Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills"
+            }
+          ],
+          "inferredClaims": [
+            "The product is targeted at pet owners struggling with pet fur on furniture.",
+            "The item is sourced via standard dropshipping or general e-commerce channels typical of Shopify storefronts."
+          ],
+          "contradictions": [],
+          "uncertainties": [
+            "Exact shipping times and manufacturing origins are not explicitly detailed in the ad copy."
+          ],
+          "aiConfidence": 0.98,
+          "needsHumanReview": false
+        },
+        "aiVerification": {
+          "verified": true,
+          "evidenceDecision": "ACCEPT_WITH_UNCERTAINTY",
+          "validAiResponse": true,
+          "correctCandidateId": true,
+          "validSourceReferences": true,
+          "accurateQuotations": true,
+          "actualMerchantEvidence": true,
+          "productIdentityConsistent": true,
+          "productRealityEligible": true,
+          "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+          "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+          "sanitizedResult": {
+            "candidateId": "cand_14769098",
+            "commercialEntityType": "PHYSICAL_PRODUCT",
+            "suggestedProductName": "Reusable Pet Hair Remover Roller with Self-Cleaning Base",
+            "suggestedProductType": "Pet Grooming and Cleaning Supplies",
+            "nicheRelevance": "HIGH",
+            "isLikelySellableProduct": true,
+            "identityEvidenceRefs": [
+              "cmvrzyiuh001k6cornssodcug",
+              "cmvrzyivt00226cor6zknkllm"
+            ],
+            "relevanceEvidenceRefs": [
+              "cmvrzyiuh001k6cornssodcug",
+              "cmvrzyiuz001q6cor6xmxn375",
+              "cmvrzyive001w6cor4iz3t27o",
+              "cmvrzyivt00226cor6zknkllm",
+              "cmvrzyiw800286coryen6tdi4"
+            ],
+            "directlyObservedClaims": [
+              {
+                "claim": "The product is a reusable pet hair remover roller with a self-cleaning base.",
+                "sourceRef": "cmvrzyiuh001k6cornssodcug",
+                "supportingQuote": "Our Reusable Pet Hair Remover makes cleaning up after your furry friends fast and effortless."
+              },
+              {
+                "claim": "It works on sofas, carpets, beds, and car seats without sticky sheets or expensive refills.",
+                "sourceRef": "cmvrzyiuh001k6cornssodcug",
+                "supportingQuote": "Works on sofas, carpets, beds & car seats\n✅ No sticky sheets or expensive refills"
+              }
+            ],
+            "inferredClaims": [
+              "The product is targeted at pet owners struggling with pet fur on furniture.",
+              "The item is sourced via standard dropshipping or general e-commerce channels typical of Shopify storefronts."
+            ],
+            "contradictions": [],
+            "uncertainties": [
+              "Exact shipping times and manufacturing origins are not explicitly detailed in the ad copy."
+            ],
+            "aiConfidence": 0.98,
+            "needsHumanReview": false
+          },
+          "contradictions": [],
+          "unsupportedClaims": [],
+          "hallucinatedSourceRefs": [],
+          "quoteMismatches": [],
+          "promptInjectionDetected": false,
+          "shortlistEligible": true,
+          "exclusionReason": null
+        },
+        "aiShortlistEligible": true,
+        "aiExclusionReason": null,
+        "aiFromCache": false,
+        "aiModelUsed": "gemini-3.5-flash-lite"
+      }
+    ],
+    "requestedCount": 3,
+    "qualifiedCount": 1,
+    "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "1 distinct products identified: Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "totalCandidatesEvaluated": 1,
+      "distinctCount": 1,
+      "duplicateGroupsCount": 0,
+      "details": [
+        {
+          "candidateId": "cand_14769098",
+          "title": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+          "canonicalKey": "pet hair remover roller dog cat fur remover with self cleaning base efficient animal hair removal to",
+          "storeDomain": "aureluxe.ch",
+          "isDuplicate": false
+        }
+      ]
+    }
+  },
+  "homeDecorShortlist": {
+    "shortlist": [],
+    "requestedCount": 3,
+    "qualifiedCount": 0,
+    "shortfallReason": "Only 0 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "No distinct products qualified for shortlist",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "totalCandidatesEvaluated": 0,
+      "distinctCount": 0,
+      "duplicateGroupsCount": 0,
+      "details": []
+    }
+  },
+  "gardeningShortlist": {
+    "shortlist": [],
+    "requestedCount": 3,
+    "qualifiedCount": 0,
+    "shortfallReason": "Only 0 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "No distinct products qualified for shortlist",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "totalCandidatesEvaluated": 0,
+      "distinctCount": 0,
+      "duplicateGroupsCount": 0,
+      "details": []
+    }
+  }
+}

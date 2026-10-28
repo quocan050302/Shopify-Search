@@ -1,0 +1,1786 @@
+{
+  "releaseVersion": "12.4.2",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "gitHead": "66647631421260cdca998947d851175b14f4853b",
+  "startedAt": "2026-10-28T10:49:09.793Z",
+  "completedAt": "2026-10-28T10:57:15.623Z",
+  "summary": {
+    "totalGates": 48,
+    "PASS": 45,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "INSUFFICIENT_EVIDENCE": 3,
+    "NOT_RUN": 0,
+    "INTERNAL_PIPELINE_VERIFIED": "PASS",
+    "LIVE_TOP3_COMPLETENESS": "INSUFFICIENT_EVIDENCE"
+  },
+  "verdicts": {
+    "Q04_LINT": "PASS",
+    "Q03_PRODUCTION_BUILD": "PASS",
+    "Q01_KH01_REGRESSION": "PASS",
+    "Q02_KH02_REGRESSION": "PASS",
+    "A01_GEMINI_MODEL_DISCOVERY": "PASS",
+    "A02_GEMINI_RETRY_FALLBACK": "PASS",
+    "A03_GEMINI_GLOBAL_BUDGET": "PASS",
+    "D01_GEMINI_DISCOVERY_PLANNER_WIRED": "PASS",
+    "D02_DYNAMIC_NICHE_UNDERSTANDING": "PASS",
+    "D03_UNKNOWN_NICHE_SUPPORT": "PASS",
+    "D04_QUERY_VALIDATION": "PASS",
+    "D05_QUERY_ARCHETYPE_DIVERSITY": "PASS",
+    "D06_DETERMINISTIC_PLANNER_FALLBACK": "PASS",
+    "B01_HISTORICAL_BACKTEST_EXECUTED": "PASS",
+    "B02_BASELINE_COMPARISON": "PASS",
+    "B03_NO_GOLD_LABEL_LEAKAGE": "PASS",
+    "B04_HOLDOUT_GENERALIZATION": "PASS",
+    "A04_GEMINI_CLASSIFICATION": "PASS",
+    "B05_REAL_GEMINI_EVALUATION": "PASS",
+    "A05_GEMINI_EVIDENCE_VERIFICATION": "PASS",
+    "R01_RELEVANT_PRODUCT_RECALL": "PASS",
+    "R02_AMBIGUOUS_CANDIDATE_RESCUE": "PASS",
+    "R03_FALSE_POSITIVE_CONTROL": "PASS",
+    "R04_PRODUCT_REALITY_GATE": "PASS",
+    "R05_PRODUCT_IDENTITY_VERIFICATION": "PASS",
+    "R06_DISTINCT_PRODUCT_DEDUPLICATION": "PASS",
+    "S01_META_GLOBAL_BUDGET": "PASS",
+    "S02_META_LIVE_QUERY_EXECUTION": "PASS",
+    "S03_META_CACHE_SEPARATION": "PASS",
+    "S04_ADAPTIVE_QUERY_EXECUTION": "PASS",
+    "S05_QUERY_YIELD_RECONCILIATION": "PASS",
+    "S06_LOOKBACK_SEMANTICS": "PASS",
+    "E01_SOURCE_QUERY_IDENTITY": "PASS",
+    "E02_QUERY_TO_AD_RECONCILIATION": "PASS",
+    "E03_AD_TO_CANDIDATE_RECONCILIATION": "PASS",
+    "E04_CANDIDATE_TO_AI_RECONCILIATION": "PASS",
+    "E05_AI_TO_SHORTLIST_RECONCILIATION": "PASS",
+    "E06_SQLITE_TO_HTTP_RECONCILIATION": "PASS",
+    "E07_HTTP_TO_BROWSER_RECONCILIATION": "PASS",
+    "Q05_REAL_CHROMIUM_E2E": "PASS",
+    "L01_DIY_REAL_RESEARCH": "PASS",
+    "L02_PET_REAL_RESEARCH": "PASS",
+    "L03_HOME_DECOR_REAL_RESEARCH": "PASS",
+    "L04_GARDENING_REAL_RESEARCH": "PASS",
+    "L05_LIVE_TOP3_SHORTLIST": "INSUFFICIENT_EVIDENCE",
+    "L06_LIVE_VERIFIED_EVERGREEN_TOP3": "INSUFFICIENT_EVIDENCE",
+    "L07_GOOGLE_PRODUCT_ENRICHMENT": "INSUFFICIENT_EVIDENCE",
+    "Q06_ZERO_FALSE_PASS_AUDIT": "PASS"
+  },
+  "gates": {
+    "Q04_LINT": {
+      "gateId": "Q04_LINT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "TypeScript (npx tsc --noEmit) and ESLint (npm run lint) both exit with code 0",
+      "expected": {
+        "tscExitCode": 0,
+        "lintExitCode": 0
+      },
+      "observed": {
+        "tscExitCode": 0,
+        "lintExitCode": 0
+      },
+      "executionCommand": "npx tsc --noEmit && npm run lint",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/tsc.log",
+        "logs/lint.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/LINT_TYPECHECK.json",
+      "reason": "Zero TypeScript and ESLint errors",
+      "executedAt": "2026-10-28T10:49:30.836Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "Q03_PRODUCTION_BUILD": {
+      "gateId": "Q03_PRODUCTION_BUILD",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "npm run build succeeds and generates .next/BUILD_ID",
+      "expected": {
+        "exitCode": 0,
+        "hasBuildId": true
+      },
+      "observed": {
+        "exitCode": 0,
+        "buildId": "1qmXKguk9XuCOYZiApQ6v",
+        "durationMs": 12490
+      },
+      "executionCommand": "npm run build",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "1qmXKguk9XuCOYZiApQ6v",
+        "logs/next_build.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCTION_BUILD.json",
+      "reason": "Next.js production build succeeded (BUILD_ID=1qmXKguk9XuCOYZiApQ6v)",
+      "executedAt": "2026-10-28T10:49:43.328Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "Q01_KH01_REGRESSION": {
+      "gateId": "Q01_KH01_REGRESSION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "npm run kh01:verify passes all 69 KH-01 tests with 0 failures",
+      "expected": {
+        "exitCode": 0,
+        "passed": 69,
+        "failed": 0
+      },
+      "observed": {
+        "exitCode": 0,
+        "passed": 69,
+        "total": 69,
+        "failed": 0
+      },
+      "executionCommand": "npm run kh01:verify",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/kh01_verify.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/KH01_REGRESSION.json",
+      "reason": "KH-01 verified (69/69)",
+      "executedAt": "2026-10-28T10:49:59.142Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "Q02_KH02_REGRESSION": {
+      "gateId": "Q02_KH02_REGRESSION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "KH-02 unit (>=370 tests including V12.4.2 Discovery Recall suite) and integration (>=26 tests) pass with 0 failures",
+      "expected": {
+        "unitExitCode": 0,
+        "intExitCode": 0,
+        "minUnitPassed": 370,
+        "minIntPassed": 26
+      },
+      "observed": {
+        "unitExitCode": 0,
+        "unitPassed": 376,
+        "intExitCode": 0,
+        "intPassed": 27
+      },
+      "executionCommand": "npm run kh02:test:unit && npm run kh02:test:integration",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/kh02_unit.log",
+        "logs/kh02_integration.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/KH02_REGRESSION.json",
+      "reason": "KH-02 verified: 376 unit + 27 integration tests passed",
+      "executedAt": "2026-10-28T10:52:46.275Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "A01_GEMINI_MODEL_DISCOVERY": {
+      "gateId": "A01_GEMINI_MODEL_DISCOVERY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Runtime Gemini model discovery lists models and selects an eligible structured-output flash/flash-lite model",
+      "expected": {
+        "authenticated": true,
+        "eligibleCount": "> 0"
+      },
+      "observed": {
+        "authenticated": true,
+        "discoveredCount": 60,
+        "eligibleCount": 21,
+        "primaryModelId": "gemini-3.5-flash-lite",
+        "fallbackModelId": "gemini-flash-lite-latest"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "gemini-3.5-flash-lite"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GEMINI_DISCOVERY_MODEL_SELECTION.json",
+      "reason": "Selected primary model gemini-3.5-flash-lite",
+      "executedAt": "2026-10-28T10:52:46.989Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "A02_GEMINI_RETRY_FALLBACK": {
+      "gateId": "A02_GEMINI_RETRY_FALLBACK",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Executes 1 initial + 3 retries (4 attempts) on 503 before downgrading to compatible fallback model",
+      "expected": {
+        "primaryAttempts": 4,
+        "fallbackAttempts": 1,
+        "result": "FALLBACK_SUCCESS"
+      },
+      "observed": {
+        "primaryAttempts": 4,
+        "fallbackAttempts": 1,
+        "result": "FALLBACK_SUCCESS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "model-primary-503",
+        "model-fallback-ok"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GEMINI_DISCOVERY_FALLBACK.json",
+      "reason": "Verified 4 attempts on primary 503 + 1 attempt on fallback model",
+      "executedAt": "2026-10-28T10:52:47.906Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "A03_GEMINI_GLOBAL_BUDGET": {
+      "gateId": "A03_GEMINI_GLOBAL_BUDGET",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Shared GeminiRunBudgetTracker enforces run-wide request ceiling across Discovery Planning and Product Classification",
+      "expected": {
+        "maxRequests": 2,
+        "requestsStarted": 2,
+        "thirdBlocked": true
+      },
+      "observed": {
+        "requestsStarted": 2,
+        "thirdBlocked": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "GeminiRunBudgetTracker"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GEMINI_DISCOVERY_FALLBACK.json",
+      "reason": "Global Gemini request cap strictly enforced",
+      "executedAt": "2026-10-28T10:52:47.907Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D01_GEMINI_DISCOVERY_PLANNER_WIRED": {
+      "gateId": "D01_GEMINI_DISCOVERY_PLANNER_WIRED",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "buildHybridKH02DiscoveryQueryPlan invokes Gemini Discovery Planner before source acquisition and produces validated queries",
+      "expected": {
+        "archetypesCount": ">= 3",
+        "validatedQueriesCount": ">= 3"
+      },
+      "observed": {
+        "plannerStatus": "COMPLETED_GEMINI",
+        "modelUsed": "gemini-3.5-flash-lite",
+        "archetypesCount": 5,
+        "validatedQueriesCount": 10,
+        "sampleQueries": [
+          "wall repair kit",
+          "cordless hot glue gun",
+          "decorative switch plate covers",
+          "pocket hole jig"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "accept_plan_diy",
+      "evidenceRefs": [
+        "src/services/kh02/discovery/geminiDiscoveryPlanner.ts"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GEMINI_DISCOVERY_PLANNER.json",
+      "reason": "Discovery planner wired (COMPLETED_GEMINI, model=gemini-3.5-flash-lite)",
+      "executedAt": "2026-10-28T10:52:55.299Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D02_DYNAMIC_NICHE_UNDERSTANDING": {
+      "gateId": "D02_DYNAMIC_NICHE_UNDERSTANDING",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "analyzeNicheIntent distinguishes BROAD_CATEGORY, SPECIFIC_PRODUCT, and prohibited/empty topics accurately",
+      "expected": {
+        "diy": "BROAD_CATEGORY",
+        "cordlessGlueGun": "SPECIFIC_PRODUCT",
+        "prohibitedCasino": true
+      },
+      "observed": {
+        "diy": "BROAD_CATEGORY",
+        "gardening": "BROAD_CATEGORY",
+        "homeDecor": "BROAD_CATEGORY",
+        "cordlessGlueGun": "SPECIFIC_PRODUCT",
+        "catWaterFountain": "SPECIFIC_PRODUCT",
+        "prohibitedCasino": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "analyzeNicheIntent"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/NICHE_INTENT_ANALYSIS.json",
+      "reason": "Niche intent classification verified across broad, specific, and prohibited topics",
+      "executedAt": "2026-10-28T10:52:55.299Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D03_UNKNOWN_NICHE_SUPPORT": {
+      "gateId": "D03_UNKNOWN_NICHE_SUPPORT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Previously unsupported niches ('diy', 'gardening', 'ergonomic desk accessories') expand into >=3 physical product archetypes without bare 1-word queries",
+      "expected": {
+        "diyArchetypes": ">= 3",
+        "gardeningArchetypes": ">= 3",
+        "unfamiliarArchetypes": ">= 3",
+        "bareDiyQueryPresent": false
+      },
+      "observed": {
+        "diyArchetypes": [
+          "Home Repair Kits",
+          "DIY Crafting Tools",
+          "Decorative Home Hardware & Wall Decor",
+          "Woodworking Jigs & Clamps",
+          "Furniture & Surface Restoration"
+        ],
+        "gardeningArchetypes": [
+          "Plant Watering & Irrigation",
+          "Pruning & Cutting Tools",
+          "Seed Starting & Propagation",
+          "Plant Supports & Trellises",
+          "Soil Testing & Monitoring"
+        ],
+        "unfamiliarArchetypes": [
+          "ergonomic desk Tools & Gadgets",
+          "ergonomic desk Starter & Repair Kits",
+          "ergonomic desk Storage & Organizers",
+          "ergonomic desk Essential Accessories"
+        ],
+        "bareDiyQueryPresent": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "accept_plan_diy",
+        "accept_plan_gardening",
+        "accept_plan_unfamiliar"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_ARCHETYPE_COVERAGE.json",
+      "reason": "Unknown/broad niches expand into concrete physical product archetypes",
+      "executedAt": "2026-10-28T10:52:55.299Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D04_QUERY_VALIDATION": {
+      "gateId": "D04_QUERY_VALIDATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "validateDiscoveryPlan rejects bare 1-word queries, B2B printers, digital apps, vet bill articles, CTA slogans, and duplicates",
+      "expected": {
+        "validatedCount": 1,
+        "rejectedCount": 6,
+        "acceptedPhrase": "cordless hot glue gun"
+      },
+      "observed": {
+        "validatedCount": 1,
+        "rejectedCount": 6,
+        "acceptedPhrases": [
+          "cordless hot glue gun"
+        ],
+        "rejectedQueries": [
+          {
+            "phrase": "diy",
+            "reason": "Single-word broad category query rejected in favor of concrete product archetype queries."
+          },
+          {
+            "phrase": "pos thermal printer wholesale",
+            "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(pos thermal printer|receipt printer|barcode scanner wholesale|b2b app|alibaba|get latest price|fob price|moq)\\b)."
+          },
+          {
+            "phrase": "icontrol easy widgets themes",
+            "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(widgets? themes?|ios app|android app|wallpaper app|icontrol|download app|app store|google play)\\b)."
+          },
+          {
+            "phrase": "er vet bill cost factors",
+            "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(vet bill|cost factors|how much does|article|blog|wikipedia|news)\\b)."
+          },
+          {
+            "phrase": "buy now free shipping",
+            "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(free shipping|best deal|shop now|limited time|flash sale|clearance sale|discount code|coupon)\\b)."
+          },
+          {
+            "phrase": "Cordless Hot Glue Gun",
+            "reason": "Near-duplicate synonym of an already validated query."
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "validateDiscoveryPlan"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/QUERY_PLAN_VALIDATION.json",
+      "reason": "All 6 invalid/duplicate queries rejected; valid physical product query preserved",
+      "executedAt": "2026-10-28T10:52:55.299Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D05_QUERY_ARCHETYPE_DIVERSITY": {
+      "gateId": "D05_QUERY_ARCHETYPE_DIVERSITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Top 3 planned queries for broad topics cover 3 distinct product archetypes (round-robin diversification)",
+      "expected": {
+        "top3QueriesCount": 3,
+        "distinctArchetypesCount": 3
+      },
+      "observed": {
+        "top3Queries": [
+          {
+            "phrase": "wall repair kit",
+            "archetypeId": "wall_repair_kit"
+          },
+          {
+            "phrase": "cordless hot glue gun",
+            "archetypeId": "cordless_hot_glue_gun"
+          },
+          {
+            "phrase": "decorative switch plate covers",
+            "archetypeId": "decorative_switch_plate_covers"
+          }
+        ],
+        "distinctArchetypesCount": 3
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "selectQueriesForSearchRound"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/DYNAMIC_QUERY_PLAN.json",
+      "reason": "3 distinct archetypes covered in first 3 queries",
+      "executedAt": "2026-10-28T10:52:55.299Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "D06_DETERMINISTIC_PLANNER_FALLBACK": {
+      "gateId": "D06_DETERMINISTIC_PLANNER_FALLBACK",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "When Gemini is unavailable or budget is 0, planner falls back deterministically with >=4 archetypes and truthful telemetry",
+      "expected": {
+        "status": "FALLBACK_DETERMINISTIC",
+        "archetypesCount": ">= 4",
+        "queriesCount": ">= 4"
+      },
+      "observed": {
+        "status": "FALLBACK_DETERMINISTIC",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypesCount": 5,
+        "queriesCount": 10
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "buildDeterministicDiscoveryPlan"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GEMINI_DISCOVERY_FALLBACK.json",
+      "reason": "Deterministic fallback verified",
+      "executedAt": "2026-10-28T10:52:55.300Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "B01_HISTORICAL_BACKTEST_EXECUTED": {
+      "gateId": "B01_HISTORICAL_BACKTEST_EXECUTED",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "runDiscoveryRecallBacktest executes Modes A, B, C, and D across 24 labeled cases and frozen SQLite runs",
+      "expected": {
+        "verdict": "PASS",
+        "totalCases": 24,
+        "modeAPassed": true
+      },
+      "observed": {
+        "verdict": "PASS",
+        "totalCases": 24,
+        "modeAPassed": true,
+        "historicalRunsReplayed": 1
+      },
+      "executionCommand": "npm run kh02:discovery:backtest",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "cbfec856ee6bf5d4ae63b247ef649446fd6c7d9421efb5553f18d59a9a1605cb"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/BACKTEST_V12_4_2_METRICS.json",
+      "reason": "All 4 backtest modes executed and passed",
+      "executedAt": "2026-10-28T10:53:02.873Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "B02_BASELINE_COMPARISON": {
+      "gateId": "B02_BASELINE_COMPARISON",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "V12.4.2 significantly improves relevant product recall over V12.4.1 baseline on identical frozen data with 0 false positives",
+      "expected": {
+        "recallImproved": true,
+        "nonLiteralRecallImproved": true,
+        "falsePositives": 0
+      },
+      "observed": {
+        "baselineRecall": 0.25,
+        "v12_4_2_Recall": 1,
+        "baselineNonLiteralRecall": 0.1818,
+        "v12_4_2_NonLiteralRecall": 1,
+        "v12_4_2_Precision": 1,
+        "v12_4_2_FalsePositives": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "BACKTEST_RECALL_COMPARISON.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/BACKTEST_RECALL_COMPARISON.json",
+      "reason": "Recall improved from 0.25 to 1 (Precision=1, FP=0)",
+      "executedAt": "2026-10-28T10:53:02.873Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "B03_NO_GOLD_LABEL_LEAKAGE": {
+      "gateId": "B03_NO_GOLD_LABEL_LEAKAGE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All gold* labels and split identifiers are stripped before any prediction function executes",
+      "expected": {
+        "leakageDetected": false,
+        "violationsCount": 0
+      },
+      "observed": {
+        "leakageDetected": false,
+        "violations": [],
+        "blindInputCount": 24,
+        "verdict": "PASS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "stripGoldLabelsForRecallEval"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/BACKTEST_LABEL_LEAKAGE_AUDIT.json",
+      "reason": "Zero gold-label leakage verified across all 24 blind inputs",
+      "executedAt": "2026-10-28T10:53:02.873Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "B04_HOLDOUT_GENERALIZATION": {
+      "gateId": "B04_HOLDOUT_GENERALIZATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Holdout split (10 unseen cases across diy, pet, gardening, kitchen, home decor) achieves >=90% recall and 0 false positives",
+      "expected": {
+        "holdoutRecall": ">= 0.9",
+        "holdoutPrecision": ">= 0.9",
+        "holdoutFP": 0
+      },
+      "observed": {
+        "totalCases": 10,
+        "positiveGoldCount": 6,
+        "negativeGoldCount": 4,
+        "truePositiveCount": 6,
+        "falsePositiveCount": 0,
+        "trueNegativeCount": 4,
+        "falseNegativeCount": 0,
+        "relevantProductRecall": 1,
+        "productPrecision": 1,
+        "shortlistEligibilityAccuracy": 1,
+        "nonLiteralPositiveRecall": 1,
+        "relevantArchetypeCoverage": 1,
+        "uniqueIdentifiableProductYield": 6,
+        "duplicateProductRate": 0,
+        "queryYieldPerProviderRequest": 0.4,
+        "sourceEvidenceCompleteness": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "BACKTEST_V12_4_2_METRICS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/BACKTEST_V12_4_2_METRICS.json",
+      "reason": "Holdout recall=1, precision=1, FP=0",
+      "executedAt": "2026-10-28T10:53:02.873Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "A04_GEMINI_CLASSIFICATION": {
+      "gateId": "A04_GEMINI_CLASSIFICATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Gemini Product Intelligence classifies Decorative Switch Sticker as PHYSICAL_PRODUCT for DIY and disqualifies B2B POS Thermal Printer",
+      "expected": {
+        "switchEntity": "PHYSICAL_PRODUCT",
+        "posShortlistEligible": false
+      },
+      "observed": {
+        "switchModel": "gemini-3.5-flash-lite",
+        "switchEntity": "PHYSICAL_PRODUCT",
+        "switchRelevance": "HIGH",
+        "switchShortlistEligible": true,
+        "posModel": "gemini-3.5-flash-lite",
+        "posEntity": "LEAD_GENERATION",
+        "posShortlistEligible": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "gemini-3.5-flash-lite"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/SEMANTIC_RELEVANCE_REGRESSION.json",
+      "reason": "Gemini (gemini-3.5-flash-lite) classified Switch Sticker as PHYSICAL_PRODUCT and rejected POS Thermal Printer",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "B05_REAL_GEMINI_EVALUATION": {
+      "gateId": "B05_REAL_GEMINI_EVALUATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Mode D executes real Gemini API calls for both Discovery Planning and Product Classification (separated from deterministic fixtures)",
+      "expected": {
+        "plannerStatus": "COMPLETED",
+        "classificationVerdict": "PASS"
+      },
+      "observed": {
+        "plannerModel": "gemini-3.5-flash-lite",
+        "plannerStatus": "COMPLETED",
+        "classificationModel": "gemini-3.5-flash-lite",
+        "classificationVerdict": "PASS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "gemini-3.5-flash-lite"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/SEMANTIC_RELEVANCE_REGRESSION.json",
+      "reason": "Real Gemini evaluation completed for both planner and classifier",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "A05_GEMINI_EVIDENCE_VERIFICATION": {
+      "gateId": "A05_GEMINI_EVIDENCE_VERIFICATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "verifyAIEvidence rejects hallucinated source references and blocks non-physical B2B POS printers from shortlist eligibility",
+      "expected": {
+        "verified": false,
+        "shortlistEligible": false
+      },
+      "observed": {
+        "verified": false,
+        "shortlistEligible": false,
+        "hallucinatedSourceRefs": [
+          "hallucinated_ref_999",
+          "hallucinated_ref_999"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "verifyAIEvidence"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_REALITY_GATE.json",
+      "reason": "Deterministic AI evidence verifier enforced",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R01_RELEVANT_PRODUCT_RECALL": {
+      "gateId": "R01_RELEVANT_PRODUCT_RECALL",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Relevant physical products (including all 11 non-literal niche products) are recovered with 100% recall on the benchmark dataset",
+      "expected": {
+        "relevantProductRecall": 1,
+        "nonLiteralPositiveRecall": 1
+      },
+      "observed": {
+        "relevantProductRecall": 1,
+        "nonLiteralPositiveRecall": 1,
+        "recoveredCount": 9
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "PRODUCT_RECALL_RECOVERY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_RECALL_RECOVERY.json",
+      "reason": "12/12 relevant physical products recovered (up from 3/12 in V12.4.1)",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R02_AMBIGUOUS_CANDIDATE_RESCUE": {
+      "gateId": "R02_AMBIGUOUS_CANDIDATE_RESCUE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "'Multicolor Rose Floral Pattern Switch Sticker' (which lacks the literal word 'diy') is rescued as POTENTIAL_RELEVANCE / HIGH_RELEVANCE so it reaches Gemini review",
+      "expected": {
+        "isAccepted": true,
+        "decisionIn": [
+          "POTENTIAL_RELEVANCE",
+          "HIGH_RELEVANCE"
+        ]
+      },
+      "observed": {
+        "decision": "POTENTIAL_RELEVANCE",
+        "discoveryDecision": "POTENTIAL_RELEVANCE",
+        "relevanceStatus": "PROBABLY_RELEVANT",
+        "isAccepted": true,
+        "score": 0.78,
+        "reasons": [
+          "Potential product archetype match for 'diy' on terms: switch sticker (preserved for Gemini semantic analysis)."
+        ],
+        "matchedArchetypeId": null
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "evaluateDiscoveryRelevance"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/EARLY_REJECTION_REGRESSION.json",
+      "reason": "Non-literal DIY physical product rescued before AI stage",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R03_FALSE_POSITIVE_CONTROL": {
+      "gateId": "R03_FALSE_POSITIVE_CONTROL",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 12 negative cases (Vet Insurance, ER Vet Bill, Casino, POS Printer, Digital Widgets, Holiday Slogan, Lead Form, Lawn Service, etc.) are rejected with 0 false positives",
+      "expected": {
+        "falsePositiveCount": 0,
+        "productPrecision": 1
+      },
+      "observed": {
+        "falsePositiveCount": 0,
+        "productPrecision": 1,
+        "trueNegativeCount": 12
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "BACKTEST_FALSE_POSITIVE_ANALYSIS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/BACKTEST_FALSE_POSITIVE_ANALYSIS.json",
+      "reason": "0/12 false positives across all negative controls",
+      "executedAt": "2026-10-28T10:53:06.215Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R04_PRODUCT_REALITY_GATE": {
+      "gateId": "R04_PRODUCT_REALITY_GATE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Mandatory Product Reality Gate distinguishes /products/ SKU pages from /collections/ pages and rejects campaign slogans ('Get Halloween ready')",
+      "expected": {
+        "skuEligible": true,
+        "skuPageClass": "ACTUAL_PRODUCT_PAGE",
+        "colPageClass": "COLLECTION_PAGE",
+        "halloweenEligible": false
+      },
+      "observed": {
+        "skuEligible": true,
+        "skuPageClass": "ACTUAL_PRODUCT_PAGE",
+        "colPageClass": "COLLECTION_PAGE",
+        "halloweenEligible": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "evaluateCandidateProductReality"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_REALITY_GATE.json",
+      "reason": "Product Reality Gate enforced across SKU, collection, and campaign pages",
+      "executedAt": "2026-10-28T10:53:06.218Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R05_PRODUCT_IDENTITY_VERIFICATION": {
+      "gateId": "R05_PRODUCT_IDENTITY_VERIFICATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Product identity verification extracts canonical /products/ URLs and prevents /collections/ URLs without SKU from claiming VERIFIED_PHYSICAL_PRODUCT",
+      "expected": {
+        "canonicalUrlExtracted": true,
+        "collectionNotVerifiedSku": true
+      },
+      "observed": {
+        "canonicalProductUrl": "https://crafttools.com/products/cordless-hot-glue-gun",
+        "storeDomain": "crafttools.com",
+        "collectionRealityStatus": "REJECTED"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "PRODUCT_IDENTITY_EVIDENCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_IDENTITY_EVIDENCE.json",
+      "reason": "Product identity verification passed",
+      "executedAt": "2026-10-28T10:53:06.218Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R06_DISTINCT_PRODUCT_DEDUPLICATION": {
+      "gateId": "R06_DISTINCT_PRODUCT_DEDUPLICATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Multiple ad creatives pointing to the same canonical Shopify product URL are consolidated into 1 product candidate and deduplicated in shortlist",
+      "expected": {
+        "consolidatedCandidatesCount": 1,
+        "supportingAdsCount": 2,
+        "distinctCount": 1
+      },
+      "observed": {
+        "consolidatedCandidatesCount": 1,
+        "supportingAdsCount": 2,
+        "distinctCount": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "PRODUCT_DISTINCTNESS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCT_DISTINCTNESS.json",
+      "reason": "Canonical SKU deduplication verified",
+      "executedAt": "2026-10-28T10:53:06.218Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S01_META_GLOBAL_BUDGET": {
+      "gateId": "S01_META_GLOBAL_BUDGET",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Shared MetaQueryBudgetTracker enforces strict 3-request ceiling across Round 1 and Adaptive Round 2 without resetting",
+      "expected": {
+        "maxRequests": 3,
+        "r1Consume": true,
+        "r2Consume": true,
+        "fourthRequestBlocked": true,
+        "remaining": 0
+      },
+      "observed": {
+        "r1Consume": true,
+        "r2Consume": true,
+        "fourthRequestBlocked": true,
+        "remaining": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "MetaQueryBudgetTracker"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/META_QUERY_BUDGET.json",
+      "reason": "3-request global Meta budget strictly enforced across rounds",
+      "executedAt": "2026-10-28T10:53:06.222Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S02_META_LIVE_QUERY_EXECUTION": {
+      "gateId": "S02_META_LIVE_QUERY_EXECUTION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Meta adapter executes planned archetype queries within the 3-request cap and records per-query execution outcomes",
+      "expected": {
+        "diyQueriesExecuted": "1..3",
+        "petQueriesExecuted": "1..3"
+      },
+      "observed": {
+        "diyQueriesExecuted": 3,
+        "diyOutcomes": [
+          {
+            "subquery": "wall repair kit",
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "recordsReturned": 3,
+            "roundNumber": 1
+          },
+          {
+            "subquery": "cordless hot glue gun",
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "recordsReturned": 2,
+            "roundNumber": 1
+          },
+          {
+            "subquery": "decorative switch plate covers",
+            "status": "SUCCEEDED_EMPTY",
+            "recordsReturned": 0,
+            "roundNumber": 2
+          }
+        ],
+        "petQueriesExecuted": 3,
+        "petOutcomes": [
+          {
+            "subquery": "pet hair remover roller",
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "recordsReturned": 8,
+            "roundNumber": 1
+          },
+          {
+            "subquery": "cat water fountain",
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "recordsReturned": 10,
+            "roundNumber": 1
+          },
+          {
+            "subquery": "automatic pet feeder",
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "recordsReturned": 10,
+            "roundNumber": 2
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "kh02_run_1793184791598_vcxs0",
+        "kh02_run_1793184831558_8ordr"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/META_QUERY_EXECUTION.json",
+      "reason": "Planned queries executed and recorded per query",
+      "executedAt": "2026-10-28T10:57:15.551Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S03_META_CACHE_SEPARATION": {
+      "gateId": "S03_META_CACHE_SEPARATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Live provider ads and cached SQLite ads are tracked and reported separately without conflation",
+      "expected": {
+        "isolatedWorkspaceQueryExecuted": false,
+        "separatesFreshAndCached": true
+      },
+      "observed": {
+        "isolatedWorkspaceQueryExecuted": false,
+        "diyFreshLiveAdsCount": 5,
+        "diyHistoricalCachedAdsCount": 7,
+        "petFreshLiveAdsCount": 28,
+        "petHistoricalCachedAdsCount": 12
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "META_LIVE_CACHE_PROVENANCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/META_LIVE_CACHE_PROVENANCE.json",
+      "reason": "Live vs cached ad provenance strictly separated",
+      "executedAt": "2026-10-28T10:57:15.568Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S04_ADAPTIVE_QUERY_EXECUTION": {
+      "gateId": "S04_ADAPTIVE_QUERY_EXECUTION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Orchestrator executes bounded Round 2 adaptive search when Round 1 yields <3 identifiable products and records explicit stopReason",
+      "expected": {
+        "round2Observed": true,
+        "maxRequestsRespected": true,
+        "hasStopReason": true
+      },
+      "observed": {
+        "round2Observed": true,
+        "diyRounds": [
+          {
+            "subquery": "wall repair kit",
+            "round": 1
+          },
+          {
+            "subquery": "cordless hot glue gun",
+            "round": 1
+          },
+          {
+            "subquery": "decorative switch plate covers",
+            "round": 2
+          }
+        ],
+        "diyStopReason": "SOURCE_BUDGET_EXHAUSTED",
+        "petStopReason": "SOURCE_BUDGET_EXHAUSTED",
+        "homeDecorStopReason": "SOURCE_BUDGET_EXHAUSTED",
+        "gardeningStopReason": "SOURCE_BUDGET_EXHAUSTED"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "ADAPTIVE_SEARCH_ROUNDS.json",
+        "ADAPTIVE_SEARCH_STOP_REASONS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/ADAPTIVE_SEARCH_ROUNDS.json",
+      "reason": "Bounded Round 2 adaptive search and explicit stopReason verified",
+      "executedAt": "2026-10-28T10:57:15.569Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S05_QUERY_YIELD_RECONCILIATION": {
+      "gateId": "S05_QUERY_YIELD_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every executed discovery query records a reconciled QueryYield entry linking queryId, phrase, roundNumber, and candidate contributions",
+      "expected": {
+        "diyYieldsCount": "> 0",
+        "petYieldsCount": "> 0"
+      },
+      "observed": {
+        "diyYields": [
+          {
+            "queryId": "kh02_q_r1_1_7883b4e1",
+            "phrase": "wall repair kit",
+            "source": "META_ADS",
+            "roundNumber": 1,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "wall_repair_kit",
+            "actualAdsReturned": 3,
+            "uniqueAdsReturned": 3,
+            "relevantCandidates": 1,
+            "merchantLinkedCandidates": 0,
+            "identifiableProducts": 0,
+            "qualifiedShortlistContributions": 0,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_WITH_RESULTS"
+          },
+          {
+            "queryId": "kh02_q_r1_2_671c4aba",
+            "phrase": "cordless hot glue gun",
+            "source": "META_ADS",
+            "roundNumber": 1,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "cordless_hot_glue_gun",
+            "actualAdsReturned": 2,
+            "uniqueAdsReturned": 2,
+            "relevantCandidates": 0,
+            "merchantLinkedCandidates": 0,
+            "identifiableProducts": 0,
+            "qualifiedShortlistContributions": 0,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_WITH_RESULTS"
+          },
+          {
+            "queryId": "kh02_q_r1_3_a31661ab",
+            "phrase": "decorative switch plate covers",
+            "source": "META_ADS",
+            "roundNumber": 2,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "decorative_switch_plate_covers",
+            "actualAdsReturned": 0,
+            "uniqueAdsReturned": 0,
+            "relevantCandidates": 0,
+            "merchantLinkedCandidates": 0,
+            "identifiableProducts": 0,
+            "qualifiedShortlistContributions": 0,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_EMPTY"
+          }
+        ],
+        "petYields": [
+          {
+            "queryId": "kh02_q_r1_1_17efd8b5",
+            "phrase": "pet hair remover roller",
+            "source": "META_ADS",
+            "roundNumber": 1,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "pet_hair_remover_roller",
+            "actualAdsReturned": 8,
+            "uniqueAdsReturned": 8,
+            "relevantCandidates": 2,
+            "merchantLinkedCandidates": 1,
+            "identifiableProducts": 1,
+            "qualifiedShortlistContributions": 1,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_WITH_RESULTS"
+          },
+          {
+            "queryId": "kh02_q_r1_2_86afa4b8",
+            "phrase": "cat water fountain",
+            "source": "META_ADS",
+            "roundNumber": 1,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "stainless_cat_water_fountain",
+            "actualAdsReturned": 10,
+            "uniqueAdsReturned": 10,
+            "relevantCandidates": 1,
+            "merchantLinkedCandidates": 0,
+            "identifiableProducts": 0,
+            "qualifiedShortlistContributions": 0,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_WITH_RESULTS"
+          },
+          {
+            "queryId": "kh02_q_r1_3_a76bbe54",
+            "phrase": "automatic pet feeder",
+            "source": "META_ADS",
+            "roundNumber": 2,
+            "origin": "GEMINI_PLANNER",
+            "archetypeId": "automatic_pet_feeder",
+            "actualAdsReturned": 10,
+            "uniqueAdsReturned": 10,
+            "relevantCandidates": 0,
+            "merchantLinkedCandidates": 0,
+            "identifiableProducts": 0,
+            "qualifiedShortlistContributions": 0,
+            "rejectedCandidates": 0,
+            "duplicateAds": 0,
+            "sourceStatus": "SUCCEEDED_WITH_RESULTS"
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "META_QUERY_YIELD.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/META_QUERY_YIELD.json",
+      "reason": "Per-query yield telemetry reconciled",
+      "executedAt": "2026-10-28T10:57:15.569Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "S06_LOOKBACK_SEMANTICS": {
+      "gateId": "S06_LOOKBACK_SEMANTICS",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Requested lookback window (30D, 90D, 180D) is preserved end-to-end and reported alongside honest provider coverage notes",
+      "expected": {
+        "diyLookback": 180,
+        "petLookback": 90,
+        "kitchenLookback": 30,
+        "hasLimitationNote": true
+      },
+      "observed": {
+        "diyLookbackCoverage": {
+          "requestedLookbackDays": 180,
+          "queryExecutionTime": "2026-10-28T10:53:11.714Z",
+          "earliestAdFirstSeen": "2026-10-28T09:13:50.715Z",
+          "latestAdLastSeen": "2026-10-28T10:53:24.622Z",
+          "activeAdsCount": 5,
+          "historicalCachedAdsCount": 7,
+          "freshLiveAdsCount": 5,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "petLookbackCoverage": {
+          "requestedLookbackDays": 90,
+          "queryExecutionTime": "2026-10-28T10:53:51.850Z",
+          "earliestAdFirstSeen": "2026-10-27T01:42:52.374Z",
+          "latestAdLastSeen": "2026-10-28T10:54:12.293Z",
+          "activeAdsCount": 28,
+          "historicalCachedAdsCount": 12,
+          "freshLiveAdsCount": 28,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "kitchenLookbackCoverage": {
+          "requestedLookbackDays": 30,
+          "queryExecutionTime": "2026-10-28T10:55:45.447Z",
+          "earliestAdFirstSeen": "2026-10-28T10:39:59.823Z",
+          "latestAdLastSeen": "2026-10-28T10:56:04.192Z",
+          "activeAdsCount": 11,
+          "historicalCachedAdsCount": 15,
+          "freshLiveAdsCount": 11,
+          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "DIY_US_180D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/DIY_US_180D_REAL_RUN.json",
+      "reason": "Lookback semantics verified across 30D, 90D, and 180D runs",
+      "executedAt": "2026-10-28T10:57:15.570Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E01_SOURCE_QUERY_IDENTITY": {
+      "gateId": "E01_SOURCE_QUERY_IDENTITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every planned discovery query has a deterministic queryId bound to the authoritative researchRunId",
+      "expected": {
+        "hasQueryIds": true,
+        "runIdMatches": "kh02_run_1793184791598_vcxs0"
+      },
+      "observed": {
+        "runId": "kh02_run_1793184791598_vcxs0",
+        "plannedQueries": [
+          {
+            "queryId": "kh02_q_r1_1_7883b4e1",
+            "researchRunId": "kh02_run_1793184791598_vcxs0",
+            "phrase": "wall repair kit"
+          },
+          {
+            "queryId": "kh02_q_r1_2_671c4aba",
+            "researchRunId": "kh02_run_1793184791598_vcxs0",
+            "phrase": "cordless hot glue gun"
+          },
+          {
+            "queryId": "kh02_q_r1_3_a31661ab",
+            "researchRunId": "kh02_run_1793184791598_vcxs0",
+            "phrase": "decorative switch plate covers"
+          },
+          {
+            "queryId": "kh02_q_r1_4_2dba4796",
+            "researchRunId": "kh02_run_1793184791598_vcxs0",
+            "phrase": "pocket hole jig"
+          },
+          {
+            "queryId": "kh02_q_r1_5_b4c61e3c",
+            "researchRunId": "kh02_run_1793184791598_vcxs0",
+            "phrase": "wood scratch repair markers"
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "SOURCE_TO_QUERY_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/SOURCE_TO_QUERY_RECONCILIATION.json",
+      "reason": "Source query IDs verified",
+      "executedAt": "2026-10-28T10:57:15.570Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E02_QUERY_TO_AD_RECONCILIATION": {
+      "gateId": "E02_QUERY_TO_AD_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Executed provider queries reconcile with returned ad observation counts and queryYields",
+      "expected": {
+        "allExecutionsHaveQueryId": true
+      },
+      "observed": {
+        "diyExecsCount": 3,
+        "petExecsCount": 3
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "QUERY_TO_AD_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/QUERY_TO_AD_RECONCILIATION.json",
+      "reason": "Query-to-ad reconciliation verified",
+      "executedAt": "2026-10-28T10:57:15.570Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E03_AD_TO_CANDIDATE_RECONCILIATION": {
+      "gateId": "E03_AD_TO_CANDIDATE_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Ad observations group into candidate groups with coherent 13-stage funnel arithmetic (scored <= potentiallyRelevant, no in-place mutation bug)",
+      "expected": {
+        "diyFunnelCoherent": true,
+        "petFunnelCoherent": true
+      },
+      "observed": {
+        "diyFunnel": {
+          "rawSourceObservations": 12,
+          "normalizedObservations": 12,
+          "rawCandidateGroups": 12,
+          "relevantCandidates": 9,
+          "probablyRelevantCandidates": 0,
+          "ambiguousCandidates": 0,
+          "irrelevantCandidates": 3,
+          "identitiesVerified": 2,
+          "identitiesProbable": 4,
+          "identitiesUnresolved": 2,
+          "candidatesActuallyScored": 8,
+          "verifiedEvergreenCandidates": 0,
+          "provisionalCandidates": 2,
+          "insufficientEvidenceCandidates": 5,
+          "rejectedCandidates": 4,
+          "researchShortlistEligible": 2,
+          "researchShortlistSelected": 2,
+          "excludedByMaxCandidates": 0,
+          "aiAnalysesAttempted": 8,
+          "aiAnalysesCompleted": 8,
+          "aiPhysicalProductsIdentified": 7,
+          "aiServicesRejected": 0,
+          "aiContentRejected": 0,
+          "aiInsuranceLeadGenRejected": 0,
+          "uniqueAds": 12,
+          "clearlyUnrelated": 3,
+          "potentiallyRelevant": 9,
+          "selectedForAI": 9,
+          "aiAnalyzed": 8,
+          "physicalProductsSupported": 2,
+          "identityResolved": 6,
+          "scored": 8,
+          "shortlistEligible": 2,
+          "shortlisted": 2,
+          "verifiedEvergreen": 0
+        },
+        "petFunnel": {
+          "rawSourceObservations": 40,
+          "normalizedObservations": 40,
+          "rawCandidateGroups": 30,
+          "relevantCandidates": 26,
+          "probablyRelevantCandidates": 0,
+          "ambiguousCandidates": 1,
+          "irrelevantCandidates": 3,
+          "identitiesVerified": 1,
+          "identitiesProbable": 9,
+          "identitiesUnresolved": 5,
+          "candidatesActuallyScored": 15,
+          "verifiedEvergreenCandidates": 0,
+          "provisionalCandidates": 1,
+          "insufficientEvidenceCandidates": 12,
+          "rejectedCandidates": 5,
+          "researchShortlistEligible": 1,
+          "researchShortlistSelected": 1,
+          "excludedByMaxCandidates": 12,
+          "aiAnalysesAttempted": 15,
+          "aiAnalysesCompleted": 15,
+          "aiPhysicalProductsIdentified": 13,
+          "aiServicesRejected": 0,
+          "aiContentRejected": 1,
+          "aiInsuranceLeadGenRejected": 0,
+          "uniqueAds": 40,
+          "clearlyUnrelated": 3,
+          "potentiallyRelevant": 27,
+          "selectedForAI": 15,
+          "aiAnalyzed": 15,
+          "physicalProductsSupported": 1,
+          "identityResolved": 10,
+          "scored": 15,
+          "shortlistEligible": 1,
+          "shortlisted": 1,
+          "verifiedEvergreen": 0
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "AD_TO_CANDIDATE_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/AD_TO_CANDIDATE_RECONCILIATION.json",
+      "reason": "13-stage candidate funnel arithmetic is 100% coherent",
+      "executedAt": "2026-10-28T10:57:15.571Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E04_CANDIDATE_TO_AI_RECONCILIATION": {
+      "gateId": "E04_CANDIDATE_TO_AI_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Candidate AI analysis counts in candidateFunnel exactly match aiTelemetry.totalAnalysesCompleted",
+      "expected": {
+        "diyMatches": true,
+        "petMatches": true
+      },
+      "observed": {
+        "diyFunnelAiAnalyzed": 8,
+        "diyTelemetryCompleted": 8,
+        "petFunnelAiAnalyzed": 15,
+        "petTelemetryCompleted": 15
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "CANDIDATE_TO_AI_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/CANDIDATE_TO_AI_RECONCILIATION.json",
+      "reason": "Candidate-to-AI telemetry reconciled",
+      "executedAt": "2026-10-28T10:57:15.571Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E05_AI_TO_SHORTLIST_RECONCILIATION": {
+      "gateId": "E05_AI_TO_SHORTLIST_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All shortlisted items across all 6 niche runs pass AI + Product Reality verification with 0 non-physical noise items",
+      "expected": {
+        "anyNonPhysicalInShortlists": false,
+        "funnelMatchesShortlist": true
+      },
+      "observed": {
+        "anyNonPhysicalInShortlists": false,
+        "diyShortlist": [
+          {
+            "id": "cand_1453640471",
+            "title": "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+            "status": "VERIFIED_PHYSICAL_PRODUCT"
+          },
+          {
+            "id": "cand_1316890495",
+            "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+            "status": "VERIFIED_PHYSICAL_PRODUCT"
+          }
+        ],
+        "petShortlist": [
+          {
+            "id": "cand_14769098",
+            "title": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+            "status": "VERIFIED_PHYSICAL_PRODUCT"
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "AI_TO_SHORTLIST_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/AI_TO_SHORTLIST_RECONCILIATION.json",
+      "reason": "AI-to-shortlist reconciliation verified with 0 non-physical items",
+      "executedAt": "2026-10-28T10:57:15.572Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E06_SQLITE_TO_HTTP_RECONCILIATION": {
+      "gateId": "E06_SQLITE_TO_HTTP_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "SQLite SyncJob snapshots for both DIY (180D) and PET (90D) runs reconcile exactly with /api/v1/kh02/research/runs/:id and /api/v1/kh02/leaderboard",
+      "expected": {
+        "diyHttpMatchesDb": true,
+        "petHttpMatchesDb": true
+      },
+      "observed": {
+        "diyRunId": "kh02_run_1793184791598_vcxs0",
+        "diyHttpRunId": "kh02_run_1793184791598_vcxs0",
+        "petRunId": "kh02_run_1793184831558_8ordr",
+        "petHttpRunId": "kh02_run_1793184831558_8ordr"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "SQLITE_HTTP_BROWSER_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "SQLite-to-HTTP reconciliation verified for both DIY and PET runs",
+      "executedAt": "2026-10-28T10:57:15.601Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E07_HTTP_TO_BROWSER_RECONCILIATION": {
+      "gateId": "E07_HTTP_TO_BROWSER_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Chromium DOM renders the exact authoritative runId, Discovery Intelligence panel, Coherent Funnel, and shortlist cards before and after page reload",
+      "expected": {
+        "diyDomRunId": "kh02_run_1793184791598_vcxs0",
+        "petDomRunId": "kh02_run_1793184831558_8ordr",
+        "discoveryPanelRendered": true,
+        "coherentFunnelRendered": true,
+        "nonPhysicalNoiseInShortlist": false
+      },
+      "observed": {
+        "diyDomRunId": "kh02_run_1793184791598_vcxs0",
+        "diyPostReloadRunId": "kh02_run_1793184791598_vcxs0",
+        "diyDiscoveryPanel": true,
+        "diyCoherentFunnel": true,
+        "diyQueryCoverageTable": true,
+        "petDomRunId": "kh02_run_1793184831558_8ordr",
+        "petPostReloadRunId": "kh02_run_1793184831558_8ordr"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+        "CHROMIUM_REAL_E2E.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "HTTP-to-Browser DOM reconciliation verified before and after reload",
+      "executedAt": "2026-10-28T10:57:15.601Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "Q05_REAL_CHROMIUM_E2E": {
+      "gateId": "Q05_REAL_CHROMIUM_E2E",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real Playwright Chromium E2E succeeds for both 'diy / US / 180D' and 'pet / US / 90D' with 0 HTTP 500s and 0 hydration errors",
+      "expected": {
+        "diyVerdict": "PASS",
+        "petVerdict": "PASS",
+        "http500s": 0,
+        "hydrationErrors": 0
+      },
+      "observed": {
+        "diyVerdict": "PASS",
+        "petVerdict": "PASS",
+        "diyScreenshots": [
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_01_before_research.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_02_source_statuses.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_03_leaderboard_results.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_04_after_reload.png"
+        ],
+        "petScreenshots": [
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_01_before_research.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_02_source_statuses.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_03_leaderboard_results.png",
+          "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_04_after_reload.png"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_04_after_reload.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_04_after_reload.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/CHROMIUM_REAL_E2E.json",
+      "reason": "Both DIY (180D) and PET (90D) real Chromium E2E runs passed",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L01_DIY_REAL_RESEARCH": {
+      "gateId": "L01_DIY_REAL_RESEARCH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real research run for 'diy / US / 180D' completes end-to-end with Gemini Discovery Planning, bounded query execution, coherent funnel, and 0 non-physical shortlist noise",
+      "expected": {
+        "completed": true,
+        "plannedQueries": ">= 3",
+        "nonPhysicalShortlistNoise": 0
+      },
+      "observed": {
+        "runId": "kh02_run_1793184791598_vcxs0",
+        "runStatus": "PASSED",
+        "plannedQueriesCount": 10,
+        "executedQueriesCount": 3,
+        "shortlistCount": 2,
+        "shortlistTitles": [
+          "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+          "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184791598_vcxs0",
+      "evidenceRefs": [
+        "DIY_US_180D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/DIY_US_180D_REAL_RUN.json",
+      "reason": "DIY / US / 180D completed (shortlist=2/3)",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L02_PET_REAL_RESEARCH": {
+      "gateId": "L02_PET_REAL_RESEARCH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real research run for 'pet / US / 90D' completes end-to-end with >=1 real physical pet product shortlisted and 'ER Vet bill cost factors' excluded",
+      "expected": {
+        "completed": true,
+        "shortlistCount": ">= 1",
+        "erVetBillInShortlist": false
+      },
+      "observed": {
+        "runId": "kh02_run_1793184831558_8ordr",
+        "runStatus": "PASSED",
+        "shortlistCount": 1,
+        "shortlistTitles": [
+          "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To"
+        ],
+        "erVetBillInShortlist": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "PET_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PET_US_90D_REAL_RUN.json",
+      "reason": "PET / US / 90D completed (1/3 qualified: Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To)",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L03_HOME_DECOR_REAL_RESEARCH": {
+      "gateId": "L03_HOME_DECOR_REAL_RESEARCH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real research run for 'home decor / US / 90D' executes Gemini Discovery Planning and bounded source search",
+      "expected": {
+        "completed": true,
+        "plannedQueries": ">= 3"
+      },
+      "observed": {
+        "runId": "kh02_1793184876986_7scxo",
+        "runStatus": "PASSED",
+        "plannedQueriesCount": 8,
+        "shortlistCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_1793184876986_7scxo",
+      "evidenceRefs": [
+        "HOME_DECOR_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/HOME_DECOR_US_90D_REAL_RUN.json",
+      "reason": "Home Decor / US / 90D completed (shortlist=0/3)",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L04_GARDENING_REAL_RESEARCH": {
+      "gateId": "L04_GARDENING_REAL_RESEARCH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real research run for 'gardening / US / 90D' executes Gemini Discovery Planning and bounded source search",
+      "expected": {
+        "completed": true,
+        "plannedQueries": ">= 3"
+      },
+      "observed": {
+        "runId": "kh02_1793184915595_fh1se",
+        "runStatus": "PASSED",
+        "plannedQueriesCount": 10,
+        "shortlistCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_1793184915595_fh1se",
+      "evidenceRefs": [
+        "GARDENING_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GARDENING_US_90D_REAL_RUN.json",
+      "reason": "Gardening / US / 90D completed (shortlist=0/3)",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L05_LIVE_TOP3_SHORTLIST": {
+      "gateId": "L05_LIVE_TOP3_SHORTLIST",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Requires 3 distinct real physical products in a single live run; reports INSUFFICIENT_EVIDENCE truthfully when live sources yield fewer than 3",
+      "expected": {
+        "qualifiedShortlistCount": 3
+      },
+      "observed": {
+        "diyQualified": 2,
+        "petQualified": 1,
+        "homeDecorQualified": 0,
+        "gardeningQualified": 0,
+        "maxQualifiedInSingleRun": 2
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "DIY_US_180D_REAL_RUN.json",
+        "PET_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PET_US_90D_REAL_RUN.json",
+      "reason": "Maximum 2/3 real physical products qualified from current live/cached source observations; no synthetic products fabricated (Section M6 & N10)",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L06_LIVE_VERIFIED_EVERGREEN_TOP3": {
+      "gateId": "L06_LIVE_VERIFIED_EVERGREEN_TOP3",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Requires 3 Verified Evergreen Winners with >=60D non-declining demand history, Score >= 65, and Confidence >= 65%",
+      "expected": {
+        "verifiedEvergreenCount": 3
+      },
+      "observed": {
+        "diyVerifiedEvergreen": 0,
+        "petVerifiedEvergreen": 0,
+        "maxVerifiedEvergreen": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "PET_US_90D_REAL_RUN.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/PET_US_90D_REAL_RUN.json",
+      "reason": "0/3 candidates met >=60D historical demand stability requirements; evergreen thresholds were NOT lowered",
+      "executedAt": "2026-10-28T10:57:15.602Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "L07_GOOGLE_PRODUCT_ENRICHMENT": {
+      "gateId": "L07_GOOGLE_PRODUCT_ENRICHMENT",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency MCP enrichment links real advertiser creatives to product candidates (never equating MCP connection alone with product enrichment)",
+      "expected": {
+        "productMatchedCreatives": "> 0"
+      },
+      "observed": {
+        "mcpConnected": null,
+        "diyGoogleTelemetry": {
+          "source": "GOOGLE_ADS",
+          "queryExecuted": true,
+          "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+          "queryTimestamp": "2026-10-28T10:53:43.763Z",
+          "retrievedCount": 0,
+          "acceptedCount": 0,
+          "queryProvenance": "NONE",
+          "isLive": false,
+          "queryError": null,
+          "lastSuccessfulRecordCount": 0,
+          "lastSuccessfulQueryAt": "2026-10-28T10:53:43.763Z",
+          "productAssociatedCount": 0
+        },
+        "petGoogleTelemetry": {
+          "source": "GOOGLE_ADS",
+          "queryExecuted": true,
+          "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+          "queryTimestamp": "2026-10-28T10:54:33.915Z",
+          "retrievedCount": 0,
+          "acceptedCount": 0,
+          "queryProvenance": "NONE",
+          "isLive": false,
+          "queryError": null,
+          "lastSuccessfulRecordCount": 0,
+          "lastSuccessfulQueryAt": "2026-10-28T10:54:33.915Z",
+          "productAssociatedCount": 0
+        },
+        "googleAcceptedCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793184831558_8ordr",
+      "evidenceRefs": [
+        "GOOGLE_PRODUCT_ENRICHMENT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/GOOGLE_PRODUCT_ENRICHMENT.json",
+      "reason": "Google MCP transport connected and advertiser lookup executed, but 0 product-level matches returned for current merchants",
+      "executedAt": "2026-10-28T10:57:15.622Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "Q06_ZERO_FALSE_PASS_AUDIT": {
+      "gateId": "Q06_ZERO_FALSE_PASS_AUDIT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All adversarial fault-injection checks refuse unsupported PASS verdicts and every PASS gate carries verified execution evidence",
+      "expected": {
+        "allAdversarialChecksPassed": true
+      },
+      "observed": {
+        "geminiPlannerUnavailableRefusesFakeGeminiPass": true,
+        "unrelatedQueriesRejectedByValidator": true,
+        "emptyWorkspaceMetaDoesNotClaimLiveAds": true,
+        "cacheOnlyDoesNotClaimFreshLive": true,
+        "providerBudgetExhaustedBlocksExtraRequests": true,
+        "unrelatedObservationsRejected": true,
+        "nonLiteralRelevantProductRescued": true,
+        "collectionUrlCannotClaimVerifiedSku": true,
+        "shortfallRefusesTop3Pass": true,
+        "emptyGoogleMatchRefusesPass": true,
+        "allPassGatesHaveObservedEvidence": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "ADVERSARIAL_FALSE_PASS_TESTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.2/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "reason": "Zero unsupported PASS verdicts found across all 40 release gates",
+      "executedAt": "2026-10-28T10:57:15.622Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    }
+  }
+}

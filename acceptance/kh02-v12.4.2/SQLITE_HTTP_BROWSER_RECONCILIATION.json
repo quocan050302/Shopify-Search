@@ -1,0 +1,28 @@
+{
+  "diy": {
+    "runId": "kh02_run_1793184791598_vcxs0",
+    "httpRunId": "kh02_run_1793184791598_vcxs0",
+    "domRunId": "kh02_run_1793184791598_vcxs0",
+    "postReloadDomRunId": "kh02_run_1793184791598_vcxs0",
+    "domShortlistIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ],
+    "postReloadShortlistIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ]
+  },
+  "pet": {
+    "runId": "kh02_run_1793184831558_8ordr",
+    "httpRunId": "kh02_run_1793184831558_8ordr",
+    "domRunId": "kh02_run_1793184831558_8ordr",
+    "postReloadDomRunId": "kh02_run_1793184831558_8ordr",
+    "domShortlistIds": [
+      "cand_14769098"
+    ],
+    "postReloadShortlistIds": [
+      "cand_14769098"
+    ]
+  }
+}

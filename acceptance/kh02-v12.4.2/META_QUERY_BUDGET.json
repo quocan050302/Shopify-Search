@@ -1,0 +1,29 @@
+{
+  "gateId": "S01_META_GLOBAL_BUDGET",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "Shared MetaQueryBudgetTracker enforces strict 3-request ceiling across Round 1 and Adaptive Round 2 without resetting",
+  "expected": {
+    "maxRequests": 3,
+    "r1Consume": true,
+    "r2Consume": true,
+    "fourthRequestBlocked": true,
+    "remaining": 0
+  },
+  "observed": {
+    "r1Consume": true,
+    "r2Consume": true,
+    "fourthRequestBlocked": true,
+    "remaining": 0
+  },
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "evidenceRefs": [
+    "MetaQueryBudgetTracker"
+  ],
+  "evidenceLocation": "acceptance/kh02-v12.4.2/META_QUERY_BUDGET.json",
+  "reason": "3-request global Meta budget strictly enforced across rounds",
+  "executedAt": "2026-10-28T10:53:06.222Z",
+  "environment": "win32-node-v22.14.0-db-6530562482a2"
+}

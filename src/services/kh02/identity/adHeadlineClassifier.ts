@@ -65,6 +65,7 @@ const PROMOTIONAL_CTA_PATTERNS = [
   /\b(while\s*supplies\s*last)\b/i,
   /\b(best\s*price\s*guaranteed)\b/i,
   /\b(satisfaction\s*guaranteed)\b/i,
+  /^(get\s*halloween\s*ready|get\s*latest\s*price|halloween\s*sale|holiday\s*deals)[!.\s]*$/i,
 ];
 
 const CLICKBAIT_HOOK_PATTERNS = [
@@ -110,7 +111,12 @@ const KNOWN_PRODUCT_NOUNS = new Set([
   "humidifier", "diffuser", "filter", "tool", "kit", "set", "pack", "organizer",
   "holder", "stand", "mount", "case", "sleeve", "pouch", "strap", "clip",
   "hook", "lock", "alarm", "razor", "shaver", "headphone", "headphones",
-  "earbuds", "watch", "speaker", "charger", "cable", "adaptor", "adapter"
+  "earbuds", "watch", "speaker", "charger", "cable", "adaptor", "adapter",
+  "covers", "plate", "plates", "sticker", "stickers", "panel", "panels",
+  "tiles", "gun", "cutter", "jig", "clamp", "marker", "markers", "spikes",
+  "shears", "tray", "trellis", "meter", "chopper", "slicer", "sprayer",
+  "strainer", "sealer", "mop", "sconce", "slipcover", "mask", "patch",
+  "curler", "wand", "multimeter"
 ]);
 
 // Generic non-product category terms (including versioned generic terms e.g. "Pet Product V4")

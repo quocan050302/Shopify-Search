@@ -1,18 +1,70 @@
 /**
- * SWAI KH-02 V12.3 — Discovery Query Planner
+ * SWAI KH-02 V12.4.2 — Hybrid AI + Deterministic Discovery Query Planner
  *
- * Implements Section D6 requirements:
- * Generates structured, evidence-grounded search plans for niche acquisition:
- * - Employs KEYWORD_EXACT_PHRASE to prevent broad token match pollution (e.g. page 'Gadgets' matching 'Pet Gadgets').
- * - Restricts subquery expansion to domain-specific product types with explicit rationales.
- * - Enforces bounded requests, max records, and deduplication across subqueries.
+ * Implements Section D6 & V12.4.2 Phases A/B/C/H:
+ * - Preserves synchronous buildKH02DiscoveryQueryPlan and MetaQueryBudgetTracker contracts
+ * - Integrates Gemini Niche Understanding & Archetype Planning (buildHybridKH02DiscoveryQueryPlan)
+ * - Expands domain templates to diy, gardening, home decor, pet, beauty, cleaning, kitchen,
+ *   plus generalized physical-product archetype synthesis for unfamiliar topics
+ * - Provides QueryYield and ShortlistCoverageState evaluation for bounded multi-round adaptive search
  */
+
+import {
+  AIDiscoveryPlan,
+  analyzeNicheIntent,
+  buildDeterministicDiscoveryPlan,
+  clearDiscoveryPlanCache,
+  DiscoveryPlannerInput,
+  DiscoveryPlannerTelemetry,
+  DiscoveryPlanValidationResult,
+  DiscoveryQuery,
+  DiscoveryQueryOrigin,
+  DiscoveryQuerySearchType,
+  generateDiscoveryQueries,
+  GenerateDiscoveryQueriesOptions,
+  generateProductArchetypes,
+  NicheIntentAnalysisResult,
+  NicheIntentType,
+  PlannedProductArchetype,
+  PlannedSearchQuery,
+  validateDiscoveryPlan,
+} from "./geminiDiscoveryPlanner";
+
+export type {
+  AIDiscoveryPlan,
+  DiscoveryPlannerInput,
+  DiscoveryPlannerTelemetry,
+  DiscoveryPlanValidationResult,
+  DiscoveryQuery,
+  DiscoveryQueryOrigin,
+  DiscoveryQuerySearchType,
+  GenerateDiscoveryQueriesOptions,
+  NicheIntentAnalysisResult,
+  NicheIntentType,
+  PlannedProductArchetype,
+  PlannedSearchQuery,
+};
+
+export {
+  analyzeNicheIntent,
+  buildDeterministicDiscoveryPlan,
+  clearDiscoveryPlanCache,
+  generateDiscoveryQueries,
+  generateProductArchetypes,
+  validateDiscoveryPlan,
+};
 
 export interface DiscoverySubqueryPlan {
   subquery: string;
   searchType: "KEYWORD_EXACT_PHRASE" | "KEYWORD_UNORDERED";
   rationale: string;
   maxResults: number;
+  queryId?: string;
+  archetypeId?: string | null;
+  origin?: DiscoveryQueryOrigin;
+  roundNumber?: number;
+  priority?: number;
+  expectedProductCategory?: string | null;
 }
 
 export interface MetaResearchBudget {
@@ -24,7 +76,7 @@ export interface MetaResearchBudget {
 }
 
 export class MetaQueryBudgetTracker {
-  private consumedRequests: number = 0;
+  public consumedRequests: number = 0;
   private consumedPages: number = 0;
   private uniqueAdsObserved: number = 0;
   private startTime: number;
@@ -56,6 +108,18 @@ export class MetaQueryBudgetTracker {
 
   canExecuteNextRequest(): boolean {
     return this.canExecuteSubquery();
+  }
+
+  canExecuteRequest(): boolean {
+    return this.canExecuteSubquery();
+  }
+
+  tryConsume(requests: number = 1): boolean {
+    if (this.remainingRequests >= requests && !this.isExhausted) {
+      this.recordUsage(requests, 0, requests);
+      return true;
+    }
+    return false;
   }
 
   reserveRequest(): boolean {
@@ -134,6 +198,7 @@ export class MetaQueryBudgetTracker {
 export interface KH02DiscoveryQueryPlan {
   topic: string;
   market: string;
+  nicheIntent?: NicheIntentType;
   primaryQuery: DiscoverySubqueryPlan;
   subqueries: DiscoverySubqueryPlan[];
   maxTotalResults: number;
@@ -141,36 +206,237 @@ export interface KH02DiscoveryQueryPlan {
   budget: MetaResearchBudget;
   deduplicateAcrossSubqueries: boolean;
   createdAt: string;
+  aiPlan?: AIDiscoveryPlan;
+  validatedQueries?: DiscoveryQuery[];
+  plannerTelemetry?: DiscoveryPlannerTelemetry;
 }
 
-// Domain-aligned subquery catalogs for common consumer ecommerce niches
-const NICHE_SUBQUERY_TEMPLATES: Record<string, Array<{ subquery: string; rationale: string }>> = {
+export interface QueryYield {
+  queryId: string;
+  phrase?: string;
+  source?: string;
+  roundNumber?: number;
+  origin?: DiscoveryQueryOrigin;
+  archetypeId?: string | null;
+  actualAdsReturned: number;
+  uniqueAdsReturned: number;
+
+  relevantCandidates: number;
+  merchantLinkedCandidates: number;
+  identifiableProducts: number;
+
+  qualifiedShortlistContributions: number;
+
+  rejectedCandidates: number;
+  duplicateAds: number;
+
+  sourceStatus: string;
+}
+
+export type ShortlistCoverageStopReason =
+  | "TARGET_REACHED"
+  | "SOURCE_BUDGET_EXHAUSTED"
+  | "AI_BUDGET_EXHAUSTED"
+  | "TIME_DEADLINE"
+  | "SOURCE_UNAVAILABLE"
+  | "NO_USEFUL_QUERIES"
+  | "CANCELLED"
+  | "CONTINUE";
+
+export interface ShortlistCoverageState {
+  requestedCount: number;
+
+  qualifiedProducts: number;
+
+  distinctProductArchetypesObserved: number;
+
+  unresolvedCandidates: number;
+
+  remainingSourceQueries: number;
+  remainingAIRequests: number;
+
+  missingArchetypes: string[];
+
+  recoveryRecommended: boolean;
+
+  stopReason: ShortlistCoverageStopReason;
+}
+
+// Domain-aligned subquery catalogs for consumer ecommerce niches (used as fallback seeds)
+const NICHE_SUBQUERY_TEMPLATES: Record<
+  string,
+  Array<{ subquery: string; rationale: string; archetypeId?: string; category?: string }>
+> = {
   pet: [
-    { subquery: "pet hair remover", rationale: "High-demand everyday deshedding & cleaning tool" },
-    { subquery: "automatic pet feeder", rationale: "Smart hardware / electronic gadget for feeding" },
-    { subquery: "dog water fountain", rationale: "Smart pet hydration and filtration appliance" },
-    { subquery: "dog grooming vacuum", rationale: "Electronic pet grooming and hair capture tool" },
-    { subquery: "smart pet collar", rationale: "Connected tracking & safety hardware for pets" },
+    {
+      subquery: "pet hair remover",
+      rationale: "High-demand everyday deshedding & cleaning tool",
+      archetypeId: "pet_grooming_hair_removal",
+      category: "Pet Grooming",
+    },
+    {
+      subquery: "automatic pet feeder",
+      rationale: "Smart hardware / electronic gadget for feeding",
+      archetypeId: "pet_feeding",
+      category: "Pet Feeding",
+    },
+    {
+      subquery: "dog water fountain",
+      rationale: "Smart pet hydration and filtration appliance",
+      archetypeId: "pet_hydration",
+      category: "Pet Hydration",
+    },
+    {
+      subquery: "dog grooming vacuum",
+      rationale: "Electronic pet grooming and hair capture tool",
+      archetypeId: "pet_grooming_vacuum",
+      category: "Pet Grooming",
+    },
+    {
+      subquery: "smart pet collar",
+      rationale: "Connected tracking & safety hardware for pets",
+      archetypeId: "pet_safety_travel",
+      category: "Pet Safety",
+    },
   ],
   beauty: [
-    { subquery: "facial cleansing brush", rationale: "Electronic skincare device" },
-    { subquery: "red light therapy wand", rationale: "Dermatological wellness hardware" },
-    { subquery: "pore vacuum cleanser", rationale: "Facial blackhead suction appliance" },
+    {
+      subquery: "facial cleansing brush",
+      rationale: "Electronic skincare device",
+      archetypeId: "facial_cleansing",
+      category: "Skincare Devices",
+    },
+    {
+      subquery: "red light therapy wand",
+      rationale: "Dermatological wellness hardware",
+      archetypeId: "facial_sculpting_devices",
+      category: "Beauty Devices",
+    },
+    {
+      subquery: "pore vacuum cleanser",
+      rationale: "Facial blackhead suction appliance",
+      archetypeId: "pore_care",
+      category: "Skincare Treatments",
+    },
   ],
   cleaning: [
-    { subquery: "electric spin scrubber", rationale: "Motorized bathroom & surface scrubbing tool" },
-    { subquery: "portable carpet cleaner", rationale: "Spot upholstery washing device" },
-    { subquery: "steam cleaner handheld", rationale: "High-temperature chemical-free sanitizing device" },
+    {
+      subquery: "electric spin scrubber",
+      rationale: "Motorized bathroom & surface scrubbing tool",
+      archetypeId: "power_scrubbers",
+      category: "Power Scrubbers",
+    },
+    {
+      subquery: "portable carpet cleaner",
+      rationale: "Spot upholstery washing device",
+      archetypeId: "carpet_upholstery_cleaners",
+      category: "Surface Cleaners",
+    },
+    {
+      subquery: "steam cleaner handheld",
+      rationale: "High-temperature chemical-free sanitizing device",
+      archetypeId: "crevice_and_steam_cleaners",
+      category: "Steam Cleaning",
+    },
   ],
   kitchen: [
-    { subquery: "automatic bottle opener", rationale: "Electric beverage uncorking tool" },
-    { subquery: "electric oil spray bottle", rationale: "Pressurized uniform cooking dispenser" },
-    { subquery: "rechargeable food sealer", rationale: "Mini bag heat-welding preservation gadget" },
+    {
+      subquery: "vegetable chopper",
+      rationale: "High-velocity food prep slicing and dicing tool",
+      archetypeId: "food_prep_choppers",
+      category: "Food Prep Tools",
+    },
+    {
+      subquery: "electric oil spray bottle",
+      rationale: "Pressurized uniform cooking dispenser",
+      archetypeId: "cooking_dispensers",
+      category: "Cooking Dispensers",
+    },
+    {
+      subquery: "rechargeable food sealer",
+      rationale: "Mini bag heat-welding preservation gadget",
+      archetypeId: "food_preservation",
+      category: "Food Storage",
+    },
+  ],
+  diy: [
+    {
+      subquery: "wall repair kit",
+      rationale: "High-intent physical DIY drywall and surface patching product",
+      archetypeId: "home_repair_kits",
+      category: "Home Repair",
+    },
+    {
+      subquery: "cordless hot glue gun",
+      rationale: "Portable physical DIY crafting and bonding tool",
+      archetypeId: "diy_crafting_tools",
+      category: "DIY Crafting",
+    },
+    {
+      subquery: "decorative switch plate covers",
+      rationale: "Self-installed physical DIY home decor hardware upgrade",
+      archetypeId: "diy_home_decor_upgrades",
+      category: "Home Decor",
+    },
+    {
+      subquery: "pocket hole jig",
+      rationale: "Precision woodworking drilling guide for DIY builders",
+      archetypeId: "woodworking_jigs",
+      category: "Woodworking",
+    },
+    {
+      subquery: "wood scratch repair markers",
+      rationale: "Consumer DIY furniture touch-up and surface restoration kit",
+      archetypeId: "furniture_restoration",
+      category: "Furniture Repair",
+    },
+  ],
+  gardening: [
+    {
+      subquery: "self watering plant spikes",
+      rationale: "Physical automatic plant hydration device",
+      archetypeId: "plant_watering_systems",
+      category: "Plant Watering",
+    },
+    {
+      subquery: "garden pruning shears",
+      rationale: "Physical ergonomic branch and stem cutting tool",
+      archetypeId: "pruning_tools",
+      category: "Pruning Tools",
+    },
+    {
+      subquery: "seed starter tray",
+      rationale: "Physical indoor seedling germination kit",
+      archetypeId: "seed_starting_kits",
+      category: "Seed Starting",
+    },
+  ],
+  "home decor": [
+    {
+      subquery: "decorative switch plate covers",
+      rationale: "Physical decorative light switch and outlet plate upgrade",
+      archetypeId: "decorative_switch_covers",
+      category: "Decorative Hardware",
+    },
+    {
+      subquery: "rechargeable wall sconce",
+      rationale: "Cordless physical wall accent lighting fixture",
+      archetypeId: "ambient_accent_lighting",
+      category: "Accent Lighting",
+    },
+    {
+      subquery: "peel and stick wall tiles",
+      rationale: "Removable physical wall accent panels",
+      archetypeId: "peel_stick_wall_accents",
+      category: "Wall Accents",
+    },
   ],
 };
 
 /**
  * Builds a disciplined, bounded query plan for KH-02 research discovery.
+ * Synchronous deterministic entry point preserved for backward compatibility
+ * while supporting DIY, gardening, home decor, and unfamiliar niches.
  */
 export function buildKH02DiscoveryQueryPlan(
   topic: string,
@@ -179,8 +445,14 @@ export function buildKH02DiscoveryQueryPlan(
 ): KH02DiscoveryQueryPlan {
   const cleanTopic = (topic || "").trim().slice(0, 100);
   const normalizedLower = cleanTopic.toLowerCase();
-  const maxTotal = options.maxTotalResults ? Math.min(100, Math.max(5, options.maxTotalResults)) : 25;
-  const maxReqs = options.maxRequests ? Math.min(10, Math.max(1, options.maxRequests)) : 3;
+  const maxTotal = options.maxTotalResults
+    ? Math.min(100, Math.max(5, options.maxTotalResults))
+    : 25;
+  const maxReqs = options.maxRequests
+    ? Math.min(10, Math.max(1, options.maxRequests))
+    : 3;
+
+  const intent = analyzeNicheIntent(cleanTopic);
 
   const budget: MetaResearchBudget = {
     maxLogicalSubqueries: 3,
@@ -196,11 +468,15 @@ export function buildKH02DiscoveryQueryPlan(
     searchType: "KEYWORD_EXACT_PHRASE",
     rationale: `Primary research topic exact phrase matching for '${cleanTopic}'`,
     maxResults: Math.min(20, maxTotal),
+    queryId: "primary",
+    origin: "USER",
+    roundNumber: 1,
+    priority: 1,
   };
 
   const subqueries: DiscoverySubqueryPlan[] = [];
 
-  // Match domain niche
+  // Match domain niche templates first
   let matchedNiche = "";
   for (const key of Object.keys(NICHE_SUBQUERY_TEMPLATES)) {
     if (normalizedLower.includes(key)) {
@@ -218,15 +494,60 @@ export function buildKH02DiscoveryQueryPlan(
           searchType: "KEYWORD_EXACT_PHRASE",
           rationale: `${t.rationale} within ${cleanTopic} domain`,
           maxResults: 10,
+          archetypeId: t.archetypeId || null,
+          origin: "DETERMINISTIC_FALLBACK",
+          roundNumber: 1,
+          priority: subqueries.length + 2,
+          expectedProductCategory: t.category || null,
         });
       }
-      if (subqueries.length >= 3) break; // Bounded expansion: max 3 subqueries
+      if (subqueries.length >= 3) break;
+    }
+  } else if (!intent.isProhibitedOrUnsupported && cleanTopic.length >= 2) {
+    // Generalized deterministic archetype expansion for unfamiliar topics
+    const detPlan = buildDeterministicDiscoveryPlan(
+      {
+        researchRunId: "sync_plan",
+        topic: cleanTopic,
+        market,
+        lookbackDays: 90,
+        productPolicy: "PHYSICAL_ECOMMERCE_PRODUCTS",
+        supportedSources: ["META_ADS"],
+        remainingProviderRequests: maxReqs,
+        remainingAIRequests: 0,
+      },
+      intent
+    );
+    for (const arch of detPlan.productArchetypes) {
+      for (const q of arch.searchQueries) {
+        if (
+          q.phrase.toLowerCase() !== normalizedLower &&
+          !subqueries.some(
+            (s) => s.subquery.toLowerCase() === q.phrase.toLowerCase()
+          )
+        ) {
+          subqueries.push({
+            subquery: q.phrase,
+            searchType: q.searchType,
+            rationale: q.rationale,
+            maxResults: 10,
+            archetypeId: arch.archetypeId,
+            origin: "DETERMINISTIC_FALLBACK",
+            roundNumber: 1,
+            priority: subqueries.length + 2,
+            expectedProductCategory: arch.productCategory,
+          });
+        }
+        if (subqueries.length >= 3) break;
+      }
+      if (subqueries.length >= 3) break;
     }
   }
 
   return {
     topic: cleanTopic,
     market: market.toUpperCase().slice(0, 2) || "US",
+    nicheIntent: intent.nicheIntent,
     primaryQuery,
     subqueries,
     maxTotalResults: maxTotal,
@@ -234,5 +555,250 @@ export function buildKH02DiscoveryQueryPlan(
     budget,
     deduplicateAcrossSubqueries: true,
     createdAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Builds a V12.4.2 hybrid AI + deterministic query plan for a research run.
+ * For BROAD_CATEGORY topics (such as "diy", "pet", "gardening"), prioritizes distinct
+ * product-specific archetype queries so the bounded 3-request Meta budget is distributed
+ * across concrete physical product queries rather than spending 2 of 3 requests on a
+ * single generic word like "diy".
+ * For SPECIFIC_PRODUCT topics (such as "pet hair remover", "cordless glue gun"), preserves
+ * the user's exact product query as priority 1.
+ */
+export async function buildHybridKH02DiscoveryQueryPlan(
+  input: DiscoveryPlannerInput,
+  options?: GenerateDiscoveryQueriesOptions & {
+    maxTotalResults?: number;
+    maxRequests?: number;
+  }
+): Promise<KH02DiscoveryQueryPlan> {
+  const cleanTopic = (input.topic || "").trim().slice(0, 100);
+  const normalizedLower = cleanTopic.toLowerCase();
+  const maxTotal = options?.maxTotalResults
+    ? Math.min(100, Math.max(5, options.maxTotalResults))
+    : 25;
+  const maxReqs = options?.maxRequests
+    ? Math.min(10, Math.max(1, options.maxRequests))
+    : Math.max(1, input.remainingProviderRequests || 3);
+
+  const budget: MetaResearchBudget = {
+    maxLogicalSubqueries: maxReqs,
+    maxProviderRequests: maxReqs,
+    maxPages: Math.max(1, Math.ceil(maxTotal / 10)),
+    maxUniqueAds: maxTotal,
+    maxDurationMs: 45_000,
+  };
+
+  const { plan, validation, queries, telemetry } =
+    await generateDiscoveryQueries(input, options);
+
+  const isSpecific = plan.nicheIntent === "SPECIFIC_PRODUCT";
+  const finalQueries: DiscoveryQuery[] = [...queries];
+
+  // For SPECIFIC_PRODUCT, ensure the exact user query is priority 1
+  if (
+    isSpecific &&
+    cleanTopic.length >= 2 &&
+    !finalQueries.some(
+      (q) => q.normalizedPhrase === normalizedLower.replace(/\s+/g, " ")
+    )
+  ) {
+    finalQueries.unshift({
+      queryId: `kh02_q_user_${input.researchRunId}`,
+      researchRunId: input.researchRunId,
+      phrase: cleanTopic,
+      normalizedPhrase: normalizedLower.replace(/\s+/g, " "),
+      archetypeId: plan.productArchetypes[0]?.archetypeId || "user_specific_sku",
+      source: input.supportedSources[0] || "META_ADS",
+      searchType: "KEYWORD_EXACT_PHRASE",
+      roundNumber: options?.roundNumber ?? 1,
+      priority: 1,
+      rationale: `Exact specific product query requested by user ('${cleanTopic}').`,
+      origin: "USER",
+      expectedProductCategory:
+        plan.productArchetypes[0]?.productCategory || cleanTopic,
+    });
+  }
+
+  const primaryDq = finalQueries[0];
+  const primaryQuery: DiscoverySubqueryPlan = primaryDq
+    ? {
+        queryId: primaryDq.queryId,
+        subquery: primaryDq.phrase,
+        searchType: primaryDq.searchType,
+        rationale: primaryDq.rationale,
+        maxResults: Math.min(15, maxTotal),
+        archetypeId: primaryDq.archetypeId,
+        origin: primaryDq.origin,
+        roundNumber: primaryDq.roundNumber,
+        priority: 1,
+        expectedProductCategory: primaryDq.expectedProductCategory,
+      }
+    : {
+        queryId: "primary",
+        subquery: cleanTopic,
+        searchType: "KEYWORD_EXACT_PHRASE",
+        rationale: `Primary research topic exact phrase matching for '${cleanTopic}'`,
+        maxResults: Math.min(15, maxTotal),
+        archetypeId: null,
+        origin: "USER",
+        roundNumber: 1,
+        priority: 1,
+        expectedProductCategory: null,
+      };
+
+  const subqueries: DiscoverySubqueryPlan[] = finalQueries
+    .slice(1)
+    .map((dq, idx) => ({
+      queryId: dq.queryId,
+      subquery: dq.phrase,
+      searchType: dq.searchType,
+      rationale: dq.rationale,
+      maxResults: 10,
+      archetypeId: dq.archetypeId,
+      origin: dq.origin,
+      roundNumber: dq.roundNumber,
+      priority: idx + 2,
+      expectedProductCategory: dq.expectedProductCategory,
+    }));
+
+  return {
+    topic: cleanTopic,
+    market: (input.market || "US").toUpperCase().slice(0, 2) || "US",
+    nicheIntent: plan.nicheIntent,
+    primaryQuery,
+    subqueries,
+    maxTotalResults: maxTotal,
+    maxRequests: maxReqs,
+    budget,
+    deduplicateAcrossSubqueries: true,
+    createdAt: new Date().toISOString(),
+    aiPlan: validation.validatedPlan,
+    validatedQueries: finalQueries,
+    plannerTelemetry: telemetry,
+  };
+}
+
+/**
+ * Selects the bounded set of queries to execute in a search round,
+ * ensuring distinct archetype diversity and avoiding any already-executed phrase.
+ */
+export function selectQueriesForSearchRound(
+  validatedQueries: DiscoveryQuery[],
+  maxQueriesForRound: number,
+  executedNormalizedPhrases: Set<string>,
+  coveredArchetypeIds: Set<string>,
+  roundNumber: number
+): DiscoveryQuery[] {
+  if (maxQueriesForRound <= 0 || validatedQueries.length === 0) {
+    return [];
+  }
+
+  const available = validatedQueries.filter(
+    (q) => !executedNormalizedPhrases.has(q.normalizedPhrase)
+  );
+  if (available.length === 0) {
+    return [];
+  }
+
+  const uncovered = available.filter(
+    (q) => !q.archetypeId || !coveredArchetypeIds.has(q.archetypeId)
+  );
+  const covered = available.filter(
+    (q) => q.archetypeId && coveredArchetypeIds.has(q.archetypeId)
+  );
+
+  const prioritized = [...uncovered, ...covered];
+  const selected: DiscoveryQuery[] = [];
+  const selectedArchetypesInRound = new Set<string>();
+
+  for (const q of prioritized) {
+    if (selected.length >= maxQueriesForRound) break;
+    if (q.archetypeId && selectedArchetypesInRound.has(q.archetypeId)) {
+      continue;
+    }
+    if (q.archetypeId) {
+      selectedArchetypesInRound.add(q.archetypeId);
+    }
+    selected.push({
+      ...q,
+      roundNumber,
+      origin:
+        roundNumber > 1 && q.origin !== "GEMINI_PLANNER"
+          ? "ADAPTIVE_RECOVERY"
+          : q.origin,
+    });
+  }
+
+  for (const q of prioritized) {
+    if (selected.length >= maxQueriesForRound) break;
+    if (!selected.some((s) => s.normalizedPhrase === q.normalizedPhrase)) {
+      selected.push({
+        ...q,
+        roundNumber,
+      });
+    }
+  }
+
+  return selected;
+}
+
+/**
+ * Evaluates shortlist coverage after a discovery/enrichment round and determines
+ * whether bounded adaptive search recovery should continue or stop.
+ */
+export function evaluateShortlistCoverage(params: {
+  requestedCount?: number;
+  qualifiedProducts: number;
+  observedArchetypeIds: string[];
+  plannedArchetypes: PlannedProductArchetype[];
+  unresolvedCandidates: number;
+  remainingSourceQueries: number;
+  remainingAIRequests: number;
+  remainingUnusedQueriesCount: number;
+  sourceAvailable: boolean;
+  timeDeadlineReached: boolean;
+  cancelled: boolean;
+}): ShortlistCoverageState {
+  const requestedCount = params.requestedCount ?? 3;
+  const observedSet = new Set(params.observedArchetypeIds.filter(Boolean));
+  const missingArchetypes = (params.plannedArchetypes || [])
+    .filter((a) => !observedSet.has(a.archetypeId))
+    .map((a) => a.productCategory || a.archetypeId);
+
+  let stopReason: ShortlistCoverageStopReason = "CONTINUE";
+  let recoveryRecommended = false;
+
+  if (params.cancelled) {
+    stopReason = "CANCELLED";
+  } else if (params.qualifiedProducts >= requestedCount) {
+    stopReason = "TARGET_REACHED";
+  } else if (params.timeDeadlineReached) {
+    stopReason = "TIME_DEADLINE";
+  } else if (!params.sourceAvailable) {
+    stopReason = "SOURCE_UNAVAILABLE";
+  } else if (params.remainingSourceQueries <= 0) {
+    stopReason = "SOURCE_BUDGET_EXHAUSTED";
+  } else if (params.remainingAIRequests <= 0) {
+    stopReason = "AI_BUDGET_EXHAUSTED";
+  } else if (params.remainingUnusedQueriesCount <= 0) {
+    stopReason = "NO_USEFUL_QUERIES";
+  } else {
+    stopReason = "CONTINUE";
+    recoveryRecommended = true;
+  }
+
+  return {
+    requestedCount,
+    qualifiedProducts: params.qualifiedProducts,
+    distinctProductArchetypesObserved: observedSet.size,
+    unresolvedCandidates: params.unresolvedCandidates,
+    remainingSourceQueries: Math.max(0, params.remainingSourceQueries),
+    remainingAIRequests: Math.max(0, params.remainingAIRequests),
+    missingArchetypes,
+    recoveryRecommended,
+    stopReason,
   };
 }

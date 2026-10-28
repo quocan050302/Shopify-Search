@@ -1,0 +1,122 @@
+{
+  "recallImprovement": 0.75,
+  "nonLiteralRecallImprovement": 0.8182,
+  "precisionDifference": 0,
+  "falseNegativeDelta": -9,
+  "falsePositiveDelta": 0,
+  "recoveredTruePositivesCount": 9,
+  "recoveredTruePositives": [
+    {
+      "caseId": "pos_diy_01_switch_cover",
+      "topic": "diy",
+      "headline": "Multicolor Rose Floral Pattern Switch Sticker & Decorative Wall Plate Cover",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_diy_02_cordless_glue_gun",
+      "topic": "diy",
+      "headline": "Rechargeable Cordless Hot Glue Gun with 30 Glue Sticks",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_gardening_03_plant_spikes",
+      "topic": "gardening",
+      "headline": "Terracotta Self-Watering Plant Spikes (Set of 6)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_kitchen_05_magnetic_spice_rack",
+      "topic": "kitchen",
+      "headline": "Heavy-Duty Magnetic Refrigerator Spice Rack Organizer (4-Pack)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_homedecor_07_wall_panels",
+      "topic": "home decor",
+      "headline": "Peel and Stick 3D Acoustic Wood Slat Wall Panels (10-Pack)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_diy_08_laser_level",
+      "topic": "diy",
+      "headline": "Self-Leveling Cross-Line Green Laser Level with Magnetic Bracket",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_gardening_10_drip_kit",
+      "topic": "gardening",
+      "headline": "100ft Heavy-Duty Expandable Water Hose with Solid Brass 10-Pattern Nozzle",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_homedecor_11_motion_cabinet_light",
+      "topic": "home decor",
+      "headline": "Rechargeable Magnetic LED Wall Sconce Lights with Remote Dimmer",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_kitchen_12_vegetable_chopper",
+      "topic": "kitchen",
+      "headline": "12-in-1 Stainless Steel Vegetable Chopper & Mandoline Dicer",
+      "containsLiteralTopicKeyword": false
+    }
+  ],
+  "falsePositivesV12_4_2": [],
+  "falseNegativesBaseline": [
+    {
+      "caseId": "pos_diy_01_switch_cover",
+      "topic": "diy",
+      "headline": "Multicolor Rose Floral Pattern Switch Sticker & Decorative Wall Plate Cover",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_diy_02_cordless_glue_gun",
+      "topic": "diy",
+      "headline": "Rechargeable Cordless Hot Glue Gun with 30 Glue Sticks",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_gardening_03_plant_spikes",
+      "topic": "gardening",
+      "headline": "Terracotta Self-Watering Plant Spikes (Set of 6)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_kitchen_05_magnetic_spice_rack",
+      "topic": "kitchen",
+      "headline": "Heavy-Duty Magnetic Refrigerator Spice Rack Organizer (4-Pack)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_homedecor_07_wall_panels",
+      "topic": "home decor",
+      "headline": "Peel and Stick 3D Acoustic Wood Slat Wall Panels (10-Pack)",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_diy_08_laser_level",
+      "topic": "diy",
+      "headline": "Self-Leveling Cross-Line Green Laser Level with Magnetic Bracket",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_gardening_10_drip_kit",
+      "topic": "gardening",
+      "headline": "100ft Heavy-Duty Expandable Water Hose with Solid Brass 10-Pattern Nozzle",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_homedecor_11_motion_cabinet_light",
+      "topic": "home decor",
+      "headline": "Rechargeable Magnetic LED Wall Sconce Lights with Remote Dimmer",
+      "containsLiteralTopicKeyword": false
+    },
+    {
+      "caseId": "pos_kitchen_12_vegetable_chopper",
+      "topic": "kitchen",
+      "headline": "12-in-1 Stainless Steel Vegetable Chopper & Mandoline Dicer",
+      "containsLiteralTopicKeyword": false
+    }
+  ],
+  "falseNegativesV12_4_2": []
+}

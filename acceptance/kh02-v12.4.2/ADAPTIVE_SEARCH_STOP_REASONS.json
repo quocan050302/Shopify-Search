@@ -1,0 +1,83 @@
+{
+  "diy": {
+    "requestedCount": 3,
+    "qualifiedProducts": 2,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 2,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 15,
+    "missingArchetypes": [
+      "Woodworking Jigs & Clamps",
+      "Furniture & Surface Restoration"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+  },
+  "pet": {
+    "requestedCount": 3,
+    "qualifiedProducts": 1,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 5,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 9,
+    "missingArchetypes": [
+      "Pet Feeding & Dispensers",
+      "Pet Travel & Safety"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+  },
+  "homeDecor": {
+    "requestedCount": 3,
+    "qualifiedProducts": 0,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 2,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 19,
+    "missingArchetypes": [
+      "Decorative Covers & Textiles"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+  },
+  "gardening": {
+    "requestedCount": 3,
+    "qualifiedProducts": 0,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 3,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 19,
+    "missingArchetypes": [
+      "Plant Supports & Trellises",
+      "Soil Testing & Monitoring"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+  },
+  "kitchen": {
+    "requestedCount": 3,
+    "qualifiedProducts": 3,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 1,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 13,
+    "missingArchetypes": [
+      "Food Storage & Vacuum Sealing"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "TARGET_REACHED"
+  },
+  "cleaning": {
+    "requestedCount": 3,
+    "qualifiedProducts": 1,
+    "distinctProductArchetypesObserved": 3,
+    "unresolvedCandidates": 1,
+    "remainingSourceQueries": 0,
+    "remainingAIRequests": 14,
+    "missingArchetypes": [
+      "Lint & Fabric Care"
+    ],
+    "recoveryRecommended": false,
+    "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+  }
+}

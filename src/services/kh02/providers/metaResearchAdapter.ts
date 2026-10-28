@@ -250,6 +250,12 @@ export interface MetaSubqueryExecution {
   completedAt: string | null;
   actualApiCalls: number;
   returnedCount: number;
+  uniqueReturnedCount?: number;
+  duplicateCount?: number;
+  roundNumber?: number;
+  origin?: string;
+  archetypeId?: string | null;
+  expectedProductCategory?: string | null;
   errorCode: string | null;
   errorMessage: string | null;
 }
@@ -438,159 +444,252 @@ export async function collectLiveMetaAds(
       maxRequests: 3,
     });
 
-    const budgetTracker = new MetaQueryBudgetTracker(plan.budget);
+    const budgetTracker: MetaQueryBudgetTracker =
+      query.sharedMetaBudgetTracker instanceof MetaQueryBudgetTracker
+        ? query.sharedMetaBudgetTracker
+        : new MetaQueryBudgetTracker(plan.budget);
+
+    const roundNumber = query.searchRoundNumber ?? 1;
     const queryOutcomes: MetaSubqueryExecution[] = [];
 
     const rawAds: any[] = [];
     const seenRawIds = new Set<string>();
-    const subqueryBindingMap = new Map<string, { queryKeyword: string; queryId: string }>();
+    const subqueryBindingMap = new Map<
+      string,
+      {
+        queryKeyword: string;
+        queryId: string;
+        roundNumber: number;
+        origin: string;
+        archetypeId: string | null;
+      }
+    >();
 
-    // 1. Primary Query Execution (Preserves user topic with exact phrase constraint)
-    const primaryOutcome: MetaSubqueryExecution = {
-      queryId: "primary",
-      keyword: plan.primaryQuery.subquery,
-      searchType: plan.primaryQuery.searchType,
-      attempted: true,
-      status: "FAILED",
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      actualApiCalls: 0,
-      returnedCount: 0,
-      errorCode: null,
-      errorMessage: null,
-    };
+    // Build the ordered list of queries to execute in this round:
+    // - If plannedQueries were provided by V12.4.2 orchestrator, execute those
+    // - Else if broad category with multiple archetype subqueries, prioritize distinct archetype subqueries (1 request each)
+    // - Else preserve primary query + subqueries
+    const queriesToRun: Array<{
+      queryId: string;
+      keyword: string;
+      searchType: "KEYWORD_EXACT_PHRASE" | "KEYWORD_UNORDERED";
+      maxResults: number;
+      roundNumber: number;
+      origin: string;
+      archetypeId: string | null;
+      expectedProductCategory: string | null;
+    }> = [];
 
-    const primaryReqs = budgetTracker.reserveRequests(2);
-    try {
-      const primaryRes = await client.searchAds({
-        query: plan.primaryQuery.subquery,
-        country: plan.market,
-        status: "ACTIVE",
+    if (Array.isArray(query.plannedQueries) && query.plannedQueries.length > 0) {
+      for (const pq of query.plannedQueries) {
+        queriesToRun.push({
+          queryId: pq.queryId || `q_r${roundNumber}_${queriesToRun.length + 1}`,
+          keyword: pq.phrase || pq.subquery || query.topic,
+          searchType:
+            pq.searchType === "KEYWORD_UNORDERED"
+              ? "KEYWORD_UNORDERED"
+              : "KEYWORD_EXACT_PHRASE",
+          maxResults: 10,
+          roundNumber: pq.roundNumber ?? roundNumber,
+          origin: pq.origin || "GEMINI_PLANNER",
+          archetypeId: pq.archetypeId ?? null,
+          expectedProductCategory: pq.expectedProductCategory ?? null,
+        });
+      }
+    } else if (
+      plan.nicheIntent === "BROAD_CATEGORY" &&
+      plan.subqueries.length >= 2
+    ) {
+      for (let i = 0; i < Math.min(plan.subqueries.length, 3); i++) {
+        const sub = plan.subqueries[i];
+        queriesToRun.push({
+          queryId: sub.queryId || `subquery_${i + 1}`,
+          keyword: sub.subquery,
+          searchType: sub.searchType,
+          maxResults: sub.maxResults || 10,
+          roundNumber,
+          origin: sub.origin || "DETERMINISTIC_FALLBACK",
+          archetypeId: sub.archetypeId ?? null,
+          expectedProductCategory: sub.expectedProductCategory ?? null,
+        });
+      }
+    } else {
+      queriesToRun.push({
+        queryId: "primary",
+        keyword: plan.primaryQuery.subquery,
         searchType: plan.primaryQuery.searchType,
         maxResults: plan.primaryQuery.maxResults,
-        maxRequests: primaryReqs,
-        maxSeconds: 20,
-        pageSize: 10,
+        roundNumber,
+        origin: plan.primaryQuery.origin || "USER",
+        archetypeId: plan.primaryQuery.archetypeId ?? null,
+        expectedProductCategory: plan.primaryQuery.expectedProductCategory ?? null,
       });
-
-      const primaryAds = primaryRes.ads || [];
-      budgetTracker.finalizeUsage(primaryReqs, primaryReqs, primaryAds.length);
-      primaryOutcome.completedAt = new Date().toISOString();
-      primaryOutcome.actualApiCalls = primaryReqs;
-      primaryOutcome.returnedCount = primaryAds.length;
-      primaryOutcome.status = primaryAds.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY";
-
-      for (const ad of primaryAds) {
-        const id = String(ad.id || ad.library_id || ad.libraryId);
-        if (id && !seenRawIds.has(id)) {
-          seenRawIds.add(id);
-          rawAds.push(ad);
-          subqueryBindingMap.set(id, { queryKeyword: plan.primaryQuery.subquery, queryId: "primary" });
-        }
+      for (let i = 0; i < Math.min(plan.subqueries.length, 2); i++) {
+        const sub = plan.subqueries[i];
+        queriesToRun.push({
+          queryId: sub.queryId || `subquery_${i + 1}`,
+          keyword: sub.subquery,
+          searchType: sub.searchType,
+          maxResults: sub.maxResults || 10,
+          roundNumber,
+          origin: sub.origin || "DETERMINISTIC_FALLBACK",
+          archetypeId: sub.archetypeId ?? null,
+          expectedProductCategory: sub.expectedProductCategory ?? null,
+        });
       }
-    } catch (primaryErr: any) {
-      budgetTracker.recordFailure(primaryReqs);
-      primaryOutcome.completedAt = new Date().toISOString();
-      primaryOutcome.actualApiCalls = primaryReqs;
-      primaryOutcome.status = "FAILED";
-      primaryOutcome.errorCode = primaryErr.code || "PRIMARY_QUERY_ERROR";
-      primaryOutcome.errorMessage = primaryErr.message || String(primaryErr);
-      console.warn(`[META_COLLECTOR] Primary query error for '${plan.primaryQuery.subquery}':`, primaryErr.message);
     }
-    queryOutcomes.push(primaryOutcome);
 
-    // 2. Bounded Subquery Expansion (Only expands relevant domain subqueries within budget)
-    const maxSubqueriesToRun = Math.min(plan.subqueries.length, 2);
-    for (let sIdx = 0; sIdx < maxSubqueriesToRun; sIdx++) {
-      const subplan = plan.subqueries[sIdx];
-      const subqueryId = `subquery_${sIdx + 1}`;
+    const maxRoundRequests =
+      typeof query.maxLiveRequestsForRound === "number" &&
+      query.maxLiveRequestsForRound > 0
+        ? Math.min(query.maxLiveRequestsForRound, budgetTracker.remainingRequests)
+        : budgetTracker.remainingRequests;
 
-      if (rawAds.length >= plan.maxTotalResults || query.signal?.aborted || !budgetTracker.canExecuteSubquery()) {
+    let roundRequestsConsumed = 0;
+    const desiredReqsPerQuery = queriesToRun.length === 1 ? Math.min(2, maxRoundRequests) : 1;
+
+    for (let qIdx = 0; qIdx < queriesToRun.length; qIdx++) {
+      const qSpec = queriesToRun[qIdx];
+
+      if (
+        rawAds.length >= plan.maxTotalResults ||
+        query.signal?.aborted ||
+        !budgetTracker.canExecuteSubquery() ||
+        roundRequestsConsumed >= maxRoundRequests
+      ) {
         queryOutcomes.push({
-          queryId: subqueryId,
-          keyword: subplan.subquery,
-          searchType: subplan.searchType,
+          queryId: qSpec.queryId,
+          keyword: qSpec.keyword,
+          searchType: qSpec.searchType,
           attempted: false,
           status: query.signal?.aborted ? "CANCELLED" : "SKIPPED_BUDGET",
           startedAt: null,
           completedAt: null,
           actualApiCalls: 0,
           returnedCount: 0,
+          uniqueReturnedCount: 0,
+          duplicateCount: 0,
+          roundNumber: qSpec.roundNumber,
+          origin: qSpec.origin,
+          archetypeId: qSpec.archetypeId,
+          expectedProductCategory: qSpec.expectedProductCategory,
           errorCode: null,
-          errorMessage: query.signal?.aborted ? "Operation cancelled" : "Skipped due to query budget limit",
+          errorMessage: query.signal?.aborted
+            ? "Operation cancelled"
+            : "Skipped due to query budget limit",
         });
         continue;
       }
 
-      const subOutcome: MetaSubqueryExecution = {
-        queryId: subqueryId,
-        keyword: subplan.subquery,
-        searchType: subplan.searchType,
-        attempted: true,
-        status: "FAILED",
-        startedAt: new Date().toISOString(),
-        completedAt: null,
-        actualApiCalls: 0,
-        returnedCount: 0,
-        errorCode: null,
-        errorMessage: null,
-      };
-
-      const subReqs = budgetTracker.reserveRequests(2);
-      if (subReqs <= 0) {
+      const reqsToReserve = Math.min(
+        desiredReqsPerQuery,
+        maxRoundRequests - roundRequestsConsumed
+      );
+      const reservedReqs = budgetTracker.reserveRequests(reqsToReserve);
+      if (reservedReqs <= 0) {
         queryOutcomes.push({
-          queryId: subqueryId,
-          keyword: subplan.subquery,
-          searchType: subplan.searchType,
+          queryId: qSpec.queryId,
+          keyword: qSpec.keyword,
+          searchType: qSpec.searchType,
           attempted: false,
           status: "SKIPPED_BUDGET",
           startedAt: null,
           completedAt: null,
           actualApiCalls: 0,
           returnedCount: 0,
+          uniqueReturnedCount: 0,
+          duplicateCount: 0,
+          roundNumber: qSpec.roundNumber,
+          origin: qSpec.origin,
+          archetypeId: qSpec.archetypeId,
+          expectedProductCategory: qSpec.expectedProductCategory,
           errorCode: null,
           errorMessage: "Skipped due to exhausted query budget",
         });
         continue;
       }
 
+      roundRequestsConsumed += reservedReqs;
+
+      const outcome: MetaSubqueryExecution = {
+        queryId: qSpec.queryId,
+        keyword: qSpec.keyword,
+        searchType: qSpec.searchType,
+        attempted: true,
+        status: "FAILED",
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+        actualApiCalls: 0,
+        returnedCount: 0,
+        uniqueReturnedCount: 0,
+        duplicateCount: 0,
+        roundNumber: qSpec.roundNumber,
+        origin: qSpec.origin,
+        archetypeId: qSpec.archetypeId,
+        expectedProductCategory: qSpec.expectedProductCategory,
+        errorCode: null,
+        errorMessage: null,
+      };
+
       try {
-        const subRes = await client.searchAds({
-          query: subplan.subquery,
+        const searchRes = await client.searchAds({
+          query: qSpec.keyword,
           country: plan.market,
           status: "ACTIVE",
-          searchType: subplan.searchType,
-          maxResults: Math.min(subplan.maxResults, plan.maxTotalResults - rawAds.length),
-          maxRequests: subReqs,
+          searchType: qSpec.searchType,
+          maxResults: Math.max(
+            1,
+            Math.min(qSpec.maxResults, plan.maxTotalResults - rawAds.length)
+          ),
+          maxRequests: reservedReqs,
           maxSeconds: 20,
           pageSize: 10,
         });
 
-        const subAds = subRes.ads || [];
-        budgetTracker.finalizeUsage(subReqs, subReqs, subAds.length);
-        subOutcome.completedAt = new Date().toISOString();
-        subOutcome.actualApiCalls = subReqs;
-        subOutcome.returnedCount = subAds.length;
-        subOutcome.status = subAds.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY";
+        const returnedAds = searchRes.ads || [];
+        let uniqueCountForQuery = 0;
+        let dupCountForQuery = 0;
 
-        for (const ad of subAds) {
+        for (const ad of returnedAds) {
           const id = String(ad.id || ad.library_id || ad.libraryId);
           if (id && !seenRawIds.has(id)) {
             seenRawIds.add(id);
             rawAds.push(ad);
-            subqueryBindingMap.set(id, { queryKeyword: subplan.subquery, queryId: subqueryId });
+            uniqueCountForQuery++;
+            subqueryBindingMap.set(id, {
+              queryKeyword: qSpec.keyword,
+              queryId: qSpec.queryId,
+              roundNumber: qSpec.roundNumber,
+              origin: qSpec.origin,
+              archetypeId: qSpec.archetypeId,
+            });
+          } else {
+            dupCountForQuery++;
           }
         }
-      } catch (subErr: any) {
-        budgetTracker.recordFailure(subReqs);
-        subOutcome.completedAt = new Date().toISOString();
-        subOutcome.actualApiCalls = subReqs;
-        subOutcome.status = "FAILED";
-        subOutcome.errorCode = subErr.code || "SUBQUERY_ERROR";
-        subOutcome.errorMessage = subErr.message || String(subErr);
-        console.warn(`[META_COLLECTOR] Subquery error for '${subplan.subquery}':`, subErr.message);
+
+        budgetTracker.finalizeUsage(reservedReqs, reservedReqs, uniqueCountForQuery);
+        outcome.completedAt = new Date().toISOString();
+        outcome.actualApiCalls = reservedReqs;
+        outcome.returnedCount = returnedAds.length;
+        outcome.uniqueReturnedCount = uniqueCountForQuery;
+        outcome.duplicateCount = dupCountForQuery;
+        outcome.status =
+          returnedAds.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY";
+      } catch (qErr: any) {
+        budgetTracker.recordFailure(reservedReqs);
+        outcome.completedAt = new Date().toISOString();
+        outcome.actualApiCalls = reservedReqs;
+        outcome.status = "FAILED";
+        outcome.errorCode = qErr.code || "META_QUERY_ERROR";
+        outcome.errorMessage = qErr.message || String(qErr);
+        console.warn(
+          `[META_COLLECTOR] Query error for '${qSpec.keyword}':`,
+          qErr.message
+        );
       }
-      queryOutcomes.push(subOutcome);
+
+      queryOutcomes.push(outcome);
     }
 
     const aggregated = aggregateMetaQueryOutcomes(queryOutcomes);
@@ -914,11 +1013,25 @@ export async function collectMetaProductSignals(
     const remainingSlots = Math.max(0, (query.maxResults || 50) - liveMatchingAds.length);
 
     if (remainingSlots > 0) {
-      const keywords = query.productKeywords && query.productKeywords.length > 0
+      const plannedQueryKeywords = Array.isArray(query.plannedQueries)
+        ? query.plannedQueries
+            .map((pq: any) => pq?.phrase || pq?.subquery || "")
+            .filter((s: string) => s.length > 2)
+        : [];
+
+      const baseKeywords = query.productKeywords && query.productKeywords.length > 0
         ? query.productKeywords
         : query.topic.split(/\s+/).filter((w) => w.length > 2);
 
-      const searchClauses = keywords.map((k) => ({
+      const combinedKeywords = Array.from(
+        new Set([
+          ...baseKeywords,
+          ...plannedQueryKeywords,
+          query.topic.trim(),
+        ])
+      ).filter((w) => w.length >= 2);
+
+      const searchClauses = combinedKeywords.map((k) => ({
         OR: [
           { headline: { contains: k } },
           { bodyText: { contains: k } },
@@ -989,6 +1102,7 @@ export async function collectMetaProductSignals(
           cachedRecordsUsedCount: 0,
           fallbackToCache: false,
           auditTraces: liveCollectorResult?.auditTraces || [],
+          queryOutcomes: liveCollectorResult?.queryOutcomes || [],
         },
       };
     }
@@ -1066,6 +1180,7 @@ export async function collectMetaProductSignals(
       cachedRecordsUsedCount: cachedCount,
       fallbackToCache: !liveSucceeded && cachedCount > 0,
       auditTraces: liveCollectorResult?.auditTraces || [],
+      queryOutcomes: liveCollectorResult?.queryOutcomes || [],
     };
 
     return {

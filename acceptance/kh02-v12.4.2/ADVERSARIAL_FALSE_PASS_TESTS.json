@@ -1,0 +1,13 @@
+{
+  "geminiPlannerUnavailableRefusesFakeGeminiPass": true,
+  "unrelatedQueriesRejectedByValidator": true,
+  "emptyWorkspaceMetaDoesNotClaimLiveAds": true,
+  "cacheOnlyDoesNotClaimFreshLive": true,
+  "providerBudgetExhaustedBlocksExtraRequests": true,
+  "unrelatedObservationsRejected": true,
+  "nonLiteralRelevantProductRescued": true,
+  "collectionUrlCannotClaimVerifiedSku": true,
+  "shortfallRefusesTop3Pass": true,
+  "emptyGoogleMatchRefusesPass": true,
+  "allPassGatesHaveObservedEvidence": true
+}

@@ -1,0 +1,838 @@
+{
+  "diyPlan": {
+    "topic": "diy",
+    "market": "US",
+    "nicheIntent": "BROAD_CATEGORY",
+    "primaryQuery": {
+      "queryId": "kh02_q_r1_1_50e9d8ca",
+      "subquery": "wall repair kit",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "rationale": "High-intent search phrase used in DTC home improvement ads.",
+      "maxResults": 15,
+      "archetypeId": "wall_repair_kit",
+      "origin": "GEMINI_PLANNER",
+      "roundNumber": 1,
+      "priority": 1,
+      "expectedProductCategory": "Home Repair Kits"
+    },
+    "subqueries": [
+      {
+        "queryId": "kh02_q_r1_2_18acf6fb",
+        "subquery": "cordless hot glue gun",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Targets popular rechargeable crafting tools featured in social media ads.",
+        "maxResults": 10,
+        "archetypeId": "cordless_hot_glue_gun",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 2,
+        "expectedProductCategory": "DIY Crafting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_3_ae3c8d67",
+        "subquery": "decorative switch plate covers",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Pinpoints home accessory items frequently advertised on visual discovery platforms.",
+        "maxResults": 10,
+        "archetypeId": "decorative_switch_plate_covers",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 3,
+        "expectedProductCategory": "Decorative Home Hardware & Wall Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_4_52b8b2a6",
+        "subquery": "pocket hole jig",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Standard industry terminology for consumer woodworking tools.",
+        "maxResults": 10,
+        "archetypeId": "pocket_hole_jig",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 4,
+        "expectedProductCategory": "Woodworking Jigs & Clamps"
+      },
+      {
+        "queryId": "kh02_q_r1_5_2a102c24",
+        "subquery": "wood scratch repair markers",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "High-converting product title for household touch-up kits.",
+        "maxResults": 10,
+        "archetypeId": "wood_scratch_repair_markers",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 5,
+        "expectedProductCategory": "Furniture & Surface Restoration"
+      },
+      {
+        "queryId": "kh02_q_r1_6_45ae5e18",
+        "subquery": "drywall patch kit",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Captures exact product variants sold by ecommerce brands.",
+        "maxResults": 10,
+        "archetypeId": "wall_repair_kit",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 6,
+        "expectedProductCategory": "Home Repair Kits"
+      },
+      {
+        "queryId": "kh02_q_r1_7_45131afb",
+        "subquery": "mini glue gun",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Common alternative product description for compact DIY adhesive tools.",
+        "maxResults": 10,
+        "archetypeId": "cordless_hot_glue_gun",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 7,
+        "expectedProductCategory": "DIY Crafting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_8_189eac7f",
+        "subquery": "brass outlet covers",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Finds specific material variations sold by home hardware brands.",
+        "maxResults": 10,
+        "archetypeId": "decorative_switch_plate_covers",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 8,
+        "expectedProductCategory": "Decorative Home Hardware & Wall Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_9_9738dd2e",
+        "subquery": "woodworking joint kit",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Captures bundled woodworking hardware packages.",
+        "maxResults": 10,
+        "archetypeId": "pocket_hole_jig",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 9,
+        "expectedProductCategory": "Woodworking Jigs & Clamps"
+      },
+      {
+        "queryId": "kh02_q_r1_10_482adfb9",
+        "subquery": "furniture touch up kit",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Identifies comprehensive surface restoration sets.",
+        "maxResults": 10,
+        "archetypeId": "wood_scratch_repair_markers",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 10,
+        "expectedProductCategory": "Furniture & Surface Restoration"
+      }
+    ],
+    "maxTotalResults": 25,
+    "maxRequests": 3,
+    "budget": {
+      "maxLogicalSubqueries": 3,
+      "maxProviderRequests": 3,
+      "maxPages": 3,
+      "maxUniqueAds": 25,
+      "maxDurationMs": 45000
+    },
+    "deduplicateAcrossSubqueries": true,
+    "createdAt": "2026-10-28T10:52:51.397Z",
+    "aiPlan": {
+      "normalizedNiche": "diy",
+      "nicheIntent": "BROAD_CATEGORY",
+      "productArchetypes": [
+        {
+          "archetypeId": "wall_repair_kit",
+          "productCategory": "Home Repair Kits",
+          "customerProblem": "Holes, cracks, and dents in drywall requiring quick cosmetic patching without professional contractor help.",
+          "relevanceReason": "Directly addresses home improvement tasks that everyday consumers perform themselves.",
+          "searchQueries": [
+            {
+              "phrase": "wall repair kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "High-intent search phrase used in DTC home improvement ads."
+            },
+            {
+              "phrase": "drywall patch kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Captures exact product variants sold by ecommerce brands."
+            }
+          ]
+        },
+        {
+          "archetypeId": "cordless_hot_glue_gun",
+          "productCategory": "DIY Crafting Tools",
+          "customerProblem": "Tethered cord restrictions when bonding crafting materials, home decor, or quick fixes.",
+          "relevanceReason": "Essential portable tool for everyday DIY projects and crafts.",
+          "searchQueries": [
+            {
+              "phrase": "cordless hot glue gun",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Targets popular rechargeable crafting tools featured in social media ads."
+            },
+            {
+              "phrase": "mini glue gun",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Common alternative product description for compact DIY adhesive tools."
+            }
+          ]
+        },
+        {
+          "archetypeId": "decorative_switch_plate_covers",
+          "productCategory": "Decorative Home Hardware & Wall Decor",
+          "customerProblem": "Boring standard plastic light switch plates that do not match interior room aesthetics.",
+          "relevanceReason": "Popular aesthetic DIY upgrade for home decor enthusiasts.",
+          "searchQueries": [
+            {
+              "phrase": "decorative switch plate covers",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Pinpoints home accessory items frequently advertised on visual discovery platforms."
+            },
+            {
+              "phrase": "brass outlet covers",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Finds specific material variations sold by home hardware brands."
+            }
+          ]
+        },
+        {
+          "archetypeId": "pocket_hole_jig",
+          "productCategory": "Woodworking Jigs & Clamps",
+          "customerProblem": "Difficulty creating strong, hidden joints when building custom wooden furniture.",
+          "relevanceReason": "Core woodworking accessory for intermediate home improvement hobbyists.",
+          "searchQueries": [
+            {
+              "phrase": "pocket hole jig",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Standard industry terminology for consumer woodworking tools."
+            },
+            {
+              "phrase": "woodworking joint kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Captures bundled woodworking hardware packages."
+            }
+          ]
+        },
+        {
+          "archetypeId": "wood_scratch_repair_markers",
+          "productCategory": "Furniture & Surface Restoration",
+          "customerProblem": "Scratches, scuffs, and discoloration on wooden furniture and flooring.",
+          "relevanceReason": "Enables easy furniture restoration without requiring professional refinishing services.",
+          "searchQueries": [
+            {
+              "phrase": "wood scratch repair markers",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "High-converting product title for household touch-up kits."
+            },
+            {
+              "phrase": "furniture touch up kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Identifies comprehensive surface restoration sets."
+            }
+          ]
+        }
+      ],
+      "negativeIntentPatterns": [
+        "b2b wholesale equipment",
+        "pos thermal receipt printers",
+        "mobile apps",
+        "services",
+        "insurance",
+        "informational blog articles",
+        "pos thermal printer",
+        "get latest price",
+        "widgets themes",
+        "vet bill cost factors"
+      ],
+      "uncertainties": [
+        "The broad nature of DIY spans everything from minor cosmetic touchups to heavy construction, so archetypes are weighted toward accessible consumer products rather than industrial equipment."
+      ]
+    },
+    "validatedQueries": [
+      {
+        "queryId": "kh02_q_r1_1_50e9d8ca",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "wall repair kit",
+        "normalizedPhrase": "wall repair kit",
+        "archetypeId": "wall_repair_kit",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 1,
+        "rationale": "High-intent search phrase used in DTC home improvement ads.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Home Repair Kits"
+      },
+      {
+        "queryId": "kh02_q_r1_2_18acf6fb",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "cordless hot glue gun",
+        "normalizedPhrase": "cordless hot glue gun",
+        "archetypeId": "cordless_hot_glue_gun",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 2,
+        "rationale": "Targets popular rechargeable crafting tools featured in social media ads.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "DIY Crafting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_3_ae3c8d67",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "decorative switch plate covers",
+        "normalizedPhrase": "decorative switch plate covers",
+        "archetypeId": "decorative_switch_plate_covers",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 3,
+        "rationale": "Pinpoints home accessory items frequently advertised on visual discovery platforms.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Decorative Home Hardware & Wall Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_4_52b8b2a6",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "pocket hole jig",
+        "normalizedPhrase": "pocket hole jig",
+        "archetypeId": "pocket_hole_jig",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 4,
+        "rationale": "Standard industry terminology for consumer woodworking tools.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Woodworking Jigs & Clamps"
+      },
+      {
+        "queryId": "kh02_q_r1_5_2a102c24",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "wood scratch repair markers",
+        "normalizedPhrase": "wood scratch repair markers",
+        "archetypeId": "wood_scratch_repair_markers",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 5,
+        "rationale": "High-converting product title for household touch-up kits.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Furniture & Surface Restoration"
+      },
+      {
+        "queryId": "kh02_q_r1_6_45ae5e18",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "drywall patch kit",
+        "normalizedPhrase": "drywall patch kit",
+        "archetypeId": "wall_repair_kit",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 6,
+        "rationale": "Captures exact product variants sold by ecommerce brands.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Home Repair Kits"
+      },
+      {
+        "queryId": "kh02_q_r1_7_45131afb",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "mini glue gun",
+        "normalizedPhrase": "mini glue gun",
+        "archetypeId": "cordless_hot_glue_gun",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 7,
+        "rationale": "Common alternative product description for compact DIY adhesive tools.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "DIY Crafting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_8_189eac7f",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "brass outlet covers",
+        "normalizedPhrase": "brass outlet covers",
+        "archetypeId": "decorative_switch_plate_covers",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 8,
+        "rationale": "Finds specific material variations sold by home hardware brands.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Decorative Home Hardware & Wall Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_9_9738dd2e",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "woodworking joint kit",
+        "normalizedPhrase": "woodworking joint kit",
+        "archetypeId": "pocket_hole_jig",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 9,
+        "rationale": "Captures bundled woodworking hardware packages.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Woodworking Jigs & Clamps"
+      },
+      {
+        "queryId": "kh02_q_r1_10_482adfb9",
+        "researchRunId": "accept_plan_diy",
+        "phrase": "furniture touch up kit",
+        "normalizedPhrase": "furniture touch up kit",
+        "archetypeId": "wood_scratch_repair_markers",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 10,
+        "rationale": "Identifies comprehensive surface restoration sets.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Furniture & Surface Restoration"
+      }
+    ],
+    "plannerTelemetry": {
+      "taskType": "DISCOVERY_PLANNING",
+      "status": "COMPLETED_GEMINI",
+      "origin": "GEMINI_PLANNER",
+      "modelUsed": "gemini-3.5-flash-lite",
+      "modelFallbackUsed": false,
+      "attemptsMade": 1,
+      "retriesUsed": 0,
+      "cacheHit": false,
+      "latencyMs": 3485,
+      "plannedArchetypesCount": 5,
+      "validatedQueriesCount": 10,
+      "rejectedQueriesCount": 0,
+      "promptVersion": "kh02_discovery_planner_v1.0.0",
+      "schemaVersion": "1.0.0",
+      "failureReason": null
+    }
+  },
+  "gardeningPlan": {
+    "topic": "gardening",
+    "market": "US",
+    "nicheIntent": "BROAD_CATEGORY",
+    "primaryQuery": {
+      "queryId": "kh02_q_r1_1_f5e71f8a",
+      "subquery": "self watering planter",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "rationale": "Directly targets high-volume DTC ads for self-watering pots and planters.",
+      "maxResults": 15,
+      "archetypeId": "self_watering_planter",
+      "origin": "GEMINI_PLANNER",
+      "roundNumber": 1,
+      "priority": 1,
+      "expectedProductCategory": "Plant Watering & Irrigation"
+    },
+    "subqueries": [
+      {
+        "queryId": "kh02_q_r1_2_e56db936",
+        "subquery": "ratchet pruning shears",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Finds popular ergonomic hand pruners sold heavily via social media ads.",
+        "maxResults": 10,
+        "archetypeId": "heavy_duty_pruning_shears",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 2,
+        "expectedProductCategory": "Pruning & Cutting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_3_b900f13e",
+        "subquery": "seed starting kit",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Targets propagator trays with built-in LED grow lights sold by DTC brands.",
+        "maxResults": 10,
+        "archetypeId": "indoor_seed_starting_kit",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 3,
+        "expectedProductCategory": "Seed Starting & Propagation"
+      },
+      {
+        "queryId": "kh02_q_r1_4_cbe3640a",
+        "subquery": "decorative plant trellis",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Finds aesthetic metal and wooden trellises popular on Instagram and TikTok ads.",
+        "maxResults": 10,
+        "archetypeId": "metal_plant_trellis",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 4,
+        "expectedProductCategory": "Plant Supports & Trellises"
+      },
+      {
+        "queryId": "kh02_q_r1_5_22330961",
+        "subquery": "soil moisture meter",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Directly targets affordable diagnostic probes frequently advertised as gifts or essential tools.",
+        "maxResults": 10,
+        "archetypeId": "digital_soil_meter",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 5,
+        "expectedProductCategory": "Soil Testing & Monitoring"
+      },
+      {
+        "queryId": "kh02_q_r1_6_780307ea",
+        "subquery": "automatic plant waterer",
+        "searchType": "KEYWORD_UNORDERED",
+        "rationale": "Captures related drip-irrigation spikes and vacation plant watering stakes.",
+        "maxResults": 10,
+        "archetypeId": "self_watering_planter",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 6,
+        "expectedProductCategory": "Plant Watering & Irrigation"
+      },
+      {
+        "queryId": "kh02_q_r1_7_1d23f2bd",
+        "subquery": "gardening pruning shears",
+        "searchType": "KEYWORD_UNORDERED",
+        "rationale": "Expands to broader high-performing cutting tool creative variants.",
+        "maxResults": 10,
+        "archetypeId": "heavy_duty_pruning_shears",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 7,
+        "expectedProductCategory": "Pruning & Cutting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_8_027d884f",
+        "subquery": "indoor greenhouse kit",
+        "searchType": "KEYWORD_UNORDERED",
+        "rationale": "Captures mini greenhouse structures marketed to home plant hobbyists.",
+        "maxResults": 10,
+        "archetypeId": "indoor_seed_starting_kit",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 8,
+        "expectedProductCategory": "Seed Starting & Propagation"
+      },
+      {
+        "queryId": "kh02_q_r1_9_9d1db545",
+        "subquery": "climbing plant support",
+        "searchType": "KEYWORD_UNORDERED",
+        "rationale": "Retrieves functional stakes and rings used for indoor and outdoor vines.",
+        "maxResults": 10,
+        "archetypeId": "metal_plant_trellis",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 9,
+        "expectedProductCategory": "Plant Supports & Trellises"
+      },
+      {
+        "queryId": "kh02_q_r1_10_08eef89f",
+        "subquery": "digital soil tester",
+        "searchType": "KEYWORD_UNORDERED",
+        "rationale": "Uncovers multi-function pH and light meters marketed to gardening enthusiasts.",
+        "maxResults": 10,
+        "archetypeId": "digital_soil_meter",
+        "origin": "GEMINI_PLANNER",
+        "roundNumber": 1,
+        "priority": 10,
+        "expectedProductCategory": "Soil Testing & Monitoring"
+      }
+    ],
+    "maxTotalResults": 25,
+    "maxRequests": 3,
+    "budget": {
+      "maxLogicalSubqueries": 3,
+      "maxProviderRequests": 3,
+      "maxPages": 3,
+      "maxUniqueAds": 25,
+      "maxDurationMs": 45000
+    },
+    "deduplicateAcrossSubqueries": true,
+    "createdAt": "2026-10-28T10:52:55.296Z",
+    "aiPlan": {
+      "normalizedNiche": "gardening",
+      "nicheIntent": "BROAD_CATEGORY",
+      "productArchetypes": [
+        {
+          "archetypeId": "self_watering_planter",
+          "productCategory": "Plant Watering & Irrigation",
+          "customerProblem": "Plants drying out quickly due to infrequent watering or busy schedules.",
+          "relevanceReason": "Provides an automated watering solution for home gardeners seeking low-maintenance plant care.",
+          "searchQueries": [
+            {
+              "phrase": "self watering planter",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Directly targets high-volume DTC ads for self-watering pots and planters."
+            },
+            {
+              "phrase": "automatic plant waterer",
+              "searchType": "KEYWORD_UNORDERED",
+              "priority": 2,
+              "rationale": "Captures related drip-irrigation spikes and vacation plant watering stakes."
+            }
+          ]
+        },
+        {
+          "archetypeId": "heavy_duty_pruning_shears",
+          "productCategory": "Pruning & Cutting Tools",
+          "customerProblem": "Hand fatigue and dull blades when trimming thick branches or harvesting plants.",
+          "relevanceReason": "Essential handheld gardening tool frequently featured in direct-to-consumer video demonstrations.",
+          "searchQueries": [
+            {
+              "phrase": "ratchet pruning shears",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Finds popular ergonomic hand pruners sold heavily via social media ads."
+            },
+            {
+              "phrase": "gardening pruning shears",
+              "searchType": "KEYWORD_UNORDERED",
+              "priority": 2,
+              "rationale": "Expands to broader high-performing cutting tool creative variants."
+            }
+          ]
+        },
+        {
+          "archetypeId": "indoor_seed_starting_kit",
+          "productCategory": "Seed Starting & Propagation",
+          "customerProblem": "Difficulty germinating seeds indoors without proper light, warmth, and humidity control.",
+          "relevanceReason": "Appeals to gardeners starting vegetables and flowers ahead of the spring planting season.",
+          "searchQueries": [
+            {
+              "phrase": "seed starting kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Targets propagator trays with built-in LED grow lights sold by DTC brands."
+            },
+            {
+              "phrase": "indoor greenhouse kit",
+              "searchType": "KEYWORD_UNORDERED",
+              "priority": 2,
+              "rationale": "Captures mini greenhouse structures marketed to home plant hobbyists."
+            }
+          ]
+        },
+        {
+          "archetypeId": "metal_plant_trellis",
+          "productCategory": "Plant Supports & Trellises",
+          "customerProblem": "Vining houseplants and climbing garden vegetables sprawling messily across floors or soil.",
+          "relevanceReason": "Combines aesthetic room decor with functional plant support for climbing species.",
+          "searchQueries": [
+            {
+              "phrase": "decorative plant trellis",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Finds aesthetic metal and wooden trellises popular on Instagram and TikTok ads."
+            },
+            {
+              "phrase": "climbing plant support",
+              "searchType": "KEYWORD_UNORDERED",
+              "priority": 2,
+              "rationale": "Retrieves functional stakes and rings used for indoor and outdoor vines."
+            }
+          ]
+        },
+        {
+          "archetypeId": "digital_soil_meter",
+          "productCategory": "Soil Testing & Monitoring",
+          "customerProblem": "Uncertainty regarding soil moisture levels, pH balance, and sunlight requirements leading to plant failure.",
+          "relevanceReason": "Provides actionable diagnostic data for home gardeners trying to optimize plant health.",
+          "searchQueries": [
+            {
+              "phrase": "soil moisture meter",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "Directly targets affordable diagnostic probes frequently advertised as gifts or essential tools."
+            },
+            {
+              "phrase": "digital soil tester",
+              "searchType": "KEYWORD_UNORDERED",
+              "priority": 2,
+              "rationale": "Uncovers multi-function pH and light meters marketed to gardening enthusiasts."
+            }
+          ]
+        }
+      ],
+      "negativeIntentPatterns": [
+        "b2b wholesale agriculture equipment",
+        "tractor machinery",
+        "commercial landscaping service",
+        "gardening mobile app",
+        "lawn care blog or magazine subscription",
+        "pest control extermination service",
+        "pos thermal printer",
+        "get latest price",
+        "widgets themes",
+        "vet bill cost factors"
+      ],
+      "uncertainties": [
+        "User did not specify whether the focus is strictly indoor houseplants or outdoor backyard gardening."
+      ]
+    },
+    "validatedQueries": [
+      {
+        "queryId": "kh02_q_r1_1_f5e71f8a",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "self watering planter",
+        "normalizedPhrase": "self watering planter",
+        "archetypeId": "self_watering_planter",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 1,
+        "rationale": "Directly targets high-volume DTC ads for self-watering pots and planters.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Plant Watering & Irrigation"
+      },
+      {
+        "queryId": "kh02_q_r1_2_e56db936",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "ratchet pruning shears",
+        "normalizedPhrase": "ratchet pruning shears",
+        "archetypeId": "heavy_duty_pruning_shears",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 2,
+        "rationale": "Finds popular ergonomic hand pruners sold heavily via social media ads.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Pruning & Cutting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_3_b900f13e",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "seed starting kit",
+        "normalizedPhrase": "seed starting kit",
+        "archetypeId": "indoor_seed_starting_kit",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 3,
+        "rationale": "Targets propagator trays with built-in LED grow lights sold by DTC brands.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Seed Starting & Propagation"
+      },
+      {
+        "queryId": "kh02_q_r1_4_cbe3640a",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "decorative plant trellis",
+        "normalizedPhrase": "decorative plant trellis",
+        "archetypeId": "metal_plant_trellis",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 4,
+        "rationale": "Finds aesthetic metal and wooden trellises popular on Instagram and TikTok ads.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Plant Supports & Trellises"
+      },
+      {
+        "queryId": "kh02_q_r1_5_22330961",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "soil moisture meter",
+        "normalizedPhrase": "soil moisture meter",
+        "archetypeId": "digital_soil_meter",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 5,
+        "rationale": "Directly targets affordable diagnostic probes frequently advertised as gifts or essential tools.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Soil Testing & Monitoring"
+      },
+      {
+        "queryId": "kh02_q_r1_6_780307ea",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "automatic plant waterer",
+        "normalizedPhrase": "automatic plant waterer",
+        "archetypeId": "self_watering_planter",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_UNORDERED",
+        "roundNumber": 1,
+        "priority": 6,
+        "rationale": "Captures related drip-irrigation spikes and vacation plant watering stakes.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Plant Watering & Irrigation"
+      },
+      {
+        "queryId": "kh02_q_r1_7_1d23f2bd",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "gardening pruning shears",
+        "normalizedPhrase": "gardening pruning shears",
+        "archetypeId": "heavy_duty_pruning_shears",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_UNORDERED",
+        "roundNumber": 1,
+        "priority": 7,
+        "rationale": "Expands to broader high-performing cutting tool creative variants.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Pruning & Cutting Tools"
+      },
+      {
+        "queryId": "kh02_q_r1_8_027d884f",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "indoor greenhouse kit",
+        "normalizedPhrase": "indoor greenhouse kit",
+        "archetypeId": "indoor_seed_starting_kit",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_UNORDERED",
+        "roundNumber": 1,
+        "priority": 8,
+        "rationale": "Captures mini greenhouse structures marketed to home plant hobbyists.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Seed Starting & Propagation"
+      },
+      {
+        "queryId": "kh02_q_r1_9_9d1db545",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "climbing plant support",
+        "normalizedPhrase": "climbing plant support",
+        "archetypeId": "metal_plant_trellis",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_UNORDERED",
+        "roundNumber": 1,
+        "priority": 9,
+        "rationale": "Retrieves functional stakes and rings used for indoor and outdoor vines.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Plant Supports & Trellises"
+      },
+      {
+        "queryId": "kh02_q_r1_10_08eef89f",
+        "researchRunId": "accept_plan_gardening",
+        "phrase": "digital soil tester",
+        "normalizedPhrase": "digital soil tester",
+        "archetypeId": "digital_soil_meter",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_UNORDERED",
+        "roundNumber": 1,
+        "priority": 10,
+        "rationale": "Uncovers multi-function pH and light meters marketed to gardening enthusiasts.",
+        "origin": "GEMINI_PLANNER",
+        "expectedProductCategory": "Soil Testing & Monitoring"
+      }
+    ],
+    "plannerTelemetry": {
+      "taskType": "DISCOVERY_PLANNING",
+      "status": "COMPLETED_GEMINI",
+      "origin": "GEMINI_PLANNER",
+      "modelUsed": "gemini-3.5-flash-lite",
+      "modelFallbackUsed": false,
+      "attemptsMade": 1,
+      "retriesUsed": 0,
+      "cacheHit": false,
+      "latencyMs": 3897,
+      "plannedArchetypesCount": 5,
+      "validatedQueriesCount": 10,
+      "rejectedQueriesCount": 0,
+      "promptVersion": "kh02_discovery_planner_v1.0.0",
+      "schemaVersion": "1.0.0",
+      "failureReason": null
+    }
+  }
+}

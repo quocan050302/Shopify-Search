@@ -1,0 +1,73 @@
+{
+  "valid": true,
+  "validatedPlan": {
+    "normalizedNiche": "diy",
+    "nicheIntent": "BROAD_CATEGORY",
+    "productArchetypes": [
+      {
+        "archetypeId": "good_glue",
+        "productCategory": "Cordless Glue Guns",
+        "customerProblem": "Home craft repairs",
+        "relevanceReason": "Physical tool",
+        "searchQueries": [
+          {
+            "phrase": "cordless hot glue gun",
+            "searchType": "KEYWORD_EXACT_PHRASE",
+            "priority": 1,
+            "rationale": "Tool"
+          }
+        ]
+      }
+    ],
+    "negativeIntentPatterns": [
+      "pos thermal printer",
+      "get latest price",
+      "widgets themes",
+      "vet bill cost factors"
+    ],
+    "uncertainties": []
+  },
+  "validatedQueries": [
+    {
+      "queryId": "kh02_q_r1_1_1679dd9e",
+      "researchRunId": "d04_test",
+      "phrase": "cordless hot glue gun",
+      "normalizedPhrase": "cordless hot glue gun",
+      "archetypeId": "good_glue",
+      "source": "META_ADS",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "roundNumber": 1,
+      "priority": 1,
+      "rationale": "Tool",
+      "origin": "GEMINI_PLANNER",
+      "expectedProductCategory": "Cordless Glue Guns"
+    }
+  ],
+  "rejectedQueries": [
+    {
+      "phrase": "diy",
+      "reason": "Single-word broad category query rejected in favor of concrete product archetype queries."
+    },
+    {
+      "phrase": "pos thermal printer wholesale",
+      "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(pos thermal printer|receipt printer|barcode scanner wholesale|b2b app|alibaba|get latest price|fob price|moq)\\b)."
+    },
+    {
+      "phrase": "icontrol easy widgets themes",
+      "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(widgets? themes?|ios app|android app|wallpaper app|icontrol|download app|app store|google play)\\b)."
+    },
+    {
+      "phrase": "er vet bill cost factors",
+      "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(vet bill|cost factors|how much does|article|blog|wikipedia|news)\\b)."
+    },
+    {
+      "phrase": "buy now free shipping",
+      "reason": "Matches non-product, service, digital app, B2B, or generic marketing pattern (\\b(free shipping|best deal|shop now|limited time|flash sale|clearance sale|discount code|coupon)\\b)."
+    },
+    {
+      "phrase": "Cordless Hot Glue Gun",
+      "reason": "Near-duplicate synonym of an already validated query."
+    }
+  ],
+  "warnings": []
+}
