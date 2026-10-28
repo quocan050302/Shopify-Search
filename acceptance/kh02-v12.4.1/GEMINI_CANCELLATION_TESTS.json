@@ -1,0 +1,42 @@
+{
+  "canceled": true,
+  "abortElapsedMs": 41,
+  "backoffSleepInterrupted": true,
+  "telemetry": {
+    "totalAttempts": 1,
+    "retriesExecuted": 0,
+    "requestsStarted": 1,
+    "requestsCompleted": 0,
+    "requestsFailed": 1,
+    "modelsAttempted": [
+      "model-b-ok"
+    ],
+    "successfulModelId": null,
+    "fallbackCount": 0,
+    "executionHistory": [
+      {
+        "modelId": "model-b-ok",
+        "attemptsCount": 1,
+        "retriesExhausted": false,
+        "successful": false,
+        "attempts": [
+          {
+            "attemptNumber": 1,
+            "modelId": "model-b-ok",
+            "statusCode": 503,
+            "errorClassification": "TRANSIENT_OVERLOAD",
+            "errorMessage": "503 Overloaded",
+            "durationMs": 0,
+            "timestamp": "2026-10-28T09:02:44.324Z",
+            "delayMs": 5114
+          }
+        ]
+      }
+    ],
+    "circuitBreakerTriggered": false,
+    "canceled": true,
+    "deadlineExceeded": false,
+    "budgetExhausted": false,
+    "totalDurationMs": 41
+  }
+}

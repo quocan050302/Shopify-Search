@@ -1,0 +1,188 @@
+{
+  "isolationDiagnostic": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": null,
+    "discoverySupported": true,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-28T09:03:44.472Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Workspace has 0 Meta ad records stored (Global: 75); live collector active (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "D:\\Project_github\\Running-Ads\\services\\meta-ads-collector\\.venv\\Scripts\\python.exe",
+    "collectorVersion": null,
+    "databaseRecordsIndexed": 0,
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-28T09:03:44.467Z",
+    "authStatus": "AUTH_NOT_REQUIRED",
+    "transportStatus": "CONNECTED",
+    "capabilityStatus": "VERIFIED",
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": null,
+      "supportedOperationsVerified": true,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": null,
+      "storedRecordCount": 0,
+      "lastLiveQueryRecordCount": null,
+      "currentRunRecordCount": null,
+      "lastSuccessfulLiveQueryAt": null,
+      "lastProbeAt": "2026-10-28T09:03:44.467Z",
+      "authStatus": "AUTH_NOT_REQUIRED",
+      "transportStatus": "CONNECTED",
+      "capabilityStatus": "VERIFIED",
+      "queryStatus": "NOT_CONFIGURED",
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "liveError": null,
+      "cachedRecordsCount": null,
+      "freshLiveCount": null
+    },
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true,
+      "pricingSource": "Local MetaAdsCollector MCP (No external API key required)"
+    }
+  },
+  "runMetaTelemetry": {
+    "source": "META_ADS",
+    "queryExecuted": true,
+    "queryStatus": "PASSED",
+    "queryTimestamp": "2026-10-28T09:03:03.147Z",
+    "retrievedCount": 17,
+    "acceptedCount": 17,
+    "queryProvenance": "LIVE_PROVIDER",
+    "isLive": true,
+    "queryError": null,
+    "lastSuccessfulRecordCount": 17,
+    "lastSuccessfulQueryAt": "2026-10-28T09:03:03.147Z",
+    "upstreamReturnedCount": 17,
+    "freshLiveCount": 17,
+    "cachedRecordsCount": 0,
+    "persistedInsertedCount": 0,
+    "persistedUpdatedCount": 17,
+    "liveAttempted": true,
+    "liveSucceeded": true,
+    "liveError": null,
+    "lastLiveQueryAt": "2026-10-28T09:03:03.147Z",
+    "lastLiveQueryRecordCount": 17,
+    "lastSuccessfulLiveQueryAt": "2026-10-28T09:03:03.147Z",
+    "auditTraces": [
+      {
+        "rawId": "1394681365927207",
+        "digest": "c56ef12bd5721a077eb5edbe966c6628",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21do900014gorux4x9zzo"
+      },
+      {
+        "rawId": "2619370888493232",
+        "digest": "be88d5ccc8fc16535121dc8d2d069720",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21dpt00064gorn2vort8a"
+      },
+      {
+        "rawId": "1409887821066414",
+        "digest": "e4fd632fc74af014202926a58baf5b75",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21dqq000b4gor1w9t6w05"
+      },
+      {
+        "rawId": "1395097056025193",
+        "digest": "c6acf0ca3e54eb510d484ff389d41172",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21drj000g4gorlvwnmgql"
+      },
+      {
+        "rawId": "1536941208479218",
+        "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+      },
+      {
+        "rawId": "1778772883252421",
+        "digest": "92da39c877d0c0db674acc93d612add1",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21dtd000o4gor6os6ozvj"
+      },
+      {
+        "rawId": "2688711491543464",
+        "digest": "f684060c0fb534bb1ff7a921a5d36e5e",
+        "decision": "UPDATED",
+        "persistedId": "cmvq21du8000t4gorrxhd3a6d"
+      },
+      {
+        "rawId": "1464108218882438",
+        "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyiz0009aworjqixph93"
+      },
+      {
+        "rawId": "1133000522848754",
+        "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyjn000faworwu1dts6g"
+      },
+      {
+        "rawId": "1501129465377642",
+        "digest": "9d77606376724215e77b7d5399a8613f",
+        "decision": "UPDATED",
+        "persistedId": "cmvrh5abo0010fcorfxmee1rj"
+      },
+      {
+        "rawId": "1641348457417375",
+        "digest": "e95e7abd2d294d3761316ba1283628a7",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqykc000laworg3qfh92d"
+      },
+      {
+        "rawId": "2249466188957796",
+        "digest": "ed821df7bed80fa8cac7153f3d29069f",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyl0000raworivkxfbhm"
+      },
+      {
+        "rawId": "1642750633880173",
+        "digest": "09354344bcebc93b92f10782e68891d8",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trww000fwgor0lp8jttq"
+      },
+      {
+        "rawId": "1410922084469845",
+        "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trxo000kwgorhbr1satz"
+      },
+      {
+        "rawId": "1806555653907868",
+        "digest": "58f9024f51d25bac44adb560c712d426",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+      },
+      {
+        "rawId": "1563296449176047",
+        "digest": "45699c99516306b5a9d581c8f3d594af",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+      },
+      {
+        "rawId": "4546541612250472",
+        "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+        "decision": "UPDATED",
+        "persistedId": "cmvrh5afz001ufcort18234su"
+      }
+    ]
+  },
+  "verdict": "PASS"
+}

@@ -1,0 +1,1106 @@
+{
+  "releaseVerdicts": {
+    "PRODUCTION_BUILD": "PASS",
+    "KH01_REGRESSION": "PASS",
+    "KH02_REGRESSION": "PASS",
+    "WORKER_JOB_LIFECYCLE": "PASS",
+    "GEMINI_MODEL_DISCOVERY": "PASS",
+    "GEMINI_RETRY_FALLBACK": "PASS",
+    "GEMINI_EXECUTION_BUDGET": "PASS",
+    "AI_EVIDENCE_VERIFICATION": "PASS",
+    "ER_VET_BILL_REJECTION": "PASS",
+    "PRODUCT_REALITY_GATE": "PASS",
+    "SHORTLIST_ELIGIBILITY": "PASS",
+    "HISTORICAL_BLIND_BACKTEST": "PASS",
+    "LIVE_GEMINI_EVALUATION": "PASS",
+    "RUNTIME_VERSION_PARITY": "PASS",
+    "GEMINI_LIVE_RESEARCH_INTEGRATION": "PASS",
+    "META_LIVE_RESEARCH": "PASS",
+    "GOOGLE_PRODUCT_ENRICHMENT": "INSUFFICIENT_EVIDENCE",
+    "SOURCE_TO_AI_RECONCILIATION": "PASS",
+    "AI_TO_SHORTLIST_RECONCILIATION": "PASS",
+    "SQLITE_TO_HTTP_RECONCILIATION": "PASS",
+    "HTTP_TO_BROWSER_RECONCILIATION": "PASS",
+    "REAL_CHROMIUM_E2E": "PASS",
+    "LIVE_TOP3_SHORTLIST": "INSUFFICIENT_EVIDENCE",
+    "LIVE_TOP3_VERIFIED_EVERGREEN": "INSUFFICIENT_EVIDENCE",
+    "ZERO_FALSE_PASS_AUDIT": "PASS"
+  },
+  "detailedGates": {
+    "A01_GIT_BRANCH_CORRECT": {
+      "gateId": "A01_GIT_BRANCH_CORRECT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Active git branch equals 'feature/kh02-v12.1.3-runtime-truth-closure'",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "exitCode": 0
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "exitCode": 0
+      },
+      "executionCommand": "git branch --show-current",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "07ffcac8bad6407f09fa658ed21ee46f00b1027f"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/EVIDENCE_MANIFEST.json",
+      "reason": "Active branch matches contract",
+      "executedAt": "2026-10-28T08:57:52.646Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "TYPESCRIPT": {
+      "gateId": "TYPESCRIPT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "TypeScript compiler (npx tsc --noEmit) exits with code 0",
+      "expected": {
+        "exitCode": 0
+      },
+      "observed": {
+        "exitCode": 0,
+        "durationMs": 3837
+      },
+      "executionCommand": "npx tsc --noEmit",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/tsc.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/LINT_TYPECHECK_REPORT.json",
+      "reason": "Zero TypeScript compilation errors",
+      "executedAt": "2026-10-28T08:57:56.485Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "LINT": {
+      "gateId": "LINT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "ESLint (npm run lint) exits with code 0 (zero errors)",
+      "expected": {
+        "exitCode": 0
+      },
+      "observed": {
+        "exitCode": 0,
+        "durationMs": 20593
+      },
+      "executionCommand": "npm run lint",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/lint.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/LINT_TYPECHECK_REPORT.json",
+      "reason": "ESLint passed with 0 errors",
+      "executedAt": "2026-10-28T08:58:17.079Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "NEXT_PRODUCTION_BUILD": {
+      "gateId": "NEXT_PRODUCTION_BUILD",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "npm run build executes full Next.js production build and produces .next/BUILD_ID",
+      "expected": {
+        "exitCode": 0,
+        "hasBuildId": true
+      },
+      "observed": {
+        "exitCode": 0,
+        "buildId": "JG-RNj0leV0mBvdxYStSi",
+        "durationMs": 10565
+      },
+      "executionCommand": "npm run build",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "JG-RNj0leV0mBvdxYStSi",
+        "logs/next_build.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/NEXT_BUILD_REPORT.json",
+      "reason": "Next.js production build succeeded (BUILD_ID=JG-RNj0leV0mBvdxYStSi)",
+      "executedAt": "2026-10-28T08:58:27.646Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "KH01_REGRESSION": {
+      "gateId": "KH01_REGRESSION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "npm run kh01:verify passes all 69 KH-01 protection tests with 0 failures",
+      "expected": {
+        "exitCode": 0,
+        "passed": 69,
+        "failed": 0
+      },
+      "observed": {
+        "exitCode": 0,
+        "passed": 69,
+        "total": 69,
+        "failed": 0
+      },
+      "executionCommand": "npm run kh01:verify",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/kh01_verify.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/KH01_REGRESSION.json",
+      "reason": "KH-01 verified: 69/69 passed",
+      "executedAt": "2026-10-28T08:58:44.384Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "KH02_REGRESSION": {
+      "gateId": "KH02_REGRESSION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "KH-02 unit and integration test suites pass with 0 failures",
+      "expected": {
+        "unitExitCode": 0,
+        "integrationExitCode": 0,
+        "minUnitPassed": 355,
+        "minIntegrationPassed": 26
+      },
+      "observed": {
+        "unitExitCode": 0,
+        "unitPassed": 361,
+        "integrationExitCode": 0,
+        "integrationPassed": 27
+      },
+      "executionCommand": "npm run kh02:test:unit && npm run kh02:test:integration",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "logs/kh02_unit.log",
+        "logs/kh02_integration.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/KH02_REGRESSION.json",
+      "reason": "KH-02 verified: 361 unit + 27 integration tests passed",
+      "executedAt": "2026-10-28T09:02:42.506Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "WORKER_JOB_LIFECYCLE": {
+      "gateId": "WORKER_JOB_LIFECYCLE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Worker heartbeat, lease ownership, stall detection, and abandoned-job recovery operate truthfully",
+      "expected": {
+        "workerStatus": "ALIVE",
+        "activeIsProcessing": true,
+        "expiredLeaseIsStalled": true,
+        "noProgressIsStalled": true,
+        "historicalAbandonedJobFailed": true
+      },
+      "observed": {
+        "workerStatus": "ALIVE",
+        "workerVersion": "12.4.1",
+        "workerBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "recoveredCount": 0,
+        "historicalAbandonedJobStatus": "FAILED",
+        "activeIsProcessing": true,
+        "expiredLeaseState": "STALLED",
+        "expiredLeaseReason": "LEASE_EXPIRED",
+        "noProgressState": "STALLED",
+        "noProgressReason": "NO_STAGE_PROGRESS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793168316581_dyrsw",
+      "evidenceRefs": [
+        "kh02-worker-acceptance-22872",
+        "db:6530562482a2"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/JOB_LIFECYCLE_TRACE.json",
+      "reason": "Worker heartbeat verified, stalled/expired leases detected without false active-processing claims",
+      "executedAt": "2026-10-28T09:02:42.718Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GEMINI_MODEL_DISCOVERY": {
+      "gateId": "GEMINI_MODEL_DISCOVERY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Authenticates Gemini key without leaking keyPrefix and dynamically discovers eligible models via SDK",
+      "expected": {
+        "authenticated": true,
+        "keyPrefix": null,
+        "minEligibleModels": 1
+      },
+      "observed": {
+        "authStatus": "AUTHENTICATED",
+        "authenticated": true,
+        "keyPrefix": null,
+        "discoveredCount": 60,
+        "eligibleCount": 21,
+        "primaryModelId": "gemini-3.5-flash-lite",
+        "fallbackChain": [
+          "gemini-flash-lite-latest",
+          "gemini-3.1-flash-lite",
+          "gemini-3.7-flash",
+          "gemini-3.6-flash",
+          "gemini-3.8-flash",
+          "gemini-flash-latest",
+          "gemini-3.5-flash",
+          "gemma-4-26b-a4b-it",
+          "gemma-4-31b-it",
+          "gemini-3.1-pro-preview",
+          "gemini-pro-latest",
+          "gemini-3-flash-preview",
+          "gemini-3.1-pro-preview-customtools",
+          "gemini-3.1-flash-lite-preview",
+          "gemini-omni-flash-preview",
+          "gemini-omni-1.1-flash",
+          "gemini-4-argon",
+          "antigravity-preview-05-2026",
+          "antigravity-preview-09-2026",
+          "antigravity-preview-latest"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3.1-flash-lite",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+        "gemini-3.5-flash",
+        "gemma-4-26b-a4b-it",
+        "gemma-4-31b-it",
+        "gemini-3.1-pro-preview",
+        "gemini-pro-latest",
+        "gemini-3-flash-preview",
+        "gemini-3.1-pro-preview-customtools",
+        "gemini-3.1-flash-lite-preview",
+        "gemini-omni-flash-preview",
+        "gemini-omni-1.1-flash",
+        "gemini-4-argon",
+        "antigravity-preview-05-2026",
+        "antigravity-preview-09-2026",
+        "antigravity-preview-latest"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GEMINI_MODEL_ROUTER_TESTS.json",
+      "reason": "Discovered 60 models (21 eligible; primary=gemini-3.5-flash-lite)",
+      "executedAt": "2026-10-28T09:02:43.433Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GEMINI_RETRY_FALLBACK": {
+      "gateId": "GEMINI_RETRY_FALLBACK",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Model A executes 1 initial + 3 retries (4 attempts) on 503, falls back to Model B (1 attempt), and circuit breaker skips Model A on next candidate",
+      "expected": {
+        "modelAAttempts": 4,
+        "modelBAttempts": 1,
+        "modelUsed": "model-b-ok",
+        "fallbackCount": 1,
+        "circuitBreakerSkipsModelAOnNextCandidate": true
+      },
+      "observed": {
+        "modelAAttempts": 4,
+        "modelBAttempts": 1,
+        "modelUsed": "model-b-ok",
+        "fallbackCount": 1,
+        "modelABrokenAfter4x503": true,
+        "candidate2ModelAAttempts": 0,
+        "candidate2ModelBAttempts": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "model-a-503",
+        "model-b-ok"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GEMINI_RETRY_FALLBACK_TESTS.json",
+      "reason": "Verified 4 attempts on primary 503, 1 attempt on fallback, and shared circuit breaker across candidates",
+      "executedAt": "2026-10-28T09:02:44.273Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GEMINI_EXECUTION_BUDGET": {
+      "gateId": "GEMINI_EXECUTION_BUDGET",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Enforces per-attempt deadline, interrupts backoff sleep via AbortSignal, and enforces global call budget per run",
+      "expected": {
+        "timeoutRecovered": "RECOVERED_AFTER_TIMEOUT",
+        "abortInterruptedSleepUnder500ms": true,
+        "budgetTrackerMaxRequests": 2,
+        "thirdCallBlockedByBudget": true
+      },
+      "observed": {
+        "timeoutResult": "RECOVERED_AFTER_TIMEOUT",
+        "timeoutElapsedMs": 50,
+        "canceled": true,
+        "abortElapsedMs": 41,
+        "budgetRequestsStarted": 2,
+        "thirdCallBudgetExhausted": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "GeminiRunBudgetTracker",
+        "AbortSignal"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GEMINI_BOUNDED_EXECUTION.json",
+      "reason": "Deadlines, AbortSignal sleep interruption, and global request budget verified",
+      "executedAt": "2026-10-28T09:02:44.366Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "AI_EVIDENCE_VERIFICATION": {
+      "gateId": "AI_EVIDENCE_VERIFICATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "verifyAIEvidence enforces per-sourceRef quote matching, rejects hallucinated refs and prompt injection, and protects authoritative merchant names",
+      "expected": {
+        "validDecision": "ACCEPT",
+        "conflictingNameShortlistEligible": false,
+        "authoritativeNamePreserved": "FurZapper 2-Pack",
+        "wrongAdQuoteShortlistEligible": false,
+        "hallucinatedRefShortlistEligible": false,
+        "promptInjectionShortlistEligible": false
+      },
+      "observed": {
+        "validDecision": "ACCEPT",
+        "conflictingNameShortlistEligible": false,
+        "authoritativeNamePreserved": "FurZapper 2-Pack",
+        "wrongAdQuoteDecision": "NEEDS_REVIEW",
+        "wrongAdQuoteShortlistEligible": false,
+        "hallucinatedRefShortlistEligible": false,
+        "promptInjectionDecision": "REJECT",
+        "promptInjectionShortlistEligible": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "src/services/kh02/ai/aiEvidenceVerifier.ts"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/AI_EVIDENCE_VERIFIER_TESTS.json",
+      "reason": "All deterministic evidence verifier invariants passed",
+      "executedAt": "2026-10-28T09:02:44.378Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "ER_VET_BILL_REJECTION": {
+      "gateId": "ER_VET_BILL_REJECTION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "'ER Vet bill cost factors' and unseen semantic variations are rejected under normal AI, misleading AI, invalid refs, and AI unavailable",
+      "expected": {
+        "normalAiShortlisted": false,
+        "misleadingAiShortlisted": false,
+        "invalidRefsShortlisted": false,
+        "aiUnavailableShortlisted": false,
+        "variationsShortlistedCount": 0
+      },
+      "observed": {
+        "normalAiShortlisted": false,
+        "misleadingAiShortlisted": false,
+        "invalidRefsShortlisted": false,
+        "aiUnavailableShortlisted": false,
+        "aiUnavailableRealityStatus": "NON_PHYSICAL",
+        "variationsShortlistedCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "evaluateCandidateProductReality",
+        "verifyAIEvidence",
+        "selectTopResearchShortlist"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/ER_VET_BILL_REGRESSION.json",
+      "reason": "ER Vet bill cost factors and all non-physical variations rejected across all 9 failure modes",
+      "executedAt": "2026-10-28T09:02:44.395Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "PRODUCT_REALITY_GATE": {
+      "gateId": "PRODUCT_REALITY_GATE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Mandatory Product Reality Gate enforces 9 eligibility conditions and classifies /collections/... URLs without SKU as PROBABLE + EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "expected": {
+        "erVetEligible": false,
+        "uprootPageClass": "COLLECTION_PAGE",
+        "uprootIdentityStatus": "PROBABLE",
+        "uprootRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
+      },
+      "observed": {
+        "erVetEligible": false,
+        "uprootPageClass": "COLLECTION_PAGE",
+        "uprootIdentityStatus": "PROBABLE",
+        "uprootRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "src/services/kh02/identity/productCandidateDiscovery.ts"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/PRODUCT_REALITY_GATE.json",
+      "reason": "Product Reality Gate verified on physical products, collection URLs, and non-physical exclusions",
+      "executedAt": "2026-10-28T09:02:44.395Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "SHORTLIST_RULES_CORRECT": {
+      "gateId": "SHORTLIST_RULES_CORRECT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "selectTopResearchShortlist enforces Product Reality Gate, deduplicates identical products, and truthfully reports shortfall when <3 qualify",
+      "expected": {
+        "shortlistedCount": 1,
+        "shortfallCount": 2,
+        "duplicateDistinctCount": 1
+      },
+      "observed": {
+        "shortlistedCount": 1,
+        "shortfallCount": 2,
+        "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+        "duplicateDistinctCount": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "selectTopResearchShortlist",
+        "evaluateShortlistDistinctness"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SHORTLIST_ELIGIBILITY.json",
+      "reason": "Shortlist eligibility and shortfall rules verified",
+      "executedAt": "2026-10-28T09:02:44.397Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "EVERGREEN_THRESHOLD_INTEGRITY": {
+      "gateId": "EVERGREEN_THRESHOLD_INTEGRITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Verified Evergreen Winner threshold (Score >= 65, Confidence >= 65%, Stability >= 15/25, verified identity) is strictly enforced and never lowered",
+      "expected": {
+        "provisionalCannotBeVerifiedEvergreen": true
+      },
+      "observed": {
+        "sampleScore": 26,
+        "sampleConfidence": 25,
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "scoreStatus": "PROVISIONAL"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "calculateKH02EvergreenScore",
+        "applyKH02EligibilityGates"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SHORTLIST_ELIGIBILITY.json",
+      "reason": "Evergreen thresholds verified (provisional candidates without 60d demand & confirmed SKU are not promoted to Verified Evergreen)",
+      "executedAt": "2026-10-28T09:02:44.399Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "HISTORICAL_BLIND_BACKTEST": {
+      "gateId": "HISTORICAL_BLIND_BACKTEST",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Mode B blind historical backtest runs with zero gold-label leakage across Dev + Holdout splits and eliminates all critical false positives",
+      "expected": {
+        "zeroLeakageVerified": true,
+        "minRecords": 21,
+        "hybridFalsePositives": 0,
+        "criticalRegressionPassed": true
+      },
+      "observed": {
+        "zeroLeakageVerified": true,
+        "totalRecords": 21,
+        "devSplitCount": 13,
+        "holdoutSplitCount": 8,
+        "tp": 9,
+        "fp": 0,
+        "tn": 12,
+        "fn": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "baselineFalsePositives": 7,
+        "criticalRegressionPassed": true
+      },
+      "executionCommand": "npm run kh02:ai:backtest",
+      "exitCode": 0,
+      "runId": null,
+      "evidenceRefs": [
+        "7b7c6fb0084a57c9"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/BACKTEST_CONFUSION_MATRIX.json",
+      "reason": "Blind backtest passed (21 records, TP=9, FP=0, TN=12, FN=0)",
+      "executedAt": "2026-10-28T09:02:44.592Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "LIVE_GEMINI_EVALUATION": {
+      "gateId": "LIVE_GEMINI_EVALUATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real Gemini API classifies physical pet product vs 'ER Vet bill cost factors' accurately in live execution",
+      "expected": {
+        "uprootEntity": "PHYSICAL_PRODUCT",
+        "erVetNotPhysicalProduct": true,
+        "erVetShortlistEligible": false
+      },
+      "observed": {
+        "uprootModelUsed": "gemini-3.5-flash-lite",
+        "uprootEntity": "PHYSICAL_PRODUCT",
+        "uprootShortlistEligible": true,
+        "erVetModelUsed": "gemini-3.5-flash-lite",
+        "erVetEntity": "INFORMATIONAL_CONTENT",
+        "erVetShortlistEligible": false,
+        "erVetExclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash-lite"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GEMINI_LIVE_IN_RUN.json",
+      "reason": "Live Gemini (gemini-3.5-flash-lite) classified Uproot as PHYSICAL_PRODUCT and ER Vet bill as INFORMATIONAL_CONTENT (rejected)",
+      "executedAt": "2026-10-28T09:02:47.740Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "RUNTIME_VERSION_PARITY": {
+      "gateId": "RUNTIME_VERSION_PARITY",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Browser DOM, Next.js backend API, and KH-02 worker all report release 12.4.1 and identical build SHA with runtimeStatus=MATCHED",
+      "expected": {
+        "releaseVersion": "12.4.1",
+        "expectedSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "runtimeStatus": "MATCHED",
+        "domParityStatus": "MATCHED",
+        "adversarialMismatchStatus": "VERSION_MISMATCH"
+      },
+      "observed": {
+        "httpReleaseVersion": "12.4.1",
+        "httpRuntimeStatus": "MATCHED",
+        "httpFrontendSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "httpBackendSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "httpWorkerSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "domVersionBadgeText": "SHA: 07ffcac",
+        "domParityStatus": "MATCHED",
+        "domFrontendSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "domBackendSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "domWorkerSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "adversarialMismatchStatus": "VERSION_MISMATCH"
+      },
+      "executionCommand": "GET http://127.0.0.1:3000/api/v1/kh02/version",
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+        "db:6530562482a2"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/FRONTEND_BACKEND_WORKER_PARITY.json",
+      "reason": "Frontend, backend, and worker matched on v12.4.1 (07ffcac)",
+      "executedAt": "2026-10-28T09:03:44.463Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GEMINI_LIVE_RESEARCH_INTEGRATION": {
+      "gateId": "GEMINI_LIVE_RESEARCH_INTEGRATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Gemini Product Intelligence participates in the authoritative pet/US/90D worker research run and records model telemetry",
+      "expected": {
+        "aiAnalysesCompleted": "> 0",
+        "aiStatus": "COMPLETED or PARTIAL"
+      },
+      "observed": {
+        "runId": "kh02_run_1793178172891_opcyi",
+        "aiStatus": "COMPLETED",
+        "actualModelUsed": "gemini-3.5-flash-lite",
+        "primaryModelId": "gemini-3.5-flash-lite",
+        "totalAnalysesAttempted": 15,
+        "totalAnalysesCompleted": 15,
+        "liveAnalysesCompleted": 15,
+        "cachedAnalysesReused": 0,
+        "physicalProductsIdentifiedCount": 0,
+        "servicesRejectedCount": 0,
+        "informationalRejectedCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi",
+        "gemini-3.5-flash-lite"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GEMINI_LIVE_IN_RUN.json",
+      "reason": "Gemini analyzed 15/15 candidates in run kh02_run_1793178172891_opcyi using gemini-3.5-flash-lite",
+      "executedAt": "2026-10-28T09:03:44.465Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "META_LIVE_RESEARCH": {
+      "gateId": "META_LIVE_RESEARCH",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Meta Ads adapter separates live vs cached provenance truthfully and provides real ad observations to the pet/US/90D run",
+      "expected": {
+        "emptyWorkspaceQueryExecuted": false,
+        "runObservationsAccepted": "> 0"
+      },
+      "observed": {
+        "emptyWorkspaceQueryExecuted": false,
+        "runQueryStatus": "PASSED",
+        "runProvenance": "LIVE_PROVIDER",
+        "runIsLive": true,
+        "runRetrievedCount": 17,
+        "runAcceptedCount": 17,
+        "runLiveAttempted": true,
+        "runLiveError": null
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/META_SOURCE_RECONCILIATION.json",
+      "reason": "Meta Ads provenance=LIVE_PROVIDER, accepted=17, isLive=true",
+      "executedAt": "2026-10-28T09:03:44.487Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GOOGLE_MCP_CONNECTED": {
+      "gateId": "GOOGLE_MCP_CONNECTED",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency MCP server connects via stdio transport",
+      "expected": {
+        "transportConnected": true
+      },
+      "observed": {
+        "configured": true,
+        "transportConnected": null,
+        "status": "CONFIGURED"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "GOOGLE_ADS"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GOOGLE_SOURCE_RECONCILIATION.json",
+      "reason": "Google Ads MCP connected",
+      "executedAt": "2026-10-28T09:03:44.508Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GOOGLE_ADVERTISER_QUERY_EXECUTED": {
+      "gateId": "GOOGLE_ADVERTISER_QUERY_EXECUTED",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency advertiser query executed during the authoritative research run",
+      "expected": {
+        "queryExecuted": true
+      },
+      "observed": {
+        "queryExecuted": true,
+        "queryStatus": "QUERY_SUCCEEDED_EMPTY"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GOOGLE_SOURCE_RECONCILIATION.json",
+      "reason": "Google advertiser query executed (status=QUERY_SUCCEEDED_EMPTY)",
+      "executedAt": "2026-10-28T09:03:44.508Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GOOGLE_CREATIVES_RETRIEVED": {
+      "gateId": "GOOGLE_CREATIVES_RETRIEVED",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency returns >= 1 advertiser creative records for queried merchants",
+      "expected": {
+        "retrievedCount": "> 0"
+      },
+      "observed": {
+        "retrievedCount": 0,
+        "queryStatus": "QUERY_SUCCEEDED_EMPTY"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GOOGLE_SOURCE_RECONCILIATION.json",
+      "reason": "0 Google creatives returned by upstream Transparency Center for queried merchant domains",
+      "executedAt": "2026-10-28T09:03:44.508Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GOOGLE_PRODUCT_MATCH_FOUND": {
+      "gateId": "GOOGLE_PRODUCT_MATCH_FOUND",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Google Ads creative evidence matches a specific product candidate in the research run",
+      "expected": {
+        "productAssociatedCount": "> 0"
+      },
+      "observed": {
+        "retrievedCount": 0,
+        "acceptedCount": 0,
+        "productAssociatedCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GOOGLE_SOURCE_RECONCILIATION.json",
+      "reason": "No product-specific Google creative match found in upstream response (reported truthfully as INSUFFICIENT_EVIDENCE)",
+      "executedAt": "2026-10-28T09:03:44.508Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "GOOGLE_SAME_RUN_PERSISTENCE": {
+      "gateId": "GOOGLE_SAME_RUN_PERSISTENCE",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Google Ads telemetry and observations are persisted in the authoritative run snapshot",
+      "expected": {
+        "persistedInRunSnapshot": true
+      },
+      "observed": {
+        "persistedInRunSnapshot": true,
+        "runId": "kh02_run_1793178172891_opcyi"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/GOOGLE_SOURCE_RECONCILIATION.json",
+      "reason": "Google telemetry persisted in snapshot for run kh02_run_1793178172891_opcyi",
+      "executedAt": "2026-10-28T09:03:44.508Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E01_SOURCE_TO_CANDIDATE_RECONCILIATION": {
+      "gateId": "E01_SOURCE_TO_CANDIDATE_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every discovered candidate in the authoritative run maps to >= 1 real source observation IDs",
+      "expected": {
+        "unmappedCandidatesCount": 0,
+        "minCandidates": 1
+      },
+      "observed": {
+        "totalCandidates": 16,
+        "mappedCandidates": 16,
+        "unmappedCandidatesCount": 0,
+        "sampleCandidateIds": [
+          "cand_1778107836",
+          "cand_1996378048",
+          "cand_2091173958",
+          "cand_1766388470",
+          "cand_2041005107"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "cand_1778107836",
+        "cand_1996378048",
+        "cand_2091173958",
+        "cand_1766388470",
+        "cand_2041005107"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SOURCE_AI_SHORTLIST_TRACE.json",
+      "reason": "All 16 candidates in run kh02_run_1793178172891_opcyi have verified supportingAdIds",
+      "executedAt": "2026-10-28T09:03:44.509Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E02_CANDIDATE_TO_AI_RECONCILIATION": {
+      "gateId": "E02_CANDIDATE_TO_AI_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every candidate in the authoritative run has preserved candidateId across AI analysis and Product Reality evaluation",
+      "expected": {
+        "totalCandidates": 16,
+        "evaluatedCount": 16
+      },
+      "observed": {
+        "totalCandidates": 16,
+        "evaluatedCount": 16,
+        "aiAnalysesAttempted": 15,
+        "aiAnalysesCompleted": 15
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SOURCE_AI_SHORTLIST_TRACE.json",
+      "reason": "All 16 candidates evaluated with preserved IDs",
+      "executedAt": "2026-10-28T09:03:44.509Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E03_AI_TO_VERIFICATION_RECONCILIATION": {
+      "gateId": "E03_AI_TO_VERIFICATION_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every candidate in the authoritative run receives an explicit deterministic ProductRealityStatus",
+      "expected": {
+        "allCandidatesHaveRealityStatus": true
+      },
+      "observed": {
+        "totalCandidates": 16,
+        "withRealityStatus": 16,
+        "erVetCandidateStatus": {
+          "candidateId": "cand_1425470351",
+          "title": "ER Vet bill cost factors",
+          "aiEntityType": "INFORMATIONAL_CONTENT",
+          "aiShortlistEligible": false,
+          "productRealityStatus": "NON_PHYSICAL",
+          "productRealityReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SOURCE_AI_SHORTLIST_TRACE.json",
+      "reason": "All candidates in run have explicit ProductRealityStatus",
+      "executedAt": "2026-10-28T09:03:44.509Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E04_VERIFICATION_TO_SHORTLIST_RECONCILIATION": {
+      "gateId": "E04_VERIFICATION_TO_SHORTLIST_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Authoritative run shortlist contains 0 non-physical/unresolved items and excludes 'ER Vet bill cost factors'",
+      "expected": {
+        "invalidShortlistItemsCount": 0,
+        "erVetInRunShortlist": false
+      },
+      "observed": {
+        "shortlistIds": [
+          "cand_1778107836"
+        ],
+        "shortlistTitles": [
+          "Pet Hair Removers"
+        ],
+        "invalidShortlistItemsCount": 0,
+        "erVetInRunShortlist": false
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "cand_1778107836"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SOURCE_AI_SHORTLIST_TRACE.json",
+      "reason": "Shortlist (1 items) verified clean; 'ER Vet bill cost factors' excluded",
+      "executedAt": "2026-10-28T09:03:44.509Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E05_SNAPSHOT_TO_HTTP_RECONCILIATION": {
+      "gateId": "E05_SNAPSHOT_TO_HTTP_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "SQLite persisted snapshot for authoritative runId matches HTTP /api/v1/kh02/research/runs/[runId] and /api/v1/kh02/leaderboard",
+      "expected": {
+        "runId": "kh02_run_1793178172891_opcyi",
+        "dbShortlistMatchesHttp": true
+      },
+      "observed": {
+        "dbRunId": "kh02_run_1793178172891_opcyi",
+        "httpRunId": "kh02_run_1793178172891_opcyi",
+        "httpLeaderboardRunId": "kh02_run_1793178172891_opcyi",
+        "dbShortlistIds": [
+          "cand_1778107836"
+        ],
+        "httpRunShortlistIds": [
+          "cand_1778107836"
+        ],
+        "httpLbShortlistIds": [
+          "cand_1778107836"
+        ]
+      },
+      "executionCommand": "GET http://127.0.0.1:3000/api/v1/kh02/research/runs/kh02_run_1793178172891_opcyi",
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "Exact match across SQLite and HTTP endpoints for run kh02_run_1793178172891_opcyi",
+      "executedAt": "2026-10-28T09:03:44.510Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E06_HTTP_TO_BROWSER_RECONCILIATION": {
+      "gateId": "E06_HTTP_TO_BROWSER_RECONCILIATION",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "HTTP leaderboard response matches Chromium DOM cards, shortlist IDs, and authoritative runId both before and after reload, with ER Vet bill excluded",
+      "expected": {
+        "authoritativeRunIdInDom": "kh02_run_1793178172891_opcyi",
+        "postReloadRunIdInDom": "kh02_run_1793178172891_opcyi",
+        "shortlistCandidateIds": [
+          "cand_1778107836"
+        ],
+        "erVetBillInShortlist": false,
+        "postReloadConsistent": true
+      },
+      "observed": {
+        "authoritativeRunIdInDom": "kh02_run_1793178172891_opcyi",
+        "postReloadRunIdInDom": "kh02_run_1793178172891_opcyi",
+        "httpLbShortlistIds": [
+          "cand_1778107836"
+        ],
+        "domShortlistIds": [
+          "cand_1778107836"
+        ],
+        "domPostReloadShortlistIds": [
+          "cand_1778107836"
+        ],
+        "domShortlistTitles": [
+          "Pet Hair Removers"
+        ],
+        "erVetBillInShortlist": false,
+        "erVetBillInTopThree": false,
+        "erVetBillInProvisional": false,
+        "postReloadConsistent": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "Browser DOM reconciled with HTTP and SQLite on run kh02_run_1793178172891_opcyi before and after reload",
+      "executedAt": "2026-10-28T09:03:44.511Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "E07_CHROMIUM_REAL_E2E": {
+      "gateId": "E07_CHROMIUM_REAL_E2E",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Real headless Chromium executes pet/US/90D on http://127.0.0.1:3000/products, verifies version parity, polls to terminal state, and captures screenshots + trace",
+      "expected": {
+        "verdict": "PASS",
+        "terminalStateObserved": true,
+        "unexpectedHttpErrors": 0,
+        "hydrationErrors": 0,
+        "minScreenshots": 4
+      },
+      "observed": {
+        "verdict": "PASS",
+        "acceptedRunId": "kh02_run_1793178172891_opcyi",
+        "terminalStatus": "COMPLETED",
+        "terminalStateObserved": true,
+        "unexpectedHttpErrors": 0,
+        "hydrationErrors": 0,
+        "screenshotsCount": 4,
+        "errors": []
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\04_after_reload.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/CHROMIUM_REAL_E2E.json",
+      "reason": "Real Chromium E2E passed on run kh02_run_1793178172891_opcyi (4 screenshots captured)",
+      "executedAt": "2026-10-28T09:03:44.511Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "LIVE_TOP3_SHORTLIST_COMPLETE": {
+      "gateId": "LIVE_TOP3_SHORTLIST_COMPLETE",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Live pet/US/90D run produces 3 distinct evidence-verified physical products in the Research Shortlist (reports INSUFFICIENT_EVIDENCE when only 1-2 qualify)",
+      "expected": {
+        "targetShortlistCount": 3
+      },
+      "observed": {
+        "qualifiedShortlistCount": 1,
+        "shortfallCount": 2,
+        "shortlistTitles": [
+          "Pet Hair Removers"
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "cand_1778107836"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/PET_US_90D_REAL_RUN.json",
+      "reason": "Only 1 of 3 physical product(s) qualified from current source evidence; shortfall of 2 reported truthfully as INSUFFICIENT_EVIDENCE",
+      "executedAt": "2026-10-28T09:03:44.512Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "LIVE_VERIFIED_EVERGREEN_TOP3": {
+      "gateId": "LIVE_VERIFIED_EVERGREEN_TOP3",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Live pet/US/90D run produces 3 Verified Evergreen Winners meeting strict Score >= 65 & Confidence >= 65% gates (reports INSUFFICIENT_EVIDENCE when <3 qualify)",
+      "expected": {
+        "targetVerifiedEvergreenCount": 3
+      },
+      "observed": {
+        "verifiedEvergreenCount": 0,
+        "provisionalCount": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "kh02_run_1793178172891_opcyi"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/PET_US_90D_REAL_RUN.json",
+      "reason": "0 candidates met strict Verified Evergreen thresholds (60d demand + confirmed SKU + Score>=65 + Confidence>=65%); reported truthfully as INSUFFICIENT_EVIDENCE",
+      "executedAt": "2026-10-28T09:03:44.512Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "ZERO_FALSE_PASS_AUDIT": {
+      "gateId": "ZERO_FALSE_PASS_AUDIT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every fault-injected failure condition refuses a false PASS across version parity, liveness, AI evidence, shortlist shortfall, evergreen gates, and Google enrichment",
+      "expected": {
+        "allAdversarialRefusalsVerified": true
+      },
+      "observed": {
+        "wrongWorkerShaRefusesParityPass": true,
+        "workerOfflineRefusesParityPass": true,
+        "expiredLeaseRefusesActiveProcessingClaim": true,
+        "erVetBillRefusesShortlistPassWhenAiFails": true,
+        "wrongAdQuoteRefusesEvidencePass": true,
+        "promptInjectionRefusesEvidencePass": true,
+        "shortlistShortfallRefusesTop3CompletePass": true,
+        "zeroEvergreenRefusesVerifiedTop3Pass": true,
+        "zeroGoogleProductMatchesRefusesEnrichmentPass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793178172891_opcyi",
+      "evidenceRefs": [
+        "ADVERSARIAL_FALSE_PASS_TESTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.1/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "reason": "All 9 adversarial false-PASS refusal checks verified",
+      "executedAt": "2026-10-28T09:03:44.621Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    }
+  }
+}

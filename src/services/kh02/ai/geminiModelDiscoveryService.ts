@@ -39,6 +39,8 @@ const EXCLUDED_NAME_PATTERNS = [
   "embed",
   "embedding",
   "imagen",
+  "-image",
+  "nano-banana",
   "veo",
   "deep-research", // requires custom interaction toolchain
 ];
@@ -48,13 +50,14 @@ const EXCLUDED_NAME_PATTERNS = [
  * Higher score = higher ranking.
  */
 const MODEL_PREFERENCE_WEIGHTS: Record<string, number> = {
+  "gemini-3.5-flash-lite": 115,
+  "gemini-flash-lite-latest": 110,
+  "gemini-3.1-flash-lite": 105,
   "gemini-3.7-flash": 100,
   "gemini-3.6-flash": 95,
   "gemini-3.8-flash": 90,
   "gemini-flash-latest": 85,
-  "gemini-flash-lite-latest": 80,
   "gemini-3.5-flash": 75,
-  "gemini-3.5-flash-lite": 70,
   "gemma-4-26b-a4b-it": 65,
   "gemma-4-31b-it": 60,
   "gemini-3.1-pro-preview": 55,
@@ -94,7 +97,8 @@ export function evaluateModelEligibility(rawModel: any): {
   // Check known discontinued models
   const isDiscontinued =
     modelId === "gemini-2.5-flash" ||
-    modelId === "gemini-2.5-pro";
+    modelId === "gemini-2.5-pro" ||
+    modelId === "gemini-2.5-flash-lite";
 
   let eligible = supportsGenerateContent && !isExcludedPattern && !isDiscontinued;
   let reason: string | undefined;

@@ -22,6 +22,7 @@ import {
   GeminiRetryTelemetry,
   GeminiModelExecutionSummary,
   GeminiAttemptRecord,
+  GeminiRunBudgetTracker,
 } from "./aiProductIntelligenceTypes";
 
 export type GeminiErrorCategory =
@@ -33,8 +34,61 @@ export type GeminiErrorCategory =
   | "PERMISSION_ERROR" // 403
   | "MODEL_NOT_FOUND" // 404
   | "INVALID_REQUEST" // 400
+  | "DEADLINE_EXCEEDED" // per-attempt, per-candidate, or stage deadline
+  | "CANCELED" // AbortSignal cancellation
+  | "GLOBAL_BUDGET_EXHAUSTED" // Run-level call/token budget limit
   | "SAFETY_BLOCKED"
   | "UNKNOWN_ERROR";
+
+export function createGeminiRunBudgetTracker(
+  options: number | { maxGlobalRequests?: number; maxGlobalTokens?: number } = {}
+): GeminiRunBudgetTracker {
+  const opts = typeof options === "number" ? { maxGlobalRequests: options } : options;
+  const maxGlobalRequests = opts.maxGlobalRequests ?? 30;
+  const maxGlobalTokens = opts.maxGlobalTokens ?? 120_000;
+  const tracker: GeminiRunBudgetTracker = {
+    maxGlobalRequests,
+    maxGlobalTokens,
+    requestsStarted: 0,
+    requestsCompleted: 0,
+    requestsFailed: 0,
+    retriesExecuted: 0,
+    fallbackTransitions: 0,
+    tokensConsumed: 0,
+    tokensReportedCount: 0,
+    canStartRequest() {
+      if (this.requestsStarted >= this.maxGlobalRequests) return false;
+      if (this.tokensReportedCount > 0 && this.tokensConsumed >= this.maxGlobalTokens) return false;
+      return true;
+    },
+    recordRequestStart() {
+      if (!this.canStartRequest()) return false;
+      this.requestsStarted++;
+      return true;
+    },
+    recordRequestEnd(success: boolean, tokensUsed?: number | null) {
+      if (success) {
+        this.requestsCompleted++;
+      } else {
+        this.requestsFailed++;
+      }
+      if (typeof tokensUsed === "number" && tokensUsed > 0) {
+        this.tokensConsumed += tokensUsed;
+        this.tokensReportedCount++;
+      }
+    },
+    recordRetry() {
+      this.retriesExecuted++;
+    },
+    recordFallback() {
+      this.fallbackTransitions++;
+    },
+    getRemainingRequests() {
+      return Math.max(0, this.maxGlobalRequests - this.requestsStarted);
+    },
+  };
+  return tracker;
+}
 
 export interface ClassifiedGeminiError {
   category: GeminiErrorCategory;
@@ -55,6 +109,26 @@ const CIRCUIT_BREAKER_COOLDOWN_MS = 60 * 1000; // 1 minute
 export function classifyGeminiError(err: any): ClassifiedGeminiError {
   const msg = err?.message || String(err);
   const status = Number(err?.status || err?.code || 0);
+
+  // Check for explicit cancellation
+  if (err?.name === "AbortError" || err?.category === "CANCELED" || msg.includes("CANCELED:")) {
+    return {
+      category: "CANCELED",
+      statusCode: 499,
+      retryable: false,
+      message: sanitizeGeminiSecrets(msg),
+    };
+  }
+
+  // Check for explicit deadline exceeded
+  if (err?.category === "DEADLINE_EXCEEDED" || msg.includes("ATTEMPT_DEADLINE_EXCEEDED") || msg.includes("CANDIDATE_DEADLINE_EXCEEDED")) {
+    return {
+      category: "DEADLINE_EXCEEDED",
+      statusCode: 504,
+      retryable: true,
+      message: sanitizeGeminiSecrets(msg),
+    };
+  }
 
   // Check for HTTP 503 or "high demand"
   if (status === 503 || msg.includes("experiencing high demand") || msg.includes("UNAVAILABLE")) {
@@ -169,8 +243,91 @@ export function calculateRetryDelay(
   return Math.min(exponential + jitter, maxDelayMs);
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  if (signal?.aborted) {
+    const err: any = new Error("CANCELED: Operation aborted before backoff sleep.");
+    err.category = "CANCELED";
+    return Promise.reject(err);
+  }
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      if (signal) signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      const err: any = new Error("CANCELED: Operation aborted during retry backoff wait.");
+      err.category = "CANCELED";
+      reject(err);
+    };
+    if (signal) {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+  });
+}
+
+function executeAttemptWithDeadlineAndSignal<T>(
+  promiseFactory: (attemptSignal: AbortSignal) => Promise<T>,
+  attemptTimeoutMs: number,
+  parentSignal?: AbortSignal
+): Promise<T> {
+  if (parentSignal?.aborted) {
+    const err: any = new Error("CANCELED: Operation aborted before attempt execution.");
+    err.category = "CANCELED";
+    return Promise.reject(err);
+  }
+
+  const attemptController = new AbortController();
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      if (parentSignal) {
+        parentSignal.removeEventListener("abort", onParentAbort);
+      }
+    };
+
+    const onParentAbort = () => {
+      if (settled) return;
+      settled = true;
+      attemptController.abort(new Error("CANCELED"));
+      cleanup();
+      const err: any = new Error("CANCELED: Operation aborted during active Gemini request.");
+      err.category = "CANCELED";
+      reject(err);
+    };
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      attemptController.abort(new Error("ATTEMPT_DEADLINE_EXCEEDED"));
+      cleanup();
+      const err: any = new Error(`ATTEMPT_DEADLINE_EXCEEDED: Gemini attempt timed out after ${attemptTimeoutMs}ms.`);
+      err.status = 504;
+      err.category = "DEADLINE_EXCEEDED";
+      reject(err);
+    }, Math.max(1, attemptTimeoutMs));
+
+    if (parentSignal) {
+      parentSignal.addEventListener("abort", onParentAbort, { once: true });
+    }
+
+    promiseFactory(attemptController.signal)
+      .then((val) => {
+        if (settled) return; // Late response after timeout/cancel cannot mutate state
+        settled = true;
+        cleanup();
+        resolve(val);
+      })
+      .catch((err) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(err);
+      });
+  });
 }
 
 export interface RouterExecutionResult<T> {
@@ -182,16 +339,96 @@ export interface RouterExecutionResult<T> {
 }
 
 /**
- * Executes a Gemini task with automatic retry (1 initial + 3 retries) and model downgrade.
+ * Executes a Gemini task with automatic retry (1 initial + 3 retries), bounded deadlines,
+ * global run budget enforcement, AbortSignal propagation, and automatic model downgrade.
  */
 export async function executeGeminiTaskWithRetry<T>(
-  taskFn: (client: GoogleGenAI, modelId: string) => Promise<T>,
+  taskFn: (client: GoogleGenAI, modelId: string, signal?: AbortSignal) => Promise<T>,
   options: GeminiRouterOptions = {}
 ): Promise<RouterExecutionResult<T>> {
   const maxRetriesPerModel = options.maxRetriesPerModel ?? 3;
   const maxFallbackModels = options.maxFallbackModels ?? 2;
   const baseDelayMs = options.retryBaseDelayMs ?? 1000;
   const maxDelayMs = options.maxRetryDelayMs ?? 8000;
+  const candidateTimeoutMs = options.timeoutMs ?? 25000;
+  const perAttemptTimeoutMs = options.perAttemptTimeoutMs ?? Math.min(12000, candidateTimeoutMs);
+  const overallStart = Date.now();
+
+  const candidateDeadlineAt = overallStart + candidateTimeoutMs;
+  const effectiveDeadlineAt = Math.min(
+    candidateDeadlineAt,
+    options.stageDeadlineAt ?? Infinity,
+    options.jobDeadlineAt ?? Infinity
+  );
+
+  if (options.signal?.aborted) {
+    return {
+      success: false,
+      result: null,
+      modelUsed: null,
+      telemetry: {
+        totalAttempts: 0,
+        retriesExecuted: 0,
+        requestsStarted: 0,
+        requestsCompleted: 0,
+        requestsFailed: 0,
+        modelsAttempted: [],
+        successfulModelId: null,
+        fallbackCount: 0,
+        executionHistory: [],
+        circuitBreakerTriggered: false,
+        canceled: true,
+        totalDurationMs: 0,
+      },
+      error: "CANCELED: Operation aborted via signal before starting Gemini router.",
+    };
+  }
+
+  if (Date.now() >= effectiveDeadlineAt) {
+    return {
+      success: false,
+      result: null,
+      modelUsed: null,
+      telemetry: {
+        totalAttempts: 0,
+        retriesExecuted: 0,
+        requestsStarted: 0,
+        requestsCompleted: 0,
+        requestsFailed: 0,
+        modelsAttempted: [],
+        successfulModelId: null,
+        fallbackCount: 0,
+        executionHistory: [],
+        circuitBreakerTriggered: false,
+        deadlineExceeded: true,
+        totalDurationMs: 0,
+      },
+      error: "DEADLINE_EXCEEDED: Research AI stage or job deadline reached before starting request.",
+    };
+  }
+
+  if (options.budgetTracker && !options.budgetTracker.canStartRequest()) {
+    return {
+      success: false,
+      result: null,
+      modelUsed: null,
+      telemetry: {
+        totalAttempts: 0,
+        retriesExecuted: 0,
+        requestsStarted: 0,
+        requestsCompleted: 0,
+        requestsFailed: 0,
+        modelsAttempted: [],
+        successfulModelId: null,
+        fallbackCount: 0,
+        executionHistory: [],
+        circuitBreakerTriggered: false,
+        budgetExhausted: true,
+        totalDurationMs: 0,
+      },
+      error: "GLOBAL_BUDGET_EXHAUSTED: Research run AI request/token budget reached.",
+    };
+  }
 
   const client = options.apiKey ? new GoogleGenAI({ apiKey: options.apiKey }) : getGoogleGenAIClient();
   if (!client) {
@@ -201,6 +438,10 @@ export async function executeGeminiTaskWithRetry<T>(
       modelUsed: null,
       telemetry: {
         totalAttempts: 0,
+        retriesExecuted: 0,
+        requestsStarted: 0,
+        requestsCompleted: 0,
+        requestsFailed: 0,
         modelsAttempted: [],
         successfulModelId: null,
         fallbackCount: 0,
@@ -221,11 +462,13 @@ export async function executeGeminiTaskWithRetry<T>(
     }
   }
 
-  // Filter out models currently in circuit breaker cooldown unless forced
+  // Filter out models currently in circuit breaker cooldown unless all are in cooldown
   const now = Date.now();
+  let circuitBreakerTriggered = false;
   const eligibleChain = modelChain.filter((m) => {
     const cb = circuitBreakerState.get(m.modelId);
     if (cb && cb.cooldownUntil > now) {
+      circuitBreakerTriggered = true;
       return false;
     }
     return true;
@@ -238,34 +481,75 @@ export async function executeGeminiTaskWithRetry<T>(
   const executionHistory: GeminiModelExecutionSummary[] = [];
   const modelsAttempted: string[] = [];
   let totalAttempts = 0;
+  let retriesExecuted = 0;
+  let requestsStarted = 0;
+  let requestsCompleted = 0;
+  let requestsFailed = 0;
   let fallbackCount = 0;
-  let circuitBreakerTriggered = false;
-  const overallStart = Date.now();
+  let canceled = false;
+  let deadlineExceeded = false;
+  let budgetExhausted = false;
 
   for (let modelIdx = 0; modelIdx < modelsToAttempt.length; modelIdx++) {
+    if (options.signal?.aborted) {
+      canceled = true;
+      break;
+    }
+    if (Date.now() >= effectiveDeadlineAt) {
+      deadlineExceeded = true;
+      break;
+    }
+    if (options.budgetTracker && !options.budgetTracker.canStartRequest()) {
+      budgetExhausted = true;
+      break;
+    }
+
     const model = modelsToAttempt[modelIdx];
     const modelId = model.modelId;
     modelsAttempted.push(modelId);
 
     if (modelIdx > 0) {
       fallbackCount++;
+      options.budgetTracker?.recordFallback();
     }
 
     const modelAttempts: GeminiAttemptRecord[] = [];
-    let modelSuccess = false;
-    let modelResult: T | null = null;
-    let lastError: ClassifiedGeminiError | null = null;
-
     // 1 initial attempt (attemptNumber = 1) + up to maxRetriesPerModel (attemptNumber = 2..1+maxRetries)
     const maxAttemptsForThisModel = 1 + maxRetriesPerModel;
 
     for (let attemptNumber = 1; attemptNumber <= maxAttemptsForThisModel; attemptNumber++) {
+      if (options.signal?.aborted) {
+        canceled = true;
+        break;
+      }
+      const remainingDeadlineMs = effectiveDeadlineAt - Date.now();
+      if (remainingDeadlineMs <= 0) {
+        deadlineExceeded = true;
+        break;
+      }
+      if (options.budgetTracker && !options.budgetTracker.recordRequestStart()) {
+        budgetExhausted = true;
+        break;
+      }
+
       totalAttempts++;
+      requestsStarted++;
+      if (attemptNumber > 1) {
+        retriesExecuted++;
+        options.budgetTracker?.recordRetry();
+      }
       const attemptStart = Date.now();
+      const thisAttemptBudgetMs = Math.min(perAttemptTimeoutMs, remainingDeadlineMs);
 
       try {
-        const res = await taskFn(client, modelId);
+        const res = await executeAttemptWithDeadlineAndSignal(
+          (attemptSignal) => taskFn(client, modelId, attemptSignal),
+          thisAttemptBudgetMs,
+          options.signal
+        );
         const durationMs = Date.now() - attemptStart;
+        requestsCompleted++;
+        options.budgetTracker?.recordRequestEnd(true);
 
         modelAttempts.push({
           attemptNumber,
@@ -292,19 +576,27 @@ export async function executeGeminiTaskWithRetry<T>(
           modelUsed: modelId,
           telemetry: {
             totalAttempts,
+            retriesExecuted,
+            requestsStarted,
+            requestsCompleted,
+            requestsFailed,
             modelsAttempted,
             successfulModelId: modelId,
             fallbackCount,
             executionHistory,
             circuitBreakerTriggered,
+            canceled: false,
+            deadlineExceeded: false,
+            budgetExhausted: false,
             totalDurationMs: Date.now() - overallStart,
           },
           error: null,
         };
       } catch (err: any) {
         const durationMs = Date.now() - attemptStart;
+        requestsFailed++;
+        options.budgetTracker?.recordRequestEnd(false);
         const classified = classifyGeminiError(err);
-        lastError = classified;
 
         modelAttempts.push({
           attemptNumber,
@@ -316,8 +608,45 @@ export async function executeGeminiTaskWithRetry<T>(
           timestamp: new Date().toISOString(),
         });
 
-        // Fatal authentication error: stop immediately, do not fallback
-        if (classified.category === "AUTHENTICATION_ERROR") {
+        // Cancellation: stop immediately, do not retry or fallback
+        if (classified.category === "CANCELED" || options.signal?.aborted) {
+          canceled = true;
+          executionHistory.push({
+            modelId,
+            attemptsCount: modelAttempts.length,
+            retriesExhausted: false,
+            successful: false,
+            attempts: modelAttempts,
+          });
+          return {
+            success: false,
+            result: null,
+            modelUsed: null,
+            telemetry: {
+              totalAttempts,
+              retriesExecuted,
+              requestsStarted,
+              requestsCompleted,
+              requestsFailed,
+              modelsAttempted,
+              successfulModelId: null,
+              fallbackCount,
+              executionHistory,
+              circuitBreakerTriggered,
+              canceled: true,
+              deadlineExceeded,
+              budgetExhausted,
+              totalDurationMs: Date.now() - overallStart,
+            },
+            error: `CANCELED: ${classified.message}`,
+          };
+        }
+
+        // Fatal authentication or permission error: stop immediately, do not fallback
+        if (
+          classified.category === "AUTHENTICATION_ERROR" ||
+          classified.category === "PERMISSION_ERROR"
+        ) {
           executionHistory.push({
             modelId,
             attemptsCount: modelAttempts.length,
@@ -332,6 +661,10 @@ export async function executeGeminiTaskWithRetry<T>(
             modelUsed: null,
             telemetry: {
               totalAttempts,
+              retriesExecuted,
+              requestsStarted,
+              requestsCompleted,
+              requestsFailed,
               modelsAttempted,
               successfulModelId: null,
               fallbackCount,
@@ -339,11 +672,14 @@ export async function executeGeminiTaskWithRetry<T>(
               circuitBreakerTriggered,
               totalDurationMs: Date.now() - overallStart,
             },
-            error: `Authentication failed (HTTP 401). Check Gemini API key.`,
+            error:
+              classified.category === "AUTHENTICATION_ERROR"
+                ? `Authentication failed (HTTP 401). Check Gemini API key.`
+                : `Permission denied (HTTP 403). Check Gemini API key permissions.`,
           };
         }
 
-        // Fatal daily quota exhausted for project: stop immediately
+        // Fatal daily quota exhausted for project: stop immediately, do not bypass account quota via fallback
         if (classified.category === "DAILY_QUOTA_EXHAUSTED") {
           executionHistory.push({
             modelId,
@@ -359,6 +695,10 @@ export async function executeGeminiTaskWithRetry<T>(
             modelUsed: null,
             telemetry: {
               totalAttempts,
+              retriesExecuted,
+              requestsStarted,
+              requestsCompleted,
+              requestsFailed,
               modelsAttempted,
               successfulModelId: null,
               fallbackCount,
@@ -377,22 +717,65 @@ export async function executeGeminiTaskWithRetry<T>(
           break; // break retry loop, move to next model in fallbackChain
         }
 
+        // Check if overall candidate/stage/job deadline is already reached
+        const remainingAfterAttemptMs = effectiveDeadlineAt - Date.now();
+        if (remainingAfterAttemptMs <= 0) {
+          deadlineExceeded = true;
+          break;
+        }
+
         // If retryable and remaining retries exist on this model:
         if (attemptNumber < maxAttemptsForThisModel) {
           const retryCount = attemptNumber; // retry 1, 2, 3
-          const delay = calculateRetryDelay(retryCount, baseDelayMs, maxDelayMs, classified.retryAfterMs);
+          // If provider specified Retry-After that exceeds remaining deadline budget, do not wait!
+          if (
+            classified.retryAfterMs &&
+            classified.retryAfterMs > remainingAfterAttemptMs
+          ) {
+            deadlineExceeded = true;
+            modelAttempts[modelAttempts.length - 1].errorMessage = `${classified.message} (Retry-After ${classified.retryAfterMs}ms exceeds remaining deadline ${remainingAfterAttemptMs}ms)`;
+            break;
+          }
+
+          const delay = calculateRetryDelay(
+            retryCount,
+            baseDelayMs,
+            maxDelayMs,
+            classified.retryAfterMs
+          );
+          if (delay >= remainingAfterAttemptMs) {
+            deadlineExceeded = true;
+            break;
+          }
+
           modelAttempts[modelAttempts.length - 1].delayMs = delay;
-          await sleep(delay);
+          try {
+            await abortableSleep(delay, options.signal);
+          } catch (sleepErr: any) {
+            canceled = true;
+            break;
+          }
         }
       }
     }
 
-    // Model exhausted its retries
+    if (canceled) {
+      executionHistory.push({
+        modelId,
+        attemptsCount: modelAttempts.length,
+        retriesExhausted: false,
+        successful: false,
+        attempts: modelAttempts,
+      });
+      break;
+    }
+
+    // Model exhausted its retries or timed out
     markModelStatus(modelId, "OVERLOADED");
 
     // Update circuit breaker
     const existingCb = circuitBreakerState.get(modelId) || { failureCount: 0, cooldownUntil: 0 };
-    existingCb.failureCount++;
+    existingCb.failureCount += modelAttempts.length;
     if (existingCb.failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
       existingCb.cooldownUntil = Date.now() + CIRCUIT_BREAKER_COOLDOWN_MS;
       circuitBreakerTriggered = true;
@@ -408,21 +791,46 @@ export async function executeGeminiTaskWithRetry<T>(
     });
   }
 
+  const terminalReason = canceled
+    ? "CANCELED: Gemini router execution was canceled via AbortSignal."
+    : deadlineExceeded
+    ? `DEADLINE_EXCEEDED: Gemini execution exceeded bounded deadline (${candidateTimeoutMs}ms).`
+    : budgetExhausted
+    ? "GLOBAL_BUDGET_EXHAUSTED: Research run AI call budget exhausted."
+    : `All eligible Gemini models failed or exhausted retry budgets (${modelsAttempted.join(" -> ")}).`;
+
   return {
     success: false,
     result: null,
     modelUsed: null,
     telemetry: {
       totalAttempts,
+      retriesExecuted,
+      requestsStarted,
+      requestsCompleted,
+      requestsFailed,
       modelsAttempted,
       successfulModelId: null,
       fallbackCount,
       executionHistory,
       circuitBreakerTriggered,
+      canceled,
+      deadlineExceeded,
+      budgetExhausted,
       totalDurationMs: Date.now() - overallStart,
     },
-    error: `All eligible Gemini models failed or exhausted retry budgets (${modelsAttempted.join(" -> ")}).`,
+    error: terminalReason,
   };
+}
+
+/**
+ * Inspects whether a model is currently in circuit-breaker cooldown.
+ */
+export function isModelCircuitBroken(modelId: string): boolean {
+  const cb = circuitBreakerState.get(modelId);
+  if (!cb) return false;
+  if (cb.cooldownUntil > Date.now()) return true;
+  return false;
 }
 
 /**

@@ -179,7 +179,7 @@ describe("SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integra
     // Only the genuine physical pet hair remover qualifies
     expect(shortlist.length).toBe(1);
     expect(shortlist[0].title).toContain("Pet Hair");
-  });
+  }, 30000);
 
   it("gracefully completes with UNAVAILABLE telemetry when AI fails or key is missing", async () => {
     // Simulate analyzeProductCandidatesWithAI throwing or returning UNAVAILABLE
@@ -220,7 +220,16 @@ describe("SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integra
 
     expect(result).toBeDefined();
     expect(result.aiTelemetry?.aiStatus).toBe("UNAVAILABLE");
+    expect(result.aiTelemetry?.actualModelUsed).toBeNull();
     // Orchestrator still succeeds with conservative deterministic evaluation
     expect(result.runStatus).toBe("PASSED");
-  });
+
+    // CRITICAL V12.4.1 FAIL-SAFE INVARIANT:
+    // Even when Gemini AI is UNAVAILABLE, 'ER Vet bill cost factors' MUST still be rejected from the shortlist!
+    const shortlist = result.researchShortlist?.shortlist || [];
+    const shortlistTitles = shortlist.map((item) => (item.title || "").toLowerCase());
+    expect(shortlistTitles.some((t) => t.includes("er vet bill"))).toBe(false);
+    expect(shortlist.length).toBe(1);
+    expect(shortlist[0].title).toContain("Pet Hair");
+  }, 30000);
 });

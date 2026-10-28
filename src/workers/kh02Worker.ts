@@ -16,9 +16,16 @@ import {
   EvergreenLeaderboardResult,
   KH02ResearchExecutionContext,
 } from "@/services/kh02/evergreenResearchOrchestrator";
+import {
+  SWAI_KH02_RELEASE_VERSION,
+  getRuntimeBuildSha,
+  getDatabaseFingerprint,
+} from "@/services/kh02/version/runtimeVersionService";
 
 export const KH02_LEASE_DURATION_MS = 60 * 1000; // 60 seconds
 export const KH02_MAX_ATTEMPTS = 3;
+export const KH02_MAX_JOB_DURATION_MS = 180 * 1000; // 3 minutes overall job deadline
+export const KH02_ABANDONED_LEASE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes max recovery age
 
 export interface ResearchInput {
   topic: string;
@@ -124,6 +131,11 @@ export interface KH02WorkerHealth {
   failureCount: number;
   processStartedAt: string | null;
   uptimeSeconds?: number;
+  workerVersion?: string | null;
+  workerBuildSha?: string | null;
+  workerProcessId?: number | null;
+  dbFingerprint?: string | null;
+  conflictingWorkerIds?: string[];
 }
 
 export interface RetryDecision {
@@ -847,9 +859,16 @@ export async function updateResearchProgress(
       return { success: false, rowsAffected: 0, reason: "OWNERSHIP_LOST" };
     }
 
+    const nowIso = new Date().toISOString();
+    const prevStage = runtime.lastProgress?.stage;
+    const stageStartedAt =
+      prevStage === progress.stage && runtime.stageStartedAt ? runtime.stageStartedAt : nowIso;
+
     meta._runtime = {
       ...runtime,
       lastProgress: progress,
+      stageStartedAt,
+      lastProgressUpdateAt: nowIso,
     };
 
     return updateJobIfClaimOwned(
@@ -993,6 +1012,8 @@ export async function recoverStaleResearchJobs(
       const attempts = job.attemptNumber || runtime.attemptNumber || 1;
       const fencingGen = job.fencingGeneration || runtime.fencingVersion || 0;
       const currentRecVersion = job.recordVersion || 0;
+      const leaseExpiredDurationMs = leaseTime > 0 ? nowMs - leaseTime : 0;
+      const isAbandonedHistoricalJob = leaseExpiredDurationMs > KH02_ABANDONED_LEASE_EXPIRY_MS;
 
       // ATOMIC CAS RECOVERY PREDICATE
       // Condition strictly on leaseExpiresAt <= now, recordVersion, fencingGeneration, and workerId at write time
@@ -1009,7 +1030,7 @@ export async function recoverStaleResearchJobs(
         recoveryWhere.leaseExpiresAt = { lte: now };
       }
 
-      if (attempts < KH02_MAX_ATTEMPTS) {
+      if (attempts < KH02_MAX_ATTEMPTS && !isAbandonedHistoricalJob) {
         const nextGeneration = fencingGen + 1;
         // Atomic CAS reclaim to PENDING
         const res = await db.syncJob.updateMany({
@@ -1080,12 +1101,18 @@ export async function executeResearchJob(
 
   const abortController = new AbortController();
   let lostOwnership = false;
+  let jobTimedOut = false;
+  const overallDeadlineTimer = setTimeout(() => {
+    jobTimedOut = true;
+    abortController.abort(new Error("JOB_DEADLINE_EXCEEDED: Overall research job deadline exceeded."));
+  }, KH02_MAX_JOB_DURATION_MS);
+
   const heartbeat = startResearchHeartbeat(job.id, ownership, {
     intervalMs: 15000,
     db,
     onLostOwnership: () => {
       lostOwnership = true;
-      abortController.abort();
+      abortController.abort(new Error("OWNERSHIP_LOST: Worker lease lost."));
     },
   });
 
@@ -1101,6 +1128,9 @@ export async function executeResearchJob(
         if (lostOwnership) {
           throw new Error("Job execution aborted: ownership lease lost.");
         }
+        if (jobTimedOut) {
+          throw new Error("JOB_DEADLINE_EXCEEDED: Overall research job deadline exceeded.");
+        }
         const progRes = await updateResearchProgress(
           job.id,
           ownership,
@@ -1109,7 +1139,7 @@ export async function executeResearchJob(
         );
         if (!progRes.success) {
           lostOwnership = true;
-          abortController.abort();
+          abortController.abort(new Error("OWNERSHIP_LOST: Lost lease ownership during progress update."));
           throw new Error(`Lost lease ownership during progress update in stage ${p.stage}.`);
         }
       },
@@ -1131,6 +1161,9 @@ export async function executeResearchJob(
     if (lostOwnership) {
       throw new Error("Job execution aborted: ownership lease was lost or claimed by another worker.");
     }
+    if (jobTimedOut) {
+      throw new Error("JOB_DEADLINE_EXCEEDED: Overall research job deadline exceeded.");
+    }
 
     await updateResearchProgress(job.id, ownership, { stage: "SNAPSHOT", percent: 90 }, db);
 
@@ -1151,6 +1184,7 @@ export async function executeResearchJob(
     }
     return { success: false, error: err.message };
   } finally {
+    clearTimeout(overallDeadlineTimer);
     heartbeat.stop();
   }
 }
@@ -1168,6 +1202,10 @@ export async function persistKh02WorkerHeartbeat(
     failureCount?: number;
     processStartedAt?: string;
     uptimeSeconds?: number;
+    workerVersion?: string;
+    workerBuildSha?: string | null;
+    workerProcessId?: number;
+    dbFingerprint?: string;
   } = {},
   db: any = prisma
 ): Promise<void> {
@@ -1185,6 +1223,10 @@ export async function persistKh02WorkerHeartbeat(
       processedCount: telemetry.processedCount ?? processedJobs,
       failureCount: telemetry.failureCount ?? failedJobs,
       processStartedAt: telemetry.processStartedAt ?? new Date(startTime).toISOString(),
+      workerVersion: telemetry.workerVersion ?? SWAI_KH02_RELEASE_VERSION,
+      workerBuildSha: telemetry.workerBuildSha !== undefined ? telemetry.workerBuildSha : getRuntimeBuildSha(),
+      workerProcessId: telemetry.workerProcessId ?? process.pid,
+      dbFingerprint: telemetry.dbFingerprint ?? getDatabaseFingerprint(),
     };
 
     if (existing) {
@@ -1249,6 +1291,11 @@ export async function getSharedResearchWorkerHealth(db: any = prisma): Promise<K
           failureCount: failedJobs,
           processStartedAt: new Date(startTime).toISOString(),
           uptimeSeconds: Math.round((Date.now() - startTime) / 1000),
+          workerVersion: SWAI_KH02_RELEASE_VERSION,
+          workerBuildSha: getRuntimeBuildSha(),
+          workerProcessId: process.pid,
+          dbFingerprint: getDatabaseFingerprint(),
+          conflictingWorkerIds: [],
         };
       }
       return {
@@ -1261,6 +1308,11 @@ export async function getSharedResearchWorkerHealth(db: any = prisma): Promise<K
         failureCount: 0,
         processStartedAt: null,
         uptimeSeconds: 0,
+        workerVersion: null,
+        workerBuildSha: null,
+        workerProcessId: null,
+        dbFingerprint: null,
+        conflictingWorkerIds: [],
       };
     }
 
@@ -1296,6 +1348,11 @@ export async function getSharedResearchWorkerHealth(db: any = prisma): Promise<K
       failureCount: meta.failureCount || 0,
       processStartedAt,
       uptimeSeconds,
+      workerVersion: meta.workerVersion || null,
+      workerBuildSha: meta.workerBuildSha || null,
+      workerProcessId: meta.workerProcessId || meta.pid || null,
+      dbFingerprint: meta.dbFingerprint || null,
+      conflictingWorkerIds: [],
     };
   } catch (err) {
     return {
@@ -1308,6 +1365,11 @@ export async function getSharedResearchWorkerHealth(db: any = prisma): Promise<K
       failureCount: 0,
       processStartedAt: null,
       uptimeSeconds: 0,
+      workerVersion: null,
+      workerBuildSha: null,
+      workerProcessId: null,
+      dbFingerprint: null,
+      conflictingWorkerIds: [],
     };
   }
 }
@@ -1333,8 +1395,12 @@ export function getResearchWorkerHealth(): WorkerHealth {
 export async function runWorkerLoop(options: { once?: boolean; pollIntervalMs?: number } = {}) {
   isRunning = true;
   const pollInterval = options.pollIntervalMs || 2000;
+  const bootSha = getRuntimeBuildSha() || "unknown";
+  const dbFp = getDatabaseFingerprint();
 
-  console.log(`[KH-02 Worker] Initialized ${WORKER_ID}. Mode: ${options.once ? "ONCE" : "DAEMON"}`);
+  console.log(
+    `[KH-02 Worker] Initialized ${WORKER_ID} | Release: V${SWAI_KH02_RELEASE_VERSION} | SHA: ${bootSha.slice(0, 7)} | DB Fingerprint: ${dbFp} | Mode: ${options.once ? "ONCE" : "DAEMON"}`
+  );
 
   // Initial persisted heartbeat
   await persistKh02WorkerHeartbeat(WORKER_ID, null, "RUNNING").catch(() => {});
@@ -1357,10 +1423,15 @@ export async function runWorkerLoop(options: { once?: boolean; pollIntervalMs?: 
     console.warn(`[KH-02 Worker] Startup recovery error:`, recErr);
   }
 
+  let loopCount = 0;
   try {
     do {
+      loopCount++;
       lastHeartbeat = new Date().toISOString();
       try {
+        if (loopCount % 5 === 0) {
+          await recoverStaleResearchJobs().catch(() => {});
+        }
         const job = await claimNextResearchJob(WORKER_ID);
         if (job) {
           console.log(`[KH-02 Worker] Claimed job ${job.id} for topic '${job.payload.topic}' (Workspace: ${job.workspaceId})`);

@@ -99,7 +99,7 @@ export async function probeGeminiAuthentication(customKey?: string): Promise<Gem
     };
   }
 
-  const prefix = key.length > 6 ? `${key.slice(0, 4)}...` : null;
+  const prefix = null;
 
   try {
     const ai = new GoogleGenAI({ apiKey: key });

@@ -1,0 +1,27 @@
+{
+  "gateId": "KH01_REGRESSION",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "npm run kh01:verify passes all 69 KH-01 protection tests with 0 failures",
+  "expected": {
+    "exitCode": 0,
+    "passed": 69,
+    "failed": 0
+  },
+  "observed": {
+    "exitCode": 0,
+    "passed": 69,
+    "total": 69,
+    "failed": 0
+  },
+  "executionCommand": "npm run kh01:verify",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "logs/kh01_verify.log"
+  ],
+  "evidenceLocation": "acceptance/kh02-v12.4.1/KH01_REGRESSION.json",
+  "reason": "KH-01 verified: 69/69 passed",
+  "executedAt": "2026-10-28T08:58:44.384Z",
+  "environment": "win32-node-v22.14.0-db-6530562482a2"
+}

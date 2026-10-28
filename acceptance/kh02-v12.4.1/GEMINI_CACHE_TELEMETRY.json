@@ -1,0 +1,8 @@
+{
+  "wroteWithModelId": "gemini-3-flash-preview",
+  "readWithoutModelIdSucceeded": true,
+  "cachedActualModelId": "gemini-3-flash-preview",
+  "cachedAnalysisStatus": "VERIFIED",
+  "inputHash": "c60ebb8d5bc1f5f527121258c3cffdb3b5c10ca9bae42e4c6a6d3871f9f5022f",
+  "evidenceHash": "cc1b59eb5841f144f160b3c9d095de59ad941bddb8dd5a384bff30a64cbcf60c"
+}

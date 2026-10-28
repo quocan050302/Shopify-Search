@@ -36,6 +36,7 @@ import {
   DiscoveredProductCandidate,
   selectTopResearchShortlist,
   ResearchShortlistResult,
+  evaluateCandidateProductReality,
 } from "./identity/productCandidateDiscovery";
 import { matchCrossPlatformProductEvidence } from "./identity/crossPlatformProductMatcher";
 import {
@@ -559,6 +560,24 @@ export async function runEvergreenProductResearch(
       }
     } catch (aiErr: any) {
       warnings.push(`Gemini AI product intelligence stage warning: ${aiErr.message}`);
+    }
+
+    // Re-evaluate mandatory Product Reality Gate after AI analysis (or fallback)
+    for (const c of candidates) {
+      const reality = evaluateCandidateProductReality(c);
+      c.productRealityStatus = reality.productRealityStatus;
+      c.sourcePageClassification = reality.sourcePageClassification;
+      if (!reality.isPhysicalProductRealityEligible) {
+        c.isEligibleAsEvergreenWinner = false;
+      } else if (
+        c.identityStatus === "VERIFIED" &&
+        !c.requiresManualReview &&
+        reality.productRealityStatus === "VERIFIED_PHYSICAL_PRODUCT"
+      ) {
+        c.isEligibleAsEvergreenWinner = true;
+      } else {
+        c.isEligibleAsEvergreenWinner = false;
+      }
     }
   }
 

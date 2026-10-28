@@ -4,6 +4,8 @@ import {
   calculateRetryDelay,
   executeGeminiTaskWithRetry,
   resetCircuitBreakerState,
+  isModelCircuitBroken,
+  createGeminiRunBudgetTracker,
 } from "@/services/kh02/ai/geminiModelRouter";
 import { GeminiModelDescriptor } from "@/services/kh02/ai/aiProductIntelligenceTypes";
 
@@ -252,5 +254,187 @@ describe("SWAI KH-02 V12.4 — Gemini Model Router & Error Classification", () =
     expect(calls).toBe(1); // No retries
     expect(res.telemetry.modelsAttempted).toEqual(["model-a"]);
     expect(res.error).toContain("Authentication failed");
+  });
+
+  it("opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate", async () => {
+    const forcedModels: GeminiModelDescriptor[] = [
+      {
+        modelId: "overloaded-primary",
+        rawName: "models/overloaded-primary",
+        displayName: "Overloaded Primary",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 100,
+        status: "ELIGIBLE",
+      },
+      {
+        modelId: "healthy-secondary",
+        rawName: "models/healthy-secondary",
+        displayName: "Healthy Secondary",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 80,
+        status: "ELIGIBLE",
+      },
+    ];
+
+    const callLog: string[] = [];
+    const task = async (_client: any, modelId: string) => {
+      callLog.push(modelId);
+      if (modelId === "overloaded-primary") {
+        const err: any = new Error("503 Service Unavailable: high demand");
+        err.status = 503;
+        throw err;
+      }
+      return `OK:${modelId}`;
+    };
+
+    // Candidate 1: 4 attempts on overloaded-primary + 1 on healthy-secondary
+    const res1 = await executeGeminiTaskWithRetry(task, {
+      forcedModelList: forcedModels,
+      apiKey: "dummy-test-key",
+      retryBaseDelayMs: 5,
+      maxRetriesPerModel: 3,
+    });
+    expect(res1.success).toBe(true);
+    expect(res1.modelUsed).toBe("healthy-secondary");
+    expect(isModelCircuitBroken("overloaded-primary")).toBe(true);
+
+    // Candidate 2: circuit breaker skips overloaded-primary and goes straight to healthy-secondary
+    callLog.length = 0;
+    const res2 = await executeGeminiTaskWithRetry(task, {
+      forcedModelList: forcedModels,
+      apiKey: "dummy-test-key",
+      retryBaseDelayMs: 5,
+      maxRetriesPerModel: 3,
+    });
+    expect(res2.success).toBe(true);
+    expect(res2.modelUsed).toBe("healthy-secondary");
+    expect(callLog).toEqual(["healthy-secondary"]);
+    expect(res2.telemetry.circuitBreakerTriggered).toBe(true);
+  });
+
+  it("enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly", async () => {
+    const forcedModels: GeminiModelDescriptor[] = [
+      {
+        modelId: "hanging-model",
+        rawName: "models/hanging-model",
+        displayName: "Hanging Model",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 100,
+        status: "ELIGIBLE",
+      },
+      {
+        modelId: "fast-fallback",
+        rawName: "models/fast-fallback",
+        displayName: "Fast Fallback",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 80,
+        status: "ELIGIBLE",
+      },
+    ];
+
+    const task = async (_client: any, modelId: string) => {
+      if (modelId === "hanging-model") {
+        await new Promise((r) => setTimeout(r, 500));
+        return "too-late";
+      }
+      return "fast-ok";
+    };
+
+    const res = await executeGeminiTaskWithRetry(task, {
+      forcedModelList: forcedModels,
+      apiKey: "dummy-test-key",
+      perAttemptTimeoutMs: 25,
+      timeoutMs: 2000,
+      retryBaseDelayMs: 5,
+      maxRetriesPerModel: 1,
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.modelUsed).toBe("fast-fallback");
+  });
+
+  it("interrupts backoff sleep immediately when AbortSignal is aborted", async () => {
+    const forcedModels: GeminiModelDescriptor[] = [
+      {
+        modelId: "retry-model",
+        rawName: "models/retry-model",
+        displayName: "Retry Model",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 100,
+        status: "ELIGIBLE",
+      },
+    ];
+
+    const controller = new AbortController();
+    let attempts = 0;
+
+    const task = async () => {
+      attempts++;
+      setTimeout(() => controller.abort(new Error("Worker canceled job")), 15);
+      const err: any = new Error("503 overloaded");
+      err.status = 503;
+      throw err;
+    };
+
+    const start = Date.now();
+    const res = await executeGeminiTaskWithRetry(task, {
+      forcedModelList: forcedModels,
+      apiKey: "dummy-test-key",
+      retryBaseDelayMs: 5000, // Long backoff that must be interrupted by abort
+      maxRetriesPerModel: 3,
+      signal: controller.signal,
+    });
+    const elapsed = Date.now() - start;
+
+    expect(res.success).toBe(false);
+    expect(res.telemetry.canceled).toBe(true);
+    expect(attempts).toBe(1);
+    expect(elapsed).toBeLessThan(1000);
+  });
+
+  it("enforces global call budget across candidates via GeminiRunBudgetTracker", async () => {
+    const forcedModels: GeminiModelDescriptor[] = [
+      {
+        modelId: "budget-model",
+        rawName: "models/budget-model",
+        displayName: "Budget Model",
+        description: "",
+        version: "1.0",
+        capabilities: {} as any,
+        priorityScore: 100,
+        status: "ELIGIBLE",
+      },
+    ];
+
+    const budget = createGeminiRunBudgetTracker(2);
+    let calls = 0;
+    const task = async () => {
+      calls++;
+      const err: any = new Error("503 overloaded");
+      err.status = 503;
+      throw err;
+    };
+
+    const res = await executeGeminiTaskWithRetry(task, {
+      forcedModelList: forcedModels,
+      apiKey: "dummy-test-key",
+      retryBaseDelayMs: 5,
+      maxRetriesPerModel: 3,
+      budgetTracker: budget,
+    });
+
+    expect(res.success).toBe(false);
+    expect(calls).toBe(2); // Capped by maxTotalCalls = 2
+    expect(res.telemetry.budgetExhausted).toBe(true);
   });
 });

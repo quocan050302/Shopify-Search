@@ -1,0 +1,83 @@
+{
+  "pageLoaded": true,
+  "authorized": true,
+  "researchSubmitted": true,
+  "acceptedRunId": "kh02_run_1793178172891_opcyi",
+  "terminalStatus": "COMPLETED",
+  "terminalStateObserved": true,
+  "resultsRendered": true,
+  "emptyStateAccurate": false,
+  "displayedCandidateIds": [
+    "cand_1778107836"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_1778107836": 47
+  },
+  "displayedConfidence": {
+    "cand_1778107836": "55"
+  },
+  "renderedCards": [
+    {
+      "candidateId": "cand_1778107836",
+      "rank": null,
+      "score": 47,
+      "confidence": "55"
+    }
+  ],
+  "postReloadCandidateIds": [
+    "cand_1778107836"
+  ],
+  "postReloadScores": {
+    "cand_1778107836": 47
+  },
+  "postReloadCards": [
+    {
+      "candidateId": "cand_1778107836",
+      "rank": null,
+      "score": 47,
+      "confidence": "55"
+    }
+  ],
+  "postReloadConsistent": true,
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "httpMatch": true,
+  "shortlistSectionRendered": true,
+  "shortlistCardsCount": 1,
+  "shortlistCandidateIds": [
+    "cand_1778107836"
+  ],
+  "shortlistTitles": [
+    "Pet Hair Removers"
+  ],
+  "rejectedTitles": [
+    "Unidentified Product (Source: Facebook Ad #1395097056025193, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet'.",
+    "ER Vet bill cost factorsREJECTEDDomain unverified · Score: 0/100Reason: Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+  ],
+  "erVetBillInShortlist": false,
+  "erVetBillInTopThree": false,
+  "erVetBillInProvisional": false,
+  "runtimeVersionBadgeText": "SHA: 07ffcac",
+  "runtimeParityStatus": "MATCHED",
+  "frontendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+  "backendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+  "workerBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+  "authoritativeRunIdInDom": "kh02_run_1793178172891_opcyi",
+  "postReloadShortlistCandidateIds": [
+    "cand_1778107836"
+  ],
+  "postReloadRunIdInDom": "kh02_run_1793178172891_opcyi",
+  "cardCount": 1,
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\03_leaderboard_results.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.1\\screenshots\\04_after_reload.png"
+  ],
+  "consoleLogs": [],
+  "errors": [],
+  "durationMs": 55064,
+  "verdict": "PASS"
+}

@@ -1,18 +1,866 @@
 {
-  "totalRecords": 20,
-  "physicalProductPrecision": 1,
-  "physicalProductRecall": 1,
-  "falseProductPositiveCount": 0,
-  "serviceToProductFalsePositives": 0,
-  "contentToProductFalsePositives": 0,
-  "nicheRelevancePrecision": 1,
-  "nicheRelevanceRecall": 1,
-  "identityAccuracy": 1,
-  "shortlistEligibilityAccuracy": 1,
-  "criticalFalsePositivesCount": 0,
-  "aiAbstentionRate": 0,
-  "modelFallbackSuccessRate": 1,
-  "averageLatencyMs": 1,
-  "totalRealApiCalls": 0,
-  "estimatedCostCredits": 0
+  "datasetVersion": "v12.4.1-gold-v2",
+  "datasetHash": "7b7c6fb0084a57c9",
+  "evaluatedAt": "2026-10-28T09:02:44.587Z",
+  "executionMode": "MODE_B_HISTORICAL_BLIND",
+  "baselineMetrics": {
+    "falsePositiveCount": 7,
+    "shortlistAccuracy": 0.667,
+    "serviceToProductFalsePositives": 5
+  },
+  "hybridAiMetrics": {
+    "totalRecords": 21,
+    "tp": 9,
+    "fp": 0,
+    "tn": 12,
+    "fn": 0,
+    "physicalProductPrecision": 1,
+    "physicalProductRecall": 1,
+    "physicalProductF1": 1,
+    "specificity": 1,
+    "falsePositiveRate": 0,
+    "falseProductPositiveCount": 0,
+    "serviceToProductFalsePositives": 0,
+    "contentToProductFalsePositives": 0,
+    "nicheRelevancePrecision": 1,
+    "nicheRelevanceRecall": 0.889,
+    "nicheRelevanceAccuracy": 0.905,
+    "identityAccuracy": 0.905,
+    "shortlistEligibilityAccuracy": 1,
+    "criticalFalsePositivesCount": 0,
+    "aiAbstentionRate": 0,
+    "modelFallbackSuccessRate": null,
+    "averageLatencyMs": 1,
+    "totalRealApiCalls": 0,
+    "estimatedCostCredits": 0
+  },
+  "holdoutMetrics": {
+    "totalHoldoutRecords": 8,
+    "shortlistEligibilityAccuracy": 1,
+    "falsePositiveCount": 0
+  },
+  "criticalRegressionPassed": true,
+  "predictions": [
+    {
+      "recordId": "gold_pos_01_hair_roller",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_01_hair_roller",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Two-Way Pet Hair Remover Roller",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_01_hair_roller"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_01_hair_roller"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Reusable Pet Hair Remover Roller",
+            "sourceRef": "obs_gold_pos_01_hair_roller",
+            "supportingQuote": "Reusable Pet Hair Remover"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 4
+    },
+    {
+      "recordId": "gold_pos_02_grooming_vac",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_02_grooming_vac",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "5-in-1 Pet Grooming Vacuum Kit",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_02_grooming_vac"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_02_grooming_vac"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Pro Grooming Vacuum & Deshedding Kit",
+            "sourceRef": "obs_gold_pos_02_grooming_vac",
+            "supportingQuote": "Pro Grooming Vacuum & Des"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_03_cat_feeder",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_03_cat_feeder",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Smart Automatic Pet Feeder 4L",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_03_cat_feeder"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_03_cat_feeder"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Automatic Timed Cat Feeder with Voice Recorder",
+            "sourceRef": "obs_gold_pos_03_cat_feeder",
+            "supportingQuote": "Automatic Timed Cat Feede"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_04_water_fountain",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_04_water_fountain",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Stainless Steel Pet Drinking Fountain 3.2L",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_04_water_fountain"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_04_water_fountain"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Stainless Steel Cat Water Fountain",
+            "sourceRef": "obs_gold_pos_04_water_fountain",
+            "supportingQuote": "Stainless Steel Cat Water"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_05_gps_tracker",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_05_gps_tracker",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Live GPS Dog Tracking Collar",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_05_gps_tracker"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_05_gps_tracker"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Waterproof GPS Pet Tracker Collar",
+            "sourceRef": "obs_gold_pos_05_gps_tracker",
+            "supportingQuote": "Waterproof GPS Pet Tracke"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_06_grooming_glove",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_06_grooming_glove",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Pet Hair Remover Grooming Mitts",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_06_grooming_glove"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_06_grooming_glove"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Gentle Pet Deshedding Grooming Glove",
+            "sourceRef": "obs_gold_pos_06_grooming_glove",
+            "supportingQuote": "Gentle Pet Deshedding Gro"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_07_orthopedic_bed",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_07_orthopedic_bed",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Orthopedic Memory Foam Pet Bed",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_07_orthopedic_bed"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_07_orthopedic_bed"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Calming Orthopedic Memory Foam Dog Bed",
+            "sourceRef": "obs_gold_pos_07_orthopedic_bed",
+            "supportingQuote": "Calming Orthopedic Memory"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_08_laser_toy",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_08_laser_toy",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Automatic Rotating Laser Cat Toy",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_08_laser_toy"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_08_laser_toy"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Interactive Automatic Laser Cat Toy",
+            "sourceRef": "obs_gold_pos_08_laser_toy",
+            "supportingQuote": "Interactive Automatic Las"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_pos_09_uproot_collection",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_pos_09_uproot_collection",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Pet Hair Removers",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_pos_09_uproot_collection"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_pos_09_uproot_collection"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Pet Hair Removers — Uproot Clean Reusable Fur Scraper",
+            "sourceRef": "obs_gold_pos_09_uproot_collection",
+            "supportingQuote": "Pet Hair Removers — Uproo"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": true,
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "exclusionReason": null,
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_01_er_vet_bill",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_01_er_vet_bill",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_01_er_vet_bill"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_01_er_vet_bill"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "ER Vet bill cost factors",
+            "sourceRef": "obs_gold_neg_01_er_vet_bill",
+            "supportingQuote": "ER Vet bill cost factors"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes veterinary expenses, cost factors, or informational content rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_02_vet_consultation_pricing",
+      "ruleBasedEligible": false,
+      "ruleBasedRelevance": "IRRELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_02_vet_consultation_pricing",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_02_vet_consultation_pricing"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_02_vet_consultation_pricing"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Emergency vet consultation pricing & overnight hospital rates",
+            "sourceRef": "obs_gold_neg_02_vet_consultation_pricing",
+            "supportingQuote": "Emergency vet consultatio"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes veterinary expenses, cost factors, or informational content rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_03_vet_clinic_service",
+      "ruleBasedEligible": false,
+      "ruleBasedRelevance": "IRRELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_03_vet_clinic_service",
+        "commercialEntityType": "SERVICE",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_03_vet_clinic_service"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_03_vet_clinic_service"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Animal hospital appointment — 24/7 Emergency Veterinary Clinic",
+            "sourceRef": "obs_gold_neg_03_vet_clinic_service",
+            "supportingQuote": "Animal hospital appointme"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes a veterinary, clinical, grooming, or local service rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as SERVICE; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_04_pet_insurance",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_04_pet_insurance",
+        "commercialEntityType": "INSURANCE",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_04_pet_insurance"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_04_pet_insurance"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Pet insurance quote — Protect Your Dog From Unexpected Vet Bills",
+            "sourceRef": "obs_gold_neg_04_pet_insurance",
+            "supportingQuote": "Pet insurance quote — Pro"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes pet insurance or financial coverage rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as INSURANCE; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 0
+    },
+    {
+      "recordId": "gold_neg_05_blog_article",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_05_blog_article",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_05_blog_article"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_05_blog_article"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Pet care blog article: How to Keep Your Dog Calm During Fireworks",
+            "sourceRef": "obs_gold_neg_05_blog_article",
+            "supportingQuote": "Pet care blog article: Ho"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes veterinary expenses, cost factors, or informational content rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_06_charity_donation",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_06_charity_donation",
+        "commercialEntityType": "LEAD_GENERATION",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_06_charity_donation"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_06_charity_donation"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Pet charity donation — Help Feed Shelter Dogs This Winter",
+            "sourceRef": "obs_gold_neg_06_charity_donation",
+            "supportingQuote": "Pet charity donation — He"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes a lead generation form, coupon signup, or charity donation rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as LEAD_GENERATION; not a purchasable physical ecommerce product.",
+      "correctClassification": false,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_07_lead_gen",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_07_lead_gen",
+        "commercialEntityType": "LEAD_GENERATION",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_07_lead_gen"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_07_lead_gen"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Generic coupon lead form — Sign Up for Free Dog Food Coupons",
+            "sourceRef": "obs_gold_neg_07_lead_gen",
+            "supportingQuote": "Generic coupon lead form "
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes a lead generation form, coupon signup, or charity donation rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as LEAD_GENERATION; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_08_campaign_code",
+      "ruleBasedEligible": false,
+      "ruleBasedRelevance": "IRRELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_08_campaign_code",
+        "commercialEntityType": "ADVERTISING_CAMPAIGN",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_08_campaign_code"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_08_campaign_code"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "WMT008 L4V2 Mustyclothes Promo Event",
+            "sourceRef": "obs_gold_neg_08_campaign_code",
+            "supportingQuote": "WMT008 L4V2 Mustyclothes "
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Non-physical entity"
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as ADVERTISING_CAMPAIGN; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 0
+    },
+    {
+      "recordId": "gold_neg_09_human_hair_eraser",
+      "ruleBasedEligible": false,
+      "ruleBasedRelevance": "IRRELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_09_human_hair_eraser",
+        "commercialEntityType": "ADVERTISING_CAMPAIGN",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_09_human_hair_eraser"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_09_human_hair_eraser"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Human hair remover — Crystal Hair Eraser for Legs & Arms",
+            "sourceRef": "obs_gold_neg_09_human_hair_eraser",
+            "supportingQuote": "Human hair remover — Crys"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Source page classified as CAMPAIGN_PAGE (ADVERTISING_CAMPAIGN)."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as ADVERTISING_CAMPAIGN; not a purchasable physical ecommerce product.",
+      "correctClassification": false,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_10_dog_grooming_booking",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_10_dog_grooming_booking",
+        "commercialEntityType": "SERVICE",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_10_dog_grooming_booking"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_10_dog_grooming_booking"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Dog grooming booking service — Mobile Pet Salon Near You",
+            "sourceRef": "obs_gold_neg_10_dog_grooming_booking",
+            "supportingQuote": "Dog grooming booking serv"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Describes a veterinary, clinical, grooming, or local service rather than a physical product."
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as SERVICE; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_11_holdout_vet_invoice_unseen",
+      "ruleBasedEligible": true,
+      "ruleBasedRelevance": "RELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_11_holdout_vet_invoice_unseen",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": null,
+        "suggestedProductType": "Non-Merchandise",
+        "nicheRelevance": "MEDIUM",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_11_holdout_vet_invoice_unseen"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_11_holdout_vet_invoice_unseen"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Why Puppy Surgery Invoices Reach $4,000 at Nighttime Clinics",
+            "sourceRef": "obs_gold_neg_11_holdout_vet_invoice_unseen",
+            "supportingQuote": "Why Puppy Surgery Invoice"
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [
+          "Non-physical entity"
+        ],
+        "aiConfidence": 0.92,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 1
+    },
+    {
+      "recordId": "gold_neg_12_fleet_tracker",
+      "ruleBasedEligible": false,
+      "ruleBasedRelevance": "IRRELEVANT",
+      "aiResult": {
+        "candidateId": "gold_neg_12_fleet_tracker",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Commercial Fleet GPS Tracker",
+        "suggestedProductType": "Physical Merchandise",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_gold_neg_12_fleet_tracker"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_gold_neg_12_fleet_tracker"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "Commercial OBD Fleet GPS Tracking System",
+            "sourceRef": "obs_gold_neg_12_fleet_tracker",
+            "supportingQuote": "Commercial OBD Fleet GPS "
+          }
+        ],
+        "inferredClaims": [],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 0.88,
+        "needsHumanReview": false
+      },
+      "deterministicVerified": true,
+      "finalShortlistEligible": false,
+      "productRealityStatus": "REJECTED",
+      "exclusionReason": "Excluded from product shortlist: Niche relevance evaluated as UNRELATED.",
+      "correctClassification": true,
+      "correctShortlistDecision": true,
+      "durationMs": 0
+    }
+  ],
+  "summary": "Zero-leakage backtest (MODE_B_HISTORICAL_BLIND) completed across 21 items (Holdout: 8). TP=9, FP=0, TN=12, FN=0, Precision=100.0%, Recall=100.0%, F1=100.0%, Critical False Positives=0."
 }

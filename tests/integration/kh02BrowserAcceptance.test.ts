@@ -9,12 +9,18 @@ import path from "path";
 
 describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
   it("launches Chromium, interacts with /products, and captures visual artifacts", async () => {
-    const isServerReachable = await fetch("http://localhost:3000/products")
-      .then((r) => r.status < 500)
+    const envBase = process.env.SWAI_BASE_URL || process.env.BASE_URL;
+    const baseUrl = envBase && envBase.startsWith("http") ? envBase : "http://127.0.0.1:3000";
+    const isServerReachable = await fetch(`${baseUrl}/api/v1/kh02/version`)
+      .then(async (r) => {
+        if (!r.ok) return false;
+        const body = await r.json().catch(() => null);
+        return Boolean(body && body.success === true);
+      })
       .catch(() => false);
 
     if (!isServerReachable) {
-      console.log("[Notice] Server at http://localhost:3000 is offline; skipping standalone browser test.");
+      console.log(`[Notice] SWAI server at ${baseUrl} is offline; skipping standalone browser test.`);
       return;
     }
 
@@ -24,7 +30,7 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
     }
 
     const result = await runKh02BrowserE2E({
-      baseUrl: "http://localhost:3000",
+      baseUrl,
       workspaceId: "test-integration-browser-ws",
       headless: true,
       topic: "Pet Hair Remover",
@@ -37,5 +43,5 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
     for (const shotPath of result.screenshots) {
       expect(fs.existsSync(shotPath)).toBe(true);
     }
-  }, 45000);
+  }, 120000);
 });

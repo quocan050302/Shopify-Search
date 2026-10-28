@@ -146,9 +146,14 @@ export function applyKH02EligibilityGates(
   }
 
   // Final Qualification Decision
+  const realityStatus = (scoreResult as any).productRealityStatus;
+  const isRealityVerifiedPhysical =
+    realityStatus === undefined || realityStatus === "VERIFIED_PHYSICAL_PRODUCT";
+
   if (
     scoreResult.scoreStatus === "VERIFIED" &&
     isIdentityVerified &&
+    isRealityVerifiedPhysical &&
     demandScore !== null &&
     demandScore >= 15 &&
     !isDemandDeclining &&
@@ -165,7 +170,10 @@ export function applyKH02EligibilityGates(
   // SECTION 11.E: Do NOT place unresolved identity into provisional with badge "Probable"
   if (
     (scoreResult as any).identityStatus === "UNRESOLVED" ||
-    (scoreResult as any).isEligibleAsEvergreenWinner === false
+    realityStatus === "UNRESOLVED" ||
+    realityStatus === "NON_PHYSICAL" ||
+    realityStatus === "REJECTED" ||
+    ((scoreResult as any).isEligibleAsEvergreenWinner === false && realityStatus === undefined)
   ) {
     return {
       tier: "INSUFFICIENT_EVIDENCE",
@@ -374,10 +382,19 @@ export function calculateKH02EvergreenScore(
   let recommendation: KH02ScoreResult["recommendation"] = "RESEARCH_MORE";
   let rationale = "Further data required to confirm evergreen stability and economics viability.";
 
-  if (c.relevanceStatus === "IRRELEVANT") {
+  if (
+    c.relevanceStatus === "IRRELEVANT" ||
+    c.productRealityStatus === "NON_PHYSICAL" ||
+    c.productRealityStatus === "REJECTED" ||
+    (c.aiIntelligence?.commercialEntityType && c.aiIntelligence.commercialEntityType !== "PHYSICAL_PRODUCT")
+  ) {
     recommendation = "REJECT";
-    rationale = c.relevanceReasons?.[0] || "Product is verified to be irrelevant to the target niche topic.";
-    risks.push("Category mismatch: Product does not address the target search topic.");
+    rationale =
+      c.aiExclusionReason ||
+      c.productRealityReason ||
+      c.relevanceReasons?.[0] ||
+      "Candidate is verified to be irrelevant or a non-physical entity.";
+    risks.push("Category or product reality mismatch: Candidate is not an eligible physical product for the target topic.");
     totalScore = 0;
     scoreStatus = "REJECTED";
   } else if (c.relevanceStatus === "AMBIGUOUS") {
@@ -475,6 +492,7 @@ export function calculateKH02EvergreenScore(
     isProductIdentityVerified: c.identityStatus === "VERIFIED",
     identityStatus: c.identityStatus,
     isEligibleAsEvergreenWinner: c.isEligibleAsEvergreenWinner,
+    productRealityStatus: c.productRealityStatus,
     relevanceStatus: c.relevanceStatus,
     relevanceReasons: c.relevanceReasons,
   } as any);

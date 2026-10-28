@@ -27,6 +27,14 @@ import {
   analyzeCustomerPsychology,
   CustomerPsychologyProfile,
 } from "../psychology/customerPsychologyService";
+import {
+  ProductRealityStatus,
+  SourcePageClassification,
+} from "../ai/aiProductIntelligenceTypes";
+import {
+  classifySourcePage,
+  evaluateDeterministicEntityReality,
+} from "../ai/aiEvidenceVerifier";
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
@@ -66,8 +74,14 @@ export interface DiscoveredProductCandidate {
   relevanceReasons?: string[];
   psychologyProfile?: CustomerPsychologyProfile | null;
   aiIntelligence?: any;
+  aiVerification?: any;
   aiShortlistEligible?: boolean;
   aiExclusionReason?: string | null;
+  aiFromCache?: boolean;
+  aiModelUsed?: string | null;
+  productRealityStatus?: ProductRealityStatus;
+  sourcePageClassification?: SourcePageClassification;
+  productRealityReason?: string | null;
 }
 
 
@@ -332,7 +346,28 @@ export function discoverProductCandidatesFromAds(
     const chosenVideo = repObs?.media?.videoUrl || c.videos[0] || null;
     const mediaSourceAdId = repObs?.sourceRecordId || repObs?.sourceExternalAdId || null;
 
-    candidates.push({
+    // Section 6.5: A /collections/... URL is not an actual SKU-specific product page.
+    // Do not mark a collection listing as VERIFIED product identity without an independently associated SKU page.
+    const pageClass = classifySourcePage(
+      c.canonicalUrl,
+      c.storeDomain ? "SHOPIFY_STORE" : "UNKNOWN",
+      candidateContext
+    );
+    let effectiveIdentityStatus = resolvedIdentity.identityStatus;
+    if (pageClass === "COLLECTION_PAGE" && effectiveIdentityStatus === "VERIFIED" && !resolvedIdentity.sku) {
+      effectiveIdentityStatus = "PROBABLE";
+    }
+    if (
+      pageClass === "ARTICLE_PAGE" ||
+      pageClass === "SERVICE_PAGE" ||
+      pageClass === "INSURANCE_PAGE" ||
+      pageClass === "LEAD_GENERATION_PAGE" ||
+      pageClass === "CAMPAIGN_PAGE"
+    ) {
+      effectiveIdentityStatus = "UNRESOLVED";
+    }
+
+    const candObj: DiscoveredProductCandidate = {
       candidateId: `cand_${Math.abs(hashCode(key))}`,
       title: resolvedIdentity.displayTitle,
       canonicalProductName: resolvedIdentity.canonicalProductName,
@@ -357,18 +392,38 @@ export function discoverProductCandidatesFromAds(
       distinctAdvertisersCount: c.advertisers.size,
       earliestObservationDate: c.earliest,
       latestObservationDate: c.latest,
-      identityConfidence: resolvedIdentity.identityStatus === "VERIFIED" ? "EXACT" : (resolvedIdentity.identityStatus === "PROBABLE" ? "HIGH_CONFIDENCE" : "AMBIGUOUS"),
+      identityConfidence:
+        effectiveIdentityStatus === "VERIFIED"
+          ? "EXACT"
+          : effectiveIdentityStatus === "PROBABLE"
+          ? "HIGH_CONFIDENCE"
+          : "AMBIGUOUS",
       sourceObservations: c.observations,
-      identityStatus: resolvedIdentity.identityStatus,
+      identityStatus: effectiveIdentityStatus,
       resolutionSource: resolvedIdentity.resolutionSource,
-      requiresManualReview: resolvedIdentity.requiresManualReview,
+      requiresManualReview: resolvedIdentity.requiresManualReview || pageClass === "COLLECTION_PAGE",
       identityEvidenceReferences: resolvedIdentity.identityEvidenceReferences,
-      isEligibleAsEvergreenWinner: resolvedIdentity.isEligibleAsEvergreenWinner && relevance.isAccepted && relevance.relevanceStatus !== "IRRELEVANT",
+      isEligibleAsEvergreenWinner:
+        effectiveIdentityStatus === "VERIFIED" &&
+        resolvedIdentity.isEligibleAsEvergreenWinner &&
+        relevance.isAccepted &&
+        relevance.relevanceStatus !== "IRRELEVANT",
       relevanceStatus: relevance.relevanceStatus,
       relevanceScore: relevance.score,
       relevanceReasons: relevance.reasons,
       psychologyProfile: psychProfile,
-    });
+      sourcePageClassification: pageClass,
+    };
+
+    const realityEval = evaluateCandidateProductReality(candObj);
+    candObj.productRealityStatus = realityEval.status;
+    candObj.sourcePageClassification = realityEval.sourcePageClassification;
+    candObj.productRealityReason = realityEval.reason;
+    if (!realityEval.eligibleForShortlist) {
+      candObj.isEligibleAsEvergreenWinner = false;
+    }
+
+    candidates.push(candObj);
 
     index++;
   }
@@ -457,39 +512,248 @@ export function evaluateShortlistDistinctness(
   };
 }
 
+export interface ProductRealityGateEvaluation {
+  status: ProductRealityStatus;
+  productRealityStatus: ProductRealityStatus;
+  sourcePageClassification: SourcePageClassification;
+  eligibleForShortlist: boolean;
+  isPhysicalProductRealityEligible: boolean;
+  reason: string | null;
+  rejectionReasons: string[];
+  conditions: {
+    correctNiche: boolean;
+    physicalProductSupported: boolean;
+    productIdentityDefensible: boolean;
+    sourceEvidenceAvailable: boolean;
+    merchantEvidenceSufficient: boolean;
+    notServiceArticleInsuranceLeadGen: boolean;
+    notCampaignTitle: boolean;
+    noUnresolvedContradiction: boolean;
+  };
+}
+
+/**
+ * Evaluates a candidate against the mandatory 9-condition Product Reality Gate (Section 6).
+ * Operates deterministically even when Gemini is unavailable, timed out, or faulted.
+ */
+export function evaluateCandidateProductReality(
+  c: DiscoveredProductCandidate
+): ProductRealityGateEvaluation {
+  const headlines = [
+    c.originalAdHeadline || "",
+    ...(c.sourceObservations || []).map((o) => o.title || ""),
+  ].filter(Boolean);
+  const descriptions = [
+    c.problemStatement || "",
+    ...(c.sourceObservations || []).map((o) => o.description || o.observedContent || ""),
+  ].filter(Boolean);
+  const landingUrls = (c.sourceObservations || [])
+    .map((o) => o.landingPageUrl || o.sourceUrl || "")
+    .filter(Boolean);
+
+  const deterministic = evaluateDeterministicEntityReality({
+    title: c.canonicalProductName || c.displayName || c.title,
+    headlines,
+    descriptions,
+    canonicalUrl: c.canonicalProductUrl,
+    landingUrls,
+    pageTypeHint: c.storeDomain ? "SHOPIFY_STORE" : "UNKNOWN",
+  });
+
+  const sourcePageClassification =
+    c.sourcePageClassification || deterministic.sourcePageClassification;
+
+  // Condition 1: Correct niche
+  const correctNiche =
+    (c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT") &&
+    (!c.aiIntelligence ||
+      (c.aiIntelligence.nicheRelevance !== "UNRELATED" &&
+        c.aiIntelligence.nicheRelevance !== "LOW"));
+
+  // Condition 6: Not a service, article, insurance or lead-generation offer
+  const aiEntity = c.aiIntelligence?.commercialEntityType;
+  const aiSaysNonPhysical =
+    (Boolean(aiEntity) && aiEntity !== "PHYSICAL_PRODUCT") ||
+    c.aiIntelligence?.isLikelySellableProduct === false;
+  const notServiceArticleInsuranceLeadGen =
+    !deterministic.isNonPhysical && !aiSaysNonPhysical;
+
+  // Condition 7: Not a campaign title masquerading as a product
+  const notCampaignTitle =
+    sourcePageClassification !== "CAMPAIGN_PAGE" &&
+    deterministic.detectedEntityType !== "ADVERTISING_CAMPAIGN";
+
+  // Condition 3: Product identity defensible
+  // Note: Collection pages cannot claim VERIFIED SKU identity without an SKU,
+  // but can have PROBABLE category/brand product identity if backed by physical product evidence.
+  const productIdentityDefensible =
+    c.identityStatus !== "UNRESOLVED" &&
+    c.identityStatus !== "AMBIGUOUS" &&
+    Boolean(c.canonicalProductName || c.displayName || c.title) &&
+    notCampaignTitle;
+
+  // Condition 4: Original advertising/source evidence available
+  const sourceEvidenceAvailable =
+    Boolean(c.supportingAdIds && c.supportingAdIds.length > 0) ||
+    Boolean(c.sourceObservations && c.sourceObservations.length > 0);
+
+  // Condition 5: Merchant/product evidence sufficient
+  const merchantEvidenceSufficient =
+    Boolean(c.storeDomain) ||
+    Boolean(c.canonicalProductUrl) ||
+    (c.identityStatus === "VERIFIED" && c.identityConfidence === "EXACT");
+
+  // Condition 2: Physical ecommerce product supported
+  const aiConfirmedPhysical =
+    c.aiIntelligence?.commercialEntityType === "PHYSICAL_PRODUCT" &&
+    c.aiIntelligence?.isLikelySellableProduct === true &&
+    c.aiShortlistEligible === true;
+  const deterministicPhysicalSupported =
+    !deterministic.isNonPhysical &&
+    (deterministic.hasPhysicalProductIndicators ||
+      sourcePageClassification === "ACTUAL_PRODUCT_PAGE" ||
+      c.identityStatus === "VERIFIED");
+
+  const physicalProductSupported =
+    notServiceArticleInsuranceLeadGen &&
+    merchantEvidenceSufficient &&
+    (aiConfirmedPhysical || (c.aiShortlistEligible !== false && deterministicPhysicalSupported));
+
+  // Condition 9: No unresolved evidence contradiction
+  const ver = c.aiVerification;
+  const hasVerifierViolation =
+    Boolean(ver) &&
+    (!ver.correctCandidateId ||
+      !ver.validSourceReferences ||
+      !ver.accurateQuotations ||
+      !ver.productIdentityConsistent ||
+      ver.promptInjectionDetected ||
+      (Array.isArray(ver.contradictions) && ver.contradictions.length > 0));
+  const noUnresolvedContradiction =
+    !hasVerifierViolation && c.aiShortlistEligible !== false;
+
+  const conditions = {
+    correctNiche,
+    physicalProductSupported,
+    productIdentityDefensible,
+    sourceEvidenceAvailable,
+    merchantEvidenceSufficient,
+    notServiceArticleInsuranceLeadGen,
+    notCampaignTitle,
+    noUnresolvedContradiction,
+  };
+
+  const buildGateResult = (
+    status: ProductRealityStatus,
+    eligibleForShortlist: boolean,
+    reason: string | null
+  ): ProductRealityGateEvaluation => ({
+    status,
+    productRealityStatus: status,
+    sourcePageClassification,
+    eligibleForShortlist,
+    isPhysicalProductRealityEligible: eligibleForShortlist,
+    reason,
+    rejectionReasons: reason ? [reason] : [],
+    conditions,
+  });
+
+  if (!notServiceArticleInsuranceLeadGen) {
+    return buildGateResult(
+      "NON_PHYSICAL",
+      false,
+      c.aiExclusionReason ||
+        deterministic.reason ||
+        `Excluded: Classified as non-physical entity (${aiEntity || deterministic.detectedEntityType || "NON_PHYSICAL"}).`
+    );
+  }
+
+  if (!notCampaignTitle) {
+    return buildGateResult(
+      "REJECTED",
+      false,
+      deterministic.reason || "Excluded: Campaign code or internal ad identifier."
+    );
+  }
+
+  if (!correctNiche) {
+    return buildGateResult(
+      "REJECTED",
+      false,
+      c.aiExclusionReason ||
+        (c.relevanceReasons && c.relevanceReasons[0]) ||
+        "Excluded: Candidate does not match requested niche."
+    );
+  }
+
+  if (!noUnresolvedContradiction) {
+    return buildGateResult(
+      "UNRESOLVED",
+      false,
+      c.aiExclusionReason ||
+        "Excluded: Unresolved AI evidence contradiction or unverified source reference."
+    );
+  }
+
+  if (
+    !productIdentityDefensible ||
+    !sourceEvidenceAvailable ||
+    !merchantEvidenceSufficient ||
+    !physicalProductSupported
+  ) {
+    return buildGateResult(
+      "UNRESOLVED",
+      false,
+      !merchantEvidenceSufficient
+        ? "Excluded: Lacks verified merchant domain or product landing URL evidence."
+        : !productIdentityDefensible
+        ? "Excluded: Product identity is unresolved."
+        : !sourceEvidenceAvailable
+        ? "Excluded: Lacks supporting source advertisement evidence."
+        : "Excluded: Insufficient physical product evidence."
+    );
+  }
+
+  const isVerifiedSkuPage =
+    sourcePageClassification === "ACTUAL_PRODUCT_PAGE" ||
+    (c.identityStatus === "VERIFIED" && sourcePageClassification !== "COLLECTION_PAGE");
+
+  return buildGateResult(
+    isVerifiedSkuPage
+      ? "VERIFIED_PHYSICAL_PRODUCT"
+      : "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+    true,
+    null
+  );
+}
+
 /**
  * Selects up to `limit` (default 3) distinct, genuine, niche-relevant products for human evaluation.
+ * Enforces the mandatory Product Reality Gate even when Gemini is unavailable or failed.
  * Returns explicit shortfall reason if authorized source data yields fewer than 3 products.
  */
 export function selectTopResearchShortlist(
   candidates: DiscoveredProductCandidate[],
   limit: number = 3
 ): ResearchShortlistResult {
-  // 1. Filter candidates for shortlist eligibility:
-  // - Must be relevant to requested topic
-  // - Product identity must be resolved (not unresolved / campaign code)
-  // - Must have supporting source evidence
+  // 1. Filter candidates through the mandatory Product Reality Gate (Section 6):
   const eligible = candidates.filter((c) => {
-    const isRelevant = c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT";
-    const hasResolvedIdentity = c.identityStatus !== "UNRESOLVED" && Boolean(c.canonicalProductName || c.displayName);
-    const hasEvidence = (c.supportingAdIds && c.supportingAdIds.length > 0) || (c.sourceObservations && c.sourceObservations.length > 0);
-
-    // V12.4 AI Product Intelligence Reality Gate:
-    // Exclude candidates explicitly evaluated as non-sellable, service, or informational content
-    if (c.aiShortlistEligible === false) {
-      return false;
+    const reality = evaluateCandidateProductReality(c);
+    c.productRealityStatus = reality.status;
+    c.sourcePageClassification = reality.sourcePageClassification;
+    c.productRealityReason = reality.reason;
+    if (
+      reality.sourcePageClassification === "COLLECTION_PAGE" &&
+      c.identityStatus === "VERIFIED" &&
+      !c.sku
+    ) {
+      c.identityStatus = "PROBABLE";
     }
-    if (c.aiIntelligence) {
-      const entity = c.aiIntelligence.commercialEntityType;
-      if (entity && entity !== "PHYSICAL_PRODUCT") {
-        return false;
-      }
-      if (c.aiIntelligence.isLikelySellableProduct === false) {
-        return false;
-      }
-    }
-
-    return isRelevant && hasResolvedIdentity && hasEvidence;
+    return (
+      reality.eligibleForShortlist &&
+      (reality.status === "VERIFIED_PHYSICAL_PRODUCT" ||
+        reality.status === "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT")
+    );
   });
 
   // 2. Sort eligible candidates: prefer higher relevance score, then observation count
@@ -614,13 +878,20 @@ export async function enrichProductCandidatesWithEvidence(
           candidate.brand = resolved.brand;
           candidate.model = resolved.model;
           candidate.sku = resolved.sku;
-          candidate.identityStatus = resolved.identityStatus;
-          candidate.identityConfidence =
-            resolved.identityStatus === "VERIFIED"
-              ? "EXACT"
-              : resolved.identityStatus === "PROBABLE"
-              ? "HIGH_CONFIDENCE"
-              : "AMBIGUOUS";
+          const enrichedPageClass = classifySourcePage(candidate.canonicalProductUrl);
+          candidate.sourcePageClassification = enrichedPageClass;
+          if (enrichedPageClass === "COLLECTION_PAGE" && resolved.identityStatus === "VERIFIED" && !resolved.sku) {
+            candidate.identityStatus = "PROBABLE";
+            candidate.identityConfidence = "HIGH_CONFIDENCE";
+          } else {
+            candidate.identityStatus = resolved.identityStatus;
+            candidate.identityConfidence =
+              resolved.identityStatus === "VERIFIED"
+                ? "EXACT"
+                : resolved.identityStatus === "PROBABLE"
+                ? "HIGH_CONFIDENCE"
+                : "AMBIGUOUS";
+          }
           candidate.resolutionSource = resolved.resolutionSource;
           candidate.requiresManualReview = resolved.requiresManualReview;
           candidate.identityEvidenceReferences = resolved.identityEvidenceReferences;
@@ -645,10 +916,25 @@ export async function enrichProductCandidatesWithEvidence(
           candidate.relevanceStatus = relevance.relevanceStatus;
           candidate.relevanceScore = relevance.score;
           candidate.relevanceReasons = relevance.reasons;
-          if (!relevance.isAccepted || relevance.relevanceStatus === "IRRELEVANT") {
+
+          const enrichedReality = evaluateCandidateProductReality(candidate);
+          candidate.productRealityStatus = enrichedReality.productRealityStatus;
+          candidate.sourcePageClassification = enrichedReality.sourcePageClassification;
+
+          if (
+            !relevance.isAccepted ||
+            relevance.relevanceStatus === "IRRELEVANT" ||
+            !enrichedReality.isPhysicalProductRealityEligible
+          ) {
             candidate.isEligibleAsEvergreenWinner = false;
-          } else if (resolved.identityStatus === "VERIFIED" && !resolved.requiresManualReview) {
+          } else if (
+            candidate.identityStatus === "VERIFIED" &&
+            !resolved.requiresManualReview &&
+            enrichedReality.productRealityStatus === "VERIFIED_PHYSICAL_PRODUCT"
+          ) {
             candidate.isEligibleAsEvergreenWinner = true;
+          } else {
+            candidate.isEligibleAsEvergreenWinner = false;
           }
 
           if (candidate.identityStatus === "VERIFIED") verifiedCount++;

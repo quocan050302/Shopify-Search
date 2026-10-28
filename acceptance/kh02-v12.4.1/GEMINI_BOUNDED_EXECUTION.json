@@ -1,0 +1,34 @@
+{
+  "timeoutTest": {
+    "result": "RECOVERED_AFTER_TIMEOUT",
+    "elapsedMs": 50
+  },
+  "budgetTest": {
+    "tracker": {
+      "maxGlobalRequests": 2,
+      "maxGlobalTokens": 120000,
+      "requestsStarted": 2,
+      "requestsCompleted": 2,
+      "requestsFailed": 0,
+      "retriesExecuted": 0,
+      "fallbackTransitions": 0,
+      "tokensConsumed": 0,
+      "tokensReportedCount": 0
+    },
+    "thirdCallTelemetry": {
+      "totalAttempts": 0,
+      "retriesExecuted": 0,
+      "requestsStarted": 0,
+      "requestsCompleted": 0,
+      "requestsFailed": 0,
+      "modelsAttempted": [],
+      "successfulModelId": null,
+      "fallbackCount": 0,
+      "executionHistory": [],
+      "circuitBreakerTriggered": false,
+      "budgetExhausted": true,
+      "totalDurationMs": 0
+    }
+  },
+  "verdict": "PASS"
+}

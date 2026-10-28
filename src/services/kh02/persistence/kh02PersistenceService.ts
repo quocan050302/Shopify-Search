@@ -21,12 +21,50 @@ export interface KH02RunSummary {
   workspaceId: string;
   topic: string;
   status: string;
+  effectiveJobState?: KH02EffectiveJobState;
   progress: number;
   totalCandidates: number;
   topCandidateTitles: string[];
   startedAt: string | null;
   completedAt: string | null;
   createdAt: string;
+}
+
+export type KH02EffectiveJobState =
+  | "QUEUED"
+  | "RUNNING"
+  | "COMPLETED"
+  | "PARTIALLY_COMPLETED"
+  | "FAILED"
+  | "CANCELED"
+  | "STALLED"
+  | "RECOVERING";
+
+export type KH02BrowserPollingState =
+  | "IDLE"
+  | "POLLING_ACTIVE"
+  | "POLLING_TIMED_OUT"
+  | "POLLING_ERROR";
+
+export interface KH02JobLivenessEvidence {
+  jobId: string;
+  jobStatus: KH02EffectiveJobState;
+  rawDbStatus: string;
+  workerId: string | null;
+  workerProcessStatus: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN";
+  workerOwnsJob: boolean;
+  lastHeartbeatAt: string | null;
+  leaseExpiresAt: string | null;
+  leaseValid: boolean;
+  currentStage: string;
+  stageStartedAt: string | null;
+  lastProgressUpdateAt: string | null;
+  retryCount: number;
+  cancellationState: "NONE" | "CANCEL_REQUESTED" | "CANCELED";
+  isActivelyProcessing: boolean;
+  isStalled: boolean;
+  stallReason: string | null;
+  actionableStatusMessage: string;
 }
 
 export interface ProvenanceValidationResult {
@@ -361,6 +399,258 @@ export async function getKH02ResearchRuns(
   });
 }
 
+const STALL_NO_PROGRESS_THRESHOLD_MS = 90 * 1000; // 90 seconds without stage/progress heartbeat
+
+async function readWorkerHealthSnapshotForJob(
+  db: any
+): Promise<{
+  workerId: string | null;
+  status: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN";
+  activeJobId: string | null;
+  lastHeartbeatAt: string | null;
+}> {
+  try {
+    if (!db?.syncJob?.findFirst) {
+      return { workerId: null, status: "UNKNOWN", activeJobId: null, lastHeartbeatAt: null };
+    }
+    const hb = await db.syncJob.findFirst({
+      where: { jobType: "KH02_WORKER_HEARTBEAT" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!hb || !hb.resultJson) {
+      return { workerId: null, status: "OFFLINE", activeJobId: null, lastHeartbeatAt: null };
+    }
+    const meta = JSON.parse(hb.resultJson);
+    const hbTime = meta.lastHeartbeatAt ? new Date(meta.lastHeartbeatAt).getTime() : 0;
+    const diffMs = Date.now() - hbTime;
+    let status: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN" = "OFFLINE";
+    if (meta.state === "STOPPED" || hb.status === "STOPPED" || hb.status === "COMPLETED") {
+      status = "OFFLINE";
+    } else if (diffMs <= 30_000) {
+      status = "ALIVE";
+    } else if (diffMs <= 60_000) {
+      status = "STALE";
+    } else {
+      status = "OFFLINE";
+    }
+    return {
+      workerId: meta.workerId || hb.workerId || null,
+      status,
+      activeJobId: meta.activeJobId || null,
+      lastHeartbeatAt: meta.lastHeartbeatAt || null,
+    };
+  } catch {
+    return { workerId: null, status: "UNKNOWN", activeJobId: null, lastHeartbeatAt: null };
+  }
+}
+
+/**
+ * Evaluates authoritative job liveness and stall status from persisted job state and worker heartbeat.
+ * Never claims a worker is actively processing without verified ownership, valid lease, and fresh heartbeat.
+ */
+export function evaluateKH02JobLiveness(
+  job: {
+    id: string;
+    status: string;
+    workerId?: string | null;
+    leaseExpiresAt?: Date | string | null;
+    attemptNumber?: number | null;
+    cancelRequested?: boolean | null;
+    errorMessage?: string | null;
+    startedAt?: Date | string | null;
+    createdAt?: Date | string | null;
+  },
+  meta: any,
+  workerHealth: {
+    workerId: string | null;
+    status: "ALIVE" | "STALE" | "OFFLINE" | "UNKNOWN";
+    activeJobId: string | null;
+    lastHeartbeatAt: string | null;
+  },
+  options: { nowMs?: number; stallNoProgressThresholdMs?: number } = {}
+): KH02JobLivenessEvidence {
+  const nowMs = options.nowMs ?? Date.now();
+  const stallThresholdMs = options.stallNoProgressThresholdMs ?? STALL_NO_PROGRESS_THRESHOLD_MS;
+  const runtime = meta?._runtime || {};
+
+  const rawDbStatus = job.status || "UNKNOWN";
+  const jobWorkerId = job.workerId || runtime.workerId || null;
+  const leaseExpiresAtIso = job.leaseExpiresAt
+    ? typeof job.leaseExpiresAt === "string"
+      ? job.leaseExpiresAt
+      : job.leaseExpiresAt.toISOString()
+    : runtime.leaseExpiresAt || null;
+
+  const leaseExpiryMs = leaseExpiresAtIso ? new Date(leaseExpiresAtIso).getTime() : 0;
+  const leaseValid = leaseExpiryMs > nowMs;
+
+  const lastHeartbeatAt = runtime.lastHeartbeatAt || workerHealth.lastHeartbeatAt || null;
+  const currentStage =
+    runtime.lastProgress?.stage ||
+    (rawDbStatus === "COMPLETED"
+      ? "COMPLETED"
+      : rawDbStatus === "PARTIALLY_COMPLETED"
+      ? "PARTIALLY_COMPLETED"
+      : rawDbStatus === "FAILED"
+      ? "FAILED"
+      : rawDbStatus === "CANCELLED" || rawDbStatus === "CANCELED"
+      ? "CANCELED"
+      : rawDbStatus === "RUNNING"
+      ? "RUNNING"
+      : "QUEUED");
+
+  const stageStartedAt =
+    runtime.stageStartedAt ||
+    (job.startedAt
+      ? typeof job.startedAt === "string"
+        ? job.startedAt
+        : job.startedAt.toISOString()
+      : null);
+
+  const lastProgressUpdateAt =
+    runtime.lastProgressUpdateAt || runtime.lastHeartbeatAt || stageStartedAt || null;
+
+  const retryCount = Math.max(0, (job.attemptNumber || runtime.attemptNumber || 1) - 1);
+  const cancelRequested = Boolean(job.cancelRequested || runtime.cancelRequested);
+  const cancellationState: "NONE" | "CANCEL_REQUESTED" | "CANCELED" =
+    rawDbStatus === "CANCELLED" || rawDbStatus === "CANCELED"
+      ? "CANCELED"
+      : cancelRequested
+      ? "CANCEL_REQUESTED"
+      : "NONE";
+
+  const workerOwnsJob =
+    rawDbStatus === "RUNNING" &&
+    leaseValid &&
+    Boolean(jobWorkerId) &&
+    (workerHealth.status === "ALIVE" || workerHealth.status === "STALE") &&
+    (!workerHealth.workerId ||
+      workerHealth.workerId === jobWorkerId ||
+      workerHealth.activeJobId === job.id);
+
+  let jobStatus: KH02EffectiveJobState = "QUEUED";
+  let isActivelyProcessing = false;
+  let isStalled = false;
+  let stallReason: string | null = null;
+  let actionableStatusMessage = "Queued for background worker pickup.";
+
+  if (rawDbStatus === "COMPLETED") {
+    jobStatus = meta?.runStatus === "PARTIAL" ? "PARTIALLY_COMPLETED" : "COMPLETED";
+    actionableStatusMessage = "Research run completed.";
+  } else if (rawDbStatus === "PARTIALLY_COMPLETED") {
+    jobStatus = "PARTIALLY_COMPLETED";
+    actionableStatusMessage = "Research run completed with partial source coverage.";
+  } else if (rawDbStatus === "FAILED") {
+    jobStatus = "FAILED";
+    actionableStatusMessage = job.errorMessage || "Research run failed.";
+  } else if (rawDbStatus === "CANCELLED" || rawDbStatus === "CANCELED") {
+    jobStatus = "CANCELED";
+    actionableStatusMessage = "Research run was canceled.";
+  } else if (rawDbStatus === "PENDING") {
+    const isRecoveredRetry =
+      retryCount > 0 || (job.errorMessage || "").includes("Recovered from stale worker");
+    if (isRecoveredRetry) {
+      if (workerHealth.status === "OFFLINE") {
+        jobStatus = "STALLED";
+        isStalled = true;
+        stallReason = "WORKER_OFFLINE_DURING_RECOVERY";
+        actionableStatusMessage =
+          "Job lease recovery pending, but the KH-02 background worker is offline.";
+      } else {
+        jobStatus = "RECOVERING";
+        actionableStatusMessage = `Recovering job (retry #${retryCount}) — waiting for active worker claim.`;
+      }
+    } else if (workerHealth.status === "OFFLINE") {
+      const createdMs = job.createdAt ? new Date(job.createdAt).getTime() : nowMs;
+      if (nowMs - createdMs > 15_000) {
+        jobStatus = "STALLED";
+        isStalled = true;
+        stallReason = "WORKER_OFFLINE";
+        actionableStatusMessage =
+          "Research job is queued, but no active KH-02 worker is running. Start the worker to process this job.";
+      } else {
+        jobStatus = "QUEUED";
+        actionableStatusMessage =
+          "Research job queued — waiting for KH-02 background worker heartbeat.";
+      }
+    } else {
+      jobStatus = "QUEUED";
+      actionableStatusMessage = "Queued for active KH-02 worker pickup.";
+    }
+  } else if (rawDbStatus === "RUNNING") {
+    const lastActivityMs = lastProgressUpdateAt ? new Date(lastProgressUpdateAt).getTime() : 0;
+    const noProgressDurationMs = lastActivityMs > 0 ? nowMs - lastActivityMs : 0;
+
+    if (leaseExpiresAtIso && !leaseValid) {
+      jobStatus = "STALLED";
+      isStalled = true;
+      isActivelyProcessing = false;
+      stallReason = "LEASE_EXPIRED";
+      actionableStatusMessage = `Research job stalled in stage ${currentStage}: worker lease expired at ${leaseExpiresAtIso}${
+        workerHealth.status === "OFFLINE" ? " and worker is offline" : ""
+      }.`;
+    } else if (workerHealth.status === "OFFLINE") {
+      jobStatus = "STALLED";
+      isStalled = true;
+      isActivelyProcessing = false;
+      stallReason = "WORKER_OFFLINE";
+      actionableStatusMessage = `Research job stalled in stage ${currentStage}: assigned worker (${
+        jobWorkerId || "unknown"
+      }) is offline.`;
+    } else if (
+      workerHealth.status === "ALIVE" &&
+      workerHealth.workerId === jobWorkerId &&
+      workerHealth.activeJobId &&
+      workerHealth.activeJobId !== job.id
+    ) {
+      jobStatus = "STALLED";
+      isStalled = true;
+      isActivelyProcessing = false;
+      stallReason = "LOST_WORKER_OWNERSHIP";
+      actionableStatusMessage = `Research job lost ownership: worker ${jobWorkerId} is now processing ${workerHealth.activeJobId}.`;
+    } else if (noProgressDurationMs > stallThresholdMs) {
+      jobStatus = "STALLED";
+      isStalled = true;
+      isActivelyProcessing = false;
+      stallReason = "NO_STAGE_PROGRESS";
+      actionableStatusMessage = `Research job stalled in stage ${currentStage}: no stage or heartbeat progress for ${Math.round(
+        noProgressDurationMs / 1000
+      )}s.`;
+    } else {
+      jobStatus = "RUNNING";
+      isActivelyProcessing = true;
+      isStalled = false;
+      stallReason = null;
+      actionableStatusMessage = `Worker ${
+        jobWorkerId || "active"
+      } is actively processing stage ${currentStage} (lease valid until ${
+        leaseExpiresAtIso || "active"
+      }).`;
+    }
+  }
+
+  return {
+    jobId: job.id,
+    jobStatus,
+    rawDbStatus,
+    workerId: jobWorkerId,
+    workerProcessStatus: workerHealth.status,
+    workerOwnsJob,
+    lastHeartbeatAt,
+    leaseExpiresAt: leaseExpiresAtIso,
+    leaseValid,
+    currentStage,
+    stageStartedAt,
+    lastProgressUpdateAt,
+    retryCount,
+    cancellationState,
+    isActivelyProcessing,
+    isStalled,
+    stallReason,
+    actionableStatusMessage,
+  };
+}
+
 /**
  * Retrieves an exact research run by ID for an authorized workspace.
  */
@@ -372,6 +662,8 @@ export async function getKH02ResearchRunById(
   runId: string;
   workspaceId: string;
   status: string;
+  effectiveJobState: KH02EffectiveJobState;
+  liveness: KH02JobLivenessEvidence;
   progress: number;
   stage?: string;
   result: EvergreenLeaderboardResult | null;
@@ -402,27 +694,23 @@ export async function getKH02ResearchRunById(
     } catch {}
   }
 
-  const stage =
-    meta._runtime?.lastProgress?.stage ||
-    (job.status === "COMPLETED"
-      ? "COMPLETED"
-      : job.status === "FAILED"
-      ? "FAILED"
-      : job.status === "RUNNING"
-      ? "RUNNING"
-      : "QUEUED");
+  const workerHealth = await readWorkerHealthSnapshotForJob(db);
+  const liveness = evaluateKH02JobLiveness(job, meta, workerHealth);
+  const stage = liveness.currentStage;
 
   return {
     runId: job.id,
     workspaceId: job.workspaceId,
     status: job.status,
+    effectiveJobState: liveness.jobStatus,
+    liveness,
     progress: job.progress,
     stage,
     result,
-    errorMessage: job.errorMessage || null,
+    errorMessage: job.errorMessage || (liveness.isStalled ? liveness.actionableStatusMessage : null),
     startedAt: job.startedAt ? job.startedAt.toISOString() : null,
     completedAt: job.completedAt ? job.completedAt.toISOString() : null,
-    leaseExpiresAt: job.leaseExpiresAt ? job.leaseExpiresAt.toISOString() : null,
+    leaseExpiresAt: liveness.leaseExpiresAt,
     createdAt: job.createdAt.toISOString(),
   };
 }
@@ -438,6 +726,8 @@ export async function getKH02ActiveResearchRun(
   runId: string;
   workspaceId: string;
   status: string;
+  effectiveJobState: KH02EffectiveJobState;
+  liveness: KH02JobLivenessEvidence;
   progress: number;
   stage: string;
   topic?: string;
@@ -464,14 +754,16 @@ export async function getKH02ActiveResearchRun(
     } catch {}
   }
 
-  const stage =
-    meta._runtime?.lastProgress?.stage ||
-    (activeJob.status === "RUNNING" ? "RUNNING" : "QUEUED");
+  const workerHealth = await readWorkerHealthSnapshotForJob(db);
+  const liveness = evaluateKH02JobLiveness(activeJob, meta, workerHealth);
+  const stage = liveness.currentStage;
 
   return {
     runId: activeJob.id,
     workspaceId: activeJob.workspaceId,
     status: activeJob.status,
+    effectiveJobState: liveness.jobStatus,
+    liveness,
     progress: activeJob.progress,
     stage,
     topic: meta.topic,

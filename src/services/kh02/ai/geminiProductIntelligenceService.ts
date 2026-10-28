@@ -17,6 +17,8 @@ import {
   GeminiProductIntelligenceResult,
   GeminiAITelemetry,
   GeminiObservationInput,
+  GeminiRunBudgetTracker,
+  GeminiRetryTelemetry,
 } from "./aiProductIntelligenceTypes";
 import {
   geminiProductIntelligenceResponseSchema,
@@ -24,13 +26,12 @@ import {
 } from "./geminiProductAnalysisSchema";
 import {
   executeGeminiTaskWithRetry,
-  RouterExecutionResult,
+  createGeminiRunBudgetTracker,
 } from "./geminiModelRouter";
-import { verifyAIEvidence } from "./aiEvidenceVerifier";
+import { verifyAIEvidence, EvidenceVerificationResult } from "./aiEvidenceVerifier";
 import {
-  getCachedAIAnalysis,
+  getCachedAIAnalysisEntry,
   setCachedAIAnalysis,
-  AI_PROMPT_VERSION,
 } from "./aiAnalysisCache";
 import { probeGeminiAuthentication } from "./geminiClient";
 import { discoverGeminiModels } from "./geminiModelDiscoveryService";
@@ -108,27 +109,44 @@ export async function analyzeSingleProductCandidate(
     forcedModelId?: string;
     apiKey?: string;
     timeoutMs?: number;
+    perAttemptTimeoutMs?: number;
+    stageDeadlineAt?: number;
+    jobDeadlineAt?: number;
+    signal?: AbortSignal;
+    budgetTracker?: GeminiRunBudgetTracker;
+    bypassCache?: boolean;
   }
 ): Promise<{
   success: boolean;
   result: GeminiProductIntelligenceResult | null;
+  verification: EvidenceVerificationResult | null;
   modelUsed: string | null;
+  fromCache: boolean;
   exclusionReason: string | null;
   shortlistEligible: boolean;
+  schemaValidationFailed?: boolean;
+  retryTelemetry?: GeminiRetryTelemetry;
+  tokensUsed?: number | null;
   error: string | null;
 }> {
-  // Check cache first
-  const cached = getCachedAIAnalysis(input, options?.forcedModelId || "default");
-  if (cached) {
-    const verified = verifyAIEvidence(input, cached);
-    return {
-      success: true,
-      result: verified.sanitizedResult,
-      modelUsed: "CACHE",
-      exclusionReason: verified.exclusionReason,
-      shortlistEligible: verified.shortlistEligible,
-      error: null,
-    };
+  // Check cache first unless bypassed
+  if (!options?.bypassCache) {
+    const cachedEntry = getCachedAIAnalysisEntry(input, options?.forcedModelId);
+    if (cachedEntry) {
+      const verified = verifyAIEvidence(input, cachedEntry.result);
+      return {
+        success: true,
+        result: verified.sanitizedResult,
+        verification: verified,
+        modelUsed: cachedEntry.actualModelId,
+        fromCache: true,
+        exclusionReason: verified.exclusionReason,
+        shortlistEligible: verified.shortlistEligible,
+        schemaValidationFailed: false,
+        tokensUsed: null,
+        error: null,
+      };
+    }
   }
 
   const promptText = `ANALYZE PRODUCT CANDIDATE:
@@ -158,8 +176,15 @@ Landing URL: ${obs.landingPageUrl || "None"}`
 
 Respond ONLY with JSON matching the required schema.`;
 
+  let observedTokens: number | null = null;
+
   const routerResult = await executeGeminiTaskWithRetry<string>(
-    async (client: GoogleGenAI, modelId: string) => {
+    async (client: GoogleGenAI, modelId: string, attemptSignal?: AbortSignal) => {
+      if (attemptSignal?.aborted) {
+        const err: any = new Error("CANCELED: Attempt aborted before SDK call.");
+        err.category = "CANCELED";
+        throw err;
+      }
       const resp = await client.models.generateContent({
         model: modelId,
         contents: promptText,
@@ -168,8 +193,14 @@ Respond ONLY with JSON matching the required schema.`;
           responseMimeType: "application/json",
           responseSchema: geminiProductIntelligenceResponseSchema,
           temperature: 0.1, // Low temperature for factual precision
+          maxOutputTokens: 1024,
         },
       });
+
+      const totalTokens = (resp as any)?.usageMetadata?.totalTokenCount;
+      if (typeof totalTokens === "number" && totalTokens > 0) {
+        observedTokens = totalTokens;
+      }
 
       const text = resp.text?.trim();
       if (!text) {
@@ -179,7 +210,36 @@ Respond ONLY with JSON matching the required schema.`;
     },
     {
       apiKey: options?.apiKey,
-      timeoutMs: options?.timeoutMs || 25000,
+      timeoutMs: options?.timeoutMs ?? 30000,
+      perAttemptTimeoutMs: options?.perAttemptTimeoutMs ?? 12000,
+      stageDeadlineAt: options?.stageDeadlineAt,
+      jobDeadlineAt: options?.jobDeadlineAt,
+      signal: options?.signal,
+      budgetTracker: options?.budgetTracker,
+      forcedModelList: options?.forcedModelId
+        ? [
+            {
+              modelId: options.forcedModelId,
+              rawName: `models/${options.forcedModelId}`,
+              displayName: options.forcedModelId,
+              description: "",
+              version: "1.0",
+              capabilities: {
+                supportsGenerateContent: true,
+                supportsStructuredOutput: true,
+                supportsVision: true,
+                supportsVideo: false,
+                inputTokenLimit: 100000,
+                outputTokenLimit: 8192,
+                isAvailableToAccount: true,
+                isDeprecatedOrRemoved: false,
+                estimatedCostTier: "FREE",
+              },
+              priorityScore: 100,
+              status: "ELIGIBLE",
+            },
+          ]
+        : undefined,
     }
   );
 
@@ -187,40 +247,62 @@ Respond ONLY with JSON matching the required schema.`;
     return {
       success: false,
       result: null,
-      modelUsed: routerResult.modelUsed,
+      verification: null,
+      modelUsed: null,
+      fromCache: false,
       exclusionReason: "AI analysis unavailable.",
       shortlistEligible: false,
+      schemaValidationFailed: false,
+      retryTelemetry: routerResult.telemetry,
+      tokensUsed: observedTokens,
       error: routerResult.error,
     };
   }
 
-  // Validate structured output
+  // Validate structured output (Section 7.5: Invalid model output returns structured failure and is NEVER cached)
   const validation = validateGeminiProductAnalysisOutput(routerResult.result, input.candidateId);
   if (!validation.success || !validation.data) {
     return {
       success: false,
       result: null,
+      verification: null,
       modelUsed: routerResult.modelUsed,
+      fromCache: false,
       exclusionReason: `AI schema validation failed: ${validation.error}`,
       shortlistEligible: false,
-      error: validation.error,
+      schemaValidationFailed: true,
+      retryTelemetry: routerResult.telemetry,
+      tokensUsed: observedTokens,
+      error: validation.error || "AI schema validation failed",
     };
   }
 
   // Run deterministic evidence verification
   const verification = verifyAIEvidence(input, validation.data);
 
-  // Save to cache
-  if (routerResult.modelUsed) {
-    setCachedAIAnalysis(input, routerResult.modelUsed, verification.sanitizedResult);
+  // Only cache verified analyses without hallucinated refs or quote mismatches (Section 7.5 & 8.2)
+  if (routerResult.modelUsed && verification.verified) {
+    setCachedAIAnalysis(input, routerResult.modelUsed, verification.sanitizedResult, {
+      analysisStatus:
+        verification.evidenceDecision === "ACCEPT"
+          ? "VERIFIED"
+          : verification.evidenceDecision === "ACCEPT_WITH_UNCERTAINTY"
+          ? "ACCEPTED_WITH_UNCERTAINTY"
+          : "REJECTED_ENTITY",
+    });
   }
 
   return {
     success: true,
     result: verification.sanitizedResult,
+    verification,
     modelUsed: routerResult.modelUsed,
+    fromCache: false,
     exclusionReason: verification.exclusionReason,
     shortlistEligible: verification.shortlistEligible,
+    schemaValidationFailed: false,
+    retryTelemetry: routerResult.telemetry,
+    tokensUsed: observedTokens,
     error: null,
   };
 }
@@ -232,7 +314,7 @@ export interface CandidateBatchAnalysisResult {
 }
 
 /**
- * Analyzes a batch of product candidates with Gemini AI.
+ * Analyzes a batch of product candidates with Gemini AI under strict bounded execution budgets.
  * Falls back safely if Gemini is unavailable or credentials are missing.
  */
 export async function analyzeProductCandidatesWithAI(
@@ -242,12 +324,20 @@ export async function analyzeProductCandidatesWithAI(
     topic: string;
     market: string;
     maxConcurrency?: number;
+    stageDeadlineMs?: number;
+    perCandidateDeadlineMs?: number;
+    perAttemptDeadlineMs?: number;
+    maxGlobalRequests?: number;
     signal?: AbortSignal;
   }
 ): Promise<CandidateBatchAnalysisResult> {
-  const modelsUsedSet = new Set<string>();
-  let completed = 0;
+  const successfulModelsSet = new Set<string>();
+  const modelsAttemptedSet = new Set<string>();
+  let attempted = 0;
+  let liveCompleted = 0;
+  let cachedReused = 0;
   let failed = 0;
+  let skipped = 0;
   let physical = 0;
   let services = 0;
   let content = 0;
@@ -255,11 +345,30 @@ export async function analyzeProductCandidatesWithAI(
   let unknown = 0;
   let contradictions = 0;
   let invalidOutputs = 0;
+  let totalTokensObserved = 0;
+  let tokensReportedCount = 0;
+
+  const stageDeadlineMs = options.stageDeadlineMs ?? 45_000;
+  const stageDeadlineAt = Date.now() + stageDeadlineMs;
+  const budgetTracker = createGeminiRunBudgetTracker({
+    maxGlobalRequests: options.maxGlobalRequests ?? 25,
+    maxGlobalTokens: 100_000,
+  });
+
+  // In Vitest test runs, do not consume live external Gemini quota unless explicitly authorized
+  const isVitestRun =
+    (process.env.VITEST === "true" || process.env.NODE_ENV === "test") &&
+    process.env.SWAI_ALLOW_LIVE_GEMINI_IN_VITEST !== "true";
 
   // Probe authentication first
-  const authProbe = await probeGeminiAuthentication();
+  const authProbe = isVitestRun
+    ? {
+        authenticated: false,
+        authStatus: "PROVIDER_UNAVAILABLE" as const,
+        errorMessage: "Live Gemini network calls skipped in automated test environment.",
+      }
+    : await probeGeminiAuthentication();
   if (!authProbe.authenticated) {
-    // Return candidates untouched with UNAVAILABLE telemetry
     const telemetry: GeminiAITelemetry = {
       provider: "GOOGLE_GEMINI",
       aiStatus: "UNAVAILABLE",
@@ -269,10 +378,24 @@ export async function analyzeProductCandidatesWithAI(
       primaryModelId: null,
       fallbackModels: [],
       actualModelUsed: null,
+      successfulModelIds: [],
+      modelsAttempted: [],
       fallbackUsed: false,
+      fallbackTransitionsCount: 0,
       totalAnalysesAttempted: 0,
       totalAnalysesCompleted: 0,
+      liveAnalysesCompleted: 0,
+      cachedAnalysesReused: 0,
       totalAnalysesFailed: 0,
+      skippedAnalysesCount: 0,
+      unavailableAnalysesCount: candidates.length,
+      requestsStarted: 0,
+      requestsCompleted: 0,
+      requestsFailed: 0,
+      retriesExecuted: 0,
+      tokensConsumed: null,
+      actualBillableUsage: null,
+      globalBudgetRemaining: budgetTracker.getRemainingRequests(),
       physicalProductsCount: 0,
       servicesRejectedCount: 0,
       contentRejectedCount: 0,
@@ -280,6 +403,7 @@ export async function analyzeProductCandidatesWithAI(
       unknownClassificationsCount: 0,
       evidenceContradictionsCount: 0,
       invalidAIOutputsRejectedCount: 0,
+      lastError: authProbe.errorMessage,
     };
 
     return {
@@ -298,11 +422,33 @@ export async function analyzeProductCandidatesWithAI(
   const updatedCandidates: DiscoveredProductCandidate[] = [];
 
   for (let i = 0; i < candidates.length; i += concurrency) {
-    if (options.signal?.aborted) break;
-
     const chunk = candidates.slice(i, i + concurrency);
+
+    if (
+      options.signal?.aborted ||
+      Date.now() >= stageDeadlineAt ||
+      !budgetTracker.canStartRequest()
+    ) {
+      for (const unanalyzed of chunk) {
+        skipped++;
+        updatedCandidates.push(unanalyzed);
+      }
+      continue;
+    }
+
     await Promise.all(
       chunk.map(async (candidate) => {
+        if (
+          options.signal?.aborted ||
+          Date.now() >= stageDeadlineAt ||
+          !budgetTracker.canStartRequest()
+        ) {
+          skipped++;
+          updatedCandidates.push(candidate);
+          return;
+        }
+
+        attempted++;
         const input = buildAIAnalysisInput(
           candidate,
           options.researchRunId,
@@ -310,12 +456,42 @@ export async function analyzeProductCandidatesWithAI(
           options.market
         );
 
-        const analysis = await analyzeSingleProductCandidate(input);
+        const analysis = await analyzeSingleProductCandidate(input, {
+          timeoutMs: options.perCandidateDeadlineMs ?? 20000,
+          perAttemptTimeoutMs: options.perAttemptDeadlineMs ?? 10000,
+          stageDeadlineAt,
+          signal: options.signal,
+          budgetTracker,
+        });
+
+        if (analysis.retryTelemetry?.modelsAttempted) {
+          for (const m of analysis.retryTelemetry.modelsAttempted) {
+            modelsAttemptedSet.add(m);
+          }
+        }
+
+        if (typeof analysis.tokensUsed === "number" && analysis.tokensUsed > 0) {
+          totalTokensObserved += analysis.tokensUsed;
+          tokensReportedCount++;
+        }
 
         if (analysis.success && analysis.result) {
-          completed++;
-          if (analysis.modelUsed && analysis.modelUsed !== "CACHE") {
-            modelsUsedSet.add(analysis.modelUsed);
+          if (analysis.fromCache) {
+            cachedReused++;
+          } else {
+            liveCompleted++;
+            if (analysis.modelUsed) {
+              successfulModelsSet.add(analysis.modelUsed);
+            }
+          }
+
+          if (
+            analysis.verification &&
+            (analysis.verification.contradictions.length > 0 ||
+              analysis.verification.hallucinatedSourceRefs.length > 0 ||
+              analysis.verification.quoteMismatches.length > 0)
+          ) {
+            contradictions++;
           }
 
           const entityType = analysis.result.commercialEntityType;
@@ -325,7 +501,7 @@ export async function analyzeProductCandidatesWithAI(
           else if (entityType === "INSURANCE" || entityType === "LEAD_GENERATION") insurance++;
           else unknown++;
 
-          // Attach AI insights to candidate
+          // Attach AI insights to candidate without overwriting authoritative merchant product names
           candidate.category = analysis.result.suggestedProductType || candidate.category;
           if (analysis.result.suggestedProductName && !candidate.canonicalProductName) {
             candidate.canonicalProductName = analysis.result.suggestedProductName;
@@ -336,20 +512,29 @@ export async function analyzeProductCandidatesWithAI(
             candidate.relevanceStatus = "IRRELEVANT";
             candidate.relevanceScore = Math.min(candidate.relevanceScore || 0, 0.2);
             candidate.relevanceReasons = candidate.relevanceReasons || [];
-            candidate.relevanceReasons.push("Gemini AI evaluated candidate as UNRELATED to requested niche.");
+            candidate.relevanceReasons.push(
+              "Gemini AI evaluated candidate as UNRELATED to requested niche."
+            );
           }
 
-          // Attach custom AI property for pipeline gating
+          // Attach custom AI & verification properties for pipeline gating
           (candidate as any).aiIntelligence = analysis.result;
+          (candidate as any).aiVerification = analysis.verification;
           (candidate as any).aiShortlistEligible = analysis.shortlistEligible;
           (candidate as any).aiExclusionReason = analysis.exclusionReason;
+          (candidate as any).aiFromCache = analysis.fromCache;
+          (candidate as any).aiModelUsed = analysis.modelUsed;
 
           if (!analysis.shortlistEligible) {
             (candidate as any).isEligibleAsEvergreenWinner = false;
           }
         } else {
           failed++;
-          if (analysis.error?.includes("schema")) invalidOutputs++;
+          if (analysis.schemaValidationFailed || analysis.error?.toLowerCase().includes("schema")) {
+            invalidOutputs++;
+          }
+          (candidate as any).aiShortlistEligible = undefined;
+          (candidate as any).aiExclusionReason = analysis.exclusionReason || analysis.error;
         }
 
         updatedCandidates.push(candidate);
@@ -357,22 +542,51 @@ export async function analyzeProductCandidatesWithAI(
     );
   }
 
-  const actualModelUsed = Array.from(modelsUsedSet)[0] || primaryModel;
-  const fallbackUsed = Array.from(modelsUsedSet).some((m) => m !== primaryModel);
+  const totalCompleted = liveCompleted + cachedReused;
+  const successfulModels = Array.from(successfulModelsSet);
+  const modelsAttempted = Array.from(modelsAttemptedSet);
+  // Section 8.3: Avoid reporting the primary model as actualModelUsed when no model actually succeeded!
+  const actualModelUsed = successfulModels[0] || null;
+  const fallbackUsed =
+    successfulModels.some((m) => m !== primaryModel) ||
+    budgetTracker.fallbackTransitions > 0;
+
+  let aiStatus: GeminiAITelemetry["aiStatus"] = "UNAVAILABLE";
+  if (options.signal?.aborted) {
+    aiStatus = totalCompleted > 0 ? "PARTIAL" : "CANCELED";
+  } else if (totalCompleted > 0) {
+    aiStatus = failed === 0 && skipped === 0 ? "COMPLETED" : "PARTIAL";
+  } else if (attempted > 0 && failed > 0) {
+    aiStatus = "UNAVAILABLE";
+  }
 
   const telemetry: GeminiAITelemetry = {
     provider: "GOOGLE_GEMINI",
-    aiStatus: completed > 0 ? (failed === 0 ? "COMPLETED" : "PARTIAL") : "UNAVAILABLE",
+    aiStatus,
     authStatus: authProbe.authStatus,
     modelsDiscoveredCount: discovery.discovered.length,
     eligibleModelsCount: discovery.eligible.length,
     primaryModelId: primaryModel,
     fallbackModels,
     actualModelUsed,
+    successfulModelIds: successfulModels,
+    modelsAttempted,
     fallbackUsed,
-    totalAnalysesAttempted: candidates.length,
-    totalAnalysesCompleted: completed,
+    fallbackTransitionsCount: budgetTracker.fallbackTransitions,
+    totalAnalysesAttempted: attempted,
+    totalAnalysesCompleted: totalCompleted,
+    liveAnalysesCompleted: liveCompleted,
+    cachedAnalysesReused: cachedReused,
     totalAnalysesFailed: failed,
+    skippedAnalysesCount: skipped,
+    unavailableAnalysesCount: totalCompleted === 0 ? candidates.length : 0,
+    requestsStarted: budgetTracker.requestsStarted,
+    requestsCompleted: budgetTracker.requestsCompleted,
+    requestsFailed: budgetTracker.requestsFailed,
+    retriesExecuted: budgetTracker.retriesExecuted,
+    tokensConsumed: tokensReportedCount > 0 ? totalTokensObserved : null,
+    actualBillableUsage: null,
+    globalBudgetRemaining: budgetTracker.getRemainingRequests(),
     physicalProductsCount: physical,
     servicesRejectedCount: services,
     contentRejectedCount: content,
@@ -385,6 +599,6 @@ export async function analyzeProductCandidatesWithAI(
   return {
     analyzedCandidates: updatedCandidates,
     telemetry,
-    modelsUsed: Array.from(modelsUsedSet),
+    modelsUsed: successfulModels,
   };
 }

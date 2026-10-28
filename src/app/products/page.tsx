@@ -147,6 +147,9 @@ export default function ProductsPage() {
   const [activeRunLookback, setActiveRunLookback] = useState<number>(90);
   const [runStage, setRunStage] = useState<string>("QUEUED");
   const [runProgress, setRunProgress] = useState<number>(0);
+  const [effectiveJobState, setEffectiveJobState] = useState<string | null>(null);
+  const [pollingState, setPollingState] = useState<"IDLE" | "POLLING_ACTIVE" | "POLLING_TIMED_OUT" | "POLLING_ERROR">("IDLE");
+  const [jobLiveness, setJobLiveness] = useState<any | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isLongRunningNotice, setIsLongRunningNotice] = useState<boolean>(false);
   const [workerStatus, setWorkerStatus] = useState<string>("UNKNOWN");
@@ -164,14 +167,20 @@ export default function ProductsPage() {
   const [storedProducts, setStoredProducts] = useState<any[]>([]);
   const [runtimeVersion, setRuntimeVersion] = useState<any | null>(null);
 
+  const compileTimeFrontendSha = process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA || "";
+  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.1";
+
   useEffect(() => {
-    fetch("/api/v1/kh02/version")
+    const params = new URLSearchParams();
+    if (compileTimeFrontendSha) params.set("frontendSha", compileTimeFrontendSha);
+    if (compileTimeReleaseVersion) params.set("frontendVersion", compileTimeReleaseVersion);
+    fetch(`/api/v1/kh02/version?${params.toString()}`)
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) setRuntimeVersion(json.data);
       })
       .catch(() => {});
-  }, []);
+  }, [compileTimeFrontendSha, compileTimeReleaseVersion]);
   const [storedLoading, setStoredLoading] = useState(false);
   const [storedSearch, setStoredSearch] = useState("");
   const [storedCategory, setStoredCategory] = useState("ALL");
@@ -316,13 +325,15 @@ export default function ProductsPage() {
   const pollJobExecution = async (runId: string) => {
     currentTrackingRunIdRef.current = runId;
     setActiveRunId(runId);
+    setPollingState("POLLING_ACTIVE");
     if (typeof window !== "undefined") {
       sessionStorage.setItem("kh02_active_run_id", runId);
     }
 
     let attempts = 0;
-    const maxAttempts = 300; // Resilient 5+ minute tracking window
+    const maxAttempts = 120; // Bounded ~3 minute active polling window per check
     const startTime = Date.now();
+    let latestLiveness: any = null;
 
     while (attempts < maxAttempts) {
       if (currentTrackingRunIdRef.current !== runId) {
@@ -355,11 +366,19 @@ export default function ProductsPage() {
           const runJson = await runRes.json();
           const jobData = runJson.data;
           const status = jobData?.status;
+          const effState = jobData?.effectiveJobState || status;
           const stage = jobData?.stage || status;
           const progress = jobData?.progress || 0;
+          const liveness = jobData?.liveness || null;
 
+          latestLiveness = liveness;
           setRunStage(stage);
           setRunProgress(progress);
+          setEffectiveJobState(effState);
+          setJobLiveness(liveness);
+          if (liveness?.workerStatus) {
+            setWorkerStatus(liveness.workerStatus);
+          }
 
           if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
             if (currentTrackingRunIdRef.current === runId) {
@@ -373,33 +392,60 @@ export default function ProductsPage() {
                 sessionStorage.removeItem("kh02_active_run_id");
               }
               setActiveRunId(null);
+              setEffectiveJobState(status);
+              setPollingState("IDLE");
               setIsResearching(false);
               setIsLongRunningNotice(false);
+              setResearchError(null);
             }
             return;
-          } else if (status === "FAILED") {
+          } else if (status === "FAILED" || status === "CANCELED" || effState === "FAILED" || effState === "CANCELED") {
             if (typeof window !== "undefined") {
               sessionStorage.removeItem("kh02_active_run_id");
             }
-            setActiveRunId(null);
+            setEffectiveJobState(effState);
+            setPollingState("IDLE");
             setIsResearching(false);
             setIsLongRunningNotice(false);
-            throw new Error(jobData?.errorMessage || "Background research job failed.");
+            throw new Error(
+              jobData?.errorMessage ||
+                liveness?.actionableStatusMessage ||
+                "Background research job failed."
+            );
+          } else if (effState === "STALLED" || liveness?.isStalled) {
+            // Evidence-backed stall detected: do NOT claim worker is actively processing
+            setEffectiveJobState("STALLED");
+            setPollingState("IDLE");
+            setIsResearching(false);
+            setIsLongRunningNotice(false);
+            setResearchError(
+              liveness?.actionableStatusMessage ||
+                `Research job ${runId} is stalled (${liveness?.stallReason || "no recent progress"}). You can start a new research run or check worker health.`
+            );
+            return;
           }
         }
       } catch (err: any) {
-        if (err.message && err.message.includes("Background research job failed")) {
+        if (err.message && (err.message.includes("Background research job failed") || err.message.includes("stalled") || err.message.includes("abandoned") || err.message.includes("deadline"))) {
           throw err;
         }
-        // Transient network glitches do not fail the research execution
+        setPollingState("POLLING_ERROR");
       }
     }
 
-    // After 300 attempts (~7.5 minutes), do not treat timeout as backend failure
+    // Browser polling window timed out — report truthfully based on actual liveness evidence
+    setPollingState("POLLING_TIMED_OUT");
     setIsLongRunningNotice(true);
-    setResearchError(
-      "Research is taking longer than expected. The background worker is still actively processing your job. You can reload this page anytime to check for results."
-    );
+    if (latestLiveness?.isActivelyProcessing) {
+      setResearchError(
+        `Browser polling window timed out for run ${runId}, while worker ${latestLiveness.workerId || "active"} still holds a valid lease (stage: ${latestLiveness.stage || runStage}, ${latestLiveness.progress ?? runProgress}%). Click "Resume Polling" or reload to check completion.`
+      );
+    } else {
+      setResearchError(
+        latestLiveness?.actionableStatusMessage ||
+          `Browser polling window timed out for run ${runId}. Active worker processing is not verified (${latestLiveness?.stallReason || "no active lease"}). You can start a new research run or check worker status.`
+      );
+    }
     setIsResearching(false);
   };
 
@@ -502,7 +548,11 @@ export default function ProductsPage() {
           const json = await res.json();
           if (json.success && json.data) {
             const active = json.data;
+            const effState = active.effectiveJobState || active.status;
+            const liveness = active.liveness || null;
             setActiveRunId(active.runId);
+            setEffectiveJobState(effState);
+            setJobLiveness(liveness);
             if (active.topic) {
               setTopic(active.topic);
               setActiveRunTopic(active.topic);
@@ -513,6 +563,14 @@ export default function ProductsPage() {
             }
             setRunStage(active.stage || active.status);
             setRunProgress(active.progress || 0);
+            if (effState === "STALLED" || liveness?.isStalled) {
+              setIsResearching(false);
+              setResearchError(
+                liveness?.actionableStatusMessage ||
+                  `Previous research job ${active.runId} is stalled (${liveness?.stallReason || "lease expired"}). You can start a new research run.`
+              );
+              return;
+            }
             setIsResearching(true);
             pollJobExecution(active.runId);
             return;
@@ -526,9 +584,24 @@ export default function ProductsPage() {
             const runRes = await fetch(`/api/v1/kh02/research/runs/${savedRunId}`);
             if (runRes.ok) {
               const runJson = await runRes.json();
-              const status = runJson.data?.status;
-              if (status === "PENDING" || status === "RUNNING") {
+              const jobData = runJson.data;
+              const status = jobData?.status;
+              const effState = jobData?.effectiveJobState || status;
+              const liveness = jobData?.liveness || null;
+              if (effState === "STALLED" || liveness?.isStalled) {
+                sessionStorage.removeItem("kh02_active_run_id");
                 setActiveRunId(savedRunId);
+                setEffectiveJobState("STALLED");
+                setJobLiveness(liveness);
+                setIsResearching(false);
+                setResearchError(
+                  liveness?.actionableStatusMessage ||
+                    `Previous research job ${savedRunId} is stalled.`
+                );
+              } else if (status === "PENDING" || status === "RUNNING") {
+                setActiveRunId(savedRunId);
+                setEffectiveJobState(effState);
+                setJobLiveness(liveness);
                 setIsResearching(true);
                 pollJobExecution(savedRunId);
               } else {
@@ -745,11 +818,34 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>SWAI KH-02 V12.4 — AI-Powered Product Intelligence</span>
+                <span>SWAI KH-02 V12.4.1 — AI-Powered Product Intelligence</span>
               </div>
-              {runtimeVersion?.buildSha && (
-                <span data-testid="kh02-runtime-version-badge" className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                  SHA: {runtimeVersion.buildSha.slice(0, 7)}
+              {(runtimeVersion?.frontendBuildSha || runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || compileTimeFrontendSha) && (
+                <span
+                  data-testid="kh02-runtime-version-badge"
+                  data-release-version={runtimeVersion?.releaseVersion || compileTimeReleaseVersion}
+                  data-frontend-sha={runtimeVersion?.frontendBuildSha || compileTimeFrontendSha || ""}
+                  data-backend-sha={runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || ""}
+                  data-worker-sha={runtimeVersion?.workerBuildSha || ""}
+                  className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800"
+                >
+                  SHA: {(runtimeVersion?.frontendBuildSha || runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || compileTimeFrontendSha).slice(0, 7)}
+                </span>
+              )}
+              {runtimeVersion?.runtimeStatus && (
+                <span
+                  data-testid="kh02-runtime-parity-badge"
+                  data-runtime-status={runtimeVersion.runtimeStatus}
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                    runtimeVersion.runtimeStatus === "MATCHED"
+                      ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                      : runtimeVersion.runtimeStatus === "WORKER_OFFLINE"
+                      ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                      : "bg-rose-950/60 text-rose-300 border-rose-700/50"
+                  }`}
+                  title={runtimeVersion.diagnostics?.join(" | ") || ""}
+                >
+                  Runtime: {runtimeVersion.runtimeStatus}
                 </span>
               )}
             </div>
@@ -821,9 +917,10 @@ export default function ProductsPage() {
               {[30, 90, 180, 365].map((days) => (
                 <button
                   key={days}
+                  type="button"
+                  data-testid={`kh02-lookback-${days}`}
                   onClick={() => {
                     setLookbackDays(days);
-                    executeResearch(topic, days);
                   }}
                   className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                     lookbackDays === days
@@ -1264,11 +1361,54 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* Error Notification */}
+        {/* Error / Stalled / Polling Timeout Notification */}
         {researchError && (
-          <div className="p-4 rounded-xl bg-red-950/40 border border-red-800/40 text-sm text-red-300 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
-            <span>{researchError}</span>
+          <div
+            data-testid="kh02-job-status-banner"
+            data-effective-job-state={effectiveJobState || "ERROR"}
+            data-polling-state={pollingState}
+            className="p-4 rounded-xl bg-red-950/40 border border-red-800/40 text-sm text-red-300 flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+              <span>{researchError}</span>
+            </div>
+            {activeRunId && (pollingState === "POLLING_TIMED_OUT" || effectiveJobState === "STALLED") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setResearchError(null);
+                  setIsResearching(true);
+                  pollJobExecution(activeRunId);
+                }}
+                className="px-3 py-1 rounded-lg bg-red-900/60 hover:bg-red-800 text-xs text-red-100 font-semibold shrink-0 border border-red-600/40"
+              >
+                Check Status
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Historical Snapshot Notice when a newer run is active, stalled, or failed */}
+        {leaderboard && activeRunId && leaderboard.researchRunId !== activeRunId && (
+          <div
+            data-testid="kh02-last-completed-research-banner"
+            data-snapshot-run-id={leaderboard.researchRunId}
+            data-active-run-id={activeRunId}
+            className="p-3.5 rounded-xl bg-amber-950/50 border border-amber-500/40 text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+          >
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="font-bold uppercase tracking-wide text-amber-300">
+                LAST COMPLETED RESEARCH
+              </span>
+              <span className="text-amber-100">
+                — Showing saved snapshot for topic &quot;{leaderboard.topic}&quot; while job <code className="font-mono text-amber-300">{activeRunId}</code> is {effectiveJobState || (isResearching ? "RUNNING" : "STALLED")}.
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-amber-300/90 shrink-0">
+              Snapshot ID: {leaderboard.researchRunId} {leaderboard.generatedAt ? `· ${new Date(leaderboard.generatedAt).toLocaleString()}` : ""}
+            </div>
           </div>
         )}
 
@@ -1297,8 +1437,12 @@ export default function ProductsPage() {
                       <span>{leaderboard.totalCandidatesDiscovered} candidate groups discovered</span>
                     )}
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                    Formula V{leaderboard.formulaVersion}
+                  <div
+                    data-testid="kh02-authoritative-run-meta"
+                    data-research-run-id={leaderboard.researchRunId}
+                    className="text-[10px] text-slate-500 font-mono mt-0.5"
+                  >
+                    Run: {leaderboard.researchRunId} · Formula V{leaderboard.formulaVersion}
                   </div>
                 </div>
               )}

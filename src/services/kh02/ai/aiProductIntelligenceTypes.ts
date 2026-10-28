@@ -26,6 +26,30 @@ export type NicheRelevanceLevel =
   | "UNRELATED"
   | "UNKNOWN";
 
+export type ProductRealityStatus =
+  | "VERIFIED_PHYSICAL_PRODUCT"
+  | "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
+  | "NON_PHYSICAL"
+  | "UNRESOLVED"
+  | "REJECTED";
+
+export type SourcePageClassification =
+  | "ACTUAL_PRODUCT_PAGE"
+  | "COLLECTION_PAGE"
+  | "HOMEPAGE"
+  | "SERVICE_PAGE"
+  | "ARTICLE_PAGE"
+  | "INSURANCE_PAGE"
+  | "LEAD_GENERATION_PAGE"
+  | "CAMPAIGN_PAGE"
+  | "UNKNOWN_PAGE";
+
+export type EvidenceDecision =
+  | "ACCEPT"
+  | "ACCEPT_WITH_UNCERTAINTY"
+  | "REJECT"
+  | "NEEDS_REVIEW";
+
 export interface DirectlyObservedClaim {
   claim: string;
   sourceRef: string;
@@ -100,12 +124,35 @@ export interface GeminiModelDescriptor {
   status: "ELIGIBLE" | "UNAVAILABLE" | "OVERLOADED" | "EXHAUSTED" | "INELIGIBLE";
 }
 
+export interface GeminiRunBudgetTracker {
+  maxGlobalRequests: number;
+  maxGlobalTokens: number;
+  requestsStarted: number;
+  requestsCompleted: number;
+  requestsFailed: number;
+  retriesExecuted: number;
+  fallbackTransitions: number;
+  tokensConsumed: number;
+  tokensReportedCount: number;
+  canStartRequest: () => boolean;
+  recordRequestStart: () => boolean;
+  recordRequestEnd: (success: boolean, tokensUsed?: number | null) => void;
+  recordRetry: () => void;
+  recordFallback: () => void;
+  getRemainingRequests: () => number;
+}
+
 export interface GeminiRouterOptions {
-  maxRetriesPerModel?: number; // default 3
+  maxRetriesPerModel?: number; // default 3 (1 initial + 3 retries = 4 total per model)
   maxFallbackModels?: number; // default 2
   retryBaseDelayMs?: number; // default 1000ms
   maxRetryDelayMs?: number; // default 8000ms
-  timeoutMs?: number; // default 30000ms
+  timeoutMs?: number; // per-candidate deadline (default 25000ms)
+  perAttemptTimeoutMs?: number; // per-attempt deadline (default 10000ms)
+  stageDeadlineAt?: number; // overall stage deadline epoch ms
+  jobDeadlineAt?: number; // overall job deadline epoch ms
+  signal?: AbortSignal; // cancellation propagation
+  budgetTracker?: GeminiRunBudgetTracker;
   maxConcurrentRequests?: number; // default 2
   apiKey?: string;
   forcedModelList?: GeminiModelDescriptor[];
@@ -119,6 +166,7 @@ export interface GeminiAttemptRecord {
   errorMessage?: string;
   delayMs?: number;
   durationMs: number;
+  tokensUsed?: number | null;
   timestamp: string;
 }
 
@@ -132,27 +180,49 @@ export interface GeminiModelExecutionSummary {
 
 export interface GeminiRetryTelemetry {
   totalAttempts: number;
+  retriesExecuted?: number;
+  requestsStarted?: number;
+  requestsCompleted?: number;
+  requestsFailed?: number;
   modelsAttempted: string[];
   successfulModelId: string | null;
   fallbackCount: number;
   executionHistory: GeminiModelExecutionSummary[];
   circuitBreakerTriggered: boolean;
+  canceled?: boolean;
+  deadlineExceeded?: boolean;
+  budgetExhausted?: boolean;
+  tokensConsumed?: number | null;
   totalDurationMs: number;
 }
 
 export interface GeminiAITelemetry {
   provider: "GOOGLE_GEMINI";
-  aiStatus: "COMPLETED" | "PARTIAL" | "UNAVAILABLE" | "SKIPPED";
+  aiStatus: "COMPLETED" | "PARTIAL" | "DEGRADED" | "UNAVAILABLE" | "SKIPPED" | "CANCELED" | "FAILED";
   authStatus: "KEY_NOT_FOUND" | "KEY_PRESENT" | "AUTHENTICATED" | "PERMISSION_DENIED" | "QUOTA_UNAVAILABLE" | "PROVIDER_UNAVAILABLE";
   modelsDiscoveredCount: number;
   eligibleModelsCount: number;
   primaryModelId: string | null;
   fallbackModels: string[];
   actualModelUsed: string | null;
+  successfulModelIds?: string[];
+  modelsAttempted?: string[];
   fallbackUsed: boolean;
+  fallbackTransitionsCount?: number;
   totalAnalysesAttempted: number;
   totalAnalysesCompleted: number;
+  liveAnalysesCompleted?: number;
+  cachedAnalysesReused?: number;
   totalAnalysesFailed: number;
+  skippedAnalysesCount?: number;
+  unavailableAnalysesCount?: number;
+  requestsStarted?: number;
+  requestsCompleted?: number;
+  requestsFailed?: number;
+  retriesExecuted?: number;
+  tokensConsumed?: number | null;
+  actualBillableUsage?: number | null;
+  globalBudgetRemaining?: number;
   physicalProductsCount: number;
   servicesRejectedCount: number;
   contentRejectedCount: number;
@@ -163,6 +233,7 @@ export interface GeminiAITelemetry {
   retryTelemetry?: GeminiRetryTelemetry;
   totalInputTokens?: number;
   totalOutputTokens?: number;
+  lastError?: string | null;
 }
 
 export interface HistoricalBacktestRecord {
@@ -174,15 +245,17 @@ export interface HistoricalBacktestRecord {
   landingPageUrl: string;
   merchantTitle?: string;
   merchantDescription?: string;
-  // Human ground truth labels
+  // Human ground truth labels (stripped before prediction)
   goldCommercialEntityType: CommercialEntityType;
   goldNicheRelevance: NicheRelevanceLevel;
   goldIsLikelySellableProduct: boolean;
   goldExpectedShortlistEligibility: boolean;
   goldExclusionReason?: string;
-  // Metadata
+  // Metadata & Provenance
   isCriticalRegressionCase?: boolean; // e.g. "ER Vet bill cost factors"
   provenance: string;
+  labelProvenance?: "CURATED_FIXTURE_EXPECTATION" | "INDEPENDENT_HISTORICAL_REVIEW";
+  split?: "DEV" | "HOLDOUT";
 }
 
 export interface HistoricalBacktestPrediction {
@@ -192,6 +265,7 @@ export interface HistoricalBacktestPrediction {
   aiResult?: GeminiProductIntelligenceResult | null;
   deterministicVerified: boolean;
   finalShortlistEligible: boolean;
+  productRealityStatus?: ProductRealityStatus;
   exclusionReason?: string | null;
   correctClassification: boolean;
   correctShortlistDecision: boolean;
@@ -200,18 +274,26 @@ export interface HistoricalBacktestPrediction {
 
 export interface HistoricalBacktestMetrics {
   totalRecords: number;
+  tp?: number;
+  fp?: number;
+  tn?: number;
+  fn?: number;
   physicalProductPrecision: number;
   physicalProductRecall: number;
+  physicalProductF1?: number;
+  specificity?: number;
+  falsePositiveRate?: number;
   falseProductPositiveCount: number;
   serviceToProductFalsePositives: number;
   contentToProductFalsePositives: number;
   nicheRelevancePrecision: number;
   nicheRelevanceRecall: number;
+  nicheRelevanceAccuracy?: number;
   identityAccuracy: number;
   shortlistEligibilityAccuracy: number;
   criticalFalsePositivesCount: number; // MUST BE 0
   aiAbstentionRate: number;
-  modelFallbackSuccessRate: number;
+  modelFallbackSuccessRate: number | null;
   averageLatencyMs: number;
   totalRealApiCalls: number;
   estimatedCostCredits: number;
@@ -221,13 +303,25 @@ export interface HistoricalBacktestReport {
   datasetVersion: string;
   datasetHash: string;
   evaluatedAt: string;
-  executionMode: "MODE_A_CONTRACT_REPLAY" | "MODE_B_HISTORICAL_GOLD" | "MODE_C_AUTHORIZED_LIVE" | "MODE_D_E2E_RESEARCH";
+  executionMode:
+    | "MODE_A_CONTRACT_FIXTURES"
+    | "MODE_B_HISTORICAL_BLIND"
+    | "MODE_C_REAL_GEMINI"
+    | "MODE_A_CONTRACT_REPLAY"
+    | "MODE_B_HISTORICAL_GOLD"
+    | "MODE_C_AUTHORIZED_LIVE"
+    | "MODE_D_E2E_RESEARCH";
   baselineMetrics: {
     falsePositiveCount: number;
     shortlistAccuracy: number;
     serviceToProductFalsePositives: number;
   };
   hybridAiMetrics: HistoricalBacktestMetrics;
+  holdoutMetrics?: {
+    totalHoldoutRecords: number;
+    shortlistEligibilityAccuracy: number;
+    falsePositiveCount: number;
+  };
   criticalRegressionPassed: boolean;
   predictions: HistoricalBacktestPrediction[];
   summary: string;

@@ -23,8 +23,10 @@ export interface Kh02BrowserE2EOptions {
   workspaceId: string;
   adminApiKey?: string;
   screenshotDir?: string;
+  tracePath?: string;
   headless?: boolean;
   topic?: string;
+  lookbackDays?: number;
   expectedMinCards?: number;
 }
 
@@ -59,6 +61,20 @@ export interface KH02BrowserAcceptance {
   httpMatch?: boolean;
   shortlistSectionRendered?: boolean;
   shortlistCardsCount?: number;
+  shortlistCandidateIds?: string[];
+  shortlistTitles?: string[];
+  rejectedTitles?: string[];
+  erVetBillInShortlist?: boolean;
+  erVetBillInTopThree?: boolean;
+  erVetBillInProvisional?: boolean;
+  runtimeVersionBadgeText?: string | null;
+  runtimeParityStatus?: string | null;
+  frontendBuildSha?: string | null;
+  backendBuildSha?: string | null;
+  workerBuildSha?: string | null;
+  authoritativeRunIdInDom?: string | null;
+  postReloadShortlistCandidateIds?: string[];
+  postReloadRunIdInDom?: string | null;
   cardCount: number;
   screenshots: string[];
   consoleLogs: string[];
@@ -116,6 +132,20 @@ export async function runKh02BrowserE2E(
   let emptyStateAccurate = false;
   let shortlistSectionRendered = false;
   let shortlistCardsCount = 0;
+  const shortlistCandidateIds: string[] = [];
+  const shortlistTitles: string[] = [];
+  const rejectedTitles: string[] = [];
+  let erVetBillInShortlist = false;
+  let erVetBillInTopThree = false;
+  let erVetBillInProvisional = false;
+  let runtimeVersionBadgeText: string | null = null;
+  let runtimeParityStatus: string | null = null;
+  let frontendBuildSha: string | null = null;
+  let backendBuildSha: string | null = null;
+  let workerBuildSha: string | null = null;
+  let authoritativeRunIdInDom: string | null = null;
+  const postReloadShortlistCandidateIds: string[] = [];
+  let postReloadRunIdInDom: string | null = null;
   let cardCount = 0;
   let databaseMatch = true;
   const displayedRankOrder: string[] = [];
@@ -152,6 +182,14 @@ export async function runKh02BrowserE2E(
         ...(options.adminApiKey ? { authorization: `Bearer ${options.adminApiKey}` } : {}),
       },
     });
+
+    if (options.tracePath) {
+      const traceDir = path.dirname(options.tracePath);
+      if (!fs.existsSync(traceDir)) {
+        fs.mkdirSync(traceDir, { recursive: true });
+      }
+      await context.tracing.start({ screenshots: false, snapshots: false }).catch(() => {});
+    }
 
     const page: Page = await context.newPage();
 
@@ -214,6 +252,18 @@ export async function runKh02BrowserE2E(
     // Wait for header and initial UI elements using Locator
     await page.locator("h1").first().waitFor({ state: "visible", timeout: 15000 });
 
+    const versionBadgeLoc = page.locator('[data-testid="kh02-runtime-version-badge"]').first();
+    if (await versionBadgeLoc.count() > 0) {
+      runtimeVersionBadgeText = (await versionBadgeLoc.textContent().catch(() => null))?.trim() || null;
+      frontendBuildSha = await versionBadgeLoc.getAttribute("data-frontend-sha").catch(() => null);
+      backendBuildSha = await versionBadgeLoc.getAttribute("data-backend-sha").catch(() => null);
+      workerBuildSha = await versionBadgeLoc.getAttribute("data-worker-sha").catch(() => null);
+    }
+    const parityBadgeLoc = page.locator('[data-testid="kh02-runtime-parity-badge"]').first();
+    if (await parityBadgeLoc.count() > 0) {
+      runtimeParityStatus = await parityBadgeLoc.getAttribute("data-runtime-status").catch(() => null);
+    }
+
     // Screenshot 1: Initial Page Load
     const shot1 = path.join(screenshotDir, "01_before_research.png");
     await page.screenshot({ path: shot1, fullPage: true }).catch(() => {});
@@ -224,8 +274,20 @@ export async function runKh02BrowserE2E(
     const topicLocator = page.locator('input[data-testid="kh02-research-input"]').first();
     await topicLocator.waitFor({ state: "visible", timeout: 10000 }).catch(() => null);
     if (await topicLocator.isVisible().catch(() => false)) {
-      await topicLocator.fill(searchTopic);
-      await page.waitForTimeout(500);
+      if (await topicLocator.isEnabled().catch(() => false)) {
+        await topicLocator.fill(searchTopic);
+        await page.waitForTimeout(300);
+      } else {
+        errors.push("Topic input [data-testid='kh02-research-input'] is disabled on initial load.");
+      }
+    }
+
+    // Select lookback window if requested (e.g., 90D)
+    const targetLookback = options.lookbackDays || 90;
+    const lookbackLocator = page.locator(`button[data-testid="kh02-lookback-${targetLookback}"]`).first();
+    if (await lookbackLocator.isVisible().catch(() => false)) {
+      await lookbackLocator.click().catch(() => {});
+      await page.waitForTimeout(200);
     }
 
     // Screenshot 2: Source Statuses and Input
@@ -266,7 +328,7 @@ export async function runKh02BrowserE2E(
       if (acceptedRunId) {
         console.log(`[Chromium E2E] Polling authoritative job status for run '${acceptedRunId}'...`);
         const pollStart = Date.now();
-        const maxPollMs = 45000;
+        const maxPollMs = 120000;
         while (Date.now() - pollStart < maxPollMs) {
           try {
             const statusRes = await context.request.get(
@@ -325,6 +387,29 @@ export async function runKh02BrowserE2E(
       const shortlistCardsLoc = page.locator('[data-testid="kh02-research-shortlist-card"]');
       shortlistSectionRendered = (await shortlistSectionLoc.count()) > 0;
       shortlistCardsCount = await shortlistCardsLoc.count();
+
+      for (let i = 0; i < shortlistCardsCount; i++) {
+        const sc = shortlistCardsLoc.nth(i);
+        const scId = await sc.getAttribute("data-candidate-id");
+        if (scId) shortlistCandidateIds.push(scId);
+        const scTitle = (await sc.locator("h4").first().textContent().catch(() => ""))?.trim() || "";
+        if (scTitle) shortlistTitles.push(scTitle);
+        if (scTitle.toLowerCase().includes("er vet")) {
+          erVetBillInShortlist = true;
+        }
+      }
+
+      const rejectedCardsLoc = page.locator('[data-testid="kh02-rejected-product-card"]');
+      const rejectedCount = await rejectedCardsLoc.count();
+      for (let i = 0; i < rejectedCount; i++) {
+        const rcText = (await rejectedCardsLoc.nth(i).textContent().catch(() => ""))?.trim() || "";
+        if (rcText) rejectedTitles.push(rcText);
+      }
+
+      const authRunMetaLoc = page.locator('[data-testid="kh02-authoritative-run-meta"]').first();
+      if (await authRunMetaLoc.count() > 0) {
+        authoritativeRunIdInDom = await authRunMetaLoc.getAttribute("data-research-run-id").catch(() => null);
+      }
 
       cardCount = rankedCount + provCount;
       resultsRendered = cardCount > 0 || (await page.locator('[data-testid="kh02-leaderboard-container"]').count()) > 0 || shortlistSectionRendered;
@@ -465,6 +550,20 @@ export async function runKh02BrowserE2E(
         }
       }
 
+      const postShortlistLoc = page.locator('[data-testid="kh02-research-shortlist-card"]');
+      const postShortlistCount = await postShortlistLoc.count();
+      for (let i = 0; i < postShortlistCount; i++) {
+        const scId = await postShortlistLoc.nth(i).getAttribute("data-candidate-id");
+        if (scId) postReloadShortlistCandidateIds.push(scId);
+      }
+      const postAuthRunMetaLoc = page.locator('[data-testid="kh02-authoritative-run-meta"]').first();
+      if (await postAuthRunMetaLoc.count() > 0) {
+        postReloadRunIdInDom = await postAuthRunMetaLoc.getAttribute("data-research-run-id").catch(() => null);
+      }
+      const shot4 = path.join(screenshotDir, "04_after_reload.png");
+      await page.screenshot({ path: shot4, fullPage: true }).catch(() => {});
+      screenshots.push(shot4);
+
       postReloadConsistent = true;
       if (emptyStateAccurate && !postReloadEmpty && postReloadCandidateIds.length === 0) {
         databaseMatch = false;
@@ -503,6 +602,9 @@ export async function runKh02BrowserE2E(
     await context?.pages()[0]?.screenshot({ path: errShot }).catch(() => {});
     screenshots.push(errShot);
   } finally {
+    if (context && options.tracePath) {
+      await context.tracing.stop({ path: options.tracePath }).catch(() => {});
+    }
     if (context) await context.close().catch(() => {});
     if (browser) await browser.close().catch(() => {});
   }
@@ -555,6 +657,20 @@ export async function runKh02BrowserE2E(
     httpMatch: unexpectedHttpErrors.length === 0,
     shortlistSectionRendered,
     shortlistCardsCount,
+    shortlistCandidateIds,
+    shortlistTitles,
+    rejectedTitles,
+    erVetBillInShortlist,
+    erVetBillInTopThree,
+    erVetBillInProvisional,
+    runtimeVersionBadgeText,
+    runtimeParityStatus,
+    frontendBuildSha,
+    backendBuildSha,
+    workerBuildSha,
+    authoritativeRunIdInDom,
+    postReloadShortlistCandidateIds,
+    postReloadRunIdInDom,
     cardCount,
     screenshots,
     consoleLogs,

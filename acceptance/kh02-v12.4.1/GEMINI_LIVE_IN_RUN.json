@@ -1,0 +1,312 @@
+{
+  "runId": "kh02_run_1793178172891_opcyi",
+  "aiTelemetry": {
+    "provider": "GOOGLE_GEMINI",
+    "aiStatus": "COMPLETED",
+    "authStatus": "AUTHENTICATED",
+    "modelsDiscoveredCount": 60,
+    "eligibleModelsCount": 21,
+    "primaryModelId": "gemini-3.5-flash-lite",
+    "fallbackModels": [
+      "gemini-flash-lite-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash",
+      "gemma-4-26b-a4b-it",
+      "gemma-4-31b-it",
+      "gemini-3.1-pro-preview",
+      "gemini-pro-latest",
+      "gemini-3-flash-preview",
+      "gemini-3.1-pro-preview-customtools",
+      "gemini-3.1-flash-lite-preview",
+      "gemini-omni-flash-preview",
+      "gemini-omni-1.1-flash",
+      "gemini-4-argon",
+      "antigravity-preview-05-2026",
+      "antigravity-preview-09-2026",
+      "antigravity-preview-latest"
+    ],
+    "actualModelUsed": "gemini-3.5-flash-lite",
+    "successfulModelIds": [
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest"
+    ],
+    "modelsAttempted": [
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest"
+    ],
+    "fallbackUsed": true,
+    "fallbackTransitionsCount": 1,
+    "totalAnalysesAttempted": 15,
+    "totalAnalysesCompleted": 15,
+    "liveAnalysesCompleted": 15,
+    "cachedAnalysesReused": 0,
+    "totalAnalysesFailed": 0,
+    "skippedAnalysesCount": 0,
+    "unavailableAnalysesCount": 0,
+    "requestsStarted": 20,
+    "requestsCompleted": 15,
+    "requestsFailed": 5,
+    "retriesExecuted": 4,
+    "tokensConsumed": 18037,
+    "actualBillableUsage": null,
+    "globalBudgetRemaining": 5,
+    "physicalProductsCount": 14,
+    "servicesRejectedCount": 0,
+    "contentRejectedCount": 1,
+    "insuranceLeadGenRejectedCount": 0,
+    "unknownClassificationsCount": 0,
+    "evidenceContradictionsCount": 0,
+    "invalidAIOutputsRejectedCount": 0
+  },
+  "liveSmokeEvaluation": {
+    "uproot": {
+      "success": true,
+      "result": {
+        "candidateId": "cand_live_uproot",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Uproot Clean Pet Hair Remover Pro",
+        "suggestedProductType": "Pet Hair Remover Tool",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_live_uproot"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_live_uproot"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "The product is a reusable pet hair remover tool designed for couches, carpets, rugs, and car seats.",
+            "sourceRef": "obs_live_uproot",
+            "supportingQuote": "Reusable pet hair remover tool for couches, carpets, rugs, and car seats."
+          }
+        ],
+        "inferredClaims": [
+          "The merchant landing page offers a collection of pet hair removal tools suitable for e-commerce on Shopify."
+        ],
+        "contradictions": [],
+        "uncertainties": [
+          "Specific SKU level pricing and exact dimensions are not provided in the snippet."
+        ],
+        "aiConfidence": 0.99,
+        "needsHumanReview": false
+      },
+      "verification": {
+        "verified": true,
+        "evidenceDecision": "ACCEPT_WITH_UNCERTAINTY",
+        "validAiResponse": true,
+        "correctCandidateId": true,
+        "validSourceReferences": true,
+        "accurateQuotations": true,
+        "actualMerchantEvidence": true,
+        "productIdentityConsistent": true,
+        "productRealityEligible": true,
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "sourcePageClassification": "COLLECTION_PAGE",
+        "sanitizedResult": {
+          "candidateId": "cand_live_uproot",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Uproot Clean Pet Hair Remover Pro",
+          "suggestedProductType": "Pet Hair Remover Tool",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "obs_live_uproot"
+          ],
+          "relevanceEvidenceRefs": [
+            "obs_live_uproot"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The product is a reusable pet hair remover tool designed for couches, carpets, rugs, and car seats.",
+              "sourceRef": "obs_live_uproot",
+              "supportingQuote": "Reusable pet hair remover tool for couches, carpets, rugs, and car seats."
+            }
+          ],
+          "inferredClaims": [
+            "The merchant landing page offers a collection of pet hair removal tools suitable for e-commerce on Shopify."
+          ],
+          "contradictions": [],
+          "uncertainties": [
+            "Specific SKU level pricing and exact dimensions are not provided in the snippet."
+          ],
+          "aiConfidence": 0.99,
+          "needsHumanReview": false
+        },
+        "contradictions": [],
+        "unsupportedClaims": [],
+        "hallucinatedSourceRefs": [],
+        "quoteMismatches": [],
+        "promptInjectionDetected": false,
+        "shortlistEligible": true,
+        "exclusionReason": null
+      },
+      "modelUsed": "gemini-3.5-flash-lite",
+      "fromCache": false,
+      "exclusionReason": null,
+      "shortlistEligible": true,
+      "schemaValidationFailed": false,
+      "retryTelemetry": {
+        "totalAttempts": 1,
+        "retriesExecuted": 0,
+        "requestsStarted": 1,
+        "requestsCompleted": 1,
+        "requestsFailed": 0,
+        "modelsAttempted": [
+          "gemini-3.5-flash-lite"
+        ],
+        "successfulModelId": "gemini-3.5-flash-lite",
+        "fallbackCount": 0,
+        "executionHistory": [
+          {
+            "modelId": "gemini-3.5-flash-lite",
+            "attemptsCount": 1,
+            "retriesExhausted": false,
+            "successful": true,
+            "attempts": [
+              {
+                "attemptNumber": 1,
+                "modelId": "gemini-3.5-flash-lite",
+                "statusCode": 200,
+                "durationMs": 1751,
+                "timestamp": "2026-10-28T09:02:46.346Z"
+              }
+            ]
+          }
+        ],
+        "circuitBreakerTriggered": false,
+        "canceled": false,
+        "deadlineExceeded": false,
+        "budgetExhausted": false,
+        "totalDurationMs": 1751
+      },
+      "tokensUsed": 789,
+      "error": null
+    },
+    "erVet": {
+      "success": true,
+      "result": {
+        "candidateId": "cand_live_er_vet",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": null,
+        "suggestedProductType": null,
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [],
+        "relevanceEvidenceRefs": [
+          "obs_live_er_vet"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "The content is an informational guide about emergency veterinary clinic bill cost factors.",
+            "sourceRef": "obs_live_er_vet",
+            "supportingQuote": "Learn what drives emergency veterinary clinic bills and how to prepare for unexpected vet costs."
+          }
+        ],
+        "inferredClaims": [
+          "The source provides informational content or educational resources rather than a physical sellable product."
+        ],
+        "contradictions": [],
+        "uncertainties": [
+          "No physical product, pricing, or checkout functionality is present. The observation describes purely informational content."
+        ],
+        "aiConfidence": 1,
+        "needsHumanReview": false
+      },
+      "verification": {
+        "verified": true,
+        "evidenceDecision": "REJECT",
+        "validAiResponse": true,
+        "correctCandidateId": true,
+        "validSourceReferences": true,
+        "accurateQuotations": true,
+        "actualMerchantEvidence": false,
+        "productIdentityConsistent": true,
+        "productRealityEligible": false,
+        "productRealityStatus": "NON_PHYSICAL",
+        "sourcePageClassification": "ARTICLE_PAGE",
+        "sanitizedResult": {
+          "candidateId": "cand_live_er_vet",
+          "commercialEntityType": "INFORMATIONAL_CONTENT",
+          "suggestedProductName": null,
+          "suggestedProductType": null,
+          "nicheRelevance": "UNRELATED",
+          "isLikelySellableProduct": false,
+          "identityEvidenceRefs": [],
+          "relevanceEvidenceRefs": [
+            "obs_live_er_vet"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The content is an informational guide about emergency veterinary clinic bill cost factors.",
+              "sourceRef": "obs_live_er_vet",
+              "supportingQuote": "Learn what drives emergency veterinary clinic bills and how to prepare for unexpected vet costs."
+            }
+          ],
+          "inferredClaims": [
+            "The source provides informational content or educational resources rather than a physical sellable product."
+          ],
+          "contradictions": [],
+          "uncertainties": [
+            "No physical product, pricing, or checkout functionality is present. The observation describes purely informational content."
+          ],
+          "aiConfidence": 1,
+          "needsHumanReview": false
+        },
+        "contradictions": [],
+        "unsupportedClaims": [],
+        "hallucinatedSourceRefs": [],
+        "quoteMismatches": [],
+        "promptInjectionDetected": false,
+        "shortlistEligible": false,
+        "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+      },
+      "modelUsed": "gemini-3.5-flash-lite",
+      "fromCache": false,
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "shortlistEligible": false,
+      "schemaValidationFailed": false,
+      "retryTelemetry": {
+        "totalAttempts": 1,
+        "retriesExecuted": 0,
+        "requestsStarted": 1,
+        "requestsCompleted": 1,
+        "requestsFailed": 0,
+        "modelsAttempted": [
+          "gemini-3.5-flash-lite"
+        ],
+        "successfulModelId": "gemini-3.5-flash-lite",
+        "fallbackCount": 0,
+        "executionHistory": [
+          {
+            "modelId": "gemini-3.5-flash-lite",
+            "attemptsCount": 1,
+            "retriesExhausted": false,
+            "successful": true,
+            "attempts": [
+              {
+                "attemptNumber": 1,
+                "modelId": "gemini-3.5-flash-lite",
+                "statusCode": 200,
+                "durationMs": 1389,
+                "timestamp": "2026-10-28T09:02:47.739Z"
+              }
+            ]
+          }
+        ],
+        "circuitBreakerTriggered": false,
+        "canceled": false,
+        "deadlineExceeded": false,
+        "budgetExhausted": false,
+        "totalDurationMs": 1389
+      },
+      "tokensUsed": 698,
+      "error": null
+    }
+  },
+  "verdict": "PASS"
+}
