@@ -88,3 +88,4 @@ Hiện tại 4 gates `G09`, `G10`, `G11`, `G12` đang trả kết quả trung th
 1. **Mở rộng thu thập Meta Ads & giải quyết shortlinks/social redirects:** Tăng số lượng ads mỗi query hoặc cho phép theo dõi thêm các trang đích Shopify thực ngoài 3 requests đầu tiên khi tỷ lệ quảng cáo không có link sản phẩm trên Meta cao.
 2. **Vượt rào cản HTTP 429 của Google Ads Transparency (`/sorry/index`):** Đợi IP hết thời gian chặn tạm thời của Google hoặc cấu hình proxy/session cho MCP `google_ads_mcp` để `search_advertiser` lấy được creatives live mà không bị chặn CAPTCHA.
 3. **Bổ sung chuỗi dữ liệu Demand History (`>= 60D`, `>= 3` điểm):** Import dữ liệu Google Trends US thực tế hoặc cấp phép truy vấn SerpApi Google Trends cho các ứng viên đã đạt `identityStatus = "VERIFIED"` để đủ điều kiện vượt cổng `VERIFIED_EVERGREEN`.
+
