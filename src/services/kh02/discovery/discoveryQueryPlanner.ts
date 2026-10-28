@@ -79,8 +79,33 @@ export class MetaQueryBudgetTracker {
 
   reserveRequests(maxDesired: number): number {
     const available = this.remainingRequests;
+    if (available <= 0) return 0;
     const reserved = Math.min(Math.max(1, maxDesired), available);
+    // Atomically commit reserved capacity so failed requests/exceptions retain accountability
+    this.consumedRequests += reserved;
     return reserved;
+  }
+
+  finalizeUsage(
+    reservedRequests: number,
+    actualRequests: number,
+    adsCount: number,
+    pagesConsumed: number = 1
+  ): void {
+    if (actualRequests < reservedRequests) {
+      const refund = Math.max(0, reservedRequests - Math.max(0, actualRequests));
+      this.consumedRequests = Math.max(0, this.consumedRequests - refund);
+    }
+    this.uniqueAdsObserved += Math.max(0, adsCount);
+    this.consumedPages += Math.max(0, pagesConsumed);
+  }
+
+  recordFailure(reservedRequests: number, actualAttempted?: number): void {
+    if (typeof actualAttempted === "number" && actualAttempted < reservedRequests) {
+      const refund = Math.max(0, reservedRequests - Math.max(1, actualAttempted));
+      this.consumedRequests = Math.max(0, this.consumedRequests - refund);
+    }
+    this.consumedPages += 1;
   }
 
   recordUsage(requestsConsumed: number, adsCount: number, pagesConsumed: number = 1): void {

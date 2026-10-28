@@ -40,7 +40,7 @@ export async function discoverAvailableKH02Providers(
 
   const results = await Promise.all(
     providerIds.map(async (providerId) => {
-      if (isSourceTemporarilyDisabled(providerId)) {
+      if (context.applyReleasePolicy && isSourceTemporarilyDisabled(providerId)) {
         const capabilities: ProviderCapabilities = {
           providerId,
           accessClass: "UNSUPPORTED",
@@ -145,7 +145,7 @@ export async function probeKH02ProviderCapabilities(
 ): Promise<ProviderCapabilities> {
   const normId = providerId.toUpperCase() as IntelligenceSource;
 
-  if (isSourceTemporarilyDisabled(normId)) {
+  if (context.applyReleasePolicy && isSourceTemporarilyDisabled(normId)) {
     return {
       providerId: normId,
       accessClass: "UNSUPPORTED",
@@ -371,7 +371,7 @@ async function evaluateProviderReadiness(
   capabilities: ProviderCapabilities,
   context: ProviderDiscoveryContext
 ): Promise<ProviderReadiness> {
-  if (isSourceTemporarilyDisabled(providerId)) {
+  if (context.applyReleasePolicy && isSourceTemporarilyDisabled(providerId)) {
     return {
       providerId,
       accessClass: "UNSUPPORTED",

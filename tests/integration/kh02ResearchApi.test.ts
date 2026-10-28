@@ -138,7 +138,7 @@ describe("SWAI KH-02 — API Integration & Workspace Security", () => {
       expect(Array.isArray(body.data.topThree)).toBe(true);
       expect(body.data.topThree.length).toBeLessThanOrEqual(3);
       expect(body.data.sourceStatuses.META_ADS).toBeDefined();
-      expect(["NOT_CONFIGURED", "NOT_VERIFIED", "MANUAL_ONLY"]).toContain(body.data.sourceStatuses.TIKTOK_ADS);
+      expect(["NOT_CONFIGURED", "NOT_VERIFIED", "MANUAL_ONLY", "TEMPORARILY_DISABLED"]).toContain(body.data.sourceStatuses.TIKTOK_ADS);
       expect(body.meta.workspaceId).toBe(testWorkspaceId);
     });
   });

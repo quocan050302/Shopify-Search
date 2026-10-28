@@ -1,0 +1,6 @@
+{
+  "executed": true,
+  "browser": "Chromium (Playwright)",
+  "testFile": "tests/integration/kh02BrowserAcceptance.test.ts",
+  "verdict": "PASS"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "PRODUCT_METADATA_SECURITY",
+  "description": "Product metadata fetcher enforces SSRF defense, manual redirect safety, and streaming byte limits",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "exitCode": 0,
+    "testsPassed": 7
+  },
+  "observed": {
+    "exitCode": 0,
+    "testsPassed": 7
+  },
+  "assertionEvidence": [
+    "All 7 security tests passed: 7/7"
+  ],
+  "executionCommand": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts",
+  "exitCode": 0,
+  "runId": null,
+  "reason": "SSRF, loopback, private IPv4/IPv6, cloud metadata, redirect depth, and streaming cap verified"
+}

@@ -78,12 +78,12 @@ const CLICKBAIT_HOOK_PATTERNS = [
 ];
 
 // Campaign and experiment tracking code patterns: e.g. "Ad50fb", "fb_camp_01", "ad12_test"
-// Campaign and experiment tracking code patterns: e.g. "Ad50fb", "fb_camp_01", "ad12_test", "fb_campaign_v3", "lp_pet_test_02"
 const CAMPAIGN_CODE_PATTERNS = [
   /^ad\d+[a-z0-9_-]*$/i, // e.g. "Ad50fb", "ad12", "ad50_test"
   /^(fb|ig|tt|meta|camp|campaign|creative|var|variant|test|lp|slug)[-_]?\d+[a-z0-9_-]*$/i,
   /^(fb|ig|tt|meta|camp|campaign|creative|test|lp|slug)[-_].*$/i, // e.g. "fb_campaign_v3", "lp_pet_test_02"
   /^[a-z]{1,4}\d{1,4}[a-z]{1,4}\d*$/i, // e.g. "Ad50fb", "fb10a"
+  /[a-z0-9_-]*(offer|variant|campaign|lp)[-_]\d+[a-z0-9_-]*/i, // e.g. "pet_offer_variant_08", "lp_test_v4", "fb_campaign_02"
 ];
 
 // Internal warehouse / SKU tracking codes without product nouns: e.g. "Wmt004 1", "WMT004-1", "SKU12345", "GG002 L1"

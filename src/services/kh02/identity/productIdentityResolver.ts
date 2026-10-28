@@ -163,15 +163,17 @@ export function resolveProductIdentity(
 
     // CRITICAL: Ensure slug itself is a valid product name, not a campaign code like "ad50fb", "wmt004-1" or "wmt008-l4v2-mustyclothes"
     if (slugClassification.headlineClass === "PRODUCT_CANDIDATE" && slugClassification.isEligibleAsProductName && slugClassification.cleanTitle) {
-      // Prefer richer descriptive ad headline if it corroborates the slug
-      const canonicalName = (bestAdHeadline && bestAdHeadline.cleanText.toLowerCase().includes(slugClassification.cleanTitle.toLowerCase()))
-        ? bestAdHeadline.cleanText
-        : (bestAdHeadline?.cleanText || slugClassification.cleanTitle);
+      const canonicalName = bestAdHeadline ? bestAdHeadline.cleanText : slugClassification.cleanTitle;
+      const displayTitle = slugClassification.cleanTitle;
+      // Section 9.7: Never verify from slug alone without independent evidence (ad context, merchant page metadata, or existing product)
+      const isSlugAloneWithoutEvidence = (!input.rawHeadlines || input.rawHeadlines.length === 0) && !input.verifiedMerchantTitle && !input.existingResearchProductId;
+      const isVerified = !isSlugAloneWithoutEvidence;
+
       return {
         canonicalProductName: canonicalName,
         canonicalName,
-        displayName: canonicalName,
-        displayTitle: canonicalName,
+        displayName: displayTitle,
+        displayTitle,
         originalAdHeadline: firstHeadline,
         originalCreativeCode: urlMeta.productHandle || null,
         productType: null,
@@ -184,13 +186,19 @@ export function resolveProductIdentity(
         landingPageUrl: input.landingPageUrl || null,
         storeDomain: urlMeta.storeDomain || storeDomain,
         category: null,
-        identityStatus: "VERIFIED",
-        identityConfidence: "EXACT",
-        resolutionHierarchyLevel: 1,
-        resolutionSource: `Verified Shopify Product URL (/products/${urlMeta.productHandle})`,
-        identityEvidenceReferences: [`Shopify Handle: ${urlMeta.productHandle}`, `Canonical URL: ${urlMeta.cleanCanonicalUrl}`],
+        identityStatus: isVerified ? "VERIFIED" : "PROBABLE",
+        identityConfidence: isVerified ? "EXACT" : "HIGH_CONFIDENCE",
+        resolutionHierarchyLevel: isVerified ? 1 : 6,
+        resolutionSource: isVerified
+          ? `Verified Shopify Product URL (/products/${urlMeta.productHandle})`
+          : `Shopify Product URL (/products/${urlMeta.productHandle}) without independent evidence (Section 9.7)`,
+        identityEvidenceReferences: [
+          `Shopify Handle: ${urlMeta.productHandle}`,
+          `Canonical URL: ${urlMeta.cleanCanonicalUrl}`,
+          ...(bestAdHeadline ? [`Corroborating Ad Copy: ${bestAdHeadline.raw}`] : []),
+        ],
         requiresManualReview: false,
-        isEligibleAsEvergreenWinner: true,
+        isEligibleAsEvergreenWinner: isVerified,
       };
     } else {
       // Slug is a campaign tag (e.g. "ad50fb") or raw SKU (e.g. "wmt004-1")

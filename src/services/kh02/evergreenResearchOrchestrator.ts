@@ -21,6 +21,7 @@ import {
   SourceObservation,
   ProviderSourceTelemetry,
   ObservationProvenance,
+  KH02CandidateFunnel,
 } from "./types";
 import { collectMetaProductSignals } from "./providers/metaResearchAdapter";
 import { collectTikTokAdsSignals } from "./providers/tiktokAdsResearchAdapter";
@@ -31,6 +32,7 @@ import { isSourceTemporarilyDisabled } from "./providers/sourcePolicy";
 import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
+  enrichProductCandidatesWithEvidence,
   DiscoveredProductCandidate,
   selectTopResearchShortlist,
   ResearchShortlistResult,
@@ -75,6 +77,7 @@ export interface EvergreenLeaderboardResult {
   errors: string[];
   researchShortlist?: ResearchShortlistResult;
   shortfallReason?: string | null;
+  candidateFunnel?: KH02CandidateFunnel;
 }
 
 export interface ResearchProgressPayload {
@@ -130,13 +133,24 @@ export async function runEvergreenProductResearch(
     });
   }
 
+  const isExcludedBySelection = (source: IntelligenceSource) => {
+    return Boolean(input.selectedSources && !input.selectedSources.includes(source));
+  };
+
+  const initialStatusFor = (source: IntelligenceSource): SourceRunStatus => {
+    if (isExcludedBySelection(source)) return "SKIPPED";
+    if (isSourceTemporarilyDisabled(source)) return "TEMPORARILY_DISABLED";
+    if (source === "DEMAND_HISTORY") return "CONFIGURED";
+    return "NOT_CONFIGURED";
+  };
+
   // Demand history starts as CONFIGURED policy engine until actual temporal points are verified
   const sourceStatuses: Record<IntelligenceSource, SourceRunStatus> = {
-    META_ADS: "NOT_CONFIGURED",
-    TIKTOK_ADS: isSourceTemporarilyDisabled("TIKTOK_ADS") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
-    TIKTOK_ORGANIC: isSourceTemporarilyDisabled("TIKTOK_ORGANIC") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
-    GOOGLE_ADS: "NOT_CONFIGURED",
-    DEMAND_HISTORY: "CONFIGURED",
+    META_ADS: initialStatusFor("META_ADS"),
+    TIKTOK_ADS: initialStatusFor("TIKTOK_ADS"),
+    TIKTOK_ORGANIC: initialStatusFor("TIKTOK_ORGANIC"),
+    GOOGLE_ADS: initialStatusFor("GOOGLE_ADS"),
+    DEMAND_HISTORY: initialStatusFor("DEMAND_HISTORY"),
   };
 
   const providerTelemetry: Record<IntelligenceSource, ProviderSourceTelemetry> = {
@@ -156,7 +170,7 @@ export async function runEvergreenProductResearch(
     TIKTOK_ADS: {
       source: "TIKTOK_ADS",
       queryExecuted: false,
-      queryStatus: isSourceTemporarilyDisabled("TIKTOK_ADS") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
+      queryStatus: initialStatusFor("TIKTOK_ADS"),
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -169,7 +183,7 @@ export async function runEvergreenProductResearch(
     TIKTOK_ORGANIC: {
       source: "TIKTOK_ORGANIC",
       queryExecuted: false,
-      queryStatus: isSourceTemporarilyDisabled("TIKTOK_ORGANIC") ? "TEMPORARILY_DISABLED" : "NOT_CONFIGURED",
+      queryStatus: initialStatusFor("TIKTOK_ORGANIC"),
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -182,7 +196,7 @@ export async function runEvergreenProductResearch(
     GOOGLE_ADS: {
       source: "GOOGLE_ADS",
       queryExecuted: false,
-      queryStatus: "NOT_CONFIGURED",
+      queryStatus: initialStatusFor("GOOGLE_ADS"),
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -195,7 +209,7 @@ export async function runEvergreenProductResearch(
     DEMAND_HISTORY: {
       source: "DEMAND_HISTORY",
       queryExecuted: false,
-      queryStatus: "CONFIGURED",
+      queryStatus: initialStatusFor("DEMAND_HISTORY"),
       queryTimestamp: null,
       retrievedCount: null,
       acceptedCount: null,
@@ -377,9 +391,9 @@ export async function runEvergreenProductResearch(
 
   // ── Stage 2: TikTok Ads US Discovery ──────────────────────────────────────
   if (!isSelected("TIKTOK_ADS")) {
-    const isTempDisabled = isSourceTemporarilyDisabled("TIKTOK_ADS");
-    sourceStatuses.TIKTOK_ADS = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
-    providerTelemetry.TIKTOK_ADS.queryStatus = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    const isExcluded = isExcludedBySelection("TIKTOK_ADS");
+    sourceStatuses.TIKTOK_ADS = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
+    providerTelemetry.TIKTOK_ADS.queryStatus = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
     providerTelemetry.TIKTOK_ADS.queryExecuted = false;
   } else {
     try {
@@ -439,10 +453,24 @@ export async function runEvergreenProductResearch(
   const rawCandidates = discoverProductCandidatesFromAds(adObservations, input.topic);
   const eligibleCandidates = rawCandidates.filter((c) => c.relevanceStatus !== "IRRELEVANT");
   const preRejectedCandidates = rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT");
-  const candidates = eligibleCandidates.slice(0, maxCandidates);
+
+  // Prioritize eligible candidates based on relevance score, evidence count, and valid canonical URL
+  eligibleCandidates.sort((a, b) => {
+    const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+    if (relDiff !== 0) return relDiff;
+    const obsDiff = b.totalObservationCount - a.totalObservationCount;
+    if (obsDiff !== 0) return obsDiff;
+    const aHasUrl = Boolean(a.canonicalProductUrl);
+    const bHasUrl = Boolean(b.canonicalProductUrl);
+    if (aHasUrl !== bHasUrl) return aHasUrl ? -1 : 1;
+    return 0;
+  });
+
+  const candidatesToProcess = eligibleCandidates.slice(0, maxCandidates);
+  const excludedByMaxCandidates = eligibleCandidates.slice(maxCandidates);
 
   // ── Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs ─────
-  for (const candidate of candidates) {
+  for (const candidate of candidatesToProcess) {
     try {
       const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
       candidate.researchProductId = resolved.researchProductId;
@@ -453,6 +481,29 @@ export async function runEvergreenProductResearch(
       warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
     }
   }
+
+  // ── Stage 4b: Async Metadata Enrichment with Real Evidence (Phase 6) ────────
+  let enrichedCandidates = candidatesToProcess;
+  try {
+    const enrichmentResult = await enrichProductCandidatesWithEvidence(
+      candidatesToProcess,
+      {
+        workspaceId: input.workspaceId,
+        topic: input.topic,
+        timeoutMs: 4000,
+        maxConcurrency: 3,
+        signal: abortSignal,
+      }
+    );
+    enrichedCandidates = enrichmentResult.candidates;
+    if (enrichmentResult.errors.length > 0) {
+      warnings.push(...enrichmentResult.errors.slice(0, 3));
+    }
+  } catch (enrichErr: any) {
+    warnings.push(`Product metadata enrichment stage error: ${enrichErr.message}`);
+  }
+
+  const candidates = enrichedCandidates;
 
   if (context?.reportProgress) {
     await context.reportProgress({
@@ -467,9 +518,9 @@ export async function runEvergreenProductResearch(
   // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
   const secondaryObservations: SourceObservation[] = [];
   if (!isSelected("TIKTOK_ORGANIC")) {
-    const isTempDisabled = isSourceTemporarilyDisabled("TIKTOK_ORGANIC");
-    sourceStatuses.TIKTOK_ORGANIC = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
-    providerTelemetry.TIKTOK_ORGANIC.queryStatus = isTempDisabled ? "TEMPORARILY_DISABLED" : "SKIPPED";
+    const isExcluded = isExcludedBySelection("TIKTOK_ORGANIC");
+    sourceStatuses.TIKTOK_ORGANIC = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
+    providerTelemetry.TIKTOK_ORGANIC.queryStatus = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
     providerTelemetry.TIKTOK_ORGANIC.queryExecuted = false;
   } else {
     const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
@@ -494,6 +545,11 @@ export async function runEvergreenProductResearch(
           ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY" ||
           ttOrganicResult.status === "QUERY_FAILED";
         const isSuccess = ttOrganicResult.status === "PASSED" || ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY";
+        const ttLiveObs = ttOrganicResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
+        const isTrulyLive = isSuccess && ttLiveObs.length > 0;
+        const liveProvenance: ObservationProvenance = isTrulyLive
+          ? "LIVE_PROVIDER"
+          : (ttOrganicResult.observations.length > 0 ? "CACHED_SOURCE" : "NONE");
 
         providerTelemetry.TIKTOK_ORGANIC = {
           source: "TIKTOK_ORGANIC",
@@ -502,8 +558,8 @@ export async function runEvergreenProductResearch(
           queryTimestamp: isExecuted ? ttOrgNow : null,
           retrievedCount: isSuccess ? ttOrganicResult.retrievedCount : null,
           acceptedCount: isSuccess ? ttOrganicResult.acceptedCount : null,
-          queryProvenance: isExecuted ? "LIVE_PROVIDER" : "NONE",
-          isLive: isExecuted,
+          queryProvenance: liveProvenance,
+          isLive: isTrulyLive,
           queryError: ttOrganicResult.errors.length > 0 ? ttOrganicResult.errors.join("; ") : null,
           lastSuccessfulRecordCount: isSuccess ? ttOrganicResult.retrievedCount : null,
           lastSuccessfulQueryAt: isSuccess ? ttOrgNow : null,
@@ -586,6 +642,11 @@ export async function runEvergreenProductResearch(
             googleResult.status === "QUERY_SUCCEEDED_EMPTY" ||
             googleResult.status === "QUERY_FAILED";
           const isSuccess = googleResult.status === "PASSED" || googleResult.status === "QUERY_SUCCEEDED_EMPTY";
+          const googleLiveObs = googleResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
+          const isTrulyLive = isSuccess && googleLiveObs.length > 0;
+          const liveProvenance: ObservationProvenance = isTrulyLive
+            ? "LIVE_PROVIDER"
+            : (googleResult.observations.length > 0 ? "CACHED_SOURCE" : "NONE");
 
           providerTelemetry.GOOGLE_ADS = {
             source: "GOOGLE_ADS",
@@ -594,8 +655,8 @@ export async function runEvergreenProductResearch(
             queryTimestamp: isExecuted ? googleNow : null,
             retrievedCount: isSuccess ? googleResult.retrievedCount : null,
             acceptedCount: isSuccess ? googleResult.acceptedCount : null,
-            queryProvenance: isExecuted ? "LIVE_PROVIDER" : "NONE",
-            isLive: isExecuted,
+            queryProvenance: liveProvenance,
+            isLive: isTrulyLive,
             queryError: googleError,
             lastSuccessfulRecordCount: isSuccess ? googleResult.retrievedCount : null,
             lastSuccessfulQueryAt: isSuccess ? googleNow : null,
@@ -861,6 +922,27 @@ export async function runEvergreenProductResearch(
     3
   );
 
+  const candidateFunnel: KH02CandidateFunnel = {
+    rawSourceObservations: adObservations.length,
+    normalizedObservations: adObservations.length,
+    rawCandidateGroups: rawCandidates.length,
+    relevantCandidates: rawCandidates.filter((c) => c.relevanceStatus === "RELEVANT").length,
+    probablyRelevantCandidates: rawCandidates.filter((c) => c.relevanceStatus === "PROBABLY_RELEVANT").length,
+    ambiguousCandidates: rawCandidates.filter((c) => c.relevanceStatus === "AMBIGUOUS").length,
+    irrelevantCandidates: rawCandidates.filter((c) => c.relevanceStatus === "IRRELEVANT").length,
+    identitiesVerified: candidates.filter((c) => c.identityStatus === "VERIFIED").length,
+    identitiesProbable: candidates.filter((c) => c.identityStatus === "PROBABLE").length,
+    identitiesUnresolved: candidates.filter((c) => c.identityStatus === "UNRESOLVED").length,
+    candidatesActuallyScored: rankedItems.length,
+    verifiedEvergreenCandidates: distinctVerifiedWinners.length,
+    provisionalCandidates: provisionalCandidates.length,
+    insufficientEvidenceCandidates: insufficientEvidenceCandidates.length,
+    rejectedCandidates: rejectedCandidates.length,
+    researchShortlistEligible: researchShortlist.qualifiedCount,
+    researchShortlistSelected: researchShortlist.shortlist.length,
+    excludedByMaxCandidates: excludedByMaxCandidates.length,
+  };
+
   const result: EvergreenLeaderboardResult = {
     researchRunId: runId,
     topic: input.topic,
@@ -883,6 +965,7 @@ export async function runEvergreenProductResearch(
     errors,
     researchShortlist,
     shortfallReason: researchShortlist.shortfallReason,
+    candidateFunnel,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

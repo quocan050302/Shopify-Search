@@ -99,6 +99,7 @@ interface LeaderboardData {
     distinctnessEvaluation?: any;
   };
   shortfallReason?: string | null;
+  candidateFunnel?: any;
 }
 
 interface ProviderStatusItem {
@@ -143,6 +144,16 @@ export default function ProductsPage() {
   // Database Products Tab State
   const [viewMode, setViewMode] = useState<"LEADERBOARD" | "STORED_PRODUCTS">("LEADERBOARD");
   const [storedProducts, setStoredProducts] = useState<any[]>([]);
+  const [runtimeVersion, setRuntimeVersion] = useState<any | null>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/kh02/version")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) setRuntimeVersion(json.data);
+      })
+      .catch(() => {});
+  }, []);
   const [storedLoading, setStoredLoading] = useState(false);
   const [storedSearch, setStoredSearch] = useState("");
   const [storedCategory, setStoredCategory] = useState("ALL");
@@ -672,9 +683,16 @@ export default function ProductsPage() {
         {/* Header / Subheader */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1f293d] pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-2">
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>SWAI V12.1 — Evidence-Driven Evergreen Product Intelligence</span>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                <span>SWAI KH-02 V12.3.2 — Evidence-Driven Evergreen Product Intelligence</span>
+              </div>
+              {runtimeVersion?.buildSha && (
+                <span data-testid="kh02-runtime-version-badge" className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                  SHA: {runtimeVersion.buildSha.slice(0, 7)}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
               <Trophy className="h-7 w-7 text-amber-400" />
@@ -1209,9 +1227,20 @@ export default function ProductsPage() {
                 </p>
               </div>
               {leaderboard && (
-                <span className="text-xs text-purple-400 font-mono">
-                  {leaderboard.totalCandidatesDiscovered} candidates evaluated · Formula V{leaderboard.formulaVersion}
-                </span>
+                <div className="text-right">
+                  <div data-testid="kh02-candidate-funnel-summary" className="text-xs text-purple-400 font-mono">
+                    {leaderboard.candidateFunnel ? (
+                      <span>
+                        {leaderboard.candidateFunnel.rawCandidateGroups} raw groups · {leaderboard.candidateFunnel.relevantCandidates + (leaderboard.candidateFunnel.probablyRelevantCandidates || 0)} eligible · {leaderboard.candidateFunnel.candidatesActuallyScored} scored · {leaderboard.candidateFunnel.identitiesVerified} verified
+                      </span>
+                    ) : (
+                      <span>{leaderboard.totalCandidatesDiscovered} candidate groups discovered</span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                    Formula V{leaderboard.formulaVersion}
+                  </div>
+                </div>
               )}
             </div>
 

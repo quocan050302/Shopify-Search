@@ -167,7 +167,7 @@ describe("SWAI KH-02 V12.2.1 — Provider Runtime Activation & Truthful Diagnost
       const caps = await discoverGoogleAdsMcpCapabilities({ mcpUrl: "https://example-nonexistent-domain-404.com/mcp" });
       expect(caps.transportConnected).toBe(false);
       expect(caps.toolsDiscovered).toEqual([]);
-    });
+    }, 15000);
   });
 
   describe("4. Acceptance Truthfulness & Adversarial Mutation Verification (Section 72-82, 98)", () => {

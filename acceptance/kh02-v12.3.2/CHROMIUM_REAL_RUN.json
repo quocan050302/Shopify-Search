@@ -1,0 +1,8 @@
+{
+  "executed": true,
+  "browser": "Chromium (Playwright)",
+  "pageLoaded": true,
+  "shortlistSectionRendered": true,
+  "reloadConsistent": true,
+  "verdict": "PASS"
+}

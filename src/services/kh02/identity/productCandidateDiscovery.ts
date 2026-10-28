@@ -18,6 +18,7 @@ import {
 } from "@/services/products/productService";
 import {
   resolveProductIdentity,
+  resolveProductIdentityWithEvidence,
   ProductIdentityStatus,
 } from "./productIdentityResolver";
 import { extractProductUrlMetadata } from "./productMetadataExtractor";
@@ -508,5 +509,176 @@ export function selectTopResearchShortlist(
     shortfallReason,
     distinctnessSummary,
     distinctnessEvaluation,
+  };
+}
+
+export interface ProductEnrichmentContext {
+  workspaceId: string;
+  topic: string;
+  timeoutMs?: number;
+  maxConcurrency?: number;
+  signal?: AbortSignal;
+  metadataFetcher?: (url: string) => Promise<any>;
+}
+
+export interface ProductEnrichmentResult {
+  candidates: DiscoveredProductCandidate[];
+  enrichedCount: number;
+  verifiedCount: number;
+  probableCount: number;
+  unresolvedCount: number;
+  contradictionCount: number;
+  errors: string[];
+}
+
+/**
+ * Asynchronously enriches product candidates with verified merchant landing page evidence.
+ * Bounded concurrency, per-page timeouts, contradiction detection, and canonical deduplication.
+ */
+export async function enrichProductCandidatesWithEvidence(
+  candidates: DiscoveredProductCandidate[],
+  context: ProductEnrichmentContext
+): Promise<ProductEnrichmentResult> {
+  const maxConcurrency = context.maxConcurrency || 3;
+  const timeoutMs = context.timeoutMs || 4000;
+  const errors: string[] = [];
+
+  let enrichedCount = 0;
+  let verifiedCount = 0;
+  let probableCount = 0;
+  let unresolvedCount = 0;
+  let contradictionCount = 0;
+
+  // Process candidates in bounded concurrent chunks
+  const enrichedList: DiscoveredProductCandidate[] = [];
+
+  for (let i = 0; i < candidates.length; i += maxConcurrency) {
+    if (context.signal?.aborted) break;
+
+    const chunk = candidates.slice(i, i + maxConcurrency);
+    await Promise.all(
+      chunk.map(async (candidate) => {
+        try {
+          if (!candidate.canonicalProductUrl) {
+            if (candidate.identityStatus === "VERIFIED") verifiedCount++;
+            else if (candidate.identityStatus === "PROBABLE") probableCount++;
+            else unresolvedCount++;
+            enrichedList.push(candidate);
+            return;
+          }
+
+          const resolved = await resolveProductIdentityWithEvidence(
+            {
+              landingPageUrl: candidate.canonicalProductUrl,
+              storeDomain: candidate.storeDomain,
+              brandOrAdvertiser: candidate.advertiserNames[0] || null,
+              rawHeadlines: candidate.originalAdHeadline ? [candidate.originalAdHeadline] : [],
+              rawDescriptions: candidate.sourceObservations
+                .map((o) => o.description || o.observedContent)
+                .filter(Boolean) as string[],
+              existingResearchProductId: candidate.researchProductId,
+              sourceReference: candidate.mediaSourceAdId
+                ? `Ad #${candidate.mediaSourceAdId}`
+                : undefined,
+            },
+            {
+              timeoutMs,
+              metadataFetchEnabled: true,
+              metadataFetcher: context.metadataFetcher,
+            }
+          );
+
+          enrichedCount++;
+          candidate.title = resolved.displayTitle;
+          candidate.canonicalProductName = resolved.canonicalProductName;
+          candidate.displayName = resolved.displayName;
+          candidate.brand = resolved.brand;
+          candidate.model = resolved.model;
+          candidate.sku = resolved.sku;
+          candidate.identityStatus = resolved.identityStatus;
+          candidate.identityConfidence =
+            resolved.identityStatus === "VERIFIED"
+              ? "EXACT"
+              : resolved.identityStatus === "PROBABLE"
+              ? "HIGH_CONFIDENCE"
+              : "AMBIGUOUS";
+          candidate.resolutionSource = resolved.resolutionSource;
+          candidate.requiresManualReview = resolved.requiresManualReview;
+          candidate.identityEvidenceReferences = resolved.identityEvidenceReferences;
+
+          if (resolved.identityStatus === "AMBIGUOUS" && resolved.requiresManualReview) {
+            contradictionCount++;
+            candidate.isEligibleAsEvergreenWinner = false;
+          }
+
+          // Re-evaluate relevance with verified landing page title
+          const candidateContext = [
+            resolved.displayTitle,
+            resolved.canonicalName || "",
+            candidate.canonicalProductUrl || "",
+            candidate.originalAdHeadline || "",
+            ...candidate.sourceObservations.map((o) => o.title || o.description || "").slice(0, 3),
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          const relevance = evaluateProductRelevance(candidateContext, context.topic);
+          candidate.relevanceStatus = relevance.relevanceStatus;
+          candidate.relevanceScore = relevance.score;
+          candidate.relevanceReasons = relevance.reasons;
+          if (!relevance.isAccepted || relevance.relevanceStatus === "IRRELEVANT") {
+            candidate.isEligibleAsEvergreenWinner = false;
+          } else if (resolved.identityStatus === "VERIFIED" && !resolved.requiresManualReview) {
+            candidate.isEligibleAsEvergreenWinner = true;
+          }
+
+          if (candidate.identityStatus === "VERIFIED") verifiedCount++;
+          else if (candidate.identityStatus === "PROBABLE") probableCount++;
+          else unresolvedCount++;
+
+          enrichedList.push(candidate);
+        } catch (err: any) {
+          errors.push(`Enrichment failed for ${candidate.candidateId}: ${err.message}`);
+          enrichedList.push(candidate);
+        }
+      })
+    );
+  }
+
+  // Canonical Product Deduplication across enriched candidates
+  const deduplicated: DiscoveredProductCandidate[] = [];
+  const seenCanonicalKeys = new Map<string, DiscoveredProductCandidate>();
+
+  for (const c of enrichedList) {
+    const rawName = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
+    const domainKey = c.storeDomain ? c.storeDomain.toLowerCase().trim() : "";
+    const dedupeKey = domainKey ? `${domainKey}::${rawName}` : rawName;
+
+    const existing = seenCanonicalKeys.get(dedupeKey);
+    if (existing) {
+      existing.totalObservationCount += c.totalObservationCount;
+      for (const adId of c.supportingAdIds) {
+        if (!existing.supportingAdIds.includes(adId)) existing.supportingAdIds.push(adId);
+      }
+      for (const src of c.supportingSourceTypes) {
+        if (!existing.supportingSourceTypes.includes(src)) existing.supportingSourceTypes.push(src);
+      }
+      for (const obs of c.sourceObservations) {
+        existing.sourceObservations.push(obs);
+      }
+    } else {
+      seenCanonicalKeys.set(dedupeKey, c);
+      deduplicated.push(c);
+    }
+  }
+
+  return {
+    candidates: deduplicated,
+    enrichedCount,
+    verifiedCount,
+    probableCount,
+    unresolvedCount,
+    contradictionCount,
+    errors,
   };
 }

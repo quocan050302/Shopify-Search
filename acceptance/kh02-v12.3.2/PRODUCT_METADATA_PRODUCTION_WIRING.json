@@ -1,0 +1,7 @@
+{
+  "wiredFunction": "enrichProductCandidatesWithEvidence",
+  "caller": "src/services/kh02/evergreenResearchOrchestrator.ts",
+  "stage": "Stage 4b",
+  "concurrencyLimit": 3,
+  "timeoutMs": 4000
+}

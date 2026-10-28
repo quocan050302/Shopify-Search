@@ -66,6 +66,7 @@
     "acceptance:kh02:v12.2.4": "tsx scripts/kh02/runAcceptanceV12_2_4.ts",
     "acceptance:kh02:v12.3": "tsx scripts/kh02/runAcceptanceV12_3.ts",
     "acceptance:kh02:v12.3.1": "tsx scripts/kh02/runAcceptanceV12_3_1.ts",
+    "acceptance:kh02:v12.3.2": "tsx scripts/kh02/runAcceptanceV12_3_2.ts",
     "kh02:accept:v12.3": "tsx scripts/kh02/runAcceptanceV12_3.ts"
   },
   "dependencies": {

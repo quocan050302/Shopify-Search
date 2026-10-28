@@ -10,6 +10,10 @@ export default defineConfig({
     environment: "node",
     globals: true,
     fileParallelism: false,
+    pool: "forks",
+    forks: {
+      singleFork: true,
+    },
     setupFiles: ["./tests/setupTestEnvironment.ts"],
   },
   resolve: {

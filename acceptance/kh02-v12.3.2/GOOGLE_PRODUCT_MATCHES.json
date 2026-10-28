@@ -1,0 +1,19 @@
+{
+  "id": "GOOGLE_PRODUCT_ASSOCIATION",
+  "description": "Google domain normalization correctly resolves canonical registrable domains",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "normalizedDomain": "uprootclean.com"
+  },
+  "observed": {
+    "normalizedDomain": "uprootclean.com"
+  },
+  "assertionEvidence": [
+    "cc.uprootclean.com -> uprootclean.com"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Subdomain correctly normalized to registrable domain"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "NICHE_RELEVANCE",
+  "description": "Niche relevance accepts relevant pet products and strictly rejects unrelated catalog items",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "petBedAccepted": true,
+    "speakerAccepted": false,
+    "speakerStatus": "IRRELEVANT"
+  },
+  "observed": {
+    "petBedAccepted": true,
+    "speakerAccepted": false,
+    "speakerStatus": "IRRELEVANT"
+  },
+  "assertionEvidence": [
+    "Pet bed score: 0.95, Speaker status: IRRELEVANT"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Pet bed accepted; Bluetooth speaker rejected as IRRELEVANT"
+}

@@ -220,6 +220,7 @@ export interface SourceDiagnosticContext {
   workspaceId?: string;
   checkLiveTransport?: boolean;
   db?: any;
+  applyReleasePolicy?: boolean;
 }
 
 export interface TestConnectionContext {
@@ -368,7 +369,7 @@ export async function diagnoseKH02Source(
     }
 
     case "TIKTOK_ADS": {
-      if (isSourceTemporarilyDisabled("TIKTOK_ADS")) {
+      if (context?.applyReleasePolicy && isSourceTemporarilyDisabled("TIKTOK_ADS")) {
         let recordCount = 0;
         try {
           if (context?.workspaceId) {
@@ -515,7 +516,7 @@ export async function diagnoseKH02Source(
     }
 
     case "TIKTOK_ORGANIC": {
-      if (isSourceTemporarilyDisabled("TIKTOK_ORGANIC")) {
+      if (context?.applyReleasePolicy && isSourceTemporarilyDisabled("TIKTOK_ORGANIC")) {
         let recordCount = 0;
         try {
           if (context?.workspaceId) {

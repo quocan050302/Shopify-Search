@@ -474,7 +474,7 @@ export async function collectLiveMetaAds(
       });
 
       const primaryAds = primaryRes.ads || [];
-      budgetTracker.recordUsage(primaryReqs, primaryAds.length);
+      budgetTracker.finalizeUsage(primaryReqs, primaryReqs, primaryAds.length);
       primaryOutcome.completedAt = new Date().toISOString();
       primaryOutcome.actualApiCalls = primaryReqs;
       primaryOutcome.returnedCount = primaryAds.length;
@@ -489,7 +489,9 @@ export async function collectLiveMetaAds(
         }
       }
     } catch (primaryErr: any) {
+      budgetTracker.recordFailure(primaryReqs);
       primaryOutcome.completedAt = new Date().toISOString();
+      primaryOutcome.actualApiCalls = primaryReqs;
       primaryOutcome.status = "FAILED";
       primaryOutcome.errorCode = primaryErr.code || "PRIMARY_QUERY_ERROR";
       primaryOutcome.errorMessage = primaryErr.message || String(primaryErr);
@@ -535,6 +537,23 @@ export async function collectLiveMetaAds(
       };
 
       const subReqs = budgetTracker.reserveRequests(2);
+      if (subReqs <= 0) {
+        queryOutcomes.push({
+          queryId: subqueryId,
+          keyword: subplan.subquery,
+          searchType: subplan.searchType,
+          attempted: false,
+          status: "SKIPPED_BUDGET",
+          startedAt: null,
+          completedAt: null,
+          actualApiCalls: 0,
+          returnedCount: 0,
+          errorCode: null,
+          errorMessage: "Skipped due to exhausted query budget",
+        });
+        continue;
+      }
+
       try {
         const subRes = await client.searchAds({
           query: subplan.subquery,
@@ -548,7 +567,7 @@ export async function collectLiveMetaAds(
         });
 
         const subAds = subRes.ads || [];
-        budgetTracker.recordUsage(subReqs, subAds.length);
+        budgetTracker.finalizeUsage(subReqs, subReqs, subAds.length);
         subOutcome.completedAt = new Date().toISOString();
         subOutcome.actualApiCalls = subReqs;
         subOutcome.returnedCount = subAds.length;
@@ -563,7 +582,9 @@ export async function collectLiveMetaAds(
           }
         }
       } catch (subErr: any) {
+        budgetTracker.recordFailure(subReqs);
         subOutcome.completedAt = new Date().toISOString();
+        subOutcome.actualApiCalls = subReqs;
         subOutcome.status = "FAILED";
         subOutcome.errorCode = subErr.code || "SUBQUERY_ERROR";
         subOutcome.errorMessage = subErr.message || String(subErr);

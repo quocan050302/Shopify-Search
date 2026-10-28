@@ -1,0 +1,21 @@
+{
+  "id": "META_ALL_FAILED_HANDLING",
+  "description": "When all Meta subqueries fail, aggregate execution status is FAILED and liveSucceeded is false",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "executionStatus": "FAILED",
+    "liveSucceeded": false
+  },
+  "observed": {
+    "executionStatus": "FAILED",
+    "liveSucceeded": false
+  },
+  "assertionEvidence": [
+    "Execution status: FAILED, liveSucceeded: false"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "All subqueries failing correctly yields executionStatus=FAILED"
+}

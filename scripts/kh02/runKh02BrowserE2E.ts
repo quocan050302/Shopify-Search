@@ -57,6 +57,8 @@ export interface KH02BrowserAcceptance {
   hydrationErrors: string[];
   databaseMatch: boolean;
   httpMatch?: boolean;
+  shortlistSectionRendered?: boolean;
+  shortlistCardsCount?: number;
   cardCount: number;
   screenshots: string[];
   consoleLogs: string[];
@@ -112,6 +114,8 @@ export async function runKh02BrowserE2E(
   let terminalStateObserved = false;
   let resultsRendered = false;
   let emptyStateAccurate = false;
+  let shortlistSectionRendered = false;
+  let shortlistCardsCount = 0;
   let cardCount = 0;
   let databaseMatch = true;
   const displayedRankOrder: string[] = [];
@@ -317,8 +321,13 @@ export async function runKh02BrowserE2E(
       const provCardsLoc = page.locator('[data-testid="kh02-provisional-product-card"]');
       const rankedCount = await rankedCardsLoc.count();
       const provCount = await provCardsLoc.count();
+      const shortlistSectionLoc = page.locator('[data-testid="kh02-research-shortlist-section"]');
+      const shortlistCardsLoc = page.locator('[data-testid="kh02-research-shortlist-card"]');
+      shortlistSectionRendered = (await shortlistSectionLoc.count()) > 0;
+      shortlistCardsCount = await shortlistCardsLoc.count();
+
       cardCount = rankedCount + provCount;
-      resultsRendered = cardCount > 0 || (await page.locator('[data-testid="kh02-leaderboard-container"]').count()) > 0;
+      resultsRendered = cardCount > 0 || (await page.locator('[data-testid="kh02-leaderboard-container"]').count()) > 0 || shortlistSectionRendered;
       displayedRankOrder.length = 0;
 
       // Extract candidate IDs directly from data-candidate-id attributes (NO title fallback! Directive 83)
@@ -544,6 +553,8 @@ export async function runKh02BrowserE2E(
     hydrationErrors,
     databaseMatch,
     httpMatch: unexpectedHttpErrors.length === 0,
+    shortlistSectionRendered,
+    shortlistCardsCount,
     cardCount,
     screenshots,
     consoleLogs,

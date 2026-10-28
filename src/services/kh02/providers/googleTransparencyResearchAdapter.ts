@@ -276,9 +276,11 @@ export async function discoverGoogleAdsMcpCapabilities(
 ): Promise<GoogleMcpCapabilities> {
   const discoveredAt = new Date().toISOString();
   const resolved = resolveGoogleMcpConfig();
+  const mcpUrl = context.mcpUrl !== undefined ? context.mcpUrl : resolved.mcpUrl;
+  const command = context.command !== undefined ? context.command : (context.mcpUrl ? undefined : resolved.command);
   const client = clientArg || createGoogleTransparencyMcpClient({
-    mcpUrl: context.mcpUrl || resolved.mcpUrl,
-    command: context.command || resolved.command,
+    mcpUrl,
+    command,
     args: context.args || resolved.args,
   });
 
@@ -616,8 +618,8 @@ export function createGoogleTransparencyMcpClient(config?: {
   args?: string[];
 }): GoogleTransparencyMcpClient {
   const resolved = resolveGoogleMcpConfig();
-  const mcpUrl = config?.mcpUrl || resolved.mcpUrl;
-  const command = config?.command || resolved.command;
+  const mcpUrl = config?.mcpUrl !== undefined ? config.mcpUrl : resolved.mcpUrl;
+  const command = config?.command !== undefined ? config.command : (config?.mcpUrl ? undefined : resolved.command);
   const args = config?.args || resolved.args || [];
 
   let mcpClient: Client | null = null;

@@ -94,12 +94,14 @@ export interface ProviderReadiness {
 export interface ProviderDiscoveryContext {
   workspaceId?: string;
   allowPaidOperations?: boolean;
+  applyReleasePolicy?: boolean;
 }
 
 export interface ProviderProbeContext {
   workspaceId?: string;
   timeoutMs?: number;
   allowPaidOperations?: boolean;
+  applyReleasePolicy?: boolean;
 }
 
 export interface ProviderCapabilities {
@@ -124,6 +126,34 @@ export interface ProviderDiscoveryResult {
   readiness: ProviderReadiness;
   capabilities: ProviderCapabilities;
   recommendedAction?: string;
+}
+
+export interface KH02CandidateFunnel {
+  rawSourceObservations: number;
+  normalizedObservations: number;
+
+  rawCandidateGroups: number;
+
+  relevantCandidates: number;
+  probablyRelevantCandidates: number;
+  ambiguousCandidates: number;
+  irrelevantCandidates: number;
+
+  identitiesVerified: number;
+  identitiesProbable: number;
+  identitiesUnresolved: number;
+
+  candidatesActuallyScored: number;
+
+  verifiedEvergreenCandidates: number;
+  provisionalCandidates: number;
+  insufficientEvidenceCandidates: number;
+  rejectedCandidates: number;
+
+  researchShortlistEligible: number;
+  researchShortlistSelected: number;
+
+  excludedByMaxCandidates: number;
 }
 
 export interface ProviderReadinessDimensions {

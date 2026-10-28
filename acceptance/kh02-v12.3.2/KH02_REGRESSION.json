@@ -1,0 +1,24 @@
+{
+  "id": "KH02_UNIT",
+  "description": "KH-02 unit test suite passes all unit tests",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "exitCode": 0,
+    "minPassed": 300
+  },
+  "observed": {
+    "exitCode": 0,
+    "testsPassed": 327,
+    "totalTests": 327
+  },
+  "assertionEvidence": [
+    "Passed: 327/327",
+    "",
+    "tail: 2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m27 passed\u001b[39m\u001b[22m\u001b[90m (27)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m327 passed\u001b[39m\u001b[22m\u001b[90m (327)\u001b[39m\n\u001b[2m   Start at \u001b[22m 11:06:26\n\u001b[2m   Duration \u001b[22m 148.52s\u001b[2m (tests 47%, setup 44%, import 8%)\u001b[22m\n\n"
+  ],
+  "executionCommand": "npm run kh02:test:unit",
+  "exitCode": 0,
+  "runId": null,
+  "reason": "KH-02 unit suite verified: 327/327 tests passed"
+}
