@@ -23,6 +23,7 @@ export interface AdHeadlineClassification {
   rawHeadline: string;
   classification: HeadlineClass;
   headlineClass: HeadlineClass; // Ergonomic alias
+  headlineType?: HeadlineClass; // Ergonomic alias
   isEligibleProductName: boolean;
   isEligibleAsProductName: boolean; // Ergonomic alias
   isProductCandidate: boolean; // Ergonomic alias
@@ -77,17 +78,20 @@ const CLICKBAIT_HOOK_PATTERNS = [
 ];
 
 // Campaign and experiment tracking code patterns: e.g. "Ad50fb", "fb_camp_01", "ad12_test"
+// Campaign and experiment tracking code patterns: e.g. "Ad50fb", "fb_camp_01", "ad12_test", "fb_campaign_v3", "lp_pet_test_02"
 const CAMPAIGN_CODE_PATTERNS = [
   /^ad\d+[a-z0-9_-]*$/i, // e.g. "Ad50fb", "ad12", "ad50_test"
   /^(fb|ig|tt|meta|camp|campaign|creative|var|variant|test|lp|slug)[-_]?\d+[a-z0-9_-]*$/i,
+  /^(fb|ig|tt|meta|camp|campaign|creative|test|lp|slug)[-_].*$/i, // e.g. "fb_campaign_v3", "lp_pet_test_02"
   /^[a-z]{1,4}\d{1,4}[a-z]{1,4}\d*$/i, // e.g. "Ad50fb", "fb10a"
 ];
 
-// Internal warehouse / SKU tracking codes without product nouns: e.g. "Wmt004 1", "WMT004-1", "SKU12345"
+// Internal warehouse / SKU tracking codes without product nouns: e.g. "Wmt004 1", "WMT004-1", "SKU12345", "GG002 L1"
 const INTERNAL_SKU_CODE_PATTERNS = [
-  /^[a-z]{2,5}\d{3,}[-_ ]?\d*$/i, // e.g. "Wmt004 1", "WMT004-1"
-  /^(sku|item|prod|p)[-_ ]?\d{3,}[-_ ]?\d*$/i, // e.g. "SKU12345", "Item-004"
-  /^[a-z0-9]{2,4}[-_]\d{3,}[-_]?[a-z0-9]*$/i, // e.g. "GG-002-L1"
+  /^[a-z]{2,5}\d{2,}[-_ ]?\d*$/i, // e.g. "Wmt004 1", "WMT004-1", "Wmt008"
+  /^(sku|item|prod|p)[-_ ]?\d{2,}[-_ ]?\d*$/i, // e.g. "SKU12345", "Item-004"
+  /^[a-z0-9]{2,4}[-_ ]\d{2,}[-_ ]?[a-z0-9]*$/i, // e.g. "GG-002-L1", "GG002 L1"
+  /^[a-z]{1,4}\d{2,4}\s+[a-z0-9]{1,4}$/i, // e.g. "GG002 L1"
 ];
 
 // Recognized concrete product item/category nouns
@@ -109,12 +113,12 @@ const KNOWN_PRODUCT_NOUNS = new Set([
   "earbuds", "watch", "speaker", "charger", "cable", "adaptor", "adapter"
 ]);
 
-// Generic non-product category terms
+// Generic non-product category terms (including versioned generic terms e.g. "Pet Product V4")
 const GENERIC_CATEGORY_PATTERNS = [
-  /^(pet\s+(gadgets?|products?|supplies|accessories|items?|stuff))$/i,
-  /^(dog\s+(gadgets?|products?|supplies|accessories|items?|stuff))$/i,
-  /^(cat\s+(gadgets?|products?|supplies|accessories|items?|stuff))$/i,
-  /^(best\s+pet\s+(gadgets?|finds?|items?))$/i,
+  /^(pet\s+(gadgets?|products?|supplies|accessories|items?|stuff))(\s+v\d+)?$/i,
+  /^(dog\s+(gadgets?|products?|supplies|accessories|items?|stuff))(\s+v\d+)?$/i,
+  /^(cat\s+(gadgets?|products?|supplies|accessories|items?|stuff))(\s+v\d+)?$/i,
+  /^(best\s+pet\s+(gadgets?|finds?|items?))(\s+v\d+)?$/i,
   /^(store\s+home\s*page|official\s+store|catalog)$/i,
 ];
 
@@ -225,7 +229,7 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
     }
   }
 
-  // 5. Check for Internal Warehouse / SKU codes without product nouns (e.g. "Wmt004 1")
+  // 5. Check for Internal Warehouse / SKU codes without product nouns (e.g. "Wmt004 1", "GG002 L1")
   for (const pattern of INTERNAL_SKU_CODE_PATTERNS) {
     if (pattern.test(raw)) {
       return {
@@ -243,7 +247,29 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
     }
   }
 
-  // 6. Check for Generic Categories (e.g. "Pet Gadgets")
+  // 5.5 Check for Compound Campaign / SKU sequences lacking concrete product nouns (e.g. "Wmt008 L4v2 Mustyclothes")
+  const hasConcreteNoun = containsKnownProductNoun(raw);
+  const words = raw.split(/[\s\-_]+/);
+  const firstWord = words[0] || "";
+  const isSkuOrCampaignPrefix = /^[a-z]{1,5}\d{2,}[a-z0-9]*$/i.test(firstWord) || /^(sku|item|prod|wmt|gg|ad|fb|lp|test)\d*/i.test(firstWord);
+  const hasExperimentToken = /\b(l\d+v\d+|v\d+|test[-_]?\d+|camp[-_]?\d+|lp[-_]?\d+)\b/i.test(raw);
+
+  if (!hasConcreteNoun && (isSkuOrCampaignPrefix || hasExperimentToken)) {
+    return {
+      rawHeadline: raw,
+      classification: isSkuOrCampaignPrefix ? "INTERNAL_SKU_CODE" : "CAMPAIGN_CODE",
+      headlineClass: isSkuOrCampaignPrefix ? "INTERNAL_SKU_CODE" : "CAMPAIGN_CODE",
+      isEligibleProductName: false,
+      isEligibleAsProductName: false,
+      cleanTitle: null,
+      normalizedCleanText: "",
+      adIdentifier: null,
+      confidence: 0.96,
+      reason: `Matched compound campaign experiment code or SKU sequence without product noun: '${raw}'`,
+    };
+  }
+
+  // 6. Check for Generic Categories (e.g. "Pet Gadgets", "Pet Product V4")
   for (const pattern of GENERIC_CATEGORY_PATTERNS) {
     if (pattern.test(raw)) {
       return {
@@ -286,13 +312,13 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
     };
   }
 
-  // 8. Extract Model / SKU suffix from legitimate product titles (e.g. "Grooming Gloves Gg002 L1")
+  // 8. Extract Model / SKU suffix from legitimate product titles (e.g. "Grooming Gloves Gg002 L1", "Pet Grooming Vacuum V3", "Automatic Feeder X200")
   let extractedModelOrSku: string | null = null;
-  const modelSuffixMatch = cleaned.match(/\s+([A-Za-z]{1,4}\d{2,4}(?:\s+[A-Za-z0-9]{1,4})?)$/i);
+  const modelSuffixMatch = cleaned.match(/\s+([A-Za-z]{1,4}\d{1,4}(?:\s+[A-Za-z0-9]{1,4})?|\d{1,2}[A-Za-z]|[A-Za-z]\d{1,3})$/i);
   if (modelSuffixMatch && modelSuffixMatch.index) {
     const candidateBase = cleaned.slice(0, modelSuffixMatch.index).trim();
-    // Only strip model if base contains at least 1 known product noun or 2 words
-    if (candidateBase.split(/\s+/).length >= 2 || containsKnownProductNoun(candidateBase)) {
+    // Only strip model if base contains at least 1 known product noun or 2 words with product noun
+    if (containsKnownProductNoun(candidateBase) || candidateBase.split(/\s+/).length >= 2) {
       extractedModelOrSku = modelSuffixMatch[1];
       cleaned = candidateBase;
     }
@@ -303,10 +329,25 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
   const hasProductNoun = containsKnownProductNoun(cleaned);
   const wordCount = cleaned.split(/\s+/).length;
 
-  // If it's a short 1-2 word phrase with NO recognized product noun and matches editorial hooks
-  if (!hasProductNoun && wordCount <= 2) {
+  // If it has NO recognized product noun and has code-like or experiment features after cleaning
+  if (!hasProductNoun) {
+    if (isSkuOrCampaignPrefix || hasExperimentToken) {
+      return {
+        rawHeadline: raw,
+        classification: "INTERNAL_SKU_CODE",
+        headlineClass: "INTERNAL_SKU_CODE",
+        isEligibleProductName: false,
+        isEligibleAsProductName: false,
+        cleanTitle: null,
+        normalizedCleanText: "",
+        adIdentifier: null,
+        confidence: 0.95,
+        reason: `Alphanumeric campaign or SKU code lacking concrete product noun: '${cleaned}'`,
+      };
+    }
+
     // Check if it's an abstract concept or hook (e.g. "Hidden Dangers", "Smart Solutions", "Life Changing")
-    if (/\b(dangers?|killers?|secrets?|hacks?|solutions?|ideas?|habits?|mistakes?|reasons?|facts?|tips?|tricks?)\b/i.test(cleaned)) {
+    if (wordCount <= 2 || /\b(dangers?|killers?|secrets?|hacks?|solutions?|ideas?|habits?|mistakes?|reasons?|facts?|tips?|tricks?)\b/i.test(cleaned)) {
       return {
         rawHeadline: raw,
         classification: "CLICKBAIT_HOOK",
@@ -355,6 +396,7 @@ export function classifyAdvertisingHeadline(headline: string | null | undefined)
     rawHeadline: rawRes.rawHeadline,
     classification: rawRes.classification,
     headlineClass: rawRes.classification,
+    headlineType: rawRes.classification,
     isEligibleProductName: isCandidate,
     isEligibleAsProductName: isCandidate,
     isProductCandidate: isCandidate,

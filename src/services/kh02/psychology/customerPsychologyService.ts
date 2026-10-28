@@ -55,6 +55,154 @@ export interface PsychologyAnalysisInput {
   sourceReference?: string;
 }
 
+export type ClaimEvidenceSupportLevel =
+  | "DIRECTLY_SUPPORTED"
+  | "PARTIALLY_SUPPORTED"
+  | "INFERRED_FROM_CONTEXT"
+  | "UNSUPPORTED";
+
+export interface ClaimEvidenceSupport {
+  supportLevel: ClaimEvidenceSupportLevel;
+  supportedTerms: string[];
+  missingTerms: string[];
+  evidenceText: string;
+  rationale: string;
+}
+
+const STOP_WORDS = new Set([
+  "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "with",
+  "by", "of", "from", "as", "is", "are", "was", "were", "be", "been", "being",
+  "have", "has", "had", "do", "does", "did", "their", "its", "that", "this",
+  "these", "those", "which", "who", "whom", "what", "when", "where", "why", "how",
+  "seeking", "dealing", "managing", "regular", "everyday", "noticeable", "notice",
+]);
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function extractSignificantTerms(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+}
+
+/**
+ * Evaluates whether source text directly substantiates the propositional claims in a PsychologyClaim.
+ * Strictly prevents broad inferences (e.g., emotional pain, full customer profiles)
+ * from being classified as OBSERVED based on weak single-word matches like "dog" or "fur".
+ */
+export function evaluateClaimEvidenceSupport(
+  claim: PsychologyClaim,
+  sourceText: string
+): ClaimEvidenceSupport {
+  if (!sourceText || !sourceText.trim()) {
+    return {
+      supportLevel: "UNSUPPORTED",
+      supportedTerms: [],
+      missingTerms: extractSignificantTerms(claim.claimText),
+      evidenceText: "",
+      rationale: "No source text provided to substantiate the claim.",
+    };
+  }
+
+  const cleanSource = sourceText.toLowerCase();
+  const claimTerms = extractSignificantTerms(claim.claimText);
+
+  if (claimTerms.length === 0) {
+    return {
+      supportLevel: "UNSUPPORTED",
+      supportedTerms: [],
+      missingTerms: [],
+      evidenceText: sourceText.slice(0, 100),
+      rationale: "Claim contains no substantive propositional terms to evaluate.",
+    };
+  }
+
+  const supportedTerms: string[] = [];
+  const missingTerms: string[] = [];
+
+  for (const term of claimTerms) {
+    const regex = new RegExp(`\\b${escapeRegExp(term)}`, "i");
+    if (regex.test(cleanSource)) {
+      supportedTerms.push(term);
+    } else {
+      missingTerms.push(term);
+    }
+  }
+
+  // Check if an explicit multi-word phrase from evidenceReference was quoted
+  const quoteMatch = claim.evidenceReference.match(/Observed quote[s]?: "([^"]+)"/i);
+  const quotedSnippet = quoteMatch ? quoteMatch[1] : null;
+
+  // Multi-pet check: if the claim specifically asserts cats and dogs, and both are in source text
+  const mentionsCatAndDog = /\b(cats?|feline)\b/i.test(cleanSource) && /\b(dogs?|canine|puppy)\b/i.test(cleanSource);
+  const claimMentionsCatAndDog = /cats and dogs/i.test(claim.claimText);
+  if (claimMentionsCatAndDog && mentionsCatAndDog) {
+    return {
+      supportLevel: "DIRECTLY_SUPPORTED",
+      supportedTerms: ["cat", "dog", ...supportedTerms],
+      missingTerms,
+      evidenceText: quotedSnippet || "cat, dog",
+      rationale: "Source text directly substantiates multi-pet (cats and dogs) context.",
+    };
+  }
+
+  // Strict check: single-word quotes cannot directly substantiate multi-term claims
+  const isSingleWordQuote = quotedSnippet && quotedSnippet.trim().split(/\s+/).length <= 1;
+  const overlapRatio = supportedTerms.length / claimTerms.length;
+
+  if (isSingleWordQuote && overlapRatio < 0.6) {
+    return {
+      supportLevel: "INFERRED_FROM_CONTEXT",
+      supportedTerms,
+      missingTerms,
+      evidenceText: quotedSnippet,
+      rationale: `Single-word quote "${quotedSnippet}" does not directly substantiate the full claim assertion (${claimTerms.length} terms).`,
+    };
+  }
+
+  if (overlapRatio >= 0.7 || (quotedSnippet && quotedSnippet.split(/\s+/).length >= 2 && cleanSource.includes(quotedSnippet.toLowerCase()))) {
+    return {
+      supportLevel: "DIRECTLY_SUPPORTED",
+      supportedTerms,
+      missingTerms,
+      evidenceText: quotedSnippet || supportedTerms.join(", "),
+      rationale: "Source text directly substantiates the core material assertion.",
+    };
+  }
+
+  if (overlapRatio >= 0.35) {
+    return {
+      supportLevel: "PARTIALLY_SUPPORTED",
+      supportedTerms,
+      missingTerms,
+      evidenceText: supportedTerms.join(", "),
+      rationale: "Source text contains partial thematic overlap but does not directly verify all aspects of the claim.",
+    };
+  }
+
+  if (supportedTerms.length > 0) {
+    return {
+      supportLevel: "INFERRED_FROM_CONTEXT",
+      supportedTerms,
+      missingTerms,
+      evidenceText: supportedTerms.join(", "),
+      rationale: "Weak keyword presence; material claims are inferred from product domain context.",
+    };
+  }
+
+  return {
+    supportLevel: "UNSUPPORTED",
+    supportedTerms: [],
+    missingTerms,
+    evidenceText: "",
+    rationale: "No material terms from the claim were found in the source text.",
+  };
+}
+
 /**
  * Extracts keyword matches or returns null.
  */
@@ -97,9 +245,11 @@ export function analyzeCustomerPsychology(
   const isTravelSafety = /seat belt|car harness|safety harness|leash|collar|tracker|gps/i.test(combinedText);
 
   // 1. Target Customer
+  const catAudienceMatch = findPatternMatch(copyText, [/(cat owners?|cat parents?|cat lovers?|for cats?)/i]);
+  const dogAudienceMatch = findPatternMatch(copyText, [/(dog owners?|dog parents?|dog lovers?|for dogs?)/i]);
   const catMatch = findPatternMatch(copyText, [/(cat\b|kitten|feline)/i]);
   const dogMatch = findPatternMatch(copyText, [/(dog\b|puppy|canine)/i]);
-  const multiPetMatch = catMatch && dogMatch;
+  const multiPetMatch = Boolean(catMatch && dogMatch);
 
   let targetCustomerClaim: PsychologyClaim;
   if (isAudioItem) {
@@ -128,13 +278,34 @@ export function analyzeCustomerPsychology(
       confidence: 0.88,
       status: "OBSERVED",
     };
-  } else if (catMatch) {
+  } else if (catAudienceMatch) {
     targetCustomerClaim = {
       claimText: "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
-      evidenceReference: `Observed quote: "${catMatch}" in ${ref}`,
+      evidenceReference: `Observed quote: "${catAudienceMatch}" in ${ref}`,
       evidenceType: "AD_COPY",
       confidence: 0.85,
       status: "OBSERVED",
+    };
+  } else if (dogAudienceMatch) {
+    targetCustomerClaim = {
+      claimText: isBedding
+        ? "Dog owners seeking dedicated, supportive resting space for their pets"
+        : isHairRemoval
+        ? "Dog owners managing shedding and fur accumulation on furniture and clothes"
+        : "Dog owners seeking practical care, feeding, or safety solutions for their pets",
+      evidenceReference: `Observed quote: "${dogAudienceMatch}" in ${ref}`,
+      evidenceType: "AD_COPY",
+      confidence: 0.85,
+      status: "OBSERVED",
+    };
+  } else if (catMatch) {
+    targetCustomerClaim = {
+      claimText: "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
+      evidenceReference: `Observed mention: "${catMatch}" in ${ref}`,
+      evidenceType: "AD_COPY",
+      confidence: 0.75,
+      status: "INFERRED",
+      uncertaintyNote: "Explicit customer demographic not in copy; inferred from cat mention.",
     };
   } else if (dogMatch) {
     targetCustomerClaim = {
@@ -143,10 +314,11 @@ export function analyzeCustomerPsychology(
         : isHairRemoval
         ? "Dog owners managing shedding and fur accumulation on furniture and clothes"
         : "Dog owners seeking practical care, feeding, or safety solutions for their pets",
-      evidenceReference: `Observed quote: "${dogMatch}" in ${ref}`,
+      evidenceReference: `Observed mention: "${dogMatch}" in ${ref}`,
       evidenceType: "AD_COPY",
-      confidence: 0.85,
-      status: "OBSERVED",
+      confidence: 0.75,
+      status: "INFERRED",
+      uncertaintyNote: "Explicit customer demographic not in copy; inferred from dog mention.",
     };
   } else if (isBedding && /dog/i.test(combinedText)) {
     targetCustomerClaim = {
@@ -445,7 +617,7 @@ export function analyzeCustomerPsychology(
     uncertaintyNote: "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion.",
   };
 
-  return {
+  const profile: CustomerPsychologyProfile = {
     targetCustomer: targetCustomerClaim,
     situationOrUseCase: situationClaim,
     functionalProblem: functionalProblemClaim,
@@ -461,4 +633,35 @@ export function analyzeCustomerPsychology(
     unverifiedBusinessMetricsDisclaimer:
       "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability.",
   };
+
+  // Strict grounding: prevent broad claims from remaining OBSERVED on weak 1-word quotes
+  const evidenceSource = copyText || combinedText;
+  const claimKeys = [
+    "targetCustomer",
+    "situationOrUseCase",
+    "functionalProblem",
+    "emotionalPain",
+    "desiredOutcome",
+    "purchaseTrigger",
+    "mainObjections",
+    "trustRequirements",
+    "demonstrationPotential",
+    "existingAlternatives",
+    "differentiationHypothesis",
+    "suggestedMessagingAngle",
+  ] as const;
+
+  for (const key of claimKeys) {
+    const claim = profile[key];
+    if (claim && claim.status === "OBSERVED") {
+      const evaluation = evaluateClaimEvidenceSupport(claim, evidenceSource);
+      if (evaluation.supportLevel !== "DIRECTLY_SUPPORTED") {
+        claim.status = "INFERRED";
+        claim.confidence = Math.min(claim.confidence, 0.75);
+        claim.uncertaintyNote = evaluation.rationale;
+      }
+    }
+  }
+
+  return profile;
 }

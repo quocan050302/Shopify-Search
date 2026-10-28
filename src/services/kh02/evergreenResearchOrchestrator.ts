@@ -32,6 +32,8 @@ import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
   DiscoveredProductCandidate,
+  selectTopResearchShortlist,
+  ResearchShortlistResult,
 } from "./identity/productCandidateDiscovery";
 import { matchCrossPlatformProductEvidence } from "./identity/crossPlatformProductMatcher";
 import {
@@ -71,6 +73,8 @@ export interface EvergreenLeaderboardResult {
   generatedAt: string;
   warnings: string[];
   errors: string[];
+  researchShortlist?: ResearchShortlistResult;
+  shortfallReason?: string | null;
 }
 
 export interface ResearchProgressPayload {
@@ -618,6 +622,9 @@ export async function runEvergreenProductResearch(
   }
 
   // ── Stage 7: Product-Specific Cross-Platform Evidence Association ─────────
+  let googleProductMatches = 0;
+  let googleBrandMatches = 0;
+
   for (const candidate of candidates) {
     for (const obs of secondaryObservations) {
       const match = matchCrossPlatformProductEvidence(candidate, {
@@ -633,14 +640,23 @@ export async function runEvergreenProductResearch(
         if (!candidate.supportingSourceTypes.includes(obs.source)) {
           candidate.supportingSourceTypes.push(obs.source);
         }
+        if (obs.source === "GOOGLE_ADS") {
+          googleProductMatches++;
+        }
         if (!candidate.videoUrl && obs.media?.videoUrl) {
           candidate.videoUrl = obs.media.videoUrl;
           if (obs.media.thumbnailUrl && !candidate.thumbnailUrl) {
             candidate.thumbnailUrl = obs.media.thumbnailUrl;
           }
         }
+      } else if (obs.source === "GOOGLE_ADS" && obs.advertiserDomain && candidate.storeDomain && obs.advertiserDomain === candidate.storeDomain) {
+        googleBrandMatches++;
       }
     }
+  }
+
+  if (providerTelemetry.GOOGLE_ADS) {
+    providerTelemetry.GOOGLE_ADS.productAssociatedCount = googleProductMatches;
   }
 
   if (context?.reportProgress) {
@@ -839,6 +855,12 @@ export async function runEvergreenProductResearch(
   if (!anyPassed) overallRunStatus = "NO_RESULTS";
   else if (anyFailed) overallRunStatus = "PARTIAL";
 
+  // Top 3 Research Shortlist (for business evaluation, separate from Verified Evergreen)
+  const researchShortlist = selectTopResearchShortlist(
+    candidates,
+    3
+  );
+
   const result: EvergreenLeaderboardResult = {
     researchRunId: runId,
     topic: input.topic,
@@ -859,6 +881,8 @@ export async function runEvergreenProductResearch(
     generatedAt,
     warnings,
     errors,
+    researchShortlist,
+    shortfallReason: researchShortlist.shortfallReason,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

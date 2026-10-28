@@ -15,6 +15,97 @@ export interface DiscoverySubqueryPlan {
   maxResults: number;
 }
 
+export interface MetaResearchBudget {
+  maxLogicalSubqueries: number;
+  maxProviderRequests: number;
+  maxPages: number;
+  maxUniqueAds: number;
+  maxDurationMs: number;
+}
+
+export class MetaQueryBudgetTracker {
+  private consumedRequests: number = 0;
+  private consumedPages: number = 0;
+  private uniqueAdsObserved: number = 0;
+  private startTime: number;
+  private budget: MetaResearchBudget;
+
+  constructor(budget: MetaResearchBudget) {
+    this.budget = budget;
+    this.startTime = Date.now();
+  }
+
+  get remainingRequests(): number {
+    return Math.max(0, this.budget.maxProviderRequests - this.consumedRequests);
+  }
+
+  get remainingUniqueAds(): number {
+    return Math.max(0, this.budget.maxUniqueAds - this.uniqueAdsObserved);
+  }
+
+  get isExhausted(): boolean {
+    if (this.consumedRequests >= this.budget.maxProviderRequests) return true;
+    if (this.uniqueAdsObserved >= this.budget.maxUniqueAds) return true;
+    if (Date.now() - this.startTime >= this.budget.maxDurationMs) return true;
+    return false;
+  }
+
+  canExecuteSubquery(): boolean {
+    return !this.isExhausted && this.remainingRequests > 0;
+  }
+
+  canExecuteNextRequest(): boolean {
+    return this.canExecuteSubquery();
+  }
+
+  reserveRequest(): boolean {
+    if (this.canExecuteNextRequest()) {
+      this.recordUsage(1, 0, 1);
+      return true;
+    }
+    return false;
+  }
+
+  recordRequestSuccess(adsCount: number): void {
+    this.uniqueAdsObserved += Math.max(0, adsCount);
+  }
+
+  getUsage(): { actualProviderRequests: number; totalAdsCollected: number } {
+    return {
+      actualProviderRequests: this.consumedRequests,
+      totalAdsCollected: this.uniqueAdsObserved,
+    };
+  }
+
+  reserveRequests(maxDesired: number): number {
+    const available = this.remainingRequests;
+    const reserved = Math.min(Math.max(1, maxDesired), available);
+    return reserved;
+  }
+
+  recordUsage(requestsConsumed: number, adsCount: number, pagesConsumed: number = 1): void {
+    this.consumedRequests += Math.max(0, requestsConsumed);
+    this.uniqueAdsObserved += Math.max(0, adsCount);
+    this.consumedPages += Math.max(0, pagesConsumed);
+  }
+
+  getUsageSummary(): {
+    consumedRequests: number;
+    consumedPages: number;
+    uniqueAdsObserved: number;
+    elapsedMs: number;
+    isBudgetExhausted: boolean;
+  } {
+    return {
+      consumedRequests: this.consumedRequests,
+      consumedPages: this.consumedPages,
+      uniqueAdsObserved: this.uniqueAdsObserved,
+      elapsedMs: Date.now() - this.startTime,
+      isBudgetExhausted: this.isExhausted,
+    };
+  }
+}
+
 export interface KH02DiscoveryQueryPlan {
   topic: string;
   market: string;
@@ -22,6 +113,7 @@ export interface KH02DiscoveryQueryPlan {
   subqueries: DiscoverySubqueryPlan[];
   maxTotalResults: number;
   maxRequests: number;
+  budget: MetaResearchBudget;
   deduplicateAcrossSubqueries: boolean;
   createdAt: string;
 }
@@ -38,6 +130,17 @@ const NICHE_SUBQUERY_TEMPLATES: Record<string, Array<{ subquery: string; rationa
   beauty: [
     { subquery: "facial cleansing brush", rationale: "Electronic skincare device" },
     { subquery: "red light therapy wand", rationale: "Dermatological wellness hardware" },
+    { subquery: "pore vacuum cleanser", rationale: "Facial blackhead suction appliance" },
+  ],
+  cleaning: [
+    { subquery: "electric spin scrubber", rationale: "Motorized bathroom & surface scrubbing tool" },
+    { subquery: "portable carpet cleaner", rationale: "Spot upholstery washing device" },
+    { subquery: "steam cleaner handheld", rationale: "High-temperature chemical-free sanitizing device" },
+  ],
+  kitchen: [
+    { subquery: "automatic bottle opener", rationale: "Electric beverage uncorking tool" },
+    { subquery: "electric oil spray bottle", rationale: "Pressurized uniform cooking dispenser" },
+    { subquery: "rechargeable food sealer", rationale: "Mini bag heat-welding preservation gadget" },
   ],
 };
 
@@ -52,7 +155,15 @@ export function buildKH02DiscoveryQueryPlan(
   const cleanTopic = (topic || "").trim().slice(0, 100);
   const normalizedLower = cleanTopic.toLowerCase();
   const maxTotal = options.maxTotalResults ? Math.min(100, Math.max(5, options.maxTotalResults)) : 25;
-  const maxReqs = options.maxRequests ? Math.min(10, Math.max(1, options.maxRequests)) : 4;
+  const maxReqs = options.maxRequests ? Math.min(10, Math.max(1, options.maxRequests)) : 3;
+
+  const budget: MetaResearchBudget = {
+    maxLogicalSubqueries: 3,
+    maxProviderRequests: maxReqs,
+    maxPages: Math.max(1, Math.ceil(maxTotal / 10)),
+    maxUniqueAds: maxTotal,
+    maxDurationMs: 45_000,
+  };
 
   // Primary query: use EXACT PHRASE to prevent token spray
   const primaryQuery: DiscoverySubqueryPlan = {
@@ -95,6 +206,7 @@ export function buildKH02DiscoveryQueryPlan(
     subqueries,
     maxTotalResults: maxTotal,
     maxRequests: maxReqs,
+    budget,
     deduplicateAcrossSubqueries: true,
     createdAt: new Date().toISOString(),
   };

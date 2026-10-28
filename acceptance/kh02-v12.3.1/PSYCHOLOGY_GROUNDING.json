@@ -1,0 +1,15 @@
+{
+  "gateId": "P0-13",
+  "requirement": "Customer psychology claims cannot be OBSERVED from weak single-word quotes",
+  "verdict": "PASS",
+  "observedValues": {
+    "inputQuote": "Dog",
+    "supportLevel": "INFERRED_FROM_CONTEXT",
+    "rationale": "Single-word quote \"Dog\" does not directly substantiate the full claim assertion (8 terms)."
+  },
+  "expectedValues": {
+    "supportLevel": "INFERRED_FROM_CONTEXT"
+  },
+  "reason": "Single-word quote 'Dog' correctly classified as INFERRED_FROM_CONTEXT",
+  "timestamp": "2026-10-28T01:42:25.830Z"
+}

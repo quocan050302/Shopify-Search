@@ -380,3 +380,133 @@ function hashCode(str: string): number {
   }
   return hash;
 }
+
+export interface DistinctnessEvaluation {
+  isDistinct: boolean;
+  totalCandidatesEvaluated: number;
+  distinctCount: number;
+  duplicateGroupsCount: number;
+  details: Array<{
+    candidateId: string;
+    title: string;
+    canonicalKey: string;
+    storeDomain: string | null;
+    isDuplicate: boolean;
+    duplicateOf?: string;
+  }>;
+}
+
+export interface ResearchShortlistResult {
+  shortlist: DiscoveredProductCandidate[];
+  requestedCount: number;
+  qualifiedCount: number;
+  shortfallReason: string | null;
+  distinctnessSummary: string;
+  distinctnessEvaluation: DistinctnessEvaluation;
+}
+
+/**
+ * Evaluates distinctness across product candidates, identifying shared canonical keys or duplicates.
+ */
+export function evaluateShortlistDistinctness(
+  candidates: DiscoveredProductCandidate[]
+): DistinctnessEvaluation {
+  const seenCanonicalKeys = new Map<string, string>(); // canonicalKey -> candidateId
+  const details: DistinctnessEvaluation["details"] = [];
+  let duplicateCount = 0;
+
+  for (const c of candidates) {
+    const rawKey = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
+    // Normalize key: remove model numbers or minor punctuation
+    const normalizedKey = rawKey.replace(/[-_.,;:]+/g, " ").trim();
+    const existing = seenCanonicalKeys.get(normalizedKey);
+
+    if (existing) {
+      duplicateCount++;
+      details.push({
+        candidateId: c.candidateId,
+        title: c.title,
+        canonicalKey: normalizedKey,
+        storeDomain: c.storeDomain,
+        isDuplicate: true,
+        duplicateOf: existing,
+      });
+    } else {
+      seenCanonicalKeys.set(normalizedKey, c.candidateId);
+      details.push({
+        candidateId: c.candidateId,
+        title: c.title,
+        canonicalKey: normalizedKey,
+        storeDomain: c.storeDomain,
+        isDuplicate: false,
+      });
+    }
+  }
+
+  const distinctCount = candidates.length - duplicateCount;
+  return {
+    isDistinct: duplicateCount === 0,
+    totalCandidatesEvaluated: candidates.length,
+    distinctCount,
+    duplicateGroupsCount: duplicateCount,
+    details,
+  };
+}
+
+/**
+ * Selects up to `limit` (default 3) distinct, genuine, niche-relevant products for human evaluation.
+ * Returns explicit shortfall reason if authorized source data yields fewer than 3 products.
+ */
+export function selectTopResearchShortlist(
+  candidates: DiscoveredProductCandidate[],
+  limit: number = 3
+): ResearchShortlistResult {
+  // 1. Filter candidates for shortlist eligibility:
+  // - Must be relevant to requested topic
+  // - Product identity must be resolved (not unresolved / campaign code)
+  // - Must have supporting source evidence
+  const eligible = candidates.filter((c) => {
+    const isRelevant = c.relevanceStatus === "RELEVANT" || c.relevanceStatus === "PROBABLY_RELEVANT";
+    const hasResolvedIdentity = c.identityStatus !== "UNRESOLVED" && Boolean(c.canonicalProductName || c.displayName);
+    const hasEvidence = (c.supportingAdIds && c.supportingAdIds.length > 0) || (c.sourceObservations && c.sourceObservations.length > 0);
+    return isRelevant && hasResolvedIdentity && hasEvidence;
+  });
+
+  // 2. Sort eligible candidates: prefer higher relevance score, then observation count
+  eligible.sort((a, b) => {
+    const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+    if (relDiff !== 0) return relDiff;
+    return b.totalObservationCount - a.totalObservationCount;
+  });
+
+  // 3. Apply distinctness filtering to prevent duplicate product opportunities
+  const distinctShortlist: DiscoveredProductCandidate[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const c of eligible) {
+    const canonicalKey = (c.canonicalProductName || c.displayName || c.title || "").toLowerCase().trim();
+    if (!seenKeys.has(canonicalKey)) {
+      seenKeys.add(canonicalKey);
+      distinctShortlist.push(c);
+    }
+    if (distinctShortlist.length >= limit) break;
+  }
+
+  const distinctnessEvaluation = evaluateShortlistDistinctness(distinctShortlist);
+  const shortfallReason = distinctShortlist.length < limit
+    ? `Only ${distinctShortlist.length} independently identifiable, niche-relevant product(s) were supported by available source evidence (requested ${limit}).`
+    : null;
+
+  const distinctnessSummary = distinctShortlist.length > 0
+    ? `${distinctShortlist.length} distinct products identified: ${distinctShortlist.map((c) => c.title).join(", ")}`
+    : "No distinct products qualified for shortlist";
+
+  return {
+    shortlist: distinctShortlist,
+    requestedCount: limit,
+    qualifiedCount: distinctShortlist.length,
+    shortfallReason,
+    distinctnessSummary,
+    distinctnessEvaluation,
+  };
+}

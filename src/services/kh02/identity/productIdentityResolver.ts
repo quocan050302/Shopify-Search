@@ -16,7 +16,11 @@
  */
 
 import { classifyAdvertisingHeadline, HeadlineClass } from "./adHeadlineClassifier";
-import { extractProductUrlMetadata, ExtractedProductUrlInfo } from "./productMetadataExtractor";
+import {
+  extractProductUrlMetadata,
+  ExtractedProductUrlInfo,
+  fetchVerifiedProductPageMetadata,
+} from "./productMetadataExtractor";
 import { ProductMatchConfidence } from "../types";
 
 export type ProductIdentityStatus =
@@ -53,6 +57,7 @@ export interface ProductIdentity {
 
 export interface CandidateIdentityInput {
   landingPageUrl?: string | null;
+  rawLandingUrl?: string | null; // Compatibility alias
   storeDomain?: string | null;
   brandOrAdvertiser?: string | null;
   rawHeadlines: string[];
@@ -60,6 +65,15 @@ export interface CandidateIdentityInput {
   existingResearchProductId?: string | null;
   existingProductTitle?: string | null;
   sourceReference?: string | null;
+  verifiedMerchantTitle?: string | null;
+  verifiedMerchantBrand?: string | null;
+  verifiedPageType?: string | null;
+}
+
+export interface IdentityResolutionContext {
+  timeoutMs?: number;
+  metadataFetchEnabled?: boolean;
+  metadataFetcher?: (url: string) => Promise<any>;
 }
 
 /**
@@ -69,10 +83,11 @@ export function resolveProductIdentity(
   input: CandidateIdentityInput
 ): ProductIdentity {
   const storeDomain = input.storeDomain || null;
-  const brand = input.brandOrAdvertiser || null;
+  const brand = input.verifiedMerchantBrand || input.brandOrAdvertiser || null;
   const sourceRef = input.sourceReference || "Ad Creative";
   const firstHeadline = input.rawHeadlines[0] || null;
-  const urlMeta = extractProductUrlMetadata(input.landingPageUrl);
+  const targetUrl = input.landingPageUrl || input.rawLandingUrl || null;
+  const urlMeta = extractProductUrlMetadata(targetUrl);
 
   // Pre-classify all raw headlines to find any legitimate product titles
   const validProductHeadlines: Array<{
@@ -106,11 +121,47 @@ export function resolveProductIdentity(
 
   const bestAdHeadline = validProductHeadlines[0] || null;
 
+  // Level 0: Verified merchant product page metadata (Highest Priority)
+  if (input.verifiedMerchantTitle && input.verifiedPageType === "ACTUAL_PRODUCT_PAGE") {
+    const merchantClassification = classifyAdvertisingHeadline(input.verifiedMerchantTitle);
+    if (merchantClassification.isEligibleAsProductName && merchantClassification.cleanTitle) {
+      const canonicalName = merchantClassification.cleanTitle;
+      return {
+        canonicalProductName: canonicalName,
+        canonicalName,
+        displayName: canonicalName,
+        displayTitle: canonicalName,
+        originalAdHeadline: firstHeadline,
+        originalCreativeCode: urlMeta.productHandle || null,
+        productType: null,
+        brand,
+        model: merchantClassification.extractedModelOrSku || null,
+        sku: null,
+        variantId: null,
+        canonicalProductUrl: urlMeta.cleanCanonicalUrl || input.landingPageUrl || null,
+        productUrl: urlMeta.cleanCanonicalUrl || input.landingPageUrl || null,
+        landingPageUrl: input.landingPageUrl || null,
+        storeDomain: urlMeta.storeDomain || storeDomain,
+        category: null,
+        identityStatus: "VERIFIED",
+        identityConfidence: "EXACT",
+        resolutionHierarchyLevel: 1,
+        resolutionSource: "Verified Merchant Product Page Metadata (JSON-LD / OG Title)",
+        identityEvidenceReferences: [
+          `Merchant Title: ${canonicalName}`,
+          `Canonical URL: ${urlMeta.cleanCanonicalUrl || input.landingPageUrl}`,
+        ],
+        requiresManualReview: false,
+        isEligibleAsEvergreenWinner: true,
+      };
+    }
+  }
+
   // Level 1: Verified product-specific landing page (Shopify /products/<handle>)
   if (urlMeta.isShopifyProductUrl && urlMeta.derivedTitleFromSlug) {
     const slugClassification = classifyAdvertisingHeadline(urlMeta.derivedTitleFromSlug);
 
-    // CRITICAL: Ensure slug itself is a valid product name, not a campaign code like "ad50fb" or "wmt004-1"
+    // CRITICAL: Ensure slug itself is a valid product name, not a campaign code like "ad50fb", "wmt004-1" or "wmt008-l4v2-mustyclothes"
     if (slugClassification.headlineClass === "PRODUCT_CANDIDATE" && slugClassification.isEligibleAsProductName && slugClassification.cleanTitle) {
       // Prefer richer descriptive ad headline if it corroborates the slug
       const canonicalName = (bestAdHeadline && bestAdHeadline.cleanText.toLowerCase().includes(slugClassification.cleanTitle.toLowerCase()))
@@ -330,4 +381,62 @@ export function resolveProductIdentity(
     requiresManualReview: true,
     isEligibleAsEvergreenWinner: false,
   };
+}
+
+/**
+ * Asynchronously resolves product identity with live merchant landing page metadata inspection when available.
+ * Detects contradictions between ad copy claims and landing page merchant offerings.
+ */
+export async function resolveProductIdentityWithEvidence(
+  input: CandidateIdentityInput,
+  context: IdentityResolutionContext = {}
+): Promise<ProductIdentity> {
+  let verifiedMerchantTitle: string | null = null;
+  let verifiedMerchantBrand: string | null = null;
+  let verifiedPageType: string | null = null;
+
+  if (input.landingPageUrl && context.metadataFetchEnabled !== false) {
+    try {
+      const fetcher = context.metadataFetcher || ((u: string) => fetchVerifiedProductPageMetadata(u, { timeoutMs: context.timeoutMs }));
+      const metaEvidence = await fetcher(input.landingPageUrl);
+      if (metaEvidence && metaEvidence.isSafe && metaEvidence.pageType === "ACTUAL_PRODUCT_PAGE") {
+        verifiedMerchantTitle = metaEvidence.productName || metaEvidence.ogTitle || metaEvidence.title || null;
+        verifiedMerchantBrand = metaEvidence.brand || null;
+        verifiedPageType = metaEvidence.pageType;
+      }
+    } catch {
+      // Non-fatal: safely fall back to synchronous identity resolution
+    }
+  }
+
+  const identity = resolveProductIdentity({
+    ...input,
+    verifiedMerchantTitle: verifiedMerchantTitle || input.verifiedMerchantTitle,
+    verifiedMerchantBrand: verifiedMerchantBrand || input.verifiedMerchantBrand,
+    verifiedPageType: verifiedPageType || input.verifiedPageType,
+  });
+
+  // Check for contradiction between ad headline and verified merchant page
+  if (verifiedMerchantTitle && input.rawHeadlines.length > 0) {
+    const merchantClass = classifyAdvertisingHeadline(verifiedMerchantTitle);
+    const adClass = classifyAdvertisingHeadline(input.rawHeadlines[0]);
+    if (merchantClass.isEligibleAsProductName && adClass.isEligibleAsProductName) {
+      const merchantNouns = merchantClass.cleanTitle?.toLowerCase().split(/\s+/) || [];
+      const adNouns = adClass.cleanTitle?.toLowerCase().split(/\s+/) || [];
+      const hasOverlap = merchantNouns.some((n) => adNouns.includes(n));
+      if (!hasOverlap && merchantNouns.length > 0 && adNouns.length > 0) {
+        return {
+          ...identity,
+          identityStatus: "AMBIGUOUS",
+          requiresManualReview: true,
+          identityEvidenceReferences: [
+            ...identity.identityEvidenceReferences,
+            `Ad vs Merchant Title Mismatch: Ad claims '${adClass.cleanTitle}' but merchant sells '${merchantClass.cleanTitle}'`,
+          ],
+        };
+      }
+    }
+  }
+
+  return identity;
 }

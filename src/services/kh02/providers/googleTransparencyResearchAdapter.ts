@@ -124,6 +124,36 @@ export interface NormalizedGoogleAd {
   marketProvenance: AdMarketProvenance;
 }
 
+export interface GoogleEnrichmentExecution {
+  attemptedDomains: string[];
+  advertiserLookupSucceeded: boolean;
+  advertisersFound: number;
+  creativeQuerySucceeded: boolean;
+  creativesReturned: number;
+  normalizedObservations: number;
+  productLevelMatches: number;
+  brandLevelMatches: number;
+  productEvidenceIds: string[];
+  queryErrors: string[];
+  queryTimestamp: string | null;
+}
+
+/**
+ * Extracts the canonical registrable domain from a hostname or URL.
+ * Handles subdomains (e.g., cc.uprootclean.com -> uprootclean.com, store.brand.co.uk -> brand.co.uk).
+ */
+export function extractRegistrableDomain(domainOrUrl: string): string {
+  if (!domainOrUrl) return "";
+  const clean = domainOrUrl.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+  const parts = clean.split(".");
+  if (parts.length <= 2) return clean;
+  const secondLast = parts[parts.length - 2];
+  if (["co", "com", "net", "org", "gov", "edu"].includes(secondLast) && parts.length > 2) {
+    return parts.slice(-3).join(".");
+  }
+  return parts.slice(-2).join(".");
+}
+
 export interface NormalizedAdsResult {
   ads: NormalizedGoogleAd[];
   observations: SourceObservation[];
@@ -845,64 +875,91 @@ export async function collectGoogleAdvertiserSignals(
     let anyLookupSucceeded = false;
     let anyAdvertiserFound = false;
     let adsRetrievalFailed = false;
+    let advertisersFoundCount = 0;
+    let creativesReturnedCount = 0;
+    let creativeQuerySucceeded = false;
+    const attemptedDomains: string[] = [];
 
-    for (const domain of targetDomains.slice(0, 5)) {
+    for (const rawDomain of targetDomains.slice(0, 5)) {
       if (query.signal?.aborted) break;
 
-      try {
-        // Step 1: Search advertiser by domain
-        const advResult = client.callToolByName
-          ? await client.callToolByName(searchTool, { query: domain })
-          : await client.searchAdvertiserByDomain(domain);
-        anyLookupSucceeded = true;
+      const domain = rawDomain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+      const regDomain = extractRegistrableDomain(domain);
+      const lookupKeys = [domain];
+      if (regDomain && regDomain !== domain && !domain.startsWith("www.")) {
+        lookupKeys.push(regDomain);
+      }
 
-        const rawAdvList = Array.isArray(advResult)
-          ? advResult
-          : (Array.isArray(advResult?.advertisers)
-            ? advResult.advertisers
-            : (Array.isArray(advResult?.data) ? advResult.data : []));
-
-        // Step 2: Extract advertiser ID(s)
-        const advertiserIds: string[] = [];
-        for (const adv of rawAdvList) {
-          const id = adv?.advertiser_id || adv?.id || adv?.advertiserId;
-          if (id) advertiserIds.push(String(id));
+      for (const key of lookupKeys) {
+        if (!attemptedDomains.includes(key)) {
+          attemptedDomains.push(key);
         }
 
-        if (advertiserIds.length > 0) {
-          anyAdvertiserFound = true;
-        }
+        try {
+          // Step 1: Search advertiser by domain
+          const advResult = client.callToolByName
+            ? await client.callToolByName(searchTool, { query: key })
+            : await client.searchAdvertiserByDomain(key);
+          anyLookupSucceeded = true;
 
-        // Step 3: Retrieve actual ad creatives for the discovered advertiser(s)
-        for (const advId of advertiserIds.slice(0, 2)) {
-          if (query.signal?.aborted) break;
-          try {
-            const adsResult = client.callToolByName
-              ? await client.callToolByName(adsTool, {
-                  advertiser_id: advId,
-                  region: query.market || "US",
-                })
-              : await client.getAds(advId, query.market || "US");
+          const rawAdvList = Array.isArray(advResult)
+            ? advResult
+            : (Array.isArray(advResult?.advertisers)
+              ? advResult.advertisers
+              : (Array.isArray(advResult?.data) ? advResult.data : []));
 
-            const normResult = normalizeGoogleAdsResponse(adsResult, {
-              requestedDomain: domain,
-              topic: query.topic,
-              observedAt: new Date().toISOString(),
-              toolName: adsTool,
-              requestedMarket: query.market || "US",
-              providerFilterMarket: query.market || "US",
-            });
-
-            for (const obs of normResult.observations) {
-              observations.push(obs);
-            }
-          } catch (adsErr: any) {
-            adsRetrievalFailed = true;
-            errors.push(`Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`);
+          // Step 2: Extract advertiser ID(s)
+          const advertiserIds: string[] = [];
+          for (const adv of rawAdvList) {
+            const id = adv?.advertiser_id || adv?.id || adv?.advertiserId;
+            if (id) advertiserIds.push(String(id));
           }
+
+          if (advertiserIds.length > 0) {
+            anyAdvertiserFound = true;
+            advertisersFoundCount += advertiserIds.length;
+          }
+
+          // Step 3: Retrieve actual ad creatives for the discovered advertiser(s)
+          for (const advId of advertiserIds.slice(0, 2)) {
+            if (query.signal?.aborted) break;
+            try {
+              const adsResult = client.callToolByName
+                ? await client.callToolByName(adsTool, {
+                    advertiser_id: advId,
+                    region: query.market || "US",
+                  })
+                : await client.getAds(advId, query.market || "US");
+
+              creativeQuerySucceeded = true;
+              const rawAds = Array.isArray(adsResult) ? adsResult : (Array.isArray(adsResult?.ads) ? adsResult.ads : []);
+              creativesReturnedCount += rawAds.length;
+
+              const normResult = normalizeGoogleAdsResponse(adsResult, {
+                requestedDomain: key,
+                topic: query.topic,
+                observedAt: new Date().toISOString(),
+                toolName: adsTool,
+                requestedMarket: query.market || "US",
+                providerFilterMarket: query.market || "US",
+              });
+
+              for (const obs of normResult.observations) {
+                observations.push(obs);
+              }
+            } catch (adsErr: any) {
+              adsRetrievalFailed = true;
+              errors.push(`Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`);
+            }
+          }
+
+          // If advertiser(s) were found with this key, don't fall back to broader domain
+          if (advertiserIds.length > 0) {
+            break;
+          }
+        } catch (domainErr: any) {
+          errors.push(`Google Transparency advertiser lookup failed for ${key}: ${domainErr.message}`);
         }
-      } catch (domainErr: any) {
-        errors.push(`Google Transparency advertiser lookup failed for ${domain}: ${domainErr.message}`);
       }
     }
 
@@ -919,6 +976,20 @@ export async function collectGoogleAdvertiserSignals(
       status = "NO_RESULTS";
     }
 
+    const enrichmentExecution: GoogleEnrichmentExecution = {
+      attemptedDomains,
+      advertiserLookupSucceeded: anyLookupSucceeded,
+      advertisersFound: advertisersFoundCount,
+      creativeQuerySucceeded,
+      creativesReturned: creativesReturnedCount,
+      normalizedObservations: observations.length,
+      productLevelMatches: 0,
+      brandLevelMatches: 0,
+      productEvidenceIds: [],
+      queryErrors: [...errors],
+      queryTimestamp: startedAt,
+    };
+
     return {
       source: "GOOGLE_ADS",
       status,
@@ -932,6 +1003,20 @@ export async function collectGoogleAdvertiserSignals(
       completedAt: new Date().toISOString(),
       errors,
       warnings,
+      enrichmentExecution,
+      executionMetadata: {
+        attempted: true,
+        executed: anyLookupSucceeded,
+        liveSucceeded: observations.length > 0 || (anyLookupSucceeded && errors.length === 0),
+        startedAt,
+        completedAt: new Date().toISOString(),
+        upstreamReturnedCount: creativesReturnedCount,
+        freshLiveObservedCount: observations.length,
+        persistedInsertedCount: 0,
+        persistedUpdatedCount: 0,
+        cachedRecordsUsedCount: 0,
+        fallbackToCache: false,
+      },
     };
   } catch (err: any) {
     return {

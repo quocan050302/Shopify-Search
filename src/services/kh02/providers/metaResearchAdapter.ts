@@ -30,7 +30,11 @@ import { createMetaCollectorClient } from "@/services/discovery/metaCollector/me
 import { normalizeMetaCollectorAd } from "@/services/discovery/normalization/normalizeMetaCollectorAd";
 import { NormalizedDiscoveredAd } from "@/services/discovery/types";
 import { ingestDiscoveredAds } from "@/services/discovery/discoveryIngestionService";
-import { buildKH02DiscoveryQueryPlan } from "@/services/kh02/discovery/discoveryQueryPlanner";
+import {
+  buildKH02DiscoveryQueryPlan,
+  MetaQueryBudgetTracker,
+  MetaResearchBudget,
+} from "@/services/kh02/discovery/discoveryQueryPlanner";
 
 export interface MarketProvenance {
   requestedMarket: string;
@@ -229,6 +233,124 @@ export async function diagnoseMetaLiveCollector(
   };
 }
 
+export type MetaQueryOutcomeStatus =
+  | "SUCCEEDED_WITH_RESULTS"
+  | "SUCCEEDED_EMPTY"
+  | "FAILED"
+  | "CANCELLED"
+  | "SKIPPED_BUDGET";
+
+export interface MetaSubqueryExecution {
+  queryId: string;
+  keyword: string;
+  searchType: string;
+  attempted: boolean;
+  status: MetaQueryOutcomeStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  actualApiCalls: number;
+  returnedCount: number;
+  errorCode: string | null;
+  errorMessage: string | null;
+}
+
+export interface MetaAggregatedOutcomes {
+  executionStatus: string;
+  liveSucceeded: boolean;
+  attemptedQueries: number;
+  successfulQueries: number;
+  failedQueries: number;
+  cancelledQueries: number;
+  skippedQueries: number;
+  totalReturned: number;
+  sourceRecordsReturned: number;
+  uniqueExternalIdsReturned: number;
+  errors: string[];
+  warnings: string[];
+}
+
+export function aggregateMetaQueryOutcomes(
+  subqueries: MetaSubqueryExecution[]
+): MetaAggregatedOutcomes {
+  const attempted = subqueries.filter((s) => s.attempted);
+  if (attempted.length === 0) {
+    return {
+      executionStatus: "NOT_RUN",
+      liveSucceeded: false,
+      attemptedQueries: 0,
+      successfulQueries: 0,
+      failedQueries: 0,
+      cancelledQueries: 0,
+      skippedQueries: subqueries.length,
+      totalReturned: 0,
+      sourceRecordsReturned: 0,
+      uniqueExternalIdsReturned: 0,
+      errors: [],
+      warnings: ["No Meta subqueries were attempted."],
+    };
+  }
+
+  const succeededWithResults = subqueries.filter((s) => s.status === "SUCCEEDED_WITH_RESULTS");
+  const succeededEmpty = subqueries.filter((s) => s.status === "SUCCEEDED_EMPTY");
+  const failed = subqueries.filter((s) => s.status === "FAILED");
+  const cancelled = subqueries.filter((s) => s.status === "CANCELLED");
+  const skipped = subqueries.filter((s) => s.status === "SKIPPED_BUDGET");
+
+  const totalReturned = subqueries.reduce((sum, s) => sum + s.returnedCount, 0);
+  const successfulCount = succeededWithResults.length + succeededEmpty.length;
+  const errors = failed.map((f) => `Subquery '${f.keyword}' failed: ${f.errorMessage || f.errorCode || "Unknown error"}`);
+  const warnings: string[] = [];
+
+  if (skipped.length > 0) {
+    warnings.push(`${skipped.length} subqueries skipped due to global budget constraints.`);
+  }
+
+  let executionStatus: string;
+  let liveSucceeded: boolean;
+
+  if (failed.length === attempted.length) {
+    executionStatus = "FAILED";
+    liveSucceeded = false;
+  } else if (cancelled.length === attempted.length) {
+    executionStatus = "CANCELLED";
+    liveSucceeded = false;
+  } else if (successfulCount > 0 && failed.length > 0) {
+    if (totalReturned > 0) {
+      executionStatus = "PARTIAL_SUCCESS_WITH_RESULTS";
+      liveSucceeded = true;
+    } else {
+      executionStatus = "PARTIAL_SUCCESS_EMPTY";
+      liveSucceeded = true;
+    }
+  } else if (successfulCount === attempted.length) {
+    if (totalReturned > 0) {
+      executionStatus = "QUERY_SUCCEEDED_WITH_RESULTS";
+      liveSucceeded = true;
+    } else {
+      executionStatus = "QUERY_SUCCEEDED_EMPTY";
+      liveSucceeded = true;
+    }
+  } else {
+    executionStatus = totalReturned > 0 ? "QUERY_SUCCEEDED_WITH_RESULTS" : "FAILED";
+    liveSucceeded = totalReturned > 0;
+  }
+
+  return {
+    executionStatus,
+    liveSucceeded,
+    attemptedQueries: attempted.length,
+    successfulQueries: successfulCount,
+    failedQueries: failed.length,
+    cancelledQueries: cancelled.length,
+    skippedQueries: skipped.length,
+    totalReturned,
+    sourceRecordsReturned: totalReturned,
+    uniqueExternalIdsReturned: totalReturned,
+    errors,
+    warnings,
+  };
+}
+
 /**
  * Executes a real live query against public Meta Ad Library via the local MetaAdsCollector MCP server.
  */
@@ -246,6 +368,20 @@ export interface MetaLiveCollectionBreakdown {
   newlyIngestedCount: number;
   auditTraces?: UpstreamRecordTrace[];
   error?: string;
+  // V12.3.1 additions
+  liveSucceeded?: boolean;
+  executionStatus?: string;
+  attemptedQueries?: number;
+  successfulQueries?: number;
+  failedQueries?: number;
+  cancelledQueries?: number;
+  queryOutcomes?: MetaSubqueryExecution[];
+  currentQueryExternalAdIds?: string[];
+  currentQueryPersistedAdIds?: string[];
+  existingUpdatedAdIds?: string[];
+  newlyInsertedAdIds?: string[];
+  errors?: string[];
+  warnings?: string[];
 }
 
 export async function collectLiveMetaAds(
@@ -280,7 +416,16 @@ export async function collectLiveMetaAds(
       newAdIds: [],
       totalCollected: 0,
       newlyIngestedCount: 0,
+      liveSucceeded: false,
+      executionStatus: "NOT_CONFIGURED",
+      attemptedQueries: 0,
+      successfulQueries: 0,
+      failedQueries: 0,
+      cancelledQueries: 0,
+      queryOutcomes: [],
       error: "Meta collector not configured",
+      errors: ["Meta collector not configured"],
+      warnings: [],
     };
   }
 
@@ -293,11 +438,29 @@ export async function collectLiveMetaAds(
       maxRequests: 3,
     });
 
+    const budgetTracker = new MetaQueryBudgetTracker(plan.budget);
+    const queryOutcomes: MetaSubqueryExecution[] = [];
+
     const rawAds: any[] = [];
     const seenRawIds = new Set<string>();
     const subqueryBindingMap = new Map<string, { queryKeyword: string; queryId: string }>();
 
     // 1. Primary Query Execution (Preserves user topic with exact phrase constraint)
+    const primaryOutcome: MetaSubqueryExecution = {
+      queryId: "primary",
+      keyword: plan.primaryQuery.subquery,
+      searchType: plan.primaryQuery.searchType,
+      attempted: true,
+      status: "FAILED",
+      startedAt: new Date().toISOString(),
+      completedAt: null,
+      actualApiCalls: 0,
+      returnedCount: 0,
+      errorCode: null,
+      errorMessage: null,
+    };
+
+    const primaryReqs = budgetTracker.reserveRequests(2);
     try {
       const primaryRes = await client.searchAds({
         query: plan.primaryQuery.subquery,
@@ -305,12 +468,18 @@ export async function collectLiveMetaAds(
         status: "ACTIVE",
         searchType: plan.primaryQuery.searchType,
         maxResults: plan.primaryQuery.maxResults,
-        maxRequests: 2,
+        maxRequests: primaryReqs,
         maxSeconds: 20,
         pageSize: 10,
       });
 
       const primaryAds = primaryRes.ads || [];
+      budgetTracker.recordUsage(primaryReqs, primaryAds.length);
+      primaryOutcome.completedAt = new Date().toISOString();
+      primaryOutcome.actualApiCalls = primaryReqs;
+      primaryOutcome.returnedCount = primaryAds.length;
+      primaryOutcome.status = primaryAds.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY";
+
       for (const ad of primaryAds) {
         const id = String(ad.id || ad.library_id || ad.libraryId);
         if (id && !seenRawIds.has(id)) {
@@ -320,16 +489,52 @@ export async function collectLiveMetaAds(
         }
       }
     } catch (primaryErr: any) {
-      console.warn(`[META_COLLECTOR] Primary query notice for '${plan.primaryQuery.subquery}':`, primaryErr.message);
+      primaryOutcome.completedAt = new Date().toISOString();
+      primaryOutcome.status = "FAILED";
+      primaryOutcome.errorCode = primaryErr.code || "PRIMARY_QUERY_ERROR";
+      primaryOutcome.errorMessage = primaryErr.message || String(primaryErr);
+      console.warn(`[META_COLLECTOR] Primary query error for '${plan.primaryQuery.subquery}':`, primaryErr.message);
     }
+    queryOutcomes.push(primaryOutcome);
 
     // 2. Bounded Subquery Expansion (Only expands relevant domain subqueries within budget)
     const maxSubqueriesToRun = Math.min(plan.subqueries.length, 2);
     for (let sIdx = 0; sIdx < maxSubqueriesToRun; sIdx++) {
-      if (rawAds.length >= plan.maxTotalResults) break;
-      if (query.signal?.aborted) break;
-
       const subplan = plan.subqueries[sIdx];
+      const subqueryId = `subquery_${sIdx + 1}`;
+
+      if (rawAds.length >= plan.maxTotalResults || query.signal?.aborted || !budgetTracker.canExecuteSubquery()) {
+        queryOutcomes.push({
+          queryId: subqueryId,
+          keyword: subplan.subquery,
+          searchType: subplan.searchType,
+          attempted: false,
+          status: query.signal?.aborted ? "CANCELLED" : "SKIPPED_BUDGET",
+          startedAt: null,
+          completedAt: null,
+          actualApiCalls: 0,
+          returnedCount: 0,
+          errorCode: null,
+          errorMessage: query.signal?.aborted ? "Operation cancelled" : "Skipped due to query budget limit",
+        });
+        continue;
+      }
+
+      const subOutcome: MetaSubqueryExecution = {
+        queryId: subqueryId,
+        keyword: subplan.subquery,
+        searchType: subplan.searchType,
+        attempted: true,
+        status: "FAILED",
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+        actualApiCalls: 0,
+        returnedCount: 0,
+        errorCode: null,
+        errorMessage: null,
+      };
+
+      const subReqs = budgetTracker.reserveRequests(2);
       try {
         const subRes = await client.searchAds({
           query: subplan.subquery,
@@ -337,23 +542,64 @@ export async function collectLiveMetaAds(
           status: "ACTIVE",
           searchType: subplan.searchType,
           maxResults: Math.min(subplan.maxResults, plan.maxTotalResults - rawAds.length),
-          maxRequests: 2,
+          maxRequests: subReqs,
           maxSeconds: 20,
           pageSize: 10,
         });
 
         const subAds = subRes.ads || [];
+        budgetTracker.recordUsage(subReqs, subAds.length);
+        subOutcome.completedAt = new Date().toISOString();
+        subOutcome.actualApiCalls = subReqs;
+        subOutcome.returnedCount = subAds.length;
+        subOutcome.status = subAds.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY";
+
         for (const ad of subAds) {
           const id = String(ad.id || ad.library_id || ad.libraryId);
           if (id && !seenRawIds.has(id)) {
             seenRawIds.add(id);
             rawAds.push(ad);
-            subqueryBindingMap.set(id, { queryKeyword: subplan.subquery, queryId: `subquery_${sIdx + 1}` });
+            subqueryBindingMap.set(id, { queryKeyword: subplan.subquery, queryId: subqueryId });
           }
         }
       } catch (subErr: any) {
-        console.warn(`[META_COLLECTOR] Subquery notice for '${subplan.subquery}':`, subErr.message);
+        subOutcome.completedAt = new Date().toISOString();
+        subOutcome.status = "FAILED";
+        subOutcome.errorCode = subErr.code || "SUBQUERY_ERROR";
+        subOutcome.errorMessage = subErr.message || String(subErr);
+        console.warn(`[META_COLLECTOR] Subquery error for '${subplan.subquery}':`, subErr.message);
       }
+      queryOutcomes.push(subOutcome);
+    }
+
+    const aggregated = aggregateMetaQueryOutcomes(queryOutcomes);
+
+    // If every query failed (or cancelled), fail closed truthfully!
+    if (!aggregated.liveSucceeded) {
+      return {
+        recordsInDbBeforeQuery: dbCountBefore,
+        sourceRecordsReturned: 0,
+        recordsNormalized: 0,
+        newUniqueInserted: 0,
+        existingUpdated: 0,
+        recordsRejected: 0,
+        recordsInDbAfterQuery: dbCountBefore,
+        providerQueryTimestamp,
+        newAdIds: [],
+        totalCollected: 0,
+        newlyIngestedCount: 0,
+        liveSucceeded: false,
+        executionStatus: aggregated.executionStatus,
+        attemptedQueries: queryOutcomes.filter((q) => q.attempted).length,
+        successfulQueries: aggregated.successfulQueries,
+        failedQueries: aggregated.failedQueries,
+        cancelledQueries: aggregated.cancelledQueries,
+        queryOutcomes,
+        error: aggregated.errors.join("; ") || "All Meta queries failed",
+        errors: aggregated.errors,
+        warnings: aggregated.warnings,
+        auditTraces: [],
+      };
     }
 
     if (rawAds.length === 0) {
@@ -369,6 +615,15 @@ export async function collectLiveMetaAds(
         newlyIngestedCount: 0,
         newAdIds: [],
         totalCollected: 0,
+        liveSucceeded: true,
+        executionStatus: aggregated.executionStatus,
+        attemptedQueries: queryOutcomes.filter((q) => q.attempted).length,
+        successfulQueries: aggregated.successfulQueries,
+        failedQueries: aggregated.failedQueries,
+        cancelledQueries: aggregated.cancelledQueries,
+        queryOutcomes,
+        errors: aggregated.errors,
+        warnings: aggregated.warnings,
         auditTraces: [],
       };
     }
@@ -474,6 +729,18 @@ export async function collectLiveMetaAds(
     const newInserted = ingestSummary.newUniqueCount || ingestSummary.newUniqueInserted || 0;
     const existingUp = ingestSummary.existingCount || ingestSummary.existingUpdated || 0;
 
+    const newlyInsertedAdIds = (ingestSummary.recordTraces || [])
+      .filter((t) => t.decision === "ACCEPTED" && t.persistedId)
+      .map((t) => t.persistedId!);
+
+    const existingUpdatedAdIds = (ingestSummary.recordTraces || [])
+      .filter((t) => (t.decision === "UPDATED" || t.decision === "DUPLICATE") && t.persistedId)
+      .map((t) => t.persistedId!);
+
+    const currentQueryPersistedAdIds = Array.from(
+      new Set([...newlyInsertedAdIds, ...existingUpdatedAdIds, ...(ingestSummary.adIds || [])])
+    );
+
     return {
       recordsInDbBeforeQuery: dbCountBefore,
       sourceRecordsReturned: rawAds.length,
@@ -487,6 +754,19 @@ export async function collectLiveMetaAds(
       newAdIds: ingestSummary.adIds || [],
       totalCollected: rawAds.length,
       auditTraces,
+      liveSucceeded: true,
+      executionStatus: aggregated.executionStatus,
+      attemptedQueries: queryOutcomes.filter((q) => q.attempted).length,
+      successfulQueries: aggregated.successfulQueries,
+      failedQueries: aggregated.failedQueries,
+      cancelledQueries: aggregated.cancelledQueries,
+      queryOutcomes,
+      currentQueryExternalAdIds: Array.from(seenRawIds),
+      currentQueryPersistedAdIds,
+      newlyInsertedAdIds,
+      existingUpdatedAdIds,
+      errors: aggregated.errors,
+      warnings: aggregated.warnings,
     };
   } catch (err: any) {
     return {
@@ -501,7 +781,16 @@ export async function collectLiveMetaAds(
       newlyIngestedCount: 0,
       newAdIds: [],
       totalCollected: 0,
+      liveSucceeded: false,
+      executionStatus: "FAILED",
+      attemptedQueries: 1,
+      successfulQueries: 0,
+      failedQueries: 1,
+      cancelledQueries: 0,
+      queryOutcomes: [],
       error: err?.message || String(err),
+      errors: [err?.message || String(err)],
+      warnings: [],
     };
   } finally {
     if (client) {
@@ -519,7 +808,8 @@ export async function collectMetaProductSignals(
   const startedAt = new Date().toISOString();
   const errors: string[] = [];
   const warnings: string[] = [];
-  const freshLiveAdIds = new Set<string>();
+  const freshLivePersistedAdIds = new Set<string>();
+  const freshLiveExternalAdIds = new Set<string>();
   let liveAttempted = false;
   let liveSucceeded = false;
   let liveCollectorResult: any = null;
@@ -537,15 +827,26 @@ export async function collectMetaProductSignals(
     try {
       const liveRes = await collectLiveMetaAds(query);
       liveCollectorResult = liveRes;
-      if (liveRes.newAdIds && liveRes.newAdIds.length > 0) {
-        liveRes.newAdIds.forEach((id) => freshLiveAdIds.add(id));
+      liveSucceeded = Boolean(liveRes.liveSucceeded);
+
+      if (liveRes.currentQueryPersistedAdIds && liveRes.currentQueryPersistedAdIds.length > 0) {
+        liveRes.currentQueryPersistedAdIds.forEach((id: string) => freshLivePersistedAdIds.add(id));
+      } else if (liveRes.newAdIds && liveRes.newAdIds.length > 0) {
+        liveRes.newAdIds.forEach((id: string) => freshLivePersistedAdIds.add(id));
       }
-      if (liveRes.error) {
-        warnings.push(`Live Meta collector attempt reported: ${liveRes.error}. Falling back to cached SQLite observations.`);
-      } else {
-        liveSucceeded = true;
+
+      if (liveRes.currentQueryExternalAdIds && liveRes.currentQueryExternalAdIds.length > 0) {
+        liveRes.currentQueryExternalAdIds.forEach((id: string) => freshLiveExternalAdIds.add(id));
+      }
+
+      if (liveRes.error || !liveSucceeded) {
+        if (!liveSucceeded && liveRes.errors && liveRes.errors.length > 0) {
+          errors.push(...liveRes.errors);
+        }
+        warnings.push(`Live Meta collector attempt reported: ${liveRes.error || "Query failed"}. Falling back to cached SQLite observations.`);
       }
     } catch (liveErr: any) {
+      liveSucceeded = false;
       warnings.push(`Live Meta query bypassed: ${liveErr?.message || String(liveErr)}. Using cached database observations.`);
     }
   }
@@ -557,60 +858,88 @@ export async function collectMetaProductSignals(
       : (query.timeWindow === "90D" ? 90 : (query.timeWindow === "180D" ? 180 : (query.timeWindow === "365D" ? 365 : 30)));
     const lookbackThreshold = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
-    // 3. Build search filter matching topic or product keywords
-    const keywords = query.productKeywords && query.productKeywords.length > 0
-      ? query.productKeywords
-      : query.topic.split(/\s+/).filter((w) => w.length > 2);
-
-    const searchClauses = keywords.map((k) => ({
-      OR: [
-        { headline: { contains: k } },
-        { bodyText: { contains: k } },
-        { advertiser: { name: { contains: k } } },
-      ],
-    }));
-
-    // Find competitor ads backed by real observation records, strictly scoped to caller's workspace
     const authorizedWhere = buildAuthorizedAdWhere(query.workspaceId);
-    const scopeClause = freshLiveAdIds.size > 0
-      ? {
-          OR: [
-            authorizedWhere,
-            { id: { in: Array.from(freshLiveAdIds) } },
-          ],
-        }
-      : authorizedWhere;
 
-    const matchingAds = await prisma.competitorAd.findMany({
-      where: {
-        platform: { in: ["META", "FACEBOOK"] },
-        isSyntheticQuarantine: false,
-        NOT: {
-          headline: { startsWith: "[SYNTHETIC_DEMO]" },
+    // 3. Query run-linked / freshly observed live ads without topic string drop
+    let liveMatchingAds: any[] = [];
+    if (freshLivePersistedAdIds.size > 0 || freshLiveExternalAdIds.size > 0) {
+      liveMatchingAds = await prisma.competitorAd.findMany({
+        where: {
+          platform: { in: ["META", "FACEBOOK"] },
+          isSyntheticQuarantine: false,
+          NOT: { headline: { startsWith: "[SYNTHETIC_DEMO]" } },
+          AND: [
+            authorizedWhere,
+            {
+              OR: [
+                { id: { in: Array.from(freshLivePersistedAdIds) } },
+                { externalAdId: { in: Array.from(freshLiveExternalAdIds) } },
+              ],
+            },
+          ],
         },
-        AND: [
-          scopeClause,
-          { OR: searchClauses.map((sc) => sc.OR).flat() },
-          { lastSeenAt: { gte: lookbackThreshold } },
+        include: {
+          advertiser: true,
+          dataSource: true,
+          mediaAssets: { take: 2 },
+          observations: { orderBy: { observedAt: "desc" }, take: 10 },
+        },
+      });
+    }
+
+    // 4. Query cached ads to fill up to query.maxResults
+    const liveAdIdSet = new Set(liveMatchingAds.map((a) => a.id));
+    let cachedMatchingAds: any[] = [];
+    const remainingSlots = Math.max(0, (query.maxResults || 50) - liveMatchingAds.length);
+
+    if (remainingSlots > 0) {
+      const keywords = query.productKeywords && query.productKeywords.length > 0
+        ? query.productKeywords
+        : query.topic.split(/\s+/).filter((w) => w.length > 2);
+
+      const searchClauses = keywords.map((k) => ({
+        OR: [
+          { headline: { contains: k } },
+          { bodyText: { contains: k } },
+          { advertiser: { name: { contains: k } } },
         ],
-      },
-      include: {
-        advertiser: true,
-        dataSource: true,
-        mediaAssets: { take: 2 },
-        observations: { orderBy: { observedAt: "desc" }, take: 10 },
-      },
-      take: query.maxResults || 50,
-      orderBy: { lastSeenAt: "desc" },
-    });
+      }));
+
+      cachedMatchingAds = await prisma.competitorAd.findMany({
+        where: {
+          platform: { in: ["META", "FACEBOOK"] },
+          isSyntheticQuarantine: false,
+          NOT: { headline: { startsWith: "[SYNTHETIC_DEMO]" } },
+          id: { notIn: Array.from(liveAdIdSet) },
+          AND: [
+            authorizedWhere,
+            { OR: searchClauses.map((sc) => sc.OR).flat() },
+            { lastSeenAt: { gte: lookbackThreshold } },
+          ],
+        },
+        include: {
+          advertiser: true,
+          dataSource: true,
+          mediaAssets: { take: 2 },
+          observations: { orderBy: { observedAt: "desc" }, take: 10 },
+        },
+        take: remainingSlots,
+        orderBy: { lastSeenAt: "desc" },
+      });
+    }
+
+    const matchingAds = [...liveMatchingAds, ...cachedMatchingAds];
 
     if (matchingAds.length === 0) {
-      warnings.push(`No active Meta ads found for topic '${query.topic}' within ${query.lookbackDays} days.`);
-      const emptyStatus: SourceRunStatus = liveSucceeded ? "QUERY_SUCCEEDED_EMPTY" : "NO_RESULTS";
+      warnings.push(`No active Meta ads found for topic '${query.topic}' within ${lookbackDays} days.`);
+      const emptyStatus: SourceRunStatus = liveSucceeded
+        ? "QUERY_SUCCEEDED_EMPTY"
+        : (liveAttempted ? "FAILED" : "NO_RESULTS");
+
       const upstreamReturnedOnEmpty = liveCollectorResult
-        ? (liveCollectorResult.sourceRecordsReturned ?? freshLiveAdIds.size)
-        : (freshLiveAdIds.size > 0 ? freshLiveAdIds.size : 0);
-      const persistedInsertedOnEmpty = liveCollectorResult ? (liveCollectorResult.newUniqueInserted ?? 0) : freshLiveAdIds.size;
+        ? (liveCollectorResult.sourceRecordsReturned ?? 0)
+        : 0;
+      const persistedInsertedOnEmpty = liveCollectorResult ? (liveCollectorResult.newUniqueInserted ?? 0) : 0;
       const persistedUpdatedOnEmpty = liveCollectorResult ? (liveCollectorResult.existingUpdated ?? 0) : 0;
 
       return {
@@ -633,7 +962,7 @@ export async function collectMetaProductSignals(
           startedAt,
           completedAt: new Date().toISOString(),
           upstreamReturnedCount: liveAttempted ? upstreamReturnedOnEmpty : null,
-          freshLiveObservedCount: freshLiveAdIds.size,
+          freshLiveObservedCount: 0,
           persistedInsertedCount: persistedInsertedOnEmpty,
           persistedUpdatedCount: persistedUpdatedOnEmpty,
           cachedRecordsUsedCount: 0,
@@ -643,39 +972,18 @@ export async function collectMetaProductSignals(
       };
     }
 
-    // 4. Normalize into SourceObservations with explicit live vs cached provenance
+    // 5. Normalize into SourceObservations with explicit live vs cached provenance
     const observations: SourceObservation[] = matchingAds.map((ad) => {
       const media = ad.mediaAssets[0];
       const domain = ad.landingPageUrl ? extractDomainFromUrl(ad.landingPageUrl) : null;
       const marketProv = resolveMetaMarketProvenance(ad, { requestedMarket: query.market || "US", topic: query.topic });
 
-      const isFreshLive = freshLiveAdIds.has(ad.id);
+      const isFreshLive = freshLivePersistedAdIds.has(ad.id) || (ad.externalAdId && freshLiveExternalAdIds.has(ad.externalAdId));
       const provenance: ObservationProvenance = isFreshLive
         ? "LIVE_PROVIDER"
         : ad.dataConfidence === "VERIFIED"
         ? "VERIFIED_SOURCE"
         : "CACHED_SOURCE";
-
-      const signals: MetaResearchSignals = {
-        adId: ad.id,
-        externalAdId: ad.externalAdId || ad.id,
-        advertiserId: ad.advertiserId,
-        advertiserName: ad.advertiser?.name || null,
-        storeDomain: domain,
-        headline: ad.headline,
-        bodyText: ad.bodyText,
-        landingPageUrl: ad.landingPageUrl,
-        firstSeenAt: ad.firstSeenAt?.toISOString() || null,
-        lastSeenAt: ad.lastSeenAt?.toISOString() || null,
-        daysRunning: ad.daysRunning,
-        status: ad.status,
-        thumbnailUrl: media?.thumbnailUrl || null,
-        videoUrl: media?.videoUrl || null,
-        mediaType: media?.mediaType || "IMAGE",
-        observationsCount: ad.observations.length,
-        sourceConfidence: ad.dataConfidence,
-        productMatchHint: ad.headline || ad.bodyText?.slice(0, 60) || null,
-      };
 
       return {
         source: "META_ADS",
@@ -690,7 +998,7 @@ export async function collectMetaProductSignals(
         reportedPublishedAt: null,
         reportedFirstShownAt: ad.firstSeenAt?.toISOString() || null,
         reportedLastShownAt: ad.lastSeenAt?.toISOString() || null,
-        observedAt: ad.lastSeenAt?.toISOString() || new Date().toISOString(),
+        observedAt: isFreshLive ? new Date().toISOString() : (ad.lastSeenAt?.toISOString() || new Date().toISOString()),
         requestedMarket: marketProv.requestedMarket,
         verifiedDeliveryMarket: marketProv.verifiedDeliveryMarket,
         title: ad.headline,
@@ -715,11 +1023,13 @@ export async function collectMetaProductSignals(
 
     const freshLiveCount = observations.filter((o) => o.provenance === "LIVE_PROVIDER").length;
     const cachedCount = observations.length - freshLiveCount;
-    const upstreamReturned = liveCollectorResult ? (liveCollectorResult.sourceRecordsReturned ?? freshLiveCount) : (freshLiveCount > 0 ? freshLiveCount : 0);
+    const upstreamReturned = liveCollectorResult
+      ? (liveCollectorResult.sourceRecordsReturned ?? freshLiveCount)
+      : (freshLiveCount > 0 ? freshLiveCount : 0);
     const persistedInserted = liveCollectorResult ? (liveCollectorResult.newUniqueInserted ?? 0) : freshLiveCount;
     const persistedUpdated = liveCollectorResult ? (liveCollectorResult.existingUpdated ?? 0) : 0;
 
-    // Truthful status: if live query was not attempted or failed, mark CACHE_ONLY
+    // Truthful status: if live query succeeded, report PASSED. If failed or bypassed, report CACHE_ONLY
     const status: SourceRunStatus = liveSucceeded ? "PASSED" : "CACHE_ONLY";
 
     const executionMetadata: ProviderExecutionMetadata = {

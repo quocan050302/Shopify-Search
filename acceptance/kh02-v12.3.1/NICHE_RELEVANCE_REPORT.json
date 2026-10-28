@@ -1,0 +1,17 @@
+{
+  "gateId": "P0-09",
+  "requirement": "Niche relevance correctly accepts domain products and rejects unrelated catalog items",
+  "verdict": "PASS",
+  "observedValues": {
+    "petBedAccepted": true,
+    "speakerAccepted": false,
+    "speakerStatus": "IRRELEVANT"
+  },
+  "expectedValues": {
+    "petBedAccepted": true,
+    "speakerAccepted": false,
+    "speakerStatus": "IRRELEVANT"
+  },
+  "reason": "Pet bed accepted as RELEVANT; Bluetooth speaker rejected as IRRELEVANT",
+  "timestamp": "2026-10-28T01:42:25.826Z"
+}

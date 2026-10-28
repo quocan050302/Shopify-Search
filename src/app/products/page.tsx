@@ -90,6 +90,15 @@ interface LeaderboardData {
   totalCandidatesDiscovered: number;
   totalObservationsCollected?: number;
   generatedAt?: string;
+  researchShortlist?: {
+    shortlist: any[];
+    requestedCount: number;
+    qualifiedCount: number;
+    shortfallReason?: string | null;
+    distinctnessSummary?: string;
+    distinctnessEvaluation?: any;
+  };
+  shortfallReason?: string | null;
 }
 
 interface ProviderStatusItem {
@@ -1445,6 +1454,141 @@ export default function ProductsPage() {
                 <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
                   To protect against false evergreen claims, candidates require proven non-declining multi-month historical demand stability (≥15/25 pts) and high evidence confidence (≥65%). Promising products are shown under Provisional Opportunities below.
                 </p>
+              </div>
+            )}
+
+            {/* TOP 3 PRODUCTS TO EVALUATE — RESEARCH SHORTLIST */}
+            {leaderboard && (
+              <div data-testid="kh02-research-shortlist-section" className="space-y-4 pt-6 border-t border-[#1f293d]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-400" />
+                      <h3 className="text-sm font-bold text-white">
+                        Top 3 Products to Evaluate
+                      </h3>
+                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                        Research Shortlist — Further Validation Required
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Identifiable, niche-relevant product candidates discovered from current advertising evidence for business evaluation. Does not imply verified evergreen demand.
+                    </p>
+                  </div>
+                  {leaderboard.researchShortlist && (
+                    <span className="text-[11px] font-mono text-amber-400 shrink-0">
+                      {leaderboard.researchShortlist.qualifiedCount} of {leaderboard.researchShortlist.requestedCount} qualified
+                    </span>
+                  )}
+                </div>
+
+                {/* Shortfall Notice if fewer than 3 qualify */}
+                {leaderboard.researchShortlist?.shortfallReason && (
+                  <div data-testid="kh02-shortlist-shortfall-notice" className="p-3 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2">
+                    <Info className="h-4 w-4 text-amber-400 shrink-0" />
+                    <span>{leaderboard.researchShortlist.shortfallReason}</span>
+                  </div>
+                )}
+
+                {leaderboard.researchShortlist?.shortlist && leaderboard.researchShortlist.shortlist.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {leaderboard.researchShortlist.shortlist.map((candidate: any, idx: number) => (
+                      <div
+                        key={candidate.candidateId}
+                        data-testid="kh02-research-shortlist-card"
+                        data-candidate-id={candidate.candidateId}
+                        data-shortlist-rank={idx + 1}
+                        className="p-4 rounded-xl bg-[#161228] border border-amber-500/30 hover:border-amber-400/60 transition-all flex flex-col justify-between space-y-3"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div
+                              onClick={() => {
+                                if (candidate.videoUrl || candidate.thumbnailUrl) {
+                                  setActiveMediaItem({
+                                    title: candidate.title,
+                                    videoUrl: candidate.videoUrl,
+                                    thumbnailUrl: candidate.thumbnailUrl,
+                                    sourceUrl: candidate.canonicalProductUrl,
+                                    platform: candidate.supportingSourceTypes?.[0] || "Meta",
+                                  });
+                                }
+                              }}
+                              className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer"
+                            >
+                              {candidate.thumbnailUrl && !isStockImage(candidate.thumbnailUrl) ? (
+                                <img src={candidate.thumbnailUrl} alt={candidate.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <ShoppingBag className="h-6 w-6 text-amber-400 m-auto mt-5" />
+                              )}
+                              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-amber-500/90 text-black font-black text-[9px]">
+                                #{idx + 1}
+                              </span>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                                  {candidate.identityStatus || "PROVISIONAL"}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-medium">
+                                  {candidate.relevanceStatus || "RELEVANT"}
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-bold text-white mt-1 line-clamp-2">
+                                {candidate.canonicalProductName || candidate.displayName || candidate.title}
+                              </h4>
+                              {candidate.storeDomain && (
+                                <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                                  <Store className="h-3 w-3 text-amber-400 shrink-0" />
+                                  <span>{candidate.storeDomain}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5 text-[11px] bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
+                            {candidate.canonicalProductUrl && (
+                              <div className="flex items-center justify-between text-slate-400">
+                                <span className="text-slate-500">URL:</span>
+                                <a
+                                  href={candidate.canonicalProductUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-amber-400 hover:underline flex items-center gap-1 truncate max-w-[180px]"
+                                >
+                                  <span className="truncate">{candidate.canonicalProductUrl.replace(/^https?:\/\//, '')}</span>
+                                  <ExternalLink className="h-3 w-3 shrink-0" />
+                                </a>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-slate-400">
+                              <span className="text-slate-500">Ad Evidence:</span>
+                              <span className="font-mono text-slate-300">
+                                {candidate.supportingAdIds?.length || 0} ads ({candidate.supportingSourceTypes?.join(", ") || "Meta"})
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-slate-400">
+                              <span className="text-slate-500">Distinctness:</span>
+                              <span className="text-slate-300 truncate max-w-[180px]">
+                                {candidate.category || "Unique Product Type"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                          <span className="text-amber-400/90 font-medium">Evaluation Candidate</span>
+                          <span className="text-slate-500 text-[10px]">Pending Long-Term Demand</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
+                    No shortlist products currently qualified for evaluation.
+                  </div>
+                )}
               </div>
             )}
 

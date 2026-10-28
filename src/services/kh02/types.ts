@@ -322,6 +322,7 @@ export interface SourceResearchResult {
   errors: string[];
   warnings: string[];
   executionMetadata?: ProviderExecutionMetadata;
+  enrichmentExecution?: any;
 }
 
 // ─── Source-Specific Normalized Models ────────────────────────────────────────

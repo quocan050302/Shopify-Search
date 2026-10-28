@@ -1,0 +1,15 @@
+{
+  "gateId": "P0-04",
+  "requirement": "Cached records cannot make live query gate PASS",
+  "verdict": "PASS",
+  "observedValues": {
+    "testInputVerdict": "FAIL",
+    "isLive": false,
+    "retrievedCached": 12
+  },
+  "expectedValues": {
+    "testInputVerdict": "FAIL"
+  },
+  "reason": "Cached records correctly rejected from satisfying META_LIVE_QUERY_PASS",
+  "timestamp": "2026-10-28T01:42:25.817Z"
+}

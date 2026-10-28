@@ -1,0 +1,14 @@
+{
+  "gateId": "P0-12",
+  "requirement": "Google domain normalization correctly resolves canonical registrable domains",
+  "verdict": "PASS",
+  "observedValues": {
+    "inputSubdomain": "cc.uprootclean.com",
+    "normalizedDomain": "uprootclean.com"
+  },
+  "expectedValues": {
+    "normalizedDomain": "uprootclean.com"
+  },
+  "reason": "Subdomain cc.uprootclean.com correctly normalized to uprootclean.com",
+  "timestamp": "2026-10-28T01:42:25.828Z"
+}
