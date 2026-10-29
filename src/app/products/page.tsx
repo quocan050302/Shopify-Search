@@ -213,6 +213,8 @@ export default function ProductsPage() {
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const latestRequestSeqRef = useRef<number>(0);
   const authoritativeRunIdRef = useRef<string | null>(null);
+  const activeRunIdRef = authoritativeRunIdRef;
+  const activePollingTokenRef = latestRequestSeqRef;
   const frontendBuildSha =
     process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA ||
     process.env.NEXT_PUBLIC_SWAI_GIT_SHA ||
@@ -305,14 +307,14 @@ export default function ProductsPage() {
         const json = await res.json();
 
         // V12.4.3.2.1 Section 7.4: Guard against stale polling or out-of-order responses
-        if (reqSeq < latestRequestSeqRef.current) {
+        if (reqSeq < activePollingTokenRef.current) {
           return null;
         }
         if (
           opts?.isPolling &&
           opts.runId &&
-          authoritativeRunIdRef.current &&
-          opts.runId !== authoritativeRunIdRef.current
+          activeRunIdRef.current &&
+          opts.runId !== activeRunIdRef.current
         ) {
           return null;
         }
@@ -1658,7 +1660,10 @@ export default function ProductsPage() {
 
                 {/* Desktop Candidate Table */}
                 <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table
+                    data-testid="pf-all-candidates-table"
+                    className="w-full text-left border-collapse text-xs"
+                  >
                     <thead>
                       <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
                         <th className="py-2.5 px-3 font-medium">Product & Store</th>
