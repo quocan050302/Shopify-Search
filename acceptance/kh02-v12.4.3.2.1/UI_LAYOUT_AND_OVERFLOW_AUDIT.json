@@ -1,0 +1,41 @@
+{
+  "version": "12.4.3.2.1",
+  "responsiveAndLayoutAudit": {
+    "pfDesktop1440": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "noHorizontalOverflow": true
+    },
+    "pfTablet1024": {
+      "width": 1024,
+      "scrollWidth": 1024,
+      "noHorizontalOverflow": true
+    },
+    "pfMobile390": {
+      "width": 390,
+      "scrollWidth": 390,
+      "noHorizontalOverflow": true
+    },
+    "piDesktop1440": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "noHorizontalOverflow": true
+    },
+    "piTablet1024": {
+      "width": 1024,
+      "scrollWidth": 1024,
+      "noHorizontalOverflow": true
+    },
+    "piMobile390": {
+      "width": 390,
+      "scrollWidth": 390,
+      "noHorizontalOverflow": true
+    },
+    "shortfallBannerBox": {
+      "width": 1120,
+      "height": 117,
+      "nonCompressed": true
+    },
+    "pass": true
+  }
+}

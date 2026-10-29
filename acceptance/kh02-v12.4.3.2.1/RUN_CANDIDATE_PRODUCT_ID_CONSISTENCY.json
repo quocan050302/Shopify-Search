@@ -1,0 +1,30 @@
+{
+  "version": "12.4.3.2.1",
+  "explicitMatchVerification": {
+    "requestedRunId": "kh02_run_1793273119399_i8jf0",
+    "requestedCandidateId": "cand_1212440541",
+    "resolvedProductId": "cmvsy7zqh000jp0orhypwohho",
+    "resolution": {
+      "status": "MATCHED_EXPLICIT_RUN",
+      "requestedRunId": "kh02_run_1793273119399_i8jf0",
+      "requestedCandidateId": "cand_1212440541",
+      "resolvedRunId": "kh02_run_1793273119399_i8jf0",
+      "resolvedCandidateId": "cand_1212440541",
+      "reason": "Verified explicit run 'kh02_run_1793273119399_i8jf0' + candidate 'cand_1212440541' + product 'cmvsy7zqh000jp0orhypwohho' relationship."
+    }
+  },
+  "tamperedMismatchVerification": {
+    "requestedRunId": "kh02_run_1793273119433_e412e",
+    "requestedCandidateId": "cand_nonexistent_tampered_999",
+    "resolution": {
+      "status": "MISMATCH_CANDIDATE_NOT_IN_RUN",
+      "requestedRunId": "kh02_run_1793273119433_e412e",
+      "requestedCandidateId": "cand_nonexistent_tampered_999",
+      "resolvedRunId": null,
+      "resolvedCandidateId": null,
+      "reason": "Candidate 'cand_nonexistent_tampered_999' was not found in explicitly requested research run 'kh02_run_1793273119433_e412e'. Did not fall back to another run."
+    },
+    "kh02ResearchContextReturned": null,
+    "chromiumMismatchBannerVisible": true
+  }
+}

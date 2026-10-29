@@ -1,0 +1,49 @@
+{
+  "version": "12.4.3.2.1",
+  "baselineCommit": "894e7f692cc9ef8a74202c94f3be2ee7faad67bf",
+  "evaluatedHeadSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+  "reproducedIssues": [
+    {
+      "issueId": "ISSUE_01_MISSING_PRODUCT_MEDIA_GALLERY_ON_INTELLIGENCE",
+      "observedIn": "User Screenshot 3 (/products/[id]/intelligence)",
+      "rootCause": "Product Intelligence rendered only text cards without any product image/video gallery, thumbnail strip, lightbox, or HTML5 video player.",
+      "repairSummary": "Created src/services/kh02/media/productMediaResolver.ts and added a responsive Product Media Gallery (pi-media-gallery) with main viewer, thumbnail strip, Lightbox modal, HTML5 video player, and honest source badges.",
+      "status": "REPRODUCED_AND_FIXED"
+    },
+    {
+      "issueId": "ISSUE_02_FALSE_MERCHANT_VERIFIED_BADGE_ON_HTTP_404_CANDIDATE",
+      "observedIn": "User Screenshot 1 & 2 (Automatic Dog Feeder on Product Finder)",
+      "rootCause": "productFinderViewModel.ts checked candidate.canonicalProductUrl.includes('/products/') to add 'Merchant product page verified' even when identityStatus was PROBABLE and fetchOutcome was HTTP_404.",
+      "repairSummary": "Restricted merchantPageVerified in productFinderViewModel.ts to require identityStatus === 'VERIFIED' and fetchOutcome not in HTTP_ERROR/HTTP_404/NON_PRODUCT_PAGE/HOMEPAGE.",
+      "status": "REPRODUCED_AND_FIXED"
+    },
+    {
+      "issueId": "ISSUE_03_SOURCE_COVERAGE_ZERO_VS_CARD_SUPPORTING_ADS_CONFUSION",
+      "observedIn": "User Screenshot 1 (Source Coverage vs Recommended Card)",
+      "rootCause": "Source Coverage displayed '0 cached records' when sourceCoverage was missing on top-level response, while product cards showed historical supporting ad counts without distinguishing current-run live vs cached ads.",
+      "repairSummary": "Persisted and reconciled sourceCoverage (currentRunLiveAdsCount vs currentRunCachedAdsCount) and separated per-product supportingAdCount and observationCount.",
+      "status": "REPRODUCED_AND_FIXED"
+    },
+    {
+      "issueId": "ISSUE_04_TECHNICAL_METADATA_LEAK_IN_WHY_IT_FITS_YOUR_SEARCH",
+      "observedIn": "User Screenshot 1 & 2 (Recommended Product Cards)",
+      "rootCause": "Card 'Why it fits your search' fell back to verificationReason ('Merchant product page verified (OpenGraph title, DOM title, price USD 89.99)').",
+      "repairSummary": "Implemented buildBuyerOrientedWhyItFits() for buyer/seller-focused card copy and moved technical OpenGraph/JSON-LD verification strings to the Research Drawer.",
+      "status": "REPRODUCED_AND_FIXED"
+    },
+    {
+      "issueId": "ISSUE_05_KH02_SCORE_COPIED_INTO_KH01_READINESS_WHEN_UNASSESSED",
+      "observedIn": "User Screenshot 3 (/products/[id]/intelligence)",
+      "rootCause": "intelligence/page.tsx fell back from opportunityAssessment.evidenceReadinessScore to kh02ResearchContext.evidenceConfidence, displaying '75/100' next to '0/100 Weak'.",
+      "repairSummary": "Strictly separated Research Score (KH-02) from Commercial Opportunity (KH-01) and Evidence Readiness (KH-01), displaying 'Not Assessed' when opportunityAssessment is null.",
+      "status": "REPRODUCED_AND_FIXED"
+    },
+    {
+      "issueId": "ISSUE_06_DEMAND_AUDIT_NULL_VALUE_MAPPING_AND_FLEX_COMPRESSION",
+      "observedIn": "DEMAND_SOURCE_FORENSIC_AUDIT.json & Shortfall Notice",
+      "rootCause": "runAcceptanceAsyncV12_4_3_2 mapped r.value instead of r.demandValue, and shortfall notice lacked a direct [View Missing Evidence] action.",
+      "repairSummary": "Mapped demandValue: r.demandValue, value: r.demandValue in forensic audit and built compact non-compressing shortfall notice with [View Missing Evidence].",
+      "status": "REPRODUCED_AND_FIXED"
+    }
+  ]
+}

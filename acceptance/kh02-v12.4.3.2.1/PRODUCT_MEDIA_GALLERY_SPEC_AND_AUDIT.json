@@ -1,0 +1,36 @@
+{
+  "version": "12.4.3.2.1",
+  "componentTestId": "pi-media-gallery",
+  "priorityOrder": [
+    "1. MERCHANT_PRODUCT_PAGE (Verified merchant primary image)",
+    "2. MERCHANT_GALLERY (Verified merchant gallery images)",
+    "3. KH02_CANDIDATE (Authoritative candidate media)",
+    "4. META_AD_CREATIVE (Explicitly linked ad image/video creatives)",
+    "5. Honest Empty State ('No verified product media available')"
+  ],
+  "chromiumGalleryAudit": {
+    "galleryRendered": true,
+    "galleryBoundingBox": {
+      "x": 313,
+      "y": 175,
+      "width": 432,
+      "height": 384
+    },
+    "mediaCountInDom": 14,
+    "hasVideoInDom": true,
+    "mainImageRendered": true,
+    "mainImageComplete": true,
+    "mainImageNaturalWidth": 1600,
+    "mainImageNaturalHeight": 1600,
+    "initialMediaSrc": "https://www.uahpet.com/cdn/shop/files/uahpet-dual-bowl-fresh-food-feeder-heating-and-cooling.webp?v=1789713332&width=1600",
+    "secondThumbnailClicked": true,
+    "postThumbnailClickMediaSrc": "https://www.uahpet.com/cdn/shop/files/uahpet-dual-bowl-fresh-food-feeder-two-units-lifestyle.webp?v=1789728535&width=1254",
+    "thumbnailSelectionChangedActiveMedia": true,
+    "sourceBadgeText": "Merchant Product Image",
+    "emptyMediaStateVerified": true,
+    "emptyMediaHeadline": "No verified product media available",
+    "brokenMediaFallbackVerified": true,
+    "brokenMediaFallbackText": "Product image unavailable from source CDNThe external image URL returned an error and was hidden to prevent broken visuals.Open Merchant Page",
+    "pass": true
+  }
+}

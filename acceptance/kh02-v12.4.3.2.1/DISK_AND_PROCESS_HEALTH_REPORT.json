@@ -1,0 +1,21 @@
+{
+  "version": "12.4.3.2.1",
+  "freeDiskBeforeBytes": 56053493760,
+  "freeDiskAfterBytes": 56047349760,
+  "freeMemBeforeBytes": 16312188928,
+  "freeMemAfterBytes": 16293023744,
+  "totalMemBytes": 34088599552,
+  "nextDirSizeBeforeBytes": 513574723,
+  "nextDirSizeAfterBytes": 517168146,
+  "acceptanceDirSizeAfterBytes": 4401278,
+  "peakConcurrencyObserved": 2,
+  "sqlitePreCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "sqlitePostCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "scratchDirCleanedUp": true
+}

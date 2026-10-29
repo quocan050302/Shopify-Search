@@ -1,0 +1,18 @@
+{
+  "version": "12.4.3.2.1",
+  "headSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+  "maxConcurrencyConfigured": 2,
+  "peakConcurrencyObserved": 2,
+  "sequentialDurationEstimateMs": 103154,
+  "actualPoolWallDurationMs": 90458,
+  "wallClockSpeedupRatio": 1.14,
+  "completionBarrier": {
+    "passed": true,
+    "incompleteJobs": []
+  },
+  "phases": {
+    "phase2FastParallelWallMs": 67320,
+    "phase4IsolatedIntegrationWallMs": 13628,
+    "phase5ProductionBuildWallMs": 9510
+  }
+}
