@@ -657,7 +657,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
             suiteId: "tsc_typecheck",
             name: "TypeScript Typecheck",
             command: process.execPath,
-            args: [tscBin, "--noEmit"],
+            args: [tscBin, "--noEmit", "--incremental"],
             logFilePath: path.join(LOGS_DIR, "tsc.log"),
             headSha: gitHead,
             signal,
@@ -672,7 +672,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
             suiteId: "eslint",
             name: "ESLint",
             command: process.execPath,
-            args: [eslintBin],
+            args: [eslintBin, "--cache", "--cache-location", ".next/cache/eslint"],
             logFilePath: path.join(LOGS_DIR, "lint.log"),
             headSha: gitHead,
             signal,
@@ -770,7 +770,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
           }),
       },
     ],
-    { maxConcurrency: 2, defaultTimeoutMs: 240000 }
+    { maxConcurrency: 4, defaultTimeoutMs: 240000 }
   );
   const phase2WallMs = Date.now() - phase2StartMs;
 
@@ -883,14 +883,22 @@ export async function runAcceptanceAsyncV12_4_3_2() {
   const targetWorkspaceId = firstWorkspace?.id || "local-desktop-workspace";
 
   // Execute research runs for dog, cat, pet gadgets, diy, gardening, automatic pet feeder, LIVE_ONLY, and CACHE_ONLY
-  console.log("[Orchestrator] Running Dog (90D), Cat (90D), LIVE_ONLY ('dog'), and CACHE_ONLY ('pet gadgets')...");
-  const [dogResult, catResult] = await Promise.all([
+  console.log("[Orchestrator] Running Dog (90D), Cat (90D), LIVE_ONLY ('dog'), and CACHE_ONLY runs concurrently...");
+  const [
+    dogResult,
+    catResult,
+    liveOnlyResult,
+    cacheOnlyResult,
+    diyResult,
+    gardeningResult,
+    feederResult,
+  ] = await Promise.all([
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "dog",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 12,
+      maxCandidates: 10,
       sourceMode: "LIVE_WITH_CACHE_FALLBACK",
     }),
     runEvergreenProductResearch({
@@ -898,54 +906,53 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       topic: "cat",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 12,
+      maxCandidates: 10,
       sourceMode: "LIVE_WITH_CACHE_FALLBACK",
     }),
-  ]);
-
-  const [liveOnlyResult, cacheOnlyResult] = await Promise.all([
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "dog",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 10,
+      maxCandidates: 8,
       sourceMode: "LIVE_ONLY",
+      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "pet gadgets",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 12,
+      maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
+      disableAiDiscovery: true,
     }),
-  ]);
-
-  const [diyResult, gardeningResult, feederResult] = await Promise.all([
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "diy",
       market: "US",
       lookbackDays: 180,
-      maxCandidates: 12,
+      maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
+      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "gardening",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 12,
+      maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
+      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
       topic: "automatic pet feeder",
       market: "US",
       lookbackDays: 90,
-      maxCandidates: 10,
+      maxCandidates: 8,
       sourceMode: "CACHE_ONLY",
+      disableAiDiscovery: true,
     }),
   ]);
 
@@ -961,6 +968,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       workspaceId: targetWorkspaceId,
       topic: "pet gadgets",
       lookbackDays: 90,
+      sourceMode: "CACHE_ONLY",
       headless: true,
       screenshotDir: runScratchDir,
       screenshotPrefix: "e2e_pet_gadgets",

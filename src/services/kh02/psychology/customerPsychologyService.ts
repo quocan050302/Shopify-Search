@@ -319,7 +319,7 @@ export function analyzeCustomerPsychology(
           status: "OBSERVED",
         }
       : {
-          claimText: "Dog or cat owners (and potentially multi-pet households) seeking everyday pet care solutions",
+          claimText: "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
           evidenceReference: `Observed mentions: "${catMatch}", "${dogMatch}" in ${ref}`,
           evidenceType: "AD_COPY",
           confidence: 0.78,

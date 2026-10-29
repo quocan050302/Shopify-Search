@@ -387,7 +387,10 @@ export default function ProductsPage() {
       const targetTopic = (overrideTopic ?? topic).trim();
       const targetLookback = overrideLookback ?? lookbackDays;
       const targetSourceMode = overrideSourceMode ?? sourceMode;
-      if (!targetTopic) return;
+      if (!targetTopic || targetTopic.length < 2) {
+        setResearchError("Please enter a research topic (at least 2 characters).");
+        return;
+      }
 
       setResearchLoading(true);
       setResearchError(null);
@@ -1131,7 +1134,7 @@ export default function ProductsPage() {
                           className="text-xs sm:text-sm font-semibold text-white"
                         >
                           0 Verified Evergreen Winners for &ldquo;
-                          {leaderboard.topic || activeRunTopic || topic}&rdquo; — Showing Top
+                          {leaderboard?.topic || activeRunTopic || topic}&rdquo; — Showing Top
                           Research-Qualified Products
                         </h2>
                         <p className="text-xs text-slate-400 leading-relaxed">

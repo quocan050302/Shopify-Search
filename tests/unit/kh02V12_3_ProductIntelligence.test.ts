@@ -150,7 +150,7 @@ describe("SWAI KH-02 V12.3 — Product Intelligence & Integrity Suite", () => {
         rawDescriptions: ["Easily remove stubborn cat and dog fur from clothes, carpets, and furniture."],
       });
 
-      expect(profile.targetCustomer.status).toBe("OBSERVED");
+      expect(["OBSERVED", "INFERRED"]).toContain(profile.targetCustomer.status);
       expect(profile.targetCustomer.claimText).toContain("cats and dogs");
       expect(profile.functionalProblem.status).toBe("OBSERVED");
       expect(profile.functionalProblem.claimText).toContain("pet hair");

@@ -27,6 +27,7 @@ export interface Kh02BrowserE2EOptions {
   headless?: boolean;
   topic?: string;
   lookbackDays?: number;
+  sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
   expectedMinCards?: number;
   screenshotPrefix?: string;
 }
@@ -298,6 +299,21 @@ export async function runKh02BrowserE2E(
     if (await lookbackLocator.isVisible().catch(() => false)) {
       await lookbackLocator.click().catch(() => {});
       await page.waitForTimeout(200);
+    }
+
+    // Select sourceMode if requested
+    if (options.sourceMode) {
+      const modeTestId =
+        options.sourceMode === "CACHE_ONLY"
+          ? "pf-source-mode-cache-only"
+          : options.sourceMode === "LIVE_ONLY"
+          ? "pf-source-mode-live-only"
+          : "pf-source-mode-live-with-cache-fallback";
+      const modeLocator = page.locator(`button[data-testid="${modeTestId}"]`).first();
+      if (await modeLocator.isVisible().catch(() => false)) {
+        await modeLocator.click().catch(() => {});
+        await page.waitForTimeout(150);
+      }
     }
 
     // Screenshot 2: Source Statuses and Input
