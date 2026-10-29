@@ -389,7 +389,23 @@ const GENERIC_TOKENS_FOR_FINGERPRINT = new Set([
   "cleaning", "decor", "store", "shop", "buy", "sale", "free", "shipping",
   "item", "items", "deal", "deals", "product", "products", "amazing",
   "in", "to", "of", "on", "by", "at", "an", "a",
+  "blue", "red", "black", "white", "green", "pink", "gray", "grey", "silver", "gold",
 ]);
+
+function stripVariantHandleSuffixes(handle: string | null | undefined): string | null {
+  if (!handle) return null;
+  let cleaned = handle.toLowerCase().trim();
+  // Repeatedly strip trailing color / pack / size variant suffixes on the same merchant handle
+  let prev = "";
+  while (cleaned !== prev) {
+    prev = cleaned;
+    cleaned = cleaned.replace(
+      /[-_](?:blue|red|black|white|green|pink|gray|grey|silver|gold|purple|yellow|orange|brown|beige|small|medium|large|xl|xxl|\d+[-_]?pack|\d+[-_]?pcs|\d+[-_]?count)$/i,
+      ""
+    );
+  }
+  return cleaned || handle.toLowerCase().trim();
+}
 
 function normalizeBrandName(brand: string | null | undefined): string | null {
   if (!brand) return null;
@@ -1001,6 +1017,42 @@ export function compareProductIdentity(
       fpA.normalizedDomain === fpB.normalizedDomain
   );
   const bothMissingDomain = !fpA.normalizedDomain && !fpB.normalizedDomain;
+
+  // Check if same merchant with variant handle suffix (e.g. -blue-2pack vs -red-3pack)
+  const baseHandleA = stripVariantHandleSuffixes(fpA.productHandle);
+  const baseHandleB = stripVariantHandleSuffixes(fpB.productHandle);
+  if (
+    hasSameVerifiedDomain &&
+    baseHandleA &&
+    baseHandleB &&
+    baseHandleA.length >= 4 &&
+    baseHandleA === baseHandleB &&
+    fpA.productHandle !== fpB.productHandle &&
+    (!fpA.normalizedModel || !fpB.normalizedModel || fpA.normalizedModel === fpB.normalizedModel) &&
+    (!fpA.physicalSpecs.capacity || !fpB.physicalSpecs.capacity || fpA.physicalSpecs.capacity === fpB.physicalSpecs.capacity)
+  ) {
+    supportingEvidence.push(
+      `Same merchant (${fpA.normalizedDomain}) and identical base product handle '${baseHandleA}' after stripping color/size/pack variant suffixes ('${fpA.productHandle}' vs '${fpB.productHandle}').`
+    );
+    return {
+      candidateIds: [candA.candidateId, candB.candidateId],
+      listingKeys: [fpA.listingKey, fpB.listingKey],
+      productKeys: [fpA.productKey, fpA.productKey],
+      familyKeys: [fpA.familyKey, fpB.familyKey],
+      decision: "SAME_PRODUCT_DIFFERENT_VARIANT",
+      areSameListing: false,
+      areSameActualProduct: true,
+      areSameVariant: false,
+      areSameFamily: true,
+      areDistinctOpportunitiesForBroadNiche: false,
+      areDistinctOpportunitiesForSpecificQuery: false,
+      confidence: "HIGH_CONFIDENCE",
+      uncertainty: null,
+      supportingEvidence,
+      conflictingEvidence,
+      reason: `Color, size, or pack-count variant handles ('${fpA.productHandle}' vs '${fpB.productHandle}') of the same product ('${baseHandleA}') on ${fpA.normalizedDomain}.`,
+    };
+  }
 
   if (
     !fpA.normalizedCanonicalUrl &&

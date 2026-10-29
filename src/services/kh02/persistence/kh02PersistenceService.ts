@@ -314,6 +314,112 @@ export async function persistKH02RankingSnapshot(
   workspaceId: string,
   result: EvergreenLeaderboardResult
 ): Promise<void> {
+  // V12.4.3.3 Section 9: Idempotently materialize shortlisted/top-3 candidates into ResearchProduct
+  // so Product Intelligence drawer and /api/v1/research/products/[id]/overview resolve immediately.
+  if (prisma.researchProduct && typeof prisma.researchProduct.upsert === "function") {
+    const candidateItems: any[] = [
+      ...(Array.isArray(result.topThree) ? result.topThree.map((i) => i.candidate) : []),
+      ...(Array.isArray(result.provisionalCandidates)
+        ? result.provisionalCandidates.map((i) => i.candidate)
+        : []),
+      ...(Array.isArray(result.researchShortlist?.shortlist)
+        ? result.researchShortlist.shortlist
+        : []),
+    ];
+    const seenIds = new Set<string>();
+    for (const cand of candidateItems) {
+      if (!cand || !cand.candidateId || seenIds.has(cand.candidateId)) continue;
+      seenIds.add(cand.candidateId);
+      try {
+        let storeId: string | null = null;
+        const cleanDomain = cand.storeDomain
+          ? String(cand.storeDomain).trim().toLowerCase().replace(/^www\./, "")
+          : null;
+        if (
+          cleanDomain &&
+          cleanDomain.includes(".") &&
+          prisma.competitorStore &&
+          typeof prisma.competitorStore.upsert === "function"
+        ) {
+          const store = await prisma.competitorStore.upsert({
+            where: { domain: cleanDomain },
+            update: {},
+            create: {
+              domain: cleanDomain,
+              storeName: cand.brand || cleanDomain.split(".")[0],
+              commercePlatform: "SHOPIFY_POSSIBLE",
+            },
+          });
+          storeId = store.id;
+        }
+        const materializedId = cand.researchProductId || cand.candidateId;
+        const primaryImg =
+          (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
+          cand.thumbnailUrl ||
+          null;
+        const prod = await prisma.researchProduct.upsert({
+          where: { id: materializedId },
+          update: {
+            storeId: storeId ?? undefined,
+            productUrl: cand.canonicalProductUrl || undefined,
+            imageUrl: primaryImg || undefined,
+          },
+          create: {
+            id: materializedId,
+            storeId,
+            title:
+              cand.merchantVerifiedProductName ||
+              cand.canonicalProductName ||
+              cand.displayName ||
+              cand.title ||
+              "Discovered Product Candidate",
+            category: result.topic || cand.category || "Other",
+            description: cand.problemStatement || null,
+            imageUrl: primaryImg || null,
+            productUrl: cand.canonicalProductUrl || null,
+          },
+        });
+        cand.researchProductId = prod.id;
+        if (
+          Array.isArray(cand.supportingAdIds) &&
+          cand.supportingAdIds.length > 0 &&
+          prisma.competitorAd &&
+          typeof prisma.competitorAd.findMany === "function" &&
+          prisma.adProductLink &&
+          typeof prisma.adProductLink.upsert === "function"
+        ) {
+          const existingAds = await prisma.competitorAd.findMany({
+            where: { id: { in: cand.supportingAdIds } },
+            select: { id: true },
+          });
+          for (const adRec of existingAds) {
+            await prisma.adProductLink
+              .upsert({
+                where: {
+                  adId_productId: {
+                    adId: adRec.id,
+                    productId: prod.id,
+                  },
+                },
+                update: {},
+                create: {
+                  adId: adRec.id,
+                  productId: prod.id,
+                  confidence:
+                    cand.identityStatus === "VERIFIED"
+                      ? "CONFIRMED"
+                      : "HIGH_CONFIDENCE",
+                },
+              })
+              .catch(() => null);
+          }
+        }
+      } catch {
+        // Non-blocking if unit test mock DB omits researchProduct
+      }
+    }
+  }
+
   await prisma.syncJob.updateMany({
     where: {
       id: runId,
@@ -365,8 +471,17 @@ export function requalifyHistoricalEvergreenSnapshot(
     const c: any = item?.candidate || {};
     const refs: string[] = [
       ...(c.demandResolution?.evidenceReferences || []),
+      ...(c.demandResolution?.dataPoints || []).map(
+        (dp: any) => dp?.evidenceReference || dp?.sourceId || ""
+      ),
+      ...(c.demandSeries?.points || []).map(
+        (dp: any) => dp?.evidenceReference || dp?.sourceId || ""
+      ),
       ...(c.temporalStability?.evidenceReferences || []),
-    ].map(String);
+      ...((item?.score as any)?.verificationEvidence || []),
+    ]
+      .filter(Boolean)
+      .map(String);
     const hasSyntheticMerchantRef = refs.some((r) =>
       r.toLowerCase().includes("verified-merchant-demand:")
     );
@@ -2073,7 +2188,7 @@ export async function getWorkspaceProviderTelemetry(
             lastSuccessfulQueryAt: decodedSuccessAt,
             ...liveFields,
           };
-        } else if (!current.queryExecuted && decodedExecuted) {
+        } else if (!current.queryExecuted && current.queryStatus !== "CACHE_ONLY" && decodedExecuted) {
           telemetry[src] = {
             source: src,
             queryExecuted: decodedExecuted,

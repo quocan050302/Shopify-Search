@@ -93,6 +93,13 @@ const GLOBAL_NON_PRODUCT_EXCLUSIONS: string[] = [
   "virtual consultation",
   "design consultation",
   "interior design consultation",
+  "ads agency",
+  "marketing agency",
+  "advertising agency",
+  "ecommerce agency",
+  "online course",
+  "coaching program",
+  "masterclass",
 ];
 
 const GENERIC_SEASONAL_CAMPAIGN_PATTERNS =
@@ -526,6 +533,53 @@ const NICHE_SIGNATURES: Record<
       "vet bill",
     ],
   },
+  car: {
+    include: [
+      "car accessory",
+      "car accessories",
+      "portable car vacuum",
+      "car vacuum",
+      "car phone mount",
+      "magnetic car phone mount",
+      "car phone holder",
+      "car trunk organizer",
+      "trunk organizer",
+      "car seat organizer",
+      "tire inflator",
+      "portable tire inflator",
+      "dash cam",
+      "dashcam",
+      "dog car seat cover",
+      "car seat cover",
+      "car trash can",
+      "windshield sunshade",
+      "car sunshade",
+      "car air freshener",
+      "car charger",
+      "jump starter",
+      "car detailing brush",
+      "car cleaning gel",
+      "blind spot mirror",
+    ],
+    potential: [
+      "steering wheel cover",
+      "headrest hook",
+      "seat gap filler",
+      "car Seat",
+      "auto accessory",
+      "vehicle organizer",
+    ],
+    exclude: [
+      "car insurance",
+      "auto insurance",
+      "auto loan",
+      "car repair service",
+      "pos thermal printer",
+      "widgets themes",
+      "casino",
+      "vet bill",
+    ],
+  },
 };
 
 function hasWordMatch(text: string, word: string): boolean {
@@ -662,12 +716,12 @@ export function evaluateProductAudienceRelevance(
       : normText.split(/https?:\/\//)[0].toLowerCase();
 
   const isExplicitlyCatOnlyTitle =
-    /\b(cat\s+feeder|cat\s+water\s+fountain|cat\s+fountain|cat\s+litter|cat\s+tree|cat\s+scratcher|wet\s+food\s+cat\s+feeder|kitten)\b/i.test(
+    /\b(cat\s+feeder|cat\s+water\s+fountain|cat\s+fountain|cat\s+litter|cat\s+tree|cat\s+scratcher|cat\s+toy|cat\s+bed|cat\s+collar|cat\s+harness|cat\s+brush|cat\s+carrier|cat\s+house|litter\s+box|litter\s+mat|wet\s+food\s+cat\s+feeder|kitten)\b/i.test(
       primaryTitle
     ) && !/\b(dogs?|pupp(?:y|ies)|canines?)\b/i.test(primaryTitle);
 
   const isExplicitlyDogOnlyTitle =
-    /\b(dog\s+bed|dog\s+harness|dog\s+leash|dog\s+bark|dog\s+collar|dog\s+crate|puppy\s+pad)\b/i.test(
+    /\b(dog\s+bed|dog\s+harness|dog\s+leash|dog\s+bark|dog\s+collar|dog\s+crate|dog\s+toy|dog\s+feeder|dog\s+water\s+fountain|dog\s+fountain|dog\s+grooming|dog\s+brush|dog\s+coat|dog\s+jacket|dog\s+muzzle|dog\s+ramp|dog\s+stairs|dog\s+car\s+seat|dog\s+chew|puppy\s+pad)\b/i.test(
       primaryTitle
     ) && !/\b(cats?|kittens?|felines?)\b/i.test(primaryTitle);
 
@@ -862,6 +916,28 @@ function evaluateProductRelevanceCore(
       isAccepted: false,
       score: 0.08,
       reasons: [audienceRelevance.relevanceReason],
+      topic,
+      matchedArchetypeId: null,
+      audienceRelevance,
+    };
+  }
+
+  // V12.4.3.3: Reject non-physical entity types (services, courses, digital products, apps)
+  if (
+    typeof candidateText === "object" &&
+    candidateText !== null &&
+    ((candidateText as any).entityType === "SERVICE_OR_COURSE" ||
+      (candidateText as any).entityType === "DIGITAL_PRODUCT" ||
+      (candidateText as any).entityType === "NON_ECOMMERCE")
+  ) {
+    return {
+      relevanceStatus: "IRRELEVANT",
+      discoveryDecision: "CLEARLY_UNRELATED",
+      isAccepted: false,
+      score: 0.05,
+      reasons: [
+        `Rejected non-physical entityType '${(candidateText as any).entityType}' under PHYSICAL_ECOMMERCE_PRODUCTS policy.`,
+      ],
       topic,
       matchedArchetypeId: null,
       audienceRelevance,
@@ -1321,8 +1397,8 @@ function evaluateProductRelevanceCore(
       // Specific-product query gates (F08): prevent sibling niche products from matching a specific product request
       const isSpecificPetFeederQuery = /\b(pet\s+feeder|cat\s+feeder|dog\s+feeder|automatic\s+pet\s+feeder|automatic\s+cat\s+feeder|automatic\s+dog\s+feeder|smart\s+pet\s+feeder|pet\s+food\s+dispenser)\b/i.test(normalizedTopic);
       if (isSpecificPetFeederQuery) {
-        const hasFeederTerm = /\b(feeder|food\s+dispenser|meal\s+dispenser|feeding\s+station|timed\s+meal|wet\s+food.*feeder|auto-cool.*auto-warm)\b/i.test(normalizedText);
-        const hasSiblingNonFeederTerm = /\b(water\s+fountain|cat\s+fountain|pet\s+fountain|hydration\s+fountain|dockstream|hair\s+remover|lint\s+roller|fur\s+remover|chomchom|deshedding\s+brush|grooming\s+brush|dog\s+bed|cat\s+bed|calming\s+bed|orthopedic\s+bed|litter\s+mat|litter\s+box|nail\s+grinder|seat\s+belt|car\s+harness)\b/i.test(normalizedText);
+        const hasFeederTerm = /\b(feeder|food\s+dispenser|meal\s+dispenser|feeding\s+station|timed\s+meal|wet\s+food.*feeder|auto-cool.*auto-warm|smarter\s+feeding|feed\s+fresh|fresh\s+meals|mealtime|uahpet)\b/i.test(normalizedText);
+        const hasSiblingNonFeederTerm = /\b(water\s+fountain|cat\s+fountain|pet\s+fountain|hydration\s+fountain|dockstream|hair\s+remover|hair\/lint|lint\s+roller|lint\s+cleaner|dust\s+cleaner|fur\s+remover|uproot\s+cleaner|chomchom|deshedding\s+brush|grooming\s+brush|grooming\s+vacuum|dog\s+bed|cat\s+bed|calming\s+bed|orthopedic\s+bed|litter\s+mat|litter\s+box|nail\s+grinder|seat\s+belt|car\s+harness|bark\s+collar)\b/i.test(normalizedText);
         if (hasFeederTerm && !hasSiblingNonFeederTerm) {
           reasons.push(`Matches specific requested product family 'pet_feeder' for query '${topic}'.`);
           return {
@@ -1350,7 +1426,7 @@ function evaluateProductRelevanceCore(
       const isSpecificWaterFountainQuery = /\b(cat\s+water\s+fountain|pet\s+water\s+fountain|dog\s+water\s+fountain|wireless\s+cat\s+fountain|stainless\s+steel\s+cat\s+fountain)\b/i.test(normalizedTopic);
       if (isSpecificWaterFountainQuery) {
         const hasFountainTerm = /\b(water\s+fountain|cat\s+fountain|pet\s+fountain|dog\s+fountain|hydration\s+fountain|dockstream|water\s+dispenser|drinking\s+fountain)\b/i.test(normalizedText);
-        const hasSiblingNonFountainTerm = /\b(pet\s+feeder|cat\s+feeder|dog\s+feeder|wet\s+food.*feeder|food\s+dispenser|meal\s+dispenser|hair\s+remover|lint\s+roller|fur\s+remover|chomchom|dog\s+bed|cat\s+bed|calming\s+bed|litter\s+mat|litter\s+box)\b/i.test(normalizedText);
+        const hasSiblingNonFountainTerm = /\b(pet\s+feeder|cat\s+feeder|dog\s+feeder|wet\s+food.*feeder|food\s+dispenser|meal\s+dispenser|hair\s+remover|hair\/lint|lint\s+roller|lint\s+cleaner|dust\s+cleaner|fur\s+remover|uproot\s+cleaner|chomchom|dog\s+bed|cat\s+bed|calming\s+bed|litter\s+mat|litter\s+box)\b/i.test(normalizedText);
         if (hasFountainTerm && !hasSiblingNonFountainTerm) {
           reasons.push(`Matches specific requested product family 'water_fountain' for query '${topic}'.`);
           return {

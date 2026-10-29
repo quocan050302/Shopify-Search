@@ -403,7 +403,6 @@ export async function runEvergreenProductResearch(
   );
   for (const rq of round1Queries) {
     executedNormalizedPhrases.add(rq.normalizedPhrase);
-    if (rq.archetypeId) coveredArchetypeIds.add(rq.archetypeId);
   }
   const plannedProductKeywords = Array.from(
     new Set(validatedQueries.map((q) => q.phrase).filter(Boolean))
@@ -924,7 +923,6 @@ export async function runEvergreenProductResearch(
       for (const r2q of round2Queries) {
         executedNormalizedPhrases.add(r2q.normalizedPhrase);
         executedNormalizedPhrases.add(`${r2q.normalizedPhrase}::${r2q.searchType}`);
-        if (r2q.archetypeId) coveredArchetypeIds.add(r2q.archetypeId);
       }
       try {
         const prevObsCount = adObservations.length;
@@ -1140,15 +1138,17 @@ export async function runEvergreenProductResearch(
         ]);
         const discoveredDomains = Array.from(
           new Set(
-            candidates
-              .filter((c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE")
+            [
+              ...candidates.filter((c) => c.identityStatus === "VERIFIED"),
+              ...candidates.filter((c) => c.identityStatus === "PROBABLE"),
+            ]
               .map((c) => c.storeDomain?.toLowerCase().trim())
               .filter(
                 (d): d is string =>
                   Boolean(d && d.includes(".") && !nonMerchantHosts.has(d))
               )
           )
-        ).slice(0, 3);
+        ).slice(0, 5);
 
         if (discoveredDomains.length === 0) {
           sourceStatuses.GOOGLE_ADS = "SKIPPED";
@@ -1174,6 +1174,7 @@ export async function runEvergreenProductResearch(
               collectGoogleAdvertiserSignals({
                 ...q,
                 advertiserDomains: discoveredDomains,
+                maxLiveDomains: Math.min(5, discoveredDomains.length),
               })
           );
           sourceStatuses.GOOGLE_ADS = googleResult.status;
@@ -1232,9 +1233,17 @@ export async function runEvergreenProductResearch(
   let googleProductMatches = 0;
   let googleBrandMatches = 0;
   const googleProductEvidenceIds: string[] = [];
+  const seenGoogleProductAssociations = new Set<string>();
+  const seenGoogleBrandAssociations = new Set<string>();
 
   for (const candidate of candidates) {
+    const existingObsKeys = new Set<string>(
+      candidate.sourceObservations.map(
+        (o) => `${o.source}::${o.sourceExternalAdId || o.sourceRecordId || o.sourceUrl}`
+      )
+    );
     for (const obs of secondaryObservations) {
+      const obsKey = `${obs.source}::${obs.sourceExternalAdId || obs.sourceRecordId || obs.sourceUrl}`;
       const match = matchCrossPlatformProductEvidence(candidate, {
         title: obs.title,
         url: obs.landingPageUrl || obs.sourceUrl,
@@ -1242,15 +1251,25 @@ export async function runEvergreenProductResearch(
         platform: obs.source,
       });
 
-      if (match.confidence === "EXACT" || match.confidence === "HIGH_CONFIDENCE") {
-        candidate.sourceObservations.push(obs);
-        candidate.totalObservationCount += 1;
+      if (
+        match.isProductSpecificEvidence !== false &&
+        (match.confidence === "EXACT" || match.confidence === "HIGH_CONFIDENCE")
+      ) {
+        if (!existingObsKeys.has(obsKey)) {
+          existingObsKeys.add(obsKey);
+          candidate.sourceObservations.push(obs);
+          candidate.totalObservationCount += 1;
+        }
         if (!candidate.supportingSourceTypes.includes(obs.source)) {
           candidate.supportingSourceTypes.push(obs.source);
         }
         if (obs.source === "GOOGLE_ADS") {
-          googleProductMatches++;
           const evId = obs.sourceExternalAdId || obs.sourceRecordId;
+          const pairKey = `${candidate.candidateId}::${evId || obsKey}`;
+          if (!seenGoogleProductAssociations.has(pairKey)) {
+            seenGoogleProductAssociations.add(pairKey);
+            googleProductMatches++;
+          }
           if (evId && !googleProductEvidenceIds.includes(evId)) {
             googleProductEvidenceIds.push(evId);
           }
@@ -1269,7 +1288,12 @@ export async function runEvergreenProductResearch(
             extractRegistrableDomain(obs.advertiserDomain) ===
               extractRegistrableDomain(candidate.storeDomain)))
       ) {
-        googleBrandMatches++;
+        const evId = obs.sourceExternalAdId || obs.sourceRecordId;
+        const pairKey = `${candidate.candidateId}::${evId || obsKey}`;
+        if (!seenGoogleBrandAssociations.has(pairKey)) {
+          seenGoogleBrandAssociations.add(pairKey);
+          googleBrandMatches++;
+        }
       }
     }
   }
@@ -1523,6 +1547,23 @@ export async function runEvergreenProductResearch(
   );
 
   // Build QueryYield metrics for each executed or planned query
+  const candidateMatchesQuery = (
+    c: { matchedQueryIds?: string[]; sourceObservations?: Array<{ queryId?: string | null; matchedQueryIds?: string[] }> },
+    qId: string
+  ): boolean => {
+    if (Array.isArray(c.matchedQueryIds) && c.matchedQueryIds.includes(qId)) {
+      return true;
+    }
+    if (Array.isArray(c.sourceObservations)) {
+      return c.sourceObservations.some(
+        (o) =>
+          o.queryId === qId ||
+          (Array.isArray(o.matchedQueryIds) && o.matchedQueryIds.includes(qId))
+      );
+    }
+    return false;
+  };
+
   const queryYields: QueryYield[] = [];
   if (allMetaQueryOutcomes.length > 0) {
     for (const qo of allMetaQueryOutcomes) {
@@ -1531,14 +1572,28 @@ export async function runEvergreenProductResearch(
         (qo.status === "SUCCEEDED_WITH_RESULTS" || qo.status === "SUCCEEDED_EMPTY")
       );
       const matchingRawCands = wasLiveExecuted
-        ? rawCandidates.filter((c) => Boolean(c.matchedQueryIds && c.matchedQueryIds.includes(qo.queryId)))
+        ? rawCandidates.filter((c) => candidateMatchesQuery(c, qo.queryId))
+        : [];
+      const matchingEnrichedCands = wasLiveExecuted
+        ? candidates.filter((c) => candidateMatchesQuery(c, qo.queryId))
         : [];
       const relCands = matchingRawCands.filter((c) => c.relevanceStatus !== "IRRELEVANT");
-      const merchantCands = relCands.filter((c) => Boolean(c.storeDomain || c.canonicalProductUrl));
-      const identCands = relCands.filter(
-        (c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE"
-      );
-      const shortlistContribs = relCands.filter((c) => shortlistedIdSet.has(c.candidateId));
+      const merchantCands =
+        matchingEnrichedCands.length > 0
+          ? matchingEnrichedCands.filter((c) => Boolean(c.storeDomain || c.canonicalProductUrl))
+          : relCands.filter((c) => Boolean(c.storeDomain || c.canonicalProductUrl));
+      const identCands =
+        matchingEnrichedCands.length > 0
+          ? matchingEnrichedCands.filter(
+              (c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE"
+            )
+          : relCands.filter(
+              (c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE"
+            );
+      const shortlistContribs =
+        matchingEnrichedCands.length > 0
+          ? matchingEnrichedCands.filter((c) => shortlistedIdSet.has(c.candidateId))
+          : relCands.filter((c) => shortlistedIdSet.has(c.candidateId));
       const rejCands = matchingRawCands.filter(
         (c) =>
           c.relevanceStatus === "IRRELEVANT" ||
@@ -1586,16 +1641,48 @@ export async function runEvergreenProductResearch(
     }
   }
 
-  const observedArchetypeIds = Array.from(
+  const plannedArchetypeIds = Array.from(
     new Set(
-      [
-        ...Array.from(coveredArchetypeIds),
-        ...candidates
-          .map((c) => c.matchedArchetypeId)
-          .filter((id): id is string => Boolean(id)),
-      ]
+      (discoveryPlan?.productArchetypes || [])
+        .map((a) => a.archetypeId)
+        .filter((id): id is string => Boolean(id))
     )
   );
+  const queriedArchetypeIds = Array.from(
+    new Set(
+      allMetaQueryOutcomes
+        .filter((qo) => qo.attempted)
+        .map((qo) => qo.archetypeId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  const archetypesWithReturnedAds = Array.from(
+    new Set(
+      allMetaQueryOutcomes
+        .filter((qo) => qo.attempted && qo.returnedCount > 0)
+        .map((qo) => qo.archetypeId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  const archetypesWithRelevantCandidates = Array.from(
+    new Set(
+      rawCandidates
+        .filter((c) => c.relevanceStatus !== "IRRELEVANT")
+        .map((c) => c.matchedArchetypeId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  const archetypesWithQualifiedProducts = Array.from(
+    new Set(
+      [
+        ...researchShortlist.shortlist.map((s) => s.matchedArchetypeId),
+        ...candidates
+          .filter((c) => shortlistedIdSet.has(c.candidateId))
+          .map((c) => c.matchedArchetypeId),
+      ].filter((id): id is string => Boolean(id))
+    )
+  );
+  const observedArchetypeIds = archetypesWithQualifiedProducts;
   const unusedQueriesCount = validatedQueries.filter(
     (q) => !executedNormalizedPhrases.has(q.normalizedPhrase)
   ).length;
@@ -1610,6 +1697,11 @@ export async function runEvergreenProductResearch(
     unverifiedQueueRemaining: unverifiedQueue.length,
     observedArchetypeIds,
     plannedArchetypes: discoveryPlan?.productArchetypes || [],
+    plannedArchetypeIds,
+    queriedArchetypeIds,
+    archetypesWithReturnedAds,
+    archetypesWithRelevantCandidates,
+    archetypesWithQualifiedProducts,
     unresolvedCandidates: candidates.filter((c) => c.identityStatus === "UNRESOLVED").length,
     remainingSourceQueries: sharedMetaBudgetTracker.remainingRequests,
     remainingAIRequests: sharedGeminiBudgetTracker.getRemainingRequests(),

@@ -18,6 +18,7 @@ import fs from "fs";
 import path from "path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { prisma } from "@/lib/db";
 import { isSafePublicUrl } from "@/services/kh02/identity/productMetadataExtractor";
 import {
   IntelligenceQuery,
@@ -54,6 +55,8 @@ export interface GoogleMcpCapabilities {
     advertiserSearch: boolean;
     adsRetrieval: boolean;
     adDetail: boolean;
+    productDiscovery?: boolean;
+    productEnrichment?: boolean;
   };
   matchedTools: {
     domainLookupTool?: string;
@@ -61,6 +64,13 @@ export interface GoogleMcpCapabilities {
     adsRetrievalTool?: string;
     adDetailTool?: string;
   };
+  // V12.4.3.3 Section 4.1 Explicit Capability Flags
+  TRANSPORT_CONNECTED: boolean;
+  ADVERTISER_LOOKUP_SUPPORTED: boolean;
+  AD_CREATIVE_RETRIEVAL_SUPPORTED: boolean;
+  PRODUCT_DISCOVERY_SUPPORTED: boolean;
+  PRODUCT_ENRICHMENT_SUPPORTED: boolean;
+  capabilityClassification: "ENRICHMENT_ONLY" | "UNAVAILABLE";
   discoveredAt: string;
   errorMessage?: string;
 }
@@ -147,6 +157,25 @@ export interface GoogleDiagnosticStateBreakdown {
   cached: boolean;
 }
 
+export interface GoogleDomainEnrichmentOutcome {
+  domain: string;
+  registrableDomain: string;
+  attempted: boolean;
+  status:
+    | "SUCCEEDED_WITH_CREATIVES"
+    | "SUCCEEDED_ADVERTISER_ONLY_NO_ADS"
+    | "SUCCEEDED_NO_ADVERTISER"
+    | "RATE_LIMITED"
+    | "BLOCKED"
+    | "TRANSPORT_FAILED"
+    | "QUERY_FAILED"
+    | "SKIPPED_COOLDOWN"
+    | "SKIPPED_BUDGET";
+  advertisersFound: number;
+  creativesReturned: number;
+  errorMessage: string | null;
+}
+
 export interface GoogleEnrichmentExecution {
   attemptedDomains: string[];
   advertiserLookupSucceeded: boolean;
@@ -157,34 +186,131 @@ export interface GoogleEnrichmentExecution {
   productLevelMatches: number;
   brandLevelMatches: number;
   productEvidenceIds: string[];
+  persistedRecordIds?: string[];
+  domainOutcomes?: GoogleDomainEnrichmentOutcome[];
   queryErrors: string[];
   queryTimestamp: string | null;
   isControlledMcp?: boolean;
   stateBreakdown?: GoogleDiagnosticStateBreakdown;
 }
 
+const PLATFORM_AND_REDIRECT_DOMAINS = new Set([
+  "facebook.com",
+  "fb.com",
+  "fb.me",
+  "m.facebook.com",
+  "l.facebook.com",
+  "lm.facebook.com",
+  "instagram.com",
+  "google.com",
+  "youtube.com",
+  "youtu.be",
+  "tiktok.com",
+  "pinterest.com",
+  "twitter.com",
+  "x.com",
+  "reddit.com",
+  "linkedin.com",
+  "lnkd.in",
+  "bit.ly",
+  "tinyurl.com",
+  "t.co",
+  "linktr.ee",
+  "ow.ly",
+  "buff.ly",
+  "localhost",
+]);
+
 /**
  * Extracts the canonical registrable domain from a hostname or URL.
- * Handles subdomains (e.g., cc.uprootclean.com -> uprootclean.com, store.brand.co.uk -> brand.co.uk).
+ * V12.4.3.3 Section 4.2:
+ * - Unwraps redirect URLs (e.g. l.facebook.com/l.php?u=..., google.com/url?q=...).
+ * - Rejects platform-owned and link-shortener domains (returns "").
+ * - Rejects invalid hostnames, IPs, and strings without a valid TLD (returns "").
+ * - Strips subdomains (e.g., cc.uprootclean.com -> uprootclean.com, store.brand.co.uk -> brand.co.uk).
  */
 export function extractRegistrableDomain(domainOrUrl: string): string {
-  if (!domainOrUrl) return "";
-  const clean = domainOrUrl
+  if (!domainOrUrl || typeof domainOrUrl !== "string") return "";
+  let candidate = domainOrUrl.trim();
+  if (!candidate) return "";
+
+  // Attempt to unwrap redirect URLs (l.facebook.com/l.php?u=..., google.com/url?q=...)
+  if (/^https?:\/\//i.test(candidate) || candidate.includes("?")) {
+    try {
+      const parsed = new URL(
+        /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`
+      );
+      const hostLower = parsed.hostname.toLowerCase();
+      if (
+        hostLower.endsWith("facebook.com") ||
+        hostLower.endsWith("fb.com") ||
+        hostLower.endsWith("google.com") ||
+        hostLower.endsWith("tiktok.com")
+      ) {
+        const redirectTarget =
+          parsed.searchParams.get("u") ||
+          parsed.searchParams.get("q") ||
+          parsed.searchParams.get("url") ||
+          parsed.searchParams.get("target");
+        if (redirectTarget) {
+          try {
+            candidate = decodeURIComponent(redirectTarget).trim();
+          } catch {
+            candidate = redirectTarget.trim();
+          }
+        }
+      }
+    } catch {
+      // Fallback to string cleanup below
+    }
+  }
+
+  const clean = candidate
     .trim()
     .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "")
-    .replace(/:\d+$/, "");
-  const parts = clean.split(".");
-  if (parts.length <= 2) return clean;
-  const secondLast = parts[parts.length - 2];
-  if (
-    ["co", "com", "net", "org", "gov", "edu"].includes(secondLast) &&
-    parts.length > 2
-  ) {
-    return parts.slice(-3).join(".");
+    .replace(/^[a-z]+:\/\//i, "")
+    .replace(/^\/\//, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/:\d+$/, "")
+    .replace(/^\.+|\.+$/g, "");
+
+  if (!clean || !clean.includes(".") || /\s/.test(clean)) return "";
+  // Reject IPv4 addresses or invalid characters
+  if (/^\d+(\.\d+){3}$/.test(clean) || !/^[a-z0-9.-]+$/.test(clean)) return "";
+
+  const parts = clean.split(".").filter(Boolean);
+  if (parts.length < 2) return "";
+  const tld = parts[parts.length - 1];
+  if (!/^[a-z]{2,18}$/.test(tld)) return "";
+
+  let regDomain: string;
+  if (parts.length <= 2) {
+    regDomain = parts.join(".");
+  } else {
+    const secondLast = parts[parts.length - 2];
+    if (
+      ["co", "com", "net", "org", "gov", "edu", "ac"].includes(secondLast) &&
+      tld.length === 2 &&
+      parts.length >= 3
+    ) {
+      regDomain = parts.slice(-3).join(".");
+    } else {
+      regDomain = parts.slice(-2).join(".");
+    }
   }
-  return parts.slice(-2).join(".");
+
+  if (
+    PLATFORM_AND_REDIRECT_DOMAINS.has(clean) ||
+    PLATFORM_AND_REDIRECT_DOMAINS.has(regDomain)
+  ) {
+    return "";
+  }
+
+  return regDomain;
+}
+
+export function clearGoogleRateLimitCooldown(): void {
+  delete (globalThis as any).__swaiGoogleRateLimitUntil;
 }
 
 export interface NormalizedAdsResult {
@@ -386,6 +512,10 @@ export async function discoverGoogleAdsMcpCapabilities(
       /^get_ad_details?$|(get|find).*ad.*detail|creative.*detail/i.test(t.name),
     )?.name;
 
+    const advLookupSupported = Boolean(domainLookupTool || advertiserSearchTool);
+    const creativeRetrievalSupported = Boolean(adsRetrievalTool);
+    const enrichmentSupported = Boolean(isConnected && advLookupSupported && creativeRetrievalSupported);
+
     return {
       transportConnected: isConnected,
       toolsDiscovered: toolDescriptors,
@@ -394,6 +524,8 @@ export async function discoverGoogleAdsMcpCapabilities(
         advertiserSearch: Boolean(advertiserSearchTool),
         adsRetrieval: Boolean(adsRetrievalTool),
         adDetail: Boolean(adDetailTool),
+        productDiscovery: false,
+        productEnrichment: enrichmentSupported,
       },
       matchedTools: {
         domainLookupTool,
@@ -401,6 +533,12 @@ export async function discoverGoogleAdsMcpCapabilities(
         adsRetrievalTool,
         adDetailTool,
       },
+      TRANSPORT_CONNECTED: isConnected,
+      ADVERTISER_LOOKUP_SUPPORTED: advLookupSupported,
+      AD_CREATIVE_RETRIEVAL_SUPPORTED: creativeRetrievalSupported,
+      PRODUCT_DISCOVERY_SUPPORTED: false,
+      PRODUCT_ENRICHMENT_SUPPORTED: enrichmentSupported,
+      capabilityClassification: enrichmentSupported ? "ENRICHMENT_ONLY" : "UNAVAILABLE",
       discoveredAt,
     };
   } catch (err: any) {
@@ -412,8 +550,16 @@ export async function discoverGoogleAdsMcpCapabilities(
         advertiserSearch: false,
         adsRetrieval: false,
         adDetail: false,
+        productDiscovery: false,
+        productEnrichment: false,
       },
       matchedTools: {},
+      TRANSPORT_CONNECTED: false,
+      ADVERTISER_LOOKUP_SUPPORTED: false,
+      AD_CREATIVE_RETRIEVAL_SUPPORTED: false,
+      PRODUCT_DISCOVERY_SUPPORTED: false,
+      PRODUCT_ENRICHMENT_SUPPORTED: false,
+      capabilityClassification: "UNAVAILABLE",
       discoveredAt,
       errorMessage: err?.message || String(err),
     };
@@ -1043,6 +1189,124 @@ export function createGoogleTransparencyMcpClient(config?: {
   };
 }
 
+export interface GoogleEnrichmentOptions {
+  maxDomains?: number;
+  maxAdsCallsPerDomain?: number;
+  persistToDatabase?: boolean;
+}
+
+/**
+ * Persists normalized Google Transparency observations into SQLite (`CompetitorAd` & `AdObservation`)
+ * so that product-level and brand-level Google evidence survives database reload.
+ */
+export async function persistGoogleObservationsToDatabase(
+  observations: SourceObservation[],
+  workspaceId?: string
+): Promise<string[]> {
+  if (!workspaceId || workspaceId === "test" || observations.length === 0) {
+    return [];
+  }
+
+  const persistedIds: string[] = [];
+  try {
+    let dataSource = await prisma.dataSource.findFirst({
+      where: { name: "GOOGLE_ADS_TRANSPARENCY" },
+    });
+    if (!dataSource) {
+      dataSource = await prisma.dataSource.create({
+        data: {
+          name: "GOOGLE_ADS_TRANSPARENCY",
+          displayName: "Google Ads Transparency Center",
+          description:
+            "Public Google Ads Transparency Center advertiser & creative enrichment via gads-transparency-mcp.",
+          status: "AVAILABLE",
+          capabilities: JSON.stringify([
+            "ADVERTISER_ENRICHMENT",
+            "CREATIVE_RETRIEVAL",
+          ]),
+          supportedRegions: JSON.stringify(["US"]),
+        },
+      });
+    }
+
+    for (const obs of observations) {
+      const extId = `GOOGLE:${obs.sourceRecordId}`;
+      const domain =
+        extractRegistrableDomain(obs.advertiserDomain || obs.storeDomainEvidence || "") ||
+        obs.advertiserDomain ||
+        "google-transparency-advertiser.com";
+      const advName = obs.advertiserOrCreator || obs.advertiserName || domain;
+
+      let advertiser = await prisma.advertiser.findFirst({
+        where: { platform: "GOOGLE", domain },
+      });
+      if (!advertiser) {
+        advertiser = await prisma.advertiser.create({
+          data: {
+            platform: "GOOGLE",
+            name: advName,
+            domain,
+            country: obs.verifiedDeliveryMarket || "US",
+          },
+        });
+      }
+
+      const now = new Date();
+      let adRow = await prisma.competitorAd.findUnique({
+        where: { externalAdId: extId },
+      });
+
+      if (!adRow) {
+        adRow = await prisma.competitorAd.create({
+          data: {
+            advertiserId: advertiser.id,
+            dataSourceId: dataSource.id,
+            externalAdId: extId,
+            platform: "GOOGLE",
+            targetMarket: obs.verifiedDeliveryMarket || "UNKNOWN",
+            headline: obs.title || `Google Ad: ${obs.sourceRecordId}`,
+            bodyText: obs.description || obs.observedContent || "",
+            callToAction: "Shop Now",
+            landingPageUrl: obs.landingPageUrl || `https://${domain}`,
+            originalAdUrl:
+              obs.sourceUrl ||
+              `https://adstransparency.google.com/?domain=${encodeURIComponent(domain)}`,
+            category: "Retail",
+            firstSeenAt: now,
+            lastSeenAt: now,
+            firstObservedAt: now,
+            lastObservedAt: now,
+            observationCount: 1,
+            status: "ACTIVE",
+            lifecycleStatus: "ACTIVE",
+            dataConfidence: "OBSERVED",
+            isSyntheticQuarantine: false,
+          },
+        });
+      } else {
+        adRow = await prisma.competitorAd.update({
+          where: { id: adRow.id },
+          data: {
+            lastSeenAt: now,
+            lastObservedAt: now,
+            observationCount: { increment: 1 },
+          },
+        });
+      }
+
+      obs.evidenceReference = `CompetitorAd:${adRow.id}`;
+      if (obs.metrics && typeof obs.metrics === "object") {
+        (obs.metrics as Record<string, unknown>).persistedAdId = adRow.id;
+      }
+      persistedIds.push(adRow.id);
+    }
+  } catch {
+    // Non-fatal if test DB or read-only context rejects persistence
+  }
+
+  return persistedIds;
+}
+
 /**
  * Collects Google Ads Transparency observations for known advertiser domains.
  * Executes full pipeline: Domain lookup -> Advertiser IDs -> Creatives -> Normalized Ad Observations.
@@ -1050,16 +1314,36 @@ export function createGoogleTransparencyMcpClient(config?: {
 export async function collectGoogleAdvertiserSignals(
   query: IntelligenceQuery,
   customClient?: GoogleTransparencyMcpClient,
+  options?: GoogleEnrichmentOptions,
 ): Promise<SourceResearchResult> {
   const startedAt = new Date().toISOString();
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // 1. Google Ads research requires domains or advertiser names
-  const targetDomains =
+  const rawInputDomains =
     query.advertiserDomains && query.advertiserDomains.length > 0
       ? query.advertiserDomains
       : [];
+
+  // Deduplicate and sanitize domains by registrable domain (Section 4.2 & 4.3)
+  const targetDomains: string[] = [];
+  const seenRegistrable = new Set<string>();
+  for (const rawDom of rawInputDomains) {
+    const reg = extractRegistrableDomain(rawDom);
+    if (!reg) continue;
+    if (!seenRegistrable.has(reg)) {
+      seenRegistrable.add(reg);
+      const cleanedHost = String(rawDom)
+        .trim()
+        .toLowerCase()
+        .replace(/^[a-z]+:\/\//i, "")
+        .replace(/[/?#].*$/, "")
+        .replace(/:\d+$/, "")
+        .replace(/^www\./, "");
+      targetDomains.push(cleanedHost && !PLATFORM_AND_REDIRECT_DOMAINS.has(cleanedHost) ? cleanedHost : reg);
+    }
+  }
 
   if (targetDomains.length === 0) {
     warnings.push(
@@ -1137,9 +1421,10 @@ export async function collectGoogleAdvertiserSignals(
         productLevelMatches: 0,
         brandLevelMatches: 0,
         productEvidenceIds: [],
+        domainOutcomes: [],
         queryErrors: [],
         queryTimestamp: startedAt,
-      isControlledMcp: Boolean(customClient),
+        isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: false,
           transportConnected: false,
@@ -1199,9 +1484,20 @@ export async function collectGoogleAdvertiserSignals(
         productLevelMatches: 0,
         brandLevelMatches: 0,
         productEvidenceIds: [],
+        domainOutcomes: [
+          {
+            domain: firstDom,
+            registrableDomain: extractRegistrableDomain(firstDom) || firstDom,
+            attempted: false,
+            status: "SKIPPED_COOLDOWN",
+            advertisersFound: 0,
+            creativesReturned: 0,
+            errorMessage: errMsg,
+          },
+        ],
         queryErrors: [errMsg],
         queryTimestamp: startedAt,
-      isControlledMcp: Boolean(customClient),
+        isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: true,
           transportConnected: true,
@@ -1256,11 +1552,12 @@ export async function collectGoogleAdvertiserSignals(
         productLevelMatches: 0,
         brandLevelMatches: 0,
         productEvidenceIds: [],
+        domainOutcomes: [],
         queryErrors: [
           `Google Ads Transparency MCP transport connection failed: ${connErr.message}`,
         ],
         queryTimestamp: startedAt,
-      isControlledMcp: Boolean(customClient),
+        isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: true,
           transportConnected: false,
@@ -1300,32 +1597,77 @@ export async function collectGoogleAdvertiserSignals(
     let creativesReturnedCount = 0;
     let creativeQuerySucceeded = false;
     const attemptedDomains: string[] = [];
+    const domainOutcomes: GoogleDomainEnrichmentOutcome[] = [];
     let upstreamRateLimitedOrBlocked = false;
-    const isRateLimitOrBlockError = (msg: string) =>
-      /\b(429|403|too many requests|sorry\/index|captcha|blocked|rate.?limit|timed?\s*out|timeout)\b/i.test(
-        msg,
-      );
 
-    const maxLiveDomains =
-      !customClient &&
+    const isRateLimitError = (msg: string) =>
+      /\b(429|too many requests|rate.?limit)\b/i.test(msg);
+    const isBlockError = (msg: string) =>
+      /\b(403|sorry\/index|captcha|anti[-_\s]?bot|blocked)\b/i.test(msg);
+    const isRateLimitOrBlockError = (msg: string) =>
+      isRateLimitError(msg) || isBlockError(msg);
+
+    // V12.4.3.3 Section 4.3: Bounded multi-domain enrichment queue for Top-3 merchant domains
+    const configuredMaxDomains =
+      options?.maxDomains ??
+      query.maxLiveDomains ??
+      (query as any)?.maxGoogleDomains ??
+      (!customClient &&
       process.env.VITEST !== "true" &&
       process.env.NODE_ENV !== "test"
-        ? 1
-        : 5;
-    for (const rawDomain of targetDomains.slice(0, maxLiveDomains)) {
-      if (query.signal?.aborted || upstreamRateLimitedOrBlocked) break;
+        ? 3
+        : 5);
+    const maxLiveDomains = Math.max(1, Math.min(configuredMaxDomains, 5));
+    const maxAdsCallsPerDomain = options?.maxAdsCallsPerDomain ?? 2;
 
+    for (let dIdx = 0; dIdx < targetDomains.length; dIdx++) {
+      const rawDomain = targetDomains[dIdx];
       const domain = rawDomain
         .trim()
         .toLowerCase()
         .replace(/^https?:\/\//, "")
         .replace(/\/.*$/, "")
         .replace(/:\d+$/, "");
-      const regDomain = extractRegistrableDomain(domain);
-      const lookupKeys = [domain];
-      if (regDomain && regDomain !== domain && !domain.startsWith("www.")) {
-        lookupKeys.push(regDomain);
+      const regDomain = extractRegistrableDomain(domain) || domain;
+
+      if (dIdx >= maxLiveDomains) {
+        domainOutcomes.push({
+          domain,
+          registrableDomain: regDomain,
+          attempted: false,
+          status: "SKIPPED_BUDGET",
+          advertisersFound: 0,
+          creativesReturned: 0,
+          errorMessage: "Skipped due to multi-domain enrichment budget limit",
+        });
+        continue;
       }
+
+      if (query.signal?.aborted || upstreamRateLimitedOrBlocked) {
+        domainOutcomes.push({
+          domain,
+          registrableDomain: regDomain,
+          attempted: false,
+          status: "SKIPPED_COOLDOWN",
+          advertisersFound: 0,
+          creativesReturned: 0,
+          errorMessage: query.signal?.aborted
+            ? "Operation cancelled"
+            : "Skipped after upstream rate-limit or block on earlier domain",
+        });
+        continue;
+      }
+
+      const lookupKeys = [regDomain];
+      if (domain && domain !== regDomain && !domain.startsWith("www.")) {
+        lookupKeys.unshift(domain);
+      }
+
+      let domainAdvFound = 0;
+      let domainCreativesReturned = 0;
+      let domainLookupOk = false;
+      let domainErrorMsg: string | null = null;
+      let domainStatus: GoogleDomainEnrichmentOutcome["status"] = "SUCCEEDED_NO_ADVERTISER";
 
       for (const key of lookupKeys) {
         if (!attemptedDomains.includes(key)) {
@@ -1338,6 +1680,7 @@ export async function collectGoogleAdvertiserSignals(
             ? await client.callToolByName(searchTool, { query: key })
             : await client.searchAdvertiserByDomain(key);
           anyLookupSucceeded = true;
+          domainLookupOk = true;
 
           const rawAdvList = Array.isArray(advResult)
             ? advResult
@@ -1354,13 +1697,14 @@ export async function collectGoogleAdvertiserSignals(
             if (id) advertiserIds.push(String(id));
           }
 
-          if (advertiserIds.length > 0 || upstreamRateLimitedOrBlocked) {
+          if (advertiserIds.length > 0) {
             anyAdvertiserFound = true;
             advertisersFoundCount += advertiserIds.length;
+            domainAdvFound += advertiserIds.length;
           }
 
           // Step 3: Retrieve actual ad creatives for the discovered advertiser(s)
-          for (const advId of advertiserIds.slice(0, 2)) {
+          for (const advId of advertiserIds.slice(0, maxAdsCallsPerDomain)) {
             if (query.signal?.aborted || upstreamRateLimitedOrBlocked) break;
             try {
               const adsResult = client.callToolByName
@@ -1377,9 +1721,10 @@ export async function collectGoogleAdvertiserSignals(
                   ? adsResult.ads
                   : [];
               creativesReturnedCount += rawAds.length;
+              domainCreativesReturned += rawAds.length;
 
               const normResult = normalizeGoogleAdsResponse(adsResult, {
-                requestedDomain: key,
+                requestedDomain: regDomain,
                 topic: query.topic,
                 observedAt: new Date().toISOString(),
                 toolName: adsTool,
@@ -1392,12 +1737,23 @@ export async function collectGoogleAdvertiserSignals(
               }
             } catch (adsErr: any) {
               adsRetrievalFailed = true;
-              errors.push(
-                `Ads retrieval failed for advertiser ${advId}: ${adsErr.message}`,
-              );
-              if (isRateLimitOrBlockError(String(adsErr?.message || adsErr))) {
+              const msg = String(adsErr?.message || adsErr);
+              domainErrorMsg = msg;
+              errors.push(`Ads retrieval failed for advertiser ${advId}: ${msg}`);
+              if (isRateLimitOrBlockError(msg)) {
                 upstreamRateLimitedOrBlocked = true;
+                domainStatus = isRateLimitError(msg) ? "RATE_LIMITED" : "BLOCKED";
+                if (
+                  !customClient &&
+                  process.env.VITEST !== "true" &&
+                  process.env.NODE_ENV !== "test"
+                ) {
+                  (globalThis as any).__swaiGoogleRateLimitUntil =
+                    Date.now() + 120_000;
+                }
                 break;
+              } else {
+                domainStatus = "QUERY_FAILED";
               }
             }
           }
@@ -1407,13 +1763,14 @@ export async function collectGoogleAdvertiserSignals(
             break;
           }
         } catch (domainErr: any) {
+          const msg = String(domainErr?.message || domainErr);
+          domainErrorMsg = msg;
           errors.push(
-            `Google Transparency advertiser lookup failed for ${key}: ${domainErr.message}`,
+            `Google Transparency advertiser lookup failed for ${key}: ${msg}`,
           );
-          if (
-            isRateLimitOrBlockError(String(domainErr?.message || domainErr))
-          ) {
+          if (isRateLimitOrBlockError(msg)) {
             upstreamRateLimitedOrBlocked = true;
+            domainStatus = isRateLimitError(msg) ? "RATE_LIMITED" : "BLOCKED";
             if (
               !customClient &&
               process.env.VITEST !== "true" &&
@@ -1423,19 +1780,49 @@ export async function collectGoogleAdvertiserSignals(
                 Date.now() + 120_000;
             }
             break;
+          } else {
+            domainStatus = "QUERY_FAILED";
           }
         }
       }
+
+      if (!domainErrorMsg && domainLookupOk) {
+        if (domainCreativesReturned > 0) {
+          domainStatus = "SUCCEEDED_WITH_CREATIVES";
+        } else if (domainAdvFound > 0) {
+          domainStatus = "SUCCEEDED_ADVERTISER_ONLY_NO_ADS";
+        } else {
+          domainStatus = "SUCCEEDED_NO_ADVERTISER";
+        }
+      }
+
+      domainOutcomes.push({
+        domain,
+        registrableDomain: regDomain,
+        attempted: true,
+        status: domainStatus,
+        advertisersFound: domainAdvFound,
+        creativesReturned: domainCreativesReturned,
+        errorMessage: domainErrorMsg,
+      });
     }
 
-    if (
-      !customClient &&
-      process.env.VITEST !== "true" &&
-      process.env.NODE_ENV !== "test" &&
-      observations.length === 0
-    ) {
-      (globalThis as any).__swaiGoogleRateLimitUntil = Date.now() + 180_000;
+    // V12.4.3.3 Section 4.4: NEVER set rate-limit cooldown merely because observations.length === 0!
+    // Cooldown is ONLY set above when an actual 429/rate-limit or anti-bot block error is returned.
+
+    // Persist Google observations to SQLite when workspaceId is provided (Section 4.7)
+    let persistedRecordIds: string[] = [];
+    const shouldPersist =
+      options?.persistToDatabase !== undefined
+        ? options.persistToDatabase
+        : Boolean(query.workspaceId && query.workspaceId !== "test");
+    if (shouldPersist && observations.length > 0) {
+      persistedRecordIds = await persistGoogleObservationsToDatabase(
+        observations,
+        query.workspaceId
+      );
     }
+
     let status: SourceRunStatus = "NOT_CONFIGURED";
     if (observations.length > 0) {
       status = "PASSED";
@@ -1443,11 +1830,15 @@ export async function collectGoogleAdvertiserSignals(
       status = "QUERY_FAILED";
     } else if (anyAdvertiserFound || anyLookupSucceeded) {
       status = "QUERY_SUCCEEDED_EMPTY";
-    } else if (errors.length > 0) {
-      status = "QUERY_FAILED"; // Lookups genuinely failed with transport or server errors!
     } else {
       status = "NO_RESULTS";
     }
+
+    const hasProductSpecificMatch = observations.some(
+      (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC"
+    );
+    const hasPersistedProductEvidence =
+      hasProductSpecificMatch && persistedRecordIds.length > 0;
 
     const enrichmentExecution: GoogleEnrichmentExecution = {
       attemptedDomains,
@@ -1467,6 +1858,8 @@ export async function collectGoogleAdvertiserSignals(
           (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
         )
         .map((o) => o.sourceRecordId),
+      persistedRecordIds,
+      domainOutcomes,
       queryErrors: [...errors],
       queryTimestamp: startedAt,
       isControlledMcp: Boolean(customClient),
@@ -1487,23 +1880,38 @@ export async function collectGoogleAdvertiserSignals(
         brandLevelMatch: observations.some(
           (o) => (o.metrics as any)?.productRelevance === "BRAND_RELATED",
         ),
-        productLevelMatch: observations.some(
-          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
-        ),
-        productAssociatedEvidence: observations.some(
-          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
-        ),
-        productEvidencePersisted: observations.some(
-          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
-        ),
-        currentRunProductEvidenceAvailable: observations.some(
-          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
-        ),
+        productLevelMatch: hasProductSpecificMatch,
+        productAssociatedEvidence: hasProductSpecificMatch,
+        productEvidencePersisted: hasPersistedProductEvidence,
+        currentRunProductEvidenceAvailable: hasProductSpecificMatch,
         empty: status === "QUERY_SUCCEEDED_EMPTY" || status === "NO_RESULTS",
         failed: status === "QUERY_FAILED",
         cached: false,
       },
     };
+
+    const domainsAttemptedCount = domainOutcomes.filter((d) => d.attempted).length;
+    const domainsSucceededCount = domainOutcomes.filter(
+      (d) =>
+        d.status === "SUCCEEDED_WITH_CREATIVES" ||
+        d.status === "SUCCEEDED_ADVERTISER_ONLY_NO_ADS" ||
+        d.status === "SUCCEEDED_NO_ADVERTISER"
+    ).length;
+    const domainsEmptyCount = domainOutcomes.filter(
+      (d) =>
+        d.status === "SUCCEEDED_ADVERTISER_ONLY_NO_ADS" ||
+        d.status === "SUCCEEDED_NO_ADVERTISER"
+    ).length;
+    const domainsRateLimitedCount = domainOutcomes.filter(
+      (d) => d.status === "RATE_LIMITED"
+    ).length;
+    const domainsFailedCount = domainOutcomes.filter(
+      (d) =>
+        d.status === "RATE_LIMITED" ||
+        d.status === "BLOCKED" ||
+        d.status === "TRANSPORT_FAILED" ||
+        d.status === "QUERY_FAILED"
+    ).length;
 
     return {
       source: "GOOGLE_ADS",
@@ -1520,7 +1928,7 @@ export async function collectGoogleAdvertiserSignals(
       warnings,
       enrichmentExecution,
       executionMetadata: {
-        attempted: true,
+        attempted: domainsAttemptedCount > 0,
         executed: anyLookupSucceeded,
         liveSucceeded:
           observations.length > 0 ||
@@ -1529,10 +1937,18 @@ export async function collectGoogleAdvertiserSignals(
         completedAt: new Date().toISOString(),
         upstreamReturnedCount: creativesReturnedCount,
         freshLiveObservedCount: observations.length,
-        persistedInsertedCount: 0,
+        currentRunLiveAdsCount: observations.length,
+        persistedInsertedCount: persistedRecordIds.length,
         persistedUpdatedCount: 0,
         cachedRecordsUsedCount: 0,
         fallbackToCache: false,
+        domainsAttempted: domainsAttemptedCount,
+        domainsSucceeded: domainsSucceededCount,
+        domainsEmpty: domainsEmptyCount,
+        domainsRateLimited: domainsRateLimitedCount,
+        domainsFailed: domainsFailedCount,
+        productEvidencePersisted: hasPersistedProductEvidence,
+        domainOutcomes,
       },
     };
   } catch (err: any) {

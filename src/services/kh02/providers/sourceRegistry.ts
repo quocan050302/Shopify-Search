@@ -1269,6 +1269,112 @@ export function estimateResearchProviderCost(
   };
 }
 
+export interface ProviderTruthMatrixRow {
+  source: IntelligenceSource;
+  policyState: "ACTIVE" | "TEMPORARILY_DISABLED";
+  installed: boolean;
+  configured: boolean;
+  transportStatus: string;
+  capabilityClassification:
+    | "PRIMARY_DISCOVERY"
+    | "ENRICHMENT_ONLY"
+    | "DEMAND_VALIDATION"
+    | "DISABLED";
+  currentRunAttempted: boolean;
+  currentRunSucceeded: boolean;
+  currentRunLiveRecords: number;
+  currentRunCachedRecords: number;
+  historicalStoredRecords: number;
+  contributesToScore: boolean;
+  contributesToConfidence: boolean;
+  status: string;
+  reason: string;
+}
+
+/**
+ * V12.4.3.3 Section 5: Builds the authoritative 5-source Provider Truth Matrix.
+ * Separates installation, configuration, transport, capability classification,
+ * current-run live vs cached execution, and historical stored records.
+ * Disabled sources (TIKTOK_ADS, TIKTOK_ORGANIC) never contribute to score or confidence.
+ */
+export async function buildProviderTruthMatrix(
+  context?: SourceDiagnosticContext & {
+    currentRunTelemetry?: Partial<Record<IntelligenceSource, ProviderSourceTelemetry>>;
+  }
+): Promise<ProviderTruthMatrixRow[]> {
+  const sources: IntelligenceSource[] = [
+    "META_ADS",
+    "GOOGLE_ADS",
+    "DEMAND_HISTORY",
+    "TIKTOK_ADS",
+    "TIKTOK_ORGANIC",
+  ];
+  const rows: ProviderTruthMatrixRow[] = [];
+
+  for (const source of sources) {
+    const disabled = isSourceTemporarilyDisabled(source);
+    const diag = await diagnoseKH02Source(source, {
+      ...context,
+      applyReleasePolicy: true,
+    });
+    const runTel = context?.currentRunTelemetry?.[source];
+
+    let capabilityClassification: ProviderTruthMatrixRow["capabilityClassification"] =
+      "PRIMARY_DISCOVERY";
+    if (disabled) {
+      capabilityClassification = "DISABLED";
+    } else if (source === "GOOGLE_ADS") {
+      capabilityClassification = "ENRICHMENT_ONLY";
+    } else if (source === "DEMAND_HISTORY") {
+      capabilityClassification = "DEMAND_VALIDATION";
+    }
+
+    const currentRunAttempted = disabled
+      ? false
+      : Boolean(
+          runTel
+            ? (runTel.liveAttempted ?? runTel.queryExecuted)
+            : false
+        );
+    const currentRunSucceeded = disabled
+      ? false
+      : Boolean(
+          runTel
+            ? (runTel.liveSucceeded ??
+                (runTel.queryStatus === "PASSED" ||
+                  runTel.queryStatus === "QUERY_SUCCEEDED_EMPTY"))
+            : false
+        );
+    const currentRunLiveRecords = disabled
+      ? 0
+      : Number(runTel?.freshLiveCount ?? (runTel?.isLive ? runTel?.retrievedCount : 0) ?? 0);
+    const currentRunCachedRecords = disabled
+      ? 0
+      : Number(runTel?.cachedRecordsCount ?? 0);
+    const historicalStoredRecords = Number(diag.storedRecordCount ?? 0);
+
+    rows.push({
+      source,
+      policyState: disabled ? "TEMPORARILY_DISABLED" : "ACTIVE",
+      installed: Boolean(diag.adapterInstalled),
+      configured: disabled ? false : Boolean(diag.configured),
+      transportStatus: disabled ? "DISABLED" : (diag.transportStatus || "NOT_TESTED"),
+      capabilityClassification,
+      currentRunAttempted,
+      currentRunSucceeded,
+      currentRunLiveRecords,
+      currentRunCachedRecords,
+      historicalStoredRecords,
+      contributesToScore: !disabled && (currentRunLiveRecords > 0 || currentRunCachedRecords > 0 || source === "DEMAND_HISTORY"),
+      contributesToConfidence: !disabled && (currentRunLiveRecords > 0 || currentRunCachedRecords > 0 || source === "DEMAND_HISTORY"),
+      status: diag.status,
+      reason: diag.reason,
+    });
+  }
+
+  return rows;
+}
+
 export {
   discoverAvailableKH02Providers,
   probeKH02ProviderCapabilities,

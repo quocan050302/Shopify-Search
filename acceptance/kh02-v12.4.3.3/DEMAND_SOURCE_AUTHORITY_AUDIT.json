@@ -1,0 +1,14 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "forensicDbDemandAudit": {
+    "totalObservations": 0,
+    "authoritativeCount": 0,
+    "cachedUnverifiedCount": 0,
+    "fixtureCount": 0,
+    "syntheticMerchantSeedCount": 0,
+    "templatedValueSeriesCount": 0,
+    "promotionalKeywordCount": 0,
+    "productBreakdown": []
+  }
+}

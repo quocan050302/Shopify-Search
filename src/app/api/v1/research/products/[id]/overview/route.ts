@@ -245,14 +245,9 @@ export async function GET(
             }
           }
 
-          // Update candidate.researchProductId inside the job snapshot so subsequent lookups are linked
+          // Note: V12.4.3.3 materializes researchProductId during persistKH02RankingSnapshot().
+          // GET overview does not mutate syncJob.resultJson to avoid concurrent GET write contention.
           cand.researchProductId = materializedProduct.id;
-          await prisma.syncJob
-            .update({
-              where: { id: job.id },
-              data: { resultJson: JSON.stringify(parsed) },
-            })
-            .catch(() => null);
 
           resolvedProductId = materializedProduct.id;
           break;

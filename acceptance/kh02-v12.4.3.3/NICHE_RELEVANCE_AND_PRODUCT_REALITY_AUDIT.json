@@ -1,0 +1,42 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "dogGadgetsZeroCatOnlyContamination": true,
+  "catGadgetsZeroDogOnlyContamination": true,
+  "emptyQueryValidation": {
+    "scenario": "Empty/whitespace query",
+    "input": "   ",
+    "intentRejected": true,
+    "thrownError": null,
+    "shortlistCount": 0,
+    "passedValidationGate": true
+  },
+  "serviceRejectionCheck": {
+    "mutationId": "M08",
+    "description": "Inject an irrelevant service into the Top 3",
+    "caughtAndRejected": true,
+    "observed": {
+      "relevanceStatus": "IRRELEVANT",
+      "discoveryDecision": "CLEARLY_UNRELATED",
+      "isAccepted": false,
+      "score": 0.05,
+      "reasons": [
+        "Rejected non-physical entityType 'SERVICE_OR_COURSE' under PHYSICAL_ECOMMERCE_PRODUCTS policy."
+      ],
+      "topic": "Pet Gadgets",
+      "matchedArchetypeId": null,
+      "audienceRelevance": {
+        "requestedAudience": "PET_GENERAL",
+        "supportedAudiences": [
+          "PET_GENERAL"
+        ],
+        "audienceMatch": "COMPATIBLE",
+        "audienceEvidenceReferences": [
+          "pet_term:\"pet\""
+        ],
+        "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+        "eligibleForPrimaryShortlist": true
+      }
+    }
+  }
+}

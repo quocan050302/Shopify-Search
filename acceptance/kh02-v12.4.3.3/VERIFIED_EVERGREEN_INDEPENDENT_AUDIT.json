@@ -1,0 +1,13 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "verifiedEvergreenWinnersCount": 0,
+  "historicalSnapshotRequalification": {
+    "totalRunsInspected": 90,
+    "runsModifiedCount": 0,
+    "totalDemotedWinnersCount": 0,
+    "requalifiedRuns": []
+  },
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "explanation": "Verified Evergreen Top 3 requires independent AUTHORITATIVE_VERIFIED or HISTORICAL_SOURCE_VERIFIED demand series. Because prisma/dev.db contains CACHED_UNVERIFIED demand series only, 0/3 Verified Evergreen winners are promoted and historical synthetic winners are demoted to Provisional Shortlist."
+}

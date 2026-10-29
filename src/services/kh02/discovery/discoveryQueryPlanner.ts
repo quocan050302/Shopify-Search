@@ -276,6 +276,13 @@ export interface ShortlistCoverageState {
   distinctFamiliesObserved?: number;
   homogeneousFamilyDetected?: boolean;
 
+  /** V12.4.3.3 Section 6.2 — Separated 5-stage archetype coverage accounting */
+  plannedArchetypeIds?: string[];
+  queriedArchetypeIds?: string[];
+  archetypesWithReturnedAds?: string[];
+  archetypesWithRelevantCandidates?: string[];
+  archetypesWithQualifiedProducts?: string[];
+
   unresolvedCandidates: number;
   unverifiedQueueRemaining?: number;
 
@@ -885,6 +892,11 @@ export function evaluateShortlistCoverage(params: {
   nicheIntent?: NicheIntentType;
   observedArchetypeIds: string[];
   plannedArchetypes: PlannedProductArchetype[];
+  plannedArchetypeIds?: string[];
+  queriedArchetypeIds?: string[];
+  archetypesWithReturnedAds?: string[];
+  archetypesWithRelevantCandidates?: string[];
+  archetypesWithQualifiedProducts?: string[];
   unresolvedCandidates: number;
   unverifiedQueueRemaining?: number;
   remainingSourceQueries: number;
@@ -895,7 +907,38 @@ export function evaluateShortlistCoverage(params: {
   cancelled: boolean;
 }): ShortlistCoverageState {
   const requestedCount = params.requestedCount ?? 3;
-  const observedSet = new Set(params.observedArchetypeIds.filter(Boolean));
+  const effectiveQualifiedArchetypes = Array.isArray(
+    params.archetypesWithQualifiedProducts
+  )
+    ? params.archetypesWithQualifiedProducts.filter(Boolean)
+    : params.qualifiedProducts > 0
+    ? params.observedArchetypeIds.filter(Boolean)
+    : [];
+  const observedSet = new Set(effectiveQualifiedArchetypes);
+  const plannedIds = Array.isArray(params.plannedArchetypeIds)
+    ? Array.from(new Set(params.plannedArchetypeIds.filter(Boolean)))
+    : Array.from(
+        new Set(
+          (params.plannedArchetypes || [])
+            .map((a) => a.archetypeId)
+            .filter(Boolean)
+        )
+      );
+  const queriedIds = Array.isArray(params.queriedArchetypeIds)
+    ? Array.from(new Set(params.queriedArchetypeIds.filter(Boolean)))
+    : [];
+  const returnedAdIds = Array.isArray(params.archetypesWithReturnedAds)
+    ? Array.from(new Set(params.archetypesWithReturnedAds.filter(Boolean)))
+    : [];
+  const relevantCandidateIds = Array.isArray(
+    params.archetypesWithRelevantCandidates
+  )
+    ? Array.from(
+        new Set(params.archetypesWithRelevantCandidates.filter(Boolean))
+      )
+    : [];
+  const qualifiedArchetypeIds = Array.from(observedSet);
+
   const missingArchetypes = (params.plannedArchetypes || [])
     .filter((a) => !observedSet.has(a.archetypeId))
     .map((a) => a.productCategory || a.archetypeId);
@@ -950,6 +993,11 @@ export function evaluateShortlistCoverage(params: {
     distinctProductArchetypesObserved: observedSet.size,
     distinctFamiliesObserved: distinctFamilies,
     homogeneousFamilyDetected,
+    plannedArchetypeIds: plannedIds,
+    queriedArchetypeIds: queriedIds,
+    archetypesWithReturnedAds: returnedAdIds,
+    archetypesWithRelevantCandidates: relevantCandidateIds,
+    archetypesWithQualifiedProducts: qualifiedArchetypeIds,
     unresolvedCandidates: params.unresolvedCandidates,
     unverifiedQueueRemaining: params.unverifiedQueueRemaining ?? 0,
     remainingSourceQueries: Math.max(0, params.remainingSourceQueries),

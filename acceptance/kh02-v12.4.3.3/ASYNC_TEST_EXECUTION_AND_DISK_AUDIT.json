@@ -1,0 +1,31 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "sessionStartedAt": "2026-10-29T15:21:27.277Z",
+  "completedAt": "2026-10-29T15:24:42.318Z",
+  "totalWallClockMs": 195041,
+  "phase2WallMs": 26358,
+  "phase4WallMs": 45230,
+  "phase5WallMs": 7984,
+  "maxObservedConcurrency": 2,
+  "completionBarrier": {
+    "passed": true,
+    "incompleteJobs": []
+  },
+  "diskAndMemory": {
+    "freeDiskBeforeGb": 9.39,
+    "freeDiskAfterGb": 10.38,
+    "freeMemBeforeMb": 93,
+    "freeMemAfterMb": 113,
+    "totalMemMb": 16384,
+    "sqlitePreCheck": {
+      "ok": true,
+      "result": "ok"
+    },
+    "sqlitePostCheck": {
+      "ok": true,
+      "result": "ok"
+    },
+    "scratchDirCleaned": true
+  }
+}

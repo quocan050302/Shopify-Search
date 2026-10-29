@@ -1,0 +1,10 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts (89 tests) 278ms
+
+ Test Files  1 passed (1)
+      Tests  89 passed (89)
+   Start at  22:21:31
+   Duration  903ms (import 42%, tests 35%, transform 14%, setup 8%, worker 1%)
+

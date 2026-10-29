@@ -1,0 +1,626 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "scenarios": {
+    "petGadgetsLiveFallback": {
+      "scenario": "Pet Gadgets (LIVE_WITH_CACHE_FALLBACK)",
+      "topic": "Pet Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438200_83y8q",
+      "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+      "liveQueryCount": 2,
+      "metaFreshAdsReturned": 18,
+      "metaCachedAdsUsed": 32,
+      "googleQueriesAttempted": 1,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 7,
+      "verifiedProductIdentitiesCount": 3,
+      "distinctProductFamiliesCount": 3,
+      "qualifiedResearchShortlistCount": 3,
+      "liveSourceSupportedShortlistCount": 1,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_1212440541",
+          "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvqw1w23008923g9oz2eiz8m",
+            "cmvqw1w1g007k23g9y9btaogg",
+            "cmvqvm7t1002s23g9obyhxwra",
+            "cmvqvm7sp002g23g9wlgnjffu"
+          ],
+          "supportingExternalAdIds": [
+            "1595856712093558",
+            "1399013621792652",
+            "2128156051108858",
+            "2046326005986245"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 4
+        },
+        {
+          "candidateId": "cand_1587534715",
+          "productName": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "kittyspout_fountain",
+          "supportingAdIds": [
+            "cmvsastxx002j8eg9368mmj4t"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_a297b0f2"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0
+        },
+        {
+          "candidateId": "cand_544204199",
+          "productName": "Gently Cooked Shelf-Stable Dog Food Starter Kit - 3 Boxes (15 Units x 1.3 lbs | 20 lbs Total) + Toy ",
+          "storeDomain": "kiwiandpata.com",
+          "canonicalProductUrl": "https://kiwiandpata.com/products/gently-cooked-dog-food-starter-kit-3-boxes-toy",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "total_toy",
+          "supportingAdIds": [
+            "cmvthd6wo0035b5g9znu6qidu"
+          ],
+          "supportingExternalAdIds": [
+            "1135438235719726"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        }
+      ],
+      "missingEvidence": [],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "petGadgetsLiveOnly": {
+      "scenario": "Pet Gadgets (LIVE_ONLY)",
+      "topic": "Pet Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438168_fde1h",
+      "sourceMode": "LIVE_ONLY",
+      "liveQueryCount": 2,
+      "metaFreshAdsReturned": 18,
+      "metaCachedAdsUsed": 0,
+      "googleQueriesAttempted": 1,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 4,
+      "verifiedProductIdentitiesCount": 2,
+      "distinctProductFamiliesCount": 3,
+      "qualifiedResearchShortlistCount": 3,
+      "liveSourceSupportedShortlistCount": 3,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_1587534715",
+          "productName": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "kittyspout_fountain",
+          "supportingAdIds": [
+            "cmvsastxx002j8eg9368mmj4t"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_9361979a"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "productName": "Pawira Stainless Steel Water Fountain",
+          "storeDomain": "pawira.com",
+          "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "water_fountain",
+          "supportingAdIds": [
+            "cmvsastyw003h8eg9ysg1m9sj",
+            "cmvsastz9003t8eg9ckv0nwgm",
+            "cmvtl5bqj00221pg91txrdfeq",
+            "cmvtl5bqu00281pg9h3qa9xyw"
+          ],
+          "supportingExternalAdIds": [
+            "2174343823475370",
+            "1605927994566450",
+            "1860647425077112",
+            "1092762023460778"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_9361979a"
+          ],
+          "liveObservationsCount": 4,
+          "cachedObservationsCount": 0
+        },
+        {
+          "candidateId": "cand_1613504636",
+          "productName": "Pet Hair/Lint/Dust Cleaner",
+          "storeDomain": "cc.uprootclean.com",
+          "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+          "identityStatus": "PROBABLE",
+          "productFamilyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvmlpdmp000uimg91229pnuq",
+            "cmvmlpdn9001cimg996p166uf",
+            "cmvmlpdnm001oimg9i4e3ejs2",
+            "cmvmlpdoh002iimg9f3ngoctx",
+            "cmvmlpdp50036img9nt00uzw5",
+            "cmvquan2u009yx1g9lyq4ofgn",
+            "cmvquan3400a4x1g95xqkohzd",
+            "cmvsastx6001z8eg9ty1hiuir"
+          ],
+          "supportingExternalAdIds": [
+            "1536941208479218",
+            "1464108218882438",
+            "1133000522848754",
+            "1641348457417375",
+            "2249466188957796",
+            "1806555653907868",
+            "1563296449176047",
+            "4546541612250472"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_1_f6b30862"
+          ],
+          "liveObservationsCount": 8,
+          "cachedObservationsCount": 0
+        }
+      ],
+      "missingEvidence": [],
+      "liveResearchTop3Verdict": "LIVE_RESEARCH_TOP3_PASS",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "diyTools": {
+      "scenario": "DIY Tools",
+      "topic": "DIY Tools",
+      "market": "US",
+      "lookbackDays": 180,
+      "researchRunId": "kh02_run_1793287438238_wrl8s",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 24,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 12,
+      "verifiedProductIdentitiesCount": 2,
+      "distinctProductFamiliesCount": 2,
+      "qualifiedResearchShortlistCount": 2,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_1316890495",
+          "productName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "storeDomain": "vipbugo.com",
+          "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "hot_glue_gun",
+          "supportingAdIds": [
+            "cmvs5wlsb000m8eg9z8mbb919"
+          ],
+          "supportingExternalAdIds": [
+            "2395948977822279"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        },
+        {
+          "candidateId": "cand_1345548906",
+          "productName": "CrochetPark™  Elegant granny Crochet Bag DIY Kit",
+          "storeDomain": "crochetpark.com",
+          "canonicalProductUrl": "https://crochetpark.com/products/elegant-granny-bag-crochet-bag-diy-kit",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "crochet_bag",
+          "supportingAdIds": [
+            "cmvthr5bx006ab5g96jo241sf"
+          ],
+          "supportingExternalAdIds": [
+            "896648623368140"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        }
+      ],
+      "missingEvidence": [
+        "Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3)."
+      ],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "kitchenGadgets": {
+      "scenario": "Kitchen Gadgets",
+      "topic": "Kitchen Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438248_b89pg",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 34,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 25,
+      "verifiedProductIdentitiesCount": 1,
+      "distinctProductFamiliesCount": 2,
+      "qualifiedResearchShortlistCount": 2,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_325186102",
+          "productName": "Multifunctional Food Chopper with Container",
+          "storeDomain": "lumeppo.com",
+          "canonicalProductUrl": "https://lumeppo.com/products/multrsady",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "vegetable_food_chopper",
+          "supportingAdIds": [
+            "cmvsaummc000d0dg9tw78lnyj"
+          ],
+          "supportingExternalAdIds": [
+            "961323550062612"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        },
+        {
+          "candidateId": "cand_2139481782",
+          "productName": "2-in-1 Glass Oil Sprayer and Dispenser",
+          "storeDomain": "allfound.co.uk",
+          "canonicalProductUrl": "https://allfound.co.uk/products/2-in-1-glass-oil-sprayer-and-dispenser",
+          "identityStatus": "PROBABLE",
+          "productFamilyKey": "oil_dispenser_sprayer",
+          "supportingAdIds": [
+            "cmvsaumoe002k0dg9l7t72u1p"
+          ],
+          "supportingExternalAdIds": [
+            "1496738839174678"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        }
+      ],
+      "missingEvidence": [
+        "Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3)."
+      ],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "automaticPetFeeder": {
+      "scenario": "Automatic Pet Feeder",
+      "topic": "Automatic Pet Feeder",
+      "market": "US",
+      "lookbackDays": 180,
+      "researchRunId": "kh02_run_1793287438271_4sthx",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 12,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 5,
+      "verifiedProductIdentitiesCount": 1,
+      "distinctProductFamiliesCount": 1,
+      "qualifiedResearchShortlistCount": 1,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_1212440541",
+          "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvqw1w23008923g9oz2eiz8m",
+            "cmvqw1w1g007k23g9y9btaogg",
+            "cmvqvm7t1002s23g9obyhxwra",
+            "cmvqvm7sp002g23g9wlgnjffu"
+          ],
+          "supportingExternalAdIds": [
+            "1595856712093558",
+            "1399013621792652",
+            "2128156051108858",
+            "2046326005986245"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 4
+        }
+      ],
+      "missingEvidence": [
+        "Only 1 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3)."
+      ],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "dogGadgets": {
+      "scenario": "Dog Gadgets",
+      "topic": "Dog Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438280_a16ms",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 43,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 4,
+      "verifiedProductIdentitiesCount": 1,
+      "distinctProductFamiliesCount": 3,
+      "qualifiedResearchShortlistCount": 3,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_544204199",
+          "productName": "Gently Cooked Shelf-Stable Dog Food Starter Kit - 3 Boxes (15 Units x 1.3 lbs | 20 lbs Total) + Toy ",
+          "storeDomain": "kiwiandpata.com",
+          "canonicalProductUrl": "https://kiwiandpata.com/products/gently-cooked-dog-food-starter-kit-3-boxes-toy",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "total_toy",
+          "supportingAdIds": [
+            "cmvthd6wo0035b5g9znu6qidu"
+          ],
+          "supportingExternalAdIds": [
+            "1135438235719726"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        },
+        {
+          "candidateId": "cand_1613504636",
+          "productName": "Pet Hair/Lint/Dust Cleaner",
+          "storeDomain": "cc.uprootclean.com",
+          "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+          "identityStatus": "PROBABLE",
+          "productFamilyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvmlpdnm001oimg9i4e3ejs2",
+            "cmvsastx6001z8eg9ty1hiuir",
+            "cmvquan3400a4x1g95xqkohzd",
+            "cmvquan2u009yx1g9lyq4ofgn",
+            "cmvmlpdp50036img9nt00uzw5",
+            "cmvmlpdoh002iimg9f3ngoctx",
+            "cmvmlpdn9001cimg996p166uf",
+            "cmvmlpdmp000uimg91229pnuq"
+          ],
+          "supportingExternalAdIds": [
+            "1133000522848754",
+            "4546541612250472",
+            "1563296449176047",
+            "1806555653907868",
+            "2249466188957796",
+            "1641348457417375",
+            "1464108218882438",
+            "1536941208479218"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 8
+        },
+        {
+          "candidateId": "cand_1300676686",
+          "productName": "Grooming Gloves",
+          "storeDomain": "order.uprootclean.com",
+          "canonicalProductUrl": "https://order.uprootclean.com/main/grooming-gloves-gg002-l1",
+          "identityStatus": "PROBABLE",
+          "productFamilyKey": "pet_grooming_glove_brush",
+          "supportingAdIds": [
+            "cmvmlpdn20016img9d9z3czus"
+          ],
+          "supportingExternalAdIds": [
+            "2688711491543464"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        }
+      ],
+      "missingEvidence": [],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "catGadgets": {
+      "scenario": "Cat Gadgets",
+      "topic": "Cat Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438304_keic8",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 50,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 4,
+      "verifiedProductIdentitiesCount": 3,
+      "distinctProductFamiliesCount": 3,
+      "qualifiedResearchShortlistCount": 3,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_1212440541",
+          "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvqw1w23008923g9oz2eiz8m",
+            "cmvqvm7t1002s23g9obyhxwra",
+            "cmvqvm7sp002g23g9wlgnjffu",
+            "cmvqw1w1g007k23g9y9btaogg"
+          ],
+          "supportingExternalAdIds": [
+            "1595856712093558",
+            "2128156051108858",
+            "2046326005986245",
+            "1399013621792652"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 4
+        },
+        {
+          "candidateId": "cand_1587534715",
+          "productName": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "kittyspout_fountain",
+          "supportingAdIds": [
+            "cmvsastxx002j8eg9368mmj4t"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "productName": "Pawira Stainless Steel Water Fountain",
+          "storeDomain": "pawira.com",
+          "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "water_fountain",
+          "supportingAdIds": [
+            "cmvsastyw003h8eg9ysg1m9sj",
+            "cmvtl5bqu00281pg9h3qa9xyw",
+            "cmvtl5bqj00221pg91txrdfeq",
+            "cmvsastz9003t8eg9ckv0nwgm"
+          ],
+          "supportingExternalAdIds": [
+            "2174343823475370",
+            "1092762023460778",
+            "1860647425077112",
+            "1605927994566450"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 4
+        }
+      ],
+      "missingEvidence": [],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    },
+    "carAccessories": {
+      "scenario": "Car Accessories",
+      "topic": "Car Accessories",
+      "market": "US",
+      "lookbackDays": 90,
+      "researchRunId": "kh02_run_1793287438327_i6uka",
+      "sourceMode": "CACHE_ONLY",
+      "liveQueryCount": 0,
+      "metaFreshAdsReturned": 0,
+      "metaCachedAdsUsed": 49,
+      "googleQueriesAttempted": 0,
+      "googleCreativesReturned": 0,
+      "googleProductLevelMatches": 0,
+      "relevantCandidatesCount": 4,
+      "verifiedProductIdentitiesCount": 2,
+      "distinctProductFamiliesCount": 3,
+      "qualifiedResearchShortlistCount": 3,
+      "liveSourceSupportedShortlistCount": 0,
+      "verifiedEvergreenWinnersCount": 0,
+      "shortlistProducts": [
+        {
+          "candidateId": "cand_506310448",
+          "productName": "Kentucky Bourbon Vehicle Paint Kit",
+          "storeDomain": "thespraysource.com",
+          "canonicalProductUrl": "https://thespraysource.com/products/kentucky-bourbon-car-kit-black-ground-coat",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "vehicle_paint",
+          "supportingAdIds": [
+            "cmvsawx1q00i20dg9atmt8xsj"
+          ],
+          "supportingExternalAdIds": [
+            "2145374463052970"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1
+        },
+        {
+          "candidateId": "cand_1913810234",
+          "productName": "Double Car Hook - The Ultimate Car Organizer",
+          "storeDomain": "lakany.com",
+          "canonicalProductUrl": "https://lakany.com/products/double-car-hook-the-ultimate-car-organizer",
+          "identityStatus": "VERIFIED",
+          "productFamilyKey": "car_organization_storage",
+          "supportingAdIds": [
+            "cmvsax17z00jo0dg9yu3a7drd",
+            "cmvsax17n00jb0dg9j3tvhkqo",
+            "cmvsax17400iz0dg9hklwtuc4"
+          ],
+          "supportingExternalAdIds": [
+            "1384331693064420",
+            "2640667989601404",
+            "1331460048757086"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 3
+        },
+        {
+          "candidateId": "cand_848005284",
+          "productName": "Personalized Pu Leather Engraved Name And Year Golf Organizer Pouch With Golf Accessories Set Father",
+          "storeDomain": "candychristy.com",
+          "canonicalProductUrl": "https://candychristy.com/personalized-pu-leather-engraved-name-and-year-golf-organizer-pouch-with-golf-accessories-set-fathers-day-wedding-gift-for-golf-lover?aid=%7B%7Bad.id%7D%7D&asid=%7B%7Badset.id%7D%7D&cid=%7B%7Bcampaign.id%7D%7D",
+          "identityStatus": "PROBABLE",
+          "productFamilyKey": "accessories_father",
+          "supportingAdIds": [
+            "cmvthr5b7005pb5g9hzf69woz",
+            "cmvthr5au005jb5g9h25h6dpc",
+            "cmvthr57o0049b5g97fvoq128"
+          ],
+          "supportingExternalAdIds": [
+            "3194100750779437",
+            "4125177021109503",
+            "2161576514710133"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 3
+        }
+      ],
+      "missingEvidence": [],
+      "liveResearchTop3Verdict": "INSUFFICIENT_LIVE_EVIDENCE",
+      "verifiedEvergreenTop3Verdict": "INSUFFICIENT_AUTHORITATIVE_DEMAND_EVIDENCE"
+    }
+  }
+}

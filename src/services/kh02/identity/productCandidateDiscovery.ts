@@ -111,6 +111,7 @@ export interface DiscoveredProductCandidate {
   imageReferences?: string[];
   advertiserNames: string[];
   supportingAdIds: string[];
+  supportingExternalAdIds?: string[];
   supportingSourceTypes: string[];
   totalObservationCount: number;
   distinctAdvertisersCount: number;
@@ -334,6 +335,14 @@ export function mergeDuplicateCandidateRecords(
     if (!primary.supportingAdIds.includes(adId)) {
       primary.supportingAdIds.push(adId);
     }
+  }
+  if (duplicate.supportingExternalAdIds) {
+    primary.supportingExternalAdIds = Array.from(
+      new Set([
+        ...(primary.supportingExternalAdIds || []),
+        ...duplicate.supportingExternalAdIds,
+      ])
+    );
   }
   for (const src of duplicate.supportingSourceTypes) {
     if (!primary.supportingSourceTypes.includes(src)) {
@@ -648,13 +657,24 @@ export function discoverProductCandidatesFromAds(
     const matchedQueryIds = Array.from(
       new Set(
         c.observations
-          .map((o) => (o.metrics as any)?.queryId)
+          .flatMap((o: any) => [
+            (o.metrics as any)?.queryId,
+            o.queryId,
+            ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
+          ])
           .filter((qid): qid is string => typeof qid === "string" && qid.length > 0)
+      )
+    );
+    const supportingExternalAdIds = Array.from(
+      new Set(
+        c.observations
+          .map((o) => o.sourceExternalAdId || o.sourceRecordId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
       )
     );
     const matchedQueryPhrase =
       c.observations
-        .map((o) => (o.metrics as any)?.queryKeyword)
+        .map((o: any) => (o.metrics as any)?.queryKeyword || o.queryKeyword)
         .find((kw): kw is string => typeof kw === "string" && kw.length > 0) ||
       null;
 
@@ -739,6 +759,7 @@ export function discoverProductCandidatesFromAds(
       imageReferences: resolvedIdentity.imageReferences || [],
       advertiserNames: Array.from(c.advertisers),
       supportingAdIds: Array.from(new Set(c.adIds)),
+      supportingExternalAdIds,
       supportingSourceTypes: Array.from(c.sources),
       totalObservationCount: Math.max(c.observations.length, c.observations.reduce((sum, o) => sum + (Number((o.metrics as any)?.observationsCount) || 1), 0)),
       distinctAdvertisersCount: c.advertisers.size,
@@ -1335,6 +1356,7 @@ export function selectTopResearchShortlist(
       | string;
     topic?: string;
     allowSameFamilyAlternativesOnShortfall?: boolean;
+    allowSameStoreMultipleSlots?: boolean;
   }
 ): ResearchShortlistResult {
   // 1. Filter candidates through the mandatory Product Reality Gate
@@ -1388,10 +1410,12 @@ export function selectTopResearchShortlist(
       ? options.nicheIntent
       : inferNicheIntentFromTopic(options?.topic || uniqueProducts[0]?.category);
 
-  // 4. Pass 1: Select primary representatives from DISTINCT product families first (Section 5.6, B20)
+  // 4. Pass 1: Select primary representatives from DISTINCT product families and DISTINCT stores first (Section 5.6, B20, Section 8.3)
   const distinctShortlist: DiscoveredProductCandidate[] = [];
   const selectedFamilies = new Map<string, DiscoveredProductCandidate>();
+  const selectedDomains = new Set<string>();
   const deferredSameFamily: DiscoveredProductCandidate[] = [];
+  const deferredSameStoreDistinctFamily: DiscoveredProductCandidate[] = [];
 
   for (const c of uniqueProducts) {
     const fp = buildProductIdentityFingerprint(c);
@@ -1410,17 +1434,45 @@ export function selectTopResearchShortlist(
       continue;
     }
 
-    if (!selectedFamilies.has(fp.familyKey)) {
+    const domainKey = fp.normalizedDomain || null;
+    const isSameStoreBlocked =
+      options?.allowSameStoreMultipleSlots !== true &&
+      domainKey !== null &&
+      selectedDomains.has(domainKey);
+
+    if (!selectedFamilies.has(fp.familyKey) && !isSameStoreBlocked) {
       c.distinctnessRole = "PRIMARY_FAMILY_REPRESENTATIVE";
       c.distinctnessReason = `Primary product representative for family '${fp.familyLabel}' (productKey=${fp.productKey}).`;
       c.crossMerchantUncertainty = null;
       selectedFamilies.set(fp.familyKey, c);
+      if (domainKey) selectedDomains.add(domainKey);
       distinctShortlist.push(c);
+    } else if (!selectedFamilies.has(fp.familyKey) && isSameStoreBlocked) {
+      deferredSameStoreDistinctFamily.push(c);
     } else {
       deferredSameFamily.push(c);
     }
 
     if (distinctShortlist.length >= limit) break;
+  }
+
+  // Pass 1b: Only if options?.allowSameStoreMultipleSlots === true and we still have fewer than `limit` items, allow distinct families from already-selected stores
+  if (
+    options?.allowSameStoreMultipleSlots === true &&
+    distinctShortlist.length < limit &&
+    deferredSameStoreDistinctFamily.length > 0
+  ) {
+    for (const c of deferredSameStoreDistinctFamily) {
+      if (distinctShortlist.length >= limit) break;
+      const fp = buildProductIdentityFingerprint(c);
+      if (!selectedFamilies.has(fp.familyKey)) {
+        c.distinctnessRole = "PRIMARY_FAMILY_REPRESENTATIVE";
+        c.distinctnessReason = `Primary product representative for family '${fp.familyLabel}' (productKey=${fp.productKey}).`;
+        c.crossMerchantUncertainty = null;
+        selectedFamilies.set(fp.familyKey, c);
+        distinctShortlist.push(c);
+      }
+    }
   }
 
   // 5. Pass 2: If fewer than `limit` distinct families exist, evaluate remaining candidates in the same family

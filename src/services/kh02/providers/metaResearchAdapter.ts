@@ -35,6 +35,7 @@ import {
   MetaQueryBudgetTracker,
   MetaResearchBudget,
 } from "@/services/kh02/discovery/discoveryQueryPlanner";
+import { evaluateProductRelevance } from "../identity/productRelevanceEvaluator";
 
 export interface MarketProvenance {
   requestedMarket: string;
@@ -137,13 +138,35 @@ export interface MetaCollectorDiagnostic {
   pythonBin?: string | null;
   collectorVersion?: string | null;
   databaseRecordsIndexed?: number;
+  // V12.4.3.3 10-Stage Explicit Readiness & Execution Dimensions (Section 3.2)
+  collectorInstalled: boolean;
+  collectorConfigured: boolean;
+  transportReachable: boolean;
+  queryCapabilityAvailable: boolean;
+  actualQueryAttempted: boolean;
+  upstreamQueryCompleted: boolean;
+  rawAdsReturned: number;
+  validObservationsNormalized: number;
+  recordsPersisted: number;
+  recordsAssociatedWithCandidates: number;
 }
 
 /**
  * Inspects real MetaAdsCollector MCP server health, python virtualenv, and SQLite index.
+ * V12.4.3.3 Section 3.2: Separates collector readiness and historical indexed DB counts
+ * from current-run query execution. Never reports historical database records as current-run ads.
  */
 export async function diagnoseMetaLiveCollector(
-  context?: { workspaceId?: string; checkLiveTransport?: boolean }
+  context?: {
+    workspaceId?: string;
+    checkLiveTransport?: boolean;
+    actualQueryAttempted?: boolean;
+    upstreamQueryCompleted?: boolean;
+    rawAdsReturned?: number;
+    validObservationsNormalized?: number;
+    recordsPersisted?: number;
+    recordsAssociatedWithCandidates?: number;
+  }
 ): Promise<MetaCollectorDiagnostic> {
   const lastCheckedAt = new Date().toISOString();
   let workspaceRecordCount = 0;
@@ -167,6 +190,16 @@ export async function diagnoseMetaLiveCollector(
 
   const config = getMetaCollectorConfig();
   const pythonExists = Boolean(config.pythonBin && fs.existsSync(config.pythonBin));
+  const actualQueryAttempted = Boolean(context?.actualQueryAttempted);
+  const upstreamQueryCompleted = Boolean(context?.upstreamQueryCompleted);
+  const rawAdsReturned = actualQueryAttempted ? (context?.rawAdsReturned ?? 0) : 0;
+  const validObservationsNormalized = actualQueryAttempted
+    ? (context?.validObservationsNormalized ?? 0)
+    : 0;
+  const recordsPersisted = actualQueryAttempted ? (context?.recordsPersisted ?? 0) : 0;
+  const recordsAssociatedWithCandidates = actualQueryAttempted
+    ? (context?.recordsAssociatedWithCandidates ?? 0)
+    : 0;
 
   if (!pythonExists) {
     return {
@@ -176,8 +209,8 @@ export async function diagnoseMetaLiveCollector(
       transportConnected: false,
       authenticated: false,
       discoverySupported: false,
-      queryExecuted: false,
-      recordsReturned: workspaceRecordCount,
+      queryExecuted: actualQueryAttempted,
+      recordsReturned: rawAdsReturned,
       provenanceVerified: workspaceRecordCount > 0,
       lastCheckedAt,
       status: "NOT_CONFIGURED",
@@ -186,6 +219,16 @@ export async function diagnoseMetaLiveCollector(
       pythonBin: config.pythonBin,
       collectorVersion: null,
       databaseRecordsIndexed: workspaceRecordCount,
+      collectorInstalled: true,
+      collectorConfigured: false,
+      transportReachable: false,
+      queryCapabilityAvailable: false,
+      actualQueryAttempted,
+      upstreamQueryCompleted: false,
+      rawAdsReturned: 0,
+      validObservationsNormalized: 0,
+      recordsPersisted: 0,
+      recordsAssociatedWithCandidates: 0,
     };
   }
 
@@ -219,9 +262,9 @@ export async function diagnoseMetaLiveCollector(
     configured: true,
     transportConnected,
     authenticated: true,
-    discoverySupported: true,
-    queryExecuted: false, // Never infer query execution from stored count
-    recordsReturned: workspaceRecordCount,
+    discoverySupported: transportConnected,
+    queryExecuted: actualQueryAttempted,
+    recordsReturned: rawAdsReturned,
     provenanceVerified: workspaceRecordCount > 0,
     lastCheckedAt,
     status: transportConnected ? "SOURCE_ACCESS_VERIFIED" : "FAILED",
@@ -230,6 +273,16 @@ export async function diagnoseMetaLiveCollector(
     pythonBin: config.pythonBin,
     collectorVersion,
     databaseRecordsIndexed: workspaceRecordCount,
+    collectorInstalled: true,
+    collectorConfigured: Boolean(config.enabled !== false && pythonExists),
+    transportReachable: transportConnected,
+    queryCapabilityAvailable: transportConnected,
+    actualQueryAttempted,
+    upstreamQueryCompleted,
+    rawAdsReturned,
+    validObservationsNormalized,
+    recordsPersisted,
+    recordsAssociatedWithCandidates,
   };
 }
 
@@ -244,39 +297,129 @@ export type ResearchSourceMode =
   | "CACHE_ONLY"
   | "LIVE_ONLY";
 
-export function resolveMetaExecutionPolicy(
+export interface MetaExecutionPolicyResolution {
+  policy: MetaExecutionPolicy;
+  requestedSourceMode: ResearchSourceMode;
+  allowLive: boolean;
+  allowCacheFallback: boolean;
+  policyConflict: boolean;
+  conflictReason: string | null;
+}
+
+export function resolveMetaExecutionPolicyWithDiagnostics(
   query?: IntelligenceQuery
-): MetaExecutionPolicy {
-  const explicit =
-    (query as any)?.metaExecutionPolicy || process.env.SWAI_META_EXECUTION_POLICY;
+): MetaExecutionPolicyResolution {
+  const queryExplicitPolicy = (query as any)?.metaExecutionPolicy;
+  const envPolicy = process.env.SWAI_META_EXECUTION_POLICY;
+  const explicit = queryExplicitPolicy || envPolicy;
+  const sourceMode: ResearchSourceMode | undefined = (query as any)?.sourceMode;
+  const liveDisabledByEnv =
+    process.env.META_COLLECTOR_ENABLED === "false" ||
+    process.env.DISABLE_LIVE_MCP === "true";
+
+  // Check for explicit LIVE_ONLY conflicts first (Section 3.1)
+  if (sourceMode === "LIVE_ONLY") {
+    if (queryExplicitPolicy === "CACHE_ONLY" || queryExplicitPolicy === "OFFLINE_FIXTURE") {
+      return {
+        policy: queryExplicitPolicy,
+        requestedSourceMode: "LIVE_ONLY",
+        allowLive: false,
+        allowCacheFallback: false,
+        policyConflict: true,
+        conflictReason: `Conflicting execution configuration: sourceMode=LIVE_ONLY cannot be combined with metaExecutionPolicy=${queryExplicitPolicy}.`,
+      };
+    }
+    if (envPolicy === "CACHE_ONLY" || envPolicy === "OFFLINE_FIXTURE") {
+      return {
+        policy: "LIVE_FIRST",
+        requestedSourceMode: "LIVE_ONLY",
+        allowLive: false,
+        allowCacheFallback: false,
+        policyConflict: true,
+        conflictReason: `Conflicting execution configuration: sourceMode=LIVE_ONLY conflicts with SWAI_META_EXECUTION_POLICY=${envPolicy}.`,
+      };
+    }
+    if (liveDisabledByEnv) {
+      return {
+        policy: "LIVE_FIRST",
+        requestedSourceMode: "LIVE_ONLY",
+        allowLive: false,
+        allowCacheFallback: false,
+        policyConflict: true,
+        conflictReason:
+          "sourceMode=LIVE_ONLY requested while live Meta collector is disabled by environment flags (META_COLLECTOR_ENABLED=false or DISABLE_LIVE_MCP=true).",
+      };
+    }
+    return {
+      policy: "LIVE_FIRST",
+      requestedSourceMode: "LIVE_ONLY",
+      allowLive: true,
+      allowCacheFallback: false,
+      policyConflict: false,
+      conflictReason: null,
+    };
+  }
+
+  if (sourceMode === "CACHE_ONLY") {
+    const policy =
+      queryExplicitPolicy === "OFFLINE_FIXTURE" ? "OFFLINE_FIXTURE" : "CACHE_ONLY";
+    const conflict = queryExplicitPolicy === "LIVE_FIRST";
+    return {
+      policy,
+      requestedSourceMode: "CACHE_ONLY",
+      allowLive: false,
+      allowCacheFallback: true,
+      policyConflict: conflict,
+      conflictReason: conflict
+        ? "Conflicting execution configuration: sourceMode=CACHE_ONLY combined with metaExecutionPolicy=LIVE_FIRST."
+        : null,
+    };
+  }
+
+  let resolvedPolicy: MetaExecutionPolicy = "CACHE_SUPPLEMENTED";
   if (
     explicit === "LIVE_FIRST" ||
     explicit === "CACHE_SUPPLEMENTED" ||
     explicit === "CACHE_ONLY" ||
     explicit === "OFFLINE_FIXTURE"
   ) {
-    return explicit;
+    resolvedPolicy = explicit;
+  } else if (process.env.ENABLE_LIVE_META === "true") {
+    resolvedPolicy = "LIVE_FIRST";
+  } else if (process.env.NODE_ENV === "test" || process.env.VITEST === "true") {
+    resolvedPolicy = "OFFLINE_FIXTURE";
+  } else if (liveDisabledByEnv) {
+    resolvedPolicy = "CACHE_ONLY";
   }
-  const sourceMode: ResearchSourceMode | undefined = (query as any)?.sourceMode;
-  if (sourceMode === "CACHE_ONLY") {
-    return "CACHE_ONLY";
-  }
-  if (sourceMode === "LIVE_ONLY") {
-    return "LIVE_FIRST";
-  }
-  if (process.env.ENABLE_LIVE_META === "true") {
-    return "LIVE_FIRST";
-  }
-  if (process.env.NODE_ENV === "test" || process.env.VITEST === "true") {
-    return "OFFLINE_FIXTURE";
-  }
-  if (
-    process.env.META_COLLECTOR_ENABLED === "false" ||
-    process.env.DISABLE_LIVE_MCP === "true"
-  ) {
-    return "CACHE_ONLY";
-  }
-  return "CACHE_SUPPLEMENTED";
+
+  const effectiveSourceMode: ResearchSourceMode =
+    sourceMode ||
+    (resolvedPolicy === "CACHE_ONLY" || resolvedPolicy === "OFFLINE_FIXTURE"
+      ? "CACHE_ONLY"
+      : "LIVE_WITH_CACHE_FALLBACK");
+
+  const allowLive =
+    !liveDisabledByEnv &&
+    (resolvedPolicy === "LIVE_FIRST" ||
+      (resolvedPolicy === "CACHE_SUPPLEMENTED" &&
+        effectiveSourceMode !== "CACHE_ONLY" &&
+        process.env.NODE_ENV !== "test" &&
+        process.env.VITEST !== "true"));
+
+  return {
+    policy: resolvedPolicy,
+    requestedSourceMode: effectiveSourceMode,
+    allowLive,
+    allowCacheFallback: true,
+    policyConflict: false,
+    conflictReason: null,
+  };
+}
+
+export function resolveMetaExecutionPolicy(
+  query?: IntelligenceQuery
+): MetaExecutionPolicy {
+  return resolveMetaExecutionPolicyWithDiagnostics(query).policy;
 }
 
 export type MetaQueryOutcomeStatus =
@@ -306,7 +449,7 @@ export interface EvidenceTrueQueryExecution {
   completedAt: string | null;
   errorCode: string | null;
   errorMessage: string | null;
-  provenance: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE";
+  provenance: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE" | "UNKNOWN";
   returnedCount: number;
   uniqueReturnedCount?: number;
   duplicateCount?: number;
@@ -334,7 +477,7 @@ export interface MetaSubqueryExecution {
   upstreamReturnedCount?: number | null;
   uniqueUpstreamIdsCount?: number | null;
   cachedRecordsUsed?: number;
-  provenance?: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE";
+  provenance?: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE" | "UNKNOWN";
   uniqueReturnedCount?: number;
   duplicateCount?: number;
   roundNumber?: number;
@@ -345,66 +488,185 @@ export interface MetaSubqueryExecution {
   errorMessage: string | null;
 }
 
-function normalizeMetaQueryOutcomeFields(outcome: MetaSubqueryExecution, runId?: string): MetaSubqueryExecution {
+/**
+ * V12.4.3.3 Section 3.4: Per-subquery truth normalization.
+ * - Never defaults unknown upstreamReturnedCount to returnedCount.
+ * - Never defaults missing provenance to LIVE_PROVIDER.
+ * - Never infers requestStarted or requestCompleted from generic status flags.
+ * - Keeps NOT_ATTEMPTED queries distinct from failed or empty queries with no fabricated counts.
+ */
+export function normalizeMetaQueryOutcomeFields(
+  outcome: Partial<MetaSubqueryExecution> & Record<string, any>,
+  runId?: string
+): MetaSubqueryExecution {
+  const isNotAttempted =
+    !outcome.attempted ||
+    outcome.status === "NOT_ATTEMPTED" ||
+    outcome.status === "SKIPPED_BUDGET" ||
+    outcome.status === "CANCELLED";
+
+  const requestStarted = isNotAttempted ? false : Boolean(outcome.requestStarted);
+  const requestCompleted = isNotAttempted ? false : Boolean(outcome.requestCompleted);
+  const upstreamReturnedCount = isNotAttempted
+    ? null
+    : outcome.upstreamReturnedCount !== undefined
+    ? outcome.upstreamReturnedCount
+    : null;
+  const uniqueUpstreamIdsCount = isNotAttempted
+    ? null
+    : outcome.uniqueUpstreamIdsCount !== undefined
+    ? outcome.uniqueUpstreamIdsCount
+    : null;
+  const provenance: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE" | "UNKNOWN" = isNotAttempted
+    ? outcome.provenance === "CACHED_SOURCE"
+      ? "CACHED_SOURCE"
+      : "NONE"
+    : outcome.provenance
+    ? outcome.provenance
+    : "UNKNOWN";
+
   return {
+    ...outcome,
+    queryId: outcome.queryId || "unknown_query",
+    keyword: outcome.keyword || outcome.queryText || "",
+    searchType: outcome.searchType || "KEYWORD",
+    status: (outcome.status as MetaQueryOutcomeStatus) || "NOT_ATTEMPTED",
+    startedAt: outcome.startedAt ?? null,
+    completedAt: outcome.completedAt ?? null,
+    errorCode: outcome.errorCode ?? null,
+    errorMessage: outcome.errorMessage ?? null,
     researchRunId: outcome.researchRunId || runId || "unknown_run",
     source: "META_ADS",
     planned: outcome.planned ?? true,
-    requestStarted: outcome.requestStarted ?? outcome.attempted,
-    requestCompleted: outcome.requestCompleted ?? (outcome.attempted && (outcome.status === "SUCCEEDED_WITH_RESULTS" || outcome.status === "SUCCEEDED_EMPTY")),
-    upstreamReturnedCount: outcome.upstreamReturnedCount !== undefined ? outcome.upstreamReturnedCount : (outcome.attempted ? outcome.returnedCount : null),
-    uniqueUpstreamIdsCount: outcome.uniqueUpstreamIdsCount !== undefined ? outcome.uniqueUpstreamIdsCount : (outcome.attempted ? (outcome.uniqueReturnedCount ?? outcome.returnedCount) : null),
+    attempted: !isNotAttempted && Boolean(outcome.attempted),
+    requestStarted,
+    requestCompleted,
+    actualApiCalls: isNotAttempted ? 0 : (outcome.actualApiCalls ?? 0),
+    returnedCount:
+      isNotAttempted && outcome.provenance !== "CACHED_SOURCE"
+        ? 0
+        : (outcome.returnedCount ?? 0),
+    upstreamReturnedCount,
+    uniqueUpstreamIdsCount,
     cachedRecordsUsed: outcome.cachedRecordsUsed ?? 0,
-    provenance: outcome.provenance || (outcome.attempted && (outcome.status === "SUCCEEDED_WITH_RESULTS" || outcome.status === "SUCCEEDED_EMPTY") ? "LIVE_PROVIDER" : "NONE"),
-    ...outcome,
+    provenance,
   };
 }
 
 export interface MetaAggregatedOutcomes {
   executionStatus: string;
+  sourceExecutionStatus: string;
   liveSucceeded: boolean;
   attemptedQueries: number;
   successfulQueries: number;
   failedQueries: number;
   cancelledQueries: number;
   skippedQueries: number;
+  notAttemptedQueries: number;
   totalReturned: number;
   sourceRecordsReturned: number;
   uniqueExternalIdsReturned: number;
+  persistenceOutcome: {
+    persistedInsertedCount: number | null;
+    persistedUpdatedCount: number | null;
+    status: "PERSISTED" | "NONE_PERSISTED" | "NOT_EVALUATED";
+  };
+  qualifiedProductOutcome: {
+    qualifiedCandidatesCount: number | null;
+    status: "QUALIFIED_PRODUCTS_FOUND" | "NO_QUALIFIED_PRODUCTS" | "NOT_EVALUATED";
+  };
   errors: string[];
   warnings: string[];
 }
 
 export function aggregateMetaQueryOutcomes(
-  subqueries: MetaSubqueryExecution[]
+  subqueries: MetaSubqueryExecution[],
+  options?: {
+    persistedInsertedCount?: number | null;
+    persistedUpdatedCount?: number | null;
+    qualifiedCandidatesCount?: number | null;
+  }
 ): MetaAggregatedOutcomes {
-  const attempted = subqueries.filter((s) => s.attempted);
-  if (attempted.length === 0) {
+  const attempted = subqueries.filter((s) => s.attempted && s.status !== "NOT_ATTEMPTED");
+  const skipped = subqueries.filter((s) => s.status === "SKIPPED_BUDGET");
+  const cancelled = subqueries.filter((s) => s.status === "CANCELLED");
+  const notAttempted = subqueries.filter((s) => s.status === "NOT_ATTEMPTED" || !s.attempted);
+
+  const buildPersistenceOutcome = () => {
+    const ins = options?.persistedInsertedCount ?? null;
+    const upd = options?.persistedUpdatedCount ?? null;
+    if (ins === null && upd === null) {
+      return {
+        persistedInsertedCount: null,
+        persistedUpdatedCount: null,
+        status: "NOT_EVALUATED" as const,
+      };
+    }
+    const total = (ins || 0) + (upd || 0);
     return {
-      executionStatus: "NOT_RUN",
+      persistedInsertedCount: ins ?? 0,
+      persistedUpdatedCount: upd ?? 0,
+      status: total > 0 ? ("PERSISTED" as const) : ("NONE_PERSISTED" as const),
+    };
+  };
+
+  const buildQualifiedOutcome = () => {
+    const qual = options?.qualifiedCandidatesCount ?? null;
+    if (qual === null) {
+      return {
+        qualifiedCandidatesCount: null,
+        status: "NOT_EVALUATED" as const,
+      };
+    }
+    return {
+      qualifiedCandidatesCount: qual,
+      status:
+        qual > 0
+          ? ("QUALIFIED_PRODUCTS_FOUND" as const)
+          : ("NO_QUALIFIED_PRODUCTS" as const),
+    };
+  };
+
+  if (attempted.length === 0) {
+    const statusWhenNoneAttempted =
+      cancelled.length > 0 && cancelled.length === subqueries.length
+        ? "CANCELLED"
+        : skipped.length > 0 && skipped.length === subqueries.length
+        ? "SKIPPED_BUDGET"
+        : "NOT_RUN";
+    return {
+      executionStatus: statusWhenNoneAttempted,
+      sourceExecutionStatus: statusWhenNoneAttempted,
       liveSucceeded: false,
       attemptedQueries: 0,
       successfulQueries: 0,
       failedQueries: 0,
-      cancelledQueries: 0,
-      skippedQueries: subqueries.length,
+      cancelledQueries: cancelled.length,
+      skippedQueries: skipped.length,
+      notAttemptedQueries: notAttempted.length,
       totalReturned: 0,
       sourceRecordsReturned: 0,
       uniqueExternalIdsReturned: 0,
+      persistenceOutcome: buildPersistenceOutcome(),
+      qualifiedProductOutcome: buildQualifiedOutcome(),
       errors: [],
       warnings: ["No Meta subqueries were attempted."],
     };
   }
 
-  const succeededWithResults = subqueries.filter((s) => s.status === "SUCCEEDED_WITH_RESULTS");
-  const succeededEmpty = subqueries.filter((s) => s.status === "SUCCEEDED_EMPTY");
-  const failed = subqueries.filter((s) => s.status === "FAILED");
-  const cancelled = subqueries.filter((s) => s.status === "CANCELLED");
-  const skipped = subqueries.filter((s) => s.status === "SKIPPED_BUDGET");
+  const succeededWithResults = attempted.filter((s) => s.status === "SUCCEEDED_WITH_RESULTS");
+  const succeededEmpty = attempted.filter((s) => s.status === "SUCCEEDED_EMPTY");
+  const failed = attempted.filter((s) => s.status === "FAILED");
 
-  const totalReturned = subqueries.reduce((sum, s) => sum + s.returnedCount, 0);
+  const totalReturned = attempted.reduce((sum, s) => sum + s.returnedCount, 0);
+  const uniqueExternalIdsReturned = attempted.reduce(
+    (sum, s) => sum + (s.uniqueUpstreamIdsCount ?? s.uniqueReturnedCount ?? s.returnedCount),
+    0
+  );
   const successfulCount = succeededWithResults.length + succeededEmpty.length;
-  const errors = failed.map((f) => `Subquery '${f.keyword}' failed: ${f.errorMessage || f.errorCode || "Unknown error"}`);
+  const errors = failed.map(
+    (f) => `Subquery '${f.keyword}' failed: ${f.errorMessage || f.errorCode || "Unknown error"}`
+  );
   const warnings: string[] = [];
 
   if (skipped.length > 0) {
@@ -416,9 +678,6 @@ export function aggregateMetaQueryOutcomes(
 
   if (failed.length === attempted.length) {
     executionStatus = "FAILED";
-    liveSucceeded = false;
-  } else if (cancelled.length === attempted.length) {
-    executionStatus = "CANCELLED";
     liveSucceeded = false;
   } else if (successfulCount > 0 && failed.length > 0) {
     if (totalReturned > 0) {
@@ -443,15 +702,19 @@ export function aggregateMetaQueryOutcomes(
 
   return {
     executionStatus,
+    sourceExecutionStatus: executionStatus,
     liveSucceeded,
     attemptedQueries: attempted.length,
     successfulQueries: successfulCount,
     failedQueries: failed.length,
     cancelledQueries: cancelled.length,
     skippedQueries: skipped.length,
+    notAttemptedQueries: notAttempted.length,
     totalReturned,
     sourceRecordsReturned: totalReturned,
-    uniqueExternalIdsReturned: totalReturned,
+    uniqueExternalIdsReturned,
+    persistenceOutcome: buildPersistenceOutcome(),
+    qualifiedProductOutcome: buildQualifiedOutcome(),
     errors,
     warnings,
   };
@@ -560,9 +823,11 @@ export async function collectLiveMetaAds(
       {
         queryKeyword: string;
         queryId: string;
+        matchedQueryIds: string[];
         roundNumber: number;
         origin: string;
         archetypeId: string | null;
+        persistedId?: string | null;
       }
     >();
 
@@ -780,12 +1045,19 @@ export async function collectLiveMetaAds(
             subqueryBindingMap.set(id, {
               queryKeyword: qSpec.keyword,
               queryId: qSpec.queryId,
+              matchedQueryIds: [qSpec.queryId],
               roundNumber: qSpec.roundNumber,
               origin: qSpec.origin,
               archetypeId: qSpec.archetypeId,
             });
           } else {
             dupCountForQuery++;
+            if (id && subqueryBindingMap.has(id)) {
+              const existingBinding = subqueryBindingMap.get(id)!;
+              if (!existingBinding.matchedQueryIds.includes(qSpec.queryId)) {
+                existingBinding.matchedQueryIds.push(qSpec.queryId);
+              }
+            }
           }
         }
 
@@ -943,6 +1215,16 @@ export async function collectLiveMetaAds(
 
     if (ingestSummary.recordTraces) {
       auditTraces.push(...ingestSummary.recordTraces);
+      for (const trace of ingestSummary.recordTraces) {
+        if (trace.rawId && trace.persistedId && subqueryBindingMap.has(trace.rawId)) {
+          const binding = subqueryBindingMap.get(trace.rawId)!;
+          binding.persistedId = trace.persistedId;
+          subqueryBindingMap.set(trace.persistedId, {
+            ...binding,
+            persistedId: trace.persistedId,
+          });
+        }
+      }
     }
 
     if (discoveryRunId) {
@@ -1068,24 +1350,59 @@ export async function collectMetaProductSignals(
   let liveSucceeded = false;
   let liveCollectorResult: any = null;
 
-  // 1. Attempt live collection according to explicit MetaExecutionPolicy & ResearchSourceMode
-  // V12.4.3.2 Section 3: Never suppress live Meta discovery merely because the global cached ad pool has >= 100 ads.
-  const executionPolicy = resolveMetaExecutionPolicy(query);
-  const requestedSourceMode: ResearchSourceMode =
-    (query as any)?.sourceMode ||
-    (executionPolicy === "CACHE_ONLY" || executionPolicy === "OFFLINE_FIXTURE"
-      ? "CACHE_ONLY"
-      : "LIVE_WITH_CACHE_FALLBACK");
-  const allowLive =
-    executionPolicy === "LIVE_FIRST" ||
-    (executionPolicy === "CACHE_SUPPLEMENTED" &&
-     requestedSourceMode !== "CACHE_ONLY" &&
-     process.env.META_COLLECTOR_ENABLED !== "false" &&
-     process.env.DISABLE_LIVE_MCP !== "true" &&
-     process.env.NODE_ENV !== "test" &&
-     process.env.VITEST !== "true");
+  // 1. Reconcile execution policy and sourceMode (V12.4.3.3 Section 3.1)
+  const policyResolution = resolveMetaExecutionPolicyWithDiagnostics(query);
+  const executionPolicy = policyResolution.policy;
+  const requestedSourceMode: ResearchSourceMode = policyResolution.requestedSourceMode;
 
-  const shouldRunLiveMeta = allowLive;
+  if (policyResolution.policyConflict) {
+    if (requestedSourceMode === "LIVE_ONLY") {
+      const conflictError =
+        policyResolution.conflictReason ||
+        "LIVE_ONLY mode conflicts with current Meta execution policy.";
+      errors.push(conflictError);
+      return {
+        source: "META_ADS",
+        status: "FAILED",
+        observations: [],
+        retrievedCount: 0,
+        acceptedCount: 0,
+        rejectedCount: 0,
+        estimatedCredits: 0,
+        consumedCredits: 0,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        errors,
+        warnings,
+        executionMetadata: {
+          attempted: false,
+          executed: false,
+          liveSucceeded: false,
+          startedAt,
+          completedAt: new Date().toISOString(),
+          upstreamReturnedCount: null,
+          freshLiveObservedCount: 0,
+          currentRunLiveAdsCount: 0,
+          historicalDatabaseRecordsCount: 0,
+          persistedInsertedCount: 0,
+          persistedUpdatedCount: 0,
+          reobservedExistingCount: 0,
+          cachedRecordsUsedCount: 0,
+          fallbackToCache: false,
+          sourceMode: requestedSourceMode,
+          executionPolicy,
+          policyConflict: true,
+          policyConflictReason: conflictError,
+          auditTraces: [],
+          queryOutcomes: [],
+        },
+      };
+    } else if (policyResolution.conflictReason) {
+      warnings.push(policyResolution.conflictReason);
+    }
+  }
+
+  const shouldRunLiveMeta = policyResolution.allowLive;
 
   if (shouldRunLiveMeta) {
     liveAttempted = true;
@@ -1107,13 +1424,73 @@ export async function collectMetaProductSignals(
       if (liveRes.error || !liveSucceeded) {
         if (!liveSucceeded && liveRes.errors && liveRes.errors.length > 0) {
           errors.push(...liveRes.errors);
+        } else if (!liveSucceeded && liveRes.error) {
+          errors.push(liveRes.error);
         }
-        warnings.push(`Live Meta collector attempt reported: ${liveRes.error || "Query failed"}. Falling back to cached SQLite observations.`);
+        if (requestedSourceMode === "LIVE_ONLY") {
+          warnings.push(
+            `Live Meta collector attempt failed under LIVE_ONLY mode: ${liveRes.error || "Query failed"}. Cache fallback disabled.`
+          );
+        } else {
+          warnings.push(
+            `Live Meta collector attempt reported: ${liveRes.error || "Query failed"}. Falling back to cached SQLite observations.`
+          );
+        }
       }
     } catch (liveErr: any) {
       liveSucceeded = false;
-      warnings.push(`Live Meta query bypassed: ${liveErr?.message || String(liveErr)}. Using cached database observations.`);
+      const errMsg = liveErr?.message || String(liveErr);
+      if (requestedSourceMode === "LIVE_ONLY") {
+        errors.push(`Live Meta query failed under LIVE_ONLY mode: ${errMsg}`);
+      } else {
+        warnings.push(`Live Meta query bypassed: ${errMsg}. Using cached database observations.`);
+      }
     }
+  }
+
+  // V12.4.3.3 Section 3.1: LIVE_ONLY must NEVER silently degrade into cached execution
+  if (requestedSourceMode === "LIVE_ONLY" && !liveSucceeded) {
+    const failedStatus: SourceRunStatus =
+      liveCollectorResult?.executionStatus === "NOT_CONFIGURED" ? "NOT_CONFIGURED" : "FAILED";
+    if (errors.length === 0) {
+      errors.push("Live Meta query did not succeed under LIVE_ONLY mode.");
+    }
+    return {
+      source: "META_ADS",
+      status: failedStatus,
+      observations: [],
+      retrievedCount: 0,
+      acceptedCount: 0,
+      rejectedCount: liveCollectorResult?.recordsRejected || 0,
+      estimatedCredits: 0,
+      consumedCredits: 0,
+      startedAt,
+      completedAt: new Date().toISOString(),
+      errors,
+      warnings,
+      executionMetadata: {
+        attempted: liveAttempted,
+        executed: liveAttempted,
+        liveSucceeded: false,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        upstreamReturnedCount: liveAttempted ? (liveCollectorResult?.sourceRecordsReturned ?? 0) : null,
+        freshLiveObservedCount: 0,
+        currentRunLiveAdsCount: 0,
+        historicalDatabaseRecordsCount: 0,
+        persistedInsertedCount: 0,
+        persistedUpdatedCount: 0,
+        reobservedExistingCount: 0,
+        cachedRecordsUsedCount: 0,
+        fallbackToCache: false,
+        sourceMode: requestedSourceMode,
+        executionPolicy,
+        policyConflict: policyResolution.policyConflict,
+        policyConflictReason: policyResolution.conflictReason,
+        auditTraces: liveCollectorResult?.auditTraces || [],
+        queryOutcomes: liveCollectorResult?.queryOutcomes || [],
+      },
+    };
   }
 
   try {
@@ -1156,7 +1533,7 @@ export async function collectMetaProductSignals(
     const liveAdIdSet = new Set(liveMatchingAds.map((a) => a.id));
     let cachedMatchingAds: any[] = [];
     const remainingSlots =
-      requestedSourceMode === "LIVE_ONLY"
+      !policyResolution.allowCacheFallback || requestedSourceMode === "LIVE_ONLY"
         ? 0
         : Math.max(0, (query.maxResults || 50) - liveMatchingAds.length);
 
@@ -1222,7 +1599,7 @@ export async function collectMetaProductSignals(
           mediaAssets: { take: 2 },
           observations: { orderBy: { observedAt: "desc" }, take: 10 },
         },
-        take: Math.max(remainingSlots * 4, 150),
+        take: Math.max(remainingSlots * 10, 400),
         orderBy: [{ landingPageUrl: "desc" }, { lastSeenAt: "desc" }],
       });
     }
@@ -1254,6 +1631,20 @@ export async function collectMetaProductSignals(
             w.length >= 4 &&
             !["with", "from", "that", "this", "your", "free", "best", "portable", "electric", "automatic", "water", "wall", "home", "clean", "tool", "tools", "cover", "covers", "plate", "plates", "panel", "panels", "holder", "rack", "tray", "brush", "spray", "bottle", "smart"].includes(w)
         );
+
+      // V12.4.3.3 Section 7: Filter cached ads through evaluateProductRelevance so unrelated cached items
+      // (e.g. "Pet Hair/Lint/Dust Cleaner" in "automatic pet feeder" or "cat gadgets") cannot contaminate candidate pools.
+      cachedMatchingAds = cachedMatchingAds.filter((ad: any) => {
+        const rel = evaluateProductRelevance(
+          {
+            title: ad.headline || ad.advertiser?.name || "Unknown Product",
+            adTexts: [ad.bodyText || ""],
+            productUrl: ad.landingPageUrl || null,
+          },
+          query.topic
+        );
+        return rel.relevanceStatus !== "IRRELEVANT";
+      });
 
       const scoreCachedAd = (ad: any): number => {
         const text = `${ad.headline || ""} ${ad.landingPageUrl || ""} ${ad.bodyText || ""} ${ad.advertiser?.name || ""}`.toLowerCase();
@@ -1313,6 +1704,8 @@ export async function collectMetaProductSignals(
           completedAt: new Date().toISOString(),
           upstreamReturnedCount: liveAttempted ? upstreamReturnedOnEmpty : null,
           freshLiveObservedCount: 0,
+          currentRunLiveAdsCount: 0,
+          historicalDatabaseRecordsCount: 0,
           persistedInsertedCount: persistedInsertedOnEmpty,
           persistedUpdatedCount: persistedUpdatedOnEmpty,
           reobservedExistingCount: persistedUpdatedOnEmpty,
@@ -1320,41 +1713,42 @@ export async function collectMetaProductSignals(
           fallbackToCache: false,
           sourceMode: requestedSourceMode,
           executionPolicy,
+          policyConflict: policyResolution.policyConflict,
+          policyConflictReason: policyResolution.conflictReason,
           auditTraces: liveCollectorResult?.auditTraces || [],
-      queryOutcomes:
-        liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
-          ? liveCollectorResult.queryOutcomes
-          : !liveAttempted && Array.isArray(query.plannedQueries) && query.plannedQueries.length > 0
-          ? query.plannedQueries.map((pq: any, idx: number) => ({
-              queryId: pq.queryId || `q_r1_${idx + 1}`,
-              researchRunId: query.researchRunId || "unknown_run",
-              source: "META_ADS" as const,
-              keyword: pq.phrase || pq.subquery || query.topic,
-              searchType: pq.searchType === "KEYWORD_UNORDERED" ? "KEYWORD_UNORDERED" : "KEYWORD_EXACT_PHRASE",
-              planned: true,
-              attempted: false,
-              requestStarted: false,
-              requestCompleted: false,
-              actualApiCalls: 0,
-              status: "NOT_ATTEMPTED" as const,
-              upstreamReturnedCount: null,
-              uniqueUpstreamIdsCount: null,
-              cachedRecordsUsed: cachedCount,
-              startedAt: null,
-              completedAt: null,
-              returnedCount: 0,
-              uniqueReturnedCount: 0,
-              duplicateCount: 0,
-              roundNumber: pq.roundNumber ?? 1,
-              origin: pq.origin || "DETERMINISTIC_FALLBACK",
-              archetypeId: pq.archetypeId ?? null,
-              expectedProductCategory: pq.expectedProductCategory ?? null,
-              errorCode: null,
-              errorMessage: null,
-              provenance: cachedCount > 0 ? ("CACHED_SOURCE" as const) : ("NONE" as const),
-            }))
-          : [],
-
+          queryOutcomes:
+            liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
+              ? liveCollectorResult.queryOutcomes
+              : !liveAttempted && Array.isArray(query.plannedQueries) && query.plannedQueries.length > 0
+              ? query.plannedQueries.map((pq: any, idx: number) => ({
+                  queryId: pq.queryId || `q_r1_${idx + 1}`,
+                  researchRunId: query.researchRunId || "unknown_run",
+                  source: "META_ADS" as const,
+                  keyword: pq.phrase || pq.subquery || query.topic,
+                  searchType: pq.searchType === "KEYWORD_UNORDERED" ? "KEYWORD_UNORDERED" : "KEYWORD_EXACT_PHRASE",
+                  planned: true,
+                  attempted: false,
+                  requestStarted: false,
+                  requestCompleted: false,
+                  actualApiCalls: 0,
+                  status: "NOT_ATTEMPTED" as const,
+                  upstreamReturnedCount: null,
+                  uniqueUpstreamIdsCount: null,
+                  cachedRecordsUsed: cachedCount,
+                  startedAt: null,
+                  completedAt: null,
+                  returnedCount: 0,
+                  uniqueReturnedCount: 0,
+                  duplicateCount: 0,
+                  roundNumber: pq.roundNumber ?? 1,
+                  origin: pq.origin || "DETERMINISTIC_FALLBACK",
+                  archetypeId: pq.archetypeId ?? null,
+                  expectedProductCategory: pq.expectedProductCategory ?? null,
+                  errorCode: null,
+                  errorMessage: null,
+                  provenance: cachedCount > 0 ? ("CACHED_SOURCE" as const) : ("NONE" as const),
+                }))
+              : [],
         },
       };
     }
@@ -1371,6 +1765,15 @@ export async function collectMetaProductSignals(
         : ad.dataConfidence === "VERIFIED"
         ? "VERIFIED_SOURCE"
         : "CACHED_SOURCE";
+
+      const binding =
+        (ad.externalAdId && liveCollectorResult?.subqueryBindings?.[ad.externalAdId]) ||
+        liveCollectorResult?.subqueryBindings?.[ad.id] ||
+        null;
+
+      const matchedQueryIds: string[] = binding
+        ? Array.from(new Set(binding.matchedQueryIds || [binding.queryId].filter(Boolean)))
+        : [];
 
       return {
         source: "META_ADS",
@@ -1390,6 +1793,7 @@ export async function collectMetaProductSignals(
         verifiedDeliveryMarket: marketProv.verifiedDeliveryMarket,
         title: ad.headline,
         description: ad.bodyText,
+        matchedQueryIds,
         metrics: {
           daysRunning: ad.daysRunning,
           status: ad.status,
@@ -1397,16 +1801,18 @@ export async function collectMetaProductSignals(
           dataConfidence: ad.dataConfidence,
           marketVerification: marketProv.marketVerification,
           isFreshLive,
-          ...(isFreshLive && ad.externalAdId && liveCollectorResult?.subqueryBindings?.[ad.externalAdId]
+          ...(isFreshLive && binding
             ? {
-                queryId: liveCollectorResult.subqueryBindings[ad.externalAdId].queryId,
-                queryKeyword: liveCollectorResult.subqueryBindings[ad.externalAdId].queryKeyword,
-                roundNumber: liveCollectorResult.subqueryBindings[ad.externalAdId].roundNumber,
-                origin: liveCollectorResult.subqueryBindings[ad.externalAdId].origin,
-                archetypeId: liveCollectorResult.subqueryBindings[ad.externalAdId].archetypeId,
+                queryId: binding.queryId,
+                matchedQueryIds,
+                queryKeyword: binding.queryKeyword,
+                roundNumber: binding.roundNumber,
+                origin: binding.origin,
+                archetypeId: binding.archetypeId,
+                persistedId: ad.id,
               }
             : {}),
-                  },
+        },
         media: {
           thumbnailUrl: media?.thumbnailUrl || null,
           videoUrl: media?.videoUrl || null,
@@ -1436,6 +1842,8 @@ export async function collectMetaProductSignals(
       completedAt: new Date().toISOString(),
       upstreamReturnedCount: liveAttempted ? upstreamReturned : null,
       freshLiveObservedCount: freshLiveCount,
+      currentRunLiveAdsCount: freshLiveCount,
+      historicalDatabaseRecordsCount: cachedCount,
       persistedInsertedCount: persistedInserted,
       persistedUpdatedCount: persistedUpdated,
       reobservedExistingCount: persistedUpdated,
@@ -1443,6 +1851,8 @@ export async function collectMetaProductSignals(
       fallbackToCache: !liveSucceeded && cachedCount > 0,
       sourceMode: requestedSourceMode,
       executionPolicy,
+      policyConflict: policyResolution.policyConflict,
+      policyConflictReason: policyResolution.conflictReason,
       auditTraces: liveCollectorResult?.auditTraces || [],
       queryOutcomes:
         liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
@@ -1477,7 +1887,6 @@ export async function collectMetaProductSignals(
               provenance: cachedCount > 0 ? ("CACHED_SOURCE" as const) : ("NONE" as const),
             }))
           : [],
-
     };
 
     return {
@@ -1518,6 +1927,8 @@ export async function collectMetaProductSignals(
         completedAt: new Date().toISOString(),
         upstreamReturnedCount: 0,
         freshLiveObservedCount: 0,
+        currentRunLiveAdsCount: 0,
+        historicalDatabaseRecordsCount: 0,
         persistedInsertedCount: 0,
         persistedUpdatedCount: 0,
         cachedRecordsUsedCount: 0,

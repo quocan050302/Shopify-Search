@@ -66,6 +66,8 @@ const PROMOTIONAL_CTA_PATTERNS = [
   /\b(best\s*price\s*guaranteed)\b/i,
   /\b(satisfaction\s*guaranteed)\b/i,
   /^(get\s*halloween\s*ready|get\s*latest\s*price|halloween\s*sale|holiday\s*deals)[!.\s]*$/i,
+  /\b(summer|winter|spring|fall|autumn|holiday|black\s*friday|cyber\s*monday|clearance|flash|weekend|anniversary)\s+sale(\s+ending)?\b/i,
+  /\b(sale\s+ending|ending\s+soon|won'?t\s+last|last\s+chance|selling\s+out\s+fast)\b/i,
 ];
 
 const CLICKBAIT_HOOK_PATTERNS = [
@@ -292,6 +294,21 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
     };
   }
 
+  if (!hasConcreteNoun && /\b(\d+%\s*off|sale\s+ending|won'?t\s+last|clearance\s+sale|flash\s+sale|limited\s+stock)\b/i.test(raw)) {
+    return {
+      rawHeadline: raw,
+      classification: "PROMOTIONAL_CTA",
+      headlineClass: "PROMOTIONAL_CTA",
+      isEligibleProductName: false,
+      isEligibleAsProductName: false,
+      cleanTitle: null,
+      normalizedCleanText: "",
+      adIdentifier: null,
+      confidence: 0.96,
+      reason: `Matched promotional discount/sale headline without concrete product noun: '${raw}'`,
+    };
+  }
+
   // 6. Check for Generic Categories (e.g. "Pet Gadgets", "Pet Product V4")
   for (const pattern of GENERIC_CATEGORY_PATTERNS) {
     if (pattern.test(raw)) {
@@ -312,7 +329,7 @@ function classifyAdvertisingHeadlineRaw(headline: string | null | undefined): {
 
   // 7. Strip common promotional suffix tags & leading superlatives
   let cleaned = raw;
-  cleaned = cleaned.replace(/\s*[-–|:]\s*(Buy Now|Shop Now|\d+%\s*Off|Free Shipping|Sale|Official Store|Best Seller).*$/i, "");
+  cleaned = cleaned.replace(/\s*[-–—|:]\s*(Buy Now|Shop Now|\d+%\s*Off|Free Shipping|Sale|Official Store|Best Seller).*$/i, "");
   cleaned = cleaned.replace(/^(NEW|HOT|MUST HAVE|VIRAL|SALE)\s*[:!-]\s*/i, "");
   // Strip leading "#1", "The #1", "Top 10 Rated" without stripping capacity/dimension numbers like "500ml", "16oz", "2-in-1"
   cleaned = cleaned.replace(

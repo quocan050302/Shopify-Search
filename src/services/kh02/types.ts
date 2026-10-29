@@ -332,6 +332,7 @@ export interface IntelligenceQuery {
   sharedMetaBudgetTracker?: any;
   searchRoundNumber?: number;
   maxLiveRequestsForRound?: number;
+  maxLiveDomains?: number;
 }
 
 export interface SourceObservation {
@@ -364,6 +365,7 @@ export interface SourceObservation {
   provenance: ObservationProvenance;
   evidenceReference?: string | null;
   researchProductId?: string | null;
+  matchedQueryIds?: string[];
 }
 
 export interface ProviderExecutionMetadata {
@@ -374,6 +376,8 @@ export interface ProviderExecutionMetadata {
   completedAt?: string | null;
   upstreamReturnedCount?: number | null;
   freshLiveObservedCount?: number | null;
+  currentRunLiveAdsCount?: number | null;
+  historicalDatabaseRecordsCount?: number | null;
   persistedInsertedCount?: number | null;
   persistedUpdatedCount?: number | null;
   reobservedExistingCount?: number | null;
@@ -381,8 +385,17 @@ export interface ProviderExecutionMetadata {
   fallbackToCache?: boolean;
   sourceMode?: ResearchSourceMode;
   executionPolicy?: string;
+  policyConflict?: boolean;
+  policyConflictReason?: string | null;
   auditTraces?: UpstreamRecordTrace[];
   queryOutcomes?: any[];
+  domainsAttempted?: number;
+  domainsSucceeded?: number;
+  domainsFailed?: number;
+  domainsEmpty?: number;
+  domainsRateLimited?: number;
+  productEvidencePersisted?: boolean;
+  domainOutcomes?: any[];
 }
 
 export interface UpstreamRecordTrace {

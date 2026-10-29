@@ -85,7 +85,9 @@
     "kh02:v12.4.3.2:regression": "vitest run tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts",
     "acceptance:kh02:v12.4.3.2.1": "tsx scripts/kh02/runAcceptanceAsyncV12_4_3_2_1.ts",
     "kh02:v12.4.3.2.1:backtest": "tsx scripts/kh02/runBacktestV12_4_3_2_1.ts",
-    "kh02:v12.4.3.2.1:regression": "vitest run tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts"
+    "kh02:v12.4.3.2.1:regression": "vitest run tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts",
+    "acceptance:kh02:v12.4.3.3": "tsx scripts/kh02/runAcceptanceV12_4_3_3.ts",
+    "kh02:v12.4.3.3:regression": "vitest run tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

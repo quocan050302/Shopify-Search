@@ -1,0 +1,198 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "variantHandleCollapseCheck": {
+    "candidateIds": [
+      "c1",
+      "c2"
+    ],
+    "listingKeys": [
+      "url::https://k9shop.com/products/no-pull-dog-harness-blue",
+      "url::https://k9shop.com/products/no-pull-dog-harness-large"
+    ],
+    "productKeys": [
+      "url::https://k9shop.com/products/no-pull-dog-harness-blue",
+      "url::https://k9shop.com/products/no-pull-dog-harness-blue"
+    ],
+    "familyKeys": [
+      "pet_car_seat_harness",
+      "pet_car_seat_harness"
+    ],
+    "decision": "SAME_PRODUCT_DIFFERENT_VARIANT",
+    "areSameListing": false,
+    "areSameActualProduct": true,
+    "areSameVariant": false,
+    "areSameFamily": true,
+    "areDistinctOpportunitiesForBroadNiche": false,
+    "areDistinctOpportunitiesForSpecificQuery": false,
+    "confidence": "HIGH_CONFIDENCE",
+    "uncertainty": null,
+    "supportingEvidence": [
+      "Same merchant (k9shop.com) and identical base product handle 'no-pull-dog-harness' after stripping color/size/pack variant suffixes ('no-pull-dog-harness-blue' vs 'no-pull-dog-harness-large')."
+    ],
+    "conflictingEvidence": [],
+    "reason": "Color, size, or pack-count variant handles ('no-pull-dog-harness-blue' vs 'no-pull-dog-harness-large') of the same product ('no-pull-dog-harness') on k9shop.com."
+  },
+  "duplicateTitleRejectionCheck": {
+    "mutationId": "M07",
+    "description": "Duplicate the same product under three different titles",
+    "caughtAndRejected": true,
+    "observed": {
+      "isDistinct": false,
+      "isFamilyDiverse": false,
+      "totalCandidatesEvaluated": 3,
+      "distinctCount": 1,
+      "distinctProductCount": 1,
+      "distinctFamilyCount": 1,
+      "distinctListingCount": 1,
+      "independentOpportunityCount": 1,
+      "homogeneousFamilyDetected": true,
+      "dominantFamilyKey": "food_feeder",
+      "dominantFamilyLabel": "Food Feeder",
+      "duplicateGroupsCount": 2,
+      "uncertainties": [],
+      "pairwiseDecisions": [
+        {
+          "candidateIds": [
+            "cand_dup_1",
+            "cand_dup_2"
+          ],
+          "listingKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "productKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "familyKeys": [
+            "food_feeder",
+            "food_feeder"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "conflictingEvidence": [],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+        },
+        {
+          "candidateIds": [
+            "cand_dup_1",
+            "cand_dup_3"
+          ],
+          "listingKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "productKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "familyKeys": [
+            "food_feeder",
+            "food_feeder"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "conflictingEvidence": [],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+        },
+        {
+          "candidateIds": [
+            "cand_dup_2",
+            "cand_dup_3"
+          ],
+          "listingKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "productKeys": [
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "familyKeys": [
+            "food_feeder",
+            "food_feeder"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+          ],
+          "conflictingEvidence": [],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+        }
+      ],
+      "details": [
+        {
+          "candidateId": "cand_dup_1",
+          "title": "Marketing Headline #1",
+          "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "variantKey": null,
+          "familyKey": "food_feeder",
+          "familyLabel": "Food Feeder",
+          "storeDomain": "uahpet.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "cand_dup_2",
+          "title": "Marketing Headline #2",
+          "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "variantKey": null,
+          "familyKey": "food_feeder",
+          "familyLabel": "Food Feeder",
+          "storeDomain": "uahpet.com",
+          "isDuplicate": true,
+          "duplicateOf": "cand_dup_1",
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+        },
+        {
+          "candidateId": "cand_dup_3",
+          "title": "Marketing Headline #3",
+          "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+          "variantKey": null,
+          "familyKey": "food_feeder",
+          "familyLabel": "Food Feeder",
+          "storeDomain": "uahpet.com",
+          "isDuplicate": true,
+          "duplicateOf": "cand_dup_1",
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+        }
+      ]
+    }
+  }
+}

@@ -11,8 +11,12 @@ export const DISCOVERY_PLANNER_SCHEMA_VERSION = "1.0.0";
 export type NicheIntentType =
   | "BROAD_CATEGORY"
   | "SPECIFIC_PRODUCT"
+  | "PRODUCT_FAMILY"
+  | "BRAND_OR_COMPETITOR"
+  | "PROBLEM_ANGLE"
   | "FUNCTIONAL_NEED"
-  | "AMBIGUOUS";
+  | "AMBIGUOUS"
+  | "UNSUPPORTED";
 
 export type DiscoveryQuerySearchType =
   | "KEYWORD_EXACT_PHRASE"
@@ -439,6 +443,283 @@ const DOMAIN_ARCHETYPE_CATALOG: Record<
             phrase: "furniture repair kit",
             searchType: "KEYWORD_EXACT_PHRASE",
             rationale: "Consumer DIY furniture restoration kit.",
+          },
+        ],
+      },
+    ],
+  },
+  dog: {
+    matchRegex:
+      /^(?!.*\b(cat|cats|kitten|feline)\b).*\b(dog|dogs|puppy|puppies|canine)\b/i,
+    allowedCategories: [
+      "Dog Grooming & Deshedding",
+      "Dog Walking Harnesses & Leashes",
+      "Dog Training & Bark Control",
+      "Dog Hydration & Slow Feeders",
+      "Dog Car Travel & Paw Cleaning",
+    ],
+    negativePatterns: [
+      "vet bill cost factors",
+      "pet insurance",
+      "dog training consultation",
+      "cat litter",
+      "cat water fountain",
+    ],
+    archetypes: [
+      {
+        archetypeId: "dog_grooming_shedding",
+        productCategory: "Dog Grooming",
+        customerProblem:
+          "Dog owners struggle with heavy coat shedding and tangled fur at home.",
+        relevanceReason:
+          "Dog grooming brushes and deshedding tools are top physical dog gadgets.",
+        queries: [
+          {
+            phrase: "dog grooming brush",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical dog deshedding tool.",
+          },
+          {
+            phrase: "dog paw cleaner cup",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Physical portable dog paw washer gadget.",
+          },
+        ],
+      },
+      {
+        archetypeId: "dog_walking_harness",
+        productCategory: "Dog Walking & Safety",
+        customerProblem:
+          "Keeping dogs secure and preventing pulling during daily walks.",
+        relevanceReason:
+          "No-pull dog harnesses and retractable leashes are high-demand physical dog gear.",
+        queries: [
+          {
+            phrase: "no pull dog harness",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Specific physical dog walking safety product.",
+          },
+        ],
+      },
+      {
+        archetypeId: "dog_training_bark_control",
+        productCategory: "Dog Training & Enrichment",
+        customerProblem:
+          "Managing excessive dog barking and keeping dogs mentally stimulated.",
+        relevanceReason:
+          "Ultrasonic bark control devices and interactive dog toys are physical dog gadgets.",
+        queries: [
+          {
+            phrase: "ultrasonic dog bark deterrent",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Specific handheld electronic dog training gadget.",
+          },
+        ],
+      },
+      {
+        archetypeId: "dog_hydration_feeding",
+        productCategory: "Dog Hydration & Feeding",
+        customerProblem:
+          "Providing clean water on walks and preventing fast gulping at mealtime.",
+        relevanceReason:
+          "Portable dog water bottles and slow feeder dog bowls are physical dog products.",
+        queries: [
+          {
+            phrase: "portable dog water bottle",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical travel hydration gadget for dogs.",
+          },
+        ],
+      },
+      {
+        archetypeId: "dog_car_travel",
+        productCategory: "Dog Travel Protection",
+        customerProblem:
+          "Protecting car seats from muddy paws, fur, and scratches during rides.",
+        relevanceReason:
+          "Waterproof dog car seat covers are durable physical dog accessories.",
+        queries: [
+          {
+            phrase: "dog car seat cover",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical automotive seat protector for dogs.",
+          },
+        ],
+      },
+    ],
+  },
+  cat: {
+    matchRegex:
+      /^(?!.*\b(dog|dogs|puppy|canine)\b).*\b(cat|cats|kitten|kittens|feline)\b/i,
+    allowedCategories: [
+      "Cat Hydration & Fountains",
+      "Cat Litter Mats & Boxes",
+      "Interactive Cat Toys",
+      "Cat Grooming & Steam Brushes",
+      "Automatic Cat Feeders",
+    ],
+    negativePatterns: [
+      "vet bill cost factors",
+      "pet insurance",
+      "dog harness",
+      "dog bark collar",
+    ],
+    archetypes: [
+      {
+        archetypeId: "cat_hydration_fountain",
+        productCategory: "Cat Hydration",
+        customerProblem:
+          "Encouraging cats to drink fresh, filtered running water daily.",
+        relevanceReason:
+          "Stainless steel and wireless cat water fountains are flagship physical cat gadgets.",
+        queries: [
+          {
+            phrase: "cat water fountain",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical cat hydration appliance.",
+          },
+          {
+            phrase: "stainless steel cat fountain",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Hygienic physical cat drinking fountain.",
+          },
+        ],
+      },
+      {
+        archetypeId: "cat_litter_hygiene",
+        productCategory: "Cat Litter & Hygiene",
+        customerProblem:
+          "Trapping scattered cat litter and controlling litter box odor indoors.",
+        relevanceReason:
+          "Honeycomb cat litter trapping mats and automatic litter boxes are core physical cat products.",
+        queries: [
+          {
+            phrase: "cat litter mat",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Physical cat floor protection product.",
+          },
+        ],
+      },
+      {
+        archetypeId: "cat_interactive_play",
+        productCategory: "Interactive Cat Toys",
+        customerProblem:
+          "Keeping indoor cats active and entertained without constant owner effort.",
+        relevanceReason:
+          "Motion-activated laser and feather cat toys are popular physical cat gadgets.",
+        queries: [
+          {
+            phrase: "interactive cat toy",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Electronic motion-activated physical cat gadget.",
+          },
+        ],
+      },
+      {
+        archetypeId: "cat_grooming_scratch",
+        productCategory: "Cat Grooming & Perches",
+        customerProblem:
+          "Reducing indoor cat shedding and dander without stressful bathing.",
+        relevanceReason:
+          "Cat steam brushes and window perches are high-demand physical cat products.",
+        queries: [
+          {
+            phrase: "cat steam brush",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Specific handheld cat grooming gadget.",
+          },
+        ],
+      },
+      {
+        archetypeId: "cat_feeding_dispenser",
+        productCategory: "Cat Feeding",
+        customerProblem:
+          "Scheduled portion-controlled dry and wet food dispensing for cats.",
+        relevanceReason:
+          "Automatic cat feeders are established physical cat appliances.",
+        queries: [
+          {
+            phrase: "automatic cat feeder",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Specific physical cat feeding appliance.",
+          },
+        ],
+      },
+    ],
+  },
+  car: {
+    matchRegex:
+      /\b(car|cars|automotive|vehicle|auto accessories|car accessories|car gadgets|truck accessories)\b/i,
+    allowedCategories: [
+      "Portable Car Vacuums & Detailing",
+      "Magnetic Car Phone Mounts",
+      "Car Trunk & Seat Organizers",
+      "Dash Cams & Tire Inflators",
+    ],
+    negativePatterns: [
+      "auto insurance quote",
+      "car loan",
+      "dealership lease",
+      "car wash membership",
+    ],
+    archetypes: [
+      {
+        archetypeId: "car_cleaning_vacuum",
+        productCategory: "Car Cleaning & Detailing",
+        customerProblem:
+          "Removing dust, crumbs, and debris from car seats and vents quickly.",
+        relevanceReason:
+          "Cordless portable car vacuums and detailing gels are top physical car gadgets.",
+        queries: [
+          {
+            phrase: "portable car vacuum",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "High-demand cordless physical automotive cleaning tool.",
+          },
+        ],
+      },
+      {
+        archetypeId: "car_phone_mount",
+        productCategory: "Car Phone Mounts",
+        customerProblem:
+          "Hands-free secure smartphone mounting and charging while driving.",
+        relevanceReason:
+          "Magnetic MagSafe car phone mounts are physical automotive accessories.",
+        queries: [
+          {
+            phrase: "magnetic car phone mount",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical dashboard/vent phone holder.",
+          },
+        ],
+      },
+      {
+        archetypeId: "car_organization_storage",
+        productCategory: "Car Storage & Organizers",
+        customerProblem:
+          "Preventing items from falling between car seats and cluttering trunks.",
+        relevanceReason:
+          "Car trunk organizers and seat gap fillers are practical physical car accessories.",
+        queries: [
+          {
+            phrase: "car trunk organizer",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Physical collapsible automotive storage product.",
+          },
+        ],
+      },
+      {
+        archetypeId: "car_safety_inflator",
+        productCategory: "Car Emergency & Safety",
+        customerProblem:
+          "Inflating low tires and recording road incidents without visiting a service station.",
+        relevanceReason:
+          "Portable tire inflators and dash cams are high-value physical automotive gadgets.",
+        queries: [
+          {
+            phrase: "portable tire inflator",
+            searchType: "KEYWORD_EXACT_PHRASE",
+            rationale: "Concrete physical cordless air compressor for cars.",
           },
         ],
       },
@@ -961,14 +1242,27 @@ const SPECIFIC_PRODUCT_NOUN_PATTERNS =
 
 const BROAD_TOPIC_EXACT_SET = new Set([
   "diy",
+  "diy tools",
   "do it yourself",
   "pet",
   "pets",
   "dog",
   "dogs",
+  "dog gadgets",
+  "dog products",
+  "dog supplies",
+  "dog accessories",
   "cat",
   "cats",
+  "cat gadgets",
+  "cat products",
+  "cat supplies",
+  "cat accessories",
+  "car accessories",
+  "car gadgets",
+  "auto accessories",
   "kitchen",
+  "kitchen tools",
   "cooking",
   "cleaning",
   "clean",
@@ -976,8 +1270,11 @@ const BROAD_TOPIC_EXACT_SET = new Set([
   "decor",
   "gardening",
   "garden",
+  "garden tools",
+  "gardening tools",
   "plants",
   "beauty",
+  "beauty tools",
   "skincare",
   "home",
   "home improvement",
@@ -986,7 +1283,10 @@ const BROAD_TOPIC_EXACT_SET = new Set([
   "tools",
   "gadgets",
   "pet gadgets",
+  "pet supplies",
+  "pet products",
   "kitchen gadgets",
+  "kitchen products",
   "cleaning gadgets",
 ]);
 
@@ -1045,14 +1345,18 @@ export function analyzeNicheIntent(topic: string): NicheIntentAnalysisResult {
     .toLowerCase()
     .replace(/\s+/g, " ");
 
-  if (!normalizedNiche || normalizedNiche.length < 2) {
+  if (
+    !normalizedNiche ||
+    normalizedNiche.length < 2 ||
+    normalizedNiche.replace(/[^a-z0-9]/g, "").length < 2
+  ) {
     return {
       rawTopic,
       normalizedNiche,
       nicheIntent: "AMBIGUOUS",
       allowedEcommerceCategories: [],
       isProhibitedOrUnsupported: true,
-      prohibitedReason: "Topic is empty or shorter than 2 characters.",
+      prohibitedReason: "Topic is empty or shorter than 2 alphanumeric characters.",
       detectedDomainKey: null,
     };
   }
@@ -1129,7 +1433,7 @@ export function analyzeNicheIntent(topic: string): NicheIntentAnalysisResult {
   } else if (
     tokens.length >= 2 &&
     SPECIFIC_PRODUCT_NOUN_PATTERNS.test(normalizedNiche) &&
-    !/\b(products|gadgets|items|supplies|accessories|ideas)\b$/i.test(
+    !/\b(products?|gadgets?|items?|supplies|accessories|ideas|tools?|gear|equipment|essentials?)\b$/i.test(
       normalizedNiche
     )
   ) {
@@ -1185,16 +1489,87 @@ export function buildDeterministicDiscoveryPlan(
     (input.previousQueries || []).map((q) => q.trim().toLowerCase())
   );
 
-  // Case 1: Specific product intent (e.g. "pet hair remover", "cordless glue gun", "cat water fountain")
+  // Case 1: Specific product intent (e.g. "automatic pet feeder", "pet hair remover", "cordless glue gun", "cat water fountain")
+  // V12.4.3.3 Section 6.2 & 7.2: Keep specific product intent strictly focused on the requested product type;
+  // NEVER pull unrelated sibling archetypes (e.g. never pull "pet hair remover" or "cat water fountain" into "automatic pet feeder").
   if (intent.nicheIntent === "SPECIFIC_PRODUCT") {
     const cleanPhrase = normalizedNiche
       .replace(/[^\w\s-]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+    const baseId = `specific_${cleanPhrase.replace(/\s+/g, "_").slice(0, 32)}`;
+
+    let variantQueries: Array<{
+      suffixId: string;
+      category: string;
+      phrase: string;
+      searchType: DiscoveryQuerySearchType;
+      rationale: string;
+    }> = [];
+
+    if (/\b(feeder|dispenser)\b/i.test(cleanPhrase)) {
+      variantQueries = [
+        {
+          suffixId: "smart_dispenser",
+          category: `${input.topic.trim()} (Smart & Timed Models)`,
+          phrase: "smart pet feeder",
+          searchType: "KEYWORD_EXACT_PHRASE",
+          rationale: `Smart/app-controlled variant of '${cleanPhrase}'.`,
+        },
+        {
+          suffixId: "timed_food_dispenser",
+          category: `${input.topic.trim()} (Programmable Dispensers)`,
+          phrase: "timed pet food dispenser",
+          searchType: "KEYWORD_EXACT_PHRASE",
+          rationale: `Programmable food dispenser variant of '${cleanPhrase}'.`,
+        },
+        {
+          suffixId: "wet_dry_feeder",
+          category: `${input.topic.trim()} (Wet & Dry Food Models)`,
+          phrase: "automatic dog cat feeder",
+          searchType: "KEYWORD_UNORDERED",
+          rationale: `Unordered species-inclusive feeder search for '${cleanPhrase}'.`,
+        },
+      ];
+    } else if (/\bfountain\b/i.test(cleanPhrase)) {
+      variantQueries = [
+        {
+          suffixId: "stainless_fountain",
+          category: `${input.topic.trim()} (Stainless Steel)`,
+          phrase: "stainless steel cat fountain",
+          searchType: "KEYWORD_EXACT_PHRASE",
+          rationale: `Stainless steel variant of '${cleanPhrase}'.`,
+        },
+        {
+          suffixId: "wireless_fountain",
+          category: `${input.topic.trim()} (Wireless Pump)`,
+          phrase: "wireless pet water fountain",
+          searchType: "KEYWORD_EXACT_PHRASE",
+          rationale: `Cordless/wireless variant of '${cleanPhrase}'.`,
+        },
+      ];
+    } else {
+      variantQueries = [
+        {
+          suffixId: "kit_variant",
+          category: `${input.topic.trim()} Kit & Set`,
+          phrase: `${cleanPhrase} kit`,
+          searchType: "KEYWORD_UNORDERED",
+          rationale: `Complete starter kit variation for '${cleanPhrase}'.`,
+        },
+        {
+          suffixId: "pro_variant",
+          category: `${input.topic.trim()} (Reusable / Portable)`,
+          phrase: `portable ${cleanPhrase}`,
+          searchType: "KEYWORD_UNORDERED",
+          rationale: `Portable or pro consumer variation for '${cleanPhrase}'.`,
+        },
+      ];
+    }
 
     const specificArchetypes: PlannedProductArchetype[] = [
       {
-        archetypeId: `specific_${cleanPhrase.replace(/\s+/g, "_").slice(0, 40)}`,
+        archetypeId: baseId,
         productCategory: `${input.topic.trim()} (Primary SKU)`,
         customerProblem: `Direct consumer demand for ${input.topic.trim()}.`,
         relevanceReason: `Matches the user's specific product query '${input.topic.trim()}'.`,
@@ -1209,47 +1584,27 @@ export function buildDeterministicDiscoveryPlan(
       },
     ];
 
-    // Add 1-2 closely related sibling product archetypes from the detected domain (if available)
-    // while keeping the specific product as priority 1.
-    if (intent.detectedDomainKey && DOMAIN_ARCHETYPE_CATALOG[intent.detectedDomainKey]) {
-      const domainConfig = DOMAIN_ARCHETYPE_CATALOG[intent.detectedDomainKey];
-      let priorityCounter = 2;
-      for (const arch of domainConfig.archetypes) {
-        const nonDupQueries = arch.queries.filter(
-          (q) =>
-            q.phrase.toLowerCase() !== cleanPhrase &&
-            !previousSet.has(q.phrase.toLowerCase())
-        );
-        if (nonDupQueries.length > 0 && specificArchetypes.length < 4) {
-          specificArchetypes.push({
-            archetypeId: arch.archetypeId,
-            productCategory: arch.productCategory,
-            customerProblem: arch.customerProblem,
-            relevanceReason: arch.relevanceReason,
-            searchQueries: nonDupQueries.slice(0, 1).map((q) => ({
-              phrase: q.phrase,
-              searchType: q.searchType,
+    let priorityCounter = 2;
+    for (const vq of variantQueries) {
+      if (
+        vq.phrase.toLowerCase() !== cleanPhrase &&
+        !previousSet.has(vq.phrase.toLowerCase())
+      ) {
+        specificArchetypes.push({
+          archetypeId: `${baseId}_${vq.suffixId}`,
+          productCategory: vq.category,
+          customerProblem: `Consumers comparing models and features of ${input.topic.trim()}.`,
+          relevanceReason: vq.rationale,
+          searchQueries: [
+            {
+              phrase: vq.phrase,
+              searchType: vq.searchType,
               priority: priorityCounter++,
-              rationale: q.rationale,
-            })),
-          });
-        }
+              rationale: vq.rationale,
+            },
+          ],
+        });
       }
-    } else {
-      specificArchetypes.push({
-        archetypeId: `specific_${cleanPhrase.replace(/\s+/g, "_").slice(0, 32)}_kit`,
-        productCategory: `${input.topic.trim()} Kit & Replacement Set`,
-        customerProblem: `Complete starter kit or reusable variant of ${input.topic.trim()}.`,
-        relevanceReason: `Direct physical product variant of '${input.topic.trim()}'.`,
-        searchQueries: [
-          {
-            phrase: `${cleanPhrase} kit`,
-            searchType: "KEYWORD_UNORDERED",
-            priority: 2,
-            rationale: `Broader unordered kit variation for '${cleanPhrase}'.`,
-          },
-        ],
-      });
     }
 
     return {
@@ -1513,6 +1868,52 @@ export function validateDiscoveryPlan(
           phrase: cleanedPhrase,
           reason:
             "Single-word broad category query rejected in favor of concrete product archetype queries.",
+        });
+        continue;
+      }
+
+      // Species-specificity enforcement: Dog Gadgets vs Cat Gadgets
+      const topicHasDogOnly =
+        /\b(dog|dogs|puppy|puppies|canine)\b/i.test(intent.normalizedNiche) &&
+        !/\b(cat|cats|kitten|kittens|feline)\b/i.test(intent.normalizedNiche);
+      const topicHasCatOnly =
+        /\b(cat|cats|kitten|kittens|feline)\b/i.test(intent.normalizedNiche) &&
+        !/\b(dog|dogs|puppy|puppies|canine)\b/i.test(intent.normalizedNiche);
+
+      if (
+        topicHasDogOnly &&
+        /\b(cat|cats|kitten|kittens|feline|litter)\b/i.test(cleanedPhrase) &&
+        !/\b(dog|dogs|puppy|puppies|canine)\b/i.test(cleanedPhrase)
+      ) {
+        rejectedQueries.push({
+          phrase: cleanedPhrase,
+          reason: "Query targets cat-only products for a dog-specific niche.",
+        });
+        continue;
+      }
+
+      if (
+        topicHasCatOnly &&
+        /\b(dog|dogs|puppy|puppies|canine|bark)\b/i.test(cleanedPhrase) &&
+        !/\b(cat|cats|kitten|kittens|feline)\b/i.test(cleanedPhrase)
+      ) {
+        rejectedQueries.push({
+          phrase: cleanedPhrase,
+          reason: "Query targets dog-only products for a cat-specific niche.",
+        });
+        continue;
+      }
+
+      // Specific-product drift enforcement (e.g., Automatic Pet Feeder must stay on feeder/dispenser)
+      if (
+        intent.nicheIntent === "SPECIFIC_PRODUCT" &&
+        /\b(feeder|dispenser)\b/i.test(intent.normalizedNiche) &&
+        !/\b(feeder|dispenser|bowl|food)\b/i.test(cleanedPhrase)
+      ) {
+        rejectedQueries.push({
+          phrase: cleanedPhrase,
+          reason:
+            "Query drifts into unrelated sibling category instead of targeting the requested specific product.",
         });
         continue;
       }
