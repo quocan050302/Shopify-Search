@@ -352,7 +352,7 @@ export async function runKh02BrowserE2E(
         while (Date.now() - pollStart < maxPollMs) {
           try {
             const statusRes = await context.request.get(
-              `${options.baseUrl}/api/v1/kh02/research/runs/${acceptedRunId}`,
+              `${options.baseUrl}/api/v1/kh02/research?runId=${encodeURIComponent(acceptedRunId)}`,
               {
                 headers: {
                   "x-workspace-id": options.workspaceId,

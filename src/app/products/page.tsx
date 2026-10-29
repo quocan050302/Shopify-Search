@@ -96,7 +96,7 @@ interface StoredProductItem {
 interface ActiveJobProgress {
   jobId: string;
   runId: string;
-  status: "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "PARTIAL";
+  status: "PENDING" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "PARTIAL";
   stage: string;
   progressPct: number;
   errorSummary?: string | null;
@@ -327,7 +327,9 @@ export default function ProductsPage() {
   useEffect(() => {
     if (
       !activeJob ||
-      (activeJob.status !== "QUEUED" && activeJob.status !== "RUNNING")
+      (activeJob.status !== "PENDING" &&
+        activeJob.status !== "QUEUED" &&
+        activeJob.status !== "RUNNING")
     ) {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -341,12 +343,14 @@ export default function ProductsPage() {
       if (
         data &&
         (!data.activeJob ||
-          (data.activeJob.status !== "QUEUED" && data.activeJob.status !== "RUNNING"))
+          (data.activeJob.status !== "PENDING" &&
+            data.activeJob.status !== "QUEUED" &&
+            data.activeJob.status !== "RUNNING"))
       ) {
         setResearchLoading(false);
         fetchSourceStatuses();
       }
-    }, 750);
+    }, 600);
 
     return () => {
       if (pollIntervalRef.current) {
@@ -400,11 +404,11 @@ export default function ProductsPage() {
             setResearchLoading(false);
             loadPersistedRun({ runId: json.data.runId });
           } else {
-            setActiveRunStatus(json.data.status || "QUEUED");
+            setActiveRunStatus("QUEUED");
             setActiveJob({
               jobId: json.data.jobId,
               runId: json.data.runId,
-              status: json.data.status || "QUEUED",
+              status: "QUEUED",
               stage: json.data.stage || "QUEUED",
               progressPct: json.data.progressPct ?? 5,
             });
