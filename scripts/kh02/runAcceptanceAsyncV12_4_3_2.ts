@@ -657,7 +657,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
             suiteId: "tsc_typecheck",
             name: "TypeScript Typecheck",
             command: process.execPath,
-            args: [tscBin, "--noEmit", "--incremental"],
+            args: [tscBin, "--noEmit"],
             logFilePath: path.join(LOGS_DIR, "tsc.log"),
             headSha: gitHead,
             signal,
