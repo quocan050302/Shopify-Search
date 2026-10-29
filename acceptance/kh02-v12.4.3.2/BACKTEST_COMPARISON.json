@@ -1,0 +1,587 @@
+{
+  "version": "12.4.3.2",
+  "previousReleaseVersion": "12.4.3.1",
+  "v12_4_3_1Summary": {
+    "verdict": "PASS",
+    "extension": {
+      "datasetVersion": "kh02-v12.4.3.1-provenance-gold-v1",
+      "datasetHash": "21440a6ec20c69c92d3f458894ece1fbd3d7cfe8a8d9817ea0886f89f8466084",
+      "startedAt": "2026-10-29T09:26:36.396Z",
+      "completedAt": "2026-10-29T09:26:36.492Z",
+      "antiOverfittingAudit": {
+        "labelLeakageDetected": false,
+        "devCaseCount": 4,
+        "holdoutCaseCount": 4,
+        "groupOverlap": [],
+        "domainOverlap": [],
+        "productOverlap": [],
+        "disjointConfirmed": true
+      },
+      "baselineV12_4_3": {
+        "overall": {
+          "caseCount": 8,
+          "syntheticMetaQueryExecutionCount": 6,
+          "specificProductRelevancePrecision": 0.75,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 0.5,
+          "customerPsychologyMisalignmentCount": 2,
+          "evergreenVerificationPrecision": 0.25,
+          "falseEvergreenPromotionCount": 6,
+          "falsePassGateCount": 2
+        },
+        "dev": {
+          "caseCount": 4,
+          "syntheticMetaQueryExecutionCount": 3,
+          "specificProductRelevancePrecision": 0.75,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 0.5,
+          "customerPsychologyMisalignmentCount": 1,
+          "evergreenVerificationPrecision": 0.25,
+          "falseEvergreenPromotionCount": 3,
+          "falsePassGateCount": 2
+        },
+        "holdout": {
+          "caseCount": 4,
+          "syntheticMetaQueryExecutionCount": 3,
+          "specificProductRelevancePrecision": 0.75,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 0.5,
+          "customerPsychologyMisalignmentCount": 1,
+          "evergreenVerificationPrecision": 0.25,
+          "falseEvergreenPromotionCount": 3,
+          "falsePassGateCount": 2
+        }
+      },
+      "fixedV12_4_3_1": {
+        "overall": {
+          "caseCount": 8,
+          "syntheticMetaQueryExecutionCount": 0,
+          "specificProductRelevancePrecision": 1,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 1,
+          "customerPsychologyMisalignmentCount": 0,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "falsePassGateCount": 0
+        },
+        "dev": {
+          "caseCount": 4,
+          "syntheticMetaQueryExecutionCount": 0,
+          "specificProductRelevancePrecision": 1,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 1,
+          "customerPsychologyMisalignmentCount": 0,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "falsePassGateCount": 0
+        },
+        "holdout": {
+          "caseCount": 4,
+          "syntheticMetaQueryExecutionCount": 0,
+          "specificProductRelevancePrecision": 1,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 1,
+          "customerPsychologyMisalignmentCount": 0,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "falsePassGateCount": 0
+        }
+      },
+      "deltasV12_4_3_to_V12_4_3_1": {
+        "syntheticMetaQueryEliminated": 6,
+        "psychologyMisalignmentEliminated": 2,
+        "falseEvergreenPromotionEliminated": 6,
+        "falsePassGateEliminated": 2,
+        "specificProductPrecisionGain": 0.25
+      },
+      "caseDetails": [
+        {
+          "caseId": "v12431_dev_01_uahpet_feeder_specific_and_no_bluetooth_psych",
+          "split": "DEV",
+          "topic": "automatic pet feeder",
+          "candidateTitle": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "baselineV12_4_3": {
+            "caseId": "v12431_dev_01_uahpet_feeder_specific_and_no_bluetooth_psych",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "AUDIO",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_dev_01_uahpet_feeder_specific_and_no_bluetooth_psych",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          }
+        },
+        {
+          "caseId": "v12431_dev_02_water_fountain_rejected_for_pet_feeder_query",
+          "split": "DEV",
+          "topic": "automatic pet feeder",
+          "candidateTitle": "Pawira Stainless Steel Cat Water Fountain",
+          "baselineV12_4_3": {
+            "caseId": "v12431_dev_02_water_fountain_rejected_for_pet_feeder_query",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_dev_02_water_fountain_rejected_for_pet_feeder_query",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": false,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": false
+          }
+        },
+        {
+          "caseId": "v12431_dev_03_fixture_demand_rejected_from_evergreen",
+          "split": "DEV",
+          "topic": "pet gadgets",
+          "candidateTitle": "Reusable Pet Hair Remover Roller",
+          "baselineV12_4_3": {
+            "caseId": "v12431_dev_03_fixture_demand_rejected_from_evergreen",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_dev_03_fixture_demand_rejected_from_evergreen",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": false,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": false
+          }
+        },
+        {
+          "caseId": "v12431_dev_04_broad_category_demand_proxy_rejected",
+          "split": "DEV",
+          "topic": "cordless hot glue gun",
+          "candidateTitle": "Rechargeable Hot Melt Glue Gun with Stand",
+          "baselineV12_4_3": {
+            "caseId": "v12431_dev_04_broad_category_demand_proxy_rejected",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "DIY",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_dev_04_broad_category_demand_proxy_rejected",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": false,
+            "predictedPsychDomain": "DIY",
+            "predictedEvergreenVerified": false
+          }
+        },
+        {
+          "caseId": "v12431_holdout_01_smart_cat_feeder_bluetooth_voice_psych_isolation",
+          "split": "HOLDOUT",
+          "topic": "automatic pet feeder",
+          "candidateTitle": "WhiskerFeed Smart Timed Cat Feeder with Stainless Bowl",
+          "baselineV12_4_3": {
+            "caseId": "v12431_holdout_01_smart_cat_feeder_bluetooth_voice_psych_isolation",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "AUDIO",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_holdout_01_smart_cat_feeder_bluetooth_voice_psych_isolation",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          }
+        },
+        {
+          "caseId": "v12431_holdout_02_hair_roller_rejected_for_automatic_pet_feeder",
+          "split": "HOLDOUT",
+          "topic": "automatic pet feeder",
+          "candidateTitle": "FurSwipe Reusable Pet Hair Remover Roller",
+          "baselineV12_4_3": {
+            "caseId": "v12431_holdout_02_hair_roller_rejected_for_automatic_pet_feeder",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_holdout_02_hair_roller_rejected_for_automatic_pet_feeder",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": false,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": false
+          }
+        },
+        {
+          "caseId": "v12431_holdout_03_cross_product_demand_mismatch_rejected",
+          "split": "HOLDOUT",
+          "topic": "automatic pet feeder",
+          "candidateTitle": "PetDine Automatic Stainless Cat Feeder",
+          "baselineV12_4_3": {
+            "caseId": "v12431_holdout_03_cross_product_demand_mismatch_rejected",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_holdout_03_cross_product_demand_mismatch_rejected",
+            "predictedMetaAttempted": false,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": false,
+            "predictedPsychDomain": "PET",
+            "predictedEvergreenVerified": false
+          }
+        },
+        {
+          "caseId": "v12431_holdout_04_spin_scrubber_specific_relevance_and_unverified_demand",
+          "split": "HOLDOUT",
+          "topic": "electric spin scrubber",
+          "candidateTitle": "ScrubPro Cordless Electric Spin Scrubber",
+          "baselineV12_4_3": {
+            "caseId": "v12431_holdout_04_spin_scrubber_specific_relevance_and_unverified_demand",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": true,
+            "predictedPsychDomain": "DIY",
+            "predictedEvergreenVerified": true
+          },
+          "fixedV12_4_3_1": {
+            "caseId": "v12431_holdout_04_spin_scrubber_specific_relevance_and_unverified_demand",
+            "predictedMetaAttempted": true,
+            "predictedSpecificRelevance": true,
+            "predictedDemandEligible": false,
+            "predictedPsychDomain": "DIY",
+            "predictedEvergreenVerified": false
+          }
+        }
+      ],
+      "verdict": "PASS"
+    }
+  },
+  "v12_4_3_2Summary": {
+    "verdict": "PASS",
+    "extension": {
+      "datasetVersion": "kh02-v12.4.3.2-audience-forensic-gold-v1",
+      "datasetHash": "07f860dd217d1477869895b5c8521eae09a76f251dc0117ee739852db29a407b",
+      "startedAt": "2026-10-29T09:26:36.206Z",
+      "completedAt": "2026-10-29T09:26:36.394Z",
+      "antiOverfittingAudit": {
+        "labelLeakageDetected": false,
+        "devCaseCount": 4,
+        "holdoutCaseCount": 4,
+        "groupOverlap": [],
+        "domainOverlap": [],
+        "productOverlap": [],
+        "disjointConfirmed": true
+      },
+      "baselineV12_4_3_1": {
+        "overall": {
+          "caseCount": 8,
+          "audienceCompatibilityAccuracy": 0.375,
+          "crossSpeciesOrAudienceContaminationCount": 5,
+          "topicRelevancePrecision": 0.375,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 0.625,
+          "syntheticMerchantDemandPromotedCount": 3,
+          "psychologyClaimIntegrityAccuracy": 0.5,
+          "evergreenVerificationPrecision": 0.4,
+          "falseEvergreenPromotionCount": 3,
+          "contradictoryExclusionCount": 1
+        },
+        "dev": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 0.5,
+          "crossSpeciesOrAudienceContaminationCount": 2,
+          "topicRelevancePrecision": 0.5,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 0.5,
+          "syntheticMerchantDemandPromotedCount": 2,
+          "psychologyClaimIntegrityAccuracy": 0.25,
+          "evergreenVerificationPrecision": 0.3333,
+          "falseEvergreenPromotionCount": 2,
+          "contradictoryExclusionCount": 1
+        },
+        "holdout": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 0.25,
+          "crossSpeciesOrAudienceContaminationCount": 3,
+          "topicRelevancePrecision": 0.25,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 0.75,
+          "syntheticMerchantDemandPromotedCount": 1,
+          "psychologyClaimIntegrityAccuracy": 0.75,
+          "evergreenVerificationPrecision": 0.5,
+          "falseEvergreenPromotionCount": 1,
+          "contradictoryExclusionCount": 0
+        }
+      },
+      "fixedV12_4_3_2": {
+        "overall": {
+          "caseCount": 8,
+          "audienceCompatibilityAccuracy": 1,
+          "crossSpeciesOrAudienceContaminationCount": 0,
+          "topicRelevancePrecision": 1,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 1,
+          "syntheticMerchantDemandPromotedCount": 0,
+          "psychologyClaimIntegrityAccuracy": 1,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "contradictoryExclusionCount": 0
+        },
+        "dev": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 1,
+          "crossSpeciesOrAudienceContaminationCount": 0,
+          "topicRelevancePrecision": 1,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 1,
+          "syntheticMerchantDemandPromotedCount": 0,
+          "psychologyClaimIntegrityAccuracy": 1,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "contradictoryExclusionCount": 0
+        },
+        "holdout": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 1,
+          "crossSpeciesOrAudienceContaminationCount": 0,
+          "topicRelevancePrecision": 1,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 1,
+          "syntheticMerchantDemandPromotedCount": 0,
+          "psychologyClaimIntegrityAccuracy": 1,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "contradictoryExclusionCount": 0
+        }
+      },
+      "deltasV12_4_3_1_to_V12_4_3_2": {
+        "crossSpeciesContaminationEliminated": 5,
+        "syntheticMerchantDemandEliminated": 3,
+        "falseEvergreenPromotionEliminated": 3,
+        "contradictoryExclusionEliminated": 1,
+        "audienceAccuracyGain": 0.625
+      },
+      "caseDetails": [
+        {
+          "caseId": "v12432_dev_01_dog_query_rejects_wet_food_cat_feeder",
+          "split": "DEV",
+          "topic": "dog",
+          "candidateTitle": "Automatic Wet Food Cat Feeder",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_dev_01_dog_query_rejects_wet_food_cat_feeder",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_dev_01_dog_query_rejects_wet_food_cat_feeder",
+            "predictedAudienceCompatible": false,
+            "predictedTopicRelevant": false,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "INFERRED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_dev_02_dog_query_accepts_no_pull_dog_harness_with_verified_csv",
+          "split": "DEV",
+          "topic": "dog",
+          "candidateTitle": "No-Pull Tactical Dog Harness for Large Dogs",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_dev_02_dog_query_accepts_no_pull_dog_harness_with_verified_csv",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_dev_02_dog_query_accepts_no_pull_dog_harness_with_verified_csv",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_dev_03_multipet_ad_mention_inferred_not_observed",
+          "split": "DEV",
+          "topic": "pet gadgets",
+          "candidateTitle": "Reusable Pet Hair Remover Roller for Dogs and Cats",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_dev_03_multipet_ad_mention_inferred_not_observed",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": true
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_dev_03_multipet_ad_mention_inferred_not_observed",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "INFERRED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_dev_04_men_query_rejects_womens_epilator",
+          "split": "DEV",
+          "topic": "men grooming trimmer",
+          "candidateTitle": "Women's Flawless Facial Epilator for Ladies",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_dev_04_men_query_rejects_womens_epilator",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_dev_04_men_query_rejects_womens_epilator",
+            "predictedAudienceCompatible": false,
+            "predictedTopicRelevant": false,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "INFERRED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_holdout_01_dog_query_rejects_pawspick_cat_fountain",
+          "split": "HOLDOUT",
+          "topic": "dog",
+          "candidateTitle": "Pawspick Cat Water Fountain Stainless Steel",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_holdout_01_dog_query_rejects_pawspick_cat_fountain",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_holdout_01_dog_query_rejects_pawspick_cat_fountain",
+            "predictedAudienceCompatible": false,
+            "predictedTopicRelevant": false,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_holdout_02_cat_query_rejects_dog_bark_collar",
+          "split": "HOLDOUT",
+          "topic": "cat",
+          "candidateTitle": "Smart Ultrasonic Anti-Bark Dog Collar",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_holdout_02_cat_query_rejects_dog_bark_collar",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_holdout_02_cat_query_rejects_dog_bark_collar",
+            "predictedAudienceCompatible": false,
+            "predictedTopicRelevant": false,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_holdout_03_cat_query_accepts_cat_litter_mat_with_verified_csv",
+          "split": "HOLDOUT",
+          "topic": "cat",
+          "candidateTitle": "Honeycomb Double-Layer Cat Litter Trapping Mat",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_holdout_03_cat_query_accepts_cat_litter_mat_with_verified_csv",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_holdout_03_cat_query_accepts_cat_litter_mat_with_verified_csv",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": true,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": true,
+            "contradictoryExclusionEmitted": false
+          }
+        },
+        {
+          "caseId": "v12432_holdout_04_car_query_rejects_motorcycle_helmet_intercom",
+          "split": "HOLDOUT",
+          "topic": "car accessories",
+          "candidateTitle": "Motorcycle Helmet Bluetooth Intercom for Bikers",
+          "baselineV12_4_3_1": {
+            "caseId": "v12432_holdout_04_car_query_rejects_motorcycle_helmet_intercom",
+            "predictedAudienceCompatible": true,
+            "predictedTopicRelevant": true,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "OBSERVED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          },
+          "fixedV12_4_3_2": {
+            "caseId": "v12432_holdout_04_car_query_rejects_motorcycle_helmet_intercom",
+            "predictedAudienceCompatible": false,
+            "predictedTopicRelevant": false,
+            "predictedDemandEligible": false,
+            "predictedPsychStatus": "INFERRED",
+            "predictedEvergreenVerified": false,
+            "contradictoryExclusionEmitted": false
+          }
+        }
+      ],
+      "verdict": "PASS"
+    },
+    "beforeVsAfterImprovements": {
+      "crossSpeciesContaminationEliminated": 5,
+      "syntheticMerchantDemandEliminated": 3,
+      "falseEvergreenPromotionEliminated": 3,
+      "contradictoryExclusionEliminated": 1,
+      "audienceAccuracyGain": 0.625
+    }
+  }
+}

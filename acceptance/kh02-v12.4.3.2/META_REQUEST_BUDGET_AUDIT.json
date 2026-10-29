@@ -1,0 +1,14 @@
+{
+  "version": "12.4.3.2",
+  "policy": {
+    "maxQueriesPerRun": 6,
+    "maxPagesPerQuery": 1,
+    "minInterQueryDelayMs": 2500,
+    "consecutiveChallengeStopThreshold": 2
+  },
+  "observed": {
+    "maxSubqueriesAcrossRuns": 3,
+    "maxApiCallsPerSubquery": 1,
+    "compliant": true
+  }
+}

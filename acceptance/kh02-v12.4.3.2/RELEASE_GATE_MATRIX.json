@@ -1,0 +1,1818 @@
+{
+  "version": "12.4.3.2",
+  "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+  "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "overallReleaseVerdict": "PASS",
+  "summaryCounts": {
+    "totalGates": 30,
+    "PASS": 30,
+    "INSUFFICIENT_EVIDENCE": 0,
+    "FAIL": 0,
+    "BLOCKED": 0
+  },
+  "gates": {
+    "R01": {
+      "gateId": "R01",
+      "meaning": "Branch and clean commit SHA integrity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Active branch is feature/kh02-v12.1.3-runtime-truth-closure, SWAI_KH02_RELEASE_VERSION is 12.4.3.2, and HEAD SHA is resolved",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "releaseVersion": "12.4.3.2"
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "releaseVersion": "12.4.3.2",
+        "nonAcceptanceModifiedFiles": []
+      },
+      "executionCommand": "git branch --show-current && git rev-parse HEAD",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "EXECUTION_MANIFEST.json",
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/EXECUTION_MANIFEST.json",
+      "reason": "Branch=feature/kh02-v12.1.3-runtime-truth-closure, HEAD=2dbabe7, ReleaseVersion=12.4.3.2",
+      "executedAt": "2026-10-29T09:28:16.675Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R02": {
+      "gateId": "R02",
+      "meaning": "Meta live query execution capability",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "LIVE_WITH_CACHE_FALLBACK and LIVE_ONLY modes execute real upstream Meta Ad Library queries (existingPoolCount >= 100 suppression gate removed); PASS requires >0 live upstream ads, INSUFFICIENT_EVIDENCE when upstream returns 0 live ads due to session challenge/rate-limit",
+      "expected": {
+        "liveAttemptedInDogOrLiveOnly": true,
+        "telemetryTruth": "PASS",
+        "liveAdsForPass": "> 0"
+      },
+      "observed": {
+        "liveAttemptedInDogOrLiveOnly": true,
+        "totalLiveAdsReturned": 70,
+        "liveOnlyQueryExecutions": [
+          {
+            "researchRunId": "kh02_1793265996499_w4ho7",
+            "source": "META_ADS",
+            "planned": true,
+            "requestStarted": true,
+            "requestCompleted": true,
+            "upstreamReturnedCount": 10,
+            "uniqueUpstreamIdsCount": 10,
+            "cachedRecordsUsed": 0,
+            "provenance": "LIVE_PROVIDER",
+            "queryId": "kh02_q_r1_1_7c9df8e1",
+            "keyword": "pet hair remover",
+            "searchType": "KEYWORD_EXACT_PHRASE",
+            "attempted": true,
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "startedAt": "2026-10-29T09:26:37.617Z",
+            "completedAt": "2026-10-29T09:26:42.296Z",
+            "actualApiCalls": 1,
+            "returnedCount": 10,
+            "uniqueReturnedCount": 10,
+            "duplicateCount": 0,
+            "roundNumber": 1,
+            "origin": "DETERMINISTIC_FALLBACK",
+            "archetypeId": "pet_grooming_hair_removal",
+            "expectedProductCategory": "Pet Grooming",
+            "errorCode": null,
+            "errorMessage": null
+          },
+          {
+            "researchRunId": "kh02_1793265996499_w4ho7",
+            "source": "META_ADS",
+            "planned": true,
+            "requestStarted": true,
+            "requestCompleted": true,
+            "upstreamReturnedCount": 10,
+            "uniqueUpstreamIdsCount": 10,
+            "cachedRecordsUsed": 0,
+            "provenance": "LIVE_PROVIDER",
+            "queryId": "kh02_q_r1_2_1c77c740",
+            "keyword": "cat water fountain",
+            "searchType": "KEYWORD_EXACT_PHRASE",
+            "attempted": true,
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "startedAt": "2026-10-29T09:26:42.296Z",
+            "completedAt": "2026-10-29T09:26:46.097Z",
+            "actualApiCalls": 1,
+            "returnedCount": 10,
+            "uniqueReturnedCount": 10,
+            "duplicateCount": 0,
+            "roundNumber": 1,
+            "origin": "DETERMINISTIC_FALLBACK",
+            "archetypeId": "pet_hydration",
+            "expectedProductCategory": "Pet Hydration",
+            "errorCode": null,
+            "errorMessage": null
+          },
+          {
+            "researchRunId": "kh02_1793265996499_w4ho7",
+            "source": "META_ADS",
+            "planned": true,
+            "requestStarted": true,
+            "requestCompleted": true,
+            "upstreamReturnedCount": 10,
+            "uniqueUpstreamIdsCount": 10,
+            "cachedRecordsUsed": 0,
+            "provenance": "LIVE_PROVIDER",
+            "queryId": "kh02_q_r1_3_e6b27bfe",
+            "keyword": "automatic pet feeder",
+            "searchType": "KEYWORD_EXACT_PHRASE",
+            "attempted": true,
+            "status": "SUCCEEDED_WITH_RESULTS",
+            "startedAt": "2026-10-29T09:27:08.355Z",
+            "completedAt": "2026-10-29T09:27:12.289Z",
+            "actualApiCalls": 1,
+            "returnedCount": 10,
+            "uniqueReturnedCount": 10,
+            "duplicateCount": 0,
+            "roundNumber": 2,
+            "origin": "ADAPTIVE_RECOVERY",
+            "archetypeId": "pet_feeding",
+            "expectedProductCategory": "Pet Feeding",
+            "errorCode": null,
+            "errorMessage": null
+          }
+        ],
+        "dogMetaTelemetry": {
+          "source": "META_ADS",
+          "queryExecuted": true,
+          "queryStatus": "PASSED",
+          "queryTimestamp": "2026-10-29T09:26:46.026Z",
+          "retrievedCount": 50,
+          "acceptedCount": 50,
+          "queryProvenance": "LIVE_PROVIDER",
+          "isLive": true,
+          "queryError": null,
+          "lastSuccessfulRecordCount": 20,
+          "lastSuccessfulQueryAt": "2026-10-29T09:26:46.026Z",
+          "upstreamReturnedCount": 20,
+          "freshLiveCount": 20,
+          "cachedRecordsCount": 30,
+          "persistedInsertedCount": 0,
+          "persistedUpdatedCount": 20,
+          "liveAttempted": true,
+          "liveSucceeded": true,
+          "liveError": null,
+          "lastLiveQueryAt": "2026-10-29T09:26:46.026Z",
+          "lastLiveQueryRecordCount": 20,
+          "lastSuccessfulLiveQueryAt": "2026-10-29T09:26:46.026Z",
+          "auditTraces": [
+            {
+              "rawId": "1536941208479218",
+              "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+            },
+            {
+              "rawId": "1464108218882438",
+              "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyiz0009aworjqixph93"
+            },
+            {
+              "rawId": "1133000522848754",
+              "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyjn000faworwu1dts6g"
+            },
+            {
+              "rawId": "1641348457417375",
+              "digest": "e95e7abd2d294d3761316ba1283628a7",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqykc000laworg3qfh92d"
+            },
+            {
+              "rawId": "2249466188957796",
+              "digest": "ed821df7bed80fa8cac7153f3d29069f",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyl0000raworivkxfbhm"
+            },
+            {
+              "rawId": "1642750633880173",
+              "digest": "09354344bcebc93b92f10782e68891d8",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0trww000fwgor0lp8jttq"
+            },
+            {
+              "rawId": "1410922084469845",
+              "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0trxo000kwgorhbr1satz"
+            },
+            {
+              "rawId": "1806555653907868",
+              "digest": "58f9024f51d25bac44adb560c712d426",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+            },
+            {
+              "rawId": "1563296449176047",
+              "digest": "45699c99516306b5a9d581c8f3d594af",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+            },
+            {
+              "rawId": "4546541612250472",
+              "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+              "decision": "UPDATED",
+              "persistedId": "cmvrh5afz001ufcort18234su"
+            },
+            {
+              "rawId": "1764530358140196",
+              "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyiwo002f6cortsfp1tv7"
+            },
+            {
+              "rawId": "1718454532575959",
+              "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyix9002l6corlkphcnbc"
+            },
+            {
+              "rawId": "1137301772072207",
+              "digest": "1cc15a16b7372407c2e38c714bf167c6",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2kv001c6sor5oxghj8o"
+            },
+            {
+              "rawId": "1067995712370292",
+              "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyixu002s6corgmhfjtem"
+            },
+            {
+              "rawId": "1025226893900208",
+              "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyiyv00366corir7asjvw"
+            },
+            {
+              "rawId": "3202991749899349",
+              "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyizq003j6corcljojmjs"
+            },
+            {
+              "rawId": "2174343823475370",
+              "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyj04003q6cort0wlap3m"
+            },
+            {
+              "rawId": "1605927994566450",
+              "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyj1600426cor9rtxnev0"
+            },
+            {
+              "rawId": "1860647425077112",
+              "digest": "a5450e30a6177a58fd74bb7aa706649c",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2n100226sorh37j76t4"
+            },
+            {
+              "rawId": "1092762023460778",
+              "digest": "a01bc37e806ed87e42f754e5d27a5371",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2nf00286sor1v06nxx0"
+            }
+          ]
+        },
+        "liveOnlyMetaTelemetry": {
+          "source": "META_ADS",
+          "queryExecuted": true,
+          "queryStatus": "PASSED",
+          "queryTimestamp": "2026-10-29T09:26:46.606Z",
+          "retrievedCount": 30,
+          "acceptedCount": 30,
+          "queryProvenance": "LIVE_PROVIDER",
+          "isLive": true,
+          "queryError": null,
+          "lastSuccessfulRecordCount": 20,
+          "lastSuccessfulQueryAt": "2026-10-29T09:26:46.606Z",
+          "upstreamReturnedCount": 30,
+          "freshLiveCount": 30,
+          "cachedRecordsCount": 0,
+          "persistedInsertedCount": 0,
+          "persistedUpdatedCount": 20,
+          "liveAttempted": true,
+          "liveSucceeded": true,
+          "liveError": null,
+          "lastLiveQueryAt": "2026-10-29T09:26:46.606Z",
+          "lastLiveQueryRecordCount": 20,
+          "lastSuccessfulLiveQueryAt": "2026-10-29T09:26:46.606Z",
+          "auditTraces": [
+            {
+              "rawId": "1536941208479218",
+              "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+            },
+            {
+              "rawId": "1464108218882438",
+              "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyiz0009aworjqixph93"
+            },
+            {
+              "rawId": "1133000522848754",
+              "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyjn000faworwu1dts6g"
+            },
+            {
+              "rawId": "1641348457417375",
+              "digest": "e95e7abd2d294d3761316ba1283628a7",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqykc000laworg3qfh92d"
+            },
+            {
+              "rawId": "2249466188957796",
+              "digest": "ed821df7bed80fa8cac7153f3d29069f",
+              "decision": "UPDATED",
+              "persistedId": "cmvlsqyl0000raworivkxfbhm"
+            },
+            {
+              "rawId": "1642750633880173",
+              "digest": "09354344bcebc93b92f10782e68891d8",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0trww000fwgor0lp8jttq"
+            },
+            {
+              "rawId": "1410922084469845",
+              "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0trxo000kwgorhbr1satz"
+            },
+            {
+              "rawId": "1806555653907868",
+              "digest": "58f9024f51d25bac44adb560c712d426",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+            },
+            {
+              "rawId": "1563296449176047",
+              "digest": "45699c99516306b5a9d581c8f3d594af",
+              "decision": "UPDATED",
+              "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+            },
+            {
+              "rawId": "4546541612250472",
+              "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+              "decision": "UPDATED",
+              "persistedId": "cmvrh5afz001ufcort18234su"
+            },
+            {
+              "rawId": "1764530358140196",
+              "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyiwo002f6cortsfp1tv7"
+            },
+            {
+              "rawId": "1718454532575959",
+              "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyix9002l6corlkphcnbc"
+            },
+            {
+              "rawId": "1137301772072207",
+              "digest": "1cc15a16b7372407c2e38c714bf167c6",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2kv001c6sor5oxghj8o"
+            },
+            {
+              "rawId": "1067995712370292",
+              "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyixu002s6corgmhfjtem"
+            },
+            {
+              "rawId": "1025226893900208",
+              "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyiyv00366corir7asjvw"
+            },
+            {
+              "rawId": "3202991749899349",
+              "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyizq003j6corcljojmjs"
+            },
+            {
+              "rawId": "2174343823475370",
+              "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyj04003q6cort0wlap3m"
+            },
+            {
+              "rawId": "1605927994566450",
+              "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+              "decision": "UPDATED",
+              "persistedId": "cmvrzyj1600426cor9rtxnev0"
+            },
+            {
+              "rawId": "1860647425077112",
+              "digest": "a5450e30a6177a58fd74bb7aa706649c",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2n100226sorh37j76t4"
+            },
+            {
+              "rawId": "1092762023460778",
+              "digest": "a01bc37e806ed87e42f754e5d27a5371",
+              "decision": "UPDATED",
+              "persistedId": "cmvtat2nf00286sor1v06nxx0"
+            }
+          ]
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052440_6ge2c",
+      "evidenceRefs": [
+        "META_LIVE_DISCOVERY_AUDIT.json",
+        "META_CACHE_VS_LIVE_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/META_LIVE_DISCOVERY_AUDIT.json",
+      "reason": "Live upstream Meta discovery returned 70 fresh live ads",
+      "executedAt": "2026-10-29T09:28:16.676Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R03": {
+      "gateId": "R03",
+      "meaning": "Meta live vs cached provenance separation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "LIVE_ONLY never mixes cached ads into current-run observations (historicalCachedAdsCount=0), CACHE_ONLY emits NOT_ATTEMPTED (attempted=false, actualApiCalls=0), and LIVE_WITH_CACHE_FALLBACK strictly separates freshLiveAdsCount from historicalCachedAdsCount",
+      "expected": {
+        "liveOnlyHistoricalCachedAdsCount": 0,
+        "cacheOnlyHasZeroAttempted": true,
+        "g06aVerdict": "PASS",
+        "g06bVerdict": "PASS"
+      },
+      "observed": {
+        "liveOnlyHistoricalCachedAdsCount": 0,
+        "cacheOnlyHasZeroAttempted": true,
+        "g06a": {
+          "verdict": "PASS",
+          "violations": [],
+          "checkedRuns": 8
+        },
+        "g06b": {
+          "verdict": "PASS",
+          "violations": [],
+          "cachedRunsCount": 7,
+          "totalCachedObservations": 310
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052450_68mz0",
+      "evidenceRefs": [
+        "META_CACHE_VS_LIVE_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/META_CACHE_VS_LIVE_RECONCILIATION.json",
+      "reason": "LIVE_ONLY, CACHE_ONLY, and LIVE_WITH_CACHE_FALLBACK provenance strictly separated",
+      "executedAt": "2026-10-29T09:28:16.676Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R04": {
+      "gateId": "R04",
+      "meaning": "Meta request budget and anti-challenge compliance",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every research run respects the strict Meta request budget: <= 6 attempted subqueries per run, <= 1 page/API call per subquery, and circuit-breaks after consecutive challenge/rate-limit responses",
+      "expected": {
+        "maxSubqueriesPerRun": "<= 6",
+        "maxApiCallsPerSubquery": "<= 1"
+      },
+      "observed": {
+        "maxSubqueriesAcrossRuns": 3,
+        "maxApiCallsPerSubquery": 1
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052440_6ge2c",
+      "evidenceRefs": [
+        "META_REQUEST_BUDGET_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/META_REQUEST_BUDGET_AUDIT.json",
+      "reason": "Meta request budget verified: maxSubqueries=3/6, maxPagesPerQuery=1/1",
+      "executedAt": "2026-10-29T09:28:16.677Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R05": {
+      "gateId": "R05",
+      "meaning": "Forensic demand source audit",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All ProductDemandObservation rows in prisma/dev.db are forensically audited; verified-merchant-demand:<domain>, [76, 79, 77, 81, 78, 82] templates, and promotional ad-copy keywords are classified as CACHED_UNVERIFIED (eligibleForEvergreen=false) and labeled SEARCH_INTEREST_NOT_SALES",
+      "expected": {
+        "dbAuthoritativeCount": 0,
+        "merchantSeedSourceAuthority": "CACHED_UNVERIFIED",
+        "merchantSeedEligibleForEvergreen": false,
+        "evidenceKind": "SEARCH_INTEREST_NOT_SALES"
+      },
+      "observed": {
+        "dbSummary": {
+          "totalObservations": 96,
+          "authoritativeCount": 0,
+          "cachedUnverifiedCount": 60,
+          "syntheticMerchantSeedCount": 60,
+          "templatedValueSeriesCount": 0,
+          "promotionalKeywordCount": 6
+        },
+        "merchantSeedEval": {
+          "sourceAuthority": "CACHED_UNVERIFIED",
+          "eligibleForEvergreen": false,
+          "evidenceKind": "SEARCH_INTEREST_NOT_SALES"
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "DEMAND_SOURCE_FORENSIC_AUDIT.json",
+        "DEMAND_RAW_DATA_TRACEABILITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/DEMAND_SOURCE_FORENSIC_AUDIT.json",
+      "reason": "Audited 96 DB demand rows: 60 merchant-seeded rows and 0 templated rows downgraded to CACHED_UNVERIFIED",
+      "executedAt": "2026-10-29T09:28:16.677Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R06": {
+      "gateId": "R06",
+      "meaning": "Evergreen winner demand qualification",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Zero Evergreen Winners are promoted from verified-merchant-demand:<domain> or CACHED_UNVERIFIED demand series; historical false winners in SQLite are retroactively demoted to Research Shortlist / Provisional",
+      "expected": {
+        "falseWinnersCount": 0,
+        "currentRunEvergreenCountWithUnverifiedDemand": 0
+      },
+      "observed": {
+        "falseWinnersCount": 0,
+        "historicalRunsRequalified": 0,
+        "historicalWinnersDemoted": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "EVERGREEN_WINNER_REQUALIFICATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/EVERGREEN_WINNER_REQUALIFICATION.json",
+      "reason": "0 false Evergreen winners across 8 fresh runs; 0 historical merchant-seeded winners retroactively demoted across 0 DB runs",
+      "executedAt": "2026-10-29T09:28:16.677Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R07": {
+      "gateId": "R07",
+      "meaning": "Product identity verification",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Merchant product identity requires fetched page verification; HTTP 403 stays PROBABLE, and JSON-LD Product schema extracts SKU/GTIN/model/brand",
+      "expected": {
+        "http403": "PROBABLE",
+        "jsonLd": "VERIFIED"
+      },
+      "observed": {
+        "http403": "PROBABLE",
+        "jsonLd": "VERIFIED",
+        "sku": "PS-FOUNTAIN-25L"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "EVERGREEN_WINNER_REQUALIFICATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/EVERGREEN_WINNER_REQUALIFICATION.json",
+      "reason": "Product identity verification passed",
+      "executedAt": "2026-10-29T09:28:16.681Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R08": {
+      "gateId": "R08",
+      "meaning": "Product distinctness and family diversity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "6-level product distinctness consolidates duplicate canonical URLs across ad creatives and enforces family diversity",
+      "expected": {
+        "consolidatedCount": 1
+      },
+      "observed": {
+        "consolidatedCount": 1,
+        "dogDistinctShortlist": 3,
+        "catDistinctShortlist": 3
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "BACKTEST_DEV_VS_HOLDOUT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/BACKTEST_DEV_VS_HOLDOUT.json",
+      "reason": "Product distinctness and diversity verified",
+      "executedAt": "2026-10-29T09:28:16.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R09": {
+      "gateId": "R09",
+      "meaning": "Species and target audience relevance",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Searching 'dog' rejects cat-only products (Automatic Wet Food Cat Feeder, Pawspick Cat Water Fountain) with SPECIES_MISMATCH_CAT_FOR_DOG_QUERY, searching 'cat' rejects dog-only products, and shared pet products are explicitly labeled Shared Pet Product",
+      "expected": {
+        "dogCatFeederStatus": "IRRELEVANT_AND_EXCLUDED",
+        "dogCatFountainStatus": "IRRELEVANT_AND_EXCLUDED",
+        "dogHasCatOnlyContamination": false,
+        "catHasDogOnlyContamination": false
+      },
+      "observed": {
+        "dogCatFeederCheck": {
+          "relevanceStatus": "IRRELEVANT",
+          "discoveryDecision": "CLEARLY_UNRELATED",
+          "isAccepted": false,
+          "score": 0.08,
+          "reasons": [
+            "Excluded — Product is marketed for cats, while this search targets dogs."
+          ],
+          "topic": "dog",
+          "matchedArchetypeId": null,
+          "audienceRelevance": {
+            "requestedAudience": "DOG",
+            "supportedAudiences": [
+              "CAT"
+            ],
+            "audienceMatch": "CONTRADICTORY",
+            "audienceEvidenceReferences": [
+              "cat_term:\"cat\""
+            ],
+            "relevanceReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+            "eligibleForPrimaryShortlist": false
+          }
+        },
+        "dogCatFountainCheck": {
+          "relevanceStatus": "IRRELEVANT",
+          "discoveryDecision": "CLEARLY_UNRELATED",
+          "isAccepted": false,
+          "score": 0.08,
+          "reasons": [
+            "Excluded — Product is marketed for cats, while this search targets dogs."
+          ],
+          "topic": "dog",
+          "matchedArchetypeId": null,
+          "audienceRelevance": {
+            "requestedAudience": "DOG",
+            "supportedAudiences": [
+              "CAT"
+            ],
+            "audienceMatch": "CONTRADICTORY",
+            "audienceEvidenceReferences": [
+              "cat_term:\"cat\""
+            ],
+            "relevanceReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+            "eligibleForPrimaryShortlist": false
+          }
+        },
+        "dogShortlistProducts": [
+          {
+            "title": "Reusable Pet Hair Remover Roller"
+          },
+          {
+            "title": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To"
+          },
+          {
+            "title": "Automatic Pet Feeder Drinking Fountain"
+          }
+        ],
+        "catShortlistProducts": [
+          {
+            "title": "The KittySpout™ - Wireless Fountain"
+          },
+          {
+            "title": "Automatic Wet Food Cat Feeder with Cooling & Warming"
+          },
+          {
+            "title": "Pawira Stainless Steel Water Fountain"
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "PRODUCT_AUDIENCE_RELEVANCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/PRODUCT_AUDIENCE_RELEVANCE.json",
+      "reason": "0 cross-species contaminations in Dog (3 products) and Cat (3 products) shortlists",
+      "executedAt": "2026-10-29T09:28:16.685Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R10": {
+      "gateId": "R10",
+      "meaning": "KH-02 to KH-01 Product Intelligence alignment",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "/api/v1/research/products/[id]/overview and /products/[id]/intelligence render side-by-side Research Qualification (KH-02) and Commercial Readiness (KH-01) cards with context-preserving back navigation",
+      "expected": {
+        "overviewHasKh02Qualification": true,
+        "overviewHasKh01Readiness": true,
+        "chromiumPiReconciliationPass": true
+      },
+      "observed": {
+        "overviewKh02Qualification": {
+          "runId": "kh02_run_1793266052412_c2pom",
+          "topic": "dog",
+          "market": "US",
+          "lookbackDays": 90,
+          "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+          "candidateId": "cand_1838011041",
+          "canonicalProductName": "Reusable Pet Hair Remover Roller",
+          "opportunityScore": 46,
+          "evidenceConfidence": 45,
+          "scoreStatus": "PROVISIONAL",
+          "tier": "PROVISIONAL_OPPORTUNITY",
+          "demandClass": "EVERGREEN_STABLE",
+          "identityStatus": "VERIFIED",
+          "storeDomain": "livlandco.com",
+          "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+          "supportingAdsCount": 1,
+          "distinctAdvertisersCount": 1,
+          "strengths": [
+            "Clear customer problem addressed: \"Facebook Ad: 1134947659228006 Dog or cat hair all over your couch, car, and clothes\"",
+            "Identified commercial domain: livlandco.com with branded catalog potential."
+          ],
+          "risks": [
+            "Concentration risk: Evidence currently limited to a single advertiser."
+          ],
+          "missingEvidence": [
+            "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).",
+            "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+            "No verified video creative available for hook analysis."
+          ],
+          "recommendation": "RESEARCH_MORE",
+          "recommendationRationale": "Moderate score (46/100). Requires additional demand history and creative validation."
+        },
+        "overviewKh01Readiness": {
+          "supplierQuoteEntered": false,
+          "landedCostCalculated": false,
+          "shippingEstimateEntered": false,
+          "marginModelCompleted": false,
+          "competitorOfferInspected": false,
+          "opportunityAssessed": false,
+          "completedCount": 0,
+          "totalSteps": 4,
+          "statusLabel": "Commercial Validation Needed"
+        },
+        "chromiumAudit": {
+          "testedProductId": "cmvsy89c00036p0orhu35a9bb",
+          "testedRunId": "kh02_run_1793266052412_c2pom",
+          "reconciliationSectionVisible": true,
+          "kh02QualificationCardVisible": true,
+          "kh01ReadinessCardVisible": true,
+          "backButtonVisible": true,
+          "backNavigationPreservedContext": true,
+          "kh02CardText": "Research Qualification (KH-02)Catalog ProductResearch ScorePendingEvidence ConfidencePendingIdentityVERIFIEDAd Evidence0 ads · 0 adv",
+          "kh01CardText": "Commercial Readiness (KH-01)Commercial Validation NeededSupplier Quote: Not enteredMargin & CAC: Not modeledStore Offer: PendingKH-01 Readiness: PendingModel Margin & CACAdd Supplier QuoteInspect Store Page",
+          "pass": true
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "PRODUCT_INTELLIGENCE_RECONCILIATION.json",
+        "screenshots/11_product_intelligence_research_context.png",
+        "screenshots/12_product_intelligence_commercial_readiness.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/PRODUCT_INTELLIGENCE_RECONCILIATION.json",
+      "reason": "KH-02 Research Qualification and KH-01 Commercial Readiness side-by-side alignment and back navigation verified in API and Chromium",
+      "executedAt": "2026-10-29T09:28:16.685Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R11": {
+      "gateId": "R11",
+      "meaning": "Customer psychology claim grounding",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Ads mentioning both 'dog' and 'cat' mark 'multi-pet households' as INFERRED (not OBSERVED) unless multi-pet household ownership is explicitly stated in ad copy",
+      "expected": {
+        "multiPetEvidenceStatus": "INFERRED"
+      },
+      "observed": {
+        "targetCustomer": {
+          "claimText": "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
+          "evidenceReference": "Observed mentions: \"Cat\", \"Dog\" in Ad Creative (Remove Dog & Cat Hair From Carpets in Seconds)",
+          "evidenceType": "AD_COPY",
+          "confidence": 0.78,
+          "status": "INFERRED",
+          "uncertaintyNote": "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated."
+        },
+        "multiPetSegment": {
+          "claimText": "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
+          "evidenceReference": "Observed mentions: \"Cat\", \"Dog\" in Ad Creative (Remove Dog & Cat Hair From Carpets in Seconds)",
+          "evidenceType": "AD_COPY",
+          "confidence": 0.78,
+          "status": "INFERRED",
+          "uncertaintyNote": "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "CUSTOMER_PSYCHOLOGY_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/CUSTOMER_PSYCHOLOGY_AUDIT.json",
+      "reason": "Multi-pet household claim truthfully marked INFERRED when ad only mentions dogs and cats",
+      "executedAt": "2026-10-29T09:28:16.685Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R12": {
+      "gateId": "R12",
+      "meaning": "Structured rejection reason integrity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every rejected candidate carries structured CandidateRejectionDetail (reasonCode, reasonText, evidenceReferences, detectedEntityType) and zero contradictory 'non-physical entity (PHYSICAL_PRODUCT)' strings exist",
+      "expected": {
+        "hasContradictoryText": false,
+        "allHaveStructuredDetail": true
+      },
+      "observed": {
+        "rejectedCandidatesCount": 2,
+        "rejectedSamples": [
+          {
+            "title": "Unidentified Product (COLLECTION_PAGE: pawspick.com, Review Required)",
+            "rejectionDetail": {
+              "reasonCode": "UNRESOLVED_PRODUCT_IDENTITY",
+              "reasonText": "Excluded — Product identity is unresolved.",
+              "evidenceReferences": [
+                "Page Classification: COLLECTION_PAGE",
+                "Ad:ad_collection_1",
+                "URL:https://pawspick.com/collections/all"
+              ],
+              "detectedEntityType": "PHYSICAL_PRODUCT"
+            }
+          },
+          {
+            "title": "Automatic Wet Food Cat Feeder",
+            "rejectionDetail": {
+              "reasonCode": "TARGET_AUDIENCE_MISMATCH",
+              "reasonText": "Excluded — Product is marketed for cats, while this search targets dogs.",
+              "evidenceReferences": [
+                "Product Handle: automatic-wet-food-cat-feeder",
+                "Canonical URL: https://pawspick.com/products/automatic-wet-food-cat-feeder",
+                "Ad Copy Headline: Automatic Wet Food Cat Feeder",
+                "Ad:ad_cat_for_dog_1",
+                "URL:https://pawspick.com/products/automatic-wet-food-cat-feeder"
+              ],
+              "detectedEntityType": "PHYSICAL_PRODUCT"
+            }
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "REJECTION_REASON_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/REJECTION_REASON_AUDIT.json",
+      "reason": "Structured CandidateRejectionDetail verified with zero contradictory entity messages",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R13": {
+      "gateId": "R13",
+      "meaning": "Product Finder information architecture",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "/products renders the 4-section commercial research workspace: Header (pf-header), Unified Command Bar (pf-command-bar), 4-Metric Status Summary (pf-status-summary), and 3 Segmented Tabs (Recommended, All Candidates, Evidence & Diagnostics)",
+      "expected": {
+        "iaPass": true,
+        "statusSummaryMetricCount": 4
+      },
+      "observed": {
+        "headerPresent": true,
+        "commandBarPresent": true,
+        "statusSummaryPresent": true,
+        "tabsPresent": true,
+        "recommendedTabPresent": true,
+        "allCandidatesTabPresent": true,
+        "evidenceDiagnosticsTabPresent": true,
+        "statusSummaryMetricCount": 4,
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_INFORMATION_ARCHITECTURE.md",
+        "screenshots/01_product_finder_initial_desktop.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_INFORMATION_ARCHITECTURE.md",
+      "reason": "4-section Product Finder IA verified in Chromium DOM",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R14": {
+      "gateId": "R14",
+      "meaning": "Single canonical product card rule (zero cross-section duplication)",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Each product appears at most once in the Recommended tab via pf-canonical-product-card; zero duplicate product cards exist across Leaderboard, Shortlist, and Provisional sections",
+      "expected": {
+        "duplicateIds": [],
+        "legacyDuplicateShortlistCardsInRecommended": 0,
+        "legacyDuplicateProvisionalCardsInRecommended": 0
+      },
+      "observed": {
+        "recommendedCardsCount": 5,
+        "renderedCandidateIds": [
+          "cand_1838011041",
+          "cand_14769098",
+          "cand_1783682388",
+          "cand_1613504636",
+          "cand_1272640899"
+        ],
+        "renderedProductKeys": [
+          "livlandco.com::pid::15402497704125",
+          "url::https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+          "url::https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+          "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::cleaner_dust_hair_lint",
+          "merchant_tokens::smartcarting.com::fur_coat::coat_couch_finally_fur_lost"
+        ],
+        "duplicateIds": [],
+        "legacyDuplicateShortlistCardsInRecommended": 0,
+        "legacyDuplicateProvisionalCardsInRecommended": 0,
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_VISUAL_ACCEPTANCE.json",
+        "screenshots/03_product_finder_recommended_results.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_VISUAL_ACCEPTANCE.json",
+      "reason": "Rendered 5 canonical product cards with 0 duplicates",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R15": {
+      "gateId": "R15",
+      "meaning": "Progressive disclosure of diagnostics",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Heavy diagnostics (provider status cards, query execution table, 13-stage funnel, runtime parity) are unmounted on the primary Recommended tab and disclosed on demand in Evidence & Diagnostics tab and Slide-Over Drawers",
+      "expected": {
+        "progressiveDisclosurePass": true
+      },
+      "observed": {
+        "diagnosticsHiddenOnRecommendedTab": true,
+        "diagnosticsVisibleOnDiagnosticsTab": true,
+        "candidateExplorerVisibleOnAllCandidatesTab": true,
+        "slideOverDrawerOpensAndCloses": true,
+        "historyDrawerOpensAndCloses": true,
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_VISUAL_ACCEPTANCE.json",
+        "screenshots/05_product_finder_evidence_diagnostics.png",
+        "screenshots/08_product_finder_research_progress.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_VISUAL_ACCEPTANCE.json",
+      "reason": "Diagnostics progressive disclosure and Slide-Over drawers verified in Chromium",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R16": {
+      "gateId": "R16",
+      "meaning": "Responsive desktop, tablet, and mobile layout",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Viewports 1440x900, 768x1024, 375x812, and 320x812 render with zero horizontal overflow (scrollWidth <= innerWidth) and mobile candidate cards render cleanly at 375px",
+      "expected": {
+        "responsivePass": true
+      },
+      "observed": {
+        "desktop1440": {
+          "width": 1440,
+          "scrollWidth": 1440,
+          "noHorizontalOverflow": true
+        },
+        "tablet768": {
+          "width": 768,
+          "scrollWidth": 768,
+          "noHorizontalOverflow": true
+        },
+        "mobile375": {
+          "width": 375,
+          "scrollWidth": 375,
+          "noHorizontalOverflow": true,
+          "mobileCardsVisible": true
+        },
+        "mobile320": {
+          "width": 320,
+          "scrollWidth": 320,
+          "noHorizontalOverflow": true
+        },
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_VISUAL_ACCEPTANCE.json",
+        "screenshots/09_product_finder_tablet.png",
+        "screenshots/10_product_finder_mobile.png"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_VISUAL_ACCEPTANCE.json",
+      "reason": "Zero horizontal overflow across 1440px, 768px, 375px, and 320px viewports",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R17": {
+      "gateId": "R17",
+      "meaning": "Accessibility and keyboard navigation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Form controls have accessible labels, Escape key closes Slide-Over Candidate Drawer and History Drawer, and semantic landmarks (header, main, h1) are present",
+      "expected": {
+        "accessibilityPass": true
+      },
+      "observed": {
+        "searchInputLabelled": true,
+        "sourceModeSelectLabelled": true,
+        "marketSelectLabelled": true,
+        "escapeClosesHistoryDrawer": true,
+        "escapeClosesCandidateDrawer": true,
+        "landmarksPresent": {
+          "header": true,
+          "main": true,
+          "h1": true
+        },
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_ACCESSIBILITY_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_ACCESSIBILITY_AUDIT.json",
+      "reason": "Keyboard Escape drawer dismissal, ARIA labels, and semantic landmarks verified",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R18": {
+      "gateId": "R18",
+      "meaning": "UI performance and bundle discipline",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Initial page load, tab switching, and candidate filtering execute within interactive latency budgets with zero chart libraries mounted on /products",
+      "expected": {
+        "initialLoadMs": "< 15000",
+        "tabSwitchMs": "< 3000",
+        "filterApplyMs": "< 2000"
+      },
+      "observed": {
+        "initialLoadMs": 3051,
+        "tabSwitchToAllCandidatesMs": 59,
+        "tabSwitchToDiagnosticsMs": 49,
+        "tabSwitchToRecommendedMs": 53,
+        "filterApplyMs": 188,
+        "drawerOpenMs": 54,
+        "pass": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "UI_PERFORMANCE_MEASUREMENTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/UI_PERFORMANCE_MEASUREMENTS.json",
+      "reason": "InitialLoad=3051ms, TabSwitchAll=59ms, Filter=188ms",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R19": {
+      "gateId": "R19",
+      "meaning": "SQLite -> HTTP -> Chromium reconciliation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Persisted SQLite KH02ResearchRun snapshot reconciles with /api/v1/kh02/leaderboard HTTP response and Playwright Chromium DOM attributes",
+      "expected": {
+        "browserVerdict": "PASS",
+        "databaseMatch": true
+      },
+      "observed": {
+        "petRunId": "kh02_run_1793266061208_7qv9r",
+        "httpRunId": "kh02_run_1793266061208_7qv9r",
+        "browserAuthoritativeRunId": "kh02_run_1793266061208_7qv9r",
+        "browserVerdict": "PASS",
+        "databaseMatch": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266061208_7qv9r",
+      "evidenceRefs": [
+        "SQLITE_HTTP_BROWSER_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "SQLite, HTTP, and Chromium DOM reconciled for run kh02_run_1793266061208_7qv9r",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R20": {
+      "gateId": "R20",
+      "meaning": "Reload and history switching persistence",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Page reload preserves authoritative run ID and candidate cards; Research History drawer switches runs cleanly",
+      "expected": {
+        "reloadPass": true,
+        "postReloadConsistent": true
+      },
+      "observed": {
+        "uxReloadAudit": {
+          "preReloadRunId": "kh02_run_1793266052412_c2pom",
+          "postReloadRunId": "kh02_run_1793266052412_c2pom",
+          "preReloadCandidateIds": [
+            "cand_1838011041",
+            "cand_14769098",
+            "cand_1783682388",
+            "cand_1613504636",
+            "cand_1272640899"
+          ],
+          "postReloadCandidateIds": [
+            "cand_1838011041",
+            "cand_14769098",
+            "cand_1783682388",
+            "cand_1613504636",
+            "cand_1272640899"
+          ],
+          "historyRunSwitchSucceeded": true,
+          "pass": true
+        },
+        "e2ePostReloadConsistent": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793266052412_c2pom",
+      "evidenceRefs": [
+        "SQLITE_HTTP_BROWSER_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "Page reload and Research History run switching verified in Chromium",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R21": {
+      "gateId": "R21",
+      "meaning": "Runtime frontend, backend, and worker version parity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "/api/v1/kh02/version reports releaseVersion=12.4.3.2, runtimeStatus=MATCHED, and allConsistent=true across frontend, backend, and worker",
+      "expected": {
+        "releaseVersion": "12.4.3.2",
+        "runtimeStatus": "MATCHED",
+        "allConsistent": true
+      },
+      "observed": {
+        "releaseVersion": "12.4.3.2",
+        "frontendBuildSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "backendBuildSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "workerBuildSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "sourceRevisionSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "buildRevisionSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "backendBootSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "workerBootSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "databaseFingerprint": "6530562482a2",
+        "backendStartedAt": "2026-10-29T09:27:35.386Z",
+        "workerStartedAt": "2026-10-29T09:27:35.283Z",
+        "dbFingerprint": "6530562482a2",
+        "workerDbFingerprint": "6530562482a2",
+        "conflictingWorkersDetected": false,
+        "diagnostics": [
+          "Frontend, backend, and worker runtime parity verified at V12.4.3.2 (2dbabe7)."
+        ],
+        "runtimeStatus": "MATCHED",
+        "buildSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "buildTimestamp": "2026-10-29T09:26:27.039Z",
+        "appVersion": "12.4.3.2",
+        "workerVersion": "12.4.3.2",
+        "environment": "production",
+        "appProcessId": 38604,
+        "workerProcessId": 35064
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/RUNTIME_BUILD_PARITY.json",
+      "reason": "Runtime parity MATCHED at v12.4.3.2 (SHA=2dbabe7)",
+      "executedAt": "2026-10-29T09:28:16.687Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R22": {
+      "gateId": "R22",
+      "meaning": "Async regression suite execution",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Bounded async job pool executes V12.4.3.2 regression, V12.4.3.1 regression, KH-02 unit, and KH-02 integration suites with exitCode=0 and 0 reused logs",
+      "expected": {
+        "allCompleted": true,
+        "failedSuites": 0
+      },
+      "observed": {
+        "barrierResult": {
+          "passed": true,
+          "incompleteJobs": []
+        },
+        "v12_4_3_2_regression": {
+          "suiteId": "v12_4_3_2_regression",
+          "name": "V12.4.3.2 Live Discovery, Demand Audit, Audience & UX Regression",
+          "command": "node.exe vitest.mjs run v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:25:13.648Z",
+          "completedAt": "2026-10-29T09:25:14.922Z",
+          "durationMs": 1274,
+          "exitCode": 0,
+          "passedTests": 16,
+          "failedTests": 0,
+          "totalTests": 16,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\v12_4_3_2_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "v12_4_3_1_regression": {
+          "suiteId": "v12_4_3_1_regression",
+          "name": "V12.4.3.1 Evidence Provenance & Async Truth Regression",
+          "command": "node.exe vitest.mjs run v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:25:13.855Z",
+          "completedAt": "2026-10-29T09:25:15.688Z",
+          "durationMs": 1833,
+          "exitCode": 0,
+          "passedTests": 25,
+          "failedTests": 0,
+          "totalTests": 25,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\v12_4_3_1_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "kh02_unit": {
+          "suiteId": "kh02_unit",
+          "name": "KH-02 Full Unit Regression Suite",
+          "command": "node.exe vitest.mjs run kh02",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:25:14.922Z",
+          "completedAt": "2026-10-29T09:26:12.238Z",
+          "durationMs": 57316,
+          "exitCode": 0,
+          "passedTests": 467,
+          "failedTests": 0,
+          "totalTests": 467,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\kh02_unit.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "kh02_integration": {
+          "suiteId": "kh02_integration",
+          "name": "KH-02 Integration Suite",
+          "command": "node.exe vitest.mjs run kh02",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:26:12.239Z",
+          "completedAt": "2026-10-29T09:26:26.427Z",
+          "durationMs": 14188,
+          "exitCode": 0,
+          "passedTests": 27,
+          "failedTests": 0,
+          "totalTests": 27,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\kh02_integration.log",
+          "timedOut": false,
+          "logTruncated": false
+        }
+      },
+      "executionCommand": "npm run kh02:v12.4.3.2:regression && npm run kh02:test:unit && npm run kh02:test:integration",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "ASYNC_TEST_EXECUTION_SUMMARY.json",
+        "REGRESSION_RESULTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/REGRESSION_RESULTS.json",
+      "reason": "All regression suites passed: V12.4.3.2 (16 passed), V12.4.3.1 (25 passed), KH-02 Unit (467 passed), KH-02 Integration (27 passed)",
+      "executedAt": "2026-10-29T09:28:16.688Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R23": {
+      "gateId": "R23",
+      "meaning": "Historical backtest DEV vs HOLDOUT",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "DEV and HOLDOUT backtests pass with 0 cross-species contaminations, 0 synthetic merchant demand series accepted, and 0 false Evergreen winners",
+      "expected": {
+        "overallVerdict": "PASS",
+        "crossSpeciesContaminationCount": 0,
+        "syntheticMerchantDemandAcceptedCount": 0,
+        "falseEvergreenWinnerCount": 0
+      },
+      "observed": {
+        "overallVerdict": "PASS",
+        "devSummary": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 1,
+          "crossSpeciesOrAudienceContaminationCount": 0,
+          "topicRelevancePrecision": 1,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 1,
+          "syntheticMerchantDemandPromotedCount": 0,
+          "psychologyClaimIntegrityAccuracy": 1,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "contradictoryExclusionCount": 0
+        },
+        "holdoutSummary": {
+          "caseCount": 4,
+          "audienceCompatibilityAccuracy": 1,
+          "crossSpeciesOrAudienceContaminationCount": 0,
+          "topicRelevancePrecision": 1,
+          "topicRelevanceRecall": 1,
+          "demandForensicAuthorityAccuracy": 1,
+          "syntheticMerchantDemandPromotedCount": 0,
+          "psychologyClaimIntegrityAccuracy": 1,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "contradictoryExclusionCount": 0
+        },
+        "comparison": {
+          "crossSpeciesContaminationEliminated": 5,
+          "syntheticMerchantDemandEliminated": 3,
+          "falseEvergreenPromotionEliminated": 3,
+          "contradictoryExclusionEliminated": 1,
+          "audienceAccuracyGain": 0.625
+        }
+      },
+      "executionCommand": "npm run kh02:v12.4.3.2:backtest",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "BACKTEST_DEV_VS_HOLDOUT.json",
+        "BACKTEST_COMPARISON.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/BACKTEST_DEV_VS_HOLDOUT.json",
+      "reason": "Backtest PASS across 8 V12.4.3.2 cases (CrossSpecies: 5->0, SyntheticMerchantDemand: 3->0, FalseEvergreen: 3->0)",
+      "executedAt": "2026-10-29T09:28:16.688Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R24": {
+      "gateId": "R24",
+      "meaning": "Adversarial false-PASS mutation tests (Mutations A-J)",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 10 adversarial false-PASS mutations (MUTATION_A through MUTATION_J) are detected and rejected by the V12.4.3.2 verifier",
+      "expected": {
+        "totalMutations": 10,
+        "passedMutations": 10,
+        "allPassed": true
+      },
+      "observed": {
+        "totalMutations": 10,
+        "passedMutations": 10,
+        "allPassed": true,
+        "mutations": [
+          {
+            "mutationId": "MUTATION_A",
+            "description": "Inject synthetic attempted=true and actualApiCalls=1 during CACHE_ONLY Meta run",
+            "injectedDefect": "attempted: true, actualApiCalls: 1 on CACHE_ONLY run",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "[Pet Gadgets] Synthetic execution: queryId='q_mut_a' has attempted=true during cache-only run."
+          },
+          {
+            "mutationId": "MUTATION_B",
+            "description": "Inject verified-merchant-demand:pawspick.com templated [76,79,77,81,78,82] series as Evergreen",
+            "injectedDefect": "source=GOOGLE_TRENDS_CSV, evidenceReference=verified-merchant-demand:pawspick.com",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+          },
+          {
+            "mutationId": "MUTATION_C",
+            "description": "Inject cat-only Automatic Wet Food Cat Feeder into 'dog' Research Shortlist",
+            "injectedDefect": "Cat-only product in 'dog' shortlist",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "[dog] Candidate 'Automatic Wet Food Cat Feeder' (cand_mut_c) violates target audience 'DOG': Excluded — Product is marketed for cats, while this search targets dogs."
+          },
+          {
+            "mutationId": "MUTATION_D",
+            "description": "Inject dog-only Anti-Bark Dog Collar into 'cat' Research Shortlist",
+            "injectedDefect": "Dog-only product in 'cat' shortlist",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "[cat] Candidate 'Rechargeable Ultrasonic Anti-Bark Dog Collar' (cand_mut_d) violates target audience 'CAT': Excluded — Product is marketed for dogs, while this search targets cats."
+          },
+          {
+            "mutationId": "MUTATION_E",
+            "description": "Attempt to classify Multi-Pet Household ownership as OBSERVED from generic 'dog and cat' ad mention",
+            "injectedDefect": "Ad mentions 'dog hair and cat hair' without multi-pet household ownership claim",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Classified targetCustomer.status as 'INFERRED' instead of OBSERVED"
+          },
+          {
+            "mutationId": "MUTATION_F",
+            "description": "Inject contradictory 'Classified as non-physical entity (PHYSICAL_PRODUCT)' exclusion reason",
+            "injectedDefect": "productRealityReason contains 'non-physical entity (PHYSICAL_PRODUCT)'",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Candidate 'Wireless Pet Fountain' (cand_mut_f) contains contradictory exclusion reason: \"Excluded: AI Review classified candidate as non-physical entity (PHYSICAL_PRODUCT).\""
+          },
+          {
+            "mutationId": "MUTATION_G",
+            "description": "Inject duplicate product card into Recommended view",
+            "injectedDefect": "Same candidateId rendered twice in Recommended cards",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Detected duplicate card IDs: cand_dup_1, cand_dup_1 (duplicate URL: uahpet.com/products/fountain)"
+          },
+          {
+            "mutationId": "MUTATION_H",
+            "description": "Inject 50 cached observations into a LIVE_ONLY run when upstream returns 0 live ads",
+            "injectedDefect": "sourceMode=LIVE_ONLY with historicalCachedAdsCount=50",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "LIVE_ONLY violation: historicalCachedAdsCount=50 mixed into LIVE_ONLY run."
+          },
+          {
+            "mutationId": "MUTATION_I",
+            "description": "Inject mismatched frontendBuildSha (1111111) vs backendBuildSha (2222222)",
+            "injectedDefect": "frontendBuildSha !== backendBuildSha",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Runtime status evaluated to VERSION_MISMATCH"
+          },
+          {
+            "mutationId": "MUTATION_J",
+            "description": "Inject reusedPreviousLog=true and mismatched gitCommitSha into test execution provenance",
+            "injectedDefect": "reusedPreviousLog=true, headSha='stale_sha_000000'",
+            "detectedAndRejected": true,
+            "gateVerdictUnderMutation": "FAIL",
+            "reason": "Suite 'mut_j_suite' reused a previous log (reusedPreviousLog=true)."
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "ADVERSARIAL_FALSE_PASS_TESTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "reason": "All 10/10 adversarial mutations (MUTATION_A..MUTATION_J) caught and rejected",
+      "executedAt": "2026-10-29T09:28:16.739Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R25": {
+      "gateId": "R25",
+      "meaning": "KH-01 backward compatibility",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "KH-01 verification suite passes 100% with exitCode=0",
+      "expected": {
+        "exitCode": 0,
+        "failedTests": 0
+      },
+      "observed": {
+        "suiteId": "kh01_verify",
+        "name": "KH-01 Verification Suite",
+        "command": "node.exe vitest.mjs run kh01Security.test.ts kh01ProductOffer.test.ts kh01LandingPage.test.ts kh01EconomicsOpportunity.test.ts kh01ProductIntelligenceWorkspace.test.ts",
+        "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "startedAt": "2026-10-29T09:25:09.510Z",
+        "completedAt": "2026-10-29T09:25:13.855Z",
+        "durationMs": 4345,
+        "exitCode": 0,
+        "passedTests": 69,
+        "failedTests": 0,
+        "totalTests": 69,
+        "reusedPreviousLog": false,
+        "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\kh01_verify.log",
+        "timedOut": false,
+        "logTruncated": false
+      },
+      "executionCommand": "npm run kh01:verify",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "REGRESSION_RESULTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/REGRESSION_RESULTS.json",
+      "reason": "KH-01 verification passed (69/69 tests)",
+      "executedAt": "2026-10-29T09:28:16.740Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R26": {
+      "gateId": "R26",
+      "meaning": "TypeScript and ESLint clean",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "tsc --noEmit and eslint both exit with code 0",
+      "expected": {
+        "tscExitCode": 0,
+        "eslintExitCode": 0
+      },
+      "observed": {
+        "tscSuite": {
+          "suiteId": "tsc_typecheck",
+          "name": "TypeScript Typecheck",
+          "command": "node.exe tsc --noEmit",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:25:06.481Z",
+          "completedAt": "2026-10-29T09:25:09.509Z",
+          "durationMs": 3028,
+          "exitCode": 0,
+          "passedTests": 0,
+          "failedTests": 0,
+          "totalTests": 0,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\tsc.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "eslintSuite": {
+          "suiteId": "eslint",
+          "name": "ESLint",
+          "command": "node.exe eslint.js --cache --cache-location eslint",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:25:06.491Z",
+          "completedAt": "2026-10-29T09:25:13.647Z",
+          "durationMs": 7156,
+          "exitCode": 0,
+          "passedTests": 0,
+          "failedTests": 0,
+          "totalTests": 0,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\lint.log",
+          "timedOut": false,
+          "logTruncated": false
+        }
+      },
+      "executionCommand": "npx tsc --noEmit && npm run lint",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "REGRESSION_RESULTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/REGRESSION_RESULTS.json",
+      "reason": "tsc (exit 0 in 3028ms) and eslint (exit 0 in 7156ms) clean",
+      "executedAt": "2026-10-29T09:28:16.740Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R27": {
+      "gateId": "R27",
+      "meaning": "Production build clean",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "next build exits with code 0 and writes a fresh .next/BUILD_ID",
+      "expected": {
+        "exitCode": 0,
+        "hasBuildId": true
+      },
+      "observed": {
+        "buildSuite": {
+          "suiteId": "production_build",
+          "name": "Next.js Production Build",
+          "command": "node.exe next build",
+          "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+          "startedAt": "2026-10-29T09:26:26.428Z",
+          "completedAt": "2026-10-29T09:26:36.205Z",
+          "durationMs": 9777,
+          "exitCode": 0,
+          "passedTests": 0,
+          "failedTests": 0,
+          "totalTests": 0,
+          "reusedPreviousLog": false,
+          "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.2\\logs\\next_build.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "freshBuildId": "ICReL_2rvmFO4dmvNxFSF"
+      },
+      "executionCommand": "npm run build",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/RUNTIME_BUILD_PARITY.json",
+      "reason": "Production build succeeded (BUILD_ID=ICReL_2rvmFO4dmvNxFSF, duration=9777ms)",
+      "executedAt": "2026-10-29T09:28:16.740Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R28": {
+      "gateId": "R28",
+      "meaning": "Disk and memory resource safety",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Free disk space remains >= 1.5GB before and after execution, peak async pool concurrency <= 2, and SQLite PRAGMA integrity_check is 'ok'",
+      "expected": {
+        "minFreeDiskGb": 1.5,
+        "maxConcurrency": 2,
+        "sqliteIntegrity": "ok"
+      },
+      "observed": {
+        "freeDiskBeforeGb": 52.26,
+        "freeDiskAfterGb": 52.26,
+        "peakConcurrencyObserved": 2,
+        "sqlitePreCheck": {
+          "ok": true,
+          "result": "ok"
+        },
+        "sqlitePostCheck": {
+          "ok": true,
+          "result": "ok"
+        }
+      },
+      "executionCommand": null,
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "DISK_MEMORY_RESOURCE_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/DISK_MEMORY_RESOURCE_AUDIT.json",
+      "reason": "FreeDisk=52.26GB, PeakConcurrency=2, SQLite=ok",
+      "executedAt": "2026-10-29T09:28:16.908Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R29": {
+      "gateId": "R29",
+      "meaning": "Acceptance artifact and screenshot completeness",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 28 required acceptance artifacts and all 12 required Chromium screenshots exist in acceptance/kh02-v12.4.3.2/ and are non-empty",
+      "expected": {
+        "screenshotsCount": 12,
+        "artifactsCount": 28,
+        "all12ScreenshotsPresent": true
+      },
+      "observed": {
+        "all12ScreenshotsPresent": true,
+        "screenshots": {
+          "01_product_finder_initial_desktop.png": {
+            "filename": "01_product_finder_initial_desktop.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/01_product_finder_initial_desktop.png",
+            "exists": true,
+            "sizeBytes": 174826,
+            "viewport": "1440x900",
+            "description": "Initial desktop load of redesigned Product Finder (/products) with 4-section architecture"
+          },
+          "02_product_finder_search_desktop.png": {
+            "filename": "02_product_finder_search_desktop.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/02_product_finder_search_desktop.png",
+            "exists": true,
+            "sizeBytes": 183122,
+            "viewport": "1440x900",
+            "description": "Unified Research Command Bar with topic 'dog', lookback selector, and source mode selector"
+          },
+          "03_product_finder_recommended_results.png": {
+            "filename": "03_product_finder_recommended_results.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/03_product_finder_recommended_results.png",
+            "exists": true,
+            "sizeBytes": 323188,
+            "viewport": "1440x900",
+            "description": "Recommended tab displaying single canonical product cards with zero cross-section duplication"
+          },
+          "08_product_finder_research_progress.png": {
+            "filename": "08_product_finder_research_progress.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/08_product_finder_research_progress.png",
+            "exists": true,
+            "sizeBytes": 194642,
+            "viewport": "1440x900",
+            "description": "Slide-Over Product Research Detail Drawer showing verified product identity, demand provenance, customer psychology, and ad creative links"
+          },
+          "04_product_finder_all_candidates.png": {
+            "filename": "04_product_finder_all_candidates.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/04_product_finder_all_candidates.png",
+            "exists": true,
+            "sizeBytes": 322134,
+            "viewport": "1440x900",
+            "description": "All Candidates explorer tab with status filter pills, family/merchant/audience filters, and structured rejection reasons"
+          },
+          "05_product_finder_evidence_diagnostics.png": {
+            "filename": "05_product_finder_evidence_diagnostics.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/05_product_finder_evidence_diagnostics.png",
+            "exists": true,
+            "sizeBytes": 169752,
+            "viewport": "1440x900",
+            "description": "Evidence & Diagnostics tab with provider cards, query execution table, 13-stage candidate funnel, and runtime parity"
+          },
+          "06_product_finder_source_failure.png": {
+            "filename": "06_product_finder_source_failure.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/06_product_finder_source_failure.png",
+            "exists": true,
+            "sizeBytes": 138675,
+            "viewport": "1440x900",
+            "description": "LIVE_ONLY mode showing truthful upstream Meta live query status without silent cache fallback"
+          },
+          "07_product_finder_cache_only.png": {
+            "filename": "07_product_finder_cache_only.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/07_product_finder_cache_only.png",
+            "exists": true,
+            "sizeBytes": 138986,
+            "viewport": "1440x900",
+            "description": "CACHE_ONLY mode showing explicit Cache Only badge and NOT_ATTEMPTED upstream queries"
+          },
+          "09_product_finder_tablet.png": {
+            "filename": "09_product_finder_tablet.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/09_product_finder_tablet.png",
+            "exists": true,
+            "sizeBytes": 119573,
+            "viewport": "768x1024",
+            "description": "Tablet responsive layout (768x1024) of Product Finder with stacked command controls and clean cards"
+          },
+          "10_product_finder_mobile.png": {
+            "filename": "10_product_finder_mobile.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/10_product_finder_mobile.png",
+            "exists": true,
+            "sizeBytes": 50068,
+            "viewport": "375x812",
+            "description": "Mobile responsive layout (375x812) of Product Finder with zero horizontal overflow"
+          },
+          "11_product_intelligence_research_context.png": {
+            "filename": "11_product_intelligence_research_context.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/11_product_intelligence_research_context.png",
+            "exists": true,
+            "sizeBytes": 141001,
+            "viewport": "1440x900",
+            "description": "Product Intelligence page showing side-by-side Research Qualification (KH-02) vs Commercial Readiness (KH-01) reconciliation and Back to Product Finder link"
+          },
+          "12_product_intelligence_commercial_readiness.png": {
+            "filename": "12_product_intelligence_commercial_readiness.png",
+            "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/12_product_intelligence_commercial_readiness.png",
+            "exists": true,
+            "sizeBytes": 141332,
+            "viewport": "1440x900",
+            "description": "Product Intelligence page scrolled to Commercial Readiness metrics and Customer Psychology evidence sections"
+          }
+        }
+      },
+      "executionCommand": null,
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "EXECUTION_MANIFEST.json",
+        "UI_VISUAL_ACCEPTANCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/EXECUTION_MANIFEST.json",
+      "reason": "All 12 Chromium screenshots and 28 acceptance artifacts generated and verified",
+      "executedAt": "2026-10-29T09:28:16.909Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "R30": {
+      "gateId": "R30",
+      "meaning": "Git commit and remote branch alignment",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Acceptance executed against clean committed source revision on feature/kh02-v12.1.3-runtime-truth-closure",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "nonAcceptanceModifiedFilesCount": 0
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "headSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+        "nonAcceptanceModifiedFiles": []
+      },
+      "executionCommand": "git status --short",
+      "exitCode": 0,
+      "runId": "v12_4_3_2_1793265905890",
+      "evidenceRefs": [
+        "EXECUTION_MANIFEST.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.2/EXECUTION_MANIFEST.json",
+      "reason": "Clean source revision 2dbabe7 verified on feature/kh02-v12.1.3-runtime-truth-closure",
+      "executedAt": "2026-10-29T09:28:16.909Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    }
+  }
+}

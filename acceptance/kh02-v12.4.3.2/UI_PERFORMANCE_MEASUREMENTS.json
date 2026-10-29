@@ -1,0 +1,16 @@
+{
+  "version": "12.4.3.2",
+  "measurements": {
+    "initialLoadMs": 3051,
+    "tabSwitchToAllCandidatesMs": 59,
+    "tabSwitchToDiagnosticsMs": 49,
+    "tabSwitchToRecommendedMs": 53,
+    "filterApplyMs": 188,
+    "drawerOpenMs": 54,
+    "pass": true
+  },
+  "bundleDiscipline": {
+    "rechartsImportedOnProductsPage": false,
+    "diagnosticsUnmountedOnRecommendedTab": true
+  }
+}
