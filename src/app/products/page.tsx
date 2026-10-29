@@ -340,14 +340,13 @@ export default function ProductsPage() {
       const data = await loadPersistedRun({ runId: activeJob.runId });
       if (
         data &&
-        data.activeJob &&
-        data.activeJob.status !== "QUEUED" &&
-        data.activeJob.status !== "RUNNING"
+        (!data.activeJob ||
+          (data.activeJob.status !== "QUEUED" && data.activeJob.status !== "RUNNING"))
       ) {
         setResearchLoading(false);
         fetchSourceStatuses();
       }
-    }, 2000);
+    }, 750);
 
     return () => {
       if (pollIntervalRef.current) {
@@ -401,7 +400,6 @@ export default function ProductsPage() {
             setResearchLoading(false);
             loadPersistedRun({ runId: json.data.runId });
           } else {
-            setActiveRunId(json.data.runId);
             setActiveRunStatus(json.data.status || "QUEUED");
             setActiveJob({
               jobId: json.data.jobId,
@@ -889,7 +887,7 @@ export default function ProductsPage() {
                   ))}
                 </div>
 
-                {activeRunId && leaderboard && (
+                {(leaderboard?.researchRunId || activeRunId) && leaderboard && (
                   <div
                     data-testid="kh02-last-completed-research-banner"
                     className="flex items-center gap-2 text-[11px] text-slate-400"
@@ -897,7 +895,7 @@ export default function ProductsPage() {
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                     <span
                       data-testid="kh02-authoritative-run-meta"
-                      data-research-run-id={activeRunId}
+                      data-research-run-id={leaderboard.researchRunId || activeRunId || ""}
                     >
                       Showing <strong className="text-slate-200">{leaderboard.topic}</strong> ·{" "}
                       {leaderboard.lookbackDays}D ·{" "}
@@ -906,7 +904,10 @@ export default function ProductsPage() {
                         : leaderboard.sourceMode === "CACHE_ONLY"
                         ? "Cache Only"
                         : "Live + Cache"}{" "}
-                      · Run <span className="font-mono">{activeRunId.slice(0, 10)}</span>
+                      · Run{" "}
+                      <span className="font-mono">
+                        {(leaderboard.researchRunId || activeRunId || "").slice(0, 10)}
+                      </span>
                     </span>
                   </div>
                 )}

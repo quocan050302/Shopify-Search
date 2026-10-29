@@ -74,8 +74,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const leaderboard =
-      targetRun?.result || (await getKH02Leaderboard(context.workspaceId));
+    const leaderboard = requestedRunId
+      ? targetRun?.result || null
+      : targetRun?.result || (await getKH02Leaderboard(context.workspaceId));
     const resolvedRunId = targetRun?.runId || leaderboard?.researchRunId || null;
     const rawStatus = targetRun?.status || (leaderboard ? "COMPLETED" : null);
 
