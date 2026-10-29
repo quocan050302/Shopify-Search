@@ -1863,7 +1863,10 @@ export async function runAcceptanceAsyncV12_4_3_2() {
     Boolean(serverBoot.reachable) &&
     serverBoot.versionResponse?.releaseVersion === "12.4.3.2" &&
     serverBoot.versionResponse?.runtimeStatus === "MATCHED" &&
-    serverBoot.versionResponse?.versionParity?.allConsistent === true;
+    serverBoot.versionResponse?.frontendBuildSha ===
+      serverBoot.versionResponse?.backendBuildSha &&
+    serverBoot.versionResponse?.backendBuildSha ===
+      serverBoot.versionResponse?.workerBuildSha;
   recordGate({
     gateId: "R21",
     meaning: "Runtime frontend, backend, and worker version parity",

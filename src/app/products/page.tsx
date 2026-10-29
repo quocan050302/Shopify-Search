@@ -178,28 +178,7 @@ export default function ProductsPage() {
   const [discoveringSources, setDiscoveringSources] = useState(false);
   const [researchLoading, setResearchLoading] = useState(false);
   const [researchError, setResearchError] = useState<string | null>(null);
-  const [runtimeIdentity, setRuntimeIdentity] = useState<{
-    releaseVersion: string;
-    gitCommitSha: string;
-    shortCommitSha: string;
-    workerStatus: {
-      status: string;
-      commitSha: string | null;
-      releaseVersion: string | null;
-      lastHeartbeatAt: string | null;
-      heartbeatAgeMs: number | null;
-    };
-    versionParity: {
-      frontendReleaseVersion: string;
-      backendReleaseVersion: string;
-      workerReleaseVersion: string | null;
-      frontendCommitSha: string;
-      backendCommitSha: string;
-      workerCommitSha: string | null;
-      allConsistent: boolean;
-      mismatchWarning: string | null;
-    };
-  } | null>(null);
+  const [runtimeIdentity, setRuntimeIdentity] = useState<any | null>(null);
 
   // All Candidates Explorer Filters
   const [candidateFilter, setCandidateFilter] = useState<"ALL" | ExplorerCandidateStatus>("ALL");
@@ -233,7 +212,9 @@ export default function ProductsPage() {
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const frontendBuildSha =
+    process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA ||
     process.env.NEXT_PUBLIC_SWAI_GIT_SHA ||
+    runtimeIdentity?.frontendBuildSha ||
     runtimeIdentity?.shortCommitSha ||
     "unknown";
   const frontendReleaseVersion =
@@ -244,9 +225,7 @@ export default function ProductsPage() {
   const fetchRuntimeVersion = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/v1/kh02/version?frontendSha=${encodeURIComponent(
-          frontendBuildSha
-        )}&frontendVersion=${encodeURIComponent(frontendReleaseVersion)}`
+        `/api/v1/kh02/version?frontendVersion=${encodeURIComponent(frontendReleaseVersion)}`
       );
       const json = await res.json();
       if (json.success && json.data) {
@@ -255,11 +234,11 @@ export default function ProductsPage() {
     } catch (err) {
       console.error("[ProductsPage] Failed to fetch runtime version:", err);
     }
-  }, [frontendBuildSha, frontendReleaseVersion]);
+  }, [frontendReleaseVersion]);
 
   const fetchSourceStatuses = useCallback(async () => {
     try {
-      const res = await fetch("/api/v1/kh02/sources/status");
+      const res = await fetch("/api/v1/kh02/providers/status");
       const json = await res.json();
       if (json.success) {
         setSourceSummary(json.data);
@@ -272,7 +251,7 @@ export default function ProductsPage() {
   const handleTestSources = async () => {
     setTestingSources(true);
     try {
-      const res = await fetch("/api/v1/kh02/sources/test", { method: "POST" });
+      const res = await fetch("/api/v1/kh02/providers/test-connection", { method: "POST" });
       const json = await res.json();
       if (json.success) {
         setSourceSummary(json.data);
@@ -287,7 +266,7 @@ export default function ProductsPage() {
   const handleDiscoverSources = async () => {
     setDiscoveringSources(true);
     try {
-      const res = await fetch("/api/v1/kh02/sources/discover", { method: "POST" });
+      const res = await fetch("/api/v1/kh02/providers/discover", { method: "POST" });
       const json = await res.json();
       if (json.success && json.data?.statusSummary) {
         setSourceSummary(json.data.statusSummary);
@@ -695,14 +674,18 @@ export default function ProductsPage() {
               data-testid="kh02-runtime-version-badge"
               data-release-version={runtimeIdentity?.releaseVersion || frontendReleaseVersion}
               data-frontend-sha={
-                runtimeIdentity?.versionParity?.frontendCommitSha || frontendBuildSha
+                runtimeIdentity?.frontendBuildSha ||
+                runtimeIdentity?.versionParity?.frontendCommitSha ||
+                frontendBuildSha
               }
               data-backend-sha={
+                runtimeIdentity?.backendBuildSha ||
                 runtimeIdentity?.versionParity?.backendCommitSha ||
                 runtimeIdentity?.shortCommitSha ||
                 "unknown"
               }
               data-worker-sha={
+                runtimeIdentity?.workerBuildSha ||
                 runtimeIdentity?.versionParity?.workerCommitSha ||
                 runtimeIdentity?.workerStatus?.commitSha ||
                 "none"
@@ -715,11 +698,13 @@ export default function ProductsPage() {
               <span
                 data-testid="kh02-runtime-parity-badge"
                 data-runtime-status={
+                  runtimeIdentity?.runtimeStatus === "MATCHED" ||
                   runtimeIdentity?.versionParity?.allConsistent
-                    ? "CONSISTENT"
+                    ? "MATCHED"
                     : "MISMATCH_OR_STALE"
                 }
                 className={`inline-flex items-center gap-1 ${
+                  runtimeIdentity?.runtimeStatus === "MATCHED" ||
                   runtimeIdentity?.versionParity?.allConsistent
                     ? "text-emerald-400"
                     : "text-amber-400"
@@ -727,12 +712,16 @@ export default function ProductsPage() {
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
+                    runtimeIdentity?.runtimeStatus === "MATCHED" ||
                     runtimeIdentity?.versionParity?.allConsistent
                       ? "bg-emerald-400"
                       : "bg-amber-400"
                   }`}
                 />
-                {runtimeIdentity?.versionParity?.allConsistent ? "Synced" : "Check Worker"}
+                {runtimeIdentity?.runtimeStatus === "MATCHED" ||
+                runtimeIdentity?.versionParity?.allConsistent
+                  ? "Synced"
+                  : "Check Worker"}
               </span>
             </button>
 

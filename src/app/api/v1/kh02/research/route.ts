@@ -16,6 +16,9 @@ import { runEvergreenProductResearch } from "@/services/kh02/evergreenResearchOr
 import {
   createKH02ResearchRun,
   enqueueResearchJob,
+  getKH02Leaderboard,
+  getKH02ResearchRunById,
+  getKH02ResearchRuns,
   persistKH02RankingSnapshot,
   updateKH02ResearchRunStatus,
   WorkspacePersistenceError,
@@ -24,13 +27,108 @@ import {
 const ResearchRequestSchema = z.object({
   topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
   market: z.literal("US").default("US"),
+  country: z.string().optional(),
   lookbackDays: z.number().int().min(7).max(730).default(90),
   maxCandidates: z.number().int().min(3).max(50).default(15),
   sourceMode: z.enum(["LIVE_WITH_CACHE_FALLBACK", "CACHE_ONLY", "LIVE_ONLY"]).optional(),
   metaExecutionPolicy: z.enum(["LIVE_FIRST", "CACHE_SUPPLEMENTED", "CACHE_ONLY", "OFFLINE_FIXTURE"]).optional(),
   mode: z.enum(["async", "sync"]).optional(),
   async: z.boolean().optional(),
+  asyncMode: z.boolean().optional(),
 });
+
+export async function GET(request: NextRequest) {
+  try {
+    const context = await resolveAuthorizedResearchContext(request);
+    const sp = request.nextUrl.searchParams;
+    const requestedRunId = sp.get("runId") || undefined;
+
+    const rawRuns = await getKH02ResearchRuns(context.workspaceId);
+    const recentRuns = rawRuns.map((r: any) => ({
+      runId: r.runId,
+      topic: r.topic || "General Research",
+      country: "US",
+      lookbackDays: 90,
+      status: r.status,
+      currentStage: r.status,
+      progressPct: r.progress ?? 100,
+      totalObservations: r.totalCandidates ?? 0,
+      totalCandidates: r.totalCandidates ?? 0,
+      verifiedCandidates: r.totalCandidates ?? 0,
+      evergreenWinners: Array.isArray(r.topCandidateTitles) ? r.topCandidateTitles.length : 0,
+      createdAt: r.createdAt,
+      completedAt: r.completedAt || null,
+    }));
+
+    let targetRun: any = null;
+    if (requestedRunId) {
+      targetRun = await getKH02ResearchRunById(requestedRunId, context.workspaceId);
+    } else if (rawRuns.length > 0) {
+      const completedSummary = rawRuns.find(
+        (r) => r.status === "COMPLETED" || r.status === "PARTIALLY_COMPLETED"
+      );
+      if (completedSummary) {
+        targetRun = await getKH02ResearchRunById(completedSummary.runId, context.workspaceId);
+      } else {
+        targetRun = await getKH02ResearchRunById(rawRuns[0].runId, context.workspaceId);
+      }
+    }
+
+    const leaderboard =
+      targetRun?.result || (await getKH02Leaderboard(context.workspaceId));
+    const resolvedRunId = targetRun?.runId || leaderboard?.researchRunId || null;
+    const rawStatus = targetRun?.status || (leaderboard ? "COMPLETED" : null);
+
+    let activeJob: any = null;
+    if (rawStatus === "PENDING" || rawStatus === "QUEUED" || rawStatus === "RUNNING") {
+      activeJob = {
+        jobId: resolvedRunId,
+        runId: resolvedRunId,
+        status: rawStatus === "PENDING" ? "QUEUED" : rawStatus,
+        stage: targetRun?.stage || targetRun?.liveness?.currentStage || rawStatus,
+        progressPct: targetRun?.progress ?? 10,
+        errorSummary: targetRun?.errorMessage || null,
+        startedAt: targetRun?.startedAt || null,
+        completedAt: targetRun?.completedAt || null,
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        runId: resolvedRunId,
+        status: rawStatus,
+        completedAt: targetRun?.completedAt || leaderboard?.generatedAt || null,
+        topic: leaderboard?.topic || targetRun?.result?.topic || null,
+        leaderboard: leaderboard
+          ? {
+              ...leaderboard,
+              researchRunId: resolvedRunId || leaderboard.researchRunId,
+            }
+          : null,
+        activeJob,
+        recentRuns,
+      },
+    });
+  } catch (err: any) {
+    if (err instanceof ResearchAuthError) {
+      return NextResponse.json(
+        { success: false, error: { code: err.code, message: err.message } },
+        { status: err.statusCode }
+      );
+    }
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "RESEARCH_READ_FAILED",
+          message: err.message || "Failed to load research state",
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,6 +162,7 @@ export async function POST(request: NextRequest) {
     const { topic, market, lookbackDays, maxCandidates, sourceMode, metaExecutionPolicy } = parseResult.data;
 
     const isAsync =
+      body.asyncMode === true ||
       body.mode === "async" ||
       body.async === true ||
       request.headers.get("prefer") === "respond-async" ||
