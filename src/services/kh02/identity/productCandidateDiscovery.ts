@@ -99,6 +99,7 @@ export interface DiscoveredProductCandidate {
   problemStatement: string | null;
   targetAudience: string | null;
   thumbnailUrl: string | null;
+  adThumbnailUrl?: string | null;
   videoUrl: string | null;
   mediaSourceAdId?: string | null;
   requestedUrl?: string | null;
@@ -1627,9 +1628,17 @@ export async function enrichProductCandidatesWithEvidence(
             resolved.imageReferences &&
             resolved.imageReferences.length > 0
           ) {
-            candidate.imageReferences = resolved.imageReferences;
-            if (!candidate.thumbnailUrl) {
-              candidate.thumbnailUrl = resolved.imageReferences[0];
+            const normalizedRefs = resolved.imageReferences.map((img) =>
+              typeof img === "string"
+                ? img.trim().replace(/^http:\/\/([^/]+\/cdn\/shop\/)/i, "https://$1")
+                : img
+            );
+            candidate.imageReferences = normalizedRefs;
+            if (candidate.thumbnailUrl && !candidate.adThumbnailUrl) {
+              candidate.adThumbnailUrl = candidate.thumbnailUrl;
+            }
+            if (normalizedRefs[0]) {
+              candidate.thumbnailUrl = normalizedRefs[0];
             }
           }
           candidate.fetchOutcome = resolved.fetchOutcome;

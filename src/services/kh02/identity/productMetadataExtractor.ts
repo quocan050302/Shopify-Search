@@ -763,7 +763,7 @@ async function fetchVerifiedProductPageMetadataUncached(
   }
 
   const timeoutMs = context.timeoutMs || 3500;
-  const maxBytes = context.maxSizeBytes || 256 * 1024; // 256KB cap
+  const maxBytes = context.maxSizeBytes || 512 * 1024; // 512KB cap to include Shopify product body gallery
   const fetchImpl = context.fetchFn || context.fetchImpl || fetch;
   const MAX_REDIRECTS = 5;
 
@@ -1565,15 +1565,76 @@ async function fetchVerifiedProductPageMetadataUncached(
       }
     }
 
+    // Extract additional Shopify product gallery images strictly from the product's own embedded JSON ("images":[...])
+    // or matching the primary product image stem so nav/related-product images from the same store are never mixed in.
+    const domGalleryImages: string[] = [];
+    if (verified) {
+      const productImagesArrayMatch = htmlText.match(
+        /"images"\s*:\s*\[\s*((?:"[^"]+"\s*,?\s*){1,16})\]/i
+      );
+      if (productImagesArrayMatch && productImagesArrayMatch[1]) {
+        const strRegex = /"([^"]+)"/g;
+        let sMatch: RegExpExecArray | null;
+        while ((sMatch = strRegex.exec(productImagesArrayMatch[1])) !== null) {
+          const unescaped = sMatch[1].replace(/\\\//g, "/");
+          if (/\.(webp|jpg|jpeg|png)(\?|$)/i.test(unescaped)) {
+            domGalleryImages.push(unescaped);
+          }
+        }
+      }
+
+      // Also check product media gallery URLs that share the primary ogImage filename stem
+      const primaryStem = ogImage
+        ? ogImage
+            .split("/")
+            .pop()
+            ?.split("?")[0]
+            ?.replace(/\.(webp|jpg|jpeg|png)$/i, "")
+            ?.split("-")
+            .slice(0, 3)
+            .join("-")
+        : null;
+      if (primaryStem && primaryStem.length >= 6) {
+        const seenGalleryPaths = new Set<string>();
+        const shopifyGalleryRegex =
+          /(?:https?:)?\/\/[a-z0-9.-]+(?:\/cdn\/shop\/(?:files|products)|\/s\/files\/1\/\d+\/\d+\/(?:files|products))\/([a-zA-Z0-9._-]+\.(?:webp|jpg|jpeg|png))(?:\?[a-zA-Z0-9=&_%-]+)?/gi;
+        let gMatch: RegExpExecArray | null;
+        while ((gMatch = shopifyGalleryRegex.exec(htmlText)) !== null) {
+          const rawImg = gMatch[0].replace(/&amp;.*$/i, "");
+          const baseFilename = (gMatch[1] || "")
+            .toLowerCase()
+            .replace(/_(small|compact|medium|large|grande|master|\d+x\d*)(?=\.)/i, "");
+          if (
+            baseFilename.includes(primaryStem.toLowerCase()) &&
+            !seenGalleryPaths.has(baseFilename)
+          ) {
+            seenGalleryPaths.add(baseFilename);
+            domGalleryImages.push(rawImg);
+            if (domGalleryImages.length >= 8) break;
+          }
+        }
+      }
+    }
+
+    const normalizeMerchantImageRef = (raw: string): string => {
+      const trimmed = decodeHtmlEntities(raw.trim()).replace(/\{width\}/gi, "1024");
+      if (trimmed.startsWith("//")) return `https:${trimmed}`;
+      if (trimmed.startsWith("http://")) return `https://${trimmed.slice(7)}`;
+      return trimmed;
+    };
+
     const imageRefs = Array.from(
       new Set(
         [
           ...(jsonLdProduct?.images || []),
           jsonLdProduct?.image || null,
           ogImage || null,
-        ].filter((x): x is string => Boolean(x && typeof x === "string"))
+          ...domGalleryImages,
+        ]
+          .filter((x): x is string => Boolean(x && typeof x === "string"))
+          .map(normalizeMerchantImageRef)
       )
-    );
+    ).slice(0, 8);
 
     const evidenceRefs: string[] = [`MerchantFetch:${currentUrl}`];
     if (jsonLdFound) evidenceRefs.push("Schema:JSON-LD:Product");

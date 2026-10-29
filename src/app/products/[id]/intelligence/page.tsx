@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, Suspense } from "react";
+import { useEffect, useState, useRef, useCallback, use, Suspense } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Plus,
   PlaySquare,
+  Play,
   CheckCircle2,
   XCircle,
   HelpCircle,
@@ -26,6 +27,12 @@ import {
   BookmarkPlus,
   TrendingUp,
   Trophy,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Film,
+  X,
+  Info,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 
@@ -75,6 +82,62 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
 
   // Recalculate Opportunity State
   const [recalculating, setRecalculating] = useState(false);
+
+  // V12.4.3.2.1 Product Media Gallery & Lightbox State
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState<number>(0);
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+  const [failedMediaIds, setFailedMediaIds] = useState<Record<string, boolean>>({});
+  const mainVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lightboxVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
+
+  const pauseAllVideos = useCallback(() => {
+    try {
+      if (mainVideoRef.current && !mainVideoRef.current.paused) {
+        mainVideoRef.current.pause();
+      }
+      if (lightboxVideoRef.current && !lightboxVideoRef.current.paused) {
+        lightboxVideoRef.current.pause();
+      }
+    } catch {
+      // ignore media pause errors
+    }
+  }, []);
+
+  const markMediaFailed = useCallback((id: string) => {
+    setFailedMediaIds((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  }, []);
+
+  const handleSelectMediaIndex = useCallback(
+    (nextIndex: number) => {
+      pauseAllVideos();
+      setSelectedMediaIndex(nextIndex);
+    },
+    [pauseAllVideos]
+  );
+
+  const openLightbox = useCallback(
+    (triggerEl?: HTMLElement | null) => {
+      pauseAllVideos();
+      if (triggerEl) {
+        lightboxTriggerRef.current = triggerEl;
+      } else if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+        lightboxTriggerRef.current = document.activeElement;
+      }
+      setLightboxOpen(true);
+    },
+    [pauseAllVideos]
+  );
+
+  const closeLightbox = useCallback(() => {
+    pauseAllVideos();
+    setLightboxOpen(false);
+    setTimeout(() => {
+      if (lightboxTriggerRef.current && typeof lightboxTriggerRef.current.focus === "function") {
+        lightboxTriggerRef.current.focus();
+      }
+    }, 0);
+  }, [pauseAllVideos]);
 
   // Helper to forward workspace and KH-02 context query parameters
   const getOverviewQuery = () => {
@@ -149,7 +212,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   useEffect(() => {
     const controller = new AbortController();
 
-    // Reset form and feedback states on product ID change
+    // Reset form, feedback, and media gallery states on product ID change
     setInspectFeedback(null);
     setEconFeedback(null);
     setQuoteFeedback(null);
@@ -159,6 +222,9 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
     setQuoteSupplierName("");
     setQuoteUnitCost("");
     setDecisionNotes("");
+    setSelectedMediaIndex(0);
+    setLightboxOpen(false);
+    setFailedMediaIds({});
 
     loadOverview(controller.signal);
 
@@ -166,6 +232,31 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
       controller.abort();
     };
   }, [productId]);
+
+  const mediaItems: any[] = overview?.mediaGallery?.items || [];
+  const safeMediaIndex =
+    mediaItems.length > 0
+      ? Math.min(Math.max(0, selectedMediaIndex), mediaItems.length - 1)
+      : 0;
+  const activeMediaItem = mediaItems[safeMediaIndex] || null;
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeLightbox();
+      } else if (e.key === "ArrowRight" && mediaItems.length > 1) {
+        e.preventDefault();
+        handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length);
+      } else if (e.key === "ArrowLeft" && mediaItems.length > 1) {
+        e.preventDefault();
+        handleSelectMediaIndex((safeMediaIndex - 1 + mediaItems.length) % mediaItems.length);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxOpen, mediaItems.length, safeMediaIndex, closeLightbox, handleSelectMediaIndex]);
 
   // Handle User-Triggered Landing Page Inspection Job
   const handleInspectLandingPage = async () => {
@@ -418,18 +509,32 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
     opportunityAssessment,
     decisions,
     kh02ResearchContext,
+    researchContextResolution,
     commercialReadinessSummary,
+    mediaGallery,
   } = overview;
 
-  // Opportunity and Readiness Scores (aligning KH-02 Research Qualification with KH-01 Commercial Readiness)
+  // Section 11: Strict separation between KH-02 Research Qualification and KH-01 Commercial Readiness
+  // NEVER copy kh02Confidence into kh01ReadinessScore or kh02Score into kh01OpportunityScore when opportunityAssessment is null!
   const kh02Score = kh02ResearchContext?.opportunityScore ?? null;
   const kh02Confidence = kh02ResearchContext?.evidenceConfidence ?? null;
-  const opportunityScore = opportunityAssessment?.opportunityScore ?? kh02Score ?? null;
-  const readinessScore = opportunityAssessment?.evidenceReadinessScore ?? kh02Confidence ?? null;
-  const recommendation = opportunityAssessment?.recommendation || kh02ResearchContext?.recommendation || "RESEARCH_MORE";
+  const kh01OpportunityScore = opportunityAssessment?.opportunityScore ?? null;
+  const kh01ReadinessScore = opportunityAssessment?.evidenceReadinessScore ?? null;
+  const opportunityScore = kh01OpportunityScore;
+  const readinessScore = kh01ReadinessScore;
+  const recommendation =
+    opportunityAssessment?.recommendation ||
+    kh02ResearchContext?.recommendation ||
+    "RESEARCH_MORE";
   const testReadiness =
     opportunityAssessment?.testReadinessStatus ||
     (kh02ResearchContext ? "RESEARCH_QUALIFIED_AWAITING_ECONOMICS" : "BLOCKED_MISSING_DATA");
+
+  const contextMismatchWarning =
+    researchContextResolution?.status === "MISMATCH_CANDIDATE_NOT_IN_RUN" ||
+    researchContextResolution?.status === "MISMATCH_PRODUCT_CANDIDATE_CONFLICT"
+      ? researchContextResolution.reason
+      : null;
 
   // Parse snapshot JSONs
   let landingObservations: any = null;
@@ -448,12 +553,12 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   } catch {}
 
   return (
-    <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0B1020] text-white flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
+      <main className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <Link
             href={getBackToFinderHref()}
             data-testid="back-to-product-finder-link"
@@ -474,103 +579,455 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
           </div>
         </div>
 
-        {/* Product Identity Hero Bar */}
-        <div className="p-6 rounded-2xl bg-[#111827] border border-[#1f293d] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
-              {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover" />
-              ) : (
-                <ShoppingBag className="h-8 w-8 text-slate-600" />
-              )}
-            </div>
-
+        {/* Section 7: Explicit Context Mismatch Banner (never silently swap runs) */}
+        {contextMismatchWarning && (
+          <div
+            data-testid="pi-context-mismatch-banner"
+            className="p-4 rounded-xl bg-amber-950/50 border border-amber-700/60 text-amber-200 text-xs flex items-start gap-3"
+          >
+            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
+              <strong className="font-semibold text-amber-100 block">
+                Research Run / Candidate Context Mismatch Detected
+              </strong>
+              <p className="text-amber-200/90 leading-relaxed">{contextMismatchWarning}</p>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            SECTIONS 3–5 & 13–14: PRODUCT MEDIA GALLERY + IDENTITY HERO
+           ===================================================================== */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#111827] border border-[#1f293d] grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN (5 cols on lg): Product Media Gallery */}
+          <div
+            data-testid="pi-media-gallery"
+            data-media-count={mediaItems.length}
+            data-has-video={mediaGallery?.hasVideo ? "true" : "false"}
+            className="lg:col-span-5 space-y-3 min-w-0 w-full"
+          >
+            {mediaItems.length > 0 && activeMediaItem ? (
+              <>
+                {/* Main Viewer */}
+                <div
+                  data-testid="pi-media-main-viewer"
+                  data-active-media-type={activeMediaItem.mediaType}
+                  data-active-media-source={activeMediaItem.sourceType}
+                  className="relative rounded-xl bg-slate-950/95 border border-slate-800 overflow-hidden min-h-[250px] sm:min-h-[290px] flex items-center justify-center group"
+                >
+                  {/* Top Bar Overlay: Source Provenance Badge + Counter + Enlarge */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-2 pointer-events-none">
+                    <span
+                      data-testid="pi-media-source-badge"
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md border backdrop-blur-md pointer-events-auto ${
+                        activeMediaItem.sourceType === "MERCHANT_PRODUCT_PAGE" ||
+                        activeMediaItem.sourceType === "MERCHANT_GALLERY" ||
+                        activeMediaItem.sourceType === "KH02_CANDIDATE"
+                          ? "bg-emerald-950/85 text-emerald-300 border-emerald-700/60"
+                          : "bg-indigo-950/85 text-indigo-200 border-indigo-700/60"
+                      }`}
+                    >
+                      {activeMediaItem.sourceLabel}
+                    </span>
+
+                    <div className="flex items-center gap-1.5 pointer-events-auto">
+                      <span
+                        data-testid="pi-media-counter"
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900/90 text-slate-300 border border-slate-700/70"
+                      >
+                        {safeMediaIndex + 1} / {mediaItems.length}
+                      </span>
+                      <button
+                        type="button"
+                        data-testid="pi-media-enlarge-btn"
+                        aria-label="Enlarge product media in lightbox"
+                        onClick={(e) => openLightbox(e.currentTarget)}
+                        className="p-1.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/70 transition-colors cursor-pointer"
+                        title="Open full-size media viewer"
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Media Asset Content */}
+                  {activeMediaItem.mediaType === "VIDEO" ? (
+                    failedMediaIds[activeMediaItem.id] ? (
+                      <div
+                        data-testid="pi-media-video-fallback"
+                        className="p-6 text-center space-y-2.5 max-w-xs"
+                      >
+                        <Film className="h-8 w-8 text-amber-400 mx-auto" />
+                        <p className="text-xs font-semibold text-white">
+                          Video playback restricted or unavailable from upstream CDN
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          {activeMediaItem.sourceLabel} · {activeMediaItem.storeDomain || "Ad Creative"}
+                        </p>
+                        {(activeMediaItem.sourcePageUrl || activeMediaItem.url) && (
+                          <a
+                            href={activeMediaItem.sourcePageUrl || activeMediaItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-medium"
+                          >
+                            <span>Open Original Video Source</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    ) : activeMediaItem.isEmbed ? (
+                      <iframe
+                        data-testid="pi-media-video-embed"
+                        src={activeMediaItem.url}
+                        title={activeMediaItem.altText || product.title}
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        className="w-full h-[280px] border-0"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        key={activeMediaItem.id}
+                        ref={mainVideoRef}
+                        data-testid="pi-media-video-player"
+                        src={activeMediaItem.url}
+                        poster={activeMediaItem.posterUrl || undefined}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        onError={() => markMediaFailed(activeMediaItem.id)}
+                        className="w-full max-h-[310px] object-contain"
+                      />
+                    )
+                  ) : failedMediaIds[activeMediaItem.id] ? (
+                    <div
+                      data-testid="pi-media-error-state"
+                      className="p-6 text-center space-y-2 max-w-xs"
+                    >
+                      <ShoppingBag className="h-8 w-8 text-slate-500 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-200">
+                        Product image unavailable from source CDN
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        The external image URL returned an error and was hidden to prevent broken visuals.
+                      </p>
+                      {activeMediaItem.sourcePageUrl && (
+                        <a
+                          href={activeMediaItem.sourcePageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:underline"
+                        >
+                          <span>Open Merchant Page</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <img
+                      key={activeMediaItem.id}
+                      data-testid="pi-media-main-image"
+                      src={activeMediaItem.url}
+                      alt={activeMediaItem.altText || product.title}
+                      onClick={(e) => openLightbox(e.currentTarget)}
+                      onError={() => markMediaFailed(activeMediaItem.id)}
+                      className="w-full max-h-[310px] object-contain p-3 cursor-zoom-in transition-transform duration-200"
+                    />
+                  )}
+
+                  {/* Prev / Next Navigation Buttons when multiple items exist */}
+                  {mediaItems.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="pi-media-prev"
+                        aria-label="Previous product media"
+                        onClick={() =>
+                          handleSelectMediaIndex(
+                            (safeMediaIndex - 1 + mediaItems.length) % mediaItems.length
+                          )
+                        }
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 shadow-md transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="pi-media-next"
+                        aria-label="Next product media"
+                        onClick={() =>
+                          handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length)
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 shadow-md transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnail Strip */}
+                <div
+                  data-testid="pi-media-thumbnail-strip"
+                  className="flex items-center gap-2 overflow-x-auto pb-1"
+                >
+                  {mediaItems.map((item: any, idx: number) => {
+                    const isSelected = idx === safeMediaIndex;
+                    const thumbBroken = failedMediaIds[`thumb_${item.id}`] || failedMediaIds[item.id];
+                    const thumbSrc = item.thumbnailUrl || item.posterUrl || item.url;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        data-testid="pi-media-thumbnail-item"
+                        data-media-type={item.mediaType}
+                        data-media-source={item.sourceType}
+                        aria-label={`Select ${item.sourceLabel} ${idx + 1} of ${mediaItems.length}`}
+                        aria-current={isSelected ? "true" : "false"}
+                        onClick={() => handleSelectMediaIndex(idx)}
+                        className={`relative h-14 w-14 rounded-lg overflow-hidden shrink-0 border transition-all flex items-center justify-center bg-slate-950 cursor-pointer ${
+                          isSelected
+                            ? "border-indigo-400 ring-2 ring-indigo-500/60"
+                            : "border-slate-800 opacity-75 hover:opacity-100 hover:border-slate-600"
+                        }`}
+                      >
+                        {item.mediaType === "VIDEO" && (!thumbSrc || thumbSrc === item.url) ? (
+                          <div className="flex flex-col items-center justify-center text-indigo-300">
+                            <Play className="h-4 w-4 fill-indigo-400" />
+                            <span className="text-[9px] font-mono mt-0.5">VIDEO</span>
+                          </div>
+                        ) : !thumbBroken && thumbSrc ? (
+                          <img
+                            src={thumbSrc}
+                            alt={item.altText || `${product.title} thumbnail ${idx + 1}`}
+                            loading={idx === 0 ? "eager" : "lazy"}
+                            onError={() => markMediaFailed(`thumb_${item.id}`)}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ShoppingBag className="h-4 w-4 text-slate-500" />
+                        )}
+
+                        {item.mediaType === "VIDEO" && (
+                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 text-[8px] font-mono text-white flex items-center gap-0.5">
+                            <Play className="h-2 w-2 fill-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              /* Honest Empty Media State (Section 4.5) */
+              <div
+                data-testid="pi-media-empty-state"
+                className="rounded-xl bg-slate-950/90 border border-slate-800 p-6 min-h-[240px] flex flex-col items-center justify-center text-center space-y-2.5"
+              >
+                <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+                  <ShoppingBag className="h-6 w-6 text-slate-500" />
+                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-white">
+                  {mediaGallery?.emptyState?.headline || "No verified product media available"}
+                </h3>
+                <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
+                  {mediaGallery?.emptyState?.explanation ||
+                    "The product was identified, but no usable image or video could be verified from the linked sources."}
+                </p>
+                {(mediaGallery?.emptyState?.merchantUrl ||
+                  product.productUrl ||
+                  kh02ResearchContext?.canonicalProductUrl) && (
+                  <a
+                    href={
+                      mediaGallery?.emptyState?.merchantUrl ||
+                      product.productUrl ||
+                      kh02ResearchContext?.canonicalProductUrl
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="pi-media-empty-merchant-link"
+                    className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition-colors"
+                  >
+                    <span>Open Merchant Page</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN (7 cols on lg): Product Identity, Storefront & Separated Score Summary */}
+          <div className="lg:col-span-7 flex flex-col justify-between space-y-5 min-w-0 w-full">
+            <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-semibold uppercase">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-slate-800 text-indigo-300 font-semibold uppercase">
                   {product.category}
                 </span>
                 {product.store?.domain && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 font-mono">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 font-mono">
                     {product.store.domain}
                   </span>
                 )}
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-400 font-mono">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-slate-800/80 text-slate-300 font-mono">
                   Shopify: {product.store?.commercePlatform || "DETECTED"}
                 </span>
+                {kh02ResearchContext?.candidateId && (
+                  <span
+                    data-testid="pi-candidate-id-badge"
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-mono"
+                  >
+                    {kh02ResearchContext.candidateId}
+                  </span>
+                )}
               </div>
 
-              <h1 className="text-lg md:text-xl font-extrabold text-white">
+              <h1
+                data-testid="pi-product-title"
+                className="text-lg sm:text-xl md:text-2xl font-extrabold text-white leading-snug"
+              >
                 {product.title}
               </h1>
 
-              <p className="text-xs text-slate-400 max-w-2xl line-clamp-2">
-                {product.description || "Identified competitor product without catalog description."}
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                {product.description || "Identified competitor product backed by market advertising evidence."}
               </p>
-            </div>
-          </div>
 
-          {/* Assessment Score Pills */}
-          <div className="flex items-center gap-4 shrink-0 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-            <div>
-              <div className="text-[10px] text-slate-400 font-medium">Evidence Readiness</div>
-              <div className="text-lg font-extrabold text-white font-mono flex items-center gap-1.5">
-                {readinessScore !== null && readinessScore !== undefined ? (
-                  <>
-                    <span>{readinessScore}%</span>
-                    <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded ${
-                        readinessScore >= 70
-                          ? "bg-emerald-950 text-emerald-400"
-                          : "bg-amber-950 text-amber-400"
-                      }`}
-                    >
-                      {readinessScore >= 70 ? "SUFFICIENT" : "GAPS EXIST"}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-slate-500 text-sm">Not Assessed</span>
-                )}
-              </div>
-              <div className="text-[9px] text-slate-500">Verified factual inputs</div>
-            </div>
-
-            <div className="h-8 w-[1px] bg-slate-800" />
-
-            <div>
-              <div className="text-[10px] text-slate-400 font-medium">Product Opportunity Research Score</div>
-              <div className="text-lg font-extrabold font-mono flex items-center gap-1.5">
-                {opportunityScore !== null && opportunityScore !== undefined ? (
-                  <span className={opportunityScore >= 70 ? "text-emerald-400" : "text-amber-400"}>
-                    {opportunityScore}/100
+              {/* Quick Storefront & Price Row */}
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                {product.currentPrice != null && (
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 font-mono font-bold text-emerald-400">
+                    ${Number(product.currentPrice).toFixed(2)} {product.currency || "USD"}
                   </span>
-                ) : (
-                  <span className="text-slate-500 text-sm">Not Assessed</span>
+                )}
+                {(product.productUrl || kh02ResearchContext?.canonicalProductUrl) && (
+                  <a
+                    href={product.productUrl || kh02ResearchContext?.canonicalProductUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="pi-open-merchant-page-link"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-800 font-medium transition-colors"
+                  >
+                    <Store className="h-3.5 w-3.5" />
+                    <span>Open Storefront Product Page</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
                 )}
               </div>
-              <div className="text-[9px] text-slate-500">Six-pillar research heuristic</div>
             </div>
 
-            <div className="h-8 w-[1px] bg-slate-800" />
-
-            <div>
-              <div className="text-[10px] text-slate-400 font-medium">Recommendation</div>
-              <div className="text-xs font-bold text-white font-mono">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  recommendation === "TEST_CANDIDATE" ? "bg-emerald-950 text-emerald-300 border border-emerald-800/50" :
-                  recommendation === "SHORTLIST" ? "bg-indigo-950 text-indigo-300 border border-indigo-800/50" :
-                  recommendation === "REJECT" ? "bg-rose-950 text-rose-300 border border-rose-800/50" :
-                  "bg-amber-950 text-amber-300 border border-amber-800/50"
-                }`}>
-                  {recommendation}
-                </span>
+            {/* Section 11: Top-Level Separated Score Summary Strip */}
+            <div
+              data-testid="pi-separated-score-strip"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/75 p-4 rounded-xl border border-slate-800/90"
+            >
+              {/* 1. KH-02 Research Score */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Research Score (KH-02)
+                </div>
+                <div
+                  data-testid="pi-kh02-research-score"
+                  className="text-base sm:text-lg font-extrabold text-white font-mono mt-0.5"
+                >
+                  {kh02Score !== null && kh02Score !== undefined ? (
+                    <span className={kh02Score >= 70 ? "text-sky-400" : "text-amber-400"}>
+                      {kh02Score} / 100
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 text-sm">Not Scored</span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  {kh02Confidence != null ? `${kh02Confidence}% evidence conf.` : "Market discovery"}
+                </div>
               </div>
-              <div className="text-[9px] text-slate-500">{testReadiness}</div>
+
+              {/* 2. KH-01 Commercial Opportunity */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Commercial Opportunity (KH-01)
+                </div>
+                <div
+                  data-testid="pi-kh01-opportunity-score"
+                  className="text-base sm:text-lg font-extrabold font-mono mt-0.5"
+                >
+                  {kh01OpportunityScore !== null && kh01OpportunityScore !== undefined ? (
+                    <span
+                      className={kh01OpportunityScore >= 70 ? "text-emerald-400" : "text-amber-400"}
+                    >
+                      {kh01OpportunityScore} / 100
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs sm:text-sm font-sans font-semibold">
+                      Not Assessed
+                    </span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  Six-pillar unit economics
+                </div>
+              </div>
+
+              {/* 3. KH-01 Evidence Readiness */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Evidence Readiness (KH-01)
+                </div>
+                <div
+                  data-testid="pi-kh01-readiness-score"
+                  className="text-base sm:text-lg font-extrabold text-white font-mono mt-0.5 flex items-center gap-1.5"
+                >
+                  {kh01ReadinessScore !== null && kh01ReadinessScore !== undefined ? (
+                    <>
+                      <span>{kh01ReadinessScore}%</span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded ${
+                          kh01ReadinessScore >= 70
+                            ? "bg-emerald-950 text-emerald-400"
+                            : "bg-amber-950 text-amber-400"
+                        }`}
+                      >
+                        {kh01ReadinessScore >= 70 ? "READY" : "GAPS"}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-slate-400 text-xs sm:text-sm font-sans font-semibold">
+                      Not Assessed
+                    </span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  Quote + Margin + CRO inputs
+                </div>
+              </div>
+
+              {/* 4. Action Recommendation */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Recommendation
+                </div>
+                <div className="text-xs font-bold text-white font-mono mt-1">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold inline-block ${
+                      recommendation === "TEST_CANDIDATE"
+                        ? "bg-emerald-950 text-emerald-300 border border-emerald-800/50"
+                        : recommendation === "SHORTLIST"
+                        ? "bg-indigo-950 text-indigo-300 border border-indigo-800/50"
+                        : recommendation === "REJECT"
+                        ? "bg-rose-950 text-rose-300 border border-rose-800/50"
+                        : "bg-amber-950 text-amber-300 border border-amber-800/50"
+                    }`}
+                  >
+                    {recommendation}
+                  </span>
+                </div>
+                <div className="text-[9px] text-slate-500 truncate mt-0.5">{testReadiness}</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* V12.4.3.2 Section 6.4 & Section 16: Separated Research Qualification (KH-02) vs Commercial Readiness (KH-01) */}
+        {/* V12.4.3.2.1 Section 11: Separated Research Qualification (KH-02) vs Commercial Readiness (KH-01) */}
         <div
           data-testid="kh02-kh01-alignment-grid"
           className="grid grid-cols-1 lg:grid-cols-2 gap-4"
@@ -608,18 +1065,24 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
                 <div className="text-[10px] text-slate-400">Research Score</div>
                 <div className="text-sm font-bold text-white font-mono">
-                  {kh02Score !== null ? `${kh02Score} / 100` : opportunityScore !== null ? `${opportunityScore} / 100` : "Pending"}
+                  {kh02Score !== null ? `${kh02Score} / 100` : "Not Scored"}
                 </div>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
                 <div className="text-[10px] text-slate-400">Evidence Confidence</div>
                 <div className="text-sm font-bold text-white font-mono">
-                  {kh02Confidence !== null ? `${kh02Confidence}%` : readinessScore !== null ? `${readinessScore}%` : "Pending"}
+                  {kh02Confidence !== null ? `${kh02Confidence}%` : "Not Scored"}
                 </div>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
                 <div className="text-[10px] text-slate-400">Identity</div>
-                <div className="text-xs font-semibold text-emerald-400 truncate">
+                <div
+                  className={`text-xs font-semibold truncate ${
+                    kh02ResearchContext?.identityStatus === "VERIFIED"
+                      ? "text-emerald-400"
+                      : "text-amber-300"
+                  }`}
+                >
                   {kh02ResearchContext?.identityStatus || "VERIFIED"}
                 </div>
               </div>
@@ -701,7 +1164,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
                   <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                 )}
                 <span className="text-slate-300 truncate">
-                  KH-01 Readiness: {opportunityAssessment ? "Assessed" : "Pending"}
+                  KH-01 Assessment: {opportunityAssessment ? `${kh01ReadinessScore}% Ready` : "Not Assessed"}
                 </span>
               </div>
             </div>
@@ -1742,6 +2205,148 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
           </div>
         )}
       </main>
+
+      {/* =====================================================================
+          SECTION 4.2: PRODUCT MEDIA LIGHTBOX MODAL
+         ===================================================================== */}
+      {lightboxOpen && activeMediaItem && (
+        <div
+          data-testid="pi-media-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Product media viewer: ${product.title}`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeLightbox();
+          }}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+        >
+          <div className="bg-[#0f1523] border border-slate-800 rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Lightbox Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
+              <div className="min-w-0 space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    data-testid="pi-lightbox-source-badge"
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                      activeMediaItem.sourceType === "MERCHANT_PRODUCT_PAGE" ||
+                      activeMediaItem.sourceType === "MERCHANT_GALLERY" ||
+                      activeMediaItem.sourceType === "KH02_CANDIDATE"
+                        ? "bg-emerald-950/80 text-emerald-300 border-emerald-700/50"
+                        : "bg-indigo-950/80 text-indigo-200 border-indigo-700/50"
+                    }`}
+                  >
+                    {activeMediaItem.sourceLabel}
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {safeMediaIndex + 1} of {mediaItems.length}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white truncate">{product.title}</h3>
+              </div>
+
+              <button
+                type="button"
+                data-testid="pi-lightbox-close"
+                aria-label="Close media lightbox"
+                onClick={closeLightbox}
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Lightbox Media Canvas */}
+            <div className="relative flex-1 bg-black/95 flex items-center justify-center min-h-[320px] sm:min-h-[440px] p-4 overflow-hidden">
+              {activeMediaItem.mediaType === "VIDEO" ? (
+                activeMediaItem.isEmbed ? (
+                  <iframe
+                    src={activeMediaItem.url}
+                    title={activeMediaItem.altText || product.title}
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    className="w-full h-[400px] border-0"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    key={`lb_${activeMediaItem.id}`}
+                    ref={lightboxVideoRef}
+                    data-testid="pi-lightbox-video"
+                    src={activeMediaItem.url}
+                    poster={activeMediaItem.posterUrl || undefined}
+                    controls
+                    playsInline
+                    className="max-h-[65vh] w-full object-contain"
+                  />
+                )
+              ) : (
+                <img
+                  key={`lb_${activeMediaItem.id}`}
+                  data-testid="pi-lightbox-image"
+                  src={activeMediaItem.url}
+                  alt={activeMediaItem.altText || product.title}
+                  className="max-h-[65vh] w-full object-contain"
+                />
+              )}
+
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    data-testid="pi-lightbox-prev"
+                    aria-label="Previous media item"
+                    onClick={() =>
+                      handleSelectMediaIndex(
+                        (safeMediaIndex - 1 + mediaItems.length) % mediaItems.length
+                      )
+                    }
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-lg cursor-pointer"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="pi-lightbox-next"
+                    aria-label="Next media item"
+                    onClick={() =>
+                      handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length)
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-lg cursor-pointer"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Lightbox Footer */}
+            <div className="p-4 border-t border-slate-800 bg-[#0b0f17] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="text-slate-400 truncate">
+                Attribution:{" "}
+                <strong className="text-slate-200">
+                  {activeMediaItem.storeDomain ||
+                    activeMediaItem.advertiserName ||
+                    product.store?.domain ||
+                    "Verified Source"}
+                </strong>{" "}
+                · Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-[10px]">Esc</kbd>{" "}
+                to close
+              </div>
+              {(activeMediaItem.sourcePageUrl || activeMediaItem.url) && (
+                <a
+                  href={activeMediaItem.sourcePageUrl || activeMediaItem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="pi-lightbox-source-link"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 font-medium shrink-0"
+                >
+                  <span>Open Original Source</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

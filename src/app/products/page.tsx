@@ -211,6 +211,8 @@ export default function ProductsPage() {
   const [storedCategory, setStoredCategory] = useState("ALL");
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const latestRequestSeqRef = useRef<number>(0);
+  const authoritativeRunIdRef = useRef<string | null>(null);
   const frontendBuildSha =
     process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA ||
     process.env.NEXT_PUBLIC_SWAI_GIT_SHA ||
@@ -220,7 +222,7 @@ export default function ProductsPage() {
   const frontendReleaseVersion =
     process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
     runtimeIdentity?.releaseVersion ||
-    "12.4.3.2";
+    "12.4.3.2.1";
 
   const fetchRuntimeVersion = useCallback(async () => {
     try {
@@ -279,7 +281,20 @@ export default function ProductsPage() {
   };
 
   const loadPersistedRun = useCallback(
-    async (opts?: { runId?: string; topic?: string; lookback?: number; syncTopicInput?: boolean }) => {
+    async (opts?: {
+      runId?: string;
+      topic?: string;
+      lookback?: number;
+      syncTopicInput?: boolean;
+      isPolling?: boolean;
+    }) => {
+      const reqSeq = opts?.isPolling
+        ? latestRequestSeqRef.current
+        : ++latestRequestSeqRef.current;
+      if (!opts?.isPolling && opts?.runId) {
+        authoritativeRunIdRef.current = opts.runId;
+      }
+
       try {
         const params = new URLSearchParams();
         if (opts?.runId) params.set("runId", opts.runId);
@@ -288,13 +303,29 @@ export default function ProductsPage() {
 
         const res = await fetch(`/api/v1/kh02/research?${params.toString()}`);
         const json = await res.json();
+
+        // V12.4.3.2.1 Section 7.4: Guard against stale polling or out-of-order responses
+        if (reqSeq < latestRequestSeqRef.current) {
+          return null;
+        }
+        if (
+          opts?.isPolling &&
+          opts.runId &&
+          authoritativeRunIdRef.current &&
+          opts.runId !== authoritativeRunIdRef.current
+        ) {
+          return null;
+        }
+
         if (json.success && json.data) {
           if (json.data.recentRuns) {
             setRecentRuns(json.data.recentRuns);
           }
           if (json.data.leaderboard) {
+            const resolvedId = json.data.runId || json.data.leaderboard.researchRunId || null;
+            authoritativeRunIdRef.current = resolvedId;
             setLeaderboard(json.data.leaderboard);
-            setActiveRunId(json.data.runId || null);
+            setActiveRunId(resolvedId);
             setActiveRunStatus(json.data.status || "COMPLETED");
             setActiveRunCompletedAt(json.data.completedAt || null);
             setActiveRunTopic(json.data.topic || json.data.leaderboard.topic || null);
@@ -304,6 +335,7 @@ export default function ProductsPage() {
           }
           if (json.data.activeJob) {
             const job = json.data.activeJob as ActiveJobProgress;
+            authoritativeRunIdRef.current = job.runId;
             setActiveJob(job);
             if (job.status === "QUEUED" || job.status === "RUNNING") {
               setResearchLoading(true);
@@ -338,8 +370,12 @@ export default function ProductsPage() {
       return;
     }
 
+    const pollingRunId = activeJob.runId;
     pollIntervalRef.current = setInterval(async () => {
-      const data = await loadPersistedRun({ runId: activeJob.runId });
+      if (authoritativeRunIdRef.current && authoritativeRunIdRef.current !== pollingRunId) {
+        return;
+      }
+      const data = await loadPersistedRun({ runId: pollingRunId, isPolling: true });
       if (
         data &&
         (!data.activeJob ||
@@ -374,6 +410,7 @@ export default function ProductsPage() {
         return;
       }
 
+      const reqSeq = ++latestRequestSeqRef.current;
       setResearchLoading(true);
       setResearchError(null);
 
@@ -390,10 +427,14 @@ export default function ProductsPage() {
           }),
         });
         const json = await res.json();
+        if (reqSeq < latestRequestSeqRef.current) {
+          return;
+        }
         if (!json.success) {
           setResearchError(json.error?.message || "Failed to enqueue research job");
           setResearchLoading(false);
         } else if (json.data) {
+          authoritativeRunIdRef.current = json.data.runId || null;
           if (json.data.leaderboard) {
             setLeaderboard(json.data.leaderboard);
             setActiveRunId(json.data.runId || null);
@@ -404,6 +445,7 @@ export default function ProductsPage() {
             setResearchLoading(false);
             loadPersistedRun({ runId: json.data.runId });
           } else {
+            setActiveRunId(json.data.runId || null);
             setActiveRunStatus("QUEUED");
             setActiveJob({
               jobId: json.data.jobId,
@@ -591,16 +633,41 @@ export default function ProductsPage() {
     return counts;
   }, [allExplorerCandidates]);
 
-  // 4-Metric Status Summary Computed Values
+  // 4-Metric Status Summary Computed Values (Section 9: Reconciled Source Coverage)
   const shortlistQualifiedCount = leaderboard?.researchShortlist?.qualifiedCount ?? 0;
   const shortlistRequestedCount = leaderboard?.researchShortlist?.requestedCount ?? 3;
   const evergreenWinnerCount = leaderboard?.topThree?.length ?? 0;
-  const metaFreshLiveAds = leaderboard?.sourceCoverage?.META_ADS?.freshLiveAdsCount ?? 0;
-  const metaHistoricalAds = leaderboard?.sourceCoverage?.META_ADS?.historicalCachedAdsCount ?? 0;
+  const rawMetaLive =
+    leaderboard?.sourceCoverage?.META_ADS?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.freshLiveAdsReturned ??
+    0;
+  const rawMetaCached =
+    leaderboard?.sourceCoverage?.META_ADS?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.cachedFallbackAdsReturned ??
+    0;
   const googleFreshLiveAds =
-    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsCount ?? 0;
+    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsReturned ??
+    0;
   const googleHistoricalAds =
-    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.historicalCachedAdsCount ?? 0;
+    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.cachedFallbackAdsReturned ??
+    0;
+  const fallbackRunObservations = leaderboard?.lookbackCoverage?.totalObservationCount ?? 0;
+  const metaFreshLiveAds =
+    rawMetaLive === 0 &&
+    rawMetaCached === 0 &&
+    leaderboard?.sourceMode === "LIVE_ONLY" &&
+    fallbackRunObservations > 0
+      ? fallbackRunObservations
+      : rawMetaLive;
+  const metaHistoricalAds =
+    rawMetaLive === 0 &&
+    rawMetaCached === 0 &&
+    leaderboard?.sourceMode !== "LIVE_ONLY" &&
+    fallbackRunObservations > 0
+      ? fallbackRunObservations
+      : rawMetaCached;
   const totalLiveAds = metaFreshLiveAds + googleFreshLiveAds;
   const totalHistoricalAds = metaHistoricalAds + googleHistoricalAds;
 
@@ -1039,8 +1106,11 @@ export default function ProductsPage() {
                     {sourceCoverageHeadline}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-mono">
-                  {totalLiveAds} live ads · {totalHistoricalAds} cached records
+                <p
+                  data-testid="pf-source-coverage-counts"
+                  className="text-[11px] text-slate-400 mt-1 font-mono"
+                >
+                  Current run: {totalLiveAds} live · {totalHistoricalAds} cached ads
                 </p>
               </div>
 
@@ -1132,37 +1202,61 @@ export default function ProductsPage() {
                 data-testid="kh02-leaderboard-container"
                 className="space-y-4"
               >
-                {/* Calm Informative Banner when Evergreen Winners == 0 */}
+                {/* Section 12: Compact Non-Compressing Evergreen Status & Shortfall Banner */}
                 {leaderboard && evergreenWinnerCount === 0 && (
                   <div
                     data-testid="kh02-empty-state"
-                    className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5"
                   >
-                    <div className="flex items-start gap-3">
-                      <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <h2
-                          data-testid="kh02-snapshot-topic-heading"
-                          className="text-xs sm:text-sm font-semibold text-white"
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0 space-y-0.5">
+                          <h2
+                            data-testid="kh02-snapshot-topic-heading"
+                            className="text-xs sm:text-sm font-semibold text-white"
+                          >
+                            No Verified Evergreen products yet for &ldquo;
+                            {leaderboard?.topic || activeRunTopic || topic}&rdquo;
+                          </h2>
+                          <p className="text-xs text-slate-400 leading-relaxed">
+                            {shortlistQualifiedCount} of {shortlistRequestedCount} products
+                            qualified for the Research Shortlist. 6+ months of verified demand
+                            history are still needed for Evergreen status.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          data-testid="pf-view-missing-evidence-btn"
+                          onClick={() => {
+                            if (canonicalRecommended[0]) {
+                              openCandidateResearchDrawer(
+                                canonicalRecommended[0].rawCandidate,
+                                canonicalRecommended[0].rawRankedItem,
+                                canonicalRecommended[0],
+                                "DEMAND"
+                              );
+                            } else {
+                              setActiveTab("EVIDENCE_DIAGNOSTICS");
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-colors whitespace-nowrap"
                         >
-                          0 Verified Evergreen Winners for &ldquo;
-                          {leaderboard?.topic || activeRunTopic || topic}&rdquo; — Showing Top
-                          Research-Qualified Products
-                        </h2>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                          Evergreen qualification requires 6–12 months of verified non-declining
-                          demand history. Review the merchant-verified products below or inspect
-                          their commercial readiness before launching.
-                        </p>
+                          View Missing Evidence
+                        </button>
                       </div>
                     </div>
+
                     {leaderboard.researchShortlist?.shortfallReason && (
-                      <span
+                      <div
                         data-testid="kh02-shortlist-shortfall-notice"
-                        className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-700/40 text-amber-200 shrink-0"
+                        className="text-[11px] px-3 py-1.5 rounded-lg bg-amber-950/35 border border-amber-700/35 text-amber-200/95 leading-relaxed break-words"
                       >
                         {leaderboard.researchShortlist.shortfallReason}
-                      </span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -1185,6 +1279,7 @@ export default function ProductsPage() {
                         data-confidence={item.evidenceConfidence}
                         data-confidence-status={item.scoreStatusCode}
                         data-identity-status={item.rawCandidate.identityStatus || "PROBABLE"}
+                        data-merchant-page-verified={item.merchantPageVerified ? "true" : "false"}
                         data-reality-status={
                           item.rawCandidate.productRealityStatus ||
                           "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
@@ -1215,6 +1310,9 @@ export default function ProductsPage() {
                           {/* Product Identity Header */}
                           <div className="flex items-start gap-3.5">
                             <div
+                              data-testid="pf-card-thumbnail"
+                              data-media-source={item.primaryMediaSourceLabel}
+                              title={`${item.primaryMediaSourceLabel} — Click to preview`}
                               onClick={() => {
                                 if (item.videoUrl || item.thumbnailUrl) {
                                   setActiveMediaItem({
@@ -1222,7 +1320,7 @@ export default function ProductsPage() {
                                     videoUrl: item.videoUrl,
                                     thumbnailUrl: item.thumbnailUrl,
                                     sourceUrl: item.canonicalProductUrl,
-                                    platform: item.supportingSources[0] || "Meta Ads",
+                                    platform: item.primaryMediaSourceLabel,
                                   });
                                 }
                               }}
@@ -1233,6 +1331,9 @@ export default function ProductsPage() {
                                   src={item.thumbnailUrl}
                                   alt={item.title}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
                                 />
                               ) : (
                                 <ShoppingBag className="h-6 w-6 text-slate-500" />
@@ -1263,11 +1364,15 @@ export default function ProductsPage() {
                               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                                 <span
                                   data-testid="kh02-badge-identity-status"
-                                  className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/70"
+                                  className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                    item.merchantPageVerified
+                                      ? "bg-emerald-950/50 text-emerald-300 border-emerald-800/50"
+                                      : "bg-amber-950/50 text-amber-300 border-amber-800/50"
+                                  }`}
                                 >
-                                  {formatBusinessTerm(
-                                    item.rawCandidate.identityStatus || "PROBABLE"
-                                  )}
+                                  {item.merchantPageVerified
+                                    ? "Merchant Page Verified"
+                                    : "Ad-Supported (Page Unverified)"}
                                 </span>
                                 <span
                                   data-testid="kh02-badge-reality-status"
@@ -1311,19 +1416,43 @@ export default function ProductsPage() {
                                   {item.evidenceConfidence}%
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-400 truncate block">
-                                {item.observationCount} ad observation
-                                {item.observationCount === 1 ? "" : "s"}
+                              <span
+                                data-testid="pf-card-ad-counts"
+                                className="text-[10px] text-slate-400 truncate block"
+                                title={`${item.supportingAdCount} distinct ads, ${item.observationCount} total historical observations across ${item.distinctAdvertisersCount} advertiser(s)`}
+                              >
+                                {item.supportingAdCount} ad{item.supportingAdCount === 1 ? "" : "s"} ·{" "}
+                                {item.observationCount} obs · {item.distinctAdvertisersCount} adv
                               </span>
                             </div>
                           </div>
 
-                          {/* Why It Matters */}
+                          {/* Section 10: Buyer-Oriented Why It Fits Your Search */}
                           <div className="space-y-1">
-                            <span className="text-[11px] font-semibold text-slate-300 block">
-                              Why it fits your search
-                            </span>
-                            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-semibold text-slate-300 block">
+                                Why it fits your search
+                              </span>
+                              <button
+                                type="button"
+                                data-testid="pf-view-evidence-details-btn"
+                                onClick={() =>
+                                  openCandidateResearchDrawer(
+                                    item.rawCandidate,
+                                    item.rawRankedItem,
+                                    item,
+                                    "OVERVIEW"
+                                  )
+                                }
+                                className="text-[10px] font-medium text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
+                              >
+                                View Evidence Details
+                              </button>
+                            </div>
+                            <p
+                              data-testid="pf-card-why-it-fits"
+                              className="text-xs text-slate-400 leading-relaxed line-clamp-2"
+                            >
                               {item.whyItMatters}
                             </p>
                           </div>
@@ -1332,18 +1461,27 @@ export default function ProductsPage() {
                           <div className="space-y-2 text-xs pt-1 border-t border-slate-800/70">
                             <div className="space-y-1">
                               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
-                                Verified Evidence
+                                Evidence Checklist
                               </span>
                               <ul className="space-y-1">
-                                {item.verifiedEvidenceItems.slice(0, 3).map((ev, i) => (
-                                  <li
-                                    key={i}
-                                    className="text-[11px] text-slate-300 flex items-center gap-1.5"
-                                  >
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
-                                    <span className="truncate">{ev}</span>
-                                  </li>
-                                ))}
+                                {item.verifiedEvidenceItems.slice(0, 3).map((ev, i) => {
+                                  const isUnverifiedWarning = ev
+                                    .toLowerCase()
+                                    .includes("unverified");
+                                  return (
+                                    <li
+                                      key={i}
+                                      className="text-[11px] text-slate-300 flex items-center gap-1.5"
+                                    >
+                                      {isUnverifiedWarning ? (
+                                        <Info className="h-3 w-3 text-amber-400 shrink-0" />
+                                      ) : (
+                                        <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                                      )}
+                                      <span className="truncate">{ev}</span>
+                                    </li>
+                                  );
+                                })}
                               </ul>
                             </div>
 
@@ -1843,12 +1981,17 @@ export default function ProductsPage() {
                         {(leaderboard?.queryExecutions || []).length > 0 ? (
                           (leaderboard?.queryExecutions || []).map((q: any, idx: number) => (
                             <tr key={idx}>
-                              <td className="py-2 px-3 text-white">{q.queryString}</td>
-                              <td className="py-2 px-3 text-slate-400">{q.queryType}</td>
+                              <td className="py-2 px-3 text-white">
+                                {q.queryString || q.keyword || "—"}
+                              </td>
+                              <td className="py-2 px-3 text-slate-400">
+                                {q.queryType || q.searchType || q.provider || "—"}
+                              </td>
                               <td className="py-2 px-3">
                                 <span
                                   className={`px-1.5 py-0.5 rounded text-[10px] ${
-                                    q.status === "QUERY_SUCCEEDED"
+                                    q.status === "QUERY_SUCCEEDED" ||
+                                    q.status === "QUERY_RETURNED_ADS"
                                       ? "bg-emerald-950 text-emerald-300"
                                       : q.status === "QUERY_FAILED"
                                       ? "bg-rose-950 text-rose-300"
@@ -1858,10 +2001,14 @@ export default function ProductsPage() {
                                   {q.status}
                                 </span>
                               </td>
-                              <td className="py-2 px-3 text-slate-300">{q.actualApiCalls}</td>
-                              <td className="py-2 px-3 text-slate-200">{q.returnedAdsCount}</td>
+                              <td className="py-2 px-3 text-slate-300">
+                                {q.actualApiCalls ?? (q.cacheHit ? 0 : 1)}
+                              </td>
+                              <td className="py-2 px-3 text-slate-200">
+                                {q.returnedAdsCount ?? q.returnedCount ?? 0}
+                              </td>
                               <td className="py-2 px-3 text-slate-400 font-sans">
-                                {q.errorMessage || "Completed"}
+                                {q.errorMessage || (q.cacheHit ? "Cached" : "Completed")}
                               </td>
                             </tr>
                           ))
@@ -1915,55 +2062,82 @@ export default function ProductsPage() {
                     {[
                       {
                         label: "1. Raw Source Items",
-                        val: leaderboard?.candidateFunnel?.rawSourceItemsCount,
+                        val:
+                          leaderboard?.candidateFunnel?.rawSourceItemsCount ??
+                          leaderboard?.candidateFunnel?.rawSourceObservations,
                       },
                       {
                         label: "2. Ad Observations",
-                        val: leaderboard?.candidateFunnel?.normalizedObservationsCount,
+                        val:
+                          leaderboard?.candidateFunnel?.normalizedObservationsCount ??
+                          leaderboard?.candidateFunnel?.normalizedObservations,
                       },
                       {
                         label: "3. Extracted Candidates",
-                        val: leaderboard?.candidateFunnel?.extractedCandidatesCount,
+                        val:
+                          leaderboard?.candidateFunnel?.extractedCandidatesCount ??
+                          leaderboard?.candidateFunnel?.rawCandidateGroups,
                       },
                       {
                         label: "4. Physical Candidates",
-                        val: leaderboard?.candidateFunnel?.physicalProductCandidatesCount,
+                        val:
+                          leaderboard?.candidateFunnel?.physicalProductCandidatesCount ??
+                          leaderboard?.candidateFunnel?.physicalProductsSupported,
                       },
                       {
                         label: "5. Non-Product Excluded",
-                        val: leaderboard?.candidateFunnel?.excludedNonProductCount,
+                        val:
+                          leaderboard?.candidateFunnel?.excludedNonProductCount ??
+                          leaderboard?.candidateFunnel?.nonProductEntitiesRejected,
                       },
                       {
                         label: "6. Site Shells Excluded",
-                        val: leaderboard?.candidateFunnel?.excludedUnverifiedSiteShellCount,
+                        val:
+                          leaderboard?.candidateFunnel?.excludedUnverifiedSiteShellCount ??
+                          leaderboard?.candidateFunnel?.unverifiedSiteShellsExcluded,
                       },
                       {
                         label: "7. Niche Irrelevant",
-                        val: leaderboard?.candidateFunnel?.excludedIrrelevantCount,
+                        val:
+                          leaderboard?.candidateFunnel?.excludedIrrelevantCount ??
+                          leaderboard?.candidateFunnel?.irrelevantAudienceRejected,
                       },
                       {
                         label: "8. Niche Relevant",
-                        val: leaderboard?.candidateFunnel?.nicheRelevantCandidatesCount,
+                        val:
+                          leaderboard?.candidateFunnel?.nicheRelevantCandidatesCount ??
+                          leaderboard?.candidateFunnel?.audienceRelevantPhysicalCount ??
+                          leaderboard?.candidateFunnel?.physicalProductsSupported,
                       },
                       {
                         label: "9. Identity Verified",
-                        val: leaderboard?.candidateFunnel?.identityVerifiedCount,
+                        val:
+                          leaderboard?.candidateFunnel?.identityVerifiedCount ??
+                          leaderboard?.candidateFunnel?.identitiesVerified,
                       },
                       {
                         label: "10. Identity Probable",
-                        val: leaderboard?.candidateFunnel?.identityProbableCount,
+                        val:
+                          leaderboard?.candidateFunnel?.identityProbableCount ??
+                          leaderboard?.candidateFunnel?.identitiesProbable,
                       },
                       {
                         label: "11. Distinct Families",
-                        val: leaderboard?.candidateFunnel?.distinctProductFamiliesCount,
+                        val:
+                          leaderboard?.candidateFunnel?.distinctProductFamiliesCount ??
+                          leaderboard?.candidateFunnel?.distinctProductFamilies,
                       },
                       {
                         label: "12. Shortlist Qualified",
-                        val: leaderboard?.candidateFunnel?.shortlistQualifiedCount,
+                        val:
+                          leaderboard?.candidateFunnel?.shortlistQualifiedCount ??
+                          leaderboard?.candidateFunnel?.researchShortlistSelected,
                       },
                       {
                         label: "13. Evergreen Winners",
-                        val: leaderboard?.candidateFunnel?.verifiedEvergreenWinnerCount,
+                        val:
+                          leaderboard?.candidateFunnel?.verifiedEvergreenWinnerCount ??
+                          leaderboard?.candidateFunnel?.verifiedEvergreenCandidates,
                       },
                     ].map((st) => (
                       <div
@@ -2181,13 +2355,107 @@ export default function ProductsPage() {
             <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
               {drawerTab === "OVERVIEW" && (
                 <div className="space-y-4">
+                  {/* Section 5.4: Consistent Product Media Preview in Research Drawer */}
+                  {(() => {
+                    const drawerImage =
+                      drawerOverviewData?.mediaGallery?.primaryImage?.url ||
+                      drawerCandidate.canonicalCard?.thumbnailUrl ||
+                      (Array.isArray(drawerCandidate.candidate.imageReferences)
+                        ? drawerCandidate.candidate.imageReferences[0]
+                        : null) ||
+                      drawerCandidate.candidate.thumbnailUrl ||
+                      null;
+                    const drawerVideo =
+                      drawerOverviewData?.mediaGallery?.primaryVideo?.url ||
+                      drawerCandidate.canonicalCard?.videoUrl ||
+                      drawerCandidate.candidate.videoUrl ||
+                      null;
+                    const mediaSourceLabel =
+                      drawerOverviewData?.mediaGallery?.primaryImage?.sourceLabel ||
+                      drawerCandidate.canonicalCard?.primaryMediaSourceLabel ||
+                      (Array.isArray(drawerCandidate.candidate.imageReferences) &&
+                      drawerCandidate.candidate.imageReferences.length > 0
+                        ? "Merchant Product Image"
+                        : drawerImage
+                        ? "Meta Ad Creative"
+                        : "No Verified Product Media");
+                    return (
+                      <div
+                        data-testid="pf-drawer-media-preview"
+                        className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-white">Product Media Preview</h3>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                            {mediaSourceLabel}
+                          </span>
+                        </div>
+                        {drawerImage && !isStockImage(drawerImage) ? (
+                          <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <div className="w-full sm:w-44 h-36 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+                              <img
+                                src={drawerImage}
+                                alt={
+                                  drawerCandidate.candidate.merchantVerifiedProductName ||
+                                  drawerCandidate.candidate.canonicalProductName ||
+                                  "Product preview"
+                                }
+                                className="w-full h-full object-contain p-1"
+                              />
+                            </div>
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <p className="text-slate-300 text-xs leading-relaxed">
+                                Primary visual resolved using strict source priority (Merchant
+                                Product Image preferred over Ad Creative).
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setActiveMediaItem({
+                                      title:
+                                        drawerCandidate.candidate.merchantVerifiedProductName ||
+                                        drawerCandidate.candidate.canonicalProductName ||
+                                        drawerCandidate.candidate.title,
+                                      videoUrl: drawerVideo,
+                                      thumbnailUrl: drawerImage,
+                                      sourceUrl: drawerCandidate.candidate.canonicalProductUrl,
+                                      platform: mediaSourceLabel,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium flex items-center gap-1.5"
+                                >
+                                  {drawerVideo ? (
+                                    <>
+                                      <Play className="h-3 w-3 text-indigo-400" />
+                                      <span>Play Video / Enlarge</span>
+                                    </>
+                                  ) : (
+                                    <span>Enlarge Image</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 text-slate-400 flex items-center gap-2.5">
+                            <ShoppingBag className="h-5 w-5 text-slate-500 shrink-0" />
+                            <span>
+                              No verified product image or video could be confirmed from the
+                              linked merchant page or ad creative.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <div className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2">
                     <h3 className="font-semibold text-white">
-                      Product Identity & Target Customer Fit
+                      Why It Fits Your Search & Target Customer
                     </h3>
                     <p className="text-slate-300 leading-relaxed">
-                      {drawerCandidate.candidate.verificationReason ||
-                        drawerCandidate.canonicalCard?.whyItMatters ||
+                      {drawerCandidate.canonicalCard?.whyItMatters ||
                         "Identified as a concrete sellable product supported by advertising and storefront evidence."}
                     </p>
                     {drawerCandidate.candidate.audienceRelevance && (
@@ -2202,6 +2470,30 @@ export default function ProductsPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Section 10: Technical Verification Details moved here */}
+                  {(drawerCandidate.canonicalCard?.technicalVerificationSummary ||
+                    drawerCandidate.candidate.verificationReason) && (
+                    <div
+                      data-testid="pf-drawer-technical-verification"
+                      className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-white">
+                          Technical Identity & Storefront Verification
+                        </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                          {drawerCandidate.candidate.fetchOutcome ||
+                            drawerCandidate.candidate.identityStatus ||
+                            "INSPECTED"}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-[11px] font-mono leading-relaxed">
+                        {drawerCandidate.canonicalCard?.technicalVerificationSummary ||
+                          drawerCandidate.candidate.verificationReason}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3.5 rounded-xl bg-[#111827] border border-slate-800">
@@ -2232,7 +2524,9 @@ export default function ProductsPage() {
                     <div className="p-3.5 rounded-xl bg-[#111827] border border-slate-800 flex items-center justify-between">
                       <div className="min-w-0 pr-3">
                         <span className="text-[10px] text-slate-400 block">
-                          Verified Product Page URL
+                          {drawerCandidate.canonicalCard?.merchantPageVerified
+                            ? "Verified Product Page URL"
+                            : "Referenced Merchant URL (Unverified Fetch)"}
                         </span>
                         <span className="text-xs font-mono text-indigo-300 truncate block">
                           {drawerCandidate.candidate.canonicalProductUrl}

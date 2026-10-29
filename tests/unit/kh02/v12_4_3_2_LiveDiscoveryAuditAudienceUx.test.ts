@@ -76,10 +76,10 @@ function makeBaseCandidate(
 
 describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audience Relevance & UX ViewModel", () => {
   describe("1. Release & Runtime Identity", () => {
-    it("reports release version 12.4.3.2", () => {
-      expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3.2");
+    it("reports release version 12.4.3.2 or 12.4.3.2.1", () => {
+      expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.2(\.1)?$/);
       const runtime = evaluateKH02RuntimeIdentity();
-      expect(runtime.releaseVersion).toBe("12.4.3.2");
+      expect(runtime.releaseVersion).toMatch(/^12\.4\.3\.2(\.1)?$/);
     });
   });
 

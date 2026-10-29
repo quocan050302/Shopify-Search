@@ -74,11 +74,58 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const leaderboard = requestedRunId
+    const rawLeaderboard = requestedRunId
       ? targetRun?.result || null
       : targetRun?.result || (await getKH02Leaderboard(context.workspaceId));
-    const resolvedRunId = targetRun?.runId || leaderboard?.researchRunId || null;
-    const rawStatus = targetRun?.status || (leaderboard ? "COMPLETED" : null);
+    const resolvedRunId = targetRun?.runId || rawLeaderboard?.researchRunId || null;
+    const rawStatus = targetRun?.status || (rawLeaderboard ? "COMPLETED" : null);
+
+    let leaderboard = rawLeaderboard;
+    if (leaderboard) {
+      const metaTel = leaderboard.providerTelemetry?.META_ADS;
+      const googleTel = leaderboard.providerTelemetry?.GOOGLE_ADS;
+      const lookbackCov = leaderboard.lookbackCoverage;
+      const obsList = Array.isArray(leaderboard.sourceObservations)
+        ? leaderboard.sourceObservations
+        : [];
+      const metaLiveCount =
+        leaderboard.sourceCoverage?.META_ADS?.freshLiveAdsCount ??
+        metaTel?.freshLiveCount ??
+        lookbackCov?.freshLiveAdsCount ??
+        obsList.filter((o: any) => o?.source === "META_ADS" && o?.provenance === "LIVE_PROVIDER").length;
+      const metaCachedCount =
+        leaderboard.sourceCoverage?.META_ADS?.historicalCachedAdsCount ??
+        metaTel?.cachedRecordsCount ??
+        lookbackCov?.historicalCachedAdsCount ??
+        obsList.filter((o: any) => o?.source === "META_ADS" && o?.provenance !== "LIVE_PROVIDER").length;
+
+      leaderboard = {
+        ...leaderboard,
+        researchRunId: resolvedRunId || leaderboard.researchRunId,
+        sourceCoverage: leaderboard.sourceCoverage || {
+          META_ADS: {
+            freshLiveAdsCount: metaLiveCount,
+            historicalCachedAdsCount: metaCachedCount,
+            totalObservationsCount: metaLiveCount + metaCachedCount,
+            queryExecuted: Boolean(metaTel?.queryExecuted),
+            queryStatus:
+              leaderboard.sourceStatuses?.META_ADS || metaTel?.queryStatus || "NOT_CONFIGURED",
+          },
+          GOOGLE_ADS: {
+            freshLiveAdsCount: obsList.filter(
+              (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance === "LIVE_PROVIDER"
+            ).length,
+            historicalCachedAdsCount: obsList.filter(
+              (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance !== "LIVE_PROVIDER"
+            ).length,
+            totalObservationsCount: obsList.filter((o: any) => o?.source === "GOOGLE_ADS").length,
+            queryExecuted: Boolean(googleTel?.queryExecuted),
+            queryStatus:
+              leaderboard.sourceStatuses?.GOOGLE_ADS || googleTel?.queryStatus || "SKIPPED",
+          },
+        },
+      };
+    }
 
     let activeJob: any = null;
     if (rawStatus === "PENDING" || rawStatus === "QUEUED" || rawStatus === "RUNNING") {

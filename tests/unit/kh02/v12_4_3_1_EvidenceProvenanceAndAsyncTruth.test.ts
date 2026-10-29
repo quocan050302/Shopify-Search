@@ -466,7 +466,7 @@ describe("SWAI KH-02 V12.4.3.1 — Evidence Provenance, Runtime Parity & Async T
   // ============================================================================
   describe("Group 5 — Runtime Version Parity Closure (F05)", () => {
     it("5.1 SWAI_KH02_RELEASE_VERSION is aligned across service, next.config.ts, and UI", () => {
-      expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.(1|2)$/);
+      expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.(1|2|2\.1)$/);
       const nextCfg = fs.readFileSync(path.resolve(process.cwd(), "next.config.ts"), "utf8");
       expect(nextCfg).toContain(`"${SWAI_KH02_RELEASE_VERSION}"`);
     });

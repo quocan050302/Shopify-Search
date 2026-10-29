@@ -271,6 +271,21 @@ export async function assertProductWorkspaceAccess(
     }
   }
 
+  // Also check if this product was discovered or persisted in a KH-02 Research Run (SyncJob)
+  if (!associatedWorkspaceIds.has(context.workspaceId)) {
+    const kh02Runs = await prisma.syncJob.findMany({
+      where: {
+        jobType: "KH02_RESEARCH",
+        resultJson: { contains: productId },
+      },
+      select: { workspaceId: true },
+      take: 20,
+    });
+    for (const job of kh02Runs) {
+      if (job.workspaceId) associatedWorkspaceIds.add(job.workspaceId);
+    }
+  }
+
   // Fail closed: If the product has NO workspace associations, deny access unless
   // operating in the system default workspace with owner authorization.
   if (associatedWorkspaceIds.size === 0) {

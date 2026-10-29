@@ -114,6 +114,16 @@ export interface EvergreenLeaderboardResult {
   shortlistCoverage?: ShortlistCoverageState;
   lookbackCoverage?: KH02LookbackCoverage;
   sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
+  sourceCoverage?: Record<
+    string,
+    {
+      freshLiveAdsCount: number;
+      historicalCachedAdsCount: number;
+      totalObservationsCount: number;
+      queryExecuted: boolean;
+      queryStatus: SourceRunStatus;
+    }
+  >;
 }
 
 export interface ResearchProgressPayload {
@@ -1732,6 +1742,36 @@ export async function runEvergreenProductResearch(
     shortlistCoverage,
     lookbackCoverage,
     sourceMode: input.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+    sourceCoverage: {
+      META_ADS: {
+        freshLiveAdsCount:
+          providerTelemetry.META_ADS?.freshLiveCount ??
+          lookbackCoverage.freshLiveAdsCount ??
+          0,
+        historicalCachedAdsCount:
+          providerTelemetry.META_ADS?.cachedRecordsCount ??
+          lookbackCoverage.historicalCachedAdsCount ??
+          0,
+        totalObservationsCount: adObservations.filter(
+          (o) => o.source === "META_ADS"
+        ).length,
+        queryExecuted: Boolean(providerTelemetry.META_ADS?.queryExecuted),
+        queryStatus: sourceStatuses.META_ADS,
+      },
+      GOOGLE_ADS: {
+        freshLiveAdsCount: secondaryObservations.filter(
+          (o) => o.source === "GOOGLE_ADS" && o.provenance === "LIVE_PROVIDER"
+        ).length,
+        historicalCachedAdsCount: secondaryObservations.filter(
+          (o) => o.source === "GOOGLE_ADS" && o.provenance !== "LIVE_PROVIDER"
+        ).length,
+        totalObservationsCount: secondaryObservations.filter(
+          (o) => o.source === "GOOGLE_ADS"
+        ).length,
+        queryExecuted: Boolean(providerTelemetry.GOOGLE_ADS?.queryExecuted),
+        queryStatus: sourceStatuses.GOOGLE_ADS,
+      },
+    },
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob
