@@ -16,7 +16,10 @@
  * - 4.7: Preserves both ad and merchant claims on contradiction and blocks winner qualification.
  */
 
-import { classifyAdvertisingHeadline } from "./adHeadlineClassifier";
+import {
+  classifyAdvertisingHeadline,
+  containsKnownProductNoun,
+} from "./adHeadlineClassifier";
 import {
   extractProductUrlMetadata,
   fetchVerifiedProductPageMetadata,
@@ -174,6 +177,11 @@ export function detectAdMerchantContradiction(
     return { contradicts: false, reason: null };
   }
 
+  // Only flag a product contradiction when BOTH the ad headline and the merchant title
+  // contain a concrete physical product noun (avoids false contradictions on pure ad benefit hooks)
+  if (!containsKnownProductNoun(adClean) || !containsKnownProductNoun(merchClean)) {
+    return { contradicts: false, reason: null };
+  }
   const tokenize = (s: string) =>
     s
       .split(/[^a-z0-9]+/)

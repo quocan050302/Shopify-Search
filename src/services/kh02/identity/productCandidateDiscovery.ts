@@ -268,7 +268,10 @@ function inferProblemStatement(
     return problemMatches[0].trim();
   }
 
-  const firstSentence = combined.split(/[.!?]/)[0];
+  const firstSentence = combined.split(/[\n\r.!?]+/).map((s) => s.trim()).find((s) => s.length >= 12);
+  if (firstSentence) {
+    return firstSentence.slice(0, 118).trim();
+  }
   if (
     firstSentence &&
     firstSentence.length > 15 &&
@@ -711,7 +714,7 @@ export function discoverProductCandidatesFromAds(
       advertiserNames: Array.from(c.advertisers),
       supportingAdIds: Array.from(new Set(c.adIds)),
       supportingSourceTypes: Array.from(c.sources),
-      totalObservationCount: c.observations.length,
+      totalObservationCount: Math.max(c.observations.length, c.observations.reduce((sum, o) => sum + (Number((o.metrics as any)?.observationsCount) || 1), 0)),
       distinctAdvertisersCount: c.advertisers.size,
       earliestObservationDate: c.earliest,
       latestObservationDate: c.latest,
@@ -1259,6 +1262,9 @@ export function selectTopResearchShortlist(
     if (verA !== verB) return verB - verA;
     const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
     if (relDiff !== 0) return relDiff;
+    const vidA = a.videoUrl ? 1 : 0;
+    const vidB = b.videoUrl ? 1 : 0;
+    if (vidA !== vidB) return vidB - vidA;
     return b.totalObservationCount - a.totalObservationCount;
   });
 
@@ -1336,8 +1342,8 @@ export function selectTopResearchShortlist(
           comp.areDistinctOpportunitiesForSpecificQuery);
       const allowForBroadShortfall =
         inferredIntent === "BROAD_CATEGORY" &&
-        options?.allowSameFamilyAlternativesOnShortfall === true &&
-        isExplicitlyDifferentiatedModel;
+        (options?.allowSameFamilyAlternativesOnShortfall === true || (selectedFamilies.size >= 2 && c.identityStatus === "VERIFIED")) &&
+        (isExplicitlyDifferentiatedModel || (c.identityStatus === "VERIFIED" && primaryInFamily.identityStatus === "VERIFIED" && c.storeDomain !== primaryInFamily.storeDomain));
 
       if (allowForSpecificQuery || allowForBroadShortfall) {
         c.distinctnessRole = "SAME_FAMILY_MODEL_ALTERNATIVE";
@@ -1427,8 +1433,8 @@ export async function enrichProductCandidatesWithEvidence(
   candidates: DiscoveredProductCandidate[],
   context: ProductEnrichmentContext
 ): Promise<ProductEnrichmentResult> {
-  const maxConcurrency = context.maxConcurrency || 3;
-  const timeoutMs = context.timeoutMs || 4000;
+  const maxConcurrency = context.maxConcurrency || 8;
+  const timeoutMs = context.timeoutMs || 2500;
   const errors: string[] = [];
 
   let enrichedCount = 0;
@@ -1598,6 +1604,14 @@ export async function enrichProductCandidatesWithEvidence(
             relevance.matchedArchetypeId ?? candidate.matchedArchetypeId;
           candidate.relevanceScore = relevance.score;
           candidate.relevanceReasons = relevance.reasons;
+          if (!candidate.problemStatement) {
+            candidate.problemStatement = inferProblemStatement(
+              candidate.canonicalProductName || candidate.title,
+              candidate.sourceObservations
+                .map((o) => o.description || o.observedContent || "")
+                .join(". ")
+            );
+          }
 
           attachDistinctnessFingerprint(candidate);
 

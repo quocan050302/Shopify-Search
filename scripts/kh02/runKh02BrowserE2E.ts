@@ -373,6 +373,11 @@ export async function runKh02BrowserE2E(
       const startPoll = Date.now();
 
       while (Date.now() - startPoll < maxWaitMs) {
+        const domRunId = await page.locator('[data-testid="kh02-authoritative-run-meta"]').first().getAttribute("data-research-run-id").catch(() => null);
+        if (acceptedRunId && domRunId !== acceptedRunId) {
+          await page.waitForTimeout(pollInterval);
+          continue;
+        }
         const hasCards = (await page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').count()) > 0;
         const hasEmptyState = (await page.locator('[data-testid="kh02-empty-state"]').count()) > 0;
 

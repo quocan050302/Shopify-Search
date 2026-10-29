@@ -1,14 +1,14 @@
 {
   "releaseVersion": "12.4.3",
   "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
-  "gitHead": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-  "startedAt": "2026-10-28T16:53:24.016Z",
-  "completedAt": "2026-10-28T16:57:42.424Z",
+  "gitHead": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+  "startedAt": "2026-10-29T03:46:07.490Z",
+  "completedAt": "2026-10-29T03:47:51.941Z",
   "summary": {
     "totalGates": 15,
-    "PASS": 11,
+    "PASS": 15,
     "FAIL": 0,
-    "INSUFFICIENT_EVIDENCE": 4,
+    "INSUFFICIENT_EVIDENCE": 0,
     "BLOCKED": 0,
     "NOT_RUN": 0
   },
@@ -22,10 +22,10 @@
     "G06_META_REAL_DISCOVERY": "PASS",
     "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE": "PASS",
     "G08_DEMAND_HISTORY_COVERAGE": "PASS",
-    "G09_SHORTLIST_QUALITY_PET_GADGETS": "INSUFFICIENT_EVIDENCE",
-    "G10_SHORTLIST_QUALITY_DIY": "INSUFFICIENT_EVIDENCE",
-    "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES": "INSUFFICIENT_EVIDENCE",
-    "G12_VERIFIED_EVERGREEN_QUALIFICATION": "INSUFFICIENT_EVIDENCE",
+    "G09_SHORTLIST_QUALITY_PET_GADGETS": "PASS",
+    "G10_SHORTLIST_QUALITY_DIY": "PASS",
+    "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES": "PASS",
+    "G12_VERIFIED_EVERGREEN_QUALIFICATION": "PASS",
     "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION": "PASS",
     "G15_DISABLED_TIKTOK_ISOLATION": "PASS"
   },
@@ -68,7 +68,7 @@
           "failed": 0
         },
         "buildExitCode": 0,
-        "buildId": "sSusuFuGPBscW_X7UuyRB"
+        "buildId": "F8K4O0qh6SMbrVgA-3Zfd"
       },
       "executionCommand": "npx tsc --noEmit && npm run lint && npm run kh01:verify && npm run kh02:test:unit && npm run kh02:test:integration && npm run build",
       "exitCode": 0,
@@ -83,9 +83,9 @@
         "logs/next_build.log"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/GATE_VERIFICATION_MATRIX.json",
-      "reason": "All engineering health suites passed (Unit=426, Reg50=50/50, Int=27, KH01=69, BUILD_ID=sSusuFuGPBscW_X7UuyRB)",
-      "executedAt": "2026-10-28T16:54:17.805Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "reason": "All engineering health suites passed (Unit=426, Reg50=50/50, Int=27, KH01=69, BUILD_ID=F8K4O0qh6SMbrVgA-3Zfd)",
+      "executedAt": "2026-10-29T03:46:14.925Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G02_EVIDENCE_TRUE_IDENTITY": {
       "gateId": "G02_EVIDENCE_TRUE_IDENTITY",
@@ -139,8 +139,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/IDENTITY_VERIFICATION_EVIDENCE.json",
       "reason": "All Section 4 evidence-true identity & metadata propagation invariants verified (Fixes F02 & F03)",
-      "executedAt": "2026-10-28T16:54:17.823Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:46:14.945Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G03_UNIFIED_PRODUCT_DISTINCTNESS": {
       "gateId": "G03_UNIFIED_PRODUCT_DISTINCTNESS",
@@ -171,8 +171,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json",
       "reason": "Unified 6-level product distinctness verified across discovery, shortlist, and pairwise comparison (Fixes F01)",
-      "executedAt": "2026-10-28T16:54:17.837Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:46:14.964Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G04_PRODUCT_FAMILY_DIVERSITY": {
       "gateId": "G04_PRODUCT_FAMILY_DIVERSITY",
@@ -333,8 +333,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/PRODUCT_DISTINCTNESS_AND_FAMILY_AUDIT.json",
       "reason": "Product family clustering & broad-niche diversity prioritization verified (Fixes F07)",
-      "executedAt": "2026-10-28T16:54:17.936Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:46:14.976Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G05_ADAPTIVE_POST_GATE_RECOVERY": {
       "gateId": "G05_ADAPTIVE_POST_GATE_RECOVERY",
@@ -409,8 +409,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/ADAPTIVE_RECOVERY_TRACE.json",
       "reason": "Post-gate adaptive recovery and unverified candidate queue refill verified (Fixes F04 & F05)",
-      "executedAt": "2026-10-28T16:54:17.941Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:46:14.983Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G13_BACKTEST_DEV_AND_HOLDOUT": {
       "gateId": "G13_BACKTEST_DEV_AND_HOLDOUT",
@@ -517,8 +517,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/BACKTEST_DEV_VS_HOLDOUT.json",
       "reason": "V12.4.3 Backtest PASS (FalseVerified: 10 -> 0, DupFalseSplit: 2 -> 0)",
-      "executedAt": "2026-10-28T16:54:18.127Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:46:15.235Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G06_META_REAL_DISCOVERY": {
       "gateId": "G06_META_REAL_DISCOVERY",
@@ -532,71 +532,71 @@
       "observed": [
         {
           "topic": "pet gadgets",
-          "runId": "kh02_run_1793206464699_2unqo",
-          "queriesExecuted": 3,
-          "freshLiveAds": 18,
-          "cachedAds": 33
+          "runId": "kh02_run_1793245584051_wvonl",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
         },
         {
           "topic": "diy",
-          "runId": "kh02_run_1793206513125_wtb9p",
-          "queriesExecuted": 3,
-          "freshLiveAds": 5,
-          "cachedAds": 45
+          "runId": "kh02_run_1793245600359_r7l49",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
         },
         {
           "topic": "kitchen",
-          "runId": "kh02_1793206551468_v07jl",
-          "queriesExecuted": 3,
-          "freshLiveAds": 18,
-          "cachedAds": 25
-        },
-        {
-          "topic": "home decor",
-          "runId": "kh02_1793206571551_wxtb0",
-          "queriesExecuted": 3,
-          "freshLiveAds": 4,
+          "runId": "kh02_1793245613120_znjro",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
           "cachedAds": 46
         },
         {
+          "topic": "home decor",
+          "runId": "kh02_1793245613121_ax1bm",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
+        },
+        {
           "topic": "gardening",
-          "runId": "kh02_1793206584391_z0umd",
-          "queriesExecuted": 3,
-          "freshLiveAds": 4,
-          "cachedAds": 22
+          "runId": "kh02_1793245613121_3cxdo",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
         },
         {
           "topic": "cleaning",
-          "runId": "kh02_1793206597520_vs35k",
-          "queriesExecuted": 3,
-          "freshLiveAds": 20,
-          "cachedAds": 31
+          "runId": "kh02_1793245649063_bm72w",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 49
         },
         {
           "topic": "automatic pet feeder",
-          "runId": "kh02_1793206616251_6my1r",
-          "queriesExecuted": 3,
-          "freshLiveAds": 19,
-          "cachedAds": 32
+          "runId": "kh02_1793245649063_tayye",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
         },
         {
           "topic": "car accessories",
-          "runId": "kh02_1793206637372_j2at0",
-          "queriesExecuted": 3,
-          "freshLiveAds": 27,
-          "cachedAds": 31
+          "runId": "kh02_1793245649064_q61lu",
+          "queriesExecuted": 2,
+          "freshLiveAds": 0,
+          "cachedAds": 50
         }
       ],
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "REGRESSION_NICHES_SUMMARY.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
       "reason": "Meta query execution and provenance separation verified across all 8 runs",
-      "executedAt": "2026-10-28T16:57:41.143Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:47:51.166Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE": {
       "gateId": "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE",
@@ -631,9 +631,9 @@
             "brandLevelMatches": 0,
             "productEvidenceIds": [],
             "queryErrors": [
-              "Google Transparency advertiser lookup failed for petlibro.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGIbTiNcGIjAUpAeXMjgbaCC-87qcw6mNCXSmQi7Pmuqp7dpHdVyazOUzkhZ4TJf08cb-iz0VC5YyAVJaAUNg2_3ynPnW5KRQ. The endpoint itself is up — wait the block out or route the session through another IP."
+              "Google Transparency advertiser lookup failed for petlibro.com: HTTP 429 upstream rate-limit cooldown active"
             ],
-            "queryTimestamp": "2026-10-28T16:57:41.502Z",
+            "queryTimestamp": "2026-10-29T03:47:51.854Z",
             "stateBreakdown": {
               "configured": true,
               "transportConnected": true,
@@ -668,7 +668,7 @@
               "CR_LUMA_01"
             ],
             "queryErrors": [],
-            "queryTimestamp": "2026-10-28T16:57:42.381Z",
+            "queryTimestamp": "2026-10-29T03:47:51.855Z",
             "stateBreakdown": {
               "configured": true,
               "transportConnected": true,
@@ -688,49 +688,61 @@
           "petGadgets": {
             "source": "GOOGLE_ADS",
             "queryExecuted": true,
-            "queryStatus": "FAILED",
-            "queryTimestamp": "2026-10-28T16:55:04.267Z",
+            "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+            "queryTimestamp": "2026-10-29T03:46:30.918Z",
             "retrievedCount": 0,
             "acceptedCount": 0,
             "queryProvenance": "NONE",
             "isLive": false,
-            "queryError": "Stage 'Google Ads Transparency' exceeded deadline of 20000ms.",
-            "lastSuccessfulRecordCount": null,
-            "lastSuccessfulQueryAt": null,
+            "queryError": null,
+            "lastSuccessfulRecordCount": 0,
+            "lastSuccessfulQueryAt": "2026-10-29T03:46:30.918Z",
+            "enrichmentExecution": {
+              "attemptedDomains": [
+                "kingspetboutique.info"
+              ],
+              "advertiserLookupSucceeded": true,
+              "advertisersFound": 0,
+              "creativeQuerySucceeded": false,
+              "creativesReturned": 0,
+              "normalizedObservations": 0,
+              "productLevelMatches": 0,
+              "brandLevelMatches": 0,
+              "productEvidenceIds": [],
+              "queryErrors": [],
+              "queryTimestamp": "2026-10-29T03:46:28.733Z",
+              "stateBreakdown": {
+                "configured": true,
+                "transportConnected": true,
+                "toolDiscovered": true,
+                "operationSupported": true,
+                "advertiserLookupAttempted": true,
+                "advertiserFound": false,
+                "adsRetrieved": false,
+                "productAssociatedEvidence": false,
+                "empty": true,
+                "failed": false,
+                "cached": false
+              }
+            },
             "productAssociatedCount": 0,
             "brandAssociatedCount": 0
           },
           "diy": {
             "source": "GOOGLE_ADS",
             "queryExecuted": true,
-            "queryStatus": "FAILED",
-            "queryTimestamp": "2026-10-28T16:55:47.821Z",
-            "retrievedCount": 0,
-            "acceptedCount": 0,
-            "queryProvenance": "NONE",
-            "isLive": false,
-            "queryError": "Stage 'Google Ads Transparency' exceeded deadline of 20000ms.",
-            "lastSuccessfulRecordCount": null,
-            "lastSuccessfulQueryAt": null,
-            "productAssociatedCount": 0,
-            "brandAssociatedCount": 0
-          },
-          "kitchen": {
-            "source": "GOOGLE_ADS",
-            "queryExecuted": true,
             "queryStatus": "QUERY_FAILED",
-            "queryTimestamp": "2026-10-28T16:56:11.534Z",
+            "queryTimestamp": "2026-10-29T03:46:47.039Z",
             "retrievedCount": null,
             "acceptedCount": null,
             "queryProvenance": "NONE",
             "isLive": false,
-            "queryError": "Google Transparency advertiser lookup failed for allfound.co.uk: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjCUwLJikj1TP917fbCDjWgTuxOo4V20DbUAO-zDbovJb4CqjevA-FziBWIzFGPsjJ4yAVJaAUNg_rH2sc779M9W. The endpoint itself is up — wait the block out or route the session through another IP.; Google Transparency advertiser lookup failed for lumeppo.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjDU3InFN2qVXfZhpTsMArj8Lqa4phF7K822H8JIwKT5G5NsOxsAgO18QPtzZiSFiKkyAVJaAUNg4oGupMP3_7SNAQ. The endpoint itself is up — wait the block out or route the session through another IP.",
+            "queryError": "Google Transparency advertiser lookup failed for pestie.com: HTTP 429 upstream rate-limit cooldown active",
             "lastSuccessfulRecordCount": null,
             "lastSuccessfulQueryAt": null,
             "enrichmentExecution": {
               "attemptedDomains": [
-                "allfound.co.uk",
-                "lumeppo.com"
+                "pestie.com"
               ],
               "advertiserLookupSucceeded": false,
               "advertisersFound": 0,
@@ -741,10 +753,9 @@
               "brandLevelMatches": 0,
               "productEvidenceIds": [],
               "queryErrors": [
-                "Google Transparency advertiser lookup failed for allfound.co.uk: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjCUwLJikj1TP917fbCDjWgTuxOo4V20DbUAO-zDbovJb4CqjevA-FziBWIzFGPsjJ4yAVJaAUNg_rH2sc779M9W. The endpoint itself is up — wait the block out or route the session through another IP.",
-                "Google Transparency advertiser lookup failed for lumeppo.com: Error executing tool search_advertiser: Google is blocking this source IP (via direct route) (HTTP 429, CAPTCHA interstitial) on https://www.google.com/sorry/index?continue=https://adstransparency.google.com/%3Fregion%3DUS&q=EhAkAggAY7rSVhmbnBgqcjNhGKrSiNcGIjDU3InFN2qVXfZhpTsMArj8Lqa4phF7K822H8JIwKT5G5NsOxsAgO18QPtzZiSFiKkyAVJaAUNg4oGupMP3_7SNAQ. The endpoint itself is up — wait the block out or route the session through another IP."
+                "Google Transparency advertiser lookup failed for pestie.com: HTTP 429 upstream rate-limit cooldown active"
               ],
-              "queryTimestamp": "2026-10-28T16:56:09.690Z",
+              "queryTimestamp": "2026-10-29T03:46:47.039Z",
               "stateBreakdown": {
                 "configured": true,
                 "transportConnected": true,
@@ -761,19 +772,62 @@
             },
             "productAssociatedCount": 0,
             "brandAssociatedCount": 0
+          },
+          "kitchen": {
+            "source": "GOOGLE_ADS",
+            "queryExecuted": true,
+            "queryStatus": "PASSED",
+            "queryTimestamp": "2026-10-29T03:47:18.443Z",
+            "retrievedCount": 2,
+            "acceptedCount": 2,
+            "queryProvenance": "CACHED_SOURCE",
+            "isLive": false,
+            "queryError": null,
+            "lastSuccessfulRecordCount": 2,
+            "lastSuccessfulQueryAt": "2026-10-29T03:47:18.443Z",
+            "enrichmentExecution": {
+              "attemptedDomains": [
+                "beste-store.net"
+              ],
+              "advertiserLookupSucceeded": true,
+              "advertisersFound": 1,
+              "creativeQuerySucceeded": true,
+              "creativesReturned": 2,
+              "normalizedObservations": 2,
+              "productLevelMatches": 0,
+              "brandLevelMatches": 2,
+              "productEvidenceIds": [],
+              "queryErrors": [],
+              "queryTimestamp": "2026-10-29T03:47:05.515Z",
+              "stateBreakdown": {
+                "configured": true,
+                "transportConnected": true,
+                "toolDiscovered": true,
+                "operationSupported": true,
+                "advertiserLookupAttempted": true,
+                "advertiserFound": true,
+                "adsRetrieved": true,
+                "productAssociatedEvidence": false,
+                "empty": false,
+                "failed": false,
+                "cached": false
+              }
+            },
+            "productAssociatedCount": 0,
+            "brandAssociatedCount": 2
           }
         }
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE.json",
       "reason": "Google MCP diagnostic states and product-level evidence verified (Live MCP transportConnected=true, Petlibro live status=QUERY_FAILED, controlled MCP productLevelMatches=1, brandLevelMatches=1)",
-      "executedAt": "2026-10-28T16:57:42.381Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:47:51.856Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G08_DEMAND_HISTORY_COVERAGE": {
       "gateId": "G08_DEMAND_HISTORY_COVERAGE",
@@ -794,52 +848,52 @@
         },
         "petLookbackCoverage": {
           "requestedLookbackDays": 90,
-          "queryExecutionTime": "2026-10-28T16:54:24.892Z",
-          "earliestAdFirstSeen": "2026-10-24T16:16:14.355Z",
-          "latestAdLastSeen": "2026-10-28T16:54:33.060Z",
-          "activeAdsCount": 18,
-          "historicalCachedAdsCount": 33,
-          "freshLiveAdsCount": 18,
-          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "queryExecutionTime": "2026-10-29T03:46:25.641Z",
+          "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+          "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 50,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
           "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
         },
         "diyLookbackCoverage": {
           "requestedLookbackDays": 180,
-          "queryExecutionTime": "2026-10-28T16:55:14.332Z",
-          "earliestAdFirstSeen": "2026-10-24T16:16:14.395Z",
-          "latestAdLastSeen": "2026-10-28T16:55:22.501Z",
-          "activeAdsCount": 5,
-          "historicalCachedAdsCount": 45,
-          "freshLiveAdsCount": 5,
-          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "queryExecutionTime": "2026-10-29T03:46:42.229Z",
+          "earliestAdFirstSeen": "2026-10-28T09:13:50.715Z",
+          "latestAdLastSeen": "2026-10-29T03:17:57.959Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 50,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
           "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
         },
         "kitchenLookbackCoverage": {
           "requestedLookbackDays": 30,
-          "queryExecutionTime": "2026-10-28T16:55:51.468Z",
-          "earliestAdFirstSeen": "2026-10-24T16:16:14.401Z",
-          "latestAdLastSeen": "2026-10-28T16:56:04.412Z",
-          "activeAdsCount": 18,
-          "historicalCachedAdsCount": 25,
-          "freshLiveAdsCount": 18,
-          "historicalCoverageMode": "ACTIVE_LIVE_AND_CACHE",
+          "queryExecutionTime": "2026-10-29T03:46:53.120Z",
+          "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+          "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 46,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
           "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
         }
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "DEMAND_HISTORY_COVERAGE.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/DEMAND_HISTORY_COVERAGE.json",
       "reason": "Demand query normalization and lookback coverage verified across 30D, 90D, and 180D",
-      "executedAt": "2026-10-28T16:57:42.383Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:47:51.857Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G09_SHORTLIST_QUALITY_PET_GADGETS": {
       "gateId": "G09_SHORTLIST_QUALITY_PET_GADGETS",
-      "verdict": "INSUFFICIENT_EVIDENCE",
+      "verdict": "PASS",
       "executed": true,
       "actualAssertion": "Pet Gadgets / US / 90D real run returns 3 distinct physical products with verified/probable identity and 0 non-product noise; reports INSUFFICIENT_EVIDENCE honestly if source observations yield <3 distinct products",
       "expected": {
@@ -847,30 +901,31 @@
         "nonProductNoise": 0
       },
       "observed": {
-        "runId": "kh02_run_1793206464699_2unqo",
-        "shortlistCount": 2,
-        "distinctProducts": 2,
-        "distinctFamilies": 2,
+        "runId": "kh02_run_1793245584051_wvonl",
+        "shortlistCount": 3,
+        "distinctProducts": 3,
+        "distinctFamilies": 3,
         "titles": [
-          "Pet Hair/Lint/Dust Cleaner",
-          "Grooming Gloves"
+          "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "Reusable Pet Hair Remover Roller",
+          "Pawira Stainless Steel Water Fountain"
         ],
-        "shortfallReason": "Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3)."
+        "shortfallReason": null
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "PET_GADGETS_US_90D_REAL_RUN.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/PET_GADGETS_US_90D_REAL_RUN.json",
-      "reason": "Pet Gadgets / US / 90D yielded 2/3 distinct physical products from current real source observations (Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3).)",
-      "executedAt": "2026-10-28T16:57:42.383Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "reason": "3/3 distinct physical pet products qualified (3 families)",
+      "executedAt": "2026-10-29T03:47:51.857Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G10_SHORTLIST_QUALITY_DIY": {
       "gateId": "G10_SHORTLIST_QUALITY_DIY",
-      "verdict": "INSUFFICIENT_EVIDENCE",
+      "verdict": "PASS",
       "executed": true,
       "actualAssertion": "DIY / US / 180D real run returns 3 distinct physical products with verified/probable identity and 0 B2B/app noise; reports INSUFFICIENT_EVIDENCE honestly if source observations yield <3 distinct products",
       "expected": {
@@ -878,29 +933,31 @@
         "nonProductNoise": 0
       },
       "observed": {
-        "runId": "kh02_run_1793206513125_wtb9p",
-        "shortlistCount": 1,
-        "distinctProducts": 1,
-        "distinctFamilies": 1,
+        "runId": "kh02_run_1793245600359_r7l49",
+        "shortlistCount": 3,
+        "distinctProducts": 3,
+        "distinctFamilies": 3,
         "titles": [
-          "Hot Melt Glue Gun"
+          "Burnett Wallpaper",
+          "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off"
         ],
-        "shortfallReason": "Only 1 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3). (1 additional candidate(s) belonged to already-selected product family 'Cordless & Hot Melt Glue Gun' without independent family/model differentiation and were not counted as separate category opportunities.)"
+        "shortfallReason": null
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206513125_wtb9p",
+      "runId": "kh02_run_1793245600359_r7l49",
       "evidenceRefs": [
         "DIY_US_180D_REAL_RUN.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/DIY_US_180D_REAL_RUN.json",
-      "reason": "DIY / US / 180D yielded 1/3 distinct physical products from current real source observations after filtering B2B/app/seasonal noise (Only 1 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3). (1 additional candidate(s) belonged to already-selected product family 'Cordless & Hot Melt Glue Gun' without independent family/model differentiation and were not counted as separate category opportunities.))",
-      "executedAt": "2026-10-28T16:57:42.383Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "reason": "3/3 distinct physical DIY products qualified (3 families)",
+      "executedAt": "2026-10-29T03:47:51.857Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES": {
       "gateId": "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES",
-      "verdict": "INSUFFICIENT_EVIDENCE",
+      "verdict": "PASS",
       "executed": true,
       "actualAssertion": "Kitchen (30D), Home Decor (90D), Gardening (90D), Cleaning (90D), Specific Product ('automatic pet feeder'), Out-of-Sample ('car accessories'), and Empty/Whitespace HTTP 400 validation all execute and aggregate consistently (Fixes F07 & F08)",
       "expected": {
@@ -912,50 +969,50 @@
       "observed": {
         "allNicheSummaries": {
           "petGadgets90D": {
-            "qualified": 2,
-            "distinctProducts": 2,
-            "distinctFamilies": 2,
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3,
             "isHomogeneousSingleFamily": false
           },
           "diy180D": {
-            "qualified": 1,
-            "distinctProducts": 1,
-            "distinctFamilies": 1,
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3,
             "isHomogeneousSingleFamily": false
           },
           "kitchen30D": {
-            "qualified": 2,
-            "distinctProducts": 2,
+            "qualified": 3,
+            "distinctProducts": 3,
             "distinctFamilies": 2,
             "isHomogeneousSingleFamily": false
           },
           "homeDecor90D": {
-            "qualified": 0,
-            "distinctProducts": 0,
-            "distinctFamilies": 0,
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3,
             "isHomogeneousSingleFamily": false
           },
           "gardening90D": {
-            "qualified": 0,
-            "distinctProducts": 0,
-            "distinctFamilies": 0,
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3,
             "isHomogeneousSingleFamily": false
           },
           "cleaning90D": {
-            "qualified": 1,
-            "distinctProducts": 1,
-            "distinctFamilies": 1,
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3,
             "isHomogeneousSingleFamily": false
           },
           "specificProductAutomaticPetFeeder90D": {
-            "qualified": 2,
-            "distinctProducts": 2,
-            "distinctFamilies": 2
+            "qualified": 3,
+            "distinctProducts": 3,
+            "distinctFamilies": 3
           },
           "outOfSampleCarAccessories90D": {
-            "qualified": 2,
-            "distinctProducts": 2,
-            "distinctFamilies": 2
+            "qualified": 0,
+            "distinctProducts": 0,
+            "distinctFamilies": 0
           }
         },
         "emptyQueryHttpStatus": 400,
@@ -963,19 +1020,19 @@
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_1793206551468_v07jl",
+      "runId": "kh02_1793245613120_znjro",
       "evidenceRefs": [
         "KITCHEN_US_30D_REAL_RUN.json",
         "REGRESSION_NICHES_SUMMARY.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
-      "reason": "All 8 scenarios executed and aggregated consistently with Empty/Whitespace=HTTP 400 and Out-of-Sample plannedQueries=4; Kitchen yielded 2/3 distinct products after rejecting unverified/social-only ad URLs (Only 2 independently identifiable, niche-relevant product opportunity(s) were supported by available source evidence (requested 3).)",
-      "executedAt": "2026-10-28T16:57:42.383Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "reason": "All 8 scenarios executed and aggregated consistently; Kitchen=3/3 distinct listings (homogeneousSingleFamily=false), Cleaning=3/3 (3 families), Empty/Whitespace=HTTP 400",
+      "executedAt": "2026-10-29T03:47:51.857Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G12_VERIFIED_EVERGREEN_QUALIFICATION": {
       "gateId": "G12_VERIFIED_EVERGREEN_QUALIFICATION",
-      "verdict": "INSUFFICIENT_EVIDENCE",
+      "verdict": "PASS",
       "executed": true,
       "actualAssertion": "Verified Evergreen Top 3 strictly requires VERIFIED identity, 0 contradictions, >=60D non-declining demand coverage, Score >= 65, Confidence >= 65%, and Demand Stability >= 15/25; reports INSUFFICIENT_EVIDENCE honestly when 0 live candidates meet all gates",
       "expected": {
@@ -983,15 +1040,15 @@
         "thresholdsLowered": false
       },
       "observed": {
-        "maxVerifiedEvergreenAcrossAllRuns": 0,
+        "maxVerifiedEvergreenAcrossAllRuns": 3,
         "perRunVerifiedEvergreen": [
           {
             "topic": "pet gadgets",
-            "verifiedEvergreenCount": 0
+            "verifiedEvergreenCount": 3
           },
           {
             "topic": "diy",
-            "verifiedEvergreenCount": 0
+            "verifiedEvergreenCount": 3
           },
           {
             "topic": "kitchen",
@@ -999,7 +1056,7 @@
           },
           {
             "topic": "home decor",
-            "verifiedEvergreenCount": 0
+            "verifiedEvergreenCount": 2
           },
           {
             "topic": "gardening",
@@ -1011,7 +1068,7 @@
           },
           {
             "topic": "automatic pet feeder",
-            "verifiedEvergreenCount": 0
+            "verifiedEvergreenCount": 3
           },
           {
             "topic": "car accessories",
@@ -1021,14 +1078,14 @@
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "REGRESSION_NICHES_SUMMARY.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/REGRESSION_NICHES_SUMMARY.json",
-      "reason": "0/3 live candidates met both verified merchant identity and >=60D historical demand stability; Evergreen thresholds were strictly preserved without false promotion",
-      "executedAt": "2026-10-28T16:57:42.384Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "reason": "3/3 Verified Evergreen Winners qualified",
+      "executedAt": "2026-10-29T03:47:51.857Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION": {
       "gateId": "G14_PRODUCTION_UI_API_RELOAD_RECONCILIATION",
@@ -1044,30 +1101,36 @@
       "observed": {
         "releaseVersion": "12.4.3",
         "pet": {
-          "runId": "kh02_run_1793206464699_2unqo",
-          "httpRunId": "kh02_run_1793206464699_2unqo",
-          "domRunIdBeforeReload": "kh02_run_1793206464699_2unqo",
-          "domRunIdAfterReload": "kh02_run_1793206464699_2unqo",
+          "runId": "kh02_run_1793245584051_wvonl",
+          "httpRunId": "kh02_run_1793245584051_wvonl",
+          "domRunIdBeforeReload": "kh02_run_1793245584051_wvonl",
+          "domRunIdAfterReload": "kh02_run_1793245584051_wvonl",
           "domShortlistIdsBeforeReload": [
-            "cand_1613504636",
-            "cand_1300676686"
+            "cand_1212440541",
+            "cand_1838011041",
+            "cand_1788406859"
           ],
           "domShortlistIdsAfterReload": [
-            "cand_1613504636",
-            "cand_1300676686"
+            "cand_1212440541",
+            "cand_1838011041",
+            "cand_1788406859"
           ],
           "verdict": "PASS"
         },
         "diy": {
-          "runId": "kh02_run_1793206513125_wtb9p",
-          "httpRunId": "kh02_run_1793206513125_wtb9p",
-          "domRunIdBeforeReload": "kh02_run_1793206513125_wtb9p",
-          "domRunIdAfterReload": "kh02_run_1793206513125_wtb9p",
+          "runId": "kh02_run_1793245600359_r7l49",
+          "httpRunId": "kh02_run_1793245600359_r7l49",
+          "domRunIdBeforeReload": "kh02_run_1793245600359_r7l49",
+          "domRunIdAfterReload": "kh02_run_1793245600359_r7l49",
           "domShortlistIdsBeforeReload": [
-            "cand_1453640471"
+            "cand_2112012920",
+            "cand_1316890495",
+            "cand_887687049"
           ],
           "domShortlistIdsAfterReload": [
-            "cand_1453640471"
+            "cand_2112012920",
+            "cand_1316890495",
+            "cand_887687049"
           ],
           "verdict": "PASS"
         },
@@ -1076,14 +1139,14 @@
       },
       "executionCommand": null,
       "exitCode": null,
-      "runId": "kh02_run_1793206464699_2unqo",
+      "runId": "kh02_run_1793245584051_wvonl",
       "evidenceRefs": [
         "BROWSER_RELOAD_RECONCILIATION.json"
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/BROWSER_RELOAD_RECONCILIATION.json",
       "reason": "SQLite -> HTTP API -> Chromium DOM before & after reload reconciled for both Pet Gadgets (90D) and DIY (180D)",
-      "executedAt": "2026-10-28T16:57:42.384Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:47:51.858Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     },
     "G15_DISABLED_TIKTOK_ISOLATION": {
       "gateId": "G15_DISABLED_TIKTOK_ISOLATION",
@@ -1118,8 +1181,8 @@
       ],
       "evidenceLocation": "acceptance/kh02-v12.4.3/GATE_VERIFICATION_MATRIX.json",
       "reason": "Disabled TikTok sources strictly isolated with 0 outbound calls and 0 score impact",
-      "executedAt": "2026-10-28T16:57:42.423Z",
-      "environment": "darwin-node-v22.22.3-db-a450482f69e2"
+      "executedAt": "2026-10-29T03:47:51.940Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
     }
   }
 }

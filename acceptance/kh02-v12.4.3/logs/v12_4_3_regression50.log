@@ -1,11 +1,11 @@
 
- RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
 
- ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 64ms
+ [32m✓[39m tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 96[2mms[22m[39m
 
- Test Files  1 passed (1)
-      Tests  50 passed (50)
-   Start at  23:53:42
-   Duration  565ms (import 56%, transform 21%, tests 13%, setup 10%, worker 1%)
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 10:46:13
+[2m   Duration [22m 1.44s[2m (import 43%, transform 38%, setup 10%, tests 8%, worker 1%)[22m
 
 

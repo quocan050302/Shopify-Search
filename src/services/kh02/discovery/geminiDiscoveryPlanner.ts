@@ -1703,6 +1703,7 @@ export async function generateProductArchetypes(
 
   if (
     isVitestRun ||
+    (!options?.allowLiveInTest && process.env.SWAI_FORCE_LIVE_GEMINI_PLANNER !== "true") ||
     options?.forceDeterministicFallback ||
     input.remainingAIRequests <= 0 ||
     (options?.budgetTracker && !options.budgetTracker.canStartRequest())

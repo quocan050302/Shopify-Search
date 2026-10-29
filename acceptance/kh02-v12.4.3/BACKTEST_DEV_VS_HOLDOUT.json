@@ -4,8 +4,8 @@
   "evaluationCutoff": "2026-10-28T00:00:00.000Z",
   "plannerSchemaVersion": "1.0.0",
   "plannerPromptVersion": "kh02_discovery_planner_v1.0.0",
-  "startedAt": "2026-10-28T16:54:17.941Z",
-  "completedAt": "2026-10-28T16:54:18.125Z",
+  "startedAt": "2026-10-29T03:46:14.983Z",
+  "completedAt": "2026-10-29T03:46:15.234Z",
   "antiOverfittingAudit": {
     "labelLeakageDetected": false,
     "leakageViolations": [],
@@ -155,7 +155,40 @@
     "familyDiversityGain": 0.3333,
     "googleAssociationPrecisionGain": 0.3333
   },
-  "historicalDbReplay": [],
+  "historicalDbReplay": [
+    {
+      "runId": "kh02_run_1793245353988_9ts5s",
+      "topic": "diy",
+      "totalCandidates": 3,
+      "baselineDistinctByName": 3,
+      "fixedDistinctByIdentity": 3,
+      "familyDiversityCount": 3
+    },
+    {
+      "runId": "kh02_run_1793245337847_7yyh5",
+      "topic": "pet gadgets",
+      "totalCandidates": 3,
+      "baselineDistinctByName": 3,
+      "fixedDistinctByIdentity": 3,
+      "familyDiversityCount": 3
+    },
+    {
+      "runId": "kh02_run_1793245009707_mqrjb",
+      "topic": "diy",
+      "totalCandidates": 3,
+      "baselineDistinctByName": 3,
+      "fixedDistinctByIdentity": 3,
+      "familyDiversityCount": 3
+    },
+    {
+      "runId": "kh02_run_1793244992989_oi67x",
+      "topic": "pet gadgets",
+      "totalCandidates": 3,
+      "baselineDistinctByName": 3,
+      "fixedDistinctByIdentity": 3,
+      "familyDiversityCount": 3
+    }
+  ],
   "caseByCaseComparison": [
     {
       "caseId": "dev_01_f02_http403_slug_not_verified",

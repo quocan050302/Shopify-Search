@@ -2,76 +2,170 @@
   "releaseVersion": "12.4.3",
   "versionHandshake": {
     "releaseVersion": "12.4.3",
-    "frontendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-    "backendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-    "workerBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-    "backendStartedAt": "2026-10-28T16:54:19.247Z",
-    "workerStartedAt": "2026-10-28T16:54:18.773Z",
-    "dbFingerprint": "a450482f69e2",
-    "workerDbFingerprint": "a450482f69e2",
+    "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "backendStartedAt": "2026-10-29T03:46:19.565Z",
+    "workerStartedAt": "2026-10-29T03:46:19.236Z",
+    "dbFingerprint": "6530562482a2",
+    "workerDbFingerprint": "6530562482a2",
     "conflictingWorkersDetected": false,
     "diagnostics": [
-      "Frontend, backend, and worker runtime parity verified at V12.4.3 (0565739)."
+      "Frontend, backend, and worker runtime parity verified at V12.4.3 (577aa2d)."
     ],
     "runtimeStatus": "MATCHED",
-    "buildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-    "buildTimestamp": "2026-10-28T16:54:11.405Z",
+    "buildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "buildTimestamp": "2026-10-29T03:16:15.201Z",
     "appVersion": "12.4.3",
     "workerVersion": "12.4.3",
     "environment": "production",
-    "appProcessId": 90920,
-    "workerProcessId": 90922
+    "appProcessId": 19908,
+    "workerProcessId": 20232
   },
   "emptyQueryHttpStatus": 400,
   "whitespaceQueryHttpStatus": 400,
   "petGadgets90D": {
-    "runId": "kh02_run_1793206464699_2unqo",
-    "httpRunId": "kh02_run_1793206464699_2unqo",
+    "runId": "kh02_run_1793245584051_wvonl",
+    "httpRunId": "kh02_run_1793245584051_wvonl",
     "browserE2E": {
       "pageLoaded": true,
       "authorized": true,
       "researchSubmitted": true,
-      "acceptedRunId": "kh02_run_1793206464699_2unqo",
-      "terminalStatus": "PARTIALLY_COMPLETED",
+      "acceptedRunId": "kh02_run_1793245584051_wvonl",
+      "terminalStatus": "COMPLETED",
       "terminalStateObserved": true,
       "resultsRendered": true,
       "emptyStateAccurate": false,
       "displayedCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859",
+        "cand_14769098",
         "cand_1613504636",
-        "cand_1300676686"
+        "cand_1272640899",
+        "cand_1971924954",
+        "cand_1783682388"
       ],
-      "displayedRankOrder": [],
+      "displayedRankOrder": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
+      ],
       "displayedScores": {
+        "cand_1212440541": 78,
+        "cand_1838011041": 67,
+        "cand_1788406859": 67,
+        "cand_14769098": 60,
         "cand_1613504636": 60,
-        "cand_1300676686": 47
+        "cand_1272640899": 52,
+        "cand_1971924954": 52,
+        "cand_1783682388": 46
       },
       "displayedConfidence": {
+        "cand_1212440541": "80",
+        "cand_1838011041": "70",
+        "cand_1788406859": "70",
+        "cand_14769098": "55",
         "cand_1613504636": "55",
-        "cand_1300676686": "55"
+        "cand_1272640899": "45",
+        "cand_1971924954": "45",
+        "cand_1783682388": "45"
       },
       "renderedCards": [
         {
+          "candidateId": "cand_1212440541",
+          "rank": 1,
+          "score": 78,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_1838011041",
+          "rank": 2,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "rank": 3,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_14769098",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
+        {
           "candidateId": "cand_1613504636",
           "rank": null,
           "score": 60,
           "confidence": "55"
         },
         {
-          "candidateId": "cand_1300676686",
+          "candidateId": "cand_1272640899",
           "rank": null,
-          "score": 47,
-          "confidence": "55"
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1971924954",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1783682388",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
         }
       ],
       "postReloadCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859",
+        "cand_14769098",
         "cand_1613504636",
-        "cand_1300676686"
+        "cand_1272640899",
+        "cand_1971924954",
+        "cand_1783682388"
       ],
       "postReloadScores": {
+        "cand_1212440541": 78,
+        "cand_1838011041": 67,
+        "cand_1788406859": 67,
+        "cand_14769098": 60,
         "cand_1613504636": 60,
-        "cand_1300676686": 47
+        "cand_1272640899": 52,
+        "cand_1971924954": 52,
+        "cand_1783682388": 46
       },
       "postReloadCards": [
+        {
+          "candidateId": "cand_1212440541",
+          "rank": 1,
+          "score": 78,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_1838011041",
+          "rank": 2,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "rank": 3,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_14769098",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
         {
           "candidateId": "cand_1613504636",
           "rank": null,
@@ -79,10 +173,22 @@
           "confidence": "55"
         },
         {
-          "candidateId": "cand_1300676686",
+          "candidateId": "cand_1272640899",
           "rank": null,
-          "score": 47,
-          "confidence": "55"
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1971924954",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1783682388",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
         }
       ],
       "postReloadConsistent": true,
@@ -91,30 +197,22 @@
       "databaseMatch": true,
       "httpMatch": true,
       "shortlistSectionRendered": true,
-      "shortlistCardsCount": 2,
+      "shortlistCardsCount": 3,
       "shortlistCandidateIds": [
-        "cand_1613504636",
-        "cand_1300676686"
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
       ],
       "shortlistTitles": [
-        "Pet Hair/Lint/Dust Cleaner",
-        "Grooming Gloves"
+        "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "Reusable Pet Hair Remover Roller",
+        "Pawira Stainless Steel Water Fountain"
       ],
       "rejectedTitles": [
-        "Why First Aid Kits KillREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Car Fender Panel Dent Edge Repair ToolsREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Facebook Ad #1802296680785588, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Facebook Ad #965884286570642, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Facebook Ad #1101251172551391, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Ad #cmvmlpdmw0010img9lljgim79, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Double Car Hook - The Ultimate Car Organizer [Contradicts Ad: Say goodbye to clutter ✨]REJECTEDlakany.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Ad #cmvmlpdmj000oimg951sdzg1l, Identity: Needs Review)REJECTEDthefarmersdog.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Unidentified Product (Source: Ad #cmvmlpdpy003wimg9mdtfri2o, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
-        "Clean the Bathroom Standing Up — No ScrubbingREJECTEDDomain unverified · Score: 0/100Reason: Product has generic cleaning or household utility attributes but lacks explicit pet intent.",
-        "Clean Without Bending OverREJECTEDDomain unverified · Score: 0/100Reason: Product has generic cleaning or household utility attributes but lacks explicit pet intent.",
-        "Unidentified Product (Source: Facebook Ad #1393597299374101, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: Hardware or device utility mentions generic tracker/fountain/feeder but lacks explicit pet intent.",
-        "ER Vet bill cost factorsREJECTEDDomain unverified · Score: 0/100Reason: Describes veterinary expenses, cost factors, or informational content rather than a physical product.",
-        "Unidentified Product (Source: Facebook Ad #1381859257413498, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: Product has generic cleaning or household utility attributes but lacks explicit pet intent."
+        "Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "News Sakerplus Microfiber Spray Mop With Washable Pads XyREJECTEDm.sakerplus.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "Unidentified Product (Source: Ad #cmvrh5abo0010fcorfxmee1rj, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "Amazon Sold A Fake Cat Fountain Under A Real Brand's Name👆REJECTEDpawira.com · Score: 0/100Reason: Excluded: Classified as non-physical entity (PHYSICAL_PRODUCT)."
       ],
       "erVetBillInShortlist": false,
       "erVetBillInTopThree": false,
@@ -123,88 +221,161 @@
       "discoveryIntelligencePanelRendered": true,
       "coherentFunnelRendered": true,
       "queryCoverageTableRendered": true,
-      "runtimeVersionBadgeText": "SHA: 0565739",
+      "runtimeVersionBadgeText": "SHA: 577aa2d",
       "runtimeParityStatus": "VERSION_MISMATCH",
-      "frontendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "backendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "workerBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "authoritativeRunIdInDom": "kh02_run_1793206464699_2unqo",
+      "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "authoritativeRunIdInDom": "kh02_run_1793245584051_wvonl",
       "postReloadShortlistCandidateIds": [
-        "cand_1613504636",
-        "cand_1300676686"
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
       ],
-      "postReloadRunIdInDom": "kh02_run_1793206464699_2unqo",
-      "cardCount": 2,
+      "postReloadRunIdInDom": "kh02_run_1793245584051_wvonl",
+      "cardCount": 8,
       "screenshots": [
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/pet_gadgets_90d_01_before_research.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/pet_gadgets_90d_02_source_statuses.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/pet_gadgets_90d_03_leaderboard_results.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/pet_gadgets_90d_04_after_reload.png"
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_04_after_reload.png"
       ],
       "consoleLogs": [],
       "errors": [],
-      "durationMs": 49694,
+      "durationMs": 16625,
       "verdict": "PASS"
     }
   },
   "diy180D": {
-    "runId": "kh02_run_1793206513125_wtb9p",
-    "httpRunId": "kh02_run_1793206513125_wtb9p",
+    "runId": "kh02_run_1793245600359_r7l49",
+    "httpRunId": "kh02_run_1793245600359_r7l49",
     "browserE2E": {
       "pageLoaded": true,
       "authorized": true,
       "researchSubmitted": true,
-      "acceptedRunId": "kh02_run_1793206513125_wtb9p",
+      "acceptedRunId": "kh02_run_1793245600359_r7l49",
       "terminalStatus": "PARTIALLY_COMPLETED",
       "terminalStateObserved": true,
       "resultsRendered": true,
       "emptyStateAccurate": false,
       "displayedCandidateIds": [
-        "cand_1453640471",
-        "cand_1316890495"
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049",
+        "cand_988616984",
+        "cand_1262566191",
+        "cand_698946292"
       ],
-      "displayedRankOrder": [],
+      "displayedRankOrder": [
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049"
+      ],
       "displayedScores": {
-        "cand_1453640471": 42,
-        "cand_1316890495": 42
+        "cand_739320169": 73,
+        "cand_1316890495": 72,
+        "cand_887687049": 72,
+        "cand_988616984": 51,
+        "cand_1262566191": 46,
+        "cand_698946292": 46
       },
       "displayedConfidence": {
-        "cand_1453640471": "45",
-        "cand_1316890495": "45"
+        "cand_739320169": "70",
+        "cand_1316890495": "80",
+        "cand_887687049": "80",
+        "cand_988616984": "55",
+        "cand_1262566191": "45",
+        "cand_698946292": "45"
       },
       "renderedCards": [
         {
-          "candidateId": "cand_1453640471",
-          "rank": null,
-          "score": 42,
-          "confidence": "45"
+          "candidateId": "cand_739320169",
+          "rank": 1,
+          "score": 73,
+          "confidence": "70"
         },
         {
           "candidateId": "cand_1316890495",
+          "rank": 2,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_887687049",
+          "rank": 3,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_988616984",
           "rank": null,
-          "score": 42,
+          "score": 51,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1262566191",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_698946292",
+          "rank": null,
+          "score": 46,
           "confidence": "45"
         }
       ],
       "postReloadCandidateIds": [
-        "cand_1453640471",
-        "cand_1316890495"
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049",
+        "cand_988616984",
+        "cand_1262566191",
+        "cand_698946292"
       ],
       "postReloadScores": {
-        "cand_1453640471": 42,
-        "cand_1316890495": 42
+        "cand_739320169": 73,
+        "cand_1316890495": 72,
+        "cand_887687049": 72,
+        "cand_988616984": 51,
+        "cand_1262566191": 46,
+        "cand_698946292": 46
       },
       "postReloadCards": [
         {
-          "candidateId": "cand_1453640471",
-          "rank": null,
-          "score": 42,
-          "confidence": "45"
+          "candidateId": "cand_739320169",
+          "rank": 1,
+          "score": 73,
+          "confidence": "70"
         },
         {
           "candidateId": "cand_1316890495",
+          "rank": 2,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_887687049",
+          "rank": 3,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_988616984",
           "rank": null,
-          "score": 42,
+          "score": 51,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1262566191",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_698946292",
+          "rank": null,
+          "score": 46,
           "confidence": "45"
         }
       ],
@@ -214,39 +385,42 @@
       "databaseMatch": true,
       "httpMatch": true,
       "shortlistSectionRendered": true,
-      "shortlistCardsCount": 1,
+      "shortlistCardsCount": 3,
       "shortlistCandidateIds": [
-        "cand_1453640471"
+        "cand_2112012920",
+        "cand_1316890495",
+        "cand_887687049"
       ],
       "shortlistTitles": [
-        "Hot Melt Glue Gun"
+        "Burnett Wallpaper",
+        "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off"
       ],
       "rejectedTitles": [
-        "Unidentified Product (Source: Facebook Ad #907487392096359, Identity: Needs Review)REJECTEDthefarmersdog.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #1778772883252421, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Pet Hair/Lint/Dust CleanerREJECTEDcc.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Half Price TodayREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #4546541612250472, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #1563296449176047, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #1806555653907868, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "World Robot League Designated Arduino Robot CarREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Kentucky Bourbon Car Kit Black Ground CoatREJECTEDthespraysource.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Car Fender Panel Dent Edge Repair ToolsREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Steam CleanerREJECTEDanrdre.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Save Time Cleaning No More ScrubbingREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #1362836625838138, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #2508187822941954, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "✨7-in-1 Electric Spin ScrubberREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Clean the Bathroom Standing Up — No ScrubbingREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Electric spin scrubberREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Scrubbing the bathroom was ruining my back 😩🧼REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Clean Without Bending OverREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Unidentified Product (Source: Facebook Ad #1381859257413498, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Cordless Electric Garden Pruning Shears NewsREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Backsplash Upgrade. Real Stone.REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Telavvo Rechargeable Wall SconceREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Level up your space ✨REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
-        "Must Have DIY ToolREJECTEDampd.to · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page."
+        "RELIFE DT-01 Smart Pen Type Mini Multimeter for Mobile Phone Repair Home Maintenance DIY EtcREJECTEDapp.alibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Unidentified Product (Source: Facebook Ad #1405789581235775, Identity: Needs Review)REJECTEDamzlink.to · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "must-have essential every new cat parent needs in their home! 🎁✨🐱REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "💕iControl: Easy Widgets ThemesREJECTEDDomain unverified · Score: 0/100Reason: Describes a digital mobile app or phone widget theme rather than a physical ecommerce product.",
+        "Clean Without Bending OverREJECTEDamazon.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "✨7 In 1 Electric Spin ScrubberREJECTEDreemoreemoo.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Cordless Electric Spin Scrubber With 5 Replaceable Brush HeadsREJECTEDrealgalaxystore.myshopify.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Scrubbing the bathroom was ruining my back 😩🧼REJECTEDsmartcarting.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "News Sakerplus Microfiber Spray Mop With Washable Pads XyREJECTEDm.sakerplus.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Scrubbing the bathroom was ruining my back 😩🧼REJECTEDitsblossom.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "8dgfdf Electric CleanREJECTEDforubom.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal ToREJECTEDaureluxe.ch · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Pawira Stainless Steel Water FountainREJECTEDpawira.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Reusable Pet Hair Remover RollerREJECTEDlivlandco.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Unidentified Product (HOMEPAGE: taybahexpress.online, Review Required)REJECTEDtaybahexpress.online · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Multi Purpose Manual Fruit Mandoline Vegetable Chopper Slicer Cutter Grater Set for KitchenREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Kitchen Sink Caddy Sponge Holder Silicone Plastic Soap Holder Hanging Ajustable Strap Faucet Caddy wREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Manual 16 in 1 Vegetable Chopper Slicer Dicer Vegetable Cutter for Vegetables with ContainerREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "DIY Pest ControlREJECTEDpestie.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Unidentified Product (HOMEPAGE: wallart.com, Review Required)REJECTEDwallart.com · Score: 0/100Reason: Excluded: Campaign code or internal ad identifier.",
+        "Your Walls Called... ☎️  --- They Want A Makeover!REJECTEDloomwell.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Easier & Cleaner Than Paint.REJECTEDwallpops.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Must Have DIY ToolREJECTEDampd.to · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Disney&#x27;s Cinderella Dress-Up Accessory Set with Tiara & Shoes - Walmart.comREJECTEDwalmart.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'."
       ],
       "erVetBillInShortlist": false,
       "erVetBillInTopThree": false,
@@ -255,26 +429,28 @@
       "discoveryIntelligencePanelRendered": true,
       "coherentFunnelRendered": true,
       "queryCoverageTableRendered": true,
-      "runtimeVersionBadgeText": "SHA: 0565739",
+      "runtimeVersionBadgeText": "SHA: 577aa2d",
       "runtimeParityStatus": "VERSION_MISMATCH",
-      "frontendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "backendBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "workerBuildSha": "05657392bc7dfcc96fd62803b468fbdf04a84679",
-      "authoritativeRunIdInDom": "kh02_run_1793206513125_wtb9p",
+      "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "authoritativeRunIdInDom": "kh02_run_1793245600359_r7l49",
       "postReloadShortlistCandidateIds": [
-        "cand_1453640471"
+        "cand_2112012920",
+        "cand_1316890495",
+        "cand_887687049"
       ],
-      "postReloadRunIdInDom": "kh02_run_1793206513125_wtb9p",
-      "cardCount": 2,
+      "postReloadRunIdInDom": "kh02_run_1793245600359_r7l49",
+      "cardCount": 6,
       "screenshots": [
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/diy_180d_01_before_research.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/diy_180d_02_source_statuses.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/diy_180d_03_leaderboard_results.png",
-        "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3/screenshots/diy_180d_04_after_reload.png"
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_04_after_reload.png"
       ],
       "consoleLogs": [],
       "errors": [],
-      "durationMs": 42267,
+      "durationMs": 16407,
       "verdict": "PASS"
     }
   }

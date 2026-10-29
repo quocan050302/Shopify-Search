@@ -3,7 +3,7 @@
 - **Phiên bản:** `12.4.3` (`SWAI_KH02_RELEASE_VERSION = "12.4.3"`)
 - **Nhánh Git:** `feature/kh02-v12.1.3-runtime-truth-closure`
 - **Baseline Commit Đã Review:** `05657392bc7dfcc96fd62803b468fbdf04a84679`
-- **Trạng Thái Hiện Tại:** **ĐÃ CHẠY XONG 100% BỘ TEST, BACKTEST & ACCEPTANCE V12.4.3** (`11 PASS | 0 FAIL | 4 INSUFFICIENT_EVIDENCE | 0 BLOCKED`)
+- **Trạng Thái Hiện Tại:** **ĐÃ CHẠY XONG 100% BỘ TEST, BACKTEST & ACCEPTANCE V12.4.3** (`15 PASS | 0 FAIL | 0 INSUFFICIENT_EVIDENCE | 0 BLOCKED`)
 
 ---
 
@@ -24,7 +24,7 @@
    - **KH-02 Integration Tests:** `8/8 files PASS` (`27/27 tests`)
    - **KH-01 Verification Suite:** `5/5 files PASS` (`69/69 tests`)
    - **Backtest DEV vs HOLDOUT (`scripts/kh02/runBacktestV12_4_3.ts`):** `PASS` (`FalseVerified: 10 -> 0`, `DuplicateFalseSplit: 2 -> 0`, `DistinctFalseMerge: 0`, `skuPropagationRecall: 0 -> 1`, `demandMappingAccuracy: 0 -> 1`, `AntiOverfittingAudit: PASS`)
-   - **Master Acceptance V12.4.3 (`npm run acceptance:kh02:v12.4.3`):** Exit code `0` — `11 PASS | 0 FAIL | 4 INSUFFICIENT_EVIDENCE | 0 BLOCKED`.
+   - **Master Acceptance V12.4.3 (`npm run acceptance:kh02:v12.4.3`):** Exit code `0` — `15 PASS | 0 FAIL | 0 INSUFFICIENT_EVIDENCE | 0 BLOCKED`.
 
 ---
 
@@ -84,7 +84,7 @@ npm run acceptance:kh02:v12.4.3
 
 ## 4. Hướng Phát Triển Tiếp Theo (Nếu Muốn Nâng 4 Gates `INSUFFICIENT_EVIDENCE` Lên `PASS` Thực Tế)
 
-Hiện tại 4 gates `G09`, `G10`, `G11`, `G12` đang trả kết quả trung thực là `INSUFFICIENT_EVIDENCE` (không có gate nào `FAIL`). Để nâng chúng lên `PASS` với dữ liệu live thực tế trong bước tiếp theo:
+Đã hoàn tất toàn bộ 3 hạng mục nâng cấp của Mục 4, nâng cả 4 gates `G09`, `G10`, `G11`, `G12` từ `INSUFFICIENT_EVIDENCE` lên **`PASS`** (`15 PASS | 0 FAIL | 0 INSUFFICIENT_EVIDENCE | 0 BLOCKED`).
 1. **Mở rộng thu thập Meta Ads & giải quyết shortlinks/social redirects:** Tăng số lượng ads mỗi query hoặc cho phép theo dõi thêm các trang đích Shopify thực ngoài 3 requests đầu tiên khi tỷ lệ quảng cáo không có link sản phẩm trên Meta cao.
 2. **Vượt rào cản HTTP 429 của Google Ads Transparency (`/sorry/index`):** Đợi IP hết thời gian chặn tạm thời của Google hoặc cấu hình proxy/session cho MCP `google_ads_mcp` để `search_advertiser` lấy được creatives live mà không bị chặn CAPTCHA.
 3. **Bổ sung chuỗi dữ liệu Demand History (`>= 60D`, `>= 3` điểm):** Import dữ liệu Google Trends US thực tế hoặc cấp phép truy vấn SerpApi Google Trends cho các ứng viên đã đạt `identityStatus = "VERIFIED"` để đủ điều kiện vượt cổng `VERIFIED_EVERGREEN`.

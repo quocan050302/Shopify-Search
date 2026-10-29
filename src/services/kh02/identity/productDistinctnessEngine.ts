@@ -312,7 +312,7 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     familyKey: "peel_and_stick_wall_tile",
     familyLabel: "Peel-and-Stick Wall Tile & Panel",
     headNoun: "wall_tile",
-    pattern: /\b(peel\s+and\s+stick\s+(?:wall|tile|backsplash|floor)|3d\s+wall\s+panel)\b/i,
+    pattern: /\b(peel\s+and\s+stick\s+(?:wall|tile|backsplash|floor)|3d\s+wall\s+panel|wallpaper)\b/i,
   },
   // Gardening
   {

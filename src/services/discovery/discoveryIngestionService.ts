@@ -244,7 +244,10 @@ export async function upsertVerifiedAdMedia(
   }
 
   // Update mediaType if previously UNKNOWN and incoming is concrete
-  if (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") {
+  if (
+    (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") ||
+    (videoUpdated && mediaType === "VIDEO" && existingMedia.mediaType !== "CAROUSEL")
+  ) {
     updateData.mediaType = mediaType;
   }
 
@@ -428,8 +431,24 @@ export async function ingestDiscoveredAds(
               observationCount: { increment: 1 },
               ...(context.isQuarantined ? { isSyntheticQuarantine: true } : {}),
               // Update landing page and headline if previously missing
-              headline: targetAd.headline ? targetAd.headline : record.headline || undefined,
-              landingPageUrl: targetAd.landingPageUrl ? targetAd.landingPageUrl : record.landingPageUrl || undefined,
+              headline:
+                targetAd.headline &&
+                targetAd.headline.trim() !== "" &&
+                !/^(Facebook Ad|Top Ad):\s*/i.test(targetAd.headline.trim())
+                  ? targetAd.headline
+                  : record.headline || targetAd.headline || undefined,
+              landingPageUrl:
+                targetAd.landingPageUrl && targetAd.landingPageUrl.trim() !== ""
+                  ? targetAd.landingPageUrl
+                  : record.landingPageUrl || undefined,
+              bodyText:
+                targetAd.bodyText && targetAd.bodyText.trim() !== ""
+                  ? targetAd.bodyText
+                  : record.bodyText || undefined,
+              callToAction:
+                targetAd.callToAction && targetAd.callToAction.trim() !== ""
+                  ? targetAd.callToAction
+                  : record.callToAction || undefined,
             },
           });
         }

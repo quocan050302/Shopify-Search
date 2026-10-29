@@ -26,7 +26,7 @@ import {
 import { extractDomainFromUrl } from "@/services/products/productService";
 import { buildAuthorizedAdWhere } from "@/services/research/authorizedScopeHelpers";
 import { getMetaCollectorConfig } from "@/services/discovery/metaCollector/metaCollectorConfig";
-import { createMetaCollectorClient } from "@/services/discovery/metaCollector/metaCollectorMcpClient";
+import { createMetaCollectorClient, getDetailedMetaAdsBatch } from "@/services/discovery/metaCollector/metaCollectorMcpClient";
 import { normalizeMetaCollectorAd } from "@/services/discovery/normalization/normalizeMetaCollectorAd";
 import { NormalizedDiscoveredAd } from "@/services/discovery/types";
 import { ingestDiscoveredAds } from "@/services/discovery/discoveryIngestionService";
@@ -646,7 +646,27 @@ export async function collectLiveMetaAds(
           pageSize: 10,
         });
 
-        const returnedAds = searchRes.ads || [];
+        let returnedAds = searchRes.ads || [];
+        const resultSetId = searchRes.result_set_id || searchRes.job_id;
+        if (resultSetId && typeof (client as any).getResults === "function") {
+          try {
+            const detailedBatch = await getDetailedMetaAdsBatch(
+              client,
+              resultSetId,
+              0,
+              Math.max(returnedAds.length, qSpec.maxResults, 25)
+            );
+            const detailedAds = Array.isArray(detailedBatch) ? detailedBatch : (Array.isArray((detailedBatch as any)?.ads) ? (detailedBatch as any).ads : []);
+            if (detailedAds.length > 0) {
+              returnedAds = detailedAds;
+            }
+          } catch (detailErr: any) {
+            console.warn(
+              `[META_COLLECTOR] Detailed batch fetch fallback for '${qSpec.keyword}':`,
+              detailErr?.message || String(detailErr)
+            );
+          }
+        }
         let uniqueCountForQuery = 0;
         let dupCountForQuery = 0;
 
@@ -942,7 +962,24 @@ export async function collectMetaProductSignals(
      process.env.NODE_ENV !== "test" &&
      process.env.VITEST !== "true");
 
-  if (allowLive) {
+  let shouldRunLiveMeta = allowLive;
+  if (shouldRunLiveMeta && process.env.ENABLE_LIVE_META !== "true") {
+    try {
+      const existingPoolCount = await prisma.competitorAd.count({
+        where: {
+          platform: { in: ["META", "FACEBOOK"] },
+          isSyntheticQuarantine: false,
+          landingPageUrl: { not: null },
+          AND: [buildAuthorizedAdWhere(query.workspaceId)],
+        },
+      });
+      if (existingPoolCount >= 100) {
+        shouldRunLiveMeta = false;
+      }
+    } catch {}
+  }
+
+  if (shouldRunLiveMeta) {
     liveAttempted = true;
     try {
       const liveRes = await collectLiveMetaAds(query);
@@ -1074,9 +1111,59 @@ export async function collectMetaProductSignals(
           mediaAssets: { take: 2 },
           observations: { orderBy: { observedAt: "desc" }, take: 10 },
         },
-        take: remainingSlots,
+        take: Math.max(remainingSlots * 4, 150),
         orderBy: [{ landingPageUrl: "desc" }, { lastSeenAt: "desc" }],
       });
+    }
+
+    if (cachedMatchingAds.length > 0) {
+      const plannedQueryKeywords = Array.isArray(query.plannedQueries)
+        ? query.plannedQueries
+            .map((pq: any) => pq?.phrase || pq?.subquery || "")
+            .filter((s: string) => s.length > 2)
+        : [];
+      const baseKeywords =
+        query.productKeywords && query.productKeywords.length > 0
+          ? query.productKeywords
+          : query.topic.split(/\s+/).filter((w) => w.length > 2);
+      const topicWords = query.topic
+        .split(/\s+/)
+        .map((w) => w.trim().toLowerCase())
+        .filter((w) => w.length >= 3 && !["gadgets", "products", "supplies", "accessories", "items"].includes(w));
+      const exactPhrasesLower = Array.from(
+        new Set([query.topic.trim(), ...plannedQueryKeywords, ...baseKeywords])
+      )
+        .map((p) => String(p).trim().toLowerCase())
+        .filter((p) => p.length >= 3);
+      const phraseTokens = [...baseKeywords, ...plannedQueryKeywords]
+        .flatMap((phrase) => String(phrase).split(/\s+/))
+        .map((w) => w.trim().toLowerCase())
+        .filter(
+          (w) =>
+            w.length >= 4 &&
+            !["with", "from", "that", "this", "your", "free", "best", "portable", "electric", "automatic", "water", "wall", "home", "clean", "tool", "tools", "cover", "covers", "plate", "plates", "panel", "panels", "holder", "rack", "tray", "brush", "spray", "bottle", "smart"].includes(w)
+        );
+
+      const scoreCachedAd = (ad: any): number => {
+        const text = `${ad.headline || ""} ${ad.landingPageUrl || ""} ${ad.bodyText || ""} ${ad.advertiser?.name || ""}`.toLowerCase();
+        let score = 0;
+        for (const phrase of exactPhrasesLower) {
+          if (text.includes(phrase)) score += 100;
+        }
+        for (const tw of topicWords) {
+          if (text.includes(tw)) score += 40;
+        }
+        for (const pt of phraseTokens) {
+          if (text.includes(pt)) score += 20;
+        }
+        if (ad.landingPageUrl && /\/products\//i.test(ad.landingPageUrl)) score += 25;
+        else if (ad.landingPageUrl && ad.landingPageUrl.trim() !== "") score += 10;
+        return score;
+      };
+
+      cachedMatchingAds = cachedMatchingAds
+        .sort((a, b) => scoreCachedAd(b) - scoreCachedAd(a))
+        .slice(0, remainingSlots);
     }
 
     const matchingAds = [...liveMatchingAds, ...cachedMatchingAds];
@@ -1158,7 +1245,7 @@ export async function collectMetaProductSignals(
         metrics: {
           daysRunning: ad.daysRunning,
           status: ad.status,
-          observationsCount: ad.observations.length,
+          observationsCount: Math.max(ad.observations.length, (ad as any).observationCount || 1),
           dataConfidence: ad.dataConfidence,
           marketVerification: marketProv.marketVerification,
           isFreshLive,

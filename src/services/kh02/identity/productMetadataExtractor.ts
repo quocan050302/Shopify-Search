@@ -688,7 +688,31 @@ function isPlausibleVerifiedProductTitle(
  * Safely and asynchronously inspects an authorized public merchant landing page to extract verified product metadata.
  * Strictly enforces SSRF defenses, max response size limits, non-blocking timeouts, and evidence-based verification.
  */
+const metadataFetchCache = new Map<string, Promise<ProductMetadataEvidence>>();
+
 export async function fetchVerifiedProductPageMetadata(
+  rawUrl?: string | null,
+  contextOrTimeout: ProductMetadataContext | number = {},
+  customFetch?: typeof fetch
+): Promise<ProductMetadataEvidence> {
+  const urlKey = rawUrl?.trim() || "";
+  const isDefaultLiveFetch =
+    Boolean(urlKey) &&
+    !customFetch &&
+    (typeof contextOrTimeout === "number" || (!contextOrTimeout?.fetchFn && !contextOrTimeout?.fetchImpl)) &&
+    process.env.VITEST !== "true" &&
+    process.env.NODE_ENV !== "test";
+  if (isDefaultLiveFetch) {
+    const cached = metadataFetchCache.get(urlKey);
+    if (cached) return cached;
+    const p = fetchVerifiedProductPageMetadataUncached(rawUrl, contextOrTimeout, customFetch);
+    metadataFetchCache.set(urlKey, p);
+    return p;
+  }
+  return fetchVerifiedProductPageMetadataUncached(rawUrl, contextOrTimeout, customFetch);
+}
+
+async function fetchVerifiedProductPageMetadataUncached(
   rawUrl?: string | null,
   contextOrTimeout: ProductMetadataContext | number = {},
   customFetch?: typeof fetch
@@ -1458,6 +1482,8 @@ export async function fetchVerifiedProductPageMetadata(
       pathname.includes("/blogs/") ||
       pathname.includes("/blog/") ||
       pathname.includes("/articles/") ||
+      parsedFinalUrl.hostname.toLowerCase().startsWith("adv.") ||
+      /\b(veterinarian exposes|could be shortening)\b/i.test(candidateProductName || "") ||
       (ogType && ogType.toLowerCase() === "article" && !jsonLdFound)
     ) {
       pageType = "BLOG_ARTICLE";

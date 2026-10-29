@@ -122,7 +122,18 @@ const KNOWN_PRODUCT_NOUNS = new Set([
   "throw", "rug", "curtain", "vase", "mirror", "clock", "frame", "shelf",
   "basket", "jar", "canister", "tongs", "whisk", "spatula", "peeler",
   "grater", "colander", "kettle", "mug", "tumbler", "thermos", "coaster",
-  "apron", "pan", "skillet", "launcher"
+  "apron", "pan", "skillet", "launcher",
+  "wallpaper", "decal", "paste", "putty", "spackle", "caulk", "sealant",
+  "wallet", "mandoline", "dicer", "crusher", "mincer", "masher", "corer",
+  "zester", "tenderizer", "frother", "infuser", "warmer", "cooler", "steamer",
+  "cooker", "fryer", "toaster", "blender", "mixer", "juicer", "dehydrator",
+  "timer", "mold", "mould", "stopper", "trivet", "caddy", "sponge", "wiper",
+  "squeegee", "plunger", "auger", "hammer", "mallet", "chisel", "vise",
+  "torch", "welder", "stapler", "nailer", "trowel", "scraper", "stencil",
+  "dashcam", "inflator", "compressor", "inverter", "sunshade", "visor",
+  "defroster", "headrest", "trashcan", "detangler", "deshedder", "aquarium",
+  "terrarium", "perch", "tunnel", "teaser", "clicker", "bootie", "booties",
+  "goggles", "bandana"
 ]);
 
 // Generic non-product category terms (including versioned generic terms e.g. "Pet Product V4")

@@ -251,7 +251,7 @@ export async function diagnoseKH02Source(
     const t = workspaceTelemetry?.[src];
     if (t) {
       const hasLiveAttempt = Boolean(t.liveAttempted ?? (t.isLive && t.queryExecuted));
-      dims.queryExecuted = Boolean(t.liveAttempted ?? t.queryExecuted);
+      dims.queryExecuted = (context?.applyReleasePolicy && isSourceTemporarilyDisabled(src)) ? false : Boolean(t.liveAttempted ?? t.queryExecuted);
       if (t.queryStatus) {
         dims.queryStatus = t.queryStatus;
       }

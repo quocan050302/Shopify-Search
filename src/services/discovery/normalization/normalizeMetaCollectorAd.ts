@@ -27,6 +27,30 @@ export interface MetaResearchContext {
   keyword?: string;
 }
 
+export function unwrapMetaRedirectUrl(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl || typeof rawUrl !== "string") return null;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === "l.facebook.com" ||
+      host === "lm.facebook.com" ||
+      host === "l.instagram.com" ||
+      host === "l.meta.ai"
+    ) {
+      const target = parsed.searchParams.get("u") || parsed.searchParams.get("url");
+      if (target && isSafeHttpUrl(target)) {
+        return target.trim();
+      }
+    }
+  } catch {
+    // Keep original if not a redirect wrapper
+  }
+  return trimmed;
+}
+
 export function parseMetaDate(dateVal: string | number | null | undefined): Date | null {
   if (!dateVal) return null;
   try {
@@ -126,9 +150,12 @@ export function normalizeMetaCollectorAd(
     : String(anyRaw.cta || anyRaw.callToAction || "").trim().slice(0, 100) || null;
 
   const rawLinkUrl = creatives.length > 0
-    ? (typeof primaryCreative.link_url === "string" && primaryCreative.link_url) || null
+    ? (typeof primaryCreative.link_url === "string" && primaryCreative.link_url.trim()) ||
+      (creatives.find((c) => typeof c.link_url === "string" && String(c.link_url).trim())?.link_url as string | undefined) ||
+      null
     : (typeof anyRaw.link_url === "string" && anyRaw.link_url) || (typeof anyRaw.landingPageUrl === "string" && anyRaw.landingPageUrl) || null;
-  const landingPageUrl = isSafeHttpUrl(rawLinkUrl) ? (rawLinkUrl as string).trim() : null;
+  const unwrappedLinkUrl = unwrapMetaRedirectUrl(rawLinkUrl);
+  const landingPageUrl = isSafeHttpUrl(unwrappedLinkUrl) ? (unwrappedLinkUrl as string).trim() : null;
 
   // 4. Honest Media Classification (Support display_format & avoid creative cross-pollution)
   const explicitMediaType = String(anyRaw.media_type || anyRaw.mediaType || "").toUpperCase();

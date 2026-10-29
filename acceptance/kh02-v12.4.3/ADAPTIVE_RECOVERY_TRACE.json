@@ -35,142 +35,150 @@
   "liveRunsAdaptiveCoverage": {
     "petGadgets": {
       "requestedCount": 3,
-      "qualifiedProducts": 2,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 2,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 17,
+      "unresolvedCandidates": 3,
       "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
+      "remainingSourceQueries": 3,
       "remainingAIRequests": 25,
       "missingArchetypes": [
+        "Pet Feeding",
         "Pet Cleaning",
         "Pet Safety"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "diy": {
       "requestedCount": 3,
-      "qualifiedProducts": 1,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 1,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
       "unresolvedCandidates": 1,
-      "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
+      "unverifiedQueueRemaining": 4,
+      "remainingSourceQueries": 3,
       "remainingAIRequests": 25,
       "missingArchetypes": [
+        "Home Decor",
         "Woodworking",
         "Furniture Repair"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "kitchen": {
       "requestedCount": 3,
-      "qualifiedProducts": 2,
-      "distinctProductArchetypesObserved": 3,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
       "distinctFamiliesObserved": 2,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 11,
+      "unresolvedCandidates": 3,
       "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
-      "remainingAIRequests": 25,
+      "remainingSourceQueries": 3,
+      "remainingAIRequests": 22,
       "missingArchetypes": [
+        "Kitchen Organization",
         "Food Storage"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "homeDecor": {
       "requestedCount": 3,
-      "qualifiedProducts": 0,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 0,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 8,
-      "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
+      "unresolvedCandidates": 1,
+      "unverifiedQueueRemaining": 10,
+      "remainingSourceQueries": 3,
       "remainingAIRequests": 25,
       "missingArchetypes": [
+        "Wall Accents",
         "Decorative Textiles"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "gardening": {
       "requestedCount": 3,
-      "qualifiedProducts": 0,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 0,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 0,
+      "unresolvedCandidates": 2,
       "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
-      "remainingAIRequests": 25,
+      "remainingSourceQueries": 3,
+      "remainingAIRequests": 14,
       "missingArchetypes": [
+        "Seed Starting",
         "Plant Supports",
         "Soil Monitoring"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "cleaning": {
       "requestedCount": 3,
-      "qualifiedProducts": 1,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 1,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 12,
-      "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
+      "unresolvedCandidates": 2,
+      "unverifiedQueueRemaining": 4,
+      "remainingSourceQueries": 3,
       "remainingAIRequests": 25,
       "missingArchetypes": [
+        "Detail & Steam Cleaning",
         "Floor Care"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "specificProduct": {
       "requestedCount": 3,
-      "qualifiedProducts": 2,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 2,
+      "qualifiedProducts": 3,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 3,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 17,
-      "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
+      "unresolvedCandidates": 1,
+      "unverifiedQueueRemaining": 3,
+      "remainingSourceQueries": 3,
       "remainingAIRequests": 25,
       "missingArchetypes": [
+        "Pet Hydration",
         "Pet Cleaning"
       ],
       "recoveryRecommended": false,
       "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "stopReason": "TARGET_REACHED"
     },
     "outOfSample": {
       "requestedCount": 3,
-      "qualifiedProducts": 2,
-      "distinctProductArchetypesObserved": 3,
-      "distinctFamiliesObserved": 2,
+      "qualifiedProducts": 0,
+      "distinctProductArchetypesObserved": 2,
+      "distinctFamiliesObserved": 0,
       "homogeneousFamilyDetected": false,
-      "unresolvedCandidates": 9,
+      "unresolvedCandidates": 2,
       "unverifiedQueueRemaining": 0,
-      "remainingSourceQueries": 0,
-      "remainingAIRequests": 25,
+      "remainingSourceQueries": 3,
+      "remainingAIRequests": 19,
       "missingArchetypes": [
+        "car Storage & Organizers",
         "car Essential Accessories"
       ],
-      "recoveryRecommended": false,
-      "recoveryTriggerReason": null,
-      "stopReason": "SOURCE_BUDGET_EXHAUSTED"
+      "recoveryRecommended": true,
+      "recoveryTriggerReason": "Post-gate qualified distinct products (0/3) below target.",
+      "stopReason": "CONTINUE"
     }
   }
 }
