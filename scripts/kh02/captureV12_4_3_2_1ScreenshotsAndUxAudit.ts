@@ -388,7 +388,11 @@ export async function runV12_4_3_2_1ChromiumUxAndScreenshotAudit(params: {
         (await page.locator('[data-testid="pf-candidate-drawer"]').count()) > 0;
       if (candidateInspectorOpened) {
         await page.keyboard.press("Escape");
-        await page.waitForTimeout(250);
+        await page.waitForTimeout(200);
+        if ((await page.locator('[data-testid="pf-drawer-close"]').count()) > 0) {
+          await page.locator('[data-testid="pf-drawer-close"]').first().click().catch(() => {});
+          await page.waitForTimeout(200);
+        }
       }
     }
 
@@ -423,7 +427,11 @@ export async function runV12_4_3_2_1ChromiumUxAndScreenshotAudit(params: {
 
     if (drawerOpened) {
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(200);
+      if ((await page.locator('[data-testid="pf-drawer-close"]').count()) > 0) {
+        await page.locator('[data-testid="pf-drawer-close"]').first().click().catch(() => {});
+        await page.waitForTimeout(200);
+      }
     }
 
     // =========================================================================

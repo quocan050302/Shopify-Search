@@ -1232,16 +1232,7 @@ export default function ProductsPage() {
                           type="button"
                           data-testid="pf-view-missing-evidence-btn"
                           onClick={() => {
-                            if (canonicalRecommended[0]) {
-                              openCandidateResearchDrawer(
-                                canonicalRecommended[0].rawCandidate,
-                                canonicalRecommended[0].rawRankedItem,
-                                canonicalRecommended[0],
-                                "DEMAND"
-                              );
-                            } else {
-                              setActiveTab("EVIDENCE_DIAGNOSTICS");
-                            }
+                            setActiveTab("EVIDENCE_DIAGNOSTICS");
                           }}
                           className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-colors whitespace-nowrap"
                         >
