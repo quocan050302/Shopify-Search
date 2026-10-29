@@ -113,6 +113,7 @@ export interface EvergreenLeaderboardResult {
   queryYields?: QueryYield[];
   shortlistCoverage?: ShortlistCoverageState;
   lookbackCoverage?: KH02LookbackCoverage;
+  sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
 }
 
 export interface ResearchProgressPayload {
@@ -136,6 +137,8 @@ export interface RunEvergreenResearchInput {
   workspaceId: string;
   runId?: string;
   selectedSources?: IntelligenceSource[];
+  sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
+  metaExecutionPolicy?: string;
   signal?: AbortSignal;
 }
 
@@ -269,6 +272,8 @@ export async function runEvergreenProductResearch(
     lookbackDays,
     maxResults: 50,
     signal: abortSignal,
+    sourceMode: input.sourceMode,
+    metaExecutionPolicy: input.metaExecutionPolicy,
   };
 
   const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 20_000;
@@ -1726,6 +1731,7 @@ export async function runEvergreenProductResearch(
     queryYields,
     shortlistCoverage,
     lookbackCoverage,
+    sourceMode: input.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

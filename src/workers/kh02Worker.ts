@@ -32,6 +32,8 @@ export interface ResearchInput {
   market?: "US";
   lookbackDays?: number;
   maxCandidates?: number;
+  sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
+  metaExecutionPolicy?: string;
   workspaceId: string;
 }
 
@@ -308,6 +310,8 @@ export async function claimNextResearchJob(
       market: payload.market || "US",
       lookbackDays: payload.lookbackDays || 90,
       maxCandidates: payload.maxCandidates || 15,
+      sourceMode: payload.sourceMode,
+      metaExecutionPolicy: payload.metaExecutionPolicy,
       workspaceId: pendingJob.workspaceId,
     },
   };
@@ -1151,6 +1155,8 @@ export async function executeResearchJob(
         market: job.payload.market || "US",
         lookbackDays: job.payload.lookbackDays || 90,
         maxCandidates: job.payload.maxCandidates || 15,
+        sourceMode: job.payload.sourceMode,
+        metaExecutionPolicy: job.payload.metaExecutionPolicy,
         workspaceId: job.workspaceId,
         runId: job.id,
         signal: abortController.signal,

@@ -26,6 +26,8 @@ const ResearchRequestSchema = z.object({
   market: z.literal("US").default("US"),
   lookbackDays: z.number().int().min(7).max(730).default(90),
   maxCandidates: z.number().int().min(3).max(50).default(15),
+  sourceMode: z.enum(["LIVE_WITH_CACHE_FALLBACK", "CACHE_ONLY", "LIVE_ONLY"]).optional(),
+  metaExecutionPolicy: z.enum(["LIVE_FIRST", "CACHE_SUPPLEMENTED", "CACHE_ONLY", "OFFLINE_FIXTURE"]).optional(),
   mode: z.enum(["async", "sync"]).optional(),
   async: z.boolean().optional(),
 });
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { topic, market, lookbackDays, maxCandidates } = parseResult.data;
+    const { topic, market, lookbackDays, maxCandidates, sourceMode, metaExecutionPolicy } = parseResult.data;
 
     const isAsync =
       body.mode === "async" ||
@@ -76,6 +78,8 @@ export async function POST(request: NextRequest) {
         market,
         lookbackDays,
         maxCandidates,
+        sourceMode,
+        metaExecutionPolicy,
       });
 
       // Enqueue job for background worker consumption (Single Executor Invariant)
@@ -91,6 +95,7 @@ export async function POST(request: NextRequest) {
             topic,
             market,
             lookbackDays,
+            sourceMode: sourceMode || "LIVE_WITH_CACHE_FALLBACK",
           },
           meta: {
             runId,
@@ -111,6 +116,8 @@ export async function POST(request: NextRequest) {
       market,
       lookbackDays,
       maxCandidates,
+      sourceMode,
+      metaExecutionPolicy,
     });
 
     await updateKH02ResearchRunStatus({
@@ -128,6 +135,8 @@ export async function POST(request: NextRequest) {
         market,
         lookbackDays,
         maxCandidates,
+        sourceMode,
+        metaExecutionPolicy,
         workspaceId: context.workspaceId,
         runId,
         signal: request.signal,

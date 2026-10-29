@@ -295,6 +295,52 @@ const NICHE_SUBQUERY_TEMPLATES: Record<
   string,
   Array<{ subquery: string; rationale: string; archetypeId?: string; category?: string }>
 > = {
+  dog: [
+    {
+      subquery: "dog hair remover",
+      rationale: "High-demand dog fur deshedding & furniture cleaning tool",
+      archetypeId: "pet_grooming_hair_removal",
+      category: "Dog Grooming",
+    },
+    {
+      subquery: "orthopedic dog bed",
+      rationale: "Supportive calming and orthopedic dog bedding",
+      archetypeId: "pet_bedding",
+      category: "Dog Bedding",
+    },
+    {
+      subquery: "dog water fountain",
+      rationale: "Filtered dog hydration and water dispenser",
+      archetypeId: "pet_hydration",
+      category: "Dog Hydration",
+    },
+    {
+      subquery: "dog grooming vacuum",
+      rationale: "Electronic dog coat brushing and hair capture device",
+      archetypeId: "pet_grooming_vacuum",
+      category: "Dog Grooming",
+    },
+  ],
+  cat: [
+    {
+      subquery: "cat water fountain",
+      rationale: "Filtered stainless steel cat hydration appliance",
+      archetypeId: "pet_hydration",
+      category: "Cat Hydration",
+    },
+    {
+      subquery: "automatic cat feeder",
+      rationale: "Timed wet/dry cat food dispenser",
+      archetypeId: "pet_feeding",
+      category: "Cat Feeding",
+    },
+    {
+      subquery: "cat litter mat",
+      rationale: "Double-layer honeycomb cat litter trapping mat",
+      archetypeId: "pet_litter_care",
+      category: "Cat Litter Care",
+    },
+  ],
   pet: [
     {
       subquery: "pet hair remover",

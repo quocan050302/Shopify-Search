@@ -76,6 +76,38 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
   // Recalculate Opportunity State
   const [recalculating, setRecalculating] = useState(false);
 
+  // Helper to forward workspace and KH-02 context query parameters
+  const getOverviewQuery = () => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    const forwarded = new URLSearchParams();
+    const ws = params.get("workspaceId");
+    if (ws) {
+      forwarded.set("workspaceId", ws);
+    } else {
+      const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+      if (cookieMatch) forwarded.set("workspaceId", cookieMatch[1]);
+    }
+    const runId = params.get("runId");
+    const candidateId = params.get("candidateId");
+    if (runId) forwarded.set("runId", runId);
+    if (candidateId) forwarded.set("candidateId", candidateId);
+    const qs = forwarded.toString();
+    return qs ? `?${qs}` : "";
+  };
+
+  const getBackToFinderHref = () => {
+    if (typeof window === "undefined") return "/products";
+    const params = new URLSearchParams(window.location.search);
+    const backParams = new URLSearchParams();
+    for (const key of ["topic", "lookbackDays", "sourceMode", "tab", "runId"]) {
+      const val = params.get(key);
+      if (val) backParams.set(key, val);
+    }
+    const qs = backParams.toString();
+    return qs ? `/products?${qs}` : "/products";
+  };
+
   // Helper to forward workspace query parameter or cookie
   const getWorkspaceQuery = () => {
     if (typeof window === "undefined") return "";
@@ -92,7 +124,7 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/v1/research/products/${productId}/overview${getWorkspaceQuery()}`, { signal });
+      const res = await fetch(`/api/v1/research/products/${productId}/overview${getOverviewQuery()}`, { signal });
       const json = await res.json();
 
       if (!json.success) {
@@ -375,13 +407,29 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
     );
   }
 
-  const { product, advertisingProfile, offerSnapshots, latestLandingPage, economicsScenarios, supplierQuotes, fulfillmentAssessment, opportunityAssessment, decisions } = overview;
+  const {
+    product,
+    advertisingProfile,
+    offerSnapshots,
+    latestLandingPage,
+    economicsScenarios,
+    supplierQuotes,
+    fulfillmentAssessment,
+    opportunityAssessment,
+    decisions,
+    kh02ResearchContext,
+    commercialReadinessSummary,
+  } = overview;
 
-  // Opportunity and Readiness Scores
-  const opportunityScore = opportunityAssessment?.opportunityScore ?? null;
-  const readinessScore = opportunityAssessment?.evidenceReadinessScore ?? null;
-  const recommendation = opportunityAssessment?.recommendation || "RESEARCH_MORE";
-  const testReadiness = opportunityAssessment?.testReadinessStatus || "BLOCKED_MISSING_DATA";
+  // Opportunity and Readiness Scores (aligning KH-02 Research Qualification with KH-01 Commercial Readiness)
+  const kh02Score = kh02ResearchContext?.opportunityScore ?? null;
+  const kh02Confidence = kh02ResearchContext?.evidenceConfidence ?? null;
+  const opportunityScore = opportunityAssessment?.opportunityScore ?? kh02Score ?? null;
+  const readinessScore = opportunityAssessment?.evidenceReadinessScore ?? kh02Confidence ?? null;
+  const recommendation = opportunityAssessment?.recommendation || kh02ResearchContext?.recommendation || "RESEARCH_MORE";
+  const testReadiness =
+    opportunityAssessment?.testReadinessStatus ||
+    (kh02ResearchContext ? "RESEARCH_QUALIFIED_AWAITING_ECONOMICS" : "BLOCKED_MISSING_DATA");
 
   // Parse snapshot JSONs
   let landingObservations: any = null;
@@ -407,10 +455,11 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
           <Link
-            href="/products"
+            href={getBackToFinderHref()}
+            data-testid="back-to-product-finder-link"
             className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Winning Product Finder
+            <ArrowLeft className="h-4 w-4" /> Back to Product Finder
           </Link>
 
           <div className="flex items-center gap-2">
@@ -517,6 +566,168 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
                 </span>
               </div>
               <div className="text-[9px] text-slate-500">{testReadiness}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* V12.4.3.2 Section 6.4 & Section 16: Separated Research Qualification (KH-02) vs Commercial Readiness (KH-01) */}
+        <div
+          data-testid="kh02-kh01-alignment-grid"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          {/* Card 1: Research Qualification (KH-02) */}
+          <div
+            data-testid="kh02-research-qualification-card"
+            className="p-5 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-sky-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Research Qualification (KH-02)
+                </h2>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                  kh02ResearchContext?.tier === "VERIFIED_EVERGREEN"
+                    ? "bg-emerald-950/80 text-emerald-300 border border-emerald-700/50"
+                    : kh02ResearchContext
+                    ? "bg-sky-950/80 text-sky-300 border border-sky-700/50"
+                    : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {kh02ResearchContext?.tier === "VERIFIED_EVERGREEN"
+                  ? "Verified Evergreen"
+                  : kh02ResearchContext
+                  ? "Research Qualified · Provisional"
+                  : "Catalog Product"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Research Score</div>
+                <div className="text-sm font-bold text-white font-mono">
+                  {kh02Score !== null ? `${kh02Score} / 100` : opportunityScore !== null ? `${opportunityScore} / 100` : "Pending"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Evidence Confidence</div>
+                <div className="text-sm font-bold text-white font-mono">
+                  {kh02Confidence !== null ? `${kh02Confidence}%` : readinessScore !== null ? `${readinessScore}%` : "Pending"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Identity</div>
+                <div className="text-xs font-semibold text-emerald-400 truncate">
+                  {kh02ResearchContext?.identityStatus || "VERIFIED"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Ad Evidence</div>
+                <div className="text-xs font-semibold text-slate-200 font-mono">
+                  {kh02ResearchContext?.supportingAdsCount ?? advertisingProfile?.distinctAdsCount ?? 0} ads ·{" "}
+                  {kh02ResearchContext?.distinctAdvertisersCount ?? advertisingProfile?.distinctAdvertisersCount ?? 0} adv
+                </div>
+              </div>
+            </div>
+
+            {kh02ResearchContext?.missingEvidence && kh02ResearchContext.missingEvidence.length > 0 && (
+              <div className="text-[11px] text-amber-300/90 bg-amber-950/30 border border-amber-800/40 rounded-lg px-3 py-2">
+                <strong className="font-semibold">Missing for Evergreen Verification:</strong>{" "}
+                {kh02ResearchContext.missingEvidence[0]}
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: Commercial Readiness (KH-01) */}
+          <div
+            data-testid="kh01-commercial-readiness-card"
+            className="p-5 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-amber-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Commercial Readiness (KH-01)
+                </h2>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                  commercialReadinessSummary?.statusLabel === "Commercial Model Complete"
+                    ? "bg-emerald-950/80 text-emerald-300 border border-emerald-700/50"
+                    : "bg-amber-950/80 text-amber-300 border border-amber-700/50"
+                }`}
+              >
+                {commercialReadinessSummary?.statusLabel || "Commercial Validation Needed"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {supplierQuotes?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Supplier Quote: {supplierQuotes?.length > 0 ? `${supplierQuotes.length} saved` : "Not entered"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {economicsScenarios?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Margin & CAC: {economicsScenarios?.length > 0 ? "Modeled" : "Not modeled"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {latestLandingPage || offerSnapshots?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Store Offer: {latestLandingPage || offerSnapshots?.length > 0 ? "Inspected" : "Pending"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {opportunityAssessment ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  KH-01 Readiness: {opportunityAssessment ? "Assessed" : "Pending"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("economics")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Model Margin & CAC
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("fulfillment")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Add Supplier Quote
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("funnel")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Inspect Store Page
+              </button>
             </div>
           </div>
         </div>

@@ -24,6 +24,29 @@ export type DiscoveryRelevanceDecision =
   | "AMBIGUOUS"
   | "CLEARLY_UNRELATED";
 
+export type TargetCustomerAudience =
+  | "DOG"
+  | "CAT"
+  | "PET_GENERAL"
+  | "MEN"
+  | "WOMEN"
+  | "KIDS"
+  | "ADULTS"
+  | "CAR"
+  | "MOTORCYCLE"
+  | "INDOOR"
+  | "OUTDOOR"
+  | "UNSPECIFIED";
+
+export interface ProductAudienceRelevance {
+  requestedAudience: TargetCustomerAudience;
+  supportedAudiences: TargetCustomerAudience[];
+  audienceMatch: "EXACT" | "COMPATIBLE" | "ADJACENT" | "CONTRADICTORY" | "UNKNOWN";
+  audienceEvidenceReferences: string[];
+  relevanceReason: string;
+  eligibleForPrimaryShortlist: boolean;
+}
+
 export interface EvaluateProductRelevanceOptions {
   plannedArchetypes?: PlannedProductArchetype[];
   matchedQueryPhrase?: string | null;
@@ -37,6 +60,7 @@ export interface RelevanceEvaluationResult {
   reasons: string[];
   topic: string;
   matchedArchetypeId?: string | null;
+  audienceRelevance?: ProductAudienceRelevance;
 }
 
 const GLOBAL_NON_PRODUCT_EXCLUSIONS: string[] = [
@@ -533,14 +557,18 @@ function mapStatusToDecision(
 export type CandidateTextInput =
   | string
   | {
+      topic?: string | null;
       title?: string | null;
       canonicalProductName?: string | null;
+      merchantVerifiedProductName?: string | null;
       category?: string | null;
       problemStatement?: string | null;
       targetAudience?: string | null;
       storeDomain?: string | null;
       canonicalProductUrl?: string | null;
+      productUrl?: string | null;
       adTexts?: string[];
+      evidenceSnippets?: string[];
     };
 
 function normalizeCandidateTextInput(input: CandidateTextInput): string {
@@ -549,25 +577,269 @@ function normalizeCandidateTextInput(input: CandidateTextInput): string {
   return [
     input.title || "",
     input.canonicalProductName || "",
+    input.merchantVerifiedProductName || "",
     input.category || "",
     input.problemStatement || "",
     input.targetAudience || "",
     input.storeDomain || "",
     input.canonicalProductUrl || "",
+    input.productUrl || "",
     ...(Array.isArray(input.adTexts) ? input.adTexts : []),
+    ...(Array.isArray(input.evidenceSnippets) ? input.evidenceSnippets : []),
   ]
     .filter(Boolean)
     .join(" ");
 }
 
+export function evaluateProductAudienceRelevance(
+  candidateText: CandidateTextInput,
+  topic?: string
+): ProductAudienceRelevance {
+  const resolvedTopic =
+    topic ||
+    (typeof candidateText === "object" && candidateText ? candidateText.topic || "" : "");
+  const normTopic = resolvedTopic.toLowerCase().trim();
+  const normText = normalizeCandidateTextInput(candidateText).toLowerCase().trim();
+
+  // 1. Determine requestedAudience from topic
+  let requestedAudience: TargetCustomerAudience = "UNSPECIFIED";
+  const topicHasDog = /\b(dogs?|pupp(?:y|ies)|canines?)\b/i.test(normTopic);
+  const topicHasCat = /\b(cats?|kittens?|felines?)\b/i.test(normTopic);
+  const topicHasPet = /\b(pets?)\b/i.test(normTopic);
+  const topicHasMen = /\b(men|mens|men's|male)\b/i.test(normTopic);
+  const topicHasWomen = /\b(women|womens|women's|female|ladies)\b/i.test(normTopic);
+  const topicHasKids = /\b(kids?|children|toddler|baby|babies)\b/i.test(normTopic);
+  const topicHasAdults = /\b(adults?)\b/i.test(normTopic);
+  const topicHasCar = /\b(cars?|auto|automotive|sedan|suv|truck)\b/i.test(normTopic);
+  const topicHasMoto = /\b(motorcycles?|motorbikes?|bikers?)\b/i.test(normTopic);
+  const topicHasIndoor = /\b(indoors?)\b/i.test(normTopic);
+  const topicHasOutdoor = /\b(outdoors?)\b/i.test(normTopic);
+
+  if (topicHasDog && !topicHasCat && !topicHasPet) requestedAudience = "DOG";
+  else if (topicHasCat && !topicHasDog && !topicHasPet) requestedAudience = "CAT";
+  else if (topicHasPet || (topicHasDog && topicHasCat)) requestedAudience = "PET_GENERAL";
+  else if (topicHasMen && !topicHasWomen) requestedAudience = "MEN";
+  else if (topicHasWomen && !topicHasMen) requestedAudience = "WOMEN";
+  else if (topicHasKids && !topicHasAdults) requestedAudience = "KIDS";
+  else if (topicHasAdults && !topicHasKids) requestedAudience = "ADULTS";
+  else if (topicHasCar && !topicHasMoto) requestedAudience = "CAR";
+  else if (topicHasMoto && !topicHasCar) requestedAudience = "MOTORCYCLE";
+  else if (topicHasIndoor && !topicHasOutdoor) requestedAudience = "INDOOR";
+  else if (topicHasOutdoor && !topicHasIndoor) requestedAudience = "OUTDOOR";
+
+  // 2. Detect supportedAudiences & evidence references from candidate text
+  const supportedAudiences: TargetCustomerAudience[] = [];
+  const evidenceRefs: string[] = [];
+
+  const addAudienceIfMatch = (aud: TargetCustomerAudience, regex: RegExp, label: string) => {
+    const m = normText.match(regex);
+    if (m && m[0]) {
+      if (!supportedAudiences.includes(aud)) supportedAudiences.push(aud);
+      evidenceRefs.push(`${label}:"${m[0].trim()}"`);
+    }
+  };
+
+  addAudienceIfMatch("DOG", /\b(dogs?|pupp(?:y|ies)|canines?)\b/i, "dog_term");
+  addAudienceIfMatch("CAT", /\b(cats?|kittens?|felines?|litter\s+box|litter\s+mat)\b/i, "cat_term");
+  addAudienceIfMatch("PET_GENERAL", /\b(pets?|fur\s+remover|pet\s+hair|paws?)\b/i, "pet_term");
+  addAudienceIfMatch("MEN", /\b(men|mens|men's|for\s+men)\b/i, "men_term");
+  addAudienceIfMatch("WOMEN", /\b(women|womens|women's|for\s+women|ladies)\b/i, "women_term");
+  addAudienceIfMatch("KIDS", /\b(kids?|children|toddler|baby|babies)\b/i, "kids_term");
+  addAudienceIfMatch("ADULTS", /\b(adults?|for\s+adults)\b/i, "adults_term");
+  addAudienceIfMatch("CAR", /\b(cars?|automotive|truck|suv)\b/i, "car_term");
+  addAudienceIfMatch("MOTORCYCLE", /\b(motorcycles?|motorbikes?)\b/i, "motorcycle_term");
+  addAudienceIfMatch("INDOOR", /\b(indoors?)\b/i, "indoor_term");
+  addAudienceIfMatch("OUTDOOR", /\b(outdoors?)\b/i, "outdoor_term");
+
+  if (supportedAudiences.length === 0) {
+    supportedAudiences.push("UNSPECIFIED");
+  }
+
+  // Primary product title / headline check for explicit species lock
+  const primaryTitle =
+    typeof candidateText === "object" && candidateText
+      ? `${candidateText.canonicalProductName || ""} ${candidateText.title || ""}`.toLowerCase()
+      : normText.split(/https?:\/\//)[0].toLowerCase();
+
+  const isExplicitlyCatOnlyTitle =
+    /\b(cat\s+feeder|cat\s+water\s+fountain|cat\s+fountain|cat\s+litter|cat\s+tree|cat\s+scratcher|wet\s+food\s+cat\s+feeder|kitten)\b/i.test(
+      primaryTitle
+    ) && !/\b(dogs?|pupp(?:y|ies)|canines?)\b/i.test(primaryTitle);
+
+  const isExplicitlyDogOnlyTitle =
+    /\b(dog\s+bed|dog\s+harness|dog\s+leash|dog\s+bark|dog\s+collar|dog\s+crate|puppy\s+pad)\b/i.test(
+      primaryTitle
+    ) && !/\b(cats?|kittens?|felines?)\b/i.test(primaryTitle);
+
+  if (requestedAudience === "UNSPECIFIED" || requestedAudience === "PET_GENERAL") {
+    return {
+      requestedAudience,
+      supportedAudiences,
+      audienceMatch: "COMPATIBLE",
+      audienceEvidenceReferences: evidenceRefs,
+      relevanceReason: "Target audience is broad or compatible with candidate audience.",
+      eligibleForPrimaryShortlist: true,
+    };
+  }
+
+  if (requestedAudience === "DOG") {
+    if (isExplicitlyCatOnlyTitle || (supportedAudiences.includes("CAT") && !supportedAudiences.includes("DOG"))) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "CONTRADICTORY",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Excluded — Product is marketed for cats, while this search targets dogs.",
+        eligibleForPrimaryShortlist: false,
+      };
+    }
+    if (supportedAudiences.includes("DOG") && supportedAudiences.includes("CAT")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "COMPATIBLE",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Multi-pet product explicitly supports both dogs and cats.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+    if (supportedAudiences.includes("DOG")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "EXACT",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Product explicitly targets dogs.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+    if (supportedAudiences.includes("PET_GENERAL")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "COMPATIBLE",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "General pet product compatible with dogs.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+  }
+
+  if (requestedAudience === "CAT") {
+    if (isExplicitlyDogOnlyTitle || (supportedAudiences.includes("DOG") && !supportedAudiences.includes("CAT"))) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "CONTRADICTORY",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Excluded — Product is marketed for dogs, while this search targets cats.",
+        eligibleForPrimaryShortlist: false,
+      };
+    }
+    if (supportedAudiences.includes("CAT") && supportedAudiences.includes("DOG")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "COMPATIBLE",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Multi-pet product explicitly supports both cats and dogs.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+    if (supportedAudiences.includes("CAT")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "EXACT",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "Product explicitly targets cats.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+    if (supportedAudiences.includes("PET_GENERAL")) {
+      return {
+        requestedAudience,
+        supportedAudiences,
+        audienceMatch: "COMPATIBLE",
+        audienceEvidenceReferences: evidenceRefs,
+        relevanceReason: "General pet product compatible with cats.",
+        eligibleForPrimaryShortlist: true,
+      };
+    }
+  }
+
+  const opposingPairs: Array<[TargetCustomerAudience, TargetCustomerAudience]> = [
+    ["MEN", "WOMEN"],
+    ["WOMEN", "MEN"],
+    ["KIDS", "ADULTS"],
+    ["ADULTS", "KIDS"],
+    ["CAR", "MOTORCYCLE"],
+    ["MOTORCYCLE", "CAR"],
+    ["INDOOR", "OUTDOOR"],
+    ["OUTDOOR", "INDOOR"],
+  ];
+
+  for (const [reqAud, oppAud] of opposingPairs) {
+    if (requestedAudience === reqAud) {
+      if (supportedAudiences.includes(oppAud) && !supportedAudiences.includes(reqAud)) {
+        return {
+          requestedAudience,
+          supportedAudiences,
+          audienceMatch: "CONTRADICTORY",
+          audienceEvidenceReferences: evidenceRefs,
+          relevanceReason: `Excluded — Product is marketed for ${oppAud.toLowerCase()}, while this search targets ${reqAud.toLowerCase()}.`,
+          eligibleForPrimaryShortlist: false,
+        };
+      }
+      if (supportedAudiences.includes(reqAud)) {
+        return {
+          requestedAudience,
+          supportedAudiences,
+          audienceMatch: supportedAudiences.includes(oppAud) ? "COMPATIBLE" : "EXACT",
+          audienceEvidenceReferences: evidenceRefs,
+          relevanceReason: `Product supports requested target audience (${reqAud.toLowerCase()}).`,
+          eligibleForPrimaryShortlist: true,
+        };
+      }
+    }
+  }
+
+  return {
+    requestedAudience,
+    supportedAudiences,
+    audienceMatch: supportedAudiences.includes(requestedAudience) ? "EXACT" : "UNKNOWN",
+    audienceEvidenceReferences: evidenceRefs,
+    relevanceReason: "No contradictory target customer audience detected.",
+    eligibleForPrimaryShortlist: true,
+  };
+}
+
 export function evaluateProductRelevance(
   candidateText: CandidateTextInput,
-  topic: string,
+  topic?: string,
   options?: EvaluateProductRelevanceOptions
+): RelevanceEvaluationResult {
+  const resolvedTopic =
+    topic ||
+    (typeof candidateText === "object" && candidateText ? candidateText.topic || "" : "");
+  const audienceRelevance = evaluateProductAudienceRelevance(candidateText, resolvedTopic);
+  const core = evaluateProductRelevanceCore(candidateText, resolvedTopic, options, audienceRelevance);
+  return {
+    ...core,
+    audienceRelevance: core.audienceRelevance || audienceRelevance,
+  };
+}
+
+function evaluateProductRelevanceCore(
+  candidateText: CandidateTextInput,
+  topic: string,
+  options?: EvaluateProductRelevanceOptions,
+  precomputedAudience?: ProductAudienceRelevance
 ): RelevanceEvaluationResult {
   const normalizedTopic = (topic || "").toLowerCase().trim();
   const normalizedText = normalizeCandidateTextInput(candidateText).toLowerCase().trim();
   const reasons: string[] = [];
+  const audienceRelevance = precomputedAudience || evaluateProductAudienceRelevance(candidateText, topic);
 
   if (!normalizedText || normalizedText.length < 2) {
     return {
@@ -578,6 +850,21 @@ export function evaluateProductRelevance(
       reasons: ["Candidate text is empty or too short."],
       topic,
       matchedArchetypeId: null,
+      audienceRelevance,
+    };
+  }
+
+  // V12.4.3.2 Section 5: Enforce strict target customer / species audience compatibility
+  if (!audienceRelevance.eligibleForPrimaryShortlist) {
+    return {
+      relevanceStatus: "IRRELEVANT",
+      discoveryDecision: "CLEARLY_UNRELATED",
+      isAccepted: false,
+      score: 0.08,
+      reasons: [audienceRelevance.relevanceReason],
+      topic,
+      matchedArchetypeId: null,
+      audienceRelevance,
     };
   }
 
@@ -653,7 +940,7 @@ export function evaluateProductRelevance(
     ) {
       nicheKey = "gardening";
     } else if (
-      /\b(cat water fountain|dog grooming|litter mat)\b/i.test(normalizedTopic)
+      /\b(cat water fountain|dog grooming|litter mat|dogs?|pupp(?:y|ies)|cats?|kittens?|pets?)\b/i.test(normalizedTopic)
     ) {
       nicheKey = "pet";
     }

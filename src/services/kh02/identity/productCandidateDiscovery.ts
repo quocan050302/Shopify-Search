@@ -25,6 +25,8 @@ import {
 import {
   DiscoveryRelevanceDecision,
   evaluateProductRelevance,
+  evaluateProductAudienceRelevance,
+  ProductAudienceRelevance,
 } from "./productRelevanceEvaluator";
 import { PlannedProductArchetype } from "../discovery/geminiDiscoveryPlanner";
 import {
@@ -55,6 +57,26 @@ export {
   clusterProductCandidates,
   evaluateOpportunityDiversity,
 };
+
+export type CandidateRejectionReasonCode =
+  | "NON_PHYSICAL_SERVICE"
+  | "NON_PHYSICAL_CONTENT_ARTICLE"
+  | "NON_PHYSICAL_LEAD_GEN_OR_INSURANCE"
+  | "CAMPAIGN_HEADLINE_OR_HOMEPAGE"
+  | "TARGET_AUDIENCE_MISMATCH"
+  | "NICHE_RELEVANCE_MISMATCH"
+  | "UNRESOLVED_PRODUCT_IDENTITY"
+  | "MISSING_MERCHANT_EVIDENCE"
+  | "DEAD_MERCHANT_URL_404"
+  | "EVIDENCE_CONTRADICTION"
+  | "NOT_SELLABLE_PRODUCT_OFFER";
+
+export interface CandidateRejectionDetail {
+  reasonCode: CandidateRejectionReasonCode;
+  reasonText: string;
+  evidenceReferences: string[];
+  detectedEntityType: string;
+}
 
 export interface DiscoveredProductCandidate {
   candidateId: string;
@@ -122,6 +144,8 @@ export interface DiscoveredProductCandidate {
   productRealityStatus?: ProductRealityStatus;
   sourcePageClassification?: SourcePageClassification;
   productRealityReason?: string | null;
+  rejectionDetail?: CandidateRejectionDetail | null;
+  audienceRelevance?: ProductAudienceRelevance;
   // Section 5: Unified Distinctness & Family fields
   listingKey?: string;
   productKey?: string;
@@ -750,6 +774,7 @@ export function discoverProductCandidatesFromAds(
       matchedQueryIds,
       relevanceScore: relevance.score,
       relevanceReasons: relevance.reasons,
+      audienceRelevance: relevance.audienceRelevance,
       psychologyProfile: psychProfile,
       sourcePageClassification: pageClass,
     };
@@ -760,6 +785,7 @@ export function discoverProductCandidatesFromAds(
     candObj.productRealityStatus = realityEval.status;
     candObj.sourcePageClassification = realityEval.sourcePageClassification;
     candObj.productRealityReason = realityEval.reason;
+    candObj.rejectionDetail = realityEval.rejectionDetail ?? null;
     if (!realityEval.eligibleForShortlist) {
       candObj.isEligibleAsEvergreenWinner = false;
     }
@@ -922,6 +948,7 @@ export interface ProductRealityGateEvaluation {
   eligibleForShortlist: boolean;
   isPhysicalProductRealityEligible: boolean;
   reason: string | null;
+  rejectionDetail?: CandidateRejectionDetail | null;
   rejectionReasons: string[];
   conditions: {
     correctNiche: boolean;
@@ -981,10 +1008,11 @@ export function evaluateCandidateProductReality(
     sourcePageClassification = "ARTICLE_PAGE";
   }
 
-  // Condition 1: Correct niche
+  // Condition 1: Correct niche & target customer audience compatibility
   const correctNiche =
     (c.relevanceStatus === "RELEVANT" ||
       c.relevanceStatus === "PROBABLY_RELEVANT") &&
+    c.audienceRelevance?.eligibleForPrimaryShortlist !== false &&
     (!c.aiIntelligence ||
       (c.aiIntelligence.nicheRelevance !== "UNRELATED" &&
         c.aiIntelligence.nicheRelevance !== "LOW"));
@@ -1072,10 +1100,29 @@ export function evaluateCandidateProductReality(
     noUnresolvedContradiction,
   };
 
+  const evidenceRefs = Array.from(
+    new Set(
+      [
+        ...(c.identityEvidenceReferences || []),
+        ...(c.supportingAdIds || []).map((id) => `Ad:${id}`),
+        c.canonicalProductUrl ? `URL:${c.canonicalProductUrl}` : null,
+      ].filter((r): r is string => Boolean(r))
+    )
+  );
+  const resolvedDetectedEntity =
+    aiEntity && aiEntity !== "PHYSICAL_PRODUCT"
+      ? aiEntity
+      : c.fetchOutcome === "NON_PRODUCT_PAGE" || sourcePageClassification === "ARTICLE_PAGE"
+      ? "CONTENT_ARTICLE"
+      : deterministic.isNonPhysical
+      ? deterministic.detectedEntityType || "NON_PHYSICAL"
+      : aiEntity || deterministic.detectedEntityType || "PHYSICAL_PRODUCT";
+
   const buildGateResult = (
     status: ProductRealityStatus,
     eligibleForShortlist: boolean,
-    reason: string | null
+    reason: string | null,
+    reasonCode?: CandidateRejectionReasonCode
   ): ProductRealityGateEvaluation => ({
     status,
     productRealityStatus: status,
@@ -1083,19 +1130,60 @@ export function evaluateCandidateProductReality(
     eligibleForShortlist,
     isPhysicalProductRealityEligible: eligibleForShortlist,
     reason,
+    rejectionDetail:
+      reason && reasonCode
+        ? {
+            reasonCode,
+            reasonText: reason,
+            evidenceReferences: evidenceRefs,
+            detectedEntityType: resolvedDetectedEntity,
+          }
+        : null,
     rejectionReasons: reason ? [reason] : [],
     conditions,
   });
 
   if (!notServiceArticleInsuranceLeadGen) {
+    // V12.4.3.2 Section 8: Never produce contradictory "Classified as non-physical entity (PHYSICAL_PRODUCT)"
+    const isArticlePage =
+      c.fetchOutcome === "NON_PRODUCT_PAGE" ||
+      sourcePageClassification === "ARTICLE_PAGE" ||
+      resolvedDetectedEntity === "CONTENT_ARTICLE";
+    const isInsuranceOrLeadGen =
+      resolvedDetectedEntity === "INSURANCE_OR_FINANCE" ||
+      resolvedDetectedEntity === "LEAD_GENERATION";
+    const isPhysicalRejectedBySellability =
+      resolvedDetectedEntity === "PHYSICAL_PRODUCT" &&
+      c.aiIntelligence?.isLikelySellableProduct === false;
+
+    const code: CandidateRejectionReasonCode = isArticlePage
+      ? "NON_PHYSICAL_CONTENT_ARTICLE"
+      : isInsuranceOrLeadGen
+      ? "NON_PHYSICAL_LEAD_GEN_OR_INSURANCE"
+      : isPhysicalRejectedBySellability
+      ? "NOT_SELLABLE_PRODUCT_OFFER"
+      : "NON_PHYSICAL_SERVICE";
+
+    const cleanReason =
+      c.aiExclusionReason && !/non-physical entity \(PHYSICAL_PRODUCT\)/i.test(c.aiExclusionReason)
+        ? c.aiExclusionReason
+        : deterministic.reason && !/non-physical entity \(PHYSICAL_PRODUCT\)/i.test(deterministic.reason)
+        ? deterministic.reason
+        : isArticlePage
+        ? "Excluded — Destination is a blog article or editorial page rather than a purchasable product."
+        : isInsuranceOrLeadGen
+        ? "Excluded — Offer is an insurance policy or lead-generation funnel rather than a physical product."
+        : isPhysicalRejectedBySellability
+        ? "Excluded — Offer lacks a verifiable sellable physical SKU on the destination page."
+        : `Excluded — Classified as non-physical service or informational offer (${
+            resolvedDetectedEntity === "PHYSICAL_PRODUCT" ? "SERVICE_OFFER" : resolvedDetectedEntity
+          }).`;
+
     return buildGateResult(
-      "NON_PHYSICAL",
+      isPhysicalRejectedBySellability ? "REJECTED" : "NON_PHYSICAL",
       false,
-      c.aiExclusionReason ||
-        deterministic.reason ||
-        `Excluded: Classified as non-physical entity (${
-          aiEntity || deterministic.detectedEntityType || "NON_PHYSICAL"
-        }).`
+      cleanReason,
+      code
     );
   }
 
@@ -1104,19 +1192,24 @@ export function evaluateCandidateProductReality(
       "REJECTED",
       false,
       c.fetchOutcome === "HOMEPAGE"
-        ? "Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page."
+        ? "Excluded — Destination URL redirected or resolved to a generic store homepage rather than a product page."
         : deterministic.reason ||
-            "Excluded: Campaign code or internal ad identifier."
+            "Excluded — Campaign code or promotional slogan rather than a specific product.",
+      "CAMPAIGN_HEADLINE_OR_HOMEPAGE"
     );
   }
 
   if (!correctNiche) {
+    const isAudienceMismatch = c.audienceRelevance?.eligibleForPrimaryShortlist === false;
     return buildGateResult(
       "REJECTED",
       false,
-      c.aiExclusionReason ||
-        (c.relevanceReasons && c.relevanceReasons[0]) ||
-        "Excluded: Candidate does not match requested niche."
+      isAudienceMismatch
+        ? c.audienceRelevance!.relevanceReason
+        : c.aiExclusionReason ||
+          (c.relevanceReasons && c.relevanceReasons[0]) ||
+          "Excluded — Candidate does not match the searched product niche.",
+      isAudienceMismatch ? "TARGET_AUDIENCE_MISMATCH" : "NICHE_RELEVANCE_MISMATCH"
     );
   }
 
@@ -1126,7 +1219,8 @@ export function evaluateCandidateProductReality(
       false,
       (c.contradictions && c.contradictions[0]) ||
         c.aiExclusionReason ||
-        "Excluded: Unresolved contradiction between ad claim and merchant page or unverified source reference."
+        "Excluded — Unresolved contradiction between ad claim and merchant page or unverified source reference.",
+      "EVIDENCE_CONTRADICTION"
     );
   }
 
@@ -1136,18 +1230,25 @@ export function evaluateCandidateProductReality(
     !merchantEvidenceSufficient ||
     !physicalProductSupported
   ) {
+    const code: CandidateRejectionReasonCode =
+      c.fetchOutcome === "HTTP_404"
+        ? "DEAD_MERCHANT_URL_404"
+        : !merchantEvidenceSufficient
+        ? "MISSING_MERCHANT_EVIDENCE"
+        : "UNRESOLVED_PRODUCT_IDENTITY";
     return buildGateResult(
       "UNRESOLVED",
       false,
       c.fetchOutcome === "HTTP_404"
-        ? "Excluded: Merchant landing page returned HTTP 404 (dead product link)."
+        ? "Excluded — Merchant landing page returned HTTP 404 (dead product link)."
         : !merchantEvidenceSufficient
-        ? "Excluded: Lacks verified merchant domain or product landing URL evidence."
+        ? "Excluded — Lacks verified merchant domain or product landing URL evidence."
         : !productIdentityDefensible
-        ? "Excluded: Product identity is unresolved."
+        ? "Excluded — Product identity is unresolved."
         : !sourceEvidenceAvailable
-        ? "Excluded: Lacks supporting source advertisement evidence."
-        : "Excluded: Insufficient physical product evidence."
+        ? "Excluded — Lacks supporting source advertisement evidence."
+        : "Excluded — Insufficient physical product evidence.",
+      code
     );
   }
 
@@ -1237,11 +1338,15 @@ export function selectTopResearchShortlist(
 ): ResearchShortlistResult {
   // 1. Filter candidates through the mandatory Product Reality Gate
   const realityPassed = candidates.filter((c) => {
+    if (!c.audienceRelevance && options?.topic) {
+      c.audienceRelevance = evaluateProductAudienceRelevance(c, options.topic);
+    }
     attachDistinctnessFingerprint(c);
     const reality = evaluateCandidateProductReality(c);
     c.productRealityStatus = reality.status;
     c.sourcePageClassification = reality.sourcePageClassification;
     c.productRealityReason = reality.reason;
+    c.rejectionDetail = reality.rejectionDetail ?? null;
     if (
       reality.sourcePageClassification === "COLLECTION_PAGE" &&
       c.identityStatus === "VERIFIED" &&

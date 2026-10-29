@@ -190,6 +190,8 @@ export async function createKH02ResearchRun(
     market?: string;
     lookbackDays?: number;
     maxCandidates?: number;
+    sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
+    metaExecutionPolicy?: string;
   },
   db: any = prisma
 ): Promise<string> {
@@ -231,6 +233,8 @@ export async function createKH02ResearchRun(
         market: params.market || "US",
         lookbackDays: params.lookbackDays || 90,
         maxCandidates: params.maxCandidates || 15,
+        sourceMode: params.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+        metaExecutionPolicy: params.metaExecutionPolicy,
       }),
       createdAt: new Date(),
     },
@@ -327,6 +331,181 @@ export async function persistKH02RankingSnapshot(
 }
 
 /**
+ * V12.4.3.2 Forensic Re-qualification:
+ * Demotes any historical Evergreen Winner whose demand series was backed by
+ * synthetic `verified-merchant-demand:<domain>` or `CACHED_UNVERIFIED` observations,
+ * moving it to Research Shortlist / Provisional without deleting any records.
+ */
+export function requalifyHistoricalEvergreenSnapshot(
+  snapshot: EvergreenLeaderboardResult | null
+): {
+  snapshot: EvergreenLeaderboardResult | null;
+  modified: boolean;
+  demotedWinners: Array<{
+    candidateId: string;
+    title: string;
+    evidenceReferences: string[];
+    reason: string;
+  }>;
+} {
+  if (!snapshot || !Array.isArray(snapshot.topThree) || snapshot.topThree.length === 0) {
+    return { snapshot, modified: false, demotedWinners: [] };
+  }
+
+  const retainedTopThree: typeof snapshot.topThree = [];
+  const demotedItems: typeof snapshot.topThree = [];
+  const demotedWinners: Array<{
+    candidateId: string;
+    title: string;
+    evidenceReferences: string[];
+    reason: string;
+  }> = [];
+
+  for (const item of snapshot.topThree) {
+    const c: any = item?.candidate || {};
+    const refs: string[] = [
+      ...(c.demandResolution?.evidenceReferences || []),
+      ...(c.temporalStability?.evidenceReferences || []),
+    ].map(String);
+    const hasSyntheticMerchantRef = refs.some((r) =>
+      r.toLowerCase().includes("verified-merchant-demand:")
+    );
+    const authority =
+      c.demandResolution?.demandSourceAuthority ||
+      c.evergreenVerification?.demandSourceAuthority ||
+      c.temporalStability?.sourceAuthority ||
+      null;
+    const isUnverifiedAuthority =
+      authority === "CACHED_UNVERIFIED" || authority === "FIXTURE_ONLY";
+
+    if (hasSyntheticMerchantRef || isUnverifiedAuthority) {
+      const reason =
+        "Retroactively demoted in V12.4.3.2: historical demand was backed by unverified merchant-seeded series (verified-merchant-demand:<domain>) rather than authoritative 6-12m external demand.";
+      if (c.demandResolution) {
+        c.demandResolution.demandSourceAuthority = "CACHED_UNVERIFIED";
+        c.demandResolution.eligibleForEvergreen = false;
+      }
+      if (c.temporalStability) {
+        c.temporalStability.sourceAuthority = "CACHED_UNVERIFIED";
+        c.temporalStability.eligibleForEvergreen = false;
+        c.temporalStability.evergreenStatus = "INSUFFICIENT_HISTORY";
+      }
+      if (c.evergreenVerification) {
+        c.evergreenVerification.demandSourceAuthority = "CACHED_UNVERIFIED";
+        c.evergreenVerification.demandAuthoritativeEligible = false;
+        c.evergreenVerification.isVerifiedEvergreenWinner = false;
+      }
+      (item as any).evergreenStatus = "INSUFFICIENT_HISTORY";
+      demotedItems.push(item);
+      demotedWinners.push({
+        candidateId: c.candidateId || "unknown",
+        title: c.canonicalProductName || c.title || "Unknown Candidate",
+        evidenceReferences: refs,
+        reason,
+      });
+    } else {
+      retainedTopThree.push(item);
+    }
+  }
+
+  if (demotedItems.length === 0) {
+    return { snapshot, modified: false, demotedWinners: [] };
+  }
+
+  const existingProvisional = Array.isArray(snapshot.provisionalCandidates)
+    ? [...snapshot.provisionalCandidates]
+    : [];
+  const existingProvIds = new Set(
+    existingProvisional.map((p: any) => p?.candidate?.candidateId)
+  );
+  for (const d of demotedItems) {
+    if (!existingProvIds.has(d.candidate?.candidateId)) {
+      existingProvisional.unshift(d);
+      existingProvIds.add(d.candidate?.candidateId);
+    }
+  }
+
+  const updated: EvergreenLeaderboardResult = {
+    ...snapshot,
+    topThree: retainedTopThree.map((it, idx) => ({ ...it, rank: (idx + 1) as 1 | 2 | 3 })),
+    provisionalCandidates: existingProvisional,
+  };
+
+  return { snapshot: updated, modified: true, demotedWinners };
+}
+
+/**
+ * Retroactively audits and updates all persisted KH-02 research runs in SQLite
+ * that contained false Evergreen winners backed by `verified-merchant-demand:<domain>`.
+ */
+export async function requalifyAllHistoricalRunsInDb(db: any = prisma): Promise<{
+  totalRunsInspected: number;
+  runsModifiedCount: number;
+  totalDemotedWinnersCount: number;
+  requalifiedRuns: Array<{
+    runId: string;
+    topic: string;
+    previousEvergreenCount: number;
+    newEvergreenCount: number;
+    demotedWinners: Array<{
+      candidateId: string;
+      title: string;
+      evidenceReferences: string[];
+      reason: string;
+    }>;
+  }>;
+}> {
+  const jobs = await db.syncJob.findMany({
+    where: { jobType: "KH02_RESEARCH" },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const requalifiedRuns: Array<{
+    runId: string;
+    topic: string;
+    previousEvergreenCount: number;
+    newEvergreenCount: number;
+    demotedWinners: Array<{
+      candidateId: string;
+      title: string;
+      evidenceReferences: string[];
+      reason: string;
+    }>;
+  }> = [];
+  let totalDemotedWinnersCount = 0;
+
+  for (const job of jobs) {
+    if (!job.resultJson) continue;
+    try {
+      const parsed = JSON.parse(job.resultJson);
+      const prevCount = Array.isArray(parsed.topThree) ? parsed.topThree.length : 0;
+      const req = requalifyHistoricalEvergreenSnapshot(parsed);
+      if (req.modified && req.snapshot) {
+        await db.syncJob.update({
+          where: { id: job.id },
+          data: { resultJson: JSON.stringify(req.snapshot) },
+        });
+        totalDemotedWinnersCount += req.demotedWinners.length;
+        requalifiedRuns.push({
+          runId: job.id,
+          topic: req.snapshot.topic || "unknown",
+          previousEvergreenCount: prevCount,
+          newEvergreenCount: req.snapshot.topThree.length,
+          demotedWinners: req.demotedWinners,
+        });
+      }
+    } catch {}
+  }
+
+  return {
+    totalRunsInspected: jobs.length,
+    runsModifiedCount: requalifiedRuns.length,
+    totalDemotedWinnersCount,
+    requalifiedRuns,
+  };
+}
+
+/**
  * Restores the latest completed leaderboard snapshot for a workspace.
  */
 export async function getKH02Leaderboard(
@@ -346,7 +525,8 @@ export async function getKH02Leaderboard(
   if (!latestJob?.resultJson) return null;
 
   try {
-    return JSON.parse(latestJob.resultJson) as EvergreenLeaderboardResult;
+    const parsed = JSON.parse(latestJob.resultJson) as EvergreenLeaderboardResult;
+    return requalifyHistoricalEvergreenSnapshot(parsed).snapshot;
   } catch {
     return null;
   }
@@ -689,7 +869,7 @@ export async function getKH02ResearchRunById(
     try {
       meta = JSON.parse(job.resultJson);
       if (meta.topThree || meta.formulaVersion) {
-        result = meta;
+        result = requalifyHistoricalEvergreenSnapshot(meta).snapshot;
       }
     } catch {}
   }

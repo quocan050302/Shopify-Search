@@ -239,6 +239,11 @@ export type MetaExecutionPolicy =
   | "CACHE_ONLY"
   | "OFFLINE_FIXTURE";
 
+export type ResearchSourceMode =
+  | "LIVE_WITH_CACHE_FALLBACK"
+  | "CACHE_ONLY"
+  | "LIVE_ONLY";
+
 export function resolveMetaExecutionPolicy(
   query?: IntelligenceQuery
 ): MetaExecutionPolicy {
@@ -251,6 +256,13 @@ export function resolveMetaExecutionPolicy(
     explicit === "OFFLINE_FIXTURE"
   ) {
     return explicit;
+  }
+  const sourceMode: ResearchSourceMode | undefined = (query as any)?.sourceMode;
+  if (sourceMode === "CACHE_ONLY") {
+    return "CACHE_ONLY";
+  }
+  if (sourceMode === "LIVE_ONLY") {
+    return "LIVE_FIRST";
   }
   if (process.env.ENABLE_LIVE_META === "true") {
     return "LIVE_FIRST";
@@ -1056,32 +1068,24 @@ export async function collectMetaProductSignals(
   let liveSucceeded = false;
   let liveCollectorResult: any = null;
 
-  // 1. Attempt live collection according to explicit MetaExecutionPolicy
+  // 1. Attempt live collection according to explicit MetaExecutionPolicy & ResearchSourceMode
+  // V12.4.3.2 Section 3: Never suppress live Meta discovery merely because the global cached ad pool has >= 100 ads.
   const executionPolicy = resolveMetaExecutionPolicy(query);
+  const requestedSourceMode: ResearchSourceMode =
+    (query as any)?.sourceMode ||
+    (executionPolicy === "CACHE_ONLY" || executionPolicy === "OFFLINE_FIXTURE"
+      ? "CACHE_ONLY"
+      : "LIVE_WITH_CACHE_FALLBACK");
   const allowLive =
     executionPolicy === "LIVE_FIRST" ||
     (executionPolicy === "CACHE_SUPPLEMENTED" &&
+     requestedSourceMode !== "CACHE_ONLY" &&
      process.env.META_COLLECTOR_ENABLED !== "false" &&
      process.env.DISABLE_LIVE_MCP !== "true" &&
      process.env.NODE_ENV !== "test" &&
      process.env.VITEST !== "true");
 
-  let shouldRunLiveMeta = allowLive;
-  if (shouldRunLiveMeta && executionPolicy !== "LIVE_FIRST" && process.env.ENABLE_LIVE_META !== "true") {
-    try {
-      const existingPoolCount = await prisma.competitorAd.count({
-        where: {
-          platform: { in: ["META", "FACEBOOK"] },
-          isSyntheticQuarantine: false,
-          landingPageUrl: { not: null },
-          AND: [buildAuthorizedAdWhere(query.workspaceId)],
-        },
-      });
-      if (existingPoolCount >= 100) {
-        shouldRunLiveMeta = false;
-      }
-    } catch {}
-  }
+  const shouldRunLiveMeta = allowLive;
 
   if (shouldRunLiveMeta) {
     liveAttempted = true;
@@ -1148,10 +1152,13 @@ export async function collectMetaProductSignals(
       });
     }
 
-    // 4. Query cached ads to fill up to query.maxResults
+    // 4. Query cached ads to fill up to query.maxResults (unless requestedSourceMode === "LIVE_ONLY")
     const liveAdIdSet = new Set(liveMatchingAds.map((a) => a.id));
     let cachedMatchingAds: any[] = [];
-    const remainingSlots = Math.max(0, (query.maxResults || 50) - liveMatchingAds.length);
+    const remainingSlots =
+      requestedSourceMode === "LIVE_ONLY"
+        ? 0
+        : Math.max(0, (query.maxResults || 50) - liveMatchingAds.length);
 
     if (remainingSlots > 0) {
       const plannedQueryKeywords = Array.isArray(query.plannedQueries)
@@ -1308,8 +1315,11 @@ export async function collectMetaProductSignals(
           freshLiveObservedCount: 0,
           persistedInsertedCount: persistedInsertedOnEmpty,
           persistedUpdatedCount: persistedUpdatedOnEmpty,
+          reobservedExistingCount: persistedUpdatedOnEmpty,
           cachedRecordsUsedCount: 0,
           fallbackToCache: false,
+          sourceMode: requestedSourceMode,
+          executionPolicy,
           auditTraces: liveCollectorResult?.auditTraces || [],
       queryOutcomes:
         liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
@@ -1428,8 +1438,11 @@ export async function collectMetaProductSignals(
       freshLiveObservedCount: freshLiveCount,
       persistedInsertedCount: persistedInserted,
       persistedUpdatedCount: persistedUpdated,
+      reobservedExistingCount: persistedUpdated,
       cachedRecordsUsedCount: cachedCount,
       fallbackToCache: !liveSucceeded && cachedCount > 0,
+      sourceMode: requestedSourceMode,
+      executionPolicy,
       auditTraces: liveCollectorResult?.auditTraces || [],
       queryOutcomes:
         liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0

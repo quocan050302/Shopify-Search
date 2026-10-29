@@ -378,11 +378,14 @@ export async function runKh02BrowserE2E(
           await page.waitForTimeout(pollInterval);
           continue;
         }
-        const hasCards = (await page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').count()) > 0;
+        const hasCards = (await page.locator('[data-testid="pf-canonical-product-card"], [data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').count()) > 0;
         const hasEmptyState = (await page.locator('[data-testid="kh02-empty-state"]').count()) > 0;
 
         if (hasCards) {
           terminalStateObserved = true;
+          if (hasEmptyState) {
+            emptyStateAccurate = true;
+          }
           break;
         }
         if (hasEmptyState) {
@@ -393,13 +396,13 @@ export async function runKh02BrowserE2E(
         await page.waitForTimeout(pollInterval);
       }
 
-      // Check candidate product cards
-      const rankedCardsLoc = page.locator('[data-testid="kh02-ranked-product-card"]');
-      const provCardsLoc = page.locator('[data-testid="kh02-provisional-product-card"]');
+      // Check candidate product cards (supports V12.4.3.2 single canonical card per product)
+      const rankedCardsLoc = page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="pf-canonical-product-card"][data-qualification-tier="EVERGREEN_WINNER"]');
+      const provCardsLoc = page.locator('[data-testid="kh02-provisional-product-card"], [data-testid="pf-canonical-product-card"]:not([data-qualification-tier="EVERGREEN_WINNER"])');
       const rankedCount = await rankedCardsLoc.count();
       const provCount = await provCardsLoc.count();
       const shortlistSectionLoc = page.locator('[data-testid="kh02-research-shortlist-section"]');
-      const shortlistCardsLoc = page.locator('[data-testid="kh02-research-shortlist-card"]');
+      const shortlistCardsLoc = page.locator('[data-testid="kh02-research-shortlist-card"], [data-testid="pf-canonical-product-card"][data-qualification-tier="RESEARCH_SHORTLIST"]');
       shortlistSectionRendered = (await shortlistSectionLoc.count()) > 0;
       shortlistCardsCount = await shortlistCardsLoc.count();
 
@@ -407,7 +410,7 @@ export async function runKh02BrowserE2E(
         const sc = shortlistCardsLoc.nth(i);
         const scId = await sc.getAttribute("data-candidate-id");
         if (scId) shortlistCandidateIds.push(scId);
-        const scTitle = (await sc.locator("h4").first().textContent().catch(() => ""))?.trim() || "";
+        const scTitle = (await sc.locator("h3, h4").first().textContent().catch(() => ""))?.trim() || "";
         if (scTitle) shortlistTitles.push(scTitle);
         if (scTitle.toLowerCase().includes("er vet")) {
           erVetBillInShortlist = true;
@@ -421,25 +424,7 @@ export async function runKh02BrowserE2E(
         }
       }
 
-      const discPanelLoc = page.locator('[data-testid="kh02-discovery-intelligence-panel"]').first();
-      discoveryIntelligencePanelRendered = (await discPanelLoc.count()) > 0;
-      const funnelGridLoc = page.locator('[data-testid="kh02-coherent-funnel-grid"]').first();
-      coherentFunnelRendered = (await funnelGridLoc.count()) > 0;
-      const queryCovToggleLoc = page.locator('[data-testid="kh02-query-coverage-toggle"]').first();
-      if ((await queryCovToggleLoc.count()) > 0) {
-        await queryCovToggleLoc.click().catch(() => {});
-        await page.waitForTimeout(200);
-        queryCoverageTableRendered =
-          (await page.locator('[data-testid="kh02-query-coverage-table"]').count()) > 0;
-      }
-
-      const rejectedCardsLoc = page.locator('[data-testid="kh02-rejected-product-card"]');
-      const rejectedCount = await rejectedCardsLoc.count();
-      for (let i = 0; i < rejectedCount; i++) {
-        const rcText = (await rejectedCardsLoc.nth(i).textContent().catch(() => ""))?.trim() || "";
-        if (rcText) rejectedTitles.push(rcText);
-      }
-
+      // Extract candidate IDs directly from data-candidate-id attributes BEFORE switching tabs
       const authRunMetaLoc = page.locator('[data-testid="kh02-authoritative-run-meta"]').first();
       if (await authRunMetaLoc.count() > 0) {
         authoritativeRunIdInDom = await authRunMetaLoc.getAttribute("data-research-run-id").catch(() => null);
@@ -449,7 +434,6 @@ export async function runKh02BrowserE2E(
       resultsRendered = cardCount > 0 || (await page.locator('[data-testid="kh02-leaderboard-container"]').count()) > 0 || shortlistSectionRendered;
       displayedRankOrder.length = 0;
 
-      // Extract candidate IDs directly from data-candidate-id attributes (NO title fallback! Directive 83)
       for (let i = 0; i < rankedCount; i++) {
         const card = rankedCardsLoc.nth(i);
         const cid = await card.getAttribute("data-candidate-id");
@@ -511,6 +495,38 @@ export async function runKh02BrowserE2E(
         }
       }
 
+      // Check diagnostics tab if segmented tabs exist (V12.4.3.2 progressive disclosure)
+      const diagTabBtn = page.locator('[data-testid="pf-tab-evidence-diagnostics"]').first();
+      const recTabBtn = page.locator('[data-testid="pf-tab-recommended"]').first();
+      if ((await diagTabBtn.count()) > 0) {
+        await diagTabBtn.click().catch(() => {});
+        await page.waitForTimeout(200);
+      }
+
+      const discPanelLoc = page.locator('[data-testid="kh02-discovery-intelligence-panel"]').first();
+      discoveryIntelligencePanelRendered = (await discPanelLoc.count()) > 0;
+      const funnelGridLoc = page.locator('[data-testid="kh02-coherent-funnel-grid"]').first();
+      coherentFunnelRendered = (await funnelGridLoc.count()) > 0;
+      const queryCovToggleLoc = page.locator('[data-testid="kh02-query-coverage-toggle"]').first();
+      if ((await queryCovToggleLoc.count()) > 0) {
+        await queryCovToggleLoc.click().catch(() => {});
+        await page.waitForTimeout(200);
+      }
+      queryCoverageTableRendered =
+        (await page.locator('[data-testid="kh02-query-coverage-table"]').count()) > 0;
+
+      const rejectedCardsLoc = page.locator('[data-testid="kh02-rejected-product-card"]');
+      const rejectedCount = await rejectedCardsLoc.count();
+      for (let i = 0; i < rejectedCount; i++) {
+        const rcText = (await rejectedCardsLoc.nth(i).textContent().catch(() => ""))?.trim() || "";
+        if (rcText) rejectedTitles.push(rcText);
+      }
+
+      if ((await recTabBtn.count()) > 0) {
+        await recTabBtn.click().catch(() => {});
+        await page.waitForTimeout(200);
+      }
+
       // Screenshot 3: Terminal Results / Empty State
       const shot3 = path.join(screenshotDir, `${prefix}03_leaderboard_results.png`);
       await page.screenshot({ path: shot3, fullPage: true }).catch(() => {});
@@ -525,15 +541,15 @@ export async function runKh02BrowserE2E(
 
       // Allow client-side useEffect (fetchLatestLeaderboard) to populate state
       if (cardCount > 0) {
-        await page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').first().waitFor({ timeout: 8000 }).catch(() => {});
+        await page.locator('[data-testid="pf-canonical-product-card"], [data-testid="kh02-ranked-product-card"], [data-testid="kh02-provisional-product-card"]').first().waitFor({ timeout: 8000 }).catch(() => {});
       } else if (emptyStateAccurate) {
         await page.locator('[data-testid="kh02-empty-state"]').first().waitFor({ timeout: 8000 }).catch(() => {});
       }
 
       // After reload, leaderboard or saved state should remain consistent
       const postReloadEmpty = (await page.locator('[data-testid="kh02-empty-state"]').count()) > 0;
-      const postRankedLoc = page.locator('[data-testid="kh02-ranked-product-card"]');
-      const postProvLoc = page.locator('[data-testid="kh02-provisional-product-card"]');
+      const postRankedLoc = page.locator('[data-testid="kh02-ranked-product-card"], [data-testid="pf-canonical-product-card"][data-qualification-tier="EVERGREEN_WINNER"]');
+      const postProvLoc = page.locator('[data-testid="kh02-provisional-product-card"], [data-testid="pf-canonical-product-card"]:not([data-qualification-tier="EVERGREEN_WINNER"])');
       const postRankedCount = await postRankedLoc.count();
       const postProvCount = await postProvLoc.count();
 
@@ -584,7 +600,7 @@ export async function runKh02BrowserE2E(
         }
       }
 
-      const postShortlistLoc = page.locator('[data-testid="kh02-research-shortlist-card"]');
+      const postShortlistLoc = page.locator('[data-testid="kh02-research-shortlist-card"], [data-testid="pf-canonical-product-card"][data-qualification-tier="RESEARCH_SHORTLIST"]');
       const postShortlistCount = await postShortlistLoc.count();
       for (let i = 0; i < postShortlistCount; i++) {
         const scId = await postShortlistLoc.nth(i).getAttribute("data-candidate-id");

@@ -97,6 +97,109 @@ export async function GET(
       take: 10,
     });
 
+    // 10. V12.4.3.2 Section 6: Lookup shared KH-02 Research Qualification context
+    const requestedRunId = request.nextUrl.searchParams.get("runId");
+    const requestedCandidateId = request.nextUrl.searchParams.get("candidateId");
+    const recentKh02Jobs = await prisma.syncJob.findMany({
+      where: {
+        workspaceId: context.workspaceId,
+        jobType: "KH02_RESEARCH",
+        status: { in: ["COMPLETED", "PARTIALLY_COMPLETED"] },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    });
+
+    const orderedJobs = requestedRunId
+      ? [
+          ...recentKh02Jobs.filter((j) => j.id === requestedRunId),
+          ...recentKh02Jobs.filter((j) => j.id !== requestedRunId),
+        ]
+      : recentKh02Jobs;
+
+    let kh02ResearchContext: any = null;
+    const normProdUrl = (product.productUrl || "").trim().toLowerCase().replace(/\/+$/, "");
+    const normProdTitle = (product.title || "").trim().toLowerCase();
+
+    for (const job of orderedJobs) {
+      if (!job.resultJson) continue;
+      let parsed: any = null;
+      try {
+        parsed = JSON.parse(job.resultJson);
+      } catch {
+        continue;
+      }
+      const allRanked: any[] = [
+        ...(Array.isArray(parsed.topThree) ? parsed.topThree : []),
+        ...(Array.isArray(parsed.provisionalCandidates) ? parsed.provisionalCandidates : []),
+        ...(Array.isArray(parsed.remainingCandidates) ? parsed.remainingCandidates : []),
+        ...(Array.isArray(parsed.insufficientEvidenceCandidates) ? parsed.insufficientEvidenceCandidates : []),
+        ...(Array.isArray(parsed.rejectedCandidates) ? parsed.rejectedCandidates : []),
+      ];
+
+      const matchedItem = allRanked.find((item) => {
+        const c = item?.candidate;
+        if (!c) return false;
+        if (c.researchProductId && c.researchProductId === productId) return true;
+        if (requestedCandidateId && c.candidateId === requestedCandidateId) return true;
+        const candUrl = (c.canonicalProductUrl || "").trim().toLowerCase().replace(/\/+$/, "");
+        if (normProdUrl && candUrl && normProdUrl === candUrl) return true;
+        const candTitle = (c.canonicalProductName || c.title || "").trim().toLowerCase();
+        if (normProdTitle && candTitle && normProdTitle === candTitle) return true;
+        return false;
+      });
+
+      if (matchedItem && matchedItem.candidate && matchedItem.score) {
+        const c = matchedItem.candidate;
+        const s = matchedItem.score;
+        kh02ResearchContext = {
+          runId: job.id,
+          topic: parsed.topic || "Product Research",
+          market: parsed.market || "US",
+          lookbackDays: parsed.lookbackDays || 90,
+          sourceMode: parsed.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+          candidateId: c.candidateId,
+          canonicalProductName: c.canonicalProductName || c.title,
+          opportunityScore: s.opportunityScore,
+          evidenceConfidence: s.evidenceConfidence,
+          scoreStatus: s.scoreStatus,
+          tier: s.tier || (s.scoreStatus === "VERIFIED" ? "VERIFIED_EVERGREEN" : "PROVISIONAL"),
+          demandClass: s.demandClass,
+          identityStatus: c.identityStatus || "VERIFIED",
+          storeDomain: c.storeDomain || product.store?.domain || null,
+          canonicalProductUrl: c.canonicalProductUrl || product.productUrl || null,
+          supportingAdsCount: Array.isArray(c.supportingAdIds) ? c.supportingAdIds.length : ((adProfile as any)?.distinctAdsCount ?? (adProfile as any)?.totalAdsCount ?? 0),
+          distinctAdvertisersCount: c.distinctAdvertisersCount ?? ((adProfile as any)?.distinctAdvertisersCount ?? (adProfile as any)?.distinctAdvertisers ?? 0),
+          strengths: Array.isArray(s.strengths) ? s.strengths : [],
+          risks: Array.isArray(s.risks) ? s.risks : [],
+          missingEvidence: Array.isArray(s.missingEvidence) ? s.missingEvidence : [],
+          recommendation: s.recommendation,
+          recommendationRationale: s.recommendationRationale,
+        };
+        break;
+      }
+    }
+
+    const commercialReadinessSummary = {
+      supplierQuoteEntered: supplierQuotes.length > 0,
+      landedCostCalculated: economicsScenarios.some((s: any) => Boolean(s.inputsJson || s.supplierCostPerUnit !== null)),
+      shippingEstimateEntered: economicsScenarios.some((s: any) => Boolean(s.inputsJson || s.actualShippingCostPaid !== null)),
+      marginModelCompleted: economicsScenarios.length > 0,
+      competitorOfferInspected: offerSnapshots.length > 0 || Boolean(latestLandingPage),
+      opportunityAssessed: Boolean(opportunityAssessment),
+      completedCount: [
+        supplierQuotes.length > 0,
+        economicsScenarios.length > 0,
+        offerSnapshots.length > 0 || Boolean(latestLandingPage),
+        Boolean(opportunityAssessment),
+      ].filter(Boolean).length,
+      totalSteps: 4,
+      statusLabel:
+        opportunityAssessment && supplierQuotes.length > 0 && economicsScenarios.length > 0
+          ? "Commercial Model Complete"
+          : "Commercial Validation Needed",
+    };
+
     return NextResponse.json({
       success: true,
       data: {
@@ -110,10 +213,12 @@ export async function GET(
         opportunityAssessment,
         evidenceRecords,
         decisions,
+        kh02ResearchContext,
+        commercialReadinessSummary,
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "11.4.0",
+        version: "12.4.3.2",
       },
     });
   } catch (err: any) {

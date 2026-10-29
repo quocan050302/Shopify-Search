@@ -10,7 +10,11 @@
  * - Sparse inputs or non-pet products are handled honestly without hallucinating pet care claims.
  */
 
-export type PsychologyEvidenceStatus = "OBSERVED" | "INFERRED" | "HYPOTHESIS";
+export type PsychologyEvidenceStatus =
+  | "OBSERVED"
+  | "INFERRED"
+  | "HYPOTHESIS"
+  | "UNSUPPORTED";
 
 export type PsychologyEvidenceType =
   | "AD_COPY"
@@ -141,16 +145,33 @@ export function evaluateClaimEvidenceSupport(
   const quoteMatch = claim.evidenceReference.match(/Observed quote[s]?: "([^"]+)"/i);
   const quotedSnippet = quoteMatch ? quoteMatch[1] : null;
 
-  // Multi-pet check: if the claim specifically asserts cats and dogs, and both are in source text
+  // Multi-pet check: mentioning "dog" and "cat" in ad copy proves product compatibility (e.g. dog and cat fur),
+  // NOT that the customer owns a multi-pet household, unless multi-pet household ownership is explicitly stated.
   const mentionsCatAndDog = /\b(cats?|feline)\b/i.test(cleanSource) && /\b(dogs?|canine|puppy)\b/i.test(cleanSource);
-  const claimMentionsCatAndDog = /cats and dogs/i.test(claim.claimText);
-  if (claimMentionsCatAndDog && mentionsCatAndDog) {
+  const claimsMultiPetHousehold = /\b(multi-?pet\s+households?|multiple\s+animals|multiple\s+pets|owners?\s+with\s+multiple)\b/i.test(
+    claim.claimText
+  );
+  const sourceStatesMultiPetHousehold = /\b(multi-?pet\s+households?|multiple\s+animals|multiple\s+pets|owners?\s+with\s+multiple)\b/i.test(
+    cleanSource
+  );
+  if (claimsMultiPetHousehold && !sourceStatesMultiPetHousehold) {
+    return {
+      supportLevel: mentionsCatAndDog ? "INFERRED_FROM_CONTEXT" : "UNSUPPORTED",
+      supportedTerms,
+      missingTerms,
+      evidenceText: quotedSnippet || (mentionsCatAndDog ? "cat, dog" : ""),
+      rationale:
+        "Ad copy mentions dog and cat product usage, but multi-pet household demographic ownership is inferred rather than directly stated.",
+    };
+  }
+  const claimMentionsCatAndDog = /cats? and dogs?|dogs? and cats?/i.test(claim.claimText);
+  if (claimMentionsCatAndDog && mentionsCatAndDog && !claimsMultiPetHousehold) {
     return {
       supportLevel: "DIRECTLY_SUPPORTED",
       supportedTerms: ["cat", "dog", ...supportedTerms],
       missingTerms,
       evidenceText: quotedSnippet || "cat, dog",
-      rationale: "Source text directly substantiates multi-pet (cats and dogs) context.",
+      rationale: "Source text directly substantiates dog and cat product usage context.",
     };
   }
 
@@ -262,8 +283,8 @@ export function analyzeCustomerPsychology(
   // 1. Target Customer
   const catAudienceMatch = findPatternMatch(copyText, [/(cat owners?|cat parents?|cat lovers?|for cats?)/i]);
   const dogAudienceMatch = findPatternMatch(copyText, [/(dog owners?|dog parents?|dog lovers?|for dogs?)/i]);
-  const catMatch = findPatternMatch(copyText, [/(cat\b|kitten|feline)/i]);
-  const dogMatch = findPatternMatch(copyText, [/(dog\b|puppy|canine)/i]);
+  const catMatch = findPatternMatch(copyText, [/(\bcats?\b|kittens?|felines?)/i]);
+  const dogMatch = findPatternMatch(copyText, [/(\bdogs?\b|pupp(?:y|ies)|canines?)/i]);
   const multiPetMatch = Boolean(catMatch && dogMatch);
 
   let targetCustomerClaim: PsychologyClaim;
@@ -286,13 +307,26 @@ export function analyzeCustomerPsychology(
       uncertaintyNote: "Lifestyle apparel product.",
     };
   } else if (multiPetMatch) {
-    targetCustomerClaim = {
-      claimText: "Pet owners with multiple animals (cats and dogs) dealing with everyday pet care challenges",
-      evidenceReference: `Observed quotes: "${catMatch}", "${dogMatch}" in ${ref}`,
-      evidenceType: "AD_COPY",
-      confidence: 0.88,
-      status: "OBSERVED",
-    };
+    const explicitMultiPetHousehold = findPatternMatch(copyText, [
+      /(multi-?pet\s+households?|multiple\s+pets?|multiple\s+animals|households?\s+with\s+cats?\s+and\s+dogs?)/i,
+    ]);
+    targetCustomerClaim = explicitMultiPetHousehold
+      ? {
+          claimText: "Multi-pet household owners managing everyday care for both cats and dogs",
+          evidenceReference: `Observed quote: "${explicitMultiPetHousehold}" in ${ref}`,
+          evidenceType: "AD_COPY",
+          confidence: 0.88,
+          status: "OBSERVED",
+        }
+      : {
+          claimText: "Dog or cat owners (and potentially multi-pet households) seeking everyday pet care solutions",
+          evidenceReference: `Observed mentions: "${catMatch}", "${dogMatch}" in ${ref}`,
+          evidenceType: "AD_COPY",
+          confidence: 0.78,
+          status: "INFERRED",
+          uncertaintyNote:
+            "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated.",
+        };
   } else if (catAudienceMatch) {
     targetCustomerClaim = {
       claimText: "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",

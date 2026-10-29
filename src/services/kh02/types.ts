@@ -308,6 +308,11 @@ export interface SourceCapabilities {
   estimatedCostPerQueryCredits: number;
 }
 
+export type ResearchSourceMode =
+  | "LIVE_WITH_CACHE_FALLBACK"
+  | "CACHE_ONLY"
+  | "LIVE_ONLY";
+
 export interface IntelligenceQuery {
   workspaceId: string;
   researchRunId: string;
@@ -320,6 +325,8 @@ export interface IntelligenceQuery {
   timeWindow?: string;
   maxResults: number;
   signal?: AbortSignal;
+  sourceMode?: ResearchSourceMode;
+  metaExecutionPolicy?: string;
   // V12.4.2 Adaptive Discovery Planner & Shared Budget Context
   plannedQueries?: any[];
   sharedMetaBudgetTracker?: any;
@@ -369,8 +376,11 @@ export interface ProviderExecutionMetadata {
   freshLiveObservedCount?: number | null;
   persistedInsertedCount?: number | null;
   persistedUpdatedCount?: number | null;
+  reobservedExistingCount?: number | null;
   cachedRecordsUsedCount?: number | null;
   fallbackToCache?: boolean;
+  sourceMode?: ResearchSourceMode;
+  executionPolicy?: string;
   auditTraces?: UpstreamRecordTrace[];
   queryOutcomes?: any[];
 }
@@ -497,4 +507,11 @@ export interface ProductEvidenceMatchResult {
   matchReasons: string[];
   evidenceReference: string | null;
 }
+
+// ─── V12.4.3.2 View-Model & Orchestrator Type Aliases ─────────────────────────
+export type DiscoveredProductCandidate = Record<string, any>;
+export type RankedProductCandidate = Record<string, any>;
+export type EvergreenLeaderboardResponse = Record<string, any>;
+export type SourceConnectionSummary = Record<string, any>;
+
 

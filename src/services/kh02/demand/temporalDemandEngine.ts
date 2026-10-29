@@ -64,6 +64,9 @@ export interface DemandHistoryPolicy {
   rejectDuplicateTimestamps?: boolean;
   requiredRegion?: string;
   candidateCanonicalName?: string;
+  candidateCanonicalTitle?: string | null;
+  candidateProductId?: string | null;
+  targetProductId?: string | null;
   searchTermUsed?: string;
   strictSourceProvenance?: boolean;
 }
@@ -82,6 +85,8 @@ export interface DemandHistoryAssessment {
   temporalCoverageValid: boolean;
   productAttributionValid?: boolean;
   demandObservationIds?: string[];
+  evidenceKind?: "SEARCH_INTEREST_NOT_SALES";
+  commercialInterpretationNote?: string;
   calculationVersion: string;
   explanation: string;
   missingEvidence: string[];
@@ -101,9 +106,33 @@ export interface TemporalStabilityEvaluation {
   trendVelocity: "ACCELERATING" | "STEADY" | "DECELERATING" | "FLAT";
   sourceAuthority?: DemandSourceAuthority;
   demandObservationIds?: string[];
+  evidenceKind?: "SEARCH_INTEREST_NOT_SALES";
+  commercialInterpretationNote?: string;
   explanation: string;
   evaluatedAt: string;
   confidencePenaltyReason?: string | null;
+}
+
+export interface DemandSourceAuditRecord {
+  productId: string | null;
+  canonicalProductName: string | null;
+  observationIds: string[];
+  source: string | null;
+  evidenceReferences: string[];
+  methodologyVersions: string[];
+  keywords: string[];
+  values: number[];
+  rawCsvFileExists: boolean;
+  hasValidFileChecksum: boolean;
+  hasProviderRequestLineage: boolean;
+  isTemplated76To82Series: boolean;
+  isPromotionalCopyKeyword: boolean;
+  resolvedAuthority: DemandSourceAuthority;
+  eligibleForEvergreen: boolean;
+  demotedFromEvergreen: boolean;
+  evidenceKind: "SEARCH_INTEREST_NOT_SALES";
+  commercialNote: string;
+  auditReasons: string[];
 }
 
 const SPECIFIC_PRODUCT_FAMILIES: Array<{ family: string; pattern: RegExp }> = [
@@ -159,6 +188,51 @@ export function isBroadCategoryDemandTerm(term: string | null | undefined): bool
   return BROAD_CATEGORY_TERMS.has(norm);
 }
 
+export function isTemplatedSyntheticDemandSeries(observations: HistoricalObservation[]): boolean {
+  if (!observations || observations.length !== 6) return false;
+  const vals = observations.map((o) => Number(o.demandValue !== undefined ? o.demandValue : (o as any).value));
+  const templated = [76, 79, 77, 81, 78, 82];
+  return vals.every((v, idx) => v === templated[idx]);
+}
+
+export function isPromotionalAdCopyDemandKeyword(keyword: string | null | undefined): boolean {
+  if (!keyword) return false;
+  const kw = String(keyword).trim();
+  const wordCount = kw.split(/\s+/).length;
+  return (
+    wordCount > 12 ||
+    /[\u{1F300}-\u{1FAFF}]/u.test(kw) ||
+    /\b(free\s+bonus|buy\s+\d+\s+set|\d+%\s+off|limited\s+time\s+offer|shop\s+now)\b/i.test(kw)
+  );
+}
+
+export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | null | undefined): {
+  rawCsvFileExists: boolean;
+  hasValidFileChecksum: boolean;
+  hasProviderRequestLineage: boolean;
+  isMerchantDomainPseudoRef: boolean;
+} {
+  if (!evidenceReference) {
+    return {
+      rawCsvFileExists: false,
+      hasValidFileChecksum: false,
+      hasProviderRequestLineage: false,
+      isMerchantDomainPseudoRef: false,
+    };
+  }
+  const ref = String(evidenceReference).trim();
+  const isMerchantDomainPseudoRef = /^verified-merchant-demand:/i.test(ref);
+  const hasValidFileChecksum = /\bsha256:[a-f0-9]{16,64}\b/i.test(ref);
+  const rawCsvFileExists = /\b(csv-import|benchmark-csv):/i.test(ref) && hasValidFileChecksum;
+  const hasProviderRequestLineage = /\b(provider-request|serpapi-request|trends-api-request):/i.test(ref);
+  return {
+    rawCsvFileExists,
+    hasValidFileChecksum,
+    hasProviderRequestLineage,
+    isMerchantDomainPseudoRef,
+  };
+}
+
 export function evaluateDemandSourceAuthority(
   observations: HistoricalObservation[],
   policy: DemandHistoryPolicy = {}
@@ -202,6 +276,18 @@ export function evaluateDemandSourceAuthority(
     return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: false };
   }
 
+  // 3b. Check for promotional ad-headline copy masquerading as a Google Trends search query
+  if (keywords.some((kw) => isPromotionalAdCopyDemandKeyword(kw))) {
+    reasons.push("Demand observation keyword is a long promotional ad headline rather than a genuine Google Trends search term.");
+    return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+  }
+
+  // 3c. Check for templated 6-point [76, 79, 77, 81, 78, 82] series
+  if (isTemplatedSyntheticDemandSeries(observations)) {
+    reasons.push("Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.");
+    return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+  }
+
   // 4. Check for cross-product family attribution mismatch
   if (policy.candidateCanonicalName) {
     const candidateFamily = detectSpecificProductFamily(policy.candidateCanonicalName);
@@ -238,12 +324,34 @@ export function evaluateDemandSourceAuthority(
     return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: true };
   }
 
-  // Check if DB records lack evidenceReference
+  // Check if DB records lack evidenceReference or use pseudo-reference 'verified-merchant-demand:<domain>' without CSV checksum
   const hasDbProductWithoutRef = observations.some(
     (o) => o.productId && o.evidenceReference === null
   );
   if (hasDbProductWithoutRef) {
     reasons.push("Stored database demand observation lacks traceable evidenceReference.");
+    return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+  }
+
+  const hasMerchantDomainPseudoRef = observations.some(
+    (o) => o.evidenceReference && hasVerifiableCsvOrProviderLineage(o.evidenceReference).isMerchantDomainPseudoRef
+  );
+  if (hasMerchantDomainPseudoRef) {
+    reasons.push(
+      "Demand observation uses 'verified-merchant-demand:<domain>' pseudo-reference without a raw Google Trends CSV file, SHA-256 checksum, or provider API response lineage."
+    );
+    return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
+  }
+
+  const hasUnbackedDbCsvRef = observations.some((o) => {
+    if (!o.productId || !o.source || !/google_trends_csv/i.test(String(o.source))) return false;
+    const lineage = hasVerifiableCsvOrProviderLineage(o.evidenceReference);
+    return !lineage.rawCsvFileExists && !lineage.hasValidFileChecksum && !lineage.hasProviderRequestLineage;
+  });
+  if (hasUnbackedDbCsvRef) {
+    reasons.push(
+      "Stored GOOGLE_TRENDS_CSV observation lacks a verifiable CSV import job ID and SHA-256 file checksum."
+    );
     return { authority: "CACHED_UNVERIFIED", reasons, productAttributionValid: false };
   }
 
@@ -265,6 +373,59 @@ export function evaluateDemandSourceAuthority(
 
   reasons.push(`Unrecognized demand source '${sources[0]}' classified as UNKNOWN_SOURCE.`);
   return { authority: "UNKNOWN_SOURCE", reasons, productAttributionValid: false };
+}
+
+export function auditDemandObservationsProvenance(
+  productId: string | null,
+  canonicalProductName: string | null,
+  observations: HistoricalObservation[]
+): DemandSourceAuditRecord {
+  const auth = evaluateDemandSourceAuthority(observations, {
+    candidateCanonicalName: canonicalProductName || undefined,
+    strictSourceProvenance: true,
+  });
+  const refs = Array.from(
+    new Set(observations.map((o) => o.evidenceReference).filter((r): r is string => Boolean(r)))
+  );
+  const versions = Array.from(
+    new Set(observations.map((o) => o.methodologyVersion).filter((v): v is string => Boolean(v)))
+  );
+  const keywords = Array.from(
+    new Set(observations.map((o) => o.keyword).filter((k): k is string => Boolean(k)))
+  );
+  const values = observations.map((o) => Number(o.demandValue !== undefined ? o.demandValue : (o as any).value || 0));
+  const lineages = refs.map((r) => hasVerifiableCsvOrProviderLineage(r));
+  const rawCsvFileExists = lineages.length > 0 && lineages.every((l) => l.rawCsvFileExists);
+  const hasValidFileChecksum = lineages.length > 0 && lineages.every((l) => l.hasValidFileChecksum);
+  const hasProviderRequestLineage = lineages.length > 0 && lineages.every((l) => l.hasProviderRequestLineage);
+  const isTemplated = isTemplatedSyntheticDemandSeries(observations);
+  const isPromoKw = keywords.some((k) => isPromotionalAdCopyDemandKeyword(k));
+  const eligible =
+    (auth.authority === "AUTHORITATIVE_VERIFIED" || auth.authority === "HISTORICAL_SOURCE_VERIFIED") &&
+    auth.productAttributionValid;
+
+  return {
+    productId,
+    canonicalProductName,
+    observationIds: observations.map((o, i) => o.id || `obs_${i + 1}`),
+    source: observations[0]?.source || null,
+    evidenceReferences: refs,
+    methodologyVersions: versions,
+    keywords,
+    values,
+    rawCsvFileExists,
+    hasValidFileChecksum,
+    hasProviderRequestLineage,
+    isTemplated76To82Series: isTemplated,
+    isPromotionalCopyKeyword: isPromoKw,
+    resolvedAuthority: auth.authority,
+    eligibleForEvergreen: eligible,
+    demotedFromEvergreen: !eligible && refs.some((r) => /^verified-merchant-demand:/i.test(r)),
+    evidenceKind: "SEARCH_INTEREST_NOT_SALES",
+    commercialNote:
+      "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+    auditReasons: auth.reasons,
+  };
 }
 
 /**
@@ -472,11 +633,14 @@ export function evaluateDemandHistoryEvidence(
     temporalCoverageValid: true,
     productAttributionValid: authorityEval.productAttributionValid,
     demandObservationIds,
-    calculationVersion: "12.4.3.1",
+    evidenceKind: "SEARCH_INTEREST_NOT_SALES",
+    commercialInterpretationNote:
+      "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+    calculationVersion: "12.4.3.2",
     explanation: eligibleForEvergreen
-      ? `Verified demand stability (${authorityEval.authority}): ${valid.length} points spanning ${coveredDays} days with CV=${cv.toFixed(2)}.`
+      ? `Verified search-interest stability (${authorityEval.authority}): ${valid.length} points spanning ${coveredDays} days with CV=${cv.toFixed(2)}.`
       : !isSourceAuthoritative || !authorityEval.productAttributionValid
-      ? `Demand source authority '${authorityEval.authority}' is not eligible for Verified Evergreen (${authorityEval.reasons[0] || "unverified provenance"}).' `
+      ? `Demand source authority '${authorityEval.authority}' is not eligible for Verified Evergreen (${authorityEval.reasons[0] || "unverified provenance"}).`
       : `Demand class '${demandClass}' does not meet verified evergreen criteria.`,
     missingEvidence,
     evaluatedAt,
@@ -512,6 +676,9 @@ export function evaluateTemporalDemandStability(
       trendVelocity: "FLAT",
       sourceAuthority: assessment.sourceAuthority,
       demandObservationIds: assessment.demandObservationIds,
+      evidenceKind: "SEARCH_INTEREST_NOT_SALES",
+      commercialInterpretationNote:
+        "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
       explanation: assessment.explanation,
       evaluatedAt,
       confidencePenaltyReason: assessment.missingEvidence[0] || "Missing historical demand time series.",
@@ -537,6 +704,9 @@ export function evaluateTemporalDemandStability(
       trendVelocity: "FLAT",
       sourceAuthority: assessment.sourceAuthority,
       demandObservationIds: assessment.demandObservationIds,
+      evidenceKind: "SEARCH_INTEREST_NOT_SALES",
+      commercialInterpretationNote:
+        "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
       explanation: assessment.explanation,
       evaluatedAt,
       confidencePenaltyReason: assessment.missingEvidence[0] || `Demand source authority '${assessment.sourceAuthority}' cannot verify Evergreen stability.`,
@@ -591,6 +761,9 @@ export function evaluateTemporalDemandStability(
     trendVelocity,
     sourceAuthority: assessment.sourceAuthority,
     demandObservationIds: assessment.demandObservationIds,
+    evidenceKind: "SEARCH_INTEREST_NOT_SALES",
+    commercialInterpretationNote:
+      "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
     explanation: assessment.explanation,
     evaluatedAt,
     confidencePenaltyReason: null,
