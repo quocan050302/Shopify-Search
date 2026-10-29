@@ -52,6 +52,8 @@ import {
 import { runEvergreenProductResearch } from "@/services/kh02/evergreenResearchOrchestrator";
 import {
   getKH02ResearchRunById,
+  createKH02ResearchRun,
+  persistKH02RankingSnapshot,
   requalifyAllHistoricalRunsInDb,
 } from "@/services/kh02/persistence/kh02PersistenceService";
 import {
@@ -950,6 +952,25 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       sourceMode: "CACHE_ONLY",
     }),
   ]);
+
+  // Persist dogResult, catResult, liveOnlyResult, and cacheOnlyResult into SQLite so Chromium & HTTP can load them by runId
+  for (const [resObj, topicName, mode] of [
+    [dogResult, "dog", "LIVE_WITH_CACHE_FALLBACK"],
+    [catResult, "cat", "LIVE_WITH_CACHE_FALLBACK"],
+    [liveOnlyResult, "dog", "LIVE_ONLY"],
+    [cacheOnlyResult, "pet gadgets", "CACHE_ONLY"],
+  ] as const) {
+    const dbRunId = await createKH02ResearchRun({
+      workspaceId: targetWorkspaceId,
+      topic: topicName,
+      market: "US",
+      lookbackDays: 90,
+      maxCandidates: 10,
+      sourceMode: mode,
+    });
+    resObj.researchRunId = dbRunId;
+    await persistKH02RankingSnapshot(dbRunId, targetWorkspaceId, resObj);
+  }
 
   // Boot fresh production server + worker for Chromium E2E and 12-screenshot UX audit
   const baseUrl = "http://127.0.0.1:3000";

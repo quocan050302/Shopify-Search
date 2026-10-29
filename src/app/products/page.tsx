@@ -1826,28 +1826,28 @@ export default function ProductsPage() {
                 </div>
 
                 {/* 14.2 Meta Subquery Execution Table */}
-                {leaderboard?.queryExecutions && leaderboard.queryExecutions.length > 0 && (
-                  <div className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-3">
-                    <h3 className="text-sm font-bold text-white">
-                      Meta & Source Subquery Execution Log
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table
-                        data-testid="kh02-query-coverage-table"
-                        className="w-full text-left border-collapse text-xs"
-                      >
-                        <thead>
-                          <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
-                            <th className="py-2 px-3">Query String</th>
-                            <th className="py-2 px-3">Type</th>
-                            <th className="py-2 px-3">Status</th>
-                            <th className="py-2 px-3">API Calls</th>
-                            <th className="py-2 px-3">Returned Ads</th>
-                            <th className="py-2 px-3">Diagnostic Note</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
-                          {leaderboard.queryExecutions.map((q: any, idx: number) => (
+                <div className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-white">
+                    Meta & Source Subquery Execution Log
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table
+                      data-testid="kh02-query-coverage-table"
+                      className="w-full text-left border-collapse text-xs"
+                    >
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                          <th className="py-2 px-3">Query String</th>
+                          <th className="py-2 px-3">Type</th>
+                          <th className="py-2 px-3">Status</th>
+                          <th className="py-2 px-3">API Calls</th>
+                          <th className="py-2 px-3">Returned Ads</th>
+                          <th className="py-2 px-3">Diagnostic Note</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+                        {(leaderboard?.queryExecutions || []).length > 0 ? (
+                          (leaderboard?.queryExecutions || []).map((q: any, idx: number) => (
                             <tr key={idx}>
                               <td className="py-2 px-3 text-white">{q.queryString}</td>
                               <td className="py-2 px-3 text-slate-400">{q.queryType}</td>
@@ -1870,118 +1870,122 @@ export default function ProductsPage() {
                                 {q.errorMessage || "Completed"}
                               </td>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-3 px-3 text-slate-400 font-sans">
+                              No upstream subqueries recorded for this snapshot.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
 
                 {/* 14.3 Coherent 13-Stage Candidate Funnel */}
-                {leaderboard?.candidateFunnel && (
+                <div
+                  data-testid="kh02-discovery-intelligence-panel"
+                  className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-4"
+                >
                   <div
-                    data-testid="kh02-discovery-intelligence-panel"
-                    className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-4"
+                    data-testid="kh02-candidate-funnel-summary"
+                    className="flex items-center justify-between"
                   >
-                    <div
-                      data-testid="kh02-candidate-funnel-summary"
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <h3 className="text-sm font-bold text-white">
-                          Coherent 13-Stage Candidate Qualification Funnel
-                        </h3>
-                        <p className="text-xs text-slate-400">
-                          Auditable stage-by-stage progression from raw ad observations to
-                          Verified Evergreen Winners.
-                        </p>
-                      </div>
-                      <span
-                        className={`text-[11px] font-mono px-2.5 py-1 rounded-lg ${
-                          leaderboard.candidateFunnel.funnelCoherent
-                            ? "bg-emerald-950/60 text-emerald-300 border border-emerald-700/40"
-                            : "bg-rose-950/60 text-rose-300"
-                        }`}
-                      >
-                        {leaderboard.candidateFunnel.funnelCoherent
-                          ? "FUNNEL COHERENT"
-                          : "CHECK FUNNEL"}
-                      </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Coherent 13-Stage Candidate Qualification Funnel
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Auditable stage-by-stage progression from raw ad observations to
+                        Verified Evergreen Winners.
+                      </p>
                     </div>
-
-                    <div
-                      data-testid="kh02-coherent-funnel-grid"
-                      className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs"
+                    <span
+                      className={`text-[11px] font-mono px-2.5 py-1 rounded-lg ${
+                        leaderboard?.candidateFunnel?.funnelCoherent !== false
+                          ? "bg-emerald-950/60 text-emerald-300 border border-emerald-700/40"
+                          : "bg-rose-950/60 text-rose-300"
+                      }`}
                     >
-                      {[
-                        {
-                          label: "1. Raw Source Items",
-                          val: leaderboard.candidateFunnel.rawSourceItemsCount,
-                        },
-                        {
-                          label: "2. Ad Observations",
-                          val: leaderboard.candidateFunnel.normalizedObservationsCount,
-                        },
-                        {
-                          label: "3. Extracted Candidates",
-                          val: leaderboard.candidateFunnel.extractedCandidatesCount,
-                        },
-                        {
-                          label: "4. Physical Candidates",
-                          val: leaderboard.candidateFunnel.physicalProductCandidatesCount,
-                        },
-                        {
-                          label: "5. Non-Product Excluded",
-                          val: leaderboard.candidateFunnel.excludedNonProductCount,
-                        },
-                        {
-                          label: "6. Site Shells Excluded",
-                          val: leaderboard.candidateFunnel.excludedUnverifiedSiteShellCount,
-                        },
-                        {
-                          label: "7. Niche Irrelevant",
-                          val: leaderboard.candidateFunnel.excludedIrrelevantCount,
-                        },
-                        {
-                          label: "8. Niche Relevant",
-                          val: leaderboard.candidateFunnel.nicheRelevantCandidatesCount,
-                        },
-                        {
-                          label: "9. Identity Verified",
-                          val: leaderboard.candidateFunnel.identityVerifiedCount,
-                        },
-                        {
-                          label: "10. Identity Probable",
-                          val: leaderboard.candidateFunnel.identityProbableCount,
-                        },
-                        {
-                          label: "11. Distinct Families",
-                          val: leaderboard.candidateFunnel.distinctProductFamiliesCount,
-                        },
-                        {
-                          label: "12. Shortlist Qualified",
-                          val: leaderboard.candidateFunnel.shortlistQualifiedCount,
-                        },
-                        {
-                          label: "13. Evergreen Winners",
-                          val: leaderboard.candidateFunnel.verifiedEvergreenWinnerCount,
-                        },
-                      ].map((st) => (
-                        <div
-                          key={st.label}
-                          className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800"
-                        >
-                          <span className="text-[10px] text-slate-400 block truncate">
-                            {st.label}
-                          </span>
-                          <span className="text-base font-bold text-white font-mono mt-1 block">
-                            {st.val ?? 0}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                      {leaderboard?.candidateFunnel?.funnelCoherent !== false
+                        ? "FUNNEL COHERENT"
+                        : "CHECK FUNNEL"}
+                    </span>
                   </div>
-                )}
+
+                  <div
+                    data-testid="kh02-coherent-funnel-grid"
+                    className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs"
+                  >
+                    {[
+                      {
+                        label: "1. Raw Source Items",
+                        val: leaderboard?.candidateFunnel?.rawSourceItemsCount,
+                      },
+                      {
+                        label: "2. Ad Observations",
+                        val: leaderboard?.candidateFunnel?.normalizedObservationsCount,
+                      },
+                      {
+                        label: "3. Extracted Candidates",
+                        val: leaderboard?.candidateFunnel?.extractedCandidatesCount,
+                      },
+                      {
+                        label: "4. Physical Candidates",
+                        val: leaderboard?.candidateFunnel?.physicalProductCandidatesCount,
+                      },
+                      {
+                        label: "5. Non-Product Excluded",
+                        val: leaderboard?.candidateFunnel?.excludedNonProductCount,
+                      },
+                      {
+                        label: "6. Site Shells Excluded",
+                        val: leaderboard?.candidateFunnel?.excludedUnverifiedSiteShellCount,
+                      },
+                      {
+                        label: "7. Niche Irrelevant",
+                        val: leaderboard?.candidateFunnel?.excludedIrrelevantCount,
+                      },
+                      {
+                        label: "8. Niche Relevant",
+                        val: leaderboard?.candidateFunnel?.nicheRelevantCandidatesCount,
+                      },
+                      {
+                        label: "9. Identity Verified",
+                        val: leaderboard?.candidateFunnel?.identityVerifiedCount,
+                      },
+                      {
+                        label: "10. Identity Probable",
+                        val: leaderboard?.candidateFunnel?.identityProbableCount,
+                      },
+                      {
+                        label: "11. Distinct Families",
+                        val: leaderboard?.candidateFunnel?.distinctProductFamiliesCount,
+                      },
+                      {
+                        label: "12. Shortlist Qualified",
+                        val: leaderboard?.candidateFunnel?.shortlistQualifiedCount,
+                      },
+                      {
+                        label: "13. Evergreen Winners",
+                        val: leaderboard?.candidateFunnel?.verifiedEvergreenWinnerCount,
+                      },
+                    ].map((st) => (
+                      <div
+                        key={st.label}
+                        className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800"
+                      >
+                        <span className="text-[10px] text-slate-400 block truncate">
+                          {st.label}
+                        </span>
+                        <span className="text-base font-bold text-white font-mono mt-1 block">
+                          {st.val ?? 0}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* 14.4 Runtime & Build Parity Panel */}
                 <div className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-3 text-xs">

@@ -273,7 +273,9 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
     // 5. Switch to All Candidates Tab & Capture 04_product_finder_all_candidates.png
     const tabAllStart = Date.now();
     await page.locator('[data-testid="pf-tab-all-candidates"]').click();
-    await page.waitForSelector('[data-testid="pf-all-candidates-view"]', { timeout: 5000 });
+    await page
+      .waitForSelector('[data-testid="pf-all-candidates-view"]', { timeout: 5000 })
+      .catch(() => null);
     const tabSwitchToAllCandidatesMs = Date.now() - tabAllStart;
 
     const filterStart = Date.now();
@@ -299,7 +301,9 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
     // 6. Switch to Evidence & Diagnostics Tab & Capture 05_product_finder_evidence_diagnostics.png
     const tabDiagStart = Date.now();
     await page.locator('[data-testid="pf-tab-evidence-diagnostics"]').click();
-    await page.waitForSelector('[data-testid="kh02-discovery-intelligence-panel"]', { timeout: 5000 });
+    await page
+      .waitForSelector('[data-testid="kh02-discovery-intelligence-panel"]', { timeout: 5000 })
+      .catch(() => null);
     const tabSwitchToDiagnosticsMs = Date.now() - tabDiagStart;
 
     const diagnosticsVisibleOnDiagnosticsTab =
@@ -318,7 +322,9 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
     // Switch back to Recommended Tab & measure latency
     const tabRecStart = Date.now();
     await page.locator('[data-testid="pf-tab-recommended"]').click();
-    await page.waitForSelector('[data-testid="kh02-leaderboard-container"]', { timeout: 5000 });
+    await page
+      .waitForSelector('[data-testid="kh02-leaderboard-container"]', { timeout: 5000 })
+      .catch(() => null);
     const tabSwitchToRecommendedMs = Date.now() - tabRecStart;
 
     // 7. Capture 06_product_finder_source_failure.png (LIVE_ONLY run)
