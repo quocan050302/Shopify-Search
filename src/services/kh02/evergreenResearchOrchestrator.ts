@@ -286,7 +286,7 @@ export async function runEvergreenProductResearch(
     metaExecutionPolicy: input.metaExecutionPolicy,
   };
 
-  const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 20_000;
+  const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 30_000;
 
   function createStageSignal(timeoutMs: number, stageName: string): { signal: AbortSignal; cleanup: () => void } {
     const controller = new AbortController();
@@ -392,8 +392,8 @@ export async function runEvergreenProductResearch(
   const coveredArchetypeIds = new Set<string>();
   const allMetaQueryOutcomes: MetaSubqueryExecution[] = [];
 
-  // Allocate Round 1 queries: if >= 3 validated queries exist, run 2 in Round 1 and reserve 1 for adaptive Round 2 recovery
-  const round1MaxQueries = validatedQueries.length >= 3 ? 2 : Math.max(1, validatedQueries.length);
+  // Allocate Round 1 queries: if >= 3 validated queries exist, run 3 in Round 1 to maximize parallel discovery throughput
+  const round1MaxQueries = validatedQueries.length >= 3 ? 3 : Math.max(1, validatedQueries.length);
   const round1Queries = selectQueriesForSearchRound(
     validatedQueries,
     round1MaxQueries,
@@ -714,17 +714,24 @@ export async function runEvergreenProductResearch(
     if (batch.length === 0) return [];
 
     // Stage 4: Resolve Candidate Identities to Real ResearchProduct IDs (respecting Section 4.6 provenance)
-    for (const candidate of batch) {
-      try {
-        const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
-        candidate.researchProductId = resolved.researchProductId;
-        candidate.existingProductVerified = resolved.existingProductVerified;
-        if (resolved.canonicalProductUrl && !candidate.canonicalProductUrl) {
-          candidate.canonicalProductUrl = resolved.canonicalProductUrl;
-        }
-      } catch (resErr: any) {
-        warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
-      }
+    // Concurrent resolution with a concurrency cap to avoid DB overload
+    const IDENTITY_CONCURRENCY = 12;
+    for (let i = 0; i < batch.length; i += IDENTITY_CONCURRENCY) {
+      const chunk = batch.slice(i, i + IDENTITY_CONCURRENCY);
+      await Promise.allSettled(
+        chunk.map(async (candidate) => {
+          try {
+            const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
+            candidate.researchProductId = resolved.researchProductId;
+            candidate.existingProductVerified = resolved.existingProductVerified;
+            if (resolved.canonicalProductUrl && !candidate.canonicalProductUrl) {
+              candidate.canonicalProductUrl = resolved.canonicalProductUrl;
+            }
+          } catch (resErr: any) {
+            warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
+          }
+        })
+      );
     }
 
     // Stage 4b: Async Metadata Enrichment with Real Evidence
@@ -733,8 +740,8 @@ export async function runEvergreenProductResearch(
       const enrichmentResult = await enrichProductCandidatesWithEvidence(batch, {
         workspaceId: input.workspaceId,
         topic: input.topic,
-        timeoutMs: 2500,
-        maxConcurrency: 8,
+        timeoutMs: 4000,
+        maxConcurrency: 12,
         signal: abortSignal,
         plannedArchetypes: discoveryPlan?.productArchetypes,
       });
@@ -755,7 +762,7 @@ export async function runEvergreenProductResearch(
           researchRunId: runId,
           topic: input.topic,
           market: market,
-          maxConcurrency: 2,
+          maxConcurrency: 4,
           budgetTracker: sharedGeminiBudgetTracker,
           signal: abortSignal,
         });
@@ -1323,54 +1330,64 @@ export async function runEvergreenProductResearch(
   }
 
   // ── Stage 8 & 9: Demand Loading, Scoring & Eligibility Gating ─────────────
+  // All candidates resolved concurrently (typically only 3–5) — eliminates sequential I/O wait
   const rankedItems: RankedLeaderboardItem[] = [];
 
-  for (const candidate of candidates) {
-    let demandRes;
-    if (isSelected("DEMAND_HISTORY")) {
-      demandRes = await resolveProductDemandHistory(
-        {
-          productId: candidate.researchProductId,
+  const demandSettled = await Promise.allSettled(
+    candidates.map(async (candidate) => {
+      let demandRes;
+      if (isSelected("DEMAND_HISTORY")) {
+        demandRes = await resolveProductDemandHistory(
+          {
+            productId: candidate.researchProductId,
+            canonicalName: candidate.title,
+            category: candidate.category,
+          },
+          {
+            lookbackDays,
+            region: market,
+            workspaceId: input.workspaceId,
+            researchRunId: runId,
+            queryId: runId,
+          }
+        );
+      } else {
+        demandRes = {
+          productId: candidate.researchProductId || null,
           canonicalName: candidate.title,
-          category: candidate.category,
-        },
-        {
-          lookbackDays,
-          region: market,
-          workspaceId: input.workspaceId,
-          researchRunId: runId,
-          queryId: runId,
-        }
-      );
+          searchTermUsed: candidate.title,
+          assessment: {
+            status: "INSUFFICIENT_EVIDENCE" as const,
+            dataPointsCount: 0,
+            coveredDays: 0,
+            stabilityClassification: "INSUFFICIENT_DATA" as const,
+            confidence: 0,
+            reason: "Demand history unselected or skipped.",
+          },
+          dataPoints: [],
+          sourceStatus: "ENGINE_READY" as const,
+        };
+      }
+      return { candidate, demandRes };
+    })
+  );
+
+  for (const settled of demandSettled) {
+    if (settled.status === "fulfilled") {
+      const { candidate, demandRes } = settled.value;
+      const score = calculateKH02EvergreenScore({
+        candidate,
+        demandSeries: ((candidate as any).demandResolution = demandRes, demandRes.dataPoints),
+        hasVerifiedSupplierQuote: false,
+      });
+      rankedItems.push({
+        rank: null,
+        candidate,
+        score,
+      });
     } else {
-      demandRes = {
-        productId: candidate.researchProductId || null,
-        canonicalName: candidate.title,
-        searchTermUsed: candidate.title,
-        assessment: {
-          status: "INSUFFICIENT_EVIDENCE" as const,
-          dataPointsCount: 0,
-          coveredDays: 0,
-          stabilityClassification: "INSUFFICIENT_DATA" as const,
-          confidence: 0,
-          reason: "Demand history unselected or skipped.",
-        },
-        dataPoints: [],
-        sourceStatus: "ENGINE_READY" as const,
-      };
+      warnings.push(`Demand/scoring error for candidate: ${settled.reason?.message ?? String(settled.reason)}`);
     }
-
-    const score = calculateKH02EvergreenScore({
-      candidate,
-      demandSeries: ((candidate as any).demandResolution = demandRes, demandRes.dataPoints),
-      hasVerifiedSupplierQuote: false,
-    });
-
-    rankedItems.push({
-      rank: null,
-      candidate,
-      score,
-    });
   }
 
   // Evaluate Demand History status truthfully
