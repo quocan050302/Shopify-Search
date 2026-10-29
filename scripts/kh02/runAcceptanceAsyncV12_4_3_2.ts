@@ -770,7 +770,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
           }),
       },
     ],
-    { maxConcurrency: 4, defaultTimeoutMs: 240000 }
+    { maxConcurrency: 2, defaultTimeoutMs: 240000 }
   );
   const phase2WallMs = Date.now() - phase2StartMs;
 
@@ -916,7 +916,6 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       lookbackDays: 90,
       maxCandidates: 8,
       sourceMode: "LIVE_ONLY",
-      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
@@ -925,7 +924,6 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       lookbackDays: 90,
       maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
-      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
@@ -934,7 +932,6 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       lookbackDays: 180,
       maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
-      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
@@ -943,7 +940,6 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       lookbackDays: 90,
       maxCandidates: 10,
       sourceMode: "CACHE_ONLY",
-      disableAiDiscovery: true,
     }),
     runEvergreenProductResearch({
       workspaceId: targetWorkspaceId,
@@ -952,7 +948,6 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       lookbackDays: 90,
       maxCandidates: 8,
       sourceMode: "CACHE_ONLY",
-      disableAiDiscovery: true,
     }),
   ]);
 
