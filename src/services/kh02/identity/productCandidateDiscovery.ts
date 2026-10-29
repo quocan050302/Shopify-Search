@@ -875,6 +875,11 @@ export interface ResearchShortlistResult {
   distinctnessSummary: string;
   distinctnessEvaluation: DistinctnessEvaluation;
   opportunityDiversity?: OpportunityDiversityEvaluation;
+  /** V12.4.3.3.1 G16: Number of shortlist candidates with identityStatus === "VERIFIED" AND
+   *  liveObservationsCount > 0 (i.e. backed by a current-run live source record, not cache-only). */
+  liveVerifiedProductCount: number;
+  /** V12.4.3.3.1 G16: true only when all `limit` candidates satisfy VERIFIED + live-grounded criteria. */
+  liveVerifiedTop3: boolean;
 }
 
 /**
@@ -1561,6 +1566,35 @@ export function selectTopResearchShortlist(
     distinctnessSummary,
     distinctnessEvaluation,
     opportunityDiversity,
+    // V12.4.3.3.1 G16: Count VERIFIED + live-grounded candidates separately from the overall shortlist.
+    // A candidate is "live-grounded" when liveObservationsCount > 0 OR at least one sourceObservation
+    // carries a sourceType that is not CACHE-only (i.e., the current run produced a live provider record).
+    liveVerifiedProductCount: distinctShortlist.filter(
+      (c) =>
+        c.identityStatus === "VERIFIED" &&
+        ((c as any).liveObservationsCount > 0 ||
+          c.sourceObservations.some(
+            (o) =>
+              (o as any).isLiveRecord === true ||
+              ((o as any).sourceType !== "CACHE" &&
+                (o as any).sourceType !== "CACHED" &&
+                (o as any).sourceType !== "CACHE_ONLY")
+          ))
+    ).length,
+    liveVerifiedTop3:
+      distinctShortlist.length >= limit &&
+      distinctShortlist.every(
+        (c) =>
+          c.identityStatus === "VERIFIED" &&
+          ((c as any).liveObservationsCount > 0 ||
+            c.sourceObservations.some(
+              (o) =>
+                (o as any).isLiveRecord === true ||
+                ((o as any).sourceType !== "CACHE" &&
+                  (o as any).sourceType !== "CACHED" &&
+                  (o as any).sourceType !== "CACHE_ONLY")
+            ))
+      ),
   };
 }
 

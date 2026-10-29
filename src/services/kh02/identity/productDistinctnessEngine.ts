@@ -203,7 +203,11 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     familyKey: "pet_water_fountain",
     familyLabel: "Automatic Pet Water Fountain",
     headNoun: "water_fountain",
-    pattern: /\b((?:cat|dog|pet)\s+(?:water\s+)?fountain|water\s+fountain\s+for\s+(?:cats|dogs|pets)|drinking\s+fountain)\b/i,
+    // V12.4.3.3.1 G12 fix: Extended to match "wireless fountain", "stainless steel water fountain",
+    // "pet drinking fountain", and brand-prefixed variants such as "KittySpout Wireless Fountain"
+    // and "Pawira Stainless Steel Water Fountain".
+    pattern:
+      /\b((?:cat|dog|pet)\s+(?:water\s+)?fountain|water\s+fountain(?:\s+for\s+(?:cats|dogs|pets))?|drinking\s+fountain(?:\s+for\s+(?:cats|dogs|pets))?|wireless\s+(?:pet\s+)?fountain|stainless\s+steel\s+(?:pet\s+|water\s+)?fountain|fountain\s+(?:water|pump|filter)|pet\s+drinking\s+(?:water\s+)?fountain)\b/i,
   },
   {
     familyKey: "automatic_pet_feeder",
@@ -497,7 +501,9 @@ function resolveProductFamily(
     };
   }
 
-  // Fallback: extract core product head noun + modifier (filtering out model codes & numbers)
+  // V12.4.3.3.1 G12 fix: Token-based fallback only applied when at least 2 meaningful semantic tokens
+  // survive the filter.  Single-token results (e.g. a brand name alone) produce UNRESOLVED_FAMILY
+  // rather than a spurious "brand_name"-style key that would count as a distinct family.
   const tokens = text
     .toLowerCase()
     .split(/[^a-z0-9]+/)
@@ -512,20 +518,18 @@ function resolveProductFamily(
         !/^[a-z]{1,4}\d{1,5}[a-z]?$/i.test(w)
     );
 
-  const headNoun = tokens[tokens.length - 1] || "";
-  if (!headNoun) {
-    const rawWords = text
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .filter(Boolean);
-    const fallbackKey = rawWords.length > 0 ? rawWords.join("_") : "general_product";
+  // Require at least 2 meaningful tokens for a reliable composite family key.
+  // Single-token or zero-token results signal insufficient semantic confidence.
+  if (tokens.length < 2) {
     return {
-      familyKey: fallbackKey,
-      familyLabel: text.trim() || "General Product",
-      headNoun: rawWords[rawWords.length - 1] || "general_product",
+      familyKey: "unresolved_family",
+      familyLabel: "Unresolved Product Family",
+      headNoun: tokens[0] || "unresolved",
     };
   }
-  const modifier = tokens.length >= 2 ? tokens[tokens.length - 2] : "item";
+
+  const headNoun = tokens[tokens.length - 1];
+  const modifier = tokens[tokens.length - 2];
   const familyKey = `${modifier}_${headNoun}`;
 
   return {

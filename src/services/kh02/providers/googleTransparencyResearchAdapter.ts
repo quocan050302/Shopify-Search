@@ -192,6 +192,11 @@ export interface GoogleEnrichmentExecution {
   queryTimestamp: string | null;
   isControlledMcp?: boolean;
   stateBreakdown?: GoogleDiagnosticStateBreakdown;
+  /** V12.4.3.3.1 Section 7: Separate counters for per-operation diagnostics */
+  domainsPlanned?: number;
+  domainsAttempted?: number;
+  mcpCallsStarted?: number;
+  mcpCallsCompleted?: number;
 }
 
 const PLATFORM_AND_REDIRECT_DOMAINS = new Set([
@@ -1193,6 +1198,12 @@ export interface GoogleEnrichmentOptions {
   maxDomains?: number;
   maxAdsCallsPerDomain?: number;
   persistToDatabase?: boolean;
+  /** V12.4.3.3.1: Per-operation deadline (ms) for MCP client.connect() — default 8 000 */
+  connectTimeoutMs?: number;
+  /** V12.4.3.3.1: Per-operation deadline (ms) for tool-discovery — default 5 000 */
+  toolDiscoveryTimeoutMs?: number;
+  /** V12.4.3.3.1: Per-operation deadline (ms) per domain lookup (advertiser search + ads retrieval) — default 15 000 */
+  perDomainTimeoutMs?: number;
 }
 
 /**
@@ -1524,8 +1535,20 @@ export async function collectGoogleAdvertiserSignals(
 
   const client = customClient || createGoogleTransparencyMcpClient();
 
+  // V12.4.3.3.1 Section 7 fix: Per-operation deadline for MCP connect.
+  // Previously `client.connect()` could stall indefinitely, consuming the entire stage budget.
+  // Now each operation gets its own AbortController + race, bounded at 8 s for connect.
+  const CONNECT_DEADLINE_MS = options?.connectTimeoutMs ?? 8_000;
+  const TOOL_DISCOVERY_DEADLINE_MS = options?.toolDiscoveryTimeoutMs ?? 5_000;
+  const PER_DOMAIN_DEADLINE_MS = options?.perDomainTimeoutMs ?? 15_000;
+
   try {
-    await client.connect();
+    await Promise.race([
+      client.connect(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`MCP connect timeout after ${CONNECT_DEADLINE_MS}ms`)), CONNECT_DEADLINE_MS)
+      ),
+    ]);
   } catch (connErr: any) {
     return {
       source: "GOOGLE_ADS",
@@ -1584,7 +1607,16 @@ export async function collectGoogleAdvertiserSignals(
 
   try {
     const observations: SourceObservation[] = [];
-    const caps = await discoverGoogleAdsMcpCapabilities({}, client);
+    // V12.4.3.3.1 Section 7: Bounded tool-discovery with per-operation deadline
+    const caps = await Promise.race([
+      discoverGoogleAdsMcpCapabilities({}, client),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`MCP tool discovery timeout after ${TOOL_DISCOVERY_DEADLINE_MS}ms`)),
+          TOOL_DISCOVERY_DEADLINE_MS
+        )
+      ),
+    ]);
 
     const searchTool =
       caps.matchedTools.advertiserSearchTool || "search_advertiser";
@@ -1675,10 +1707,18 @@ export async function collectGoogleAdvertiserSignals(
         }
 
         try {
-          // Step 1: Search advertiser by domain
-          const advResult = client.callToolByName
-            ? await client.callToolByName(searchTool, { query: key })
-            : await client.searchAdvertiserByDomain(key);
+          // Step 1: Search advertiser by domain — V12.4.3.3.1: bounded by PER_DOMAIN_DEADLINE_MS
+          const advResult = await Promise.race([
+            client.callToolByName
+              ? client.callToolByName(searchTool, { query: key })
+              : client.searchAdvertiserByDomain(key),
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () => reject(new Error(`Advertiser lookup timeout for ${key} after ${PER_DOMAIN_DEADLINE_MS}ms`)),
+                PER_DOMAIN_DEADLINE_MS
+              )
+            ),
+          ]);
           anyLookupSucceeded = true;
           domainLookupOk = true;
 
@@ -1863,6 +1903,11 @@ export async function collectGoogleAdvertiserSignals(
       queryErrors: [...errors],
       queryTimestamp: startedAt,
       isControlledMcp: Boolean(customClient),
+      // V12.4.3.3.1 Section 7: per-operation counters for acceptance gate diagnostics
+      domainsPlanned: targetDomains.length,
+      domainsAttempted: domainOutcomes.filter((d) => d.attempted).length,
+      mcpCallsStarted: attemptedDomains.length,
+      mcpCallsCompleted: anyLookupSucceeded ? attemptedDomains.length : 0,
       stateBreakdown: {
         configured: true,
         transportConnected: true,

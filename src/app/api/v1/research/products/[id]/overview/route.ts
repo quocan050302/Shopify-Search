@@ -167,89 +167,26 @@ export async function GET(
             }
           }
 
-          // Materialize an authorized ResearchProduct record for this KH-02 candidate so Product Intelligence
-          // and Commercial Assessment work seamlessly without 404 (Section 6 & Section 7)
-          let storeId: string | null = null;
-          const cleanDomain = cand.storeDomain
-            ? String(cand.storeDomain).trim().toLowerCase().replace(/^www\./, "")
-            : null;
-          if (cleanDomain && cleanDomain.includes(".")) {
-            const store = await prisma.competitorStore.upsert({
-              where: { domain: cleanDomain },
-              update: {},
-              create: {
-                domain: cleanDomain,
-                storeName: cand.brand || cleanDomain.split(".")[0],
-                commercePlatform: "SHOPIFY_POSSIBLE",
-              },
-            });
-            storeId = store.id;
-          }
-
-          const rawPrimaryImg =
-            (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
-            cand.thumbnailUrl ||
-            null;
-          const validImg = validateAndNormalizeMediaUrl(rawPrimaryImg);
-
+          // V12.4.3.3.1 Section 10 fix: GET must not create unauthorized product/ad associations.
+          // The ResearchProduct, CompetitorStore, and AdProductLink records must be created by
+          // persistKH02RankingSnapshot() in the worker — not on every GET request.
+          // If the candidate has not yet been materialized (no researchProductId and no DB record),
+          // we do a read-only lookup by candidateId before returning 404.
           const materializedId = cand.researchProductId || cand.candidateId;
-          const materializedProduct = await prisma.researchProduct.upsert({
+          const existingProduct = await prisma.researchProduct.findUnique({
             where: { id: materializedId },
-            update: {
-              storeId: storeId ?? undefined,
-              productUrl: cand.canonicalProductUrl || undefined,
-              imageUrl: validImg.valid ? validImg.normalizedUrl : undefined,
-            },
-            create: {
-              id: materializedId,
-              storeId,
-              title:
-                cand.merchantVerifiedProductName ||
-                cand.canonicalProductName ||
-                cand.displayName ||
-                cand.title ||
-                "Discovered Product Candidate",
-              category: parsed.topic || cand.category || "Other",
-              description: cand.problemStatement || null,
-              imageUrl: validImg.valid ? validImg.normalizedUrl : null,
-              productUrl: cand.canonicalProductUrl || null,
-            },
+            select: { id: true },
           });
-
-          // Link any supporting CompetitorAd records that exist in DB
-          if (Array.isArray(cand.supportingAdIds) && cand.supportingAdIds.length > 0) {
-            const existingAds = await prisma.competitorAd.findMany({
-              where: { id: { in: cand.supportingAdIds } },
-              select: { id: true },
-            });
-            for (const adRec of existingAds) {
-              await prisma.adProductLink
-                .upsert({
-                  where: {
-                    adId_productId: {
-                      adId: adRec.id,
-                      productId: materializedProduct.id,
-                    },
-                  },
-                  update: {},
-                  create: {
-                    adId: adRec.id,
-                    productId: materializedProduct.id,
-                    confidence:
-                      cand.identityStatus === "VERIFIED"
-                        ? "CONFIRMED"
-                        : "HIGH_CONFIDENCE",
-                  },
-                })
-                .catch(() => null);
-            }
+          if (existingProduct) {
+            // Previously persisted by persistKH02RankingSnapshot — resolve and continue
+            cand.researchProductId = existingProduct.id;
+            resolvedProductId = existingProduct.id;
+            break;
           }
 
-          // Note: V12.4.3.3 materializes researchProductId during persistKH02RankingSnapshot().
-          // GET overview does not mutate syncJob.resultJson to avoid concurrent GET write contention.
-          cand.researchProductId = materializedProduct.id;
-
-          resolvedProductId = materializedProduct.id;
+          // Note: V12.4.3.3.1 — GET does not materialize ResearchProduct, CompetitorStore,
+          // or AdProductLink records.  persistKH02RankingSnapshot() is responsible for all writes.
+          // If the product has not been persisted yet, the caller receives PRODUCT_NOT_FOUND (404).
           break;
         }
       }
