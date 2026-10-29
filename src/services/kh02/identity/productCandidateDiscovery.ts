@@ -29,6 +29,7 @@ import {
 import { PlannedProductArchetype } from "../discovery/geminiDiscoveryPlanner";
 import {
   analyzeCustomerPsychology,
+  validateCustomerPsychologyAlignment,
   CustomerPsychologyProfile,
 } from "../psychology/customerPsychologyService";
 import {
@@ -1611,6 +1612,36 @@ export async function enrichProductCandidatesWithEvidence(
                 .map((o) => o.description || o.observedContent || "")
                 .join(". ")
             );
+          }
+
+          candidate.psychologyProfile = analyzeCustomerPsychology({
+            candidateId: candidate.candidateId,
+            candidateTitle: candidate.canonicalProductName || candidate.title,
+            categoryOrTopic: context.topic || candidate.category || "general",
+            rawHeadlines: Array.from(
+              new Set(
+                [
+                  candidate.canonicalProductName || candidate.title,
+                  candidate.originalAdHeadline,
+                  ...candidate.sourceObservations.map((o) => o.title),
+                ].filter((t): t is string => Boolean(t && t.trim().length > 0))
+              )
+            ),
+            rawDescriptions: candidate.sourceObservations
+              .map((o) => o.description || o.observedContent)
+              .filter(Boolean) as string[],
+            landingPageUrl: candidate.canonicalProductUrl,
+            advertiserName: candidate.advertiserNames[0] || null,
+            sourceReference: candidate.mediaSourceAdId
+              ? `Ad #${candidate.mediaSourceAdId}`
+              : undefined,
+          });
+          const psychCheck = validateCustomerPsychologyAlignment(
+            candidate.psychologyProfile,
+            candidate
+          );
+          if (!psychCheck.valid) {
+            candidate.psychologyProfile = undefined;
           }
 
           attachDistinctnessFingerprint(candidate);

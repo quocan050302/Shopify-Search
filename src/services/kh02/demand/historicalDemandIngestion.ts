@@ -12,6 +12,7 @@ import {
   DemandDataPoint,
   DemandHistoryAssessment,
   evaluateDemandHistoryEvidence,
+  detectSpecificProductFamily,
 } from "./temporalDemandEngine";
 import { defaultDemandProvider, DemandQuery } from "./demandProviderRegistry";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
@@ -137,9 +138,10 @@ export async function resolveProductDemandHistory(
   // 2. If not found by productId, check if observations exist matching a single canonical product
   // CRITICAL: NEVER merge multiple distinct products into one time series
   if (rawRecords.length === 0 && searchTerm.length > 2) {
-    const matchingProduct = await prisma.researchProduct.findFirst({
+    const candidateProducts = await prisma.researchProduct.findMany({
       where: {
         AND: [
+          { id: { not: { startsWith: "prod_fixture_" } } },
           ...(options.workspaceId ? [buildAuthorizedProductWhere(options.workspaceId)] : []),
           {
             OR: [
@@ -149,7 +151,15 @@ export async function resolveProductDemandHistory(
           },
         ],
       },
-      select: { id: true },
+      select: { id: true, title: true, productUrl: true },
+      take: 5,
+    });
+
+    const candFamily = detectSpecificProductFamily(candidate.canonicalName);
+    const matchingProduct = candidateProducts.find((mp) => {
+      const mpFamily = detectSpecificProductFamily(mp.title);
+      if (candFamily && mpFamily && candFamily !== mpFamily) return false;
+      return true;
     });
 
     if (matchingProduct) {
@@ -272,6 +282,12 @@ export async function resolveProductDemandHistory(
   }
 
   const dataPoints: DemandDataPoint[] = rawRecords.map((r) => ({
+    id: r.id,
+    productId: r.productId,
+    keyword: r.keyword,
+    evidenceReference: r.evidenceReference,
+    methodologyVersion: r.methodologyVersion,
+    isFixture: String(r.productId || "").startsWith("prod_fixture_"),
     periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
     periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
     demandValue: r.demandValue,
@@ -286,6 +302,8 @@ export async function resolveProductDemandHistory(
     minimumDataPoints: 3,
     minimumCoveredDays: 60,
     requiredRegion: region,
+    candidateCanonicalName: candidate.canonicalName,
+    searchTermUsed: searchTerm,
   });
 
   const sourceStatus =

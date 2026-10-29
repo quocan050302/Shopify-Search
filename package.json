@@ -76,7 +76,10 @@
     "kh02:discovery:backtest": "tsx scripts/kh02/runDiscoveryRecallBacktest.ts",
     "kh02:discovery:regression": "vitest run tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts",
     "kh02:v12.4.3:backtest": "tsx scripts/kh02/runBacktestV12_4_3.ts",
-    "kh02:v12.4.3:regression": "vitest run tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts"
+    "kh02:v12.4.3:regression": "vitest run tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts",
+    "acceptance:kh02:v12.4.3.1": "tsx scripts/kh02/runAcceptanceAsyncV12_4_3_1.ts",
+    "kh02:v12.4.3.1:backtest": "tsx scripts/kh02/runBacktestV12_4_3_1.ts",
+    "kh02:v12.4.3.1:regression": "vitest run tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

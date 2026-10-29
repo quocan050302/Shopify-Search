@@ -30,6 +30,9 @@ export interface PsychologyClaim {
 }
 
 export interface CustomerPsychologyProfile {
+  candidateId?: string;
+  canonicalProductName?: string;
+  productDomain?: "PET" | "AUDIO" | "DIY" | "HOME" | "APPAREL" | "GENERAL";
   targetCustomer: PsychologyClaim;
   situationOrUseCase: PsychologyClaim;
   functionalProblem: PsychologyClaim;
@@ -46,6 +49,7 @@ export interface CustomerPsychologyProfile {
 }
 
 export interface PsychologyAnalysisInput {
+  candidateId?: string;
   candidateTitle: string;
   categoryOrTopic: string;
   rawHeadlines: string[];
@@ -236,13 +240,24 @@ export function analyzeCustomerPsychology(
   const ref = input.sourceReference || `Ad Creative (${input.rawHeadlines[0] || input.candidateTitle || "Unknown"})`;
   const copyText = [headlinesJoined, descriptionsJoined].filter(Boolean).join(" ");
 
-  // Determine Product Archetype
-  const isAudioItem = /speaker|bluetooth|fm radio|soundbox|headphone|earbud/i.test(combinedText);
-  const isFootwearOrApparel = /dance shoes|shoes|boots|sandals|sunglasses|dress|jacket|eyewear/i.test(combinedText);
-  const isHairRemoval = /hair remover|pet hair|fur|deshedding|lint|grooming vacuum|cleaner|roller/i.test(combinedText);
-  const isBedding = /bed|donut|orthopedic|mattress|cushion|blanket|sofa cover/i.test(combinedText);
-  const isFeedingFountain = /feeder|fountain|water dispenser|water bowl|litter/i.test(combinedText);
-  const isTravelSafety = /seat belt|car harness|safety harness|leash|collar|tracker|gps/i.test(combinedText);
+  // Determine Product Archetype with strict domain disambiguation (F09: never let 'no Bluetooth' or voice speaker on a pet feeder trigger wireless audio psychology)
+  const isFeedingFountain = /\b(feeder|fountain|water dispenser|water bowl|wet food|food dispenser|meal dispenser|litter)\b/i.test(combinedText);
+  const isHairRemoval = /\b(hair remover|pet hair|fur remover|deshedding|lint roller|grooming vacuum|pet roller|chomchom)\b/i.test(combinedText);
+  const isBedding = /\b(dog bed|cat bed|pet bed|calming bed|donut bed|orthopedic|mattress|cushion|sofa cover)\b/i.test(combinedText);
+  const isTravelSafety = /\b(seat belt|car harness|safety harness|leash|collar|pet tracker|dog gps)\b/i.test(combinedText);
+  const isPetContext =
+    isFeedingFountain ||
+    isHairRemoval ||
+    isBedding ||
+    isTravelSafety ||
+    /\b(pet|pets|cat|cats|kitten|feline|dog|dogs|puppy|canine|paw|paws|whiskers)\b/i.test(combinedText);
+  const cleanedForAudio = combinedText.replace(/\bno\s+(?:wi-?fi|bluetooth)\b/gi, " ");
+  const isAudioItem =
+    !isPetContext &&
+    /\b(bluetooth\s+speaker|wireless\s+speaker|fm\s+radio|soundbox|headphone|earbud|portable\s+speaker|audio\s+speaker)\b/i.test(cleanedForAudio);
+  const isFootwearOrApparel =
+    !isPetContext &&
+    /\b(dance shoes|shoes|boots|sandals|sunglasses|dress|jacket|eyewear)\b/i.test(combinedText);
 
   // 1. Target Customer
   const catAudienceMatch = findPatternMatch(copyText, [/(cat owners?|cat parents?|cat lovers?|for cats?)/i]);
@@ -617,7 +632,20 @@ export function analyzeCustomerPsychology(
     uncertaintyNote: "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion.",
   };
 
+  const productDomain: CustomerPsychologyProfile["productDomain"] = isPetContext
+    ? "PET"
+    : isAudioItem
+    ? "AUDIO"
+    : isFootwearOrApparel
+    ? "APPAREL"
+    : /\b(glue gun|wall repair|drywall|repair|tool|scrubber)\b/i.test(combinedText)
+    ? "DIY"
+    : "GENERAL";
+
   const profile: CustomerPsychologyProfile = {
+    candidateId: input.candidateId,
+    canonicalProductName: input.candidateTitle,
+    productDomain,
     targetCustomer: targetCustomerClaim,
     situationOrUseCase: situationClaim,
     functionalProblem: functionalProblemClaim,
@@ -664,4 +692,49 @@ export function analyzeCustomerPsychology(
   }
 
   return profile;
+}
+
+
+/**
+ * Validates that a CustomerPsychologyProfile is aligned with its candidate product identity
+ * and contains zero cross-category leakage (e.g., wireless audio psychology on a pet feeder).
+ */
+export function validateCustomerPsychologyAlignment(
+  profile: CustomerPsychologyProfile | null | undefined,
+  candidate: { candidateId?: string; title: string; canonicalProductName?: string | null; category?: string | null }
+): { valid: boolean; reason: string | null } {
+  if (!profile) {
+    return { valid: false, reason: "Missing customer psychology profile." };
+  }
+  if (profile.candidateId && candidate.candidateId && profile.candidateId !== candidate.candidateId) {
+    return {
+      valid: false,
+      reason: `Psychology profile candidateId (${profile.candidateId}) does not match candidate (${candidate.candidateId}).`,
+    };
+  }
+  const prodText = `${candidate.canonicalProductName || ""} ${candidate.title || ""} ${candidate.category || ""}`.toLowerCase();
+  const isPetCandidate = /\b(pet|cat|dog|feeder|fountain|fur|hair remover|paw|litter)\b/i.test(prodText);
+  const allClaimsText = [
+    profile.targetCustomer?.claimText,
+    profile.situationOrUseCase?.claimText,
+    profile.functionalProblem?.claimText,
+    profile.emotionalPain?.claimText,
+    profile.desiredOutcome?.claimText,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (
+    isPetCandidate &&
+    (profile.productDomain === "AUDIO" ||
+      /\b(music listeners|wireless audio|motorbike trips|tinny mobile device sound|boomboxes|bluetooth latency|portable speaker)\b/i.test(allClaimsText))
+  ) {
+    return {
+      valid: false,
+      reason: "Cross-product psychology leakage detected: Pet product contains wireless audio/commuter psychology claims.",
+    };
+  }
+
+  return { valid: true, reason: null };
 }

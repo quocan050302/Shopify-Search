@@ -132,9 +132,16 @@ export interface GoogleDiagnosticStateBreakdown {
   toolDiscovered: boolean;
   operationSupported: boolean;
   advertiserLookupAttempted: boolean;
+  queryAttempted?: boolean;
+  querySucceeded?: boolean;
   advertiserFound: boolean;
   adsRetrieved: boolean;
+  creativesReturned?: boolean;
+  brandLevelMatch?: boolean;
+  productLevelMatch?: boolean;
   productAssociatedEvidence: boolean;
+  productEvidencePersisted?: boolean;
+  currentRunProductEvidenceAvailable?: boolean;
   empty: boolean;
   failed: boolean;
   cached: boolean;
@@ -152,6 +159,7 @@ export interface GoogleEnrichmentExecution {
   productEvidenceIds: string[];
   queryErrors: string[];
   queryTimestamp: string | null;
+  isControlledMcp?: boolean;
   stateBreakdown?: GoogleDiagnosticStateBreakdown;
 }
 
@@ -1131,15 +1139,23 @@ export async function collectGoogleAdvertiserSignals(
         productEvidenceIds: [],
         queryErrors: [],
         queryTimestamp: startedAt,
+      isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: false,
           transportConnected: false,
           toolDiscovered: false,
           operationSupported: false,
           advertiserLookupAttempted: false,
+          queryAttempted: false,
+          querySucceeded: false,
           advertiserFound: false,
           adsRetrieved: false,
+          creativesReturned: false,
+          brandLevelMatch: false,
+          productLevelMatch: false,
           productAssociatedEvidence: false,
+          productEvidencePersisted: false,
+          currentRunProductEvidenceAvailable: false,
           empty: false,
           failed: false,
           cached: false,
@@ -1185,15 +1201,23 @@ export async function collectGoogleAdvertiserSignals(
         productEvidenceIds: [],
         queryErrors: [errMsg],
         queryTimestamp: startedAt,
+      isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: true,
           transportConnected: true,
           toolDiscovered: true,
           operationSupported: true,
           advertiserLookupAttempted: true,
+          queryAttempted: true,
+          querySucceeded: false,
           advertiserFound: false,
           adsRetrieved: false,
+          creativesReturned: false,
+          brandLevelMatch: false,
+          productLevelMatch: false,
           productAssociatedEvidence: false,
+          productEvidencePersisted: false,
+          currentRunProductEvidenceAvailable: false,
           empty: false,
           failed: true,
           cached: false,
@@ -1236,15 +1260,23 @@ export async function collectGoogleAdvertiserSignals(
           `Google Ads Transparency MCP transport connection failed: ${connErr.message}`,
         ],
         queryTimestamp: startedAt,
+      isControlledMcp: Boolean(customClient),
         stateBreakdown: {
           configured: true,
           transportConnected: false,
           toolDiscovered: false,
           operationSupported: false,
           advertiserLookupAttempted: false,
+          queryAttempted: false,
+          querySucceeded: false,
           advertiserFound: false,
           adsRetrieved: false,
+          creativesReturned: false,
+          brandLevelMatch: false,
+          productLevelMatch: false,
           productAssociatedEvidence: false,
+          productEvidencePersisted: false,
+          currentRunProductEvidenceAvailable: false,
           empty: false,
           failed: true,
           cached: false,
@@ -1437,6 +1469,7 @@ export async function collectGoogleAdvertiserSignals(
         .map((o) => o.sourceRecordId),
       queryErrors: [...errors],
       queryTimestamp: startedAt,
+      isControlledMcp: Boolean(customClient),
       stateBreakdown: {
         configured: true,
         transportConnected: true,
@@ -1446,9 +1479,24 @@ export async function collectGoogleAdvertiserSignals(
           caps.supportedOperations.adsRetrieval,
         ),
         advertiserLookupAttempted: attemptedDomains.length > 0,
+        queryAttempted: attemptedDomains.length > 0,
+        querySucceeded: status !== "QUERY_FAILED" && (anyLookupSucceeded || creativeQuerySucceeded),
         advertiserFound: anyAdvertiserFound,
         adsRetrieved: observations.length > 0,
+        creativesReturned: creativesReturnedCount > 0,
+        brandLevelMatch: observations.some(
+          (o) => (o.metrics as any)?.productRelevance === "BRAND_RELATED",
+        ),
+        productLevelMatch: observations.some(
+          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
+        ),
         productAssociatedEvidence: observations.some(
+          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
+        ),
+        productEvidencePersisted: observations.some(
+          (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
+        ),
+        currentRunProductEvidenceAvailable: observations.some(
           (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",
         ),
         empty: status === "QUERY_SUCCEEDED_EMPTY" || status === "NO_RESULTS",

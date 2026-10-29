@@ -1,0 +1,144 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "releaseVersion": "12.4.3.1",
+  "sourceBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "sourceHead": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+  "workingTreeStatusAtStart": [
+    "M next.config.ts",
+    " M package.json",
+    " M src/app/products/page.tsx",
+    " M src/services/kh02/demand/historicalDemandIngestion.ts",
+    " M src/services/kh02/demand/temporalDemandEngine.ts",
+    " M src/services/kh02/evergreenResearchOrchestrator.ts",
+    " M src/services/kh02/identity/productCandidateDiscovery.ts",
+    " M src/services/kh02/identity/productRelevanceEvaluator.ts",
+    " M src/services/kh02/providers/googleTransparencyResearchAdapter.ts",
+    " M src/services/kh02/providers/metaResearchAdapter.ts",
+    " M src/services/kh02/psychology/customerPsychologyService.ts",
+    " M src/services/kh02/scoring/evergreenOpportunityScoring.ts",
+    " M src/services/kh02/version/runtimeVersionService.ts",
+    " M tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts",
+    "?? acceptance/kh02-v12.4.3.1/",
+    "?? scripts/kh02/runAcceptanceAsyncV12_4_3_1.ts",
+    "?? scripts/kh02/runBacktestV12_4_3_1.ts",
+    "?? src/services/kh02/acceptance/",
+    "?? test-results/",
+    "?? tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts"
+  ],
+  "executionStartedAt": "2026-10-29T06:06:43.308Z",
+  "executionFinishedAt": "2026-10-29T06:10:09.765Z",
+  "totalDurationMs": 206457,
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "nodeVersion": "v22.14.0",
+    "cpus": 12
+  },
+  "databaseFingerprint": "6530562482a2",
+  "testCommands": [
+    {
+      "suiteId": "tsc_typecheck",
+      "command": "node.exe tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 3874,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "eslint",
+      "command": "node.exe eslint.js",
+      "exitCode": 0,
+      "durationMs": 22843,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "kh01_verify",
+      "command": "node.exe vitest.mjs run kh01Security.test.ts kh01ProductOffer.test.ts kh01LandingPage.test.ts kh01EconomicsOpportunity.test.ts kh01ProductIntelligenceWorkspace.test.ts",
+      "exitCode": 0,
+      "durationMs": 4291,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "v12_4_3_1_regression",
+      "command": "node.exe vitest.mjs run v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+      "exitCode": 0,
+      "durationMs": 1971,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "kh02_unit",
+      "command": "node.exe vitest.mjs run kh02",
+      "exitCode": 0,
+      "durationMs": 58658,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "historical_backtest",
+      "command": "node.exe cli.mjs runBacktestV12_4_3_1.ts",
+      "exitCode": 0,
+      "durationMs": 1458,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "kh02_integration",
+      "command": "node.exe vitest.mjs run kh02",
+      "exitCode": 0,
+      "durationMs": 13700,
+      "reusedPreviousLog": false
+    },
+    {
+      "suiteId": "production_build",
+      "command": "node.exe next build",
+      "exitCode": 0,
+      "durationMs": 8938,
+      "reusedPreviousLog": false
+    }
+  ],
+  "gateCounts": {
+    "total": 23,
+    "PASS": 21,
+    "FAIL": 0,
+    "INSUFFICIENT_EVIDENCE": 2,
+    "BLOCKED": 0,
+    "NOT_RUN": 0
+  },
+  "internalEngineeringReady": true,
+  "realSourceVerifiedEvergreenReady": false,
+  "finalDecision": "ENGINEERING_READY_LIVE_EVIDENCE_INCOMPLETE",
+  "liveSourceAvailability": {
+    "metaLiveAdsReturned": false,
+    "googleLiveProductMatchesReturned": false,
+    "tiktokStatus": "TEMPORARILY_DISABLED"
+  },
+  "resourceAndCleanup": {
+    "freeDiskBeforeGB": 53.19,
+    "freeDiskAfterGB": 53.18,
+    "tempScratchCleaned": true,
+    "orphanedProcessCount": 0,
+    "sqliteIntegrity": "ok"
+  },
+  "artifactChecksums": {
+    "acceptance/kh02-v12.4.3.1/GATE_VERIFICATION_MATRIX.json": "fc4bd657972623d9ab1d5286d3d78fbe9d711e27770c18c1f87a45874b46edf1",
+    "acceptance/kh02-v12.4.3.1/ASYNC_TEST_EXECUTION_SUMMARY.json": "ac6af8d33471eccbf2f31c1e1c89080bdab22f1b96298e29d890bdfc7760e3ab",
+    "acceptance/kh02-v12.4.3.1/TEST_RUNTIME_AND_RESOURCE_METRICS.json": "ffedee8f0b872d9a428f6b1875a972d54ece3e295d9ca6022b297ba11b0d0f7f",
+    "acceptance/kh02-v12.4.3.1/DISK_SAFETY_AUDIT.json": "2c238145c980f58eaf051b1a490bfcc95408030de2601ced8be81127e99b9559",
+    "acceptance/kh02-v12.4.3.1/META_QUERY_PROVENANCE.json": "14ec4321322cda6ec0c756ea61453f743c368c62184638bb2e61c4295cb490d0",
+    "acceptance/kh02-v12.4.3.1/META_CACHE_VS_LIVE_AUDIT.json": "08bcb2bfbd56af26ec0ab7562ae97131a47f5f5bd700762e87ab42aadf135013",
+    "acceptance/kh02-v12.4.3.1/QUERY_TO_AD_DB_RECONCILIATION.json": "591f12b0be30dee25c27d4a96b720636d41a3dc31104913bb701952d4e36f7f9",
+    "acceptance/kh02-v12.4.3.1/DEMAND_HISTORY_AUTHORITY_AUDIT.json": "e92a029dac7e0b5f7342866b273e5f69f8b3948463e718cabfbf0ed3f1072947",
+    "acceptance/kh02-v12.4.3.1/DEMAND_TEMPORAL_COVERAGE.json": "3040e93db553316ba0c4aa15fc4cf5c881ecaa8e27a0f9de485132904db7532d",
+    "acceptance/kh02-v12.4.3.1/VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json": "114fa3a125909ade08c66e8a06dd6e8ed3fa9514959589d549f8796015ef879f",
+    "acceptance/kh02-v12.4.3.1/RESEARCH_SHORTLIST_DISTINCTNESS.json": "d935f9fc301f99716caaf9d1121bacdba439a9f5913d5154433826e4205f1805",
+    "acceptance/kh02-v12.4.3.1/SPECIFIC_QUERY_RELEVANCE.json": "3e6e0f15c581dfb6a77a3fc6e979bbb463817ea26f2adafbee5219630f208ef9",
+    "acceptance/kh02-v12.4.3.1/PSYCHOLOGY_SOURCE_ASSOCIATION.json": "ca6d308fd5a6b0dd5644dc3f650f2649e167920ba216a8eca3da72262c2e4ada",
+    "acceptance/kh02-v12.4.3.1/GOOGLE_SOURCE_TRUTH.json": "5eb8c89a9dd7930fae2ca94c5c146c80528e787541be1c4ff06b51e5548e4ff0",
+    "acceptance/kh02-v12.4.3.1/TIKTOK_SOURCE_ISOLATION.json": "baa5b6eb8473560ac186e4ebc555cd34838922dc6a06ed5cab4a28f779e0268b",
+    "acceptance/kh02-v12.4.3.1/RUNTIME_BUILD_PARITY.json": "c2f7457c7409e6eb34e7b79e485845d978746ef7d74a3dc47ae9c36e0cc8242b",
+    "acceptance/kh02-v12.4.3.1/BACKTEST_DEV_VS_HOLDOUT.json": "b804527cb80be987ac8a7d726377f85032442b0e32b9a82a56ad052e3c23006f",
+    "acceptance/kh02-v12.4.3.1/BACKTEST_REGRESSION_COMPARISON.json": "d34e39793bd1f52b25bfec7b5056a55dc369d09ee5323e213a7b59f28c6d93ab",
+    "acceptance/kh02-v12.4.3.1/ADVERSARIAL_FALSE_PASS_TESTS.json": "1624a9634caf9c5a067e91b62b42ad06b175109c76719b359c1773def844b2d5",
+    "acceptance/kh02-v12.4.3.1/REAL_MULTI_NICHE_RESULTS.json": "b05032ed94f0fb274b11dd1767147a9e99e28b63857db1e5f383bf7e3b43165d",
+    "acceptance/kh02-v12.4.3.1/SQLITE_HTTP_BROWSER_RECONCILIATION.json": "deb3bc732b84d9b9303b1fc6f5989a81eeb690413209607ce539690a7f9a48a0",
+    "acceptance/kh02-v12.4.3.1/SOURCE_CODE_CHANGE_SUMMARY.md": "edd592f205c5a309370620ed003c120b415c63677bd20f7441cf14280ef27648",
+    "acceptance/kh02-v12.4.3.1/FINAL_ACCEPTANCE_REPORT.md": "c66c578a54f9d9370dc16ee494462b2cb66e1b5f6bc51949139bae8e4f409bd8"
+  }
+}

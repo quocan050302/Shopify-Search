@@ -10,7 +10,7 @@ import { execSync } from "child_process";
 import crypto from "crypto";
 import path from "path";
 
-export const SWAI_KH02_RELEASE_VERSION = "12.4.3";
+export const SWAI_KH02_RELEASE_VERSION = "12.4.3.1";
 
 export type KH02RuntimeParityStatus =
   | "MATCHED"
@@ -23,6 +23,11 @@ export interface KH02RuntimeIdentity {
   frontendBuildSha: string | null;
   backendBuildSha: string | null;
   workerBuildSha: string | null;
+  sourceRevisionSha?: string | null;
+  buildRevisionSha?: string | null;
+  backendBootSha?: string | null;
+  workerBootSha?: string | null;
+  databaseFingerprint?: string;
 
   backendStartedAt: string;
   workerStartedAt: string | null;
@@ -231,6 +236,11 @@ export function evaluateKH02RuntimeIdentity(
     frontendBuildSha,
     backendBuildSha,
     workerBuildSha,
+    sourceRevisionSha: currentHeadSha,
+    buildRevisionSha: frontendBuildSha,
+    backendBootSha: backendBuildSha,
+    workerBootSha: workerBuildSha,
+    databaseFingerprint: dbFingerprint,
     backendStartedAt: PROCESS_STARTED_AT,
     workerStartedAt,
     dbFingerprint,

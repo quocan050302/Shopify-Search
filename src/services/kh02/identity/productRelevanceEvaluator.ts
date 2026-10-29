@@ -821,7 +821,7 @@ export function evaluateProductRelevance(
           hasWordMatch(normalizedText, term) || normalizedText.includes(term)
       );
 
-      if (hasGenericDevice && !hasCorePetContext) {
+      if (hasGenericDevice && !hasCorePetContext && !(/\b(feeder|food\s+dispenser)\b/i.test(normalizedTopic) && !/\b(feeder|food\s+dispenser)\b/i.test(normalizedText))) {
         if (hasNonPetContext) {
           reasons.push(
             "Device or hardware product targets vehicle, garden, or non-pet context."
@@ -1029,6 +1029,145 @@ export function evaluateProductRelevance(
         }
       }
     }
+
+
+      // Specific-product query gates (F08): prevent sibling niche products from matching a specific product request
+      const isSpecificPetFeederQuery = /\b(pet\s+feeder|cat\s+feeder|dog\s+feeder|automatic\s+pet\s+feeder|automatic\s+cat\s+feeder|automatic\s+dog\s+feeder|smart\s+pet\s+feeder|pet\s+food\s+dispenser)\b/i.test(normalizedTopic);
+      if (isSpecificPetFeederQuery) {
+        const hasFeederTerm = /\b(feeder|food\s+dispenser|meal\s+dispenser|feeding\s+station|timed\s+meal|wet\s+food.*feeder|auto-cool.*auto-warm)\b/i.test(normalizedText);
+        const hasSiblingNonFeederTerm = /\b(water\s+fountain|cat\s+fountain|pet\s+fountain|hydration\s+fountain|dockstream|hair\s+remover|lint\s+roller|fur\s+remover|chomchom|deshedding\s+brush|grooming\s+brush|dog\s+bed|cat\s+bed|calming\s+bed|orthopedic\s+bed|litter\s+mat|litter\s+box|nail\s+grinder|seat\s+belt|car\s+harness)\b/i.test(normalizedText);
+        if (hasFeederTerm && !hasSiblingNonFeederTerm) {
+          reasons.push(`Matches specific requested product family 'pet_feeder' for query '${topic}'.`);
+          return {
+            relevanceStatus: "RELEVANT",
+            discoveryDecision: "HIGH_RELEVANCE",
+            isAccepted: true,
+            score: 0.95,
+            reasons,
+            topic,
+            matchedArchetypeId: "pet_feeding_hydration",
+          };
+        }
+        reasons.push(`Candidate belongs to a sibling or unrelated product family and does not match specific product query '${topic}'.`);
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+
+      const isSpecificWaterFountainQuery = /\b(cat\s+water\s+fountain|pet\s+water\s+fountain|dog\s+water\s+fountain|wireless\s+cat\s+fountain|stainless\s+steel\s+cat\s+fountain)\b/i.test(normalizedTopic);
+      if (isSpecificWaterFountainQuery) {
+        const hasFountainTerm = /\b(water\s+fountain|cat\s+fountain|pet\s+fountain|dog\s+fountain|hydration\s+fountain|dockstream|water\s+dispenser|drinking\s+fountain)\b/i.test(normalizedText);
+        const hasSiblingNonFountainTerm = /\b(pet\s+feeder|cat\s+feeder|dog\s+feeder|wet\s+food.*feeder|food\s+dispenser|meal\s+dispenser|hair\s+remover|lint\s+roller|fur\s+remover|chomchom|dog\s+bed|cat\s+bed|calming\s+bed|litter\s+mat|litter\s+box)\b/i.test(normalizedText);
+        if (hasFountainTerm && !hasSiblingNonFountainTerm) {
+          reasons.push(`Matches specific requested product family 'water_fountain' for query '${topic}'.`);
+          return {
+            relevanceStatus: "RELEVANT",
+            discoveryDecision: "HIGH_RELEVANCE",
+            isAccepted: true,
+            score: 0.95,
+            reasons,
+            topic,
+            matchedArchetypeId: "pet_feeding_hydration",
+          };
+        }
+        reasons.push(`Candidate belongs to a sibling or unrelated product family and does not match specific product query '${topic}'.`);
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+
+      const isSpecificGlueGunQuery = /\b(glue\s+gun|hot\s+melt\s+glue)\b/i.test(normalizedTopic);
+      if (isSpecificGlueGunQuery) {
+        const hasGlueGunTerm = /\b(glue\s+gun|hot\s+melt|glue\s+stick)\b/i.test(normalizedText);
+        if (hasGlueGunTerm) {
+          reasons.push(`Matches specific requested product family 'glue_gun' for query '${topic}'.`);
+          return {
+            relevanceStatus: "RELEVANT",
+            discoveryDecision: "HIGH_RELEVANCE",
+            isAccepted: true,
+            score: 0.95,
+            reasons,
+            topic,
+            matchedArchetypeId: "diy_fastening_bonding",
+          };
+        }
+        reasons.push(`Candidate does not match specific product query '${topic}'.`);
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+
+      const isSpecificPlantSpikeQuery = /\b(plant\s+spike|watering\s+spike|self-watering\s+plant\s+spike|watering\s+globe)\b/i.test(normalizedTopic);
+      if (isSpecificPlantSpikeQuery) {
+        const hasSpikeTerm = /\b(plant\s+spike|watering\s+spike|self-watering|self\s+watering|watering\s+globe|plant\s+waterer|drip\s+spike|terracotta\s+watering)\b/i.test(normalizedText);
+        if (hasSpikeTerm) {
+          reasons.push(`Matches specific requested product family 'plant_spike' for query '${topic}'.`);
+          return {
+            relevanceStatus: "RELEVANT",
+            discoveryDecision: "HIGH_RELEVANCE",
+            isAccepted: true,
+            score: 0.95,
+            reasons,
+            topic,
+            matchedArchetypeId: "gardening_irrigation",
+          };
+        }
+        reasons.push(`Candidate does not match specific product query '${topic}'.`);
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+
+      const isSpecificSpinScrubberQuery = /\b(spin\s+scrubber|electric\s+scrubber|power\s+scrubber)\b/i.test(normalizedTopic);
+      if (isSpecificSpinScrubberQuery) {
+        const hasScrubberTerm = /\b(spin\s+scrubber|electric\s+scrubber|power\s+scrubber|cleaning\s+brush|rotary\s+scrubber)\b/i.test(normalizedText);
+        if (hasScrubberTerm) {
+          reasons.push(`Matches specific requested product family 'spin_scrubber' for query '${topic}'.`);
+          return {
+            relevanceStatus: "RELEVANT",
+            discoveryDecision: "HIGH_RELEVANCE",
+            isAccepted: true,
+            score: 0.95,
+            reasons,
+            topic,
+            matchedArchetypeId: "cleaning_power_tools",
+          };
+        }
+        reasons.push(`Candidate does not match specific product query '${topic}'.`);
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
 
     // Check for domain core includes
     const matchedSignatureTerms = signature.include.filter((term) =>

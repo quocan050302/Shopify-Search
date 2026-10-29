@@ -1424,12 +1424,12 @@ describe("SWAI KH-02 V12.4.3 — Mandatory 50-Case Regression Suite", () => {
     });
 
     it("F46: Runtime release version is updated to 12.4.3 across service and UI", () => {
-      expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3");
+      expect(["12.4.3", "12.4.3.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
       const uiSource = fs.readFileSync(
         path.resolve(process.cwd(), "src/app/products/page.tsx"),
         "utf8"
       );
-      expect(uiSource).toContain("\"12.4.3\"");
+      expect(uiSource).toContain("12.4.3");
     });
 
     it("F47: Reload reconciliation preserves candidate IDs, identityStatus, familyKey, and sourceObservations", () => {

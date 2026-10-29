@@ -417,23 +417,47 @@ export async function runEvergreenProductResearch(
       addUniqueObservations(metaResult.observations);
       if (metaResult.warnings.length > 0) warnings.push(...metaResult.warnings);
 
+      const metaLiveObservations = adObservations.filter(
+        (o) => o.source === "META_ADS" && o.provenance === "LIVE_PROVIDER"
+      );
+      const freshLiveCount = metaLiveObservations.length;
+      const cachedObservationsCount =
+        adObservations.filter((o) => o.source === "META_ADS").length - freshLiveCount;
+
       const execMeta = metaResult.executionMetadata;
       if (Array.isArray(execMeta?.queryOutcomes)) {
         allMetaQueryOutcomes.push(...execMeta.queryOutcomes);
       }
       if (allMetaQueryOutcomes.length === 0 && round1Queries.length > 0) {
+        const liveWasAttempted = Boolean(execMeta?.attempted);
+        const liveDidSucceed = Boolean(execMeta?.liveSucceeded);
         for (const rq of round1Queries) {
           allMetaQueryOutcomes.push({
             queryId: rq.queryId,
+            researchRunId: runId,
+            source: "META_ADS",
             keyword: rq.phrase,
             searchType: rq.searchType,
-            attempted: true,
-            status: metaResult.observations.length > 0 ? "SUCCEEDED_WITH_RESULTS" : "SUCCEEDED_EMPTY",
-            startedAt: execMeta?.startedAt || generatedAt,
-            completedAt: execMeta?.completedAt || new Date().toISOString(),
-            actualApiCalls: 1,
-            returnedCount: metaResult.observations.length,
-            uniqueReturnedCount: metaResult.observations.length,
+            planned: true,
+            attempted: liveWasAttempted,
+            requestStarted: liveWasAttempted,
+            requestCompleted: liveWasAttempted && liveDidSucceed,
+            status: liveWasAttempted
+              ? liveDidSucceed
+                ? freshLiveCount > 0
+                  ? "SUCCEEDED_WITH_RESULTS"
+                  : "SUCCEEDED_EMPTY"
+                : "FAILED"
+              : "NOT_ATTEMPTED",
+            startedAt: liveWasAttempted ? execMeta?.startedAt || generatedAt : null,
+            completedAt: liveWasAttempted ? execMeta?.completedAt || new Date().toISOString() : null,
+            actualApiCalls: liveWasAttempted ? 1 : 0,
+            returnedCount: liveWasAttempted ? freshLiveCount : 0,
+            upstreamReturnedCount: liveWasAttempted ? (execMeta?.upstreamReturnedCount ?? freshLiveCount) : null,
+            uniqueUpstreamIdsCount: liveWasAttempted ? freshLiveCount : null,
+            cachedRecordsUsed: cachedObservationsCount,
+            provenance: freshLiveCount > 0 ? "LIVE_PROVIDER" : cachedObservationsCount > 0 ? "CACHED_SOURCE" : "NONE",
+            uniqueReturnedCount: liveWasAttempted ? freshLiveCount : 0,
             duplicateCount: 0,
             roundNumber: rq.roundNumber ?? 1,
             origin: rq.origin,
@@ -444,13 +468,6 @@ export async function runEvergreenProductResearch(
           });
         }
       }
-
-      const metaLiveObservations = adObservations.filter(
-        (o) => o.source === "META_ADS" && o.provenance === "LIVE_PROVIDER"
-      );
-      const freshLiveCount = metaLiveObservations.length;
-      const cachedObservationsCount =
-        adObservations.filter((o) => o.source === "META_ADS").length - freshLiveCount;
 
       const liveAttempted = Boolean(execMeta?.attempted);
       const liveSucceeded = Boolean(execMeta?.liveSucceeded);
@@ -1306,7 +1323,7 @@ export async function runEvergreenProductResearch(
 
     const score = calculateKH02EvergreenScore({
       candidate,
-      demandSeries: demandRes.dataPoints,
+      demandSeries: ((candidate as any).demandResolution = demandRes, demandRes.dataPoints),
       hasVerifiedSupplierQuote: false,
     });
 
@@ -1494,12 +1511,13 @@ export async function runEvergreenProductResearch(
   const queryYields: QueryYield[] = [];
   if (allMetaQueryOutcomes.length > 0) {
     for (const qo of allMetaQueryOutcomes) {
-      const kwLower = (qo.keyword || "").toLowerCase();
-      const matchingRawCands = rawCandidates.filter((c) => {
-        if (c.matchedQueryIds && c.matchedQueryIds.includes(qo.queryId)) return true;
-        const text = `${c.title} ${c.originalAdHeadline || ""} ${c.canonicalProductName || ""}`.toLowerCase();
-        return kwLower.length > 2 && text.includes(kwLower);
-      });
+      const wasLiveExecuted = Boolean(
+        qo.attempted &&
+        (qo.status === "SUCCEEDED_WITH_RESULTS" || qo.status === "SUCCEEDED_EMPTY")
+      );
+      const matchingRawCands = wasLiveExecuted
+        ? rawCandidates.filter((c) => Boolean(c.matchedQueryIds && c.matchedQueryIds.includes(qo.queryId)))
+        : [];
       const relCands = matchingRawCands.filter((c) => c.relevanceStatus !== "IRRELEVANT");
       const merchantCands = relCands.filter((c) => Boolean(c.storeDomain || c.canonicalProductUrl));
       const identCands = relCands.filter(
@@ -1520,32 +1538,19 @@ export async function runEvergreenProductResearch(
         roundNumber: qo.roundNumber ?? 1,
         origin: (qo.origin as any) || "GEMINI_PLANNER",
         archetypeId: qo.archetypeId ?? null,
-        actualAdsReturned: qo.returnedCount,
-        uniqueAdsReturned: qo.uniqueReturnedCount ?? qo.returnedCount,
+        actualAdsReturned: wasLiveExecuted ? qo.returnedCount : 0,
+        uniqueAdsReturned: wasLiveExecuted ? (qo.uniqueReturnedCount ?? qo.returnedCount) : 0,
         relevantCandidates: relCands.length,
         merchantLinkedCandidates: merchantCands.length,
         identifiableProducts: identCands.length,
         qualifiedShortlistContributions: shortlistContribs.length,
         rejectedCandidates: rejCands.length,
-        duplicateAds: qo.duplicateCount ?? 0,
+        duplicateAds: wasLiveExecuted ? (qo.duplicateCount ?? 0) : 0,
         sourceStatus: qo.status,
       });
     }
   } else {
     for (const rq of round1Queries) {
-      const kwLower = rq.normalizedPhrase;
-      const matchingRawCands = rawCandidates.filter((c) => {
-        const text = `${c.title} ${c.originalAdHeadline || ""} ${c.canonicalProductName || ""}`.toLowerCase();
-        return kwLower.length > 2 && text.includes(kwLower);
-      });
-      const relCands = matchingRawCands.filter((c) => c.relevanceStatus !== "IRRELEVANT");
-      const merchantCands = relCands.filter((c) => Boolean(c.storeDomain || c.canonicalProductUrl));
-      const identCands = relCands.filter(
-        (c) => c.identityStatus === "VERIFIED" || c.identityStatus === "PROBABLE"
-      );
-      const shortlistContribs = relCands.filter((c) => shortlistedIdSet.has(c.candidateId));
-      const rejCands = matchingRawCands.filter((c) => c.relevanceStatus === "IRRELEVANT");
-
       queryYields.push({
         queryId: rq.queryId,
         phrase: rq.phrase,
@@ -1553,15 +1558,15 @@ export async function runEvergreenProductResearch(
         roundNumber: rq.roundNumber,
         origin: rq.origin,
         archetypeId: rq.archetypeId,
-        actualAdsReturned: matchingRawCands.reduce((s, c) => s + c.totalObservationCount, 0),
-        uniqueAdsReturned: matchingRawCands.reduce((s, c) => s + c.supportingAdIds.length, 0),
-        relevantCandidates: relCands.length,
-        merchantLinkedCandidates: merchantCands.length,
-        identifiableProducts: identCands.length,
-        qualifiedShortlistContributions: shortlistContribs.length,
-        rejectedCandidates: rejCands.length,
+        actualAdsReturned: 0,
+        uniqueAdsReturned: 0,
+        relevantCandidates: 0,
+        merchantLinkedCandidates: 0,
+        identifiableProducts: 0,
+        qualifiedShortlistContributions: 0,
+        rejectedCandidates: 0,
         duplicateAds: 0,
-        sourceStatus: sourceStatuses.META_ADS,
+        sourceStatus: "NOT_ATTEMPTED",
       });
     }
   }

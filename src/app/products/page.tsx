@@ -194,7 +194,7 @@ export default function ProductsPage() {
   const [runtimeVersion, setRuntimeVersion] = useState<any | null>(null);
 
   const compileTimeFrontendSha = process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA || "";
-  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.3";
+  const compileTimeReleaseVersion = process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION || "12.4.3.1";
   const [showQueryCoverage, setShowQueryCoverage] = useState<boolean>(false);
 
   useEffect(() => {
@@ -845,7 +845,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold">
                 <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>SWAI KH-02 V12.4.3 — AI-Powered Product Intelligence</span>
+                <span>SWAI KH-02 V12.4.3.1 — AI-Powered Product Intelligence</span>
               </div>
               {(runtimeVersion?.frontendBuildSha || runtimeVersion?.backendBuildSha || runtimeVersion?.buildSha || compileTimeFrontendSha) && (
                 <span
@@ -1784,16 +1784,23 @@ export default function ProductsPage() {
                               </span>
                             )}
                             <span
+                              data-testid="kh02-badge-demand-status"
+                              className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-cyan-950/60 text-cyan-300 border border-cyan-800/40"
+                            >
+                              Demand: {(item.score as any)?.verificationDimensions?.demandVerifiedByHistoricalSource ? "HISTORICAL_VERIFIED" : ((item.score as any)?.demandSourceAuthority || "VERIFIED")}
+                            </span>
+                            <span
+                              data-testid="kh02-badge-ai-review-status"
+                              className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40"
+                            >
+                              AI Review: {(item.score as any)?.verificationDimensions?.aiReviewed ? "AI_REVIEWED" : "DETERMINISTIC_ONLY"}
+                            </span>
+                            <span
                               data-testid="kh02-badge-evergreen-status"
                               className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
                             >
                               Evergreen: {item.score.tier || item.score.scoreStatus}
                             </span>
-                            {item.candidate.aiIntelligence && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40">
-                                AI: {item.candidate.aiIntelligence.commercialEntityType}
-                              </span>
-                            )}
                           </div>
                           <h3 className={`text-base md:text-lg font-bold leading-tight ${
                             item.candidate.identityStatus === "UNRESOLVED" || item.candidate.title.startsWith("Unidentified Product")

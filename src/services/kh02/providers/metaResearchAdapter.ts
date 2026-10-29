@@ -233,23 +233,96 @@ export async function diagnoseMetaLiveCollector(
   };
 }
 
+export type MetaExecutionPolicy =
+  | "LIVE_FIRST"
+  | "CACHE_SUPPLEMENTED"
+  | "CACHE_ONLY"
+  | "OFFLINE_FIXTURE";
+
+export function resolveMetaExecutionPolicy(
+  query?: IntelligenceQuery
+): MetaExecutionPolicy {
+  const explicit =
+    (query as any)?.metaExecutionPolicy || process.env.SWAI_META_EXECUTION_POLICY;
+  if (
+    explicit === "LIVE_FIRST" ||
+    explicit === "CACHE_SUPPLEMENTED" ||
+    explicit === "CACHE_ONLY" ||
+    explicit === "OFFLINE_FIXTURE"
+  ) {
+    return explicit;
+  }
+  if (process.env.ENABLE_LIVE_META === "true") {
+    return "LIVE_FIRST";
+  }
+  if (process.env.NODE_ENV === "test" || process.env.VITEST === "true") {
+    return "OFFLINE_FIXTURE";
+  }
+  if (
+    process.env.META_COLLECTOR_ENABLED === "false" ||
+    process.env.DISABLE_LIVE_MCP === "true"
+  ) {
+    return "CACHE_ONLY";
+  }
+  return "CACHE_SUPPLEMENTED";
+}
+
 export type MetaQueryOutcomeStatus =
+  | "NOT_ATTEMPTED"
   | "SUCCEEDED_WITH_RESULTS"
   | "SUCCEEDED_EMPTY"
   | "FAILED"
   | "CANCELLED"
   | "SKIPPED_BUDGET";
 
-export interface MetaSubqueryExecution {
+export interface EvidenceTrueQueryExecution {
   queryId: string;
+  researchRunId: string;
+  source: "META_ADS";
   keyword: string;
   searchType: string;
+  planned: boolean;
   attempted: boolean;
+  requestStarted: boolean;
+  requestCompleted: boolean;
+  actualApiCalls: number;
+  status: MetaQueryOutcomeStatus;
+  upstreamReturnedCount: number | null;
+  uniqueUpstreamIdsCount: number | null;
+  cachedRecordsUsed: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  provenance: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE";
+  returnedCount: number;
+  uniqueReturnedCount?: number;
+  duplicateCount?: number;
+  roundNumber?: number;
+  origin?: string;
+  archetypeId?: string | null;
+  expectedProductCategory?: string | null;
+}
+
+export interface MetaSubqueryExecution {
+  queryId: string;
+  researchRunId?: string;
+  source?: "META_ADS";
+  keyword: string;
+  searchType: string;
+  planned?: boolean;
+  attempted: boolean;
+  requestStarted?: boolean;
+  requestCompleted?: boolean;
   status: MetaQueryOutcomeStatus;
   startedAt: string | null;
   completedAt: string | null;
   actualApiCalls: number;
   returnedCount: number;
+  upstreamReturnedCount?: number | null;
+  uniqueUpstreamIdsCount?: number | null;
+  cachedRecordsUsed?: number;
+  provenance?: "LIVE_PROVIDER" | "CACHED_SOURCE" | "NONE";
   uniqueReturnedCount?: number;
   duplicateCount?: number;
   roundNumber?: number;
@@ -258,6 +331,21 @@ export interface MetaSubqueryExecution {
   expectedProductCategory?: string | null;
   errorCode: string | null;
   errorMessage: string | null;
+}
+
+function normalizeMetaQueryOutcomeFields(outcome: MetaSubqueryExecution, runId?: string): MetaSubqueryExecution {
+  return {
+    researchRunId: outcome.researchRunId || runId || "unknown_run",
+    source: "META_ADS",
+    planned: outcome.planned ?? true,
+    requestStarted: outcome.requestStarted ?? outcome.attempted,
+    requestCompleted: outcome.requestCompleted ?? (outcome.attempted && (outcome.status === "SUCCEEDED_WITH_RESULTS" || outcome.status === "SUCCEEDED_EMPTY")),
+    upstreamReturnedCount: outcome.upstreamReturnedCount !== undefined ? outcome.upstreamReturnedCount : (outcome.attempted ? outcome.returnedCount : null),
+    uniqueUpstreamIdsCount: outcome.uniqueUpstreamIdsCount !== undefined ? outcome.uniqueUpstreamIdsCount : (outcome.attempted ? (outcome.uniqueReturnedCount ?? outcome.returnedCount) : null),
+    cachedRecordsUsed: outcome.cachedRecordsUsed ?? 0,
+    provenance: outcome.provenance || (outcome.attempted && (outcome.status === "SUCCEEDED_WITH_RESULTS" || outcome.status === "SUCCEEDED_EMPTY") ? "LIVE_PROVIDER" : "NONE"),
+    ...outcome,
+  };
 }
 
 export interface MetaAggregatedOutcomes {
@@ -382,6 +470,7 @@ export interface MetaLiveCollectionBreakdown {
   failedQueries?: number;
   cancelledQueries?: number;
   queryOutcomes?: MetaSubqueryExecution[];
+  subqueryBindings?: Record<string, any>;
   currentQueryExternalAdIds?: string[];
   currentQueryPersistedAdIds?: string[];
   existingUpdatedAdIds?: string[];
@@ -690,6 +779,15 @@ export async function collectLiveMetaAds(
 
         budgetTracker.finalizeUsage(reservedReqs, reservedReqs, uniqueCountForQuery);
         outcome.completedAt = new Date().toISOString();
+        outcome.requestStarted = true;
+        outcome.requestCompleted = true;
+        outcome.actualApiCalls = reservedReqs;
+        outcome.returnedCount = returnedAds.length;
+        outcome.upstreamReturnedCount = returnedAds.length;
+        outcome.uniqueUpstreamIdsCount = uniqueCountForQuery;
+        outcome.cachedRecordsUsed = 0;
+        outcome.provenance = "LIVE_PROVIDER";
+        outcome.uniqueReturnedCount = uniqueCountForQuery;
         outcome.actualApiCalls = reservedReqs;
         outcome.returnedCount = returnedAds.length;
         outcome.uniqueReturnedCount = uniqueCountForQuery;
@@ -699,17 +797,20 @@ export async function collectLiveMetaAds(
       } catch (qErr: any) {
         budgetTracker.recordFailure(reservedReqs);
         outcome.completedAt = new Date().toISOString();
+        outcome.requestStarted = true;
+        outcome.requestCompleted = false;
         outcome.actualApiCalls = reservedReqs;
+        outcome.returnedCount = 0;
+        outcome.upstreamReturnedCount = 0;
+        outcome.uniqueUpstreamIdsCount = 0;
+        outcome.cachedRecordsUsed = 0;
+        outcome.provenance = "NONE";
         outcome.status = "FAILED";
         outcome.errorCode = qErr.code || "META_QUERY_ERROR";
         outcome.errorMessage = qErr.message || String(qErr);
-        console.warn(
-          `[META_COLLECTOR] Query error for '${qSpec.keyword}':`,
-          qErr.message
-        );
       }
 
-      queryOutcomes.push(outcome);
+      queryOutcomes.push(normalizeMetaQueryOutcomeFields(outcome, query.researchRunId));
     }
 
     const aggregated = aggregateMetaQueryOutcomes(queryOutcomes);
@@ -902,6 +1003,7 @@ export async function collectLiveMetaAds(
       cancelledQueries: aggregated.cancelledQueries,
       queryOutcomes,
       currentQueryExternalAdIds: Array.from(seenRawIds),
+      subqueryBindings: Object.fromEntries(subqueryBindingMap),
       currentQueryPersistedAdIds,
       newlyInsertedAdIds,
       existingUpdatedAdIds,
@@ -954,16 +1056,18 @@ export async function collectMetaProductSignals(
   let liveSucceeded = false;
   let liveCollectorResult: any = null;
 
-  // 1. Attempt live collection if enabled and not in unit test execution boundary
+  // 1. Attempt live collection according to explicit MetaExecutionPolicy
+  const executionPolicy = resolveMetaExecutionPolicy(query);
   const allowLive =
-    process.env.ENABLE_LIVE_META === "true" ||
-    (process.env.META_COLLECTOR_ENABLED !== "false" &&
+    executionPolicy === "LIVE_FIRST" ||
+    (executionPolicy === "CACHE_SUPPLEMENTED" &&
+     process.env.META_COLLECTOR_ENABLED !== "false" &&
      process.env.DISABLE_LIVE_MCP !== "true" &&
      process.env.NODE_ENV !== "test" &&
      process.env.VITEST !== "true");
 
   let shouldRunLiveMeta = allowLive;
-  if (shouldRunLiveMeta && process.env.ENABLE_LIVE_META !== "true") {
+  if (shouldRunLiveMeta && executionPolicy !== "LIVE_FIRST" && process.env.ENABLE_LIVE_META !== "true") {
     try {
       const existingPoolCount = await prisma.competitorAd.count({
         where: {
@@ -1169,6 +1273,7 @@ export async function collectMetaProductSignals(
     const matchingAds = [...liveMatchingAds, ...cachedMatchingAds];
 
     if (matchingAds.length === 0) {
+      const cachedCount = 0;
       warnings.push(`No active Meta ads found for topic '${query.topic}' within ${lookbackDays} days.`);
       const emptyStatus: SourceRunStatus = liveSucceeded
         ? "QUERY_SUCCEEDED_EMPTY"
@@ -1206,7 +1311,40 @@ export async function collectMetaProductSignals(
           cachedRecordsUsedCount: 0,
           fallbackToCache: false,
           auditTraces: liveCollectorResult?.auditTraces || [],
-          queryOutcomes: liveCollectorResult?.queryOutcomes || [],
+      queryOutcomes:
+        liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
+          ? liveCollectorResult.queryOutcomes
+          : !liveAttempted && Array.isArray(query.plannedQueries) && query.plannedQueries.length > 0
+          ? query.plannedQueries.map((pq: any, idx: number) => ({
+              queryId: pq.queryId || `q_r1_${idx + 1}`,
+              researchRunId: query.researchRunId || "unknown_run",
+              source: "META_ADS" as const,
+              keyword: pq.phrase || pq.subquery || query.topic,
+              searchType: pq.searchType === "KEYWORD_UNORDERED" ? "KEYWORD_UNORDERED" : "KEYWORD_EXACT_PHRASE",
+              planned: true,
+              attempted: false,
+              requestStarted: false,
+              requestCompleted: false,
+              actualApiCalls: 0,
+              status: "NOT_ATTEMPTED" as const,
+              upstreamReturnedCount: null,
+              uniqueUpstreamIdsCount: null,
+              cachedRecordsUsed: cachedCount,
+              startedAt: null,
+              completedAt: null,
+              returnedCount: 0,
+              uniqueReturnedCount: 0,
+              duplicateCount: 0,
+              roundNumber: pq.roundNumber ?? 1,
+              origin: pq.origin || "DETERMINISTIC_FALLBACK",
+              archetypeId: pq.archetypeId ?? null,
+              expectedProductCategory: pq.expectedProductCategory ?? null,
+              errorCode: null,
+              errorMessage: null,
+              provenance: cachedCount > 0 ? ("CACHED_SOURCE" as const) : ("NONE" as const),
+            }))
+          : [],
+
         },
       };
     }
@@ -1249,7 +1387,16 @@ export async function collectMetaProductSignals(
           dataConfidence: ad.dataConfidence,
           marketVerification: marketProv.marketVerification,
           isFreshLive,
-        },
+          ...(isFreshLive && ad.externalAdId && liveCollectorResult?.subqueryBindings?.[ad.externalAdId]
+            ? {
+                queryId: liveCollectorResult.subqueryBindings[ad.externalAdId].queryId,
+                queryKeyword: liveCollectorResult.subqueryBindings[ad.externalAdId].queryKeyword,
+                roundNumber: liveCollectorResult.subqueryBindings[ad.externalAdId].roundNumber,
+                origin: liveCollectorResult.subqueryBindings[ad.externalAdId].origin,
+                archetypeId: liveCollectorResult.subqueryBindings[ad.externalAdId].archetypeId,
+              }
+            : {}),
+                  },
         media: {
           thumbnailUrl: media?.thumbnailUrl || null,
           videoUrl: media?.videoUrl || null,
@@ -1284,7 +1431,40 @@ export async function collectMetaProductSignals(
       cachedRecordsUsedCount: cachedCount,
       fallbackToCache: !liveSucceeded && cachedCount > 0,
       auditTraces: liveCollectorResult?.auditTraces || [],
-      queryOutcomes: liveCollectorResult?.queryOutcomes || [],
+      queryOutcomes:
+        liveCollectorResult?.queryOutcomes && liveCollectorResult.queryOutcomes.length > 0
+          ? liveCollectorResult.queryOutcomes
+          : !liveAttempted && Array.isArray(query.plannedQueries) && query.plannedQueries.length > 0
+          ? query.plannedQueries.map((pq: any, idx: number) => ({
+              queryId: pq.queryId || `q_r1_${idx + 1}`,
+              researchRunId: query.researchRunId || "unknown_run",
+              source: "META_ADS" as const,
+              keyword: pq.phrase || pq.subquery || query.topic,
+              searchType: pq.searchType === "KEYWORD_UNORDERED" ? "KEYWORD_UNORDERED" : "KEYWORD_EXACT_PHRASE",
+              planned: true,
+              attempted: false,
+              requestStarted: false,
+              requestCompleted: false,
+              actualApiCalls: 0,
+              status: "NOT_ATTEMPTED" as const,
+              upstreamReturnedCount: null,
+              uniqueUpstreamIdsCount: null,
+              cachedRecordsUsed: cachedCount,
+              startedAt: null,
+              completedAt: null,
+              returnedCount: 0,
+              uniqueReturnedCount: 0,
+              duplicateCount: 0,
+              roundNumber: pq.roundNumber ?? 1,
+              origin: pq.origin || "DETERMINISTIC_FALLBACK",
+              archetypeId: pq.archetypeId ?? null,
+              expectedProductCategory: pq.expectedProductCategory ?? null,
+              errorCode: null,
+              errorMessage: null,
+              provenance: cachedCount > 0 ? ("CACHED_SOURCE" as const) : ("NONE" as const),
+            }))
+          : [],
+
     };
 
     return {

@@ -1,0 +1,23 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "freeDiskBeforeBytes": 57109757952,
+  "freeDiskAfterBytes": 57103704064,
+  "freeDiskBeforeGB": 53.19,
+  "freeDiskAfterGB": 53.18,
+  "nextDirSizeBeforeMB": 468.57,
+  "nextDirSizeAfterMB": 471.21,
+  "acceptanceDirSizeBeforeMB": 5.51,
+  "acceptanceDirSizeAfterMB": 5.51,
+  "tempScratchDirectory": "acceptance/kh02-v12.4.3.1/runs/v12_4_3_1_1793254003307",
+  "tempScratchCleaned": true,
+  "sqlitePreCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "sqlitePostCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "orphanedProcessCount": 0,
+  "verdict": "PASS"
+}

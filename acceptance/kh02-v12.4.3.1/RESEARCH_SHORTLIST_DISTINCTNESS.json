@@ -1,0 +1,1648 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "duplicateConsolidationCheck": {
+    "consolidatedCount": 1,
+    "manualThreeTitlesSameUrl": {
+      "isDistinct": false,
+      "isFamilyDiverse": false,
+      "totalCandidatesEvaluated": 3,
+      "distinctCount": 1,
+      "distinctProductCount": 1,
+      "distinctFamilyCount": 1,
+      "distinctListingCount": 1,
+      "independentOpportunityCount": 1,
+      "homogeneousFamilyDetected": true,
+      "dominantFamilyKey": "item_title",
+      "dominantFamilyLabel": "Item Title",
+      "duplicateGroupsCount": 2,
+      "uncertainties": [],
+      "pairwiseDecisions": [
+        {
+          "candidateIds": [
+            "c1",
+            "c2"
+          ],
+          "listingKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "productKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "familyKeys": [
+            "item_title",
+            "item_title"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "conflictingEvidence": [
+            "Different ad/display titles ('Title 1' vs 'Title 2') overridden by identical canonical product URL."
+          ],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        },
+        {
+          "candidateIds": [
+            "c1",
+            "c3"
+          ],
+          "listingKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "productKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "familyKeys": [
+            "item_title",
+            "item_title"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "conflictingEvidence": [
+            "Different ad/display titles ('Title 1' vs 'Title 3') overridden by identical canonical product URL."
+          ],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        },
+        {
+          "candidateIds": [
+            "c2",
+            "c3"
+          ],
+          "listingKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "productKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "familyKeys": [
+            "item_title",
+            "item_title"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "conflictingEvidence": [
+            "Different ad/display titles ('Title 2' vs 'Title 3') overridden by identical canonical product URL."
+          ],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        }
+      ],
+      "details": [
+        {
+          "candidateId": "c1",
+          "title": "Title 1",
+          "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "variantKey": null,
+          "familyKey": "item_title",
+          "familyLabel": "Item Title",
+          "storeDomain": "uprootclean.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "c2",
+          "title": "Title 2",
+          "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "variantKey": null,
+          "familyKey": "item_title",
+          "familyLabel": "Item Title",
+          "storeDomain": "uprootclean.com",
+          "isDuplicate": true,
+          "duplicateOf": "c1",
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        },
+        {
+          "candidateId": "c3",
+          "title": "Title 3",
+          "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "variantKey": null,
+          "familyKey": "item_title",
+          "familyLabel": "Item Title",
+          "storeDomain": "uprootclean.com",
+          "isDuplicate": true,
+          "duplicateOf": "c1",
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        }
+      ]
+    }
+  },
+  "nicheShortlists": {
+    "petGadgets90D": {
+      "shortlistCount": 3,
+      "distinctProducts": 3,
+      "distinctFamilies": 3,
+      "products": [
+        {
+          "candidateId": "cand_1212440541",
+          "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "storeDomain": "uahpet.com",
+          "brand": "UahPet",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "cooling_warming",
+          "familyLabel": "Cooling Warming",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (10532085367078), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn3h00546corujh7567u",
+            "cmvrzyn2j004s6corb96ke61v"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "canonicalName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "rawTerm": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "normalizedTerm": "Automatic Wet Food Cat Feeder with",
+            "searchTermUsed": "Automatic Wet Food Cat Feeder with",
+            "mappingReason": "Normalized 'Automatic Wet Food Cat Feeder with Cooling & Warming' -> 'Automatic Wet Food Cat Feeder with' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy7zsf000rp0orbgbi6tiu",
+                "cmvsy7zsl000sp0orl8wkum7g",
+                "cmvsy7zsr000tp0or4w85v2ug",
+                "cmvsy7zsy000up0oriz6hihpd",
+                "cmvsy7zt3000vp0orzpca0gas",
+                "cmvsy7ztc000wp0orr1ypsqg4"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:29.598Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy7zsf000rp0orbgbi6tiu",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:15.373Z",
+                "periodEnd": "2026-06-08T02:53:15.373Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:15.373Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy7zsl000sp0orl8wkum7g",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:15.373Z",
+                "periodEnd": "2026-07-08T02:53:15.373Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:15.373Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy7zsr000tp0or4w85v2ug",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:15.373Z",
+                "periodEnd": "2026-08-07T02:53:15.373Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:15.373Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy7zsy000up0oriz6hihpd",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:15.373Z",
+                "periodEnd": "2026-09-06T02:53:15.373Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:15.373Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy7zt3000vp0orzpca0gas",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:15.373Z",
+                "periodEnd": "2026-10-06T02:53:15.373Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:15.373Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy7ztc000wp0orr1ypsqg4",
+                "productId": "cmvsy7zqh000jp0orhypwohho",
+                "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+                "evidenceReference": "verified-merchant-demand:uahpet.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:15.373Z",
+                "periodEnd": "2026-10-31T02:53:15.373Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:15.373Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "PET",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_1838011041",
+          "title": "Reusable Pet Hair Remover Roller",
+          "canonicalProductName": "Reusable Pet Hair Remover Roller",
+          "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+          "storeDomain": "livlandco.com",
+          "brand": "Livland Co.",
+          "model": null,
+          "sku": "FVEYXE0",
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "pet_hair_remover_roller",
+          "familyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (15402497704125), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzyiu0001d6coruwq7iaw0"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "canonicalName": "Reusable Pet Hair Remover Roller",
+            "rawTerm": "Reusable Pet Hair Remover Roller",
+            "normalizedTerm": "Reusable Pet Hair Remover Roller",
+            "searchTermUsed": "Reusable Pet Hair Remover Roller",
+            "mappingReason": "Used clean product name 'Reusable Pet Hair Remover Roller' directly",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy7znm0003p0or42qkebmn",
+                "cmvsy7znu0004p0oraa6lift3",
+                "cmvsy7zo10005p0or3kn60dae",
+                "cmvsy7zo60006p0ordbxjay4n",
+                "cmvsy7zoa0007p0or46h397m6",
+                "cmvsy7zof0008p0orleiz2r5t"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:29.589Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy7znm0003p0or42qkebmn",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:15.196Z",
+                "periodEnd": "2026-06-08T02:53:15.196Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:15.196Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy7znu0004p0oraa6lift3",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:15.196Z",
+                "periodEnd": "2026-07-08T02:53:15.196Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:15.196Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy7zo10005p0or3kn60dae",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:15.196Z",
+                "periodEnd": "2026-08-07T02:53:15.196Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:15.196Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy7zo60006p0ordbxjay4n",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:15.196Z",
+                "periodEnd": "2026-09-06T02:53:15.196Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:15.196Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy7zoa0007p0or46h397m6",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:15.196Z",
+                "periodEnd": "2026-10-06T02:53:15.196Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:15.196Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy7zof0008p0orleiz2r5t",
+                "productId": "cmvsy7zeg0001p0orsexc5psw",
+                "keyword": "Reusable Pet Hair Remover Roller",
+                "evidenceReference": "verified-merchant-demand:livlandco.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:15.196Z",
+                "periodEnd": "2026-10-31T02:53:15.196Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:15.196Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "PET",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "title": "Pawira Stainless Steel Water Fountain",
+          "canonicalProductName": "Pawira Stainless Steel Water Fountain",
+          "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+          "storeDomain": "pawira.com",
+          "brand": "Linda Parker",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "water_fountain",
+          "familyLabel": "Water Fountain",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (8154762150074), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzyj04003q6cort0wlap3m"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "canonicalName": "Pawira Stainless Steel Water Fountain",
+            "rawTerm": "Pawira Stainless Steel Water Fountain",
+            "normalizedTerm": "Pawira Stainless Steel Water Fountain",
+            "searchTermUsed": "Pawira Stainless Steel Water Fountain",
+            "mappingReason": "Used clean product name 'Pawira Stainless Steel Water Fountain' directly",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy7zp6000cp0or152bdoqj",
+                "cmvsy7zpc000dp0orbx694akm",
+                "cmvsy7zph000ep0orzu1au04r",
+                "cmvsy7zpp000fp0orb7jmcogp",
+                "cmvsy7zpu000gp0oryg05yxy6",
+                "cmvsy7zq3000hp0ory58q7t5b"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:29.595Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy7zp6000cp0or152bdoqj",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:15.258Z",
+                "periodEnd": "2026-06-08T02:53:15.258Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:15.258Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy7zpc000dp0orbx694akm",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:15.258Z",
+                "periodEnd": "2026-07-08T02:53:15.258Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:15.258Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy7zph000ep0orzu1au04r",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:15.258Z",
+                "periodEnd": "2026-08-07T02:53:15.258Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:15.258Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy7zpp000fp0orb7jmcogp",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:15.258Z",
+                "periodEnd": "2026-09-06T02:53:15.258Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:15.258Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy7zpu000gp0oryg05yxy6",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:15.258Z",
+                "periodEnd": "2026-10-06T02:53:15.258Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:15.258Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy7zq3000hp0ory58q7t5b",
+                "productId": "cmvsy7zoq000ap0or4ly9ciih",
+                "keyword": "Pawira Stainless Steel Water Fountain",
+                "evidenceReference": "verified-merchant-demand:pawira.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:15.258Z",
+                "periodEnd": "2026-10-31T02:53:15.258Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:15.258Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "PET",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        }
+      ]
+    },
+    "diy180D": {
+      "shortlistCount": 3,
+      "distinctProducts": 3,
+      "distinctFamilies": 3,
+      "products": [
+        {
+          "candidateId": "cand_1316890495",
+          "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "canonicalProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+          "storeDomain": "vipbugo.com",
+          "brand": "Vipbu home",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "hot_glue_gun",
+          "familyLabel": "Cordless & Hot Melt Glue Gun",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (15390241063225), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzxmcv000m6cor8w1qwnhy"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy85zn000yp0ore89xpw92",
+            "canonicalName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+            "rawTerm": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+            "normalizedTerm": "Rechargeable Hot Melt Glue Gun with",
+            "searchTermUsed": "Rechargeable Hot Melt Glue Gun with",
+            "mappingReason": "Normalized 'Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks' -> 'Rechargeable Hot Melt Glue Gun with' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 180,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [
+              "Observed series covers 152D out of requested 180D window."
+            ],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy86010010p0or2bz21l17",
+                "cmvsy86050011p0orsjdtoig7",
+                "cmvsy86090012p0orkrkrcm9o",
+                "cmvsy860d0013p0or5gyesvqo",
+                "cmvsy860m0014p0ordbo8fmu6",
+                "cmvsy860u0015p0oreqn8xdwr"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:46.438Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy86010010p0or2bz21l17",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:23.424Z",
+                "periodEnd": "2026-06-08T02:53:23.424Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:23.424Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy86050011p0orsjdtoig7",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:23.424Z",
+                "periodEnd": "2026-07-08T02:53:23.424Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:23.424Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy86090012p0orkrkrcm9o",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:23.424Z",
+                "periodEnd": "2026-08-07T02:53:23.424Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:23.424Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy860d0013p0or5gyesvqo",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:23.424Z",
+                "periodEnd": "2026-09-06T02:53:23.424Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:23.424Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy860m0014p0ordbo8fmu6",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:23.424Z",
+                "periodEnd": "2026-10-06T02:53:23.424Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:23.424Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy860u0015p0oreqn8xdwr",
+                "productId": "cmvsy85zn000yp0ore89xpw92",
+                "keyword": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+                "evidenceReference": "verified-merchant-demand:vipbugo.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:23.424Z",
+                "periodEnd": "2026-10-31T02:53:23.424Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:23.424Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "DIY",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_2112012920",
+          "title": "Burnett Wallpaper",
+          "canonicalProductName": "Burnett Wallpaper",
+          "canonicalProductUrl": "https://wallblush.com/products/burnett-wallpaper",
+          "storeDomain": "wallblush.com",
+          "brand": "WALL BLUSH",
+          "model": "LU|2|32696|2-R",
+          "sku": "LU|2|32696|2-R",
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "peel_and_stick_wall_tile",
+          "familyLabel": "Peel-and-Stick Wall Tile & Panel",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (7289286393919), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzzjre000et4or9s03n1n8"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy867l0027p0ort3vvnxxg",
+            "canonicalName": "Burnett Wallpaper",
+            "rawTerm": "Burnett Wallpaper",
+            "normalizedTerm": "Burnett Wallpaper",
+            "searchTermUsed": "Burnett Wallpaper",
+            "mappingReason": "Used clean product name 'Burnett Wallpaper' directly",
+            "requestedLookbackDays": 180,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [
+              "Observed series covers 152D out of requested 180D window."
+            ],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy867z0029p0orauyn512q",
+                "cmvsy8687002ap0orsxa9s4ys",
+                "cmvsy868f002bp0orom5jqm0i",
+                "cmvsy868k002cp0ory0qym961",
+                "cmvsy868o002dp0orofit3u9l",
+                "cmvsy868v002ep0oroaflgbj4"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:46.445Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy867z0029p0orauyn512q",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:23.710Z",
+                "periodEnd": "2026-06-08T02:53:23.710Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:23.710Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy8687002ap0orsxa9s4ys",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:23.710Z",
+                "periodEnd": "2026-07-08T02:53:23.710Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:23.710Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy868f002bp0orom5jqm0i",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:23.710Z",
+                "periodEnd": "2026-08-07T02:53:23.710Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:23.710Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy868k002cp0ory0qym961",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:23.710Z",
+                "periodEnd": "2026-09-06T02:53:23.710Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:23.710Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy868o002dp0orofit3u9l",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:23.710Z",
+                "periodEnd": "2026-10-06T02:53:23.710Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:23.710Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy868v002ep0oroaflgbj4",
+                "productId": "cmvsy867l0027p0ort3vvnxxg",
+                "keyword": "Burnett Wallpaper",
+                "evidenceReference": "verified-merchant-demand:wallblush.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:23.710Z",
+                "periodEnd": "2026-10-31T02:53:23.710Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:23.710Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "GENERAL",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_887687049",
+          "title": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+          "canonicalProductName": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+          "canonicalProductUrl": "https://acompactly.com/products/easy-fill-wall-repair-paste-kit",
+          "storeDomain": "acompactly.com",
+          "brand": "Acompactly",
+          "model": "20007845",
+          "sku": "20007845",
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "wall_tile_repair_paste",
+          "familyLabel": "Wall Mending & Tile Grout Repair",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via JSON-LD Product schema, OpenGraph product tags, ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzxmb600016cor39ruhbkb"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy864i001pp0or0a8ff2vx",
+            "canonicalName": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+            "rawTerm": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+            "normalizedTerm": "Easy-Fill Wall Repair Paste Kit -",
+            "searchTermUsed": "Easy-Fill Wall Repair Paste Kit -",
+            "mappingReason": "Normalized 'Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off' -> 'Easy-Fill Wall Repair Paste Kit -' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 180,
+            "actualCoveredDays": 152,
+            "observationPointsCount": 6,
+            "coverageGaps": [
+              "Observed series covers 152D out of requested 180D window."
+            ],
+            "assessment": {
+              "status": "VERIFIED",
+              "eligibleForEvergreen": true,
+              "dataPointsCount": 6,
+              "distinctObservationDatesCount": 6,
+              "coveredDays": 152,
+              "meanInterest": 78.8,
+              "stdDev": 2.1,
+              "coefficientOfVariation": 0.03,
+              "demandClass": "EVERGREEN_STABLE",
+              "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+              "temporalCoverageValid": true,
+              "productAttributionValid": true,
+              "demandObservationIds": [
+                "cmvsy864y001rp0or94dwo073",
+                "cmvsy8652001sp0orfb0xfu3t",
+                "cmvsy8659001tp0orhc1f88dg",
+                "cmvsy865e001up0orcxurlln0",
+                "cmvsy865i001vp0orug34v3a2",
+                "cmvsy865p001wp0orh0l7rvy0"
+              ],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Verified demand stability (HISTORICAL_SOURCE_VERIFIED): 6 points spanning 152 days with CV=0.03.",
+              "missingEvidence": [],
+              "evaluatedAt": "2026-10-29T06:08:46.449Z"
+            },
+            "dataPoints": [
+              {
+                "id": "cmvsy864y001rp0or94dwo073",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-06-01T02:53:23.601Z",
+                "periodEnd": "2026-06-08T02:53:23.601Z",
+                "demandValue": 76,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-06-01T02:53:23.601Z",
+                "value": 76
+              },
+              {
+                "id": "cmvsy8652001sp0orfb0xfu3t",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-01T02:53:23.601Z",
+                "periodEnd": "2026-07-08T02:53:23.601Z",
+                "demandValue": 79,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-01T02:53:23.601Z",
+                "value": 79
+              },
+              {
+                "id": "cmvsy8659001tp0orhc1f88dg",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-07-31T02:53:23.601Z",
+                "periodEnd": "2026-08-07T02:53:23.601Z",
+                "demandValue": 77,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-07-31T02:53:23.601Z",
+                "value": 77
+              },
+              {
+                "id": "cmvsy865e001up0orcxurlln0",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-08-30T02:53:23.601Z",
+                "periodEnd": "2026-09-06T02:53:23.601Z",
+                "demandValue": 81,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-08-30T02:53:23.601Z",
+                "value": 81
+              },
+              {
+                "id": "cmvsy865i001vp0orug34v3a2",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-09-29T02:53:23.601Z",
+                "periodEnd": "2026-10-06T02:53:23.601Z",
+                "demandValue": 78,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-09-29T02:53:23.601Z",
+                "value": 78
+              },
+              {
+                "id": "cmvsy865p001wp0orh0l7rvy0",
+                "productId": "cmvsy864i001pp0or0a8ff2vx",
+                "keyword": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+                "evidenceReference": "verified-merchant-demand:acompactly.com",
+                "methodologyVersion": "12.4.3",
+                "isFixture": false,
+                "periodStart": "2026-10-24T02:53:23.601Z",
+                "periodEnd": "2026-10-31T02:53:23.601Z",
+                "demandValue": 82,
+                "region": "US",
+                "source": "GOOGLE_TRENDS_CSV",
+                "date": "2026-10-24T02:53:23.601Z",
+                "value": 82
+              }
+            ],
+            "sourceStatus": "PRODUCT_HISTORY_VERIFIED"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "DIY",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        }
+      ]
+    },
+    "kitchen30D": {
+      "shortlistCount": 3,
+      "distinctProducts": 3,
+      "distinctFamilies": 2,
+      "products": [
+        {
+          "candidateId": "cand_1008292129",
+          "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+          "canonicalProductName": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+          "canonicalProductUrl": "https://beste-store.net/products/470ml-glass-oil-dispenser-a-useful-gift-for-the-home-cook",
+          "storeDomain": "beste-store.net",
+          "brand": "Best E-Store",
+          "model": null,
+          "sku": "CJYD199944011KP",
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "oil_dispenser_sprayer",
+          "familyLabel": "Oil Dispenser & Sprayer Bottle",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (15432260485435), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvs011gp0051t4orldy2vyls",
+            "cmvs011ef0047t4or6k6xr7pi",
+            "cmvs011h80057t4orcnu1hiqd",
+            "cmvs011ft004pt4or1bxl8m6z",
+            "cmvs011dy0041t4orf7ckm49m",
+            "cmvs011di003vt4ornwhtkuu6",
+            "cmvs011ex004dt4orze9qol2x"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy89c00036p0orhu35a9bb",
+            "canonicalName": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+            "rawTerm": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+            "normalizedTerm": "Glass Oil Dispenser — A Useful",
+            "searchTermUsed": "Glass Oil Dispenser — A Useful",
+            "mappingReason": "Normalized '470ml Glass Oil Dispenser — A Useful Gift for the Home Cook' -> 'Glass Oil Dispenser — A Useful' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 30,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "Requested lookback window is 30D, which is shorter than the mandatory 60D minimum required for Verified Evergreen qualification."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:08.097Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "GENERAL",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_519143299",
+          "title": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+          "canonicalProductName": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+          "canonicalProductUrl": "https://tokosaya.shop/products/15-in-1-vegetable-chopper-8-stainless-steel-blades-dicer-slicer-set",
+          "storeDomain": "tokosaya.shop",
+          "brand": "Michael Garcia",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "vegetable_food_chopper",
+          "familyLabel": "Vegetable & Food Chopper / Slicer",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (9622250750140), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzgdlv0057lsornhlxiao0",
+            "cmvrzgdlb0051lsorijhtjtov"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy89ad002yp0orhygo9kbp",
+            "canonicalName": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+            "rawTerm": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+            "normalizedTerm": "1 Vegetable Chopper, 8 Stainless Steel",
+            "searchTermUsed": "1 Vegetable Chopper, 8 Stainless Steel",
+            "mappingReason": "Normalized '15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se' -> '1 Vegetable Chopper, 8 Stainless Steel' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 30,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "Requested lookback window is 30D, which is shorter than the mandatory 60D minimum required for Verified Evergreen qualification."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:08.093Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "GENERAL",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_1012572416",
+          "title": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+          "canonicalProductName": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+          "canonicalProductUrl": "https://shaquila.shop/products/all-in-one-vegetable-chopper-slicer-set-for-fast-kitchen-prep",
+          "storeDomain": "shaquila.shop",
+          "brand": "Michael Garcia",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "vegetable_food_chopper",
+          "familyLabel": "Vegetable & Food Chopper / Slicer",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (15418714980720), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzgdkr004vlsorey24fi10",
+            "cmvrzgdk6004plsorkug6q0iv"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": "cmvsy89bb0032p0orkqzuzoi1",
+            "canonicalName": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+            "rawTerm": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+            "normalizedTerm": "All In One Vegetable Chopper &",
+            "searchTermUsed": "All In One Vegetable Chopper &",
+            "mappingReason": "Normalized 'All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep' -> 'All In One Vegetable Chopper &' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 30,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "Requested lookback window is 30D, which is shorter than the mandatory 60D minimum required for Verified Evergreen qualification."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:08.105Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "GENERAL",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        }
+      ]
+    },
+    "cleaning90D": {
+      "shortlistCount": 3,
+      "distinctProducts": 3,
+      "distinctFamilies": 3,
+      "products": [
+        {
+          "candidateId": "cand_1162625533",
+          "title": "7-in-1 Electric Spin Scrubber",
+          "canonicalProductName": "7-in-1 Electric Spin Scrubber",
+          "canonicalProductUrl": "https://reemoreemoo.com/products/✨7-in-1-electric-spin-scrubber",
+          "storeDomain": "reemoreemoo.com",
+          "brand": "Reemo Collective",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "electric_spin_scrubber",
+          "familyLabel": "Electric Spin Scrubber & Power Brush",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzh3iy007alsorzrbpvdog"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": null,
+            "canonicalName": "7-in-1 Electric Spin Scrubber",
+            "rawTerm": "7-in-1 Electric Spin Scrubber",
+            "normalizedTerm": "7-in-1 Electric Spin Scrubber",
+            "searchTermUsed": "7-in-1 Electric Spin Scrubber",
+            "mappingReason": "Used clean product name '7-in-1 Electric Spin Scrubber' directly",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:20.803Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "DIY",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_386308104",
+          "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+          "canonicalProductName": "8-in-1 Electric Cleaning Brush Set for Home Use",
+          "canonicalProductUrl": "https://forubom.com/products/8dgfdf-electric-clean",
+          "storeDomain": "forubom.com",
+          "brand": "Forubom us",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "brush_use",
+          "familyLabel": "Brush Use",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph product tags, merchant product ID (10325547876659), ecommerce product DOM.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzh3ga0065lsore49hb07g"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": null,
+            "canonicalName": "8-in-1 Electric Cleaning Brush Set for Home Use",
+            "rawTerm": "8-in-1 Electric Cleaning Brush Set for Home Use",
+            "normalizedTerm": "8-in-1 Electric Cleaning Brush Set for",
+            "searchTermUsed": "8-in-1 Electric Cleaning Brush Set for",
+            "mappingReason": "Normalized '8-in-1 Electric Cleaning Brush Set for Home Use' -> '8-in-1 Electric Cleaning Brush Set for' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:20.804Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "GENERAL",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        },
+        {
+          "candidateId": "cand_457825095",
+          "title": "Make Cleaning Effortless with HOTO!",
+          "canonicalProductName": "Make Cleaning Effortless with HOTO!",
+          "canonicalProductUrl": "https://twentytwowords.com/product/B0CPXQ4XQK",
+          "storeDomain": "twentytwowords.com",
+          "brand": "Bad Parenting Moments",
+          "model": null,
+          "sku": null,
+          "gtin": null,
+          "variantId": null,
+          "familyKey": "effortless_hoto",
+          "familyLabel": "Effortless Hoto",
+          "identityStatus": "VERIFIED",
+          "identityConfidence": "EXACT",
+          "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+          "verificationReason": "Verified product page via OpenGraph metadata on product endpoint.",
+          "verificationLimitations": [],
+          "contradictions": [],
+          "supportingAdIds": [
+            "cmvrzh3jr007nlsorijexm20l",
+            "cmvrzh3fr005ylsorb1j1xmpm"
+          ],
+          "googleMatchedAdsCount": 0,
+          "demandResolution": {
+            "productId": null,
+            "canonicalName": "Make Cleaning Effortless with HOTO!",
+            "rawTerm": "Make Cleaning Effortless with HOTO!",
+            "normalizedTerm": "Make Cleaning Effortless with HOTO",
+            "searchTermUsed": "Make Cleaning Effortless with HOTO",
+            "mappingReason": "Normalized 'Make Cleaning Effortless with HOTO!' -> 'Make Cleaning Effortless with HOTO' (stripped promotional suffixes/capacities for clean product demand query)",
+            "requestedLookbackDays": 90,
+            "actualCoveredDays": 0,
+            "observationPointsCount": 0,
+            "coverageGaps": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "assessment": {
+              "status": "INSUFFICIENT_HISTORY",
+              "eligibleForEvergreen": false,
+              "dataPointsCount": 0,
+              "distinctObservationDatesCount": 0,
+              "coveredDays": 0,
+              "meanInterest": null,
+              "stdDev": null,
+              "coefficientOfVariation": null,
+              "demandClass": "INSUFFICIENT_HISTORY",
+              "sourceAuthority": "UNKNOWN_SOURCE",
+              "temporalCoverageValid": false,
+              "productAttributionValid": false,
+              "demandObservationIds": [],
+              "calculationVersion": "12.4.3.1",
+              "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+              "missingEvidence": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+              ],
+              "evaluatedAt": "2026-10-29T06:09:20.810Z"
+            },
+            "dataPoints": [],
+            "sourceStatus": "ENGINE_READY"
+          },
+          "evergreenVerification": null,
+          "verificationDimensions": null,
+          "customerPsychology": {
+            "productDomain": "DIY",
+            "painPointClaims": [],
+            "alignment": {
+              "valid": true,
+              "reason": null
+            }
+          }
+        }
+      ]
+    }
+  }
+}
