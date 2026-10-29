@@ -472,6 +472,7 @@ export default function ProductsPage() {
       const urlTopic = sp.get("topic") || undefined;
       const urlLookback = sp.get("lookback") ? Number(sp.get("lookback")) : undefined;
       const urlSourceMode = sp.get("sourceMode") as ResearchSourceMode | null;
+      const urlTab = sp.get("tab") as PrimaryTab | null;
 
       if (urlTopic) setTopic(urlTopic);
       if (urlLookback === 30 || urlLookback === 90 || urlLookback === 180 || urlLookback === 365) {
@@ -483,6 +484,13 @@ export default function ProductsPage() {
         urlSourceMode === "LIVE_ONLY"
       ) {
         setSourceMode(urlSourceMode);
+      }
+      if (
+        urlTab === "RECOMMENDED" ||
+        urlTab === "ALL_CANDIDATES" ||
+        urlTab === "EVIDENCE_DIAGNOSTICS"
+      ) {
+        setActiveTab(urlTab);
       }
 
       loadPersistedRun({
@@ -501,6 +509,19 @@ export default function ProductsPage() {
       fetchStoredProducts();
     }
   }, [viewMode, fetchStoredProducts]);
+
+  // Keyboard Escape handler to close slide-over drawers and modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDrawerCandidate(null);
+        setHistoryDrawerOpen(false);
+        setActiveMediaItem(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Open Candidate Research Detail Drawer and fetch optional overview data
   const openCandidateResearchDrawer = useCallback(
@@ -802,10 +823,7 @@ export default function ProductsPage() {
                         key={days}
                         type="button"
                         data-testid={`kh02-lookback-${days}`}
-                        onClick={() => {
-                          setLookbackDays(days);
-                          handleRunEvergreenResearch(topic, days, sourceMode);
-                        }}
+                        onClick={() => setLookbackDays(days)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                           lookbackDays === days
                             ? "bg-indigo-600 text-white shadow-xs"
@@ -2438,6 +2456,7 @@ export default function ProductsPage() {
                     </div>
                     <button
                       type="button"
+                      data-testid="pf-history-run-item"
                       onClick={() => {
                         loadPersistedRun({ runId: run.runId, syncTopicInput: true });
                         setHistoryDrawerOpen(false);

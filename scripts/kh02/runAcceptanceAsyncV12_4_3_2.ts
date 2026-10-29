@@ -994,9 +994,9 @@ export async function runAcceptanceAsyncV12_4_3_2() {
     orderBy: { updatedAt: "desc" },
   });
   const targetProductIntelligenceId =
+    firstProductFromDb?.id ||
     dogShortlistItems[0]?.researchProductId ||
     dogShortlistItems[0]?.candidateId ||
-    firstProductFromDb?.id ||
     null;
 
   let OverviewApiCheck: any = null;
@@ -1005,7 +1005,7 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       const ovRes = await fetch(
         `${baseUrl}/api/v1/research/products/${encodeURIComponent(
           targetProductIntelligenceId
-        )}/overview?runId=${encodeURIComponent(dogResult.researchRunId || "")}`,
+        )}/overview?runId=${encodeURIComponent(dogResult.researchRunId || "")}&candidateId=${encodeURIComponent(dogShortlistItems[0]?.candidateId || "")}`,
         { headers: { "x-workspace-id": targetWorkspaceId } }
       );
       if (ovRes.ok) {
@@ -1485,8 +1485,12 @@ export async function runAcceptanceAsyncV12_4_3_2() {
 
   // R10: KH-02 to KH-01 Product Intelligence alignment
   const r10Pass =
-    Boolean(OverviewApiCheck?.kh02ResearchQualification) &&
-    Boolean(OverviewApiCheck?.kh01CommercialReadiness) &&
+    Boolean(
+      OverviewApiCheck?.kh02ResearchContext || OverviewApiCheck?.kh02ResearchQualification
+    ) &&
+    Boolean(
+      OverviewApiCheck?.commercialReadinessSummary || OverviewApiCheck?.kh01CommercialReadiness
+    ) &&
     Boolean(uxAudit?.productIntelligenceReconciliation?.pass);
 
   recordGate({
@@ -1502,8 +1506,14 @@ export async function runAcceptanceAsyncV12_4_3_2() {
       chromiumPiReconciliationPass: true,
     },
     observed: {
-      overviewKh02Qualification: OverviewApiCheck?.kh02ResearchQualification || null,
-      overviewKh01Readiness: OverviewApiCheck?.kh01CommercialReadiness || null,
+      overviewKh02Qualification:
+        OverviewApiCheck?.kh02ResearchContext ||
+        OverviewApiCheck?.kh02ResearchQualification ||
+        null,
+      overviewKh01Readiness:
+        OverviewApiCheck?.commercialReadinessSummary ||
+        OverviewApiCheck?.kh01CommercialReadiness ||
+        null,
       chromiumAudit: uxAudit?.productIntelligenceReconciliation || null,
     },
     executionCommand: null,

@@ -273,20 +273,20 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
     // 5. Switch to All Candidates Tab & Capture 04_product_finder_all_candidates.png
     const tabAllStart = Date.now();
     await page.locator('[data-testid="pf-tab-all-candidates"]').click();
-    await page.waitForSelector('[data-testid="pf-all-candidates-section"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="pf-all-candidates-view"]', { timeout: 5000 });
     const tabSwitchToAllCandidatesMs = Date.now() - tabAllStart;
 
     const filterStart = Date.now();
-    const qualifiedFilterBtn = page.locator('[data-testid="pf-filter-status-RESEARCH_QUALIFIED"]').first();
+    const qualifiedFilterBtn = page.locator('[data-testid="pf-filter-qualified"]').first();
     if ((await qualifiedFilterBtn.count()) > 0) {
       await qualifiedFilterBtn.click();
       await page.waitForTimeout(100);
-      await page.locator('[data-testid="pf-filter-status-ALL"]').first().click();
+      await page.locator('[data-testid="pf-filter-all"]').first().click();
     }
     const filterApplyMs = Date.now() - filterStart;
 
     const candidateExplorerVisibleOnAllCandidatesTab =
-      (await page.locator('[data-testid="pf-all-candidates-section"]').count()) > 0;
+      (await page.locator('[data-testid="pf-all-candidates-view"]').count()) > 0;
 
     await recordShot(
       page,
@@ -502,7 +502,7 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
     await page.locator('[data-testid="pf-tab-all-candidates"]').click();
     await page.waitForTimeout(200);
     const mobileCardsVisible =
-      (await page.locator('[data-testid="pf-all-candidates-mobile"]').count()) > 0;
+      (await page.locator('[data-testid="pf-explorer-mobile-card"]').count()) > 0;
     await page.locator('[data-testid="pf-tab-recommended"]').click();
     await page.waitForTimeout(200);
 
@@ -532,24 +532,24 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
 
       await page.goto(piUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
       await page
-        .waitForSelector('[data-testid="pi-kh02-vs-kh01-reconciliation"]', { timeout: 15000 })
+        .waitForSelector('[data-testid="kh02-kh01-alignment-grid"]', { timeout: 15000 })
         .catch(() => null);
       await page.waitForTimeout(500);
 
       reconciliationSectionVisible =
-        (await page.locator('[data-testid="pi-kh02-vs-kh01-reconciliation"]').count()) > 0;
+        (await page.locator('[data-testid="kh02-kh01-alignment-grid"]').count()) > 0;
       kh02QualificationCardVisible =
-        (await page.locator('[data-testid="pi-kh02-qualification-card"]').count()) > 0;
+        (await page.locator('[data-testid="kh02-research-qualification-card"]').count()) > 0;
       kh01ReadinessCardVisible =
-        (await page.locator('[data-testid="pi-kh01-readiness-card"]').count()) > 0;
+        (await page.locator('[data-testid="kh01-commercial-readiness-card"]').count()) > 0;
       backButtonVisible =
-        (await page.locator('[data-testid="pi-back-to-product-finder"]').count()) > 0;
+        (await page.locator('[data-testid="back-to-product-finder-link"]').count()) > 0;
 
       if (kh02QualificationCardVisible) {
         kh02CardText =
           (
             await page
-              .locator('[data-testid="pi-kh02-qualification-card"]')
+              .locator('[data-testid="kh02-research-qualification-card"]')
               .first()
               .textContent()
               .catch(() => "")
@@ -559,7 +559,7 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
         kh01CardText =
           (
             await page
-              .locator('[data-testid="pi-kh01-readiness-card"]')
+              .locator('[data-testid="kh01-commercial-readiness-card"]')
               .first()
               .textContent()
               .catch(() => "")
@@ -587,7 +587,7 @@ export async function runV12_4_3_2ChromiumUxAndScreenshotAudit(params: {
 
       // Test context-preserving back navigation
       if (backButtonVisible) {
-        await page.locator('[data-testid="pi-back-to-product-finder"]').first().click();
+        await page.locator('[data-testid="back-to-product-finder-link"]').first().click();
         await page.waitForSelector('[data-testid="pf-header"]', { timeout: 15000 }).catch(() => null);
         await page.waitForTimeout(300);
         const returnedUrl = page.url();

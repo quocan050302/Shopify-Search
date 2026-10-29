@@ -303,15 +303,9 @@ export async function runKh02BrowserE2E(
 
     // Select sourceMode if requested
     if (options.sourceMode) {
-      const modeTestId =
-        options.sourceMode === "CACHE_ONLY"
-          ? "pf-source-mode-cache-only"
-          : options.sourceMode === "LIVE_ONLY"
-          ? "pf-source-mode-live-only"
-          : "pf-source-mode-live-with-cache-fallback";
-      const modeLocator = page.locator(`button[data-testid="${modeTestId}"]`).first();
-      if (await modeLocator.isVisible().catch(() => false)) {
-        await modeLocator.click().catch(() => {});
+      const modeSelect = page.locator('select[data-testid="kh02-source-mode-select"]').first();
+      if (await modeSelect.isVisible().catch(() => false)) {
+        await modeSelect.selectOption(options.sourceMode).catch(() => {});
         await page.waitForTimeout(150);
       }
     }
