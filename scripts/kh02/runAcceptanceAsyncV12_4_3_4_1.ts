@@ -313,7 +313,7 @@ async function stopLingeringServerAndWorker() {
   try {
     if (process.platform === "win32") {
       execSync(
-        'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name = \'node.exe\'\\" | Where-Object { ($_.CommandLine -match \'kh02Worker\' -or $_.CommandLine -match \'next.*start\') -and $_.ProcessId -ne ' +
+        'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name = \'node.exe\'\\" | Where-Object { ($_.CommandLine -match \'kh02Worker\' -or $_.CommandLine -match \'next.*start\' -or $_.CommandLine -match \'next.*dev\') -and $_.ProcessId -ne ' +
           process.pid +
           ' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"',
         { stdio: "ignore" }
@@ -1252,6 +1252,7 @@ async function runAdversarialMutationsRuntimeCheck() {
 }
 
 async function main() {
+  await stopLingeringServerAndWorker();
   ensureOutputDirs();
 
   // Support post-commit provenance update without re-running suites
@@ -1638,69 +1639,60 @@ async function main() {
   });
 
   console.log("  [4.4] Executing remaining niche scenarios (DIY Tools, Kitchen Gadgets, Automatic Pet Feeder, Dog Gadgets, Cat Gadgets, Car Accessories)...");
-  const [
-    diyToolsRun,
-    kitchenGadgetsRun,
-    autoPetFeederRun,
-    dogGadgetsRun,
-    catGadgetsRun,
-    carAccessoriesRun,
-  ] = await Promise.all([
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "DIY Tools",
-      market: "US",
-      lookbackDays: 180,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "Kitchen Gadgets",
-      market: "US",
-      lookbackDays: 90,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "Automatic Pet Feeder",
-      market: "US",
-      lookbackDays: 180,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "Dog Gadgets",
-      market: "US",
-      lookbackDays: 90,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "Cat Gadgets",
-      market: "US",
-      lookbackDays: 90,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-    runEvergreenProductResearch({
-      workspaceId: targetWorkspaceId,
-      topic: "Car Accessories",
-      market: "US",
-      lookbackDays: 90,
-      maxCandidates: 10,
-      sourceMode: "CACHE_ONLY",
-      selectedSources: ["META_ADS", "DEMAND_HISTORY"],
-    }),
-  ]);
+  const diyToolsRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "DIY Tools",
+    market: "US",
+    lookbackDays: 180,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
+  const kitchenGadgetsRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "Kitchen Gadgets",
+    market: "US",
+    lookbackDays: 90,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
+  const autoPetFeederRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "Automatic Pet Feeder",
+    market: "US",
+    lookbackDays: 180,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
+  const dogGadgetsRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "Dog Gadgets",
+    market: "US",
+    lookbackDays: 90,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
+  const catGadgetsRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "Cat Gadgets",
+    market: "US",
+    lookbackDays: 90,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
+  const carAccessoriesRun = await runEvergreenProductResearch({
+    workspaceId: targetWorkspaceId,
+    topic: "Car Accessories",
+    market: "US",
+    lookbackDays: 90,
+    maxCandidates: 10,
+    sourceMode: "CACHE_ONLY",
+    selectedSources: ["META_ADS", "DEMAND_HISTORY"],
+  });
 
   // Empty query validation
   const emptyQueryIntent = analyzeNicheIntent("   ");

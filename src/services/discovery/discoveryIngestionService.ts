@@ -593,7 +593,7 @@ export async function ingestDiscoveredAds(
         }
 
         return { adId: targetAd.id, isNew };
-      });
+      }, { maxWait: 15000, timeout: 30000 });
 
       const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
       if (txResult.isNew) {
