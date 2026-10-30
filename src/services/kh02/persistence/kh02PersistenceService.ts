@@ -537,20 +537,31 @@ export async function persistKH02RankingSnapshot(
   // so Product Intelligence drawer and /api/v1/research/products/[id]/overview resolve immediately.
   await materializeKH02CandidatesToDatabase(result, prisma);
 
-  await prisma.syncJob.updateMany({
-    where: {
-      id: runId,
-      workspaceId,
-      jobType: "KH02_RESEARCH",
-    },
-    data: {
-      status: result.runStatus === "FAILED" ? "FAILED" : (result.runStatus === "PARTIAL" ? "PARTIALLY_COMPLETED" : "COMPLETED"),
-      progress: 100,
-      totalItems: result.totalCandidatesDiscovered,
-      resultJson: JSON.stringify(result),
-      completedAt: new Date(),
-    },
-  });
+  // Resilient syncJob update with retry for SQLite / libSQL driver timeouts
+  let updateAttempts = 0;
+  while (updateAttempts < 3) {
+    try {
+      await prisma.syncJob.updateMany({
+        where: {
+          id: runId,
+          workspaceId,
+          jobType: "KH02_RESEARCH",
+        },
+        data: {
+          status: result.runStatus === "FAILED" ? "FAILED" : (result.runStatus === "PARTIAL" ? "PARTIALLY_COMPLETED" : "COMPLETED"),
+          progress: 100,
+          totalItems: result.totalCandidatesDiscovered,
+          resultJson: JSON.stringify(result),
+          completedAt: new Date(),
+        },
+      });
+      break;
+    } catch (err: any) {
+      updateAttempts++;
+      if (updateAttempts >= 3) throw err;
+      await new Promise((r) => setTimeout(r, 300 * updateAttempts));
+    }
+  }
 }
 
 /**

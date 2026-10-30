@@ -1706,6 +1706,7 @@ async function main() {
     });
     runObj.researchRunId = dbRunId;
     await persistKH02RankingSnapshot(dbRunId, targetWorkspaceId, runObj);
+    await new Promise((r) => setTimeout(r, 200));
   }
 
   // ─── PHASE 5: Server Bootstrap, GET Read-Only Proof & Same-Run Chromium Reconciliation ──
