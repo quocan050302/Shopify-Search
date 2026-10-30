@@ -47,6 +47,7 @@ import {
   compareProductIdentity,
   clusterProductCandidates,
   evaluateOpportunityDiversity,
+  resolveProductFamily,
   PairwiseIdentityComparison,
   OpportunityDiversityEvaluation,
 } from "./productDistinctnessEngine";
@@ -56,6 +57,7 @@ export {
   compareProductIdentity,
   clusterProductCandidates,
   evaluateOpportunityDiversity,
+  resolveProductFamily,
 };
 
 export type CandidateRejectionReasonCode =
@@ -114,6 +116,8 @@ export interface DiscoveredProductCandidate {
   supportingExternalAdIds?: string[];
   supportingSourceTypes: string[];
   totalObservationCount: number;
+  liveObservationsCount?: number;
+  cachedObservationsCount?: number;
   distinctAdvertisersCount: number;
   earliestObservationDate: string | null;
   latestObservationDate: string | null;
@@ -435,7 +439,139 @@ export function mergeDuplicateCandidateRecords(
     new Set([...(primary.mergeReasons || []), comparison.reason])
   );
 
+  // V12.4.3.3.1 G16/G04: Recompute live vs cached observation counts after merging
+  if (primary.sourceObservations && primary.sourceObservations.length > 0) {
+    const liveCount = primary.sourceObservations.filter((o) =>
+      isLiveProviderObservation(o)
+    ).length;
+    primary.liveObservationsCount = liveCount;
+    primary.cachedObservationsCount =
+      primary.sourceObservations.length - liveCount;
+  } else {
+    primary.liveObservationsCount =
+      (primary.liveObservationsCount || 0) +
+      (duplicate.liveObservationsCount || 0);
+    primary.cachedObservationsCount =
+      (primary.cachedObservationsCount || 0) +
+      (duplicate.cachedObservationsCount || 0);
+  }
+
   return attachDistinctnessFingerprint(primary);
+}
+
+/**
+ * V12.4.3.3.1 G04/G16: Strictly determines whether an observation originated from a live provider
+ * execution rather than a cached/historical fallback record or an untyped record (`sourceType: undefined`).
+ */
+export function isLiveProviderObservation(
+  obs: SourceObservation | Record<string, any> | null | undefined,
+  executedQueryIds?: Set<string> | string[]
+): boolean {
+  if (!obs || typeof obs !== "object") return false;
+  const o = obs as Record<string, any>;
+
+  // Explicit cache / non-live markers always disqualify
+  const rawProv = typeof o.provenance === "string" ? o.provenance.toUpperCase() : "";
+  const rawSourceType =
+    typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
+  if (
+    rawProv === "CACHED_SOURCE" ||
+    rawProv === "CACHE" ||
+    rawProv === "CACHED" ||
+    rawProv === "CACHE_ONLY" ||
+    rawSourceType === "CACHE" ||
+    rawSourceType === "CACHED" ||
+    rawSourceType === "CACHE_ONLY" ||
+    o.isCached === true ||
+    o.fromCache === true ||
+    o.isLiveRecord === false
+  ) {
+    return false;
+  }
+
+  // Must carry positive live provenance (never pass merely because sourceType is undefined)
+  const hasPositiveLiveMarker =
+    rawProv === "LIVE_PROVIDER" ||
+    rawProv === "VERIFIED_SOURCE" ||
+    o.isLiveRecord === true ||
+    rawSourceType === "LIVE_PROVIDER" ||
+    rawSourceType === "LIVE";
+
+  if (!hasPositiveLiveMarker) return false;
+
+  if (executedQueryIds) {
+    const qSet =
+      executedQueryIds instanceof Set
+        ? executedQueryIds
+        : new Set(executedQueryIds.filter(Boolean));
+    if (qSet.size > 0) {
+      const obsQueryIds: string[] = [
+        o.queryId,
+        o.metrics?.queryId,
+        ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
+      ].filter((q): q is string => typeof q === "string" && q.length > 0);
+      if (obsQueryIds.length > 0 && !obsQueryIds.some((qid) => qSet.has(qid))) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/**
+ * V12.4.3.3.1 G16: Determines whether a candidate is both VERIFIED and grounded in at least one
+ * current-run live provider observation (never counting cache-only or `sourceType: undefined` records).
+ */
+export function isCandidateLiveVerified(
+  c: DiscoveredProductCandidate | null | undefined,
+  executedQueryIds?: Set<string> | string[]
+): boolean {
+  if (!c || c.identityStatus !== "VERIFIED") return false;
+
+  // If explicit liveObservationsCount is set to 0 and candidate has cached observations or no live observations, reject
+  if (
+    typeof c.liveObservationsCount === "number" &&
+    c.liveObservationsCount <= 0
+  ) {
+    const hasPositiveLiveObs =
+      Array.isArray(c.sourceObservations) &&
+      c.sourceObservations.some((o) =>
+        isLiveProviderObservation(o, executedQueryIds)
+      );
+    if (!hasPositiveLiveObs || (c.cachedObservationsCount ?? 0) > 0) {
+      return false;
+    }
+  }
+
+  if (executedQueryIds) {
+    const qSet =
+      executedQueryIds instanceof Set
+        ? executedQueryIds
+        : new Set(executedQueryIds.filter(Boolean));
+    if (qSet.size > 0) {
+      const candQIds = Array.isArray(c.matchedQueryIds) ? c.matchedQueryIds : [];
+      const obsQIds = (c.sourceObservations || []).flatMap((o: any) => [
+        o?.queryId,
+        o?.metrics?.queryId,
+        ...(Array.isArray(o?.matchedQueryIds) ? o.matchedQueryIds : []),
+      ]);
+      const allQIds = [...candQIds, ...obsQIds].filter(
+        (q): q is string => typeof q === "string" && q.length > 0
+      );
+      if (!allQIds.some((qid) => qSet.has(qid))) {
+        return false;
+      }
+    }
+  }
+
+  if (Array.isArray(c.sourceObservations) && c.sourceObservations.length > 0) {
+    return c.sourceObservations.some((o) =>
+      isLiveProviderObservation(o, executedQueryIds)
+    );
+  }
+
+  return typeof c.liveObservationsCount === "number" && c.liveObservationsCount > 0;
 }
 
 /**
@@ -474,7 +610,16 @@ export function discoverProductCandidatesFromAds(
         videoUrl: raw.videoUrl || null,
         mediaType: raw.mediaType || null,
       },
-      provenance: raw.provenance || "LIVE_PROVIDER",
+      provenance:
+        raw.provenance === "CACHED_SOURCE" ||
+        raw.sourceType === "CACHE" ||
+        raw.sourceType === "CACHED" ||
+        raw.sourceType === "CACHE_ONLY" ||
+        raw.isCached === true ||
+        raw.fromCache === true ||
+        raw.isLiveRecord === false
+          ? "CACHED_SOURCE"
+          : raw.provenance || "LIVE_PROVIDER",
       evidenceReference: raw.evidenceReference || `Ad:${raw.id || "raw"}`,
     } as SourceObservation;
   });
@@ -762,6 +907,10 @@ export function discoverProductCandidatesFromAds(
       supportingExternalAdIds,
       supportingSourceTypes: Array.from(c.sources),
       totalObservationCount: Math.max(c.observations.length, c.observations.reduce((sum, o) => sum + (Number((o.metrics as any)?.observationsCount) || 1), 0)),
+      liveObservationsCount: c.observations.filter((o) => isLiveProviderObservation(o)).length,
+      cachedObservationsCount:
+        c.observations.length -
+        c.observations.filter((o) => isLiveProviderObservation(o)).length,
       distinctAdvertisersCount: c.advertisers.size,
       earliestObservationDate: c.earliest,
       latestObservationDate: c.latest,
@@ -1362,8 +1511,30 @@ export function selectTopResearchShortlist(
     topic?: string;
     allowSameFamilyAlternativesOnShortfall?: boolean;
     allowSameStoreMultipleSlots?: boolean;
+    executedQueryIds?: string[] | Set<string>;
   }
 ): ResearchShortlistResult {
+  const executedQSet = options?.executedQueryIds
+    ? options.executedQueryIds instanceof Set
+      ? options.executedQueryIds
+      : new Set(options.executedQueryIds.filter(Boolean))
+    : null;
+
+  const isLiveGroundedForCurrentRun = (c: DiscoveredProductCandidate): boolean => {
+    const hasLiveObs =
+      typeof c.liveObservationsCount === "number"
+        ? c.liveObservationsCount > 0
+        : (c.sourceObservations || []).some((o) =>
+            isLiveProviderObservation(o, executedQSet || undefined)
+          );
+    if (!hasLiveObs) return false;
+    if (executedQSet && executedQSet.size > 0) {
+      const qIds = c.matchedQueryIds || [];
+      return qIds.some((qid) => executedQSet.has(qid));
+    }
+    return true;
+  };
+
   // 1. Filter candidates through the mandatory Product Reality Gate
   const realityPassed = candidates.filter((c) => {
     if (!c.audienceRelevance && options?.topic) {
@@ -1389,11 +1560,15 @@ export function selectTopResearchShortlist(
     );
   });
 
-  // 2. Sort eligible candidates: prefer VERIFIED identity, then higher relevance score, then observation count
+  // 2. Sort eligible candidates: prefer VERIFIED identity, then current-run live-grounded over cache-only (G04),
+  //    then higher relevance score, then video media, then observation count
   realityPassed.sort((a, b) => {
     const verA = a.identityStatus === "VERIFIED" ? 1 : 0;
     const verB = b.identityStatus === "VERIFIED" ? 1 : 0;
     if (verA !== verB) return verB - verA;
+    const liveA = isLiveGroundedForCurrentRun(a) ? 1 : 0;
+    const liveB = isLiveGroundedForCurrentRun(b) ? 1 : 0;
+    if (liveA !== liveB) return liveB - liveA;
     const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
     if (relDiff !== 0) return relDiff;
     const vidA = a.videoUrl ? 1 : 0;
@@ -1445,16 +1620,29 @@ export function selectTopResearchShortlist(
       domainKey !== null &&
       selectedDomains.has(domainKey);
 
-    if (!selectedFamilies.has(fp.familyKey) && !isSameStoreBlocked) {
+    const isUnresolvedFamilyForBroad =
+      inferredIntent === "BROAD_CATEGORY" &&
+      (fp.familyKey === "unresolved_family" ||
+        fp.familyKey === "UNRESOLVED_FAMILY");
+
+    if (
+      !isUnresolvedFamilyForBroad &&
+      !selectedFamilies.has(fp.familyKey) &&
+      !isSameStoreBlocked
+    ) {
       c.distinctnessRole = "PRIMARY_FAMILY_REPRESENTATIVE";
       c.distinctnessReason = `Primary product representative for family '${fp.familyLabel}' (productKey=${fp.productKey}).`;
       c.crossMerchantUncertainty = null;
       selectedFamilies.set(fp.familyKey, c);
       if (domainKey) selectedDomains.add(domainKey);
       distinctShortlist.push(c);
-    } else if (!selectedFamilies.has(fp.familyKey) && isSameStoreBlocked) {
+    } else if (
+      !isUnresolvedFamilyForBroad &&
+      !selectedFamilies.has(fp.familyKey) &&
+      isSameStoreBlocked
+    ) {
       deferredSameStoreDistinctFamily.push(c);
-    } else {
+    } else if (!isUnresolvedFamilyForBroad) {
       deferredSameFamily.push(c);
     }
 
@@ -1493,11 +1681,11 @@ export function selectTopResearchShortlist(
         continue;
       }
 
-      // Section 5.6 & B18 & B19:
+      // Section 5.6 & B18 & B19 & V12.4.3.3.1 G12:
       // - If SPECIFIC_PRODUCT query: allow distinct models or brand/capacity alternatives in the same family.
       // - If BROAD_CATEGORY query: only allow a second candidate in the same family if it is an explicitly
-      //   differentiated model (comp.decision === "DIFFERENT_MODELS_SAME_FAMILY") AND options allow same-family alternatives on shortfall.
-      //   Never include unverified generic cross-merchant clones (UNKNOWN_CROSS_MERCHANT_SAME_FAMILY) as independent broad-niche opportunities.
+      //   differentiated model (comp.decision === "DIFFERENT_MODELS_SAME_FAMILY") AND options?.allowSameFamilyAlternativesOnShortfall === true.
+      //   Never allow two same-family products into a broad-niche Top-3 shortlist by default.
       const isExplicitlyDifferentiatedModel =
         comp.decision === "DIFFERENT_MODELS_SAME_FAMILY";
       const allowForSpecificQuery =
@@ -1506,8 +1694,8 @@ export function selectTopResearchShortlist(
           comp.areDistinctOpportunitiesForSpecificQuery);
       const allowForBroadShortfall =
         inferredIntent === "BROAD_CATEGORY" &&
-        (options?.allowSameFamilyAlternativesOnShortfall === true || (selectedFamilies.size >= 2 && c.identityStatus === "VERIFIED")) &&
-        (isExplicitlyDifferentiatedModel || (c.identityStatus === "VERIFIED" && primaryInFamily.identityStatus === "VERIFIED" && c.storeDomain !== primaryInFamily.storeDomain));
+        options?.allowSameFamilyAlternativesOnShortfall === true &&
+        isExplicitlyDifferentiatedModel;
 
       if (allowForSpecificQuery || allowForBroadShortfall) {
         c.distinctnessRole = "SAME_FAMILY_MODEL_ALTERNATIVE";
@@ -1557,6 +1745,10 @@ export function selectTopResearchShortlist(
           .join(", ")}`
       : "No distinct products qualified for shortlist";
 
+  const liveVerifiedItems = distinctShortlist.filter((c) =>
+    isCandidateLiveVerified(c, executedQSet || undefined)
+  );
+
   return {
     shortlist: distinctShortlist,
     requestedCount: limit,
@@ -1566,35 +1758,11 @@ export function selectTopResearchShortlist(
     distinctnessSummary,
     distinctnessEvaluation,
     opportunityDiversity,
-    // V12.4.3.3.1 G16: Count VERIFIED + live-grounded candidates separately from the overall shortlist.
-    // A candidate is "live-grounded" when liveObservationsCount > 0 OR at least one sourceObservation
-    // carries a sourceType that is not CACHE-only (i.e., the current run produced a live provider record).
-    liveVerifiedProductCount: distinctShortlist.filter(
-      (c) =>
-        c.identityStatus === "VERIFIED" &&
-        ((c as any).liveObservationsCount > 0 ||
-          c.sourceObservations.some(
-            (o) =>
-              (o as any).isLiveRecord === true ||
-              ((o as any).sourceType !== "CACHE" &&
-                (o as any).sourceType !== "CACHED" &&
-                (o as any).sourceType !== "CACHE_ONLY")
-          ))
-    ).length,
+    // V12.4.3.3.1 G16: Count VERIFIED + live-grounded candidates using positive live provenance checks.
+    liveVerifiedProductCount: liveVerifiedItems.length,
     liveVerifiedTop3:
       distinctShortlist.length >= limit &&
-      distinctShortlist.every(
-        (c) =>
-          c.identityStatus === "VERIFIED" &&
-          ((c as any).liveObservationsCount > 0 ||
-            c.sourceObservations.some(
-              (o) =>
-                (o as any).isLiveRecord === true ||
-                ((o as any).sourceType !== "CACHE" &&
-                  (o as any).sourceType !== "CACHED" &&
-                  (o as any).sourceType !== "CACHE_ONLY")
-            ))
-      ),
+      liveVerifiedItems.length === distinctShortlist.length,
   };
 }
 

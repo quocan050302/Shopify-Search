@@ -192,11 +192,40 @@ export interface GoogleEnrichmentExecution {
   queryTimestamp: string | null;
   isControlledMcp?: boolean;
   stateBreakdown?: GoogleDiagnosticStateBreakdown;
-  /** V12.4.3.3.1 Section 7: Separate counters for per-operation diagnostics */
+  /** V12.4.3.3.1 Section 6 & 7: Separate counters and step timeline for per-operation diagnostics */
   domainsPlanned?: number;
   domainsAttempted?: number;
   mcpCallsStarted?: number;
   mcpCallsCompleted?: number;
+  cleanupCompleted?: boolean;
+  stepTimeline?: Array<{
+    step: string;
+    status: "COMPLETED" | "FAILED" | "TIMED_OUT" | "SKIPPED";
+    startedAt: string;
+    completedAt: string;
+    durationMs: number;
+    detail?: string;
+  }>;
+}
+
+async function withOperationDeadline<T>(
+  operation: () => Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string
+): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([operation(), timeoutPromise]);
+  } finally {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+    }
+  }
 }
 
 const PLATFORM_AND_REDIRECT_DOMAINS = new Set([
@@ -316,6 +345,11 @@ export function extractRegistrableDomain(domainOrUrl: string): string {
 
 export function clearGoogleRateLimitCooldown(): void {
   delete (globalThis as any).__swaiGoogleRateLimitUntil;
+}
+
+export function isGoogleRateLimitCooldownActive(): boolean {
+  const until = (globalThis as any).__swaiGoogleRateLimitUntil;
+  return typeof until === "number" && Date.now() < until;
 }
 
 export interface NormalizedAdsResult {
@@ -1535,21 +1569,56 @@ export async function collectGoogleAdvertiserSignals(
 
   const client = customClient || createGoogleTransparencyMcpClient();
 
-  // V12.4.3.3.1 Section 7 fix: Per-operation deadline for MCP connect.
-  // Previously `client.connect()` could stall indefinitely, consuming the entire stage budget.
-  // Now each operation gets its own AbortController + race, bounded at 8 s for connect.
+  // V12.4.3.3.1 Section 6 & 7 fix: Per-operation deadlines for MCP connect, tool discovery,
+  // advertiser lookup, and creative retrieval with guaranteed timer cleanup and child-process teardown.
   const CONNECT_DEADLINE_MS = options?.connectTimeoutMs ?? 8_000;
   const TOOL_DISCOVERY_DEADLINE_MS = options?.toolDiscoveryTimeoutMs ?? 5_000;
   const PER_DOMAIN_DEADLINE_MS = options?.perDomainTimeoutMs ?? 15_000;
 
+  const stepTimeline: NonNullable<GoogleEnrichmentExecution["stepTimeline"]> = [];
+  const recordStep = (
+    step: string,
+    status: "COMPLETED" | "FAILED" | "TIMED_OUT" | "SKIPPED",
+    stepStartMs: number,
+    detail?: string
+  ) => {
+    const nowMs = Date.now();
+    stepTimeline.push({
+      step,
+      status,
+      startedAt: new Date(stepStartMs).toISOString(),
+      completedAt: new Date(nowMs).toISOString(),
+      durationMs: Math.max(0, nowMs - stepStartMs),
+      detail,
+    });
+  };
+
+  let mcpCallsStarted = 0;
+  let mcpCallsCompleted = 0;
+
+  recordStep("startup", "COMPLETED", Date.now(), `domainsPlanned=${targetDomains.length}`);
+
+  const connectStartMs = Date.now();
   try {
-    await Promise.race([
-      client.connect(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`MCP connect timeout after ${CONNECT_DEADLINE_MS}ms`)), CONNECT_DEADLINE_MS)
-      ),
-    ]);
+    await withOperationDeadline(
+      () => client.connect(),
+      CONNECT_DEADLINE_MS,
+      `MCP connect timeout after ${CONNECT_DEADLINE_MS}ms`
+    );
+    recordStep("connect", "COMPLETED", connectStartMs);
   } catch (connErr: any) {
+    const isTimeout = /timeout/i.test(String(connErr?.message || ""));
+    recordStep(
+      "connect",
+      isTimeout ? "TIMED_OUT" : "FAILED",
+      connectStartMs,
+      connErr?.message || String(connErr)
+    );
+    const cleanupStartMs = Date.now();
+    if (!customClient) {
+      await client.close().catch(() => {});
+    }
+    recordStep("cleanup", "COMPLETED", cleanupStartMs, "Closed client after connect failure");
     return {
       source: "GOOGLE_ADS",
       status: "BLOCKED_SOURCE",
@@ -1581,6 +1650,12 @@ export async function collectGoogleAdvertiserSignals(
         ],
         queryTimestamp: startedAt,
         isControlledMcp: Boolean(customClient),
+        domainsPlanned: targetDomains.length,
+        domainsAttempted: 0,
+        mcpCallsStarted: 0,
+        mcpCallsCompleted: 0,
+        cleanupCompleted: true,
+        stepTimeline,
         stateBreakdown: {
           configured: true,
           transportConnected: false,
@@ -1607,16 +1682,19 @@ export async function collectGoogleAdvertiserSignals(
 
   try {
     const observations: SourceObservation[] = [];
-    // V12.4.3.3.1 Section 7: Bounded tool-discovery with per-operation deadline
-    const caps = await Promise.race([
-      discoverGoogleAdsMcpCapabilities({}, client),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`MCP tool discovery timeout after ${TOOL_DISCOVERY_DEADLINE_MS}ms`)),
-          TOOL_DISCOVERY_DEADLINE_MS
-        )
-      ),
-    ]);
+    // V12.4.3.3.1 Section 6 & 7: Bounded tool-discovery with timer-safe per-operation deadline
+    const tdStartMs = Date.now();
+    const caps = await withOperationDeadline(
+      () => discoverGoogleAdsMcpCapabilities({}, client),
+      TOOL_DISCOVERY_DEADLINE_MS,
+      `MCP tool discovery timeout after ${TOOL_DISCOVERY_DEADLINE_MS}ms`
+    );
+    recordStep(
+      "toolDiscovery",
+      "COMPLETED",
+      tdStartMs,
+      `toolsDiscovered=${caps.toolsDiscovered.length}`
+    );
 
     const searchTool =
       caps.matchedTools.advertiserSearchTool || "search_advertiser";
@@ -1708,19 +1786,20 @@ export async function collectGoogleAdvertiserSignals(
 
         try {
           // Step 1: Search advertiser by domain — V12.4.3.3.1: bounded by PER_DOMAIN_DEADLINE_MS
-          const advResult = await Promise.race([
-            client.callToolByName
-              ? client.callToolByName(searchTool, { query: key })
-              : client.searchAdvertiserByDomain(key),
-            new Promise<never>((_, reject) =>
-              setTimeout(
-                () => reject(new Error(`Advertiser lookup timeout for ${key} after ${PER_DOMAIN_DEADLINE_MS}ms`)),
-                PER_DOMAIN_DEADLINE_MS
-              )
-            ),
-          ]);
+          const lookupStartMs = Date.now();
+          mcpCallsStarted++;
+          const advResult = await withOperationDeadline(
+            () =>
+              client.callToolByName
+                ? client.callToolByName(searchTool, { query: key })
+                : client.searchAdvertiserByDomain(key),
+            PER_DOMAIN_DEADLINE_MS,
+            `Advertiser lookup timeout for ${key} after ${PER_DOMAIN_DEADLINE_MS}ms`
+          );
+          mcpCallsCompleted++;
           anyLookupSucceeded = true;
           domainLookupOk = true;
+          recordStep("advertiserLookup", "COMPLETED", lookupStartMs, `domain=${key}`);
 
           const rawAdvList = Array.isArray(advResult)
             ? advResult
@@ -1746,13 +1825,22 @@ export async function collectGoogleAdvertiserSignals(
           // Step 3: Retrieve actual ad creatives for the discovered advertiser(s)
           for (const advId of advertiserIds.slice(0, maxAdsCallsPerDomain)) {
             if (query.signal?.aborted || upstreamRateLimitedOrBlocked) break;
+            const crStartMs = Date.now();
             try {
-              const adsResult = client.callToolByName
-                ? await client.callToolByName(adsTool, {
-                    advertiser_id: advId,
-                    region: query.market || "US",
-                  })
-                : await client.getAds(advId, query.market || "US");
+              mcpCallsStarted++;
+              const adsResult = await withOperationDeadline(
+                () =>
+                  client.callToolByName
+                    ? client.callToolByName(adsTool, {
+                        advertiser_id: advId,
+                        region: query.market || "US",
+                      })
+                    : client.getAds(advId, query.market || "US"),
+                PER_DOMAIN_DEADLINE_MS,
+                `Creative retrieval timeout for advertiser ${advId} after ${PER_DOMAIN_DEADLINE_MS}ms`
+              );
+              mcpCallsCompleted++;
+              recordStep("creativeRetrieval", "COMPLETED", crStartMs, `advertiserId=${advId}`);
 
               creativeQuerySucceeded = true;
               const rawAds = Array.isArray(adsResult)
@@ -1763,6 +1851,7 @@ export async function collectGoogleAdvertiserSignals(
               creativesReturnedCount += rawAds.length;
               domainCreativesReturned += rawAds.length;
 
+              const normStartMs = Date.now();
               const normResult = normalizeGoogleAdsResponse(adsResult, {
                 requestedDomain: regDomain,
                 topic: query.topic,
@@ -1771,6 +1860,12 @@ export async function collectGoogleAdvertiserSignals(
                 requestedMarket: query.market || "US",
                 providerFilterMarket: query.market || "US",
               });
+              recordStep(
+                "normalize",
+                "COMPLETED",
+                normStartMs,
+                `normalized=${normResult.observations.length}`
+              );
 
               for (const obs of normResult.observations) {
                 observations.push(obs);
@@ -1779,15 +1874,17 @@ export async function collectGoogleAdvertiserSignals(
               adsRetrievalFailed = true;
               const msg = String(adsErr?.message || adsErr);
               domainErrorMsg = msg;
+              recordStep(
+                "creativeRetrieval",
+                /timeout/i.test(msg) ? "TIMED_OUT" : "FAILED",
+                crStartMs,
+                msg
+              );
               errors.push(`Ads retrieval failed for advertiser ${advId}: ${msg}`);
               if (isRateLimitOrBlockError(msg)) {
                 upstreamRateLimitedOrBlocked = true;
                 domainStatus = isRateLimitError(msg) ? "RATE_LIMITED" : "BLOCKED";
-                if (
-                  !customClient &&
-                  process.env.VITEST !== "true" &&
-                  process.env.NODE_ENV !== "test"
-                ) {
+                if (isRateLimitError(msg)) {
                   (globalThis as any).__swaiGoogleRateLimitUntil =
                     Date.now() + 120_000;
                 }
@@ -1805,17 +1902,19 @@ export async function collectGoogleAdvertiserSignals(
         } catch (domainErr: any) {
           const msg = String(domainErr?.message || domainErr);
           domainErrorMsg = msg;
+          recordStep(
+            "advertiserLookup",
+            /timeout/i.test(msg) ? "TIMED_OUT" : "FAILED",
+            Date.now(),
+            `domain=${key}: ${msg}`
+          );
           errors.push(
             `Google Transparency advertiser lookup failed for ${key}: ${msg}`,
           );
           if (isRateLimitOrBlockError(msg)) {
             upstreamRateLimitedOrBlocked = true;
             domainStatus = isRateLimitError(msg) ? "RATE_LIMITED" : "BLOCKED";
-            if (
-              !customClient &&
-              process.env.VITEST !== "true" &&
-              process.env.NODE_ENV !== "test"
-            ) {
+            if (isRateLimitError(msg)) {
               (globalThis as any).__swaiGoogleRateLimitUntil =
                 Date.now() + 120_000;
             }
@@ -1903,11 +2002,13 @@ export async function collectGoogleAdvertiserSignals(
       queryErrors: [...errors],
       queryTimestamp: startedAt,
       isControlledMcp: Boolean(customClient),
-      // V12.4.3.3.1 Section 7: per-operation counters for acceptance gate diagnostics
+      // V12.4.3.3.1 Section 6 & 7: per-operation counters for acceptance gate diagnostics
       domainsPlanned: targetDomains.length,
       domainsAttempted: domainOutcomes.filter((d) => d.attempted).length,
-      mcpCallsStarted: attemptedDomains.length,
-      mcpCallsCompleted: anyLookupSucceeded ? attemptedDomains.length : 0,
+      mcpCallsStarted,
+      mcpCallsCompleted,
+      cleanupCompleted: true,
+      stepTimeline,
       stateBreakdown: {
         configured: true,
         transportConnected: true,
@@ -1997,6 +2098,15 @@ export async function collectGoogleAdvertiserSignals(
       },
     };
   } catch (err: any) {
+    const errMsg =
+      err.message ||
+      "Google Ads Transparency Center access was blocked or interrupted.";
+    recordStep(
+      "toolDiscovery",
+      /timeout/i.test(errMsg) ? "TIMED_OUT" : "FAILED",
+      Date.now(),
+      errMsg
+    );
     return {
       source: "GOOGLE_ADS",
       status: "BLOCKED_SOURCE",
@@ -2008,11 +2118,49 @@ export async function collectGoogleAdvertiserSignals(
       consumedCredits: 0,
       startedAt,
       completedAt: new Date().toISOString(),
-      errors: [
-        err.message ||
-          "Google Ads Transparency Center access was blocked or interrupted.",
-      ],
+      errors: [errMsg],
       warnings,
+      enrichmentExecution: {
+        attemptedDomains: [],
+        advertiserLookupSucceeded: false,
+        advertisersFound: 0,
+        creativeQuerySucceeded: false,
+        creativesReturned: 0,
+        normalizedObservations: 0,
+        productLevelMatches: 0,
+        brandLevelMatches: 0,
+        productEvidenceIds: [],
+        domainOutcomes: [],
+        queryErrors: [errMsg],
+        queryTimestamp: startedAt,
+        isControlledMcp: Boolean(customClient),
+        domainsPlanned: targetDomains.length,
+        domainsAttempted: 0,
+        mcpCallsStarted,
+        mcpCallsCompleted,
+        cleanupCompleted: true,
+        stepTimeline,
+        stateBreakdown: {
+          configured: true,
+          transportConnected: true,
+          toolDiscovered: false,
+          operationSupported: false,
+          advertiserLookupAttempted: false,
+          queryAttempted: false,
+          querySucceeded: false,
+          advertiserFound: false,
+          adsRetrieved: false,
+          creativesReturned: false,
+          brandLevelMatch: false,
+          productLevelMatch: false,
+          productAssociatedEvidence: false,
+          productEvidencePersisted: false,
+          currentRunProductEvidenceAvailable: false,
+          empty: false,
+          failed: true,
+          cached: false,
+        },
+      },
     };
   } finally {
     if (!customClient) {

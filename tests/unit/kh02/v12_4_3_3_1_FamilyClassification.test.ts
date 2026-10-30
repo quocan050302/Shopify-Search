@@ -1,17 +1,21 @@
 /**
- * SWAI KH-02 V12.4.3.3.1 — Semantic Product Family Classification Tests
+ * SWAI KH-02 V12.4.3.3.1 — Semantic Product Family Classification & Niche Relevance Tests
  *
- * Validates G12 fix: two water fountain products from different brands must share the
- * same family key (`pet_water_fountain`) and not count as distinct product families.
- *
- * Also verifies:
- * - UNRESOLVED_FAMILY fallback for single-token / brand-only titles
- * - Correct family rejection for niche-contamination cases (golf, crochet, dog food)
+ * Validates G09, G10, G12, and G26 using real production functions:
+ * - buildProductIdentityFingerprint / resolveProductFamily / evaluateOpportunityDiversity
+ * - evaluateProductRelevance (rejecting golf organizer in Car Accessories, crochet bag kit in DIY Tools,
+ *   consumable dog food starter kit in Pet Gadgets / Dog Gadgets, and species mismatch)
+ * - selectTopResearchShortlist (preventing same-family duplicate slots in BROAD_CATEGORY)
  */
 
 import { describe, it, expect } from "vitest";
-import { buildProductIdentityFingerprint } from "../../../src/services/kh02/identity/productDistinctnessEngine";
-import type { DistinctnessCandidateLike } from "../../../src/services/kh02/identity/productDistinctnessEngine";
+import {
+  buildProductIdentityFingerprint,
+  evaluateOpportunityDiversity,
+  resolveProductFamily,
+  type DistinctnessCandidateLike,
+} from "../../../src/services/kh02/identity/productDistinctnessEngine";
+import { evaluateProductRelevance } from "../../../src/services/kh02/identity/productRelevanceEvaluator";
 
 function makeCandidate(
   id: string,
@@ -27,9 +31,6 @@ function makeCandidate(
   };
 }
 
-// ---------------------------------------------------------------------------
-// G12 — Two water fountains must share pet_water_fountain family
-// ---------------------------------------------------------------------------
 describe("G12: pet_water_fountain family classification", () => {
   it("KittySpout Wireless Fountain → pet_water_fountain", () => {
     const fp = buildProductIdentityFingerprint(
@@ -77,9 +78,6 @@ describe("G12: pet_water_fountain family classification", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// G12 — Feeder, hair remover, and fountain are DISTINCT families
-// ---------------------------------------------------------------------------
 describe("G12: distinct families — feeder, fountain, hair remover", () => {
   it("Automatic Pet Feeder → automatic_pet_feeder", () => {
     const fp = buildProductIdentityFingerprint(
@@ -95,94 +93,104 @@ describe("G12: distinct families — feeder, fountain, hair remover", () => {
     expect(fp.familyKey).toBe("pet_hair_remover_roller");
   });
 
-  it("Three different families are counted as 3", () => {
-    const families = [
-      buildProductIdentityFingerprint(makeCandidate("a", "UAHPET Automatic Pet Feeder")).familyKey,
-      buildProductIdentityFingerprint(makeCandidate("b", "KittySpout Wireless Fountain")).familyKey,
-      buildProductIdentityFingerprint(makeCandidate("c", "Pet Hair Remover Roller")).familyKey,
-    ];
-    const distinctCount = new Set(families).size;
-    expect(distinctCount).toBe(3);
+  it("Three different families are counted as 3 by evaluateOpportunityDiversity", () => {
+    const div = evaluateOpportunityDiversity(
+      [
+        makeCandidate("a", "UAHPET Automatic Pet Feeder"),
+        makeCandidate("b", "KittySpout Wireless Fountain"),
+        makeCandidate("c", "Pet Hair Remover Roller"),
+      ],
+      { nicheIntent: "BROAD_CATEGORY", topic: "Pet Gadgets" }
+    );
+    expect(div.distinctFamilyCount).toBe(3);
+    expect(div.isFamilyDiverse).toBe(true);
   });
 });
 
-// ---------------------------------------------------------------------------
-// G12 — Niche contamination — mismatched family keys
-// ---------------------------------------------------------------------------
-describe("G12: niche contamination — wrong family rejection", () => {
-  it("Golf organizer pouch → NOT car_accessories family", () => {
+describe("G09, G10 & G12: Niche contamination rejection via evaluateProductRelevance and family resolution", () => {
+  it("Golf organizer pouch is rejected as IRRELEVANT for Car Accessories", () => {
+    const rel = evaluateProductRelevance(
+      "Golf Organizer Pouch With Golf Accessories Set https://golfstore.com/products/golf-organizer-pouch",
+      "Car Accessories"
+    );
+    expect(rel.relevanceStatus).toBe("IRRELEVANT");
+    expect(rel.isAccepted).toBe(false);
+
     const fp = buildProductIdentityFingerprint(
       makeCandidate("c20", "Golf Organizer Pouch Clip")
     );
     expect(fp.familyKey).not.toBe("car_accessories");
-    expect(fp.familyKey).not.toBe("car_organizer_holder");
+    expect(fp.familyKey).not.toBe("car_organizer_storage");
   });
 
-  it("Crochet kit → NOT diy_tools family", () => {
+  it("Crochet bag DIY kit is rejected as IRRELEVANT for DIY Tools", () => {
+    const rel = evaluateProductRelevance(
+      "CrochetPark™ Elegant granny Crochet Bag DIY Kit https://crochetpark.com/products/granny-crochet-bag-diy-kit",
+      "DIY Tools"
+    );
+    expect(rel.relevanceStatus).toBe("IRRELEVANT");
+    expect(rel.isAccepted).toBe(false);
+
     const fp = buildProductIdentityFingerprint(
       makeCandidate("c21", "Learn to Crochet Starter Kit")
     );
-    // Crochet is not in PRODUCT_FAMILY_RULES for diy_tools, so it gets a token-based or unresolved key
     expect(fp.familyKey).not.toBe("diy_tools");
     expect(fp.familyKey).not.toBe("hot_glue_gun");
   });
 
-  it("Dog food bundle → NOT pet_gadgets family", () => {
-    const fp = buildProductIdentityFingerprint(
-      makeCandidate("c22", "Purina Pro Plan Dog Food Bundle")
+  it("Shelf-stable dog food starter kit (+ Toy) is rejected as IRRELEVANT for Pet Gadgets and Dog Gadgets", () => {
+    const relPet = evaluateProductRelevance(
+      "Gently Cooked Shelf-Stable Dog Food Starter Kit - 3 Boxes (2 lbs Each) + Toy https://dogfood.com/products/starter-kit",
+      "Pet Gadgets"
     );
-    expect(fp.familyKey).not.toBe("pet_water_fountain");
-    expect(fp.familyKey).not.toBe("automatic_pet_feeder");
-    expect(fp.familyKey).not.toBe("gps_pet_tracker_collar");
-    expect(fp.familyKey).not.toBe("interactive_pet_toy");
+    expect(relPet.relevanceStatus).toBe("IRRELEVANT");
+    expect(relPet.isAccepted).toBe(false);
+
+    const relDog = evaluateProductRelevance(
+      "Gently Cooked Shelf-Stable Dog Food Starter Kit - 3 Boxes (2 lbs Each) + Toy https://dogfood.com/products/starter-kit",
+      "Dog Gadgets"
+    );
+    expect(relDog.relevanceStatus).toBe("IRRELEVANT");
+    expect(relDog.isAccepted).toBe(false);
+  });
+
+  it("Automatic Pet Feeder hardware device remains RELEVANT for Pet Gadgets", () => {
+    const relFeeder = evaluateProductRelevance(
+      "UAHPET Automatic Pet Feeder Smart Timed Dog & Cat Food Dispenser https://uahpet.com/products/automatic-pet-feeder",
+      "Pet Gadgets"
+    );
+    expect(relFeeder.relevanceStatus).toBe("RELEVANT");
+    expect(relFeeder.isAccepted).toBe(true);
   });
 });
 
-// ---------------------------------------------------------------------------
-// G12 — Oil sprayer / oil dispenser share same family
-// ---------------------------------------------------------------------------
 describe("G12: oil dispenser and oil sprayer share oil_dispenser_sprayer", () => {
-  it("Oil sprayer → oil_dispenser_sprayer", () => {
-    const fp = buildProductIdentityFingerprint(
-      makeCandidate("c30", "Olive Oil Sprayer Bottle for Cooking")
-    );
-    expect(fp.familyKey).toBe("oil_dispenser_sprayer");
-  });
-
-  it("Oil dispenser → oil_dispenser_sprayer", () => {
-    const fp = buildProductIdentityFingerprint(
-      makeCandidate("c31", "Premium Oil Dispenser Kitchen")
-    );
-    expect(fp.familyKey).toBe("oil_dispenser_sprayer");
-  });
-
-  it("Both share exact same familyKey", () => {
+  it("Oil sprayer and oil dispenser resolve to exact same familyKey oil_dispenser_sprayer", () => {
     const fp1 = buildProductIdentityFingerprint(
       makeCandidate("c30", "Olive Oil Sprayer Bottle for Cooking")
     );
     const fp2 = buildProductIdentityFingerprint(
       makeCandidate("c31", "Premium Oil Dispenser Kitchen")
     );
+    expect(fp1.familyKey).toBe("oil_dispenser_sprayer");
+    expect(fp2.familyKey).toBe("oil_dispenser_sprayer");
     expect(fp1.familyKey).toBe(fp2.familyKey);
   });
 });
 
-// ---------------------------------------------------------------------------
-// G12 — UNRESOLVED_FAMILY fallback for brand-only or insufficient tokens
-// ---------------------------------------------------------------------------
-describe("G12: UNRESOLVED_FAMILY for brand-only titles (< 2 semantic tokens)", () => {
-  it("Brand-only single word → unresolved_family", () => {
-    const fp = buildProductIdentityFingerprint(
-      makeCandidate("c40", "Swiffer")
-    );
-    // Only 1 token after filtering generics — cannot form a reliable composite family
+describe("G12: UNRESOLVED_FAMILY for brand-only titles (< 2 semantic tokens) never inflates distinctFamilyCount", () => {
+  it("Brand-only single word → unresolved_family and distinctFamilyCount=0 in evaluateOpportunityDiversity", () => {
+    const fp = buildProductIdentityFingerprint(makeCandidate("c40", "Swiffer"));
     expect(fp.familyKey).toBe("unresolved_family");
-  });
 
-  it("All-generic tokens → unresolved_family", () => {
-    // 'New', 'the', 'pro', 'max' are all generic/filtered, leaving 0 meaningful tokens
-    const fp = buildProductIdentityFingerprint(makeCandidate("c41", "New Pro Max"));
-    expect(fp.familyKey).toBe("unresolved_family");
+    const fp2 = resolveProductFamily("New Pro Max");
+    expect(fp2.familyKey).toBe("unresolved_family");
+
+    const div = evaluateOpportunityDiversity(
+      [makeCandidate("c40", "Swiffer"), makeCandidate("c41", "New Pro Max")],
+      { nicheIntent: "BROAD_CATEGORY", topic: "Cleaning Gadgets" }
+    );
+    expect(div.distinctFamilyCount).toBe(0);
+    expect(div.isFamilyDiverse).toBe(false);
   });
 });
-

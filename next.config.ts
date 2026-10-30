@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   env: {
-    NEXT_PUBLIC_SWAI_RELEASE_VERSION: "12.4.3.3",
+    NEXT_PUBLIC_SWAI_RELEASE_VERSION: "12.4.3.3.1",
     NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA: compileTimeSha,
     NEXT_PUBLIC_BUILD_TIMESTAMP: compileTimeTimestamp,
   },

@@ -86,6 +86,7 @@ export interface ExplorerCandidateRow {
   plainEnglishReason: string;
   rejectionReasonCode: string | null;
   researchProductId: string | null;
+  inRankedSnapshot?: boolean;
   rawCandidate: DiscoveredProductCandidate;
   rawRankedItem: RankedProductCandidate | null;
 }
@@ -674,7 +675,7 @@ export function buildAllCandidatesExplorerList(
 ): ExplorerCandidateRow[] {
   if (!leaderboard) return [];
 
-  const seenKeys = new Set<string>();
+  const seenCandidateIds = new Set<string>();
   const rows: ExplorerCandidateRow[] = [];
 
   const shortlistIds = new Set(
@@ -683,15 +684,19 @@ export function buildAllCandidatesExplorerList(
   const evergreenIds = new Set(
     (leaderboard.topThree || []).map((r: any) => r.candidate.candidateId)
   );
+  const rankedSnapshotIds = new Set<string>([
+    ...(leaderboard.topThree || []).map((r: any) => r.candidate?.candidateId),
+    ...(leaderboard.provisionalCandidates || []).map((r: any) => r.candidate?.candidateId),
+    ...(leaderboard.remainingCandidates || []).map((r: any) => r.candidate?.candidateId),
+  ].filter(Boolean));
 
   const addEntry = (
     candidate: DiscoveredProductCandidate,
     rankedItem: RankedProductCandidate | null,
     defaultBucket: ExplorerCandidateStatus
   ) => {
-    const keys = getCanonicalDedupeKeys(candidate);
-    if (keys.some((k) => seenKeys.has(k))) return;
-    keys.forEach((k) => seenKeys.add(k));
+    if (!candidate?.candidateId || seenCandidateIds.has(candidate.candidateId)) return;
+    seenCandidateIds.add(candidate.candidateId);
 
     let explorerStatus: ExplorerCandidateStatus = defaultBucket;
     if (
@@ -808,6 +813,7 @@ export function buildAllCandidatesExplorerList(
       plainEnglishReason,
       rejectionReasonCode: candidate.rejectionDetail?.reasonCode || null,
       researchProductId: candidate.researchProductId || null,
+      inRankedSnapshot: rankedSnapshotIds.has(candidate.candidateId),
       rawCandidate: candidate,
       rawRankedItem: rankedItem,
     });

@@ -1,35 +1,48 @@
 /**
  * SWAI KH-02 V12.4.3.3.1 — Meta & Google Live Integrity Adversarial Tests
  *
- * 22 adversarial mutation checks (M1–M22) verifying:
- * - G04: Full query→ad→DB→candidate lineage gates
- * - G12: Semantic product family diversity gates
- * - G16: Live Verified Top-3 identity separation
- * - G17: Browser reconciliation NOT_RUN = NOT PASS
- * - G25: Protected feature integrity
- * - G26: Cross-niche generalization
- * - G27: Provider error / timeout truth
+ * Every test invokes real exported production functions (zero local-expression-only assertions):
+ * - selectTopResearchShortlist / discoverProductCandidatesFromAds / mergeDuplicateCandidateRecords
+ * - isLiveProviderObservation / isCandidateLiveVerified
+ * - buildProductIdentityFingerprint / evaluateOpportunityDiversity
+ * - evaluateProductRelevance
+ * - collectGoogleAdvertiserSignals
+ * - reconcileResearchAcrossLayers / requalifyHistoricalEvergreenSnapshot
+ * - calculateKH02EvergreenScore
+ * - SWAI_KH02_RELEASE_VERSION
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import fs from "fs";
+import path from "path";
+import { describe, it, expect } from "vitest";
 import {
   buildProductIdentityFingerprint,
+  evaluateOpportunityDiversity,
 } from "../../../src/services/kh02/identity/productDistinctnessEngine";
 import {
+  discoverProductCandidatesFromAds,
   evaluateShortlistDistinctness,
+  isCandidateLiveVerified,
+  isLiveProviderObservation,
+  mergeDuplicateCandidateRecords,
   selectTopResearchShortlist,
 } from "../../../src/services/kh02/identity/productCandidateDiscovery";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+import { evaluateProductRelevance } from "../../../src/services/kh02/identity/productRelevanceEvaluator";
+import { collectGoogleAdvertiserSignals } from "../../../src/services/kh02/providers/googleTransparencyResearchAdapter";
+import {
+  reconcileResearchAcrossLayers,
+  requalifyHistoricalEvergreenSnapshot,
+} from "../../../src/services/kh02/persistence/kh02PersistenceService";
+import { calculateKH02EvergreenScore } from "../../../src/services/kh02/scoring/evergreenOpportunityScoring";
+import { SWAI_KH02_RELEASE_VERSION } from "../../../src/services/kh02/version/runtimeVersionService";
 
 function candidateBase(overrides: Record<string, any> = {}) {
   return {
     candidateId: `cand_test_${Math.random().toString(36).slice(2)}`,
-    title: "Test Product",
-    displayName: "Test Product",
-    canonicalProductName: "Test Product",
+    title: "Automatic Pet Feeder Smart WiFi",
+    displayName: "Automatic Pet Feeder Smart WiFi",
+    canonicalProductName: "Automatic Pet Feeder Smart WiFi",
+    canonicalProductUrl: "https://teststore.com/products/automatic-pet-feeder",
     identityStatus: "VERIFIED" as const,
     identityConfidence: "EXACT" as const,
     category: "Pet Gadgets",
@@ -42,21 +55,26 @@ function candidateBase(overrides: Record<string, any> = {}) {
     distinctAdvertisersCount: 1,
     earliestObservationDate: "2026-01-01T00:00:00Z",
     latestObservationDate: "2026-10-01T00:00:00Z",
-    relevanceScore: 0.85,
-    relevanceStatus: "ACCEPTED",
+    relevanceScore: 0.92,
+    relevanceStatus: "RELEVANT",
     matchedQueryIds: ["query_live_001"],
     sourceObservations: [
       {
+        source: "META_ADS",
         sourceRecordId: "obs_001",
+        provenance: "LIVE_PROVIDER",
         sourceType: "LIVE",
         isLiveRecord: true,
         queryId: "query_live_001",
-        title: "Test Product Ad",
+        matchedQueryIds: ["query_live_001"],
+        title: "Automatic Pet Feeder Ad",
+        landingPageUrl: "https://teststore.com/products/automatic-pet-feeder",
       },
     ],
-    liveObservationsCount: 3,
+    liveObservationsCount: 1,
     cachedObservationsCount: 0,
     productRealityStatus: "VERIFIED_PHYSICAL_PRODUCT",
+    sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
     isEligibleAsEvergreenWinner: false,
     requiresManualReview: false,
     hasUnresolvedContradiction: false,
@@ -68,307 +86,539 @@ function candidateBase(overrides: Record<string, any> = {}) {
   } as any;
 }
 
-// ---------------------------------------------------------------------------
-// M1: Candidate has supportingAdIds but empty matchedQueryIds → G04 FAIL
-// ---------------------------------------------------------------------------
-describe("M1: G04 — supportingAdIds present but matchedQueryIds empty", () => {
-  it("candidate with empty matchedQueryIds fails G04 lineage check", () => {
+describe("M1 & M2: G04 — selectTopResearchShortlist and isCandidateLiveVerified enforce current-run matchedQueryIds lineage", () => {
+  it("candidate with supportingAdIds but empty matchedQueryIds fails isCandidateLiveVerified when executedQueryIds is supplied", () => {
     const cand = candidateBase({
       candidateId: "cand_m1",
       matchedQueryIds: [],
       supportingAdIds: ["ad_001", "ad_002"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_001",
+          provenance: "LIVE_PROVIDER",
+          matchedQueryIds: [],
+        },
+      ],
     });
-    // G04 acceptance gate: matchedQueryIds must be non-empty
-    const lineagePass = Array.isArray(cand.matchedQueryIds) && cand.matchedQueryIds.length > 0;
-    expect(lineagePass).toBe(false);
+
+    expect(isCandidateLiveVerified(cand, ["query_live_001"])).toBe(false);
+
+    const shortlistRes = selectTopResearchShortlist([cand], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
+      executedQueryIds: ["query_live_001"],
+    });
+    expect(shortlistRes.liveVerifiedProductCount).toBe(0);
+    expect(shortlistRes.liveVerifiedTop3).toBe(false);
+  });
+
+  it("candidate with queryId from another research run fails isCandidateLiveVerified for current run", () => {
+    const cand = candidateBase({
+      candidateId: "cand_m2",
+      matchedQueryIds: ["query_STALE_RUN_XYZ"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_stale_1",
+          provenance: "LIVE_PROVIDER",
+          queryId: "query_STALE_RUN_XYZ",
+          matchedQueryIds: ["query_STALE_RUN_XYZ"],
+        },
+      ],
+    });
+
+    expect(
+      isCandidateLiveVerified(cand, ["query_current_run_001", "query_current_run_002"])
+    ).toBe(false);
+  });
+
+  it("selectTopResearchShortlist prioritizes current-run live candidate over cached candidate with more historical observations in the same family", () => {
+    const cachedCandidate = candidateBase({
+      candidateId: "cand_cached_fountain",
+      title: "Cached Stainless Steel Cat Water Fountain",
+      canonicalProductName: "Cached Stainless Steel Cat Water Fountain",
+      canonicalProductUrl: "https://cachedstore.com/products/cat-water-fountain",
+      storeDomain: "cachedstore.com",
+      totalObservationCount: 8,
+      liveObservationsCount: 0,
+      cachedObservationsCount: 8,
+      matchedQueryIds: [],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_cache_1",
+          provenance: "CACHED_SOURCE",
+          matchedQueryIds: [],
+        },
+      ],
+    });
+
+    const liveCandidate = candidateBase({
+      candidateId: "cand_live_fountain",
+      title: "Live Wireless Cat Water Fountain",
+      canonicalProductName: "Live Wireless Cat Water Fountain",
+      canonicalProductUrl: "https://livestore.com/products/wireless-cat-fountain",
+      storeDomain: "livestore.com",
+      totalObservationCount: 1,
+      liveObservationsCount: 1,
+      cachedObservationsCount: 0,
+      matchedQueryIds: ["q_r1_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_live_1",
+          provenance: "LIVE_PROVIDER",
+          queryId: "q_r1_1",
+          matchedQueryIds: ["q_r1_1"],
+        },
+      ],
+    });
+
+    const res = selectTopResearchShortlist([cachedCandidate, liveCandidate], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
+      executedQueryIds: ["q_r1_1"],
+    });
+
+    expect(res.shortlist.length).toBe(1);
+    expect(res.shortlist[0].candidateId).toBe("cand_live_fountain");
+    expect(res.liveVerifiedProductCount).toBe(1);
   });
 });
 
-// ---------------------------------------------------------------------------
-// M2: queryId from another run → should NOT pass G04
-// ---------------------------------------------------------------------------
-describe("M2: G04 — queryId from a different research run rejected", () => {
-  it("queryId not in current run's executedQueries fails G04", () => {
-    const currentRunQueryIds = new Set(["query_current_run_001", "query_current_run_002"]);
-    const candidateMatchedQueryIds = ["query_STALE_RUN_XYZ"];
-    const allQueryIdsInRun = candidateMatchedQueryIds.every((qid) => currentRunQueryIds.has(qid));
-    expect(allQueryIdsInRun).toBe(false);
-  });
-});
+describe("M3 & G16: selectTopResearchShortlist rejects cache-only and undefined sourceType observations from liveVerifiedProductCount", () => {
+  it("candidate with liveObservationsCount=0 and sourceObservations=[{ sourceType: undefined }] produces liveVerifiedProductCount=0", () => {
+    const cand = candidateBase({
+      candidateId: "cand_undefined_sourcetype",
+      identityStatus: "VERIFIED",
+      liveObservationsCount: 0,
+      cachedObservationsCount: 1,
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "obs_undef_1",
+          sourceType: undefined,
+        },
+      ],
+    });
 
-// ---------------------------------------------------------------------------
-// M3: Cached ad labeled as LIVE_PROVIDER → should fail G04 live source check
-// ---------------------------------------------------------------------------
-describe("M3: G04 — cached observation labeled as live is detected", () => {
-  it("observation with sourceType=CACHED fails live grounding check", () => {
+    expect(isLiveProviderObservation(cand.sourceObservations[0])).toBe(false);
+    expect(isCandidateLiveVerified(cand)).toBe(false);
+
+    const res = selectTopResearchShortlist([cand], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
+    });
+    expect(res.liveVerifiedProductCount).toBe(0);
+    expect(res.liveVerifiedTop3).toBe(false);
+  });
+
+  it("candidate with provenance=CACHED_SOURCE fails live grounding in selectTopResearchShortlist", () => {
     const cand = candidateBase({
       candidateId: "cand_m3",
       liveObservationsCount: 0,
       cachedObservationsCount: 4,
       sourceObservations: [
         {
+          source: "META_ADS",
           sourceRecordId: "obs_cache_1",
+          provenance: "CACHED_SOURCE",
           sourceType: "CACHED",
           isLiveRecord: false,
-          queryId: "query_cache_001",
         },
       ],
     });
-    const isLiveGrounded =
-      cand.liveObservationsCount > 0 ||
-      cand.sourceObservations.some(
-        (o: any) =>
-          o.isLiveRecord === true ||
-          (o.sourceType !== "CACHE" && o.sourceType !== "CACHED" && o.sourceType !== "CACHE_ONLY")
-      );
-    expect(isLiveGrounded).toBe(false);
+
+    const res = selectTopResearchShortlist([cand], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
+    });
+    expect(res.liveVerifiedProductCount).toBe(0);
+    expect(res.liveVerifiedTop3).toBe(false);
   });
 });
 
-// ---------------------------------------------------------------------------
-// M9: Two water fountains classified as separate families → G12 FAIL
-// ---------------------------------------------------------------------------
-describe("M9: G12 — two water fountains must NOT be 2 distinct families", () => {
-  it("KittySpout Wireless Fountain and Pawira Water Fountain share same familyKey", () => {
-    const fp1 = buildProductIdentityFingerprint({
-      candidateId: "c1",
+describe("M9 & M17: G12 — selectTopResearchShortlist enforces 1 representative per product family for BROAD_CATEGORY", () => {
+  it("two water fountains + one feeder in BROAD_CATEGORY shortlist selects only 1 water fountain and 1 feeder (2 distinct families)", () => {
+    const fountain1 = candidateBase({
+      candidateId: "c_fountain_1",
       title: "KittySpout Wireless Fountain",
       canonicalProductName: "KittySpout Wireless Fountain",
+      canonicalProductUrl: "https://kittyspout.com/products/wireless-fountain",
+      storeDomain: "kittyspout.com",
     });
-    const fp2 = buildProductIdentityFingerprint({
-      candidateId: "c2",
+    const fountain2 = candidateBase({
+      candidateId: "c_fountain_2",
       title: "Pawira Stainless Steel Water Fountain",
       canonicalProductName: "Pawira Stainless Steel Water Fountain",
+      canonicalProductUrl: "https://pawira.com/products/water-fountain",
+      storeDomain: "pawira.com",
     });
-    // Gate: they MUST share the same family — NOT 2 distinct families
-    expect(fp1.familyKey).toBe(fp2.familyKey);
-    expect(fp1.familyKey).toBe("pet_water_fountain");
-  });
-
-  it("distinctFamilyCount with two fountains + one feeder = 2 (not 3)", () => {
-    const fp1 = buildProductIdentityFingerprint({
-      candidateId: "c1",
-      title: "KittySpout Wireless Fountain",
-      canonicalProductName: "KittySpout Wireless Fountain",
-    });
-    const fp2 = buildProductIdentityFingerprint({
-      candidateId: "c2",
-      title: "Pawira Stainless Steel Water Fountain",
-      canonicalProductName: "Pawira Stainless Steel Water Fountain",
-    });
-    const fp3 = buildProductIdentityFingerprint({
-      candidateId: "c3",
+    const feeder = candidateBase({
+      candidateId: "c_feeder_1",
       title: "UAHPET Automatic Pet Feeder",
       canonicalProductName: "UAHPET Automatic Pet Feeder",
+      canonicalProductUrl: "https://uahpet.com/products/automatic-pet-feeder",
+      storeDomain: "uahpet.com",
     });
-    const families = new Set([fp1.familyKey, fp2.familyKey, fp3.familyKey]);
-    expect(families.size).toBe(2); // fountain + feeder = 2, not 3
-  });
-});
 
-// ---------------------------------------------------------------------------
-// M11: PROBABLE labeled as VERIFIED → G16 FAIL
-// ---------------------------------------------------------------------------
-describe("M11: G16 — PROBABLE identity must not qualify as VERIFIED for live top-3", () => {
-  it("candidate with identityStatus=PROBABLE excluded from liveVerifiedProductCount", () => {
-    const cand = candidateBase({
-      candidateId: "cand_m11",
-      identityStatus: "PROBABLE",
-      liveObservationsCount: 5,
+    const res = selectTopResearchShortlist([fountain1, fountain2, feeder], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
     });
-    const isLiveVerified =
-      cand.identityStatus === "VERIFIED" &&
-      (cand.liveObservationsCount > 0 ||
-        cand.sourceObservations.some((o: any) => o.isLiveRecord === true));
-    expect(isLiveVerified).toBe(false);
+
+    expect(res.shortlist.length).toBe(2);
+    expect(res.distinctFamiliesCount).toBe(2);
+    const selectedFamilies = res.shortlist.map((c) => c.familyKey);
+    expect(selectedFamilies).toContain("pet_water_fountain");
+    expect(selectedFamilies).toContain("automatic_pet_feeder");
   });
 
-  it("liveVerifiedTop3 requires ALL 3 candidates to be VERIFIED (not PROBABLE)", () => {
-    const candidates = [
-      candidateBase({ candidateId: "c1", identityStatus: "VERIFIED", liveObservationsCount: 3 }),
-      candidateBase({ candidateId: "c2", identityStatus: "PROBABLE", liveObservationsCount: 2 }),
-      candidateBase({ candidateId: "c3", identityStatus: "VERIFIED", liveObservationsCount: 1 }),
-    ];
-    const liveVerifiedCount = candidates.filter(
-      (c) => c.identityStatus === "VERIFIED" && c.liveObservationsCount > 0
-    ).length;
-    const liveVerifiedTop3 = liveVerifiedCount >= 3;
-    expect(liveVerifiedTop3).toBe(false);
-    expect(liveVerifiedCount).toBe(2); // not 3
-  });
-});
-
-// ---------------------------------------------------------------------------
-// M15: browserReconciled=false → G17 FAIL
-// ---------------------------------------------------------------------------
-describe("M15: G17 — browserReconciled=false must prevent G17 PASS", () => {
-  it("browserStatus=NOT_RUN produces browserReconciled=false (never PASS)", () => {
-    const browserStatus = "NOT_RUN" as "PASS" | "FAIL" | "NOT_RUN" | "BLOCKED";
-    // V12.4.3.3.1 fix: NOT_RUN → false
-    const browserReconciled = browserStatus === "PASS";
-    expect(browserReconciled).toBe(false);
-  });
-
-  it("G17 verdict is MISMATCH when browserStatus=NOT_RUN", () => {
-    const isConsistent = true;
-    const httpReconciled = true;
-    const browserStatus = "NOT_RUN" as "PASS" | "FAIL" | "NOT_RUN" | "BLOCKED";
-    const browserReconciled = browserStatus === "PASS" ? true : false;
-    const verdict = isConsistent && httpReconciled && browserReconciled ? "RECONCILED" : "MISMATCH";
-    expect(verdict).toBe("MISMATCH");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// M16: Source observation missing queryId → lineage chain broken
-// ---------------------------------------------------------------------------
-describe("M16: G04 — observation without queryId breaks lineage chain", () => {
-  it("observation with no queryId cannot contribute to matchedQueryIds", () => {
-    const obs = { sourceRecordId: "obs_001", sourceType: "LIVE", isLiveRecord: true };
-    const derivedQueryId = (obs as any).queryId || (obs as any).metrics?.queryId;
-    expect(derivedQueryId).toBeUndefined();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// M17: Homogeneous shortlist (all same family) → G12 distinctFamilyCount < 3
-// ---------------------------------------------------------------------------
-describe("M17: G12 — homogeneous shortlist (all pet_water_fountain) = 1 family, not 3", () => {
-  it("three water fountains = 1 distinct family", () => {
-    const families = [
-      buildProductIdentityFingerprint({ candidateId: "a", title: "KittySpout Wireless Fountain", canonicalProductName: "KittySpout Wireless Fountain" }).familyKey,
-      buildProductIdentityFingerprint({ candidateId: "b", title: "Pawira Water Fountain", canonicalProductName: "Pawira Water Fountain" }).familyKey,
-      buildProductIdentityFingerprint({ candidateId: "c", title: "Cat Pet Drinking Fountain", canonicalProductName: "Cat Pet Drinking Fountain" }).familyKey,
-    ];
-    const distinctFamilyCount = new Set(families).size;
-    expect(distinctFamilyCount).toBe(1);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// M20: GET request must not create unauthorized product/ad associations
-// ---------------------------------------------------------------------------
-describe("M20: GET API side effects — read-only enforcement", () => {
-  it("GET overview must not call prisma.competitorStore.upsert() (behavioral check)", async () => {
-    // This test verifies the behavioral contract described in V12.4.3.3.1 Section 10.
-    // The full integration check is performed in the acceptance runner.
-    // Here we verify the implementation intent by checking that the route code
-    // no longer contains write operations by confirming the route is read-only
-    // (done at implementation level — the acceptance runner M20 gate does runtime DB row count diff).
-    const routeCode = await import("fs").then((fs) =>
-      fs.readFileSync(
-        `${process.cwd()}/src/app/api/v1/research/products/[id]/overview/route.ts`,
-        "utf-8"
-      )
+  it("evaluateOpportunityDiversity reports distinctFamilyCount=1 for three water fountains", () => {
+    const div = evaluateOpportunityDiversity(
+      [
+        {
+          candidateId: "a",
+          title: "KittySpout Wireless Fountain",
+          canonicalProductName: "KittySpout Wireless Fountain",
+        },
+        {
+          candidateId: "b",
+          title: "Pawira Stainless Steel Water Fountain",
+          canonicalProductName: "Pawira Stainless Steel Water Fountain",
+        },
+        {
+          candidateId: "c",
+          title: "Cat Pet Drinking Fountain",
+          canonicalProductName: "Cat Pet Drinking Fountain",
+        },
+      ],
+      { nicheIntent: "BROAD_CATEGORY", topic: "Pet Gadgets" }
     );
-    // The upsert blocks that write on GET should have been replaced with read-only findUnique
-    // Confirm the pattern of "Materialize an authorized" comment is gone
-    expect(routeCode).not.toContain("Materialize an authorized ResearchProduct record for this KH-02 candidate so Product Intelligence");
-    // The new code should only have the read-only comment
-    expect(routeCode).toContain("GET does not materialize ResearchProduct");
+    expect(div.distinctFamilyCount).toBe(1);
+    expect(div.isFamilyDiverse).toBe(false);
   });
 });
 
-// ---------------------------------------------------------------------------
-// M21: testedSourceSha must differ from artifactCommitSha
-// ---------------------------------------------------------------------------
-describe("M21: Provenance SHA tracking — tested ≠ artifact SHA", () => {
-  it("testedSourceSha and artifactCommitSha are tracked as separate fields", () => {
-    const provenance = {
-      testedSourceSha: "87627ae851a02d855245ca71b8bd9435826a7811",
-      artifactCommitSha: null as string | null, // will be filled after commit
+describe("M11: G16 — PROBABLE identity excluded from liveVerifiedProductCount in selectTopResearchShortlist", () => {
+  it("shortlist with 2 VERIFIED and 1 PROBABLE live candidates reports liveVerifiedProductCount=2 and liveVerifiedTop3=false", () => {
+    const c1 = candidateBase({
+      candidateId: "c1",
+      title: "UAHPET Automatic Pet Feeder",
+      canonicalProductName: "UAHPET Automatic Pet Feeder",
+      canonicalProductUrl: "https://uahpet.com/products/automatic-pet-feeder",
+      storeDomain: "uahpet.com",
+      identityStatus: "VERIFIED",
+      liveObservationsCount: 3,
+    });
+    const c2 = candidateBase({
+      candidateId: "c2",
+      title: "ChomChom Pet Hair Remover Roller",
+      canonicalProductName: "ChomChom Pet Hair Remover Roller",
+      canonicalProductUrl: "https://chomchom.com/products/pet-hair-remover",
+      storeDomain: "chomchom.com",
+      identityStatus: "PROBABLE",
+      liveObservationsCount: 2,
+    });
+    const c3 = candidateBase({
+      candidateId: "c3",
+      title: "KittySpout Wireless Cat Water Fountain",
+      canonicalProductName: "KittySpout Wireless Cat Water Fountain",
+      canonicalProductUrl: "https://kittyspout.com/products/wireless-fountain",
+      storeDomain: "kittyspout.com",
+      identityStatus: "VERIFIED",
+      liveObservationsCount: 1,
+    });
+
+    const res = selectTopResearchShortlist([c1, c2, c3], 3, {
+      nicheIntent: "BROAD_CATEGORY",
+      topic: "Pet Gadgets",
+    });
+
+    expect(res.shortlist.length).toBe(3);
+    expect(res.liveVerifiedProductCount).toBe(2);
+    expect(res.liveVerifiedTop3).toBe(false);
+  });
+});
+
+describe("M15: G17 — reconcileResearchAcrossLayers sets browserStatus=NOT_RUN and browserReconciled=false when browserEvidence is omitted", () => {
+  it("reconcileResearchAcrossLayers without browserEvidence never marks browserReconciled=true", async () => {
+    const mockSnapshot: any = {
+      researchRunId: "run_g17_test",
+      topic: "Pet Gadgets",
+      runStatus: "PASSED",
+      topThree: [],
+      provisionalCandidates: [
+        {
+          rank: null,
+          candidate: candidateBase({
+            candidateId: "cand_reconcile_1",
+            title: "Automatic Pet Feeder",
+          }),
+          score: {
+            opportunityScore: 68,
+            tier: "PROVISIONAL_OPPORTUNITY",
+            recommendation: "WATCH",
+            scoreStatus: "SCORED",
+          },
+        },
+      ],
+      insufficientEvidenceCandidates: [],
+      researchShortlist: {
+        shortlist: [
+          candidateBase({
+            candidateId: "cand_reconcile_1",
+            title: "Automatic Pet Feeder",
+          }),
+        ],
+        qualifiedCount: 1,
+      },
+      providerTelemetry: {
+        META_ADS: { queryStatus: "PASSED", isLive: true },
+      },
     };
-    // testedSourceSha must be non-empty
-    expect(provenance.testedSourceSha).toBeTruthy();
-    expect(provenance.testedSourceSha.length).toBeGreaterThan(10);
-    // artifactCommitSha starts as null before artifacts are committed — that's valid
-    // Both fields must exist as separate keys
-    expect("testedSourceSha" in provenance).toBe(true);
-    expect("artifactCommitSha" in provenance).toBe(true);
+
+    const mockDb = {
+      syncJob: {
+        findUnique: async () => ({
+          id: "run_g17_test",
+          workspaceId: "ws_test",
+          status: "COMPLETED",
+          resultJson: JSON.stringify(mockSnapshot),
+        }),
+      },
+    };
+
+    const recWithoutBrowser = await reconcileResearchAcrossLayers("run_g17_test", {
+      db: mockDb,
+      workspaceId: "ws_test",
+      strictFullLayers: true,
+    });
+    expect(recWithoutBrowser.browserStatus).toBe("NOT_RUN");
+    expect(recWithoutBrowser.browserReconciled).toBe(false);
+    expect(recWithoutBrowser.reconciliationVerdict).toBe("MISMATCH");
+
+    const recWithMatchingBrowser = await reconcileResearchAcrossLayers("run_g17_test", {
+      db: mockDb,
+      workspaceId: "ws_test",
+      browserEvidence: {
+        runId: "run_g17_test",
+        terminalStatus: "COMPLETED",
+        displayedCandidateIds: ["cand_reconcile_1"],
+        displayedRankOrder: [],
+      },
+    });
+    expect(recWithMatchingBrowser.browserStatus).toBe("PASS");
+    expect(recWithMatchingBrowser.browserReconciled).toBe(true);
   });
 });
 
-// ---------------------------------------------------------------------------
-// M22: Evergreen gate must not auto-promote PROVISIONAL to VERIFIED_EVERGREEN
-// ---------------------------------------------------------------------------
-describe("M22: Evergreen gate — PROVISIONAL demand must not become VERIFIED_EVERGREEN", () => {
-  it("candidate without historical demand evidence cannot be VERIFIED_EVERGREEN", () => {
+describe("M16: G04 — discoverProductCandidatesFromAds preserves matchedQueryIds only when observation carries queryId", () => {
+  it("observation without queryId produces empty matchedQueryIds on discovered candidate", () => {
+    const cands = discoverProductCandidatesFromAds(
+      [
+        {
+          source: "META_ADS",
+          sourceRecordId: "obs_no_qid",
+          provenance: "CACHED_SOURCE",
+          title: "Automatic Pet Feeder",
+          landingPageUrl: "https://petstore.com/products/automatic-pet-feeder",
+          storeDomainEvidence: "petstore.com",
+        } as any,
+      ],
+      "Pet Gadgets"
+    );
+    expect(cands.length).toBe(1);
+    expect(cands[0].matchedQueryIds).toEqual([]);
+    expect(cands[0].liveObservationsCount).toBe(0);
+    expect(cands[0].cachedObservationsCount).toBe(1);
+  });
+});
+
+describe("M20: GET API side effects & Runtime Version (G20)", () => {
+  it("GET overview route is read-only and SWAI_KH02_RELEASE_VERSION equals 12.4.3.3.1", () => {
+    expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3.3.1");
+    const routeCode = fs.readFileSync(
+      path.resolve(
+        process.cwd(),
+        "src/app/api/v1/research/products/[id]/overview/route.ts"
+      ),
+      "utf-8"
+    );
+    expect(routeCode).not.toContain(
+      "Materialize an authorized ResearchProduct record for this KH-02 candidate so Product Intelligence"
+    );
+    expect(routeCode).toContain("GET does not materialize ResearchProduct");
+    expect(routeCode).toContain('version: "12.4.3.3.1"');
+  });
+});
+
+describe("M22: Evergreen gate — calculateKH02EvergreenScore never promotes candidate without 90-day demand history to VERIFIED_EVERGREEN", () => {
+  it("VERIFIED candidate with empty demandSeries is scored as PROVISIONAL_OPPORTUNITY or INSUFFICIENT_EVIDENCE, never VERIFIED_EVERGREEN", () => {
     const candidate = candidateBase({
       isEligibleAsEvergreenWinner: true,
       identityStatus: "VERIFIED",
-      historicalDemandStatus: "CACHED_UNVERIFIED",
     });
-    // Evergreen requires real historical demand beyond cache — not just live ad evidence
-    const evergreenEligible =
-      candidate.isEligibleAsEvergreenWinner &&
-      candidate.historicalDemandStatus !== "CACHED_UNVERIFIED" &&
-      candidate.historicalDemandStatus !== "NO_DATA";
-    expect(evergreenEligible).toBe(false);
+    const score = calculateKH02EvergreenScore({
+      candidate,
+      demandSeries: [],
+      hasVerifiedSupplierQuote: false,
+    });
+    expect(score.tier).not.toBe("VERIFIED_EVERGREEN");
+    expect(score.pillars.demandStability.status).not.toBe("PASS");
   });
 });
 
-// ---------------------------------------------------------------------------
-// G25: Protected feature integrity — V12.4.3.3 acceptance PASS must remain intact
-// ---------------------------------------------------------------------------
-describe("G25: V12.4.3.3 acceptance artifacts are not overwritten", () => {
-  it("acceptance/kh02-v12.4.3.3/ directory exists with FINAL_ACCEPTANCE_REPORT.md", async () => {
-    const { existsSync } = await import("fs");
+describe("G25 & Historical Requalification — requalifyHistoricalEvergreenSnapshot demotes unverified legacy winners", () => {
+  it("acceptance/kh02-v12.4.3.3/ directory exists with FINAL_ACCEPTANCE_REPORT.md", () => {
     expect(
-      existsSync(`${process.cwd()}/acceptance/kh02-v12.4.3.3/FINAL_ACCEPTANCE_REPORT.md`)
+      fs.existsSync(
+        path.resolve(
+          process.cwd(),
+          "acceptance/kh02-v12.4.3.3/FINAL_ACCEPTANCE_REPORT.md"
+        )
+      )
     ).toBe(true);
   });
+
+  it("requalifyHistoricalEvergreenSnapshot demotes legacy topThree winner with CACHED_UNVERIFIED demand", () => {
+    const legacySnapshot: any = {
+      researchRunId: "legacy_run_1",
+      topic: "Pet Gadgets",
+      topThree: [
+        {
+          rank: 1,
+          candidate: candidateBase({
+            candidateId: "cand_legacy_cached_demand",
+            identityStatus: "VERIFIED",
+            demandResolution: {
+              demandSourceAuthority: "CACHED_UNVERIFIED",
+              evidenceReferences: ["verified-merchant-demand:teststore.com"],
+            },
+          }),
+          score: {
+            opportunityScore: 82,
+            tier: "VERIFIED_EVERGREEN",
+            recommendation: "PURSUE",
+            scoreStatus: "SCORED",
+          },
+        },
+      ],
+      provisionalCandidates: [],
+      insufficientEvidenceCandidates: [],
+    };
+    const requalified = requalifyHistoricalEvergreenSnapshot(legacySnapshot);
+    expect(requalified.modified).toBe(true);
+    expect(requalified.snapshot?.topThree.length).toBe(0);
+    expect(requalified.snapshot?.provisionalCandidates.length).toBeGreaterThanOrEqual(1);
+    expect(requalified.demotedWinners.length).toBe(1);
+  });
 });
 
-// ---------------------------------------------------------------------------
-// G26: Cross-niche generalization — families resolve correctly for Home Cleaning
-// ---------------------------------------------------------------------------
-describe("G26: Cross-niche generalization — Home Cleaning Gadgets families", () => {
-  it("Cordless Vacuum Cleaner → known or composite family key, not unresolved_family", () => {
-    const fp = buildProductIdentityFingerprint({
-      candidateId: "nc1",
-      title: "Cordless Stick Vacuum Cleaner for Hardwood Floors",
-      canonicalProductName: "Cordless Stick Vacuum Cleaner for Hardwood Floors",
-    });
-    // Should resolve to a token-based composite key (at least 2 tokens survive)
-    expect(fp.familyKey).not.toBe("unresolved_family");
-    expect(fp.coreProductHeadNoun).toBeTruthy();
-  });
-
-  it("Two different vacuum brands → same composite headNoun family", () => {
-    const fp1 = buildProductIdentityFingerprint({
+describe("G26: Cross-niche generalization — Home Cleaning Gadgets & Car Accessories", () => {
+  it("Home Cleaning Gadgets and Car Accessories resolve to clean functional families and reject out-of-niche products", () => {
+    const fpVacuum1 = buildProductIdentityFingerprint({
       candidateId: "nc1",
       title: "Dyson V15 Cordless Vacuum Cleaner",
       canonicalProductName: "Dyson V15 Cordless Vacuum Cleaner",
     });
-    const fp2 = buildProductIdentityFingerprint({
+    const fpVacuum2 = buildProductIdentityFingerprint({
       candidateId: "nc2",
-      title: "Shark IX141 Cordless Vacuum Cleaner",
-      canonicalProductName: "Shark IX141 Cordless Vacuum Cleaner",
+      title: "Shark IX141 Cordless Stick Vacuum Cleaner",
+      canonicalProductName: "Shark IX141 Cordless Stick Vacuum Cleaner",
     });
-    // Both end in "cleaner" after token extraction → same familyKey suffix
-    expect(fp1.coreProductHeadNoun).toBe(fp2.coreProductHeadNoun);
+    expect(fpVacuum1.familyKey).toBe("cordless_vacuum_cleaner");
+    expect(fpVacuum2.familyKey).toBe("cordless_vacuum_cleaner");
+
+    const fpCarMount = buildProductIdentityFingerprint({
+      candidateId: "car1",
+      title: "Magnetic Car Phone Mount Holder for Dashboard",
+      canonicalProductName: "Magnetic Car Phone Mount Holder for Dashboard",
+    });
+    expect(fpCarMount.familyKey).toBe("car_phone_mount");
+
+    const relGolfInCar = evaluateProductRelevance(
+      "Golf Organizer Pouch With Golf Accessories Set https://store.com/products/golf-organizer-pouch",
+      "Car Accessories"
+    );
+    expect(relGolfInCar.relevanceStatus).toBe("IRRELEVANT");
+    expect(relGolfInCar.isAccepted).toBe(false);
   });
 });
 
-// ---------------------------------------------------------------------------
-// G27: Provider error / timeout truth — Google timeout reported as INSUFFICIENT_EVIDENCE
-// ---------------------------------------------------------------------------
-describe("G27: Provider error truth — timeout ≠ PASS", () => {
-  it("Google stage timeout produces status !== SUCCESS", () => {
-    // Simulate what the acceptance runner checks:
-    // If domainsAttempted === 0, it must NOT be classified as a passing result
-    const googleStatus: string = "BLOCKED_SOURCE";
-    const domainsAttempted = 0;
-    // A valid PASS requires actual query execution with results
-    const isValidSource = googleStatus === "QUERY_SUCCEEDED_WITH_RESULTS" && domainsAttempted > 0;
-    expect(isValidSource).toBe(false);
+describe("G06, G07 & G27: Google Ads MCP timeout, 429, 403, and empty advertiser handling via collectGoogleAdvertiserSignals", () => {
+  it("MCP connect timeout returns BLOCKED_SOURCE within deadline and records TIMED_OUT step in stepTimeline", async () => {
+    let closeCalled = false;
+    const stallingConnectClient: any = {
+      connect: () => new Promise(() => {}),
+      close: async () => {
+        closeCalled = true;
+      },
+    };
+
+    const res = await collectGoogleAdvertiserSignals(
+      {
+        workspaceId: "test",
+        researchRunId: "run_test_timeout",
+        topic: "Pet Gadgets",
+        market: "US",
+        lookbackDays: 90,
+        maxResults: 5,
+        advertiserDomains: ["kittyspout.com"],
+      },
+      stallingConnectClient,
+      {
+        connectTimeoutMs: 50,
+        persistToDatabase: false,
+      }
+    );
+
+    expect(res.status).toBe("BLOCKED_SOURCE");
+    expect(res.enrichmentExecution?.stateBreakdown?.transportConnected).toBe(false);
+    expect(res.enrichmentExecution?.stepTimeline?.some((s: any) => s.step === "connect" && s.status === "TIMED_OUT")).toBe(true);
+    expect(closeCalled).toBe(false); // customClient lifecycle is owned by caller
   });
 
-  it("429 rate-limit cooldown must NOT be set for timeout errors (only real 429 responses)", () => {
-    const isRateLimitError = (msg: string) => /\b(429|too many requests|rate.?limit)\b/i.test(msg);
-    const timeoutMsg = "MCP connect timeout after 8000ms";
-    const rateLimitMsg = "HTTP 429 Too Many Requests";
-    expect(isRateLimitError(timeoutMsg)).toBe(false);
-    expect(isRateLimitError(rateLimitMsg)).toBe(true);
+  it("Advertiser lookup timeout and 429 rate-limit are classified accurately with exact mcpCallsStarted/mcpCallsCompleted counters", async () => {
+    const rateLimitedClient: any = {
+      connect: async () => {},
+      close: async () => {},
+      listTools: async () => ({
+        tools: [
+          { name: "search_advertiser", description: "Search advertiser" },
+          { name: "get_advertiser_ads", description: "Get ads" },
+        ],
+      }),
+      callToolByName: async (toolName: string) => {
+        if (toolName === "search_advertiser") {
+          throw new Error("HTTP 429 Too Many Requests from Google Transparency");
+        }
+        return [];
+      },
+    };
+
+    const res = await collectGoogleAdvertiserSignals(
+      {
+        workspaceId: "test",
+        researchRunId: "run_test_429",
+        topic: "Pet Gadgets",
+        market: "US",
+        lookbackDays: 90,
+        maxResults: 5,
+        advertiserDomains: ["kittyspout.com", "pawira.com"],
+      },
+      rateLimitedClient,
+      {
+        perDomainTimeoutMs: 100,
+        persistToDatabase: false,
+      }
+    );
+
+    expect(res.status).toBe("QUERY_FAILED");
+    expect(res.enrichmentExecution?.mcpCallsStarted).toBe(1);
+    expect(res.enrichmentExecution?.mcpCallsCompleted).toBe(0);
+    expect(res.enrichmentExecution?.domainOutcomes?.[0]?.status).toBe("RATE_LIMITED");
+    expect(res.enrichmentExecution?.domainOutcomes?.[1]?.status).toBe("SKIPPED_COOLDOWN");
   });
 });

@@ -341,15 +341,45 @@ export async function runEvergreenProductResearch(
   }
 
   const adObservations: SourceObservation[] = [];
-  const seenObservationKeys = new Set<string>();
-  const addUniqueObservations = (obsList: SourceObservation[]) => {
+  const seenObservationByKey = new Map<string, SourceObservation>();
+  const addUniqueObservations = (obsList: SourceObservation[]): SourceObservation[] => {
+    const addedOrUpgraded: SourceObservation[] = [];
     for (const obs of obsList) {
       const key = `${obs.source}::${obs.sourceRecordId || obs.sourceExternalAdId || obs.title}`;
-      if (!seenObservationKeys.has(key)) {
-        seenObservationKeys.add(key);
+      const existing = seenObservationByKey.get(key);
+      if (!existing) {
+        seenObservationByKey.set(key, obs);
         adObservations.push(obs);
+        addedOrUpgraded.push(obs);
+      } else {
+        // V12.4.3.3.1 G02/G04: If Round 2 live-discovers an ad that Round 1 loaded from cache,
+        // upgrade its provenance to LIVE_PROVIDER and merge matchedQueryIds.
+        let upgraded = false;
+        if (obs.provenance === "LIVE_PROVIDER" && existing.provenance !== "LIVE_PROVIDER") {
+          existing.provenance = "LIVE_PROVIDER";
+          upgraded = true;
+        }
+        if (Array.isArray(obs.matchedQueryIds) && obs.matchedQueryIds.length > 0) {
+          const mergedQ = Array.from(
+            new Set([...(existing.matchedQueryIds || []), ...obs.matchedQueryIds])
+          );
+          if (mergedQ.length !== (existing.matchedQueryIds || []).length) {
+            existing.matchedQueryIds = mergedQ;
+            upgraded = true;
+          }
+        }
+        if (obs.metrics && typeof obs.metrics === "object") {
+          existing.metrics = {
+            ...(existing.metrics || {}),
+            ...(obs.metrics as Record<string, any>),
+          };
+        }
+        if (upgraded) {
+          addedOrUpgraded.push(existing);
+        }
       }
     }
+    return addedOrUpgraded;
   };
 
   // Shared run-wide Gemini & Meta provider budgets (no per-round reset)
@@ -648,6 +678,10 @@ export async function runEvergreenProductResearch(
       const aMerchant = Boolean(a.canonicalProductUrl || a.storeDomain);
       const bMerchant = Boolean(b.canonicalProductUrl || b.storeDomain);
       if (aMerchant !== bMerchant) return aMerchant ? -1 : 1;
+      // V12.4.3.3.1 G04: Prefer current-run live-grounded candidates ahead of cache-only candidates
+      const aLive = (a.liveObservationsCount || 0) > 0 && (a.matchedQueryIds?.length || 0) > 0;
+      const bLive = (b.liveObservationsCount || 0) > 0 && (b.matchedQueryIds?.length || 0) > 0;
+      if (aLive !== bLive) return aLive ? -1 : 1;
       const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
       if (relDiff !== 0) return relDiff;
       const obsDiff = b.totalObservationCount - a.totalObservationCount;
@@ -853,6 +887,7 @@ export async function runEvergreenProductResearch(
   let currentShortlistEval = selectTopResearchShortlist(verifiedPool, 3, {
     nicheIntent: hybridPlan.nicheIntent,
     topic: input.topic,
+    executedQueryIds: allMetaQueryOutcomes.filter((qo) => qo.attempted).map((qo) => qo.queryId),
   });
 
   while (
@@ -878,6 +913,7 @@ export async function runEvergreenProductResearch(
     currentShortlistEval = selectTopResearchShortlist(verifiedPool, 3, {
       nicheIntent: hybridPlan.nicheIntent,
       topic: input.topic,
+      executedQueryIds: allMetaQueryOutcomes.filter((qo) => qo.attempted).map((qo) => qo.queryId),
     });
   }
 
@@ -889,8 +925,7 @@ export async function runEvergreenProductResearch(
   const needsRound2Recovery =
     postGateQualifiedCount < 3 ||
     (hybridPlan.nicheIntent !== "SPECIFIC_PRODUCT" &&
-      postGateQualifiedCount >= 1 &&
-      postGateDistinctFamilies < Math.min(2, postGateQualifiedCount));
+      postGateDistinctFamilies < 3);
 
   if (
     needsRound2Recovery &&
@@ -947,7 +982,7 @@ export async function runEvergreenProductResearch(
               maxLiveRequestsForRound: sharedMetaBudgetTracker.remainingRequests,
             })
         );
-        addUniqueObservations(metaRound2Result.observations);
+        const newObsFromR2 = addUniqueObservations(metaRound2Result.observations);
         const execMetaR2 = metaRound2Result.executionMetadata;
         if (Array.isArray(execMetaR2?.queryOutcomes)) {
           allMetaQueryOutcomes.push(...execMetaR2.queryOutcomes);
@@ -975,8 +1010,7 @@ export async function runEvergreenProductResearch(
           providerTelemetry.META_ADS.isLive = freshLiveAfterR2 > 0;
         }
 
-        // Extract and verify newly discovered Round 2 candidates
-        const newObsFromR2 = adObservations.slice(prevObsCount);
+        // Extract and verify newly discovered or live-upgraded Round 2 candidates
         if (newObsFromR2.length > 0) {
           rawCandidates = discoverProductCandidatesFromAds(
             adObservations,
@@ -1000,6 +1034,20 @@ export async function runEvergreenProductResearch(
           for (const irr of r2Irrelevant) {
             if (!preRejectedCandidates.some((p) => p.candidateId === irr.candidateId)) {
               preRejectedCandidates.push(irr);
+            }
+          }
+
+          // Also update any already-verified candidates in verifiedPool if Round 2 upgraded their observations to live
+          for (const r2c of r2RawCandidates) {
+            const existingVerified = verifiedPool.find(
+              (existing) => compareProductIdentity(existing, r2c).areSameActualProduct === true
+            );
+            if (existingVerified) {
+              mergeDuplicateCandidateRecords(
+                existingVerified,
+                r2c,
+                compareProductIdentity(existingVerified, r2c)
+              );
             }
           }
 
@@ -1556,6 +1604,7 @@ export async function runEvergreenProductResearch(
     {
       nicheIntent: hybridPlan.nicheIntent,
       topic: input.topic,
+      executedQueryIds: allMetaQueryOutcomes.filter((qo) => qo.attempted).map((qo) => qo.queryId),
     }
   );
 

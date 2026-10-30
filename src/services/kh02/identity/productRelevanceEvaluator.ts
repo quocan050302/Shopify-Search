@@ -264,6 +264,17 @@ const NICHE_SIGNATURES: Record<
       "metal door sign",
       "pos thermal printer",
       "widgets themes",
+      // V12.4.3.3.1 G09/G10: Consumable pet food, starter kits, bundles, treats & supplements
+      "dog food starter kit",
+      "shelf-stable dog food",
+      "cooked dog food",
+      "raw dog food",
+      "freeze-dried dog food",
+      "dog food bundle",
+      "cat food bundle",
+      "pet food starter",
+      "probiotic chew",
+      "probiotic chews",
     ],
   },
   beauty: {
@@ -342,7 +353,8 @@ const NICHE_SIGNATURES: Record<
       "home repair",
       "home improvement",
       "handyman",
-      "craft kit",
+      "woodworking kit",
+      "home repair kit",
     ],
     exclude: [
       "pos thermal printer",
@@ -361,6 +373,19 @@ const NICHE_SIGNATURES: Record<
       "mortgage",
       "real estate",
       "crypto",
+      // V12.4.3.3.1 G09/G10: Exclude textile/yarn/crochet/fashion bag craft kits from DIY Tools
+      "crochet",
+      "granny bag",
+      "crochet bag",
+      "knitting",
+      "yarn",
+      "embroidery",
+      "cross stitch",
+      "needlepoint",
+      "macrame",
+      "sewing pattern",
+      "jewelry making",
+      "bead kit",
     ],
   },
   gardening: {
@@ -472,18 +497,29 @@ const NICHE_SIGNATURES: Record<
       "spin scrubber",
       "washing machine cleaner",
       "portable carpet cleaner",
+      "carpet cleaner",
+      "spot cleaner",
       "steam cleaner",
+      "steam mop",
       "microfiber spray mop",
       "spray mop",
       "grout brush",
       "window cleaner",
+      "window vacuum",
       "appliance cleaner",
+      "cordless vacuum",
+      "stick vacuum",
+      "vacuum cleaner",
+      "handheld vacuum",
+      "robot vacuum",
+      "ultrasonic cleaner",
+      "lint remover",
+      "fabric shaver",
     ],
     potential: [
       "power scrubber",
       "crevice brush",
       "microfiber mop",
-      "lint remover",
       "duster",
       "stain remover",
     ],
@@ -494,6 +530,8 @@ const NICHE_SIGNATURES: Record<
       "storage cleaner app",
       "casino",
       "vet bill",
+      "pet grooming vacuum",
+      "dog grooming vacuum",
     ],
   },
   "home decor": {
@@ -578,6 +616,19 @@ const NICHE_SIGNATURES: Record<
       "widgets themes",
       "casino",
       "vet bill",
+      // V12.4.3.3.1 G09/G10/G26: Exclude golf & non-automotive sports/home organizers from Car Accessories
+      "golf",
+      "golf organizer",
+      "golf accessories",
+      "golf bag",
+      "golf tee",
+      "golf club",
+      "makeup organizer",
+      "cosmetic organizer",
+      "jewelry organizer",
+      "desk organizer",
+      "closet organizer",
+      "wardrobe organizer",
     ],
   },
 };
@@ -986,7 +1037,27 @@ function evaluateProductRelevanceCore(
   }
 
   // Match topic terms directly using word boundaries to prevent substring false positives (e.g. mohair != hair)
-  const topicWords = normalizedTopic.split(/\s+/).filter((w) => w.length > 2);
+  const GENERIC_CATEGORY_SUFFIX_WORDS = new Set([
+    "accessories",
+    "accessory",
+    "gadgets",
+    "gadget",
+    "tools",
+    "tool",
+    "supplies",
+    "supply",
+    "products",
+    "product",
+    "items",
+    "item",
+    "equipment",
+    "gear",
+  ]);
+  const rawTopicWords = normalizedTopic.split(/\s+/).filter((w) => w.length > 2);
+  const coreTopicWords = rawTopicWords.filter(
+    (w) => !GENERIC_CATEGORY_SUFFIX_WORDS.has(w)
+  );
+  const topicWords = coreTopicWords.length > 0 ? coreTopicWords : rawTopicWords;
   let matchedTopicWords = 0;
   for (const word of topicWords) {
     if (hasWordMatch(normalizedText, word)) {
@@ -1036,6 +1107,55 @@ function evaluateProductRelevanceCore(
           discoveryDecision: "CLEARLY_UNRELATED",
           isAccepted: false,
           score: 0.05,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+    }
+
+    // V12.4.3.3.1 G09/G10: Reject consumable pet food, starter kits, bundles, treats & dietary supplements
+    // unless the product is an actual feeding/hydration hardware device (e.g., automatic feeder, water fountain).
+    if (nicheKey === "pet") {
+      const isConsumablePetFoodOrSupplement =
+        /\b(dog\s+food|cat\s+food|pet\s+food|cooked\s+dog\s+food|shelf[-_\s]stable\s+dog\s+food|raw\s+dog\s+food|freeze[-_\s]dried\s+(?:dog|cat|pet)\s+food|food\s+starter\s+kit|food\s+bundle|kibble|dog\s+treats?|cat\s+treats?|pet\s+supplement|dog\s+supplement|probiotic\s+chews?|hip\s+and\s+joint\s+chews?|multivitamin\s+chews?)\b/i.test(
+          normalizedText
+        );
+      const isFeedingHardwareDevice =
+        /\b((?:automatic|smart|timed|electronic|programmable)\s+(?:pet|cat|dog)?\s*feeder|(?:pet|cat|dog)\s+feeder|food\s+dispenser|meal\s+dispenser|water\s+fountain|drinking\s+fountain|slow\s+feeder\s+bowl)\b/i.test(
+          normalizedText
+        );
+      if (isConsumablePetFoodOrSupplement && !isFeedingHardwareDevice) {
+        reasons.push(
+          "Excluded — Consumable pet food, treats, or dietary supplement rather than a physical pet gadget or durable accessory."
+        );
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+    }
+
+    // V12.4.3.3.1 G09/G10/G26: Require automotive/vehicle context for 'car' niche
+    if (nicheKey === "car") {
+      const hasAutomotiveContext =
+        /\b(cars?|auto|automotive|vehicles?|trucks?|suvs?|sedans?|windshield|dashboard|dash\s*cam|dashcam|trunk|steering\s+wheel|tires?|headrest|seat\s+gap|blind\s+spot|jump\s+starter|obd)\b/i.test(
+          normalizedText
+        );
+      if (!hasAutomotiveContext) {
+        reasons.push(
+          "Excluded — Product lacks automotive or vehicle context required for Car Accessories."
+        );
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
           reasons,
           topic,
           matchedArchetypeId: null,
@@ -1620,6 +1740,7 @@ function evaluateProductRelevanceCore(
 
   // Fallback for general topics without custom signature dictionary
   if (
+    !nicheKey &&
     topicWords.length > 0 &&
     matchedTopicWords >= Math.ceil(topicWords.length / 2)
   ) {

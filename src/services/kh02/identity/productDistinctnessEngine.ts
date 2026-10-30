@@ -368,6 +368,91 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     headNoun: "appliance_cleaner",
     pattern: /\b(washing\s+machine\s+cleaner|dishwasher\s+cleaner|washer\s+tablets)\b/i,
   },
+  {
+    familyKey: "cordless_vacuum_cleaner",
+    familyLabel: "Cordless Stick & Handheld Vacuum Cleaner",
+    headNoun: "vacuum_cleaner",
+    pattern: /\b(cordless\s+(?:stick\s+)?vacuum|stick\s+vacuum|handheld\s+vacuum|vacuum\s+cleaner)\b/i,
+  },
+  {
+    familyKey: "robot_vacuum_cleaner",
+    familyLabel: "Robot Vacuum & Floor Cleaner",
+    headNoun: "robot_vacuum",
+    pattern: /\b(robot\s+vacuum|robotic\s+vacuum)\b/i,
+  },
+  {
+    familyKey: "steam_cleaner_mop",
+    familyLabel: "Steam Cleaner & Handheld Steamer",
+    headNoun: "steam_cleaner",
+    pattern: /\b(steam\s+cleaner|steam\s+mop|handheld\s+steamer)\b/i,
+  },
+  {
+    familyKey: "portable_carpet_spot_cleaner",
+    familyLabel: "Portable Carpet & Upholstery Spot Cleaner",
+    headNoun: "carpet_cleaner",
+    pattern: /\b(carpet\s+cleaner|spot\s+cleaner|upholstery\s+cleaner)\b/i,
+  },
+  {
+    familyKey: "window_cleaning_tool",
+    familyLabel: "Magnetic Window Cleaner & Window Vacuum",
+    headNoun: "window_cleaner",
+    pattern: /\b(window\s+(?:cleaner|vacuum|squeegee)|magnetic\s+window)\b/i,
+  },
+  {
+    familyKey: "lint_fabric_shaver",
+    familyLabel: "Electric Lint Remover & Fabric Shaver",
+    headNoun: "fabric_shaver",
+    pattern: /\b(lint\s+remover|fabric\s+shaver|sweater\s+defuzzer)\b/i,
+  },
+  // Car & Automotive Accessories
+  {
+    familyKey: "car_phone_mount",
+    familyLabel: "Magnetic & MagSafe Car Phone Mount",
+    headNoun: "car_phone_mount",
+    pattern: /\b(car\s+phone\s+(?:mount|holder)|magnetic\s+(?:car\s+)?phone\s+(?:mount|holder)|dashboard\s+phone\s+(?:mount|holder)|vent\s+phone\s+mount)\b/i,
+  },
+  {
+    familyKey: "car_organizer_storage",
+    familyLabel: "Car Trunk & Seat Organizer Storage",
+    headNoun: "car_organizer",
+    pattern: /\b((?:car|trunk|seat|auto|vehicle|suvs?)\s+(?:trunk\s+|backseat\s+|seat\s+)?organizer|seat\s+gap\s+filler|car\s+storage\s+box|trunk\s+storage)\b/i,
+  },
+  {
+    familyKey: "portable_car_vacuum",
+    familyLabel: "Portable High-Power Car Vacuum",
+    headNoun: "car_vacuum",
+    pattern: /\b(car\s+vacuum|automotive\s+vacuum|vehicle\s+vacuum)\b/i,
+  },
+  {
+    familyKey: "portable_tire_inflator",
+    familyLabel: "Portable Tire Inflator & Air Compressor",
+    headNoun: "tire_inflator",
+    pattern: /\b(tire\s+inflator|car\s+air\s+compressor|portable\s+air\s+pump)\b/i,
+  },
+  {
+    familyKey: "car_dash_cam",
+    familyLabel: "Front & Rear Car Dash Cam",
+    headNoun: "dash_cam",
+    pattern: /\b(dash\s*cam|car\s+camera|driving\s+recorder)\b/i,
+  },
+  {
+    familyKey: "vehicle_paint_repair_kit",
+    familyLabel: "Car Scratch & Paint Touch-Up Repair Kit",
+    headNoun: "car_paint_repair",
+    pattern: /\b((?:car|auto|vehicle)\s+(?:scratch|paint)\s+(?:repair|touch[-_\s]?up)|touch[-_\s]?up\s+paint|car\s+polish)\b/i,
+  },
+  {
+    familyKey: "windshield_sunshade",
+    familyLabel: "Foldable Car Windshield Sunshade",
+    headNoun: "windshield_sunshade",
+    pattern: /\b(windshield\s+sun\s*shade|car\s+sun\s*shade|car\s+umbrella\s+shade)\b/i,
+  },
+  {
+    familyKey: "car_jump_starter",
+    familyLabel: "Portable Car Battery Jump Starter",
+    headNoun: "jump_starter",
+    pattern: /\b(jump\s+starter|car\s+battery\s+booster)\b/i,
+  },
   // Home Decor
   {
     familyKey: "rechargeable_wall_sconce",
@@ -476,7 +561,7 @@ function extractPhysicalSpecs(text: string): {
   };
 }
 
-function resolveProductFamily(
+export function resolveProductFamily(
   text: string,
   categoryHint?: string | null,
   archetypeHint?: string | null
@@ -1351,6 +1436,12 @@ export function evaluateOpportunityDiversity(
   const familyCounts = new Map<string, { count: number; label: string }>();
 
   for (const fp of fingerprints) {
+    if (
+      fp.familyKey === "unresolved_family" ||
+      fp.familyKey === "UNRESOLVED_FAMILY"
+    ) {
+      continue;
+    }
     const prev = familyCounts.get(fp.familyKey) || { count: 0, label: fp.familyLabel };
     familyCounts.set(fp.familyKey, { count: prev.count + 1, label: fp.familyLabel });
   }

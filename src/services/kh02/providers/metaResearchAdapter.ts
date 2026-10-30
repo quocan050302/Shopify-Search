@@ -1037,7 +1037,7 @@ export async function collectLiveMetaAds(
         let dupCountForQuery = 0;
 
         for (const ad of returnedAds) {
-          const id = String(ad.id || ad.library_id || ad.libraryId);
+          const id = String(ad.id || ad.library_id || ad.libraryId || "").trim();
           if (id && !seenRawIds.has(id)) {
             seenRawIds.add(id);
             rawAds.push(ad);
@@ -1159,11 +1159,14 @@ export async function collectLiveMetaAds(
     for (let i = 0; i < rawAds.length; i++) {
       const ad = rawAds[i];
       const anyRaw = ad as Record<string, unknown>;
-      const rawId = String(anyRaw?.id ?? anyRaw?.library_id ?? anyRaw?.libraryId ?? `raw_meta_${i + 1}`);
+      const rawId = String(anyRaw?.id ?? anyRaw?.library_id ?? anyRaw?.libraryId ?? `raw_meta_${i + 1}`).trim();
       const binding = subqueryBindingMap.get(rawId);
       const queryKeyword = binding?.queryKeyword || query.topic;
       try {
         const norm = normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: queryKeyword });
+        if (binding && norm.sourceExternalId && !subqueryBindingMap.has(norm.sourceExternalId)) {
+          subqueryBindingMap.set(norm.sourceExternalId, binding);
+        }
         normalizedAds.push(norm);
       } catch (normErr: any) {
         auditTraces.push({
@@ -1216,8 +1219,9 @@ export async function collectLiveMetaAds(
     if (ingestSummary.recordTraces) {
       auditTraces.push(...ingestSummary.recordTraces);
       for (const trace of ingestSummary.recordTraces) {
-        if (trace.rawId && trace.persistedId && subqueryBindingMap.has(trace.rawId)) {
-          const binding = subqueryBindingMap.get(trace.rawId)!;
+        const lookupKey = trace.rawId ? String(trace.rawId).trim() : "";
+        if (lookupKey && trace.persistedId && subqueryBindingMap.has(lookupKey)) {
+          const binding = subqueryBindingMap.get(lookupKey)!;
           binding.persistedId = trace.persistedId;
           subqueryBindingMap.set(trace.persistedId, {
             ...binding,

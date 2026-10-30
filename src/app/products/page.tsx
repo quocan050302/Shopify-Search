@@ -1684,6 +1684,7 @@ export default function ProductsPage() {
                               : "pf-explorer-candidate-row"
                           }
                           data-candidate-id={row.candidateId}
+                          data-in-ranked-snapshot={row.inRankedSnapshot ? "true" : "false"}
                           className="hover:bg-slate-900/50 transition-colors"
                         >
                           <td className="py-3 px-3 max-w-xs">
