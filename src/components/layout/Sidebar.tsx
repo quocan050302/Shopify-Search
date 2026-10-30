@@ -64,7 +64,6 @@ const navGroups: NavGroupDef[] = [
         icon: Flame,
         requiredParam: { key: "mode", value: "EVERGREEN" },
       },
-      { name: "TikTok Research", href: "/discovery", icon: Radar },
     ],
   },
   {

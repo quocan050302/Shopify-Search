@@ -11,8 +11,73 @@
  */
 
 import { createHash } from "crypto";
+import fs from "fs";
+import path from "path";
 import { prisma } from "@/lib/db";
 import { DemandDataPoint } from "./temporalDemandEngine";
+
+export const GOOGLE_TRENDS_CSV_STORAGE_DIR = path.resolve(
+  process.cwd(),
+  "data/google_trends_imports"
+);
+
+export function saveOriginalGoogleTrendsCsvFile(
+  rawCsvContent: string,
+  sha256Checksum: string
+): string {
+  if (!fs.existsSync(GOOGLE_TRENDS_CSV_STORAGE_DIR)) {
+    fs.mkdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR, { recursive: true });
+  }
+  const filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${sha256Checksum}.csv`);
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, rawCsvContent, "utf8");
+  }
+  return filePath;
+}
+
+export function verifyStoredCsvFile(sha256Checksum: string): {
+  exists: boolean;
+  validHash: boolean;
+  filePath: string | null;
+} {
+  if (!sha256Checksum || typeof sha256Checksum !== "string" || sha256Checksum.length < 16) {
+    return { exists: false, validHash: false, filePath: null };
+  }
+  let filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${sha256Checksum}.csv`);
+  if (!fs.existsSync(filePath)) {
+    if (sha256Checksum.length >= 16 && fs.existsSync(GOOGLE_TRENDS_CSV_STORAGE_DIR)) {
+      try {
+        const files = fs.readdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR);
+        const prefixMatch = files.find(
+          (f) => f.startsWith(sha256Checksum) && f.endsWith(".csv")
+        );
+        if (prefixMatch) {
+          filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, prefixMatch);
+        } else {
+          return { exists: false, validHash: false, filePath: null };
+        }
+      } catch {
+        return { exists: false, validHash: false, filePath: null };
+      }
+    } else {
+      return { exists: false, validHash: false, filePath: null };
+    }
+  }
+  try {
+    const bytes = fs.readFileSync(filePath, "utf8");
+    const computedHash = createHash("sha256").update(bytes, "utf8").digest("hex");
+    const validHash =
+      computedHash === sha256Checksum ||
+      (sha256Checksum.length < 64 && computedHash.startsWith(sha256Checksum));
+    return {
+      exists: true,
+      validHash,
+      filePath,
+    };
+  } catch {
+    return { exists: false, validHash: false, filePath: null };
+  }
+}
 
 export interface GoogleTrendsCsvValidationResult {
   valid: boolean;
@@ -40,6 +105,7 @@ export function validateAndParseGoogleTrendsCsv(
   csvContent: string,
   options: {
     expectedKeyword?: string;
+    canonicalProductName?: string;
     expectedRegion?: string;
     importedAt?: string;
   } = {}
@@ -47,6 +113,7 @@ export function validateAndParseGoogleTrendsCsv(
   const errors: string[] = [];
   const sha256Checksum = createHash("sha256").update(csvContent, "utf8").digest("hex");
   const importedAt = options.importedAt || new Date().toISOString();
+  const effectiveExpectedKeyword = options.expectedKeyword || options.canonicalProductName;
 
   if (!csvContent || typeof csvContent !== "string" || csvContent.trim().length === 0) {
     return {
@@ -123,11 +190,11 @@ export function validateAndParseGoogleTrendsCsv(
     extractedKeyword = metricCol.replace(/[":]/g, "").trim();
   }
 
-  if (options.expectedKeyword && options.expectedKeyword.trim()) {
-    const normExpected = options.expectedKeyword.toLowerCase().trim();
+  if (effectiveExpectedKeyword && effectiveExpectedKeyword.trim()) {
+    const normExpected = effectiveExpectedKeyword.toLowerCase().trim();
     const normExtracted = extractedKeyword.toLowerCase().trim();
     if (!normExtracted.includes(normExpected) && !normExpected.includes(normExtracted)) {
-      errors.push(`CSV keyword '${extractedKeyword}' does not match expected keyword '${options.expectedKeyword}'.`);
+      errors.push(`CSV keyword '${extractedKeyword}' does not match expected keyword '${effectiveExpectedKeyword}'.`);
     }
   }
 
@@ -199,6 +266,14 @@ export function validateAndParseGoogleTrendsCsv(
   const evidenceReference = valid
     ? `csv-import:google-trends-explore:sha256:${sha256Checksum}:q=${safeKeywordTag}:geo=${extractedRegion}:start=${startDate?.slice(0, 10)}:end=${endDate?.slice(0, 10)}:imported=${importedAt}`
     : null;
+
+  if (valid) {
+    try {
+      saveOriginalGoogleTrendsCsvFile(csvContent, sha256Checksum);
+    } catch {
+      // Non-fatal if storage directory cannot be written in read-only environment
+    }
+  }
 
   return {
     valid,

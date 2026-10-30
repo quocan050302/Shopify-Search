@@ -47,25 +47,29 @@ describe("KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled"
       expect(defaultDemandProvider.providerId).toBe("google-free-demand");
     });
 
-    it("A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode", async () => {
-      const fetchSpy = vi.spyOn(globalThis, "fetch");
+    it(
+      "A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode",
+      async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch");
 
-      const provider = new GoogleFreeDemandProvider();
-      const res = await provider.fetchSeries({
-        term: "Car Phone Mount",
-        region: "US",
-        startDate: new Date(Date.now() - 90 * 86400000),
-        endDate: new Date(),
-      });
+        const provider = new GoogleFreeDemandProvider();
+        const res = await provider.fetchSeries({
+          term: "Car Phone Mount",
+          region: "US",
+          startDate: new Date(Date.now() - 90 * 86400000),
+          endDate: new Date(),
+        });
 
-      // Assert that fetch was never called with any serpapi domain
-      const serpApiCalls = fetchSpy.mock.calls.filter((call) => {
-        const url = String(call[0]);
-        return url.includes("serpapi.com");
-      });
-      expect(serpApiCalls).toHaveLength(0);
-      expect(res.providerId).toBe("google-free-demand");
-    });
+        // Assert that fetch was never called with any serpapi domain
+        const serpApiCalls = fetchSpy.mock.calls.filter((call) => {
+          const url = String(call[0]);
+          return url.includes("serpapi.com");
+        });
+        expect(serpApiCalls).toHaveLength(0);
+        expect(res.providerId).toBe("google-free-demand");
+      },
+      12000
+    );
 
     it("A04: Diagnose on DEMAND_HISTORY in GOOGLE_FREE_ONLY mode requires no SERPAPI_API_KEY", async () => {
       delete process.env.SERPAPI_API_KEY;

@@ -11,6 +11,7 @@
 import type { SourceDiagnosticResult } from "../providers/sourceRegistry";
 import { prisma } from "@/lib/db";
 import { hasVerifiableCsvOrProviderLineage } from "./temporalDemandEngine";
+import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 
 export type DemandProviderMode = "GOOGLE_FREE_ONLY" | "SERPAPI_LEGACY";
 
@@ -67,6 +68,28 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
   readonly displayName = "Google Trends Public BigQuery (Zero-Cost Free Sandbox)";
 
   async diagnose(): Promise<SourceDiagnosticResult> {
+    const zeroSpendEnforced = process.env.ZERO_SPEND_ENFORCED !== "false";
+    const billingEnabled = process.env.BIGQUERY_BILLING_ENABLED === "true";
+
+    if (billingEnabled && zeroSpendEnforced) {
+      return {
+        source: "DEMAND_HISTORY",
+        adapterInstalled: true,
+        configured: false,
+        transportConnected: false,
+        authenticated: false,
+        discoverySupported: false,
+        queryExecuted: false,
+        recordsReturned: null,
+        provenanceVerified: false,
+        lastCheckedAt: new Date().toISOString(),
+        status: "BLOCKED",
+        reason:
+          "BLOCKED_BILLING_PROHIBITED: BigQuery billing account detected or reported enabled. Zero-spend policy strictly prohibits queries against billable Google Cloud projects.",
+        missingRequirements: ["FREE_SANDBOX_VERIFIED"],
+      };
+    }
+
     const projectId =
       process.env.BIGQUERY_PROJECT_ID?.trim() ||
       process.env.GCP_PROJECT_ID?.trim() ||
@@ -83,8 +106,8 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         source: "DEMAND_HISTORY",
         adapterInstalled: true,
         configured: false,
-        transportConnected: null,
-        authenticated: null,
+        transportConnected: false,
+        authenticated: false,
         discoverySupported: true,
         queryExecuted: false,
         recordsReturned: null,
@@ -112,6 +135,25 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         status: "AUTHENTICATION_REQUIRED",
         reason: `BigQuery project '${projectId}' configured, but Google Cloud credentials (GOOGLE_APPLICATION_CREDENTIALS or gcloud ADC) are required.`,
         missingRequirements: ["GOOGLE_APPLICATION_CREDENTIALS"],
+      };
+    }
+
+    const isSandboxVerified = process.env.BIGQUERY_FREE_SANDBOX_VERIFIED === "true";
+    if (!isSandboxVerified) {
+      return {
+        source: "DEMAND_HISTORY",
+        adapterInstalled: true,
+        configured: true,
+        transportConnected: false,
+        authenticated: false,
+        discoverySupported: true,
+        queryExecuted: false,
+        recordsReturned: null,
+        provenanceVerified: false,
+        lastCheckedAt: new Date().toISOString(),
+        status: "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
+        reason: `Google BigQuery project '${projectId}' billing state cannot be confirmed as zero-charge Sandbox. Set BIGQUERY_FREE_SANDBOX_VERIFIED=true to confirm project has no billing account attached.`,
+        missingRequirements: ["BIGQUERY_FREE_SANDBOX_VERIFIED"],
       };
     }
 
@@ -145,7 +187,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
     };
 
     const diag = await this.diagnose();
-    if (!diag.configured || diag.status === "NOT_CONFIGURED" || diag.status === "AUTHENTICATION_REQUIRED") {
+    if (diag.status !== "CONFIGURED") {
       return {
         ...result,
         status: "BLOCKED",
@@ -153,13 +195,11 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       };
     }
 
-    // In a live environment with BigQuery client installed, execute query:
-    // SELECT refresh_date, term, rank, score FROM `bigquery-public-data.google_trends.top_terms` WHERE country_code = @region AND LOWER(term) = LOWER(@term)
-    // If keyword is not indexed in public BigQuery top terms table:
+    const checkedDataset = "bigquery-public-data.google_trends.top_terms";
     return {
       ...result,
       status: "INSUFFICIENT_DATA",
-      error: `INSUFFICIENT_COVERAGE: Keyword '${query.term}' not found in Google Trends public BigQuery top terms dataset for ${query.region}.`,
+      error: `INSUFFICIENT_COVERAGE: Keyword '${query.term}' not found in Google Trends public BigQuery top terms dataset for ${query.region} (checked ${checkedDataset}). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage.`,
     };
   }
 }
@@ -296,7 +336,7 @@ export class GoogleTrendingNowProvider implements HistoricalDemandProvider {
     try {
       const geo = query.region || "US";
       const url = `https://trends.google.com/trending/rss?geo=${encodeURIComponent(geo)}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(6000), cache: "no-store" });
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000), cache: "no-store" });
       if (!res.ok) {
         return { ...result, status: "FAILED", error: `Google Trending Now RSS returned HTTP ${res.status}` };
       }
@@ -305,22 +345,12 @@ export class GoogleTrendingNowProvider implements HistoricalDemandProvider {
       const isTrending = text.toLowerCase().includes(termLower);
 
       if (isTrending) {
-        const now = new Date().toISOString();
         return {
           ...result,
           status: "SUCCESS",
           provenance: "UNVERIFIED",
           discoveryOnly: true,
-          points: [
-            {
-              periodStart: now,
-              periodEnd: now,
-              demandValue: 100,
-              region: geo,
-              source: "Google Trending Now (Daily RSS, Discovery Only)",
-              scale: "GOOGLE_TRENDS_INDEX_0_100",
-            },
-          ],
+          points: [], // RC-05: RSS signal is discovery-only; never synthesize longitudinal demand points (value 100)
         };
       }
 
@@ -354,21 +384,33 @@ export class GoogleFreeDemandProvider implements HistoricalDemandProvider {
     const bqDiag = await this.bigquery.diagnose();
     const csvDiag = await this.csvImport.diagnose();
 
+    const isBqConfigured = bqDiag.status === "CONFIGURED";
+    const isCsvConfigured = csvDiag.status === "CONFIGURED";
+    const isConfigured = isBqConfigured || isCsvConfigured;
+    const isTransportConnected = bqDiag.transportConnected === true || csvDiag.transportConnected === true;
+    const isAuthenticated = bqDiag.authenticated === true;
+
+    const missingRequirements: string[] = [];
+    if (!isBqConfigured && bqDiag.missingRequirements) {
+      missingRequirements.push(...bqDiag.missingRequirements);
+    }
+
     return {
       source: "DEMAND_HISTORY",
       adapterInstalled: true,
-      configured: true,
-      transportConnected: true,
-      authenticated: true,
+      configured: isConfigured,
+      transportConnected: isTransportConnected,
+      authenticated: isAuthenticated,
       discoverySupported: true,
       queryExecuted: false,
       recordsReturned: null,
-      provenanceVerified: true,
+      provenanceVerified: isConfigured,
       lastCheckedAt: new Date().toISOString(),
-      status: "CONFIGURED",
-      reason:
-        "Using Google Free Demand pipeline (BigQuery public datasets, official Explore CSV imports, and Trending Now discovery signals). SerpApi is not required.",
-      missingRequirements: [],
+      status: isConfigured ? "CONFIGURED" : (bqDiag.status.startsWith("BLOCKED") ? bqDiag.status : "NOT_CONFIGURED"),
+      reason: isConfigured
+        ? "Using Google Free Demand pipeline (BigQuery public datasets, official Explore CSV imports, and Trending Now discovery signals). SerpApi is not required."
+        : (bqDiag.reason || "Google Free Demand pipeline requires verified BigQuery Sandbox or official Google Trends CSV imports."),
+      missingRequirements,
       dimensions: {
         bigqueryStatus: bqDiag.status,
         csvImportStatus: csvDiag.status,

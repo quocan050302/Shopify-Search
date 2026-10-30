@@ -1472,6 +1472,16 @@ export interface ResearchShortlistResult {
   liveVerifiedProductCount: number;
   /** V12.4.3.3.1 G16: true only when all `limit` candidates satisfy VERIFIED + live-grounded criteria. */
   liveVerifiedTop3: boolean;
+  /** V12.4.3.4.1 Section 8.2: Explicitly separated live-verified candidates collection */
+  liveVerifiedShortlist: DiscoveredProductCandidate[];
+  /** V12.4.3.4.1 Section 8.3: Forensic per-candidate rejection ledger */
+  candidateRejectionLedger: Array<{
+    candidateId: string;
+    title: string;
+    identityStatus: string;
+    liveObservationsCount: number;
+    failureReason: string;
+  }>;
 }
 
 /**
@@ -2209,9 +2219,58 @@ export function selectTopResearchShortlist(
           .join(", ")}`
       : "No distinct products qualified for shortlist";
 
-  const liveVerifiedItems = distinctShortlist.filter((c) =>
+  const candidateRejectionLedger: Array<{
+    candidateId: string;
+    title: string;
+    identityStatus: string;
+    liveObservationsCount: number;
+    failureReason: string;
+  }> = [];
+
+  // Identify why any candidate in distinctShortlist failed live verification (RC-07)
+  for (const c of distinctShortlist) {
+    const isLive = isCandidateLiveVerified(c, executedQSet || undefined);
+    if (!isLive) {
+      let failureReason = "Unspecified verification failure";
+      if (c.identityStatus !== "VERIFIED") {
+        failureReason = `Identity status is ${c.identityStatus} (not VERIFIED); merchant product landing page metadata unverified.`;
+      } else if (!isLiveGroundedForCurrentRun(c)) {
+        failureReason = "Lacks current-run live provider observations (cache-only observation).";
+      }
+      candidateRejectionLedger.push({
+        candidateId: c.candidateId,
+        title: c.title,
+        identityStatus: c.identityStatus || "UNRESOLVED",
+        liveObservationsCount:
+          typeof c.liveObservationsCount === "number" ? c.liveObservationsCount : 0,
+        failureReason,
+      });
+    }
+  }
+
+  // Live Verified Shortlist: start with verified items from distinctShortlist
+  const liveVerifiedShortlist: DiscoveredProductCandidate[] = distinctShortlist.filter((c) =>
     isCandidateLiveVerified(c, executedQSet || undefined)
   );
+
+  // Candidate Recovery (RC-07 & Section 8.1): If liveVerifiedShortlist < limit, search uniqueProducts for eligible VERIFIED candidates from distinct families
+  if (liveVerifiedShortlist.length < limit) {
+    const selectedFamiliesInLive = new Set(
+      liveVerifiedShortlist.map((c) => buildProductIdentityFingerprint(c).familyKey)
+    );
+    for (const c of uniqueProducts) {
+      if (liveVerifiedShortlist.length >= limit) break;
+      const isLive = isCandidateLiveVerified(c, executedQSet || undefined);
+      if (!isLive) continue;
+      const fp = buildProductIdentityFingerprint(c);
+      if (!selectedFamiliesInLive.has(fp.familyKey)) {
+        selectedFamiliesInLive.add(fp.familyKey);
+        liveVerifiedShortlist.push(c);
+      }
+    }
+  }
+
+  const liveVerifiedTop3 = liveVerifiedShortlist.length >= limit;
 
   return {
     shortlist: distinctShortlist,
@@ -2222,11 +2281,11 @@ export function selectTopResearchShortlist(
     distinctnessSummary,
     distinctnessEvaluation,
     opportunityDiversity,
-    // V12.4.3.3.1 G16: Count VERIFIED + live-grounded candidates using positive live provenance checks.
-    liveVerifiedProductCount: liveVerifiedItems.length,
-    liveVerifiedTop3:
-      distinctShortlist.length >= limit &&
-      liveVerifiedItems.length === distinctShortlist.length,
+    // V12.4.3.4.1 Section 8.2 & 8.3: Separated live verified items and recovery
+    liveVerifiedProductCount: liveVerifiedShortlist.length,
+    liveVerifiedTop3,
+    liveVerifiedShortlist,
+    candidateRejectionLedger,
   };
 }
 

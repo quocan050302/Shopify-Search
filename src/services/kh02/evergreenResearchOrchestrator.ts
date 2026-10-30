@@ -1335,12 +1335,6 @@ export async function runEvergreenProductResearch(
   let googleProductMatches = 0;
   let googleBrandMatches = 0;
   const googleProductEvidenceIds: string[] = [];
-  const googleCreativeRejections: Array<{
-    creativeId: string;
-    advertiserDomain: string | null;
-    rejectionReason: string;
-    matchedCandidateId: string | null;
-  }> = [];
   const seenGoogleProductAssociations = new Set<string>();
   const seenGoogleBrandAssociations = new Set<string>();
 
@@ -1402,30 +1396,182 @@ export async function runEvergreenProductResearch(
           seenGoogleBrandAssociations.add(pairKey);
           googleBrandMatches++;
         }
-      } else if (obs.source === "GOOGLE_ADS") {
-        const evId = obs.sourceExternalAdId || obs.sourceRecordId || "unknown";
-        googleCreativeRejections.push({
-          creativeId: evId,
-          advertiserDomain: obs.advertiserDomain || null,
-          rejectionReason: (match as any).reason || "Low cross-platform text/URL similarity or non-product match",
-          matchedCandidateId: candidate.candidateId,
-        });
       }
     }
   }
 
+  // Build forensic per-creative ledger for unique Google Ads observations (Section 7.2 & RC-06)
+  const googleAdsObservations = secondaryObservations.filter((o) => o.source === "GOOGLE_ADS");
+  const uniqueGoogleCreativesMap = new Map<string, (typeof googleAdsObservations)[0]>();
+  for (const obs of googleAdsObservations) {
+    const cId = obs.sourceExternalAdId || obs.sourceRecordId || obs.sourceUrl;
+    if (cId && !uniqueGoogleCreativesMap.has(cId)) {
+      uniqueGoogleCreativesMap.set(cId, obs);
+    }
+  }
+
+  const creativeAssociationLedger: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    sourceMarket: string;
+    rawLandingUrl: string | null;
+    finalDestination: string | null;
+    normalizedProductUrl: string | null;
+    creativeTitle: string | null;
+    candidateIdsEvaluated: string[];
+    exactMatchingClassification: string | null;
+    matchingEvidence: string | null;
+    rejectionReason: string | null;
+    associationVerdict:
+      | "EXACT_PRODUCT_MATCH"
+      | "PROBABLE_PRODUCT_MATCH"
+      | "BRAND_ONLY_MATCH"
+      | "REJECTED_UNRELATED_CREATIVE"
+      | "UNMATCHED"
+      | "MISSING_DESTINATION"
+      | "UPSTREAM_TIMEOUT";
+  }> = [];
+
+  const googleCreativeRejections: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    rejectionReason: string;
+    matchedCandidateId: string | null;
+  }> = [];
+
+  let uniqueProductAssociatedCount = 0;
+  let uniqueBrandOnlyCount = 0;
+  let uniqueRejectedCount = 0;
+  let uniqueUnmatchedCount = 0;
+
+  for (const [cId, obs] of uniqueGoogleCreativesMap.entries()) {
+    let bestVerdict:
+      | "EXACT_PRODUCT_MATCH"
+      | "PROBABLE_PRODUCT_MATCH"
+      | "BRAND_ONLY_MATCH"
+      | "REJECTED_UNRELATED_CREATIVE"
+      | "UNMATCHED"
+      | "MISSING_DESTINATION" = "UNMATCHED";
+    let bestClassification: string | null = null;
+    let bestEvidence: string | null = null;
+    let bestRejectionReason: string | null = null;
+    let bestCandidateId: string | null = null;
+
+    if (!obs.landingPageUrl && !obs.sourceUrl) {
+      bestVerdict = "MISSING_DESTINATION";
+      bestRejectionReason = "Missing landing page destination URL";
+    } else {
+      for (const candidate of candidates) {
+        const match = matchCrossPlatformProductEvidence(candidate, {
+          title: obs.title,
+          url: obs.landingPageUrl || obs.sourceUrl,
+          domain: obs.advertiserDomain,
+          platform: obs.source,
+        });
+
+        if (
+          match.isProductSpecificEvidence !== false &&
+          (match.confidence === "EXACT" || match.confidence === "HIGH_CONFIDENCE")
+        ) {
+          bestVerdict = "EXACT_PRODUCT_MATCH";
+          bestClassification = match.confidence;
+          bestEvidence =
+            (match.matchReasons || []).join("; ") ||
+            `Exact cross-platform product title/URL match with candidate ${candidate.candidateId}`;
+          bestCandidateId = candidate.candidateId;
+          bestRejectionReason = null;
+          break; // Highest tier reached
+        } else if (
+          match.confidence === "PROBABLE" &&
+          bestVerdict !== "PROBABLE_PRODUCT_MATCH"
+        ) {
+          bestVerdict = "PROBABLE_PRODUCT_MATCH";
+          bestClassification = "PROBABLE";
+          bestEvidence =
+            (match.matchReasons || []).join("; ") ||
+            `Probable product match with candidate ${candidate.candidateId}`;
+          bestCandidateId = candidate.candidateId;
+        } else if (
+          obs.advertiserDomain &&
+          candidate.storeDomain &&
+          extractRegistrableDomain(obs.advertiserDomain) ===
+            extractRegistrableDomain(candidate.storeDomain) &&
+          bestVerdict === "UNMATCHED"
+        ) {
+          bestVerdict = "BRAND_ONLY_MATCH";
+          bestClassification = "BRAND_DOMAIN_MATCH";
+          bestEvidence = `Domain match (${obs.advertiserDomain}) without product-specific headline/URL alignment`;
+          bestCandidateId = candidate.candidateId;
+        } else if (bestVerdict === "UNMATCHED") {
+          bestRejectionReason =
+            (match.matchReasons || []).join("; ") || "Low cross-platform text/URL similarity";
+          bestCandidateId = candidate.candidateId;
+        }
+      }
+
+      if (bestVerdict === "UNMATCHED") {
+        bestVerdict = "REJECTED_UNRELATED_CREATIVE";
+        bestRejectionReason =
+          bestRejectionReason ||
+          "No candidate matched creative title or destination URL";
+      }
+    }
+
+    if (
+      bestVerdict === "EXACT_PRODUCT_MATCH" ||
+      bestVerdict === "PROBABLE_PRODUCT_MATCH"
+    ) {
+      uniqueProductAssociatedCount++;
+    } else if (bestVerdict === "BRAND_ONLY_MATCH") {
+      uniqueBrandOnlyCount++;
+    } else if (bestVerdict === "REJECTED_UNRELATED_CREATIVE") {
+      uniqueRejectedCount++;
+    } else {
+      uniqueUnmatchedCount++;
+    }
+
+    creativeAssociationLedger.push({
+      creativeId: cId,
+      advertiserDomain: obs.advertiserDomain || null,
+      sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
+      rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
+      finalDestination: obs.landingPageUrl || null,
+      normalizedProductUrl: null,
+      creativeTitle: obs.title || null,
+      candidateIdsEvaluated: candidates.map((c) => c.candidateId),
+      exactMatchingClassification: bestClassification,
+      matchingEvidence: bestEvidence,
+      rejectionReason: bestRejectionReason,
+      associationVerdict: bestVerdict,
+    });
+
+    if (bestVerdict !== "EXACT_PRODUCT_MATCH") {
+      googleCreativeRejections.push({
+        creativeId: cId,
+        advertiserDomain: obs.advertiserDomain || null,
+        rejectionReason: bestRejectionReason || `Classified as ${bestVerdict}`,
+        matchedCandidateId: bestCandidateId,
+      });
+    }
+  }
+
   if (providerTelemetry.GOOGLE_ADS) {
-    providerTelemetry.GOOGLE_ADS.productAssociatedCount = googleProductMatches;
-    providerTelemetry.GOOGLE_ADS.brandAssociatedCount = googleBrandMatches;
+    providerTelemetry.GOOGLE_ADS.productAssociatedCount = uniqueProductAssociatedCount;
+    providerTelemetry.GOOGLE_ADS.brandAssociatedCount = uniqueBrandOnlyCount;
     if (providerTelemetry.GOOGLE_ADS.enrichmentExecution) {
-      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = googleProductMatches;
-      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = googleBrandMatches;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = uniqueBrandOnlyCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productEvidenceIds = googleProductEvidenceIds;
-      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCreativeCount = googleCreativeRejections.length;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCreativeCount = uniqueRejectedCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeRejections = googleCreativeRejections;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productAssociatedCount = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandOnlyCount = uniqueBrandOnlyCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCount = uniqueRejectedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.unmatchedCount = uniqueUnmatchedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeAssociationLedger = creativeAssociationLedger;
       if (providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown) {
         providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown.productAssociatedEvidence =
-          googleProductMatches > 0;
+          uniqueProductAssociatedCount > 0;
       }
     }
   }

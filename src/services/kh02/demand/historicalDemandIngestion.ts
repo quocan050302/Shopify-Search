@@ -370,15 +370,15 @@ export async function resolveProductDemandHistory(
                 await prisma.productDemandObservation.create({
                   data: {
                     productId: targetProductId,
-                    source: pt.source || "Google Trends (SerpApi)",
+                    source: pt.source || (isGoogleFreeMode ? "Google Trends (Free Demand)" : "Google Trends (SerpApi)"),
                     region: pt.region || region,
                     keyword: searchTerm,
                     periodStart: new Date(pt.periodStart),
                     periodEnd: new Date(pt.periodEnd),
                     demandValue: pt.demandValue,
                     valueType: "RELATIVE_INTEREST",
-                    evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
-                    methodologyVersion: "serpapi_google_trends_live",
+                    evidenceReference: (pt as any).evidenceReference || options.queryId || options.researchRunId || (isGoogleFreeMode ? "GOOGLE_FREE_DEMAND_INGESTION" : "DEMAND_API_INGESTION"),
+                    methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
                   },
                 });
               } catch {
@@ -395,8 +395,8 @@ export async function resolveProductDemandHistory(
             source: p.source,
             date: p.periodStart,
             value: p.demandValue,
-            methodologyVersion: "serpapi_google_trends_live",
-            evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
+            methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
+            evidenceReference: (p as any).evidenceReference || options.queryId || options.researchRunId || (isGoogleFreeMode ? "GOOGLE_FREE_DEMAND_INGESTION" : "DEMAND_API_INGESTION"),
           }));
 
           // Merge live points with existing valid (non-fixture, non-synthetic) points

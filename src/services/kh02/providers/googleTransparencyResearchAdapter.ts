@@ -222,6 +222,39 @@ export interface GoogleEnrichmentExecution {
     durationMs: number;
     detail?: string;
   }>;
+  /** V12.4.3.4.1 Section 7.2: Forensic per-creative association ledger and telemetry */
+  productAssociatedCount?: number;
+  brandOnlyCount?: number;
+  rejectedCount?: number;
+  unmatchedCount?: number;
+  timeoutCount?: number;
+  creativeAssociationLedger?: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    sourceMarket: string;
+    rawLandingUrl: string | null;
+    finalDestination: string | null;
+    normalizedProductUrl: string | null;
+    creativeTitle: string | null;
+    candidateIdsEvaluated: string[];
+    exactMatchingClassification: string | null;
+    matchingEvidence: string | null;
+    rejectionReason: string | null;
+    associationVerdict:
+      | "EXACT_PRODUCT_MATCH"
+      | "PROBABLE_PRODUCT_MATCH"
+      | "BRAND_ONLY_MATCH"
+      | "REJECTED_UNRELATED_CREATIVE"
+      | "UNMATCHED"
+      | "MISSING_DESTINATION"
+      | "UPSTREAM_TIMEOUT";
+  }>;
+  creativeRejections?: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    rejectionReason: string;
+    matchedCandidateId: string | null;
+  }>;
 }
 
 async function withOperationDeadline<T>(
