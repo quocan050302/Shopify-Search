@@ -1,0 +1,9 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "providerMode": "GOOGLE_FREE_ONLY",
+  "methodology": "google_free_demand_live",
+  "serpApiIsolated": true,
+  "serpApiCallsMade": 0,
+  "demandLineageIntegrity": "PASS"
+}

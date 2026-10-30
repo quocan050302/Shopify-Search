@@ -1,0 +1,66 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "rootCauses": [
+    {
+      "id": "RC-01",
+      "title": "BigQuery public dataset top_terms coverage limitation",
+      "remediation": "Honest INSUFFICIENT_COVERAGE returned on missing terms; official Trends CSV Explore import path provided; zero synthetic points generated.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-02",
+      "title": "False positive provider diagnostics without verified credentials",
+      "remediation": "GoogleFreeDemandProvider.diagnose() checks BIGQUERY_FREE_SANDBOX_VERIFIED and returns BLOCKED_FREE_SANDBOX_NOT_VERIFIED when unconfigured.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-03",
+      "title": "SerpApi provenance leakage in demand ingestion",
+      "remediation": "DEMAND_PROVIDER_MODE=GOOGLE_FREE_ONLY sets methodologyVersion=google_free_demand_live and evidenceReference=GOOGLE_FREE_DEMAND_INGESTION; 0 SerpApi network calls made.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-04",
+      "title": "Trends CSV import lacked cryptographic disk integrity",
+      "remediation": "Official Explore CSVs persisted to data/google_trends_imports/<sha256>.csv; verifyStoredCsvFile() validates physical file existence and recomputes SHA-256.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-05",
+      "title": "Google Trending Now RSS generated fake historical points",
+      "remediation": "points: [] strictly enforced; trending signals strictly restricted to discovery, never Evergreen demand.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-06",
+      "title": "Google Ads Transparency lacked 1:1 creative association ledger",
+      "remediation": "Forensic creativeAssociationLedger categorizes every creative as EXACT_PRODUCT_MATCH, PROBABLE_PRODUCT_MATCH, BRAND_ONLY_MATCH, or REJECTED_UNRELATED_CREATIVE.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-07",
+      "title": "G16 promoted unverified candidates without recovery",
+      "remediation": "selectTopResearchShortlist() initiates merchant recovery and searches current-run candidates for VERIFIED replacements; records candidateRejectionLedger; fails closed if < 3 verified.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-08",
+      "title": "TikTok Organic was visible in navigation and active in discovery",
+      "remediation": "TikTok Research nav item removed from Sidebar and Header; provider disabled in orchestrator.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-09",
+      "title": "Unapproved cloud spend risk",
+      "remediation": "ZERO_SPEND_ENFORCED=true; dryRun query validation; strict zero-byte billing check; fails closed without credentials.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "RC-10",
+      "title": "G15 Evergreen multi-scenario candidate summing",
+      "remediation": "G15 evaluates candidate demand within a single research run, never summing across disjoint fallback and live runs.",
+      "status": "CLOSED"
+    }
+  ]
+}

@@ -1,0 +1,648 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "metaLiveDiag": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-30T08:58:14.017Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (303 records); live collector active (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "D:\\Project_github\\Running-Ads\\services\\meta-ads-collector\\.venv\\Scripts\\python.exe",
+    "collectorVersion": null,
+    "databaseRecordsIndexed": 303,
+    "collectorInstalled": true,
+    "collectorConfigured": true,
+    "transportReachable": true,
+    "queryCapabilityAvailable": true,
+    "actualQueryAttempted": false,
+    "upstreamQueryCompleted": false,
+    "rawAdsReturned": 0,
+    "validObservationsNormalized": 0,
+    "recordsPersisted": 0,
+    "recordsAssociatedWithCandidates": 0
+  },
+  "liveOnlyRun": {
+    "researchRunId": "kh02_run_1793350997300_7il0g",
+    "actualApiCalls": 3,
+    "freshLiveAdsCount": 25,
+    "cachedAdsCount": 0,
+    "executedQueryIds": [
+      "kh02_q_r1_1_5b529f64",
+      "kh02_q_r1_2_e0145dca",
+      "kh02_q_r1_3_1e5b2ff1"
+    ],
+    "shortlistProducts": [
+      {
+        "rank": 1,
+        "candidateId": "cand_1212440541",
+        "researchProductId": "cand_1212440541",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityStatus": "VERIFIED",
+        "familyKey": "automatic_pet_feeder",
+        "supportingAdIds": [
+          "cmvrzyn23004m6coriy1lwr49",
+          "cmvrzyn2j004s6corb96ke61v"
+        ],
+        "supportingExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_1e5b2ff1"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 2,
+          "uniqueLiveExternalAdIds": [
+            "2046326005986245",
+            "2128156051108858"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [],
+          "rejectionReasons": [],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_3_1e5b2ff1",
+              "providerRequestId": "0d80088ebbe44e9fa532e9950705e96d",
+              "upstreamAdId": "2046326005986245",
+              "persistedAdId": "cmvrzyn23004m6coriy1lwr49",
+              "sourceObservationId": "cmvuqpile002l0worum8711ou",
+              "candidateId": "cand_1212440541",
+              "researchProductId": "cand_1212440541"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_3_1e5b2ff1",
+              "providerRequestId": "0d80088ebbe44e9fa532e9950705e96d",
+              "upstreamAdId": "2128156051108858",
+              "persistedAdId": "cmvrzyn2j004s6corb96ke61v",
+              "sourceObservationId": "cmvuqpilq002p0wor01ew8aaq",
+              "candidateId": "cand_1212440541",
+              "researchProductId": "cand_1212440541"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      },
+      {
+        "rank": 2,
+        "candidateId": "cand_1587534715",
+        "researchProductId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "kittyspout.com",
+        "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "identityStatus": "VERIFIED",
+        "familyKey": "pet_water_fountain",
+        "supportingAdIds": [
+          "cmvrzyixu002s6corgmhfjtem"
+        ],
+        "supportingExternalAdIds": [
+          "1067995712370292"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_2_e0145dca"
+        ],
+        "liveObservationsCount": 1,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 1,
+          "uniqueLiveExternalAdIds": [
+            "1067995712370292"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [],
+          "rejectionReasons": [],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_2_e0145dca",
+              "providerRequestId": "3e82b429977b454ca469c7b8403c3b88",
+              "upstreamAdId": "1067995712370292",
+              "persistedAdId": "cmvrzyixu002s6corgmhfjtem",
+              "sourceObservationId": "cmvuqpii1001h0worqerornwj",
+              "candidateId": "cand_1587534715",
+              "researchProductId": "cand_1587534715"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      },
+      {
+        "rank": 3,
+        "candidateId": "cand_1613504636",
+        "researchProductId": "cand_1613504636",
+        "title": "Pet Hair/Lint/Dust Cleaner",
+        "storeDomain": "cc.uprootclean.com",
+        "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+        "identityStatus": "PROBABLE",
+        "familyKey": "pet_hair_remover_roller",
+        "supportingAdIds": [
+          "cmvlsqyhy0003awor2cubpbuq",
+          "cmvlsqyiz0009aworjqixph93",
+          "cmvlsqyjn000faworwu1dts6g",
+          "cmvlsqykc000laworg3qfh92d",
+          "cmvlsqyl0000raworivkxfbhm",
+          "cmvq0trww000fwgor0lp8jttq",
+          "cmvq0trxo000kwgorhbr1satz",
+          "cmvq0tryb000pwgorf9nb1cw7",
+          "cmvq0tryv000uwgorvjr4hq8v",
+          "cmvrh5afz001ufcort18234su"
+        ],
+        "supportingExternalAdIds": [
+          "1536941208479218",
+          "1464108218882438",
+          "1133000522848754",
+          "1641348457417375",
+          "2249466188957796",
+          "1642750633880173",
+          "1410922084469845",
+          "1806555653907868",
+          "1563296449176047",
+          "4546541612250472"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_1_5b529f64"
+        ],
+        "liveObservationsCount": 10,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": false,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 10,
+          "uniqueLiveExternalAdIds": [
+            "1536941208479218",
+            "1464108218882438",
+            "1133000522848754",
+            "1641348457417375",
+            "2249466188957796",
+            "1642750633880173",
+            "1410922084469845",
+            "1806555653907868",
+            "1563296449176047",
+            "4546541612250472"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [
+            "NOT_VERIFIED_IDENTITY"
+          ],
+          "rejectionReasons": [
+            "Candidate identityStatus is not VERIFIED."
+          ],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1536941208479218",
+              "persistedAdId": "cmvlsqyhy0003awor2cubpbuq",
+              "sourceObservationId": "cmvuqpid000010wornjcbrfu1",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1464108218882438",
+              "persistedAdId": "cmvlsqyiz0009aworjqixph93",
+              "sourceObservationId": "cmvuqpidn00050wor3pxu7za5",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1133000522848754",
+              "persistedAdId": "cmvlsqyjn000faworwu1dts6g",
+              "sourceObservationId": "cmvuqpie600090worbhrare0g",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1641348457417375",
+              "persistedAdId": "cmvlsqykc000laworg3qfh92d",
+              "sourceObservationId": "cmvuqpien000d0wort4zz60bd",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "2249466188957796",
+              "persistedAdId": "cmvlsqyl0000raworivkxfbhm",
+              "sourceObservationId": "cmvuqpif2000h0worayq5p080",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1642750633880173",
+              "persistedAdId": "cmvq0trww000fwgor0lp8jttq",
+              "sourceObservationId": "cmvuqpifr000p0worm4zcpdxh",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1410922084469845",
+              "persistedAdId": "cmvq0trxo000kwgorhbr1satz",
+              "sourceObservationId": "cmvuqpifg000l0wori2r8git6",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1806555653907868",
+              "persistedAdId": "cmvq0tryb000pwgorf9nb1cw7",
+              "sourceObservationId": "cmvuqpig2000t0worbrxm5wfd",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "1563296449176047",
+              "persistedAdId": "cmvq0tryv000uwgorvjr4hq8v",
+              "sourceObservationId": "cmvuqpigf000x0worle3eyv3p",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997300_7il0g",
+              "executedQueryId": "kh02_q_r1_1_5b529f64",
+              "providerRequestId": "b3b36fd7b7ac4b0c87b5eeb561b26303",
+              "upstreamAdId": "4546541612250472",
+              "persistedAdId": "cmvrh5afz001ufcort18234su",
+              "sourceObservationId": "cmvuqpigr00110worrjzj643m",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      }
+    ]
+  },
+  "liveWithCacheFallbackRun": {
+    "researchRunId": "kh02_run_1793350997659_kk3j0",
+    "executedQueryIds": [
+      "kh02_q_r1_1_b42eb56b",
+      "kh02_q_r1_2_882223e8",
+      "kh02_q_r1_3_d6de1688"
+    ],
+    "shortlistProducts": [
+      {
+        "rank": 1,
+        "candidateId": "cand_1212440541",
+        "researchProductId": "cand_1212440541",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityStatus": "VERIFIED",
+        "familyKey": "automatic_pet_feeder",
+        "supportingAdIds": [
+          "cmvrzyn23004m6coriy1lwr49",
+          "cmvrzyn2j004s6corb96ke61v",
+          "cmvrzyn3h00546corujh7567u",
+          "cmvrzyn5c005t6cor0yylqvk2",
+          "cmvrzyn30004y6corojbfmznc",
+          "cmvrzyn4w005n6corlzcsccsh",
+          "cmvrzyn3x005a6corm3d0e51v"
+        ],
+        "supportingExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858",
+          "1399013621792652",
+          "1595856712093558",
+          "1802296680785588",
+          "1393597299374101",
+          "905190415961783"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_d6de1688"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 5,
+        "isLiveVerified": true,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 2,
+          "uniqueLiveExternalAdIds": [
+            "2046326005986245",
+            "2128156051108858"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [],
+          "rejectionReasons": [],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_3_d6de1688",
+              "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+              "upstreamAdId": "2046326005986245",
+              "persistedAdId": "cmvrzyn23004m6coriy1lwr49",
+              "sourceObservationId": "cmvuqqvfs005d0worfp0vsw0h",
+              "candidateId": "cand_1212440541",
+              "researchProductId": "cand_1212440541"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_3_d6de1688",
+              "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+              "upstreamAdId": "2128156051108858",
+              "persistedAdId": "cmvrzyn2j004s6corb96ke61v",
+              "sourceObservationId": "cmvuqqvg6005h0worhmdkf5sc",
+              "candidateId": "cand_1212440541",
+              "researchProductId": "cand_1212440541"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      },
+      {
+        "rank": 2,
+        "candidateId": "cand_1587534715",
+        "researchProductId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "kittyspout.com",
+        "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "identityStatus": "VERIFIED",
+        "familyKey": "pet_water_fountain",
+        "supportingAdIds": [
+          "cmvrzyixu002s6corgmhfjtem"
+        ],
+        "supportingExternalAdIds": [
+          "1067995712370292"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_2_882223e8"
+        ],
+        "liveObservationsCount": 1,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 1,
+          "uniqueLiveExternalAdIds": [
+            "1067995712370292"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [],
+          "rejectionReasons": [],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_2_882223e8",
+              "providerRequestId": "4f7b99eb07fb40389fc616dcd7c71bc9",
+              "upstreamAdId": "1067995712370292",
+              "persistedAdId": "cmvrzyixu002s6corgmhfjtem",
+              "sourceObservationId": "cmvuqqvca00490worp620gq5x",
+              "candidateId": "cand_1587534715",
+              "researchProductId": "cand_1587534715"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      },
+      {
+        "rank": 3,
+        "candidateId": "cand_1613504636",
+        "researchProductId": "cand_1613504636",
+        "title": "Pet Hair/Lint/Dust Cleaner",
+        "storeDomain": "cc.uprootclean.com",
+        "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+        "identityStatus": "PROBABLE",
+        "familyKey": "pet_hair_remover_roller",
+        "supportingAdIds": [
+          "cmvlsqyhy0003awor2cubpbuq",
+          "cmvlsqyiz0009aworjqixph93",
+          "cmvlsqyjn000faworwu1dts6g",
+          "cmvlsqykc000laworg3qfh92d",
+          "cmvlsqyl0000raworivkxfbhm",
+          "cmvq0trww000fwgor0lp8jttq",
+          "cmvq0trxo000kwgorhbr1satz",
+          "cmvq0tryb000pwgorf9nb1cw7",
+          "cmvq0tryv000uwgorvjr4hq8v",
+          "cmvrh5afz001ufcort18234su"
+        ],
+        "supportingExternalAdIds": [
+          "1536941208479218",
+          "1464108218882438",
+          "1133000522848754",
+          "1641348457417375",
+          "2249466188957796",
+          "1642750633880173",
+          "1410922084469845",
+          "1806555653907868",
+          "1563296449176047",
+          "4546541612250472"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_1_b42eb56b"
+        ],
+        "liveObservationsCount": 10,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": false,
+        "lineageVerification": {
+          "valid": true,
+          "authenticatedLiveObservationCount": 10,
+          "uniqueLiveExternalAdIds": [
+            "1536941208479218",
+            "1464108218882438",
+            "1133000522848754",
+            "1641348457417375",
+            "2249466188957796",
+            "1642750633880173",
+            "1410922084469845",
+            "1806555653907868",
+            "1563296449176047",
+            "4546541612250472"
+          ],
+          "duplicateExternalAdIdsDetected": [],
+          "rejectionCodes": [
+            "NOT_VERIFIED_IDENTITY"
+          ],
+          "rejectionReasons": [
+            "Candidate identityStatus is not VERIFIED."
+          ],
+          "verifiedLinks": [
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1536941208479218",
+              "persistedAdId": "cmvlsqyhy0003awor2cubpbuq",
+              "sourceObservationId": "cmvuqqv75002t0woryn25jzrr",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1464108218882438",
+              "persistedAdId": "cmvlsqyiz0009aworjqixph93",
+              "sourceObservationId": "cmvuqqv7j002x0worcmvqq78g",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1133000522848754",
+              "persistedAdId": "cmvlsqyjn000faworwu1dts6g",
+              "sourceObservationId": "cmvuqqv7x00310woraydsr0bc",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1641348457417375",
+              "persistedAdId": "cmvlsqykc000laworg3qfh92d",
+              "sourceObservationId": "cmvuqqv8p00350workwesqmms",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "2249466188957796",
+              "persistedAdId": "cmvlsqyl0000raworivkxfbhm",
+              "sourceObservationId": "cmvuqqv9300390worybu7tkxg",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1642750633880173",
+              "persistedAdId": "cmvq0trww000fwgor0lp8jttq",
+              "sourceObservationId": "cmvuqqv9r003h0wor9menlwq9",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1410922084469845",
+              "persistedAdId": "cmvq0trxo000kwgorhbr1satz",
+              "sourceObservationId": "cmvuqqv9g003d0wor2dyftjt1",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1806555653907868",
+              "persistedAdId": "cmvq0tryb000pwgorf9nb1cw7",
+              "sourceObservationId": "cmvuqqva4003l0worvq4jvcas",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "1563296449176047",
+              "persistedAdId": "cmvq0tryv000uwgorvjr4hq8v",
+              "sourceObservationId": "cmvuqqvag003p0wor7dfb088o",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            },
+            {
+              "researchRunId": "kh02_run_1793350997659_kk3j0",
+              "executedQueryId": "kh02_q_r1_1_b42eb56b",
+              "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+              "upstreamAdId": "4546541612250472",
+              "persistedAdId": "cmvrh5afz001ufcort18234su",
+              "sourceObservationId": "cmvuqqvat003t0wor1tfp0cbd",
+              "candidateId": "cand_1613504636",
+              "researchProductId": "cand_1613504636"
+            }
+          ]
+        },
+        "demandCoverageDays": 0
+      }
+    ]
+  },
+  "cacheOnlyRun": {
+    "researchRunId": "kh02_run_1793350998915_t934n",
+    "freshLiveAdsCount": 0,
+    "qualifiedCount": 1
+  },
+  "adversarialLineageChecks": [
+    {
+      "id": "M01",
+      "description": "supportingAdIds present but matchedQueryIds empty -> G04/G16 rejected",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M02",
+      "description": "matchedQueryIds from another run -> rejected against current run executedQueryIds",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M03",
+      "description": "Cached observation with undefined sourceType -> never treated as live",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M10",
+      "description": "8-step Meta lineage chain authenticates valid live link and deduplicates duplicate externalAdId",
+      "caughtAndRejected": true,
+      "observed": {
+        "authenticValid": true,
+        "dupAuthenticatedCount": 1,
+        "dupRejectionCodes": [
+          "DUPLICATE_EXTERNAL_AD_COUNTED_TWICE"
+        ]
+      }
+    }
+  ],
+  "g02Verdict": "PASS",
+  "g04Verdict": "PASS"
+}
