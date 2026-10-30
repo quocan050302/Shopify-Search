@@ -1,0 +1,632 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "scenarios": {
+    "petGadgetsLiveOnly": {
+      "scenario": "Pet Gadgets (LIVE_ONLY)",
+      "researchRunId": "kh02_run_1793327245714_gkql7",
+      "topic": "Pet Gadgets",
+      "sourceMode": "LIVE_ONLY",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 3,
+      "liveVerifiedTop3": true,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [
+        "kh02_q_r1_1_32894f1d",
+        "kh02_q_r1_2_3835a2db",
+        "kh02_q_r1_3_83557a0c"
+      ],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn2j004s6corb96ke61v"
+          ],
+          "supportingExternalAdIds": [
+            "2046326005986245",
+            "2128156051108858"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_83557a0c"
+          ],
+          "liveObservationsCount": 2,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1587534715",
+          "title": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyixu002s6corgmhfjtem"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_3835a2db"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_592688578",
+          "title": "Chew Resistant Squeaky Plush Pet Toy",
+          "storeDomain": "livinginurban.com",
+          "canonicalProductUrl": "https://livinginurban.com/products/null-1773399526609",
+          "identityStatus": "VERIFIED",
+          "familyKey": "plush_toy",
+          "supportingAdIds": [
+            "cmvrzyn1800496corko0f36to",
+            "cmvrzyn1m004f6corovcwt882"
+          ],
+          "supportingExternalAdIds": [
+            "1019672154369562",
+            "1686452209316599"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_83557a0c"
+          ],
+          "liveObservationsCount": 2,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        }
+      ]
+    },
+    "petGadgetsLiveFallback": {
+      "scenario": "Pet Gadgets (LIVE_WITH_CACHE_FALLBACK)",
+      "researchRunId": "kh02_run_1793327245885_raa19",
+      "topic": "Pet Gadgets",
+      "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 3,
+      "liveVerifiedTop3": true,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [
+        "kh02_q_r1_1_5cf0b0f9",
+        "kh02_q_r1_2_37fea34f",
+        "kh02_q_r1_3_4f82d376"
+      ],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn3h00546corujh7567u",
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn4w005n6corlzcsccsh",
+            "cmvrzyn3x005a6corm3d0e51v"
+          ],
+          "supportingExternalAdIds": [
+            "2046326005986245",
+            "2128156051108858",
+            "1595856712093558",
+            "1399013621792652",
+            "1802296680785588",
+            "1393597299374101",
+            "905190415961783"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_4f82d376"
+          ],
+          "liveObservationsCount": 2,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1587534715",
+          "title": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyixu002s6corgmhfjtem"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_37fea34f"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_592688578",
+          "title": "Chew Resistant Squeaky Plush Pet Toy",
+          "storeDomain": "livinginurban.com",
+          "canonicalProductUrl": "https://livinginurban.com/products/null-1773399526609",
+          "identityStatus": "VERIFIED",
+          "familyKey": "plush_toy",
+          "supportingAdIds": [
+            "cmvrzyn1800496corko0f36to",
+            "cmvrzyn1m004f6corovcwt882"
+          ],
+          "supportingExternalAdIds": [
+            "1019672154369562",
+            "1686452209316599"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_4f82d376"
+          ],
+          "liveObservationsCount": 2,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        }
+      ]
+    },
+    "homeCleaningGadgets": {
+      "scenario": "Home Cleaning Gadgets (LIVE_WITH_CACHE_FALLBACK)",
+      "researchRunId": "kh02_run_1793327246048_5ff3d",
+      "topic": "Home Cleaning Gadgets",
+      "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 3,
+      "liveVerifiedTop3": true,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [
+        "kh02_q_r1_1_42161752",
+        "kh02_q_r1_2_b75bdd4c",
+        "kh02_q_r1_3_f4e941f9"
+      ],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_386308104",
+          "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+          "storeDomain": "forubom.com",
+          "canonicalProductUrl": "https://forubom.com/products/8dgfdf-electric-clean",
+          "identityStatus": "VERIFIED",
+          "familyKey": "brush_use",
+          "supportingAdIds": [
+            "cmvrzh3ga0065lsore49hb07g"
+          ],
+          "supportingExternalAdIds": [
+            "1381859257413498"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_1_42161752"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_118020086",
+          "title": "Cordless Electric Spin Scrubber with 5 Replaceable Brush Heads",
+          "storeDomain": "realgalaxystore.com",
+          "canonicalProductUrl": "https://realgalaxystore.com/products/cordless-electric-spin-scrubber-with-5-replaceable-brush-heads",
+          "identityStatus": "VERIFIED",
+          "familyKey": "electric_spin_scrubber",
+          "supportingAdIds": [
+            "cmvrzh3i6006wlsortpfbvynk"
+          ],
+          "supportingExternalAdIds": [
+            "2014179012604906"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_1_42161752"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_824704036",
+          "title": "Steam Genie ™ Pro",
+          "storeDomain": "getgenieproducts.com",
+          "canonicalProductUrl": "https://getgenieproducts.com/products/steam-genie-pro",
+          "identityStatus": "VERIFIED",
+          "familyKey": "steam_genie",
+          "supportingAdIds": [
+            "cmvuc6j4q008x6oorn4csai1g"
+          ],
+          "supportingExternalAdIds": [
+            "2302991560230745"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_f4e941f9"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true
+        }
+      ]
+    },
+    "carAccessories": {
+      "scenario": "Car Accessories (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246472_56id2",
+      "topic": "Car Accessories",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 0,
+      "distinctFamiliesCount": 0,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": []
+    },
+    "diyTools": {
+      "scenario": "DIY Tools (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246105_lsuxc",
+      "topic": "DIY Tools",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1316890495",
+          "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "storeDomain": "vipbugo.com",
+          "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+          "identityStatus": "VERIFIED",
+          "familyKey": "hot_glue_gun",
+          "supportingAdIds": [
+            "cmvrzxmcv000m6cor8w1qwnhy"
+          ],
+          "supportingExternalAdIds": [
+            "2395948977822279"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_2112012920",
+          "title": "Burnett Wallpaper",
+          "storeDomain": "wallblush.com",
+          "canonicalProductUrl": "https://wallblush.com/products/burnett-wallpaper",
+          "identityStatus": "VERIFIED",
+          "familyKey": "peel_and_stick_wall_tile",
+          "supportingAdIds": [
+            "cmvrzzjre000et4or9s03n1n8"
+          ],
+          "supportingExternalAdIds": [
+            "4074376052697583"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_887687049",
+          "title": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+          "storeDomain": "acompactly.com",
+          "canonicalProductUrl": "https://acompactly.com/products/easy-fill-wall-repair-paste-kit",
+          "identityStatus": "VERIFIED",
+          "familyKey": "wall_tile_repair_paste",
+          "supportingAdIds": [
+            "cmvrzxmb600016cor39ruhbkb"
+          ],
+          "supportingExternalAdIds": [
+            "1646258873753644"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        }
+      ]
+    },
+    "kitchenGadgets": {
+      "scenario": "Kitchen Gadgets (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246179_j7jup",
+      "topic": "Kitchen Gadgets",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 2,
+      "distinctFamiliesCount": 2,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_519143299",
+          "title": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Set",
+          "storeDomain": "tokosaya.shop",
+          "canonicalProductUrl": "https://tokosaya.shop/products/15-in-1-vegetable-chopper-8-stainless-steel-blades-dicer-slicer-set",
+          "identityStatus": "VERIFIED",
+          "familyKey": "vegetable_food_chopper",
+          "supportingAdIds": [
+            "cmvrzgdlv0057lsornhlxiao0",
+            "cmvrzgdlb0051lsorijhtjtov"
+          ],
+          "supportingExternalAdIds": [
+            "1822390809179925",
+            "1118067957348183"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 2,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1956461376",
+          "title": "Glass Olive Oil Sprayer for Cooking-TrendPlain 16oz/470ml – 2 in 1 Olive Oil Dispenser Bottle for Ki",
+          "storeDomain": "amazon.com",
+          "canonicalProductUrl": "https://amazon.com/Glass-Olive-Sprayer-Cooking-TrendPlain-470ml/dp/B0GXKMDHQF",
+          "identityStatus": "PROBABLE",
+          "familyKey": "oil_dispenser_sprayer",
+          "supportingAdIds": [
+            "cmvrzgh3o005rlsorzylfwpn4"
+          ],
+          "supportingExternalAdIds": [
+            "1351740921361581"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        }
+      ]
+    },
+    "automaticPetFeeder": {
+      "scenario": "Automatic Pet Feeder (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246214_s1sd0",
+      "topic": "Automatic Pet Feeder",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 2,
+      "distinctFamiliesCount": 1,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn3h00546corujh7567u",
+            "cmvrzyn3x005a6corm3d0e51v",
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn4w005n6corlzcsccsh"
+          ],
+          "supportingExternalAdIds": [
+            "1595856712093558",
+            "2128156051108858",
+            "1399013621792652",
+            "905190415961783",
+            "2046326005986245",
+            "1802296680785588",
+            "1393597299374101"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 7,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1783682388",
+          "title": "Automatic Dog Feeder for Easy Daily Meals",
+          "storeDomain": "kingspetboutique.info",
+          "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+          "identityStatus": "PROBABLE",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn4d005h6corri8cn3vo"
+          ],
+          "supportingExternalAdIds": [
+            "1022579813629139"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        }
+      ]
+    },
+    "dogGadgets": {
+      "scenario": "Dog Gadgets (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246276_lt6lw",
+      "topic": "Dog Gadgets",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1838011041",
+          "title": "Reusable Pet Hair Remover Roller",
+          "storeDomain": "livlandco.com",
+          "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvrzyiu0001d6coruwq7iaw0"
+          ],
+          "supportingExternalAdIds": [
+            "1134947659228006"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1300676686",
+          "title": "Grooming Gloves",
+          "storeDomain": "order.uprootclean.com",
+          "canonicalProductUrl": "https://order.uprootclean.com/main/grooming-gloves-gg002-l1",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_grooming_glove_brush",
+          "supportingAdIds": [
+            "cmvq21du8000t4gorrxhd3a6d"
+          ],
+          "supportingExternalAdIds": [
+            "2688711491543464"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_14769098",
+          "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+          "storeDomain": "aureluxe.ch",
+          "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+          "identityStatus": "PROBABLE",
+          "familyKey": "clothes_carpets",
+          "supportingAdIds": [
+            "cmvrzyiw800286coryen6tdi4",
+            "cmvrzyivt00226cor6zknkllm",
+            "cmvrzyive001w6cor4iz3t27o",
+            "cmvrzyiuz001q6cor6xmxn375",
+            "cmvrzyiuh001k6cornssodcug"
+          ],
+          "supportingExternalAdIds": [
+            "27106880412256326",
+            "1328426295348377",
+            "1652686075964972",
+            "27409053148688133",
+            "1655139552269207"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": false
+        }
+      ]
+    },
+    "catGadgets": {
+      "scenario": "Cat Gadgets (CACHE_ONLY)",
+      "researchRunId": "kh02_run_1793327246347_kj3uc",
+      "topic": "Cat Gadgets",
+      "sourceMode": "CACHE_ONLY",
+      "qualifiedCount": 3,
+      "distinctFamiliesCount": 3,
+      "liveVerifiedProductCount": 0,
+      "liveVerifiedTop3": false,
+      "verifiedEvergreenCount": 0,
+      "executedQueryIds": [],
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn3x005a6corm3d0e51v",
+            "cmvrzyn4w005n6corlzcsccsh",
+            "cmvrzyn3h00546corujh7567u"
+          ],
+          "supportingExternalAdIds": [
+            "1802296680785588",
+            "2128156051108858",
+            "2046326005986245",
+            "1595856712093558",
+            "905190415961783",
+            "1393597299374101",
+            "1399013621792652"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 7,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1587534715",
+          "title": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyixu002s6corgmhfjtem"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_1838011041",
+          "title": "Reusable Pet Hair Remover Roller",
+          "storeDomain": "livlandco.com",
+          "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvrzyiu0001d6coruwq7iaw0"
+          ],
+          "supportingExternalAdIds": [
+            "1134947659228006"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false
+        }
+      ]
+    }
+  },
+  "g14Verdict": "PASS"
+}

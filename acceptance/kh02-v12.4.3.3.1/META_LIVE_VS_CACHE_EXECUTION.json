@@ -1,0 +1,50 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "metaLiveDiag": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-30T02:24:37.358Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (254 records); live collector active (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "D:\\Project_github\\Running-Ads\\services\\meta-ads-collector\\.venv\\Scripts\\python.exe",
+    "collectorVersion": null,
+    "databaseRecordsIndexed": 254,
+    "collectorInstalled": true,
+    "collectorConfigured": true,
+    "transportReachable": true,
+    "queryCapabilityAvailable": true,
+    "actualQueryAttempted": false,
+    "upstreamQueryCompleted": false,
+    "rawAdsReturned": 0,
+    "validObservationsNormalized": 0,
+    "recordsPersisted": 0,
+    "recordsAssociatedWithCandidates": 0
+  },
+  "liveOnlyRun": {
+    "researchRunId": "kh02_run_1793327245714_gkql7",
+    "actualApiCalls": 3,
+    "freshLiveAdsCount": 25,
+    "cachedAdsCount": 0,
+    "qualifiedCount": 3,
+    "liveVerifiedProductCount": 3
+  },
+  "cacheOnlyRun": {
+    "researchRunId": "kh02_run_1793327246214_s1sd0",
+    "freshLiveAdsCount": 0,
+    "qualifiedCount": 2
+  },
+  "liveWithCacheFallbackRun": {
+    "researchRunId": "kh02_run_1793327245885_raa19",
+    "qualifiedCount": 3,
+    "liveVerifiedProductCount": 3
+  }
+}

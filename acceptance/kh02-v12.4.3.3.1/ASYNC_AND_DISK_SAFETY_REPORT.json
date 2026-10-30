@@ -1,0 +1,22 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "diskCheckMethod": "fs.statfsSync(process.cwd())",
+  "freeDiskBeforeGB": 52.08,
+  "freeDiskAfterGB": 52.07,
+  "minimumRequiredGB": 15,
+  "diskHeadroomPass": true,
+  "sqlitePreCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "sqlitePostCheck": {
+    "ok": true,
+    "result": "ok"
+  },
+  "dbFingerprint": "6530562482a2",
+  "completionBarrier": {
+    "passed": true,
+    "incompleteJobs": []
+  }
+}
