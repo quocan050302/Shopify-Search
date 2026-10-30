@@ -441,8 +441,8 @@ describe("M16: G04 — discoverProductCandidatesFromAds preserves matchedQueryId
 });
 
 describe("M20: GET API side effects & Runtime Version (G20)", () => {
-  it("GET overview route is read-only and SWAI_KH02_RELEASE_VERSION is 12.4.3.3.1 or 12.4.3.3.2", () => {
-    expect(["12.4.3.3.1", "12.4.3.3.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
+  it("GET overview route is read-only and SWAI_KH02_RELEASE_VERSION is 12.4.3.3.1, 12.4.3.3.2, or 12.4.3.4.1", () => {
+    expect(["12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
     const routeCode = fs.readFileSync(
       path.resolve(
         process.cwd(),
@@ -454,7 +454,7 @@ describe("M20: GET API side effects & Runtime Version (G20)", () => {
       "Materialize an authorized ResearchProduct record for this KH-02 candidate so Product Intelligence"
     );
     expect(routeCode).toContain("GET does not materialize ResearchProduct");
-    expect(routeCode).toMatch(/version:\s*"12\.4\.3\.3\.(1|2)"/);
+    expect(routeCode).toMatch(/version:\s*"12\.4\.3\.(3\.(1|2)|4\.1)"/);
   });
 });
 

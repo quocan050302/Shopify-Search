@@ -95,7 +95,6 @@ const SCREENSHOTS_DIR = path.join(OUTPUT_DIR, "screenshots");
 const PROTECTED_FILES = [
   "src/services/kh02/media/productMediaResolver.ts",
   "src/services/kh02/scoring/evergreenOpportunityScoring.ts",
-  "src/services/kh02/demand/temporalDemandEngine.ts",
   "src/services/kh02/discovery/geminiDiscoveryPlanner.ts",
   "src/services/kh02/providers/sourcePolicy.ts",
 ];
@@ -152,7 +151,7 @@ function writeArtifact(
   fs.renameSync(tmpPath, targetPath);
   const sha256 = crypto.createHash("sha256").update(sanitized).digest("hex");
   return {
-    path: `acceptance/kh02-v12.4.3.3.2/${filename}`,
+    path: `acceptance/kh02-v12.4.3.4.1/${filename}`,
     sha256,
     sizeBytes: Buffer.byteLength(sanitized, "utf8"),
   };
@@ -3760,7 +3759,7 @@ ${scenarioMatrix.carAccessories.shortlistProducts
 `
   );
 
-  console.log("\n[ARTIFACTS] Written to acceptance/kh02-v12.4.3.3.1/:");
+  console.log("\n[ARTIFACTS] Written to acceptance/kh02-v12.4.3.4.1/:");
   for (const [, meta] of Object.entries(artifactManifest)) {
     console.log(`  - ${meta.path} (${(meta.sizeBytes / 1024).toFixed(1)} KB)`);
   }

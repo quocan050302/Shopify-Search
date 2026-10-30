@@ -224,7 +224,7 @@ export default function ProductsPage() {
   const frontendReleaseVersion =
     process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
     runtimeIdentity?.releaseVersion ||
-    "12.4.3.3.2";
+    "12.4.3.4.1";
 
   const fetchRuntimeVersion = useCallback(async () => {
     try {
