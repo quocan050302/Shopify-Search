@@ -1,0 +1,59 @@
+{
+  "pageLoaded": true,
+  "authorized": true,
+  "researchSubmitted": true,
+  "acceptedRunId": "kh02_run_1793166711000_oqarw",
+  "terminalStatus": "COMPLETED",
+  "terminalStateObserved": true,
+  "resultsRendered": true,
+  "emptyStateAccurate": false,
+  "displayedCandidateIds": [
+    "cand_1778107836"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_1778107836": 47
+  },
+  "displayedConfidence": {
+    "cand_1778107836": "55"
+  },
+  "renderedCards": [
+    {
+      "candidateId": "cand_1778107836",
+      "rank": null,
+      "score": 47,
+      "confidence": "55"
+    }
+  ],
+  "postReloadCandidateIds": [
+    "cand_1778107836"
+  ],
+  "postReloadScores": {
+    "cand_1778107836": 47
+  },
+  "postReloadCards": [
+    {
+      "candidateId": "cand_1778107836",
+      "rank": null,
+      "score": 47,
+      "confidence": "55"
+    }
+  ],
+  "postReloadConsistent": true,
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "httpMatch": true,
+  "shortlistSectionRendered": true,
+  "shortlistCardsCount": 2,
+  "cardCount": 1,
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4\\screenshots\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4\\screenshots\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4\\screenshots\\03_leaderboard_results.png"
+  ],
+  "consoleLogs": [],
+  "errors": [],
+  "durationMs": 21033,
+  "verdict": "PASS"
+}

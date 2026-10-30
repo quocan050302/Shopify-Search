@@ -1,0 +1,34 @@
+{
+  "allMutationsPreventedFalsePass": true,
+  "mutations": [
+    {
+      "mutation": "Transport Disconnected Gate",
+      "testCondition": "transportConnected = false",
+      "expectedVerdict": "BLOCKED",
+      "actualResult": "GUARDED",
+      "preventedFalsePass": true
+    },
+    {
+      "mutation": "Missing Chromium Evidence Gate",
+      "testCondition": "browserResult.pageLoaded = false",
+      "expectedVerdict": "BLOCKED_OR_FAIL",
+      "actualResult": "GUARDED",
+      "preventedFalsePass": true
+    },
+    {
+      "mutation": "Unapproved Paid API Charge Gate",
+      "testCondition": "AUTO_PAID_RESEARCH = false",
+      "expectedVerdict": "BLOCKED",
+      "actualResult": "BLOCKED",
+      "preventedFalsePass": true
+    },
+    {
+      "mutation": "Cached DB Count != Fresh Query Gate",
+      "testCondition": "recordsInDbBeforeQuery !== sourceRecordsReturned",
+      "expectedVerdict": "SEPARATED",
+      "actualResult": "SEPARATED",
+      "preventedFalsePass": true
+    }
+  ],
+  "verifiedAt": "2026-10-26T16:00:40.077Z"
+}

@@ -15,9 +15,11 @@ echo "Service Dir:  ${SERVICE_DIR}"
 
 # 1. Check Python version
 PYTHON_CMD=""
-if command -v python3 >/dev/null 2>&1; then
+if command -v python3 >/dev/null 2>&1 && python3 --version >/dev/null 2>&1; then
   PYTHON_CMD="python3"
-elif command -v python >/dev/null 2>&1; then
+elif command -v py >/dev/null 2>&1 && py --version >/dev/null 2>&1; then
+  PYTHON_CMD="py"
+elif command -v python >/dev/null 2>&1 && python --version >/dev/null 2>&1; then
   PYTHON_CMD="python"
 else
   echo "[ERROR] Python 3 was not found in PATH. Please install Python 3.10+." >&2
@@ -37,17 +39,22 @@ fi
 mkdir -p "${SERVICE_DIR}"
 mkdir -p "${SERVICE_DIR}/data"
 
-if [ ! -d "${VENV_DIR}" ]; then
-  echo "Creating virtual environment in ${VENV_DIR}..."
-  "${PYTHON_CMD}" -m venv "${VENV_DIR}"
-else
-  echo "Virtual environment already exists in ${VENV_DIR}."
-fi
-
 # Determine python and pip binary inside venv
 VENV_PYTHON="${VENV_DIR}/bin/python"
 if [ ! -f "${VENV_PYTHON}" ] && [ -f "${VENV_DIR}/Scripts/python.exe" ]; then
   VENV_PYTHON="${VENV_DIR}/Scripts/python.exe"
+fi
+
+if [ ! -f "${VENV_PYTHON}" ]; then
+  echo "Creating virtual environment in ${VENV_DIR}..."
+  "${PYTHON_CMD}" -m venv --clear "${VENV_DIR}"
+  if [ -f "${VENV_DIR}/Scripts/python.exe" ]; then
+    VENV_PYTHON="${VENV_DIR}/Scripts/python.exe"
+  else
+    VENV_PYTHON="${VENV_DIR}/bin/python"
+  fi
+else
+  echo "Virtual environment already exists in ${VENV_DIR}."
 fi
 
 # 3. Upgrade pip and install pinned requirements

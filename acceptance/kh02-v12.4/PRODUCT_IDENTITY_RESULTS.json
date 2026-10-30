@@ -1,0 +1,30 @@
+{
+  "verified": true,
+  "sanitizedResult": {
+    "candidateId": "cand_p06",
+    "commercialEntityType": "PHYSICAL_PRODUCT",
+    "suggestedProductName": "FurPet Reusable Pet Hair Remover",
+    "suggestedProductType": "Pet Grooming Tool",
+    "nicheRelevance": "HIGH",
+    "isLikelySellableProduct": true,
+    "identityEvidenceRefs": [
+      "obs_p06"
+    ],
+    "relevanceEvidenceRefs": [
+      "obs_p06"
+    ],
+    "directlyObservedClaims": [],
+    "inferredClaims": [],
+    "contradictions": [],
+    "uncertainties": [],
+    "aiConfidence": 0.95,
+    "needsHumanReview": false
+  },
+  "contradictions": [],
+  "unsupportedClaims": [],
+  "hallucinatedSourceRefs": [],
+  "quoteMismatches": [],
+  "promptInjectionDetected": false,
+  "shortlistEligible": true,
+  "exclusionReason": null
+}

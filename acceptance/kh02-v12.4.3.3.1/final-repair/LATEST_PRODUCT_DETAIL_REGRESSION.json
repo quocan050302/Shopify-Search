@@ -1,0 +1,36 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "30d3ee08172ceaa82e3bc7f98e8379f89f2562a8",
+  "reviewedHeadCommitVerified": "12ae3118532024f319e01bb0627679355b472609",
+  "persistedResearchProductCheck": {
+    "productId": "cand_1212440541",
+    "httpStatus": 200,
+    "success": true,
+    "metaVersion": "12.4.3.3.1"
+  },
+  "unmaterializedCandidateVirtualResolutionCheck": {
+    "candidateId": "cand_virtual_readonly_probe_v124331",
+    "httpStatus": 200,
+    "isVirtualCandidate": true,
+    "adLinkConfidencePreservedAsProbable": true,
+    "dbRowsCreated": {
+      "researchProductDelta": 0,
+      "competitorStoreDelta": 0,
+      "adProductLinkDelta": 0
+    },
+    "readOnlyVerified": true
+  },
+  "unknownProductIdCheck": {
+    "productId": "unknown_product_nonexistent_999999",
+    "httpStatus": 404,
+    "returns404Truthfully": true
+  },
+  "foreignWorkspaceAuthorizationCheck": {
+    "productId": "cand_1212440541",
+    "foreignWorkspaceId": "foreign-unauthorized-workspace-999",
+    "httpStatus": 403,
+    "returns403Forbidden": true
+  },
+  "chromiumProductIntelligenceGalleryRendered": true,
+  "g18Verdict": "PASS"
+}

@@ -20,9 +20,16 @@ import {
   SourceResearchResult,
   SourceObservation,
   TikTokOrganicVideo,
+  SourceRunStatus,
 } from "../types";
-import { estimateResearchProviderCost } from "./sourceRegistry";
-import { fetchHasDataCreditStatus, evaluateHasDataQuota } from "./hasDataCreditService";
+import {
+  fetchHasDataCreditStatus,
+  evaluateHasDataQuota,
+  ProviderOperationCost,
+  getHasDataOperationCost,
+  hasVerifiedFreeAllowance,
+} from "./hasDataCreditService";
+import { evaluateProviderCostGuard } from "./providerCostPolicy";
 
 export interface ProviderCostPolicy {
   creditsPerRequest: number;
@@ -33,10 +40,10 @@ export interface ProviderCostPolicy {
 }
 
 export const TIKTOK_ORGANIC_COST_POLICY: ProviderCostPolicy = {
-  creditsPerRequest: 1,
+  creditsPerRequest: 10, // HasData MCP tool call costs 10 credits per query
   pageSize: 20,
   maximumPages: 2,
-  freeMonthlyAllowance: 0,
+  freeMonthlyAllowance: 1000, // HasData free monthly allowance is 1,000 credits
   quotaVerifiedAt: "2026-10-26T00:00:00.000Z",
 };
 
@@ -66,7 +73,7 @@ export interface TikTokOrganicQuery {
 
 export interface TikTokOrganicCollectionResult {
   success: boolean;
-  status: "PASSED" | "NO_RESULTS" | "BLOCKED" | "NOT_CONFIGURED" | "FAILED";
+  status: SourceRunStatus;
   videos: TikTokOrganicVideo[];
   observations: SourceObservation[];
   retrievedCount: number;
@@ -160,11 +167,11 @@ export function normalizeTikTokOrganicVideo(raw: any, sourceContext?: any): TikT
     throw new Error("Invalid TikTok video payload: nonempty videoId required");
   }
 
-  const views = parseSafeMetric(raw.views ?? raw.play_count);
+  const views = parseSafeMetric(raw.views ?? raw.plays ?? raw.play_count);
   const likes = parseSafeMetric(raw.likes ?? raw.digg_count);
   const comments = parseSafeMetric(raw.comments ?? raw.comment_count);
   const shares = parseSafeMetric(raw.shares ?? raw.share_count);
-  const saves = parseSafeMetric(raw.saves ?? raw.collect_count);
+  const saves = parseSafeMetric(raw.saves ?? raw.collects ?? raw.collect_count);
 
   let observedEngagementRatio: number | null = null;
   if (views !== null && views > 0 && likes !== null) {
@@ -184,15 +191,15 @@ export function normalizeTikTokOrganicVideo(raw: any, sourceContext?: any): TikT
     lifetimeViewsPerDayEstimate = Math.round(views / daysSincePub);
   }
 
-  const rawThumbnail = raw.thumbnailUrl || raw.cover || raw.dynamic_cover?.url_list?.[0] || null;
-  const rawVideoUrl = raw.videoUrl || raw.play_addr?.url_list?.[0] || raw.share_url || `https://www.tiktok.com/@${raw.author?.unique_id || "video"}/video/${videoId}`;
+  const rawThumbnail = raw.thumbnailUrl || raw.coverUrl || raw.cover || raw.dynamic_cover?.url_list?.[0] || null;
+  const rawVideoUrl = raw.videoUrl || raw.playUrl || raw.play_addr?.url_list?.[0] || raw.share_url || `https://www.tiktok.com/@${raw.author?.unique_id || raw.author?.username || "video"}/video/${videoId}`;
 
   return {
     videoId,
-    canonicalUrl: `https://www.tiktok.com/@${raw.author?.unique_id || "video"}/video/${videoId}`,
-    creatorId: raw.author?.uid ? String(raw.author.uid) : null,
-    creatorHandle: raw.author?.unique_id || raw.author?.nickname || null,
-    caption: typeof raw.desc === "string" ? raw.desc : (typeof raw.caption === "string" ? raw.caption : (typeof raw.title === "string" ? raw.title : null)),
+    canonicalUrl: isValidHttpUrl(raw.url) || `https://www.tiktok.com/@${raw.author?.unique_id || raw.author?.username || "video"}/video/${videoId}`,
+    creatorId: raw.author?.uid || raw.author?.id ? String(raw.author.uid || raw.author.id) : null,
+    creatorHandle: raw.author?.unique_id || raw.author?.username || raw.author?.nickname || null,
+    caption: typeof raw.desc === "string" ? raw.desc : (typeof raw.caption === "string" ? raw.caption : (typeof raw.title === "string" ? raw.title : (typeof raw.description === "string" ? raw.description : null))),
     hashtags: Array.isArray(raw.hashtags)
       ? raw.hashtags.filter((h: any) => typeof h === "string")
       : (Array.isArray(raw.text_extra)
@@ -244,12 +251,29 @@ export async function collectTikTokOrganicEvidence(
     };
   }
 
-  // Authoritative credit check
+  // Balance lookup is non-metered; only provider-verified Free allowance is exempt.
   const creditStatus = await fetchHasDataCreditStatus({ apiKey });
+  const costDecision = evaluateProviderCostGuard("HASDATA", "TIKTOK_ORGANIC_SEARCH", 10);
+  if (!costDecision.allowed && !hasVerifiedFreeAllowance(creditStatus, 10)) {
+    const reason = `Free-tier research blocked: HasData did not confirm a Free plan with at least 10 credits. ${creditStatus.errorMessage || "Check the account plan and quota response."} Paid research remains disabled.`;
+    warnings.push(reason);
+    return {
+      success: false,
+      status: "COST_BLOCKED",
+      videos: [],
+      observations: [],
+      retrievedCount: 0,
+      creditsConsumed: 0,
+      errors: [reason],
+      warnings,
+    };
+  }
+
+  // Authoritative credit check
   const quotaDecision = evaluateHasDataQuota(creditStatus, {
     operationType: "TIKTOK_ORGANIC_SEARCH",
     estimatedRequests: 1,
-    creditsPerRequest: 1,
+    creditsPerRequest: 10,
   });
 
   if (!quotaDecision.isAllowed) {
@@ -268,7 +292,7 @@ export async function collectTikTokOrganicEvidence(
 
   try {
     const count = Math.min(query.maxResults || 20, 20);
-    const searchUrl = `https://api.hasdata.com/scrape/tiktok/search?keyword=${encodeURIComponent(query.topic)}&type=video&count=${count}`;
+    const searchUrl = `https://api.hasdata.com/scrape/tiktok/search?keyword=${encodeURIComponent(query.topic)}&type=video`;
 
     const res = await fetch(searchUrl, {
       method: "GET",
@@ -276,15 +300,54 @@ export async function collectTikTokOrganicEvidence(
         "x-api-key": apiKey,
         "Content-Type": "application/json",
       },
-      signal: query.signal,
+      signal: query.signal ? AbortSignal.any([query.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
-      if (res.status === 402 || res.status === 429) {
-        errors.push(`TikTok Organic provider quota or rate limit exceeded (HTTP ${res.status}).`);
+      if (res.status === 401 || res.status === 403) {
+        errors.push(`HasData API key authentication failed (HTTP ${res.status}).`);
         return {
           success: false,
-          status: "BLOCKED",
+          status: "AUTHENTICATION_FAILED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status === 402) {
+        errors.push("TikTok Organic provider credit balance exhausted (HTTP 402 Payment Required).");
+        return {
+          success: false,
+          status: "COST_BLOCKED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status === 429) {
+        errors.push("TikTok Organic provider rate limit exceeded (HTTP 429).");
+        return {
+          success: false,
+          status: "RATE_LIMITED",
+          videos: [],
+          observations: [],
+          retrievedCount: 0,
+          creditsConsumed: 0,
+          errors,
+          warnings,
+        };
+      }
+      if (res.status >= 500) {
+        errors.push(`HasData upstream server error (HTTP ${res.status}).`);
+        return {
+          success: false,
+          status: "FAILED",
           videos: [],
           observations: [],
           retrievedCount: 0,
@@ -297,11 +360,26 @@ export async function collectTikTokOrganicEvidence(
     }
 
     const json = await res.json();
+    if (json?.error || (json?.success === false && json?.message)) {
+      const errMsg = json.error || json.message || "HasData reported query failure";
+      errors.push(`TikTok Organic provider returned error: ${errMsg}`);
+      return {
+        success: false,
+        status: "QUERY_FAILED",
+        videos: [],
+        observations: [],
+        retrievedCount: 0,
+        creditsConsumed: 0,
+        errors,
+        warnings,
+      };
+    }
+
     const rawItems: any[] = Array.isArray(json.data)
       ? json.data
       : (Array.isArray(json.items) ? json.items : (Array.isArray(json.videos) ? json.videos : []));
 
-    for (const raw of rawItems) {
+    for (const raw of rawItems.slice(0, count)) {
       try {
         const normVideo = normalizeTikTokOrganicVideo(raw);
         videos.push(normVideo);
@@ -344,11 +422,11 @@ export async function collectTikTokOrganicEvidence(
 
     return {
       success: true,
-      status: videos.length > 0 ? "PASSED" : "NO_RESULTS",
+      status: videos.length > 0 ? "PASSED" : "QUERY_SUCCEEDED_EMPTY",
       videos,
       observations,
       retrievedCount: videos.length,
-      creditsConsumed: 1,
+      creditsConsumed: 10,
       errors,
       warnings,
     };
@@ -376,24 +454,7 @@ export async function collectTikTokOrganicSignals(
   const startedAt = new Date().toISOString();
 
   // Check budget safeguards
-  const costEstimate = estimateResearchProviderCost("TIKTOK_ORGANIC", query);
-  if (!costEstimate.isAllowed) {
-    return {
-      source: "TIKTOK_ORGANIC",
-      status: "NOT_CONFIGURED",
-      observations: [],
-      retrievedCount: 0,
-      acceptedCount: 0,
-      rejectedCount: 0,
-      estimatedCredits: costEstimate.estimatedCredits,
-      consumedCredits: 0,
-      startedAt,
-      completedAt: new Date().toISOString(),
-      errors: [],
-      warnings: [costEstimate.reason || "TikTok organic metered search is disabled in zero-cost mode."],
-    };
-  }
-
+  // The collector verifies actual Free-plan quota before allowing any paid-policy exception.
   const result = await collectTikTokOrganicEvidence(
     {
       topic: query.topic,
@@ -411,7 +472,7 @@ export async function collectTikTokOrganicSignals(
     retrievedCount: result.retrievedCount,
     acceptedCount: result.observations.length,
     rejectedCount: 0,
-    estimatedCredits: costEstimate.estimatedCredits,
+    estimatedCredits: 10,
     consumedCredits: result.creditsConsumed,
     startedAt,
     completedAt: new Date().toISOString(),

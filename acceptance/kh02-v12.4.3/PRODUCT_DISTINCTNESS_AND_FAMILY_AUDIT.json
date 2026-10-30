@@ -1,0 +1,260 @@
+{
+  "f01DuplicateConsolidation": {
+    "consolidatedCount": 1,
+    "manualPairCheck": {
+      "isDistinct": false,
+      "isFamilyDiverse": false,
+      "totalCandidatesEvaluated": 2,
+      "distinctCount": 1,
+      "distinctProductCount": 1,
+      "distinctFamilyCount": 1,
+      "distinctListingCount": 1,
+      "independentOpportunityCount": 1,
+      "homogeneousFamilyDetected": true,
+      "dominantFamilyKey": "item_title",
+      "dominantFamilyLabel": "Item Title",
+      "duplicateGroupsCount": 1,
+      "uncertainties": [],
+      "pairwiseDecisions": [
+        {
+          "candidateIds": [
+            "dup_a",
+            "dup_b"
+          ],
+          "listingKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "productKeys": [
+            "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "url::https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "familyKeys": [
+            "item_title",
+            "item_title"
+          ],
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "areSameListing": true,
+          "areSameActualProduct": true,
+          "areSameVariant": true,
+          "areSameFamily": true,
+          "areDistinctOpportunitiesForBroadNiche": false,
+          "areDistinctOpportunitiesForSpecificQuery": false,
+          "confidence": "EXACT",
+          "uncertainty": null,
+          "supportingEvidence": [
+            "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+          ],
+          "conflictingEvidence": [
+            "Different ad/display titles ('Title A' vs 'Title B') overridden by identical canonical product URL."
+          ],
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        }
+      ],
+      "details": [
+        {
+          "candidateId": "dup_a",
+          "title": "Title A",
+          "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "variantKey": null,
+          "familyKey": "item_title",
+          "familyLabel": "Item Title",
+          "storeDomain": "uprootclean.com",
+          "isDuplicate": false
+        },
+        {
+          "candidateId": "dup_b",
+          "title": "Title B",
+          "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+          "variantKey": null,
+          "familyKey": "item_title",
+          "familyLabel": "Item Title",
+          "storeDomain": "uprootclean.com",
+          "isDuplicate": true,
+          "duplicateOf": "dup_a",
+          "decision": "SAME_LISTING_SAME_PRODUCT",
+          "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+        }
+      ]
+    }
+  },
+  "b15LocalSkuIsolation": {
+    "candidateIds": [
+      "sku_m1",
+      "sku_m2"
+    ],
+    "listingKeys": [
+      "url::https://merchant-one.com/products/spin-scrubber",
+      "url::https://merchant-two.com/products/spray-mop"
+    ],
+    "productKeys": [
+      "url::https://merchant-one.com/products/spin-scrubber",
+      "url::https://merchant-two.com/products/spray-mop"
+    ],
+    "familyKeys": [
+      "electric_spin_scrubber",
+      "spray_microfiber_mop"
+    ],
+    "decision": "DIFFERENT_PRODUCTS",
+    "areSameListing": false,
+    "areSameActualProduct": false,
+    "areSameVariant": false,
+    "areSameFamily": false,
+    "areDistinctOpportunitiesForBroadNiche": true,
+    "areDistinctOpportunitiesForSpecificQuery": true,
+    "confidence": "EXACT",
+    "uncertainty": null,
+    "supportingEvidence": [],
+    "conflictingEvidence": [
+      "Local SKU 'SKU-100' appears on two different merchant domains (merchant-one.com vs merchant-two.com); local SKU strings are merchant-scoped and cannot prove cross-merchant identity without GTIN or verified brand+model.",
+      "Different product families: 'electric_spin_scrubber' (Electric Spin Scrubber & Power Brush) vs 'spray_microfiber_mop' (Spray Mop & Spin Mop System)."
+    ],
+    "reason": "Candidates represent different physical product families ('Electric Spin Scrubber & Power Brush' vs 'Spray Mop & Spin Mop System')."
+  },
+  "f07ThreeOilDispensersAudit": {
+    "isDistinct": true,
+    "isFamilyDiverse": false,
+    "distinctCount": 3,
+    "distinctProductCount": 3,
+    "distinctFamilyCount": 1,
+    "distinctListingCount": 3,
+    "independentOpportunityCount": 1,
+    "homogeneousFamilyDetected": true,
+    "dominantFamilyKey": "oil_dispenser_sprayer",
+    "dominantFamilyLabel": "Oil Dispenser & Sprayer Bottle",
+    "duplicateKeys": [],
+    "familyKeys": [
+      "oil_dispenser_sprayer",
+      "oil_dispenser_sprayer",
+      "oil_dispenser_sprayer"
+    ],
+    "productKeys": [
+      "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+      "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+      "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+    ],
+    "uncertainties": [
+      "[cand_985549029 vs cand_1382030795]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+      "[cand_985549029 vs cand_957268311]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+      "[cand_1382030795 vs cand_957268311]: Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models."
+    ],
+    "pairwiseDecisions": [
+      {
+        "candidateIds": [
+          "cand_985549029",
+          "cand_1382030795"
+        ],
+        "listingKeys": [
+          "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+          "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser"
+        ],
+        "productKeys": [
+          "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+          "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser"
+        ],
+        "familyKeys": [
+          "oil_dispenser_sprayer",
+          "oil_dispenser_sprayer"
+        ],
+        "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+        "areSameListing": false,
+        "areSameActualProduct": null,
+        "areSameVariant": false,
+        "areSameFamily": true,
+        "areDistinctOpportunitiesForBroadNiche": false,
+        "areDistinctOpportunitiesForSpecificQuery": true,
+        "confidence": "AMBIGUOUS",
+        "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+        "supportingEvidence": [
+          "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.50."
+        ],
+        "conflictingEvidence": [
+          "Different physical capacities ('470ml' vs '500ml')."
+        ],
+        "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+      },
+      {
+        "candidateIds": [
+          "cand_985549029",
+          "cand_957268311"
+        ],
+        "listingKeys": [
+          "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+          "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+        ],
+        "productKeys": [
+          "url::https://kitchena.com/products/2-in-1-glass-oil-sprayer",
+          "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+        ],
+        "familyKeys": [
+          "oil_dispenser_sprayer",
+          "oil_dispenser_sprayer"
+        ],
+        "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+        "areSameListing": false,
+        "areSameActualProduct": null,
+        "areSameVariant": false,
+        "areSameFamily": true,
+        "areDistinctOpportunitiesForBroadNiche": false,
+        "areDistinctOpportunitiesForSpecificQuery": false,
+        "confidence": "AMBIGUOUS",
+        "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+        "supportingEvidence": [
+          "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.50."
+        ],
+        "conflictingEvidence": [],
+        "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+      },
+      {
+        "candidateIds": [
+          "cand_1382030795",
+          "cand_957268311"
+        ],
+        "listingKeys": [
+          "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+          "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+        ],
+        "productKeys": [
+          "url::https://kitchenb.com/products/500ml-gravity-oil-dispenser",
+          "url::https://kitchenc.com/products/press-measure-oil-dispenser"
+        ],
+        "familyKeys": [
+          "oil_dispenser_sprayer",
+          "oil_dispenser_sprayer"
+        ],
+        "decision": "UNKNOWN_CROSS_MERCHANT_SAME_FAMILY",
+        "areSameListing": false,
+        "areSameActualProduct": null,
+        "areSameVariant": false,
+        "areSameFamily": true,
+        "areDistinctOpportunitiesForBroadNiche": false,
+        "areDistinctOpportunitiesForSpecificQuery": false,
+        "confidence": "AMBIGUOUS",
+        "uncertainty": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models.",
+        "supportingEvidence": [
+          "Both listings belong to product family 'oil_dispenser_sprayer' (Oil Dispenser & Sprayer Bottle), token similarity=0.33."
+        ],
+        "conflictingEvidence": [],
+        "reason": "Both listings sell a product in the same functional family across different URLs/merchants without verified GTIN or manufacturer model numbers to confirm whether they are the exact same factory SKU or distinct supplier models. For broad niche discovery, they share the single family 'Oil Dispenser & Sprayer Bottle'."
+      }
+    ],
+    "diversitySummary": "All 3 listings belong to a single product family ('Oil Dispenser & Sprayer Bottle', familykey=REDACTED They represent 3 listing(s) within 1 functional family (1 independent category opportunity)."
+  },
+  "diverseKitchenShortlistSelection": {
+    "selectedCount": 3,
+    "selectedFamilies": [
+      "oil_dispenser_sprayer",
+      "vegetable_food_chopper",
+      "cutting_board_defroster"
+    ],
+    "selectedTitles": [
+      "2 In 1 Glass Oil Sprayer",
+      "Rotary Mandoline Cheese Grater",
+      "Rapid Meat Defrosting Tray"
+    ]
+  }
+}

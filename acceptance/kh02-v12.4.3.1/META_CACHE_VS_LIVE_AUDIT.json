@@ -1,0 +1,94 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "perRunCacheVsLive": [
+    {
+      "topic": "pet gadgets",
+      "researchRunId": "kh02_run_1793254102976_uw326",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "diy",
+      "researchRunId": "kh02_run_1793254118806_w60gg",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "kitchen",
+      "researchRunId": "kh02_1793254134040_uux5p",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 46,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "home decor",
+      "researchRunId": "kh02_1793254134041_06e55",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "gardening",
+      "researchRunId": "kh02_1793254157419_g3tta",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "cleaning",
+      "researchRunId": "kh02_1793254157419_nhtqj",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 49,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "automatic pet feeder",
+      "researchRunId": "kh02_1793254175306_z6pp1",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    },
+    {
+      "topic": "car accessories",
+      "researchRunId": "kh02_1793254175307_z88xy",
+      "executionPolicy": "CACHE_ONLY",
+      "queryStatus": "CACHE_ONLY",
+      "queryExecuted": false,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "unattemptedQueriesCount": 2,
+      "attemptedQueriesCount": 0
+    }
+  ]
+}

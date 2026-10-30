@@ -1,0 +1,22 @@
+{
+  "assessment": {
+    "status": "INSUFFICIENT_HISTORY",
+    "eligibleForEvergreen": false,
+    "dataPointsCount": 0,
+    "distinctObservationDatesCount": 0,
+    "coveredDays": 0,
+    "meanInterest": null,
+    "stdDev": null,
+    "coefficientOfVariation": null,
+    "demandClass": "INSUFFICIENT_HISTORY",
+    "sourceAuthority": "UNVERIFIED",
+    "temporalCoverageValid": false,
+    "calculationVersion": "12.1.1",
+    "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+    "missingEvidence": [
+      "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+    ],
+    "evaluatedAt": "2026-10-26T15:27:08.618Z"
+  },
+  "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+}

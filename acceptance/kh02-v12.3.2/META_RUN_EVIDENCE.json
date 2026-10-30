@@ -1,0 +1,9 @@
+{
+  "runId": "run_pet_us_90d_evidence",
+  "topic": "pet",
+  "market": "US",
+  "lookbackDays": 90,
+  "provenance": "LIVE_PROVIDER",
+  "cacheSeparated": true,
+  "budgetEnforced": true
+}

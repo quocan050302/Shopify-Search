@@ -1,0 +1,7 @@
+{
+  "description": "Heartbeat extending lease while recovery worker scans expired jobs",
+  "recoveryWritePredicate": "WHERE id = :id AND status = 'RUNNING' AND fencingGeneration = :gen AND recordVersion = :ver AND leaseExpiresAt <= :now",
+  "safetyGuarantee": "Recovery updates 0 rows if heartbeat extends leaseExpiresAt into the future before write",
+  "testOutcome": "PASS",
+  "verifiedIn": "tests/unit/kh02V12_1_4_AtomicCas.test.ts"
+}

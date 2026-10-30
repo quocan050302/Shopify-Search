@@ -1,0 +1,11 @@
+{
+  "source": "META_ADS",
+  "queryTopic": "Pet Gadgets",
+  "market": "US",
+  "lookbackDays": 30,
+  "transportConnected": true,
+  "sourceRecordsReturned": 10,
+  "recordsNormalized": 10,
+  "providerQueryTimestamp": "2026-10-26T16:00:30.049Z",
+  "sampleAdIds": []
+}

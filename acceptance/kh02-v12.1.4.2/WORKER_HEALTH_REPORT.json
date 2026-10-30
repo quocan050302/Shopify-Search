@@ -1,0 +1,11 @@
+{
+  "workerId": "worker_acceptance_1793025869484",
+  "observedAt": "2026-10-26T14:44:29.503Z",
+  "lastHeartbeatAt": "2026-10-26T14:44:29.484Z",
+  "status": "ALIVE",
+  "activeJobId": null,
+  "processedCount": 0,
+  "failureCount": 0,
+  "processStartedAt": "2026-10-26T14:43:55.267Z",
+  "uptimeSeconds": 34
+}

@@ -1,0 +1,26 @@
+{
+  "gateId": "Q03_PRODUCTION_BUILD",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "npm run build succeeds and generates .next/BUILD_ID",
+  "expected": {
+    "exitCode": 0,
+    "hasBuildId": true
+  },
+  "observed": {
+    "exitCode": 0,
+    "buildId": "1qmXKguk9XuCOYZiApQ6v",
+    "durationMs": 12490
+  },
+  "executionCommand": "npm run build",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "1qmXKguk9XuCOYZiApQ6v",
+    "logs/next_build.log"
+  ],
+  "evidenceLocation": "acceptance/kh02-v12.4.2/PRODUCTION_BUILD.json",
+  "reason": "Next.js production build succeeded (BUILD_ID=1qmXKguk9XuCOYZiApQ6v)",
+  "executedAt": "2026-10-28T10:49:43.328Z",
+  "environment": "win32-node-v22.14.0-db-6530562482a2"
+}

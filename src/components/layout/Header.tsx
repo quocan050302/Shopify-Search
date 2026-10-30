@@ -178,6 +178,7 @@ export function Header({
               if (searchQuery.trim().length >= 2) setIsDropdownOpen(true);
             }}
             placeholder="Search ads, products, brands... (⌘K)"
+            suppressHydrationWarning
             className="w-full pl-9 pr-8 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
           />
           {searchQuery && (

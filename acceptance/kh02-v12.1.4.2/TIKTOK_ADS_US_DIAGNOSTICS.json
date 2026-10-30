@@ -1,0 +1,17 @@
+{
+  "source": "TIKTOK_ADS",
+  "adapterInstalled": true,
+  "configured": true,
+  "transportConnected": true,
+  "authenticated": null,
+  "discoverySupported": false,
+  "queryExecuted": true,
+  "recordsReturned": 5,
+  "provenanceVerified": true,
+  "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+  "status": "MANUAL_RESEARCH_ONLY",
+  "reason": "Automated TikTok US ad provider is unconfigured; database competitor ad search active, manual Creative Center lookup & batch import available.",
+  "missingRequirements": [
+    "TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"
+  ]
+}

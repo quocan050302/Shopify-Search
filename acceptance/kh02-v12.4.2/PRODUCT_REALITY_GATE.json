@@ -1,0 +1,112 @@
+{
+  "skuReality": {
+    "status": "VERIFIED_PHYSICAL_PRODUCT",
+    "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "eligibleForShortlist": true,
+    "isPhysicalProductRealityEligible": true,
+    "reason": null,
+    "rejectionReasons": [],
+    "conditions": {
+      "correctNiche": true,
+      "physicalProductSupported": true,
+      "productIdentityDefensible": true,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": true,
+      "notServiceArticleInsuranceLeadGen": true,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "colReality": {
+    "status": "REJECTED",
+    "productRealityStatus": "REJECTED",
+    "sourcePageClassification": "COLLECTION_PAGE",
+    "eligibleForShortlist": false,
+    "isPhysicalProductRealityEligible": false,
+    "reason": "No keyword or niche alignment found with topic 'diy'.",
+    "rejectionReasons": [
+      "No keyword or niche alignment found with topic 'diy'."
+    ],
+    "conditions": {
+      "correctNiche": false,
+      "physicalProductSupported": true,
+      "productIdentityDefensible": true,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": true,
+      "notServiceArticleInsuranceLeadGen": true,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "halloweenReality": {
+    "status": "REJECTED",
+    "productRealityStatus": "REJECTED",
+    "sourcePageClassification": "COLLECTION_PAGE",
+    "eligibleForShortlist": false,
+    "isPhysicalProductRealityEligible": false,
+    "reason": "No keyword or niche alignment found with topic 'diy'.",
+    "rejectionReasons": [
+      "No keyword or niche alignment found with topic 'diy'."
+    ],
+    "conditions": {
+      "correctNiche": false,
+      "physicalProductSupported": false,
+      "productIdentityDefensible": false,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": true,
+      "notServiceArticleInsuranceLeadGen": true,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "hallucinatedVer": {
+    "verified": false,
+    "evidenceDecision": "REJECT",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": false,
+    "accurateQuotations": true,
+    "actualMerchantEvidence": true,
+    "productIdentityConsistent": true,
+    "productRealityEligible": false,
+    "productRealityStatus": "UNRESOLVED",
+    "sourcePageClassification": "UNKNOWN_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_pos_printer",
+      "commercialEntityType": "LEAD_GENERATION",
+      "suggestedProductName": "POS Printer",
+      "suggestedProductType": "DIY Tool",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": false,
+      "identityEvidenceRefs": [
+        "hallucinated_ref_999"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_pos_1"
+      ],
+      "directlyObservedClaims": [],
+      "inferredClaims": [],
+      "contradictions": [
+        "Contradiction: AI returned PHYSICAL_PRODUCT, but deterministic source verification identified LEAD_GENERATION (Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.)."
+      ],
+      "uncertainties": [],
+      "aiConfidence": 0.99,
+      "needsHumanReview": true
+    },
+    "contradictions": [
+      "Contradiction: AI returned PHYSICAL_PRODUCT, but deterministic source verification identified LEAD_GENERATION (Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.)."
+    ],
+    "unsupportedClaims": [
+      "Fake claim"
+    ],
+    "hallucinatedSourceRefs": [
+      "hallucinated_ref_999",
+      "hallucinated_ref_999"
+    ],
+    "quoteMismatches": [],
+    "promptInjectionDetected": false,
+    "shortlistEligible": false,
+    "exclusionReason": "Excluded from product shortlist: AI cited hallucinated source references (hallucinated_ref_999, hallucinated_ref_999)."
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "meta_ads": {
+    "provider": "MetaAdsCollector MCP",
+    "protocol": "stdio JSON-RPC",
+    "costPerQuery": 0,
+    "pricingType": "FREE_LOCAL",
+    "authRequired": false
+  },
+  "tiktok_ads": {
+    "provider": "TikTok Creative Center Direct / Apify Top Ads",
+    "protocol": "HTTPS RPC / REST",
+    "costPerQuery": 0,
+    "pricingType": "SESSION_OR_METERED",
+    "authRequirements": [
+      "TIKTOK_CC_COOKIE",
+      "APIFY_TOKEN"
+    ]
+  },
+  "tiktok_organic": {
+    "provider": "HasData TikTok REST API",
+    "endpoint": "https://api.hasdata.com/scrape/tiktok/search",
+    "usageEndpoint": "https://api.hasdata.com/user/me/usage",
+    "costPerQuery": 10,
+    "pricingType": "PAID_CREDITS",
+    "authHeader": "x-api-key",
+    "authRequirement": "HASDATA_API_KEY"
+  },
+  "google_ads": {
+    "provider": "gads-transparency-mcp",
+    "protocol": "JSON-RPC 2.0 MCP",
+    "tools": [
+      "search_advertiser",
+      "get_advertiser_ads",
+      "get_ad_details"
+    ],
+    "costPerQuery": 0,
+    "pricingType": "FREE_TRANSPARENCY",
+    "authRequired": false
+  },
+  "demand_history": {
+    "provider": "Internal Policy Engine / SerpApi Google Trends",
+    "protocol": "HTTPS REST / SQLite",
+    "costPerQuery": 0,
+    "pricingType": "INTERNAL_ENGINE",
+    "upstreamAuthRequirement": "SERPAPI_API_KEY or GOOGLE_TRENDS_API_KEY",
+    "minimumCoverageRequiredDays": 60
+  }
+}

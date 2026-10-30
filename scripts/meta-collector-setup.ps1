@@ -38,16 +38,16 @@ if (-not (Test-Path $DataDir)) {
     New-Item -ItemType Directory -Path $DataDir -Force | Out-Null
 }
 
-if (-not (Test-Path $VenvDir)) {
-    Write-Host "Creating virtual environment in $VenvDir..."
-    & $PythonCmd -m venv $VenvDir
-} else {
-    Write-Host "Virtual environment already exists in $VenvDir."
-}
-
 $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
 if (-not (Test-Path $VenvPython)) {
     $VenvPython = Join-Path $VenvDir "bin\python"
+}
+
+if (-not (Test-Path $VenvPython)) {
+    Write-Host "Creating virtual environment in $VenvDir..."
+    & $PythonCmd -m venv --clear $VenvDir
+} else {
+    Write-Host "Virtual environment already exists in $VenvDir."
 }
 
 # 3. Pip install pinned dependencies

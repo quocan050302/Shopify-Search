@@ -12,6 +12,15 @@
 import { ProductMatchConfidence } from "../types";
 import { DiscoveredProductCandidate } from "./productCandidateDiscovery";
 import { canonicalizeProductUrl, extractDomainFromUrl } from "@/services/products/productService";
+import { extractRegistrableDomain } from "../providers/googleTransparencyResearchAdapter";
+
+export { extractRegistrableDomain };
+
+export type GoogleAssociationClassification =
+  | "EXACT_PRODUCT_MATCH"
+  | "PROBABLE_PRODUCT_MATCH"
+  | "BRAND_ONLY_MATCH"
+  | "REJECTED_UNRELATED_CREATIVE";
 
 export interface ProductMatchHypothesis {
   matchId: string;
@@ -20,11 +29,60 @@ export interface ProductMatchHypothesis {
   matchedEntityTitle: string;
   matchedPlatform: string;
   confidence: ProductMatchConfidence;
+  associationClassification?: GoogleAssociationClassification;
+  isProductSpecificEvidence?: boolean;
   matchReasons: string[];
   requiresManualReview: boolean;
   userReviewDecision?: "CONFIRMED" | "REJECTED" | "UNCERTAIN" | null;
   reviewedAt?: string | null;
   reviewedBy?: string | null;
+}
+
+function extractProductHandleFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const m = String(url).match(/\/products\/([a-z0-9-_]+)/i);
+  return m && m[1] ? m[1].toLowerCase() : null;
+}
+
+const MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS: string[][] = [
+  ["feeder", "dispenser", "bowl"],
+  ["fountain", "waterer", "hydration"],
+  ["litter", "scoop", "deodorizer"],
+  ["roller", "remover", "scraper", "chom", "uproot"],
+  ["laundry", "detergent", "sheets"],
+  ["harness", "leash", "collar"],
+  ["bark", "ultrasonic", "trainer"],
+  ["camera", "monitor", "treat"],
+  ["carrier", "backpack", "seat", "hammock"],
+  ["laser", "level"],
+  ["stripper", "stripping", "crimper", "pliers"],
+  ["stud", "scanner", "detector"],
+  ["chopper", "dicer", "slicer", "mandoline"],
+  ["sharpener", "knife"],
+  ["sealer", "vacuum"],
+  ["thermometer", "probe"],
+];
+
+function hasConflictingProductCategory(textA: string, textB: string): boolean {
+  const lowerA = textA.toLowerCase();
+  const lowerB = textB.toLowerCase();
+  let groupA = -1;
+  let groupB = -1;
+  for (let i = 0; i < MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS.length; i++) {
+    const grp = MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS[i];
+    if (grp.some((w) => new RegExp(`\\b${w}s?\\b`, "i").test(lowerA))) {
+      groupA = i;
+      break;
+    }
+  }
+  for (let i = 0; i < MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS.length; i++) {
+    const grp = MUTUALLY_EXCLUSIVE_PRODUCT_GROUPS[i];
+    if (grp.some((w) => new RegExp(`\\b${w}s?\\b`, "i").test(lowerB))) {
+      groupB = i;
+      break;
+    }
+  }
+  return groupA !== -1 && groupB !== -1 && groupA !== groupB;
 }
 
 /**
@@ -41,9 +99,9 @@ function normalizeWord(w: string): string {
 /**
  * Calculates string word-overlap Jaccard similarity and token coverage.
  */
-function wordSimilarity(a: string, b: string): { jaccard: number; coverage: number } {
-  const wordsA = new Set(a.toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
-  const wordsB = new Set(b.toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
+function wordSimilarity(a?: string | null, b?: string | null): { jaccard: number; coverage: number } {
+  const wordsA = new Set((a || "").toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
+  const wordsB = new Set((b || "").toLowerCase().split(/\W+/).filter((w) => w.length > 2).map(normalizeWord));
   if (wordsA.size === 0 || wordsB.size === 0) return { jaccard: 0, coverage: 0 };
 
   let intersection = 0;
@@ -85,30 +143,140 @@ export function matchCrossPlatformProductEvidence(
       matchedEntityTitle: incomingEvidence.title || "External Evidence",
       matchedPlatform: incomingEvidence.platform,
       confidence,
+      associationClassification: "EXACT_PRODUCT_MATCH",
+      isProductSpecificEvidence: true,
       matchReasons,
       requiresManualReview: false,
     };
   }
 
-  // 2. Same store domain with strong title match
-  if (candidate.storeDomain && evidenceDomain && candidate.storeDomain === evidenceDomain) {
-    const { jaccard, coverage } = wordSimilarity(candidate.title, incomingEvidence.title || "");
-    if (jaccard > 0.5 || coverage > 0.7) {
+  // 2. Same store domain (including registrable subdomain match) with strong product-specific title/model match
+  const candRegDomain = candidate.storeDomain ? extractRegistrableDomain(candidate.storeDomain) : null;
+  const evRegDomain = evidenceDomain ? extractRegistrableDomain(evidenceDomain) : null;
+
+  if (candRegDomain && evRegDomain && candRegDomain === evRegDomain) {
+    const candidateProductText = candidate.canonicalProductName || candidate.displayName || candidate.title || "";
+    const incomingText = incomingEvidence.title || "";
+    const { jaccard, coverage } = wordSimilarity(candidateProductText, incomingText);
+
+    const candHandle =
+      (candidate as any).normalizedProductHandle ||
+      extractProductHandleFromUrl(candidate.canonicalProductUrl);
+    const evHandle = extractProductHandleFromUrl(incomingEvidence.url);
+
+    // If both URLs specify /products/<handle> on the same store and the handles differ,
+    // or if the product categories are mutually exclusive (e.g. fountain vs feeder, laundry sheets vs pet hair remover),
+    // reject as product-specific evidence (keep confidence PROBABLE for backwards compatibility, classification REJECTED_UNRELATED_CREATIVE)
+    const hasHandleConflict = Boolean(candHandle && evHandle && candHandle !== evHandle);
+    const hasCategoryConflict = hasConflictingProductCategory(candidateProductText, incomingText);
+
+    // Strip store/brand tokens to verify whether the ad matches the actual product vs brand-only
+    const brandTokens = new Set(
+      [
+        ...(candidate.brand ? candidate.brand.toLowerCase().split(/\W+/) : []),
+        ...candRegDomain.split(".")[0].split(/[-_]+/),
+        "official", "store", "shop", "sale", "free", "shipping", "online", "best", "new",
+      ]
+        .filter((w) => w.length > 1)
+        .map(normalizeWord)
+    );
+    const nonBrandCandWords = new Set(
+      candidateProductText
+        .toLowerCase()
+        .split(/\W+/)
+        .filter((w) => w.length > 2)
+        .map(normalizeWord)
+        .filter((w) => !brandTokens.has(w))
+    );
+    const nonBrandEvWords = new Set(
+      incomingText
+        .toLowerCase()
+        .split(/\W+/)
+        .filter((w) => w.length > 2)
+        .map(normalizeWord)
+        .filter((w) => !brandTokens.has(w))
+    );
+    let nonBrandOverlap = 0;
+    for (const w of nonBrandCandWords) {
+      if (nonBrandEvWords.has(w)) nonBrandOverlap++;
+    }
+    const hasModelMatch = Boolean(
+      candidate.model &&
+        incomingText.toLowerCase().includes(candidate.model.toLowerCase())
+    );
+    const hasSameHandle = Boolean(candHandle && evHandle && candHandle === evHandle);
+
+    if (hasSameHandle) {
+      return {
+        matchId: `match_${candidate.candidateId}_exact_handle`,
+        sourceCandidateId: candidate.candidateId,
+        matchedEntityTitle: incomingEvidence.title || "Store Catalog Item",
+        matchedPlatform: incomingEvidence.platform,
+        confidence: "EXACT",
+        associationClassification: "EXACT_PRODUCT_MATCH",
+        isProductSpecificEvidence: true,
+        matchReasons: [
+          `Same verified store domain (${candRegDomain}) and identical product handle (${candHandle}).`,
+        ],
+        requiresManualReview: false,
+      };
+    }
+
+    if (hasHandleConflict || hasCategoryConflict) {
+      confidence = "PROBABLE";
+      matchReasons.push(
+        `Same verified store domain (${candRegDomain}), but creative targets a different product (${hasHandleConflict ? `handle ${evHandle} vs ${candHandle}` : "conflicting product category"}). Not counted as product-specific evidence.`
+      );
+      return {
+        matchId: `match_${candidate.candidateId}_domain_different_product`,
+        sourceCandidateId: candidate.candidateId,
+        matchedEntityTitle: incomingEvidence.title || "Store Catalog Item",
+        matchedPlatform: incomingEvidence.platform,
+        confidence,
+        associationClassification: "REJECTED_UNRELATED_CREATIVE",
+        isProductSpecificEvidence: false,
+        matchReasons,
+        requiresManualReview: true,
+      };
+    }
+
+    if ((jaccard > 0.5 || coverage > 0.7 || hasModelMatch) && (nonBrandOverlap >= 1 || hasModelMatch)) {
       confidence = "HIGH_CONFIDENCE";
-      matchReasons.push(`Same verified store domain (${candidate.storeDomain}) and high title similarity (${Math.round(Math.max(jaccard, coverage) * 100)}%).`);
+      const assocClass: GoogleAssociationClassification =
+        hasModelMatch && (jaccard >= 0.5 || coverage >= 0.7)
+          ? "EXACT_PRODUCT_MATCH"
+          : "PROBABLE_PRODUCT_MATCH";
+      matchReasons.push(
+        `Same verified store domain (${candRegDomain}) and product-specific creative match (${Math.round(Math.max(jaccard, coverage) * 100)}% overlap).`
+      );
+      return {
+        matchId: `match_${candidate.candidateId}_domain`,
+        sourceCandidateId: candidate.candidateId,
+        matchedEntityTitle: incomingEvidence.title || "Store Catalog Item",
+        matchedPlatform: incomingEvidence.platform,
+        confidence,
+        associationClassification: assocClass,
+        isProductSpecificEvidence: true,
+        matchReasons,
+        requiresManualReview: false,
+      };
     } else {
       confidence = "PROBABLE";
-      matchReasons.push(`Same verified store domain (${candidate.storeDomain}) with related catalog offering.`);
+      matchReasons.push(
+        `Same verified store domain (${candRegDomain}) with brand-level or general catalog creative (no product-specific match).`
+      );
+      return {
+        matchId: `match_${candidate.candidateId}_domain`,
+        sourceCandidateId: candidate.candidateId,
+        matchedEntityTitle: incomingEvidence.title || "Store Catalog Item",
+        matchedPlatform: incomingEvidence.platform,
+        confidence,
+        associationClassification: "BRAND_ONLY_MATCH",
+        isProductSpecificEvidence: false,
+        matchReasons,
+        requiresManualReview: true,
+      };
     }
-    return {
-      matchId: `match_${candidate.candidateId}_domain`,
-      sourceCandidateId: candidate.candidateId,
-      matchedEntityTitle: incomingEvidence.title || "Store Catalog Item",
-      matchedPlatform: incomingEvidence.platform,
-      confidence,
-      matchReasons,
-      requiresManualReview: confidence !== "HIGH_CONFIDENCE",
-    };
   }
 
   // 3. Different stores or unverified URL: Check functional/title similarity
@@ -123,6 +291,8 @@ export function matchCrossPlatformProductEvidence(
       matchedEntityTitle: incomingEvidence.title || "Cross-Store Competitor Listing",
       matchedPlatform: incomingEvidence.platform,
       confidence,
+      associationClassification: "REJECTED_UNRELATED_CREATIVE",
+      isProductSpecificEvidence: false,
       matchReasons,
       requiresManualReview: true, // User must review cross-store links
     };
@@ -135,6 +305,8 @@ export function matchCrossPlatformProductEvidence(
     matchedEntityTitle: incomingEvidence.title || "Unknown Evidence",
     matchedPlatform: incomingEvidence.platform,
     confidence: "AMBIGUOUS",
+    associationClassification: "REJECTED_UNRELATED_CREATIVE",
+    isProductSpecificEvidence: false,
     matchReasons: ["Insufficient keyword or destination overlap to establish product identity."],
     requiresManualReview: true,
   };

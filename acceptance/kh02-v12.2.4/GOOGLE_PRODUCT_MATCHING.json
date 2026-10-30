@@ -1,0 +1,11 @@
+{
+  "targetCandidate": null,
+  "candidateStoreDomain": null,
+  "totalCreativesEvaluated": 0,
+  "brandLevelCount": 0,
+  "productSpecificCount": 0,
+  "brandAdsRequireManualReview": true,
+  "matches": [],
+  "status": "SKIPPED",
+  "reason": "No confirmed advertiser domains discovered from relevant candidates in live research run"
+}

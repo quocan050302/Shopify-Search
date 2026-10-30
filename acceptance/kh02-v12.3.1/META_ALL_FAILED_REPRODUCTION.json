@@ -1,0 +1,17 @@
+{
+  "gateId": "P0-01",
+  "requirement": "Meta all-failed scenario reports failure (never successful empty)",
+  "verdict": "PASS",
+  "observedValues": {
+    "executionStatus": "FAILED",
+    "liveSucceeded": false,
+    "failedQueries": 3
+  },
+  "expectedValues": {
+    "executionStatus": "FAILED",
+    "liveSucceeded": false,
+    "failedQueries": 3
+  },
+  "reason": "All failed subqueries correctly aggregated to FAILED and liveSucceeded=false",
+  "timestamp": "2026-10-28T01:42:25.815Z"
+}

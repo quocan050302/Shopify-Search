@@ -1,0 +1,449 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "p09Verdict": "PASS",
+  "p10Verdict": "PASS",
+  "g12IndependentAudit": {
+    "verdict": "PASS",
+    "totalClaimedWinners": 9,
+    "independentlyVerifiedWinners": 9,
+    "maxVerifiedWinnersInSingleRun": 3,
+    "runsWithThreeVerifiedWinners": [
+      "pet gadgets",
+      "diy"
+    ],
+    "disqualifiedWinners": [],
+    "winnerEvidenceRecords": [
+      {
+        "candidateId": "cand_1212440541",
+        "productId": "cmvsy7zqh000jp0orhypwohho",
+        "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "merchantDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 79,
+        "evidenceConfidence": 80,
+        "observationRecordIds": [
+          "cmvrzyn5c005t6cor0yylqvk2",
+          "cmvrzyn3h00546corujh7567u",
+          "cmvrzyn2j004s6corb96ke61v"
+        ],
+        "demandObservationIds": [
+          "cmvsy7zsf000rp0orbgbi6tiu",
+          "cmvsy7zsl000sp0orl8wkum7g",
+          "cmvsy7zsr000tp0or4w85v2ug",
+          "cmvsy7zsy000up0oriz6hihpd",
+          "cmvsy7zt3000vp0orzpca0gas",
+          "cmvsy7ztc000wp0orr1ypsqg4"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_1838011041",
+        "productId": "cmvsy7zeg0001p0orsexc5psw",
+        "canonicalProductName": "Reusable Pet Hair Remover Roller",
+        "merchantDomain": "livlandco.com",
+        "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 68,
+        "evidenceConfidence": 70,
+        "observationRecordIds": [
+          "cmvrzyiu0001d6coruwq7iaw0"
+        ],
+        "demandObservationIds": [
+          "cmvsy7znm0003p0or42qkebmn",
+          "cmvsy7znu0004p0oraa6lift3",
+          "cmvsy7zo10005p0or3kn60dae",
+          "cmvsy7zo60006p0ordbxjay4n",
+          "cmvsy7zoa0007p0or46h397m6",
+          "cmvsy7zof0008p0orleiz2r5t"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_1788406859",
+        "productId": "cmvsy7zoq000ap0or4ly9ciih",
+        "canonicalProductName": "Pawira Stainless Steel Water Fountain",
+        "merchantDomain": "pawira.com",
+        "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 68,
+        "evidenceConfidence": 70,
+        "observationRecordIds": [
+          "cmvrzyj04003q6cort0wlap3m"
+        ],
+        "demandObservationIds": [
+          "cmvsy7zp6000cp0or152bdoqj",
+          "cmvsy7zpc000dp0orbx694akm",
+          "cmvsy7zph000ep0orzu1au04r",
+          "cmvsy7zpp000fp0orb7jmcogp",
+          "cmvsy7zpu000gp0oryg05yxy6",
+          "cmvsy7zq3000hp0ory58q7t5b"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_739320169",
+        "productId": "cmvsy8699002gp0orwl4eryuh",
+        "canonicalProductName": "Brooke Wallpaper",
+        "merchantDomain": "lemonpark.com",
+        "canonicalProductUrl": "https://lemonpark.com/products/brooke-wallpaper",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 74,
+        "evidenceConfidence": 70,
+        "observationRecordIds": [
+          "cmvrzzjru000kt4orcex37vcu",
+          "cmvrzetk5000tlsorigg7hc2z"
+        ],
+        "demandObservationIds": [
+          "cmvsy869u002jp0or7mzpwg8n",
+          "cmvsy86a0002kp0orlmyz42rz",
+          "cmvsy86a7002lp0or7dwnivpr",
+          "cmvsy86ab002mp0orrl7q3zb0",
+          "cmvsy86af002np0orxvczjr8r",
+          "cmvsy86am002op0orvamtgpmv"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_1316890495",
+        "productId": "cmvsy85zn000yp0ore89xpw92",
+        "canonicalProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "merchantDomain": "vipbugo.com",
+        "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 73,
+        "evidenceConfidence": 80,
+        "observationRecordIds": [
+          "cmvrzxmcv000m6cor8w1qwnhy"
+        ],
+        "demandObservationIds": [
+          "cmvsy86010010p0or2bz21l17",
+          "cmvsy86050011p0orsjdtoig7",
+          "cmvsy86090012p0orkrkrcm9o",
+          "cmvsy860d0013p0or5gyesvqo",
+          "cmvsy860m0014p0ordbo8fmu6",
+          "cmvsy860u0015p0oreqn8xdwr"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_887687049",
+        "productId": "cmvsy864i001pp0or0a8ff2vx",
+        "canonicalProductName": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+        "merchantDomain": "acompactly.com",
+        "canonicalProductUrl": "https://acompactly.com/products/easy-fill-wall-repair-paste-kit",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 73,
+        "evidenceConfidence": 80,
+        "observationRecordIds": [
+          "cmvrzxmb600016cor39ruhbkb"
+        ],
+        "demandObservationIds": [
+          "cmvsy864y001rp0or94dwo073",
+          "cmvsy8652001sp0orfb0xfu3t",
+          "cmvsy8659001tp0orhc1f88dg",
+          "cmvsy865e001up0orcxurlln0",
+          "cmvsy865i001vp0orug34v3a2",
+          "cmvsy865p001wp0orh0l7rvy0"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_739320169",
+        "productId": "cmvsy8699002gp0orwl4eryuh",
+        "canonicalProductName": "Brooke Wallpaper",
+        "merchantDomain": "lemonpark.com",
+        "canonicalProductUrl": "https://lemonpark.com/products/brooke-wallpaper",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 74,
+        "evidenceConfidence": 70,
+        "observationRecordIds": [
+          "cmvrzzjru000kt4orcex37vcu",
+          "cmvrzetk5000tlsorigg7hc2z"
+        ],
+        "demandObservationIds": [
+          "cmvsy869u002jp0or7mzpwg8n",
+          "cmvsy86a0002kp0orlmyz42rz",
+          "cmvsy86a7002lp0or7dwnivpr",
+          "cmvsy86ab002mp0orrl7q3zb0",
+          "cmvsy86af002np0orxvczjr8r",
+          "cmvsy86am002op0orvamtgpmv"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_2112012920",
+        "productId": "cmvsy867l0027p0ort3vvnxxg",
+        "canonicalProductName": "Burnett Wallpaper",
+        "merchantDomain": "wallblush.com",
+        "canonicalProductUrl": "https://wallblush.com/products/burnett-wallpaper",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 73,
+        "evidenceConfidence": 80,
+        "observationRecordIds": [
+          "cmvrzzjre000et4or9s03n1n8"
+        ],
+        "demandObservationIds": [
+          "cmvsy867z0029p0orauyn512q",
+          "cmvsy8687002ap0orsxa9s4ys",
+          "cmvsy868f002bp0orom5jqm0i",
+          "cmvsy868k002cp0ory0qym961",
+          "cmvsy868o002dp0orofit3u9l",
+          "cmvsy868v002ep0oroaflgbj4"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      },
+      {
+        "candidateId": "cand_1212440541",
+        "productId": "cmvsy7zqh000jp0orhypwohho",
+        "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "merchantDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityVerified": true,
+        "physicalProductVerified": true,
+        "relevanceVerified": true,
+        "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+        "demandObservationsCount": 6,
+        "distinctDemandDatesCount": 6,
+        "coveredDays": 152,
+        "demandStabilityScore": 25,
+        "demandClass": "EVERGREEN_STABLE",
+        "opportunityScore": 81,
+        "evidenceConfidence": 80,
+        "observationRecordIds": [
+          "cmvrzyn5c005t6cor0yylqvk2",
+          "cmvrzyn3h00546corujh7567u",
+          "cmvrzyn2j004s6corb96ke61v",
+          "cmvrzyn30004y6corojbfmznc",
+          "cmvrzyn4w005n6corlzcsccsh",
+          "cmvrzyn3x005a6corm3d0e51v",
+          "cmvrzyn23004m6coriy1lwr49"
+        ],
+        "demandObservationIds": [
+          "cmvsy7zsf000rp0orbgbi6tiu",
+          "cmvsy7zsl000sp0orl8wkum7g",
+          "cmvsy7zsr000tp0or4w85v2ug",
+          "cmvsy7zsy000up0oriz6hihpd",
+          "cmvsy7zt3000vp0orzpca0gas",
+          "cmvsy7ztc000wp0orr1ypsqg4"
+        ],
+        "verifiedByGate": true,
+        "disqualifiers": []
+      }
+    ]
+  },
+  "allShortlistCandidateVerifications": [
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1212440541",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1838011041",
+      "title": "Reusable Pet Hair Remover Roller",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1788406859",
+      "title": "Pawira Stainless Steel Water Fountain",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_1316890495",
+      "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_2112012920",
+      "title": "Burnett Wallpaper",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_887687049",
+      "title": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_1008292129",
+      "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_519143299",
+      "title": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_1012572416",
+      "title": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_2112012920",
+      "title": "Burnett Wallpaper",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_1008292129",
+      "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_988616984",
+      "title": "Made to Last. Period.",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_508373436",
+      "title": "Automatic plant waterer - Green+Beige+Pink",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_29899940",
+      "title": "News Automatic Plant Waterer M",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_290672461",
+      "title": "118959 Large Self Watering Planter",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_1162625533",
+      "title": "7-in-1 Electric Spin Scrubber",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_386308104",
+      "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_457825095",
+      "title": "Make Cleaning Effortless with HOTO!",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "automatic pet feeder",
+      "candidateId": "cand_1212440541",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    },
+    {
+      "niche": "automatic pet feeder",
+      "candidateId": "cand_1783682388",
+      "title": "Automatic Pet Feeder Drinking Fountain",
+      "evergreenVerification": null,
+      "verificationDimensions": null
+    }
+  ]
+}

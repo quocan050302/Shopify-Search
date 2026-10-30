@@ -1,0 +1,135 @@
+{
+  "candidate1": {
+    "success": true,
+    "result": "FALLBACK_OK",
+    "modelUsed": "model-b-ok",
+    "telemetry": {
+      "totalAttempts": 5,
+      "retriesExecuted": 3,
+      "requestsStarted": 5,
+      "requestsCompleted": 1,
+      "requestsFailed": 4,
+      "modelsAttempted": [
+        "model-a-503",
+        "model-b-ok"
+      ],
+      "successfulModelId": "model-b-ok",
+      "fallbackCount": 1,
+      "executionHistory": [
+        {
+          "modelId": "model-a-503",
+          "attemptsCount": 4,
+          "retriesExhausted": true,
+          "successful": false,
+          "attempts": [
+            {
+              "attemptNumber": 1,
+              "modelId": "model-a-503",
+              "statusCode": 503,
+              "errorClassification": "TRANSIENT_OVERLOAD",
+              "errorMessage": "503 Service Unavailable: Model overloaded",
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:43.434Z",
+              "delayMs": 324
+            },
+            {
+              "attemptNumber": 2,
+              "modelId": "model-a-503",
+              "statusCode": 503,
+              "errorClassification": "TRANSIENT_OVERLOAD",
+              "errorMessage": "503 Service Unavailable: Model overloaded",
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:43.774Z",
+              "delayMs": 433
+            },
+            {
+              "attemptNumber": 3,
+              "modelId": "model-a-503",
+              "statusCode": 503,
+              "errorClassification": "TRANSIENT_OVERLOAD",
+              "errorMessage": "503 Service Unavailable: Model overloaded",
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:44.211Z",
+              "delayMs": 50
+            },
+            {
+              "attemptNumber": 4,
+              "modelId": "model-a-503",
+              "statusCode": 503,
+              "errorClassification": "TRANSIENT_OVERLOAD",
+              "errorMessage": "503 Service Unavailable: Model overloaded",
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:44.272Z"
+            }
+          ]
+        },
+        {
+          "modelId": "model-b-ok",
+          "attemptsCount": 1,
+          "retriesExhausted": false,
+          "successful": true,
+          "attempts": [
+            {
+              "attemptNumber": 1,
+              "modelId": "model-b-ok",
+              "statusCode": 200,
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:44.272Z"
+            }
+          ]
+        }
+      ],
+      "circuitBreakerTriggered": true,
+      "canceled": false,
+      "deadlineExceeded": false,
+      "budgetExhausted": false,
+      "totalDurationMs": 838
+    },
+    "error": null
+  },
+  "candidate2": {
+    "success": true,
+    "result": "CANDIDATE_2_OK",
+    "modelUsed": "model-b-ok",
+    "telemetry": {
+      "totalAttempts": 1,
+      "retriesExecuted": 0,
+      "requestsStarted": 1,
+      "requestsCompleted": 1,
+      "requestsFailed": 0,
+      "modelsAttempted": [
+        "model-b-ok"
+      ],
+      "successfulModelId": "model-b-ok",
+      "fallbackCount": 0,
+      "executionHistory": [
+        {
+          "modelId": "model-b-ok",
+          "attemptsCount": 1,
+          "retriesExhausted": false,
+          "successful": true,
+          "attempts": [
+            {
+              "attemptNumber": 1,
+              "modelId": "model-b-ok",
+              "statusCode": 200,
+              "durationMs": 0,
+              "timestamp": "2026-10-28T09:02:44.273Z"
+            }
+          ]
+        }
+      ],
+      "circuitBreakerTriggered": true,
+      "canceled": false,
+      "deadlineExceeded": false,
+      "budgetExhausted": false,
+      "totalDurationMs": 0
+    },
+    "error": null
+  },
+  "modelAAttempts": 4,
+  "modelBAttempts": 1,
+  "candidate2ModelAAttempts": 0,
+  "candidate2ModelBAttempts": 1,
+  "verdict": "PASS"
+}

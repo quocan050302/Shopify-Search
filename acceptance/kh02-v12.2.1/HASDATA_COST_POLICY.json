@@ -1,0 +1,10 @@
+{
+  "vendor": "HasData",
+  "operation": "search_videos",
+  "estimatedCredits": 10,
+  "knownCost": true,
+  "pricingSource": "HasData MCP Vendor Documentation (10 credits/tool call)",
+  "monthlyFreeTierAllowance": 1000,
+  "autoPaidResearchPolicy": "AUTO_PAID_RESEARCH=false (Zero unauthorized charges)",
+  "creditsConsumedInTest": 0
+}

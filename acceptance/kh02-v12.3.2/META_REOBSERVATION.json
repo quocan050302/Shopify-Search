@@ -1,0 +1,25 @@
+{
+  "id": "META_REOBSERVATION",
+  "description": "Fresh observations recorded even when ad already exists in database (0 new inserts)",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "provenance": "LIVE_PROVIDER",
+    "isFreshLive": true,
+    "isNewlyInserted": false
+  },
+  "observed": {
+    "provenance": "LIVE_PROVIDER",
+    "isFreshLive": true,
+    "isNewlyInserted": false
+  },
+  "assertionEvidence": [
+    "provenance: LIVE_PROVIDER",
+    "isFreshLive: true",
+    "isNewlyInserted: false"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Re-observed existing ads correctly receive LIVE_PROVIDER provenance and isFreshLive=true without being misclassified as new inserts"
+}

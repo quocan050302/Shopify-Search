@@ -1,0 +1,6 @@
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 305ms
+✓ Running next.config.ts took 112ms
+[KH-02 Worker] Initialized kh02-worker-35268-mvugaxog | Release: V12.4.3.3.1 | SHA: 30d3ee0 | DB Fingerprint: 6530562482a2 | Mode: DAEMON

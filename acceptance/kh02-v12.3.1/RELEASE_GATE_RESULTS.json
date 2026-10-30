@@ -1,0 +1,318 @@
+{
+  "gates": {
+    "P0-01": {
+      "gateId": "P0-01",
+      "requirement": "Meta all-failed scenario reports failure (never successful empty)",
+      "verdict": "PASS",
+      "observedValues": {
+        "executionStatus": "FAILED",
+        "liveSucceeded": false,
+        "failedQueries": 3
+      },
+      "expectedValues": {
+        "executionStatus": "FAILED",
+        "liveSucceeded": false,
+        "failedQueries": 3
+      },
+      "reason": "All failed subqueries correctly aggregated to FAILED and liveSucceeded=false",
+      "timestamp": "2026-10-28T01:42:25.815Z"
+    },
+    "P0-02": {
+      "gateId": "P0-02",
+      "requirement": "Meta partial success preserves data while aggregating failed subquery errors",
+      "verdict": "PASS",
+      "observedValues": {
+        "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+        "successfulQueries": 1,
+        "failedQueries": 2,
+        "errorCount": 2
+      },
+      "expectedValues": {
+        "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+        "successfulQueries": 1,
+        "failedQueries": 2,
+        "errorCount": 2
+      },
+      "reason": "Partial success preserved 5 ads while aggregating 2 subquery errors",
+      "timestamp": "2026-10-28T01:42:25.816Z"
+    },
+    "P0-03": {
+      "gateId": "P0-03",
+      "requirement": "Successful empty query is distinct from failure",
+      "verdict": "PASS",
+      "observedValues": {
+        "executionStatus": "QUERY_SUCCEEDED_EMPTY",
+        "liveSucceeded": true,
+        "errorCount": 0
+      },
+      "expectedValues": {
+        "executionStatus": "QUERY_SUCCEEDED_EMPTY",
+        "liveSucceeded": true,
+        "errorCount": 0
+      },
+      "reason": "Successful empty query classified as QUERY_SUCCEEDED_EMPTY with 0 errors",
+      "timestamp": "2026-10-28T01:42:25.817Z"
+    },
+    "P0-04": {
+      "gateId": "P0-04",
+      "requirement": "Cached records cannot make live query gate PASS",
+      "verdict": "PASS",
+      "observedValues": {
+        "testInputVerdict": "FAIL",
+        "isLive": false,
+        "retrievedCached": 12
+      },
+      "expectedValues": {
+        "testInputVerdict": "FAIL"
+      },
+      "reason": "Cached records correctly rejected from satisfying META_LIVE_QUERY_PASS",
+      "timestamp": "2026-10-28T01:42:25.817Z"
+    },
+    "P0-05": {
+      "gateId": "P0-05",
+      "requirement": "Fresh observations are recorded even when ad already exists in database (0 new inserts)",
+      "verdict": "PASS",
+      "observedValues": {
+        "reObservedExistingTreatedAsLive": true
+      },
+      "expectedValues": {
+        "reObservedExistingTreatedAsLive": true
+      },
+      "reason": "Live collector marks re-observed existing ads as LIVE_PROVIDER with isFreshLive=true",
+      "timestamp": "2026-10-28T01:42:25.818Z"
+    },
+    "P0-06": {
+      "gateId": "P0-06",
+      "requirement": "Total query budget is enforced as a single operation budget",
+      "verdict": "PASS",
+      "observedValues": {
+        "canExecuteThirdRequest": false,
+        "consumedRequests": 2,
+        "maxAllowed": 2
+      },
+      "expectedValues": {
+        "canExecuteThirdRequest": false
+      },
+      "reason": "Budget tracker stopped execution after reaching maxProviderRequests=2",
+      "timestamp": "2026-10-28T01:42:25.818Z"
+    },
+    "P0-07": {
+      "gateId": "P0-07",
+      "requirement": "Workspace isolation is preserved across all database queries",
+      "verdict": "PASS",
+      "observedValues": {
+        "whereClause": {
+          "OR": [
+            {
+              "runAds": {
+                "some": {
+                  "OR": [
+                    {
+                      "workspaceId": "acceptance_v12_3_1_ws"
+                    },
+                    {
+                      "run": {
+                        "workspaceId": "acceptance_v12_3_1_ws"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "watchlistItems": {
+                "some": {
+                  "watchlist": {
+                    "workspaceId": "acceptance_v12_3_1_ws"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectedValues": {
+        "workspaceId": "acceptance_v12_3_1_ws"
+      },
+      "reason": "buildAuthorizedAdWhere strictly scopes queries to testWorkspace",
+      "timestamp": "2026-10-28T01:42:25.819Z"
+    },
+    "P0-08": {
+      "gateId": "P0-08",
+      "requirement": "Product identity does not accept campaign codes or SKU sequences as verified product names",
+      "verdict": "PASS",
+      "observedValues": {
+        "headlineClass": "INTERNAL_SKU_CODE",
+        "isProductCandidate": false,
+        "identityStatus": "UNRESOLVED",
+        "isEligible": false
+      },
+      "expectedValues": {
+        "isProductCandidate": false,
+        "identityStatus": "UNRESOLVED",
+        "isEligible": false
+      },
+      "reason": "Wmt008 L4v2 Mustyclothes was rejected from product candidates and winner eligibility",
+      "timestamp": "2026-10-28T01:42:25.824Z"
+    },
+    "P0-09": {
+      "gateId": "P0-09",
+      "requirement": "Niche relevance correctly accepts domain products and rejects unrelated catalog items",
+      "verdict": "PASS",
+      "observedValues": {
+        "petBedAccepted": true,
+        "speakerAccepted": false,
+        "speakerStatus": "IRRELEVANT"
+      },
+      "expectedValues": {
+        "petBedAccepted": true,
+        "speakerAccepted": false,
+        "speakerStatus": "IRRELEVANT"
+      },
+      "reason": "Pet bed accepted as RELEVANT; Bluetooth speaker rejected as IRRELEVANT",
+      "timestamp": "2026-10-28T01:42:25.826Z"
+    },
+    "P0-10": {
+      "gateId": "P0-10",
+      "requirement": "Shortlist distinctness prevents duplicate products and reports explicit shortfall",
+      "verdict": "PASS",
+      "observedValues": {
+        "qualifiedCount": 1,
+        "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3)."
+      },
+      "expectedValues": {
+        "qualifiedCount": 1,
+        "hasShortfallReason": true
+      },
+      "reason": "Duplicates collapsed to 1 distinct product; explicit shortfall reported",
+      "timestamp": "2026-10-28T01:42:25.827Z"
+    },
+    "P0-11": {
+      "gateId": "P0-11",
+      "requirement": "Google SUCCEEDED_EMPTY satisfies query execution but NOT product enrichment",
+      "verdict": "PASS",
+      "observedValues": {
+        "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+        "enrichmentVerdict": "INSUFFICIENT_EVIDENCE"
+      },
+      "expectedValues": {
+        "enrichmentVerdict": "INSUFFICIENT_EVIDENCE"
+      },
+      "reason": "QUERY_SUCCEEDED_EMPTY correctly produces INSUFFICIENT_EVIDENCE for enrichment",
+      "timestamp": "2026-10-28T01:42:25.828Z"
+    },
+    "P0-12": {
+      "gateId": "P0-12",
+      "requirement": "Google domain normalization correctly resolves canonical registrable domains",
+      "verdict": "PASS",
+      "observedValues": {
+        "inputSubdomain": "cc.uprootclean.com",
+        "normalizedDomain": "uprootclean.com"
+      },
+      "expectedValues": {
+        "normalizedDomain": "uprootclean.com"
+      },
+      "reason": "Subdomain cc.uprootclean.com correctly normalized to uprootclean.com",
+      "timestamp": "2026-10-28T01:42:25.828Z"
+    },
+    "P0-13": {
+      "gateId": "P0-13",
+      "requirement": "Customer psychology claims cannot be OBSERVED from weak single-word quotes",
+      "verdict": "PASS",
+      "observedValues": {
+        "inputQuote": "Dog",
+        "supportLevel": "INFERRED_FROM_CONTEXT",
+        "rationale": "Single-word quote \"Dog\" does not directly substantiate the full claim assertion (8 terms)."
+      },
+      "expectedValues": {
+        "supportLevel": "INFERRED_FROM_CONTEXT"
+      },
+      "reason": "Single-word quote 'Dog' correctly classified as INFERRED_FROM_CONTEXT",
+      "timestamp": "2026-10-28T01:42:25.830Z"
+    },
+    "P0-14": {
+      "gateId": "P0-14",
+      "requirement": "Source-to-run reconciliation rejects unaudited upstream traces without workspace fallback",
+      "verdict": "PASS",
+      "observedValues": {
+        "exactMatch": false,
+        "reason": "Source to Database Reconciliation Unverified: missing upstream audit trace envelope. Upstream query audit is required."
+      },
+      "expectedValues": {
+        "exactMatch": false
+      },
+      "reason": "Missing audited traces correctly failed reconciliation",
+      "timestamp": "2026-10-28T01:42:25.831Z"
+    },
+    "P0-15": {
+      "gateId": "P0-15",
+      "requirement": "Adversarial false-PASS mutation tests evaluate dynamically",
+      "verdict": "PASS",
+      "observedValues": {
+        "CASE_2_MISMATCHED_RUN_ID_FAILS": {
+          "verdict": "FAIL",
+          "expectedVerdict": "FAIL",
+          "passed": true
+        },
+        "CASE_3_CONFIDENCE_MUTATION_FAILS": {
+          "exactMatch": false,
+          "expectedExactMatch": false,
+          "passed": true
+        }
+      },
+      "expectedValues": {
+        "allMutationsCaught": true
+      },
+      "reason": "All adversarial mutation tests passed dynamically",
+      "timestamp": "2026-10-28T01:42:25.833Z"
+    },
+    "P0-16": {
+      "gateId": "P0-16",
+      "requirement": "KH-01 protection suite passes completely with zero regressions",
+      "verdict": "PASS",
+      "observedValues": {
+        "exitCode": 0,
+        "testsPassed": 69,
+        "testsTotal": 69
+      },
+      "expectedValues": {
+        "exitCode": 0,
+        "testsPassed": 69
+      },
+      "reason": "KH-01 verified: 69/69 tests passed",
+      "timestamp": "2026-10-28T01:42:36.625Z"
+    },
+    "P0-17": {
+      "gateId": "P0-17",
+      "requirement": "TypeScript typecheck and linting succeed with 0 errors",
+      "verdict": "PASS",
+      "observedValues": {
+        "tscExitCode": 0,
+        "lintExitCode": 0
+      },
+      "expectedValues": {
+        "tscExitCode": 0,
+        "lintExitCode": 0
+      },
+      "reason": "Typecheck and lint succeeded with 0 errors",
+      "timestamp": "2026-10-28T01:43:01.439Z"
+    },
+    "P0-18": {
+      "gateId": "P0-18",
+      "requirement": "V12.3.1 closure test suite passes all deterministic scenarios",
+      "verdict": "PASS",
+      "observedValues": {
+        "exitCode": 0,
+        "testsPassed": 16,
+        "testsTotal": 16
+      },
+      "expectedValues": {
+        "exitCode": 0,
+        "minTestsPassed": 15
+      },
+      "reason": "All 16 V12.3.1 closure scenarios passed",
+      "timestamp": "2026-10-28T01:43:04.785Z"
+    }
+  },
+  "timestamp": "2026-10-28T01:43:04.785Z"
+}

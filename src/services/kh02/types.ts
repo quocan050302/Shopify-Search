@@ -19,11 +19,36 @@ export type IntelligenceSource =
 export type SourceRunStatus =
   | "PASSED"
   | "PARTIAL"
+  | "NOT_INSTALLED"
+  | "CREDENTIALS_REQUIRED"
   | "NOT_CONFIGURED"
+  | "NOT_PROBED"
+  | "MCP_NOT_CONFIGURED"
+  | "MCP_TRANSPORT_FAILURE"
   | "CONFIGURED"
+  | "CONNECTING"
+  | "CONNECTED"
   | "TRANSPORT_CONNECTED"
+  | "TRANSPORT_FAILED"
+  | "AUTHENTICATED"
+  | "AUTHENTICATION_FAILED"
+  | "AUTH_NOT_REQUIRED"
+  | "CAPABILITY_VERIFIED"
+  | "UNSUPPORTED_CAPABILITY"
+  | "COST_BLOCKED"
+  | "QUOTA_UNKNOWN"
+  | "QUOTA_EXCEEDED"
+  | "QUERY_EXECUTED"
+  | "QUERY_FAILED"
+  | "QUERY_SUCCEEDED_EMPTY"
+  | "LIVE_DATA_VERIFIED"
+  | "CACHE_ONLY"
+  | "MANUAL_ONLY"
   | "SOURCE_ACCESS_VERIFIED"
   | "SOURCE_DATA_VERIFIED"
+  | "MANUAL_RESEARCH_ONLY"
+  | "ENGINE_READY"
+  | "INSUFFICIENT_HISTORY"
   | "NOT_VERIFIED"
   | "UNSUPPORTED_REGION"
   | "BLOCKED"
@@ -31,14 +56,232 @@ export type SourceRunStatus =
   | "RATE_LIMITED"
   | "NO_RESULTS"
   | "FAILED"
-  | "SKIPPED";
+  | "SKIPPED"
+  | "TEMPORARILY_DISABLED"
+  | "DISABLED";
+
+export type ProviderAccessClass =
+  | "ZERO_KEY_AUTHORIZED"
+  | "FREE_ACCOUNT_REQUIRED"
+  | "FREE_API_KEY_REQUIRED"
+  | "PAID_CREDENTIAL_REQUIRED"
+  | "LOCAL_COLLECTOR_AVAILABLE"
+  | "MANUAL_IMPORT_ONLY"
+  | "UNSUPPORTED";
+
+export interface ProviderReadiness {
+  providerId: string;
+  accessClass: ProviderAccessClass;
+
+  installed: boolean;
+  configured: boolean;
+  transportConnected: boolean;
+  authenticated: boolean | null;
+  requiredCapabilityAvailable: boolean;
+
+  realQueryExecuted: boolean;
+  realQuerySucceeded: boolean;
+  realRecordsObserved: number;
+
+  lastSuccessfulQueryAt: string | null;
+  dataFreshness: string | null;
+
+  costApprovalRequired: boolean;
+  blockerCode: string | null;
+  blockerReason: string | null;
+}
+
+export interface ProviderDiscoveryContext {
+  workspaceId?: string;
+  allowPaidOperations?: boolean;
+  applyReleasePolicy?: boolean;
+}
+
+export interface ProviderProbeContext {
+  workspaceId?: string;
+  timeoutMs?: number;
+  allowPaidOperations?: boolean;
+  applyReleasePolicy?: boolean;
+}
+
+export interface ProviderCapabilities {
+  providerId: string;
+  accessClass: ProviderAccessClass;
+  installed: boolean;
+  configured: boolean;
+  transportConnected: boolean;
+  supportedTools: string[];
+  supportsUS: boolean;
+  supportsKeywordSearch: boolean;
+  supportsDateFiltering: boolean;
+  estimatedCostPerQueryCredits: number;
+  pricingSource: string;
+  blockerReason: string | null;
+}
+
+export interface ProviderDiscoveryResult {
+  providerId: string;
+  displayName: string;
+  accessClass: ProviderAccessClass;
+  readiness: ProviderReadiness;
+  capabilities: ProviderCapabilities;
+  recommendedAction?: string;
+}
+
+export interface KH02CandidateFunnel {
+  rawSourceObservations: number;
+  normalizedObservations: number;
+
+  rawCandidateGroups: number;
+
+  relevantCandidates: number;
+  probablyRelevantCandidates: number;
+  ambiguousCandidates: number;
+  irrelevantCandidates: number;
+
+  identitiesVerified: number;
+  identitiesProbable: number;
+  identitiesAmbiguous?: number;
+  identitiesUnresolved: number;
+
+  candidatesActuallyScored: number;
+
+  verifiedEvergreenCandidates: number;
+  provisionalCandidates: number;
+  insufficientEvidenceCandidates: number;
+  rejectedCandidates: number;
+
+  researchShortlistEligible: number;
+  researchShortlistSelected: number;
+
+  excludedByMaxCandidates: number;
+
+  // V12.4 AI Product Intelligence Funnel Telemetry
+  aiAnalysesAttempted?: number;
+  aiAnalysesCompleted?: number;
+  aiPhysicalProductsIdentified?: number;
+  aiServicesRejected?: number;
+  aiContentRejected?: number;
+  aiInsuranceLeadGenRejected?: number;
+
+  // V12.4.2 Coherent 13-Stage Discovery & Reality Funnel
+  uniqueAds?: number;
+  clearlyUnrelated?: number;
+  potentiallyRelevant?: number;
+  selectedForAI?: number;
+  aiAnalyzed?: number;
+  physicalProductsSupported?: number;
+  identityResolved?: number;
+  scored?: number;
+  shortlistEligible?: number;
+  shortlisted?: number;
+  verifiedEvergreen?: number;
+}
+
+export interface KH02LookbackCoverage {
+  requestedLookbackDays: number;
+  queryExecutionTime: string;
+  earliestAdFirstSeen: string | null;
+  latestAdLastSeen: string | null;
+  activeAdsCount: number;
+  historicalCachedAdsCount: number;
+  freshLiveAdsCount: number;
+  historicalCoverageMode:
+    | "ACTIVE_LIVE_AND_CACHE"
+    | "ACTIVE_LIVE_ONLY"
+    | "HISTORICAL_CACHE_ONLY"
+    | "EMPTY";
+  providerLimitationNote: string;
+}
+
+export interface ProviderReadinessDimensions {
+  adapterInstalled: boolean;
+  configured: boolean;
+  transportConnected: boolean | null;
+  authenticated: boolean | null;
+  supportedOperationsVerified: boolean;
+  requiredCapabilityAvailable?: boolean;
+  queryExecuted: boolean;
+  sourceDataVerified: boolean;
+  lastLiveQueryAt: string | null;
+  blockerCode: string | null;
+
+  // V12.2.2 Explicit Separated Diagnostic Telemetry
+  storedRecordCount?: number | null;
+  lastLiveQueryRecordCount?: number | null;
+  currentRunRecordCount?: number | null;
+  lastSuccessfulLiveQueryAt?: string | null;
+  lastSuccessfulQueryAt?: string | null;
+  lastProbeAt?: string | null;
+  authStatus?: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" | "DISABLED";
+  transportStatus?: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" | "DISABLED";
+  capabilityStatus?: "VERIFIED" | "UNSUPPORTED" | "NOT_TESTED" | "DISABLED";
+
+  // KH-02 Truthful Query Provenance & Failure Trace
+  queryStatus?: SourceRunStatus | string | null;
+  queryProvenance?: ObservationProvenance | null;
+  isLive?: boolean | null;
+  queryError?: string | null;
+  lastSuccessfulRecordCount?: number | null;
+  liveAttempted?: boolean;
+  liveSucceeded?: boolean;
+  liveError?: string | null;
+  cachedRecordsCount?: number | null;
+  freshLiveCount?: number | null;
+}
+
+export interface ProviderSourceTelemetry {
+  source: IntelligenceSource;
+  queryExecuted: boolean;
+  queryStatus: SourceRunStatus;
+  queryTimestamp: string | null;
+  retrievedCount: number | null;
+  acceptedCount: number | null;
+  productAssociatedCount?: number | null;
+  brandAssociatedCount?: number | null;
+  enrichmentExecution?: any;
+  storedRecordCount?: number | null;
+  queryProvenance: ObservationProvenance;
+  isLive: boolean;
+  queryError: string | null;
+  lastSuccessfulRecordCount: number | null;
+  lastSuccessfulQueryAt: string | null;
+
+  // Detailed live vs cache execution breakdown
+  upstreamReturnedCount?: number | null;
+  freshLiveCount?: number | null;
+  cachedRecordsCount?: number | null;
+  persistedInsertedCount?: number | null;
+  persistedUpdatedCount?: number | null;
+  liveAttempted?: boolean;
+  liveSucceeded?: boolean;
+  liveError?: string | null;
+  lastLiveQueryRecordCount?: number | null;
+  auditTraces?: UpstreamRecordTrace[];
+
+  // Canonical compatibility aliases
+  status?: SourceRunStatus;
+  provenance?: ObservationProvenance;
+  lastLiveQueryAt?: string | null;
+  lastSuccessfulLiveQueryAt?: string | null;
+  error?: string | null;
+  warning?: string | null;
+}
 
 export type ObservationProvenance =
   | "REAL_UPSTREAM"
   | "USER_IMPORTED"
   | "VERIFIED_SOURCE"
   | "UNKNOWN"
-  | "TEST_FIXTURE";
+  | "TEST_FIXTURE"
+  | "LIVE_PROVIDER"
+  | "VERIFIED_IMPORTED"
+  | "MANUAL_IMPORT"
+  | "CACHED_SOURCE"
+  | "CONTROLLED_FIXTURE"
+  | "UNVERIFIED"
+  | "NONE";
+
 
 export type ProductMatchConfidence =
   | "EXACT"
@@ -65,6 +308,11 @@ export interface SourceCapabilities {
   estimatedCostPerQueryCredits: number;
 }
 
+export type ResearchSourceMode =
+  | "LIVE_WITH_CACHE_FALLBACK"
+  | "CACHE_ONLY"
+  | "LIVE_ONLY";
+
 export interface IntelligenceQuery {
   workspaceId: string;
   researchRunId: string;
@@ -74,30 +322,41 @@ export interface IntelligenceQuery {
   advertiserNames?: string[];
   advertiserDomains?: string[];
   lookbackDays: number;
+  timeWindow?: string;
   maxResults: number;
   signal?: AbortSignal;
+  sourceMode?: ResearchSourceMode;
+  metaExecutionPolicy?: string;
+  // V12.4.2 Adaptive Discovery Planner & Shared Budget Context
+  plannedQueries?: any[];
+  sharedMetaBudgetTracker?: any;
+  searchRoundNumber?: number;
+  maxLiveRequestsForRound?: number;
+  maxLiveDomains?: number;
 }
 
 export interface SourceObservation {
   source: IntelligenceSource;
   sourceRecordId: string;
-  sourceUrl: string | null;
+  sourceUrl?: string | null;
   landingPageUrl?: string | null;
   sourceExternalAdId?: string | null;
   storeDomainEvidence?: string | null;
-  advertiserOrCreator: string | null;
-  advertiserDomain: string | null;
+  advertiserOrCreator?: string | null;
+  advertiserName?: string | null;
+  advertiserDomain?: string | null;
   productMatchHint?: string | null;
   reportedPublishedAt?: string | null;
   reportedFirstShownAt?: string | null;
   reportedLastShownAt?: string | null;
   observedAt: string;
-  requestedMarket: string;
-  verifiedDeliveryMarket: string | null;
+  requestedMarket?: string;
+  verifiedDeliveryMarket?: string | null;
   title: string | null;
   description?: string | null;
+  observedContent?: string | null;
   metrics?: Record<string, unknown>;
-  media: {
+  media?: {
     thumbnailUrl?: string | null;
     videoUrl?: string | null;
     embedUrl?: string | null;
@@ -106,6 +365,58 @@ export interface SourceObservation {
   provenance: ObservationProvenance;
   evidenceReference?: string | null;
   researchProductId?: string | null;
+  matchedQueryIds?: string[];
+  researchRunId?: string | null;
+  queryId?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdId?: string | null;
+  persistedAdId?: string | null;
+  sourceObservationId?: string | null;
+  sourceType?: string | null;
+  isLiveRecord?: boolean;
+}
+
+export interface ProviderExecutionMetadata {
+  attempted: boolean;
+  executed: boolean;
+  liveSucceeded: boolean;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  upstreamReturnedCount?: number | null;
+  freshLiveObservedCount?: number | null;
+  currentRunLiveAdsCount?: number | null;
+  historicalDatabaseRecordsCount?: number | null;
+  persistedInsertedCount?: number | null;
+  persistedUpdatedCount?: number | null;
+  reobservedExistingCount?: number | null;
+  cachedRecordsUsedCount?: number | null;
+  fallbackToCache?: boolean;
+  sourceMode?: ResearchSourceMode;
+  executionPolicy?: string;
+  policyConflict?: boolean;
+  policyConflictReason?: string | null;
+  auditTraces?: UpstreamRecordTrace[];
+  queryOutcomes?: any[];
+  domainsAttempted?: number;
+  domainsSucceeded?: number;
+  domainsFailed?: number;
+  domainsEmpty?: number;
+  domainsRateLimited?: number;
+  productEvidencePersisted?: boolean;
+  domainOutcomes?: any[];
+}
+
+export interface UpstreamRecordTrace {
+  rawId: string;
+  digest?: string;
+  decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+  rejectionReason?: string | null;
+  persistedId?: string | null;
+  researchRunId?: string | null;
+  queryId?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdId?: string | null;
+  sourceObservationId?: string | null;
 }
 
 export interface SourceResearchResult {
@@ -122,6 +433,8 @@ export interface SourceResearchResult {
   completedAt: string;
   errors: string[];
   warnings: string[];
+  executionMetadata?: ProviderExecutionMetadata;
+  enrichmentExecution?: any;
 }
 
 // ─── Source-Specific Normalized Models ────────────────────────────────────────
@@ -220,4 +533,11 @@ export interface ProductEvidenceMatchResult {
   matchReasons: string[];
   evidenceReference: string | null;
 }
+
+// ─── V12.4.3.2 View-Model & Orchestrator Type Aliases ─────────────────────────
+export type DiscoveredProductCandidate = Record<string, any>;
+export type RankedProductCandidate = Record<string, any>;
+export type EvergreenLeaderboardResponse = Record<string, any>;
+export type SourceConnectionSummary = Record<string, any>;
+
 

@@ -1,0 +1,5 @@
+{
+  "executed": true,
+  "verdict": "PASS",
+  "runner": "tests/integration/kh02BrowserAcceptance.test.ts"
+}

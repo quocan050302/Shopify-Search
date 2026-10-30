@@ -1,0 +1,16 @@
+{
+  "track": "Track 1: Nonzero Candidate Discovery",
+  "topic": "Smart Posture Corrector",
+  "verdict": "PASS",
+  "cardCount": 1,
+  "displayedCandidateIds": [
+    "cand_282145610_1"
+  ],
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track1_nonzero\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track1_nonzero\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track1_nonzero\\03_leaderboard_results.png"
+  ]
+}

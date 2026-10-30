@@ -1,0 +1,7 @@
+{
+  "provider": "TIKTOK_ADS",
+  "queryExecuted": false,
+  "status": "MANUAL_RESEARCH_ONLY",
+  "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available.",
+  "marketVerifiedUS": false
+}

@@ -1,0 +1,17 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "liveGoogleProductMatchesCount": 0,
+  "deterministicClassificationVerification": {
+    "unrelatedModelOnSameDomain": {
+      "mutationId": "M05",
+      "description": "Associate a Google brand advertisement with an unrelated model",
+      "caughtAndRejected": true,
+      "observed": {
+        "classification": "REJECTED_UNRELATED_CREATIVE",
+        "isProductSpecificEvidence": false
+      }
+    }
+  },
+  "verdict": "INSUFFICIENT_EVIDENCE"
+}

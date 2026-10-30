@@ -1,0 +1,436 @@
+{
+  "authProbe": {
+    "configured": true,
+    "variableName": "GEMINI_API_KEY",
+    "keyLength": 53,
+    "keyPrefix": null,
+    "authStatus": "AUTHENTICATED",
+    "authenticated": true,
+    "testedAt": "2026-10-28T10:52:46.627Z",
+    "errorMessage": null
+  },
+  "primaryModel": {
+    "modelId": "gemini-3.5-flash-lite",
+    "rawName": "models/gemini-3.5-flash-lite",
+    "displayName": "Gemini 3.5 Flash Lite",
+    "description": "Gemini 3.5 Flash Lite",
+    "version": "3.5-flash-lite-07-2026",
+    "capabilities": {
+      "supportsGenerateContent": true,
+      "supportsStructuredOutput": true,
+      "supportsVision": true,
+      "supportsVideo": true,
+      "inputTokenLimit": 1048576,
+      "outputTokenLimit": 65536,
+      "isAvailableToAccount": true,
+      "isDeprecatedOrRemoved": false,
+      "estimatedCostTier": "FREE"
+    },
+    "priorityScore": 115,
+    "status": "ELIGIBLE"
+  },
+  "fallbackModels": [
+    {
+      "modelId": "gemini-flash-lite-latest",
+      "rawName": "models/gemini-flash-lite-latest",
+      "displayName": "Gemini Flash-Lite Latest",
+      "description": "Latest release of Gemini Flash-Lite",
+      "version": "Gemini Flash-Lite Latest",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "FREE"
+      },
+      "priorityScore": 110,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.1-flash-lite",
+      "rawName": "models/gemini-3.1-flash-lite",
+      "displayName": "Gemini 3.1 Flash Lite",
+      "description": "Gemini 3.1 Flash Lite",
+      "version": "3.1-flash-lite-05-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "FREE"
+      },
+      "priorityScore": 105,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.7-flash",
+      "rawName": "models/gemini-3.7-flash",
+      "displayName": "Gemini 3.7 Flash",
+      "description": "Gemini 3.7 Flash",
+      "version": "3.7-flash-08-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 100,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.6-flash",
+      "rawName": "models/gemini-3.6-flash",
+      "displayName": "Gemini 3.6 Flash",
+      "description": "Gemini 3.6 Flash",
+      "version": "3.6-flash-07-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 95,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.8-flash",
+      "rawName": "models/gemini-3.8-flash",
+      "displayName": "Gemini 3.8 Flash",
+      "description": "Gemini 3.8 Flash",
+      "version": "3.0",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 90,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-flash-latest",
+      "rawName": "models/gemini-flash-latest",
+      "displayName": "Gemini Flash Latest",
+      "description": "Latest release of Gemini Flash",
+      "version": "Gemini Flash Latest",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 85,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.5-flash",
+      "rawName": "models/gemini-3.5-flash",
+      "displayName": "Gemini 3.5 Flash",
+      "description": "Gemini 3.5 Flash",
+      "version": "3.5-flash-05-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 75,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemma-4-26b-a4b-it",
+      "rawName": "models/gemma-4-26b-a4b-it",
+      "displayName": "Gemma 4 26B A4B IT",
+      "description": "Gemma 4 26B A4B IT",
+      "version": "001",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": false,
+        "supportsVideo": false,
+        "inputTokenLimit": 262144,
+        "outputTokenLimit": 32768,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "FREE"
+      },
+      "priorityScore": 65,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemma-4-31b-it",
+      "rawName": "models/gemma-4-31b-it",
+      "displayName": "Gemma 4 31B IT",
+      "description": "Gemma 4 31B IT",
+      "version": "001",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": false,
+        "supportsVideo": false,
+        "inputTokenLimit": 262144,
+        "outputTokenLimit": 32768,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "FREE"
+      },
+      "priorityScore": 60,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.1-pro-preview",
+      "rawName": "models/gemini-3.1-pro-preview",
+      "displayName": "Gemini 3.1 Pro Preview",
+      "description": "Gemini 3.1 Pro Preview",
+      "version": "3.1-pro-preview-01-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "HIGH"
+      },
+      "priorityScore": 55,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-pro-latest",
+      "rawName": "models/gemini-pro-latest",
+      "displayName": "Gemini Pro Latest",
+      "description": "Latest release of Gemini Pro",
+      "version": "Gemini Pro Latest",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "HIGH"
+      },
+      "priorityScore": 50,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3-flash-preview",
+      "rawName": "models/gemini-3-flash-preview",
+      "displayName": "Gemini 3 Flash Preview",
+      "description": "Gemini 3 Flash Preview",
+      "version": "3-flash-preview-12-2025",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 45,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.1-pro-preview-customtools",
+      "rawName": "models/gemini-3.1-pro-preview-customtools",
+      "displayName": "Gemini 3.1 Pro Preview Custom Tools",
+      "description": "Gemini 3.1 Pro Preview optimized for custom tool usage",
+      "version": "3.1-pro-preview-01-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "HIGH"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-3.1-flash-lite-preview",
+      "rawName": "models/gemini-3.1-flash-lite-preview",
+      "displayName": "Gemini 3.1 Flash Lite Preview",
+      "description": "Gemini 3.1 Flash Lite Preview",
+      "version": "3.1-flash-lite-preview-03-2026",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "FREE"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-omni-flash-preview",
+      "rawName": "models/gemini-omni-flash-preview",
+      "displayName": "Gemini Omni Flash Preview",
+      "description": "Gemini Omni Flash Preview",
+      "version": "001",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 131072,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-omni-1.1-flash",
+      "rawName": "models/gemini-omni-1.1-flash",
+      "displayName": "Gemini Omni 1.1 Flash",
+      "description": "Gemini Omni 1.1 Flash ",
+      "version": "001",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": true,
+        "inputTokenLimit": 131072,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "gemini-4-argon",
+      "rawName": "models/gemini-4-argon",
+      "displayName": "Gemini 4 Argon",
+      "description": "Gemini 4 Argon",
+      "version": "3.0",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": false,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 32768,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "antigravity-preview-05-2026",
+      "rawName": "models/antigravity-preview-05-2026",
+      "displayName": "Antigravity Agent Preview",
+      "description": "Preview release of Antigravity Agent (05-2026)",
+      "version": "0.1",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": false,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "antigravity-preview-09-2026",
+      "rawName": "models/antigravity-preview-09-2026",
+      "displayName": "Antigravity Agent Preview",
+      "description": "Preview release of Antigravity Agent (09-2026)",
+      "version": "0.1",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": false,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    },
+    {
+      "modelId": "antigravity-preview-latest",
+      "rawName": "models/antigravity-preview-latest",
+      "displayName": "Antigravity Agent Preview Latest",
+      "description": "Latest preview release of Antigravity Agent",
+      "version": "Antigravity Agent Preview Latest",
+      "capabilities": {
+        "supportsGenerateContent": true,
+        "supportsStructuredOutput": true,
+        "supportsVision": true,
+        "supportsVideo": false,
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 65536,
+        "isAvailableToAccount": true,
+        "isDeprecatedOrRemoved": false,
+        "estimatedCostTier": "LOW"
+      },
+      "priorityScore": 30,
+      "status": "ELIGIBLE"
+    }
+  ],
+  "eligibleCount": 21,
+  "verdict": "PASS"
+}

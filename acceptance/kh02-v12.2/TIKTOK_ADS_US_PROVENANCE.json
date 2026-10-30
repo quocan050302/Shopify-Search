@@ -1,0 +1,5 @@
+{
+  "source": "TIKTOK_ADS",
+  "provenanceType": "CACHED_SOURCE",
+  "marketVerificationRule": "ad.targetMarket === 'US' required for verified delivery market"
+}

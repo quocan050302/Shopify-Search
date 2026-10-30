@@ -1,0 +1,20 @@
+{
+  "browserPollingStatesSupported": [
+    "IDLE",
+    "POLLING_ACTIVE",
+    "POLLING_TIMED_OUT",
+    "POLLING_ERROR"
+  ],
+  "effectiveJobStatesSupported": [
+    "QUEUED",
+    "RUNNING",
+    "COMPLETED",
+    "PARTIALLY_COMPLETED",
+    "FAILED",
+    "CANCELED",
+    "STALLED",
+    "RECOVERING"
+  ],
+  "expiredLeaseNeverClaimsActiveProcessing": true,
+  "noProgressNeverClaimsActiveProcessing": true
+}

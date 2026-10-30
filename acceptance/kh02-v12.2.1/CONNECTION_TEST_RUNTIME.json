@@ -1,0 +1,172 @@
+[
+  {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": 141,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T16:00:40.081Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (141 records observed); live collection active via local collector (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+    "collectorVersion": "1.7.0",
+    "databaseRecordsIndexed": 141,
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "supportedOperationsVerified": true,
+      "queryExecuted": true,
+      "sourceDataVerified": true,
+      "lastLiveQueryAt": null,
+      "blockerCode": null
+    },
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true,
+      "pricingSource": "Local MetaAdsCollector MCP (Free zero-cost)"
+    }
+  },
+  {
+    "source": "TIKTOK_ADS",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": false,
+    "authenticated": null,
+    "discoverySupported": false,
+    "queryExecuted": true,
+    "recordsReturned": 5,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T16:00:40.081Z",
+    "status": "MANUAL_RESEARCH_ONLY",
+    "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_ADS_US_LIVE: BLOCKED); database competitor ad search active, manual Creative Center lookup & batch import available.",
+    "missingRequirements": [
+      "TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"
+    ],
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": false,
+      "authenticated": null,
+      "supportedOperationsVerified": false,
+      "queryExecuted": true,
+      "sourceDataVerified": true,
+      "lastLiveQueryAt": null,
+      "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER"
+    },
+    "requiredAction": "Utilize manual Creative Center batch import or configure authorized US ad provider.",
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true
+    }
+  },
+  {
+    "source": "TIKTOK_ORGANIC",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": null,
+    "authenticated": false,
+    "discoverySupported": false,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T16:00:40.081Z",
+    "status": "CREDENTIALS_REQUIRED",
+    "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment (TIKTOK_ORGANIC_LIVE: BLOCKED). Configure HASDATA_API_KEY to enable live organic search.",
+    "missingRequirements": [
+      "HASDATA_API_KEY"
+    ],
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": null,
+      "authenticated": false,
+      "supportedOperationsVerified": false,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": "MISSING_CREDENTIALS"
+    },
+    "requiredAction": "Configure HASDATA_API_KEY in environment to enable live video queries.",
+    "estimatedQueryCost": {
+      "estimatedCredits": 10,
+      "isPaid": true,
+      "knownCost": true,
+      "pricingSource": "HasData MCP Vendor Documentation (10 credits/tool call)"
+    }
+  },
+  {
+    "source": "GOOGLE_ADS",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": false,
+    "authenticated": null,
+    "discoverySupported": false,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T16:00:40.081Z",
+    "status": "MCP_NOT_CONFIGURED",
+    "reason": "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_LIVE: BLOCKED).",
+    "missingRequirements": [
+      "GOOGLE_TRANSPARENCY_MCP_URL"
+    ],
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": false,
+      "authenticated": null,
+      "supportedOperationsVerified": false,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": "MCP_NOT_CONFIGURED"
+    },
+    "requiredAction": "Deploy Google Ads Transparency MCP server and configure GOOGLE_TRANSPARENCY_MCP_URL.",
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true
+    }
+  },
+  {
+    "source": "DEMAND_HISTORY",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T16:00:40.081Z",
+    "status": "ENGINE_READY",
+    "reason": "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status.",
+    "missingRequirements": [],
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "supportedOperationsVerified": true,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": null
+    },
+    "requiredAction": "Provide product-specific search terms or import historical observations.",
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true
+    }
+  }
+]

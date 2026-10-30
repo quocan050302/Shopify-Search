@@ -1,0 +1,8 @@
+{
+  "datasetVersion": "v12.4.1-gold-v2",
+  "datasetHash": "7b7c6fb0084a57c9",
+  "totalRecords": 21,
+  "devSplitCount": 13,
+  "holdoutSplitCount": 8,
+  "summary": "Zero-leakage backtest (MODE_B_HISTORICAL_BLIND) completed across 21 items (Holdout: 8). TP=9, FP=0, TN=12, FN=0, Precision=100.0%, Recall=100.0%, F1=100.0%, Critical False Positives=0."
+}

@@ -1,0 +1,12 @@
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 241ms
+✓ Running next.config.ts took 47ms
+[KH-02 Worker] Initialized kh02-worker-25192-mvt56tse | Release: V12.4.3.1 | SHA: 7126d67 | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+[KH-02 Worker] Claimed job kh02_run_1793254102976_uw326 for topic 'pet gadgets' (Workspace: acceptance_v12_2_3_ws)
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+[KH-02 Worker] Finished job kh02_run_1793254102976_uw326: COMPLETED
+[KH-02 Worker] Claimed job kh02_run_1793254118806_w60gg for topic 'diy' (Workspace: acceptance_v12_2_3_ws)
+[KH-02 Worker] Finished job kh02_run_1793254118806_w60gg: COMPLETED

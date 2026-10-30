@@ -1,0 +1,23 @@
+{
+  "id": "CANDIDATE_FUNNEL_RECONCILIATION",
+  "description": "Candidate funnel explains raw groups to scored products with auditable accounting",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "totalGroups": 2,
+    "relevant": 1,
+    "irrelevant": 1
+  },
+  "observed": {
+    "totalGroups": 2,
+    "relevant": 1,
+    "irrelevant": 1
+  },
+  "assertionEvidence": [
+    "Funnel balanced: 1 relevant + 1 irrelevant = 2 total"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Funnel accounts for all candidate groups without dropping records"
+}

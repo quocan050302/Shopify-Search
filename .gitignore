@@ -46,6 +46,8 @@ next-env.d.ts
 /src/generated/prisma
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.bak
 *.backup*
 .env
@@ -63,3 +65,8 @@ artifacts/
 !artifacts/v11.6.0/
 !artifacts/v11.6.1/
 artifacts/**/.scratch*
+
+/services/google-transparency/.venv/
+__pycache__/
+
+/.setup-tmp/

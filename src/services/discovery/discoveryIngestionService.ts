@@ -39,6 +39,13 @@ export interface IngestionResultSummary {
   failedCount: number;
   adIds: string[];
   errors: Array<{ identityHash: string; error: string }>;
+  recordTraces?: Array<{
+    rawId: string;
+    digest?: string;
+    decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+    rejectionReason?: string | null;
+    persistedId?: string | null;
+  }>;
 }
 
 export interface MediaUpsertResult {
@@ -237,7 +244,10 @@ export async function upsertVerifiedAdMedia(
   }
 
   // Update mediaType if previously UNKNOWN and incoming is concrete
-  if (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") {
+  if (
+    (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") ||
+    (videoUpdated && mediaType === "VIDEO" && existingMedia.mediaType !== "CAROUSEL")
+  ) {
     updateData.mediaType = mediaType;
   }
 
@@ -300,6 +310,7 @@ export async function ingestDiscoveredAds(
     failedCount: 0,
     adIds: [],
     errors: [],
+    recordTraces: [],
   };
 
   if (records.length === 0) return summary;
@@ -420,8 +431,24 @@ export async function ingestDiscoveredAds(
               observationCount: { increment: 1 },
               ...(context.isQuarantined ? { isSyntheticQuarantine: true } : {}),
               // Update landing page and headline if previously missing
-              headline: targetAd.headline ? targetAd.headline : record.headline || undefined,
-              landingPageUrl: targetAd.landingPageUrl ? targetAd.landingPageUrl : record.landingPageUrl || undefined,
+              headline:
+                targetAd.headline &&
+                targetAd.headline.trim() !== "" &&
+                !/^(Facebook Ad|Top Ad):\s*/i.test(targetAd.headline.trim())
+                  ? targetAd.headline
+                  : record.headline || targetAd.headline || undefined,
+              landingPageUrl:
+                targetAd.landingPageUrl && targetAd.landingPageUrl.trim() !== ""
+                  ? targetAd.landingPageUrl
+                  : record.landingPageUrl || undefined,
+              bodyText:
+                targetAd.bodyText && targetAd.bodyText.trim() !== ""
+                  ? targetAd.bodyText
+                  : record.bodyText || undefined,
+              callToAction:
+                targetAd.callToAction && targetAd.callToAction.trim() !== ""
+                  ? targetAd.callToAction
+                  : record.callToAction || undefined,
             },
           });
         }
@@ -568,13 +595,25 @@ export async function ingestDiscoveredAds(
         return { adId: targetAd.id, isNew };
       });
 
-      // Post-transaction outcome updates (transaction-safe)
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
       if (txResult.isNew) {
         summary.newUniqueInserted++;
         summary.newUniqueCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "ACCEPTED",
+          persistedId: txResult.adId,
+        });
       } else {
         summary.existingUpdated++;
         summary.existingCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "UPDATED",
+          persistedId: txResult.adId,
+        });
       }
       summary.adIds.push(txResult.adId);
     } catch (err: unknown) {
@@ -583,6 +622,14 @@ export async function ingestDiscoveredAds(
       summary.errors.push({
         identityHash: stableIdentityHash,
         error: msg,
+      });
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
+      summary.recordTraces?.push({
+        rawId: rawExternalId,
+        digest: stableIdentityHash,
+        decision: "REJECTED",
+        rejectionReason: msg,
+        persistedId: null,
       });
       console.warn(`Failed to ingest discovered ad [${stableIdentityHash}]:`, msg);
     }

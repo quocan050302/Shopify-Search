@@ -1,0 +1,27 @@
+{
+  "metaAds": {
+    "ready": true,
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database; live collection requires authorized collector."
+  },
+  "tiktokAds": {
+    "ready": true,
+    "status": "NOT_VERIFIED",
+    "reason": "Automated TikTok US ad provider is unconfigured; manual Creative Center lookup & batch import available."
+  },
+  "tiktokOrganic": {
+    "ready": false,
+    "status": "NOT_CONFIGURED",
+    "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment."
+  },
+  "googleAds": {
+    "ready": false,
+    "status": "NOT_CONFIGURED",
+    "reason": "Google Ads Transparency MCP server is not configured in environment."
+  },
+  "demandHistory": {
+    "ready": true,
+    "status": "CONFIGURED",
+    "reason": "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status."
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "totalMutations": 14,
+  "caughtCount": 14,
+  "allCaught": true,
+  "mutations": [
+    {
+      "id": "M01",
+      "description": "supportingAdIds present but matchedQueryIds empty -> G04/G16 rejected",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M02",
+      "description": "matchedQueryIds from another run -> rejected against current run executedQueryIds",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M03",
+      "description": "Cached observation with undefined sourceType -> never treated as live",
+      "caughtAndRejected": true,
+      "observed": {
+        "isCandidateLiveVerified": false
+      }
+    },
+    {
+      "id": "M04",
+      "description": "Google MCP connect timeout aborts within deadline, records TIMED_OUT + cleanup, and does not set 429 cooldown",
+      "caughtAndRejected": true,
+      "observed": {
+        "status": "BLOCKED_SOURCE",
+        "timedOutStepRecorded": true,
+        "cleanupCompleted": true,
+        "cooldownActive": false,
+        "elapsedMs": 42
+      }
+    },
+    {
+      "id": "M05",
+      "description": "Google HTTP 429 sets RATE_LIMITED domain outcome and activates rate-limit cooldown",
+      "caughtAndRejected": true,
+      "observed": {
+        "status": "QUERY_FAILED",
+        "domainStatus": "RATE_LIMITED",
+        "cooldownActive": true
+      }
+    },
+    {
+      "id": "M06",
+      "description": "KittySpout and Pawira water fountains share pet_water_fountain family (distinctFamilyCount === 1)",
+      "caughtAndRejected": true,
+      "observed": {
+        "kittyspoutFamily": "pet_water_fountain",
+        "pawiraFamily": "pet_water_fountain",
+        "distinctFamilyCount": 1
+      }
+    },
+    {
+      "id": "M07",
+      "description": "Rejects Dog Food Bundle in Pet Gadgets, Crochet Kit in DIY Tools, and Golf Pouch in Car Accessories",
+      "caughtAndRejected": true,
+      "observed": {
+        "dogFoodStatus": "IRRELEVANT",
+        "crochetStatus": "IRRELEVANT",
+        "golfStatus": "IRRELEVANT"
+      }
+    },
+    {
+      "id": "M08",
+      "description": "PROBABLE candidate never counts toward liveVerifiedProductCount or liveVerifiedTop3",
+      "caughtAndRejected": true,
+      "observed": {
+        "qualifiedCount": 1,
+        "liveVerifiedProductCount": 0,
+        "liveVerifiedTop3": false
+      }
+    },
+    {
+      "id": "M09",
+      "description": "Synthetic verified-merchant-demand rows classify as CACHED_UNVERIFIED",
+      "caughtAndRejected": true,
+      "observed": {
+        "resolvedAuthority": "CACHED_UNVERIFIED"
+      }
+    },
+    {
+      "id": "M10",
+      "description": "8-step Meta lineage chain authenticates valid live link and deduplicates duplicate externalAdId",
+      "caughtAndRejected": true,
+      "observed": {
+        "authenticValid": true,
+        "dupAuthenticatedCount": 1,
+        "dupRejectionCodes": [
+          "DUPLICATE_EXTERNAL_AD_COUNTED_TWICE"
+        ]
+      }
+    },
+    {
+      "id": "M11",
+      "description": "Malformed placeholder slug /products/null-1773399526609 downgraded from VERIFIED to PROBABLE",
+      "caughtAndRejected": true,
+      "observed": {
+        "identityStatus": "PROBABLE",
+        "isEligibleAsEvergreenWinner": false
+      }
+    },
+    {
+      "id": "M12",
+      "description": "8-in-1 Electric Cleaning Brush Set and Cordless Electric Spin Scrubber collapse to electric_spin_scrubber",
+      "caughtAndRejected": true,
+      "observed": {
+        "brushSetFamily": "electric_spin_scrubber",
+        "spinScrubberFamily": "electric_spin_scrubber"
+      }
+    },
+    {
+      "id": "M13",
+      "description": "Passive plush squeaky chew toy rejected in Pet Gadgets and accepted in Pet Toys",
+      "caughtAndRejected": true,
+      "observed": {
+        "petGadgetsStatus": "IRRELEVANT",
+        "petToysStatus": "RELEVANT"
+      }
+    },
+    {
+      "id": "M14",
+      "description": "Decorative Burnett Wallpaper rejected from DIY Tools niche",
+      "caughtAndRejected": true,
+      "observed": {
+        "diyToolsWallpaperStatus": "IRRELEVANT"
+      }
+    }
+  ]
+}

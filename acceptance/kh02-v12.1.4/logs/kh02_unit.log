@@ -1,0 +1,37 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:unit
+> vitest run tests/unit/kh02
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02V12_1_4_AtomicCas.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 9246[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4 — Atomic Lease CAS & Database Concurrency [2m(7)[22m
+     [33m[2m✓[22m[39m updateJobIfClaimOwned enforces exact conditional match on all identity columns[33m 1964[2mms[22m[39m
+     [33m[2m✓[22m[39m renewResearchJobLease advances recordVersion monotonically and never advances fencingGeneration[33m 1169[2mms[22m[39m
+     [33m[2m✓[22m[39m safely handles heartbeat vs progress write races with same-owner CAS retry[33m 1100[2mms[22m[39m
+     [33m[2m✓[22m[39m prevents recovery from snatching a lease when heartbeat extends it before recovery write[33m 1192[2mms[22m[39m
+     [33m[2m✓[22m[39m resolves concurrent recovery contention so exactly one recovery worker reclaims[33m 1529[2mms[22m[39m
+     [33m[2m✓[22m[39m completely rejects progress, completion, and failure writes from stale workers after recovery[33m 1216[2mms[22m[39m
+     [33m[2m✓[22m[39m ensureSyncJobSchemaUpgraded verifies all columns and operates idempotently[33m 1076[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_1_Runtime.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 1341[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.1 — Runtime Hardening & Provider Contract Suite [2m(20)[22m
+     [32m✓[39m 6. Provenance Validation & Cross-Layer Traceability [2m(5)[22m
+       [33m[2m✓[22m[39m traces displayed product card back to persisted evidence references[33m 543[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_3_Ownership.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 319[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_P0.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductIdentity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02SourceAdapters.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02EvergreenScoring.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02TemporalDemand.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m9 passed[39m[22m[90m (9)[39m
+[2m      Tests [22m [1m[32m66 passed[39m[22m[90m (66)[39m
+[2m   Start at [22m 16:00:48
+[2m   Duration [22m 25.74s[2m (setup 46%, tests 45%, import 8%, transform 1%)[22m
+
+
+
+=== STDERR ===

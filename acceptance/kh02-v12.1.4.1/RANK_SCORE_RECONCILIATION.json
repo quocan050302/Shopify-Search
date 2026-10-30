@@ -1,0 +1,7 @@
+{
+  "httpScoreTolerance": 0.01,
+  "browserScoreTolerance": 1,
+  "rankOrderEnforced": true,
+  "confidenceStatusEnforced": true,
+  "testOutcome": "PASS"
+}

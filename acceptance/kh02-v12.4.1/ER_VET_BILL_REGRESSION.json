@@ -1,0 +1,29 @@
+{
+  "normalAiShortlisted": false,
+  "misleadingAiShortlisted": false,
+  "invalidRefsShortlisted": false,
+  "aiUnavailableShortlisted": false,
+  "aiUnavailableReality": {
+    "status": "NON_PHYSICAL",
+    "productRealityStatus": "NON_PHYSICAL",
+    "sourcePageClassification": "ARTICLE_PAGE",
+    "eligibleForShortlist": false,
+    "isPhysicalProductRealityEligible": false,
+    "reason": "Describes veterinary expenses, cost factors, or informational content rather than a physical product.",
+    "rejectionReasons": [
+      "Describes veterinary expenses, cost factors, or informational content rather than a physical product."
+    ],
+    "conditions": {
+      "correctNiche": true,
+      "physicalProductSupported": false,
+      "productIdentityDefensible": false,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": false,
+      "notServiceArticleInsuranceLeadGen": false,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "variationsShortlistedCount": 0,
+  "verdict": "PASS"
+}

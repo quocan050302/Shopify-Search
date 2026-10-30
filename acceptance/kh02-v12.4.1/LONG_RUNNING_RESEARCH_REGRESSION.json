@@ -1,0 +1,7 @@
+{
+  "jobDeadlineMs": 180000,
+  "abandonedLeaseThresholdMs": 1800000,
+  "noProgressStallThresholdMs": 120000,
+  "expiredLeaseDetectedAsStalled": true,
+  "noProgressDetectedAsStalled": true
+}

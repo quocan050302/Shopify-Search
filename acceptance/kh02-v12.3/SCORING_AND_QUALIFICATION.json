@@ -1,0 +1,21 @@
+{
+  "formulaVersion": "12.1.0",
+  "pillarWeights": {
+    "demandStability": 25,
+    "problemSolutionFit": 20,
+    "multiPlatformValidation": 20,
+    "brandabilityStoreFit": 15,
+    "creativeDepth": 10,
+    "competitionSustainability": 10
+  },
+  "qualificationGates": [
+    "Gate 1: Minimum Identity & Commercial Niche Relevance",
+    "Gate 2: Minimum Demand Breadth & Multi-Source Evidence",
+    "Gate 3: Commercial Validation & Real Ecommerce Destination",
+    "Gate 4: Demand Stability & Temporal History Coverage",
+    "Gate 5: Non-Degrading Evergreen Distinctness"
+  ],
+  "evaluatedCandidatesCount": 2,
+  "scoringIntegrityVerified": true,
+  "timestamp": "2026-10-27T16:10:08.369Z"
+}

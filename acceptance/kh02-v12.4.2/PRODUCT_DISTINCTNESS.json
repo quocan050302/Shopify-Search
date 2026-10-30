@@ -1,0 +1,194 @@
+{
+  "consolidatedCandidate": {
+    "candidateId": "cand_445224726",
+    "title": "Cordless Hot Glue Gun",
+    "canonicalProductName": "Cordless Hot Glue Gun Kit - Ad Creative 1",
+    "displayName": "Cordless Hot Glue Gun",
+    "originalAdHeadline": "Cordless Hot Glue Gun Kit - Ad Creative 1",
+    "originalCreativeCode": "cordless-hot-glue-gun",
+    "brand": "CraftTools",
+    "model": null,
+    "sku": null,
+    "category": "diy",
+    "problemStatement": "Cordless Hot Glue Gun Kit - Ad Creative 1 Fast heat up glue gun",
+    "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+    "thumbnailUrl": null,
+    "videoUrl": null,
+    "mediaSourceAdId": "dup_1",
+    "canonicalProductUrl": "https://crafttools.com/products/cordless-hot-glue-gun",
+    "storeDomain": "crafttools.com",
+    "advertiserNames": [
+      "CraftTools"
+    ],
+    "supportingAdIds": [
+      "dup_1",
+      "dup_2"
+    ],
+    "supportingSourceTypes": [
+      "META_ADS"
+    ],
+    "totalObservationCount": 2,
+    "distinctAdvertisersCount": 1,
+    "earliestObservationDate": "2026-10-28T10:53:06.218Z",
+    "latestObservationDate": "2026-10-28T10:53:06.218Z",
+    "identityConfidence": "EXACT",
+    "sourceObservations": [
+      {
+        "source": "META_ADS",
+        "sourceRecordId": "dup_1",
+        "title": "Cordless Hot Glue Gun Kit - Ad Creative 1",
+        "description": "Fast heat up glue gun.",
+        "advertiserOrCreator": "CraftTools",
+        "landingPageUrl": "https://crafttools.com/products/cordless-hot-glue-gun?utm_source=fb1",
+        "storeDomainEvidence": "crafttools.com",
+        "observedAt": "2026-10-28T10:53:06.218Z",
+        "provenance": "LIVE_PROVIDER"
+      },
+      {
+        "source": "META_ADS",
+        "sourceRecordId": "dup_2",
+        "title": "Cordless Hot Glue Gun Kit - Ad Creative 2",
+        "description": "Includes 30 glue sticks.",
+        "advertiserOrCreator": "CraftTools",
+        "landingPageUrl": "https://crafttools.com/products/cordless-hot-glue-gun?utm_source=fb2",
+        "storeDomainEvidence": "crafttools.com",
+        "observedAt": "2026-10-28T10:53:06.218Z",
+        "provenance": "LIVE_PROVIDER"
+      }
+    ],
+    "identityStatus": "VERIFIED",
+    "resolutionSource": "Verified Shopify Product URL (/products/cordless-hot-glue-gun)",
+    "requiresManualReview": false,
+    "identityEvidenceReferences": [
+      "Shopify Handle: cordless-hot-glue-gun",
+      "Canonical URL: https://crafttools.com/products/cordless-hot-glue-gun",
+      "Corroborating Ad Copy: Cordless Hot Glue Gun Kit - Ad Creative 1"
+    ],
+    "isEligibleAsEvergreenWinner": true,
+    "relevanceStatus": "RELEVANT",
+    "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+    "matchedArchetypeId": null,
+    "matchedQueryIds": [],
+    "relevanceScore": 0.92,
+    "relevanceReasons": [
+      "Strong niche match on terms: cordless hot glue gun, hot glue gun, glue gun."
+    ],
+    "psychologyProfile": {
+      "targetCustomer": {
+        "claimText": "Consumers actively seeking solutions related to diy",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Regular routine use in the home when utilizing cordless hot glue gun",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Everyday inconvenience and friction addressed by Cordless Hot Glue Gun",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Conventional manual household tools or unspecialized generic accessories",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+        "evidenceReference": "Facebook Ad #dup_1",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    },
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+    "productRealityReason": null
+  },
+  "distinctEval": {
+    "isDistinct": false,
+    "totalCandidatesEvaluated": 2,
+    "distinctCount": 1,
+    "duplicateGroupsCount": 1,
+    "details": [
+      {
+        "candidateId": "c1",
+        "title": "Cordless Glue Gun",
+        "canonicalKey": "cordless glue gun",
+        "storeDomain": "crafttools.com",
+        "isDuplicate": false
+      },
+      {
+        "candidateId": "c2",
+        "title": "Cordless Glue Gun",
+        "canonicalKey": "cordless glue gun",
+        "storeDomain": "crafttools.com",
+        "isDuplicate": true,
+        "duplicateOf": "c1"
+      }
+    ]
+  }
+}

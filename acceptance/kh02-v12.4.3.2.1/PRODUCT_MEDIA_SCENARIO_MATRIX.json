@@ -1,0 +1,119 @@
+{
+  "version": "12.4.3.2.1",
+  "totalScenarios": 12,
+  "passedScenarios": 12,
+  "allPassed": true,
+  "scenarios": [
+    {
+      "scenarioId": "SCENARIO_01_SINGLE_MERCHANT_IMAGE",
+      "passed": true,
+      "observed": {
+        "totalCount": 1,
+        "primarySource": "MERCHANT_PRODUCT_PAGE"
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_02_MULTI_MERCHANT_GALLERY",
+      "passed": true,
+      "observed": {
+        "totalCount": 3,
+        "sources": [
+          "MERCHANT_PRODUCT_PAGE",
+          "MERCHANT_GALLERY",
+          "MERCHANT_GALLERY"
+        ]
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_03_MERCHANT_IMAGES_PLUS_MP4_VIDEO",
+      "passed": true,
+      "observed": {
+        "hasImages": true,
+        "hasVideo": true,
+        "primaryImageSource": "MERCHANT_PRODUCT_PAGE"
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_04_MULTIPLE_AD_VIDEOS_DEDUPED",
+      "passed": true,
+      "observed": {
+        "videoCount": 2,
+        "deduplicated": 1
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_05_AD_CREATIVE_IMAGE_ONLY",
+      "passed": true,
+      "observed": {
+        "totalCount": 1,
+        "sourceType": "META_AD_CREATIVE",
+        "sourceLabel": "Meta Ad Creative"
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_06_AD_VIDEO_ONLY_WITH_POSTER",
+      "passed": true,
+      "observed": {
+        "hasVideo": true,
+        "posterUrl": "https://scontent.fbcdn.net/v/dog-poster.jpg"
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_07_EMPTY_MEDIA_HONEST_STATE",
+      "passed": true,
+      "observed": {
+        "isEmpty": true,
+        "headline": "No verified product media available",
+        "explanation": "The product was identified, but no usable image or video could be verified from the linked sources.",
+        "merchantPageUrl": "https://example-pet.com/products/feeder",
+        "merchantUrl": "https://example-pet.com/products/feeder"
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_08_09_10_BROKEN_PRIMARY_THUMB_AND_VIDEO",
+      "passed": true,
+      "observed": {
+        "rejectedCount": 3
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_11_SHOPIFY_SIZE_VARIANT_DEDUPLICATION",
+      "passed": true,
+      "observed": {
+        "totalCount": 1,
+        "deduplicatedCount": 2
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_12_CROSS_PRODUCT_CONTAMINATION_BLOCKED",
+      "passed": true,
+      "observed": {
+        "totalCount": 1,
+        "rejected": [
+          {
+            "rawUrl": "https://otherstore.com/products/dog-collar",
+            "source": "META_AD_CREATIVE",
+            "reasonCode": "CROSS_PRODUCT_CONTAMINATION",
+            "reason": "Media product handle 'dog-collar' conflicts with target product handle 'wet-food-cat-feeder'."
+          }
+        ]
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_13_UNSAFE_SCHEMES_AND_SSRF_BLOCKED",
+      "passed": true,
+      "observed": {
+        "totalCount": 0,
+        "rejectedCount": 5
+      }
+    },
+    {
+      "scenarioId": "SCENARIO_14_STOCK_AND_PLACEHOLDER_IMAGES_BLOCKED",
+      "passed": true,
+      "observed": {
+        "totalCount": 0,
+        "rejectedCount": 3
+      }
+    }
+  ]
+}

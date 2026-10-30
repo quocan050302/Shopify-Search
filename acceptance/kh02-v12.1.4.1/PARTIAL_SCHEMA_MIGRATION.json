@@ -1,0 +1,16 @@
+{
+  "scenario": "Database where subset of columns exist; migration safely adds remainder",
+  "alreadyPresent": [
+    "workerId",
+    "recordVersion",
+    "attemptNumber"
+  ],
+  "newlyAdded": [
+    "claimToken",
+    "fencingToken",
+    "fencingGeneration",
+    "leaseExpiresAt"
+  ],
+  "finalColumnsVerified": 7,
+  "testOutcome": "PASS"
+}

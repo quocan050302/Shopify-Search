@@ -1,0 +1,53 @@
+{
+  "switchStickerEvaluation": {
+    "decision": "POTENTIAL_RELEVANCE",
+    "discoveryDecision": "POTENTIAL_RELEVANCE",
+    "relevanceStatus": "PROBABLY_RELEVANT",
+    "isAccepted": true,
+    "score": 0.78,
+    "reasons": [
+      "Potential product archetype match for 'diy' on terms: switch sticker (preserved for Gemini semantic analysis)."
+    ],
+    "matchedArchetypeId": null
+  },
+  "historicalReplay": {
+    "runsReplayedCount": 1,
+    "runs": [
+      {
+        "runId": "kh02_run_1793178825461_s4pfb",
+        "topic": "diy",
+        "lookbackDays": 180,
+        "frozenCandidateTitles": [
+          "Two Blue Cats | Paint by Numbers",
+          "DIY Pest Control",
+          "Must Have DIY Tool",
+          "RELIFE DT-01 Smart Pen Type Mini Multimeter for Mobile Phone Repair Home Maintenance DIY Etc",
+          "Hot Sell 80mm Pos Thermal Printer Driver Receipt Printer Thermal with Cutter Thermal Receipt Printer",
+          "get latest price",
+          "Unidentified Product (Source: Facebook Ad #1405789581235775, Identity: Needs Review)",
+          "Multicolor Rose Floral Pattern Switch Sticker Decorative Light Switch Covers Outlet Plates Polyvinyl",
+          "💕iControl: Easy Widgets Themes",
+          "Get Halloween ready"
+        ],
+        "v12_4_1_ShortlistCount": 0,
+        "v12_4_1_RelevantCandidates": [],
+        "v12_4_2_ShortlistCount": 0,
+        "v12_4_2_RecoveredCandidates": [
+          "Two Blue Cats | Paint by Numbers (HIGH_RELEVANCE)",
+          "DIY Pest Control (HIGH_RELEVANCE)",
+          "Must Have DIY Tool (HIGH_RELEVANCE)",
+          "RELIFE DT-01 Smart Pen Type Mini Multimeter for Mobile Phone Repair Home Maintenance DIY Etc (HIGH_RELEVANCE)",
+          "Unidentified Product (Source: Facebook Ad #1405789581235775, Identity: Needs Review) (HIGH_RELEVANCE)",
+          "Multicolor Rose Floral Pattern Switch Sticker Decorative Light Switch Covers Outlet Plates Polyvinyl (HIGH_RELEVANCE)"
+        ],
+        "v12_4_2_RejectedNoise": [
+          "Hot Sell 80mm Pos Thermal Printer Driver Receipt Printer Thermal with Cutter Thermal Receipt Printer (CLEARLY_UNRELATED)",
+          "get latest price (CLEARLY_UNRELATED)",
+          "💕iControl: Easy Widgets Themes (CLEARLY_UNRELATED)",
+          "Get Halloween ready (CLEARLY_UNRELATED)"
+        ],
+        "notes": "Replayed exact frozen SQLite snapshot without fabricating missing live ads (Section 15 K10)."
+      }
+    ]
+  }
+}

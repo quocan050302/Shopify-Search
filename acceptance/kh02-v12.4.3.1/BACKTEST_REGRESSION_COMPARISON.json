@@ -1,0 +1,129 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "v12_4_3_ReportSummary": {
+    "verdict": "PASS",
+    "overall": {
+      "splitName": "OVERALL",
+      "totalCases": 16,
+      "nicheRelevancePrecision": 1,
+      "nicheRelevanceRecall": 1,
+      "productIdentityVerificationPrecision": 1,
+      "productIdentityVerificationRecall": 1,
+      "falseVerifiedCount": 0,
+      "skuPropagationRecall": 1,
+      "duplicateProductFalseSplitCount": 0,
+      "distinctProductFalseMergeCount": 0,
+      "unknownCrossMerchantAccuracy": 1,
+      "qualifiedDistinctProductYieldPerRequest": 1.0833,
+      "top3ShortlistCompletionRatePerNiche": 1,
+      "top3ProductFamilyDiversityRate": 1,
+      "productRealityPrecision": 1,
+      "googleProductAssociationPrecision": 1,
+      "demandMappingAccuracy": 1,
+      "evergreenQualificationPrecision": 1,
+      "evergreenFalsePositiveCount": 0
+    },
+    "holdout": {
+      "splitName": "HOLDOUT",
+      "totalCases": 7,
+      "nicheRelevancePrecision": 1,
+      "nicheRelevanceRecall": 1,
+      "productIdentityVerificationPrecision": 1,
+      "productIdentityVerificationRecall": 1,
+      "falseVerifiedCount": 0,
+      "skuPropagationRecall": 1,
+      "duplicateProductFalseSplitCount": 0,
+      "distinctProductFalseMergeCount": 0,
+      "unknownCrossMerchantAccuracy": 1,
+      "qualifiedDistinctProductYieldPerRequest": 0.6,
+      "top3ShortlistCompletionRatePerNiche": 1,
+      "top3ProductFamilyDiversityRate": 1,
+      "productRealityPrecision": 1,
+      "googleProductAssociationPrecision": 1,
+      "demandMappingAccuracy": 1,
+      "evergreenQualificationPrecision": 1,
+      "evergreenFalsePositiveCount": 0
+    }
+  },
+  "v12_4_3_1_ReportSummary": {
+    "verdict": "PASS",
+    "baselineV12_4_3": {
+      "overall": {
+        "caseCount": 8,
+        "syntheticMetaQueryExecutionCount": 6,
+        "specificProductRelevancePrecision": 0.75,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 0.5,
+        "customerPsychologyMisalignmentCount": 2,
+        "evergreenVerificationPrecision": 0.25,
+        "falseEvergreenPromotionCount": 6,
+        "falsePassGateCount": 2
+      },
+      "dev": {
+        "caseCount": 4,
+        "syntheticMetaQueryExecutionCount": 3,
+        "specificProductRelevancePrecision": 0.75,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 0.5,
+        "customerPsychologyMisalignmentCount": 1,
+        "evergreenVerificationPrecision": 0.25,
+        "falseEvergreenPromotionCount": 3,
+        "falsePassGateCount": 2
+      },
+      "holdout": {
+        "caseCount": 4,
+        "syntheticMetaQueryExecutionCount": 3,
+        "specificProductRelevancePrecision": 0.75,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 0.5,
+        "customerPsychologyMisalignmentCount": 1,
+        "evergreenVerificationPrecision": 0.25,
+        "falseEvergreenPromotionCount": 3,
+        "falsePassGateCount": 2
+      }
+    },
+    "fixedV12_4_3_1": {
+      "overall": {
+        "caseCount": 8,
+        "syntheticMetaQueryExecutionCount": 0,
+        "specificProductRelevancePrecision": 1,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 1,
+        "customerPsychologyMisalignmentCount": 0,
+        "evergreenVerificationPrecision": 1,
+        "falseEvergreenPromotionCount": 0,
+        "falsePassGateCount": 0
+      },
+      "dev": {
+        "caseCount": 4,
+        "syntheticMetaQueryExecutionCount": 0,
+        "specificProductRelevancePrecision": 1,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 1,
+        "customerPsychologyMisalignmentCount": 0,
+        "evergreenVerificationPrecision": 1,
+        "falseEvergreenPromotionCount": 0,
+        "falsePassGateCount": 0
+      },
+      "holdout": {
+        "caseCount": 4,
+        "syntheticMetaQueryExecutionCount": 0,
+        "specificProductRelevancePrecision": 1,
+        "specificProductRelevanceRecall": 1,
+        "demandAuthorityAccuracy": 1,
+        "customerPsychologyMisalignmentCount": 0,
+        "evergreenVerificationPrecision": 1,
+        "falseEvergreenPromotionCount": 0,
+        "falsePassGateCount": 0
+      }
+    },
+    "deltasV12_4_3_to_V12_4_3_1": {
+      "syntheticMetaQueryEliminated": 6,
+      "psychologyMisalignmentEliminated": 2,
+      "falseEvergreenPromotionEliminated": 6,
+      "falsePassGateEliminated": 2,
+      "specificProductPrecisionGain": 0.25
+    }
+  }
+}

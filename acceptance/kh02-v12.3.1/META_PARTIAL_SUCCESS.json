@@ -1,0 +1,19 @@
+{
+  "gateId": "P0-02",
+  "requirement": "Meta partial success preserves data while aggregating failed subquery errors",
+  "verdict": "PASS",
+  "observedValues": {
+    "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+    "successfulQueries": 1,
+    "failedQueries": 2,
+    "errorCount": 2
+  },
+  "expectedValues": {
+    "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+    "successfulQueries": 1,
+    "failedQueries": 2,
+    "errorCount": 2
+  },
+  "reason": "Partial success preserved 5 ads while aggregating 2 subquery errors",
+  "timestamp": "2026-10-28T01:42:25.816Z"
+}

@@ -1,0 +1,106 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "chromiumPrimaryAudit": {
+    "executed": true,
+    "runId": "kh02_run_1793327245885_raa19",
+    "renderedRunId": "kh02_run_1793327245885_raa19",
+    "releaseVersionBadge": "12.4.3.3.1",
+    "runtimeParityStatus": "MATCHED",
+    "browserEvidence": {
+      "runId": "kh02_run_1793327245885_raa19",
+      "displayedCandidateIds": [
+        "cand_1212440541",
+        "cand_1587534715",
+        "cand_592688578",
+        "cand_14769098",
+        "cand_1788406859",
+        "cand_1272640899",
+        "cand_1783682388",
+        "cand_1838011041"
+      ],
+      "displayedRankOrder": [],
+      "emptyStateRendered": true
+    },
+    "recommendedCards": [
+      {
+        "rank": 1,
+        "candidateId": "cand_1212440541",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "#1Research Shortlist · Live & Historical EvidenceUAHPET Fresh Food Automatic Pet Feederuahpet.com·Automatic Pet FeederMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%7 ads · 99 obs · 1 advWhy it fits your searchView Evidence DetailsUAHPET Fresh Food Automatic Pet Feeder for cat owners (Protect your pet’s health with the UAHPET Dual Temp Feeder), matching your \"Pet Gadgets\" search and verified on uahpet.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "familyLabel": "#1Research Shortlist · Live & Historical EvidenceUAHPET Fresh Food Automatic Pet Feederuahpet.com·Automatic Pet FeederMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%7 ads · 99 obs · 1 advWhy it fits your searchView Evidence DetailsUAHPET Fresh Food Automatic Pet Feeder for cat owners (Protect your pet’s health with the UAHPET Dual Temp Feeder), matching your \"Pet Gadgets\" search and verified on uahpet.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "identityBadge": "Merchant Page Verified",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#1Research Shortlist · Live & Historical EvidenceUAHPET Fresh Food Automatic Pet Feederuahpet.com·Automatic Pet FeederMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%7 ads · 99 obs · 1 advWhy it fits your searchView Evidence DetailsUAHPET Fresh Food Automatic Pet Feeder for cat owners (Protect your pet’s health with the UAHPET Dual Temp Feeder), matching your \"Pet Gadgets\" search and verified on uahpet.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "adCountsText": "7 ads · 99 obs · 1 adv"
+      },
+      {
+        "rank": 2,
+        "candidateId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "#2Research Shortlist · Live & Historical EvidenceThe KittySpout™ - Wireless Fountainkittyspout.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score55/ 100Provisional — Needs Demand HistoryEvidence Confidence55%1 ad · 33 obs · 1 advWhy it fits your searchView Evidence DetailsThe KittySpout™ - Wireless Fountain for cat owners (The #1 Vet-Recommended Cat Fountain Cat parents are going CRAZY over this), matching your \"Pet Gadgets\" search and verified on kittyspout.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (1 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "familyLabel": "#2Research Shortlist · Live & Historical EvidenceThe KittySpout™ - Wireless Fountainkittyspout.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score55/ 100Provisional — Needs Demand HistoryEvidence Confidence55%1 ad · 33 obs · 1 advWhy it fits your searchView Evidence DetailsThe KittySpout™ - Wireless Fountain for cat owners (The #1 Vet-Recommended Cat Fountain Cat parents are going CRAZY over this), matching your \"Pet Gadgets\" search and verified on kittyspout.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (1 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "identityBadge": "Merchant Page Verified",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#2Research Shortlist · Live & Historical EvidenceThe KittySpout™ - Wireless Fountainkittyspout.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score55/ 100Provisional — Needs Demand HistoryEvidence Confidence55%1 ad · 33 obs · 1 advWhy it fits your searchView Evidence DetailsThe KittySpout™ - Wireless Fountain for cat owners (The #1 Vet-Recommended Cat Fountain Cat parents are going CRAZY over this), matching your \"Pet Gadgets\" search and verified on kittyspout.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (1 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "adCountsText": "1 ad · 33 obs · 1 adv"
+      },
+      {
+        "rank": 3,
+        "candidateId": "cand_592688578",
+        "title": "Chew Resistant Squeaky Plush Pet Toy",
+        "storeDomain": "#3Research Shortlist · Live & Historical EvidenceChew Resistant Squeaky Plush Pet Toylivinginurban.com·Plush ToyMerchant Page VerifiedVerified Physical ProductPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 34 obs · 1 advWhy it fits your searchView Evidence DetailsChew Resistant Squeaky Plush Pet Toy for pet owners (Chew Resistant Squeaky Plush Pet Toy UrbanNest), matching your \"Pet Gadgets\" search and verified on livinginurban.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "familyLabel": "#3Research Shortlist · Live & Historical EvidenceChew Resistant Squeaky Plush Pet Toylivinginurban.com·Plush ToyMerchant Page VerifiedVerified Physical ProductPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 34 obs · 1 advWhy it fits your searchView Evidence DetailsChew Resistant Squeaky Plush Pet Toy for pet owners (Chew Resistant Squeaky Plush Pet Toy UrbanNest), matching your \"Pet Gadgets\" search and verified on livinginurban.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "identityBadge": "Merchant Page Verified",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#3Research Shortlist · Live & Historical EvidenceChew Resistant Squeaky Plush Pet Toylivinginurban.com·Plush ToyMerchant Page VerifiedVerified Physical ProductPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 34 obs · 1 advWhy it fits your searchView Evidence DetailsChew Resistant Squeaky Plush Pet Toy for pet owners (Chew Resistant Squeaky Plush Pet Toy UrbanNest), matching your \"Pet Gadgets\" search and verified on livinginurban.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (2 in current run)Needed for Evergreen WinnerInsufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.View ResearchCommercial Assessment",
+        "adCountsText": "2 ads · 34 obs · 1 adv"
+      },
+      {
+        "rank": 4,
+        "candidateId": "cand_14769098",
+        "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+        "storeDomain": "#4Provisional · Needs Demand HistoryFurFree - No more pet hair on furniture, clothes, and carpets.aureluxe.ch·Clothes CarpetsAd-Supported (Page Unverified)Physical Product ConfirmedDog & Cat HouseholdsResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%5 ads · 15 obs · 1 advWhy it fits your searchView Evidence DetailsFurFree - No more pet hair on furniture, clothes, and carpets. for dog & cat households (FurFree - No more pet hair on furniture, clothes, and carpets), matching your \"Pet Gadgets\" search and supported by 5 linked advertising creative(s) for aureluxe.ch.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 5 distinct ads · 15 total obs (Meta Ads)Needed for Evergreen WinnerMerchant product page returned HTTP error during live verificationView ResearchCommercial Assessment",
+        "familyLabel": "#4Provisional · Needs Demand HistoryFurFree - No more pet hair on furniture, clothes, and carpets.aureluxe.ch·Clothes CarpetsAd-Supported (Page Unverified)Physical Product ConfirmedDog & Cat HouseholdsResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%5 ads · 15 obs · 1 advWhy it fits your searchView Evidence DetailsFurFree - No more pet hair on furniture, clothes, and carpets. for dog & cat households (FurFree - No more pet hair on furniture, clothes, and carpets), matching your \"Pet Gadgets\" search and supported by 5 linked advertising creative(s) for aureluxe.ch.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 5 distinct ads · 15 total obs (Meta Ads)Needed for Evergreen WinnerMerchant product page returned HTTP error during live verificationView ResearchCommercial Assessment",
+        "identityBadge": "Ad-Supported (Page Unverified)",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#4Provisional · Needs Demand HistoryFurFree - No more pet hair on furniture, clothes, and carpets.aureluxe.ch·Clothes CarpetsAd-Supported (Page Unverified)Physical Product ConfirmedDog & Cat HouseholdsResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence55%5 ads · 15 obs · 1 advWhy it fits your searchView Evidence DetailsFurFree - No more pet hair on furniture, clothes, and carpets. for dog & cat households (FurFree - No more pet hair on furniture, clothes, and carpets), matching your \"Pet Gadgets\" search and supported by 5 linked advertising creative(s) for aureluxe.ch.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 5 distinct ads · 15 total obs (Meta Ads)Needed for Evergreen WinnerMerchant product page returned HTTP error during live verificationView ResearchCommercial Assessment",
+        "adCountsText": "5 ads · 15 obs · 1 adv"
+      },
+      {
+        "rank": 5,
+        "candidateId": "cand_1788406859",
+        "title": "Pawira Stainless Steel Water Fountain",
+        "storeDomain": "#5Provisional · Needs Demand HistoryPawira Stainless Steel Water Fountainpawira.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence50%4 ads · 126 obs · 2 advWhy it fits your searchView Evidence DetailsPawira Stainless Steel Water Fountain for cat owners (Amazon Sold Me A Fake Cat Fountain Under A Real Brand's Name👆 I ordered a cat water fountain on Amazon), matching your \"Pet Gadgets\" search and verified on pawira.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (4 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "familyLabel": "#5Provisional · Needs Demand HistoryPawira Stainless Steel Water Fountainpawira.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence50%4 ads · 126 obs · 2 advWhy it fits your searchView Evidence DetailsPawira Stainless Steel Water Fountain for cat owners (Amazon Sold Me A Fake Cat Fountain Under A Real Brand's Name👆 I ordered a cat water fountain on Amazon), matching your \"Pet Gadgets\" search and verified on pawira.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (4 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "identityBadge": "Merchant Page Verified",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#5Provisional · Needs Demand HistoryPawira Stainless Steel Water Fountainpawira.com·Automatic Pet Water FountainMerchant Page VerifiedVerified Physical ProductCat OwnersResearch Score60/ 100Provisional — Needs Demand HistoryEvidence Confidence50%4 ads · 126 obs · 2 advWhy it fits your searchView Evidence DetailsPawira Stainless Steel Water Fountain for cat owners (Amazon Sold Me A Fake Cat Fountain Under A Real Brand's Name👆 I ordered a cat water fountain on Amazon), matching your \"Pet Gadgets\" search and verified on pawira.com.Evidence ChecklistMerchant product page verifiedPhysical product supportedLive ads observed (4 in current run)Needed for Evergreen WinnerDemand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).View ResearchCommercial Assessment",
+        "adCountsText": "4 ads · 126 obs · 2 adv"
+      },
+      {
+        "rank": 6,
+        "candidateId": "cand_1272640899",
+        "title": "My Couch Finally Lost The Fur Coat 🐶✨",
+        "storeDomain": "#6Provisional · Needs Demand HistoryMy Couch Finally Lost The Fur Coat 🐶✨smartcarting.com·Fur CoatAd-Supported (Page Unverified)Physical Product ConfirmedPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 6 obs · 1 advWhy it fits your searchView Evidence DetailsMy Couch Finally Lost The Fur Coat 🐶✨ for pet owners (My Couch Finally Lost The Fur Coat 🐶✨ I love having my pet on the couch), matching your \"Pet Gadgets\" search and supported by 2 linked advertising creative(s) for smartcarting.com.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 2 distinct ads · 6 total obs (Meta Ads)Needed for Evergreen WinnerDirect merchant product page verification still neededView ResearchCommercial Assessment",
+        "familyLabel": "#6Provisional · Needs Demand HistoryMy Couch Finally Lost The Fur Coat 🐶✨smartcarting.com·Fur CoatAd-Supported (Page Unverified)Physical Product ConfirmedPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 6 obs · 1 advWhy it fits your searchView Evidence DetailsMy Couch Finally Lost The Fur Coat 🐶✨ for pet owners (My Couch Finally Lost The Fur Coat 🐶✨ I love having my pet on the couch), matching your \"Pet Gadgets\" search and supported by 2 linked advertising creative(s) for smartcarting.com.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 2 distinct ads · 6 total obs (Meta Ads)Needed for Evergreen WinnerDirect merchant product page verification still neededView ResearchCommercial Assessment",
+        "identityBadge": "Ad-Supported (Page Unverified)",
+        "merchantVerifiedAttr": null,
+        "scoreText": "#6Provisional · Needs Demand HistoryMy Couch Finally Lost The Fur Coat 🐶✨smartcarting.com·Fur CoatAd-Supported (Page Unverified)Physical Product ConfirmedPet OwnersResearch Score52/ 100Provisional — Needs Demand HistoryEvidence Confidence45%2 ads · 6 obs · 1 advWhy it fits your searchView Evidence DetailsMy Couch Finally Lost The Fur Coat 🐶✨ for pet owners (My Couch Finally Lost The Fur Coat 🐶✨ I love having my pet on the couch), matching your \"Pet Gadgets\" search and supported by 2 linked advertising creative(s) for smartcarting.com.Evidence ChecklistAd-supported product (merchant page unverified)Physical product supportedHistorical advertising observations: 2 distinct ads · 6 total obs (Meta Ads)Needed for Evergreen WinnerDirect merchant product page verification still neededView ResearchCommercial Assessment",
+        "adCountsText": "2 ads · 6 obs · 1 adv"
+      }
+    ],
+    "drawerOpened": true,
+    "drawerMediaPreviewPresent": true,
+    "productIntelligenceGalleryRendered": true,
+    "consoleErrors": [],
+    "pageErrors": [],
+    "api500Errors": [],
+    "screenshots": [
+      "acceptance/kh02-v12.4.3.3.1/screenshots/01_pf_recommended_live_with_cache_fallback.png",
+      "acceptance/kh02-v12.4.3.3.1/screenshots/02_pf_all_candidates_live_with_cache_fallback.png",
+      "acceptance/kh02-v12.4.3.3.1/screenshots/03_product_intelligence_gallery.png"
+    ]
+  },
+  "getOverviewReadOnlyDynamicPass": true
+}

@@ -1,0 +1,14 @@
+{
+  "gateId": "P0-11",
+  "requirement": "Google SUCCEEDED_EMPTY satisfies query execution but NOT product enrichment",
+  "verdict": "PASS",
+  "observedValues": {
+    "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+    "enrichmentVerdict": "INSUFFICIENT_EVIDENCE"
+  },
+  "expectedValues": {
+    "enrichmentVerdict": "INSUFFICIENT_EVIDENCE"
+  },
+  "reason": "QUERY_SUCCEEDED_EMPTY correctly produces INSUFFICIENT_EVIDENCE for enrichment",
+  "timestamp": "2026-10-28T01:42:25.828Z"
+}

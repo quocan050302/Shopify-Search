@@ -1,0 +1,783 @@
+{
+  "version": "12.4.3.2.1",
+  "databasePath": "prisma/dev.db",
+  "demandValueFieldFixVerified": true,
+  "totalObservations": 96,
+  "authoritativeCount": 0,
+  "cachedUnverifiedCount": 60,
+  "fixtureCount": 36,
+  "syntheticMerchantSeedCount": 60,
+  "templatedValueSeriesCount": 60,
+  "promotionalKeywordCount": 6,
+  "productBreakdown": [
+    {
+      "productId": "cmvsy7zeg0001p0orsexc5psw",
+      "canonicalProductName": "Reusable Pet Hair Remover Roller",
+      "observationIds": [
+        "cmvsy7znm0003p0or42qkebmn",
+        "cmvsy7znu0004p0oraa6lift3",
+        "cmvsy7zo10005p0or3kn60dae",
+        "cmvsy7zo60006p0ordbxjay4n",
+        "cmvsy7zoa0007p0or46h397m6",
+        "cmvsy7zof0008p0orleiz2r5t"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:livlandco.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Reusable Pet Hair Remover Roller"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy7zoq000ap0or4ly9ciih",
+      "canonicalProductName": "Pawira Stainless Steel Water Fountain",
+      "observationIds": [
+        "cmvsy7zp6000cp0or152bdoqj",
+        "cmvsy7zpc000dp0orbx694akm",
+        "cmvsy7zph000ep0orzu1au04r",
+        "cmvsy7zpp000fp0orb7jmcogp",
+        "cmvsy7zpu000gp0oryg05yxy6",
+        "cmvsy7zq3000hp0ory58q7t5b"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:pawira.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Pawira Stainless Steel Water Fountain"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy7zqh000jp0orhypwohho",
+      "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "observationIds": [
+        "cmvsy7zsf000rp0orbgbi6tiu",
+        "cmvsy7zsl000sp0orl8wkum7g",
+        "cmvsy7zsr000tp0or4w85v2ug",
+        "cmvsy7zsy000up0oriz6hihpd",
+        "cmvsy7zt3000vp0orzpca0gas",
+        "cmvsy7ztc000wp0orr1ypsqg4"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:uahpet.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Automatic Wet Food Cat Feeder with Cooling & Warming"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy85zn000yp0ore89xpw92",
+      "canonicalProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+      "observationIds": [
+        "cmvsy86010010p0or2bz21l17",
+        "cmvsy86050011p0orsjdtoig7",
+        "cmvsy86090012p0orkrkrcm9o",
+        "cmvsy860d0013p0or5gyesvqo",
+        "cmvsy860m0014p0ordbo8fmu6",
+        "cmvsy860u0015p0oreqn8xdwr"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:vipbugo.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy86180017p0orn9ajx8g7",
+      "canonicalProductName": "Hot Melt Glue Gun",
+      "observationIds": [
+        "cmvsy861n0019p0or4onimfz4",
+        "cmvsy861t001ap0orc2d9yxvc",
+        "cmvsy861y001bp0or1kuky3qz",
+        "cmvsy8626001cp0or14eackme",
+        "cmvsy862b001dp0ordnrgntbr",
+        "cmvsy862i001ep0ori4nctfbg"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:snappory.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Hot Melt Glue Gun"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy862v001gp0orczh9wm7e",
+      "canonicalProductName": "Two Blue Cats",
+      "observationIds": [
+        "cmvsy863b001ip0orrgcnorhv",
+        "cmvsy863f001jp0or10b5tw26",
+        "cmvsy863k001kp0or6fa0mrxi",
+        "cmvsy863r001lp0orqmdr3eae",
+        "cmvsy863w001mp0or9w2epes1",
+        "cmvsy8644001np0or40p8kjus"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:diy-artclub.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Two Blue Cats"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy864i001pp0or0a8ff2vx",
+      "canonicalProductName": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+      "observationIds": [
+        "cmvsy864y001rp0or94dwo073",
+        "cmvsy8652001sp0orfb0xfu3t",
+        "cmvsy8659001tp0orhc1f88dg",
+        "cmvsy865e001up0orcxurlln0",
+        "cmvsy865i001vp0orug34v3a2",
+        "cmvsy865p001wp0orh0l7rvy0"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:acompactly.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": true,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observation keyword is a long promotional ad headline rather than a genuine Google Trends search term."
+      ]
+    },
+    {
+      "productId": "cmvsy867l0027p0ort3vvnxxg",
+      "canonicalProductName": "Burnett Wallpaper",
+      "observationIds": [
+        "cmvsy867z0029p0orauyn512q",
+        "cmvsy8687002ap0orsxa9s4ys",
+        "cmvsy868f002bp0orom5jqm0i",
+        "cmvsy868k002cp0ory0qym961",
+        "cmvsy868o002dp0orofit3u9l",
+        "cmvsy868v002ep0oroaflgbj4"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:wallblush.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Burnett Wallpaper"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy8699002gp0orwl4eryuh",
+      "canonicalProductName": "Brooke Wallpaper",
+      "observationIds": [
+        "cmvsy869u002jp0or7mzpwg8n",
+        "cmvsy86a0002kp0orlmyz42rz",
+        "cmvsy86a7002lp0or7dwnivpr",
+        "cmvsy86ab002mp0orrl7q3zb0",
+        "cmvsy86af002np0orxvczjr8r",
+        "cmvsy86am002op0orvamtgpmv"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:lemonpark.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "Brooke Wallpaper"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "cmvsy8663001yp0orm0u01s7m",
+      "canonicalProductName": "THE ULTIMATE White Drywall Repair Paint Kit",
+      "observationIds": [
+        "cmvsy86bd002rp0orcj69iaxq",
+        "cmvsy86bi002sp0oroelz7x3p",
+        "cmvsy86bo002tp0orwhbtlzrg",
+        "cmvsy86bu002up0orn6exzyyh",
+        "cmvsy86c1002vp0orgurxu1vv",
+        "cmvsy86ca002wp0orn52xkuwx"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [
+        "verified-merchant-demand:proemptli.com"
+      ],
+      "methodologyVersions": [
+        "12.4.3"
+      ],
+      "keywords": [
+        "THE ULTIMATE White Drywall Repair Paint Kit"
+      ],
+      "values": [
+        76,
+        79,
+        77,
+        81,
+        78,
+        82
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": true,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "CACHED_UNVERIFIED",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": true,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+      ]
+    },
+    {
+      "productId": "prod_fixture_1793008628398",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvp31k230005lcor7upbcbvz",
+        "cmvp31k230006lcor90zokfak",
+        "cmvp31k230007lcorzt9xsev7",
+        "cmvp31k230008lcoru3xafssg"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        72,
+        80
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_1793009100689",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvp3bogx0005mwori98sq2tk",
+        "cmvp3bogx0006mworg6hqmw7p",
+        "cmvp3bogx0007mwora34bl966",
+        "cmvp3bogx0008mwormioh89mg"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        72,
+        80
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_1793009363724",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvp3hbfe0005ngorudgl975j",
+        "cmvp3hbff0006ngorkqu7ek8a",
+        "cmvp3hbff0007ngoryr2pm1te",
+        "cmvp3hbff0008ngor2g72deds"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        72,
+        80
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_1793066120523",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvq19t96001tskor1jcilyy3",
+        "cmvq19t96001uskorxgv357qt",
+        "cmvq19t96001vskorm8w842sq",
+        "cmvq19t96001wskor0848qu1h"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_1793066371899",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvq1f77u001tloorbwj68xm3",
+        "cmvq1f77u001uloorkqjawmd3",
+        "cmvq1f77u001vloorw6jozlzs",
+        "cmvq1f77u001wloorovf9hbem"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_v1224_1793087349829",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvqdwtw9002dhoorf51m1azl",
+        "cmvqdwtw9002ehoorxske7pq6",
+        "cmvqdwtw9002fhoorh5bxhva2",
+        "cmvqdwtw9002ghoor2yc9m1nq"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_v1224_1793090023971",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvqfi59t0005fworr7rd7vqj",
+        "cmvqfi59t0006fworfsoke34c",
+        "cmvqfi59t0007fworwrqsjkn3",
+        "cmvqfi59t0008fworutuh24la"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_v1224_1793090458435",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvqfrgib0005hkort6r88zfr",
+        "cmvqfrgib0006hkorgdqip9aj",
+        "cmvqfrgib0007hkorrz2u2x0u",
+        "cmvqfrgib0008hkor5hd37j2l"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    },
+    {
+      "productId": "prod_fixture_v1224_1793090598910",
+      "canonicalProductName": "Smart Posture Corrector",
+      "observationIds": [
+        "cmvqfugwl00059gorxsru624n",
+        "cmvqfugwl00069goryp5b29w7",
+        "cmvqfugwl00079gorjfx6o6gk",
+        "cmvqfugwl00089gory62ch0lz"
+      ],
+      "source": "GOOGLE_TRENDS_CSV",
+      "evidenceReferences": [],
+      "methodologyVersions": [
+        "1.0"
+      ],
+      "keywords": [
+        "Smart Posture Corrector"
+      ],
+      "values": [
+        75,
+        78,
+        76,
+        77
+      ],
+      "rawCsvFileExists": false,
+      "hasValidFileChecksum": false,
+      "hasProviderRequestLineage": false,
+      "isTemplated76To82Series": false,
+      "isPromotionalCopyKeyword": false,
+      "resolvedAuthority": "FIXTURE_ONLY",
+      "eligibleForEvergreen": false,
+      "demotedFromEvergreen": false,
+      "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+      "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+      "auditReasons": [
+        "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+      ]
+    }
+  ],
+  "historicalRequalification": {
+    "totalRunsInspected": 112,
+    "runsModifiedCount": 0,
+    "totalDemotedWinnersCount": 0,
+    "requalifiedRuns": []
+  }
+}

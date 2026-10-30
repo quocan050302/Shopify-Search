@@ -1,0 +1,7 @@
+{
+  "validWorkspaceAllowed": true,
+  "missingWorkspaceReturns404": true,
+  "emptyWorkspaceReturns400": true,
+  "silentAutoCreationPrevented": true,
+  "allAuthorizationTestsPassed": true
+}

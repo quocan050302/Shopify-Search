@@ -1,0 +1,5 @@
+{
+  "verdict": "PASS",
+  "modelUsed": "gemini-3.7-flash",
+  "reason": "Live Gemini analysis completed with model: gemini-3.7-flash, entity: PHYSICAL_PRODUCT"
+}

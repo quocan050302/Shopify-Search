@@ -223,8 +223,17 @@ CREATE TABLE IF NOT EXISTS "sync_jobs" (
     "startedAt" DATETIME,
     "completedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "workerId" TEXT,
+    "claimToken" TEXT,
+    "fencingToken" TEXT,
+    "fencingGeneration" INTEGER NOT NULL DEFAULT 0,
+    "recordVersion" INTEGER NOT NULL DEFAULT 0,
+    "leaseExpiresAt" DATETIME,
+    "attemptNumber" INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT "sync_jobs_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
+CREATE INDEX IF NOT EXISTS "sync_jobs_jobType_status_idx" ON "sync_jobs"("jobType", "status");
+CREATE INDEX IF NOT EXISTS "sync_jobs_workerId_status_idx" ON "sync_jobs"("workerId", "status");
 CREATE TABLE IF NOT EXISTS "audit_logs" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT,

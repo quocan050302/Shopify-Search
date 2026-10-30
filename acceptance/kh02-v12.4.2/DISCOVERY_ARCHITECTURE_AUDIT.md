@@ -1,0 +1,7 @@
+# SWAI KH-02 V12.4.2 — Discovery Architecture Audit
+
+## Two-Stage Hybrid AI Architecture
+- **Stage 0 (Before Source Acquisition):** `geminiDiscoveryPlanner.ts` + `discoveryQueryPlanner.ts` analyze niche intent (`BROAD_CATEGORY`, `SPECIFIC_PRODUCT`, `FUNCTIONAL_NEED`, `AMBIGUOUS`), expand broad/unfamiliar niches into 4–6 physical ecommerce product archetypes, validate concrete 2–5 word search queries, and allocate queries across distinct archetypes within the shared 3-request Meta budget.
+- **Stage 1 & 2b (Bounded Adaptive Source Search):** `metaResearchAdapter.ts` + `evergreenResearchOrchestrator.ts` execute Round 1 queries and, if fewer than 3 identifiable physical products are found and budget remains, execute Round 2 adaptive recovery queries from uncovered archetypes without resetting the shared `MetaQueryBudgetTracker`.
+- **Stage 3 (Recall-Preserving Pre-Filter):** `productRelevanceEvaluator.ts` classifies candidates into `HIGH_RELEVANCE`, `POTENTIAL_RELEVANCE`, `AMBIGUOUS`, or `CLEARLY_UNRELATED`, rescuing plausible physical products that omit the literal parent niche keyword while immediately rejecting B2B/app/service/insurance/casino noise.
+- **Stage 4 & 5 (Gemini Classification + Mandatory Product Reality Gate):** `geminiProductIntelligenceService.ts`, `aiEvidenceVerifier.ts`, and `productCandidateDiscovery.ts` verify source evidence quotes and enforce strict physical-product shortlist eligibility.

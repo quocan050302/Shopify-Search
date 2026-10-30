@@ -1,0 +1,246 @@
+{
+  "runTimestamp": "2026-10-26T13:52:29.095Z",
+  "gitHeadSha": "dfb9f67a9c3d82b71623fdb94d9f385d6f0a64c9",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "baseQaSha": "ea2a236401eaa9e5fe48cd1a2d4724b7c8426a76",
+  "overallVerdict": "GO",
+  "passedCount": 26,
+  "failedCount": 0,
+  "blockedCount": 0,
+  "gates": {
+    "A": {
+      "gateId": "GATE_A_BRANCH_CHECKOUT",
+      "name": "Checkout correctly from latest origin/QA",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Branch: feature/kh02-v12.1.3-runtime-truth-closure, HEAD: dfb9f67a9c3d82b71623fdb94d9f385d6f0a64c9, Clean: false, QA Ancestor: true.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "B": {
+      "gateId": "GATE_B_KH01_REGRESSION",
+      "name": "KH-01 regression verified",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "69 tests passed across 5 test files with 0 failures.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "C": {
+      "gateId": "GATE_C_ORCHESTRATOR_PURITY",
+      "name": "Orchestrator has no unowned lifecycle writes",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Verified runEvergreenProductResearch executes without mutating DB status or snapshots when unowned.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "D": {
+      "gateId": "GATE_D_UI_ASYNC_REQUEST",
+      "name": "UI requests async research",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "UI / HTTP POST sends mode: 'async', server responds with HTTP 202 and runId.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "E": {
+      "gateId": "GATE_E_EXCLUSIVE_WORKER_CLAIM",
+      "name": "Exclusive worker claim",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "claimNextResearchJob atomically transitions PENDING to RUNNING with dedicated columns and fencing token.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "F": {
+      "gateId": "GATE_F_EXACT_OWNERSHIP_FENCING",
+      "name": "Exact ownership fencing",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Dedicated fencingGeneration, recordVersion, workerId, claimToken columns tested under real SQLite concurrency.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "G": {
+      "gateId": "GATE_G_VALID_LEASE_RENEWAL",
+      "name": "Valid lease renewal & fresh metadata retry",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "renewResearchJobLease builds fresh retry payload preserving concurrent progress writes and validates exact ownership.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "H": {
+      "gateId": "GATE_H_STALE_WORKER_WRITE_REJECTED",
+      "name": "Stale worker write rejected",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Stale worker writes after recovery, transfer, or lease expiry rejected across progress, completion, and heartbeat.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "I": {
+      "gateId": "GATE_I_OWNED_TERMINAL_COMPLETION",
+      "name": "Owned terminal completion",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "completeResearchJob commits final leaderboard snapshot exclusively under active ownership.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "J": {
+      "gateId": "GATE_J_OWNED_FAILURE_TRANSITION",
+      "name": "Owned failure transition",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "failResearchJob guards failure state transition with active ownership CAS and sanitizes credentials.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "K": {
+      "gateId": "GATE_K_SAFE_CRASH_RECOVERY",
+      "name": "Safe crash recovery",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Controlled expired lease recovered safely to PENDING (fencingGeneration: 2, recordVersion: 0).",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "L": {
+      "gateId": "GATE_L_INDEPENDENT_WORKER_RUNTIME",
+      "name": "Independent worker process executes job",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Worker process PID 60345 claimed job from queue, monitored heartbeats, and completed snapshot.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "M": {
+      "gateId": "GATE_M_SQLITE_PERSISTENCE",
+      "name": "Genuine SQLite legacy migration & schema verification",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Pre-V12.1.3 SQLite DB lacking all 7 columns upgraded safely with PRAGMA table_info and index_list verification.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "N": {
+      "gateId": "GATE_N_SAFE_FIXTURE_CLEANUP",
+      "name": "No unsafe test cleanup",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "cleanupKH02TestFixtures strictly scoped to registered fixture IDs; sentinel row 'job_sentinel_1793022793363' preserved intact.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "O": {
+      "gateId": "GATE_O_ACTUAL_HTTP_E2E",
+      "name": "Actual HTTP E2E",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "All 5 HTTP endpoints returned valid status codes and response schemas.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "P": {
+      "gateId": "GATE_P_ACTUAL_CHROMIUM_E2E",
+      "name": "Actual Chromium E2E",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Track 1 (Nonzero): 1 cards, IDs: [cand_282145610_1]; Track 2 (Empty): accurate empty state.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "Q": {
+      "gateId": "GATE_Q_NO_UNEXPECTED_HTTP_500",
+      "name": "Unexpected HTTP 500 rejected",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Chromium sessions intercepted 0 unexpected HTTP 500 status codes across both tracks.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "R": {
+      "gateId": "GATE_R_HYDRATION_INTEGRITY",
+      "name": "Unexpected hydration errors investigated and resolved",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Chromium console caught 0 React hydration mismatches across both tracks.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "S": {
+      "gateId": "GATE_S_CROSS_LAYER_RECONCILIATION",
+      "name": "Exact Cross-layer identity, ranking and score reconciled",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Reconciled: Candidate IDs [cand_282145610_1] match across DB, HTTP, and Browser.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "T": {
+      "gateId": "GATE_T_CANDIDATE_FIXTURE_E2E",
+      "name": "Real candidate fixture E2E",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Track 1 deterministic candidate discovery rendered 1 product card(s) with stable candidate IDs.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "U": {
+      "gateId": "GATE_U_ZERO_RESULT_SEMANTICS",
+      "name": "Zero-result semantics correct",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Track 2 empty-state research completed with status COMPLETED and distinct from software failure.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "V": {
+      "gateId": "GATE_V_SOURCE_READINESS_TRUTHFUL",
+      "name": "Source readiness truthful",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Meta: SOURCE_ACCESS_VERIFIED, TikTok Ads: NOT_VERIFIED, TikTok Org: NOT_CONFIGURED, Google: NOT_CONFIGURED. No false live verification claimed.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "W": {
+      "gateId": "GATE_W_DEMAND_HISTORY_HONESTY",
+      "name": "Demand History not automatically VERIFIED",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Initial Demand History reported as 'CONFIGURED' (not falsely initialized as SOURCE_DATA_VERIFIED).",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "X": {
+      "gateId": "GATE_X_EVIDENCE_DERIVED_VERDICT",
+      "name": "Evidence-derived acceptance verdict & harness mutation tests",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Reconciliation mutation tests verified: runId, missing candidate, extra candidate, duplicate candidate, rank order, and score mutations all detected as MISMATCH.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "Y": {
+      "gateId": "GATE_Y_BUILD_LINT_CI_RECORDED",
+      "name": "Build, lint and test execution recorded",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Build: OK, Lint: OK, KH-01: 69 passed, KH-02 Unit: 89 passed, Heartbeat: 7 passed, Reconcile: 16 passed, Migration: 2 passed.",
+      "failureReason": null,
+      "blockerReason": null
+    },
+    "Z": {
+      "gateId": "GATE_Z_SECURITY_AND_SECRETS",
+      "name": "Security, tenant isolation and secrets protection",
+      "verdict": "PASS",
+      "executed": true,
+      "evidence": "Tenant isolation verified: true; Credentials redacted from error logs: true.",
+      "failureReason": null,
+      "blockerReason": null
+    }
+  }
+}

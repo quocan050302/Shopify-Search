@@ -1,0 +1,30 @@
+{
+  "kh01Verify": {
+    "testFilesPassed": 5,
+    "testsPassed": 69,
+    "testsFailed": 0,
+    "exitCode": 0
+  },
+  "kh02Unit": {
+    "testFilesPassed": 9,
+    "testsPassed": 66,
+    "testsFailed": 0,
+    "exitCode": 0
+  },
+  "kh02Integration": {
+    "testFilesPassed": 5,
+    "testsPassed": 20,
+    "testsFailed": 0,
+    "exitCode": 0
+  },
+  "kh02Cas": {
+    "testsPassed": 7,
+    "testsFailed": 0,
+    "exitCode": 0
+  },
+  "kh02Ownership": {
+    "testsPassed": 5,
+    "testsFailed": 0,
+    "exitCode": 0
+  }
+}

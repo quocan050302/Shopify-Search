@@ -1,0 +1,10 @@
+{
+  "layer": "Source to Database",
+  "runId": "kh02_run_1793090618422_mb5oc",
+  "runSourceRecordsCount": 10,
+  "persistedRecordsCount": 10,
+  "exactMatch": true,
+  "missingInDb": [],
+  "extraInDb": [],
+  "verifiedAt": "2026-10-27T08:43:46.278Z"
+}

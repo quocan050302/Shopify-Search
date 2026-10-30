@@ -1,0 +1,5 @@
+{
+  "ssrfProtection": "VERIFIED",
+  "credentialsExposure": "ZERO_SECRETS_STORED",
+  "tenantIsolation": "ENFORCED"
+}

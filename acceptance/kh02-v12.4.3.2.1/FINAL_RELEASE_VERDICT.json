@@ -1,0 +1,140 @@
+{
+  "version": "12.4.3.2.1",
+  "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "headSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+  "databaseFingerprint": "6530562482a2",
+  "startedAt": "2026-10-29T11:23:12.997Z",
+  "completedAt": "2026-10-29T11:25:54.995Z",
+  "totalWallDurationMs": 161998,
+  "overallReleaseVerdict": "PASS",
+  "gateCounts": {
+    "total": 34,
+    "PASS": 34,
+    "INSUFFICIENT_EVIDENCE": 0,
+    "FAIL": 0,
+    "BLOCKED": 0
+  },
+  "all16ScreenshotsVerified": true,
+  "artifacts": {
+    "BASELINE_REPRODUCTION_REPORT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/BASELINE_REPRODUCTION_REPORT.json",
+      "sha256": "8e4b3e0089d50d8adf92fd9a3599c8cfce32824cba58a10835a9f0f99a39838b",
+      "sizeBytes": 3760
+    },
+    "PRODUCT_MEDIA_GALLERY_SPEC_AND_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/PRODUCT_MEDIA_GALLERY_SPEC_AND_AUDIT.json",
+      "sha256": "6318e51fd40dbdbceba8b143a0ce1503a2493e7abdc087e650012a017b697f00",
+      "sizeBytes": 1555
+    },
+    "PRODUCT_MEDIA_PROVENANCE_REPORT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/PRODUCT_MEDIA_PROVENANCE_REPORT.json",
+      "sha256": "50a2ddc2ea6f6da155fd65404fe21a4010b6acd90f6a1e8b35dc5699a89414fb",
+      "sizeBytes": 56334
+    },
+    "PRODUCT_MEDIA_SCENARIO_MATRIX.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/PRODUCT_MEDIA_SCENARIO_MATRIX.json",
+      "sha256": "e02cbad24a58036e71cbca0a9d63121f1b911e5e931878e98e76a684392eca5f",
+      "sizeBytes": 3132
+    },
+    "VIDEO_PLAYBACK_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/VIDEO_PLAYBACK_AUDIT.json",
+      "sha256": "9d4a2821ff71fbdfb141a17722ce104c554ba8b9b5548dc6803b98dd76cfceb1",
+      "sizeBytes": 1549
+    },
+    "LIGHTBOX_INTERACTION_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/LIGHTBOX_INTERACTION_AUDIT.json",
+      "sha256": "3458e340cc06eb7ca7587c54988ca297ed8eb250726e474d2a5bef8836613912",
+      "sizeBytes": 365
+    },
+    "END_TO_END_PRODUCT_FLOW_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/END_TO_END_PRODUCT_FLOW_AUDIT.json",
+      "sha256": "194ce304e7bd402c28c164aa80a8dadffd9fda01f42ab16070a749f6b29ccfc6",
+      "sizeBytes": 2023
+    },
+    "RUN_CANDIDATE_PRODUCT_ID_CONSISTENCY.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/RUN_CANDIDATE_PRODUCT_ID_CONSISTENCY.json",
+      "sha256": "67105353a727c2857e39e30a4138ae0d6de76fffb939e13b184fc2421f286e98",
+      "sizeBytes": 1324
+    },
+    "EVIDENCE_AND_SCORE_CONSISTENCY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/EVIDENCE_AND_SCORE_CONSISTENCY_AUDIT.json",
+      "sha256": "cb13d37b91e7f23c2b54fc60ad316d1f76d9cd490c1999ce4d17288f84e209ea",
+      "sizeBytes": 6029
+    },
+    "SOURCE_COVERAGE_VS_PRODUCT_ADS_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/SOURCE_COVERAGE_VS_PRODUCT_ADS_RECONCILIATION.json",
+      "sha256": "e307bfb567adf54cd1c54aec6958d095ddef7a337212df6ddedd8a9b5dce4190",
+      "sizeBytes": 960
+    },
+    "DEMAND_SOURCE_FORENSIC_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/DEMAND_SOURCE_FORENSIC_AUDIT.json",
+      "sha256": "70402a9669d0cd05152738ee287f6a1e68c071aee456f4c146aa29b958590509",
+      "sizeBytes": 26054
+    },
+    "PRODUCT_FINDER_CARD_COPY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/PRODUCT_FINDER_CARD_COPY_AUDIT.json",
+      "sha256": "e5b2d712cd4d93d9db72d255a515c2326187bdf8681d6b77627bcdb52bf36f22",
+      "sizeBytes": 1791
+    },
+    "UI_LAYOUT_AND_OVERFLOW_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/UI_LAYOUT_AND_OVERFLOW_AUDIT.json",
+      "sha256": "05d254d7ee7a104caca854105516eab4fe1f78dfefc6d4219bc3ebb823fa4dcc",
+      "sizeBytes": 856
+    },
+    "ACCESSIBILITY_GALLERY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/ACCESSIBILITY_GALLERY_AUDIT.json",
+      "sha256": "3a908177050034d0aeac131447c76d5b13c5d2c8eacfa5a7077a2639165d99fd",
+      "sizeBytes": 299
+    },
+    "SECURITY_MEDIA_URL_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/SECURITY_MEDIA_URL_AUDIT.json",
+      "sha256": "3540cc584073c7c7ed9e4f509661094f03af7a8f643652a0dfd8f6b9aa8763d5",
+      "sizeBytes": 700
+    },
+    "BACKTEST_DEV_VS_HOLDOUT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/BACKTEST_DEV_VS_HOLDOUT.json",
+      "sha256": "86c405223e9df58a20c7b0ffdea5d379a8fed63bc960a053d2979893bde84deb",
+      "sizeBytes": 47199
+    },
+    "ADVERSARIAL_FALSE_PASS_TESTS.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "sha256": "0ebd8587d401702b04ef37d9c3c1a23fcd0b3f6732398d306f6a3efdcf38bc33",
+      "sizeBytes": 5642
+    },
+    "ASYNC_EXECUTION_TELEMETRY.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/ASYNC_EXECUTION_TELEMETRY.json",
+      "sha256": "7f03b29c4c889b1006ffe8267e1dc3459f74eca6ab2def757cbe336f6a282217",
+      "sizeBytes": 482
+    },
+    "DISK_AND_PROCESS_HEALTH_REPORT.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/DISK_AND_PROCESS_HEALTH_REPORT.json",
+      "sha256": "b1e71fbee8494a52af04ca9d661f05411e1c53b36b7db53007d109db45f0093c",
+      "sizeBytes": 516
+    },
+    "TEST_EXECUTION_PROVENANCE.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/TEST_EXECUTION_PROVENANCE.json",
+      "sha256": "506c2f1aacaa36584bec95246c78838fd711ba96de93b303f20825157db0cbe5",
+      "sizeBytes": 6716
+    },
+    "RUNTIME_IDENTITY_VERIFICATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/RUNTIME_IDENTITY_VERIFICATION.json",
+      "sha256": "aa015df6c85408f09b3002cc657ad4c209c41518e30926acd7a3b17a7c134723",
+      "sizeBytes": 1439
+    },
+    "CHROMIUM_ACCEPTANCE_SUMMARY.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/CHROMIUM_ACCEPTANCE_SUMMARY.json",
+      "sha256": "830a089c050a147dec28ce119241f5c2350eddc40b6271fc364389c017a807c8",
+      "sizeBytes": 12296
+    },
+    "GATE_SCORECARD_M01_M34.json": {
+      "path": "acceptance/kh02-v12.4.3.2.1/GATE_SCORECARD_M01_M34.json",
+      "sha256": "7c3ba37e64396ebdd89cb4c86636fa7f20b55e60aa39b12c6b8a5711428fc5f2",
+      "sizeBytes": 54405
+    },
+    "EXECUTIVE_SUMMARY.md": {
+      "path": "acceptance/kh02-v12.4.3.2.1/EXECUTIVE_SUMMARY.md",
+      "sha256": "5ef299e3810fa3679d23de87e26707d0d878fca93da349c75a7f72addf6c5484",
+      "sizeBytes": 2471
+    }
+  }
+}

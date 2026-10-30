@@ -1,0 +1,250 @@
+{
+  "datasetVersion": "kh02-v12.4.2-discovery-recall-gold-v1",
+  "datasetHash": "cbfec856ee6bf5d4ae63b247ef649446fd6c7d9421efb5553f18d59a9a1605cb",
+  "evaluationCutoff": "2026-10-28T00:00:00.000Z",
+  "totalCases": 24,
+  "devCases": 14,
+  "holdoutCases": 10,
+  "cases": [
+    {
+      "caseId": "pos_diy_01_switch_cover",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Decorative Switch Plate & Outlet Covers",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Observed user screenshot failure case (kh02_run_1793178825461_s4pfb) + human audit"
+    },
+    {
+      "caseId": "pos_diy_02_cordless_glue_gun",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Cordless Hot Glue Gun & Crafting Tools",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Controlled positive recall benchmark (Section 15 K4)"
+    },
+    {
+      "caseId": "pos_gardening_03_plant_spikes",
+      "split": "DEV",
+      "topic": "gardening",
+      "archetypeLabel": "Self-Watering Planters & Drip Spikes",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Controlled positive recall benchmark (Section 15 K4)"
+    },
+    {
+      "caseId": "pos_pet_04_water_fountain",
+      "split": "DEV",
+      "topic": "pet",
+      "archetypeLabel": "Automatic Pet Feeders & Water Fountains",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Controlled positive recall benchmark (Section 15 K4)"
+    },
+    {
+      "caseId": "pos_kitchen_05_magnetic_spice_rack",
+      "split": "DEV",
+      "topic": "kitchen",
+      "archetypeLabel": "Under-Sink & Pantry Storage Organizers",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Controlled positive recall benchmark"
+    },
+    {
+      "caseId": "pos_cleaning_06_spin_mop",
+      "split": "DEV",
+      "topic": "cleaning",
+      "archetypeLabel": "Spray Mops & Floor Squeegee Systems",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Controlled positive recall benchmark"
+    },
+    {
+      "caseId": "pos_homedecor_07_wall_panels",
+      "split": "HOLDOUT",
+      "topic": "home decor",
+      "archetypeLabel": "3D Peel and Stick Wall Tiles & Panels",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "pos_diy_08_laser_level",
+      "split": "HOLDOUT",
+      "topic": "diy",
+      "archetypeLabel": "Multi-Angle Measuring & Laser Level Tools",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "pos_pet_09_hair_remover",
+      "split": "HOLDOUT",
+      "topic": "pet",
+      "archetypeLabel": "Pet Hair & Fur Removal Tools",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "pos_gardening_10_drip_kit",
+      "split": "HOLDOUT",
+      "topic": "gardening",
+      "archetypeLabel": "Expandable Garden Hoses & Brass Nozzles",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "pos_homedecor_11_motion_cabinet_light",
+      "split": "HOLDOUT",
+      "topic": "home decor",
+      "archetypeLabel": "Cordless LED Wall Sconces & Accent Lighting",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "pos_kitchen_12_vegetable_chopper",
+      "split": "HOLDOUT",
+      "topic": "kitchen",
+      "archetypeLabel": "Mandoline Slicers & Vegetable Choppers",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": true,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout positive recall benchmark"
+    },
+    {
+      "caseId": "neg_pet_13_vet_insurance",
+      "split": "DEV",
+      "topic": "pet",
+      "archetypeLabel": "Veterinary Insurance",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "SERVICE",
+      "labelProvenance": "Negative benchmark: Veterinary Insurance (Section 15 K5)"
+    },
+    {
+      "caseId": "neg_pet_14_er_vet_bill_article",
+      "split": "DEV",
+      "topic": "pet",
+      "archetypeLabel": "Emergency Veterinary Bill Article",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "CONTENT_ARTICLE",
+      "labelProvenance": "Observed user screenshot failure case (Section 15 K5)"
+    },
+    {
+      "caseId": "neg_diy_15_casino_ad",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Casino Advertisement",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "PROMOTIONAL_CAMPAIGN",
+      "labelProvenance": "Negative benchmark: Casino Advertisement (Section 15 K5)"
+    },
+    {
+      "caseId": "neg_diy_16_pos_thermal_printer",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "POS Receipt Printer",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "LEAD_GENERATION",
+      "labelProvenance": "Observed user screenshot failure case (kh02_run_1793178825461_s4pfb, Section 1 & K5)"
+    },
+    {
+      "caseId": "neg_diy_17_digital_widgets",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Digital Phone Widgets",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "DIGITAL_PRODUCT",
+      "labelProvenance": "Observed user screenshot failure case (kh02_run_1793178825461_s4pfb, Section 1 & K5)"
+    },
+    {
+      "caseId": "neg_diy_18_holiday_slogan",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Generic Holiday Advertising",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "PROMOTIONAL_CAMPAIGN",
+      "labelProvenance": "Observed user screenshot failure case (kh02_run_1793178825461_s4pfb, Section 1 & K5)"
+    },
+    {
+      "caseId": "neg_diy_19_lead_form",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Unrelated Lead Form",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "LEAD_GENERATION",
+      "labelProvenance": "Observed user screenshot failure case (kh02_run_1793178825461_s4pfb, Section 1 & K5)"
+    },
+    {
+      "caseId": "neg_diy_20_unidentified_campaign",
+      "split": "DEV",
+      "topic": "diy",
+      "archetypeLabel": "Unidentified Campaign",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "UNIDENTIFIED",
+      "labelProvenance": "Observed user screenshot failure case (Section 1 & K5)"
+    },
+    {
+      "caseId": "neg_pet_21_human_depilatory",
+      "split": "HOLDOUT",
+      "topic": "pet",
+      "archetypeLabel": "Human Cosmetics Cross-Contamination",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "PHYSICAL_PRODUCT",
+      "labelProvenance": "Holdout cross-niche negative benchmark"
+    },
+    {
+      "caseId": "neg_gardening_22_landscaping_service",
+      "split": "HOLDOUT",
+      "topic": "gardening",
+      "archetypeLabel": "Local Lawn Service",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "SERVICE",
+      "labelProvenance": "Holdout service negative benchmark"
+    },
+    {
+      "caseId": "neg_kitchen_23_b2b_forklift",
+      "split": "HOLDOUT",
+      "topic": "kitchen",
+      "archetypeLabel": "B2B Industrial Equipment",
+      "containsLiteralTopicKeyword": false,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "LEAD_GENERATION",
+      "labelProvenance": "Holdout B2B negative benchmark"
+    },
+    {
+      "caseId": "neg_homedecor_24_interior_consultation",
+      "split": "HOLDOUT",
+      "topic": "home decor",
+      "archetypeLabel": "Interior Design Consultation Service",
+      "containsLiteralTopicKeyword": true,
+      "goldIsRelevantPhysicalProduct": false,
+      "goldEntityType": "SERVICE",
+      "labelProvenance": "Holdout service negative benchmark"
+    }
+  ]
+}

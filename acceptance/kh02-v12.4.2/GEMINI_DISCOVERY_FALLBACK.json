@@ -1,0 +1,566 @@
+{
+  "retryFallbackTest": {
+    "primary503Attempts": 4,
+    "fallbackOkAttempts": 1,
+    "result": "FALLBACK_SUCCESS"
+  },
+  "budgetTest": {
+    "requestsStarted": 2,
+    "thirdBlocked": {
+      "totalAttempts": 0,
+      "retriesExecuted": 0,
+      "requestsStarted": 0,
+      "requestsCompleted": 0,
+      "requestsFailed": 0,
+      "modelsAttempted": [],
+      "successfulModelId": null,
+      "fallbackCount": 0,
+      "executionHistory": [],
+      "circuitBreakerTriggered": false,
+      "budgetExhausted": true,
+      "totalDurationMs": 0
+    }
+  },
+  "deterministicFallback": {
+    "plan": {
+      "normalizedNiche": "diy",
+      "nicheIntent": "BROAD_CATEGORY",
+      "productArchetypes": [
+        {
+          "archetypeId": "home_repair_kits",
+          "productCategory": "Home Repair",
+          "customerProblem": "Homeowners need fast, mess-free patching for drywall holes, cracked tiles, and wall scuffs.",
+          "relevanceReason": "Consumer DIY repair kits are core physical products for at-home improvement.",
+          "searchQueries": [
+            {
+              "phrase": "wall repair kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 1,
+              "rationale": "High-intent physical DIY drywall/surface repair product."
+            },
+            {
+              "phrase": "tile repair kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 2,
+              "rationale": "Concrete DIY ceramic/floor surface repair product."
+            }
+          ]
+        },
+        {
+          "archetypeId": "diy_crafting_tools",
+          "productCategory": "DIY Crafting",
+          "customerProblem": "Crafters and makers need portable precision bonding and cutting tools for home projects.",
+          "relevanceReason": "Cordless glue guns and precision cutters are top-selling DTC DIY crafting tools.",
+          "searchQueries": [
+            {
+              "phrase": "cordless hot glue gun",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 3,
+              "rationale": "Concrete physical DIY crafting and repair tool."
+            },
+            {
+              "phrase": "precision craft cutter",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 4,
+              "rationale": "Specific handheld DIY crafting tool."
+            }
+          ]
+        },
+        {
+          "archetypeId": "diy_home_decor_upgrades",
+          "productCategory": "Home Decor",
+          "customerProblem": "Renters and homeowners want easy self-installed decorative upgrades without hiring contractors.",
+          "relevanceReason": "Peel-and-stick panels and decorative switch plate covers are classic DIY home decor upgrades.",
+          "searchQueries": [
+            {
+              "phrase": "decorative switch plate covers",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 5,
+              "rationale": "Physical DIY home decor hardware upgrade frequently advertised on Meta."
+            },
+            {
+              "phrase": "peel and stick wall panels",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 6,
+              "rationale": "Self-installed DIY wall renovation product."
+            }
+          ]
+        },
+        {
+          "archetypeId": "woodworking_jigs",
+          "productCategory": "Woodworking",
+          "customerProblem": "DIY woodworkers need accurate drilling and corner clamping guides.",
+          "relevanceReason": "Pocket hole jigs and corner clamps are high-repeat physical DIY woodworking tools.",
+          "searchQueries": [
+            {
+              "phrase": "pocket hole jig",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 7,
+              "rationale": "Specific woodworking tool SKU for DIY builders."
+            },
+            {
+              "phrase": "woodworking corner clamp",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 8,
+              "rationale": "Physical clamping tool for DIY woodworking."
+            }
+          ]
+        },
+        {
+          "archetypeId": "furniture_restoration",
+          "productCategory": "Furniture Repair",
+          "customerProblem": "Fixing scratches, dents, and worn wood or leather surfaces at home.",
+          "relevanceReason": "Wood scratch repair markers and furniture restoration kits are direct consumer DIY products.",
+          "searchQueries": [
+            {
+              "phrase": "wood scratch repair markers",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 9,
+              "rationale": "Specific physical furniture touch-up product."
+            },
+            {
+              "phrase": "furniture repair kit",
+              "searchType": "KEYWORD_EXACT_PHRASE",
+              "priority": 10,
+              "rationale": "Consumer DIY furniture restoration kit."
+            }
+          ]
+        }
+      ],
+      "negativeIntentPatterns": [
+        "pos thermal printer",
+        "get latest price",
+        "alibaba wholesale",
+        "widgets themes app",
+        "contractor hiring service",
+        "home insurance",
+        "widgets themes",
+        "vet bill cost factors"
+      ],
+      "uncertainties": []
+    },
+    "validation": {
+      "valid": true,
+      "validatedPlan": {
+        "normalizedNiche": "diy",
+        "nicheIntent": "BROAD_CATEGORY",
+        "productArchetypes": [
+          {
+            "archetypeId": "home_repair_kits",
+            "productCategory": "Home Repair",
+            "customerProblem": "Homeowners need fast, mess-free patching for drywall holes, cracked tiles, and wall scuffs.",
+            "relevanceReason": "Consumer DIY repair kits are core physical products for at-home improvement.",
+            "searchQueries": [
+              {
+                "phrase": "wall repair kit",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 1,
+                "rationale": "High-intent physical DIY drywall/surface repair product."
+              },
+              {
+                "phrase": "tile repair kit",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 2,
+                "rationale": "Concrete DIY ceramic/floor surface repair product."
+              }
+            ]
+          },
+          {
+            "archetypeId": "diy_crafting_tools",
+            "productCategory": "DIY Crafting",
+            "customerProblem": "Crafters and makers need portable precision bonding and cutting tools for home projects.",
+            "relevanceReason": "Cordless glue guns and precision cutters are top-selling DTC DIY crafting tools.",
+            "searchQueries": [
+              {
+                "phrase": "cordless hot glue gun",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 3,
+                "rationale": "Concrete physical DIY crafting and repair tool."
+              },
+              {
+                "phrase": "precision craft cutter",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 4,
+                "rationale": "Specific handheld DIY crafting tool."
+              }
+            ]
+          },
+          {
+            "archetypeId": "diy_home_decor_upgrades",
+            "productCategory": "Home Decor",
+            "customerProblem": "Renters and homeowners want easy self-installed decorative upgrades without hiring contractors.",
+            "relevanceReason": "Peel-and-stick panels and decorative switch plate covers are classic DIY home decor upgrades.",
+            "searchQueries": [
+              {
+                "phrase": "decorative switch plate covers",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 5,
+                "rationale": "Physical DIY home decor hardware upgrade frequently advertised on Meta."
+              },
+              {
+                "phrase": "peel and stick wall panels",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 6,
+                "rationale": "Self-installed DIY wall renovation product."
+              }
+            ]
+          },
+          {
+            "archetypeId": "woodworking_jigs",
+            "productCategory": "Woodworking",
+            "customerProblem": "DIY woodworkers need accurate drilling and corner clamping guides.",
+            "relevanceReason": "Pocket hole jigs and corner clamps are high-repeat physical DIY woodworking tools.",
+            "searchQueries": [
+              {
+                "phrase": "pocket hole jig",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 7,
+                "rationale": "Specific woodworking tool SKU for DIY builders."
+              },
+              {
+                "phrase": "woodworking corner clamp",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 8,
+                "rationale": "Physical clamping tool for DIY woodworking."
+              }
+            ]
+          },
+          {
+            "archetypeId": "furniture_restoration",
+            "productCategory": "Furniture Repair",
+            "customerProblem": "Fixing scratches, dents, and worn wood or leather surfaces at home.",
+            "relevanceReason": "Wood scratch repair markers and furniture restoration kits are direct consumer DIY products.",
+            "searchQueries": [
+              {
+                "phrase": "wood scratch repair markers",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 9,
+                "rationale": "Specific physical furniture touch-up product."
+              },
+              {
+                "phrase": "furniture repair kit",
+                "searchType": "KEYWORD_EXACT_PHRASE",
+                "priority": 10,
+                "rationale": "Consumer DIY furniture restoration kit."
+              }
+            ]
+          }
+        ],
+        "negativeIntentPatterns": [
+          "pos thermal printer",
+          "get latest price",
+          "alibaba wholesale",
+          "widgets themes app",
+          "contractor hiring service",
+          "home insurance",
+          "widgets themes",
+          "vet bill cost factors"
+        ],
+        "uncertainties": []
+      },
+      "validatedQueries": [
+        {
+          "queryId": "kh02_q_r1_1_3e069e0a",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "wall repair kit",
+          "normalizedPhrase": "wall repair kit",
+          "archetypeId": "home_repair_kits",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 1,
+          "rationale": "High-intent physical DIY drywall/surface repair product.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Home Repair"
+        },
+        {
+          "queryId": "kh02_q_r1_2_5526bef1",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "cordless hot glue gun",
+          "normalizedPhrase": "cordless hot glue gun",
+          "archetypeId": "diy_crafting_tools",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 2,
+          "rationale": "Concrete physical DIY crafting and repair tool.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "DIY Crafting"
+        },
+        {
+          "queryId": "kh02_q_r1_3_b18cddb8",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "decorative switch plate covers",
+          "normalizedPhrase": "decorative switch plate covers",
+          "archetypeId": "diy_home_decor_upgrades",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 3,
+          "rationale": "Physical DIY home decor hardware upgrade frequently advertised on Meta.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Home Decor"
+        },
+        {
+          "queryId": "kh02_q_r1_4_a6bbd196",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "pocket hole jig",
+          "normalizedPhrase": "pocket hole jig",
+          "archetypeId": "woodworking_jigs",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 4,
+          "rationale": "Specific woodworking tool SKU for DIY builders.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Woodworking"
+        },
+        {
+          "queryId": "kh02_q_r1_5_2ee5f81e",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "wood scratch repair markers",
+          "normalizedPhrase": "wood scratch repair markers",
+          "archetypeId": "furniture_restoration",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 5,
+          "rationale": "Specific physical furniture touch-up product.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Furniture Repair"
+        },
+        {
+          "queryId": "kh02_q_r1_6_237756c6",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "tile repair kit",
+          "normalizedPhrase": "tile repair kit",
+          "archetypeId": "home_repair_kits",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 6,
+          "rationale": "Concrete DIY ceramic/floor surface repair product.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Home Repair"
+        },
+        {
+          "queryId": "kh02_q_r1_7_66b0da03",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "precision craft cutter",
+          "normalizedPhrase": "precision craft cutter",
+          "archetypeId": "diy_crafting_tools",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 7,
+          "rationale": "Specific handheld DIY crafting tool.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "DIY Crafting"
+        },
+        {
+          "queryId": "kh02_q_r1_8_258d60e6",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "peel and stick wall panels",
+          "normalizedPhrase": "peel and stick wall panels",
+          "archetypeId": "diy_home_decor_upgrades",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 8,
+          "rationale": "Self-installed DIY wall renovation product.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Home Decor"
+        },
+        {
+          "queryId": "kh02_q_r1_9_a2f567cf",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "woodworking corner clamp",
+          "normalizedPhrase": "woodworking corner clamp",
+          "archetypeId": "woodworking_jigs",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 9,
+          "rationale": "Physical clamping tool for DIY woodworking.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Woodworking"
+        },
+        {
+          "queryId": "kh02_q_r1_10_b70cf749",
+          "researchRunId": "d06_fallback_test",
+          "phrase": "furniture repair kit",
+          "normalizedPhrase": "furniture repair kit",
+          "archetypeId": "furniture_restoration",
+          "source": "META_ADS",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "roundNumber": 1,
+          "priority": 10,
+          "rationale": "Consumer DIY furniture restoration kit.",
+          "origin": "DETERMINISTIC_FALLBACK",
+          "expectedProductCategory": "Furniture Repair"
+        }
+      ],
+      "rejectedQueries": [],
+      "warnings": []
+    },
+    "queries": [
+      {
+        "queryId": "kh02_q_r1_1_3e069e0a",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "wall repair kit",
+        "normalizedPhrase": "wall repair kit",
+        "archetypeId": "home_repair_kits",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 1,
+        "rationale": "High-intent physical DIY drywall/surface repair product.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Home Repair"
+      },
+      {
+        "queryId": "kh02_q_r1_2_5526bef1",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "cordless hot glue gun",
+        "normalizedPhrase": "cordless hot glue gun",
+        "archetypeId": "diy_crafting_tools",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 2,
+        "rationale": "Concrete physical DIY crafting and repair tool.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "DIY Crafting"
+      },
+      {
+        "queryId": "kh02_q_r1_3_b18cddb8",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "decorative switch plate covers",
+        "normalizedPhrase": "decorative switch plate covers",
+        "archetypeId": "diy_home_decor_upgrades",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 3,
+        "rationale": "Physical DIY home decor hardware upgrade frequently advertised on Meta.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Home Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_4_a6bbd196",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "pocket hole jig",
+        "normalizedPhrase": "pocket hole jig",
+        "archetypeId": "woodworking_jigs",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 4,
+        "rationale": "Specific woodworking tool SKU for DIY builders.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Woodworking"
+      },
+      {
+        "queryId": "kh02_q_r1_5_2ee5f81e",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "wood scratch repair markers",
+        "normalizedPhrase": "wood scratch repair markers",
+        "archetypeId": "furniture_restoration",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 5,
+        "rationale": "Specific physical furniture touch-up product.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Furniture Repair"
+      },
+      {
+        "queryId": "kh02_q_r1_6_237756c6",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "tile repair kit",
+        "normalizedPhrase": "tile repair kit",
+        "archetypeId": "home_repair_kits",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 6,
+        "rationale": "Concrete DIY ceramic/floor surface repair product.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Home Repair"
+      },
+      {
+        "queryId": "kh02_q_r1_7_66b0da03",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "precision craft cutter",
+        "normalizedPhrase": "precision craft cutter",
+        "archetypeId": "diy_crafting_tools",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 7,
+        "rationale": "Specific handheld DIY crafting tool.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "DIY Crafting"
+      },
+      {
+        "queryId": "kh02_q_r1_8_258d60e6",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "peel and stick wall panels",
+        "normalizedPhrase": "peel and stick wall panels",
+        "archetypeId": "diy_home_decor_upgrades",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 8,
+        "rationale": "Self-installed DIY wall renovation product.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Home Decor"
+      },
+      {
+        "queryId": "kh02_q_r1_9_a2f567cf",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "woodworking corner clamp",
+        "normalizedPhrase": "woodworking corner clamp",
+        "archetypeId": "woodworking_jigs",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 9,
+        "rationale": "Physical clamping tool for DIY woodworking.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Woodworking"
+      },
+      {
+        "queryId": "kh02_q_r1_10_b70cf749",
+        "researchRunId": "d06_fallback_test",
+        "phrase": "furniture repair kit",
+        "normalizedPhrase": "furniture repair kit",
+        "archetypeId": "furniture_restoration",
+        "source": "META_ADS",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "roundNumber": 1,
+        "priority": 10,
+        "rationale": "Consumer DIY furniture restoration kit.",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "expectedProductCategory": "Furniture Repair"
+      }
+    ],
+    "telemetry": {
+      "taskType": "DISCOVERY_PLANNING",
+      "status": "FALLBACK_DETERMINISTIC",
+      "origin": "DETERMINISTIC_FALLBACK",
+      "modelUsed": null,
+      "modelFallbackUsed": false,
+      "attemptsMade": 0,
+      "retriesUsed": 0,
+      "cacheHit": false,
+      "latencyMs": 0,
+      "plannedArchetypesCount": 5,
+      "validatedQueriesCount": 10,
+      "rejectedQueriesCount": 0,
+      "promptVersion": "kh02_discovery_planner_v1.0.0",
+      "schemaVersion": "1.0.0",
+      "failureReason": "AI request budget exhausted prior to discovery planning."
+    }
+  }
+}

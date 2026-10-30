@@ -1,0 +1,41 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Notice] SWAI server at http://127.0.0.1:3000 is offline; skipping standalone browser test.
+
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_2_LongResearch.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2328[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Integration: Long-Running Research & Worker Lifecycle [2m(3)[22m
+     [33m[2m✓[22m[39m executes complete async research lifecycle from enqueue to worker claim and terminal snapshot[33m 979[2mms[22m[39m
+     [33m[2m✓[22m[39m detects worker offline when job is PENDING and no active heartbeat exists[33m 645[2mms[22m[39m
+     [33m[2m✓[22m[39m recovers stale job after worker crash and allows subsequent worker to finish research[33m 702[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02HttpServerE2E.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 2105[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance [2m(6)[22m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/providers/status reports live capability and truthful readiness[33m 303[2mms[22m[39m
+     [33m[2m✓[22m[39m POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot[33m 680[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/leaderboard restores the latest completed snapshot on reload[33m 543[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/research/runs returns historical runs with workspace scoping[33m 327[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/geminiWorkerPipeline.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1002[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integration [2m(2)[22m
+     [33m[2m✓[22m[39m executes complete research orchestrator pipeline and applies AI Product Reality Gate[33m 635[2mms[22m[39m
+     [33m[2m✓[22m[39m gracefully completes with UNAVAILABLE telemetry when AI fails or key is missing[33m 366[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_3_Acceptance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1465[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E [2m(4)[22m
+     [33m[2m✓[22m[39m executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback[33m 586[2mms[22m[39m
+     [33m[2m✓[22m[39m accurately handles zero-result discovery without software failure[33m 526[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_Persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 379[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02ResearchApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 343[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 557[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.1 — Genuine Legacy SQLite Migration & Idempotency [2m(2)[22m
+     [33m[2m✓[22m[39m handles partial migration recovery when only a subset of columns exist[33m 307[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m27 passed[39m[22m[90m (27)[39m
+[2m   Start at [22m 09:24:10
+[2m   Duration [22m 14.04s[2m (tests 64%, import 26%, setup 7%, transform 2%, worker 1%)[22m
+
+[2m     Import [22m [33m90 modules were evaluated 341 times[39m[2m · 3.38s total, 26% of tracked time[22m
+[2m            [22m [2m~2.49s faster with [22m[33misolate: false[39m[2m — shared modules are evaluated once per worker instead of once per file[22m
+[2m            [22m [2mlearn more: https://vitest.dev/guide/improving-performance#test-isolation[22m
+

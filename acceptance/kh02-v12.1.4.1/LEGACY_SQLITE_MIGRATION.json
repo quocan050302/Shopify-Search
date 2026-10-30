@@ -1,0 +1,18 @@
+{
+  "testSuite": "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
+  "preMigrationColsMissing": [
+    "workerId",
+    "claimToken",
+    "fencingToken",
+    "fencingGeneration",
+    "recordVersion",
+    "leaseExpiresAt",
+    "attemptNumber"
+  ],
+  "postMigrationVerified": true,
+  "pragmaTableInfoChecked": true,
+  "pragmaIndexListChecked": true,
+  "historicalDataPreserved": true,
+  "idempotentSecondRun": true,
+  "testOutcome": "PASS"
+}

@@ -1,0 +1,126 @@
+{
+  "diy": {
+    "rawTopic": "diy",
+    "normalizedNiche": "diy",
+    "nicheIntent": "BROAD_CATEGORY",
+    "allowedEcommerceCategories": [
+      "Home Repair Kits",
+      "DIY Crafting Tools",
+      "Decorative Home Hardware & Wall Decor",
+      "Woodworking Jigs & Clamps",
+      "Furniture & Surface Restoration"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "diy"
+  },
+  "gardening": {
+    "rawTopic": "gardening",
+    "normalizedNiche": "gardening",
+    "nicheIntent": "BROAD_CATEGORY",
+    "allowedEcommerceCategories": [
+      "Pruning & Cutting Tools",
+      "Plant Watering & Irrigation",
+      "Seed Starting & Propagation",
+      "Plant Supports & Trellises",
+      "Soil Testing & Monitoring"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "gardening"
+  },
+  "homeDecor": {
+    "rawTopic": "home decor",
+    "normalizedNiche": "home decor",
+    "nicheIntent": "BROAD_CATEGORY",
+    "allowedEcommerceCategories": [
+      "Decorative Hardware & Switch Plates",
+      "Ambient & Accent Lighting",
+      "Peel & Stick Wall Accents",
+      "Decorative Covers & Textiles"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "home_decor"
+  },
+  "pet": {
+    "rawTopic": "pet",
+    "normalizedNiche": "pet",
+    "nicheIntent": "BROAD_CATEGORY",
+    "allowedEcommerceCategories": [
+      "Pet Grooming & Hair Removal",
+      "Pet Hydration & Fountains",
+      "Pet Feeding & Dispensers",
+      "Pet Hygiene & Litter",
+      "Interactive Pet Toys",
+      "Pet Travel & Safety"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "pet"
+  },
+  "cordlessGlueGun": {
+    "rawTopic": "cordless glue gun",
+    "normalizedNiche": "cordless glue gun",
+    "nicheIntent": "SPECIFIC_PRODUCT",
+    "allowedEcommerceCategories": [
+      "Home Repair Kits",
+      "DIY Crafting Tools",
+      "Decorative Home Hardware & Wall Decor",
+      "Woodworking Jigs & Clamps",
+      "Furniture & Surface Restoration"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "diy"
+  },
+  "catWaterFountain": {
+    "rawTopic": "cat water fountain",
+    "normalizedNiche": "cat water fountain",
+    "nicheIntent": "SPECIFIC_PRODUCT",
+    "allowedEcommerceCategories": [
+      "Pet Grooming & Hair Removal",
+      "Pet Hydration & Fountains",
+      "Pet Feeding & Dispensers",
+      "Pet Hygiene & Litter",
+      "Interactive Pet Toys",
+      "Pet Travel & Safety"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "pet"
+  },
+  "switchPlate": {
+    "rawTopic": "decorative switch plate cover",
+    "normalizedNiche": "decorative switch plate cover",
+    "nicheIntent": "SPECIFIC_PRODUCT",
+    "allowedEcommerceCategories": [
+      "Home Repair Kits",
+      "DIY Crafting Tools",
+      "Decorative Home Hardware & Wall Decor",
+      "Woodworking Jigs & Clamps",
+      "Furniture & Surface Restoration"
+    ],
+    "isProhibitedOrUnsupported": false,
+    "prohibitedReason": null,
+    "detectedDomainKey": "diy"
+  },
+  "prohibitedCasino": {
+    "rawTopic": "online casino real money bonus",
+    "normalizedNiche": "online casino real money bonus",
+    "nicheIntent": "AMBIGUOUS",
+    "allowedEcommerceCategories": [],
+    "isProhibitedOrUnsupported": true,
+    "prohibitedReason": "Gambling and betting topics are not supported physical ecommerce niches.",
+    "detectedDomainKey": null
+  },
+  "emptyTopic": {
+    "rawTopic": "   ",
+    "normalizedNiche": "",
+    "nicheIntent": "AMBIGUOUS",
+    "allowedEcommerceCategories": [],
+    "isProhibitedOrUnsupported": true,
+    "prohibitedReason": "Topic is empty or shorter than 2 characters.",
+    "detectedDomainKey": null
+  }
+}

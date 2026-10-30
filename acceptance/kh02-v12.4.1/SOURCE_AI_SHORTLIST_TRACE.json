@@ -1,0 +1,561 @@
+{
+  "runId": "kh02_run_1793178172891_opcyi",
+  "totalCandidates": 16,
+  "candidatesTrace": [
+    {
+      "candidateId": "cand_1778107836",
+      "title": "Pet Hair Removers",
+      "storeDomain": "uprootclean.co",
+      "canonicalProductUrl": "https://www.uprootclean.co/collections/pet-hair-removers",
+      "supportingAdIds": [
+        "cmvlsqyjn000faworwu1dts6g"
+      ],
+      "identityStatus": "PROBABLE",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "COLLECTION_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": true,
+      "aiExclusionReason": null,
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "productRealityReason": null
+    },
+    {
+      "candidateId": "cand_1996378048",
+      "title": "Unidentified Product (Source: Facebook Ad #1536941208479218, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvlsqyhy0003awor2cubpbuq"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_2091173958",
+      "title": "Unidentified Product (Source: Facebook Ad #1464108218882438, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvlsqyiz0009aworjqixph93"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_1766388470",
+      "title": "Unidentified Product (Source: Facebook Ad #1641348457417375, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvlsqykc000laworg3qfh92d"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_2041005107",
+      "title": "Unidentified Product (Source: Facebook Ad #2249466188957796, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvlsqyl0000raworivkxfbhm"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_586824438",
+      "title": "Unidentified Product (Source: Facebook Ad #1642750633880173, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq0trww000fwgor0lp8jttq"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_508415319",
+      "title": "Unidentified Product (Source: Facebook Ad #1410922084469845, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq0trxo000kwgorhbr1satz"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_1873040136",
+      "title": "Unidentified Product (Source: Facebook Ad #1806555653907868, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq0tryb000pwgorf9nb1cw7"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_755956224",
+      "title": "Unidentified Product (Source: Facebook Ad #1563296449176047, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq0tryv000uwgorvjr4hq8v"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_244987810",
+      "title": "Unidentified Product (Source: Facebook Ad #1778772883252421, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21dtd000o4gor6os6ozvj"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_1687665271",
+      "title": "Unidentified Product (Source: Facebook Ad #2688711491543464, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21du8000t4gorrxhd3a6d"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_1832235731",
+      "title": "Unidentified Product (Source: Facebook Ad #1501129465377642, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvrh5abo0010fcorfxmee1rj"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-flash-lite-latest",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_557102477",
+      "title": "Unidentified Product (Source: Facebook Ad #2619370888493232, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21dpt00064gorn2vort8a"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_719212133",
+      "title": "Unidentified Product (Source: Facebook Ad #1409887821066414, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21dqq000b4gor1w9t6w05"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "RELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": "PHYSICAL_PRODUCT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence.",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded from product shortlist: Lacks verified merchant or product landing page evidence."
+    },
+    {
+      "candidateId": "cand_52378965",
+      "title": "Unidentified Product (Source: Facebook Ad #1395097056025193, Identity: Needs Review)",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21drj000g4gorlvwnmgql"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "IRRELEVANT",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "aiEntityType": null,
+      "aiModelUsed": null,
+      "aiExclusionReason": null,
+      "productRealityStatus": "REJECTED",
+      "productRealityReason": "No keyword or niche alignment found with topic 'pet'."
+    },
+    {
+      "candidateId": "cand_1425470351",
+      "title": "ER Vet bill cost factors",
+      "storeDomain": null,
+      "canonicalProductUrl": null,
+      "supportingAdIds": [
+        "cmvq21do900014gorux4x9zzo"
+      ],
+      "identityStatus": "UNRESOLVED",
+      "relevanceStatus": "IRRELEVANT",
+      "sourcePageClassification": "ARTICLE_PAGE",
+      "aiEntityType": "INFORMATIONAL_CONTENT",
+      "aiModelUsed": "gemini-3.5-flash-lite",
+      "aiShortlistEligible": false,
+      "aiExclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+      "productRealityStatus": "NON_PHYSICAL",
+      "productRealityReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+    }
+  ],
+  "shortlistIds": [
+    "cand_1778107836"
+  ],
+  "shortlistTitles": [
+    "Pet Hair Removers"
+  ],
+  "erVetInRunCandidates": {
+    "candidateId": "cand_1425470351",
+    "title": "ER Vet bill cost factors",
+    "canonicalProductName": "ER Vet bill cost factors",
+    "displayName": "ER Vet bill cost factors",
+    "originalAdHeadline": "ER Vet bill cost factors",
+    "originalCreativeCode": null,
+    "brand": "CareCredit",
+    "model": null,
+    "sku": null,
+    "category": "Informational Content",
+    "problemStatement": null,
+    "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+    "thumbnailUrl": null,
+    "videoUrl": null,
+    "mediaSourceAdId": "cmvq21do900014gorux4x9zzo",
+    "canonicalProductUrl": null,
+    "storeDomain": null,
+    "advertiserNames": [
+      "CareCredit"
+    ],
+    "supportingAdIds": [
+      "cmvq21do900014gorux4x9zzo"
+    ],
+    "supportingSourceTypes": [
+      "META_ADS"
+    ],
+    "totalObservationCount": 1,
+    "distinctAdvertisersCount": 1,
+    "earliestObservationDate": "2026-10-28T09:03:03.147Z",
+    "latestObservationDate": "2026-10-28T09:03:03.147Z",
+    "identityConfidence": "AMBIGUOUS",
+    "sourceObservations": [
+      {
+        "source": "META_ADS",
+        "sourceRecordId": "cmvq21do900014gorux4x9zzo",
+        "sourceUrl": "https://www.facebook.com/ads/library/?id=1394681365927207",
+        "landingPageUrl": null,
+        "sourceExternalAdId": "1394681365927207",
+        "storeDomainEvidence": null,
+        "advertiserOrCreator": "CareCredit",
+        "advertiserDomain": null,
+        "productMatchHint": "ER Vet bill cost factors",
+        "reportedPublishedAt": null,
+        "reportedFirstShownAt": "2026-10-27T02:16:46.707Z",
+        "reportedLastShownAt": "2026-10-28T09:03:02.589Z",
+        "observedAt": "2026-10-28T09:03:03.147Z",
+        "requestedMarket": "US",
+        "verifiedDeliveryMarket": "US",
+        "title": "ER Vet bill cost factors",
+        "description": "Pet emergencies happen and a visit to the emergency vet can bring unexpected costs depending on the treatments needed. CareCredit’s WellU guide prepares you with cost breakdown, warning signs and payment options that can help.",
+        "metrics": {
+          "daysRunning": 1,
+          "status": "UNKNOWN",
+          "observationsCount": 10,
+          "dataConfidence": "OBSERVED",
+          "marketVerification": "VERIFIED",
+          "isFreshLive": true
+        },
+        "media": {
+          "thumbnailUrl": null,
+          "videoUrl": null,
+          "mediaType": "UNKNOWN"
+        },
+        "provenance": "LIVE_PROVIDER",
+        "evidenceReference": "CompetitorAd:cmvq21do900014gorux4x9zzo"
+      }
+    ],
+    "identityStatus": "UNRESOLVED",
+    "resolutionSource": "Ad Creative Headline (Classified Product Name)",
+    "requiresManualReview": false,
+    "identityEvidenceReferences": [
+      "Ad Headline: ER Vet bill cost factors"
+    ],
+    "isEligibleAsEvergreenWinner": false,
+    "relevanceStatus": "IRRELEVANT",
+    "relevanceScore": 0.2,
+    "relevanceReasons": [
+      "Strong niche match on terms: pet.",
+      "Gemini AI evaluated candidate as UNRELATED to requested niche."
+    ],
+    "psychologyProfile": {
+      "targetCustomer": {
+        "claimText": "Consumers actively seeking solutions related to pet",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Regular routine use in the home when utilizing er vet bill cost factors",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Everyday inconvenience and friction addressed by ER Vet bill cost factors",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Conventional manual household tools or unspecialized generic accessories",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+        "evidenceReference": "Facebook Ad #1394681365927207",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    },
+    "sourcePageClassification": "ARTICLE_PAGE",
+    "productRealityStatus": "NON_PHYSICAL",
+    "productRealityReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+    "researchProductId": null,
+    "aiIntelligence": {
+      "candidateId": "cand_1425470351",
+      "commercialEntityType": "INFORMATIONAL_CONTENT",
+      "suggestedProductName": "ER Vet bill cost factors guide",
+      "suggestedProductType": "Informational Content",
+      "nicheRelevance": "UNRELATED",
+      "isLikelySellableProduct": false,
+      "identityEvidenceRefs": [
+        "cmvq21do900014gorux4x9zzo"
+      ],
+      "relevanceEvidenceRefs": [
+        "cmvq21do900014gorux4x9zzo"
+      ],
+      "directlyObservedClaims": [
+        {
+          "claim": "CareCredit provides a WellU guide detailing ER vet bill cost factors, cost breakdowns, warning signs, and payment options.",
+          "sourceRef": "cmvq21do900014gorux4x9zzo",
+          "supportingQuote": "Pet emergencies happen and a visit to the emergency vet can bring unexpected costs depending on the treatments needed. CareCredit’s WellU guide prepares you with cost breakdown, warning signs and payment options that can help."
+        }
+      ],
+      "inferredClaims": [
+        "The advertisement promotes informational content and financial services rather than a physical product."
+      ],
+      "contradictions": [],
+      "uncertainties": [
+        "The candidate is an informational guide and financial service advertisement rather than a sellable physical product suitable for an e-commerce storefront."
+      ],
+      "aiConfidence": 1,
+      "needsHumanReview": false
+    },
+    "aiVerification": {
+      "verified": true,
+      "evidenceDecision": "REJECT",
+      "validAiResponse": true,
+      "correctCandidateId": true,
+      "validSourceReferences": true,
+      "accurateQuotations": true,
+      "actualMerchantEvidence": true,
+      "productIdentityConsistent": true,
+      "productRealityEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "sourcePageClassification": "ARTICLE_PAGE",
+      "sanitizedResult": {
+        "candidateId": "cand_1425470351",
+        "commercialEntityType": "INFORMATIONAL_CONTENT",
+        "suggestedProductName": "ER Vet bill cost factors guide",
+        "suggestedProductType": "Informational Content",
+        "nicheRelevance": "UNRELATED",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "cmvq21do900014gorux4x9zzo"
+        ],
+        "relevanceEvidenceRefs": [
+          "cmvq21do900014gorux4x9zzo"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "CareCredit provides a WellU guide detailing ER vet bill cost factors, cost breakdowns, warning signs, and payment options.",
+            "sourceRef": "cmvq21do900014gorux4x9zzo",
+            "supportingQuote": "Pet emergencies happen and a visit to the emergency vet can bring unexpected costs depending on the treatments needed. CareCredit’s WellU guide prepares you with cost breakdown, warning signs and payment options that can help."
+          }
+        ],
+        "inferredClaims": [
+          "The advertisement promotes informational content and financial services rather than a physical product."
+        ],
+        "contradictions": [],
+        "uncertainties": [
+          "The candidate is an informational guide and financial service advertisement rather than a sellable physical product suitable for an e-commerce storefront."
+        ],
+        "aiConfidence": 1,
+        "needsHumanReview": false
+      },
+      "contradictions": [],
+      "unsupportedClaims": [],
+      "hallucinatedSourceRefs": [],
+      "quoteMismatches": [],
+      "promptInjectionDetected": false,
+      "shortlistEligible": false,
+      "exclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+    },
+    "aiShortlistEligible": false,
+    "aiExclusionReason": "Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product.",
+    "aiFromCache": false,
+    "aiModelUsed": "gemini-3.5-flash-lite"
+  },
+  "erVetInRunShortlist": false
+}

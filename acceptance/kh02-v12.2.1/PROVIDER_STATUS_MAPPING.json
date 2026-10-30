@@ -1,0 +1,101 @@
+[
+  {
+    "source": "META_ADS",
+    "displayName": "Meta Ad Library (Facebook / Instagram)",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "readinessStatus": "SOURCE_ACCESS_VERIFIED",
+    "diagnosticStatus": "SOURCE_ACCESS_VERIFIED",
+    "blockerCode": null,
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "supportedOperationsVerified": true,
+      "queryExecuted": true,
+      "sourceDataVerified": true,
+      "lastLiveQueryAt": null,
+      "blockerCode": null
+    }
+  },
+  {
+    "source": "TIKTOK_ADS",
+    "displayName": "TikTok Ads US (Creative Center)",
+    "status": "MANUAL_RESEARCH_ONLY",
+    "readinessStatus": "NOT_VERIFIED",
+    "diagnosticStatus": "MANUAL_RESEARCH_ONLY",
+    "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": false,
+      "authenticated": null,
+      "supportedOperationsVerified": false,
+      "queryExecuted": true,
+      "sourceDataVerified": true,
+      "lastLiveQueryAt": null,
+      "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER"
+    },
+    "requiredAction": "Utilize manual Creative Center batch import or configure authorized US ad provider."
+  },
+  {
+    "source": "TIKTOK_ORGANIC",
+    "displayName": "TikTok Organic Video Research",
+    "status": "CREDENTIALS_REQUIRED",
+    "readinessStatus": "CREDENTIALS_REQUIRED",
+    "diagnosticStatus": "CREDENTIALS_REQUIRED",
+    "blockerCode": "MISSING_CREDENTIALS",
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": null,
+      "authenticated": false,
+      "supportedOperationsVerified": false,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": "MISSING_CREDENTIALS"
+    },
+    "requiredAction": "Configure HASDATA_API_KEY in environment to enable live video queries."
+  },
+  {
+    "source": "GOOGLE_ADS",
+    "displayName": "Google Ads Transparency Center",
+    "status": "MCP_NOT_CONFIGURED",
+    "readinessStatus": "MCP_NOT_CONFIGURED",
+    "diagnosticStatus": "MCP_NOT_CONFIGURED",
+    "blockerCode": "MCP_NOT_CONFIGURED",
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": false,
+      "transportConnected": false,
+      "authenticated": null,
+      "supportedOperationsVerified": false,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": "MCP_NOT_CONFIGURED"
+    },
+    "requiredAction": "Deploy Google Ads Transparency MCP server and configure GOOGLE_TRANSPARENCY_MCP_URL."
+  },
+  {
+    "source": "DEMAND_HISTORY",
+    "displayName": "Historical Demand & Trend Stability (Google Trends)",
+    "status": "ENGINE_READY",
+    "readinessStatus": "CONFIGURED",
+    "diagnosticStatus": "ENGINE_READY",
+    "blockerCode": null,
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "supportedOperationsVerified": true,
+      "queryExecuted": false,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": null
+    },
+    "requiredAction": "Provide product-specific search terms or import historical observations."
+  }
+]

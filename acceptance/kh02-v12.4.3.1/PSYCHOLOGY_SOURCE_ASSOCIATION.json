@@ -1,0 +1,264 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "uahpetCatFeederNoBluetoothReproducer": {
+    "psychology": {
+      "candidateId": "cand_uahpet_feeder",
+      "canonicalProductName": "Uahpet Automatic Cat Feeder Timed Wet & Dry Food Dispenser",
+      "productDomain": "PET",
+      "targetCustomer": {
+        "claimText": "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
+        "evidenceReference": "Observed quote: \"for cats\" in Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "AD_COPY",
+        "confidence": 0.85,
+        "status": "OBSERVED"
+      },
+      "situationOrUseCase": {
+        "claimText": "Daily automated hydration and feeding, especially during work hours or short travel",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Inconvenience of manual daily feeding schedules and concerns about pet hydration when away from home",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "emotionalPain": {
+        "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Conventional manual household tools or unspecialized generic accessories",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+        "evidenceReference": "Ad Creative (Zero setup frustration—no Wi-Fi, no Bluetooth, just 2 physical buttons)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    },
+    "alignment": {
+      "valid": true,
+      "reason": null
+    }
+  },
+  "allShortlistPsychChecks": [
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1212440541",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "productDomain": "PET",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1838011041",
+      "title": "Reusable Pet Hair Remover Roller",
+      "productDomain": "PET",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "pet gadgets",
+      "candidateId": "cand_1788406859",
+      "title": "Pawira Stainless Steel Water Fountain",
+      "productDomain": "PET",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_1316890495",
+      "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+      "productDomain": "DIY",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_2112012920",
+      "title": "Burnett Wallpaper",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "diy",
+      "candidateId": "cand_887687049",
+      "title": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+      "productDomain": "DIY",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_1008292129",
+      "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_519143299",
+      "title": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Se",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "kitchen",
+      "candidateId": "cand_1012572416",
+      "title": "All In One Vegetable Chopper & Slicer Set for Fast Kitchen Prep",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_2112012920",
+      "title": "Burnett Wallpaper",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_1008292129",
+      "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "home decor",
+      "candidateId": "cand_988616984",
+      "title": "Made to Last. Period.",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_508373436",
+      "title": "Automatic plant waterer - Green+Beige+Pink",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_29899940",
+      "title": "News Automatic Plant Waterer M",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "gardening",
+      "candidateId": "cand_290672461",
+      "title": "118959 Large Self Watering Planter",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_1162625533",
+      "title": "7-in-1 Electric Spin Scrubber",
+      "productDomain": "DIY",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_386308104",
+      "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+      "productDomain": "GENERAL",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "cleaning",
+      "candidateId": "cand_457825095",
+      "title": "Make Cleaning Effortless with HOTO!",
+      "productDomain": "DIY",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "automatic pet feeder",
+      "candidateId": "cand_1212440541",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "productDomain": "PET",
+      "valid": true,
+      "reason": null
+    },
+    {
+      "niche": "automatic pet feeder",
+      "candidateId": "cand_1783682388",
+      "title": "Automatic Pet Feeder Drinking Fountain",
+      "productDomain": "PET",
+      "valid": true,
+      "reason": null
+    }
+  ]
+}

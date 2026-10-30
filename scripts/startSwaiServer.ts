@@ -18,6 +18,7 @@ interface ParsedCliArgs {
   exposure?: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE";
   host?: string;
   port?: number;
+  withWorker?: boolean;
 }
 
 function parseCliArgs(argv: string[]): ParsedCliArgs {
@@ -26,6 +27,7 @@ function parseCliArgs(argv: string[]): ParsedCliArgs {
   let exposure: "LOCAL_DESKTOP" | "AUTHENTICATED_REMOTE" | undefined;
   let host: string | undefined;
   let port: number | undefined;
+  let withWorker: boolean = process.env.SWAI_WITH_WORKER === "true";
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -35,6 +37,8 @@ function parseCliArgs(argv: string[]): ParsedCliArgs {
       exposure = "LOCAL_DESKTOP";
     } else if (arg === "--remote") {
       exposure = "AUTHENTICATED_REMOTE";
+    } else if (arg === "--with-worker" || arg === "--worker") {
+      withWorker = true;
     } else if (arg === "-H" || arg === "--host") {
       host = args[++i];
     } else if (arg.startsWith("--host=")) {
@@ -48,7 +52,7 @@ function parseCliArgs(argv: string[]): ParsedCliArgs {
     }
   }
 
-  return { command, exposure, host, port };
+  return { command, exposure, host, port, withWorker };
 }
 
 export async function launchSwaiServer(argv: string[] = process.argv): Promise<void> {
@@ -91,6 +95,9 @@ export async function launchSwaiServer(argv: string[] = process.argv): Promise<v
   console.log(`[SWAI-LAUNCHER] Binding Interface: ${launchConfig.listenerHost}:${launchConfig.port}`);
   console.log(`[SWAI-LAUNCHER] Deployment Mode:   ${launchConfig.mode}`);
   console.log(`[SWAI-LAUNCHER] Auth Required:     ${launchConfig.authenticationRequired}`);
+  if (parsed.withWorker) {
+    console.log(`[SWAI-LAUNCHER] Supervised Worker: Enabled`);
+  }
 
   const child = spawn(process.execPath, serverArgs, {
     cwd: path.resolve(__dirname, ".."),
@@ -98,9 +105,26 @@ export async function launchSwaiServer(argv: string[] = process.argv): Promise<v
     stdio: "inherit",
   });
 
+  let workerChild: any = null;
+  if (parsed.withWorker) {
+    const workerScript = path.resolve(__dirname, "../src/workers/kh02Worker.ts");
+    workerChild = spawn(
+      process.execPath,
+      [require.resolve("tsx/cli"), workerScript],
+      {
+        cwd: path.resolve(__dirname, ".."),
+        env: childEnv,
+        stdio: "inherit",
+      }
+    );
+  }
+
   const forwardSignal = (sig: NodeJS.Signals) => {
-    if (!child.killed) {
+    if (child && !child.killed) {
       child.kill(sig);
+    }
+    if (workerChild && !workerChild.killed) {
+      workerChild.kill(sig);
     }
   };
 
@@ -108,6 +132,9 @@ export async function launchSwaiServer(argv: string[] = process.argv): Promise<v
   process.on("SIGTERM", () => forwardSignal("SIGTERM"));
 
   child.on("exit", (code, signal) => {
+    if (workerChild && !workerChild.killed) {
+      workerChild.kill("SIGTERM");
+    }
     if (signal) {
       process.kill(process.pid, signal);
     } else {

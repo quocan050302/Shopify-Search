@@ -1,0 +1,12 @@
+{
+  "source": "META_ADS",
+  "recordsInDbBeforeQuery": 141,
+  "sourceRecordsReturned": 10,
+  "recordsNormalized": 10,
+  "newUniqueInserted": 0,
+  "existingUpdated": 0,
+  "recordsRejected": 0,
+  "recordsInDbAfterQuery": 141,
+  "separationVerified": true,
+  "deduplicationMethod": "AdSourceIdentity stableIdentityHash + platform scoped externalAdId"
+}

@@ -1,0 +1,373 @@
+{
+  "gates": {
+    "BUILD": {
+      "id": "BUILD",
+      "description": "Production TypeScript typecheck succeeds with 0 errors",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0
+      },
+      "observed": {
+        "exitCode": 0
+      },
+      "assertionEvidence": [
+        ""
+      ],
+      "executionCommand": "npx tsc --noEmit",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "TypeScript typecheck passed with zero errors"
+    },
+    "LINT": {
+      "id": "LINT",
+      "description": "ESLint rules pass with 0 errors",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0
+      },
+      "observed": {
+        "exitCode": 0
+      },
+      "assertionEvidence": [
+        "\n> shopify-winning-ads-intelligence@0.1.0 lint\n> eslint\n\n\nD:\\Project_github\\Running-Ads\\prisma\\seed.ts\n  11:9  warning  'metaSource' is assigned a value but never used    @typescript-eslint/no-unused-vars\n  25:9  warning  'tiktokSource' is assigned a value but never used  @typescript-eslint/no-unuse"
+      ],
+      "executionCommand": "npm run lint",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "ESLint passed with zero errors"
+    },
+    "KH01_REGRESSION": {
+      "id": "KH01_REGRESSION",
+      "description": "KH-01 protection suite passes completely with zero regressions",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0,
+        "testsPassed": 69
+      },
+      "observed": {
+        "exitCode": 0,
+        "testsPassed": 69,
+        "totalTests": 69
+      },
+      "assertionEvidence": [
+        "Passed: 69/69"
+      ],
+      "executionCommand": "npm run kh01:verify",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "KH-01 verified: 69/69 tests passed"
+    },
+    "KH02_UNIT": {
+      "id": "KH02_UNIT",
+      "description": "KH-02 unit test suite passes all unit tests",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0,
+        "minPassed": 300
+      },
+      "observed": {
+        "exitCode": 0,
+        "testsPassed": 327,
+        "totalTests": 327
+      },
+      "assertionEvidence": [
+        "Passed: 327/327",
+        "",
+        "tail: 2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m27 passed\u001b[39m\u001b[22m\u001b[90m (27)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m327 passed\u001b[39m\u001b[22m\u001b[90m (327)\u001b[39m\n\u001b[2m   Start at \u001b[22m 11:06:26\n\u001b[2m   Duration \u001b[22m 148.52s\u001b[2m (tests 47%, setup 44%, import 8%)\u001b[22m\n\n"
+      ],
+      "executionCommand": "npm run kh02:test:unit",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "KH-02 unit suite verified: 327/327 tests passed"
+    },
+    "META_BUDGET_INTEGRITY": {
+      "id": "META_BUDGET_INTEGRITY",
+      "description": "Meta query budget enforces atomic capacity reservation across all 12 mandatory scenarios",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0,
+        "passedScenarios": 12
+      },
+      "observed": {
+        "exitCode": 0,
+        "passedScenarios": 12
+      },
+      "assertionEvidence": [
+        "All 12 scenarios passed: 12/12"
+      ],
+      "executionCommand": "npx vitest run tests/unit/kh02MetaGlobalBudget.test.ts",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "All 12 budget scenarios passed: atomic reservation, failures retained, pagination, retry"
+    },
+    "META_ALL_FAILED_HANDLING": {
+      "id": "META_ALL_FAILED_HANDLING",
+      "description": "When all Meta subqueries fail, aggregate execution status is FAILED and liveSucceeded is false",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "executionStatus": "FAILED",
+        "liveSucceeded": false
+      },
+      "observed": {
+        "executionStatus": "FAILED",
+        "liveSucceeded": false
+      },
+      "assertionEvidence": [
+        "Execution status: FAILED, liveSucceeded: false"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "All subqueries failing correctly yields executionStatus=FAILED"
+    },
+    "META_PARTIAL_SUCCESS": {
+      "id": "META_PARTIAL_SUCCESS",
+      "description": "Meta partial success retains retrieved observations and preserves errors",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+        "liveSucceeded": true,
+        "hasErrors": true
+      },
+      "observed": {
+        "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+        "liveSucceeded": true,
+        "errorCount": 1
+      },
+      "assertionEvidence": [
+        "Execution status: PARTIAL_SUCCESS_WITH_RESULTS, error: Subquery 'pet hair remover' failed: Upstream rate limit"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Partial success correctly records PARTIAL_SUCCESS_WITH_RESULTS and preserves errors"
+    },
+    "META_CACHE_VS_LIVE": {
+      "id": "META_CACHE_VS_LIVE",
+      "description": "Cached database records alone do not satisfy live query PASS or report isLive=true",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "queryExecutedInferredFromDb": false
+      },
+      "observed": {
+        "queryExecuted": false
+      },
+      "assertionEvidence": [
+        "queryExecuted: false"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Database record presence correctly does not set queryExecuted"
+    },
+    "META_REOBSERVATION": {
+      "id": "META_REOBSERVATION",
+      "description": "Fresh observations recorded even when ad already exists in database (0 new inserts)",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "provenance": "LIVE_PROVIDER",
+        "isFreshLive": true,
+        "isNewlyInserted": false
+      },
+      "observed": {
+        "provenance": "LIVE_PROVIDER",
+        "isFreshLive": true,
+        "isNewlyInserted": false
+      },
+      "assertionEvidence": [
+        "provenance: LIVE_PROVIDER",
+        "isFreshLive: true",
+        "isNewlyInserted: false"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Re-observed existing ads correctly receive LIVE_PROVIDER provenance and isFreshLive=true without being misclassified as new inserts"
+    },
+    "PRODUCT_METADATA_SECURITY": {
+      "id": "PRODUCT_METADATA_SECURITY",
+      "description": "Product metadata fetcher enforces SSRF defense, manual redirect safety, and streaming byte limits",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "exitCode": 0,
+        "testsPassed": 7
+      },
+      "observed": {
+        "exitCode": 0,
+        "testsPassed": 7
+      },
+      "assertionEvidence": [
+        "All 7 security tests passed: 7/7"
+      ],
+      "executionCommand": "npx vitest run tests/unit/kh02ProductMetadataSecurity.test.ts",
+      "exitCode": 0,
+      "runId": null,
+      "reason": "SSRF, loopback, private IPv4/IPv6, cloud metadata, redirect depth, and streaming cap verified"
+    },
+    "PRODUCT_IDENTITY": {
+      "id": "PRODUCT_IDENTITY",
+      "description": "Product identity rejects campaign codes and does not verify products from slug alone",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "wmtVerified": false,
+        "wmtEligible": false,
+        "slugOnlyVerified": false
+      },
+      "observed": {
+        "wmtIdentityStatus": "UNRESOLVED",
+        "wmtEligible": false,
+        "slugOnlyStatus": "PROBABLE"
+      },
+      "assertionEvidence": [
+        "Wmt008 status: UNRESOLVED",
+        "Slug only status: PROBABLE"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Campaign codes rejected; slug alone produces PROBABLE (not VERIFIED) per Section 9.7"
+    },
+    "NICHE_RELEVANCE": {
+      "id": "NICHE_RELEVANCE",
+      "description": "Niche relevance accepts relevant pet products and strictly rejects unrelated catalog items",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "petBedAccepted": true,
+        "speakerAccepted": false,
+        "speakerStatus": "IRRELEVANT"
+      },
+      "observed": {
+        "petBedAccepted": true,
+        "speakerAccepted": false,
+        "speakerStatus": "IRRELEVANT"
+      },
+      "assertionEvidence": [
+        "Pet bed score: 0.95, Speaker status: IRRELEVANT"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Pet bed accepted; Bluetooth speaker rejected as IRRELEVANT"
+    },
+    "CANDIDATE_FUNNEL_RECONCILIATION": {
+      "id": "CANDIDATE_FUNNEL_RECONCILIATION",
+      "description": "Candidate funnel explains raw groups to scored products with auditable accounting",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "totalGroups": 2,
+        "relevant": 1,
+        "irrelevant": 1
+      },
+      "observed": {
+        "totalGroups": 2,
+        "relevant": 1,
+        "irrelevant": 1
+      },
+      "assertionEvidence": [
+        "Funnel balanced: 1 relevant + 1 irrelevant = 2 total"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Funnel accounts for all candidate groups without dropping records"
+    },
+    "GOOGLE_PRODUCT_ASSOCIATION": {
+      "id": "GOOGLE_PRODUCT_ASSOCIATION",
+      "description": "Google domain normalization correctly resolves canonical registrable domains",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "normalizedDomain": "uprootclean.com"
+      },
+      "observed": {
+        "normalizedDomain": "uprootclean.com"
+      },
+      "assertionEvidence": [
+        "cc.uprootclean.com -> uprootclean.com"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Subdomain correctly normalized to registrable domain"
+    },
+    "RESEARCH_SHORTLIST_PIPELINE": {
+      "id": "RESEARCH_SHORTLIST_PIPELINE",
+      "description": "Top 3 Research Shortlist pipeline filters for distinct products and reports shortfall",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "qualifiedCount": 1,
+        "hasShortfallReason": true
+      },
+      "observed": {
+        "qualifiedCount": 1,
+        "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3)."
+      },
+      "assertionEvidence": [
+        "Qualified: 1, Shortfall: Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3)."
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Shortlist pipeline correctly qualified 1 product and reported shortfall reason"
+    },
+    "ZERO_FALSE_PASS_REGRESSIONS": {
+      "id": "ZERO_FALSE_PASS_REGRESSIONS",
+      "description": "Adversarial false-pass mutations trigger genuine failure verdicts",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "c2Verdict": "FAIL",
+        "c3ExactMatch": false
+      },
+      "observed": {
+        "c2Verdict": "FAIL",
+        "c3ExactMatch": false
+      },
+      "assertionEvidence": [
+        "Case 2 verdict: FAIL",
+        "Case 3 exact match: false"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "All adversarial mutation scenarios evaluated dynamically and failed as expected"
+    },
+    "RUNTIME_VERSION_VERIFICATION": {
+      "id": "RUNTIME_VERSION_VERIFICATION",
+      "description": "Runtime version info exposes buildSha, appVersion, and environment without secrets",
+      "executed": true,
+      "verdict": "PASS",
+      "expected": {
+        "hasAppVersion": true,
+        "hasEnvironment": true
+      },
+      "observed": {
+        "appVersion": "12.3.2",
+        "environment": "development",
+        "buildSha": "cbffd41"
+      },
+      "assertionEvidence": [
+        "App version: 12.3.2, SHA: cbffd41"
+      ],
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "reason": "Runtime version diagnostics verified"
+    }
+  },
+  "timestamp": "2026-10-28T04:09:07.541Z"
+}

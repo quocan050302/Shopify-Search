@@ -1,0 +1,246 @@
+{
+  "version": "12.4.3.2",
+  "sessionRunId": "v12_4_3_2_1793265905890",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "gitHead": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+  "dbFingerprint": "6530562482a2",
+  "startedAt": "2026-10-29T09:25:05.892Z",
+  "completedAt": "2026-10-29T09:28:16.958Z",
+  "totalWallDurationMs": 191066,
+  "overallReleaseVerdict": "PASS",
+  "artifacts": {
+    "BASELINE_BEHAVIOR_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/BASELINE_BEHAVIOR_AUDIT.json",
+      "sha256": "430e490574d71e0dcf7b5394bb480877c5dfc7f4db97aa2924ceecdb6ef8d229",
+      "sizeBytes": 3575
+    },
+    "BASELINE_UI_UX_AUDIT.md": {
+      "path": "acceptance/kh02-v12.4.3.2/BASELINE_UI_UX_AUDIT.md",
+      "sha256": "9c5d358fa7da90d34ccf2028c37f171acd3995d033201361b32b1c9225f61f65",
+      "sizeBytes": 2107
+    },
+    "META_LIVE_DISCOVERY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/META_LIVE_DISCOVERY_AUDIT.json",
+      "sha256": "5c9e305d934908d4a0470b170c9aad23299c1b1a81289099738295b7f4bbb820",
+      "sizeBytes": 16788
+    },
+    "META_CACHE_VS_LIVE_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2/META_CACHE_VS_LIVE_RECONCILIATION.json",
+      "sha256": "4c84d72d093df29b789cd37c044d255bca78e8f36c920dcf0758d6d88d7c623a",
+      "sizeBytes": 2849
+    },
+    "META_REQUEST_BUDGET_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/META_REQUEST_BUDGET_AUDIT.json",
+      "sha256": "432a7de5d3aea74bfcaa6ba0528a492a466e30a8abb754d19930b6914a08ae1f",
+      "sizeBytes": 287
+    },
+    "DEMAND_SOURCE_FORENSIC_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/DEMAND_SOURCE_FORENSIC_AUDIT.json",
+      "sha256": "61e32c69818a4fffc6f1765bd9c35a6d1f35c67dc3162622091487763ee4c25e",
+      "sizeBytes": 26222
+    },
+    "DEMAND_RAW_DATA_TRACEABILITY.json": {
+      "path": "acceptance/kh02-v12.4.3.2/DEMAND_RAW_DATA_TRACEABILITY.json",
+      "sha256": "c7e7177b0d01aff13cd6d726e534bd1725d88a08ea7afc9bf49616cafa9dc9b6",
+      "sizeBytes": 54826
+    },
+    "EVERGREEN_WINNER_REQUALIFICATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2/EVERGREEN_WINNER_REQUALIFICATION.json",
+      "sha256": "f120dd2d18e2d3bac8935699759605dfa74a38cc68e6903a0527f1cfbf852d14",
+      "sizeBytes": 451
+    },
+    "PRODUCT_AUDIENCE_RELEVANCE.json": {
+      "path": "acceptance/kh02-v12.4.3.2/PRODUCT_AUDIENCE_RELEVANCE.json",
+      "sha256": "9c5a44dfac529252e9eba822b6c8c51e0fc55526607455c5f55a3ed4c0d12a1f",
+      "sizeBytes": 32885
+    },
+    "CUSTOMER_PSYCHOLOGY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/CUSTOMER_PSYCHOLOGY_AUDIT.json",
+      "sha256": "cfc12a980e3ed1d7b754ee36c548181c3a0c5fbc0a6d4ed4294ba4fdb22a096e",
+      "sizeBytes": 5874
+    },
+    "REJECTION_REASON_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/REJECTION_REASON_AUDIT.json",
+      "sha256": "0091d0409fc2d4f2a32b4390f16ae53cf62f915b48ffaac13a6b2712575030b2",
+      "sizeBytes": 20249
+    },
+    "PRODUCT_INTELLIGENCE_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2/PRODUCT_INTELLIGENCE_RECONCILIATION.json",
+      "sha256": "33434f7cd5329b4c6213fa109347b05c42ea1686187a16fc488ff1d0790eb930",
+      "sizeBytes": 969
+    },
+    "UI_REDESIGN_CHANGELOG.md": {
+      "path": "acceptance/kh02-v12.4.3.2/UI_REDESIGN_CHANGELOG.md",
+      "sha256": "f176ac27b9c5c72bcf7f874b75f004b579014c01d6e0d0ab73400a190dfa2e58",
+      "sizeBytes": 1546
+    },
+    "UI_INFORMATION_ARCHITECTURE.md": {
+      "path": "acceptance/kh02-v12.4.3.2/UI_INFORMATION_ARCHITECTURE.md",
+      "sha256": "8e90f9fb603075adb5cd1fe3da4e0e3adaf04b620dbb77c260b73117c51a86ce",
+      "sizeBytes": 993
+    },
+    "UI_ACCESSIBILITY_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/UI_ACCESSIBILITY_AUDIT.json",
+      "sha256": "50c0fab58afe5580906e889f393ef954dffba9fdb147930494c9269a820fa628",
+      "sizeBytes": 339
+    },
+    "UI_VISUAL_ACCEPTANCE.json": {
+      "path": "acceptance/kh02-v12.4.3.2/UI_VISUAL_ACCEPTANCE.json",
+      "sha256": "81e4f0c91a3bc94ead0b783bc7193e13b68f69d4290d20a2b643995191238d25",
+      "sizeBytes": 7088
+    },
+    "UI_PERFORMANCE_MEASUREMENTS.json": {
+      "path": "acceptance/kh02-v12.4.3.2/UI_PERFORMANCE_MEASUREMENTS.json",
+      "sha256": "de861593a59ecce6cc97b9bc0127624240d3c0e84454c05d3e36d4cd6533e533",
+      "sizeBytes": 379
+    },
+    "ASYNC_TEST_EXECUTION_SUMMARY.json": {
+      "path": "acceptance/kh02-v12.4.3.2/ASYNC_TEST_EXECUTION_SUMMARY.json",
+      "sha256": "d7f352fafad563d0de0edc54ae38ef49352db3878da02eec96c68c7b88430455",
+      "sizeBytes": 6186
+    },
+    "REGRESSION_RESULTS.json": {
+      "path": "acceptance/kh02-v12.4.3.2/REGRESSION_RESULTS.json",
+      "sha256": "12f4b3e76c9819387610861be110ed5df10194b49a54afa97d89eae56eda3404",
+      "sizeBytes": 5955
+    },
+    "BACKTEST_DEV_VS_HOLDOUT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/BACKTEST_DEV_VS_HOLDOUT.json",
+      "sha256": "4e87800bbabfdd3cc91763be8c6db22c1e567ec47b61375193d0da36f0c25220",
+      "sizeBytes": 37183
+    },
+    "BACKTEST_COMPARISON.json": {
+      "path": "acceptance/kh02-v12.4.3.2/BACKTEST_COMPARISON.json",
+      "sha256": "9dbc148f032239b8e2d5548397cd94d478373b86d614ecd656f09139f77d2d7a",
+      "sizeBytes": 24234
+    },
+    "ADVERSARIAL_FALSE_PASS_TESTS.json": {
+      "path": "acceptance/kh02-v12.4.3.2/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "sha256": "cba5101723e6d84beaf14cf94209796134528c286a9921ec502500645c825957",
+      "sizeBytes": 4481
+    },
+    "SQLITE_HTTP_BROWSER_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.2/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "sha256": "434d3e6f565797b265317558a8f7ff75a5a2b771e551655a53909c29725be0de",
+      "sizeBytes": 223036
+    },
+    "RUNTIME_BUILD_PARITY.json": {
+      "path": "acceptance/kh02-v12.4.3.2/RUNTIME_BUILD_PARITY.json",
+      "sha256": "395db83c5437ae5795371435edb3596608d9a6006a733ae88422f9ddc5c746b2",
+      "sizeBytes": 1429
+    },
+    "DISK_MEMORY_RESOURCE_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.2/DISK_MEMORY_RESOURCE_AUDIT.json",
+      "sha256": "9ac1f06045671c9c2cbd0c276fdd7d073776d6660333a4844af2e476d1c2ad6c",
+      "sizeBytes": 514
+    },
+    "RELEASE_GATE_MATRIX.json": {
+      "path": "acceptance/kh02-v12.4.3.2/RELEASE_GATE_MATRIX.json",
+      "sha256": "157194adf10e6e792aad599634bb200f362374e8a16c8b2aa9b1f5b6df212a2e",
+      "sizeBytes": 76649
+    },
+    "FINAL_ACCEPTANCE_REPORT.md": {
+      "path": "acceptance/kh02-v12.4.3.2/FINAL_ACCEPTANCE_REPORT.md",
+      "sha256": "aa837ad0dc2a109bc082f0d103e9b0eacf2db3dacde399ee3e98ec10801ce270",
+      "sizeBytes": 7407
+    }
+  },
+  "screenshots": {
+    "01_product_finder_initial_desktop.png": {
+      "filename": "01_product_finder_initial_desktop.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/01_product_finder_initial_desktop.png",
+      "exists": true,
+      "sizeBytes": 174826,
+      "viewport": "1440x900",
+      "description": "Initial desktop load of redesigned Product Finder (/products) with 4-section architecture"
+    },
+    "02_product_finder_search_desktop.png": {
+      "filename": "02_product_finder_search_desktop.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/02_product_finder_search_desktop.png",
+      "exists": true,
+      "sizeBytes": 183122,
+      "viewport": "1440x900",
+      "description": "Unified Research Command Bar with topic 'dog', lookback selector, and source mode selector"
+    },
+    "03_product_finder_recommended_results.png": {
+      "filename": "03_product_finder_recommended_results.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/03_product_finder_recommended_results.png",
+      "exists": true,
+      "sizeBytes": 323188,
+      "viewport": "1440x900",
+      "description": "Recommended tab displaying single canonical product cards with zero cross-section duplication"
+    },
+    "08_product_finder_research_progress.png": {
+      "filename": "08_product_finder_research_progress.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/08_product_finder_research_progress.png",
+      "exists": true,
+      "sizeBytes": 194642,
+      "viewport": "1440x900",
+      "description": "Slide-Over Product Research Detail Drawer showing verified product identity, demand provenance, customer psychology, and ad creative links"
+    },
+    "04_product_finder_all_candidates.png": {
+      "filename": "04_product_finder_all_candidates.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/04_product_finder_all_candidates.png",
+      "exists": true,
+      "sizeBytes": 322134,
+      "viewport": "1440x900",
+      "description": "All Candidates explorer tab with status filter pills, family/merchant/audience filters, and structured rejection reasons"
+    },
+    "05_product_finder_evidence_diagnostics.png": {
+      "filename": "05_product_finder_evidence_diagnostics.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/05_product_finder_evidence_diagnostics.png",
+      "exists": true,
+      "sizeBytes": 169752,
+      "viewport": "1440x900",
+      "description": "Evidence & Diagnostics tab with provider cards, query execution table, 13-stage candidate funnel, and runtime parity"
+    },
+    "06_product_finder_source_failure.png": {
+      "filename": "06_product_finder_source_failure.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/06_product_finder_source_failure.png",
+      "exists": true,
+      "sizeBytes": 138675,
+      "viewport": "1440x900",
+      "description": "LIVE_ONLY mode showing truthful upstream Meta live query status without silent cache fallback"
+    },
+    "07_product_finder_cache_only.png": {
+      "filename": "07_product_finder_cache_only.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/07_product_finder_cache_only.png",
+      "exists": true,
+      "sizeBytes": 138986,
+      "viewport": "1440x900",
+      "description": "CACHE_ONLY mode showing explicit Cache Only badge and NOT_ATTEMPTED upstream queries"
+    },
+    "09_product_finder_tablet.png": {
+      "filename": "09_product_finder_tablet.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/09_product_finder_tablet.png",
+      "exists": true,
+      "sizeBytes": 119573,
+      "viewport": "768x1024",
+      "description": "Tablet responsive layout (768x1024) of Product Finder with stacked command controls and clean cards"
+    },
+    "10_product_finder_mobile.png": {
+      "filename": "10_product_finder_mobile.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/10_product_finder_mobile.png",
+      "exists": true,
+      "sizeBytes": 50068,
+      "viewport": "375x812",
+      "description": "Mobile responsive layout (375x812) of Product Finder with zero horizontal overflow"
+    },
+    "11_product_intelligence_research_context.png": {
+      "filename": "11_product_intelligence_research_context.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/11_product_intelligence_research_context.png",
+      "exists": true,
+      "sizeBytes": 141001,
+      "viewport": "1440x900",
+      "description": "Product Intelligence page showing side-by-side Research Qualification (KH-02) vs Commercial Readiness (KH-01) reconciliation and Back to Product Finder link"
+    },
+    "12_product_intelligence_commercial_readiness.png": {
+      "filename": "12_product_intelligence_commercial_readiness.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/12_product_intelligence_commercial_readiness.png",
+      "exists": true,
+      "sizeBytes": 141332,
+      "viewport": "1440x900",
+      "description": "Product Intelligence page scrolled to Commercial Readiness metrics and Customer Psychology evidence sections"
+    }
+  }
+}

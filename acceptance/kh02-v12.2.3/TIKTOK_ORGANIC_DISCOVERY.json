@@ -1,0 +1,50 @@
+{
+  "source": "TIKTOK_ORGANIC",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": null,
+  "authenticated": false,
+  "discoverySupported": false,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "storedRecordCount": 0,
+  "lastLiveQueryRecordCount": null,
+  "currentRunRecordCount": null,
+  "lastProbeAt": "2026-10-27T01:59:25.012Z",
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "transportStatus": "NOT_TESTED",
+  "capabilityStatus": "NOT_TESTED",
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-27T01:59:25.012Z",
+  "status": "CREDENTIALS_REQUIRED",
+  "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment. Configuration: Missing, Authentication: Credentials required, Transport: Not tested.",
+  "missingRequirements": [
+    "HASDATA_API_KEY"
+  ],
+  "dimensions": {
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": null,
+    "authenticated": false,
+    "supportedOperationsVerified": false,
+    "queryExecuted": false,
+    "sourceDataVerified": false,
+    "lastLiveQueryAt": null,
+    "blockerCode": "MISSING_CREDENTIALS",
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-27T01:59:25.012Z",
+    "authStatus": "CREDENTIALS_REQUIRED",
+    "transportStatus": "NOT_TESTED",
+    "capabilityStatus": "NOT_TESTED"
+  },
+  "requiredAction": "Configure HASDATA_API_KEY in environment to enable live video queries.",
+  "estimatedQueryCost": {
+    "estimatedCredits": 10,
+    "isPaid": true,
+    "knownCost": true,
+    "pricingSource": "HasData Scraper API Documentation (10 credits/search)"
+  }
+}

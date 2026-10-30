@@ -1,0 +1,13 @@
+{
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
+  "enrichmentTriggerRule": "Confirmed store domain required from relevant product candidate of the exact research run",
+  "candidatesEvaluatedCount": 4,
+  "candidatesWithDomainCount": 0,
+  "status": "SKIPPED",
+  "reason": "No confirmed advertiser domains discovered from relevant candidates in live research run",
+  "queriesExecutedCount": 0,
+  "creativesRetrievedCount": 0,
+  "candidateSkuAssociationsCount": 0,
+  "separationOfBrandVsSkuEvidenceVerified": true,
+  "verifiedAt": "2026-10-27T08:43:45.490Z"
+}

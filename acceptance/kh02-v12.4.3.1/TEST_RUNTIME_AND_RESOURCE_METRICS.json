@@ -1,0 +1,24 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "totalWallClockMs": 206457,
+  "asyncTestPoolsWallClockMs": 91436,
+  "sequentialEquivalentTestSumMs": 115733,
+  "timeSavedByParallelPoolMs": 24297,
+  "peakConcurrency": 2,
+  "maxConcurrentSqliteWriters": 1,
+  "peakRssMB": 342.18,
+  "totalSystemMemoryGB": 31.75,
+  "freeMemoryBeforeGB": 9.93,
+  "freeMemoryAfterGB": 9.86,
+  "orphanedProcessCount": 0,
+  "perJobDurationsMs": {
+    "tsc_typecheck": 3874,
+    "eslint": 22843,
+    "kh01_verify": 4291,
+    "v12_4_3_1_regression": 1971,
+    "kh02_unit": 58658,
+    "historical_backtest": 1458,
+    "kh02_integration": 13700,
+    "production_build": 8938
+  }
+}

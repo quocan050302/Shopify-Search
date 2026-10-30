@@ -1,0 +1,25 @@
+{
+  "authoritativeRunId": "kh02_run_1793117384742_eqabj",
+  "workspaceId": "acceptance_v12_3_ws",
+  "layers": {
+    "layer1_source_to_db": {
+      "reconciled": true,
+      "upstreamCount": 25,
+      "dbRecordCount": 25
+    },
+    "layer2_db_to_http": {
+      "reconciled": true,
+      "gateD07Verdict": "PASS",
+      "dbTopThreeCount": 0,
+      "httpTopThreeCount": 0
+    },
+    "layer3_http_to_dom": {
+      "reconciled": true,
+      "httpCandidateCount": 2,
+      "renderedCardCount": 2,
+      "postReloadConsistent": true
+    }
+  },
+  "reconciliationVerdict": "PASS",
+  "timestamp": "2026-10-27T16:10:08.371Z"
+}

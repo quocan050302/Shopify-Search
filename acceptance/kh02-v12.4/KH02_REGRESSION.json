@@ -1,0 +1,22 @@
+{
+  "gateId": "A05_KH02_REGRESSION_PASS",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "npm run kh02:test:unit passes with 0 failures",
+  "expected": {
+    "exitCode": 0,
+    "minPassed": 340
+  },
+  "observed": {
+    "exitCode": 0,
+    "testsPassed": 352,
+    "totalTests": 352
+  },
+  "executionCommand": "npm run kh02:test:unit",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "Passed: 352/352"
+  ],
+  "reason": "KH-02 suite verified: 352/352 tests passed"
+}

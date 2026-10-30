@@ -1,0 +1,15 @@
+{
+  "version": "12.4.3.2.1",
+  "chromiumVideoAudit": {
+    "videoThumbnailFound": true,
+    "videoThumbnailClicked": true,
+    "videoPlayerOrFallbackRendered": true,
+    "videoElementPresent": true,
+    "videoControlsEnabled": true,
+    "videoAutoplayDisabled": true,
+    "videoSrc": "https://video.fhan3-2.fna.fbcdn.net/o1/v/t2/f2/m366/AQPhMuyu6BwxETgu1z5WTj6iwoyJcTrVRHHaxzs7jpxLXkQzvIaO7f-CnbEQHy8EiuCdST1glQUfqcoTEHFD0ZL_t676NoZLkoRaSQFeonM3Tg.mp4?_nc_cat=102&_nc_oc=AdqyiKWVXNb0VHpIJenw9CVE0TVOPtdmGE12Rk5S3DcY6vq7bSdzM8J2X7OJ6bAhNYg&_nc_sid=b66105&_nc_ht=video.fhan3-2.fna.fbcdn.net&_nc_ohc=VIZGFbHLg5YQ7kNvwHXLBht&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEwNjk2NDIyNDg5NTQwNzEsImFzc2V0X2FnZV9kYXlzIjo3NiwidmlfdXNlY2FzZV9pZCI6MTA3OTksImR1cmF0aW9uX3MiOjI0LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=c6e0464869dfb6a1&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9DMjQ4REQ0NEJFQzhGN0JCRTdEMTA3NUExRTRFMEE5Rl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzAyNDkxRUVBNzBCRTNGMTE2RUEyOUIzQjU4RUZDNUI3X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaug8nkr7XmAxUCKAJDMywXQDjEGJN0vGoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZd6oAQA&_nc_gid=EgzSJiI1OLxxXQDLNPvniQ&_nc_ss=7a289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQQy85KhcCEVTYQkQ_ey1L8RsjL3NEeN-SzFz6MFoec6lQ&oe=6AE78AFE",
+    "videoSourceBadgeText": "Meta Ad Video Creative",
+    "videoPausedOnThumbnailSwitch": true,
+    "pass": true
+  }
+}

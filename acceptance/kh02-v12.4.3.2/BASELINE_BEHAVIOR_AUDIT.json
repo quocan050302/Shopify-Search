@@ -1,0 +1,49 @@
+{
+  "version": "12.4.3.2",
+  "baselineCommit": "4df8391d6144936dfc8fe08883b9c99619604a96",
+  "evaluatedHeadSha": "2dbabe758892a291d291a3c05754eb3a7cfddc4e",
+  "findings": [
+    {
+      "findingId": "F01_META_LIVE_SUPPRESSION_AT_100_CACHED_ADS",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/services/kh02/providers/metaResearchAdapter.ts",
+      "rootCause": "metaResearchAdapter skipped live Meta Ad Library queries whenever existingPoolCount >= 100 in SQLite, forcing perpetual CACHE_ONLY runs.",
+      "fixSummary": "Removed existingPoolCount >= 100 suppression gate; implemented explicit ResearchSourceMode (LIVE_WITH_CACHE_FALLBACK, CACHE_ONLY, LIVE_ONLY) with strict LIVE_ONLY cache isolation."
+    },
+    {
+      "findingId": "F02_SYNTHETIC_MERCHANT_DEMAND_SERIES",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/services/kh02/demand/temporalDemandEngine.ts",
+      "rootCause": "30 ProductDemandObservation rows in prisma/dev.db used evidenceReference='verified-merchant-demand:<domain>' with identical templated values [76, 79, 77, 81, 78, 82] and promotional ad-copy keywords.",
+      "fixSummary": "Updated evaluateDemandSourceAuthority() and added auditDemandObservationsProvenance() + requalifyAllHistoricalRunsInDb() so merchant-seeded, templated, promotional, and unbacked CSV rows are CACHED_UNVERIFIED (eligibleForEvergreen=false)."
+    },
+    {
+      "findingId": "F03_CROSS_SPECIES_DOG_CAT_CONTAMINATION",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/services/kh02/identity/productRelevanceEvaluator.ts",
+      "rootCause": "Searching 'dog' expanded to generic pet queries and admitted cat-only products (Automatic Wet Food Cat Feeder, Pawspick Cat Water Fountain).",
+      "fixSummary": "Implemented evaluateProductAudienceRelevance() and dedicated 'dog'/'cat' subquery plans in discoveryQueryPlanner.ts; cat-only products are rejected for 'dog' with SPECIES_MISMATCH_CAT_FOR_DOG_QUERY."
+    },
+    {
+      "findingId": "F04_KH02_VS_KH01_INTELLIGENCE_CONTRADICTION",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/app/products/[id]/intelligence/page.tsx",
+      "rootCause": "Clicking a KH-02 shortlist product opened KH-01 Product Intelligence showing '0/100 Weak' without explaining that supplier cost and 6-12m demand were still uncollected.",
+      "fixSummary": "Updated /api/v1/research/products/[id]/overview and /products/[id]/intelligence to display side-by-side Research Qualification (KH-02) vs Commercial Readiness (KH-01) cards with context-preserving back navigation."
+    },
+    {
+      "findingId": "F05_UNSUPPORTED_MULTI_PET_PSYCHOLOGY_CLAIM",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/services/kh02/psychology/customerPsychologyService.ts",
+      "rootCause": "Ads mentioning both 'dog' and 'cat' were marked OBSERVED for 'multi-pet households'.",
+      "fixSummary": "Updated analyzeCustomerPsychology() so 'multi-pet households' is only OBSERVED when multi-pet household ownership is explicitly stated in ad copy; otherwise INFERRED."
+    },
+    {
+      "findingId": "F06_CONTRADICTORY_REJECTION_REASON_STRINGS",
+      "status": "REPRODUCED_AND_FIXED",
+      "codePath": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "rootCause": "Rejected candidates could display contradictory text 'Classified as non-physical entity (PHYSICAL_PRODUCT)'.",
+      "fixSummary": "Implemented structured CandidateRejectionDetail (reasonCode, reasonText, evidenceReferences, detectedEntityType) and sanitizeRejectionOrRealityReason()."
+    }
+  ]
+}

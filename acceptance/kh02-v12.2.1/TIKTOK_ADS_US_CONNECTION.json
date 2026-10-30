@@ -1,0 +1,10 @@
+{
+  "source": "TIKTOK_ADS",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": false,
+  "authenticated": null,
+  "status": "MANUAL_RESEARCH_ONLY",
+  "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+  "requiredAction": "Utilize manual Creative Center batch import or configure authorized US ad provider."
+}

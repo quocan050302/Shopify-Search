@@ -1,0 +1,15 @@
+{
+  "gateId": "P0-06",
+  "requirement": "Total query budget is enforced as a single operation budget",
+  "verdict": "PASS",
+  "observedValues": {
+    "canExecuteThirdRequest": false,
+    "consumedRequests": 2,
+    "maxAllowed": 2
+  },
+  "expectedValues": {
+    "canExecuteThirdRequest": false
+  },
+  "reason": "Budget tracker stopped execution after reaching maxProviderRequests=2",
+  "timestamp": "2026-10-28T01:42:25.818Z"
+}

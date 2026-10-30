@@ -1,0 +1,41 @@
+{
+  "niche": "Pet Gadgets",
+  "market": "US",
+  "window": "30D",
+  "startedAt": "2026-10-27T13:28:43.191Z",
+  "completedAt": "2026-10-27T13:28:46.944Z",
+  "durationMs": 3752,
+  "attempted": true,
+  "succeeded": true,
+  "status": "PASSED",
+  "upstreamReturnedCount": 10,
+  "acceptedCount": 10,
+  "isLive": true,
+  "freshLiveObservedCount": 10,
+  "persistedInsertedCount": 0,
+  "cachedRecordsUsedCount": 0,
+  "errorClassification": null,
+  "sourceObservationsSample": [
+    {
+      "sourceRecordId": "cmvpeu1xa001ahug9c0mw6npf",
+      "title": "Twist-out Bluetooth Speaker with FM Radio — Wireless Audio & Musi",
+      "domain": null,
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-10-27T13:28:46.770Z"
+    },
+    {
+      "sourceRecordId": "cmvpeu1wx0015hug9k61oe5vo",
+      "title": "Jazz Dance Shoes for Women — Vibrant Colors & Versatile Fit",
+      "domain": null,
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-10-27T13:28:46.761Z"
+    },
+    {
+      "sourceRecordId": "cmvpeu1wn0010hug9qzy85er5",
+      "title": "Hot Selling Mirror MP3 FM Speaker for Motorbike Rearview Mirror",
+      "domain": null,
+      "provenance": "LIVE_PROVIDER",
+      "observedAt": "2026-10-27T13:28:46.753Z"
+    }
+  ]
+}

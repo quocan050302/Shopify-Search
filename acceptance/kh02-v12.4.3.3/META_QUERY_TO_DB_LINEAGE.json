@@ -1,0 +1,90 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "petGadgetsLineage": [
+    {
+      "candidateId": "cand_1212440541",
+      "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "productFamilyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvqw1w23008923g9oz2eiz8m",
+        "cmvqw1w1g007k23g9y9btaogg",
+        "cmvqvm7t1002s23g9obyhxwra",
+        "cmvqvm7sp002g23g9wlgnjffu"
+      ],
+      "supportingExternalAdIds": [
+        "1595856712093558",
+        "1399013621792652",
+        "2128156051108858",
+        "2046326005986245"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 4
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "productName": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "productFamilyKey": "kittyspout_fountain",
+      "supportingAdIds": [
+        "cmvsastxx002j8eg9368mmj4t"
+      ],
+      "supportingExternalAdIds": [
+        "1067995712370292"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_2_a297b0f2"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0
+    },
+    {
+      "candidateId": "cand_544204199",
+      "productName": "Gently Cooked Shelf-Stable Dog Food Starter Kit - 3 Boxes (15 Units x 1.3 lbs | 20 lbs Total) + Toy ",
+      "storeDomain": "kiwiandpata.com",
+      "canonicalProductUrl": "https://kiwiandpata.com/products/gently-cooked-dog-food-starter-kit-3-boxes-toy",
+      "identityStatus": "VERIFIED",
+      "productFamilyKey": "total_toy",
+      "supportingAdIds": [
+        "cmvthd6wo0035b5g9znu6qidu"
+      ],
+      "supportingExternalAdIds": [
+        "1135438235719726"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1
+    }
+  ],
+  "automaticPetFeederLineage": [
+    {
+      "candidateId": "cand_1212440541",
+      "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "productFamilyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvqw1w23008923g9oz2eiz8m",
+        "cmvqw1w1g007k23g9y9btaogg",
+        "cmvqvm7t1002s23g9obyhxwra",
+        "cmvqvm7sp002g23g9wlgnjffu"
+      ],
+      "supportingExternalAdIds": [
+        "1595856712093558",
+        "1399013621792652",
+        "2128156051108858",
+        "2046326005986245"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 4
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "version": "12.4.3.2.1",
+  "scoreSeparation": {
+    "canonicalRecommendedCount": 2,
+    "zeroDuplicateCards": true,
+    "cardsWithBuyerOrientedCopyCount": 2,
+    "cardsWithRawTechnicalMetadataLeakCount": 0,
+    "falseMerchantVerifiedBadgeCount": 0,
+    "piKh02ScoreVisible": true,
+    "piKh02ScoreText": "60 / 100",
+    "piKh01ScoreText": "Not Assessed",
+    "piKh01ShowsNotAssessedWhenNull": true,
+    "viewMissingEvidenceBtnNavigatesToDiagnostics": true,
+    "pass": true
+  },
+  "overviewKh02Context": {
+    "runId": "kh02_run_1793273119399_i8jf0",
+    "topic": "Automatic Pet Feeder",
+    "market": "US",
+    "lookbackDays": 180,
+    "sourceMode": "CACHE_ONLY",
+    "candidateId": "cand_1212440541",
+    "canonicalProductName": "UAHPET Fresh Food Automatic Pet Feeder",
+    "opportunityScore": 60,
+    "evidenceConfidence": 55,
+    "scoreStatus": "PROVISIONAL",
+    "tier": "PROVISIONAL_OPPORTUNITY",
+    "demandClass": "EVERGREEN_STABLE",
+    "identityStatus": "VERIFIED",
+    "fetchOutcome": "VERIFIED_PRODUCT_PAGE",
+    "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "storeDomain": "uahpet.com",
+    "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+    "supportingAdsCount": 7,
+    "currentRunLiveAdsCount": 0,
+    "currentRunCachedAdsCount": 7,
+    "totalHistoricalObservations": 84,
+    "distinctAdvertisersCount": 1,
+    "strengths": [
+      "Clear customer problem addressed: \"Perfect for multi-pet households 🎉 New Arrival: UAHPET Fresh Food Automatic Pet Feeder\"",
+      "Identified commercial domain: uahpet.com with branded catalog potential.",
+      "Video demonstration creative available for product hook evaluation."
+    ],
+    "risks": [
+      "Concentration risk: Evidence currently limited to a single advertiser."
+    ],
+    "missingEvidence": [
+      "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).",
+      "Single-platform evidence: Lacks corroboration on secondary ad or social channels."
+    ],
+    "recommendation": "SHORTLIST",
+    "recommendationRationale": "Promising candidate (60/100). Valid candidate for niche store catalog, recommend supplier quote verification.",
+    "verificationReason": "Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (10532085367078), ecommerce product DOM."
+  },
+  "overviewKh01OpportunityAssessment": {
+    "id": "cmvt1vvau0001igorsp8mtiq1",
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "productId": "cmvsy7zqh000jp0orhypwohho",
+    "methodologyVersion": "11.4.2",
+    "opportunityScore": null,
+    "evidenceReadinessScore": 13,
+    "pillarsJson": "{\"product\":{\"pillar\":\"PRODUCT\",\"weight\":20,\"score\":null,\"readiness\":30,\"status\":\"INSUFFICIENT_DATA\",\"findings\":[\"Product identity established with PROBABLE confidence\"],\"missingEvidence\":[\"Customer problem addressed is vague or unverified\",\"No observable product differentiation recorded\"],\"risks\":[]},\"creative\":{\"pillar\":\"CREATIVE\",\"weight\":15,\"score\":35,\"readiness\":45,\"status\":\"NEEDS_WORK\",\"findings\":[\"7 authentic competitor ad(s) cataloged\",\"Clear direct-response Call to Action in creative messaging\"],\"missingEvidence\":[\"No video demonstration observed in creative assets\"],\"risks\":[]},\"offer\":{\"pillar\":\"OFFER\",\"weight\":15,\"score\":null,\"readiness\":0,\"status\":\"INSUFFICIENT_DATA\",\"findings\":[],\"missingEvidence\":[\"No competitor offer snapshots recorded\"],\"risks\":[\"Competitor pricing and commercial terms unknown\"]},\"landingPage\":{\"pillar\":\"LANDING_PAGE\",\"weight\":15,\"score\":null,\"readiness\":0,\"status\":\"INSUFFICIENT_DATA\",\"findings\":[],\"missingEvidence\":[\"Landing page inspection has not been executed\"],\"risks\":[\"Funnel conversion structure and trust elements unverified\"]},\"economics\":{\"pillar\":\"ECONOMICS\",\"weight\":25,\"score\":null,\"readiness\":0,\"status\":\"INSUFFICIENT_DATA\",\"findings\":[],\"missingEvidence\":[\"No unit economics scenario modeled\"],\"risks\":[\"Unit economics and break-even CPA unknown\"]},\"fulfillment\":{\"pillar\":\"FULFILLMENT\",\"weight\":10,\"score\":null,\"readiness\":0,\"status\":\"INSUFFICIENT_DATA\",\"findings\":[],\"missingEvidence\":[\"Fulfillment and supplier assessment not performed\"],\"risks\":[\"Supplier lead times, shipping weight, and fragility unverified\"]}}",
+    "strengthsJson": "[]",
+    "risksJson": "[\"Competitor pricing and commercial terms unknown\",\"Funnel conversion structure and trust elements unverified\",\"Unit economics and break-even CPA unknown\",\"Supplier lead times, shipping weight, and fragility unverified\"]",
+    "missingCriticalEvidenceJson": "[\"Customer problem addressed is vague or unverified\",\"No observable product differentiation recorded\",\"No video demonstration observed in creative assets\",\"No competitor offer snapshots recorded\",\"Landing page inspection has not been executed\",\"No unit economics scenario modeled\",\"Fulfillment and supplier assessment not performed\"]",
+    "recommendation": "RESEARCH_MORE",
+    "recommendationRationale": "Insufficient factual evidence (13% readiness). Critical gaps: Customer problem addressed is vague or unverified; No observable product differentiation recorded; No video demonstration observed in creative assets.",
+    "testReadinessStatus": "BLOCKED_MISSING_DATA",
+    "createdAt": "2026-10-29T04:35:48.150Z",
+    "updatedAt": "2026-10-29T04:35:48.150Z"
+  },
+  "overviewCommercialReadinessSummary": {
+    "supplierQuoteEntered": false,
+    "landedCostCalculated": false,
+    "shippingEstimateEntered": false,
+    "marginModelCompleted": false,
+    "competitorOfferInspected": false,
+    "opportunityAssessed": true,
+    "completedCount": 1,
+    "totalSteps": 4,
+    "statusLabel": "Commercial Validation Needed"
+  }
+}

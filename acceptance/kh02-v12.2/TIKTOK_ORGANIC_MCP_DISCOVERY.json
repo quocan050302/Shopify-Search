@@ -1,0 +1,7 @@
+{
+  "provider": "HasData TikTok MCP (mcp.hasdata.com/mcp?apis=tiktok)",
+  "authConfigured": false,
+  "status": "BLOCKED",
+  "missingKey": "HASDATA_API_KEY",
+  "setupInstructions": "Set HASDATA_API_KEY in environment to enable live metered TikTok video keyword searches."
+}

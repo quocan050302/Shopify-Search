@@ -1,0 +1,285 @@
+[
+  {
+    "input": "Dog bed",
+    "expectedArchetype": "bedding",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Dog owners seeking dedicated, supportive resting space for their pets",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "situationOrUseCase": {
+        "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from bedding category context; specific orthopedic claims not explicit in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Moderate: Slow-recovery foam compression demo, water-repellent droplet test, or pet resting reactions",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+        "evidenceReference": "Ad Creative (Dog bed)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  },
+  {
+    "input": "Pet Hair Remover Roller",
+    "expectedArchetype": "hair_removal",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Consumers actively seeking solutions related to pet gadgets",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+      },
+      "situationOrUseCase": {
+        "claimText": "Quick surface touch-ups before heading out, before guests arrive, or maintaining couches/car seats",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Everyday inconvenience and friction addressed by Pet Hair Remover Roller",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.65,
+        "status": "INFERRED",
+        "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+      },
+      "emotionalPain": {
+        "claimText": "Social embarrassment when hosting guests or leaving home in fur-covered clothes; fatigue from non-stop cleaning",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Fur-free surfaces in minutes with zero disposable sticky tape refills and minimal physical effort",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "A striking visual demonstration showing an effortless before-and-after fur extraction from a couch",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Skepticism over whether it works on specific delicate fabrics (velvet, silk) and ease of chamber emptying",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "Uncut video demonstration on diverse fabric textures and a clear 30-day return policy",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Disposable sticky adhesive lint rollers, heavy domestic vacuums, and rubber squeegees",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Reusable self-cleaning chamber mechanism or multi-surface edge geometry eliminating recurring refill costs",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Efficiency Angle: 'Stop buying lint roller refills every month — clean your furniture quickly.' Empathy Angle: 'Love your pet without living in their fur.'",
+        "evidenceReference": "Ad Creative (Electrostatic brush removes fur instantly from couch and clothes)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  },
+  {
+    "input": "Twist-out Bluetooth Speaker",
+    "expectedArchetype": "audio_electronics",
+    "profile": {
+      "targetCustomer": {
+        "claimText": "Everyday music listeners and commuters seeking versatile, portable wireless audio solutions",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED",
+        "uncertaintyNote": "Non-pet consumer audio item."
+      },
+      "situationOrUseCase": {
+        "claimText": "Outdoor leisure, motorbike trips, personal workouts, or casual social get-togethers",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "functionalProblem": {
+        "claimText": "Inadequate or tinny mobile device sound and inconvenient wired connections during on-the-go activities",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "emotionalPain": {
+        "claimText": "Frustration with poor audio quality and missed enjoyment during social gatherings or solo rides",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "desiredOutcome": {
+        "claimText": "Convenient, crisp audio playback with reliable battery life and simple device pairing",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "purchaseTrigger": {
+        "claimText": "Upcoming outdoor event, personal travel, or finding an affordable multi-function audio gadget",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "INFERRED"
+      },
+      "mainObjections": {
+        "claimText": "Skepticism regarding acoustic distortion at high volume, bluetooth latency, and actual battery endurance",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+      },
+      "trustRequirements": {
+        "claimText": "Verifiable battery runtime benchmarks, bluetooth version specs, and explicit warranty coverage",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "HYPOTHESIS"
+      },
+      "demonstrationPotential": {
+        "claimText": "Moderate: Audio comparison, twisting mechanism demo, or rugged outdoor use showcase",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.75,
+        "status": "INFERRED"
+      },
+      "existingAlternatives": {
+        "claimText": "Built-in smartphone speakers, wired headphones, or traditional bulky boomboxes",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.85,
+        "status": "INFERRED"
+      },
+      "differentiationHypothesis": {
+        "claimText": "Unique form factor (e.g. twist-out directional acoustic horn or rearview mirror mounting integration)",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "HEADLINE",
+        "confidence": 0.78,
+        "status": "HYPOTHESIS"
+      },
+      "suggestedMessagingAngle": {
+        "claimText": "Convenience Angle: 'Crisp, amplified music wherever your outdoor ride or weekend trip takes you.'",
+        "evidenceReference": "Ad Creative (Crystal clear sound with FM radio and portable design)",
+        "evidenceType": "MARKET_KNOWLEDGE",
+        "confidence": 0.8,
+        "status": "HYPOTHESIS",
+        "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+      },
+      "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+    }
+  }
+]

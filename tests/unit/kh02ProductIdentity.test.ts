@@ -45,7 +45,7 @@ describe("SWAI KH-02 — Product Identity & Candidate Deduplication", () => {
     expect(candidate.storeDomain).toBe("ergopaw.com");
     expect(candidate.supportingAdIds).toHaveLength(50);
     expect(candidate.totalObservationCount).toBe(50);
-    expect(candidate.identityConfidence).toBe("EXACT");
+    expect(candidate.identityConfidence).toBe("HIGH_CONFIDENCE");
 
     // Title cleaning removes the clickbait suffix " - Buy Now 50% Off"
     expect(candidate.title).not.toContain("50% Off");

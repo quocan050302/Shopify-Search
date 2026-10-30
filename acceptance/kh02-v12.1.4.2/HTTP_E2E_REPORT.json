@@ -1,0 +1,32 @@
+{
+  "GET /api/v1/kh02/worker/status": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Worker status: undefined"
+  },
+  "GET /api/v1/kh02/research/active": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Active run: none"
+  },
+  "POST /api/v1/kh02/providers/test-connection": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Diagnostic: SOURCE_ACCESS_VERIFIED"
+  },
+  "POST /api/v1/kh02/research": {
+    "status": 202,
+    "ok": true,
+    "responseSnippet": "Accepted runId: kh02_run_1793025869655_lxjae"
+  },
+  "GET /api/v1/kh02/research/runs/[runId]": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Status: COMPLETED"
+  },
+  "GET /api/v1/kh02/leaderboard": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Restored leaderboard for 'Smart Bark Deterrent'"
+  }
+}

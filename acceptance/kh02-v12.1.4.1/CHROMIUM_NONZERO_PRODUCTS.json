@@ -1,0 +1,26 @@
+{
+  "track": "Track 1: Nonzero product discovery",
+  "topic": "Smart Posture Corrector",
+  "acceptedRunId": "kh02_run_1793022800483_09trb",
+  "terminalStatus": "COMPLETED",
+  "cardCount": 1,
+  "displayedCandidateIds": [
+    "cand_282145610_1"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_282145610_1": 42
+  },
+  "displayedConfidence": {
+    "cand_282145610_1": "PROVISIONAL"
+  },
+  "hydrationErrors": [],
+  "unexpectedHttpErrors": [],
+  "databaseMatch": true,
+  "verdict": "PASS",
+  "screenshots": [
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track1_nonzero/01_before_research.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track1_nonzero/02_source_statuses.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track1_nonzero/03_leaderboard_results.png"
+  ]
+}

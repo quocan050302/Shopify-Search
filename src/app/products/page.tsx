@@ -1,110 +1,201 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
-  Trophy,
-  Medal,
-  Sparkles,
+  Search,
+  ShoppingBag,
   TrendingUp,
-  ShieldCheck,
-  AlertCircle,
-  AlertTriangle,
-  PlaySquare,
-  Play,
   Store,
   ExternalLink,
-  Search,
-  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Award,
   Clock,
-  ChevronRight,
-  ShoppingBag,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Database,
+  ShieldCheck,
   RefreshCw,
-  X,
-  Eye,
+  ChevronRight,
   SlidersHorizontal,
+  Play,
+  X,
+  Info,
+  AlertTriangle,
+  History,
+  Filter,
+  Layers,
+  Activity,
+  Users,
+  FileSearch,
+  BarChart3,
 } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { isStockImage } from "@/services/video/videoSourceResolver";
+import type {
+  EvergreenLeaderboardResponse,
+  RankedProductCandidate,
+  SourceConnectionSummary,
+  ResearchSourceMode,
+} from "@/services/kh02/types";
+import {
+  buildCanonicalRecommendedProducts,
+  buildAllCandidatesExplorerList,
+  formatBusinessTerm,
+  type CanonicalRecommendedProduct,
+  type ExplorerCandidateRow,
+  type ExplorerCandidateStatus,
+} from "@/services/kh02/presentation/productFinderViewModel";
 
-interface RankedItem {
-  rank: number | null;
-  candidate: {
-    candidateId: string;
-    researchProductId?: string | null;
-    title: string;
-    category: string;
-    problemStatement: string | null;
-    targetAudience: string | null;
-    thumbnailUrl: string | null;
-    videoUrl: string | null;
-    canonicalProductUrl: string | null;
-    storeDomain: string | null;
-    advertiserNames: string[];
-    supportingAdIds: string[];
-    supportingSourceTypes: string[];
-    totalObservationCount: number;
-    distinctAdvertisersCount: number;
-    sourceObservations?: any[];
-  };
-  score: {
-    opportunityScore: number | null;
-    evidenceConfidence: number;
-    scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE";
-    tier?: string;
-    demandClass: string;
-    strengths: string[];
-    risks: string[];
-    missingEvidence: string[];
-    recommendation: string;
-    recommendationRationale: string;
-    pillars: Record<string, { score: number | null; maxWeight: number; status: string; explanation: string }>;
-  };
+function isStockImage(url: string | null | undefined): boolean {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes("unsplash.com") ||
+    lower.includes("picsum.photos") ||
+    lower.includes("placehold.co") ||
+    lower.includes("placeholder.com") ||
+    lower.includes("via.placeholder") ||
+    lower.includes("dummyimage.com")
+  );
 }
 
-interface LeaderboardData {
-  researchRunId: string;
+function formatRelativeAge(isoDate: string | null | undefined): string {
+  if (!isoDate) return "Just now";
+  const ts = new Date(isoDate).getTime();
+  if (Number.isNaN(ts)) return "Just now";
+  const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
+}
+
+interface StoredProductItem {
+  id: string;
+  title: string;
+  category: string;
+  imageUrl: string | null;
+  productUrl: string | null;
+  currentPrice: number | null;
+  compareAtPrice: number | null;
+  store?: {
+    id: string;
+    domain: string;
+    storeName: string | null;
+  };
+  adLinks?: Array<{
+    adId: string;
+    confidenceScore: number;
+  }>;
+}
+
+interface ActiveJobProgress {
+  jobId: string;
+  runId: string;
+  status: "PENDING" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "PARTIAL";
+  stage: string;
+  progressPct: number;
+  errorSummary?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}
+
+interface RecentRunHistoryItem {
+  runId: string;
   topic: string;
-  market: "US";
+  country: string;
   lookbackDays: number;
-  formulaVersion: string;
-  runStatus: string;
-  sourceStatuses: Record<string, string>;
-  topThree: RankedItem[];
-  provisionalCandidates?: RankedItem[];
-  remainingCandidates: RankedItem[];
-  insufficientEvidenceCandidates: RankedItem[];
-  totalCandidatesDiscovered: number;
-  generatedAt?: string;
+  status: string;
+  currentStage: string;
+  progressPct: number;
+  totalObservations: number;
+  totalCandidates: number;
+  verifiedCandidates: number;
+  evergreenWinners: number;
+  createdAt: string;
+  completedAt?: string | null;
 }
 
-interface ProviderStatusItem {
-  source: string;
-  displayName: string;
-  readiness: string;
-  isReady: boolean;
-  readinessReason: string;
+type PrimaryTab = "RECOMMENDED" | "ALL_CANDIDATES" | "EVIDENCE_DIAGNOSTICS";
+type DrawerTab = "OVERVIEW" | "ADS" | "DEMAND" | "PSYCHOLOGY";
+
+const WORKER_PROGRESS_STAGES = [
+  { key: "DISCOVERING_SOURCES", label: "Discovering Sources", minPct: 5 },
+  { key: "COLLECTING_EVIDENCE", label: "Collecting Evidence", minPct: 20 },
+  { key: "VERIFYING_IDENTITY", label: "Verifying Product Identity", minPct: 45 },
+  { key: "CHECKING_DEMAND", label: "Checking Demand", minPct: 65 },
+  { key: "RANKING_CANDIDATES", label: "Ranking Candidates", minPct: 82 },
+  { key: "PREPARING_RESULTS", label: "Preparing Results", minPct: 95 },
+];
+
+function resolveWorkerStageIndex(stageRaw: string | undefined, pct: number): number {
+  const s = (stageRaw || "").toUpperCase();
+  if (s.includes("COMPLETED") || pct >= 95) return 5;
+  if (s.includes("SCORING") || s.includes("RANK")) return 4;
+  if (s.includes("DEMAND") || s.includes("TEMPORAL")) return 3;
+  if (s.includes("CANDIDATE") || s.includes("IDENTITY") || s.includes("AI_DISCOVERY") || s.includes("ENRICH")) return 2;
+  if (s.includes("META") || s.includes("GOOGLE") || s.includes("OBSERVATION") || s.includes("COLLECT")) return 1;
+  return 0;
 }
+
+const QUICK_TOPICS = [
+  "Pet Gadgets",
+  "Dog",
+  "Cat",
+  "DIY",
+  "Gardening",
+  "Automatic Pet Feeder",
+];
 
 export default function ProductsPage() {
-  // Research State
+  const [viewMode, setViewMode] = useState<"EVERGREEN_RESEARCH" | "STORED_PRODUCTS">(
+    "EVERGREEN_RESEARCH"
+  );
+  const [activeTab, setActiveTab] = useState<PrimaryTab>("RECOMMENDED");
+
+  // Search Command Bar State
   const [topic, setTopic] = useState("Pet Gadgets");
-  const [lookbackDays, setLookbackDays] = useState<number>(90);
-  const [isResearching, setIsResearching] = useState(false);
+  const [country, setCountry] = useState("US");
+  const [lookbackDays, setLookbackDays] = useState<30 | 90 | 180 | 365>(180);
+  const [sourceMode, setSourceMode] = useState<ResearchSourceMode>("LIVE_WITH_CACHE_FALLBACK");
+
+  // Research Leaderboard & Run State
+  const [leaderboard, setLeaderboard] = useState<EvergreenLeaderboardResponse | null>(null);
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [activeRunStatus, setActiveRunStatus] = useState<string | null>(null);
+  const [activeRunCompletedAt, setActiveRunCompletedAt] = useState<string | null>(null);
+  const [activeRunTopic, setActiveRunTopic] = useState<string | null>(null);
+  const [activeJob, setActiveJob] = useState<ActiveJobProgress | null>(null);
+  const [recentRuns, setRecentRuns] = useState<RecentRunHistoryItem[]>([]);
+
+  // Source Status & Runtime Identity
+  const [sourceSummary, setSourceSummary] = useState<SourceConnectionSummary | null>(null);
+  const [testingSources, setTestingSources] = useState(false);
+  const [discoveringSources, setDiscoveringSources] = useState(false);
+  const [researchLoading, setResearchLoading] = useState(false);
   const [researchError, setResearchError] = useState<string | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
+  const [runtimeIdentity, setRuntimeIdentity] = useState<any | null>(null);
 
-  // Live Provider Status State
-  const [providerStatuses, setProviderStatuses] = useState<ProviderStatusItem[]>([]);
+  // All Candidates Explorer Filters
+  const [candidateFilter, setCandidateFilter] = useState<"ALL" | ExplorerCandidateStatus>("ALL");
+  const [candidateSearch, setCandidateSearch] = useState("");
+  const [selectedFamily, setSelectedFamily] = useState<string>("ALL");
 
-  // Database Products Tab State
-  const [viewMode, setViewMode] = useState<"LEADERBOARD" | "STORED_PRODUCTS">("LEADERBOARD");
-  const [storedProducts, setStoredProducts] = useState<any[]>([]);
-  const [storedLoading, setStoredLoading] = useState(false);
-  const [storedSearch, setStoredSearch] = useState("");
-  const [storedCategory, setStoredCategory] = useState("ALL");
+  // Drawers & Modals
+  const [drawerCandidate, setDrawerCandidate] = useState<{
+    candidate: any;
+    rankedItem: RankedProductCandidate | null;
+    canonicalCard?: CanonicalRecommendedProduct | null;
+  } | null>(null);
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>("OVERVIEW");
+  const [drawerOverviewData, setDrawerOverviewData] = useState<any | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
-  // Video / Media Modal State
+  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [activeMediaItem, setActiveMediaItem] = useState<{
     title: string;
     videoUrl?: string | null;
@@ -113,754 +204,2588 @@ export default function ProductsPage() {
     platform?: string;
   } | null>(null);
 
-  // Candidate Inspection Modal State (for unlinked candidates)
-  const [inspectCandidate, setInspectCandidate] = useState<RankedItem | null>(null);
+  // Stored Catalog State
+  const [storedProducts, setStoredProducts] = useState<StoredProductItem[]>([]);
+  const [storedLoading, setStoredLoading] = useState(false);
+  const [storedSearch, setStoredSearch] = useState("");
+  const [storedCategory, setStoredCategory] = useState("ALL");
 
-  // Fetch Latest Leaderboard Snapshot from DB (No network research on reload)
-  const fetchLatestLeaderboard = async () => {
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const latestRequestSeqRef = useRef<number>(0);
+  const authoritativeRunIdRef = useRef<string | null>(null);
+  const activeRunIdRef = authoritativeRunIdRef;
+  const activePollingTokenRef = latestRequestSeqRef;
+  const frontendBuildSha =
+    process.env.NEXT_PUBLIC_SWAI_FRONTEND_BUILD_SHA ||
+    process.env.NEXT_PUBLIC_SWAI_GIT_SHA ||
+    runtimeIdentity?.frontendBuildSha ||
+    runtimeIdentity?.shortCommitSha ||
+    "unknown";
+  const frontendReleaseVersion =
+    process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
+    runtimeIdentity?.releaseVersion ||
+    "12.4.3.3";
+
+  const fetchRuntimeVersion = useCallback(async () => {
     try {
-      const res = await fetch("/api/v1/kh02/leaderboard");
+      const res = await fetch(
+        `/api/v1/kh02/version?frontendVersion=${encodeURIComponent(frontendReleaseVersion)}`
+      );
       const json = await res.json();
       if (json.success && json.data) {
-        setLeaderboard(json.data);
-        if (json.data.topic) setTopic(json.data.topic);
-        if (json.data.lookbackDays) setLookbackDays(json.data.lookbackDays);
+        setRuntimeIdentity(json.data);
       }
     } catch (err) {
-      console.error("Failed to load saved leaderboard snapshot:", err);
+      console.error("[ProductsPage] Failed to fetch runtime version:", err);
     }
-  };
+  }, [frontendReleaseVersion]);
 
-  // Fetch Live Provider Readiness Statuses
-  const fetchProviderStatuses = async () => {
+  const fetchSourceStatuses = useCallback(async () => {
     try {
       const res = await fetch("/api/v1/kh02/providers/status");
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setProviderStatuses(json.data);
+      if (json.success) {
+        setSourceSummary(json.data);
       }
     } catch (err) {
-      console.error("Failed to load provider statuses:", err);
+      console.error("[ProductsPage] Failed to load source statuses:", err);
+    }
+  }, []);
+
+  const handleTestSources = async () => {
+    setTestingSources(true);
+    try {
+      const res = await fetch("/api/v1/kh02/providers/test-connection", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        setSourceSummary(json.data);
+      }
+    } catch (err) {
+      console.error("[ProductsPage] Source test failed:", err);
+    } finally {
+      setTestingSources(false);
     }
   };
 
-  // Explicit User-Triggered Research Execution
-  const executeResearch = async (selectedTopic: string = topic, days: number = lookbackDays) => {
+  const handleDiscoverSources = async () => {
+    setDiscoveringSources(true);
     try {
-      setIsResearching(true);
-      setResearchError(null);
-
-      const res = await fetch("/api/v1/kh02/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: selectedTopic.trim() || "Pet Gadgets",
-          market: "US",
-          lookbackDays: days,
-          maxCandidates: 15,
-        }),
-      });
-
+      const res = await fetch("/api/v1/kh02/providers/discover", { method: "POST" });
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to execute evergreen product research.");
+      if (json.success && json.data?.statusSummary) {
+        setSourceSummary(json.data.statusSummary);
+      }
+    } catch (err) {
+      console.error("[ProductsPage] Source auto-discovery failed:", err);
+    } finally {
+      setDiscoveringSources(false);
+    }
+  };
+
+  const loadPersistedRun = useCallback(
+    async (opts?: {
+      runId?: string;
+      topic?: string;
+      lookback?: number;
+      syncTopicInput?: boolean;
+      isPolling?: boolean;
+    }) => {
+      const reqSeq = opts?.isPolling
+        ? latestRequestSeqRef.current
+        : ++latestRequestSeqRef.current;
+      if (!opts?.isPolling && opts?.runId) {
+        authoritativeRunIdRef.current = opts.runId;
       }
 
-      if (res.status === 202 && json.data?.runId) {
-        const runId = json.data.runId;
-        let isDone = false;
-        let attempts = 0;
-        while (!isDone && attempts < 60) {
-          await new Promise((r) => setTimeout(r, 1000));
-          attempts++;
-          const runRes = await fetch(`/api/v1/kh02/research/runs/${runId}`);
-          if (runRes.ok) {
-            const runJson = await runRes.json();
-            const status = runJson.data?.status;
-            if (status === "COMPLETED" || status === "PARTIALLY_COMPLETED") {
-              isDone = true;
-              if (runJson.data?.result) {
-                setLeaderboard(runJson.data.result);
-              } else {
-                await fetchLatestLeaderboard();
-              }
-              setViewMode("LEADERBOARD");
-              break;
-            } else if (status === "FAILED") {
-              throw new Error(runJson.data?.errorMessage || "Background research job failed.");
+      try {
+        const params = new URLSearchParams();
+        if (opts?.runId) params.set("runId", opts.runId);
+        if (opts?.topic) params.set("topic", opts.topic);
+        if (opts?.lookback) params.set("lookback", String(opts.lookback));
+
+        const res = await fetch(`/api/v1/kh02/research?${params.toString()}`);
+        const json = await res.json();
+
+        // V12.4.3.2.1 Section 7.4: Guard against stale polling or out-of-order responses
+        if (reqSeq < activePollingTokenRef.current) {
+          return null;
+        }
+        if (
+          opts?.isPolling &&
+          opts.runId &&
+          activeRunIdRef.current &&
+          opts.runId !== activeRunIdRef.current
+        ) {
+          return null;
+        }
+
+        if (json.success && json.data) {
+          if (json.data.recentRuns) {
+            setRecentRuns(json.data.recentRuns);
+          }
+          if (json.data.leaderboard) {
+            const resolvedId = json.data.runId || json.data.leaderboard.researchRunId || null;
+            authoritativeRunIdRef.current = resolvedId;
+            setLeaderboard(json.data.leaderboard);
+            setActiveRunId(resolvedId);
+            setActiveRunStatus(json.data.status || "COMPLETED");
+            setActiveRunCompletedAt(json.data.completedAt || null);
+            setActiveRunTopic(json.data.topic || json.data.leaderboard.topic || null);
+            if (opts?.syncTopicInput && json.data.topic) {
+              setTopic(json.data.topic);
             }
           }
+          if (json.data.activeJob) {
+            const job = json.data.activeJob as ActiveJobProgress;
+            authoritativeRunIdRef.current = job.runId;
+            setActiveJob(job);
+            if (job.status === "QUEUED" || job.status === "RUNNING") {
+              setResearchLoading(true);
+            } else {
+              setResearchLoading(false);
+            }
+          } else {
+            setActiveJob(null);
+            setResearchLoading(false);
+          }
+          return json.data;
         }
-        if (!isDone) {
-          throw new Error("Research execution timed out waiting for worker snapshot.");
-        }
-      } else {
-        setLeaderboard(json.data);
-        setViewMode("LEADERBOARD");
+      } catch (err) {
+        console.error("[ProductsPage] Failed to load persisted run:", err);
       }
-    } catch (err: any) {
-      setResearchError(err.message || "Failed to conduct evergreen product research.");
-    } finally {
-      setIsResearching(false);
-    }
-  };
+      return null;
+    },
+    []
+  );
 
-  // Fetch Database Stored Products (Catalog)
-  const fetchStoredProducts = async () => {
+  useEffect(() => {
+    if (
+      !activeJob ||
+      (activeJob.status !== "PENDING" &&
+        activeJob.status !== "QUEUED" &&
+        activeJob.status !== "RUNNING")
+    ) {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const pollingRunId = activeJob.runId;
+    pollIntervalRef.current = setInterval(async () => {
+      if (authoritativeRunIdRef.current && authoritativeRunIdRef.current !== pollingRunId) {
+        return;
+      }
+      const data = await loadPersistedRun({ runId: pollingRunId, isPolling: true });
+      if (
+        data &&
+        (!data.activeJob ||
+          (data.activeJob.status !== "PENDING" &&
+            data.activeJob.status !== "QUEUED" &&
+            data.activeJob.status !== "RUNNING"))
+      ) {
+        setResearchLoading(false);
+        fetchSourceStatuses();
+      }
+    }, 600);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [activeJob, loadPersistedRun, fetchSourceStatuses]);
+
+  const handleRunEvergreenResearch = useCallback(
+    async (
+      overrideTopic?: string,
+      overrideLookback?: 30 | 90 | 180 | 365,
+      overrideSourceMode?: ResearchSourceMode
+    ) => {
+      const targetTopic = (overrideTopic ?? topic).trim();
+      const targetLookback = overrideLookback ?? lookbackDays;
+      const targetSourceMode = overrideSourceMode ?? sourceMode;
+      if (!targetTopic || targetTopic.length < 2) {
+        setResearchError("Please enter a research topic (at least 2 characters).");
+        return;
+      }
+
+      const reqSeq = ++latestRequestSeqRef.current;
+      setResearchLoading(true);
+      setResearchError(null);
+
+      try {
+        const res = await fetch("/api/v1/kh02/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: targetTopic,
+            country,
+            lookbackDays: targetLookback,
+            sourceMode: targetSourceMode,
+            asyncMode: true,
+          }),
+        });
+        const json = await res.json();
+        if (reqSeq < latestRequestSeqRef.current) {
+          return;
+        }
+        if (!json.success) {
+          setResearchError(json.error?.message || "Failed to enqueue research job");
+          setResearchLoading(false);
+        } else if (json.data) {
+          authoritativeRunIdRef.current = json.data.runId || null;
+          if (json.data.leaderboard) {
+            setLeaderboard(json.data.leaderboard);
+            setActiveRunId(json.data.runId || null);
+            setActiveRunStatus(json.data.status || "COMPLETED");
+            setActiveRunCompletedAt(json.data.completedAt || new Date().toISOString());
+            setActiveRunTopic(targetTopic);
+            setActiveJob(null);
+            setResearchLoading(false);
+            loadPersistedRun({ runId: json.data.runId });
+          } else {
+            setActiveRunId(json.data.runId || null);
+            setActiveRunStatus("QUEUED");
+            setActiveJob({
+              jobId: json.data.jobId,
+              runId: json.data.runId,
+              status: "QUEUED",
+              stage: json.data.stage || "QUEUED",
+              progressPct: json.data.progressPct ?? 5,
+            });
+          }
+          fetchSourceStatuses();
+        }
+      } catch (err: any) {
+        setResearchError(err?.message || "Unexpected network error");
+        setResearchLoading(false);
+      }
+    },
+    [topic, country, lookbackDays, sourceMode, fetchSourceStatuses, loadPersistedRun]
+  );
+
+  const fetchStoredProducts = useCallback(async () => {
+    setStoredLoading(true);
     try {
-      setStoredLoading(true);
       const params = new URLSearchParams();
-      if (storedSearch.trim()) params.append("query", storedSearch.trim());
-      if (storedCategory !== "ALL") params.append("category", storedCategory);
+      if (storedSearch) params.set("search", storedSearch);
+      if (storedCategory !== "ALL") params.set("category", storedCategory);
 
       const res = await fetch(`/api/v1/products?${params.toString()}`);
       const json = await res.json();
       if (json.success) {
         setStoredProducts(json.data);
       }
-    } catch (err: any) {
-      console.error("Error fetching stored products:", err);
+    } catch (err) {
+      console.error("[ProductsPage] Stored products fetch failed:", err);
     } finally {
       setStoredLoading(false);
     }
-  };
+  }, [storedSearch, storedCategory]);
 
-  // On page mount: Restore saved state (NO automatic network research)
+  // Initial load + URL query restoration
   useEffect(() => {
-    fetchLatestLeaderboard();
-    fetchProviderStatuses();
-    fetchStoredProducts();
+    fetchRuntimeVersion();
+    fetchSourceStatuses();
+
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const urlRunId = sp.get("runId") || undefined;
+      const urlTopic = sp.get("topic") || undefined;
+      const urlLookback = sp.get("lookback") ? Number(sp.get("lookback")) : undefined;
+      const urlSourceMode = sp.get("sourceMode") as ResearchSourceMode | null;
+      const urlTab = sp.get("tab") as PrimaryTab | null;
+
+      if (urlTopic) setTopic(urlTopic);
+      if (urlLookback === 30 || urlLookback === 90 || urlLookback === 180 || urlLookback === 365) {
+        setLookbackDays(urlLookback);
+      }
+      if (
+        urlSourceMode === "LIVE_WITH_CACHE_FALLBACK" ||
+        urlSourceMode === "CACHE_ONLY" ||
+        urlSourceMode === "LIVE_ONLY"
+      ) {
+        setSourceMode(urlSourceMode);
+      }
+      if (
+        urlTab === "RECOMMENDED" ||
+        urlTab === "ALL_CANDIDATES" ||
+        urlTab === "EVIDENCE_DIAGNOSTICS"
+      ) {
+        setActiveTab(urlTab);
+      }
+
+      loadPersistedRun({
+        runId: urlRunId,
+        topic: urlRunId ? undefined : urlTopic,
+        lookback: urlLookback,
+        syncTopicInput: true,
+      });
+    } else {
+      loadPersistedRun({ syncTopicInput: true });
+    }
+  }, [fetchRuntimeVersion, fetchSourceStatuses, loadPersistedRun]);
+
+  useEffect(() => {
+    if (viewMode === "STORED_PRODUCTS") {
+      fetchStoredProducts();
+    }
+  }, [viewMode, fetchStoredProducts]);
+
+  // Keyboard Escape handler to close slide-over drawers and modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDrawerCandidate(null);
+        setHistoryDrawerOpen(false);
+        setActiveMediaItem(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const getSourceBadge = (sourceKey: string, defaultLabel: string) => {
-    const live = providerStatuses.find((p) => p.source === sourceKey);
-    const status = live?.readiness || leaderboard?.sourceStatuses?.[sourceKey] || "NOT_CONFIGURED";
+  // Open Candidate Research Detail Drawer and fetch optional overview data
+  const openCandidateResearchDrawer = useCallback(
+    async (
+      candidate: any,
+      rankedItem: RankedProductCandidate | null,
+      canonicalCard?: CanonicalRecommendedProduct | null,
+      initialTab: DrawerTab = "OVERVIEW"
+    ) => {
+      setDrawerCandidate({ candidate, rankedItem, canonicalCard });
+      setDrawerTab(initialTab);
+      setDrawerOverviewData(null);
 
-    if (status === "SOURCE_DATA_VERIFIED" || status === "PASSED") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-medium">
-          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-          {defaultLabel}: Verified
-        </span>
-      );
+      const pid = candidate.researchProductId || candidate.candidateId;
+      if (!pid) return;
+      setDrawerLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (activeRunId) params.set("runId", activeRunId);
+        if (candidate.candidateId) params.set("candidateId", candidate.candidateId);
+        const res = await fetch(
+          `/api/v1/research/products/${encodeURIComponent(pid)}/overview?${params.toString()}`
+        );
+        const json = await res.json();
+        if (json.success && json.data) {
+          setDrawerOverviewData(json.data);
+        }
+      } catch {
+        // Drawer still renders full candidate evidence from leaderboard
+      } finally {
+        setDrawerLoading(false);
+      }
+    },
+    [activeRunId]
+  );
+
+  // Derived View Models
+  const canonicalRecommended = useMemo(
+    () => buildCanonicalRecommendedProducts(leaderboard),
+    [leaderboard]
+  );
+
+  const allExplorerCandidates = useMemo(
+    () => buildAllCandidatesExplorerList(leaderboard),
+    [leaderboard]
+  );
+
+  const distinctFamilies = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of allExplorerCandidates) {
+      if (row.familyKey && row.familyLabel) {
+        map.set(row.familyKey, row.familyLabel);
+      }
     }
-    if (status === "CONFIGURED") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-950/70 border border-blue-500/40 text-blue-300 text-[11px] font-medium">
-          <Clock className="h-3 w-3 text-blue-400" />
-          {defaultLabel}: Configured
-        </span>
-      );
+    return Array.from(map.entries());
+  }, [allExplorerCandidates]);
+
+  const filteredExplorerCandidates = useMemo(() => {
+    return allExplorerCandidates.filter((row) => {
+      if (candidateFilter !== "ALL" && row.explorerStatus !== candidateFilter) {
+        return false;
+      }
+      if (selectedFamily !== "ALL" && row.familyKey !== selectedFamily) {
+        return false;
+      }
+      if (candidateSearch.trim()) {
+        const q = candidateSearch.trim().toLowerCase();
+        const hay = `${row.title} ${row.storeDomain || ""} ${row.familyLabel} ${row.audienceBadgeLabel}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [allExplorerCandidates, candidateFilter, selectedFamily, candidateSearch]);
+
+  const explorerCounts = useMemo(() => {
+    const counts = {
+      ALL: allExplorerCandidates.length,
+      RESEARCH_QUALIFIED: 0,
+      PROVISIONAL: 0,
+      NEEDS_VERIFICATION: 0,
+      EXCLUDED: 0,
+    };
+    for (const row of allExplorerCandidates) {
+      counts[row.explorerStatus] = (counts[row.explorerStatus] || 0) + 1;
     }
-    if (status === "NOT_VERIFIED") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-300 text-[11px] font-medium">
-          <AlertTriangle className="h-3 w-3 text-amber-400" />
-          {defaultLabel}: Not Verified
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 border border-slate-700/50 text-slate-400 text-[11px] font-medium">
-        <Clock className="h-3 w-3 text-slate-500" />
-        {defaultLabel}: Not Configured
-      </span>
-    );
-  };
+    return counts;
+  }, [allExplorerCandidates]);
+
+  // 4-Metric Status Summary Computed Values (Section 9: Reconciled Source Coverage)
+  const shortlistQualifiedCount = leaderboard?.researchShortlist?.qualifiedCount ?? 0;
+  const shortlistRequestedCount = leaderboard?.researchShortlist?.requestedCount ?? 3;
+  const evergreenWinnerCount = leaderboard?.topThree?.length ?? 0;
+  const rawMetaLive =
+    leaderboard?.sourceCoverage?.META_ADS?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.freshLiveAdsReturned ??
+    0;
+  const rawMetaCached =
+    leaderboard?.sourceCoverage?.META_ADS?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.cachedFallbackAdsReturned ??
+    0;
+  const googleFreshLiveAds =
+    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsReturned ??
+    0;
+  const googleHistoricalAds =
+    leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.cachedFallbackAdsReturned ??
+    0;
+  const fallbackRunObservations = leaderboard?.lookbackCoverage?.totalObservationCount ?? 0;
+  const metaFreshLiveAds =
+    rawMetaLive === 0 &&
+    rawMetaCached === 0 &&
+    leaderboard?.sourceMode === "LIVE_ONLY" &&
+    fallbackRunObservations > 0
+      ? fallbackRunObservations
+      : rawMetaLive;
+  const metaHistoricalAds =
+    rawMetaLive === 0 &&
+    rawMetaCached === 0 &&
+    leaderboard?.sourceMode !== "LIVE_ONLY" &&
+    fallbackRunObservations > 0
+      ? fallbackRunObservations
+      : rawMetaCached;
+  const totalLiveAds = metaFreshLiveAds + googleFreshLiveAds;
+  const totalHistoricalAds = metaHistoricalAds + googleHistoricalAds;
+
+  const sourceCoverageHeadline = useMemo(() => {
+    const metaPart =
+      metaFreshLiveAds > 0
+        ? "Meta Live"
+        : metaHistoricalAds > 0
+        ? "Meta Cache"
+        : "Meta Idle";
+    const googlePart =
+      googleFreshLiveAds > 0
+        ? "Google Live"
+        : googleHistoricalAds > 0
+        ? "Google Cache"
+        : "Google Ready";
+    return `${metaPart} · ${googlePart}`;
+  }, [metaFreshLiveAds, metaHistoricalAds, googleFreshLiveAds, googleHistoricalAds]);
+
+  const buildCommercialAssessmentUrl = useCallback(
+    (productIdOrCandidateId: string, candidateId: string) => {
+      const params = new URLSearchParams();
+      if (activeRunId) params.set("runId", activeRunId);
+      if (candidateId) params.set("candidateId", candidateId);
+      if (leaderboard?.topic || topic) params.set("topic", leaderboard?.topic || topic);
+      params.set("lookbackDays", String(leaderboard?.lookbackDays || lookbackDays));
+      params.set("sourceMode", leaderboard?.sourceMode || sourceMode);
+      return `/products/${encodeURIComponent(
+        productIdOrCandidateId
+      )}/intelligence?${params.toString()}`;
+    },
+    [activeRunId, leaderboard, topic, lookbackDays, sourceMode]
+  );
+
+  const activeStageIndex = activeJob
+    ? resolveWorkerStageIndex(activeJob.stage, activeJob.progressPct)
+    : -1;
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020] text-slate-100">
-      <Header onImportSuccess={() => fetchStoredProducts()} />
-
-      <main className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8">
-        {/* Header / Subheader */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1f293d] pb-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-2">
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>SWAI V12.1 — Evidence-Driven Evergreen Product Intelligence</span>
+    <div className="min-h-screen bg-[#0b0f17] text-slate-100 pb-20 overflow-x-hidden">
+      {/* =====================================================================
+          SECTION 1: CLEAN PRODUCT FINDER HEADER
+         ===================================================================== */}
+      <header
+        data-testid="pf-header"
+        className="border-b border-slate-800/80 bg-[#0f1523]/95 backdrop-blur-md sticky top-0 z-30"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-9 w-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+              <ShoppingBag className="h-4.5 w-4.5 text-indigo-400" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-              <Trophy className="h-7 w-7 text-amber-400" />
-              <span>Evergreen Opportunity Leaderboard</span>
-            </h1>
-            <p className="text-xs md:text-sm text-slate-400 mt-1 max-w-2xl">
-              Cross-platform market intelligence across Meta Ads, TikTok Ads, TikTok Organic, and Google Ads Transparency. Identifying sustainable products for a long-term branded Shopify store.
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                  Product Finder
+                </h1>
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700/70">
+                  US Market
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 truncate">
+                Discover products backed by market evidence.
+              </p>
+            </div>
           </div>
 
-          {/* View Mode Switcher */}
-          <div className="flex items-center bg-[#111827] border border-[#1f293d] p-1 rounded-xl text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Runtime Version & Parity Pill */}
             <button
-              onClick={() => setViewMode("LEADERBOARD")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                viewMode === "LEADERBOARD"
-                  ? "bg-purple-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              type="button"
+              onClick={() => setActiveTab("EVIDENCE_DIAGNOSTICS")}
+              data-testid="kh02-runtime-version-badge"
+              data-release-version={runtimeIdentity?.releaseVersion || frontendReleaseVersion}
+              data-frontend-sha={
+                runtimeIdentity?.frontendBuildSha ||
+                runtimeIdentity?.versionParity?.frontendCommitSha ||
+                frontendBuildSha
+              }
+              data-backend-sha={
+                runtimeIdentity?.backendBuildSha ||
+                runtimeIdentity?.versionParity?.backendCommitSha ||
+                runtimeIdentity?.shortCommitSha ||
+                "unknown"
+              }
+              data-worker-sha={
+                runtimeIdentity?.workerBuildSha ||
+                runtimeIdentity?.versionParity?.workerCommitSha ||
+                runtimeIdentity?.workerStatus?.commitSha ||
+                "none"
+              }
+              className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition-colors"
+              title="Click to inspect runtime parity and diagnostics"
             >
-              Top 3 Leaderboard
-            </button>
-            <button
-              onClick={() => setViewMode("STORED_PRODUCTS")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                viewMode === "STORED_PRODUCTS"
-                  ? "bg-purple-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              All Researched SKUs ({storedProducts.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Research Filter & Niche Selector */}
-        <div className="p-5 rounded-2xl bg-[#161228] border border-[#2e234d] shadow-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-            {/* Topic Input */}
-            <div className="md:col-span-6 relative">
-              <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400" />
-              <input
-                type="text"
-                data-testid="kh02-research-input"
-                placeholder="Enter niche or topic (e.g. Pet Gadgets, Home Cleaning, Kitchen Organization)..."
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && executeResearch()}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0e0b1c] border border-[#3b2d63] text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder-slate-500"
-              />
-            </div>
-
-            {/* Time Window Selector */}
-            <div className="md:col-span-3 flex items-center bg-[#0e0b1c] border border-[#3b2d63] p-1 rounded-xl">
-              {[30, 90, 180, 365].map((days) => (
-                <button
-                  key={days}
-                  onClick={() => {
-                    setLookbackDays(days);
-                    executeResearch(topic, days);
-                  }}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    lookbackDays === days
-                      ? "bg-purple-600 text-white shadow-sm"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {days}D
-                </button>
-              ))}
-            </div>
-
-            {/* Action Button */}
-            <div className="md:col-span-3">
-              <button
-                data-testid="kh02-analyze-button"
-                onClick={() => executeResearch()}
-                disabled={isResearching}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs md:text-sm flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
+              <span>v{runtimeIdentity?.releaseVersion || frontendReleaseVersion}</span>
+              <span className="text-slate-600">·</span>
+              <span
+                data-testid="kh02-runtime-parity-badge"
+                data-runtime-status={
+                  runtimeIdentity?.runtimeStatus === "MATCHED" ||
+                  runtimeIdentity?.versionParity?.allConsistent
+                    ? "MATCHED"
+                    : "MISMATCH_OR_STALE"
+                }
+                className={`inline-flex items-center gap-1 ${
+                  runtimeIdentity?.runtimeStatus === "MATCHED" ||
+                  runtimeIdentity?.versionParity?.allConsistent
+                    ? "text-emerald-400"
+                    : "text-amber-400"
+                }`}
               >
-                {isResearching ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Analyzing Multi-Source Data...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    <span>Analyze Evergreen Niche</span>
-                  </>
-                )}
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    runtimeIdentity?.runtimeStatus === "MATCHED" ||
+                    runtimeIdentity?.versionParity?.allConsistent
+                      ? "bg-emerald-400"
+                      : "bg-amber-400"
+                  }`}
+                />
+                {runtimeIdentity?.runtimeStatus === "MATCHED" ||
+                runtimeIdentity?.versionParity?.allConsistent
+                  ? "Synced"
+                  : "Check Worker"}
+              </span>
+            </button>
+
+            {/* Research History Drawer Trigger */}
+            <button
+              type="button"
+              data-testid="pf-history-trigger"
+              onClick={() => setHistoryDrawerOpen(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 flex items-center gap-1.5 transition-colors"
+            >
+              <History className="h-3.5 w-3.5 text-slate-400" />
+              <span>Research History</span>
+              {recentRuns.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">
+                  {recentRuns.length}
+                </span>
+              )}
+            </button>
+
+            {/* Workspace Mode Switcher */}
+            <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setViewMode("EVERGREEN_RESEARCH")}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                  viewMode === "EVERGREEN_RESEARCH"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Market Research
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("STORED_PRODUCTS")}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                  viewMode === "STORED_PRODUCTS"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Catalog ({storedProducts.length || "SKUs"})
               </button>
             </div>
           </div>
-
-          {/* Dynamic Source Status Bar */}
-          <div data-testid="kh02-source-status-bar" className="pt-3 border-t border-[#2e234d]/60 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2 text-slate-400 font-medium">
-              <span>Source Status:</span>
-              {getSourceBadge("META_ADS", "Meta Ads")}
-              {getSourceBadge("TIKTOK_ADS", "TikTok Ads US")}
-              {getSourceBadge("TIKTOK_ORGANIC", "TikTok Organic")}
-              {getSourceBadge("GOOGLE_ADS", "Google Ads")}
-              {getSourceBadge("DEMAND_HISTORY", "Demand History")}
-            </div>
-            <div className="text-slate-500 text-[11px]">
-              Market: <span className="text-slate-300 font-semibold">United States</span> · Zero unapproved credit spend
-            </div>
-          </div>
         </div>
+      </header>
 
-        {/* Error Notification */}
-        {researchError && (
-          <div className="p-4 rounded-xl bg-red-950/40 border border-red-800/40 text-sm text-red-300 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
-            <span>{researchError}</span>
-          </div>
-        )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {viewMode === "EVERGREEN_RESEARCH" && (
+          <>
+            {/* =====================================================================
+                SECTION 2: UNIFIED RESEARCH COMMAND BAR
+               ===================================================================== */}
+            <section
+              data-testid="pf-command-bar"
+              className="rounded-2xl bg-[#111827] border border-slate-800/90 p-4 sm:p-5 shadow-lg space-y-3.5"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                {/* Search Input */}
+                <div className="lg:col-span-5 relative">
+                  <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    data-testid="kh02-research-input"
+                    type="text"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleRunEvergreenResearch()}
+                    placeholder="Search a niche or product (e.g., dog, cat, cordless glue gun)..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0b0f17] border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
 
-        {/* VIEW MODE 1: LEADERBOARD PRESENTATION */}
-        {viewMode === "LEADERBOARD" && (
-          <div className="space-y-8">
-            {/* Top 3 Section Title */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
-                  <Medal className="h-5 w-5 text-amber-400" />
-                  <span>Top 3 Evidence-Qualified Evergreen Products</span>
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Strictly gated on verified long-term demand stability (≥15/25 pts), multi-month coverage, and high confidence (≥65%).
-                </p>
-              </div>
-              {leaderboard && (
-                <span className="text-xs text-purple-400 font-mono">
-                  {leaderboard.totalCandidatesDiscovered} candidates evaluated · Formula V{leaderboard.formulaVersion}
-                </span>
-              )}
-            </div>
+                {/* Market + Lookback Window */}
+                <div className="lg:col-span-3 flex items-center gap-2">
+                  <select
+                    aria-label="Target Market"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="px-2.5 py-2.5 rounded-xl bg-[#0b0f17] border border-slate-700/80 text-xs font-medium text-slate-200 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="US">US</option>
+                  </select>
 
-            {/* TOP 3 PODIUM CONTAINER */}
-            {isResearching ? (
-              <div className="p-16 rounded-2xl bg-[#161228] border border-[#2e234d] text-center space-y-4">
-                <RefreshCw className="h-8 w-8 text-purple-400 animate-spin mx-auto" />
-                <p className="text-sm font-semibold text-white">Aggregating cross-platform intelligence...</p>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Inspecting Meta ad observations, TikTok video metrics, Google advertiser domains, and historical demand time series.
-                </p>
-              </div>
-            ) : leaderboard && leaderboard.topThree.length > 0 ? (
-              <div data-testid="kh02-leaderboard-container" className="space-y-4">
-                {leaderboard.topThree.map((item) => {
-                  const rank = item.rank || 1;
-                  const isGold = rank === 1;
-                  const isSilver = rank === 2;
-
-                  const borderColor = isGold
-                    ? "border-[#F4C95D] shadow-[0_0_25px_rgba(244,201,93,0.15)]"
-                    : isSilver
-                    ? "border-[#66C9EB] shadow-[0_0_20px_rgba(102,201,235,0.15)]"
-                    : "border-[#F48B87] shadow-[0_0_20px_rgba(244,139,135,0.15)]";
-
-                  const badgeBg = isGold
-                    ? "bg-[#F4C95D] text-black font-extrabold"
-                    : isSilver
-                    ? "bg-[#66C9EB] text-black font-extrabold"
-                    : "bg-[#F48B87] text-black font-extrabold";
-
-                  const rankLabel = isGold ? "#1 EVERGREEN WINNER" : isSilver ? "#2 STRONG CONTENDER" : "#3 VIABLE OPPORTUNITY";
-
-                  return (
-                    <div
-                      key={item.candidate.candidateId}
-                      data-testid="kh02-ranked-product-card"
-                      className={`p-5 rounded-2xl bg-[#1D1733] border-2 ${borderColor} transition-all flex flex-col md:flex-row items-center gap-6 justify-between`}
-                    >
-                      {/* Left: Thumbnail & Video Trigger */}
-                      <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div
-                          onClick={() => {
-                            if (item.candidate.videoUrl || item.candidate.thumbnailUrl) {
-                              setActiveMediaItem({
-                                title: item.candidate.title,
-                                videoUrl: item.candidate.videoUrl,
-                                thumbnailUrl: item.candidate.thumbnailUrl,
-                                sourceUrl: item.candidate.canonicalProductUrl,
-                                platform: item.candidate.supportingSourceTypes[0] || "Meta",
-                              });
-                            }
-                          }}
-                          className="relative shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer group"
-                        >
-                          {item.candidate.thumbnailUrl && !isStockImage(item.candidate.thumbnailUrl) ? (
-                            <img
-                              src={item.candidate.thumbnailUrl}
-                              alt={item.candidate.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-purple-950/40 text-purple-300">
-                              <ShoppingBag className="h-8 w-8 text-purple-400" />
-                            </div>
-                          )}
-                          {/* Rank Badge */}
-                          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[11px] ${badgeBg}`}>
-                            #{rank}
-                          </div>
-                          {/* Video Play Overlay */}
-                          {item.candidate.videoUrl ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-all">
-                              <div className="w-8 h-8 rounded-full bg-purple-600/90 text-white flex items-center justify-center shadow-lg">
-                                <Play className="h-4 w-4 fill-white" />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                              <Eye className="h-2.5 w-2.5" /> Preview
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Title & Core Problem */}
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/40">
-                              {rankLabel}
-                            </span>
-                            <span className="text-[11px] text-slate-400 font-medium">
-                              {item.candidate.category}
-                            </span>
-                          </div>
-                          <h3 className="text-base md:text-lg font-bold text-white leading-tight">
-                            {item.candidate.title}
-                          </h3>
-                          {item.candidate.problemStatement && (
-                            <p className="text-xs text-slate-300 line-clamp-2">
-                              <span className="text-purple-400 font-semibold">Problem:</span> {item.candidate.problemStatement}
-                            </p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
-                            {item.candidate.storeDomain && (
-                              <span className="inline-flex items-center gap-1 text-slate-400">
-                                <Store className="h-3 w-3 text-indigo-400" />
-                                {item.candidate.storeDomain}
-                              </span>
-                            )}
-                            <span className="text-slate-600">•</span>
-                            <span className="text-slate-400">
-                              {item.candidate.distinctAdvertisersCount} active advertiser(s)
-                            </span>
-                            <span className="text-slate-600">•</span>
-                            <span className="text-purple-300">
-                              {item.candidate.supportingSourceTypes.join(", ")}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Scores & Action */}
-                      <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-[#2e234d]">
-                        {/* Score Metric */}
-                        <div className="text-center md:text-right">
-                          <span className="text-[10px] text-slate-400 block font-medium">Evergreen Score</span>
-                          <span className="text-2xl md:text-3xl font-black text-white font-mono">
-                            {item.score.opportunityScore ?? "—"}<span className="text-xs text-slate-500">/100</span>
-                          </span>
-                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                            {item.score.demandClass.replace("_", " ")}
-                          </div>
-                        </div>
-
-                        {/* Evidence Confidence */}
-                        <div className="text-center md:text-right">
-                          <span className="text-[10px] text-slate-400 block font-medium">Confidence</span>
-                          <span className="text-lg md:text-xl font-extrabold text-purple-300 font-mono">
-                            {item.score.evidenceConfidence}%
-                          </span>
-                          <span className="text-[10px] text-emerald-400 block font-semibold">
-                            {item.score.scoreStatus}
-                          </span>
-                        </div>
-
-                        {/* Intelligence Action */}
-                        <div>
-                          {item.candidate.researchProductId ? (
-                            <Link
-                              href={`/products/${item.candidate.researchProductId}/intelligence`}
-                              className="py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition-all whitespace-nowrap"
-                            >
-                              <span>Inspect Analysis</span>
-                              <ChevronRight className="h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <button
-                              onClick={() => setInspectCandidate(item)}
-                              className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 font-semibold text-xs flex items-center gap-1.5 shadow-md transition-all whitespace-nowrap"
-                            >
-                              <span>Inspect Candidate</span>
-                              <SlidersHorizontal className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-8 rounded-2xl bg-[#161228] border border-amber-500/30 text-center space-y-3">
-                <AlertTriangle className="h-7 w-7 text-amber-400 mx-auto" />
-                <h3 className="text-sm font-bold text-white">No verified evergreen winners yet for &quot;{topic}&quot;</h3>
-                <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
-                  To protect against false evergreen claims, candidates require proven non-declining multi-month historical demand stability (≥15/25 pts) and high evidence confidence (≥65%). Promising products are shown under Provisional Opportunities below.
-                </p>
-              </div>
-            )}
-
-            {/* PROVISIONAL OPPORTUNITIES SHORTLIST */}
-            {leaderboard && leaderboard.provisionalCandidates && leaderboard.provisionalCandidates.length > 0 && (
-              <div className="space-y-4 pt-6 border-t border-[#1f293d]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-purple-400" />
-                      <span>Provisional Opportunities (Pending Long-Term Demand Confirmation)</span>
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Promising commercial presence observed across ads, but historical demand or supplier margins remain provisional.
-                    </p>
+                  <div className="flex-1 flex items-center bg-[#0b0f17] p-1 rounded-xl border border-slate-700/80">
+                    {([30, 90, 180, 365] as const).map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        data-testid={`kh02-lookback-${days}`}
+                        onClick={() => setLookbackDays(days)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          lookbackDays === days
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {days}D
+                      </button>
+                    ))}
                   </div>
-                  <span className="text-[11px] font-mono text-purple-400">
-                    {leaderboard.provisionalCandidates.length} provisional candidates
+                </div>
+
+                {/* Source Mode Selector */}
+                <div className="lg:col-span-2">
+                  <select
+                    aria-label="Research Source Mode"
+                    data-testid="kh02-source-mode-select"
+                    value={sourceMode}
+                    onChange={(e) => setSourceMode(e.target.value as ResearchSourceMode)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0b0f17] border border-slate-700/80 text-xs font-medium text-slate-200 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="LIVE_WITH_CACHE_FALLBACK">Live + Cache</option>
+                    <option value="CACHE_ONLY">Cache Only</option>
+                    <option value="LIVE_ONLY">Live Only</option>
+                  </select>
+                </div>
+
+                {/* Primary CTA Button */}
+                <div className="lg:col-span-2">
+                  <button
+                    type="button"
+                    data-testid="kh02-analyze-button"
+                    onClick={() => handleRunEvergreenResearch()}
+                    disabled={researchLoading || !topic.trim()}
+                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    {researchLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Analyzing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        <span>Analyze Products</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Topic Pills & Active Run Context */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-slate-800/70 text-xs">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] text-slate-500 font-medium mr-1">
+                    Quick searches:
+                  </span>
+                  {QUICK_TOPICS.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setTopic(preset);
+                        handleRunEvergreenResearch(preset, lookbackDays, sourceMode);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                        (leaderboard?.topic || topic).toLowerCase() === preset.toLowerCase()
+                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                          : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+
+                {(leaderboard?.researchRunId || activeRunId) && leaderboard && (
+                  <div
+                    data-testid="kh02-last-completed-research-banner"
+                    className="flex items-center gap-2 text-[11px] text-slate-400"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span
+                      data-testid="kh02-authoritative-run-meta"
+                      data-research-run-id={leaderboard.researchRunId || activeRunId || ""}
+                    >
+                      Showing <strong className="text-slate-200">{leaderboard.topic}</strong> ·{" "}
+                      {leaderboard.lookbackDays}D ·{" "}
+                      {leaderboard.sourceMode === "LIVE_ONLY"
+                        ? "Live Only"
+                        : leaderboard.sourceMode === "CACHE_ONLY"
+                        ? "Cache Only"
+                        : "Live + Cache"}{" "}
+                      · Run{" "}
+                      <span className="font-mono">
+                        {(leaderboard.researchRunId || activeRunId || "").slice(0, 10)}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* 6-Stage Real Worker Progress Indicator */}
+              {activeJob &&
+                (activeJob.status === "QUEUED" || activeJob.status === "RUNNING") && (
+                  <div
+                    data-testid="kh02-research-progress-panel"
+                    className="pt-3 border-t border-slate-800 space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-indigo-300 font-medium">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
+                        <span>
+                          {WORKER_PROGRESS_STAGES[activeStageIndex]?.label ||
+                            "Running product research..."}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs text-slate-300">
+                        {activeJob.progressPct}%
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-6 gap-1.5">
+                      {WORKER_PROGRESS_STAGES.map((stage, idx) => {
+                        const isDone = idx < activeStageIndex;
+                        const isCurrent = idx === activeStageIndex;
+                        return (
+                          <div
+                            key={stage.key}
+                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-medium flex items-center gap-1.5 ${
+                              isDone
+                                ? "bg-emerald-950/40 border-emerald-700/40 text-emerald-300"
+                                : isCurrent
+                                ? "bg-indigo-950/60 border-indigo-500/60 text-white"
+                                : "bg-slate-900/60 border-slate-800 text-slate-500"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                                isDone
+                                  ? "bg-emerald-400"
+                                  : isCurrent
+                                  ? "bg-indigo-400 animate-pulse"
+                                  : "bg-slate-700"
+                              }`}
+                            />
+                            <span className="truncate">{stage.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              {researchError && (
+                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/50 text-xs text-rose-200 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
+                  <span>{researchError}</span>
+                </div>
+              )}
+            </section>
+
+            {/* =====================================================================
+                SECTION 3: 4-METRIC RESEARCH STATUS SUMMARY
+               ===================================================================== */}
+            <section
+              data-testid="pf-status-summary"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+            >
+              {/* Metric 1: Research Shortlist */}
+              <div className="p-4 rounded-xl bg-[#111827] border border-slate-800/90 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">
+                    Research Shortlist
+                  </span>
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-white font-mono">
+                    {shortlistQualifiedCount} / {shortlistRequestedCount}
+                  </span>
+                  <span className="text-xs font-medium text-amber-300">Products</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Merchant-verified physical products matching your search
+                </p>
+              </div>
+
+              {/* Metric 2: Verified Evergreen */}
+              <div className="p-4 rounded-xl bg-[#111827] border border-slate-800/90 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">
+                    Verified Evergreen
+                  </span>
+                  <Award className="h-4 w-4 text-emerald-400" />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-white font-mono">
+                    {evergreenWinnerCount} / 3
+                  </span>
+                  <span className="text-xs font-medium text-emerald-400">Winners</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {evergreenWinnerCount > 0
+                    ? "Backed by verified multi-month demand stability"
+                    : "Requires 6+ months of verified demand history"}
+                </p>
+              </div>
+
+              {/* Metric 3: Source Coverage */}
+              <div className="p-4 rounded-xl bg-[#111827] border border-slate-800/90 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">
+                    Source Coverage
+                  </span>
+                  <Database className="h-4 w-4 text-indigo-400" />
+                </div>
+                <div className="mt-2">
+                  <span
+                    data-testid="kh02-badge-source-freshness"
+                    className="text-base font-bold text-white block truncate"
+                  >
+                    {sourceCoverageHeadline}
                   </span>
                 </div>
+                <p
+                  data-testid="pf-source-coverage-counts"
+                  className="text-[11px] text-slate-400 mt-1 font-mono"
+                >
+                  Current run: {totalLiveAds} live · {totalHistoricalAds} cached ads
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {leaderboard.provisionalCandidates.slice(0, 6).map((item) => (
-                    <div
-                      key={item.candidate.candidateId}
-                      data-testid="kh02-provisional-product-card"
-                      className="p-4 rounded-xl bg-[#130f24] border border-[#2b214a] hover:border-purple-500/40 transition-all flex items-start justify-between gap-4"
-                    >
-                      <div className="flex items-start gap-3 flex-1">
-                        <div
-                          onClick={() => {
-                            if (item.candidate.videoUrl || item.candidate.thumbnailUrl) {
-                              setActiveMediaItem({
-                                title: item.candidate.title,
-                                videoUrl: item.candidate.videoUrl,
-                                thumbnailUrl: item.candidate.thumbnailUrl,
-                                sourceUrl: item.candidate.canonicalProductUrl,
-                                platform: item.candidate.supportingSourceTypes[0] || "Meta",
-                              });
-                            }
-                          }}
-                          className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer"
-                        >
-                          {item.candidate.thumbnailUrl && !isStockImage(item.candidate.thumbnailUrl) ? (
-                            <img src={item.candidate.thumbnailUrl} alt={item.candidate.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <ShoppingBag className="h-6 w-6 text-purple-400 m-auto mt-5" />
-                          )}
-                          {item.candidate.videoUrl && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                              <Play className="h-3 w-3 fill-white text-white" />
-                            </div>
-                          )}
-                        </div>
+              {/* Metric 4: Research Freshness */}
+              <div className="p-4 rounded-xl bg-[#111827] border border-slate-800/90 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400">
+                    Research Freshness
+                  </span>
+                  <Clock className="h-4 w-4 text-slate-400" />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-base font-bold text-white">
+                    {formatRelativeAge(activeRunCompletedAt || leaderboard?.generatedAt)}
+                  </span>
+                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                    {leaderboard?.lookbackDays || lookbackDays}D
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1 truncate">
+                  {leaderboard?.topic ? `Topic: "${leaderboard.topic}"` : "Ready to analyze"}
+                </p>
+              </div>
+            </section>
 
-                        <div className="space-y-1 flex-1">
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800/40">
-                            PROVISIONAL
-                          </span>
-                          <h4 className="text-xs font-bold text-white line-clamp-1">{item.candidate.title}</h4>
-                          <p className="text-[11px] text-slate-400 line-clamp-1">
-                            {item.candidate.storeDomain || "Multi-store"} · {item.candidate.distinctAdvertisersCount} advertiser(s)
+            {/* =====================================================================
+                SECTION 4: SEGMENTED RESULT NAVIGATION TABS
+               ===================================================================== */}
+            <div
+              data-testid="pf-tabs"
+              className="flex items-center justify-between border-b border-slate-800 gap-2 overflow-x-auto"
+            >
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  data-testid="pf-tab-recommended"
+                  onClick={() => setActiveTab("RECOMMENDED")}
+                  className={`px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === "RECOMMENDED"
+                      ? "border-indigo-500 text-white"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4 text-indigo-400" />
+                  <span>Recommended</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono">
+                    {canonicalRecommended.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="pf-tab-all-candidates"
+                  onClick={() => setActiveTab("ALL_CANDIDATES")}
+                  className={`px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === "ALL_CANDIDATES"
+                      ? "border-indigo-500 text-white"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Layers className="h-4 w-4 text-slate-400" />
+                  <span>All Candidates</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono">
+                    {allExplorerCandidates.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="pf-tab-evidence-diagnostics"
+                  onClick={() => setActiveTab("EVIDENCE_DIAGNOSTICS")}
+                  className={`px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === "EVIDENCE_DIAGNOSTICS"
+                      ? "border-indigo-500 text-white"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Activity className="h-4 w-4 text-slate-400" />
+                  <span>Evidence & Diagnostics</span>
+                </button>
+              </div>
+            </div>
+
+            {/* =====================================================================
+                TAB 1: RECOMMENDED (CANONICAL SINGLE-CARD PRODUCT DECISION VIEW)
+               ===================================================================== */}
+            {activeTab === "RECOMMENDED" && (
+              <section
+                data-testid="kh02-leaderboard-container"
+                className="space-y-4"
+              >
+                {/* Section 12: Compact Non-Compressing Evergreen Status & Shortfall Banner */}
+                {leaderboard && evergreenWinnerCount === 0 && (
+                  <div
+                    data-testid="kh02-empty-state"
+                    className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0 space-y-0.5">
+                          <h2
+                            data-testid="kh02-snapshot-topic-heading"
+                            className="text-xs sm:text-sm font-semibold text-white"
+                          >
+                            No Verified Evergreen products yet for &ldquo;
+                            {leaderboard?.topic || activeRunTopic || topic}&rdquo;
+                          </h2>
+                          <p className="text-xs text-slate-400 leading-relaxed">
+                            {shortlistQualifiedCount} of {shortlistRequestedCount} products
+                            qualified for the Research Shortlist. 6+ months of verified demand
+                            history are still needed for Evergreen status.
                           </p>
-                          <div className="text-[10px] text-purple-300 font-mono pt-1">
-                            Score: {item.score.opportunityScore ?? "—"}/100 · Conf: {item.score.evidenceConfidence}%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          data-testid="pf-view-missing-evidence-btn"
+                          onClick={() => {
+                            setActiveTab("EVIDENCE_DIAGNOSTICS");
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-colors whitespace-nowrap"
+                        >
+                          View Missing Evidence
+                        </button>
+                      </div>
+                    </div>
+
+                    {leaderboard.researchShortlist?.shortfallReason && (
+                      <div
+                        data-testid="kh02-shortlist-shortfall-notice"
+                        className="text-[11px] px-3 py-1.5 rounded-lg bg-amber-950/35 border border-amber-700/35 text-amber-200/95 leading-relaxed break-words"
+                      >
+                        {leaderboard.researchShortlist.shortfallReason}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Canonical Recommended Product Cards (Strictly 1 Card Per Product) */}
+                {canonicalRecommended.length > 0 ? (
+                  <div
+                    data-testid="kh02-research-shortlist-section"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+                  >
+                    {canonicalRecommended.map((item) => (
+                      <article
+                        key={item.candidateId}
+                        data-testid="pf-canonical-product-card"
+                        data-candidate-id={item.candidateId}
+                        data-product-id={item.rawCandidate.researchProductId || item.candidateId}
+                        data-title={item.title}
+                        data-store-domain={item.storeDomain || ""}
+                        data-canonical-url={item.canonicalProductUrl || ""}
+                        data-product-key={item.productKey}
+                        data-qualification-tier={item.qualificationTier}
+                        data-opportunity-score={item.opportunityScore ?? 0}
+                        data-research-score={item.opportunityScore ?? 0}
+                        data-evergreen-status={item.scoreStatusCode}
+                        data-evidence-count={item.observationCount ?? item.rawCandidate.totalObservationCount ?? 0}
+                        data-rank={item.rank}
+                        data-confidence={item.evidenceConfidence}
+                        data-confidence-status={item.scoreStatusCode}
+                        data-identity-status={item.rawCandidate.identityStatus || "PROBABLE"}
+                        data-merchant-page-verified={item.merchantPageVerified ? "true" : "false"}
+                        data-reality-status={
+                          item.rawCandidate.productRealityStatus ||
+                          "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
+                        }
+                        data-family-key={item.familyKey}
+                        className="rounded-2xl bg-[#111827] border border-slate-800 hover:border-slate-700 transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm"
+                      >
+                        <div className="space-y-4">
+                          {/* Top Row: Rank + Qualification Badge */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 font-mono text-xs font-bold">
+                              #{item.rank}
+                            </span>
+                            <span
+                              data-testid="kh02-badge-evergreen-status"
+                              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                                item.qualificationTone === "emerald"
+                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                                  : item.qualificationTone === "amber"
+                                  ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                                  : "bg-slate-800 text-slate-300 border-slate-700"
+                              }`}
+                            >
+                              {item.qualificationBadgeLabel}
+                            </span>
+                          </div>
+
+                          {/* Product Identity Header */}
+                          <div className="flex items-start gap-3.5">
+                            <div
+                              data-testid="pf-card-thumbnail"
+                              data-media-source={item.primaryMediaSourceLabel}
+                              title={`${item.primaryMediaSourceLabel} — Click to preview`}
+                              onClick={() => {
+                                if (item.videoUrl || item.thumbnailUrl) {
+                                  setActiveMediaItem({
+                                    title: item.title,
+                                    videoUrl: item.videoUrl,
+                                    thumbnailUrl: item.thumbnailUrl,
+                                    sourceUrl: item.canonicalProductUrl,
+                                    platform: item.primaryMediaSourceLabel,
+                                  });
+                                }
+                              }}
+                              className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0 cursor-pointer flex items-center justify-center"
+                            >
+                              {item.thumbnailUrl && !isStockImage(item.thumbnailUrl) ? (
+                                <img
+                                  src={item.thumbnailUrl}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <ShoppingBag className="h-6 w-6 text-slate-500" />
+                              )}
+                              {item.videoUrl && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <Play className="h-4 w-4 text-white fill-white" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <h3 className="text-sm font-bold text-white leading-snug line-clamp-2">
+                                {item.title}
+                              </h3>
+                              <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-400">
+                                {item.storeDomain && (
+                                  <span className="inline-flex items-center gap-1 text-slate-300 font-medium truncate max-w-[170px]">
+                                    <Store className="h-3 w-3 text-indigo-400 shrink-0" />
+                                    {item.storeDomain}
+                                  </span>
+                                )}
+                                <span>·</span>
+                                <span className="text-slate-400 truncate">
+                                  {item.familyLabel}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                <span
+                                  data-testid="kh02-badge-identity-status"
+                                  className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                    item.merchantPageVerified
+                                      ? "bg-emerald-950/50 text-emerald-300 border-emerald-800/50"
+                                      : "bg-amber-950/50 text-amber-300 border-amber-800/50"
+                                  }`}
+                                >
+                                  {item.merchantPageVerified
+                                    ? "Merchant Page Verified"
+                                    : "Ad-Supported (Page Unverified)"}
+                                </span>
+                                <span
+                                  data-testid="kh02-badge-reality-status"
+                                  className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/70"
+                                >
+                                  {formatBusinessTerm(
+                                    item.rawCandidate.productRealityStatus ||
+                                      "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT"
+                                  )}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/50 font-medium">
+                                  {item.audienceBadgeLabel}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Score & Confidence Metrics */}
+                          <div className="grid grid-cols-2 gap-2.5 p-3 rounded-xl bg-[#0b0f17] border border-slate-800/80">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">
+                                Research Score
+                              </span>
+                              <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-lg font-bold text-white font-mono">
+                                  {item.opportunityScore ?? "—"}
+                                </span>
+                                <span className="text-xs text-slate-500 font-mono">/ 100</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 truncate block">
+                                {item.scoreStatusLabel}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">
+                                Evidence Confidence
+                              </span>
+                              <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-lg font-bold text-emerald-400 font-mono">
+                                  {item.evidenceConfidence}%
+                                </span>
+                              </div>
+                              <span
+                                data-testid="pf-card-ad-counts"
+                                className="text-[10px] text-slate-400 truncate block"
+                                title={`${item.supportingAdCount} distinct ads, ${item.observationCount} total historical observations across ${item.distinctAdvertisersCount} advertiser(s)`}
+                              >
+                                {item.supportingAdCount} ad{item.supportingAdCount === 1 ? "" : "s"} ·{" "}
+                                {item.observationCount} obs · {item.distinctAdvertisersCount} adv
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Section 10: Buyer-Oriented Why It Fits Your Search */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-semibold text-slate-300 block">
+                                Why it fits your search
+                              </span>
+                              <button
+                                type="button"
+                                data-testid="pf-view-evidence-details-btn"
+                                onClick={() =>
+                                  openCandidateResearchDrawer(
+                                    item.rawCandidate,
+                                    item.rawRankedItem,
+                                    item,
+                                    "OVERVIEW"
+                                  )
+                                }
+                                className="text-[10px] font-medium text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
+                              >
+                                View Evidence Details
+                              </button>
+                            </div>
+                            <p
+                              data-testid="pf-card-why-it-fits"
+                              className="text-xs text-slate-400 leading-relaxed line-clamp-2"
+                            >
+                              {item.whyItMatters}
+                            </p>
+                          </div>
+
+                          {/* Verified Evidence & Missing Requirements */}
+                          <div className="space-y-2 text-xs pt-1 border-t border-slate-800/70">
+                            <div className="space-y-1">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
+                                Evidence Checklist
+                              </span>
+                              <ul className="space-y-1">
+                                {item.verifiedEvidenceItems.slice(0, 3).map((ev, i) => {
+                                  const isUnverifiedWarning = ev
+                                    .toLowerCase()
+                                    .includes("unverified");
+                                  return (
+                                    <li
+                                      key={i}
+                                      className="text-[11px] text-slate-300 flex items-center gap-1.5"
+                                    >
+                                      {isUnverifiedWarning ? (
+                                        <Info className="h-3 w-3 text-amber-400 shrink-0" />
+                                      ) : (
+                                        <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                                      )}
+                                      <span className="truncate">{ev}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+
+                            {item.missingRequirements.length > 0 && (
+                              <div className="space-y-1 pt-1">
+                                <span className="text-[10px] uppercase tracking-wider text-amber-400/90 font-semibold block">
+                                  Needed for Evergreen Winner
+                                </span>
+                                <p className="text-[11px] text-amber-200/90 leading-snug line-clamp-2">
+                                  {item.missingRequirements[0]}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
 
-                      <div>
-                        {item.candidate.researchProductId ? (
-                          <Link
-                            href={`/products/${item.candidate.researchProductId}/intelligence`}
-                            className="py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-semibold flex items-center gap-1"
-                          >
-                            <span>Inspect</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </Link>
-                        ) : (
+                        {/* Card Footer Actions */}
+                        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
                           <button
-                            onClick={() => setInspectCandidate(item)}
-                            className="py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-semibold flex items-center gap-1"
+                            type="button"
+                            data-testid="pf-view-research-btn"
+                            onClick={() =>
+                              openCandidateResearchDrawer(
+                                item.rawCandidate,
+                                item.rawRankedItem,
+                                item,
+                                "OVERVIEW"
+                              )
+                            }
+                            className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           >
-                            <span>Details</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
+                            <FileSearch className="h-3.5 w-3.5 text-indigo-400" />
+                            <span>View Research</span>
                           </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
+                          <Link
+                            data-testid="pf-commercial-assessment-link"
+                            href={buildCommercialAssessmentUrl(
+                              item.researchProductId || item.candidateId,
+                              item.candidateId
+                            )}
+                            className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors text-center"
+                          >
+                            <span>Commercial Assessment</span>
+                            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                          </Link>
+
+                          {item.canonicalProductUrl && (
+                            <a
+                              href={item.canonicalProductUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Open merchant product page"
+                              className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    data-testid="kh02-empty-shortlist-explanation"
+                    className="p-8 rounded-2xl bg-[#111827] border border-slate-800 text-center space-y-3"
+                  >
+                    <ShoppingBag className="h-8 w-8 text-slate-500 mx-auto" />
+                    <h3 className="text-sm font-bold text-white">
+                      No qualified product candidates found for &ldquo;
+                      {leaderboard?.topic || topic}&rdquo;
+                    </h3>
+                    <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                      Returned advertisements either lacked verifiable merchant product pages or
+                      targeted a different customer segment. Try switching Source Mode to{" "}
+                      <strong className="text-slate-200">Live + Cache</strong> or check the{" "}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("ALL_CANDIDATES")}
+                        className="text-indigo-400 underline hover:text-indigo-300"
+                      >
+                        All Candidates
+                      </button>{" "}
+                      tab to inspect excluded items.
+                    </p>
+                  </div>
+                )}
+              </section>
             )}
 
-            {/* REMAINING CANDIDATES (#4+) */}
-            {leaderboard && leaderboard.remainingCandidates.length > 0 && (
-              <div className="space-y-3 pt-6 border-t border-[#1f293d]">
-                <h3 className="text-sm font-bold text-slate-300">
-                  Other Verified Candidates (#{leaderboard.remainingCandidates[0]?.rank || 4} and below)
-                </h3>
-                <div className="space-y-2">
-                  {leaderboard.remainingCandidates.map((item) => (
-                    <div
-                      key={item.candidate.candidateId}
-                      className="p-3.5 rounded-xl bg-[#141026] border border-[#261d40] hover:border-purple-500/40 transition-all flex items-center justify-between gap-4 text-xs"
+            {/* =====================================================================
+                TAB 2: ALL CANDIDATES EXPLORER
+               ===================================================================== */}
+            {activeTab === "ALL_CANDIDATES" && (
+              <section
+                data-testid="pf-all-candidates-view"
+                className="rounded-2xl bg-[#111827] border border-slate-800 p-4 sm:p-5 space-y-4"
+              >
+                {/* Filter Bar */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  {/* Status Filter Chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {(
+                      [
+                        { key: "ALL", label: "All", testId: "pf-filter-all" },
+                        {
+                          key: "RESEARCH_QUALIFIED",
+                          label: "Research Qualified",
+                          testId: "pf-filter-qualified",
+                        },
+                        {
+                          key: "PROVISIONAL",
+                          label: "Provisional",
+                          testId: "pf-filter-provisional",
+                        },
+                        {
+                          key: "NEEDS_VERIFICATION",
+                          label: "Needs Verification",
+                          testId: "pf-filter-needs-verification",
+                        },
+                        {
+                          key: "EXCLUDED",
+                          label: "Excluded",
+                          testId: "pf-filter-excluded",
+                        },
+                      ] as const
+                    ).map((chip) => {
+                      const count = explorerCounts[chip.key] ?? 0;
+                      const active = candidateFilter === chip.key;
+                      return (
+                        <button
+                          key={chip.key}
+                          type="button"
+                          data-testid={chip.testId}
+                          onClick={() => setCandidateFilter(chip.key)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                            active
+                              ? "bg-indigo-600 text-white"
+                              : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                          }`}
+                        >
+                          <span>{chip.label}</span>
+                          <span
+                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                              active ? "bg-indigo-700 text-white" : "bg-slate-800 text-slate-400"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Search & Family Filter */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative">
+                      <Search className="h-3.5 w-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={candidateSearch}
+                        onChange={(e) => setCandidateSearch(e.target.value)}
+                        placeholder="Filter by product or store..."
+                        className="pl-8 pr-3 py-1.5 rounded-lg bg-[#0b0f17] border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-full sm:w-52"
+                      />
+                    </div>
+
+                    <select
+                      aria-label="Filter by Product Family"
+                      value={selectedFamily}
+                      onChange={(e) => setSelectedFamily(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-[#0b0f17] border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 text-center font-bold text-slate-400 font-mono">
-                          #{item.rank}
-                        </span>
-                        <div>
-                          <h4 className="font-semibold text-white">{item.candidate.title}</h4>
-                          <p className="text-[11px] text-slate-500">{item.candidate.category} · {item.candidate.storeDomain || "Multiple stores"}</p>
-                        </div>
-                      </div>
+                      <option value="ALL">All Families ({distinctFamilies.length})</option>
+                      {distinctFamilies.map(([key, label]) => (
+                        <option key={key} value={key}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <span className="text-slate-400 text-[10px] block">Score</span>
-                          <span className="font-bold text-white font-mono">{item.score.opportunityScore ?? "—"}/100</span>
+                {/* Desktop Candidate Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table
+                    data-testid="pf-all-candidates-table"
+                    className="w-full text-left border-collapse text-xs"
+                  >
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                        <th className="py-2.5 px-3 font-medium">Product & Store</th>
+                        <th className="py-2.5 px-3 font-medium">Status</th>
+                        <th className="py-2.5 px-3 font-medium">Audience Fit</th>
+                        <th className="py-2.5 px-3 font-medium">Score / Conf</th>
+                        <th className="py-2.5 px-3 font-medium">Evidence & Qualification Note</th>
+                        <th className="py-2.5 px-3 text-right font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredExplorerCandidates.map((row) => (
+                        <tr
+                          key={row.candidateId}
+                          data-testid={
+                            row.explorerStatus === "EXCLUDED"
+                              ? "kh02-rejected-product-card"
+                              : "pf-explorer-candidate-row"
+                          }
+                          data-candidate-id={row.candidateId}
+                          data-in-ranked-snapshot={row.inRankedSnapshot ? "true" : "false"}
+                          className="hover:bg-slate-900/50 transition-colors"
+                        >
+                          <td className="py-3 px-3 max-w-xs">
+                            <div className="font-semibold text-white line-clamp-1">
+                              {row.title}
+                            </div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              <span>{row.storeDomain || "Store unverified"}</span>
+                              <span>·</span>
+                              <span className="text-slate-500">{row.familyLabel}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span
+                              className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${
+                                row.statusTone === "emerald"
+                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/40"
+                                  : row.statusTone === "amber"
+                                  ? "bg-amber-950/60 text-amber-300 border-amber-700/40"
+                                  : row.statusTone === "rose"
+                                  ? "bg-rose-950/60 text-rose-300 border-rose-700/40"
+                                  : "bg-slate-800 text-slate-300 border-slate-700"
+                              }`}
+                            >
+                              {row.statusBadgeLabel}
+                            </span>
+                            <div className="text-[10px] text-slate-500 mt-1">
+                              {row.identityLabel}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span
+                              className={`text-[11px] px-2 py-0.5 rounded font-medium ${
+                                row.audienceFitStatus === "MISMATCHED"
+                                  ? "bg-rose-950/60 text-rose-300 border border-rose-800/50"
+                                  : "bg-slate-800 text-slate-300"
+                              }`}
+                            >
+                              {row.audienceBadgeLabel}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap font-mono">
+                            <div className="text-white font-semibold">
+                              {row.opportunityScore != null ? `${row.opportunityScore}/100` : "—"}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {row.evidenceConfidence}% · {row.observationCount} obs
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 max-w-md">
+                            <p className="text-slate-300 text-xs line-clamp-2">
+                              {row.plainEnglishReason}
+                            </p>
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openCandidateResearchDrawer(
+                                    row.rawCandidate,
+                                    row.rawRankedItem,
+                                    null,
+                                    "OVERVIEW"
+                                  )
+                                }
+                                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium"
+                              >
+                                Inspect
+                              </button>
+                              {row.explorerStatus !== "EXCLUDED" && (
+                                <Link
+                                  href={buildCommercialAssessmentUrl(
+                                    row.researchProductId || row.candidateId,
+                                    row.candidateId
+                                  )}
+                                  className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium"
+                                >
+                                  Assess
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Stacked Cards */}
+                <div className="md:hidden space-y-2.5">
+                  {filteredExplorerCandidates.map((row) => (
+                    <div
+                      key={row.candidateId}
+                      data-testid="pf-explorer-mobile-card"
+                      className="p-3.5 rounded-xl bg-[#0b0f17] border border-slate-800 space-y-2 text-xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-white line-clamp-1">{row.title}</h4>
+                          <p className="text-[11px] text-slate-400 truncate">
+                            {row.storeDomain || "Store unverified"} · {row.familyLabel}
+                          </p>
                         </div>
-                        <div className="text-right">
-                          <span className="text-slate-400 text-[10px] block">Confidence</span>
-                          <span className="font-semibold text-purple-300 font-mono">{item.score.evidenceConfidence}%</span>
-                        </div>
-                        {item.candidate.researchProductId ? (
-                          <Link
-                            href={`/products/${item.candidate.researchProductId}/intelligence`}
-                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium"
-                          >
-                            Inspect
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={() => setInspectCandidate(item)}
-                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium"
-                          >
-                            Details
-                          </button>
-                        )}
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                            row.statusTone === "emerald"
+                              ? "bg-emerald-950 text-emerald-300"
+                              : row.statusTone === "rose"
+                              ? "bg-rose-950 text-rose-300"
+                              : "bg-amber-950 text-amber-300"
+                          }`}
+                        >
+                          {row.statusBadgeLabel}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 line-clamp-2">
+                        {row.plainEnglishReason}
+                      </p>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                        <span className="font-mono text-[11px] text-slate-400">
+                          Score: {row.opportunityScore ?? "—"}/100 · {row.audienceBadgeLabel}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openCandidateResearchDrawer(
+                              row.rawCandidate,
+                              row.rawRankedItem,
+                              null,
+                              "OVERVIEW"
+                            )
+                          }
+                          className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-medium"
+                        >
+                          Inspect
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
-          </div>
+
+            {/* =====================================================================
+                TAB 3: EVIDENCE & DIAGNOSTICS
+               ===================================================================== */}
+            {activeTab === "EVIDENCE_DIAGNOSTICS" && (
+              <section
+                data-testid="pf-evidence-diagnostics-view"
+                className="space-y-6"
+              >
+                {/* 14.1 Source Execution Summary */}
+                <div
+                  data-testid="kh02-source-status-bar"
+                  className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Database className="h-4 w-4 text-indigo-400" />
+                        <span>Advertising & Demand Source Providers</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Real-time upstream collection status, historical cache fallback, and
+                        provider credentials.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid="kh02-discover-sources-button"
+                        onClick={handleDiscoverSources}
+                        disabled={discoveringSources}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium flex items-center gap-1.5"
+                      >
+                        {discoveringSources ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                        )}
+                        <span>Discover Sources</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-testid="kh02-test-connections-button"
+                        onClick={handleTestSources}
+                        disabled={testingSources}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5"
+                      >
+                        {testingSources ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        )}
+                        <span>Test Connections</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                    {[
+                      {
+                        label: "Meta Ads Library",
+                        cov: leaderboard?.sourceCoverage?.META_ADS,
+                      },
+                      {
+                        label: "Google Ads Transparency",
+                        cov: leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY,
+                      },
+                      {
+                        label: "Demand History",
+                        cov: leaderboard?.sourceCoverage?.GOOGLE_TRENDS,
+                      },
+                      {
+                        label: "TikTok Creative",
+                        cov: leaderboard?.sourceCoverage?.TIKTOK_CREATIVE,
+                      },
+                    ].map((src) => (
+                      <div
+                        key={src.label}
+                        className="p-3.5 rounded-xl bg-[#0b0f17] border border-slate-800 space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-200">{src.label}</span>
+                          <span
+                            className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                              src.cov?.freshLiveAdsCount
+                                ? "bg-emerald-950 text-emerald-300"
+                                : src.cov?.historicalCachedAdsCount
+                                ? "bg-amber-950 text-amber-300"
+                                : "bg-slate-800 text-slate-400"
+                            }`}
+                          >
+                            {src.cov?.queryStatus || "READY"}
+                          </span>
+                        </div>
+                        <div className="font-mono text-[11px] text-slate-400">
+                          Live: {src.cov?.freshLiveAdsCount ?? 0} · Cache:{" "}
+                          {src.cov?.historicalCachedAdsCount ?? 0}
+                        </div>
+                        {src.cov?.errorSummary && (
+                          <p className="text-[10px] text-amber-300/90 line-clamp-2">
+                            {src.cov.errorSummary}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Gemini AI Badge */}
+                    <div
+                      data-testid="kh02-gemini-ai-badge"
+                      className="p-3.5 rounded-xl bg-[#0b0f17] border border-slate-800 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-200">Gemini AI Verifier</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300">
+                          {leaderboard?.aiDiscoverySummary?.aiMode || "ACTIVE"}
+                        </span>
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-400">
+                        Verified: {leaderboard?.aiDiscoverySummary?.aiVerifiedPhysicalCount ?? 0}{" "}
+                        · Calls: {leaderboard?.aiDiscoverySummary?.actualGeminiCalls ?? 0}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 14.2 Meta Subquery Execution Table */}
+                <div className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-white">
+                    Meta & Source Subquery Execution Log
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table
+                      data-testid="kh02-query-coverage-table"
+                      className="w-full text-left border-collapse text-xs"
+                    >
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                          <th className="py-2 px-3">Query String</th>
+                          <th className="py-2 px-3">Type</th>
+                          <th className="py-2 px-3">Status</th>
+                          <th className="py-2 px-3">API Calls</th>
+                          <th className="py-2 px-3">Returned Ads</th>
+                          <th className="py-2 px-3">Diagnostic Note</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+                        {(leaderboard?.queryExecutions || []).length > 0 ? (
+                          (leaderboard?.queryExecutions || []).map((q: any, idx: number) => (
+                            <tr key={idx}>
+                              <td className="py-2 px-3 text-white">
+                                {q.queryString || q.keyword || "—"}
+                              </td>
+                              <td className="py-2 px-3 text-slate-400">
+                                {q.queryType || q.searchType || q.provider || "—"}
+                              </td>
+                              <td className="py-2 px-3">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] ${
+                                    q.status === "QUERY_SUCCEEDED" ||
+                                    q.status === "QUERY_RETURNED_ADS"
+                                      ? "bg-emerald-950 text-emerald-300"
+                                      : q.status === "QUERY_FAILED"
+                                      ? "bg-rose-950 text-rose-300"
+                                      : "bg-slate-800 text-slate-300"
+                                  }`}
+                                >
+                                  {q.status}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-slate-300">
+                                {q.actualApiCalls ?? (q.cacheHit ? 0 : 1)}
+                              </td>
+                              <td className="py-2 px-3 text-slate-200">
+                                {q.returnedAdsCount ?? q.returnedCount ?? 0}
+                              </td>
+                              <td className="py-2 px-3 text-slate-400 font-sans">
+                                {q.errorMessage || (q.cacheHit ? "Cached" : "Completed")}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-3 px-3 text-slate-400 font-sans">
+                              No upstream subqueries recorded for this snapshot.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 14.3 Coherent 13-Stage Candidate Funnel */}
+                <div
+                  data-testid="kh02-discovery-intelligence-panel"
+                  className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-4"
+                >
+                  <div
+                    data-testid="kh02-candidate-funnel-summary"
+                    className="flex items-center justify-between"
+                  >
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Coherent 13-Stage Candidate Qualification Funnel
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Auditable stage-by-stage progression from raw ad observations to
+                        Verified Evergreen Winners.
+                      </p>
+                    </div>
+                    <span
+                      className={`text-[11px] font-mono px-2.5 py-1 rounded-lg ${
+                        leaderboard?.candidateFunnel?.funnelCoherent !== false
+                          ? "bg-emerald-950/60 text-emerald-300 border border-emerald-700/40"
+                          : "bg-rose-950/60 text-rose-300"
+                      }`}
+                    >
+                      {leaderboard?.candidateFunnel?.funnelCoherent !== false
+                        ? "FUNNEL COHERENT"
+                        : "CHECK FUNNEL"}
+                    </span>
+                  </div>
+
+                  <div
+                    data-testid="kh02-coherent-funnel-grid"
+                    className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs"
+                  >
+                    {[
+                      {
+                        label: "1. Raw Source Items",
+                        val:
+                          leaderboard?.candidateFunnel?.rawSourceItemsCount ??
+                          leaderboard?.candidateFunnel?.rawSourceObservations,
+                      },
+                      {
+                        label: "2. Ad Observations",
+                        val:
+                          leaderboard?.candidateFunnel?.normalizedObservationsCount ??
+                          leaderboard?.candidateFunnel?.normalizedObservations,
+                      },
+                      {
+                        label: "3. Extracted Candidates",
+                        val:
+                          leaderboard?.candidateFunnel?.extractedCandidatesCount ??
+                          leaderboard?.candidateFunnel?.rawCandidateGroups,
+                      },
+                      {
+                        label: "4. Physical Candidates",
+                        val:
+                          leaderboard?.candidateFunnel?.physicalProductCandidatesCount ??
+                          leaderboard?.candidateFunnel?.physicalProductsSupported,
+                      },
+                      {
+                        label: "5. Non-Product Excluded",
+                        val:
+                          leaderboard?.candidateFunnel?.excludedNonProductCount ??
+                          leaderboard?.candidateFunnel?.nonProductEntitiesRejected,
+                      },
+                      {
+                        label: "6. Site Shells Excluded",
+                        val:
+                          leaderboard?.candidateFunnel?.excludedUnverifiedSiteShellCount ??
+                          leaderboard?.candidateFunnel?.unverifiedSiteShellsExcluded,
+                      },
+                      {
+                        label: "7. Niche Irrelevant",
+                        val:
+                          leaderboard?.candidateFunnel?.excludedIrrelevantCount ??
+                          leaderboard?.candidateFunnel?.irrelevantAudienceRejected,
+                      },
+                      {
+                        label: "8. Niche Relevant",
+                        val:
+                          leaderboard?.candidateFunnel?.nicheRelevantCandidatesCount ??
+                          leaderboard?.candidateFunnel?.audienceRelevantPhysicalCount ??
+                          leaderboard?.candidateFunnel?.physicalProductsSupported,
+                      },
+                      {
+                        label: "9. Identity Verified",
+                        val:
+                          leaderboard?.candidateFunnel?.identityVerifiedCount ??
+                          leaderboard?.candidateFunnel?.identitiesVerified,
+                      },
+                      {
+                        label: "10. Identity Probable",
+                        val:
+                          leaderboard?.candidateFunnel?.identityProbableCount ??
+                          leaderboard?.candidateFunnel?.identitiesProbable,
+                      },
+                      {
+                        label: "11. Distinct Families",
+                        val:
+                          leaderboard?.candidateFunnel?.distinctProductFamiliesCount ??
+                          leaderboard?.candidateFunnel?.distinctProductFamilies,
+                      },
+                      {
+                        label: "12. Shortlist Qualified",
+                        val:
+                          leaderboard?.candidateFunnel?.shortlistQualifiedCount ??
+                          leaderboard?.candidateFunnel?.researchShortlistSelected,
+                      },
+                      {
+                        label: "13. Evergreen Winners",
+                        val:
+                          leaderboard?.candidateFunnel?.verifiedEvergreenWinnerCount ??
+                          leaderboard?.candidateFunnel?.verifiedEvergreenCandidates,
+                      },
+                    ].map((st) => (
+                      <div
+                        key={st.label}
+                        className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800"
+                      >
+                        <span className="text-[10px] text-slate-400 block truncate">
+                          {st.label}
+                        </span>
+                        <span className="text-base font-bold text-white font-mono mt-1 block">
+                          {st.val ?? 0}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 14.4 Runtime & Build Parity Panel */}
+                <div className="rounded-2xl bg-[#111827] border border-slate-800 p-5 space-y-3 text-xs">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                    <span>Runtime & Worker Build Parity</span>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-mono">
+                    <div className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-sans">
+                        Release Version
+                      </span>
+                      <span className="text-sm font-bold text-white">
+                        {runtimeIdentity?.releaseVersion || frontendReleaseVersion}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-sans">
+                        Frontend Build SHA
+                      </span>
+                      <span className="text-sm font-bold text-slate-200">
+                        {runtimeIdentity?.versionParity?.frontendCommitSha || frontendBuildSha}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-sans">
+                        Backend Server SHA
+                      </span>
+                      <span className="text-sm font-bold text-slate-200">
+                        {runtimeIdentity?.versionParity?.backendCommitSha ||
+                          runtimeIdentity?.shortCommitSha ||
+                          "unknown"}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#0b0f17] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-sans">
+                        Worker Heartbeat SHA
+                      </span>
+                      <span className="text-sm font-bold text-emerald-400">
+                        {runtimeIdentity?.versionParity?.workerCommitSha ||
+                          runtimeIdentity?.workerStatus?.commitSha ||
+                          "standby"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </>
         )}
 
-        {/* VIEW MODE 2: STORED DATABASE SKUS (PRESERVES EXISTING FUNCTIONALITY) */}
+        {/* =====================================================================
+            STORED CATALOG SKUS VIEW (PRESERVED KH-01 / CATALOG FUNCTIONALITY)
+           ===================================================================== */}
         {viewMode === "STORED_PRODUCTS" && (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-3 items-center justify-between text-xs">
+          <section className="space-y-5">
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between text-xs">
               <div className="relative flex-1 w-full">
                 <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search catalog products by title or domain..."
+                  placeholder="Search catalog products by title or store domain..."
                   value={storedSearch}
                   onChange={(e) => setStoredSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && fetchStoredProducts()}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#111827] border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
                 />
               </div>
 
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <span className="text-slate-500 font-medium">Category:</span>
-                <select
-                  value={storedCategory}
-                  onChange={(e) => setStoredCategory(e.target.value)}
-                  className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
-                >
-                  <option value="ALL">All Categories</option>
-                  <option value="Home & Kitchen">Home & Kitchen</option>
-                  <option value="Beauty & Personal Care">Beauty & Personal Care</option>
-                  <option value="Health & Wellness Products">Health & Wellness</option>
-                  <option value="Pet Supplies">Pet Supplies</option>
-                  <option value="Fitness">Fitness</option>
-                  <option value="Fashion">Fashion</option>
-                </select>
-              </div>
+              <select
+                aria-label="Catalog Category"
+                value={storedCategory}
+                onChange={(e) => setStoredCategory(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-[#111827] border border-slate-800 text-slate-200 text-xs"
+              >
+                <option value="ALL">All Categories</option>
+                <option value="Home & Kitchen">Home & Kitchen</option>
+                <option value="Beauty & Personal Care">Beauty & Personal Care</option>
+                <option value="Pet Supplies">Pet Supplies</option>
+              </select>
             </div>
 
             {storedLoading ? (
-              <div className="p-16 text-center text-slate-500">Loading catalog products...</div>
-            ) : storedProducts.length === 0 ? (
-              <div className="p-16 rounded-xl bg-[#111827] border border-[#1f293d] text-center space-y-3">
-                <ShoppingBag className="h-10 w-10 text-slate-600 mx-auto" />
-                <p className="text-sm font-bold text-white">No products found in catalog</p>
+              <div className="p-12 text-center text-slate-400 text-xs">
+                Loading stored catalog products...
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {storedProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="bg-[#111827] rounded-xl border border-[#1f293d] overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all shadow-sm"
+                    className="bg-[#111827] rounded-2xl border border-slate-800 overflow-hidden flex flex-col justify-between p-4 space-y-3"
                   >
-                    <div>
-                      <div className="relative h-44 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
-                        {product.imageUrl && !isStockImage(product.imageUrl) ? (
-                          <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <ShoppingBag className="h-8 w-8 text-slate-700" />
-                        )}
-                      </div>
-                      <div className="p-4 space-y-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium">
-                          {product.category}
-                        </span>
-                        <h2 className="text-sm font-bold text-white line-clamp-2">{product.title}</h2>
-                        <p className="text-xs text-slate-400 font-mono">
-                          Domain: <span className="text-indigo-300">{product.store?.domain || "Unknown"}</span>
-                        </p>
-                      </div>
+                    <div className="space-y-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                        {product.category}
+                      </span>
+                      <h3 className="text-sm font-bold text-white line-clamp-2">
+                        {product.title}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-mono">
+                        Store: {product.store?.domain || "Unknown"}
+                      </p>
                     </div>
-
-                    <div className="p-4 pt-0 space-y-3">
-                      <div className="flex items-center justify-between pt-3 border-t border-[#1f293d]">
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Observed Price</span>
-                          <span className="text-base font-extrabold text-emerald-400 font-mono">
-                            {product.currentPrice != null ? `$${product.currentPrice.toFixed(2)}` : "—"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-slate-500 block">Linked Ads</span>
-                          <span className="text-xs font-bold text-white font-mono">
-                            {product.adLinks?.length ?? 0} observed
-                          </span>
-                        </div>
-                      </div>
-
+                    <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                      <span className="text-sm font-bold text-emerald-400 font-mono">
+                        {product.currentPrice != null
+                          ? `$${product.currentPrice.toFixed(2)}`
+                          : "Price unverified"}
+                      </span>
                       <Link
                         href={`/products/${product.id}/intelligence`}
-                        className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                        className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
                       >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        <span>Product Intelligence</span>
+                        Commercial Assessment
                       </Link>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         )}
       </main>
 
-      {/* VIDEO / MEDIA PREVIEW MODAL */}
-      {activeMediaItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#161228] border border-[#2e234d] rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-4 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">
-                  {activeMediaItem.platform || "Media Creative"}
-                </span>
-                <h3 className="text-base font-bold text-white mt-1 line-clamp-1">{activeMediaItem.title}</h3>
+      {/* =====================================================================
+          SECTION 12: SLIDE-OVER PRODUCT RESEARCH DETAIL DRAWER
+         ===================================================================== */}
+      {drawerCandidate && (
+        <div
+          data-testid="pf-candidate-drawer"
+          className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs"
+        >
+          <div className="w-full max-w-2xl bg-[#0f1523] border-l border-slate-800 h-full flex flex-col justify-between overflow-hidden shadow-2xl">
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-slate-800 flex items-start justify-between gap-4">
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/50">
+                    {formatBusinessTerm(
+                      drawerCandidate.candidate.identityStatus || "PROBABLE"
+                    )}
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                    {drawerCandidate.candidate.familyLabel ||
+                      drawerCandidate.candidate.category ||
+                      "Physical Product"}
+                  </span>
+                </div>
+                <h2 className="text-base font-bold text-white line-clamp-2">
+                  {drawerCandidate.candidate.merchantVerifiedProductName ||
+                    drawerCandidate.candidate.canonicalProductName ||
+                    drawerCandidate.candidate.title}
+                </h2>
+                {drawerCandidate.candidate.storeDomain && (
+                  <p className="text-xs text-slate-400 font-mono">
+                    Merchant: {drawerCandidate.candidate.storeDomain}
+                  </p>
+                )}
               </div>
+
               <button
-                onClick={() => setActiveMediaItem(null)}
+                type="button"
+                data-testid="pf-drawer-close"
+                onClick={() => setDrawerCandidate(null)}
                 className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+            {/* Drawer Internal Tabs */}
+            <div className="flex items-center border-b border-slate-800 px-5 gap-2 overflow-x-auto bg-[#0b0f17]">
+              {(
+                [
+                  { key: "OVERVIEW", label: "Overview" },
+                  { key: "ADS", label: "Advertising Evidence" },
+                  { key: "DEMAND", label: "Demand & Trend Evidence" },
+                  { key: "PSYCHOLOGY", label: "Customer Psychology" },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  data-testid={`pf-drawer-tab-${t.key.toLowerCase()}`}
+                  onClick={() => setDrawerTab(t.key)}
+                  className={`py-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
+                    drawerTab === t.key
+                      ? "border-indigo-500 text-white"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              {drawerTab === "OVERVIEW" && (
+                <div className="space-y-4">
+                  {/* Section 5.4: Consistent Product Media Preview in Research Drawer */}
+                  {(() => {
+                    const drawerImage =
+                      drawerOverviewData?.mediaGallery?.primaryImage?.url ||
+                      drawerCandidate.canonicalCard?.thumbnailUrl ||
+                      (Array.isArray(drawerCandidate.candidate.imageReferences)
+                        ? drawerCandidate.candidate.imageReferences[0]
+                        : null) ||
+                      drawerCandidate.candidate.thumbnailUrl ||
+                      null;
+                    const drawerVideo =
+                      drawerOverviewData?.mediaGallery?.primaryVideo?.url ||
+                      drawerCandidate.canonicalCard?.videoUrl ||
+                      drawerCandidate.candidate.videoUrl ||
+                      null;
+                    const mediaSourceLabel =
+                      drawerOverviewData?.mediaGallery?.primaryImage?.sourceLabel ||
+                      drawerCandidate.canonicalCard?.primaryMediaSourceLabel ||
+                      (Array.isArray(drawerCandidate.candidate.imageReferences) &&
+                      drawerCandidate.candidate.imageReferences.length > 0
+                        ? "Merchant Product Image"
+                        : drawerImage
+                        ? "Meta Ad Creative"
+                        : "No Verified Product Media");
+                    return (
+                      <div
+                        data-testid="pf-drawer-media-preview"
+                        className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-white">Product Media Preview</h3>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                            {mediaSourceLabel}
+                          </span>
+                        </div>
+                        {drawerImage && !isStockImage(drawerImage) ? (
+                          <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <div className="w-full sm:w-44 h-36 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+                              <img
+                                src={drawerImage}
+                                alt={
+                                  drawerCandidate.candidate.merchantVerifiedProductName ||
+                                  drawerCandidate.candidate.canonicalProductName ||
+                                  "Product preview"
+                                }
+                                className="w-full h-full object-contain p-1"
+                              />
+                            </div>
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <p className="text-slate-300 text-xs leading-relaxed">
+                                Primary visual resolved using strict source priority (Merchant
+                                Product Image preferred over Ad Creative).
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setActiveMediaItem({
+                                      title:
+                                        drawerCandidate.candidate.merchantVerifiedProductName ||
+                                        drawerCandidate.candidate.canonicalProductName ||
+                                        drawerCandidate.candidate.title,
+                                      videoUrl: drawerVideo,
+                                      thumbnailUrl: drawerImage,
+                                      sourceUrl: drawerCandidate.candidate.canonicalProductUrl,
+                                      platform: mediaSourceLabel,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium flex items-center gap-1.5"
+                                >
+                                  {drawerVideo ? (
+                                    <>
+                                      <Play className="h-3 w-3 text-indigo-400" />
+                                      <span>Play Video / Enlarge</span>
+                                    </>
+                                  ) : (
+                                    <span>Enlarge Image</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 text-slate-400 flex items-center gap-2.5">
+                            <ShoppingBag className="h-5 w-5 text-slate-500 shrink-0" />
+                            <span>
+                              No verified product image or video could be confirmed from the
+                              linked merchant page or ad creative.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <div className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2">
+                    <h3 className="font-semibold text-white">
+                      Why It Fits Your Search & Target Customer
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      {drawerCandidate.canonicalCard?.whyItMatters ||
+                        "Identified as a concrete sellable product supported by advertising and storefront evidence."}
+                    </p>
+                    {drawerCandidate.candidate.audienceRelevance && (
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Target Customer Segment:</span>
+                        <span className="font-semibold text-indigo-300">
+                          {(drawerCandidate.candidate.audienceRelevance.supportedAudiences || []).join(
+                            ", "
+                          )}{" "}
+                          ({drawerCandidate.candidate.audienceRelevance.relevanceReason})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 10: Technical Verification Details moved here */}
+                  {(drawerCandidate.canonicalCard?.technicalVerificationSummary ||
+                    drawerCandidate.candidate.verificationReason) && (
+                    <div
+                      data-testid="pf-drawer-technical-verification"
+                      className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-white">
+                          Technical Identity & Storefront Verification
+                        </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                          {drawerCandidate.candidate.fetchOutcome ||
+                            drawerCandidate.candidate.identityStatus ||
+                            "INSPECTED"}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-[11px] font-mono leading-relaxed">
+                        {drawerCandidate.canonicalCard?.technicalVerificationSummary ||
+                          drawerCandidate.candidate.verificationReason}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-xl bg-[#111827] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">
+                        Merchant Store Domain
+                      </span>
+                      <span className="text-sm font-semibold text-white mt-0.5 block truncate">
+                        {drawerCandidate.candidate.storeDomain || "Unverified Store"}
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-[#111827] border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">
+                        Model / SKU / Identifier
+                      </span>
+                      <span className="text-sm font-mono text-slate-200 mt-0.5 block truncate">
+                        {[
+                          drawerCandidate.candidate.model,
+                          drawerCandidate.candidate.sku,
+                          drawerCandidate.candidate.gtin,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "Standard Merchant SKU"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {drawerCandidate.candidate.canonicalProductUrl && (
+                    <div className="p-3.5 rounded-xl bg-[#111827] border border-slate-800 flex items-center justify-between">
+                      <div className="min-w-0 pr-3">
+                        <span className="text-[10px] text-slate-400 block">
+                          {drawerCandidate.canonicalCard?.merchantPageVerified
+                            ? "Verified Product Page URL"
+                            : "Referenced Merchant URL (Unverified Fetch)"}
+                        </span>
+                        <span className="text-xs font-mono text-indigo-300 truncate block">
+                          {drawerCandidate.candidate.canonicalProductUrl}
+                        </span>
+                      </div>
+                      <a
+                        href={drawerCandidate.candidate.canonicalProductUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium shrink-0 flex items-center gap-1"
+                      >
+                        <span>Open Page</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {drawerTab === "ADS" && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2">
+                    <h3 className="font-semibold text-white">
+                      Supporting Advertising Observations
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2 pt-1 font-mono">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-sans">
+                          Total Observations
+                        </span>
+                        <span className="text-sm font-bold text-white">
+                          {drawerCandidate.candidate.totalObservationCount || 1}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-sans">
+                          Supporting Ads
+                        </span>
+                        <span className="text-sm font-bold text-white">
+                          {drawerCandidate.candidate.supportingAdIds?.length || 1}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-sans">
+                          Distinct Advertisers
+                        </span>
+                        <span className="text-sm font-bold text-white">
+                          {drawerCandidate.candidate.distinctAdvertisersCount || 1}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {drawerCandidate.candidate.evidenceSnippets?.map(
+                    (snippet: string, i: number) => (
+                      <div
+                        key={i}
+                        className="p-3.5 rounded-xl bg-[#111827] border border-slate-800 text-slate-300 leading-relaxed"
+                      >
+                        &ldquo;{snippet}&rdquo;
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+
+              {drawerTab === "DEMAND" && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-white">
+                        Historical Demand & Trend Provenance
+                      </h3>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700/40">
+                        {drawerCandidate.rankedItem?.temporalProfile?.demandSourceAuthority
+                          ?.authorityStatus || "PENDING_VERIFICATION"}
+                      </span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      {drawerCandidate.rankedItem?.temporalProfile?.demandSourceAuthority
+                        ?.authorityReason ||
+                        "Historical multi-month search demand is not yet verified from an authoritative Google Trends CSV import or live provider."}
+                    </p>
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+                      <strong>Data Honesty Note:</strong> Search interest reflects search
+                      trends, not direct unit sales (`SEARCH_INTEREST_NOT_SALES`). Unverified or
+                      templated series cannot qualify a product as a Verified Evergreen Winner.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {drawerTab === "PSYCHOLOGY" && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2">
+                    <h3 className="font-semibold text-white">
+                      Customer Psychology & Ad Angles
+                    </h3>
+                    <p className="text-slate-400 text-[11px]">
+                      Signals are strictly separated into <strong>OBSERVED</strong> (directly in
+                      ad copy) vs <strong>INFERRED</strong> (modeled from product category).
+                    </p>
+                    {drawerLoading ? (
+                      <div className="py-4 text-slate-400 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading customer psychology signals...</span>
+                      </div>
+                    ) : drawerOverviewData?.customerPsychology ? (
+                      <div className="space-y-2 pt-2">
+                        {(drawerOverviewData.customerPsychology.painPoints || [])
+                          .slice(0, 3)
+                          .map((pt: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-start justify-between gap-2"
+                            >
+                              <span className="text-slate-200">{pt.label}</span>
+                              <span
+                                className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
+                                  pt.evidenceStatus === "OBSERVED"
+                                    ? "bg-emerald-950 text-emerald-300"
+                                    : "bg-amber-950 text-amber-300"
+                                }`}
+                              >
+                                {pt.evidenceStatus}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 text-xs">
+                        Open the full Commercial Assessment to inspect detailed buyer personas,
+                        pain points, and creative angles.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-4 border-t border-slate-800 bg-[#0b0f17] flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setDrawerCandidate(null)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+              >
+                Close
+              </button>
+              <Link
+                href={buildCommercialAssessmentUrl(
+                  drawerCandidate.candidate.researchProductId ||
+                    drawerCandidate.candidate.candidateId,
+                  drawerCandidate.candidate.candidateId
+                )}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5"
+              >
+                <span>Open Full Commercial Assessment</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          SECTION 15: RESEARCH HISTORY DRAWER
+         ===================================================================== */}
+      {historyDrawerOpen && (
+        <div
+          data-testid="pf-history-drawer"
+          className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs"
+        >
+          <div className="w-full max-w-md bg-[#0f1523] border-l border-slate-800 h-full flex flex-col justify-between overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <History className="h-4 w-4 text-indigo-400" />
+                  <span>Research History</span>
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Switch between previous research runs without losing stored evidence.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoryDrawerOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {recentRuns.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-8">
+                  No historical research runs recorded yet.
+                </p>
+              ) : (
+                recentRuns.map((run) => (
+                  <div
+                    key={run.runId}
+                    className={`p-3.5 rounded-xl border transition-colors flex items-center justify-between gap-3 text-xs ${
+                      activeRunId === run.runId
+                        ? "bg-indigo-950/40 border-indigo-500/50"
+                        : "bg-[#111827] border-slate-800 hover:border-slate-700"
+                    }`}
+                  >
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="font-bold text-white truncate">{run.topic}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">
+                        {run.lookbackDays}D · {run.totalObservations} obs ·{" "}
+                        {run.evergreenWinners} evergreen
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        {formatRelativeAge(run.completedAt || run.createdAt)} ·{" "}
+                        <span className="font-mono">{run.runId.slice(0, 8)}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="pf-history-run-item"
+                      onClick={() => {
+                        loadPersistedRun({ runId: run.runId, syncTopicInput: true });
+                        setHistoryDrawerOpen(false);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold shrink-0"
+                    >
+                      Load Run
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MEDIA PREVIEW MODAL */}
+      {activeMediaItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+          <div className="bg-[#111827] border border-slate-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white truncate">
+                {activeMediaItem.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setActiveMediaItem(null)}
+                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
               {activeMediaItem.videoUrl ? (
                 <video
                   src={activeMediaItem.videoUrl}
@@ -874,120 +2799,8 @@ export default function ProductsPage() {
                   alt={activeMediaItem.title}
                   className="w-full h-full object-contain"
                 />
-              ) : (
-                <p className="text-xs text-slate-500">Media source unavailable for preview.</p>
-              )}
+              ) : null}
             </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-slate-400">Verified platform creative demonstration</span>
-              {activeMediaItem.sourceUrl && (
-                <a
-                  href={activeMediaItem.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-semibold"
-                >
-                  <span>Open Canonical Source</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CANDIDATE INSPECTION MODAL (For Unlinked Candidates) */}
-      {inspectCandidate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#161228] border border-[#2e234d] rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">
-                  CANDIDATE INTELLIGENCE SUMMARY
-                </span>
-                <h3 className="text-lg font-bold text-white mt-1">{inspectCandidate.candidate.title}</h3>
-                <p className="text-xs text-slate-400">
-                  {inspectCandidate.candidate.category} · {inspectCandidate.candidate.storeDomain || "Multiple Storefronts"}
-                </p>
-              </div>
-              <button
-                onClick={() => setInspectCandidate(null)}
-                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Score Overview */}
-            <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-[#0e0b1c] border border-[#2e234d]">
-              <div>
-                <span className="text-[10px] text-slate-400 block">Opportunity Score</span>
-                <span className="text-xl font-bold text-white font-mono">{inspectCandidate.score.opportunityScore ?? "—"}/100</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">Evidence Confidence</span>
-                <span className="text-xl font-bold text-purple-300 font-mono">{inspectCandidate.score.evidenceConfidence}%</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">Recommendation</span>
-                <span className="text-xs font-bold text-amber-400">{inspectCandidate.score.recommendation}</span>
-              </div>
-            </div>
-
-            {/* Problem Statement */}
-            {inspectCandidate.candidate.problemStatement && (
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-purple-400">Identified Problem / Pain Point</span>
-                <p className="text-xs text-slate-300 bg-[#0e0b1c] p-3 rounded-lg border border-[#2e234d]">
-                  {inspectCandidate.candidate.problemStatement}
-                </p>
-              </div>
-            )}
-
-            {/* Pillars Breakdown */}
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-slate-300">Six-Pillar Evaluation</span>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {Object.entries(inspectCandidate.score.pillars).map(([key, val]) => (
-                  <div key={key} className="p-2.5 rounded-lg bg-[#0e0b1c] border border-[#261d40] space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400 capitalize text-[11px]">{key.replace(/([A-Z])/g, " $1")}</span>
-                      <span className="font-bold text-white font-mono">{val.score ?? 0}/{val.maxWeight}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 line-clamp-1">{val.explanation}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Missing Evidence */}
-            {inspectCandidate.score.missingEvidence.length > 0 && (
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-amber-400">Missing Signals For Full Evergreening</span>
-                <ul className="text-[11px] text-slate-400 space-y-1 bg-[#0e0b1c] p-3 rounded-lg border border-[#2e234d] list-disc list-inside">
-                  {inspectCandidate.score.missingEvidence.map((m, idx) => (
-                    <li key={idx}>{m}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Canonical Link */}
-            {inspectCandidate.candidate.canonicalProductUrl && (
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-slate-400">Store Destination URL</span>
-                <a
-                  href={inspectCandidate.candidate.canonicalProductUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-semibold"
-                >
-                  <span>Visit Storefront</span>
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            )}
           </div>
         </div>
       )}

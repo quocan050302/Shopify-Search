@@ -1,0 +1,157 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "petGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "familyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvrzyn23004m6coriy1lwr49",
+        "cmvrzyn2j004s6corb96ke61v",
+        "cmvrzyn5c005t6cor0yylqvk2",
+        "cmvrzyn3h00546corujh7567u",
+        "cmvrzyn30004y6corojbfmznc",
+        "cmvrzyn4w005n6corlzcsccsh",
+        "cmvrzyn3x005a6corm3d0e51v"
+      ],
+      "supportingExternalAdIds": [
+        "2046326005986245",
+        "2128156051108858",
+        "1595856712093558",
+        "1399013621792652",
+        "1802296680785588",
+        "1393597299374101",
+        "905190415961783"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_4f82d376"
+      ],
+      "liveObservationsCount": 2,
+      "cachedObservationsCount": 5,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_water_fountain",
+      "supportingAdIds": [
+        "cmvrzyixu002s6corgmhfjtem"
+      ],
+      "supportingExternalAdIds": [
+        "1067995712370292"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_2_37fea34f"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_592688578",
+      "title": "Chew Resistant Squeaky Plush Pet Toy",
+      "storeDomain": "livinginurban.com",
+      "canonicalProductUrl": "https://livinginurban.com/products/null-1773399526609",
+      "identityStatus": "VERIFIED",
+      "familyKey": "plush_toy",
+      "supportingAdIds": [
+        "cmvrzyn1800496corko0f36to",
+        "cmvrzyn1m004f6corovcwt882"
+      ],
+      "supportingExternalAdIds": [
+        "1019672154369562",
+        "1686452209316599"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_4f82d376"
+      ],
+      "liveObservationsCount": 2,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "waterFountainCountInShortlist": 1,
+  "homeCleaningGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_386308104",
+      "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+      "storeDomain": "forubom.com",
+      "canonicalProductUrl": "https://forubom.com/products/8dgfdf-electric-clean",
+      "identityStatus": "VERIFIED",
+      "familyKey": "brush_use",
+      "supportingAdIds": [
+        "cmvrzh3ga0065lsore49hb07g"
+      ],
+      "supportingExternalAdIds": [
+        "1381859257413498"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_1_42161752"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_118020086",
+      "title": "Cordless Electric Spin Scrubber with 5 Replaceable Brush Heads",
+      "storeDomain": "realgalaxystore.com",
+      "canonicalProductUrl": "https://realgalaxystore.com/products/cordless-electric-spin-scrubber-with-5-replaceable-brush-heads",
+      "identityStatus": "VERIFIED",
+      "familyKey": "electric_spin_scrubber",
+      "supportingAdIds": [
+        "cmvrzh3i6006wlsortpfbvynk"
+      ],
+      "supportingExternalAdIds": [
+        "2014179012604906"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_1_42161752"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_824704036",
+      "title": "Steam Genie ™ Pro",
+      "storeDomain": "getgenieproducts.com",
+      "canonicalProductUrl": "https://getgenieproducts.com/products/steam-genie-pro",
+      "identityStatus": "VERIFIED",
+      "familyKey": "steam_genie",
+      "supportingAdIds": [
+        "cmvuc6j4q008x6oorn4csai1g"
+      ],
+      "supportingExternalAdIds": [
+        "2302991560230745"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_f4e941f9"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    }
+  ],
+  "carAccessoriesShortlist": [],
+  "kittyspoutPawiraCollapseProof": {
+    "kittyspoutFamily": "pet_water_fountain",
+    "pawiraFamily": "pet_water_fountain",
+    "distinctFamilyCount": 1
+  },
+  "g12Verdict": "PASS"
+}

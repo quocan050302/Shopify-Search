@@ -1,0 +1,24 @@
+{
+  "kh01Verify": {
+    "command": "npm run kh01:verify",
+    "passed": true,
+    "exitCode": 0,
+    "testCount": 69
+  },
+  "kh02UnitTests": {
+    "command": "npm run kh02:test:unit",
+    "passed": true,
+    "testCount": 146,
+    "filesPassed": 15
+  },
+  "buildCheck": {
+    "command": "npm run build",
+    "passed": true,
+    "compiledRoutes": 51
+  },
+  "lintCheck": {
+    "command": "npm run lint",
+    "passed": true,
+    "errors": 0
+  }
+}

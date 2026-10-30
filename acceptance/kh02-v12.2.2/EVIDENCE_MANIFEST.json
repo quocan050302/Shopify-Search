@@ -1,0 +1,82 @@
+{
+  "version": "KH-02 V12.2.2",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "testedCommitSha": "95b51fc23c017ce5a7b4e91ff5e1bca3c04350a4",
+  "workingTreeStatus": "DIRTY (Working tree modifications present)",
+  "targetQuery": "Pet Gadgets (Market: US)",
+  "researchRunId": "kh02_run_1793033103089_bh2yr",
+  "queryId": "kh02_query_1793033103089_40j6m",
+  "timestamps": {
+    "startedAt": "2026-10-26T16:45:01.063Z",
+    "completedAt": "2026-10-26T16:45:38.833Z"
+  },
+  "verdicts": {
+    "codeRegression": "PASS",
+    "diagnosticsCorrectness": "PASS",
+    "metaLive": "LIVE_QUERY_SUCCEEDED_WITH_DATA",
+    "tiktokAdsUSLive": "BLOCKED_EXTERNAL_REQUIREMENT",
+    "tiktokOrganicLive": "BLOCKED_EXTERNAL_REQUIREMENT",
+    "googleTransparencyLive": "BLOCKED_EXTERNAL_REQUIREMENT",
+    "demandLiveIngestion": "CONFIGURED_UNPROBED",
+    "realSourcePipelineE2E": "PASS",
+    "providerCoverage": "PARTIAL_COVERAGE_META_LIVE"
+  },
+  "files": {
+    "BASELINE_AUDIT.md": {
+      "sizeBytes": 8082,
+      "sha256": "444214bb1eb0dd8454865c669da8ee873b96bdd8b8262a4c39d52c2d5d924f83"
+    },
+    "ROOT_CAUSE_REPORT.md": {
+      "sizeBytes": 1670,
+      "sha256": "0aa521042b30c1b9b4a11f20a0991ac8d4e9921e98bd401ee3f551b07cb0d8f5"
+    },
+    "PROVIDER_SELECTION.md": {
+      "sizeBytes": 1783,
+      "sha256": "0d64c516291fa28c521b0e0174a4e1ee13a06ce2b47efd94dd5febeabcf6e168"
+    },
+    "PROVIDER_CONTRACTS.json": {
+      "sizeBytes": 1367,
+      "sha256": "1fb26b64ac828e6f8d7f1a45b39aab4be62c09f4a512dac3b45110b3d998c31b"
+    },
+    "DIAGNOSTICS_STATE_MATRIX.json": {
+      "sizeBytes": 2690,
+      "sha256": "ed6ec5339a01eebf91a0a085345695419d62a511195490598bc43cd33b19d1d8"
+    },
+    "LIVE_SOURCE_ACTIVATION_MATRIX.json": {
+      "sizeBytes": 1374,
+      "sha256": "eeeed72688f8b0f79c56647e0d805c8d087088073a31b7e009c01c264048fab2"
+    },
+    "META_LIVE_QUERY.json": {
+      "sizeBytes": 673,
+      "sha256": "1a30079cfec6d9da0a67ab24afcc10a3380318e6ec4b29d8013df1a6c645b880"
+    },
+    "TIKTOK_ADS_US_LIVE_QUERY.json": {
+      "sizeBytes": 494,
+      "sha256": "80a3143c240432bb90f0dab26025301c555149e27588e2eba8740774d4e3e088"
+    },
+    "TIKTOK_ORGANIC_LIVE_QUERY.json": {
+      "sizeBytes": 710,
+      "sha256": "15684bcd8878ec27cb79eca3b3ef5152c53d4b236374ff0f12edbec7552feef5"
+    },
+    "GOOGLE_LIVE_QUERY.json": {
+      "sizeBytes": 583,
+      "sha256": "abd4d80a6ef3003012356c002d87190977ce9d8cd5f914869f7b461e316ec6c4"
+    },
+    "DEMAND_HISTORY_INGESTION.json": {
+      "sizeBytes": 1196,
+      "sha256": "11b1493b5627db71e68e57f0b41aeb2f991948a9b1ab0c25508b39a759cfc350"
+    },
+    "SOURCE_DB_HTTP_UI_RECONCILIATION.json": {
+      "sizeBytes": 695,
+      "sha256": "70b023864f174f637fbf25fd81dc85229d65390a87eb64bb293ce6f2020e27fb"
+    },
+    "FALSE_PASS_MUTATION_RESULTS.json": {
+      "sizeBytes": 1455,
+      "sha256": "172bf4b3fa404c491ec29ed3a50acfadd212d2d298e9a297e488e43ed514b178"
+    },
+    "TEST_RESULTS.json": {
+      "sizeBytes": 442,
+      "sha256": "13870ad2a11eac791e1f63340f6e39efdbf8ffdd89524388557dc683c93a9374"
+    }
+  }
+}

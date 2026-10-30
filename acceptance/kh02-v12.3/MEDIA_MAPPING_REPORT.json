@@ -1,0 +1,19 @@
+{
+  "totalCandidates": 2,
+  "candidatesWithMedia": 1,
+  "mediaIntegritySample": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "thumbnailUrl": "https://scontent.fsgn5-6.fna.fbcdn.net/v/t39.35426-6/782170688_1030438103089364_8603041269957432738_n.jpg?_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=rNw6VFudjBgQ7kNvwEy2bZm&_nc_oc=AdqaKN9xfOHqOULYgnwXojZH908cI4OpO1jUK9hWZFHfjudStqVAJy5_79QFP6Gnau75uGVnvjKc4T6SyuNXQuhq&_nc_zt=14&_nc_ht=scontent.fsgn5-6.fna&_nc_gid=sMRr9wFOz7_ZNDX_AqTgQw&_nc_ss=78289&oh=00_AQMSCP3YaNb_U9dUdwVkMVqSI3sx_VrSl_cZ8UStPAxDbQ&oe=6AE2C33C",
+      "storeDomain": "cc.uprootclean.com"
+    },
+    {
+      "candidateId": "cand_2132024804",
+      "title": "Wmt008 L4v2 Mustyclothes",
+      "thumbnailUrl": null,
+      "storeDomain": "order.uprootclean.com"
+    }
+  ],
+  "timestamp": "2026-10-27T16:10:06.870Z"
+}

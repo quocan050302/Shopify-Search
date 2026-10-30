@@ -1,0 +1,94 @@
+{
+  "states": [
+    {
+      "status": "NOT_CONFIGURED",
+      "meaning": "Provider configuration or endpoint is missing",
+      "uiLabel": "Not Configured",
+      "badgeColor": "slate"
+    },
+    {
+      "status": "CREDENTIALS_REQUIRED",
+      "meaning": "API key or token is missing from environment",
+      "uiLabel": "Key Required",
+      "badgeColor": "amber"
+    },
+    {
+      "status": "NOT_PROBED",
+      "meaning": "Configuration present but connection has not been tested",
+      "uiLabel": "Pending Probe",
+      "badgeColor": "slate"
+    },
+    {
+      "status": "CONNECTED",
+      "meaning": "Transport connection confirmed alive",
+      "uiLabel": "Connected",
+      "badgeColor": "emerald"
+    },
+    {
+      "status": "AUTHENTICATION_FAILED",
+      "meaning": "Provider rejected credentials with 401/403",
+      "uiLabel": "Auth Failed",
+      "badgeColor": "rose"
+    },
+    {
+      "status": "AUTH_NOT_REQUIRED",
+      "meaning": "Protocol requires no API key (e.g. local stdio MCP)",
+      "uiLabel": "Not Required",
+      "badgeColor": "slate"
+    },
+    {
+      "status": "UNSUPPORTED_CAPABILITY",
+      "meaning": "Connected server lacks required tool or method",
+      "uiLabel": "Unsupported",
+      "badgeColor": "rose"
+    },
+    {
+      "status": "COST_BLOCKED",
+      "meaning": "Paid request halted by AUTO_PAID_RESEARCH=false policy",
+      "uiLabel": "Cost Blocked",
+      "badgeColor": "rose"
+    },
+    {
+      "status": "QUERY_FAILED",
+      "meaning": "Upstream query threw error or network failure",
+      "uiLabel": "Query Failed",
+      "badgeColor": "rose"
+    },
+    {
+      "status": "QUERY_SUCCEEDED_EMPTY",
+      "meaning": "Valid query completed with 0 results",
+      "uiLabel": "Empty",
+      "badgeColor": "slate"
+    },
+    {
+      "status": "LIVE_DATA_VERIFIED",
+      "meaning": "Fresh observations retrieved from live query in run",
+      "uiLabel": "Live Verified",
+      "badgeColor": "emerald"
+    },
+    {
+      "status": "CACHE_ONLY",
+      "meaning": "Live query unconfigured or failed; using stored records",
+      "uiLabel": "Cache Only",
+      "badgeColor": "amber"
+    },
+    {
+      "status": "MANUAL_ONLY",
+      "meaning": "Automated scraper absent; manual research or cache active",
+      "uiLabel": "Manual Only",
+      "badgeColor": "amber"
+    },
+    {
+      "status": "ENGINE_READY",
+      "meaning": "Temporal demand policy engine active for observations",
+      "uiLabel": "Engine Ready",
+      "badgeColor": "blue"
+    },
+    {
+      "status": "INSUFFICIENT_HISTORY",
+      "meaning": "Observations span < 60 days; evergreen unverified",
+      "uiLabel": "Insufficient History",
+      "badgeColor": "amber"
+    }
+  ]
+}

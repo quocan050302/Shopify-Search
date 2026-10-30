@@ -1,0 +1,17 @@
+{
+  "source": "GOOGLE_ADS",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": false,
+  "authenticated": null,
+  "discoverySupported": false,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+  "status": "MCP_NOT_CONFIGURED",
+  "reason": "Google Ads Transparency MCP server is not configured in environment.",
+  "missingRequirements": [
+    "GOOGLE_TRANSPARENCY_MCP_URL"
+  ]
+}

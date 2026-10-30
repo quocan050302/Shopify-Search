@@ -27,6 +27,30 @@ export interface MetaResearchContext {
   keyword?: string;
 }
 
+export function unwrapMetaRedirectUrl(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl || typeof rawUrl !== "string") return null;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === "l.facebook.com" ||
+      host === "lm.facebook.com" ||
+      host === "l.instagram.com" ||
+      host === "l.meta.ai"
+    ) {
+      const target = parsed.searchParams.get("u") || parsed.searchParams.get("url");
+      if (target && isSafeHttpUrl(target)) {
+        return target.trim();
+      }
+    }
+  } catch {
+    // Keep original if not a redirect wrapper
+  }
+  return trimmed;
+}
+
 export function parseMetaDate(dateVal: string | number | null | undefined): Date | null {
   if (!dateVal) return null;
   try {
@@ -93,44 +117,47 @@ export function normalizeMetaCollectorAd(
 
   // 3. Extract Creative Content & Variants across all creative objects
   const creatives = (Array.isArray(anyRaw.creatives) ? anyRaw.creatives : []) as Array<Record<string, unknown>>;
-  const primaryCreative = creatives[0] || {};
+  let primaryCreativeIndex = 0;
+  let primaryCreative = creatives[0] || {};
 
-  const headline = String(
-    primaryCreative.title ||
-    creatives.find((c) => typeof c.title === "string" && c.title.trim())?.title ||
-    anyRaw.title ||
-    anyRaw.headline ||
-    ""
-  ).trim().slice(0, 500) || null;
+  // If multiple creatives are present (e.g. multi-product carousel ads),
+  // select the creative that matches the research topic keyword if available
+  if (creatives.length > 1 && context.keyword) {
+    const kwTokens = context.keyword.toLowerCase().split(/\s+/).filter((t) => t.length > 2);
+    const matchingIdx = creatives.findIndex((c) => {
+      const text = `${c.title || ""} ${c.body || ""}`.toLowerCase();
+      return kwTokens.some((t) => text.includes(t));
+    });
+    if (matchingIdx >= 0) {
+      primaryCreativeIndex = matchingIdx;
+      primaryCreative = creatives[matchingIdx];
+    }
+  }
 
-  const bodyText = String(
-    primaryCreative.body ||
-    primaryCreative.description ||
-    primaryCreative.caption ||
-    creatives.find((c) => typeof (c.body || c.description || c.caption) === "string")?.body ||
-    anyRaw.body ||
-    anyRaw.bodyText ||
-    ""
-  ).trim().slice(0, 5000) || null;
+  // Strict per-creative extraction: When creatives are present, all text and link fields MUST belong to chosen creative
+  const headline = creatives.length > 0
+    ? (typeof primaryCreative.title === "string" && primaryCreative.title.trim()) || null
+    : String(anyRaw.title || anyRaw.headline || "").trim().slice(0, 500) || null;
 
-  const callToAction = String(
-    primaryCreative.cta_text ||
-    primaryCreative.cta_type ||
-    creatives.find((c) => typeof (c.cta_text || c.cta_type) === "string")?.cta_text ||
-    anyRaw.cta ||
-    anyRaw.callToAction ||
-    ""
-  ).trim().slice(0, 100) || null;
+  const bodyText = creatives.length > 0
+    ? (typeof (primaryCreative.body || primaryCreative.description || primaryCreative.caption) === "string"
+        && String(primaryCreative.body || primaryCreative.description || primaryCreative.caption).trim().slice(0, 5000)) || null
+    : String(anyRaw.body || anyRaw.bodyText || "").trim().slice(0, 5000) || null;
 
-  const rawLinkUrl =
-    (typeof primaryCreative.link_url === "string" && primaryCreative.link_url) ||
-    creatives.find((c) => typeof c.link_url === "string" && c.link_url)?.link_url ||
-    (typeof anyRaw.link_url === "string" && anyRaw.link_url) ||
-    (typeof anyRaw.landingPageUrl === "string" && anyRaw.landingPageUrl) ||
-    null;
-  const landingPageUrl = isSafeHttpUrl(rawLinkUrl) ? (rawLinkUrl as string).trim() : null;
+  const callToAction = creatives.length > 0
+    ? (typeof (primaryCreative.cta_text || primaryCreative.cta_type) === "string"
+        && String(primaryCreative.cta_text || primaryCreative.cta_type).trim().slice(0, 100)) || null
+    : String(anyRaw.cta || anyRaw.callToAction || "").trim().slice(0, 100) || null;
 
-  // 4. Honest Media Classification (Phase 3: Support display_format & avoid false carousel)
+  const rawLinkUrl = creatives.length > 0
+    ? (typeof primaryCreative.link_url === "string" && primaryCreative.link_url.trim()) ||
+      (creatives.find((c) => typeof c.link_url === "string" && String(c.link_url).trim())?.link_url as string | undefined) ||
+      null
+    : (typeof anyRaw.link_url === "string" && anyRaw.link_url) || (typeof anyRaw.landingPageUrl === "string" && anyRaw.landingPageUrl) || null;
+  const unwrappedLinkUrl = unwrapMetaRedirectUrl(rawLinkUrl);
+  const landingPageUrl = isSafeHttpUrl(unwrappedLinkUrl) ? (unwrappedLinkUrl as string).trim() : null;
+
+  // 4. Honest Media Classification (Support display_format & avoid creative cross-pollution)
   const explicitMediaType = String(anyRaw.media_type || anyRaw.mediaType || "").toUpperCase();
   const displayFormat = String(anyRaw.display_format || anyRaw.displayFormat || "").toUpperCase();
   const rawAdType = String(anyRaw.ad_type || "").toUpperCase();
@@ -140,71 +167,32 @@ export function normalizeMetaCollectorAd(
     displayFormat === "CAROUSEL" ||
     rawAdType === "CAROUSEL";
 
-  const hasVideoMedia =
-    explicitMediaType === "VIDEO" ||
-    displayFormat === "VIDEO" ||
-    creatives.some((c) =>
-      Boolean(
-        c.video_url ||
-        c.video_hd_url ||
-        c.video_sd_url ||
-        c.watermarked_video_hd_url ||
-        c.watermarked_video_sd_url
-      )
-    ) ||
-    Boolean(
-      anyRaw.video_url ||
-      anyRaw.video_hd_url ||
-      anyRaw.video_sd_url ||
-      anyRaw.watermarked_video_hd_url ||
-      anyRaw.watermarked_video_sd_url ||
-      anyRaw.videoUrl
-    );
-
-  const hasImageMedia =
-    explicitMediaType === "IMAGE" ||
-    displayFormat === "IMAGE" ||
-    creatives.some((c) =>
-      Boolean(
-        c.image_url ||
-        c.thumbnail_url ||
-        c.original_image_url ||
-        c.resized_image_url ||
-        c.watermarked_image_url
-      )
-    ) ||
-    Boolean(
-      anyRaw.image_url ||
-      anyRaw.thumbnail_url ||
-      anyRaw.imageUrl ||
-      anyRaw.thumbnailUrl ||
-      anyRaw.original_image_url
-    );
-
-  let mediaType: "VIDEO" | "IMAGE" | "CAROUSEL" | "UNKNOWN" = "UNKNOWN";
-  if (isExplicitCarousel) {
-    mediaType = "CAROUSEL";
-  } else if (hasVideoMedia) {
-    mediaType = "VIDEO";
-  } else if (hasImageMedia) {
-    mediaType = "IMAGE";
-  }
-
-  // Extract direct media URLs across all creatives with source-backed priority
+  // Extract direct media URLs: MUST be isolated to selected primaryCreative
   let videoUrl: string | null = null;
-  for (const c of creatives) {
-    const candidate =
-      c.video_hd_url ||
-      c.video_url ||
-      c.video_sd_url ||
-      c.watermarked_video_hd_url ||
-      c.watermarked_video_sd_url;
-    if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
-      videoUrl = candidate.trim();
-      break;
+  let thumbnailUrl: string | null = null;
+
+  if (creatives.length > 0) {
+    const candidateVideo =
+      primaryCreative.video_hd_url ||
+      primaryCreative.video_url ||
+      primaryCreative.video_sd_url ||
+      primaryCreative.watermarked_video_hd_url ||
+      primaryCreative.watermarked_video_sd_url;
+    if (typeof candidateVideo === "string" && isSafeHttpUrl(candidateVideo)) {
+      videoUrl = candidateVideo.trim();
     }
-  }
-  if (!videoUrl) {
+
+    const candidateThumb =
+      primaryCreative.thumbnail_url ||
+      primaryCreative.image_url ||
+      primaryCreative.original_image_url ||
+      primaryCreative.resized_image_url ||
+      primaryCreative.watermarked_image_url;
+    if (typeof candidateThumb === "string" && isSafeHttpUrl(candidateThumb)) {
+      thumbnailUrl = candidateThumb.trim();
+    }
+  } else {
+    // Top-level fallback ONLY when ad has no creatives array
     const rawVideo =
       anyRaw.video_hd_url ||
       anyRaw.video_url ||
@@ -215,61 +203,26 @@ export function normalizeMetaCollectorAd(
     if (typeof rawVideo === "string" && isSafeHttpUrl(rawVideo)) {
       videoUrl = (rawVideo as string).trim();
     }
+
+    const rawThumb =
+      anyRaw.thumbnail_url ||
+      anyRaw.thumbnailUrl ||
+      anyRaw.image_url ||
+      anyRaw.imageUrl ||
+      anyRaw.original_image_url ||
+      anyRaw.resized_image_url;
+    if (typeof rawThumb === "string" && isSafeHttpUrl(rawThumb)) {
+      thumbnailUrl = (rawThumb as string).trim();
+    }
   }
 
-  // Thumbnail extraction with explicit priority
-  let thumbnailUrl: string | null = null;
-  if (mediaType === "VIDEO") {
-    // For video ads, prioritize genuine video poster/thumbnail preview
-    for (const c of creatives) {
-      const candidate =
-        c.thumbnail_url ||
-        c.image_url ||
-        c.original_image_url ||
-        c.resized_image_url ||
-        c.watermarked_image_url;
-      if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
-        thumbnailUrl = candidate.trim();
-        break;
-      }
-    }
-    if (!thumbnailUrl) {
-      const rawThumb =
-        anyRaw.thumbnail_url ||
-        anyRaw.thumbnailUrl ||
-        anyRaw.image_url ||
-        anyRaw.imageUrl ||
-        anyRaw.original_image_url;
-      if (typeof rawThumb === "string" && isSafeHttpUrl(rawThumb)) {
-        thumbnailUrl = (rawThumb as string).trim();
-      }
-    }
-  } else {
-    // For image or carousel ads, prioritize high-quality genuine creative image
-    for (const c of creatives) {
-      const candidate =
-        c.original_image_url ||
-        c.image_url ||
-        c.resized_image_url ||
-        c.thumbnail_url ||
-        c.watermarked_image_url;
-      if (typeof candidate === "string" && isSafeHttpUrl(candidate)) {
-        thumbnailUrl = candidate.trim();
-        break;
-      }
-    }
-    if (!thumbnailUrl) {
-      const rawImage =
-        anyRaw.original_image_url ||
-        anyRaw.image_url ||
-        anyRaw.imageUrl ||
-        anyRaw.thumbnail_url ||
-        anyRaw.thumbnailUrl ||
-        anyRaw.resized_image_url;
-      if (typeof rawImage === "string" && isSafeHttpUrl(rawImage)) {
-        thumbnailUrl = (rawImage as string).trim();
-      }
-    }
+  let mediaType: "VIDEO" | "IMAGE" | "CAROUSEL" | "UNKNOWN" = "UNKNOWN";
+  if (isExplicitCarousel) {
+    mediaType = "CAROUSEL";
+  } else if (videoUrl) {
+    mediaType = "VIDEO";
+  } else if (thumbnailUrl) {
+    mediaType = "IMAGE";
   }
 
   // Preserve multiple creative variants rather than discarding
@@ -400,6 +353,8 @@ export function normalizeMetaCollectorAd(
     marketEvidence: "QUERY_FILTER",
     notes,
     creativeVariants,
+    parentAdExternalId: libraryId,
+    selectedCreativeIndex: primaryCreativeIndex,
   };
 
   const rawCountry = typeof anyRaw.country === "string" ? anyRaw.country : "US";

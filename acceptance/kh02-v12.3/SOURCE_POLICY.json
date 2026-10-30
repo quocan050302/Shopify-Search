@@ -1,0 +1,80 @@
+{
+  "activePolicy": "KH02_V12.3_SERVER_SOURCE_POLICY",
+  "sources": {
+    "TIKTOK_ADS": {
+      "source": "TIKTOK_ADS",
+      "status": "TEMPORARILY_DISABLED",
+      "isEnabled": false,
+      "isTemporarilyDisabled": true,
+      "reason": "Source 'TIKTOK_ADS' is temporarily disabled in KH-02 V12.3 release policy. Outbound probing, collector execution, and quota verification are bypassed.",
+      "uiBadgeLabel": "Temporarily Disabled",
+      "outboundAllowed": false,
+      "allowOutboundNetworkCalls": false,
+      "requiresCredentials": false,
+      "quotaCheckAllowed": false,
+      "cacheReuseInResearchAllowed": false,
+      "allowCacheFallbackInNewRuns": false
+    },
+    "TIKTOK_ORGANIC": {
+      "source": "TIKTOK_ORGANIC",
+      "status": "TEMPORARILY_DISABLED",
+      "isEnabled": false,
+      "isTemporarilyDisabled": true,
+      "reason": "Source 'TIKTOK_ORGANIC' is temporarily disabled in KH-02 V12.3 release policy. Outbound probing, collector execution, and quota verification are bypassed.",
+      "uiBadgeLabel": "Temporarily Disabled",
+      "outboundAllowed": false,
+      "allowOutboundNetworkCalls": false,
+      "requiresCredentials": false,
+      "quotaCheckAllowed": false,
+      "cacheReuseInResearchAllowed": false,
+      "allowCacheFallbackInNewRuns": false
+    },
+    "META_ADS": {
+      "source": "META_ADS",
+      "status": "ACTIVE",
+      "isEnabled": true,
+      "isTemporarilyDisabled": false,
+      "reason": "Source 'META_ADS' is enabled for live research query and enrichment.",
+      "uiBadgeLabel": "Active",
+      "outboundAllowed": true,
+      "allowOutboundNetworkCalls": true,
+      "requiresCredentials": true,
+      "quotaCheckAllowed": true,
+      "cacheReuseInResearchAllowed": true,
+      "allowCacheFallbackInNewRuns": true
+    },
+    "GOOGLE_ADS": {
+      "source": "GOOGLE_ADS",
+      "status": "ACTIVE",
+      "isEnabled": true,
+      "isTemporarilyDisabled": false,
+      "reason": "Source 'GOOGLE_ADS' is enabled for live research query and enrichment.",
+      "uiBadgeLabel": "Active",
+      "outboundAllowed": true,
+      "allowOutboundNetworkCalls": true,
+      "requiresCredentials": true,
+      "quotaCheckAllowed": true,
+      "cacheReuseInResearchAllowed": true,
+      "allowCacheFallbackInNewRuns": true
+    },
+    "DEMAND_HISTORY": {
+      "source": "DEMAND_HISTORY",
+      "status": "ACTIVE",
+      "isEnabled": true,
+      "isTemporarilyDisabled": false,
+      "reason": "Source 'DEMAND_HISTORY' is enabled for live research query and enrichment.",
+      "uiBadgeLabel": "Active",
+      "outboundAllowed": true,
+      "allowOutboundNetworkCalls": true,
+      "requiresCredentials": true,
+      "quotaCheckAllowed": true,
+      "cacheReuseInResearchAllowed": true,
+      "allowCacheFallbackInNewRuns": true
+    }
+  },
+  "filteredSources": [
+    "META_ADS",
+    "GOOGLE_ADS",
+    "DEMAND_HISTORY"
+  ]
+}

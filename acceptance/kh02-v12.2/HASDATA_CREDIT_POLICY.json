@@ -1,0 +1,6 @@
+{
+  "policy": "AUTO_PAID_RESEARCH=false",
+  "creditsPerQuery": 1,
+  "unauthorizedChargeProtection": "ACTIVE",
+  "zeroCostEnforcement": "Metered requests strictly blocked unless explicitly authorized"
+}

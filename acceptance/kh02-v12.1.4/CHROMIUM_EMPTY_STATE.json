@@ -1,0 +1,14 @@
+{
+  "track": "Track 2: Truthful Empty State",
+  "topic": "Completely Nonexistent Niche 9999",
+  "verdict": "PASS",
+  "cardCount": 0,
+  "emptyStateAccurate": true,
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track2_empty\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track2_empty\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.4\\screenshots\\track2_empty\\03_leaderboard_results.png"
+  ]
+}

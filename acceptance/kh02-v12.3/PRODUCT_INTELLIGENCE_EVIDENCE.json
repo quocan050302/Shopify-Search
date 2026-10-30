@@ -1,0 +1,51 @@
+{
+  "authoritativeRunId": "kh02_run_1793117384742_eqabj",
+  "topic": "Pet Gadgets",
+  "identityValidation": {
+    "editorialHooksRejected": [
+      "Hidden Dangers"
+    ],
+    "campaignCodesRejected": [
+      "Ad50fb",
+      "Wmt004 1"
+    ],
+    "modelsExtracted": [
+      "Gg002 L1"
+    ],
+    "shopifyUrlsResolved": [
+      "/products/pet-hair-roller -> VERIFIED"
+    ]
+  },
+  "deduplication": {
+    "distinctCandidatesFormed": 2,
+    "distinctnessPreserved": true,
+    "duplicateSunglassesConsolidated": true
+  },
+  "psychologyGrounding": {
+    "archetypesIdentified": [
+      {
+        "input": "Dog bed",
+        "functionalProblem": "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
+        "expectedArchetype": "bedding"
+      },
+      {
+        "input": "Pet Hair Remover Roller",
+        "functionalProblem": "Everyday inconvenience and friction addressed by Pet Hair Remover Roller",
+        "expectedArchetype": "hair_removal"
+      },
+      {
+        "input": "Twist-out Bluetooth Speaker",
+        "functionalProblem": "Inadequate or tinny mobile device sound and inconvenient wired connections during on-the-go activities",
+        "expectedArchetype": "audio_electronics"
+      }
+    ],
+    "hallucinatedClaimsBlocked": true
+  },
+  "qualificationSummary": {
+    "qualifiedWinnersCount": 0,
+    "provisionalCount": 2,
+    "rejectedCount": 8,
+    "winnersForced": false
+  },
+  "timestamp": "2026-10-27T16:10:08.371Z"
+}

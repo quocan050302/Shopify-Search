@@ -1,0 +1,13 @@
+{
+  "staticPassGatesEliminated": [
+    "A",
+    "K",
+    "N",
+    "V",
+    "X",
+    "Z"
+  ],
+  "all26GatesEvidenceDerived": true,
+  "mutationTestsExecuted": true,
+  "zeroHardcodedPass": true
+}

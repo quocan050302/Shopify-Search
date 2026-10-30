@@ -1,0 +1,28 @@
+{
+  "researchRunId": "kh02_run_1793025869655_lxjae",
+  "workspaceId": "ws_acceptance_v12_1_4_2_1793025835502",
+  "status": "COMPLETED",
+  "rawObservationsCount": null,
+  "candidatesCount": 1,
+  "topThreeCount": 0,
+  "provisionalCount": 1,
+  "candidateIds": [
+    "cand_1564509370_1"
+  ],
+  "databaseConsistent": true,
+  "httpReconciled": true,
+  "httpStatus": "PASS",
+  "browserReconciled": true,
+  "browserStatus": "PASS",
+  "productDiscoveryVerified": true,
+  "liveSourceVerified": false,
+  "persistedSnapshotMatchesHttp": true,
+  "reconciliationVerdict": "RECONCILED",
+  "reconciled": true,
+  "mismatches": [],
+  "notes": [
+    "DB snapshot verified: 1 candidates (0 ranked, 1 provisional).",
+    "HTTP readback content verified: exact match with DB snapshot.",
+    "Browser reconciliation verified: complete candidate set, rank order, and scores match DB."
+  ]
+}

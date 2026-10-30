@@ -1,0 +1,41 @@
+{
+  "gateId": "P0-07",
+  "requirement": "Workspace isolation is preserved across all database queries",
+  "verdict": "PASS",
+  "observedValues": {
+    "whereClause": {
+      "OR": [
+        {
+          "runAds": {
+            "some": {
+              "OR": [
+                {
+                  "workspaceId": "acceptance_v12_3_1_ws"
+                },
+                {
+                  "run": {
+                    "workspaceId": "acceptance_v12_3_1_ws"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "watchlistItems": {
+            "some": {
+              "watchlist": {
+                "workspaceId": "acceptance_v12_3_1_ws"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectedValues": {
+    "workspaceId": "acceptance_v12_3_1_ws"
+  },
+  "reason": "buildAuthorizedAdWhere strictly scopes queries to testWorkspace",
+  "timestamp": "2026-10-28T01:42:25.819Z"
+}

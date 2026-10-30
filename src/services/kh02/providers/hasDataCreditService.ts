@@ -30,6 +30,46 @@ export interface HasDataCreditStatus {
   errorMessage?: string;
 }
 
+export interface ProviderOperationCost {
+  provider: string;
+  operation: string;
+  estimatedCredits: number | null;
+  knownCost: boolean;
+  pricingSource: string | null;
+  verifiedAt: string | null;
+}
+
+export function getHasDataOperationCost(
+  operation: string
+): ProviderOperationCost {
+  const opUpper = (operation || "").toUpperCase();
+  if (
+    opUpper.includes("TIKTOK") ||
+    opUpper.includes("SEARCH_VIDEOS") ||
+    opUpper.includes("VIDEO") ||
+    opUpper.includes("MCP_TOOL_CALL") ||
+    opUpper.includes("ORGANIC")
+  ) {
+    return {
+      provider: "HASDATA",
+      operation,
+      estimatedCredits: 10, // HasData MCP tool call is 10 credits (1,000 free credits/mo)
+      knownCost: true,
+      pricingSource: "HasData MCP Vendor Documentation (10 credits/tool call)",
+      verifiedAt: "2026-10-26T00:00:00.000Z",
+    };
+  }
+
+  return {
+    provider: "HASDATA",
+    operation,
+    estimatedCredits: null,
+    knownCost: false,
+    pricingSource: null,
+    verifiedAt: null,
+  };
+}
+
 export interface HasDataOperation {
   operationType: "TIKTOK_ORGANIC_SEARCH" | "TIKTOK_VIDEO_METRICS" | "GENERAL_SCRAPE";
   estimatedRequests: number;
@@ -97,8 +137,8 @@ export async function fetchHasDataCreditStatus(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    // HasData account profile / balance endpoint
-    const res = await fetch(`${baseUrl}/account/balance`, {
+    // HasData account usage endpoint (docs: /user/me/usage)
+    let res = await fetch(`${baseUrl}/user/me/usage`, {
       method: "GET",
       headers: {
         "x-api-key": apiKey,
@@ -106,6 +146,18 @@ export async function fetchHasDataCreditStatus(
       },
       signal: controller.signal,
     }).catch(() => null);
+
+    // Fallback to /account/balance for compatibility with alternate proxies
+    if (!res || res.status === 404) {
+      res = await fetch(`${baseUrl}/account/balance`, {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+          "Accept": "application/json",
+        },
+        signal: controller.signal,
+      }).catch(() => null);
+    }
 
     clearTimeout(timer);
 
@@ -119,7 +171,7 @@ export async function fetchHasDataCreditStatus(
         unit: "CREDITS",
         authority: "UNSUPPORTED",
         verificationStatus: "UNVERIFIED",
-        errorMessage: "Network or transport error connecting to HasData balance endpoint.",
+        errorMessage: "Network or transport error connecting to HasData usage endpoint.",
       };
     }
 
@@ -148,7 +200,7 @@ export async function fetchHasDataCreditStatus(
         unit: "CREDITS",
         authority: "UNSUPPORTED",
         verificationStatus: "UNVERIFIED",
-        errorMessage: "Authoritative balance endpoint is not exposed by HasData API. Quota cannot be automatically verified.",
+        errorMessage: "Authoritative balance/usage endpoint is not exposed by HasData API route.",
       };
     }
 
@@ -167,9 +219,19 @@ export async function fetchHasDataCreditStatus(
     }
 
     const data = await res.json();
-    const remaining = typeof data?.remaining_credits === "number" ? data.remaining_credits : (typeof data?.credits === "number" ? data.credits : null);
-    const total = typeof data?.total_credits === "number" ? data.total_credits : null;
-    const used = typeof data?.used_credits === "number" ? data.used_credits : null;
+    const remaining = typeof data?.remaining_credits === "number"
+      ? data.remaining_credits
+      : (typeof data?.credits === "number"
+        ? data.credits
+        : (typeof data?.remainingCredits === "number" ? data.remainingCredits : null));
+    const total = typeof data?.total_credits === "number"
+      ? data.total_credits
+      : (typeof data?.limit === "number"
+        ? data.limit
+        : (typeof data?.totalCredits === "number" ? data.totalCredits : null));
+    const used = typeof data?.used_credits === "number"
+      ? data.used_credits
+      : (typeof data?.usedCredits === "number" ? data.usedCredits : null);
 
     return {
       totalCredits: total,
@@ -195,6 +257,14 @@ export async function fetchHasDataCreditStatus(
       errorMessage: err.message || "Unknown error inspecting HasData credit balance.",
     };
   }
+}
+
+/** A credit balance alone does not prove that the account has no paid billing. */
+export function hasVerifiedFreeAllowance(status: HasDataCreditStatus, requiredCredits: number): boolean {
+  return status.authority === "AUTHORITATIVE_API" && status.verificationStatus === "VERIFIED" &&
+    typeof status.accountPlan === "string" && /^free(?: plan)?$/i.test(status.accountPlan.trim()) &&
+    typeof status.remainingCredits === "number" && Number.isFinite(status.remainingCredits) &&
+    status.remainingCredits >= requiredCredits;
 }
 
 /**
@@ -233,7 +303,7 @@ export function evaluateHasDataQuota(
   }
 
   // If AUTO_PAID_RESEARCH is disabled, refuse paid spend unless free allowance is confirmed
-  if (!autoPaidAllowed) {
+  if (!autoPaidAllowed && !hasVerifiedFreeAllowance(creditStatus, reqCredits)) {
     return {
       decision: "QUOTA_UNAVAILABLE",
       isAllowed: false,

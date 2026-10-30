@@ -1,0 +1,6 @@
+{
+  "providerId": "google-trends",
+  "status": "ENGINE_READY",
+  "alphaAccessAvailable": false,
+  "resolutionPolicy": "Disambiguated product-specific keyword time series"
+}

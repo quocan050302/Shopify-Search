@@ -1,0 +1,89 @@
+
+ RUN  v5.0.5 D:/Project_github/Running-Ads
+
+ ✓ tests/unit/kh02V12_3_1_ProductShortlistClosure.test.ts (16 tests) 57ms
+ ✓ tests/unit/kh02/ai/geminiModelDiscovery.test.ts (7 tests) 2ms
+ ✓ tests/unit/kh02V12_1_4_2_Reliability.test.ts (13 tests) 18127ms
+   ✓ SWAI KH-02 V12.1.4.2 — Research Reliability, Worker Health & Source Auto-Setup (13)
+     ✓ persists worker heartbeat to SQLite and detects ALIVE status within freshness window 1483ms
+     ✓ classifies worker as STALE when heartbeat is between 30 and 60 seconds old 1162ms
+     ✓ classifies worker as OFFLINE when stopped or heartbeat exceeds 60 seconds 1190ms
+     ✓ retrieves the active research run to resume tracking upon page mount/reload 1878ms
+     ✓ does not return completed or failed runs as active 1084ms
+     ✓ truthfully diagnoses Meta Ads as SOURCE_ACCESS_VERIFIED 1162ms
+     ✓ truthfully diagnoses TikTok Ads as MANUAL_RESEARCH_ONLY without fabricating live US scraper 1134ms
+     ✓ truthfully diagnoses TikTok Organic as CREDENTIALS_REQUIRED when API key is missing 1477ms
+     ✓ truthfully diagnoses Google Ads as MCP_NOT_CONFIGURED when MCP server is missing 1147ms
+     ✓ diagnoses Demand History as ENGINE_READY policy engine 1286ms
+     ✓ rejects invalid or unauthorized source names in testKH02SourceConnection 1102ms
+     ✓ executes safe connection test for allowed sources without charging credits 2650ms
+     ✓ bounds candidate discoveries to maxCandidates limit 1370ms
+ ✓ tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts (7 tests) 11704ms
+   ✓ SWAI KH-02 V12.1.4.1 — Heartbeat CAS Retry Integrity (7)
+     ✓ buildHeartbeatRetryPayload preserves topic, sourceStatuses, and lastProgress 1266ms
+     ✓ heartbeat retry against version conflict preserves progress written by concurrent update 1450ms
+     ✓ heartbeat retry rejects claimToken mismatch 2109ms
+     ✓ heartbeat retry rejects fencingToken mismatch 1221ms
+     ✓ heartbeat retry rejects replaced owner after lease reclaim 1399ms
+     ✓ heartbeat retry rejects mutating COMPLETED or FAILED jobs 2893ms
+     ✓ handles concurrent progress writes and heartbeats across independent Prisma clients 1366ms
+ ✓ tests/unit/kh02V12_1_4_AtomicCas.test.ts (7 tests) 10094ms
+   ✓ SWAI KH-02 V12.1.4 — Atomic Lease CAS & Database Concurrency (7)
+     ✓ updateJobIfClaimOwned enforces exact conditional match on all identity columns 1087ms
+     ✓ renewResearchJobLease advances recordVersion monotonically and never advances fencingGeneration 1071ms
+     ✓ safely handles heartbeat vs progress write races with same-owner CAS retry 1671ms
+     ✓ prevents recovery from snatching a lease when heartbeat extends it before recovery write 1118ms
+     ✓ resolves concurrent recovery contention so exactly one recovery worker reclaims 1206ms
+     ✓ completely rejects progress, completion, and failure writes from stale workers after recovery 1444ms
+     ✓ ensureSyncJobSchemaUpgraded verifies all columns and operates idempotently 2497ms
+ ✓ tests/unit/kh02/ai/geminiModelRouter.test.ts (14 tests) 2166ms
+   ✓ SWAI KH-02 V12.4 — Gemini Model Router & Error Classification (14)
+     ✓ retries up to 3 times on 503 before succeeding on same model 379ms
+     ✓ exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds 739ms
+     ✓ opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate 497ms
+     ✓ enforces global call budget across candidates via GeminiRunBudgetTracker 341ms
+ ✓ tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts (16 tests) 2185ms
+   ✓ SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance (16)
+     ✓ 1. Missing Key vs Invalid Key (Section C.1, C.2, L) (2)
+       ✓ verifies HasData credit status fails gracefully with error message on dummy key 1181ms
+     ✓ 9. Non-Interfering Provider Connection Testing (Section C.10, L) (1)
+       ✓ tests each connection independently with timeout without throwing if one fails 957ms
+ ✓ tests/unit/kh02V12_2_3_ProviderDiscovery.test.ts (7 tests) 17ms
+ ✓ tests/unit/kh02RuntimeTelemetryAndRelevance.test.ts (32 tests) 1576ms
+ ✓ tests/unit/kh02V12_1_1_Runtime.test.ts (20 tests) 733ms
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ ✓ tests/unit/kh02TestConnectionsFlow.test.ts (8 tests) 879ms
+   ✓ SWAI KH-02 — Test Connections Flow & Truthful Diagnostics (8)
+     ✓ 4. Probe Results Caching & Timeout Handling (3)
+       ✓ live probes Google Ads via local python FastMCP server and connects successfully 870ms
+ ✓ tests/unit/kh02V12_1_3_Ownership.test.ts (5 tests) 185ms
+ ✓ tests/unit/kh02V12_2_1_ProviderActivation.test.ts (13 tests) 114ms
+ ✓ tests/unit/kh02WorkspaceAuthorization.test.ts (4 tests) 45ms
+ ✓ tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts (9 tests) 6ms
+ ✓ tests/unit/kh02V12_1_P0.test.ts (8 tests) 9ms
+ ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 66ms
+ ✓ tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts (15 tests) 38ms
+ ✓ tests/unit/kh02CandidateDiscovery.test.ts (9 tests) 8ms
+ ✓ tests/unit/kh02V12_3_ProductIntelligence.test.ts (25 tests) 11ms
+ ✓ tests/unit/kh02/ai/geminiProductClassification.test.ts (6 tests) 4ms
+ ✓ tests/unit/kh02FreeProviderContracts.test.ts (13 tests) 22ms
+ ✓ tests/unit/kh02ProductIdentity.test.ts (2 tests) 5ms
+ ✓ tests/unit/kh02ProductMetadataSecurity.test.ts (7 tests) 7ms
+ ✓ tests/unit/kh02TemporalDemand.test.ts (5 tests) 1ms
+ ✓ tests/unit/kh02/ai/geminiEvidenceValidation.test.ts (7 tests) 5ms
+ ✓ tests/unit/kh02V12_2_ProductIdentity.test.ts (15 tests) 4ms
+ ✓ tests/unit/kh02ReleaseGatesAndReconciliation.test.ts (37 tests) 7ms
+ ✓ tests/unit/kh02EvergreenScoring.test.ts (6 tests) 2ms
+ ✓ tests/unit/kh02V12_1_4_1_Reconciliation.test.ts (16 tests) 5ms
+ ✓ tests/unit/kh02SourceAdapters.test.ts (4 tests) 2ms
+ ✓ tests/unit/kh02GoogleProvenance.test.ts (11 tests) 3ms
+ ✓ tests/unit/kh02MetaGlobalBudget.test.ts (12 tests) 1ms
+
+ Test Files  33 passed (33)
+      Tests  426 passed (426)
+   Start at  10:24:00
+   Duration  52.11s (tests 93%, setup 3%, import 3%, transform 1%)
+
+
+

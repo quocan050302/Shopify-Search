@@ -1,0 +1,12 @@
+{
+  "supervisorScript": "scripts/startSwaiServer.ts",
+  "supportedFlags": [
+    "--with-worker",
+    "dev",
+    "start"
+  ],
+  "processSupervised": true,
+  "hotReloadIsolation": "Separate child process with dedicated PID",
+  "gracefulShutdown": "SIGINT / SIGTERM forwarded to worker with status STOPPED",
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

@@ -1,0 +1,7 @@
+{
+  "progressWriteRejected": true,
+  "completionWriteRejected": true,
+  "failureWriteRejected": true,
+  "staleWorkerRowsAffected": 0,
+  "testOutcome": "PASS"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "ZERO_FALSE_PASS_REGRESSIONS",
+  "description": "Adversarial false-pass mutations trigger genuine failure verdicts",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "c2Verdict": "FAIL",
+    "c3ExactMatch": false
+  },
+  "observed": {
+    "c2Verdict": "FAIL",
+    "c3ExactMatch": false
+  },
+  "assertionEvidence": [
+    "Case 2 verdict: FAIL",
+    "Case 3 exact match: false"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "All adversarial mutation scenarios evaluated dynamically and failed as expected"
+}

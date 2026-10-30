@@ -1,0 +1,8 @@
+{
+  "qualifiedCount": 0,
+  "thresholdScore": 65,
+  "thresholdConfidence": 0.65,
+  "minDemandStability": 15,
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "reason": "Historical demand stability requires independent external validation"
+}

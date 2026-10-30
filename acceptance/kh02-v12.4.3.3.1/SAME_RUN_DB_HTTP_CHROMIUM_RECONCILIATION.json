@@ -1,0 +1,52 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "researchRunId": "kh02_run_1793327245885_raa19",
+  "crossLayerReconciliation": {
+    "researchRunId": "kh02_run_1793327245885_raa19",
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "status": "PARTIALLY_COMPLETED",
+    "rawObservationsCount": 50,
+    "candidatesCount": 17,
+    "topThreeCount": 0,
+    "provisionalCount": 8,
+    "candidateIds": [
+      "cand_1212440541",
+      "cand_14769098",
+      "cand_1788406859",
+      "cand_1587534715",
+      "cand_592688578",
+      "cand_1272640899",
+      "cand_1783682388",
+      "cand_1838011041"
+    ],
+    "databaseConsistent": true,
+    "httpReconciled": true,
+    "httpStatus": "PASS",
+    "browserReconciled": true,
+    "browserStatus": "PASS",
+    "productDiscoveryVerified": true,
+    "liveSourceVerified": true,
+    "persistedSnapshotMatchesHttp": true,
+    "reconciliationVerdict": "RECONCILED",
+    "reconciled": true,
+    "mismatches": [],
+    "notes": [
+      "DB snapshot verified: 17 candidates (0 ranked, 8 provisional).",
+      "HTTP readback content verified: exact match with DB snapshot.",
+      "Browser reconciliation verified: complete candidate set, rank order, and scores match DB."
+    ]
+  },
+  "dbTop3ShortlistIds": [
+    "cand_1212440541",
+    "cand_1587534715",
+    "cand_592688578"
+  ],
+  "chromiumTop3Ids": [
+    "cand_1212440541",
+    "cand_1587534715",
+    "cand_592688578"
+  ],
+  "top3OrderMatchesChromium": true,
+  "g17Verdict": "PASS"
+}

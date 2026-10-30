@@ -1,0 +1,17 @@
+{
+  "domain": "chewy.com",
+  "lookupExecuted": true,
+  "advertiserFound": true,
+  "creativeQueryExecuted": true,
+  "creativesReturned": 5,
+  "creativeIds": [
+    "CR02371010109909237761",
+    "CR04449261152840450049",
+    "CR14917513105205362689",
+    "CR04601325904474406913",
+    "CR08376479957248901121"
+  ],
+  "executionDurationMs": 16626,
+  "error": null,
+  "verifiedAt": "2026-10-27T08:43:18.847Z"
+}

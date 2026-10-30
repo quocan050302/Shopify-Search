@@ -1,0 +1,21 @@
+{
+  "version": "12.4.3.2",
+  "testedProductId": "cmvsy89c00036p0orhu35a9bb",
+  "testedRunId": "kh02_run_1793266052412_c2pom",
+  "overviewApiPayload": {
+    "kh02ResearchQualification": null,
+    "kh01CommercialReadiness": null
+  },
+  "chromiumVerification": {
+    "testedProductId": "cmvsy89c00036p0orhu35a9bb",
+    "testedRunId": "kh02_run_1793266052412_c2pom",
+    "reconciliationSectionVisible": true,
+    "kh02QualificationCardVisible": true,
+    "kh01ReadinessCardVisible": true,
+    "backButtonVisible": true,
+    "backNavigationPreservedContext": true,
+    "kh02CardText": "Research Qualification (KH-02)Catalog ProductResearch ScorePendingEvidence ConfidencePendingIdentityVERIFIEDAd Evidence0 ads · 0 adv",
+    "kh01CardText": "Commercial Readiness (KH-01)Commercial Validation NeededSupplier Quote: Not enteredMargin & CAC: Not modeledStore Offer: PendingKH-01 Readiness: PendingModel Margin & CACAdd Supplier QuoteInspect Store Page",
+    "pass": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "unit": {
+    "passed": 102,
+    "failed": 0
+  },
+  "integration": {
+    "passed": 25,
+    "failed": 0
+  },
+  "cas": {
+    "passed": 7,
+    "failed": 0
+  },
+  "heartbeat": {
+    "passed": 7,
+    "failed": 0
+  },
+  "reconcile": {
+    "passed": 16,
+    "failed": 0
+  },
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

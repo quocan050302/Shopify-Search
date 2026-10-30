@@ -1,0 +1,4 @@
+{
+  "crossPlatformPolicy": "Conservative matching requiring exact canonical URL or same domain + title token overlap >= 70%",
+  "automaticCrossStoreMergeBlocked": true
+}

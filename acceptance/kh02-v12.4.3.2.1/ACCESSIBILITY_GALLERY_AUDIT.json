@@ -1,0 +1,11 @@
+{
+  "version": "12.4.3.2.1",
+  "accessibilityGalleryAudit": {
+    "enlargeButtonAriaLabel": "Enlarge product media in lightbox",
+    "thumbnailsHaveAriaLabel": true,
+    "thumbnailsHaveAriaCurrent": true,
+    "lightboxHasDialogRole": true,
+    "escapeDismissesLightbox": true,
+    "pass": true
+  }
+}

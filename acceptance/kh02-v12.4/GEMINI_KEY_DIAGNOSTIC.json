@@ -1,0 +1,10 @@
+{
+  "configured": true,
+  "variableName": "GEMINI_API_KEY",
+  "keyLength": 53,
+  "keyPrefix": "AQ.A...",
+  "authStatus": "AUTHENTICATED",
+  "authenticated": true,
+  "testedAt": "2026-10-28T05:44:46.174Z",
+  "errorMessage": null
+}

@@ -1,0 +1,277 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "contaminationProbes": {
+    "dogFoodStatus": "IRRELEVANT",
+    "crochetStatus": "IRRELEVANT",
+    "golfStatus": "IRRELEVANT"
+  },
+  "dogGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1838011041",
+      "title": "Reusable Pet Hair Remover Roller",
+      "storeDomain": "livlandco.com",
+      "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_hair_remover_roller",
+      "supportingAdIds": [
+        "cmvrzyiu0001d6coruwq7iaw0"
+      ],
+      "supportingExternalAdIds": [
+        "1134947659228006"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1300676686",
+      "title": "Grooming Gloves",
+      "storeDomain": "order.uprootclean.com",
+      "canonicalProductUrl": "https://order.uprootclean.com/main/grooming-gloves-gg002-l1",
+      "identityStatus": "PROBABLE",
+      "familyKey": "pet_grooming_glove_brush",
+      "supportingAdIds": [
+        "cmvq21du8000t4gorrxhd3a6d"
+      ],
+      "supportingExternalAdIds": [
+        "2688711491543464"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_14769098",
+      "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+      "storeDomain": "aureluxe.ch",
+      "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+      "identityStatus": "PROBABLE",
+      "familyKey": "clothes_carpets",
+      "supportingAdIds": [
+        "cmvrzyiw800286coryen6tdi4",
+        "cmvrzyivt00226cor6zknkllm",
+        "cmvrzyive001w6cor4iz3t27o",
+        "cmvrzyiuz001q6cor6xmxn375",
+        "cmvrzyiuh001k6cornssodcug"
+      ],
+      "supportingExternalAdIds": [
+        "27106880412256326",
+        "1328426295348377",
+        "1652686075964972",
+        "27409053148688133",
+        "1655139552269207"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 5,
+      "isLiveVerified": false
+    }
+  ],
+  "catGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "familyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvrzyn30004y6corojbfmznc",
+        "cmvrzyn2j004s6corb96ke61v",
+        "cmvrzyn23004m6coriy1lwr49",
+        "cmvrzyn5c005t6cor0yylqvk2",
+        "cmvrzyn3x005a6corm3d0e51v",
+        "cmvrzyn4w005n6corlzcsccsh",
+        "cmvrzyn3h00546corujh7567u"
+      ],
+      "supportingExternalAdIds": [
+        "1802296680785588",
+        "2128156051108858",
+        "2046326005986245",
+        "1595856712093558",
+        "905190415961783",
+        "1393597299374101",
+        "1399013621792652"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 7,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_water_fountain",
+      "supportingAdIds": [
+        "cmvrzyixu002s6corgmhfjtem"
+      ],
+      "supportingExternalAdIds": [
+        "1067995712370292"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1838011041",
+      "title": "Reusable Pet Hair Remover Roller",
+      "storeDomain": "livlandco.com",
+      "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_hair_remover_roller",
+      "supportingAdIds": [
+        "cmvrzyiu0001d6coruwq7iaw0"
+      ],
+      "supportingExternalAdIds": [
+        "1134947659228006"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    }
+  ],
+  "diyToolsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1316890495",
+      "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+      "storeDomain": "vipbugo.com",
+      "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+      "identityStatus": "VERIFIED",
+      "familyKey": "hot_glue_gun",
+      "supportingAdIds": [
+        "cmvrzxmcv000m6cor8w1qwnhy"
+      ],
+      "supportingExternalAdIds": [
+        "2395948977822279"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_2112012920",
+      "title": "Burnett Wallpaper",
+      "storeDomain": "wallblush.com",
+      "canonicalProductUrl": "https://wallblush.com/products/burnett-wallpaper",
+      "identityStatus": "VERIFIED",
+      "familyKey": "peel_and_stick_wall_tile",
+      "supportingAdIds": [
+        "cmvrzzjre000et4or9s03n1n8"
+      ],
+      "supportingExternalAdIds": [
+        "4074376052697583"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_887687049",
+      "title": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+      "storeDomain": "acompactly.com",
+      "canonicalProductUrl": "https://acompactly.com/products/easy-fill-wall-repair-paste-kit",
+      "identityStatus": "VERIFIED",
+      "familyKey": "wall_tile_repair_paste",
+      "supportingAdIds": [
+        "cmvrzxmb600016cor39ruhbkb"
+      ],
+      "supportingExternalAdIds": [
+        "1646258873753644"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false
+    }
+  ],
+  "carAccessoriesShortlist": [],
+  "homeCleaningShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_386308104",
+      "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+      "storeDomain": "forubom.com",
+      "canonicalProductUrl": "https://forubom.com/products/8dgfdf-electric-clean",
+      "identityStatus": "VERIFIED",
+      "familyKey": "brush_use",
+      "supportingAdIds": [
+        "cmvrzh3ga0065lsore49hb07g"
+      ],
+      "supportingExternalAdIds": [
+        "1381859257413498"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_1_42161752"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_118020086",
+      "title": "Cordless Electric Spin Scrubber with 5 Replaceable Brush Heads",
+      "storeDomain": "realgalaxystore.com",
+      "canonicalProductUrl": "https://realgalaxystore.com/products/cordless-electric-spin-scrubber-with-5-replaceable-brush-heads",
+      "identityStatus": "VERIFIED",
+      "familyKey": "electric_spin_scrubber",
+      "supportingAdIds": [
+        "cmvrzh3i6006wlsortpfbvynk"
+      ],
+      "supportingExternalAdIds": [
+        "2014179012604906"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_1_42161752"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_824704036",
+      "title": "Steam Genie ™ Pro",
+      "storeDomain": "getgenieproducts.com",
+      "canonicalProductUrl": "https://getgenieproducts.com/products/steam-genie-pro",
+      "identityStatus": "VERIFIED",
+      "familyKey": "steam_genie",
+      "supportingAdIds": [
+        "cmvuc6j4q008x6oorn4csai1g"
+      ],
+      "supportingExternalAdIds": [
+        "2302991560230745"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_f4e941f9"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true
+    }
+  ],
+  "dogHasCatOnly": false,
+  "catHasDogOnly": false,
+  "emptyQueryRejected": true,
+  "g09Verdict": "PASS",
+  "g26Verdict": "PASS"
+}

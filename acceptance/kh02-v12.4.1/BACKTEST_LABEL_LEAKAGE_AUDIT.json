@@ -1,0 +1,11 @@
+{
+  "zeroLeakageVerified": true,
+  "totalRecordsChecked": 21,
+  "goldFieldsStrippedBeforeInference": [
+    "goldCommercialEntityType",
+    "goldProductName",
+    "goldNicheRelevance",
+    "goldIsLikelySellableProduct",
+    "goldExpectedShortlistEligibility"
+  ]
+}

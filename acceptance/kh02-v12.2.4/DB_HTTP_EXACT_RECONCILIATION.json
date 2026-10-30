@@ -1,0 +1,38 @@
+{
+  "layer": "Database to HTTP API",
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
+  "dbCandidateCount": 11,
+  "httpCandidateCount": 11,
+  "idsExactMatch": true,
+  "scoreDiffsCount": 0,
+  "expectedCandidateIds": [
+    "cand_688692874_4",
+    "cand_334795365_5",
+    "cand_1424880279_11",
+    "cand_1950428281_7",
+    "cand_625654596_1",
+    "cand_759388857_2",
+    "cand_1741955052_3",
+    "cand_44585695_6",
+    "cand_788576853_8",
+    "cand_2083368825_9",
+    "cand_1809033985_10"
+  ],
+  "actualCandidateIds": [
+    "cand_688692874_4",
+    "cand_334795365_5",
+    "cand_1424880279_11",
+    "cand_1950428281_7",
+    "cand_625654596_1",
+    "cand_759388857_2",
+    "cand_1741955052_3",
+    "cand_44585695_6",
+    "cand_788576853_8",
+    "cand_2083368825_9",
+    "cand_1809033985_10"
+  ],
+  "reconciled": true,
+  "verdict": "PASS",
+  "reason": null,
+  "verifiedAt": "2026-10-27T08:43:46.279Z"
+}

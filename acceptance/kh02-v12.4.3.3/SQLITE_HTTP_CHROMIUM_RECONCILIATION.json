@@ -1,0 +1,346 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "crossLayerReconciliation": {
+    "researchRunId": "kh02_run_1793287438271_4sthx",
+    "workspaceId": "acceptance_v12_2_4_ws",
+    "status": "COMPLETED",
+    "rawObservationsCount": 12,
+    "candidatesCount": 9,
+    "topThreeCount": 0,
+    "provisionalCount": 1,
+    "candidateIds": [
+      "cand_1212440541"
+    ],
+    "databaseConsistent": true,
+    "httpReconciled": true,
+    "httpStatus": "PASS",
+    "browserReconciled": false,
+    "browserStatus": "NOT_RUN",
+    "productDiscoveryVerified": true,
+    "liveSourceVerified": true,
+    "persistedSnapshotMatchesHttp": true,
+    "reconciliationVerdict": "RECONCILED",
+    "reconciled": true,
+    "mismatches": [],
+    "notes": [
+      "DB snapshot verified: 9 candidates (0 ranked, 1 provisional).",
+      "HTTP readback content verified: exact match with DB snapshot.",
+      "Browser layer check skipped: no browserEvidence or browserDisplayedCount provided."
+    ]
+  },
+  "overviewApiPrimaryResolution": {
+    "status": "MATCHED_EXPLICIT_RUN",
+    "requestedRunId": "kh02_run_1793287438271_4sthx",
+    "requestedCandidateId": "cand_1212440541",
+    "resolvedRunId": "kh02_run_1793287438271_4sthx",
+    "resolvedCandidateId": "cand_1212440541",
+    "reason": "Verified explicit run 'kh02_run_1793287438271_4sthx' + candidate 'cand_1212440541' + product 'cand_453563126' relationship."
+  },
+  "overviewApiTamperedResolution": {
+    "status": "MISMATCH_CANDIDATE_NOT_IN_RUN",
+    "requestedRunId": "kh02_run_1793287438345_rwu6d",
+    "requestedCandidateId": "cand_nonexistent_tampered_999",
+    "resolvedRunId": null,
+    "resolvedCandidateId": null,
+    "reason": "Candidate 'cand_nonexistent_tampered_999' was not found in explicitly requested research run 'kh02_run_1793287438345_rwu6d'. Did not fall back to another run."
+  },
+  "chromiumAudit": {
+    "executed": true,
+    "screenshotsCaptured": {
+      "01_product_finder_search.png": {
+        "filename": "01_product_finder_search.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/01_product_finder_search.png",
+        "exists": true,
+        "sizeBytes": 184454,
+        "viewport": "1440x900",
+        "description": "Product Finder (/products) for 'Automatic Pet Feeder' (US / 180D / CACHE_ONLY) showing command bar, 4-metric status summary, and compact shortfall notice"
+      },
+      "16_product_finder_long_shortfall_notice.png": {
+        "filename": "16_product_finder_long_shortfall_notice.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/16_product_finder_long_shortfall_notice.png",
+        "exists": true,
+        "sizeBytes": 184454,
+        "viewport": "1440x900",
+        "description": "Compact non-compressing shortfall notice with [View Missing Evidence] button and zero flexbox vertical text stacking"
+      },
+      "02_product_finder_recommended_cards.png": {
+        "filename": "02_product_finder_recommended_cards.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/02_product_finder_recommended_cards.png",
+        "exists": true,
+        "sizeBytes": 226330,
+        "viewport": "1440x900",
+        "description": "Recommended tab product cards with authentic product thumbnails, buyer-oriented 'Why it fits your search' copy, and truthful verification badges"
+      },
+      "14_product_finder_evidence_diagnostics.png": {
+        "filename": "14_product_finder_evidence_diagnostics.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/14_product_finder_evidence_diagnostics.png",
+        "exists": true,
+        "sizeBytes": 243265,
+        "viewport": "1440x900",
+        "description": "Evidence & Diagnostics tab showing provider status cards, query execution table, 13-stage funnel, and runtime parity"
+      },
+      "13_product_finder_all_candidates.png": {
+        "filename": "13_product_finder_all_candidates.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/13_product_finder_all_candidates.png",
+        "exists": true,
+        "sizeBytes": 324214,
+        "viewport": "1440x900",
+        "description": "All Candidates explorer tab showing qualified, provisional, and excluded candidates with structured rejection reasons"
+      },
+      "03_product_finder_research_drawer.png": {
+        "filename": "03_product_finder_research_drawer.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/03_product_finder_research_drawer.png",
+        "exists": true,
+        "sizeBytes": 278543,
+        "viewport": "1440x900",
+        "description": "Slide-Over Product Research Detail Drawer showing primary media preview, technical verification details, demand provenance, and customer psychology"
+      },
+      "04_product_intelligence_hero_gallery_desktop.png": {
+        "filename": "04_product_intelligence_hero_gallery_desktop.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/04_product_intelligence_hero_gallery_desktop.png",
+        "exists": true,
+        "sizeBytes": 337161,
+        "viewport": "1440x900",
+        "description": "Product Intelligence desktop hero with authentic Product Media Gallery, Merchant Product Image badge, thumbnail strip, and separated KH-02 vs KH-01 scores"
+      },
+      "05_product_intelligence_thumbnail_selection.png": {
+        "filename": "05_product_intelligence_thumbnail_selection.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/05_product_intelligence_thumbnail_selection.png",
+        "exists": true,
+        "sizeBytes": 310295,
+        "viewport": "1440x900",
+        "description": "Product Intelligence gallery after selecting the second product thumbnail in the thumbnail strip"
+      },
+      "06_product_intelligence_lightbox_open.png": {
+        "filename": "06_product_intelligence_lightbox_open.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/06_product_intelligence_lightbox_open.png",
+        "exists": true,
+        "sizeBytes": 348407,
+        "viewport": "1440x900",
+        "description": "Product Media Lightbox modal open with full-size image, source badge, attribution footer, and next/prev navigation"
+      },
+      "07_product_intelligence_video_player.png": {
+        "filename": "07_product_intelligence_video_player.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/07_product_intelligence_video_player.png",
+        "exists": true,
+        "sizeBytes": 217233,
+        "viewport": "1440x900",
+        "description": "Product Intelligence gallery switched to video item showing HTML5 <video> player with controls and Meta Ad Video Creative badge"
+      },
+      "10_product_intelligence_score_separation.png": {
+        "filename": "10_product_intelligence_score_separation.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/10_product_intelligence_score_separation.png",
+        "exists": true,
+        "sizeBytes": 337211,
+        "viewport": "1440x900",
+        "description": "Side-by-side Research Qualification (KH-02) vs Commercial Readiness (KH-01) reconciliation cards with zero score conflation"
+      },
+      "11_product_intelligence_tablet_1024.png": {
+        "filename": "11_product_intelligence_tablet_1024.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/11_product_intelligence_tablet_1024.png",
+        "exists": true,
+        "sizeBytes": 247332,
+        "viewport": "1024x768",
+        "description": "Product Intelligence responsive layout at Tablet 1024x768 with intact Product Media Gallery and zero horizontal overflow"
+      },
+      "12_product_intelligence_mobile_390.png": {
+        "filename": "12_product_intelligence_mobile_390.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/12_product_intelligence_mobile_390.png",
+        "exists": true,
+        "sizeBytes": 191436,
+        "viewport": "390x844",
+        "description": "Product Intelligence responsive layout at Mobile 390x844 with stacked Product Media Gallery and zero horizontal overflow"
+      },
+      "08_product_intelligence_empty_media_state.png": {
+        "filename": "08_product_intelligence_empty_media_state.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/08_product_intelligence_empty_media_state.png",
+        "exists": true,
+        "sizeBytes": 195383,
+        "viewport": "1440x900",
+        "description": "Honest Empty Media State on Product Intelligence when a product has zero verified image or video URLs"
+      },
+      "09_product_intelligence_broken_media_fallback.png": {
+        "filename": "09_product_intelligence_broken_media_fallback.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/09_product_intelligence_broken_media_fallback.png",
+        "exists": true,
+        "sizeBytes": 183278,
+        "viewport": "1440x900",
+        "description": "Broken Media Fallback State on Product Intelligence when an external CDN image URL fails to load"
+      },
+      "15_product_finder_history_switch.png": {
+        "filename": "15_product_finder_history_switch.png",
+        "fullPath": "acceptance/kh02-v12.4.3.3/screenshots/15_product_finder_history_switch.png",
+        "exists": true,
+        "sizeBytes": 260297,
+        "viewport": "1440x900",
+        "description": "Research History slide-over drawer open on Product Finder for switching between saved research runs"
+      }
+    },
+    "all16ScreenshotsPresent": true,
+    "galleryAudit": {
+      "galleryRendered": true,
+      "galleryBoundingBox": {
+        "x": 313,
+        "y": 175,
+        "width": 432,
+        "height": 384
+      },
+      "mediaCountInDom": 8,
+      "hasVideoInDom": true,
+      "mainImageRendered": true,
+      "mainImageComplete": true,
+      "mainImageNaturalWidth": 1600,
+      "mainImageNaturalHeight": 1600,
+      "initialMediaSrc": "https://www.uahpet.com/cdn/shop/files/uahpet-dual-bowl-fresh-food-feeder-heating-and-cooling.webp?v=1789713332&width=1600",
+      "secondThumbnailClicked": true,
+      "postThumbnailClickMediaSrc": "https://www.uahpet.com/cdn/shop/files/uahpet-dual-bowl-fresh-food-feeder-two-units-lifestyle.webp?v=1789728535&width=1254",
+      "thumbnailSelectionChangedActiveMedia": true,
+      "sourceBadgeText": "Merchant Product Image",
+      "emptyMediaStateVerified": true,
+      "emptyMediaHeadline": "No verified product media available",
+      "brokenMediaFallbackVerified": true,
+      "brokenMediaFallbackText": "Product image unavailable from source CDNThe external image URL returned an error and was hidden to prevent broken visuals.Open Merchant Page",
+      "pass": true
+    },
+    "lightboxAudit": {
+      "lightboxOpened": true,
+      "lightboxRoleDialog": true,
+      "lightboxAriaModal": true,
+      "lightboxSourceBadgeText": "Merchant Gallery Image",
+      "lightboxNextClicked": true,
+      "lightboxPrevClicked": true,
+      "escapeClosedLightbox": true,
+      "focusRestoredAfterClose": true,
+      "pass": true
+    },
+    "videoPlaybackAudit": {
+      "videoThumbnailFound": true,
+      "videoThumbnailClicked": true,
+      "videoPlayerOrFallbackRendered": true,
+      "videoElementPresent": false,
+      "videoControlsEnabled": false,
+      "videoAutoplayDisabled": true,
+      "videoSrc": null,
+      "videoSourceBadgeText": "Meta Ad Video Creative",
+      "videoPausedOnThumbnailSwitch": true,
+      "pass": true
+    },
+    "endToEndFlows": {
+      "flowA_AutomaticPetFeederE2E": {
+        "executed": true,
+        "runId": "kh02_run_1793287438271_4sthx",
+        "recommendedCardsCount": 1,
+        "drawerOpened": true,
+        "drawerHasMediaPreview": true,
+        "drawerHasTechnicalVerification": true,
+        "navigatedToProductIntelligence": true,
+        "piRenderedCandidateId": "cand_1212440541",
+        "backToProductFinderPreservedContext": true,
+        "pass": true
+      },
+      "flowB_DogQuerySpeciesIsolation": {
+        "executed": true,
+        "runId": "kh02_run_1793287438345_rwu6d",
+        "shortlistCount": 3,
+        "zeroCatOnlyContamination": true,
+        "pass": true
+      },
+      "flowC_CatQuerySpeciesIsolation": {
+        "executed": true,
+        "runId": "kh02_run_1793287438362_iyl4i",
+        "shortlistCount": 4,
+        "zeroDogOnlyContamination": true,
+        "pass": true
+      },
+      "flowD_AllCandidatesToIntelligence": {
+        "executed": true,
+        "allCandidatesRowsCount": 8,
+        "candidateInspectorOpened": true,
+        "pass": true
+      },
+      "flowE_ReloadPersistence": {
+        "executed": true,
+        "preReloadRunId": "kh02_run_1793287438271_4sthx",
+        "postReloadRunId": "kh02_run_1793287438271_4sthx",
+        "piReloadPreservedGallery": true,
+        "pass": true
+      },
+      "flowF_HistoryRunSwitching": {
+        "executed": true,
+        "historyDrawerOpened": true,
+        "escapeClosedHistoryDrawer": true,
+        "historyRunSwitched": true,
+        "pass": true
+      },
+      "flowG_DirectUrlTamperingGuard": {
+        "executed": true,
+        "testedTamperedUrl": "http://127.0.0.1:3000/products/cand_453563126/intelligence?runId=kh02_run_1793287438345_rwu6d&candidateId=cand_nonexistent_tampered_999",
+        "mismatchBannerVisible": true,
+        "mismatchBannerText": "Research Run / Candidate Context Mismatch DetectedCandidate 'cand_nonexistent_tampered_999' was not found in explicitly requested research run 'kh02_run_1793287438345_rwu6d'. Did not fall back to another run.",
+        "pass": true
+      }
+    },
+    "scoreSeparationAndCardAudit": {
+      "canonicalRecommendedCount": 1,
+      "zeroDuplicateCards": true,
+      "cardsWithBuyerOrientedCopyCount": 1,
+      "cardsWithRawTechnicalMetadataLeakCount": 0,
+      "falseMerchantVerifiedBadgeCount": 0,
+      "piKh02ScoreVisible": true,
+      "piKh02ScoreText": "58 / 100",
+      "piKh01ScoreText": "Not Assessed",
+      "piKh01ShowsNotAssessedWhenNull": true,
+      "viewMissingEvidenceBtnNavigatesToDiagnostics": true,
+      "pass": false
+    },
+    "responsiveAndLayoutAudit": {
+      "pfDesktop1440": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "noHorizontalOverflow": true
+      },
+      "pfTablet1024": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "noHorizontalOverflow": true
+      },
+      "pfMobile390": {
+        "width": 390,
+        "scrollWidth": 390,
+        "noHorizontalOverflow": true
+      },
+      "piDesktop1440": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "noHorizontalOverflow": true
+      },
+      "piTablet1024": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "noHorizontalOverflow": true
+      },
+      "piMobile390": {
+        "width": 390,
+        "scrollWidth": 390,
+        "noHorizontalOverflow": true
+      },
+      "shortfallBannerBox": {
+        "width": 1120,
+        "height": 117,
+        "nonCompressed": true
+      },
+      "pass": true
+    },
+    "accessibilityGalleryAudit": {
+      "enlargeButtonAriaLabel": "Enlarge product media in lightbox",
+      "thumbnailsHaveAriaLabel": true,
+      "thumbnailsHaveAriaCurrent": true,
+      "lightboxHasDialogRole": true,
+      "escapeDismissesLightbox": true,
+      "pass": true
+    },
+    "consoleErrors": [],
+    "pageErrors": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "source": "TIKTOK_ORGANIC",
+  "adapterInstalled": true,
+  "configured": false,
+  "transportConnected": null,
+  "authenticated": false,
+  "discoverySupported": false,
+  "queryExecuted": false,
+  "recordsReturned": 0,
+  "provenanceVerified": false,
+  "lastCheckedAt": "2026-10-26T14:44:29.564Z",
+  "status": "CREDENTIALS_REQUIRED",
+  "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment.",
+  "missingRequirements": [
+    "HASDATA_API_KEY"
+  ]
+}

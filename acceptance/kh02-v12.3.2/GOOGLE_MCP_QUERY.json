@@ -1,0 +1,5 @@
+{
+  "mcpServerConfigured": true,
+  "transport": "stdio",
+  "mcpUrlSsrfProtected": true
+}

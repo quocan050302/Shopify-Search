@@ -1,0 +1,6 @@
+{
+  "source": "TIKTOK_ORGANIC",
+  "liveQueryStatus": "BLOCKED",
+  "costGuardEnforced": true,
+  "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment (TIKTOK_ORGANIC_LIVE: BLOCKED). Configure HASDATA_API_KEY to enable live organic search."
+}

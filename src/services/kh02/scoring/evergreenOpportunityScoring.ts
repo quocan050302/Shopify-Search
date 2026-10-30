@@ -22,8 +22,10 @@
 import { DiscoveredProductCandidate } from "../identity/productCandidateDiscovery";
 import {
   evaluateTemporalDemandStability,
+  evaluateDemandHistoryEvidence,
   DemandDataPoint,
   KH02DemandClass,
+  DemandSourceAuthority,
 } from "../demand/temporalDemandEngine";
 
 export const KH02_SCORE_VERSION = "12.1.0";
@@ -42,11 +44,46 @@ export interface PillarScoreDetail {
   explanation: string;
 }
 
+export interface EvergreenVerificationEvidence {
+  candidateId: string;
+  productId: string | null;
+  canonicalProductName: string;
+  merchantDomain: string;
+  canonicalProductUrl: string;
+  identityVerified: boolean;
+  physicalProductVerified: boolean;
+  relevanceVerified: boolean;
+  demandSourceAuthority: DemandSourceAuthority;
+  demandObservationsCount: number;
+  distinctDemandDatesCount: number;
+  coveredDays: number;
+  demandStabilityScore: number;
+  demandClass:
+    | "EVERGREEN_STABLE"
+    | "SEASONAL_RECURRING"
+    | "EMERGING_PERSISTENT"
+    | KH02DemandClass;
+  opportunityScore: number;
+  evidenceConfidence: number;
+  observationRecordIds: string[];
+  demandObservationIds: string[];
+  verifiedByGate: boolean;
+  disqualifiers: string[];
+}
+
+export interface CandidateVerificationDimensions {
+  identityVerifiedByMerchant: boolean;
+  demandVerifiedByHistoricalSource: boolean;
+  aiReviewed: boolean;
+  multiPlatformValidated: boolean;
+  evergreenIndependentlyVerified: boolean;
+}
+
 export interface KH02ScoreResult {
   candidateId: string;
   opportunityScore: number | null;
   evidenceConfidence: number; // 0-100 completeness score
-  scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE";
+  scoreStatus: "VERIFIED" | "PROVISIONAL" | "INSUFFICIENT_EVIDENCE" | "REJECTED";
   tier: KH02ProductTier;
   formulaVersion: string;
   demandClass: KH02DemandClass;
@@ -64,6 +101,9 @@ export interface KH02ScoreResult {
   recommendation: "RESEARCH_MORE" | "SHORTLIST" | "TEST_CANDIDATE" | "REQUIRES_MANUAL_REVIEW" | "REJECT";
   recommendationRationale: string;
   evaluatedAt: string;
+  demandSourceAuthority?: DemandSourceAuthority;
+  evergreenVerification?: EvergreenVerificationEvidence | null;
+  verificationDimensions?: CandidateVerificationDimensions;
 }
 
 export interface ProductScoringContext {
@@ -85,10 +125,211 @@ export interface EligibilityGateResult {
  * Evaluates whether a candidate qualifies for the primary Top 3 Evergreen Winners
  * versus the secondary Provisional Opportunities shortlist.
  */
+
+/**
+ * Independently recomputes and validates all Evergreen winner requirements from raw candidate
+ * and demand observations. Used both during scoring and by Acceptance Gate G12.
+ */
+export function verifyEvergreenCandidateIndependently(
+  candidate: any,
+  rawDemandPoints?: DemandDataPoint[],
+  scoreContext?: {
+    opportunityScore?: number | null;
+    evidenceConfidence?: number;
+    demandStabilityScore?: number | null;
+    demandClass?: KH02DemandClass;
+    demandSourceAuthority?: DemandSourceAuthority;
+    demandObservationIds?: string[];
+    distinctDemandDatesCount?: number;
+    coveredDays?: number;
+    demandObservationsCount?: number;
+  }
+): EvergreenVerificationEvidence {
+  const disqualifiers: string[] = [];
+  const candidateId = String(candidate?.candidateId || candidate?.id || "unknown_candidate");
+  const productId = candidate?.productId || candidate?.demandResolution?.productId || null;
+  const canonicalProductName = String(
+    candidate?.canonicalProductName || candidate?.title || ""
+  ).trim();
+  const merchantDomain = String(candidate?.storeDomain || "").trim();
+  const canonicalProductUrl = String(candidate?.canonicalProductUrl || "").trim();
+
+  const identityStatus = candidate?.identityStatus;
+  const identityConfidence = candidate?.identityConfidence;
+  const hasExplicitVerifiedIdentity =
+    identityStatus === "VERIFIED" ||
+    (identityStatus === undefined && identityConfidence === "EXACT");
+  const hasMerchantProductUrl =
+    Boolean(merchantDomain) &&
+    Boolean(canonicalProductUrl) &&
+    /\/products\//i.test(canonicalProductUrl);
+  const identityVerified = Boolean(hasExplicitVerifiedIdentity && hasMerchantProductUrl);
+  if (!identityVerified) {
+    disqualifiers.push("Product identity is not verified with a canonical /products/ merchant URL and domain.");
+  }
+
+  const realityStatus = candidate?.productRealityStatus;
+  const physicalProductVerified =
+    realityStatus === undefined || realityStatus === "VERIFIED_PHYSICAL_PRODUCT";
+  if (!physicalProductVerified) {
+    disqualifiers.push(`Product reality status '${realityStatus}' is not VERIFIED_PHYSICAL_PRODUCT.`);
+  }
+
+  const relevanceStatus = candidate?.relevanceStatus;
+  const relevanceVerified =
+    relevanceStatus === undefined || relevanceStatus === "RELEVANT";
+  if (!relevanceVerified) {
+    disqualifiers.push(`Relevance status '${relevanceStatus}' is not RELEVANT.`);
+  }
+
+  const points: DemandDataPoint[] =
+    rawDemandPoints ||
+    candidate?.demandResolution?.dataPoints ||
+    candidate?.demandSeries ||
+    [];
+
+  const demandAssessment = evaluateDemandHistoryEvidence(points, {
+    minimumDataPoints: 3,
+    minimumCoveredDays: 60,
+    candidateCanonicalName: canonicalProductName,
+  });
+
+  const demandEval = evaluateTemporalDemandStability(points, 90, {
+    candidateCanonicalName: canonicalProductName,
+  });
+
+  const demandSourceAuthority: DemandSourceAuthority =
+    points.length > 0
+      ? demandAssessment.sourceAuthority
+      : scoreContext?.demandSourceAuthority || "UNKNOWN_SOURCE";
+
+  const isAuthoritativeSource =
+    demandSourceAuthority === "AUTHORITATIVE_VERIFIED" ||
+    demandSourceAuthority === "HISTORICAL_SOURCE_VERIFIED" ||
+    demandSourceAuthority === "AUTHORITATIVE_PROVIDER";
+  if (!isAuthoritativeSource) {
+    disqualifiers.push(`Demand source authority '${demandSourceAuthority}' is not authoritative/historical verified.`);
+  }
+
+  const demandObservationsCount =
+    points.length > 0
+      ? demandAssessment.dataPointsCount
+      : (scoreContext?.demandObservationsCount ?? 0);
+  const distinctDemandDatesCount =
+    points.length > 0
+      ? demandAssessment.distinctObservationDatesCount
+      : (scoreContext?.distinctDemandDatesCount ?? 0);
+  const coveredDays =
+    points.length > 0
+      ? demandAssessment.coveredDays
+      : (scoreContext?.coveredDays ?? 0);
+  const demandStabilityScore =
+    points.length > 0
+      ? (demandEval.stabilityScore ?? 0)
+      : (scoreContext?.demandStabilityScore ?? 0);
+  const demandClass: KH02DemandClass =
+    points.length > 0
+      ? demandEval.demandClass
+      : (scoreContext?.demandClass || "INSUFFICIENT_HISTORY");
+
+  if (demandObservationsCount < 3 || distinctDemandDatesCount < 3) {
+    disqualifiers.push(`Insufficient distinct demand observations (${distinctDemandDatesCount}/3 required).`);
+  }
+  if (coveredDays < 60) {
+    disqualifiers.push(`Demand coverage (${coveredDays}D) is below mandatory 60D threshold.`);
+  }
+  if (demandStabilityScore < 15) {
+    disqualifiers.push(`Demand stability score (${demandStabilityScore}/25) is below mandatory 15/25 threshold.`);
+  }
+  if (
+    demandClass !== "EVERGREEN_STABLE" &&
+    demandClass !== "SEASONAL_RECURRING" &&
+    demandClass !== "EMERGING_PERSISTENT"
+  ) {
+    disqualifiers.push(`Demand class '${demandClass}' is not eligible for Verified Evergreen.`);
+  }
+
+  const opportunityScore = Number(
+    scoreContext?.opportunityScore ??
+    candidate?.score?.opportunityScore ??
+    candidate?.opportunityScore ??
+    0
+  );
+  const evidenceConfidence = Number(
+    scoreContext?.evidenceConfidence ??
+    candidate?.score?.evidenceConfidence ??
+    candidate?.evidenceConfidence ??
+    0
+  );
+
+  if (opportunityScore < 65) {
+    disqualifiers.push(`Opportunity score (${opportunityScore}/100) is below 65/100 threshold.`);
+  }
+  if (evidenceConfidence < 65) {
+    disqualifiers.push(`Evidence confidence (${evidenceConfidence}/100) is below 65/100 threshold.`);
+  }
+
+  const observationRecordIds: string[] = Array.from(
+    new Set([
+      ...(Array.isArray(candidate?.supportingAdIds) ? candidate.supportingAdIds : []),
+      ...(Array.isArray(candidate?.sourceObservations)
+        ? candidate.sourceObservations.map((o: any) => o.sourceRecordId || o.evidenceReference).filter(Boolean)
+        : []),
+    ])
+  );
+  if (observationRecordIds.length === 0) {
+    disqualifiers.push("Candidate lacks traceable source observation record IDs.");
+  }
+
+  const demandObservationIds: string[] =
+    (demandAssessment.demandObservationIds && demandAssessment.demandObservationIds.length > 0)
+      ? demandAssessment.demandObservationIds
+      : (scoreContext?.demandObservationIds || []);
+  if (demandObservationIds.length < 3) {
+    disqualifiers.push("Candidate lacks >= 3 traceable demand observation IDs.");
+  }
+
+  return {
+    candidateId,
+    productId,
+    canonicalProductName,
+    merchantDomain,
+    canonicalProductUrl,
+    identityVerified,
+    physicalProductVerified,
+    relevanceVerified,
+    demandSourceAuthority,
+    demandObservationsCount,
+    distinctDemandDatesCount,
+    coveredDays,
+    demandStabilityScore,
+    demandClass,
+    opportunityScore,
+    evidenceConfidence,
+    observationRecordIds,
+    demandObservationIds,
+    verifiedByGate: disqualifiers.length === 0,
+    disqualifiers,
+  };
+}
+
 export function applyKH02EligibilityGates(
-  scoreResult: Omit<KH02ScoreResult, "tier"> & { tier?: KH02ProductTier }
+  scoreResult: Omit<KH02ScoreResult, "tier"> & { tier?: KH02ProductTier; isProductIdentityVerified?: boolean }
 ): EligibilityGateResult {
   const gateReasons: string[] = [];
+
+  // Gate 0: Irrelevant Category / Reject Gate
+  if ((scoreResult as any).relevanceStatus === "IRRELEVANT" || scoreResult.recommendation === "REJECT") {
+    gateReasons.push(
+      (scoreResult as any).relevanceReasons?.[0] ||
+      "Product category is verified to be IRRELEVANT to the target research niche."
+    );
+    return {
+      tier: "INSUFFICIENT_EVIDENCE",
+      isTop3Eligible: false,
+      gateReasons,
+    };
+  }
 
   // Gate 1: Compliance / trademark block
   if (scoreResult.recommendation === "REQUIRES_MANUAL_REVIEW") {
@@ -126,9 +367,21 @@ export function applyKH02EligibilityGates(
     gateReasons.push(`Opportunity score (${oppScore}/100) below verified evergreen threshold (65/100).`);
   }
 
+  // Gate 5: Product Identity Verification (Section 95: Ambiguous identity cannot become verified evergreen winner)
+  const isIdentityVerified = (scoreResult as any).isProductIdentityVerified !== false;
+  if (!isIdentityVerified) {
+    gateReasons.push("Product identity is unconfirmed, provisional, or ambiguous; cannot qualify as verified evergreen winner.");
+  }
+
   // Final Qualification Decision
+  const realityStatus = (scoreResult as any).productRealityStatus;
+  const isRealityVerifiedPhysical =
+    realityStatus === undefined || realityStatus === "VERIFIED_PHYSICAL_PRODUCT";
+
   if (
     scoreResult.scoreStatus === "VERIFIED" &&
+    isIdentityVerified &&
+    isRealityVerifiedPhysical &&
     demandScore !== null &&
     demandScore >= 15 &&
     !isDemandDeclining &&
@@ -142,8 +395,28 @@ export function applyKH02EligibilityGates(
     };
   }
 
+  // SECTION 11.E: Do NOT place unresolved identity into provisional with badge "Probable"
+  if (
+    (scoreResult as any).identityStatus === "UNRESOLVED" ||
+    realityStatus === "UNRESOLVED" ||
+    realityStatus === "NON_PHYSICAL" ||
+    realityStatus === "REJECTED" ||
+    ((scoreResult as any).isEligibleAsEvergreenWinner === false && realityStatus === undefined)
+  ) {
+    return {
+      tier: "INSUFFICIENT_EVIDENCE",
+      isTop3Eligible: false,
+      gateReasons: [...gateReasons, "Product identity is unresolved or non-product creative; classified as Insufficient Evidence."],
+    };
+  }
+
   // Distinguish provisional opportunities from dead / insufficient data
-  if (oppScore >= 40 && scoreResult.evidenceConfidence >= 30 && scoreResult.demandClass !== "DECLINING") {
+  if (
+    oppScore >= 40 &&
+    scoreResult.evidenceConfidence >= 30 &&
+    scoreResult.demandClass !== "DECLINING" &&
+    (scoreResult as any).relevanceStatus !== "IRRELEVANT"
+  ) {
     return {
       tier: "PROVISIONAL_OPPORTUNITY",
       isTop3Eligible: false,
@@ -174,7 +447,9 @@ export function calculateKH02EvergreenScore(
   let confidencePoints = 0; // Out of 100
 
   // ── Pillar A: Demand Stability (25 pts) ───────────────────────────────────
-  const demandEval = evaluateTemporalDemandStability(ctx.demandSeries, 90);
+  const demandEval = evaluateTemporalDemandStability(ctx.demandSeries, 90, {
+    candidateCanonicalName: c.canonicalProductName || c.title,
+  });
   let pillarA_Score: number | null = demandEval.stabilityScore;
   let pillarA_Status: PillarScoreDetail["status"] = "MISSING_DATA";
 
@@ -278,7 +553,7 @@ export function calculateKH02EvergreenScore(
   else if (uniqueAds >= 2) pillarE_Score += 3;
   else if (uniqueAds === 1) pillarE_Score += 1;
 
-  if (c.videoUrl || c.sourceObservations.some((o) => o.media.mediaType === "VIDEO")) {
+  if (c.videoUrl || c.sourceObservations.some((o) => o.media?.mediaType === "VIDEO")) {
     pillarE_Score += 5;
     confidencePoints += 10;
     strengths.push("Video demonstration creative available for product hook evaluation.");
@@ -337,7 +612,26 @@ export function calculateKH02EvergreenScore(
   let recommendation: KH02ScoreResult["recommendation"] = "RESEARCH_MORE";
   let rationale = "Further data required to confirm evergreen stability and economics viability.";
 
-  if (ctx.complianceRiskDetected) {
+  if (
+    c.relevanceStatus === "IRRELEVANT" ||
+    c.productRealityStatus === "NON_PHYSICAL" ||
+    c.productRealityStatus === "REJECTED" ||
+    (c.aiIntelligence?.commercialEntityType && c.aiIntelligence.commercialEntityType !== "PHYSICAL_PRODUCT")
+  ) {
+    recommendation = "REJECT";
+    rationale =
+      c.aiExclusionReason ||
+      c.productRealityReason ||
+      c.relevanceReasons?.[0] ||
+      "Candidate is verified to be irrelevant or a non-physical entity.";
+    risks.push("Category or product reality mismatch: Candidate is not an eligible physical product for the target topic.");
+    totalScore = 0;
+    scoreStatus = "REJECTED";
+  } else if (c.relevanceStatus === "AMBIGUOUS") {
+    recommendation = "REQUIRES_MANUAL_REVIEW";
+    rationale = c.relevanceReasons?.[0] || "Ambiguous niche alignment; manual review required to confirm applicability.";
+    risks.push("Niche relevance is ambiguous or unverified.");
+  } else if (ctx.complianceRiskDetected) {
     recommendation = "REQUIRES_MANUAL_REVIEW";
     rationale = "Compliance or trademark/safety risk flagged. Manual inspection required before promotion.";
     risks.push("Compliance/safety risk flagged on product candidate.");
@@ -345,7 +639,7 @@ export function calculateKH02EvergreenScore(
     risks.push("Shipping & fulfillment fragility risk: Potentially high return or damage rate.");
   }
 
-  if (recommendation !== "REQUIRES_MANUAL_REVIEW") {
+  if (recommendation !== "REQUIRES_MANUAL_REVIEW" && recommendation !== "REJECT") {
     // Rule: Declining demand, trend-dependent volatility, or failing demand stability can NEVER be a TEST_CANDIDATE
     const isDemandEligible =
       demandEval.demandClass !== "DECLINING" &&
@@ -423,10 +717,68 @@ export function calculateKH02EvergreenScore(
     evaluatedAt,
   };
 
-  const gateResult = applyKH02EligibilityGates(prelimResult);
+  const isIdentityConfirmed =
+    c.identityStatus === "VERIFIED" ||
+    (c.identityStatus === undefined && c.identityConfidence === "EXACT");
+
+  const gateResult = applyKH02EligibilityGates({
+    ...prelimResult,
+    isProductIdentityVerified: isIdentityConfirmed,
+    identityStatus: c.identityStatus,
+    isEligibleAsEvergreenWinner: c.isEligibleAsEvergreenWinner,
+    productRealityStatus: c.productRealityStatus,
+    relevanceStatus: c.relevanceStatus,
+    relevanceReasons: c.relevanceReasons,
+  } as any);
+
+  const evergreenVerification = verifyEvergreenCandidateIndependently(c, ctx.demandSeries, {
+    opportunityScore: totalScore,
+    evidenceConfidence: Math.min(100, confidencePoints),
+    demandStabilityScore: pillarA_Score,
+    demandClass: demandEval.demandClass,
+    demandSourceAuthority: demandEval.sourceAuthority,
+    demandObservationIds: demandEval.demandObservationIds,
+    distinctDemandDatesCount: demandEval.distinctObservationDatesCount,
+    coveredDays: demandEval.coveredDays,
+    demandObservationsCount: demandEval.dataPointsCount,
+  });
+
+  let finalTier = gateResult.tier;
+  if (finalTier === "VERIFIED_EVERGREEN" && !evergreenVerification.verifiedByGate) {
+    finalTier =
+      (totalScore ?? 0) >= 40 && confidencePoints >= 30 && demandEval.demandClass !== "DECLINING"
+        ? "PROVISIONAL_OPPORTUNITY"
+        : "INSUFFICIENT_EVIDENCE";
+  }
+
+  const aiObj = c.aiIntelligence as any;
+  const aiReviewed = Boolean(
+    aiObj &&
+    aiObj.status !== "UNAVAILABLE" &&
+    aiObj.provenance !== "DETERMINISTIC_FALLBACK" &&
+    (aiObj.customerProblem || aiObj.executiveSummary || (typeof aiObj.confidence === "number" && aiObj.confidence > 0))
+  );
+
+  const verificationDimensions: CandidateVerificationDimensions = {
+    identityVerifiedByMerchant: evergreenVerification.identityVerified,
+    demandVerifiedByHistoricalSource: Boolean(
+      evergreenVerification.demandObservationsCount >= 3 &&
+      evergreenVerification.coveredDays >= 60 &&
+      evergreenVerification.demandStabilityScore >= 15 &&
+      (evergreenVerification.demandSourceAuthority === "AUTHORITATIVE_VERIFIED" ||
+       evergreenVerification.demandSourceAuthority === "HISTORICAL_SOURCE_VERIFIED" ||
+       evergreenVerification.demandSourceAuthority === "AUTHORITATIVE_PROVIDER")
+    ),
+    aiReviewed,
+    multiPlatformValidated: platformCount >= 2,
+    evergreenIndependentlyVerified: finalTier === "VERIFIED_EVERGREEN" && evergreenVerification.verifiedByGate,
+  };
 
   return {
     ...prelimResult,
-    tier: gateResult.tier,
+    tier: finalTier,
+    demandSourceAuthority: demandEval.sourceAuthority,
+    evergreenVerification,
+    verificationDimensions,
   };
 }

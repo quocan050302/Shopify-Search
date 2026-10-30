@@ -1,0 +1,15 @@
+{
+  "track": "Track 2: Truthful empty state",
+  "topic": "Completely Nonexistent Niche 9999",
+  "acceptedRunId": "kh02_run_1793022811951_4dmk0",
+  "cardCount": 0,
+  "emptyStateAccurate": true,
+  "hydrationErrors": [],
+  "unexpectedHttpErrors": [],
+  "verdict": "PASS",
+  "screenshots": [
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track2_empty/01_before_research.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track2_empty/02_source_statuses.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.1/screenshots/track2_empty/03_leaderboard_results.png"
+  ]
+}

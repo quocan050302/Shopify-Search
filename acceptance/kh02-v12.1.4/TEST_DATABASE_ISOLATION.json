@@ -1,0 +1,6 @@
+{
+  "isolationStrategy": "Scoped test fixtures via TestFixtureRegistry & createIsolatedTestDatabase",
+  "sentinelJobId": "job_sentinel_1793005307646",
+  "sentinelPreserved": true,
+  "unrelatedDataProtected": true
+}

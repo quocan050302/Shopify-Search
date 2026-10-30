@@ -1,0 +1,14 @@
+{
+  "adversarialChecks": {
+    "wrongWorkerShaRefusesParityPass": true,
+    "workerOfflineRefusesParityPass": true,
+    "expiredLeaseRefusesActiveProcessingClaim": true,
+    "erVetBillRefusesShortlistPassWhenAiFails": true,
+    "wrongAdQuoteRefusesEvidencePass": true,
+    "promptInjectionRefusesEvidencePass": true,
+    "shortlistShortfallRefusesTop3CompletePass": true,
+    "zeroEvergreenRefusesVerifiedTop3Pass": true,
+    "zeroGoogleProductMatchesRefusesEnrichmentPass": true
+  },
+  "verdict": "PASS"
+}
