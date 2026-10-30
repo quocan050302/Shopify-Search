@@ -503,6 +503,29 @@ export async function persistKH02RankingSnapshot(
   workspaceId: string,
   result: EvergreenLeaderboardResult
 ): Promise<void> {
+  // Synchronize researchRunId across snapshot and candidate source observations when persisted under a DB run ID
+  const prevRunId = result.researchRunId;
+  result.researchRunId = runId;
+  const allCandLists = [
+    (result as any).evergreenLeaderboard,
+    result.topThree,
+    result.researchShortlist?.shortlist,
+    result.provisionalCandidates,
+    result.remainingCandidates,
+    result.rejectedCandidates,
+  ];
+  for (const list of allCandLists) {
+    if (!Array.isArray(list)) continue;
+    for (const cand of list as any[]) {
+      if (!cand || !Array.isArray(cand.sourceObservations)) continue;
+      for (const obs of cand.sourceObservations) {
+        if (obs && (!obs.researchRunId || obs.researchRunId === prevRunId)) {
+          obs.researchRunId = runId;
+        }
+      }
+    }
+  }
+
   // V12.4.3.3 Section 9: Idempotently materialize discovered candidates into ResearchProduct
   // so Product Intelligence drawer and /api/v1/research/products/[id]/overview resolve immediately.
   await materializeKH02CandidatesToDatabase(result, prisma);

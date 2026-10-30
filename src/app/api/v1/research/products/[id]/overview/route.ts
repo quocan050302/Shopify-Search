@@ -247,6 +247,11 @@ export async function GET(
             productUrl: cand.canonicalProductUrl || null,
             createdAt: job.createdAt || new Date(),
             updatedAt: job.completedAt || job.createdAt || new Date(),
+            metadata: {
+              isVirtualCandidate: true,
+              candidateId: cand.candidateId,
+              identityStatus: cand.identityStatus || "PROBABLE",
+            },
             store:
               existingStore ||
               (cleanDomain

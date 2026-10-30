@@ -680,9 +680,6 @@ export async function runEvergreenProductResearch(
     list: DiscoveredProductCandidate[]
   ): DiscoveredProductCandidate[] => {
     const sorted = [...list].sort((a, b) => {
-      const aShopify = Boolean(a.canonicalProductUrl && /\/products\//i.test(a.canonicalProductUrl));
-      const bShopify = Boolean(b.canonicalProductUrl && /\/products\//i.test(b.canonicalProductUrl));
-      if (aShopify !== bShopify) return aShopify ? -1 : 1;
       const aMerchant = Boolean(a.canonicalProductUrl || a.storeDomain);
       const bMerchant = Boolean(b.canonicalProductUrl || b.storeDomain);
       if (aMerchant !== bMerchant) return aMerchant ? -1 : 1;
@@ -690,6 +687,9 @@ export async function runEvergreenProductResearch(
       const aLive = (a.liveObservationsCount || 0) > 0 && (a.matchedQueryIds?.length || 0) > 0;
       const bLive = (b.liveObservationsCount || 0) > 0 && (b.matchedQueryIds?.length || 0) > 0;
       if (aLive !== bLive) return aLive ? -1 : 1;
+      const aShopify = Boolean(a.canonicalProductUrl && /\/products\//i.test(a.canonicalProductUrl));
+      const bShopify = Boolean(b.canonicalProductUrl && /\/products\//i.test(b.canonicalProductUrl));
+      if (aShopify !== bShopify) return aShopify ? -1 : 1;
       const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
       if (relDiff !== 0) return relDiff;
       const obsDiff = b.totalObservationCount - a.totalObservationCount;
@@ -908,7 +908,12 @@ export async function runEvergreenProductResearch(
     (currentShortlistEval.qualifiedCount < 3 ||
       (hybridPlan.nicheIntent !== "SPECIFIC_PRODUCT" &&
         (currentShortlistEval.opportunityDiversity?.distinctFamilyCount || 0) <
-          Math.min(3, currentShortlistEval.qualifiedCount + 1))) &&
+          Math.min(3, currentShortlistEval.qualifiedCount + 1)) ||
+      (providerTelemetry.META_ADS.liveAttempted &&
+        currentShortlistEval.shortlist.some((c) => (c.liveObservationsCount || 0) === 0) &&
+        unverifiedQueue.some(
+          (c) => (c.liveObservationsCount || 0) > 0 && (c.matchedQueryIds?.length || 0) > 0
+        ))) &&
     unverifiedQueue.length > 0 &&
     !abortSignal?.aborted &&
     sharedGeminiBudgetTracker.getRemainingRequests() > 0

@@ -701,7 +701,7 @@ async function verifyRunInChromium(params: {
       if (fs.existsSync(shot3)) screenshots.push(`acceptance/kh02-v12.4.3.3.1/final-repair/screenshots/${path.basename(shot3)}`);
     }
 
-    const shortlistIdsFromCards = recommendedCards.map((c) => c.candidateId).filter(Boolean);
+    const shortlistIdsFromCards = recommendedCards.slice(0, 3).map((c) => c.candidateId).filter(Boolean);
     const browserEvidence: BrowserReconciliationEvidence = {
       runId: renderedRunId || params.runId,
       displayedCandidateIds,
