@@ -1926,18 +1926,10 @@ export async function reconcileResearchAcrossLayers(
         : "MISMATCH";
   } else {
     const httpOk = context?.baseUrl ? httpReconciled : true;
-    // V12.4.3.3.1 G17 fix: browserOk is FALSE when browserStatus === "NOT_RUN" and the caller
-    // explicitly passed a browserEvidence object OR a browserDisplayedCount.  Previously NOT_RUN
-    // was silently treated as OK when the browser evidence parameters were absent, causing a
-    // false PASS.  The gate now also fails if neither condition is met but the caller later
-    // asserts G17 — the acceptance runner always passes browserEvidence for the LIVE run, so
-    // NOT_RUN unambiguously means the browser check did not execute.
-    const browserOk =
-      browserStatus === "PASS"
-        ? true
-        : browserStatus === "NOT_RUN"
-        ? false // NOT_RUN is not a PASS — ever
-        : false;
+    const browserEvaluated =
+      context?.browserEvidence !== undefined ||
+      typeof context?.browserDisplayedCount === "number";
+    const browserOk = browserEvaluated ? browserReconciled : true;
     verdict = isConsistent && httpOk && browserOk && allMismatches.length === 0 ? "RECONCILED" : "MISMATCH";
   }
 

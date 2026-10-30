@@ -529,6 +529,11 @@ export function isCandidateLiveVerified(
 ): boolean {
   if (!c || c.identityStatus !== "VERIFIED") return false;
 
+  // An explicit empty matchedQueryIds array means no current-run query lineage
+  if (Array.isArray(c.matchedQueryIds) && c.matchedQueryIds.length === 0) {
+    return false;
+  }
+
   // If explicit liveObservationsCount is set to 0 and candidate has cached observations or no live observations, reject
   if (
     typeof c.liveObservationsCount === "number" &&
@@ -550,16 +555,10 @@ export function isCandidateLiveVerified(
         ? executedQueryIds
         : new Set(executedQueryIds.filter(Boolean));
     if (qSet.size > 0) {
-      const candQIds = Array.isArray(c.matchedQueryIds) ? c.matchedQueryIds : [];
-      const obsQIds = (c.sourceObservations || []).flatMap((o: any) => [
-        o?.queryId,
-        o?.metrics?.queryId,
-        ...(Array.isArray(o?.matchedQueryIds) ? o.matchedQueryIds : []),
-      ]);
-      const allQIds = [...candQIds, ...obsQIds].filter(
-        (q): q is string => typeof q === "string" && q.length > 0
-      );
-      if (!allQIds.some((qid) => qSet.has(qid))) {
+      const candQIds = (
+        Array.isArray(c.matchedQueryIds) ? c.matchedQueryIds : []
+      ).filter((q): q is string => typeof q === "string" && q.length > 0);
+      if (candQIds.length === 0 || !candQIds.some((qid) => qSet.has(qid))) {
         return false;
       }
     }
@@ -1560,14 +1559,18 @@ export function selectTopResearchShortlist(
     );
   });
 
-  // 2. Sort eligible candidates: prefer VERIFIED identity, then current-run live-grounded over cache-only (G04),
-  //    then higher relevance score, then video media, then observation count
+  // 2. Sort eligible candidates: when current-run executedQueryIds are provided (G04), prioritize
+  //    current-run live-grounded candidates ahead of cache-only fallbacks; within each tier, prefer
+  //    VERIFIED identity, higher relevance score, video media, and observation count.
   realityPassed.sort((a, b) => {
+    const liveA = isLiveGroundedForCurrentRun(a) ? 1 : 0;
+    const liveB = isLiveGroundedForCurrentRun(b) ? 1 : 0;
+    if (executedQSet && executedQSet.size > 0 && liveA !== liveB) {
+      return liveB - liveA;
+    }
     const verA = a.identityStatus === "VERIFIED" ? 1 : 0;
     const verB = b.identityStatus === "VERIFIED" ? 1 : 0;
     if (verA !== verB) return verB - verA;
-    const liveA = isLiveGroundedForCurrentRun(a) ? 1 : 0;
-    const liveB = isLiveGroundedForCurrentRun(b) ? 1 : 0;
     if (liveA !== liveB) return liveB - liveA;
     const relDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
     if (relDiff !== 0) return relDiff;

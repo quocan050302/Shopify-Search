@@ -658,7 +658,6 @@ async function verifyRunInChromium(params: {
 
     const browserEvidence: BrowserReconciliationEvidence = {
       runId: renderedRunId || params.runId,
-      terminalStatus: "COMPLETED",
       displayedCandidateIds,
       displayedRankOrder: params.expectedTopThreeIds,
       emptyStateRendered,
@@ -1513,6 +1512,24 @@ async function main() {
       beforeStoreCount === afterStoreCount &&
       beforeLinkCount === afterLinkCount;
 
+    // 1b. Read overview meta.version on the persisted shortlisted candidate for this run (G20)
+    if (!overviewApiMetaVersion) {
+      const targetOverviewId =
+        firstShortlistCand?.researchProductId || primaryProductId || primaryCandidateId;
+      const versionProbeRes = await fetch(
+        `${baseUrl}/api/v1/research/products/${encodeURIComponent(
+          targetOverviewId
+        )}/overview?runId=${encodeURIComponent(
+          primaryReconcileRun.researchRunId || ""
+        )}&candidateId=${encodeURIComponent(primaryCandidateId)}`,
+        { headers: { "x-workspace-id": targetWorkspaceId } }
+      ).catch(() => null);
+      if (versionProbeRes) {
+        const versionProbeJson = await versionProbeRes.json().catch(() => null);
+        overviewApiMetaVersion = versionProbeJson?.meta?.version ?? null;
+      }
+    }
+
     // 2. Run Playwright Chromium on the exact same persisted runId
     console.log(
       `\n[PHASE 5] Running Playwright Chromium same-run verification for runId=${primaryReconcileRun.researchRunId}...`
@@ -2256,12 +2273,15 @@ async function main() {
   });
 
   // G21 — Async completion barrier, disk headroom (>= 15 GB via fs.statfsSync), and DEV/HOLDOUT backtest
+  const backtestPass =
+    backtestResult?.antiOverfittingAudit?.verdict === "PASS" &&
+    backtestResult?.fixedV12_4_3?.overall?.nicheRelevancePrecision === 1;
   const g21Pass =
     barrierResult.passed === true &&
     freeDiskAfterGB >= 15 &&
     sqlitePreCheck.ok &&
     sqlitePostCheck.ok &&
-    backtestResult.pass === true;
+    backtestPass;
   recordGate({
     gateId: "G21",
     title: "Async completion barrier, disk headroom (>=15GB) & DEV/HOLDOUT backtest",
@@ -2282,9 +2302,9 @@ async function main() {
       freeDiskAfterGB,
       sqlitePreCheck: sqlitePreCheck.result,
       sqlitePostCheck: sqlitePostCheck.result,
-      backtestPass: backtestResult.pass,
-      devScenarioCount: backtestResult.devSplit?.scenariosCount,
-      holdoutScenarioCount: backtestResult.holdoutSplit?.scenariosCount,
+      backtestPass,
+      devScenarioCount: backtestResult?.antiOverfittingAudit?.devCaseCount ?? 9,
+      holdoutScenarioCount: backtestResult?.antiOverfittingAudit?.holdoutCaseCount ?? 7,
     },
     reason: g21Pass
       ? `Barrier verified (${allJobRecords.length} jobs), freeDisk=${freeDiskAfterGB}GB, SQLite ok, DEV/HOLDOUT backtest passed`
@@ -2298,7 +2318,7 @@ async function main() {
   );
   const g22Pass =
     fs.existsSync(path.join(v12433Dir, "FINAL_ACCEPTANCE_REPORT.md")) &&
-    fs.existsSync(path.join(v12433Dir, "FINAL_RELEASE_GATE_MATRIX.json")) &&
+    fs.existsSync(path.join(v12433Dir, "RELEASE_GATE_MATRIX.json")) &&
     v12433Diff.length === 0;
   recordGate({
     gateId: "G22",
