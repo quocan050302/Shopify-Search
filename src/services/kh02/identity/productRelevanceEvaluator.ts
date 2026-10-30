@@ -323,8 +323,6 @@ const NICHE_SIGNATURES: Record<
       "scratch repair marker",
       "furniture repair kit",
       "furniture repair",
-      "wallpaper",
-      "peel and stick wallpaper",
       "multimeter",
       "soldering",
       "rotary tool",
@@ -345,8 +343,6 @@ const NICHE_SIGNATURES: Record<
       "peel and stick wall",
       "wall panels",
       "wall tiles",
-      "wallpaper",
-      "peel and stick wallpaper",
       "cabinet hardware",
       "adhesive hook",
       "weather stripping",
@@ -1128,6 +1124,63 @@ function evaluateProductRelevanceCore(
       if (isConsumablePetFoodOrSupplement && !isFeedingHardwareDevice) {
         reasons.push(
           "Excluded — Consumable pet food, treats, or dietary supplement rather than a physical pet gadget or durable accessory."
+        );
+        return {
+          relevanceStatus: "IRRELEVANT",
+          discoveryDecision: "CLEARLY_UNRELATED",
+          isAccepted: false,
+          score: 0.08,
+          reasons,
+          topic,
+          matchedArchetypeId: null,
+        };
+      }
+
+      // V12.4.3.3.1 WS-C (Section 7.1): Exclude passive plush/squeaky/chew/stuffed/rope toys from 'Pet Gadgets'
+      // unless they have electronic, smart, automated, dispensing, grooming, or hardware gadget indicators
+      // (while still accepting them when the topic targets 'Pet Toys' / 'Dog Toys' / 'Cat Toys').
+      const isGadgetSubNicheTopic =
+        /\bgadgets?\b/i.test(normalizedTopic) && !/\btoys?\b/i.test(normalizedTopic);
+      if (isGadgetSubNicheTopic) {
+        const isPassivePlushOrChewToy =
+          /\b(plush|squeak(?:y|er)?|stuffed\s+toy|chew\s+toy|chew[-_\s]resistant[^.|]*?\btoy|bite[-_\s]resistant[^.|]*?\btoy|rope\s+toy|crinkle\s+toy|plush\s+(?:pet|dog|cat|puppy|kitten)?\s*toy|squeaky\s+(?:pet|dog|cat|puppy|kitten)?\s*toy|fetch\s+ball|tennis\s+ball|catnip\s+toy)\b/i.test(
+            normalizedText
+          );
+        const hasActiveGadgetOrHardwareIndicator =
+          /\b(electronic|electric|smart|automatic|automated|rechargeable|usb|battery[-_\s]operated|motorized|motion[-_\s]activated|sensor|laser|ball\s+launcher|launcher|treat[-_\s]dispens(?:er|ing)|food[-_\s]dispens(?:er|ing)|feeder|fountain|gps|tracker|camera|collar|bark\s+(?:collar|control|deterrent)|ultrasonic|grooming|vacuum|nail\s+grinder|trimmer|clipper|deshedding|hair\s+remover|fur\s+remover|led)\b/i.test(
+            normalizedText
+          );
+        if (isPassivePlushOrChewToy && !hasActiveGadgetOrHardwareIndicator) {
+          reasons.push(
+            "Excluded — Passive plush, squeaky, or chew pet toy lacks electronic, smart, automated, dispensing, grooming, or hardware gadget functionality required for 'Pet Gadgets'."
+          );
+          return {
+            relevanceStatus: "IRRELEVANT",
+            discoveryDecision: "CLEARLY_UNRELATED",
+            isAccepted: false,
+            score: 0.08,
+            reasons,
+            topic,
+            matchedArchetypeId: null,
+          };
+        }
+      }
+    }
+
+    // V12.4.3.3.1 WS-C (Section 7.4): Exclude decorative wallpaper, wall decals, wall murals, and peel-and-stick decor
+    // materials from DIY / DIY Tools unless the product is an actual tool or hardware applicator.
+    if (nicheKey === "diy") {
+      const isDecorativeWallMaterial =
+        /\b(wallpapers?|wall\s+decals?|wall\s+murals?|wall\s+art|wall\s+tapestry|peel[-_\s]and[-_\s]stick\s+wallpaper|contact\s+paper|window\s+film|decorative\s+film)\b/i.test(
+          normalizedText
+        );
+      const isActualDiyToolOrHardware =
+        /\b(tool|tools|scraper|stripper|steamer|roller|smoother|squeegee|cutter|knife|seam\s+roller|paste\s+brush|laser\s+level|glue\s+gun|drill|driver|saw|clamp|jig|sander|multimeter|soldering|wrench|pliers|caulking\s+tool)\b/i.test(
+          normalizedText
+        );
+      if (isDecorativeWallMaterial && !isActualDiyToolOrHardware) {
+        reasons.push(
+          "Excluded — Decorative wallpaper, wall decal, or surface covering material rather than a functional DIY tool or hardware."
         );
         return {
           relevanceStatus: "IRRELEVANT",

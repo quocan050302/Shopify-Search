@@ -151,6 +151,13 @@ export async function GET(
         });
 
         if (foundItem?.candidate) {
+          if (job.workspaceId && job.workspaceId !== context.workspaceId) {
+            throw new ResearchAuthError(
+              `Access denied: Candidate '${rawParamId}' belongs to another workspace.`,
+              "FORBIDDEN_WORKSPACE_RUN",
+              403
+            );
+          }
           const cand = foundItem.candidate;
           if (cand.researchProductId) {
             const linkedProd = await prisma.researchProduct.findUnique({
@@ -186,7 +193,7 @@ export async function GET(
                 where: { domain: cleanDomain },
               })
             : null;
-          const existingAds =
+          const rawExistingAds =
             Array.isArray(cand.supportingAdIds) && cand.supportingAdIds.length > 0
               ? await prisma.competitorAd.findMany({
                   where: { id: { in: cand.supportingAdIds } },
@@ -197,6 +204,28 @@ export async function GET(
                   },
                 })
               : [];
+          const existingAds = rawExistingAds.filter((adRec: any) => {
+            if (!cleanDomain || !adRec?.landingPageUrl) return true;
+            try {
+              const adHost = new URL(adRec.landingPageUrl).hostname
+                .toLowerCase()
+                .replace(/^www\./, "");
+              if (
+                adHost &&
+                !adHost.includes("facebook.com") &&
+                !adHost.includes("instagram.com") &&
+                !adHost.includes("tiktok.com") &&
+                adHost !== cleanDomain &&
+                !adHost.endsWith(`.${cleanDomain}`) &&
+                !cleanDomain.endsWith(`.${adHost}`)
+              ) {
+                return false;
+              }
+            } catch {
+              // Ignore malformed URL
+            }
+            return true;
+          });
           const primaryImg =
             (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
             cand.thumbnailUrl ||
@@ -204,6 +233,7 @@ export async function GET(
 
           virtualProductFromCandidate = {
             id: materializedId,
+            workspaceId: job.workspaceId || context.workspaceId,
             storeId: existingStore?.id || null,
             title:
               cand.merchantVerifiedProductName ||
@@ -231,7 +261,7 @@ export async function GET(
               adId: adRec.id,
               productId: materializedId,
               confidence:
-                cand.identityStatus === "VERIFIED" ? "CONFIRMED" : "HIGH_CONFIDENCE",
+                cand.identityStatus === "VERIFIED" ? "CONFIRMED" : "PROBABLE",
               ad: adRec,
             })),
           };

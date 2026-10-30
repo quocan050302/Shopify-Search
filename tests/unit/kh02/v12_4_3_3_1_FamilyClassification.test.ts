@@ -16,6 +16,7 @@ import {
   type DistinctnessCandidateLike,
 } from "../../../src/services/kh02/identity/productDistinctnessEngine";
 import { evaluateProductRelevance } from "../../../src/services/kh02/identity/productRelevanceEvaluator";
+import { resolveProductIdentity } from "../../../src/services/kh02/identity/productIdentityResolver";
 
 function makeCandidate(
   id: string,
@@ -192,5 +193,61 @@ describe("G12: UNRESOLVED_FAMILY for brand-only titles (< 2 semantic tokens) nev
     );
     expect(div.distinctFamilyCount).toBe(0);
     expect(div.isFamilyDiverse).toBe(false);
+  });
+});
+
+describe("V12.4.3.3.1 Final Repair: Pet Gadgets vs Pet Toys, null slug, electric spin scrubber, and DIY wallpaper", () => {
+  it("Chew Resistant Squeaky Plush Pet Toy is rejected in Pet Gadgets / Dog Gadgets / Cat Gadgets but accepted in Pet Toys", () => {
+    const plushUrl = "https://livlandco.com/products/null-1773399526609";
+    const plushText = `Chew Resistant Squeaky Plush Pet Toy ${plushUrl}`;
+
+    const relPetGadgets = evaluateProductRelevance(plushText, "Pet Gadgets");
+    expect(relPetGadgets.relevanceStatus).toBe("IRRELEVANT");
+    expect(relPetGadgets.isAccepted).toBe(false);
+
+    const relDogGadgets = evaluateProductRelevance(plushText, "Dog Gadgets");
+    expect(relDogGadgets.relevanceStatus).toBe("IRRELEVANT");
+    expect(relDogGadgets.isAccepted).toBe(false);
+
+    const relCatGadgets = evaluateProductRelevance(plushText, "Cat Gadgets");
+    expect(relCatGadgets.relevanceStatus).toBe("IRRELEVANT");
+    expect(relCatGadgets.isAccepted).toBe(false);
+
+    const relPetToys = evaluateProductRelevance(plushText, "Pet Toys");
+    expect(relPetToys.relevanceStatus).toBe("RELEVANT");
+    expect(relPetToys.isAccepted).toBe(true);
+  });
+
+  it("Malformed URL slug /products/null-1773399526609 is downgraded from VERIFIED to PROBABLE", () => {
+    const resolved = resolveProductIdentity({
+      landingPageUrl: "https://livlandco.com/products/null-1773399526609",
+      storeDomain: "livlandco.com",
+      brandOrAdvertiser: "LivLand Co",
+      rawHeadlines: ["Chew Resistant Squeaky Plush Pet Toy"],
+      rawDescriptions: ["Durable plush squeaky toy for dogs"],
+    });
+    expect(resolved.identityStatus).toBe("PROBABLE");
+    expect(resolved.isEligibleAsEvergreenWinner).toBe(false);
+  });
+
+  it("8-in-1 Electric Cleaning Brush Set for Home Use and Cordless Electric Spin Scrubber collapse into electric_spin_scrubber", () => {
+    const fp1 = buildProductIdentityFingerprint(
+      makeCandidate("clean_1", "8-in-1 Electric Cleaning Brush Set for Home Use")
+    );
+    const fp2 = buildProductIdentityFingerprint(
+      makeCandidate("clean_2", "Cordless Electric Spin Scrubber")
+    );
+    expect(fp1.familyKey).toBe("electric_spin_scrubber");
+    expect(fp2.familyKey).toBe("electric_spin_scrubber");
+    expect(fp1.familyKey).not.toBe("brush_use");
+  });
+
+  it("Burnett Wallpaper is rejected as IRRELEVANT in DIY Tools", () => {
+    const rel = evaluateProductRelevance(
+      "Burnett Wallpaper Peel and Stick Decorative Wall Covering https://wallpaperstore.com/products/burnett-wallpaper",
+      "DIY Tools"
+    );
+    expect(rel.relevanceStatus).toBe("IRRELEVANT");
+    expect(rel.isAccepted).toBe(false);
   });
 });

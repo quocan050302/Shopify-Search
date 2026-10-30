@@ -344,7 +344,30 @@ export function resolveProductIdentity(
     input.verifiedPageType ||
     (explicitVerifiedMerchantTitle ? "ACTUAL_PRODUCT_PAGE" : undefined);
 
+  const MALFORMED_PRODUCT_HANDLE_REGEX =
+    /^(?:null|undefined|nan)(?:[-_]\d+|[-_][a-z0-9_-]+)?$/i;
+  const MALFORMED_PRODUCT_URL_PATH_REGEX =
+    /\/(?:products?|item|p|dp)\/(?:null|undefined|nan)(?:[-_][^/?#]*)?(?:[/?#]|$)/i;
+
+  const hasMalformedProductSlug = Boolean(
+    (urlMeta.productHandle &&
+      MALFORMED_PRODUCT_HANDLE_REGEX.test(urlMeta.productHandle)) ||
+      (requestedUrlMeta.productHandle &&
+        MALFORMED_PRODUCT_HANDLE_REGEX.test(requestedUrlMeta.productHandle)) ||
+      MALFORMED_PRODUCT_URL_PATH_REGEX.test(baseCanonicalUrl || targetUrl || "")
+  );
+  if (hasMalformedProductSlug) {
+    limitations.push(
+      `Merchant product URL handle ('${
+        urlMeta.productHandle ||
+        requestedUrlMeta.productHandle ||
+        baseCanonicalUrl
+      }') contains a malformed placeholder slug ('null'/'undefined'); disqualified from VERIFIED status.`
+    );
+  }
+
   const hasVerifiedMerchantPage =
+    !hasMalformedProductSlug &&
     Boolean(explicitVerifiedMerchantTitle) &&
     effectiveVerifiedPageType === "ACTUAL_PRODUCT_PAGE" &&
     fetchOutcome !== "HTTP_403" &&

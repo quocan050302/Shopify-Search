@@ -26,10 +26,12 @@ import {
   isLiveProviderObservation,
   mergeDuplicateCandidateRecords,
   selectTopResearchShortlist,
+  verifyCandidateLiveLineageChain,
 } from "../../../src/services/kh02/identity/productCandidateDiscovery";
 import { evaluateProductRelevance } from "../../../src/services/kh02/identity/productRelevanceEvaluator";
 import { collectGoogleAdvertiserSignals } from "../../../src/services/kh02/providers/googleTransparencyResearchAdapter";
 import {
+  materializeKH02CandidatesToDatabase,
   reconcileResearchAcrossLayers,
   requalifyHistoricalEvergreenSnapshot,
 } from "../../../src/services/kh02/persistence/kh02PersistenceService";
@@ -68,7 +70,9 @@ function candidateBase(overrides: Record<string, any> = {}) {
         queryId: "query_live_001",
         matchedQueryIds: ["query_live_001"],
         title: "Automatic Pet Feeder Ad",
-        landingPageUrl: "https://teststore.com/products/automatic-pet-feeder",
+        landingPageUrl:
+          overrides.canonicalProductUrl ||
+          "https://teststore.com/products/automatic-pet-feeder",
       },
     ],
     liveObservationsCount: 1,
@@ -620,5 +624,318 @@ describe("G06, G07 & G27: Google Ads MCP timeout, 429, 403, and empty advertiser
     expect(res.enrichmentExecution?.mcpCallsCompleted).toBe(0);
     expect(res.enrichmentExecution?.domainOutcomes?.[0]?.status).toBe("RATE_LIMITED");
     expect(res.enrichmentExecution?.domainOutcomes?.[1]?.status).toBe("SKIPPED_COOLDOWN");
+    expect(res.enrichmentExecution?.domainsPlanned).toBe(2);
+    expect(res.enrichmentExecution?.domainsAttempted).toBe(1);
+    expect(res.enrichmentExecution?.domainsRateLimited).toBe(1);
+    expect(res.enrichmentExecution?.domainsFailed).toBe(1);
+    expect(res.enrichmentExecution?.mcpInvocations?.length).toBe(1);
+    expect(res.enrichmentExecution?.mcpInvocations?.[0]?.toolName).toBe("search_advertiser");
+  });
+});
+
+describe("Section 5: 8-Step Meta Lineage Verification & All 9 Adversarial Failure Modes", () => {
+  it("verifyCandidateLiveLineageChain catches all 9 adversarial cases and passes authentic 8-step lineage", () => {
+    // Authentic 8-step lineage
+    const authenticCand = candidateBase({
+      candidateId: "cand_auth_1",
+      researchProductId: "cand_auth_1",
+      storeDomain: "uahpet.com",
+      matchedQueryIds: ["q_r1_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_db_1",
+          sourceExternalAdId: "ext_meta_1001",
+          upstreamAdId: "ext_meta_1001",
+          persistedAdId: "ad_db_1",
+          sourceObservationId: "sobs_meta_1",
+          researchRunId: "run_live_1",
+          queryId: "q_r1_1",
+          providerRequestId: "req_run_live_1_q_r1_1",
+          matchedQueryIds: ["q_r1_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+          storeDomainEvidence: "uahpet.com",
+        },
+      ],
+    });
+    const authRes = verifyCandidateLiveLineageChain(authenticCand, {
+      researchRunId: "run_live_1",
+      executedQueryIds: ["q_r1_1"],
+      upstreamExternalAdIds: ["ext_meta_1001"],
+      persistedAdIdsByExternalId: { ext_meta_1001: "ad_db_1" },
+    });
+    expect(authRes.valid).toBe(true);
+    expect(authRes.authenticatedLiveObservationCount).toBe(1);
+    expect(authRes.verifiedLinks[0]).toEqual({
+      researchRunId: "run_live_1",
+      executedQueryId: "q_r1_1",
+      providerRequestId: "req_run_live_1_q_r1_1",
+      upstreamAdId: "ext_meta_1001",
+      persistedAdId: "ad_db_1",
+      sourceObservationId: "sobs_meta_1",
+      candidateId: "cand_auth_1",
+      researchProductId: "cand_auth_1",
+    });
+
+    // 1. MISSING_QUERY_ID
+    const c1 = candidateBase({
+      matchedQueryIds: [],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_1",
+          sourceExternalAdId: "ext_1",
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(verifyCandidateLiveLineageChain(c1).rejectionCodes).toContain("MISSING_QUERY_ID");
+
+    // 2. FOREIGN_RUN_QUERY_ID
+    const c2 = candidateBase({
+      matchedQueryIds: ["q_foreign_99"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_2",
+          sourceExternalAdId: "ext_2",
+          queryId: "q_foreign_99",
+          matchedQueryIds: ["q_foreign_99"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(
+      verifyCandidateLiveLineageChain(c2, { executedQueryIds: ["q_current_1"] }).rejectionCodes
+    ).toContain("FOREIGN_RUN_QUERY_ID");
+
+    // 3. FAKE_UPSTREAM_AD_ID
+    const c3 = candidateBase({
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_3",
+          sourceExternalAdId: "ext_fake_999",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(
+      verifyCandidateLiveLineageChain(c3, {
+        executedQueryIds: ["q_1"],
+        upstreamExternalAdIds: ["ext_real_1"],
+      }).rejectionCodes
+    ).toContain("FAKE_UPSTREAM_AD_ID");
+
+    // 4. WRONG_PERSISTED_AD_ID
+    const c4 = candidateBase({
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_wrong_id",
+          sourceExternalAdId: "ext_real_1",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(
+      verifyCandidateLiveLineageChain(c4, {
+        executedQueryIds: ["q_1"],
+        upstreamExternalAdIds: ["ext_real_1"],
+        persistedAdIdsByExternalId: { ext_real_1: "ad_expected_id" },
+      }).rejectionCodes
+    ).toContain("WRONG_PERSISTED_AD_ID");
+
+    // 5. CACHE_IMPERSONATING_LIVE
+    const c5 = candidateBase({
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_cache_5",
+          sourceExternalAdId: "ext_5",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "CACHED_SOURCE",
+          sourceType: "CACHED_SOURCE",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(verifyCandidateLiveLineageChain(c5).rejectionCodes).toContain("CACHE_IMPERSONATING_LIVE");
+
+    // 6. UNDEFINED_SOURCE_TYPE
+    const c6 = candidateBase({
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_6",
+          sourceExternalAdId: "ext_6",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: undefined,
+        },
+      ],
+    });
+    expect(verifyCandidateLiveLineageChain(c6).rejectionCodes).toContain("UNDEFINED_SOURCE_TYPE");
+
+    // 7. UNAUTHENTICATED_LIVE_RECORD_FLAG
+    const c7 = candidateBase({
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_7",
+          sourceExternalAdId: "ext_7",
+          isLiveRecord: true,
+        },
+      ],
+    });
+    expect(verifyCandidateLiveLineageChain(c7).rejectionCodes).toContain(
+      "UNAUTHENTICATED_LIVE_RECORD_FLAG"
+    );
+
+    // 8. ANOTHER_MERCHANTS_AD
+    const c8 = candidateBase({
+      storeDomain: "uahpet.com",
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_8",
+          sourceExternalAdId: "ext_8",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+          storeDomainEvidence: "othermerchant.com",
+        },
+      ],
+    });
+    expect(verifyCandidateLiveLineageChain(c8).rejectionCodes).toContain("ANOTHER_MERCHANTS_AD");
+
+    // 9. DUPLICATE_EXTERNAL_AD_COUNTED_TWICE
+    const c9 = candidateBase({
+      storeDomain: "uahpet.com",
+      matchedQueryIds: ["q_1"],
+      sourceObservations: [
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_9a",
+          sourceExternalAdId: "ext_dup_9",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+          storeDomainEvidence: "uahpet.com",
+        },
+        {
+          source: "META_ADS",
+          sourceRecordId: "ad_9b",
+          sourceExternalAdId: "ext_dup_9",
+          queryId: "q_1",
+          matchedQueryIds: ["q_1"],
+          provenance: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isLiveRecord: true,
+          storeDomainEvidence: "uahpet.com",
+        },
+      ],
+    });
+    const dupRes = verifyCandidateLiveLineageChain(c9);
+    expect(dupRes.rejectionCodes).toContain("DUPLICATE_EXTERNAL_AD_COUNTED_TWICE");
+    expect(dupRes.authenticatedLiveObservationCount).toBe(1);
+    expect(dupRes.uniqueLiveExternalAdIds).toEqual(["ext_dup_9"]);
+  });
+});
+
+describe("Section 10: Worker Materialization excludes rejectedCandidates and preserves PROBABLE confidence", () => {
+  it("materializeKH02CandidatesToDatabase skips rejectedCandidates and sets PROBABLE confidence for non-VERIFIED candidates", async () => {
+    const upsertedProducts: any[] = [];
+    const upsertedLinks: any[] = [];
+    const mockDb = {
+      competitorStore: {
+        upsert: async ({ create }: any) => ({ id: "store_1", domain: create.domain }),
+      },
+      researchProduct: {
+        upsert: async ({ where, create }: any) => {
+          upsertedProducts.push({ id: where.id, ...create });
+          return { id: where.id, ...create };
+        },
+      },
+      competitorAd: {
+        findMany: async () => [
+          { id: "ad_valid_1", landingPageUrl: "https://teststore.com/products/feeder" },
+          { id: "ad_foreign_1", landingPageUrl: "https://wrongstore.com/products/other" },
+        ],
+      },
+      adProductLink: {
+        upsert: async ({ create }: any) => {
+          upsertedLinks.push(create);
+          return create;
+        },
+      },
+    };
+
+    const res = await materializeKH02CandidatesToDatabase(
+      {
+        researchRunId: "run_mat_1",
+        topic: "Pet Gadgets",
+        topThree: [],
+        provisionalCandidates: [
+          {
+            rank: null,
+            candidate: candidateBase({
+              candidateId: "cand_probable_1",
+              researchProductId: null,
+              identityStatus: "PROBABLE",
+              storeDomain: "teststore.com",
+              supportingAdIds: ["ad_valid_1", "ad_foreign_1"],
+            }),
+          },
+        ],
+        rejectedCandidates: [
+          {
+            rank: null,
+            candidate: candidateBase({
+              candidateId: "cand_rejected_plush_1",
+              researchProductId: null,
+              productRealityStatus: "REJECTED",
+              relevanceStatus: "IRRELEVANT",
+            }),
+          },
+        ],
+      } as any,
+      mockDb
+    );
+
+    expect(res.materializedCount).toBe(1);
+    expect(res.skippedRejectedCount).toBe(1);
+    expect(res.materializedProductIds).toEqual(["cand_probable_1"]);
+    expect(res.skippedRejectedIds).toEqual(["cand_rejected_plush_1"]);
+    expect(upsertedProducts.map((p) => p.id)).toEqual(["cand_probable_1"]);
+    expect(upsertedLinks.length).toBe(1);
+    expect(upsertedLinks[0].adId).toBe("ad_valid_1");
+    expect(upsertedLinks[0].confidence).toBe("PROBABLE");
   });
 });

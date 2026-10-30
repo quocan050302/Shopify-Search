@@ -357,6 +357,14 @@ export async function runEvergreenProductResearch(
         let upgraded = false;
         if (obs.provenance === "LIVE_PROVIDER" && existing.provenance !== "LIVE_PROVIDER") {
           existing.provenance = "LIVE_PROVIDER";
+          existing.sourceType = "LIVE_PROVIDER";
+          existing.isLiveRecord = true;
+          if (obs.queryId) existing.queryId = obs.queryId;
+          if (obs.providerRequestId) existing.providerRequestId = obs.providerRequestId;
+          if (obs.researchRunId) existing.researchRunId = obs.researchRunId;
+          if (obs.upstreamAdId) existing.upstreamAdId = obs.upstreamAdId;
+          if (obs.persistedAdId) existing.persistedAdId = obs.persistedAdId;
+          if (obs.sourceObservationId) existing.sourceObservationId = obs.sourceObservationId;
           upgraded = true;
         }
         if (Array.isArray(obs.matchedQueryIds) && obs.matchedQueryIds.length > 0) {
@@ -756,12 +764,18 @@ export async function runEvergreenProductResearch(
         chunk.map(async (candidate) => {
           try {
             const resolved = await resolveCandidateResearchProduct(candidate, input.workspaceId);
-            candidate.researchProductId = resolved.researchProductId;
+            candidate.researchProductId =
+              resolved.researchProductId ||
+              candidate.researchProductId ||
+              candidate.candidateId;
             candidate.existingProductVerified = resolved.existingProductVerified;
             if (resolved.canonicalProductUrl && !candidate.canonicalProductUrl) {
               candidate.canonicalProductUrl = resolved.canonicalProductUrl;
             }
           } catch (resErr: any) {
+            if (!candidate.researchProductId) {
+              candidate.researchProductId = candidate.candidateId;
+            }
             warnings.push(`Identity resolution error for ${candidate.candidateId}: ${resErr.message}`);
           }
         })
@@ -1003,6 +1017,12 @@ export async function runEvergreenProductResearch(
         providerTelemetry.META_ADS.retrievedCount =
           (providerTelemetry.META_ADS.upstreamReturnedCount || freshLiveAfterR2) +
           cachedAfterR2;
+        if (Array.isArray(execMetaR2?.auditTraces) && execMetaR2.auditTraces.length > 0) {
+          providerTelemetry.META_ADS.auditTraces = [
+            ...(providerTelemetry.META_ADS.auditTraces || []),
+            ...execMetaR2.auditTraces,
+          ];
+        }
         if (metaRound2Result.status === "PASSED") {
           sourceStatuses.META_ADS = "PASSED";
           providerTelemetry.META_ADS.queryStatus = "PASSED";
@@ -1191,13 +1211,26 @@ export async function runEvergreenProductResearch(
           "ampd.to",
           "walmrt.us",
         ]);
+        // V12.4.3.3.1 Section 6: Prioritize Top-3 shortlist domains first, then remaining VERIFIED and PROBABLE candidates,
+        // using extractRegistrableDomain so subdomains/URLs resolve cleanly.
+        const shortlistCandidates = currentShortlistEval?.shortlist || [];
+        const domainSourceCandidates = [
+          ...shortlistCandidates,
+          ...candidates.filter((c) => c.identityStatus === "VERIFIED"),
+          ...candidates.filter((c) => c.identityStatus === "PROBABLE"),
+        ];
         const discoveredDomains = Array.from(
           new Set(
-            [
-              ...candidates.filter((c) => c.identityStatus === "VERIFIED"),
-              ...candidates.filter((c) => c.identityStatus === "PROBABLE"),
-            ]
-              .map((c) => c.storeDomain?.toLowerCase().trim())
+            domainSourceCandidates
+              .map((c) => {
+                const rawDom =
+                  c.storeDomain ||
+                  c.canonicalProductUrl ||
+                  c.normalizedProductUrl ||
+                  c.requestedUrl ||
+                  "";
+                return extractRegistrableDomain(rawDom) || c.storeDomain?.toLowerCase().trim() || "";
+              })
               .filter(
                 (d): d is string =>
                   Boolean(d && d.includes(".") && !nonMerchantHosts.has(d))
@@ -1219,17 +1252,47 @@ export async function runEvergreenProductResearch(
             queryError: null,
             lastSuccessfulRecordCount: null,
             lastSuccessfulQueryAt: null,
+            enrichmentExecution: {
+              attemptedDomains: [],
+              advertiserLookupSucceeded: false,
+              advertisersFound: 0,
+              creativeQuerySucceeded: false,
+              creativesReturned: 0,
+              creativesRetrievedCount: 0,
+              normalizedObservations: 0,
+              productLevelMatches: 0,
+              brandLevelMatches: 0,
+              productEvidenceIds: [],
+              domainOutcomes: [],
+              queryErrors: [],
+              queryTimestamp: new Date().toISOString(),
+              domainsPlanned: 0,
+              domainsAttempted: 0,
+              domainsSucceeded: 0,
+              domainsEmpty: 0,
+              domainsRateLimited: 0,
+              domainsFailed: 0,
+              mcpCallsStarted: 0,
+              mcpCallsCompleted: 0,
+              cleanupCompleted: true,
+              mcpInvocations: [],
+              stepTimeline: [],
+            },
           };
           warnings.push("Google Ads Transparency: No confirmed advertiser domains discovered from relevant candidates. Domain required.");
         } else {
+          // V12.4.3.3.1 Section 6.2: Allow sufficient outer deadline (65s) for up to 3 domains (connect 8s + discovery 5s + 3x15s = 58s)
+          // so Stage 6 never times out at 30.0s and wipes out enrichmentExecution while Google MCP is completing at ~35s.
+          const googleStageTimeoutMs = Math.max(STAGE_TIMEOUT_MS, 65_000);
+          const maxGoogleLiveDomains = Math.min(3, discoveredDomains.length);
           const googleResult = await executeStageWithSignal(
             "Google Ads Transparency",
-            STAGE_TIMEOUT_MS,
+            googleStageTimeoutMs,
             (q) =>
               collectGoogleAdvertiserSignals({
                 ...q,
                 advertiserDomains: discoveredDomains,
-                maxLiveDomains: Math.min(5, discoveredDomains.length),
+                maxLiveDomains: maxGoogleLiveDomains,
               })
           );
           sourceStatuses.GOOGLE_ADS = googleResult.status;
@@ -1241,9 +1304,12 @@ export async function runEvergreenProductResearch(
           const isExecuted =
             googleResult.status === "PASSED" ||
             googleResult.status === "QUERY_SUCCEEDED_EMPTY" ||
-            googleResult.status === "QUERY_FAILED";
+            googleResult.status === "QUERY_FAILED" ||
+            Boolean(googleResult.enrichmentExecution && (googleResult.enrichmentExecution.domainsAttempted ?? 0) > 0);
           const isSuccess = googleResult.status === "PASSED" || googleResult.status === "QUERY_SUCCEEDED_EMPTY";
-          const googleLiveObs = googleResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
+          const googleLiveObs = googleResult.observations.filter(
+            (o) => o.provenance === "LIVE_PROVIDER" || o.provenance === "REAL_UPSTREAM"
+          );
           const isTrulyLive = isSuccess && googleLiveObs.length > 0;
           const liveProvenance: ObservationProvenance = isTrulyLive
             ? "LIVE_PROVIDER"
@@ -1279,6 +1345,32 @@ export async function runEvergreenProductResearch(
           queryError: err.message,
           lastSuccessfulRecordCount: null,
           lastSuccessfulQueryAt: null,
+          enrichmentExecution: {
+            attemptedDomains: [],
+            advertiserLookupSucceeded: false,
+            advertisersFound: 0,
+            creativeQuerySucceeded: false,
+            creativesReturned: 0,
+            creativesRetrievedCount: 0,
+            normalizedObservations: 0,
+            productLevelMatches: 0,
+            brandLevelMatches: 0,
+            productEvidenceIds: [],
+            domainOutcomes: [],
+            queryErrors: [err.message],
+            queryTimestamp: new Date().toISOString(),
+            domainsPlanned: 0,
+            domainsAttempted: 0,
+            domainsSucceeded: 0,
+            domainsEmpty: 0,
+            domainsRateLimited: 0,
+            domainsFailed: 1,
+            mcpCallsStarted: 0,
+            mcpCallsCompleted: 0,
+            cleanupCompleted: true,
+            mcpInvocations: [],
+            stepTimeline: [],
+          },
         };
       }
     }

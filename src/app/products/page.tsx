@@ -1265,9 +1265,16 @@ export default function ProductsPage() {
                         key={item.candidateId}
                         data-testid="pf-canonical-product-card"
                         data-candidate-id={item.candidateId}
+                        data-product-id={item.rawCandidate.researchProductId || item.candidateId}
+                        data-title={item.title}
+                        data-store-domain={item.storeDomain || ""}
+                        data-canonical-url={item.canonicalProductUrl || ""}
                         data-product-key={item.productKey}
                         data-qualification-tier={item.qualificationTier}
                         data-opportunity-score={item.opportunityScore ?? 0}
+                        data-research-score={item.opportunityScore ?? 0}
+                        data-evergreen-status={item.scoreStatusCode}
+                        data-evidence-count={item.observationCount ?? item.rawCandidate.totalObservationCount ?? 0}
                         data-rank={item.rank}
                         data-confidence={item.evidenceConfidence}
                         data-confidence-status={item.scoreStatusCode}

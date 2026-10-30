@@ -354,7 +354,8 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     familyKey: "electric_spin_scrubber",
     familyLabel: "Electric Spin Scrubber & Power Brush",
     headNoun: "spin_scrubber",
-    pattern: /\b(spin\s+scrubber|power\s+scrubber|cleaning\s+brush\s+electric)\b/i,
+    pattern:
+      /\b(spin\s+scrubber|power\s+scrubber|(?:electric|cordless|rechargeable|rotary|power|motorized)\s+(?:spin\s+|rotary\s+|power\s+)?scrubber|(?:electric|cordless|rechargeable|rotary|power|motorized)\s+(?:spin\s+|rotary\s+)?(?:cleaning|scrub|scrubber|bath|shower|tile)\s+brush(?:es)?|cleaning\s+brush\s+electric)\b/i,
   },
   {
     familyKey: "spray_microfiber_mop",
@@ -478,6 +479,8 @@ const GENERIC_TOKENS_FOR_FINGERPRINT = new Set([
   "cleaning", "decor", "store", "shop", "buy", "sale", "free", "shipping",
   "item", "items", "deal", "deals", "product", "products", "amazing",
   "in", "to", "of", "on", "by", "at", "an", "a",
+  "use", "uses", "using", "daily", "everyday", "indoor", "outdoor",
+  "household", "multipurpose", "multifunctional", "multi",
   "blue", "red", "black", "white", "green", "pink", "gray", "grey", "silver", "gold",
 ]);
 

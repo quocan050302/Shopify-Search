@@ -457,6 +457,9 @@ export interface EvidenceTrueQueryExecution {
   origin?: string;
   archetypeId?: string | null;
   expectedProductCategory?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdIds?: string[];
+  persistedAdIds?: string[];
 }
 
 export interface MetaSubqueryExecution {
@@ -484,6 +487,9 @@ export interface MetaSubqueryExecution {
   origin?: string;
   archetypeId?: string | null;
   expectedProductCategory?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdIds?: string[];
+  persistedAdIds?: string[];
   errorCode: string | null;
   errorMessage: string | null;
 }
@@ -827,6 +833,9 @@ export async function collectLiveMetaAds(
         roundNumber: number;
         origin: string;
         archetypeId: string | null;
+        providerRequestId?: string | null;
+        researchRunId?: string | null;
+        upstreamAdId?: string | null;
         persistedId?: string | null;
       }
     >();
@@ -1014,6 +1023,10 @@ export async function collectLiveMetaAds(
 
         let returnedAds = searchRes.ads || [];
         const resultSetId = searchRes.result_set_id || searchRes.job_id;
+        const providerRequestId = String(
+          resultSetId || `req_${query.researchRunId || "run"}_${qSpec.queryId}_${qIdx + 1}`
+        );
+        outcome.providerRequestId = providerRequestId;
         if (resultSetId && typeof (client as any).getResults === "function") {
           try {
             const detailedBatch = await getDetailedMetaAdsBatch(
@@ -1035,9 +1048,13 @@ export async function collectLiveMetaAds(
         }
         let uniqueCountForQuery = 0;
         let dupCountForQuery = 0;
+        const queryUpstreamAdIds: string[] = [];
 
         for (const ad of returnedAds) {
           const id = String(ad.id || ad.library_id || ad.libraryId || "").trim();
+          if (id) {
+            queryUpstreamAdIds.push(id);
+          }
           if (id && !seenRawIds.has(id)) {
             seenRawIds.add(id);
             rawAds.push(ad);
@@ -1049,6 +1066,9 @@ export async function collectLiveMetaAds(
               roundNumber: qSpec.roundNumber,
               origin: qSpec.origin,
               archetypeId: qSpec.archetypeId,
+              providerRequestId,
+              researchRunId: query.researchRunId || null,
+              upstreamAdId: id,
             });
           } else {
             dupCountForQuery++;
@@ -1060,6 +1080,7 @@ export async function collectLiveMetaAds(
             }
           }
         }
+        outcome.upstreamAdIds = Array.from(new Set(queryUpstreamAdIds));
 
         budgetTracker.finalizeUsage(reservedReqs, reservedReqs, uniqueCountForQuery);
         outcome.completedAt = new Date().toISOString();
@@ -1155,6 +1176,7 @@ export async function collectLiveMetaAds(
 
     const auditTraces: UpstreamRecordTrace[] = [];
     const normalizedAds: NormalizedDiscoveredAd[] = [];
+    const seenNormalizedExternalIds = new Set<string>();
 
     for (let i = 0; i < rawAds.length; i++) {
       const ad = rawAds[i];
@@ -1164,8 +1186,18 @@ export async function collectLiveMetaAds(
       const queryKeyword = binding?.queryKeyword || query.topic;
       try {
         const norm = normalizeMetaCollectorAd(ad, { queryMarket: query.market || "US", keyword: queryKeyword });
+        const normExtId = String(norm.sourceExternalId || rawId).trim();
+        if (normExtId && seenNormalizedExternalIds.has(normExtId)) {
+          continue;
+        }
+        if (normExtId) {
+          seenNormalizedExternalIds.add(normExtId);
+        }
         if (binding && norm.sourceExternalId && !subqueryBindingMap.has(norm.sourceExternalId)) {
-          subqueryBindingMap.set(norm.sourceExternalId, binding);
+          subqueryBindingMap.set(norm.sourceExternalId, {
+            ...binding,
+            upstreamAdId: norm.sourceExternalId,
+          });
         }
         normalizedAds.push(norm);
       } catch (normErr: any) {
@@ -1175,6 +1207,10 @@ export async function collectLiveMetaAds(
           decision: "REJECTED",
           rejectionReason: `NORMALIZATION_REJECTED: ${normErr?.message || String(normErr)}`,
           persistedId: null,
+          researchRunId: query.researchRunId || null,
+          queryId: binding?.queryId || null,
+          providerRequestId: binding?.providerRequestId || null,
+          upstreamAdId: rawId,
         });
       }
     }
@@ -1217,16 +1253,30 @@ export async function collectLiveMetaAds(
     });
 
     if (ingestSummary.recordTraces) {
-      auditTraces.push(...ingestSummary.recordTraces);
       for (const trace of ingestSummary.recordTraces) {
         const lookupKey = trace.rawId ? String(trace.rawId).trim() : "";
-        if (lookupKey && trace.persistedId && subqueryBindingMap.has(lookupKey)) {
-          const binding = subqueryBindingMap.get(lookupKey)!;
+        const binding = lookupKey ? subqueryBindingMap.get(lookupKey) : undefined;
+        const enrichedTrace: UpstreamRecordTrace = {
+          ...trace,
+          researchRunId: query.researchRunId || binding?.researchRunId || null,
+          queryId: binding?.queryId || null,
+          providerRequestId: binding?.providerRequestId || null,
+          upstreamAdId: lookupKey || binding?.upstreamAdId || null,
+        };
+        auditTraces.push(enrichedTrace);
+
+        if (lookupKey && trace.persistedId && binding) {
           binding.persistedId = trace.persistedId;
           subqueryBindingMap.set(trace.persistedId, {
             ...binding,
             persistedId: trace.persistedId,
+            upstreamAdId: lookupKey,
           });
+          for (const qo of queryOutcomes) {
+            if (qo.queryId === binding.queryId) {
+              qo.persistedAdIds = Array.from(new Set([...(qo.persistedAdIds || []), trace.persistedId]));
+            }
+          }
         }
       }
     }
@@ -1763,28 +1813,35 @@ export async function collectMetaProductSignals(
       const domain = ad.landingPageUrl ? extractDomainFromUrl(ad.landingPageUrl) : null;
       const marketProv = resolveMetaMarketProvenance(ad, { requestedMarket: query.market || "US", topic: query.topic });
 
-      const isFreshLive = freshLivePersistedAdIds.has(ad.id) || (ad.externalAdId && freshLiveExternalAdIds.has(ad.externalAdId));
-      const provenance: ObservationProvenance = isFreshLive
-        ? "LIVE_PROVIDER"
-        : ad.dataConfidence === "VERIFIED"
-        ? "VERIFIED_SOURCE"
-        : "CACHED_SOURCE";
-
       const binding =
         (ad.externalAdId && liveCollectorResult?.subqueryBindings?.[ad.externalAdId]) ||
         liveCollectorResult?.subqueryBindings?.[ad.id] ||
         null;
 
-      const matchedQueryIds: string[] = binding
+      const isFreshLive =
+        (freshLivePersistedAdIds.has(ad.id) || Boolean(ad.externalAdId && freshLiveExternalAdIds.has(ad.externalAdId))) &&
+        Boolean(binding && binding.queryId);
+      const provenance: ObservationProvenance = isFreshLive
+        ? "LIVE_PROVIDER"
+        : "CACHED_SOURCE";
+
+      const matchedQueryIds: string[] = isFreshLive && binding
         ? Array.from(new Set(binding.matchedQueryIds || [binding.queryId].filter(Boolean)))
         : [];
+      const latestObsRecord = Array.isArray(ad.observations) && ad.observations.length > 0 ? ad.observations[0] : null;
+      const sourceObservationId = latestObsRecord?.id || `sobs_meta_${ad.id}`;
+      const upstreamAdId = String(ad.externalAdId || binding?.upstreamAdId || ad.id);
+      const providerRequestId = isFreshLive && binding
+        ? (binding.providerRequestId || `req_${query.researchRunId || "run"}_${binding.queryId}`)
+        : null;
+      const researchRunId = isFreshLive ? (query.researchRunId || binding?.researchRunId || null) : null;
 
       return {
         source: "META_ADS",
         sourceRecordId: ad.id,
         sourceUrl: ad.originalAdUrl || (ad.externalAdId ? `https://www.facebook.com/ads/library/?id=${ad.externalAdId}` : null),
         landingPageUrl: ad.landingPageUrl || null,
-        sourceExternalAdId: ad.externalAdId || ad.id,
+        sourceExternalAdId: upstreamAdId,
         storeDomainEvidence: domain,
         advertiserOrCreator: ad.advertiser?.name || null,
         advertiserDomain: domain,
@@ -1798,6 +1855,14 @@ export async function collectMetaProductSignals(
         title: ad.headline,
         description: ad.bodyText,
         matchedQueryIds,
+        researchRunId,
+        queryId: isFreshLive && binding ? binding.queryId : null,
+        providerRequestId,
+        upstreamAdId,
+        persistedAdId: ad.id,
+        sourceObservationId,
+        sourceType: isFreshLive ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+        isLiveRecord: isFreshLive,
         metrics: {
           daysRunning: ad.daysRunning,
           status: ad.status,
@@ -1805,9 +1870,14 @@ export async function collectMetaProductSignals(
           dataConfidence: ad.dataConfidence,
           marketVerification: marketProv.marketVerification,
           isFreshLive,
+          sourceObservationId,
+          persistedAdId: ad.id,
+          upstreamAdId,
           ...(isFreshLive && binding
             ? {
+                researchRunId,
                 queryId: binding.queryId,
+                providerRequestId,
                 matchedQueryIds,
                 queryKeyword: binding.queryKeyword,
                 roundNumber: binding.roundNumber,

@@ -103,20 +103,38 @@ export interface BrowserReconciliationEvidence {
   renderedSourceStatuses?: Record<string, string>;
   cardCount?: number;
   emptyStateRendered?: boolean;
+  shortlistCandidateIds?: string[];
+  shortlistDetails?: ComparableResearchSnapshot["shortlistDetails"];
 }
 
 export interface ComparableResearchSnapshot {
   runId: string;
   workspaceId: string;
   status: string;
+  sourceMode?: string;
   candidateIds: string[];
   rankedCandidateIds: string[];
+  shortlistCandidateIds?: string[];
   provisionalCandidateIds: string[];
   rankedScores: Record<string, number>;
   confidenceStatuses: Record<string, string>;
   sourceObservationIds: string[];
   rawObservationsCount: number | null;
   candidateCount: number;
+  shortlistDetails?: Record<
+    string,
+    {
+      productId: string;
+      title: string;
+      storeDomain: string;
+      canonicalUrl: string;
+      identityStatus: string;
+      familyKey: string;
+      evidenceCount: number;
+      researchScore: number;
+      evergreenStatus: string;
+    }
+  >;
 }
 
 export interface ReconciliationMismatch {
@@ -309,26 +327,62 @@ export async function updateKH02ResearchRunStatus(params: {
 /**
  * Persists the final immutable leaderboard ranking snapshot to the research run.
  */
+export interface MaterializeCandidatesResult {
+  materializedCount: number;
+  skippedRejectedCount: number;
+  materializedProductIds: string[];
+  skippedRejectedIds: string[];
+  errors: string[];
+}
+
 export async function materializeKH02CandidatesToDatabase(
   result: EvergreenLeaderboardResult,
   db: any = prisma
-): Promise<void> {
+): Promise<MaterializeCandidatesResult> {
+  const summary: MaterializeCandidatesResult = {
+    materializedCount: 0,
+    skippedRejectedCount: 0,
+    materializedProductIds: [],
+    skippedRejectedIds: [],
+    errors: [],
+  };
   if (!db?.researchProduct || typeof db.researchProduct.upsert !== "function") {
-    return;
+    return summary;
   }
   const unwrap = (arr: any) =>
     Array.isArray(arr) ? arr.map((i: any) => i?.candidate || i).filter(Boolean) : [];
+
+  const rejectedList = unwrap(result.rejectedCandidates);
+  const rejectedIdSet = new Set<string>(
+    rejectedList.map((r: any) => r?.candidateId).filter(Boolean)
+  );
+  summary.skippedRejectedCount = rejectedIdSet.size;
+  summary.skippedRejectedIds = Array.from(rejectedIdSet);
+
+  // V12.4.3.3.1 Section 10.1: Only materialize eligible/non-rejected candidates (never rejectedCandidates)
   const candidateItems: any[] = [
     ...unwrap(result.topThree),
+    ...unwrap(result.researchShortlist?.shortlist),
     ...unwrap(result.provisionalCandidates),
     ...unwrap((result as any).remainingCandidates),
     ...unwrap((result as any).insufficientEvidenceCandidates),
-    ...unwrap(result.rejectedCandidates),
-    ...unwrap(result.researchShortlist?.shortlist),
   ];
   const seenIds = new Set<string>();
   for (const cand of candidateItems) {
     if (!cand || !cand.candidateId || seenIds.has(cand.candidateId)) continue;
+    if (
+      rejectedIdSet.has(cand.candidateId) ||
+      cand.productRealityStatus === "REJECTED" ||
+      cand.productRealityStatus === "NON_PHYSICAL" ||
+      cand.relevanceStatus === "IRRELEVANT"
+    ) {
+      if (!rejectedIdSet.has(cand.candidateId)) {
+        rejectedIdSet.add(cand.candidateId);
+        summary.skippedRejectedCount++;
+        summary.skippedRejectedIds.push(cand.candidateId);
+      }
+      continue;
+    }
     seenIds.add(cand.candidateId);
     try {
       let storeId: string | null = null;
@@ -380,6 +434,8 @@ export async function materializeKH02CandidatesToDatabase(
         },
       });
       cand.researchProductId = prod.id;
+      summary.materializedCount++;
+      summary.materializedProductIds.push(prod.id);
       if (
         Array.isArray(cand.supportingAdIds) &&
         cand.supportingAdIds.length > 0 &&
@@ -390,9 +446,29 @@ export async function materializeKH02CandidatesToDatabase(
       ) {
         const existingAds = await db.competitorAd.findMany({
           where: { id: { in: cand.supportingAdIds } },
-          select: { id: true },
+          select: { id: true, landingPageUrl: true },
         });
         for (const adRec of existingAds) {
+          if (cleanDomain && adRec.landingPageUrl) {
+            try {
+              const adHost = new URL(adRec.landingPageUrl).hostname
+                .toLowerCase()
+                .replace(/^www\./, "");
+              if (
+                adHost &&
+                !adHost.includes("facebook.com") &&
+                !adHost.includes("instagram.com") &&
+                !adHost.includes("tiktok.com") &&
+                adHost !== cleanDomain &&
+                !adHost.endsWith(`.${cleanDomain}`) &&
+                !cleanDomain.endsWith(`.${adHost}`)
+              ) {
+                continue;
+              }
+            } catch {
+              // Ignore URL parse error
+            }
+          }
           await db.adProductLink
             .upsert({
               where: {
@@ -408,16 +484,18 @@ export async function materializeKH02CandidatesToDatabase(
                 confidence:
                   cand.identityStatus === "VERIFIED"
                     ? "CONFIRMED"
-                    : "HIGH_CONFIDENCE",
+                    : "PROBABLE",
               },
             })
             .catch(() => null);
         }
       }
-    } catch {
+    } catch (err: any) {
       // Non-blocking if unit test mock DB omits researchProduct
+      summary.errors.push(err?.message || String(err));
     }
   }
+  return summary;
 }
 
 export async function persistKH02RankingSnapshot(
@@ -1392,10 +1470,15 @@ export function normalizeResearchSnapshotForComparison(
   }
 
   const topThreeList = Array.isArray(snapshot?.topThree) ? snapshot.topThree : [];
+  const shortlistList = Array.isArray(snapshot?.researchShortlist?.shortlist)
+    ? snapshot.researchShortlist.shortlist
+    : [];
   const provList = Array.isArray(snapshot?.provisionalCandidates) ? snapshot.provisionalCandidates : [];
   const remainingList = Array.isArray(snapshot?.remainingCandidates) ? snapshot.remainingCandidates : [];
 
   const rankedCandidateIds: string[] = [];
+  const shortlistCandidateIds: string[] = [];
+  const shortlistDetails: NonNullable<ComparableResearchSnapshot["shortlistDetails"]> = {};
   const rankedScores: Record<string, number> = {};
   const confidenceStatuses: Record<string, string> = {};
   const sourceObservationIds: string[] = [];
@@ -1417,6 +1500,69 @@ export function normalizeResearchSnapshotForComparison(
         for (const obs of item.candidate.sourceObservations) {
           if (obs?.sourceRecordId) sourceObservationIds.push(obs.sourceRecordId);
         }
+      }
+    }
+  }
+
+  for (const item of provList) {
+    const c = item?.candidate || item;
+    const cid = c?.candidateId || c?.id;
+    if (cid && typeof cid === "string") {
+      const scoreVal =
+        typeof item?.score?.opportunityScore === "number"
+          ? item.score.opportunityScore
+          : typeof c?.relevanceScore === "number"
+          ? c.relevanceScore
+          : 0;
+      shortlistDetails[cid] = {
+        productId: String(c?.researchProductId || cid),
+        title: String(c?.canonicalProductName || c?.displayName || c?.title || ""),
+        storeDomain: String(c?.storeDomain || ""),
+        canonicalUrl: String(c?.canonicalProductUrl || c?.normalizedProductUrl || ""),
+        identityStatus: String(c?.identityStatus || "UNKNOWN"),
+        familyKey: String(c?.familyKey || ""),
+        evidenceCount: Number(
+          c?.totalObservationCount ??
+            (Array.isArray(c?.sourceObservations) ? c.sourceObservations.length : 0)
+        ),
+        researchScore: Math.round(scoreVal * 100) / 100,
+        evergreenStatus: String(
+          item?.score?.scoreStatus ||
+            (c?.isEligibleAsEvergreenWinner ? "QUALIFIED" : "PROVISIONAL")
+        ),
+      };
+    }
+  }
+
+  for (const item of shortlistList) {
+    const c = item?.candidate || item;
+    const cid = c?.candidateId || c?.id;
+    if (cid && typeof cid === "string") {
+      shortlistCandidateIds.push(cid);
+      if (!shortlistDetails[cid]) {
+        const scoreVal =
+          typeof item?.score?.opportunityScore === "number"
+            ? item.score.opportunityScore
+            : typeof c?.relevanceScore === "number"
+            ? c.relevanceScore
+            : 0;
+        shortlistDetails[cid] = {
+          productId: String(c?.researchProductId || cid),
+          title: String(c?.canonicalProductName || c?.displayName || c?.title || ""),
+          storeDomain: String(c?.storeDomain || ""),
+          canonicalUrl: String(c?.canonicalProductUrl || c?.normalizedProductUrl || ""),
+          identityStatus: String(c?.identityStatus || "UNKNOWN"),
+          familyKey: String(c?.familyKey || ""),
+          evidenceCount: Number(
+            c?.totalObservationCount ??
+              (Array.isArray(c?.sourceObservations) ? c.sourceObservations.length : 0)
+          ),
+          researchScore: Math.round(scoreVal * 100) / 100,
+          evergreenStatus: String(
+            item?.score?.scoreStatus ||
+              (c?.isEligibleAsEvergreenWinner ? "QUALIFIED" : "PROVISIONAL")
+          ),
+        };
       }
     }
   }
@@ -1470,14 +1616,21 @@ export function normalizeResearchSnapshotForComparison(
     runId,
     workspaceId: resolvedWorkspaceId,
     status,
+    sourceMode:
+      snapshot?.providerTelemetry?.META_ADS?.sourceMode ||
+      snapshot?.sourceMode ||
+      source?.sourceMode ||
+      undefined,
     candidateIds,
     rankedCandidateIds,
+    shortlistCandidateIds,
     provisionalCandidateIds,
     rankedScores,
     confidenceStatuses,
     sourceObservationIds,
     rawObservationsCount,
     candidateCount,
+    shortlistDetails,
   };
 }
 
@@ -1726,9 +1879,14 @@ export function reconcileDatabaseAndBrowser(
     });
   }
 
-  // 6. Ranked order check
+  // 6. Ranked order check (supports both Evergreen topThree and Research Shortlist Top 3 when topThree is empty)
   if (browserEvidence.displayedRankOrder && browserEvidence.displayedRankOrder.length > 0) {
-    const expectedRanked = dbSnapshot.rankedCandidateIds;
+    const expectedRanked =
+      dbSnapshot.rankedCandidateIds.length > 0
+        ? dbSnapshot.rankedCandidateIds
+        : dbSnapshot.shortlistCandidateIds && dbSnapshot.shortlistCandidateIds.length > 0
+        ? dbSnapshot.shortlistCandidateIds
+        : dbSnapshot.rankedCandidateIds;
     const actualRanked = browserEvidence.displayedRankOrder.map((v) => String(v));
     if (
       actualRanked.length !== expectedRanked.length ||
@@ -1770,6 +1928,38 @@ export function reconcileDatabaseAndBrowser(
           expected: dbConf,
           actual: browserConf,
           reason: `Browser confidence for '${cid}' is '${browserConf}', but DB is '${dbConf}'`,
+        });
+      }
+    }
+  }
+
+  // 9. Field-level shortlist details check (Section 9)
+  if (browserEvidence.shortlistDetails && dbSnapshot.shortlistDetails) {
+    for (const [cid, bDetail] of Object.entries(browserEvidence.shortlistDetails)) {
+      const dbDetail = dbSnapshot.shortlistDetails[cid];
+      if (!dbDetail) continue;
+      if (bDetail.storeDomain && dbDetail.storeDomain && bDetail.storeDomain !== dbDetail.storeDomain) {
+        mismatches.push({
+          field: `shortlistDetails.${cid}.storeDomain`,
+          expected: dbDetail.storeDomain,
+          actual: bDetail.storeDomain,
+          reason: `Browser storeDomain '${bDetail.storeDomain}' !== DB '${dbDetail.storeDomain}'`,
+        });
+      }
+      if (bDetail.identityStatus && dbDetail.identityStatus && bDetail.identityStatus !== dbDetail.identityStatus) {
+        mismatches.push({
+          field: `shortlistDetails.${cid}.identityStatus`,
+          expected: dbDetail.identityStatus,
+          actual: bDetail.identityStatus,
+          reason: `Browser identityStatus '${bDetail.identityStatus}' !== DB '${dbDetail.identityStatus}'`,
+        });
+      }
+      if (bDetail.familyKey && dbDetail.familyKey && bDetail.familyKey !== dbDetail.familyKey) {
+        mismatches.push({
+          field: `shortlistDetails.${cid}.familyKey`,
+          expected: dbDetail.familyKey,
+          actual: bDetail.familyKey,
+          reason: `Browser familyKey '${bDetail.familyKey}' !== DB '${dbDetail.familyKey}'`,
         });
       }
     }

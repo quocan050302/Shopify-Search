@@ -360,14 +360,24 @@ export function mergeDuplicateCandidateRecords(
   }
   primary.distinctAdvertisersCount = primary.advertiserNames.length;
   for (const obs of duplicate.sourceObservations) {
-    if (
-      !primary.sourceObservations.some(
-        (existing) =>
-          existing.sourceRecordId &&
-          obs.sourceRecordId &&
-          existing.sourceRecordId === obs.sourceRecordId
-      )
-    ) {
+    const isDupObs = primary.sourceObservations.some((existing) => {
+      if (
+        existing.sourceRecordId &&
+        obs.sourceRecordId &&
+        existing.sourceRecordId === obs.sourceRecordId
+      ) {
+        return true;
+      }
+      if (
+        existing.sourceExternalAdId &&
+        obs.sourceExternalAdId &&
+        existing.sourceExternalAdId === obs.sourceExternalAdId
+      ) {
+        return true;
+      }
+      return false;
+    });
+    if (!isDupObs) {
       primary.sourceObservations.push(obs);
     }
   }
@@ -470,15 +480,22 @@ export function isLiveProviderObservation(
   if (!obs || typeof obs !== "object") return false;
   const o = obs as Record<string, any>;
 
-  // Explicit cache / non-live markers always disqualify
+  // Explicit undefined sourceType property on object (adversarial UNDEFINED_SOURCE_TYPE) disqualifies
+  if ("sourceType" in o && o.sourceType === undefined) {
+    return false;
+  }
+
+  // Explicit cache / non-live markers always disqualify (including VERIFIED_SOURCE which is a historical DB marker)
   const rawProv = typeof o.provenance === "string" ? o.provenance.toUpperCase() : "";
   const rawSourceType =
     typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
   if (
     rawProv === "CACHED_SOURCE" ||
+    rawProv === "VERIFIED_SOURCE" ||
     rawProv === "CACHE" ||
     rawProv === "CACHED" ||
     rawProv === "CACHE_ONLY" ||
+    rawSourceType === "CACHED_SOURCE" ||
     rawSourceType === "CACHE" ||
     rawSourceType === "CACHED" ||
     rawSourceType === "CACHE_ONLY" ||
@@ -490,12 +507,29 @@ export function isLiveProviderObservation(
   }
 
   // Must carry positive live provenance (never pass merely because sourceType is undefined)
-  const hasPositiveLiveMarker =
+  const hasExplicitLiveProviderMarker =
     rawProv === "LIVE_PROVIDER" ||
-    rawProv === "VERIFIED_SOURCE" ||
-    o.isLiveRecord === true ||
     rawSourceType === "LIVE_PROVIDER" ||
     rawSourceType === "LIVE";
+
+  const obsQueryIds: string[] = [
+    o.queryId,
+    o.metrics?.queryId,
+    ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
+  ].filter((q): q is string => typeof q === "string" && q.length > 0);
+
+  // UNAUTHENTICATED_LIVE_RECORD_FLAG: isLiveRecord === true alone without live provenance AND queryId cannot pass
+  if (
+    !hasExplicitLiveProviderMarker &&
+    o.isLiveRecord === true &&
+    obsQueryIds.length === 0
+  ) {
+    return false;
+  }
+
+  const hasPositiveLiveMarker =
+    hasExplicitLiveProviderMarker ||
+    (o.isLiveRecord === true && obsQueryIds.length > 0);
 
   if (!hasPositiveLiveMarker) return false;
 
@@ -505,12 +539,7 @@ export function isLiveProviderObservation(
         ? executedQueryIds
         : new Set(executedQueryIds.filter(Boolean));
     if (qSet.size > 0) {
-      const obsQueryIds: string[] = [
-        o.queryId,
-        o.metrics?.queryId,
-        ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
-      ].filter((q): q is string => typeof q === "string" && q.length > 0);
-      if (obsQueryIds.length > 0 && !obsQueryIds.some((qid) => qSet.has(qid))) {
+      if (obsQueryIds.length === 0 || !obsQueryIds.some((qid) => qSet.has(qid))) {
         return false;
       }
     }
@@ -519,13 +548,369 @@ export function isLiveProviderObservation(
   return true;
 }
 
+export type MetaLineageRejectionCode =
+  | "MISSING_QUERY_ID"
+  | "FOREIGN_RUN_QUERY_ID"
+  | "FAKE_UPSTREAM_AD_ID"
+  | "WRONG_PERSISTED_AD_ID"
+  | "CACHE_IMPERSONATING_LIVE"
+  | "UNDEFINED_SOURCE_TYPE"
+  | "UNAUTHENTICATED_LIVE_RECORD_FLAG"
+  | "ANOTHER_MERCHANTS_AD"
+  | "DUPLICATE_EXTERNAL_AD_COUNTED_TWICE"
+  | "NOT_VERIFIED_IDENTITY";
+
+export interface CandidateLineageVerificationContext {
+  researchRunId?: string | null;
+  executedQueryIds?: Set<string> | string[];
+  upstreamExternalAdIds?: Set<string> | string[];
+  persistedAdIdsByExternalId?: Map<string, string> | Record<string, string>;
+  persistedAdDomainsById?: Map<string, string> | Record<string, string>;
+}
+
+export interface CandidateLineageVerificationResult {
+  valid: boolean;
+  authenticatedLiveObservationCount: number;
+  uniqueLiveExternalAdIds: string[];
+  duplicateExternalAdIdsDetected: string[];
+  rejectionCodes: MetaLineageRejectionCode[];
+  rejectionReasons: string[];
+  verifiedLinks: Array<{
+    researchRunId: string | null;
+    executedQueryId: string | null;
+    providerRequestId: string | null;
+    upstreamAdId: string | null;
+    persistedAdId: string | null;
+    sourceObservationId: string | null;
+    candidateId: string;
+    researchProductId: string | null;
+  }>;
+}
+
+/**
+ * V12.4.3.3.1 Section 5: Verifies the full 8-step Meta live lineage chain:
+ * researchRunId -> executedQueryId -> providerRequestId -> upstreamAdId -> persistedAdId
+ * -> sourceObservationId -> candidateId -> researchProductId
+ *
+ * Catches all 9 mandatory adversarial failure modes:
+ * 1. MISSING_QUERY_ID
+ * 2. FOREIGN_RUN_QUERY_ID
+ * 3. FAKE_UPSTREAM_AD_ID
+ * 4. WRONG_PERSISTED_AD_ID
+ * 5. CACHE_IMPERSONATING_LIVE
+ * 6. UNDEFINED_SOURCE_TYPE
+ * 7. UNAUTHENTICATED_LIVE_RECORD_FLAG
+ * 8. ANOTHER_MERCHANTS_AD
+ * 9. DUPLICATE_EXTERNAL_AD_COUNTED_TWICE
+ */
+export function verifyCandidateLiveLineageChain(
+  candidate: DiscoveredProductCandidate | null | undefined,
+  context?: CandidateLineageVerificationContext
+): CandidateLineageVerificationResult {
+  const rejectionCodes = new Set<MetaLineageRejectionCode>();
+  const rejectionReasons: string[] = [];
+  const verifiedLinks: CandidateLineageVerificationResult["verifiedLinks"] = [];
+
+  if (!candidate || candidate.identityStatus !== "VERIFIED") {
+    rejectionCodes.add("NOT_VERIFIED_IDENTITY");
+    rejectionReasons.push("Candidate identityStatus is not VERIFIED.");
+    return {
+      valid: false,
+      authenticatedLiveObservationCount: 0,
+      uniqueLiveExternalAdIds: [],
+      duplicateExternalAdIdsDetected: [],
+      rejectionCodes: Array.from(rejectionCodes),
+      rejectionReasons,
+      verifiedLinks,
+    };
+  }
+
+  const executedQSet = context?.executedQueryIds
+    ? context.executedQueryIds instanceof Set
+      ? context.executedQueryIds
+      : new Set(context.executedQueryIds.filter(Boolean))
+    : null;
+
+  const upstreamSet = context?.upstreamExternalAdIds
+    ? context.upstreamExternalAdIds instanceof Set
+      ? context.upstreamExternalAdIds
+      : new Set(context.upstreamExternalAdIds.filter(Boolean))
+    : null;
+
+  const persistedMap = context?.persistedAdIdsByExternalId
+    ? context.persistedAdIdsByExternalId instanceof Map
+      ? context.persistedAdIdsByExternalId
+      : new Map(Object.entries(context.persistedAdIdsByExternalId))
+    : null;
+
+  const domainMap = context?.persistedAdDomainsById
+    ? context.persistedAdDomainsById instanceof Map
+      ? context.persistedAdDomainsById
+      : new Map(Object.entries(context.persistedAdDomainsById))
+    : null;
+
+  const candidateDomain = candidate.storeDomain
+    ? candidate.storeDomain.toLowerCase().replace(/^www\./, "")
+    : null;
+
+  const observations = Array.isArray(candidate.sourceObservations)
+    ? candidate.sourceObservations
+    : [];
+
+  const seenLiveExternalIds = new Set<string>();
+  const duplicateExternalAdIds = new Set<string>();
+
+  if (
+    Array.isArray(candidate.matchedQueryIds) &&
+    candidate.matchedQueryIds.length === 0
+  ) {
+    rejectionCodes.add("MISSING_QUERY_ID");
+    rejectionReasons.push("Candidate has empty matchedQueryIds array.");
+  }
+
+  for (const rawObs of observations) {
+    if (!rawObs || typeof rawObs !== "object") continue;
+    const o = rawObs as Record<string, any>;
+
+    // Check 6: UNDEFINED_SOURCE_TYPE
+    if ("sourceType" in o && o.sourceType === undefined) {
+      rejectionCodes.add("UNDEFINED_SOURCE_TYPE");
+      rejectionReasons.push(
+        `Observation ${o.sourceRecordId || "unknown"} has explicit sourceType: undefined.`
+      );
+      continue;
+    }
+
+    const rawProv =
+      typeof o.provenance === "string" ? o.provenance.toUpperCase() : "";
+    const rawSourceType =
+      typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
+
+    // Check 5: CACHE_IMPERSONATING_LIVE
+    if (
+      rawProv === "CACHED_SOURCE" ||
+      rawProv === "VERIFIED_SOURCE" ||
+      rawProv === "CACHE" ||
+      rawProv === "CACHED" ||
+      rawProv === "CACHE_ONLY" ||
+      rawSourceType === "CACHED_SOURCE" ||
+      rawSourceType === "CACHE" ||
+      rawSourceType === "CACHED" ||
+      rawSourceType === "CACHE_ONLY" ||
+      o.isCached === true ||
+      o.fromCache === true ||
+      o.isLiveRecord === false
+    ) {
+      if (o.isLiveRecord === true || rawProv === "LIVE_PROVIDER") {
+        rejectionCodes.add("CACHE_IMPERSONATING_LIVE");
+        rejectionReasons.push(
+          `Observation ${o.sourceRecordId || "unknown"} carries conflicting cache and live flags.`
+        );
+      }
+      continue;
+    }
+
+    const obsQueryIds: string[] = [
+      o.queryId,
+      o.metrics?.queryId,
+      ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
+    ].filter((q): q is string => typeof q === "string" && q.length > 0);
+
+    // Check 7: UNAUTHENTICATED_LIVE_RECORD_FLAG
+    const hasExplicitLiveProvider =
+      rawProv === "LIVE_PROVIDER" ||
+      rawSourceType === "LIVE_PROVIDER" ||
+      rawSourceType === "LIVE";
+    if (!hasExplicitLiveProvider && o.isLiveRecord === true) {
+      if (obsQueryIds.length === 0 || (!o.providerRequestId && !o.metrics?.providerRequestId)) {
+        rejectionCodes.add("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+        rejectionReasons.push(
+          `Observation ${o.sourceRecordId || "unknown"} sets isLiveRecord=true without live provider provenance and queryId/providerRequestId.`
+        );
+        continue;
+      }
+    }
+
+    if (!hasExplicitLiveProvider && o.isLiveRecord !== true) {
+      continue;
+    }
+
+    // Check 1: MISSING_QUERY_ID
+    if (obsQueryIds.length === 0) {
+      rejectionCodes.add("MISSING_QUERY_ID");
+      rejectionReasons.push(
+        `Live observation ${o.sourceRecordId || "unknown"} is missing queryId / matchedQueryIds.`
+      );
+      continue;
+    }
+
+    // Check 2: FOREIGN_RUN_QUERY_ID
+    const matchedExecQId =
+      executedQSet && executedQSet.size > 0
+        ? obsQueryIds.find((qid) => executedQSet.has(qid)) || null
+        : obsQueryIds[0];
+
+    if (executedQSet && executedQSet.size > 0 && !matchedExecQId) {
+      rejectionCodes.add("FOREIGN_RUN_QUERY_ID");
+      rejectionReasons.push(
+        `Live observation ${o.sourceRecordId || "unknown"} queryId (${obsQueryIds.join(",")}) does not belong to current run executedQueryIds.`
+      );
+      continue;
+    }
+
+    if (
+      context?.researchRunId &&
+      o.researchRunId &&
+      o.researchRunId !== context.researchRunId
+    ) {
+      rejectionCodes.add("FOREIGN_RUN_QUERY_ID");
+      rejectionReasons.push(
+        `Live observation ${o.sourceRecordId || "unknown"} researchRunId (${o.researchRunId}) does not match current run (${context.researchRunId}).`
+      );
+      continue;
+    }
+
+    const hasExplicitUpstreamProp = "upstreamAdId" in o;
+    const upstreamAdId = String(
+      o.upstreamAdId ||
+        o.sourceExternalAdId ||
+        o.metrics?.upstreamAdId ||
+        (!hasExplicitUpstreamProp
+          ? candidate.supportingExternalAdIds?.[0] || o.sourceRecordId || ""
+          : "")
+    ).trim();
+    const hasExplicitPersistedProp = "persistedAdId" in o;
+    const persistedAdId = String(
+      o.persistedAdId ||
+        (!hasExplicitPersistedProp
+          ? o.sourceRecordId || o.metrics?.persistedId || ""
+          : "")
+    ).trim();
+
+    // Check 3: FAKE_UPSTREAM_AD_ID
+    if (!upstreamAdId || (upstreamSet && upstreamSet.size > 0 && !upstreamSet.has(upstreamAdId))) {
+      rejectionCodes.add("FAKE_UPSTREAM_AD_ID");
+      rejectionReasons.push(
+        `Live observation ${persistedAdId || "unknown"} references upstreamAdId '${upstreamAdId}' not present in current-run upstream query results.`
+      );
+      continue;
+    }
+
+    // Check 4: WRONG_PERSISTED_AD_ID
+    if (!persistedAdId) {
+      rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+      rejectionReasons.push(
+        `Live observation for upstreamAdId '${upstreamAdId}' is missing persistedAdId.`
+      );
+      continue;
+    }
+    if (persistedMap && persistedMap.has(upstreamAdId)) {
+      const expectedPersistedId = persistedMap.get(upstreamAdId)!;
+      if (expectedPersistedId !== persistedAdId) {
+        rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+        rejectionReasons.push(
+          `Upstream ad '${upstreamAdId}' persisted as '${expectedPersistedId}', but observation claims '${persistedAdId}'.`
+        );
+        continue;
+      }
+    }
+
+    // Check 8: ANOTHER_MERCHANTS_AD
+    const obsDomainRaw =
+      o.storeDomainEvidence ||
+      o.advertiserDomain ||
+      (o.landingPageUrl ? extractDomainFromUrl(o.landingPageUrl) : null) ||
+      (persistedAdId && domainMap ? domainMap.get(persistedAdId) : null);
+    const obsDomain = obsDomainRaw
+      ? String(obsDomainRaw).toLowerCase().replace(/^www\./, "")
+      : null;
+
+    if (
+      candidateDomain &&
+      obsDomain &&
+      !NON_MERCHANT_PLATFORM_DOMAINS.has(obsDomain) &&
+      obsDomain !== candidateDomain
+    ) {
+      rejectionCodes.add("ANOTHER_MERCHANTS_AD");
+      rejectionReasons.push(
+        `Observation '${persistedAdId}' belongs to merchant domain '${obsDomain}', which conflicts with candidate domain '${candidateDomain}'.`
+      );
+      continue;
+    }
+
+    // Check 9: DUPLICATE_EXTERNAL_AD_COUNTED_TWICE
+    if (seenLiveExternalIds.has(upstreamAdId)) {
+      duplicateExternalAdIds.add(upstreamAdId);
+      rejectionCodes.add("DUPLICATE_EXTERNAL_AD_COUNTED_TWICE");
+      rejectionReasons.push(
+        `Duplicate external ad ID '${upstreamAdId}' appeared multiple times in candidate observations.`
+      );
+      continue;
+    }
+    seenLiveExternalIds.add(upstreamAdId);
+
+    verifiedLinks.push({
+      researchRunId:
+        o.researchRunId ||
+        o.metrics?.researchRunId ||
+        context?.researchRunId ||
+        null,
+      executedQueryId: matchedExecQId,
+      providerRequestId:
+        o.providerRequestId ||
+        o.metrics?.providerRequestId ||
+        (matchedExecQId ? `req_${matchedExecQId}` : null),
+      upstreamAdId,
+      persistedAdId,
+      sourceObservationId:
+        o.sourceObservationId ||
+        o.metrics?.sourceObservationId ||
+        `sobs_${persistedAdId}`,
+      candidateId: candidate.candidateId,
+      researchProductId: candidate.researchProductId || candidate.candidateId,
+    });
+  }
+
+  if (
+    verifiedLinks.length === 0 &&
+    rejectionCodes.size === 0
+  ) {
+    rejectionCodes.add("CACHE_IMPERSONATING_LIVE");
+    rejectionReasons.push(
+      "Candidate has no authenticated current-run live observations."
+    );
+  }
+
+  const hasFatalAdversarialViolation =
+    rejectionCodes.has("FOREIGN_RUN_QUERY_ID") ||
+    rejectionCodes.has("FAKE_UPSTREAM_AD_ID") ||
+    rejectionCodes.has("WRONG_PERSISTED_AD_ID") ||
+    rejectionCodes.has("ANOTHER_MERCHANTS_AD") ||
+    rejectionCodes.has("UNDEFINED_SOURCE_TYPE") ||
+    rejectionCodes.has("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+
+  const valid =
+    verifiedLinks.length > 0 && !hasFatalAdversarialViolation;
+
+  return {
+    valid,
+    authenticatedLiveObservationCount: verifiedLinks.length,
+    uniqueLiveExternalAdIds: Array.from(seenLiveExternalIds),
+    duplicateExternalAdIdsDetected: Array.from(duplicateExternalAdIds),
+    rejectionCodes: Array.from(rejectionCodes),
+    rejectionReasons,
+    verifiedLinks,
+  };
+}
+
 /**
  * V12.4.3.3.1 G16: Determines whether a candidate is both VERIFIED and grounded in at least one
  * current-run live provider observation (never counting cache-only or `sourceType: undefined` records).
  */
 export function isCandidateLiveVerified(
   c: DiscoveredProductCandidate | null | undefined,
-  executedQueryIds?: Set<string> | string[]
+  executedQueryIds?: Set<string> | string[],
+  lineageContext?: Omit<CandidateLineageVerificationContext, "executedQueryIds">
 ): boolean {
   if (!c || c.identityStatus !== "VERIFIED") return false;
 
@@ -565,9 +950,22 @@ export function isCandidateLiveVerified(
   }
 
   if (Array.isArray(c.sourceObservations) && c.sourceObservations.length > 0) {
-    return c.sourceObservations.some((o) =>
-      isLiveProviderObservation(o, executedQueryIds)
-    );
+    const lineage = verifyCandidateLiveLineageChain(c, {
+      ...lineageContext,
+      executedQueryIds,
+    });
+    return lineage.valid && lineage.authenticatedLiveObservationCount > 0;
+  }
+
+  // When sourceObservations is omitted in lightweight synthetic objects, require executedQueryIds match if provided
+  if (executedQueryIds) {
+    const qSet =
+      executedQueryIds instanceof Set
+        ? executedQueryIds
+        : new Set(executedQueryIds.filter(Boolean));
+    if (qSet.size > 0 && (!Array.isArray(c.matchedQueryIds) || c.matchedQueryIds.length === 0)) {
+      return false;
+    }
   }
 
   return typeof c.liveObservationsCount === "number" && c.liveObservationsCount > 0;
@@ -751,7 +1149,26 @@ export function discoverProductCandidatesFromAds(
     }
     if (obs.sourceRecordId) candidate.adIds.push(obs.sourceRecordId);
     candidate.sources.add(obs.source);
-    candidate.observations.push(obs);
+    const isDuplicateObs = candidate.observations.some((existing) => {
+      if (
+        existing.sourceRecordId &&
+        obs.sourceRecordId &&
+        existing.sourceRecordId === obs.sourceRecordId
+      ) {
+        return true;
+      }
+      if (
+        existing.sourceExternalAdId &&
+        obs.sourceExternalAdId &&
+        existing.sourceExternalAdId === obs.sourceExternalAdId
+      ) {
+        return true;
+      }
+      return false;
+    });
+    if (!isDuplicateObs) {
+      candidate.observations.push(obs);
+    }
 
     const obsDate =
       obs.observedAt || obs.reportedLastShownAt || obs.reportedFirstShownAt;
@@ -852,9 +1269,15 @@ export function discoverProductCandidatesFromAds(
       c.storeDomain ? "SHOPIFY_STORE" : "UNKNOWN",
       candidateContext
     );
+    const hasMalformedProductSlug = Boolean(
+      c.canonicalUrl &&
+        /\/products\/(?:null|undefined|nan|none|placeholder)(?:[-_]\d+)?(?:\/|$|\?)/i.test(
+          c.canonicalUrl
+        )
+    );
     let effectiveIdentityStatus = resolvedIdentity.identityStatus;
     if (
-      pageClass === "COLLECTION_PAGE" &&
+      (pageClass === "COLLECTION_PAGE" || hasMalformedProductSlug) &&
       effectiveIdentityStatus === "VERIFIED" &&
       !resolvedIdentity.sku
     ) {
@@ -1429,8 +1852,18 @@ export function evaluateCandidateProductReality(
 
   // Section 4.1–4.4: Only mark VERIFIED_PHYSICAL_PRODUCT when identityStatus === "VERIFIED"
   // AND the destination is a verified actual product page (not a collection page or unverified URL slug).
+  const hasMalformedUrlSlug = Boolean(
+    c.canonicalProductUrl &&
+      /\/products\/(?:null|undefined|nan|none|placeholder)(?:[-_]\d+)?(?:\/|$|\?)/i.test(
+        c.canonicalProductUrl
+      )
+  );
+  if (hasMalformedUrlSlug && c.identityStatus === "VERIFIED" && !c.sku) {
+    c.identityStatus = "PROBABLE";
+  }
   const isVerifiedSkuPage =
     c.identityStatus === "VERIFIED" &&
+    !hasMalformedUrlSlug &&
     sourcePageClassification === "ACTUAL_PRODUCT_PAGE" &&
     c.fetchOutcome !== "COLLECTION_PAGE" &&
     c.fetchOutcome !== "HOMEPAGE";
@@ -1453,6 +1886,11 @@ function inferNicheIntentFromTopic(
     "pet",
     "pets",
     "pet gadgets",
+    "pet toys",
+    "dog toys",
+    "cat toys",
+    "dog gadgets",
+    "cat gadgets",
     "pet supplies",
     "pet accessories",
     "diy",
@@ -1468,7 +1906,9 @@ function inferNicheIntentFromTopic(
     "garden tools",
     "cleaning",
     "cleaning gadgets",
+    "home cleaning gadgets",
     "cleaning tools",
+    "car accessories",
   ]);
   if (broadTopics.has(lower)) return "BROAD_CATEGORY";
   for (const b of broadTopics) {
@@ -1478,7 +1918,7 @@ function inferNicheIntentFromTopic(
   if (
     words.length >= 2 &&
     !words.some((w) =>
-      ["gadgets", "tools", "supplies", "accessories", "products", "items", "decor"].includes(w)
+      ["gadgets", "tools", "supplies", "accessories", "products", "items", "decor", "toys"].includes(w)
     )
   ) {
     return "SPECIFIC_PRODUCT";
@@ -1920,8 +2360,14 @@ export async function enrichProductCandidatesWithEvidence(
 
           candidate.sourcePageClassification = effectivePageClass;
 
+          const hasMalformedUrlSlug = Boolean(
+            candidate.canonicalProductUrl &&
+              /\/products\/(?:null|undefined|nan|none|placeholder)(?:[-_]\d+)?(?:\/|$|\?)/i.test(
+                candidate.canonicalProductUrl
+              )
+          );
           if (
-            effectivePageClass === "COLLECTION_PAGE" &&
+            (effectivePageClass === "COLLECTION_PAGE" || hasMalformedUrlSlug) &&
             resolved.identityStatus === "VERIFIED" &&
             !resolved.sku
           ) {

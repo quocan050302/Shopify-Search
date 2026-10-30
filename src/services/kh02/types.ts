@@ -366,6 +366,14 @@ export interface SourceObservation {
   evidenceReference?: string | null;
   researchProductId?: string | null;
   matchedQueryIds?: string[];
+  researchRunId?: string | null;
+  queryId?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdId?: string | null;
+  persistedAdId?: string | null;
+  sourceObservationId?: string | null;
+  sourceType?: string | null;
+  isLiveRecord?: boolean;
 }
 
 export interface ProviderExecutionMetadata {
@@ -404,6 +412,11 @@ export interface UpstreamRecordTrace {
   decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
   rejectionReason?: string | null;
   persistedId?: string | null;
+  researchRunId?: string | null;
+  queryId?: string | null;
+  providerRequestId?: string | null;
+  upstreamAdId?: string | null;
+  sourceObservationId?: string | null;
 }
 
 export interface SourceResearchResult {
