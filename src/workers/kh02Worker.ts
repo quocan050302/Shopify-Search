@@ -16,6 +16,7 @@ import {
   EvergreenLeaderboardResult,
   KH02ResearchExecutionContext,
 } from "@/services/kh02/evergreenResearchOrchestrator";
+import { materializeKH02CandidatesToDatabase } from "@/services/kh02/persistence/kh02PersistenceService";
 import {
   SWAI_KH02_RELEASE_VERSION,
   getRuntimeBuildSha,
@@ -920,6 +921,8 @@ export async function completeResearchJob(
         : result.runStatus === "PARTIAL"
         ? "PARTIALLY_COMPLETED"
         : "COMPLETED";
+
+    await materializeKH02CandidatesToDatabase(result, db).catch(() => null);
 
     // Preserve input metadata, runtime telemetry, and leaderboard result snapshot
     const mergedResultJson = JSON.stringify({

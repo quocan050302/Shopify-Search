@@ -117,6 +117,7 @@ export async function GET(
     // 3. Check if rawParamId already resolves to a ResearchProduct, or if it is a KH-02 candidateId (cand_...)
     //    whose researchProductId was null when persisted.
     let resolvedProductId = rawParamId;
+    let virtualProductFromCandidate: any = null;
     const productCheck = await prisma.researchProduct.findUnique({
       where: { id: resolvedProductId },
       select: { id: true },
@@ -137,17 +138,12 @@ export async function GET(
         const foundItem = allRanked.find((item) => {
           const c = item?.candidate;
           if (!c) return false;
-          if (c.candidateId === rawParamId) return true;
-          if (
-            Array.isArray(c.mergedCandidateIds) &&
-            c.mergedCandidateIds.includes(rawParamId)
-          ) {
+          if (c.candidateId === rawParamId || c.researchProductId === rawParamId) {
             return true;
           }
           if (
-            requestedCandidateId &&
-            rawParamId.startsWith("cand_") &&
-            c.candidateId === requestedCandidateId
+            Array.isArray(c.mergedCandidateIds) &&
+            c.mergedCandidateIds.includes(rawParamId)
           ) {
             return true;
           }
@@ -167,26 +163,79 @@ export async function GET(
             }
           }
 
-          // V12.4.3.3.1 Section 10 fix: GET must not create unauthorized product/ad associations.
-          // The ResearchProduct, CompetitorStore, and AdProductLink records must be created by
-          // persistKH02RankingSnapshot() in the worker — not on every GET request.
-          // If the candidate has not yet been materialized (no researchProductId and no DB record),
-          // we do a read-only lookup by candidateId before returning 404.
+          // V12.4.3.3.1 Section 10: GET does not materialize ResearchProduct, CompetitorStore,
+          // or AdProductLink records in SQLite. Perform a read-only lookup first; if not yet
+          // materialized in ResearchProduct, construct a read-only in-memory projection from
+          // the authorized KH-02 run candidate snapshot with zero database writes.
           const materializedId = cand.researchProductId || cand.candidateId;
           const existingProduct = await prisma.researchProduct.findUnique({
             where: { id: materializedId },
             select: { id: true },
           });
           if (existingProduct) {
-            // Previously persisted by persistKH02RankingSnapshot — resolve and continue
             cand.researchProductId = existingProduct.id;
             resolvedProductId = existingProduct.id;
             break;
           }
 
-          // Note: V12.4.3.3.1 — GET does not materialize ResearchProduct, CompetitorStore,
-          // or AdProductLink records.  persistKH02RankingSnapshot() is responsible for all writes.
-          // If the product has not been persisted yet, the caller receives PRODUCT_NOT_FOUND (404).
+          const cleanDomain = cand.storeDomain
+            ? String(cand.storeDomain).trim().toLowerCase().replace(/^www\./, "")
+            : null;
+          const existingStore = cleanDomain
+            ? await prisma.competitorStore.findFirst({
+                where: { domain: cleanDomain },
+              })
+            : null;
+          const existingAds =
+            Array.isArray(cand.supportingAdIds) && cand.supportingAdIds.length > 0
+              ? await prisma.competitorAd.findMany({
+                  where: { id: { in: cand.supportingAdIds } },
+                  include: {
+                    mediaAssets: true,
+                    advertiser: true,
+                    observations: { take: 5, orderBy: { observedAt: "desc" } },
+                  },
+                })
+              : [];
+          const primaryImg =
+            (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
+            cand.thumbnailUrl ||
+            null;
+
+          virtualProductFromCandidate = {
+            id: materializedId,
+            storeId: existingStore?.id || null,
+            title:
+              cand.merchantVerifiedProductName ||
+              cand.canonicalProductName ||
+              cand.displayName ||
+              cand.title ||
+              "Discovered Product Candidate",
+            category: parsed.topic || cand.category || "Other",
+            description: cand.problemStatement || null,
+            imageUrl: primaryImg || null,
+            productUrl: cand.canonicalProductUrl || null,
+            createdAt: job.createdAt || new Date(),
+            updatedAt: job.completedAt || job.createdAt || new Date(),
+            store:
+              existingStore ||
+              (cleanDomain
+                ? {
+                    id: `virtual_store_${cleanDomain}`,
+                    domain: cleanDomain,
+                    storeName: cand.brand || cleanDomain.split(".")[0],
+                    commercePlatform: "SHOPIFY_POSSIBLE",
+                  }
+                : null),
+            adLinks: existingAds.map((adRec: any) => ({
+              adId: adRec.id,
+              productId: materializedId,
+              confidence:
+                cand.identityStatus === "VERIFIED" ? "CONFIRMED" : "HIGH_CONFIDENCE",
+              ad: adRec,
+            })),
+          };
+          resolvedProductId = materializedId;
           break;
         }
       }
@@ -194,26 +243,30 @@ export async function GET(
 
     const productId = resolvedProductId;
 
-    // 4. Enforce strict workspace access on the resolved ResearchProduct
-    await assertProductWorkspaceAccess(productId, context);
+    // 4. Enforce strict workspace access on the resolved ResearchProduct (when persisted in DB)
+    if (!virtualProductFromCandidate) {
+      await assertProductWorkspaceAccess(productId, context);
+    }
 
-    const product = await prisma.researchProduct.findUnique({
-      where: { id: productId },
-      include: {
-        store: true,
-        adLinks: {
-          include: {
-            ad: {
-              include: {
-                mediaAssets: true,
-                advertiser: true,
-                observations: { take: 5, orderBy: { observedAt: "desc" } },
+    const product =
+      virtualProductFromCandidate ||
+      (await prisma.researchProduct.findUnique({
+        where: { id: productId },
+        include: {
+          store: true,
+          adLinks: {
+            include: {
+              ad: {
+                include: {
+                  mediaAssets: true,
+                  advertiser: true,
+                  observations: { take: 5, orderBy: { observedAt: "desc" } },
+                },
               },
             },
           },
         },
-      },
-    });
+      }));
 
     if (!product) {
       return NextResponse.json(
@@ -223,7 +276,62 @@ export async function GET(
     }
 
     // 5. Advertising profile & KH-01 commercial entities
-    const adProfile = await getProductAdvertisingProfile(productId);
+    const adProfile = virtualProductFromCandidate
+      ? {
+          productId: product.id,
+          productTitle: product.title,
+          storeDomain: product.store?.domain || null,
+          totalLinkedAds: Array.isArray(product.adLinks) ? product.adLinks.length : 0,
+          distinctAdvertisers: Array.from(
+            new Map(
+              (product.adLinks || [])
+                .map((l: any) => l?.ad?.advertiser)
+                .filter(Boolean)
+                .map((adv: any) => [adv.id, { id: adv.id, name: adv.name }])
+            ).values()
+          ),
+          distinctStores: product.store
+            ? [{ id: product.store.id, domain: product.store.domain }]
+            : [],
+          distinctCreativeFormats: Array.from(
+            new Set(
+              (product.adLinks || []).map(
+                (l: any) => l?.ad?.mediaAssets?.[0]?.mediaType || "IMAGE"
+              )
+            )
+          ),
+          observedLandingPages: Array.from(
+            new Set(
+              (product.adLinks || [])
+                .map((l: any) => l?.ad?.landingPageUrl)
+                .filter(Boolean)
+            )
+          ),
+          earliestReportedStartAt: null,
+          firstObservedAt: null,
+          latestObservedAt: null,
+          verifiedActiveObservationsCount: Array.isArray(product.adLinks)
+            ? product.adLinks.length
+            : 0,
+          unverifiedObservationsCount: 0,
+          ads: (product.adLinks || [])
+            .map((l: any) => l?.ad)
+            .filter(Boolean)
+            .map((ad: any) => ({
+              id: ad.id,
+              externalAdId: ad.externalAdId || ad.id,
+              headline: ad.headline,
+              status: ad.status,
+              format: ad.mediaAssets?.[0]?.mediaType || "IMAGE",
+              firstSeenAt: ad.firstSeenAt
+                ? new Date(ad.firstSeenAt).toISOString()
+                : null,
+              lastSeenAt: ad.lastSeenAt
+                ? new Date(ad.lastSeenAt).toISOString()
+                : null,
+            })),
+        }
+      : await getProductAdvertisingProfile(productId);
 
     const offerSnapshots = await prisma.competitorOfferSnapshot.findMany({
       where: { productId },

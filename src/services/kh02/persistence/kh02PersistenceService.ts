@@ -309,116 +309,125 @@ export async function updateKH02ResearchRunStatus(params: {
 /**
  * Persists the final immutable leaderboard ranking snapshot to the research run.
  */
+export async function materializeKH02CandidatesToDatabase(
+  result: EvergreenLeaderboardResult,
+  db: any = prisma
+): Promise<void> {
+  if (!db?.researchProduct || typeof db.researchProduct.upsert !== "function") {
+    return;
+  }
+  const unwrap = (arr: any) =>
+    Array.isArray(arr) ? arr.map((i: any) => i?.candidate || i).filter(Boolean) : [];
+  const candidateItems: any[] = [
+    ...unwrap(result.topThree),
+    ...unwrap(result.provisionalCandidates),
+    ...unwrap((result as any).remainingCandidates),
+    ...unwrap((result as any).insufficientEvidenceCandidates),
+    ...unwrap(result.rejectedCandidates),
+    ...unwrap(result.researchShortlist?.shortlist),
+  ];
+  const seenIds = new Set<string>();
+  for (const cand of candidateItems) {
+    if (!cand || !cand.candidateId || seenIds.has(cand.candidateId)) continue;
+    seenIds.add(cand.candidateId);
+    try {
+      let storeId: string | null = null;
+      const cleanDomain = cand.storeDomain
+        ? String(cand.storeDomain).trim().toLowerCase().replace(/^www\./, "")
+        : null;
+      if (
+        cleanDomain &&
+        cleanDomain.includes(".") &&
+        db.competitorStore &&
+        typeof db.competitorStore.upsert === "function"
+      ) {
+        const store = await db.competitorStore.upsert({
+          where: { domain: cleanDomain },
+          update: {},
+          create: {
+            domain: cleanDomain,
+            storeName: cand.brand || cleanDomain.split(".")[0],
+            commercePlatform: "SHOPIFY_POSSIBLE",
+          },
+        });
+        storeId = store.id;
+      }
+      const materializedId = cand.researchProductId || cand.candidateId;
+      const primaryImg =
+        (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
+        cand.thumbnailUrl ||
+        null;
+      const prod = await db.researchProduct.upsert({
+        where: { id: materializedId },
+        update: {
+          storeId: storeId ?? undefined,
+          productUrl: cand.canonicalProductUrl || undefined,
+          imageUrl: primaryImg || undefined,
+        },
+        create: {
+          id: materializedId,
+          storeId,
+          title:
+            cand.merchantVerifiedProductName ||
+            cand.canonicalProductName ||
+            cand.displayName ||
+            cand.title ||
+            "Discovered Product Candidate",
+          category: result.topic || cand.category || "Other",
+          description: cand.problemStatement || null,
+          imageUrl: primaryImg || null,
+          productUrl: cand.canonicalProductUrl || null,
+        },
+      });
+      cand.researchProductId = prod.id;
+      if (
+        Array.isArray(cand.supportingAdIds) &&
+        cand.supportingAdIds.length > 0 &&
+        db.competitorAd &&
+        typeof db.competitorAd.findMany === "function" &&
+        db.adProductLink &&
+        typeof db.adProductLink.upsert === "function"
+      ) {
+        const existingAds = await db.competitorAd.findMany({
+          where: { id: { in: cand.supportingAdIds } },
+          select: { id: true },
+        });
+        for (const adRec of existingAds) {
+          await db.adProductLink
+            .upsert({
+              where: {
+                adId_productId: {
+                  adId: adRec.id,
+                  productId: prod.id,
+                },
+              },
+              update: {},
+              create: {
+                adId: adRec.id,
+                productId: prod.id,
+                confidence:
+                  cand.identityStatus === "VERIFIED"
+                    ? "CONFIRMED"
+                    : "HIGH_CONFIDENCE",
+              },
+            })
+            .catch(() => null);
+        }
+      }
+    } catch {
+      // Non-blocking if unit test mock DB omits researchProduct
+    }
+  }
+}
+
 export async function persistKH02RankingSnapshot(
   runId: string,
   workspaceId: string,
   result: EvergreenLeaderboardResult
 ): Promise<void> {
-  // V12.4.3.3 Section 9: Idempotently materialize shortlisted/top-3 candidates into ResearchProduct
+  // V12.4.3.3 Section 9: Idempotently materialize discovered candidates into ResearchProduct
   // so Product Intelligence drawer and /api/v1/research/products/[id]/overview resolve immediately.
-  if (prisma.researchProduct && typeof prisma.researchProduct.upsert === "function") {
-    const candidateItems: any[] = [
-      ...(Array.isArray(result.topThree) ? result.topThree.map((i) => i.candidate) : []),
-      ...(Array.isArray(result.provisionalCandidates)
-        ? result.provisionalCandidates.map((i) => i.candidate)
-        : []),
-      ...(Array.isArray(result.researchShortlist?.shortlist)
-        ? result.researchShortlist.shortlist
-        : []),
-    ];
-    const seenIds = new Set<string>();
-    for (const cand of candidateItems) {
-      if (!cand || !cand.candidateId || seenIds.has(cand.candidateId)) continue;
-      seenIds.add(cand.candidateId);
-      try {
-        let storeId: string | null = null;
-        const cleanDomain = cand.storeDomain
-          ? String(cand.storeDomain).trim().toLowerCase().replace(/^www\./, "")
-          : null;
-        if (
-          cleanDomain &&
-          cleanDomain.includes(".") &&
-          prisma.competitorStore &&
-          typeof prisma.competitorStore.upsert === "function"
-        ) {
-          const store = await prisma.competitorStore.upsert({
-            where: { domain: cleanDomain },
-            update: {},
-            create: {
-              domain: cleanDomain,
-              storeName: cand.brand || cleanDomain.split(".")[0],
-              commercePlatform: "SHOPIFY_POSSIBLE",
-            },
-          });
-          storeId = store.id;
-        }
-        const materializedId = cand.researchProductId || cand.candidateId;
-        const primaryImg =
-          (Array.isArray(cand.imageReferences) && cand.imageReferences[0]) ||
-          cand.thumbnailUrl ||
-          null;
-        const prod = await prisma.researchProduct.upsert({
-          where: { id: materializedId },
-          update: {
-            storeId: storeId ?? undefined,
-            productUrl: cand.canonicalProductUrl || undefined,
-            imageUrl: primaryImg || undefined,
-          },
-          create: {
-            id: materializedId,
-            storeId,
-            title:
-              cand.merchantVerifiedProductName ||
-              cand.canonicalProductName ||
-              cand.displayName ||
-              cand.title ||
-              "Discovered Product Candidate",
-            category: result.topic || cand.category || "Other",
-            description: cand.problemStatement || null,
-            imageUrl: primaryImg || null,
-            productUrl: cand.canonicalProductUrl || null,
-          },
-        });
-        cand.researchProductId = prod.id;
-        if (
-          Array.isArray(cand.supportingAdIds) &&
-          cand.supportingAdIds.length > 0 &&
-          prisma.competitorAd &&
-          typeof prisma.competitorAd.findMany === "function" &&
-          prisma.adProductLink &&
-          typeof prisma.adProductLink.upsert === "function"
-        ) {
-          const existingAds = await prisma.competitorAd.findMany({
-            where: { id: { in: cand.supportingAdIds } },
-            select: { id: true },
-          });
-          for (const adRec of existingAds) {
-            await prisma.adProductLink
-              .upsert({
-                where: {
-                  adId_productId: {
-                    adId: adRec.id,
-                    productId: prod.id,
-                  },
-                },
-                update: {},
-                create: {
-                  adId: adRec.id,
-                  productId: prod.id,
-                  confidence:
-                    cand.identityStatus === "VERIFIED"
-                      ? "CONFIRMED"
-                      : "HIGH_CONFIDENCE",
-                },
-              })
-              .catch(() => null);
-          }
-        }
-      } catch {
-        // Non-blocking if unit test mock DB omits researchProduct
-      }
-    }
-  }
+  await materializeKH02CandidatesToDatabase(result, prisma);
 
   await prisma.syncJob.updateMany({
     where: {
