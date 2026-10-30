@@ -287,6 +287,8 @@ export async function runEvergreenProductResearch(
   };
 
   const STAGE_TIMEOUT_MS = Number(process.env.KH02_STAGE_TIMEOUT_MS) || 30_000;
+  const META_STAGE_TIMEOUT_MS =
+    Number(process.env.KH02_META_STAGE_TIMEOUT_MS) || Math.max(STAGE_TIMEOUT_MS, 75_000);
 
   function createStageSignal(timeoutMs: number, stageName: string): { signal: AbortSignal; cleanup: () => void } {
     const controller = new AbortController();
@@ -454,7 +456,7 @@ export async function runEvergreenProductResearch(
     try {
       const metaResult = await executeStageWithSignal(
         "Meta Ads",
-        STAGE_TIMEOUT_MS,
+        META_STAGE_TIMEOUT_MS,
         (q) =>
           collectMetaProductSignals({
             ...q,
@@ -989,7 +991,7 @@ export async function runEvergreenProductResearch(
         const prevObsCount = adObservations.length;
         const metaRound2Result = await executeStageWithSignal(
           "Meta Ads Post-Gate Adaptive Round 2",
-          STAGE_TIMEOUT_MS,
+          META_STAGE_TIMEOUT_MS,
           (q) =>
             collectMetaProductSignals({
               ...q,

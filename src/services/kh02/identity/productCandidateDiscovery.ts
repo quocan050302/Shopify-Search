@@ -611,9 +611,9 @@ export function verifyCandidateLiveLineageChain(
   const rejectionReasons: string[] = [];
   const verifiedLinks: CandidateLineageVerificationResult["verifiedLinks"] = [];
 
-  if (!candidate || candidate.identityStatus !== "VERIFIED") {
+  if (!candidate) {
     rejectionCodes.add("NOT_VERIFIED_IDENTITY");
-    rejectionReasons.push("Candidate identityStatus is not VERIFIED.");
+    rejectionReasons.push("Candidate is missing.");
     return {
       valid: false,
       authenticatedLiveObservationCount: 0,
@@ -623,6 +623,10 @@ export function verifyCandidateLiveLineageChain(
       rejectionReasons,
       verifiedLinks,
     };
+  }
+  if (candidate.identityStatus !== "VERIFIED") {
+    rejectionCodes.add("NOT_VERIFIED_IDENTITY");
+    rejectionReasons.push("Candidate identityStatus is not VERIFIED.");
   }
 
   const executedQSet = context?.executedQueryIds

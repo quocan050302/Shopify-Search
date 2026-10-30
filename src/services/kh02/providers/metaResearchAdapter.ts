@@ -1007,18 +1007,31 @@ export async function collectLiveMetaAds(
       };
 
       try {
-        const searchRes = await client.searchAds({
-          query: qSpec.keyword,
-          country: plan.market,
-          status: "ACTIVE",
-          searchType: qSpec.searchType,
-          maxResults: Math.max(
-            1,
-            Math.min(qSpec.maxResults, plan.maxTotalResults - rawAds.length)
-          ),
-          maxRequests: reservedReqs,
-          maxSeconds: 20,
-          pageSize: 10,
+        const maxSecs = Number(process.env.META_COLLECTOR_MAX_SECONDS) || 15;
+        const subqueryTimeoutMs = maxSecs * 1000 + 8000;
+        let subTimer: NodeJS.Timeout | undefined;
+        const searchRes: any = await Promise.race([
+          client.searchAds({
+            query: qSpec.keyword,
+            country: plan.market,
+            status: "ACTIVE",
+            searchType: qSpec.searchType,
+            maxResults: Math.max(
+              1,
+              Math.min(qSpec.maxResults, plan.maxTotalResults - rawAds.length)
+            ),
+            maxRequests: reservedReqs,
+            maxSeconds: maxSecs,
+            pageSize: 10,
+          }),
+          new Promise((_, reject) => {
+            subTimer = setTimeout(
+              () => reject(new Error(`Meta subquery '${qSpec.keyword}' timed out after ${subqueryTimeoutMs}ms`)),
+              subqueryTimeoutMs
+            );
+          }),
+        ]).finally(() => {
+          if (subTimer) clearTimeout(subTimer);
         });
 
         let returnedAds = searchRes.ads || [];

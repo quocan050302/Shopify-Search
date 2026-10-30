@@ -720,8 +720,14 @@ export function buildProductIdentityFingerprint(
   );
 
   const physicalSpecs = extractPhysicalSpecs(rawTitle);
-  const familyInfo = resolveProductFamily(
+  const familyInputText = [
     rawTitle,
+    productHandle ? productHandle.replace(/[-_]+/g, " ") : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const familyInfo = resolveProductFamily(
+    familyInputText,
     cand.category,
     cand.matchedArchetypeId
   );

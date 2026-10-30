@@ -503,9 +503,15 @@ export async function persistKH02RankingSnapshot(
   workspaceId: string,
   result: EvergreenLeaderboardResult
 ): Promise<void> {
-  // Synchronize researchRunId across snapshot and candidate source observations when persisted under a DB run ID
-  const prevRunId = result.researchRunId;
+  // Synchronize researchRunId across snapshot, queryExecutions, and candidate source observations when persisted under a DB run ID
   result.researchRunId = runId;
+  if (Array.isArray((result as any).queryExecutions)) {
+    for (const q of (result as any).queryExecutions) {
+      if (q && typeof q === "object") {
+        q.researchRunId = runId;
+      }
+    }
+  }
   const allCandLists = [
     (result as any).evergreenLeaderboard,
     result.topThree,
@@ -516,10 +522,11 @@ export async function persistKH02RankingSnapshot(
   ];
   for (const list of allCandLists) {
     if (!Array.isArray(list)) continue;
-    for (const cand of list as any[]) {
+    for (const item of list as any[]) {
+      const cand = item?.candidate || item;
       if (!cand || !Array.isArray(cand.sourceObservations)) continue;
       for (const obs of cand.sourceObservations) {
-        if (obs && (!obs.researchRunId || obs.researchRunId === prevRunId)) {
+        if (obs && typeof obs === "object") {
           obs.researchRunId = runId;
         }
       }
