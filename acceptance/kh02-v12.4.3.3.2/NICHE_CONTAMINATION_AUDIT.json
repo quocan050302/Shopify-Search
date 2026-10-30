@@ -1,0 +1,1104 @@
+{
+  "version": "12.4.3.3.2",
+  "testedSourceSha": "bbe3dbc5625465150dc1dbafb3608dcf23af44c6",
+  "contaminationProbes": {
+    "dogFoodStatus": "IRRELEVANT",
+    "crochetStatus": "IRRELEVANT",
+    "golfStatus": "IRRELEVANT"
+  },
+  "plushToyPetGadgetsVsPetToysProbe": {
+    "petGadgetsStatus": "IRRELEVANT",
+    "petToysStatus": "RELEVANT"
+  },
+  "diyToolsWallpaperExclusionProbe": {
+    "diyToolsWallpaperStatus": "IRRELEVANT"
+  },
+  "scenarios": {
+    "petGadgetsLiveFallback": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "researchProductId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn3h00546corujh7567u",
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn4w005n6corlzcsccsh",
+            "cmvrzyn3x005a6corm3d0e51v"
+          ],
+          "supportingExternalAdIds": [
+            "2046326005986245",
+            "2128156051108858",
+            "1595856712093558",
+            "1399013621792652",
+            "1802296680785588",
+            "1393597299374101",
+            "905190415961783"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_eecaab6b"
+          ],
+          "liveObservationsCount": 2,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": true,
+          "lineageVerification": {
+            "valid": true,
+            "authenticatedLiveObservationCount": 2,
+            "uniqueLiveExternalAdIds": [
+              "2046326005986245",
+              "2128156051108858"
+            ],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [],
+            "rejectionReasons": [],
+            "verifiedLinks": [
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_3_eecaab6b",
+                "providerRequestId": "8f282baf44494dbeb230c2ef1ca1f219",
+                "upstreamAdId": "2046326005986245",
+                "persistedAdId": "cmvrzyn23004m6coriy1lwr49",
+                "sourceObservationId": "cmvujzlug005gfkory0gjhvhi",
+                "candidateId": "cand_1212440541",
+                "researchProductId": "cand_1212440541"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_3_eecaab6b",
+                "providerRequestId": "8f282baf44494dbeb230c2ef1ca1f219",
+                "upstreamAdId": "2128156051108858",
+                "persistedAdId": "cmvrzyn2j004s6corb96ke61v",
+                "sourceObservationId": "cmvujzlur005kfkorfyy7wo32",
+                "candidateId": "cand_1212440541",
+                "researchProductId": "cand_1212440541"
+              }
+            ]
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1587534715",
+          "researchProductId": "cand_1587534715",
+          "title": "The KittySpout™ - Wireless Fountain",
+          "storeDomain": "kittyspout.com",
+          "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyixu002s6corgmhfjtem"
+          ],
+          "supportingExternalAdIds": [
+            "1067995712370292"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_2_5598e1e9"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true,
+          "lineageVerification": {
+            "valid": true,
+            "authenticatedLiveObservationCount": 1,
+            "uniqueLiveExternalAdIds": [
+              "1067995712370292"
+            ],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [],
+            "rejectionReasons": [],
+            "verifiedLinks": [
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_2_5598e1e9",
+                "providerRequestId": "a980051194c04ca0b3422e91f213ca12",
+                "upstreamAdId": "1067995712370292",
+                "persistedAdId": "cmvrzyixu002s6corgmhfjtem",
+                "sourceObservationId": "cmvujzlrd004cfkore3ynau90",
+                "candidateId": "cand_1587534715",
+                "researchProductId": "cand_1587534715"
+              }
+            ]
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cand_1613504636",
+          "title": "Pet Hair/Lint/Dust Cleaner",
+          "storeDomain": "cc.uprootclean.com",
+          "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvlsqyhy0003awor2cubpbuq",
+            "cmvlsqyiz0009aworjqixph93",
+            "cmvlsqyjn000faworwu1dts6g",
+            "cmvlsqykc000laworg3qfh92d",
+            "cmvlsqyl0000raworivkxfbhm",
+            "cmvq0trww000fwgor0lp8jttq",
+            "cmvq0trxo000kwgorhbr1satz",
+            "cmvq0tryb000pwgorf9nb1cw7",
+            "cmvq0tryv000uwgorvjr4hq8v",
+            "cmvrh5afz001ufcort18234su"
+          ],
+          "supportingExternalAdIds": [
+            "1536941208479218",
+            "1464108218882438",
+            "1133000522848754",
+            "1641348457417375",
+            "2249466188957796",
+            "1642750633880173",
+            "1410922084469845",
+            "1806555653907868",
+            "1563296449176047",
+            "4546541612250472"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_1_9b3d8524"
+          ],
+          "liveObservationsCount": 10,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": true,
+            "authenticatedLiveObservationCount": 10,
+            "uniqueLiveExternalAdIds": [
+              "1536941208479218",
+              "1464108218882438",
+              "1133000522848754",
+              "1641348457417375",
+              "2249466188957796",
+              "1642750633880173",
+              "1410922084469845",
+              "1806555653907868",
+              "1563296449176047",
+              "4546541612250472"
+            ],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED."
+            ],
+            "verifiedLinks": [
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1536941208479218",
+                "persistedAdId": "cmvlsqyhy0003awor2cubpbuq",
+                "sourceObservationId": "cmvujzlna002wfkorhjfjecbm",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1464108218882438",
+                "persistedAdId": "cmvlsqyiz0009aworjqixph93",
+                "sourceObservationId": "cmvujzlnl0030fkor2jis0rzl",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1133000522848754",
+                "persistedAdId": "cmvlsqyjn000faworwu1dts6g",
+                "sourceObservationId": "cmvujzlnw0034fkorvowh3411",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1641348457417375",
+                "persistedAdId": "cmvlsqykc000laworg3qfh92d",
+                "sourceObservationId": "cmvujzlo90038fkor46rduozx",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "2249466188957796",
+                "persistedAdId": "cmvlsqyl0000raworivkxfbhm",
+                "sourceObservationId": "cmvujzlon003cfkorg62alg1d",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1642750633880173",
+                "persistedAdId": "cmvq0trww000fwgor0lp8jttq",
+                "sourceObservationId": "cmvujzlp9003kfkorttracg08",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1410922084469845",
+                "persistedAdId": "cmvq0trxo000kwgorhbr1satz",
+                "sourceObservationId": "cmvujzlox003gfkorddkcxm8i",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1806555653907868",
+                "persistedAdId": "cmvq0tryb000pwgorf9nb1cw7",
+                "sourceObservationId": "cmvujzlpj003ofkoraxs152k0",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "1563296449176047",
+                "persistedAdId": "cmvq0tryv000uwgorvjr4hq8v",
+                "sourceObservationId": "cmvujzlpu003sfkor0laclc32",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              },
+              {
+                "researchRunId": "kh02_run_1793339561345_3hskf",
+                "executedQueryId": "kh02_q_r1_1_9b3d8524",
+                "providerRequestId": "284c7efa5d5d4e538e1e6113fd90fa5f",
+                "upstreamAdId": "4546541612250472",
+                "persistedAdId": "cmvrh5afz001ufcort18234su",
+                "sourceObservationId": "cmvujzlq5003wfkorclqksxnm",
+                "candidateId": "cand_1613504636",
+                "researchProductId": "cand_1613504636"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "homeCleaningGadgets": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_386308104",
+          "researchProductId": "cand_386308104",
+          "title": "8-in-1 Electric Cleaning Brush Set for Home Use",
+          "storeDomain": "forubom.com",
+          "canonicalProductUrl": "https://forubom.com/products/8dgfdf-electric-clean",
+          "identityStatus": "VERIFIED",
+          "familyKey": "electric_spin_scrubber",
+          "supportingAdIds": [
+            "cmvrzh3ga0065lsore49hb07g"
+          ],
+          "supportingExternalAdIds": [
+            "1381859257413498"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_1_1b60d648"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true,
+          "lineageVerification": {
+            "valid": true,
+            "authenticatedLiveObservationCount": 1,
+            "uniqueLiveExternalAdIds": [
+              "1381859257413498"
+            ],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [],
+            "rejectionReasons": [],
+            "verifiedLinks": [
+              {
+                "researchRunId": "kh02_run_1793339561702_x62y6",
+                "executedQueryId": "kh02_q_r1_1_1b60d648",
+                "providerRequestId": "686363bf76b44a229336e5d6d652b182",
+                "upstreamAdId": "1381859257413498",
+                "persistedAdId": "cmvrzh3ga0065lsore49hb07g",
+                "sourceObservationId": "cmvuk13h7005sfkorbaofeagz",
+                "candidateId": "cand_386308104",
+                "researchProductId": "cand_386308104"
+              }
+            ]
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_824704036",
+          "researchProductId": "cand_824704036",
+          "title": "Steam Genie ™ Pro",
+          "storeDomain": "getgenieproducts.com",
+          "canonicalProductUrl": "https://getgenieproducts.com/products/steam-genie-pro",
+          "identityStatus": "VERIFIED",
+          "familyKey": "steam_genie",
+          "supportingAdIds": [
+            "cmvuc6j4q008x6oorn4csai1g"
+          ],
+          "supportingExternalAdIds": [
+            "2302991560230745"
+          ],
+          "matchedQueryIds": [
+            "kh02_q_r1_3_35de673f"
+          ],
+          "liveObservationsCount": 1,
+          "cachedObservationsCount": 0,
+          "isLiveVerified": true,
+          "lineageVerification": {
+            "valid": true,
+            "authenticatedLiveObservationCount": 1,
+            "uniqueLiveExternalAdIds": [
+              "2302991560230745"
+            ],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [],
+            "rejectionReasons": [],
+            "verifiedLinks": [
+              {
+                "researchRunId": "kh02_run_1793339561702_x62y6",
+                "executedQueryId": "kh02_q_r1_3_35de673f",
+                "providerRequestId": "5b5bb7a986a943d6920d404d185de907",
+                "upstreamAdId": "2302991560230745",
+                "persistedAdId": "cmvuc6j4q008x6oorn4csai1g",
+                "sourceObservationId": "cmvuk13ot008cfkorw4r3pmjr",
+                "candidateId": "cand_824704036",
+                "researchProductId": "cand_824704036"
+              }
+            ]
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_1832163014",
+          "researchProductId": "cand_1832163014",
+          "title": "Wireless Handheld Car Vacuum Cleaner - GREY (Enhanced Edition🔥Vacuum + Blow Available） / 1SET",
+          "storeDomain": "reserivation.com",
+          "canonicalProductUrl": "https://reserivation.com/products/power-2-2-2-4-2-3-5-3-3",
+          "identityStatus": "VERIFIED",
+          "familyKey": "cordless_vacuum_cleaner",
+          "supportingAdIds": [
+            "cmvud4u56001cbcormqw5pgil"
+          ],
+          "supportingExternalAdIds": [
+            "1764069101564333"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "diyTools": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1316890495",
+          "researchProductId": "cmvsy85zn000yp0ore89xpw92",
+          "title": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+          "storeDomain": "vipbugo.com",
+          "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+          "identityStatus": "VERIFIED",
+          "familyKey": "hot_glue_gun",
+          "supportingAdIds": [
+            "cmvrzxmcv000m6cor8w1qwnhy"
+          ],
+          "supportingExternalAdIds": [
+            "2395948977822279"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_593313102",
+          "researchProductId": "cmvsy8663001yp0orm0u01s7m",
+          "title": "THE ULTIMATE White Drywall Repair Paint Kit – No Sanding, No Primer, No Mess. Fix Nail Holes, Cracks",
+          "storeDomain": "romiantic.com",
+          "canonicalProductUrl": "https://romiantic.com/products/drywall-patch-repair-kit-3",
+          "identityStatus": "VERIFIED",
+          "familyKey": "wall_tile_repair_paste",
+          "supportingAdIds": [
+            "cmvrzxmbx00086corst3hkohk"
+          ],
+          "supportingExternalAdIds": [
+            "1118449667365377"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_778694510",
+          "researchProductId": "cand_778694510",
+          "title": "Two Blue Cats | Paint by Numbers",
+          "storeDomain": "diy-artclub.com",
+          "canonicalProductUrl": "https://diy-artclub.com/products/two-blue-cats-paint-by-numbers",
+          "identityStatus": "VERIFIED",
+          "familyKey": "paint_numbers",
+          "supportingAdIds": [
+            "cmvrwdl03002fy4orzjha3psz"
+          ],
+          "supportingExternalAdIds": [
+            "1079207668129052"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "kitchenGadgets": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1008292129",
+          "researchProductId": "cmvsy89c00036p0orhu35a9bb",
+          "title": "470ml Glass Oil Dispenser — A Useful Gift for the Home Cook",
+          "storeDomain": "beste-store.net",
+          "canonicalProductUrl": "https://beste-store.net/products/470ml-glass-oil-dispenser-a-useful-gift-for-the-home-cook",
+          "identityStatus": "VERIFIED",
+          "familyKey": "oil_dispenser_sprayer",
+          "supportingAdIds": [
+            "cmvs011gp0051t4orldy2vyls",
+            "cmvs011ef0047t4or6k6xr7pi",
+            "cmvs011h80057t4orcnu1hiqd",
+            "cmvs011ft004pt4or1bxl8m6z"
+          ],
+          "supportingExternalAdIds": [
+            "1651240269784142",
+            "1760679788567874",
+            "1471624814868018",
+            "28837545959241415"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 4,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_519143299",
+          "researchProductId": "cmvsy89ad002yp0orhygo9kbp",
+          "title": "15 in 1 Vegetable Chopper, 8 Stainless Steel Blades, Dicer & Slicer Set",
+          "storeDomain": "tokosaya.shop",
+          "canonicalProductUrl": "https://tokosaya.shop/products/15-in-1-vegetable-chopper-8-stainless-steel-blades-dicer-slicer-set",
+          "identityStatus": "VERIFIED",
+          "familyKey": "vegetable_food_chopper",
+          "supportingAdIds": [
+            "cmvrzgdlv0057lsornhlxiao0",
+            "cmvrzgdlb0051lsorijhtjtov"
+          ],
+          "supportingExternalAdIds": [
+            "1822390809179925",
+            "1118067957348183"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 2,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_754413569",
+          "researchProductId": "cand_754413569",
+          "title": "Reusable Diamond Weave Scrubber Cloths – Tough on Stains, Gentle on Surfaces",
+          "storeDomain": "cheerstash.com",
+          "canonicalProductUrl": "https://cheerstash.com/products/reusable-diamond-weave-scrubber-cloths",
+          "identityStatus": "VERIFIED",
+          "familyKey": "scrubber_cloths",
+          "supportingAdIds": [
+            "cmvugui8i000rpsortfv4bq9b"
+          ],
+          "supportingExternalAdIds": [
+            "1506991707865278"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "automaticPetFeeder": {
+      "qualifiedCount": 2,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "researchProductId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn3h00546corujh7567u",
+            "cmvrzyn3x005a6corm3d0e51v",
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn4w005n6corlzcsccsh"
+          ],
+          "supportingExternalAdIds": [
+            "1595856712093558",
+            "2128156051108858",
+            "1399013621792652",
+            "905190415961783",
+            "2046326005986245",
+            "1802296680785588",
+            "1393597299374101"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 7,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1783682388",
+          "researchProductId": "cand_1783682388",
+          "title": "Automatic Dog Feeder for Easy Daily Meals",
+          "storeDomain": "kingspetboutique.info",
+          "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyn4d005h6corri8cn3vo"
+          ],
+          "supportingExternalAdIds": [
+            "1022579813629139"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY",
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED.",
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "dogGadgets": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1300676686",
+          "researchProductId": "cand_1300676686",
+          "title": "Grooming Gloves",
+          "storeDomain": "order.uprootclean.com",
+          "canonicalProductUrl": "https://order.uprootclean.com/main/grooming-gloves-gg002-l1",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_grooming_glove_brush",
+          "supportingAdIds": [
+            "cmvq21du8000t4gorrxhd3a6d"
+          ],
+          "supportingExternalAdIds": [
+            "2688711491543464"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY",
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED.",
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_14769098",
+          "researchProductId": "cand_14769098",
+          "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+          "storeDomain": "aureluxe.ch",
+          "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvrzyiw800286coryen6tdi4",
+            "cmvrzyivt00226cor6zknkllm",
+            "cmvrzyive001w6cor4iz3t27o",
+            "cmvrzyiuz001q6cor6xmxn375",
+            "cmvrzyiuh001k6cornssodcug"
+          ],
+          "supportingExternalAdIds": [
+            "27106880412256326",
+            "1328426295348377",
+            "1652686075964972",
+            "27409053148688133",
+            "1655139552269207"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY",
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED.",
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_1783682388",
+          "researchProductId": "cand_1783682388",
+          "title": "Automatic Dog Feeder for Easy Daily Meals",
+          "storeDomain": "kingspetboutique.info",
+          "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyn4d005h6corri8cn3vo"
+          ],
+          "supportingExternalAdIds": [
+            "1022579813629139"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY",
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED.",
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "catGadgets": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1212440541",
+          "researchProductId": "cand_1212440541",
+          "title": "UAHPET Fresh Food Automatic Pet Feeder",
+          "storeDomain": "uahpet.com",
+          "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+          "identityStatus": "VERIFIED",
+          "familyKey": "automatic_pet_feeder",
+          "supportingAdIds": [
+            "cmvrzyn30004y6corojbfmznc",
+            "cmvrzyn2j004s6corb96ke61v",
+            "cmvrzyn23004m6coriy1lwr49",
+            "cmvrzyn5c005t6cor0yylqvk2",
+            "cmvrzyn3x005a6corm3d0e51v",
+            "cmvrzyn4w005n6corlzcsccsh",
+            "cmvrzyn3h00546corujh7567u"
+          ],
+          "supportingExternalAdIds": [
+            "1802296680785588",
+            "2128156051108858",
+            "2046326005986245",
+            "1595856712093558",
+            "905190415961783",
+            "1393597299374101",
+            "1399013621792652"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 7,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1788406859",
+          "researchProductId": "cand_1788406859",
+          "title": "Pawira Stainless Steel Water Fountain",
+          "storeDomain": "pawira.com",
+          "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+          "identityStatus": "VERIFIED",
+          "familyKey": "pet_water_fountain",
+          "supportingAdIds": [
+            "cmvrzyj04003q6cort0wlap3m",
+            "cmvtat2nf00286sor1v06nxx0",
+            "cmvtat2n100226sorh37j76t4",
+            "cmvrzyj1600426cor9rtxnev0",
+            "cmvrzyiza003d6corm3mvwl86"
+          ],
+          "supportingExternalAdIds": [
+            "2174343823475370",
+            "1092762023460778",
+            "1860647425077112",
+            "1605927994566450",
+            "2249446295845257"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_14769098",
+          "researchProductId": "cand_14769098",
+          "title": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+          "storeDomain": "aureluxe.ch",
+          "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+          "identityStatus": "PROBABLE",
+          "familyKey": "pet_hair_remover_roller",
+          "supportingAdIds": [
+            "cmvrzyiw800286coryen6tdi4",
+            "cmvrzyivt00226cor6zknkllm",
+            "cmvrzyive001w6cor4iz3t27o",
+            "cmvrzyiuz001q6cor6xmxn375",
+            "cmvrzyiuh001k6cornssodcug"
+          ],
+          "supportingExternalAdIds": [
+            "27106880412256326",
+            "1328426295348377",
+            "1652686075964972",
+            "27409053148688133",
+            "1655139552269207"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 5,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "NOT_VERIFIED_IDENTITY",
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate identityStatus is not VERIFIED.",
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    },
+    "carAccessoriesCacheOnly": {
+      "qualifiedCount": 3,
+      "contaminationRejectionPass": true,
+      "productDiscoverySuccess": true,
+      "productDiscoveryVerdict": "PRODUCT_DISCOVERY_SUCCESS",
+      "shortlistProducts": [
+        {
+          "rank": 1,
+          "candidateId": "cand_1832163014",
+          "researchProductId": "cand_1832163014",
+          "title": "Wireless Handheld Car Vacuum Cleaner - GREY (Enhanced Edition🔥Vacuum + Blow Available） / 1SET",
+          "storeDomain": "reserivation.com",
+          "canonicalProductUrl": "https://reserivation.com/products/power-2-2-2-4-2-3-5-3-3",
+          "identityStatus": "VERIFIED",
+          "familyKey": "cordless_vacuum_cleaner",
+          "supportingAdIds": [
+            "cmvud4u56001cbcormqw5pgil"
+          ],
+          "supportingExternalAdIds": [
+            "1764069101564333"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 2,
+          "candidateId": "cand_1816307487",
+          "researchProductId": "cand_1816307487",
+          "title": "Foldable Car Boot Organiser and Trunk Organizer with Logo",
+          "storeDomain": "sarenie.com",
+          "canonicalProductUrl": "https://sarenie.com/products/foldable-car-trunk-organizer",
+          "identityStatus": "VERIFIED",
+          "familyKey": "car_organizer_storage",
+          "supportingAdIds": [
+            "cmvud4uhu003sbcorrxlhkoo0"
+          ],
+          "supportingExternalAdIds": [
+            "28592845963711449"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        },
+        {
+          "rank": 3,
+          "candidateId": "cand_262462180",
+          "researchProductId": "cand_262462180",
+          "title": "Magnetic Car Phone Mount for MagSafe – 95° Adjustable Air Vent Cell Phone Holder with Strong Suction",
+          "storeDomain": "quotationy.com",
+          "canonicalProductUrl": "https://quotationy.com/products/magnetic-car-phone-mount-for-magsafe-95-adjustable-air-vent-cell-phone-holder-with-strong-suction-grip-hands-free-accessories-for-iphone-17-16-15-14-13-12-series",
+          "identityStatus": "VERIFIED",
+          "familyKey": "car_phone_mount",
+          "supportingAdIds": [
+            "cmvud4ug60037bcortbzdyqw7"
+          ],
+          "supportingExternalAdIds": [
+            "1615743963525688"
+          ],
+          "matchedQueryIds": [],
+          "liveObservationsCount": 0,
+          "cachedObservationsCount": 1,
+          "isLiveVerified": false,
+          "lineageVerification": {
+            "valid": false,
+            "authenticatedLiveObservationCount": 0,
+            "uniqueLiveExternalAdIds": [],
+            "duplicateExternalAdIdsDetected": [],
+            "rejectionCodes": [
+              "MISSING_QUERY_ID"
+            ],
+            "rejectionReasons": [
+              "Candidate has empty matchedQueryIds array."
+            ],
+            "verifiedLinks": []
+          }
+        }
+      ]
+    }
+  },
+  "dogHasCatOnly": false,
+  "catHasDogOnly": false,
+  "emptyQueryRejected": true,
+  "g09Verdict": "PASS",
+  "g26Verdict": "PASS"
+}
