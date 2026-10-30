@@ -12,10 +12,21 @@ import {
   DemandDataPoint,
   DemandHistoryAssessment,
   evaluateDemandHistoryEvidence,
+  evaluateDemandSourceAuthority,
   detectSpecificProductFamily,
 } from "./temporalDemandEngine";
 import { defaultDemandProvider, DemandQuery } from "./demandProviderRegistry";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
+
+export type DemandCacheAuthorityClassification =
+  | "CACHE_AUTHORITATIVE_FRESH"
+  | "CACHE_AUTHORITATIVE_STALE"
+  | "CACHE_UNVERIFIED"
+  | "CACHE_INSUFFICIENT"
+  | "LIVE_PROVIDER_AVAILABLE"
+  | "LIVE_PROVIDER_BLOCKED"
+  | "LIVE_PROVIDER_FAILED"
+  | "NO_VALID_DEMAND_EVIDENCE";
 
 export interface ProductDemandResolution {
   productId: string | null;
@@ -31,6 +42,10 @@ export interface ProductDemandResolution {
   assessment: DemandHistoryAssessment;
   dataPoints: DemandDataPoint[];
   sourceStatus: "PRODUCT_HISTORY_VERIFIED" | "INSUFFICIENT_HISTORY" | "ENGINE_READY";
+  cacheClassification?: DemandCacheAuthorityClassification;
+  providerAttempted?: boolean;
+  providerStatus?: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED" | "NOT_CONFIGURED" | "SKIPPED";
+  providerError?: string | null;
 }
 
 /**
@@ -67,10 +82,10 @@ export function normalizeProductSearchTerm(productTitle: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  // If overly long, take the core words (up to 6 words)
+  // If overly long, take the core words (up to 8 words)
   const words = cleaned.split(/\s+/).filter(Boolean);
-  if (words.length > 6) {
-    cleaned = words.slice(0, 6).join(" ");
+  if (words.length > 8) {
+    cleaned = words.slice(0, 8).join(" ");
   }
 
   return cleaned || productTitle.trim();
@@ -177,7 +192,13 @@ export async function resolveProductDemandHistory(
   const buildResolution = (
     dataPoints: DemandDataPoint[],
     assessment: DemandHistoryAssessment,
-    sourceStatus: "PRODUCT_HISTORY_VERIFIED" | "INSUFFICIENT_HISTORY" | "ENGINE_READY"
+    sourceStatus: "PRODUCT_HISTORY_VERIFIED" | "INSUFFICIENT_HISTORY" | "ENGINE_READY",
+    resolutionMeta?: {
+      cacheClassification?: DemandCacheAuthorityClassification;
+      providerAttempted?: boolean;
+      providerStatus?: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED" | "NOT_CONFIGURED" | "SKIPPED";
+      providerError?: string | null;
+    }
   ): ProductDemandResolution => {
     const coverageGaps: string[] = [...(assessment.missingEvidence || [])];
     if (requestedLookbackDays < 60) {
@@ -198,6 +219,26 @@ export async function resolveProductDemandHistory(
         `Observed series covers ${assessment.coveredDays}D out of requested ${requestedLookbackDays}D window.`
       );
     }
+
+    if (resolutionMeta?.cacheClassification === "CACHE_UNVERIFIED") {
+      coverageGaps.push(
+        "Stored cache observations are CACHED_UNVERIFIED and cannot verify production Evergreen demand without authoritative provider refresh."
+      );
+    }
+    if (resolutionMeta?.providerStatus === "NOT_CONFIGURED") {
+      coverageGaps.push(
+        "Demand provider credentials (SERPAPI_API_KEY) are not configured. To enable live Google Trends verification, set SERPAPI_API_KEY from the SerpApi Free plan."
+      );
+    } else if (resolutionMeta?.providerStatus === "BLOCKED") {
+      coverageGaps.push(
+        `Demand provider is BLOCKED: ${resolutionMeta.providerError || "Quota exhausted or paid research blocked."}`
+      );
+    } else if (resolutionMeta?.providerStatus === "FAILED") {
+      coverageGaps.push(
+        `Demand provider call failed: ${resolutionMeta.providerError || "Network error or provider timeout."}`
+      );
+    }
+
     return {
       productId: targetProductId,
       canonicalName: candidate.canonicalName,
@@ -212,76 +253,15 @@ export async function resolveProductDemandHistory(
       assessment,
       dataPoints,
       sourceStatus,
+      cacheClassification: resolutionMeta?.cacheClassification,
+      providerAttempted: resolutionMeta?.providerAttempted,
+      providerStatus: resolutionMeta?.providerStatus,
+      providerError: resolutionMeta?.providerError,
     };
   };
 
-  // 3. If no stored records exist, attempt real live provider query if configured
-  if (rawRecords.length === 0 && searchTerm.length > 2) {
-    try {
-      const now = new Date();
-      const startDate = new Date(now.getTime() - requestedLookbackDays * 86400000);
-
-      const seriesResult = await defaultDemandProvider.fetchSeries({
-        term: searchTerm,
-        canonicalProductName: candidate.canonicalName,
-        productId: targetProductId || undefined,
-        region,
-        startDate,
-        endDate: now,
-      });
-
-      if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
-        if (targetProductId) {
-          for (const pt of seriesResult.points) {
-            try {
-              await prisma.productDemandObservation.create({
-                data: {
-                  productId: targetProductId,
-                  source: pt.source || "PROVIDER_API",
-                  region: pt.region || region,
-                  keyword: searchTerm,
-                  periodStart: new Date(pt.periodStart),
-                  periodEnd: new Date(pt.periodEnd),
-                  demandValue: pt.demandValue,
-                  valueType: "RELATIVE_INTEREST",
-                  evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
-                  methodologyVersion: "12.4.3",
-                },
-              });
-            } catch {
-              // ignore duplicate key or constraint violation
-            }
-          }
-        }
-
-        const dataPoints: DemandDataPoint[] = seriesResult.points.map((p) => ({
-          periodStart: p.periodStart,
-          periodEnd: p.periodEnd,
-          demandValue: p.demandValue,
-          region: p.region,
-          source: p.source,
-          date: p.periodStart,
-          value: p.demandValue,
-        }));
-
-        const assessment = evaluateDemandHistoryEvidence(dataPoints, {
-          minimumDataPoints: 3,
-          minimumCoveredDays: 60,
-          requiredRegion: region,
-        });
-
-        return buildResolution(
-          dataPoints,
-          assessment,
-          assessment.status === "VERIFIED" ? "PRODUCT_HISTORY_VERIFIED" : "INSUFFICIENT_HISTORY"
-        );
-      }
-    } catch {
-      // Live provider lookup failed or unconfigured; proceed with local assessment
-    }
-  }
-
-  const dataPoints: DemandDataPoint[] = rawRecords.map((r) => ({
+  // 3. Convert stored raw records to demand data points and evaluate authority/coverage
+  let currentPoints: DemandDataPoint[] = rawRecords.map((r) => ({
     id: r.id,
     productId: r.productId,
     keyword: r.keyword,
@@ -297,8 +277,138 @@ export async function resolveProductDemandHistory(
     value: r.demandValue,
   }));
 
-  // 4. Evaluate demand history policy (Strict 60-day requirement: never silently reduce)
-  const assessment = evaluateDemandHistoryEvidence(dataPoints, {
+  const initialAssessment = evaluateDemandHistoryEvidence(currentPoints, {
+    minimumDataPoints: 3,
+    minimumCoveredDays: requestedLookbackDays,
+    requiredRegion: region,
+    candidateCanonicalName: candidate.canonicalName,
+    searchTermUsed: searchTerm,
+  });
+
+  const initialAuth = evaluateDemandSourceAuthority(currentPoints, {
+    candidateCanonicalName: candidate.canonicalName,
+    searchTermUsed: searchTerm,
+  });
+
+  let cacheClassification: DemandCacheAuthorityClassification;
+  if (rawRecords.length === 0) {
+    cacheClassification = "NO_VALID_DEMAND_EVIDENCE";
+  } else if (
+    initialAuth.authority === "AUTHORITATIVE_VERIFIED" ||
+    initialAuth.authority === "HISTORICAL_SOURCE_VERIFIED"
+  ) {
+    if (initialAssessment.status === "VERIFIED" && initialAssessment.coveredDays >= requestedLookbackDays) {
+      cacheClassification = "CACHE_AUTHORITATIVE_FRESH";
+    } else if (initialAssessment.coveredDays < requestedLookbackDays) {
+      cacheClassification = "CACHE_AUTHORITATIVE_STALE";
+    } else {
+      cacheClassification = "CACHE_INSUFFICIENT";
+    }
+  } else {
+    // Unverified, synthetic, proxy, or fixture series
+    cacheClassification = "CACHE_UNVERIFIED";
+  }
+
+  // 4. Determine whether live provider query is required:
+  // Never let CACHED_UNVERIFIED or CACHE_INSUFFICIENT block live query if provider is available
+  let providerAttempted = false;
+  let providerStatus: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED" | "NOT_CONFIGURED" | "SKIPPED" = "SKIPPED";
+  let providerError: string | null = null;
+
+  const needsLiveQuery =
+    cacheClassification !== "CACHE_AUTHORITATIVE_FRESH" && searchTerm.length > 2;
+
+  if (needsLiveQuery) {
+    let diag: any = { configured: false, status: "NOT_CONFIGURED" };
+    try {
+      diag = await defaultDemandProvider.diagnose();
+    } catch {
+      diag = { configured: false, status: "NOT_CONFIGURED" };
+    }
+
+    if (!diag.configured) {
+      providerAttempted = false;
+      providerStatus = "NOT_CONFIGURED";
+      providerError = "Demand provider credentials (SERPAPI_API_KEY) are not configured.";
+    } else {
+      providerAttempted = true;
+      try {
+        const now = new Date();
+        const startDate = new Date(now.getTime() - requestedLookbackDays * 86400000);
+
+        const seriesResult = await defaultDemandProvider.fetchSeries({
+          term: searchTerm,
+          canonicalProductName: candidate.canonicalName,
+          productId: targetProductId || undefined,
+          region,
+          startDate,
+          endDate: now,
+        });
+
+        providerStatus = seriesResult.status;
+        providerError = seriesResult.error || null;
+
+        if (seriesResult.status === "SUCCESS" && seriesResult.points.length > 0) {
+          if (targetProductId) {
+            for (const pt of seriesResult.points) {
+              try {
+                await prisma.productDemandObservation.create({
+                  data: {
+                    productId: targetProductId,
+                    source: pt.source || "Google Trends (SerpApi)",
+                    region: pt.region || region,
+                    keyword: searchTerm,
+                    periodStart: new Date(pt.periodStart),
+                    periodEnd: new Date(pt.periodEnd),
+                    demandValue: pt.demandValue,
+                    valueType: "RELATIVE_INTEREST",
+                    evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
+                    methodologyVersion: "serpapi_google_trends_live",
+                  },
+                });
+              } catch {
+                // Ignore duplicate constraint violation
+              }
+            }
+          }
+
+          const livePoints: DemandDataPoint[] = seriesResult.points.map((p) => ({
+            periodStart: p.periodStart,
+            periodEnd: p.periodEnd,
+            demandValue: p.demandValue,
+            region: p.region,
+            source: p.source,
+            date: p.periodStart,
+            value: p.demandValue,
+            methodologyVersion: "serpapi_google_trends_live",
+            evidenceReference: options.queryId || options.researchRunId || "DEMAND_API_INGESTION",
+          }));
+
+          // Merge live points with existing valid (non-fixture, non-synthetic) points
+          const existingValid = currentPoints.filter(
+            (p) => !p.isFixture && p.source !== "CACHED_UNVERIFIED"
+          );
+          const seenDates = new Set(livePoints.map((p) => String(p.periodStart).slice(0, 10)));
+          const combined = [...livePoints];
+          for (const ep of existingValid) {
+            const d = String(ep.periodStart).slice(0, 10);
+            if (!seenDates.has(d)) {
+              seenDates.add(d);
+              combined.push(ep);
+            }
+          }
+          combined.sort((a, b) => String(a.periodStart).localeCompare(String(b.periodStart)));
+          currentPoints = combined;
+        }
+      } catch (err: any) {
+        providerStatus = "FAILED";
+        providerError = err?.message || "Live demand provider fetch threw an unexpected error.";
+      }
+    }
+  }
+
+  // 5. Final demand history assessment across all valid data points
+  const assessment = evaluateDemandHistoryEvidence(currentPoints, {
     minimumDataPoints: 3,
     minimumCoveredDays: 60,
     requiredRegion: region,
@@ -309,9 +419,14 @@ export async function resolveProductDemandHistory(
   const sourceStatus =
     assessment.status === "VERIFIED"
       ? "PRODUCT_HISTORY_VERIFIED"
-      : dataPoints.length > 0
+      : currentPoints.length > 0
       ? "INSUFFICIENT_HISTORY"
       : "ENGINE_READY";
 
-  return buildResolution(dataPoints, assessment, sourceStatus);
+  return buildResolution(currentPoints, assessment, sourceStatus, {
+    cacheClassification,
+    providerAttempted,
+    providerStatus,
+    providerError,
+  });
 }

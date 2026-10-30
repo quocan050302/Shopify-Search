@@ -22,8 +22,8 @@ import {
 import { SWAI_KH02_RELEASE_VERSION } from "@/services/kh02/version/runtimeVersionService";
 
 describe("SWAI KH-02 V12.4.3.2.1 — Product Media Gallery, End-to-End Flow & Visual Integrity", () => {
-  it("Release version is 12.4.3.2.1, 12.4.3.3, or 12.4.3.3.1", () => {
-    expect(["12.4.3.2.1", "12.4.3.3", "12.4.3.3.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
+  it("Release version is 12.4.3.2.1, 12.4.3.3, 12.4.3.3.1, or 12.4.3.3.2", () => {
+    expect(["12.4.3.2.1", "12.4.3.3", "12.4.3.3.1", "12.4.3.3.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("Section 17: 25 Media Regression Scenarios", () => {

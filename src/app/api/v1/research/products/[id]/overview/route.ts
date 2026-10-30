@@ -809,7 +809,7 @@ export async function GET(
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "12.4.3.3.1",
+        version: "12.4.3.3.2",
       },
     });
   } catch (err: any) {

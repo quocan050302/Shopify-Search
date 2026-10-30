@@ -1719,11 +1719,11 @@ describe("SWAI KH-02 V12.4.3.3 — Meta & Google Ads Live Discovery, Niche-Accur
       expect(rec.reconciled).toBe(false);
     });
 
-    it("E12: Release version matches 12.4.3.3 or 12.4.3.3.1 across runtimeVersionService", () => {
-      expect(["12.4.3.3", "12.4.3.3.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    it("E12: Release version matches 12.4.3.3, 12.4.3.3.1, or 12.4.3.3.2 across runtimeVersionService", () => {
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
       const report = evaluateKH02RuntimeIdentity({ frontendVersion: SWAI_KH02_RELEASE_VERSION });
-      expect(["12.4.3.3", "12.4.3.3.1"]).toContain(report.releaseVersion);
-      expect(["12.4.3.3", "12.4.3.3.1"]).toContain(report.appVersion);
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2"]).toContain(report.releaseVersion);
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2"]).toContain(report.appVersion);
     });
   });
 

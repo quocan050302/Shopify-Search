@@ -348,18 +348,34 @@ export function mergeDuplicateCandidateRecords(
       ])
     );
   }
-  for (const src of duplicate.supportingSourceTypes) {
-    if (!primary.supportingSourceTypes.includes(src)) {
-      primary.supportingSourceTypes.push(src);
+  if (!Array.isArray(primary.supportingSourceTypes)) {
+    primary.supportingSourceTypes = [];
+  }
+  if (Array.isArray(duplicate.supportingSourceTypes)) {
+    for (const src of duplicate.supportingSourceTypes) {
+      if (!primary.supportingSourceTypes.includes(src)) {
+        primary.supportingSourceTypes.push(src);
+      }
     }
   }
-  for (const adv of duplicate.advertiserNames) {
-    if (!primary.advertiserNames.includes(adv)) {
-      primary.advertiserNames.push(adv);
+
+  if (!Array.isArray(primary.advertiserNames)) {
+    primary.advertiserNames = [];
+  }
+  if (Array.isArray(duplicate.advertiserNames)) {
+    for (const adv of duplicate.advertiserNames) {
+      if (!primary.advertiserNames.includes(adv)) {
+        primary.advertiserNames.push(adv);
+      }
     }
   }
   primary.distinctAdvertisersCount = primary.advertiserNames.length;
-  for (const obs of duplicate.sourceObservations) {
+
+  if (!Array.isArray(primary.sourceObservations)) {
+    primary.sourceObservations = [];
+  }
+  if (Array.isArray(duplicate.sourceObservations)) {
+    for (const obs of duplicate.sourceObservations) {
     const isDupObs = primary.sourceObservations.some((existing) => {
       if (
         existing.sourceRecordId &&
@@ -381,6 +397,7 @@ export function mergeDuplicateCandidateRecords(
       primary.sourceObservations.push(obs);
     }
   }
+}
   if (duplicate.earliestObservationDate) {
     if (
       !primary.earliestObservationDate ||
