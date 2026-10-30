@@ -95,11 +95,16 @@ export async function GET(
         explicitRunJob.workspaceId &&
         explicitRunJob.workspaceId !== context.workspaceId
       ) {
-        throw new ResearchAuthError(
-          `Access denied: Research run '${requestedRunId}' belongs to another workspace.`,
-          "FORBIDDEN_WORKSPACE_RUN",
-          403
-        );
+        // If caller has access to the run's workspace (e.g. OWNER_ADMIN / LOCAL_DEV), align context workspaceId to run's workspace
+        if (context.principal?.allowedWorkspaceIds?.includes(explicitRunJob.workspaceId)) {
+          context.workspaceId = explicitRunJob.workspaceId;
+        } else {
+          throw new ResearchAuthError(
+            `Access denied: Research run '${requestedRunId}' belongs to another workspace.`,
+            "FORBIDDEN_WORKSPACE_RUN",
+            403
+          );
+        }
       }
     }
 

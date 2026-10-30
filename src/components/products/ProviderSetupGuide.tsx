@@ -1,18 +1,13 @@
 const guides: Record<string, { title: string; href: string; text: string; config?: string }> = {
-  TIKTOK_ORGANIC: {
-    title: "Get a free HasData key", href: "https://app.hasdata.com",
-    text: "Create a Free account, open account settings and copy your API key. 1,000 credits/month; TikTok search uses 10 credits. Key configuration, quota verification and query authorization are separate steps.",
-    config: 'HASDATA_API_KEY="your_personal_key"',
-  },
   GOOGLE_ADS: {
     title: "Free Google Ads connector (no key)", href: "https://github.com/block-town/google-ads-transparency-mcp",
     text: "Install the local connector once, then restart the app and research worker. Test Connections checks MCP transport; a real query is still needed to verify upstream data. Public endpoints can be rate-limited.",
     config: "npm run kh02:setup:free",
   },
   DEMAND_HISTORY: {
-    title: "Get a free SerpApi key", href: "https://serpapi.com/manage-api-key",
-    text: "Choose the Free plan (250 searches/month). The app verifies the free plan and remaining searches before querying Trends. The local scoring engine alone does not supply search history. Official Google Trends API access is still application-gated.",
-    config: 'SERPAPI_API_KEY="your_personal_key"',
+    title: "Google Free Demand & Trends CSV", href: "https://trends.google.com/explore",
+    text: "SWAI uses genuinely free Google data sources in GOOGLE_FREE_ONLY mode: Google Trends public BigQuery datasets (1TB/month free tier) and official Google Trends Explore CSV exports with cryptographic hash verification. SerpApi is optional.",
+    config: 'DEMAND_PROVIDER_MODE="GOOGLE_FREE_ONLY"',
   },
   TIKTOK_ADS: {
     title: "Open free TikTok Creative Center", href: "https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en",

@@ -19,7 +19,6 @@ import {
 const ALLOWED_SOURCES = new Set<string>([
   "META_ADS",
   "TIKTOK_ADS",
-  "TIKTOK_ORGANIC",
   "GOOGLE_ADS",
   "DEMAND_HISTORY",
 ]);
@@ -84,6 +83,18 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedSource = String(body.source || body.provider).toUpperCase();
+    if (requestedSource === "TIKTOK_ORGANIC") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "SOURCE_DISABLED",
+            message: "TikTok Organic is permanently disabled in KH-02.",
+          },
+        },
+        { status: 400 }
+      );
+    }
     if (!ALLOWED_SOURCES.has(requestedSource)) {
       return NextResponse.json(
         {

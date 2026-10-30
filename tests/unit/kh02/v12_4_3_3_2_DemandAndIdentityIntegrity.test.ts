@@ -112,6 +112,7 @@ describe("SWAI KH-02 V12.4.3.3.2 — Authoritative Demand, Identity & Top-3 Inte
     });
 
     it("evaluates unconfigured SERPAPI_API_KEY gracefully as NOT_CONFIGURED without throwing", async () => {
+      process.env.DEMAND_PROVIDER_MODE = "SERPAPI_LEGACY";
       delete process.env.SERPAPI_API_KEY;
 
       const diag = await defaultDemandProvider.diagnose();

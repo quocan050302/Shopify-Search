@@ -15,7 +15,11 @@ import {
   evaluateDemandSourceAuthority,
   detectSpecificProductFamily,
 } from "./temporalDemandEngine";
-import { defaultDemandProvider, DemandQuery } from "./demandProviderRegistry";
+import {
+  defaultDemandProvider,
+  resolveDemandProviderMode,
+  DemandQuery,
+} from "./demandProviderRegistry";
 import { buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 
 export type DemandCacheAuthorityClassification =
@@ -225,9 +229,17 @@ export async function resolveProductDemandHistory(
         "Stored cache observations are CACHED_UNVERIFIED and cannot verify production Evergreen demand without authoritative provider refresh."
       );
     }
+    const isGoogleFreeMode = resolveDemandProviderMode() === "GOOGLE_FREE_ONLY";
     if (resolutionMeta?.providerStatus === "NOT_CONFIGURED") {
       coverageGaps.push(
-        "Demand provider credentials (SERPAPI_API_KEY) are not configured. To enable live Google Trends verification, set SERPAPI_API_KEY from the SerpApi Free plan."
+        isGoogleFreeMode
+          ? "Google free demand sources (BigQuery public datasets / official Trends CSV import) have insufficient historical coverage for this product. Import an official Google Trends CSV export or configure BigQuery sandbox."
+          : "Demand provider credentials (SERPAPI_API_KEY) are not configured. To enable live Google Trends verification, set SERPAPI_API_KEY from the SerpApi Free plan."
+      );
+    } else if (resolutionMeta?.providerStatus === "INSUFFICIENT_DATA") {
+      coverageGaps.push(
+        resolutionMeta.providerError ||
+          `Google demand sources returned insufficient time-series data for '${searchTerm}'.`
       );
     } else if (resolutionMeta?.providerStatus === "BLOCKED") {
       coverageGaps.push(
@@ -315,6 +327,7 @@ export async function resolveProductDemandHistory(
   let providerStatus: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED" | "NOT_CONFIGURED" | "SKIPPED" = "SKIPPED";
   let providerError: string | null = null;
 
+  const isGoogleFreeMode = resolveDemandProviderMode() === "GOOGLE_FREE_ONLY";
   const needsLiveQuery =
     cacheClassification !== "CACHE_AUTHORITATIVE_FRESH" && searchTerm.length > 2;
 
@@ -329,7 +342,9 @@ export async function resolveProductDemandHistory(
     if (!diag.configured) {
       providerAttempted = false;
       providerStatus = "NOT_CONFIGURED";
-      providerError = "Demand provider credentials (SERPAPI_API_KEY) are not configured.";
+      providerError = isGoogleFreeMode
+        ? "Google Free demand sources have no active configuration."
+        : "Demand provider credentials (SERPAPI_API_KEY) are not configured.";
     } else {
       providerAttempted = true;
       try {

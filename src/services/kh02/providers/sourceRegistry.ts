@@ -12,7 +12,11 @@ import {
   IntelligenceQuery,
   ProviderReadinessDimensions,
 } from "../types";
-import { inspectSerpApiAccount } from "../demand/demandProviderRegistry";
+import {
+  inspectSerpApiAccount,
+  resolveDemandProviderMode,
+  googleFreeDemandProvider,
+} from "../demand/demandProviderRegistry";
 import { getProviderBudget } from "@/services/providers/budgetService";
 import { prisma } from "@/lib/db";
 import { diagnoseMetaLiveCollector } from "./metaResearchAdapter";
@@ -114,10 +118,10 @@ export function getKH02SourceCapabilities(source: IntelligenceSource): SourceCap
 }
 
 /**
- * Lists all KH-02 source capabilities.
+ * Lists all active KH-02 source capabilities (excluding permanently hidden/disabled sources like TIKTOK_ORGANIC).
  */
 export function listKH02SourceCapabilities(): SourceCapabilities[] {
-  return Object.values(KH02_SOURCE_CAPABILITIES);
+  return Object.values(KH02_SOURCE_CAPABILITIES).filter((c) => !isSourceHiddenOrDisabled(c.source));
 }
 
 import {
@@ -127,7 +131,7 @@ import {
   discoverGoogleAdsMcpCapabilities,
   resolveGoogleMcpConfig,
 } from "./googleTransparencyResearchAdapter";
-import { isSourceTemporarilyDisabled } from "./sourcePolicy";
+import { isSourceTemporarilyDisabled, isSourceHiddenOrDisabled } from "./sourcePolicy";
 import { getWorkspaceProviderTelemetry } from "../persistence/kh02PersistenceService";
 import { ProviderSourceTelemetry } from "../types";
 
@@ -516,218 +520,55 @@ export async function diagnoseKH02Source(
     }
 
     case "TIKTOK_ORGANIC": {
-      if (context?.applyReleasePolicy && isSourceTemporarilyDisabled("TIKTOK_ORGANIC")) {
-        let recordCount = 0;
-        try {
-          if (context?.workspaceId) {
-            recordCount = await prisma.competitorAd.count({
-              where: {
-                platform: "TIKTOK_ORGANIC",
-                isSyntheticQuarantine: false,
-                ...buildAuthorizedAdWhere(context.workspaceId),
-              },
-            });
-          }
-        } catch {}
-
-        const dimensions: ProviderReadinessDimensions = applyTelemetry({
-          adapterInstalled: true,
-          configured: false,
-          transportConnected: null,
-          authenticated: null,
-          supportedOperationsVerified: false,
-          queryExecuted: false,
-          sourceDataVerified: recordCount > 0,
-          lastLiveQueryAt: null,
-          blockerCode: null,
-          storedRecordCount: recordCount,
-          lastLiveQueryRecordCount: null,
-          currentRunRecordCount: null,
-          lastSuccessfulLiveQueryAt: null,
-          lastProbeAt: lastCheckedAt,
-          authStatus: "DISABLED",
-          transportStatus: "DISABLED",
-          capabilityStatus: "DISABLED",
-        }, "TIKTOK_ORGANIC");
-
-        return {
-          source: "TIKTOK_ORGANIC",
-          adapterInstalled: true,
-          configured: false,
-          transportConnected: null,
-          authenticated: null,
-          discoverySupported: false,
-          queryExecuted: dimensions.queryExecuted,
-          recordsReturned: recordCount,
-          storedRecordCount: recordCount,
-          lastLiveQueryRecordCount: null,
-          currentRunRecordCount: null,
-          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
-          lastProbeAt: lastCheckedAt,
-          authStatus: "DISABLED",
-          transportStatus: "DISABLED",
-          capabilityStatus: "DISABLED",
-          provenanceVerified: recordCount > 0,
-          lastCheckedAt,
-          status: "TEMPORARILY_DISABLED",
-          reason: "TikTok Organic Video Research is temporarily disabled in KH-02 V12.3. No HasData API calls, quota checks, or credentials required.",
-          missingRequirements: [],
-          dimensions,
-          requiredAction: undefined,
-          estimatedQueryCost: {
-            estimatedCredits: 0,
-            isPaid: false,
-            knownCost: true,
-            pricingSource: "Temporarily disabled by source policy",
-          },
-        };
-      }
-
-      const hasDataKey = process.env.HASDATA_API_KEY || process.env.TIKTOK_ORGANIC_API_KEY;
-      if (!hasDataKey) {
-        const dimensions: ProviderReadinessDimensions = {
-          adapterInstalled: true,
-          configured: false,
-          transportConnected: null,
-          authenticated: false,
-          supportedOperationsVerified: false,
-          queryExecuted: false,
-          sourceDataVerified: false,
-          lastLiveQueryAt: null,
-          blockerCode: "MISSING_CREDENTIALS",
-          storedRecordCount: 0,
-          lastLiveQueryRecordCount: null,
-          currentRunRecordCount: null,
-          lastSuccessfulLiveQueryAt: null,
-          lastProbeAt: lastCheckedAt,
-          authStatus: "CREDENTIALS_REQUIRED",
-          transportStatus: "NOT_TESTED",
-          capabilityStatus: "NOT_TESTED",
-        };
-
-        return {
-          source: "TIKTOK_ORGANIC",
-          adapterInstalled: true,
-          configured: false,
-          transportConnected: null,
-          authenticated: false,
-          discoverySupported: false,
-          queryExecuted: false,
-          recordsReturned: 0,
-          storedRecordCount: 0,
-          lastLiveQueryRecordCount: null,
-          currentRunRecordCount: null,
-          lastProbeAt: lastCheckedAt,
-          authStatus: "CREDENTIALS_REQUIRED",
-          transportStatus: "NOT_TESTED",
-          capabilityStatus: "NOT_TESTED",
-          provenanceVerified: false,
-          lastCheckedAt,
-          status: "CREDENTIALS_REQUIRED",
-          reason: "TikTok Organic API key (HASDATA_API_KEY) not configured in environment. Configuration: Missing, Authentication: Credentials required, Transport: Not tested.",
-          missingRequirements: ["HASDATA_API_KEY"],
-          dimensions,
-          requiredAction: "Get your own free-tier key at https://app.hasdata.com and set HASDATA_API_KEY. Search costs 10 credits; quota and spend authorization are checked separately.",
-          estimatedQueryCost: {
-            estimatedCredits: 10,
-            isPaid: true,
-            knownCost: true,
-            pricingSource: "HasData Scraper API Documentation (10 credits/search)",
-          },
-        };
-      }
-
-      // Key is configured: verify live transport if requested, without assuming connected
-      let transportConnected: boolean | null = null;
-      let authenticated: boolean | null = null;
-      let authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = "NOT_PROBED";
-      let transportStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = "NOT_TESTED";
-      let status = "CONFIGURED";
-      let reason = "TikTok Organic API credentials configured (Paid queries gated by AUTO_PAID_RESEARCH policy).";
-
-      if (context?.checkLiveTransport) {
-        try {
-          const creditStatus = await fetchHasDataCreditStatus({ apiKey: hasDataKey, timeoutMs: 3000 });
-          if (creditStatus.verificationStatus === "BLOCKED") {
-            transportConnected = true;
-            transportStatus = "CONNECTED";
-            authenticated = false;
-            authStatus = "AUTHENTICATION_FAILED";
-            status = "AUTHENTICATION_FAILED";
-            reason = creditStatus.errorMessage || "HasData API key authentication failed.";
-          } else if (creditStatus.remainingCredits !== null) {
-            transportConnected = true;
-            transportStatus = "CONNECTED";
-            authenticated = true;
-            authStatus = "AUTHENTICATED";
-            status = "CONFIGURED";
-            reason = `HasData TikTok Organic API authenticated (${creditStatus.remainingCredits} credits available).`;
-          } else {
-            transportConnected = true;
-            transportStatus = "CONNECTED";
-            authenticated = null;
-            authStatus = "NOT_PROBED";
-            reason = "HasData credentials configured. Live verification requires a metered search call (zero unapproved charges policy).";
-          }
-        } catch {
-          transportConnected = false;
-          transportStatus = "TRANSPORT_FAILED";
-          authenticated = false;
-          authStatus = "AUTHENTICATION_FAILED";
-          status = "TRANSPORT_FAILED";
-          reason = "Failed to establish connection to HasData API.";
-        }
-      }
-
       const dimensions: ProviderReadinessDimensions = applyTelemetry({
         adapterInstalled: true,
-        configured: true,
-        transportConnected,
-        authenticated,
-        supportedOperationsVerified: authenticated === true,
+        configured: false,
+        transportConnected: null,
+        authenticated: null,
+        supportedOperationsVerified: false,
         queryExecuted: false,
         sourceDataVerified: false,
         lastLiveQueryAt: null,
-        blockerCode: authStatus === "AUTHENTICATION_FAILED" ? "AUTHENTICATION_FAILED" : null,
+        blockerCode: "DISABLED_BY_POLICY",
         storedRecordCount: 0,
         lastLiveQueryRecordCount: null,
         currentRunRecordCount: null,
         lastSuccessfulLiveQueryAt: null,
         lastProbeAt: lastCheckedAt,
-        authStatus,
-        transportStatus,
-        capabilityStatus: authenticated === true ? "VERIFIED" : "NOT_TESTED",
+        authStatus: "DISABLED",
+        transportStatus: "DISABLED",
+        capabilityStatus: "DISABLED",
       }, "TIKTOK_ORGANIC");
 
       return {
         source: "TIKTOK_ORGANIC",
         adapterInstalled: true,
-        configured: true,
-        transportConnected,
-        authenticated,
-        discoverySupported: authenticated === true,
-        queryExecuted: dimensions.queryExecuted,
-        recordsReturned: null,
+        configured: false,
+        transportConnected: null,
+        authenticated: null,
+        discoverySupported: false,
+        queryExecuted: false,
+        recordsReturned: 0,
         storedRecordCount: 0,
-        lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount,
+        lastLiveQueryRecordCount: null,
         currentRunRecordCount: null,
-        lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt,
+        lastSuccessfulLiveQueryAt: null,
         lastProbeAt: lastCheckedAt,
-        authStatus,
-        transportStatus,
-        capabilityStatus: dimensions.capabilityStatus,
+        authStatus: "DISABLED",
+        transportStatus: "DISABLED",
+        capabilityStatus: "DISABLED",
         provenanceVerified: false,
         lastCheckedAt,
-        status,
-        reason,
-        missingRequirements: authStatus === "AUTHENTICATION_FAILED" ? ["VALID_HASDATA_API_KEY"] : [],
+        status: "DISABLED",
+        reason: "Source 'TIKTOK_ORGANIC' is permanently disabled in KH-02 release policy. Probing, collector execution, and quota verification are bypassed.",
+        missingRequirements: [],
         dimensions,
-        requiredAction: authStatus === "AUTHENTICATION_FAILED" ? "Verify and update HASDATA_API_KEY." : undefined,
+        requiredAction: undefined,
         estimatedQueryCost: {
-          estimatedCredits: 10,
-          isPaid: true,
+          estimatedCredits: 0,
+          isPaid: false,
           knownCost: true,
-          pricingSource: "HasData Scraper API Documentation (10 credits/search)",
+          pricingSource: "Permanently disabled by server policy",
         },
       };
     }
@@ -950,6 +791,62 @@ export async function diagnoseKH02Source(
         }
       } catch {}
 
+      const demandMode = resolveDemandProviderMode();
+      if (demandMode === "GOOGLE_FREE_ONLY") {
+        const freeDiag = await googleFreeDemandProvider.diagnose();
+        const dimensions: ProviderReadinessDimensions = applyTelemetry({
+          adapterInstalled: true,
+          configured: true,
+          transportConnected: true,
+          authenticated: true,
+          supportedOperationsVerified: true,
+          queryExecuted: false,
+          sourceDataVerified: demandCount > 0,
+          lastLiveQueryAt: null,
+          blockerCode: null,
+          storedRecordCount: demandCount,
+          lastLiveQueryRecordCount: null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: null,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "AUTH_NOT_REQUIRED",
+          transportStatus: "CONNECTED",
+          capabilityStatus: "VERIFIED",
+        }, "DEMAND_HISTORY");
+
+        return {
+          source: "DEMAND_HISTORY",
+          upstreamConfigured: true,
+          adapterInstalled: true,
+          configured: true,
+          transportConnected: true,
+          authenticated: true,
+          discoverySupported: true,
+          queryExecuted: dimensions.queryExecuted,
+          recordsReturned: dimensions.lastLiveQueryRecordCount ?? null,
+          storedRecordCount: demandCount,
+          lastLiveQueryRecordCount: dimensions.lastLiveQueryRecordCount ?? null,
+          currentRunRecordCount: null,
+          lastSuccessfulLiveQueryAt: dimensions.lastSuccessfulLiveQueryAt ?? null,
+          lastProbeAt: lastCheckedAt,
+          authStatus: "AUTH_NOT_REQUIRED",
+          transportStatus: "CONNECTED",
+          capabilityStatus: "VERIFIED",
+          provenanceVerified: dimensions.queryExecuted,
+          lastCheckedAt,
+          status: "ENGINE_READY",
+          reason: "Demand stability policy engine active with Google Free Demand pipeline (BigQuery Sandbox + Official CSV exports). SerpApi is not required.",
+          missingRequirements: [],
+          dimensions,
+          estimatedQueryCost: {
+            estimatedCredits: 0,
+            isPaid: false,
+            knownCost: true,
+            pricingSource: "Google Free Demand Engine (BigQuery Free Sandbox + Trends CSV)",
+          },
+        };
+      }
+
       const hasUpstreamApiKey = Boolean(process.env.SERPAPI_API_KEY?.trim());
       let upstreamStatus: "CONNECTED" | "TRANSPORT_FAILED" | "NOT_CONFIGURED" | "NOT_TESTED" = hasUpstreamApiKey ? "NOT_TESTED" : "NOT_CONFIGURED";
       let authStatus: "AUTHENTICATED" | "AUTHENTICATION_FAILED" | "AUTH_NOT_REQUIRED" | "CREDENTIALS_REQUIRED" | "NOT_PROBED" = hasUpstreamApiKey ? "NOT_PROBED" : "CREDENTIALS_REQUIRED";
@@ -1057,10 +954,14 @@ export async function testKH02SourceConnection(
   const allowedSources: IntelligenceSource[] = [
     "META_ADS",
     "TIKTOK_ADS",
-    "TIKTOK_ORGANIC",
     "GOOGLE_ADS",
     "DEMAND_HISTORY",
   ];
+  if (isSourceHiddenOrDisabled(source) || source === "TIKTOK_ORGANIC") {
+    const diag = await diagnoseKH02Source(source, { workspaceId: context?.workspaceId });
+    recordLatestProbe(source, diag, context?.workspaceId);
+    return diag;
+  }
   if (!allowedSources.includes(source)) {
     throw new Error(`Invalid or unsupported intelligence source for connection test: ${source}`);
   }

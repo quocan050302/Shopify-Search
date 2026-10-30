@@ -697,6 +697,15 @@ export default function ProductsPage() {
       if (leaderboard?.topic || topic) params.set("topic", leaderboard?.topic || topic);
       params.set("lookbackDays", String(leaderboard?.lookbackDays || lookbackDays));
       params.set("sourceMode", leaderboard?.sourceMode || sourceMode);
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ws = urlParams.get("workspaceId") || (leaderboard as any)?.workspaceId;
+        if (ws) params.set("workspaceId", ws);
+        else {
+          const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+          if (cookieMatch) params.set("workspaceId", cookieMatch[1]);
+        }
+      }
       return `/products/${encodeURIComponent(
         productIdOrCandidateId
       )}/intelligence?${params.toString()}`;
@@ -1893,7 +1902,7 @@ export default function ProductsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     {[
                       {
                         label: "Meta Ads Library",
@@ -1906,10 +1915,6 @@ export default function ProductsPage() {
                       {
                         label: "Demand History",
                         cov: leaderboard?.sourceCoverage?.GOOGLE_TRENDS,
-                      },
-                      {
-                        label: "TikTok Creative",
-                        cov: leaderboard?.sourceCoverage?.TIKTOK_CREATIVE,
                       },
                     ].map((src) => (
                       <div

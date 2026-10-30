@@ -2121,19 +2121,6 @@ function ProductIntelligenceContent({ params }: IntelligencePageProps) {
                 </div>
               </div>
 
-              {/* TikTok Organic Card */}
-              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
-                <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <PlaySquare className="h-4 w-4 text-purple-400" />
-                  <span>TikTok Public Video Signals</span>
-                </h2>
-                <div className="space-y-1.5 text-slate-300">
-                  <div>Observed Plays: <strong className="text-white">Active social video attention</strong></div>
-                  <div>Engagement Ratio: <strong className="text-purple-300">Observed interaction ratio tracked</strong></div>
-                  <div>US Regional Status: <span className="text-amber-400 font-semibold">Observed popularity</span></div>
-                </div>
-              </div>
-
               {/* Google Ads Card */}
               <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">

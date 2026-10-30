@@ -35,7 +35,7 @@ import {
   extractRegistrableDomain,
 } from "./providers/googleTransparencyResearchAdapter";
 import { diagnoseKH02Source } from "./providers/sourceRegistry";
-import { isSourceTemporarilyDisabled } from "./providers/sourcePolicy";
+import { isSourceTemporarilyDisabled, isSourceHiddenOrDisabled } from "./providers/sourcePolicy";
 import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
@@ -1118,74 +1118,22 @@ export async function runEvergreenProductResearch(
     });
   }
 
-  // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
+  // ── Stage 5: TikTok Organic Video Enrichment (Permanently Disabled in KH-02) ────────
   const secondaryObservations: SourceObservation[] = [];
-  if (!isSelected("TIKTOK_ORGANIC")) {
-    const isExcluded = isExcludedBySelection("TIKTOK_ORGANIC");
-    sourceStatuses.TIKTOK_ORGANIC = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
-    providerTelemetry.TIKTOK_ORGANIC.queryStatus = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
-    providerTelemetry.TIKTOK_ORGANIC.queryExecuted = false;
-  } else {
-    const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
-    if (!ttDiag.configured) {
-      sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
-      providerTelemetry.TIKTOK_ORGANIC.queryStatus = ttDiag.status as SourceRunStatus;
-      warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
-    } else {
-      try {
-        const ttOrganicResult = await executeStageWithSignal(
-          "TikTok Organic",
-          STAGE_TIMEOUT_MS,
-          (q) => collectTikTokOrganicSignals(q)
-        );
-        sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
-        secondaryObservations.push(...ttOrganicResult.observations);
-        if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
-
-        const ttOrgNow = new Date().toISOString();
-        const isExecuted =
-          ttOrganicResult.status === "PASSED" ||
-          ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY" ||
-          ttOrganicResult.status === "QUERY_FAILED";
-        const isSuccess = ttOrganicResult.status === "PASSED" || ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY";
-        const ttLiveObs = ttOrganicResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
-        const isTrulyLive = isSuccess && ttLiveObs.length > 0;
-        const liveProvenance: ObservationProvenance = isTrulyLive
-          ? "LIVE_PROVIDER"
-          : (ttOrganicResult.observations.length > 0 ? "CACHED_SOURCE" : "NONE");
-
-        providerTelemetry.TIKTOK_ORGANIC = {
-          source: "TIKTOK_ORGANIC",
-          queryExecuted: isExecuted,
-          queryStatus: ttOrganicResult.status,
-          queryTimestamp: isExecuted ? ttOrgNow : null,
-          retrievedCount: isSuccess ? ttOrganicResult.retrievedCount : null,
-          acceptedCount: isSuccess ? ttOrganicResult.acceptedCount : null,
-          queryProvenance: liveProvenance,
-          isLive: isTrulyLive,
-          queryError: ttOrganicResult.errors.length > 0 ? ttOrganicResult.errors.join("; ") : null,
-          lastSuccessfulRecordCount: isSuccess ? ttOrganicResult.retrievedCount : null,
-          lastSuccessfulQueryAt: isSuccess ? ttOrgNow : null,
-        };
-      } catch (err: any) {
-        sourceStatuses.TIKTOK_ORGANIC = "FAILED";
-        errors.push(`TikTok Organic collection failed: ${err.message}`);
-        providerTelemetry.TIKTOK_ORGANIC = {
-          source: "TIKTOK_ORGANIC",
-          queryExecuted: true,
-          queryStatus: "FAILED",
-          queryTimestamp: new Date().toISOString(),
-          retrievedCount: 0,
-          acceptedCount: 0,
-          queryProvenance: "NONE",
-          isLive: false,
-          queryError: err.message,
-          lastSuccessfulRecordCount: null,
-          lastSuccessfulQueryAt: null,
-        };
-      }
-    }
-  }
+  sourceStatuses.TIKTOK_ORGANIC = "DISABLED";
+  providerTelemetry.TIKTOK_ORGANIC = {
+    source: "TIKTOK_ORGANIC",
+    queryExecuted: false,
+    queryStatus: "DISABLED",
+    queryTimestamp: null,
+    retrievedCount: 0,
+    acceptedCount: 0,
+    queryProvenance: "NONE",
+    isLive: false,
+    queryError: null,
+    lastSuccessfulRecordCount: null,
+    lastSuccessfulQueryAt: null,
+  };
 
   // ── Stage 6: Google Ads Transparency Enrichment ───────────────────────────
   if (!isSelected("GOOGLE_ADS")) {
@@ -1387,6 +1335,12 @@ export async function runEvergreenProductResearch(
   let googleProductMatches = 0;
   let googleBrandMatches = 0;
   const googleProductEvidenceIds: string[] = [];
+  const googleCreativeRejections: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    rejectionReason: string;
+    matchedCandidateId: string | null;
+  }> = [];
   const seenGoogleProductAssociations = new Set<string>();
   const seenGoogleBrandAssociations = new Set<string>();
 
@@ -1448,6 +1402,14 @@ export async function runEvergreenProductResearch(
           seenGoogleBrandAssociations.add(pairKey);
           googleBrandMatches++;
         }
+      } else if (obs.source === "GOOGLE_ADS") {
+        const evId = obs.sourceExternalAdId || obs.sourceRecordId || "unknown";
+        googleCreativeRejections.push({
+          creativeId: evId,
+          advertiserDomain: obs.advertiserDomain || null,
+          rejectionReason: (match as any).reason || "Low cross-platform text/URL similarity or non-product match",
+          matchedCandidateId: candidate.candidateId,
+        });
       }
     }
   }
@@ -1459,6 +1421,8 @@ export async function runEvergreenProductResearch(
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = googleProductMatches;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = googleBrandMatches;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productEvidenceIds = googleProductEvidenceIds;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCreativeCount = googleCreativeRejections.length;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeRejections = googleCreativeRejections;
       if (providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown) {
         providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown.productAssociatedEvidence =
           googleProductMatches > 0;
