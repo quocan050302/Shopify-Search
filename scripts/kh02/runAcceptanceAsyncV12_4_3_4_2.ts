@@ -157,7 +157,7 @@ function writeArtifact(
   fs.renameSync(tmpPath, targetPath);
   const sha256 = crypto.createHash("sha256").update(sanitized).digest("hex");
   return {
-    path: `acceptance/kh02-v12.4.3.4.2_closure/${filename}`,
+    path: path.relative(process.cwd(), targetPath).replace(/\\/g, "/"),
     sha256,
     sizeBytes: Buffer.byteLength(sanitized, "utf8"),
   };
@@ -2998,7 +2998,12 @@ async function main() {
   const ZERO_SPEND_LIVE_RUNTIME = bqBillingAudit.sandboxEligible ? "PASS" : "BLOCKED";
   const BIGQUERY_LIVE_EXECUTION = bqTrendsSearch.status === "SUCCESS" ? "PASS" : "BLOCKED";
   const GOOGLE_MCP_LIVE_RETRIEVAL = gateResults["G06"]?.verdict === "PASS" ? "PASS" : "BLOCKED";
-  const GOOGLE_PRODUCT_ASSOCIATION = (googleAdsEnrichment?.creativeAssociationLedger?.length || 0) > 0 ? "PASS" : "FAIL";
+  const GOOGLE_PRODUCT_ASSOCIATION =
+    (googleAdsEnrichment?.creativeAssociationLedger?.length || 0) > 0
+      ? "PASS"
+      : gateResults["G06"]?.verdict === "PASS"
+      ? "FAIL"
+      : "INSUFFICIENT_EVIDENCE";
   const ASYNC_RESOURCE_SAFETY = (barrierResult.passed && freeDiskAfterGB >= 15 && sqlitePreCheck.ok && sqlitePostCheck.ok) ? "PASS" : "FAIL";
   const POLICY_SCENARIO_TESTS = backtestResult?.policyScenarioVerdict === "PASS" ? "PASS" : "FAIL";
   const HISTORICAL_DEV_BACKTEST = backtestResult?.historicalDevReplay?.demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_EVIDENCE";

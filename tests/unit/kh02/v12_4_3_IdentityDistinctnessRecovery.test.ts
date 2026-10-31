@@ -1424,7 +1424,7 @@ describe("SWAI KH-02 V12.4.3 — Mandatory 50-Case Regression Suite", () => {
     });
 
     it("F46: Runtime release version is updated to 12.4.3 across service and UI", () => {
-      expect(["12.4.3", "12.4.3.1", "12.4.3.2", "12.4.3.2.1", "12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
+      expect(["12.4.3", "12.4.3.1", "12.4.3.2", "12.4.3.2.1", "12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3"]).toContain(SWAI_KH02_RELEASE_VERSION);
       const uiSource = fs.readFileSync(
         path.resolve(process.cwd(), "src/app/products/page.tsx"),
         "utf8"
