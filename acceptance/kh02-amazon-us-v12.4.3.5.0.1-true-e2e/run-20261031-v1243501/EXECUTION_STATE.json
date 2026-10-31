@@ -1,0 +1,11 @@
+{
+  "releaseVersion": "12.4.3.5.0.1",
+  "branch": "feature/kh02-amazon-us-pilot-v12.4.3.5.0",
+  "baseSha": "c1833362cf6634917f2ff94df19d97c393247d94",
+  "previousHeadSha": "30d13d0ca4fd0d9dce901a8eca5fbb53163c007d",
+  "previousCodeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "codeSha": "75de4e26cbef061e2fe000a0ade0b711a9bd5e38",
+  "startedAt": "2026-10-31T20:12:33.044Z",
+  "completedAt": "2026-10-31T20:13:09.774Z",
+  "status": "COMPLETED"
+}
