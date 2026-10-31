@@ -115,6 +115,7 @@ async function computeSqliteSnapshotDigest(): Promise<{
 }> {
   const [jobs, evidences, products] = await Promise.all([
     prisma.syncJob.findMany({
+      where: { jobType: { not: "KH02_WORKER_HEARTBEAT" } },
       orderBy: { id: "asc" },
       select: { id: true, status: true, createdAt: true, completedAt: true, resultJson: true },
     }),
@@ -665,23 +666,50 @@ async function main() {
     codeSha,
     evaluatedAt: new Date().toISOString(),
     opportunityScoreWeightsUnchanged: true,
-    fixturesRejectedByLiveGate: gateEval.counts.fixtureOrCachedRowsExcludedFromLive === 3,
+    fixturesRejectedByLiveGate:
+      gateEval.counts.authorizedLiveRows === 0 &&
+      gateEval.counts.fixtureOrCachedRowsExcludedFromLive + gateEval.counts.rejectedCount === 3,
     disabledProviderNotCountedAsLive: gateEval.counts.verifiedLiveUsProductIdentitiesCount === 0,
     evaluation: gateEval,
   });
 
-  // ── 3. Full Unit + Integration Suites ──────────────────────────────────────
-  console.log("[Stage 3/7] Running full Vitest unit and integration test suites...");
+  // ── 3, 4 & 6 (Concurrent Async Wave): Unit + Integration + Next Build + Historical Backtest ──
+  console.log(
+    "[Stages 3, 4 & 6/7] Running Vitest unit, Vitest integration, fresh Next.js build, and historical DEV/HOLDOUT backtest concurrently..."
+  );
   const unitJsonFile = path.join(os.tmpdir(), `vitest-unit-${Date.now()}.json`);
   const intJsonFile = path.join(os.tmpdir(), `vitest-int-${Date.now()}.json`);
 
-  execSync(`npx vitest run tests/unit/kh02/ --reporter=json --outputFile=${unitJsonFile}`, {
-    stdio: "inherit",
-  });
-  execSync(
-    `npx vitest run tests/integration/kh02/ --reporter=json --outputFile=${intJsonFile}`,
-    { stdio: "inherit" }
-  );
+  const runShellAsync = (cmd: string): Promise<{ exitCode: number; durationMs: number }> =>
+    new Promise((resolve) => {
+      const t0 = Date.now();
+      const child = spawn(cmd, {
+        cwd: process.cwd(),
+        shell: true,
+        stdio: "inherit",
+      });
+      child.on("close", (code) => {
+        resolve({ exitCode: code ?? 1, durationMs: Date.now() - t0 });
+      });
+      child.on("error", () => {
+        resolve({ exitCode: 1, durationMs: Date.now() - t0 });
+      });
+    });
+
+  const [unitRes, intRes, buildRes, btOut] = await Promise.all([
+    runShellAsync(`npx vitest run tests/unit/kh02 --reporter=json --outputFile=${unitJsonFile}`),
+    runShellAsync(
+      `npx vitest run tests/integration/kh02 --reporter=json --outputFile=${intJsonFile}`
+    ),
+    runShellAsync("npm run build"),
+    runBacktestV12_4_3_4_2({ outputDir: OUTPUT_DIR }),
+  ]);
+
+  if (unitRes.exitCode !== 0 || intRes.exitCode !== 0) {
+    throw new Error(
+      `Vitest failed: unitExit=${unitRes.exitCode}, intExit=${intRes.exitCode}`
+    );
+  }
 
   const unitReport = JSON.parse(fs.readFileSync(unitJsonFile, "utf8"));
   const intReport = JSON.parse(fs.readFileSync(intJsonFile, "utf8"));
@@ -737,25 +765,16 @@ async function main() {
     }),
   });
 
-  // ── 4. Fresh Next.js Production Build ──────────────────────────────────────
-  console.log("[Stage 4/7] Running fresh Next.js production build (`npm run build`)...");
-  const buildStartMs = Date.now();
-  let buildExitCode = 0;
-  try {
-    execSync("npm run build", { stdio: "inherit" });
-  } catch (err: any) {
-    buildExitCode = err?.status || 1;
-  }
   writeArtifact("BUILD_EXECUTION_REPORT.json", {
     version: VERSION,
     codeSha,
     evaluatedAt: new Date().toISOString(),
-    buildStatus: buildExitCode === 0 ? "BUILD_PASS" : "BUILD_FAIL",
-    exitCode: buildExitCode,
-    durationMs: Date.now() - buildStartMs,
+    buildStatus: buildRes.exitCode === 0 ? "BUILD_PASS" : "BUILD_FAIL",
+    exitCode: buildRes.exitCode,
+    durationMs: buildRes.durationMs,
   });
-  if (buildExitCode !== 0) {
-    throw new Error(`Next.js build failed with exit code ${buildExitCode}`);
+  if (buildRes.exitCode !== 0) {
+    throw new Error(`Next.js build failed with exit code ${buildRes.exitCode}`);
   }
 
   // ── 5. Isolated Next Server + 3-Way SQLite/HTTP/Chromium Parity + Read-Only Proof ──
@@ -990,14 +1009,14 @@ async function main() {
     await cardSection.waitFor({ state: "visible", timeout: 15000 });
 
     const domAttrs = {
-      asin: await cardSection.getAttribute("data-asin"),
-      canonicalAmazonUrl: await cardSection.getAttribute("data-canonical-url"),
-      identityMatch: await cardSection.getAttribute("data-identity-match"),
-      status: await cardSection.getAttribute("data-status"),
-      observedAt: await cardSection.getAttribute("data-observed-at"),
-      observationClass: await cardSection.getAttribute("data-observation-class"),
-      rawEvidenceHash: await cardSection.getAttribute("data-raw-hash"),
-      extractedFieldsHash: await cardSection.getAttribute("data-extracted-hash"),
+      asin: await cardSection.getAttribute("data-amazon-asin"),
+      canonicalAmazonUrl: await cardSection.getAttribute("data-amazon-canonical-url"),
+      identityMatch: await cardSection.getAttribute("data-amazon-identity-match"),
+      status: await cardSection.getAttribute("data-amazon-status"),
+      observedAt: await cardSection.getAttribute("data-amazon-observed-at"),
+      observationClass: await cardSection.getAttribute("data-amazon-provenance"),
+      rawEvidenceHash: await cardSection.getAttribute("data-amazon-hash"),
+      extractedFieldsHash: await cardSection.getAttribute("data-amazon-extracted-hash"),
     };
 
     // Check tabs exist and remain unregressed
@@ -1119,10 +1138,7 @@ async function main() {
     await prisma.researchProduct.deleteMany({ where: { id: parityProductId } });
   }
 
-  // ── 6. Historical DEV/HOLDOUT Backtest & Point-in-Time Audit ───────────────
-  console.log("[Stage 6/7] Running historical DEV/HOLDOUT backtest & point-in-time Amazon lookahead audit...");
-  const btOut = await runBacktestV12_4_3_4_2({ outputDir: OUTPUT_DIR });
-
+  // ── 6. Historical DEV/HOLDOUT Backtest & Point-in-Time Audit Artifacts ─────
   writeArtifact("HISTORICAL_DEV_BACKTEST.json", {
     version: VERSION,
     codeSha,
