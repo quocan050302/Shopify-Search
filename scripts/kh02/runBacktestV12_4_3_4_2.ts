@@ -53,6 +53,18 @@ export interface PolicyScenarioReport {
   scenarios: PolicyScenarioResult[];
 }
 
+export interface ProductHistoricalEvidenceRecord {
+  candidateId: string;
+  title: string;
+  storeDomain: string | null;
+  familyKey: string;
+  observationCount: number;
+  coveredDays: number;
+  status: string;
+  eligibleForEvergreen: boolean;
+  sources: string[];
+}
+
 export interface HistoricalReplayResult {
   split: "DEV" | "HOLDOUT";
   windowStart: string;
@@ -68,6 +80,7 @@ export interface HistoricalReplayResult {
     storeDomain: string | null;
     familyKey: string;
   }>;
+  productEvidenceLedger: ProductHistoricalEvidenceRecord[];
   distinctFamiliesCount: number;
   futureLeakageDetected: boolean;
   futureLeakageCount: number;
@@ -739,35 +752,70 @@ export async function runRealHistoricalProductReplay(): Promise<{
       topic: "Pet Gadgets",
     });
 
-    // RC-07: Real point-in-time historical demand query & evaluation (no hard-coded false)
-    const historicalDemandObservations = await prisma.productDemandObservation.findMany({
-      where: {
-        periodEnd: { lte: asOf },
-        observedAt: { lte: asOf },
-      },
-      take: 100,
-    });
+    // RC-07: Per-product point-in-time historical demand query & evaluation
+    const productEvidenceLedger: ProductHistoricalEvidenceRecord[] = [];
+    let hasAnyCandidateLongitudinalDemand = false;
 
-    let hasLongitudinalDemand = false;
-    let demandAssessmentDetail = "No historical demand observations found <= asOf";
-    if (historicalDemandObservations.length >= 3) {
-      const demandAssessment = evaluateDemandHistoryEvidence(
-        historicalDemandObservations as any[],
-        { minimumCoveredDays: 60 }
-      );
-      hasLongitudinalDemand = Boolean(
-        demandAssessment.status === "VERIFIED" && demandAssessment.eligibleForEvergreen
-      );
-      demandAssessmentDetail = `Evaluated ${historicalDemandObservations.length} historical observations: coveredDays=${demandAssessment.coveredDays}, status=${demandAssessment.status}`;
+    for (const c of shortlistRes.shortlist) {
+      const candidateId = c.candidateId;
+      const researchProductId = (c as any).researchProductId;
+
+      const orClauses: Array<{ productId?: string; keyword?: string }> = [];
+      if (researchProductId) orClauses.push({ productId: String(researchProductId) });
+      if (c.title) orClauses.push({ keyword: String(c.title) });
+      if (c.canonicalProductName) orClauses.push({ keyword: String(c.canonicalProductName) });
+
+      const candidateDemandObs = await prisma.productDemandObservation.findMany({
+        where: {
+          periodEnd: { lte: asOf },
+          observedAt: { lte: asOf },
+          ...(orClauses.length > 0 ? { OR: orClauses } : {}),
+        },
+      });
+
+      if (candidateDemandObs.length >= 3) {
+        const assessment = evaluateDemandHistoryEvidence(candidateDemandObs as any[], { minimumCoveredDays: 60 });
+        const eligible = Boolean(assessment.status === "VERIFIED" && assessment.eligibleForEvergreen);
+        if (eligible) {
+          hasAnyCandidateLongitudinalDemand = true;
+        }
+        productEvidenceLedger.push({
+          candidateId,
+          title: c.title,
+          storeDomain: c.storeDomain || null,
+          familyKey: c.familyKey || "replayed_family",
+          observationCount: candidateDemandObs.length,
+          coveredDays: assessment.coveredDays,
+          status: assessment.status,
+          eligibleForEvergreen: eligible,
+          sources: Array.from(new Set(candidateDemandObs.map((o) => o.source))),
+        });
+      } else {
+        productEvidenceLedger.push({
+          candidateId,
+          title: c.title,
+          storeDomain: c.storeDomain || null,
+          familyKey: c.familyKey || "replayed_family",
+          observationCount: candidateDemandObs.length,
+          coveredDays: 0,
+          status: "INSUFFICIENT_HISTORY",
+          eligibleForEvergreen: false,
+          sources: Array.from(new Set(candidateDemandObs.map((o) => o.source))),
+        });
+      }
     }
 
-    const demandCoverageStatus = hasLongitudinalDemand
+    const demandCoverageStatus = hasAnyCandidateLongitudinalDemand
       ? "AUTHORITATIVE_DEMAND_CONFIRMED"
       : "INSUFFICIENT_HISTORICAL_EVIDENCE";
 
+    const demandAssessmentDetail = productEvidenceLedger
+      .map((p) => `${p.title}: ${p.observationCount} obs (${p.status}, eligible=${p.eligibleForEvergreen})`)
+      .join("; ");
+
     return {
       split,
-      windowStart: split === "DEV" ? "2026-07-19T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
+      windowStart: split === "DEV" ? "2026-06-01T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
       windowEnd: split === "DEV" ? DEV_CUTOFF.toISOString() : HOLDOUT_CUTOFF.toISOString(),
       asOfTimestamp: asOf.toISOString(),
       historicalObservationCount: adsList.length,
@@ -780,6 +828,7 @@ export async function runRealHistoricalProductReplay(): Promise<{
         storeDomain: c.storeDomain || null,
         familyKey: c.familyKey || "replayed_family",
       })),
+      productEvidenceLedger,
       distinctFamiliesCount: shortlistRes.distinctFamiliesCount ?? 0,
       futureLeakageDetected: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length > 0,
       futureLeakageCount: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length,
@@ -810,7 +859,11 @@ export async function runRealHistoricalProductReplay(): Promise<{
 export async function runBacktestV12_4_3_4_2(
   options: { outputDir?: string } = {}
 ): Promise<FullBacktestOutput> {
-  const outDir = options.outputDir || path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure");
+  const outDir =
+    options.outputDir ||
+    (process.env.SWAI_ACCEPTANCE_OUTPUT_DIR
+      ? path.resolve(process.cwd(), process.env.SWAI_ACCEPTANCE_OUTPUT_DIR)
+      : path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure"));
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }

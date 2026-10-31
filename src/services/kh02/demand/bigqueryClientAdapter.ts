@@ -16,6 +16,7 @@
 
 import { createHash } from "crypto";
 import fs from "fs";
+import path from "path";
 import { GoogleAuth } from "google-auth-library";
 
 export interface BigQueryRow {
@@ -171,6 +172,27 @@ export async function getGoogleCloudAccessToken(
         error: "Malformed GOOGLE_CLOUD_KEYFILE_JSON (invalid JSON syntax).",
       };
     }
+  }
+
+  // 3. Fast-fail if local ADC file is absent on desktop/workstation environments to avoid GCE metadata server TCP timeout
+  const defaultAdcPath = process.platform === "win32"
+    ? (process.env.APPDATA ? path.join(process.env.APPDATA, "gcloud", "application_default_credentials.json") : null)
+    : (process.env.HOME ? path.join(process.env.HOME, ".config", "gcloud", "application_default_credentials.json") : null);
+
+  const isGcpEnvironment = Boolean(
+    process.env.GCE_METADATA_HOST ||
+    process.env.K_SERVICE ||
+    process.env.GAE_SERVICE ||
+    process.env.CLOUD_RUN_JOB
+  );
+
+  if (!credPath && !keyfileJson && (!defaultAdcPath || !fs.existsSync(defaultAdcPath)) && !isGcpEnvironment) {
+    return {
+      token: null,
+      authType: "NONE",
+      errorCode: "MISSING_CREDENTIALS",
+      error: "Google Cloud Application Default Credentials (ADC) not configured. No service account key, GOOGLE_APPLICATION_CREDENTIALS, or local gcloud ADC file found.",
+    };
   }
 
   try {

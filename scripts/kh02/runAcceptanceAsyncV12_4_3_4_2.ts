@@ -94,7 +94,9 @@ const V12_4_3_3_BASELINE_SHA = V12_4_3_4_2_BASELINE_SHA;
 const REVIEWED_HEAD_SHA = "21a72d5de3c2b129eb7a798b00f342c1cb6fa67f";
 const EARLIER_TESTED_SOURCE_SHA = "21a72d5de3c2b129eb7a798b00f342c1cb6fa67f";
 const EARLIER_ARTIFACT_COMMIT_SHA = "21a72d5de3c2b129eb7a798b00f342c1cb6fa67f";
-const OUTPUT_DIR = path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure");
+const OUTPUT_DIR = process.env.SWAI_ACCEPTANCE_OUTPUT_DIR
+  ? path.resolve(process.cwd(), process.env.SWAI_ACCEPTANCE_OUTPUT_DIR)
+  : path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure");
 const LOGS_DIR = path.join(OUTPUT_DIR, "logs");
 const SCREENSHOTS_DIR = path.join(OUTPUT_DIR, "screenshots");
 
