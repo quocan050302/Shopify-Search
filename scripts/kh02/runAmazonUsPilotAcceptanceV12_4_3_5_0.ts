@@ -897,10 +897,13 @@ async function main() {
 
   let serverProc: ChildProcess | null = null;
   try {
-    serverProc = spawn("npx", ["next", "start", "-p", String(port)], {
+    serverProc = spawn("npx", ["next", "start", "-H", "127.0.0.1", "-p", String(port)], {
       cwd: process.cwd(),
       env: {
         ...process.env,
+        HOST: "127.0.0.1",
+        HOSTNAME: "127.0.0.1",
+        PORT: String(port),
         NODE_ENV: "production",
         KH02_AMAZON_US_ENABLED: "false",
         KH02_AMAZON_US_LIVE_ALLOWED: "false",
