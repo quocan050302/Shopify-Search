@@ -1,0 +1,181 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "evaluatedAt": "2026-10-31T01:57:48.332Z",
+  "totalRootCauses": 12,
+  "resolvedCount": 12,
+  "rootCauses": [
+    {
+      "rcId": "RC-01",
+      "title": "Missing OAuth Access Tokens",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/demand/bigqueryClientAdapter.ts",
+        "package.json"
+      ],
+      "correctedFunctions": [
+        "getGoogleCloudAccessToken()",
+        "verifyGoogleCloudProjectBilling()",
+        "executeBigQueryTrendsSearch()"
+      ],
+      "regressionProof": "GoogleAuth integration verified in v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts; Bearer REDACTED attached to upstream REST requests.",
+      "remainingLimitations": "Local development without ADC or Google credentials fails closed with BLOCKED_FREE_SANDBOX_NOT_VERIFIED."
+    },
+    {
+      "rcId": "RC-02",
+      "title": "Unsafe Billing-Verification Bypass",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/demand/bigqueryClientAdapter.ts"
+      ],
+      "correctedFunctions": [
+        "verifyGoogleCloudProjectBilling()"
+      ],
+      "regressionProof": "Removed ambient bypasses; mock bypass strictly restricted to NODE_ENV===test and valid-sandbox-proj.",
+      "remainingLimitations": "None; production code strictly queries Google Cloud Billing REST API."
+    },
+    {
+      "rcId": "RC-03",
+      "title": "Invalid Google Trends SQL Assumptions & Top Terms / Explore Conflation",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/demand/bigqueryClientAdapter.ts",
+        "src/services/kh02/demand/demandProviderRegistry.ts",
+        "src/services/kh02/demand/temporalDemandEngine.ts"
+      ],
+      "correctedFunctions": [
+        "buildGoogleTrendsTopTermsQuery()",
+        "evaluateDemandSourceAuthority()",
+        "GoogleTrendsBigQueryProvider.fetchSeries()"
+      ],
+      "regressionProof": "SQL construction verified for US (top_terms) and International (international_top_terms with country_code); rank scores classified as ESTIMATED_OR_PROXY signals.",
+      "remainingLimitations": "Public dataset covers top/rising search terms; niche e-commerce queries return sparse results requiring Explore CSV import."
+    },
+    {
+      "rcId": "RC-04",
+      "title": "Incomplete BigQuery Asynchronous Job Handling",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/demand/bigqueryClientAdapter.ts"
+      ],
+      "correctedFunctions": [
+        "executeBigQueryTrendsSearch()",
+        "pollBigQueryJobCompletion()"
+      ],
+      "regressionProof": "Job polling with exponential backoff, error extraction, and row iteration tested in adversarial unit suite.",
+      "remainingLimitations": "Live asynchronous jobs require live sandbox credentials."
+    },
+    {
+      "rcId": "RC-05",
+      "title": "Fake Zero-Byte Accounting",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/demand/bigqueryClientAdapter.ts"
+      ],
+      "correctedFunctions": [
+        "executeBigQueryTrendsSearch()",
+        "getBigQueryAuditLedger()"
+      ],
+      "regressionProof": "Hardcoded 0 billed bytes removed; statistics.query.totalBytesBilled parsed directly from upstream response; 100MB query budget & 1GB cumulative budget enforced.",
+      "remainingLimitations": "None."
+    },
+    {
+      "rcId": "RC-06",
+      "title": "Historical Replay Metadata Leakage",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "replayPointInTime()",
+        "runRealHistoricalProductReplay()"
+      ],
+      "regressionProof": "Point-in-time replay strictly filters ad candidates and observations by asOf without accessing current ResearchProduct state; futureLeakageDetected===false.",
+      "remainingLimitations": "Ad observations reflect the historical snapshot stored in SQLite."
+    },
+    {
+      "rcId": "RC-07",
+      "title": "Historical Demand Hardcoded Unavailable",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "replayPointInTime()"
+      ],
+      "regressionProof": "Replaced hardcoded hasLongitudinalDemand=false with genuine query of prisma.productDemandObservation (observedAt<=asOf, periodEnd<=asOf) and evaluateDemandHistoryEvidence().",
+      "remainingLimitations": "Database currently contains sparse longitudinal historical series for long-tail products."
+    },
+    {
+      "rcId": "RC-08",
+      "title": "G21 Combines Unrelated Acceptance Requirements",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "main()"
+      ],
+      "regressionProof": "Decomposed G21 sub-gates: completion barrier, disk headroom, SQLite integrity, policy scenarios, point-in-time replay integrity, DEV/HOLDOUT backtest.",
+      "remainingLimitations": "None."
+    },
+    {
+      "rcId": "RC-09",
+      "title": "Google Creative Association Mismatch",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/evergreenResearchOrchestrator.ts",
+        "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "runEvergreenProductResearch()",
+        "saveArtifact()"
+      ],
+      "regressionProof": "Exposed googleAds enrichment telemetry directly on EvergreenLeaderboardResult; reconciled creativeAssociationLedger with retrieved creatives.",
+      "remainingLimitations": "None."
+    },
+    {
+      "rcId": "RC-10",
+      "title": "G15/G16 Qualification Truth",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "src/services/kh02/identity/productCandidateDiscovery.ts",
+        "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "isCandidateLiveVerified()",
+        "selectTopResearchShortlist()"
+      ],
+      "regressionProof": "Fail-closed identity evaluation maintained: UAHPET and KittySpout VERIFIED (2/3); UprootClean PROBABLE; G16 honestly reported as INSUFFICIENT_EVIDENCE; G15 0/3 honestly reported.",
+      "remainingLimitations": "Requires 3rd merchant candidate with JSON-LD schema for G16; requires Explore CSV imports for G15."
+    },
+    {
+      "rcId": "RC-11",
+      "title": "Source SHA Attribution Dirty Working Tree",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "main()"
+      ],
+      "regressionProof": "Two-commit lifecycle implemented: Commit A establishes definitive testedSourceSha from clean committed source; acceptance runs against that SHA; Commit B stages and commits acceptance artifacts.",
+      "remainingLimitations": "None."
+    },
+    {
+      "rcId": "RC-12",
+      "title": "Test Execution & Coverage Accounting",
+      "status": "RESOLVED",
+      "changedFiles": [
+        "tests/integration/kh02BrowserAcceptance.test.ts",
+        "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+      ],
+      "correctedFunctions": [
+        "runBoundedAsyncJobPool()",
+        "spawnFreshChildSuite()"
+      ],
+      "regressionProof": "Playwright tests use ctx.skip() when offline instead of fake PASS; bounded worker concurrency (--maxWorkers=1, --fileParallelism=false); valid JUnit XML generated.",
+      "remainingLimitations": "None."
+    }
+  ]
+}
