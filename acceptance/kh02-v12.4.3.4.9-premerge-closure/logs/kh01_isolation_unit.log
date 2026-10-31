@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh01Security.test.ts (30 tests) 248ms
+ ✓ tests/unit/dbIsolation.test.ts (11 tests) 86ms
+
+ Test Files  2 passed (2)
+      Tests  41 passed (41)
+   Start at  19:14:01
+   Duration  868ms (tests 48%, setup 22%, import 21%, transform 8%, worker 1%)
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.9-premerge-closure/json_reports/kh01_isolation_unit.json

@@ -1,0 +1,44 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:20.237Z",
+  "version": "12.4.3.4.9",
+  "acceptanceRunId": "autoclosure_20261031121351",
+  "originalResearchRunId": "kh02_run_1793448875844_coess",
+  "researchRunId": "kh02_run_1793448875844_coess",
+  "runExecutionMode": "FRESH_LIVE_CURRENT_RUN",
+  "replayModeDetected": false,
+  "setReconciliation": {
+    "rawCreativeIds": [
+      "CR15687592804278599681",
+      "CR16936723500461195265",
+      "CR10612806541364953089",
+      "CR03442952402741755905",
+      "CR10572287106929917953",
+      "CR10069218206024728577",
+      "CR18069901272336564225",
+      "CR01340272006737690625",
+      "CR09345042876892971009"
+    ],
+    "normalizedCreativeIds": [
+      "CR15687592804278599681",
+      "CR16936723500461195265",
+      "CR10612806541364953089",
+      "CR03442952402741755905",
+      "CR10572287106929917953",
+      "CR10069218206024728577",
+      "CR18069901272336564225",
+      "CR01340272006737690625",
+      "CR09345042876892971009"
+    ],
+    "rejectedCreativeIds": [],
+    "unaccountedRawCreativeIds": [],
+    "unknownNormalizedCreativeIds": [],
+    "unknownRejectedCreativeIds": [],
+    "overlapNormalizedAndRejectedIds": [],
+    "runIdMismatchCreativeIds": [],
+    "unknownAssociationCreativeIds": [],
+    "unknownAssociationCandidateIds": [],
+    "lineageViolations": [],
+    "setInvariantPassed": true
+  },
+  "pipelineInvariantsSatisfied": true
+}

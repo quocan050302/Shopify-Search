@@ -1,0 +1,154 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:20.236Z",
+  "researchRunId": "kh02_run_1793448875844_coess",
+  "acceptanceRunId": "autoclosure_20261031121351",
+  "originalResearchRunId": "kh02_run_1793448875844_coess",
+  "runExecutionMode": "FRESH_LIVE_CURRENT_RUN",
+  "replayModeDetected": false,
+  "transportStatus": "CONNECTED",
+  "liveCreativesRetrievedCount": 9,
+  "upstreamRequestIdVerifiedCount": 0,
+  "missingUpstreamRequestIdCount": 9,
+  "verifiedLocalInvocationOnlyCount": 9,
+  "rejectedUnverifiedLineageCount": 0,
+  "creativeLineageMatrix": [
+    {
+      "creativeId": "CR15687592804278599681",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1793448895754",
+      "responseEvidenceHash": "3b3a5bf270fc431c5ab69a9eb3acd2c648bf738e3f391cdc7deeb31e759b8da0",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR16936723500461195265",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1793448895754",
+      "responseEvidenceHash": "3b3a5bf270fc431c5ab69a9eb3acd2c648bf738e3f391cdc7deeb31e759b8da0",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR10612806541364953089",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1793448895754",
+      "responseEvidenceHash": "3b3a5bf270fc431c5ab69a9eb3acd2c648bf738e3f391cdc7deeb31e759b8da0",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR03442952402741755905",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1793448905894",
+      "responseEvidenceHash": "646a5869b0cc5c48d0c1540b2ce3881d7d4e136cff354dce7f0a1b69276bf8a4",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR10572287106929917953",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1793448905894",
+      "responseEvidenceHash": "646a5869b0cc5c48d0c1540b2ce3881d7d4e136cff354dce7f0a1b69276bf8a4",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR10069218206024728577",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1793448905894",
+      "responseEvidenceHash": "646a5869b0cc5c48d0c1540b2ce3881d7d4e136cff354dce7f0a1b69276bf8a4",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR18069901272336564225",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uprootclean.com_AR17310456840001159169_1793448914212",
+      "responseEvidenceHash": "c80e04cc67753e31306a77a62de6335ccb1d29f39e648c601dd6f5d31334e4e6",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR01340272006737690625",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uprootclean.com_AR17310456840001159169_1793448914212",
+      "responseEvidenceHash": "c80e04cc67753e31306a77a62de6335ccb1d29f39e648c601dd6f5d31334e4e6",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    },
+    {
+      "creativeId": "CR09345042876892971009",
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "mcpInvocationRef": "google_mcp_inv_uprootclean.com_AR17310456840001159169_1793448914212",
+      "responseEvidenceHash": "c80e04cc67753e31306a77a62de6335ccb1d29f39e648c601dd6f5d31334e4e6",
+      "lineageMethod": "VERIFIED_LOCAL_INVOCATION_ONLY",
+      "verified": true,
+      "rejectionReason": null
+    }
+  ],
+  "exactProductSkuMatchesCount": 1,
+  "probableProductMatchesCount": 8,
+  "brandOnlyMatchesCount": 0,
+  "pipelineInvariantPassed": true,
+  "setReconciliation": {
+    "rawCreativeIds": [
+      "CR15687592804278599681",
+      "CR16936723500461195265",
+      "CR10612806541364953089",
+      "CR03442952402741755905",
+      "CR10572287106929917953",
+      "CR10069218206024728577",
+      "CR18069901272336564225",
+      "CR01340272006737690625",
+      "CR09345042876892971009"
+    ],
+    "normalizedCreativeIds": [
+      "CR15687592804278599681",
+      "CR16936723500461195265",
+      "CR10612806541364953089",
+      "CR03442952402741755905",
+      "CR10572287106929917953",
+      "CR10069218206024728577",
+      "CR18069901272336564225",
+      "CR01340272006737690625",
+      "CR09345042876892971009"
+    ],
+    "rejectedCreativeIds": [],
+    "unaccountedRawCreativeIds": [],
+    "unknownNormalizedCreativeIds": [],
+    "unknownRejectedCreativeIds": [],
+    "overlapNormalizedAndRejectedIds": [],
+    "runIdMismatchCreativeIds": [],
+    "unknownAssociationCreativeIds": [],
+    "unknownAssociationCandidateIds": [],
+    "lineageViolations": [],
+    "setInvariantPassed": true
+  },
+  "subGates": {
+    "G06_TRANSPORT": "PASS",
+    "G06_LIVE_RETRIEVAL": "PASS",
+    "G06_CREATIVE_PIPELINE": "PASS",
+    "G06_PIPELINE_RECONCILIATION": "PASS",
+    "GOOGLE_PRODUCT_ASSOCIATION": "PASS",
+    "GOOGLE_EXACT_PRODUCT_EVIDENCE": "PASS"
+  },
+  "overallG06Verdict": "PASS",
+  "overallG06Reason": "Retrieved and set-reconciled 9 live Google Ads creatives (8 probable product matches, 0 brand-only matches, 1 exact SKU matches)."
+}
