@@ -1,0 +1,9 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.544Z",
+  "version": "12.4.3.4.3",
+  "usesProductionClustering": true,
+  "usesProductionRelevance": true,
+  "usesProductionDistinctness": true,
+  "usesProductionEvergreenScoring": true,
+  "parityVerified": true
+}

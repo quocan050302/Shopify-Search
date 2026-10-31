@@ -1,0 +1,261 @@
+{
+  "runId": "autoclosure_20261031023848",
+  "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "baselineSha": "21c357df55dfe115993d3186726948eacefb1a7c",
+  "sourceShaUnderTest": "21c357df55dfe115993d3186726948eacefb1a7c",
+  "phaseId": "ALL_PHASES_COMPLETED",
+  "phaseStatus": "COMPLETED",
+  "startedAt": "2026-10-31T02:38:48.551Z",
+  "completedAt": "2026-10-31T02:40:13.545Z",
+  "jobsScheduled": 0,
+  "jobsCompleted": 6,
+  "jobsFailed": 0,
+  "jobsSkipped": 0,
+  "blockers": [
+    "BIGQUERY_ADC_CREDENTIALS_MISSING"
+  ],
+  "artifactHashes": {
+    "BIGQUERY_AUTH_AND_COST_AUDIT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/BIGQUERY_AUTH_AND_COST_AUDIT.json",
+      "sha256": "9142aa3514026855e0679b3a29327f724eedaeeeacecec5dc413ba78daa4dbd8",
+      "sizeBytes": 1068
+    },
+    "REAL_BIGQUERY_QUERY_PROOF.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REAL_BIGQUERY_QUERY_PROOF.json",
+      "sha256": "abe5fdce9ff4cab0d7d37b4125ce21b9b9d8b446d5a7a82041c1af8ba84f6925",
+      "sizeBytes": 677
+    },
+    "PRODUCT_KEYWORD_COVERAGE_MATRIX.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PRODUCT_KEYWORD_COVERAGE_MATRIX.json",
+      "sha256": "f398bfb07ac26f9c21e561b9713548ce72429774d8079938b8f4d565133520eb",
+      "sizeBytes": 9660
+    },
+    "REQUIRED_OWNER_CONFIGURATION.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REQUIRED_OWNER_CONFIGURATION.md",
+      "sha256": "c3f1e6e0b97c0a665353e9c7a499410b06ced6996e0a9451aa96f1aa8c9ce7c1",
+      "sizeBytes": 1454
+    },
+    "GOOGLE_FREE_SOURCE_FEASIBILITY.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_FREE_SOURCE_FEASIBILITY.md",
+      "sha256": "f4b8fd9e1e4014af96498a3c3a0c0436baceb5905fb852537f6ff12d9d01b3f0",
+      "sizeBytes": 1085
+    },
+    "G15_HISTORICAL_SOURCE_DECISION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/G15_HISTORICAL_SOURCE_DECISION.json",
+      "sha256": "88633ae9040237d0a78b14db2cdbd6b591c0c4e614af0cd65de389712638709e",
+      "sizeBytes": 525
+    },
+    "PHASE_1_RESULT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_1_RESULT.json",
+      "sha256": "e39dec452dad59dafc39197d800bc7d1b116d96b09d47285806f2b816b6deace",
+      "sizeBytes": 2284
+    },
+    "PHASE_1_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_1_REPORT.md",
+      "sha256": "6ee62ba68a7624f36129cd8cc3d2c49b8a75c7063b59445dcf28d9ea4ad2a2b2",
+      "sizeBytes": 739
+    },
+    "GOOGLE_MCP_REQUEST_TIMELINE.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_MCP_REQUEST_TIMELINE.json",
+      "sha256": "8e465e375c1ca3141c1ed0299ef324f4ad41211a406e1442fc3964ae9837f233",
+      "sizeBytes": 1197
+    },
+    "GOOGLE_RAW_CREATIVE_MANIFEST.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_RAW_CREATIVE_MANIFEST.json",
+      "sha256": "2a76a22f5b2e41d280fe710712b822d7d761c25b1de33681df1cb099f1fb6219",
+      "sizeBytes": 182
+    },
+    "GOOGLE_CREATIVE_NORMALIZATION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_CREATIVE_NORMALIZATION.json",
+      "sha256": "18a9709c7b374848906d168aaf331dd3b033e5cd008b3af65a96d1fa4b87a52a",
+      "sizeBytes": 252
+    },
+    "GOOGLE_PRODUCT_ASSOCIATION_LEDGER.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_PRODUCT_ASSOCIATION_LEDGER.json",
+      "sha256": "0105e26832de1878a476c9d9a86663cbd4d760cf5d8a95d28ef04dbe12fe4042",
+      "sizeBytes": 9119
+    },
+    "SAME_RUN_GOOGLE_RECONCILIATION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/SAME_RUN_GOOGLE_RECONCILIATION.json",
+      "sha256": "58c6fca4767ae1029d020913e1eaf666bc939312d90e54573c85801e3a97e57c",
+      "sizeBytes": 332
+    },
+    "GOOGLE_MCP_ROOT_CAUSE_AND_FIX.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/GOOGLE_MCP_ROOT_CAUSE_AND_FIX.md",
+      "sha256": "6fce4d467f1530064786165a16d192415fc0b140f2c1ae1504e1068c85a3cc7e",
+      "sizeBytes": 774
+    },
+    "PHASE_2_RESULT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_2_RESULT.json",
+      "sha256": "48737601201d4fa740dd1b8a74aebb505478a926baf36477c3c76a966013f63c",
+      "sizeBytes": 626
+    },
+    "PHASE_2_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_2_REPORT.md",
+      "sha256": "0c4fce17c078962768fcf532416a683b18969ecc206a54816411c21a7a40d3f5",
+      "sizeBytes": 572
+    },
+    "REAL_DEV_REPLAY.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REAL_DEV_REPLAY.json",
+      "sha256": "f101cfb48ec19090ae195e35e3280523176626eee172aebbfde55bda3983615e",
+      "sizeBytes": 2725
+    },
+    "REAL_HOLDOUT_REPLAY.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REAL_HOLDOUT_REPLAY.json",
+      "sha256": "5c466d124240b8c32b3ecf5e11b5ac45afe5f8783c377611fdc84d50a8db62ac",
+      "sizeBytes": 2801
+    },
+    "POLICY_SCENARIO_RESULTS.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/POLICY_SCENARIO_RESULTS.json",
+      "sha256": "bd91947c06b15e400b3e25038d0bf03b3a90900a5a39f6b1989fbaaa98a7db13",
+      "sizeBytes": 10057
+    },
+    "PRODUCT_HISTORICAL_EVIDENCE_LEDGER.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PRODUCT_HISTORICAL_EVIDENCE_LEDGER.json",
+      "sha256": "4b571c85f06ad7baa0569c8c6c269f872768c2d8035bb392f556a16541b749eb",
+      "sizeBytes": 2317
+    },
+    "AS_OF_SNAPSHOT_INTEGRITY.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/AS_OF_SNAPSHOT_INTEGRITY.json",
+      "sha256": "27cb4b5653a60ecbe02160f27a2f59f06aa0ccb4c5ca06e86f6b08c7c88ec430",
+      "sizeBytes": 346
+    },
+    "FUTURE_LEAKAGE_NEGATIVE_CONTROLS.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/FUTURE_LEAKAGE_NEGATIVE_CONTROLS.json",
+      "sha256": "38e3ec5bcd0dca1cf9e8d8b00f3c1f7a199a897d6d2d7427c84ecb418bf4ae0b",
+      "sizeBytes": 265
+    },
+    "PRODUCTION_REPLAY_PARITY.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PRODUCTION_REPLAY_PARITY.json",
+      "sha256": "a914124dfdb9a443b854aa884b27a1149e5b05a0eba1b92628222e8e17e591b3",
+      "sizeBytes": 251
+    },
+    "HISTORICAL_POINT_IN_TIME_AUDIT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "sha256": "b49bb22edbc1372d8debce3c3c774d5664b5b20785fa31557f096221b6979fbe",
+      "sizeBytes": 529
+    },
+    "HISTORICAL_DATA_GAP_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/HISTORICAL_DATA_GAP_REPORT.md",
+      "sha256": "f6ce6c640f847b7bb952dbe779799ceb5fa7becaa66217d7d54ac64255f03808",
+      "sizeBytes": 759
+    },
+    "PHASE_3_RESULT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_3_RESULT.json",
+      "sha256": "a44ce1309146872bbc769b408c283402c844ed9f9fdb92a17a5aec2d6dcea87d",
+      "sizeBytes": 781
+    },
+    "PHASE_3_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_3_REPORT.md",
+      "sha256": "a31217623e2cef4b2719759256f6390356ef90f5d08a39b6e95c170d300a098e",
+      "sizeBytes": 527
+    },
+    "G15_PRODUCT_LEVEL_PROOF.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/G15_PRODUCT_LEVEL_PROOF.json",
+      "sha256": "ac05940418b7c21a2319969d7d5d068cbd3ec01044cae415608901ff0bb935b6",
+      "sizeBytes": 1845
+    },
+    "G16_CURRENT_RUN_IDENTITY_LEDGER.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/G16_CURRENT_RUN_IDENTITY_LEDGER.json",
+      "sha256": "2e9f340696faee4c1d1b8fb20394201713de6c4763b64e1c8976a5e13d59cdf5",
+      "sizeBytes": 2040
+    },
+    "PRODUCT_RECOVERY_TRACE.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PRODUCT_RECOVERY_TRACE.json",
+      "sha256": "ce37bd57587f4fde09010f330d9a86426996d97b34aa0363d71c204c06c17e42",
+      "sizeBytes": 409
+    },
+    "TOP3_STATUS_RECONCILIATION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/TOP3_STATUS_RECONCILIATION.json",
+      "sha256": "6143922533e87bcd6632d331bde76dca81803e7f80ad43437a430cd174855e03",
+      "sizeBytes": 1133
+    },
+    "FREE_SOURCE_LIMITATION_DECISION.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/FREE_SOURCE_LIMITATION_DECISION.md",
+      "sha256": "c0b8c1509fc5223482acff52cf38bea760349c9c2221f9034420a41e1033c47f",
+      "sizeBytes": 1062
+    },
+    "BUSINESS_ACCEPTANCE_READINESS.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/BUSINESS_ACCEPTANCE_READINESS.md",
+      "sha256": "929f6ff100414be555783510896b04fb3c377b7f4d11a9e1008554d174bbacba",
+      "sizeBytes": 672
+    },
+    "PHASE_4_RESULT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_4_RESULT.json",
+      "sha256": "7b455f3aa3aa45e6baa381f1bf9e00c3ab7c3aaa2d3fd26727cf61f3e3cda005",
+      "sizeBytes": 539
+    },
+    "PHASE_4_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_4_REPORT.md",
+      "sha256": "b956ec7be12edc872d0c86dc7335de48ef7a71f6945af29286691330c14c786c",
+      "sizeBytes": 586
+    },
+    "FULL_REGRESSION_RESULTS.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/FULL_REGRESSION_RESULTS.json",
+      "sha256": "5aa0d2ca2b0fe6ba7b03d6914c1c0fb31c31f62f0a98d4122ff1e1d0177c8e6f",
+      "sizeBytes": 7447
+    },
+    "REGRESSION_RESULTS.junit.xml": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REGRESSION_RESULTS.junit.xml",
+      "sha256": "11dc6c6967c9e6be79376e0a3339f1265fddb0c9cf30b5be4f70b9eaeeceb5f5",
+      "sizeBytes": 1114
+    },
+    "CHROMIUM_EXECUTION_AUDIT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/CHROMIUM_EXECUTION_AUDIT.json",
+      "sha256": "5da31abe9f227d4367112224c6010cd5075586604fab5638fc600fc95e5c3d99",
+      "sizeBytes": 429
+    },
+    "SQLITE_HTTP_CHROMIUM_RECONCILIATION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/SQLITE_HTTP_CHROMIUM_RECONCILIATION.json",
+      "sha256": "2ca553ba907833e6ea9707a30f1e0f87a8883586dc7a6b4facc7fee2e38471d8",
+      "sizeBytes": 228
+    },
+    "ASYNC_WORKER_EXECUTION.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/ASYNC_WORKER_EXECUTION.json",
+      "sha256": "5598c9861cc02b5ceb0fe6d02c8f128d487b016ad5418c2a5ff0a7b3f0b13aa9",
+      "sizeBytes": 11717
+    },
+    "DISK_MEMORY_SQLITE_SAFETY.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/DISK_MEMORY_SQLITE_SAFETY.json",
+      "sha256": "24667f5139eee91b4a146ce6ab3737f9a15211f5423c1554cd4af59ec39b873b",
+      "sizeBytes": 226
+    },
+    "FINAL_RELEASE_GATE_MATRIX.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/FINAL_RELEASE_GATE_MATRIX.json",
+      "sha256": "76c311b1aa4261c3f1f0d7de4f0b835cc7e9b1685b2d1c114ee13a1014d46b12",
+      "sizeBytes": 5561
+    },
+    "REMAINING_BLOCKERS.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/REMAINING_BLOCKERS.md",
+      "sha256": "99e4f423dc4daca98cefe3f6492b06abc9e1b3de8675b50a3941bc1c1a5cab04",
+      "sizeBytes": 1010
+    },
+    "ROOT_CAUSE_CLOSURE_MATRIX.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/ROOT_CAUSE_CLOSURE_MATRIX.json",
+      "sha256": "4606d836c9926da6cdc281dc20614938be11b6ed14e62602cd5a0dab11e4f48b",
+      "sizeBytes": 2074
+    },
+    "SOURCE_SHA_PROVENANCE.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/SOURCE_SHA_PROVENANCE.json",
+      "sha256": "bd4308b2675a7cb410a8cdaa5b0625f182d2b9da5237fd92d84828d0b19492cd",
+      "sizeBytes": 292
+    },
+    "PHASE_5_RESULT.json": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_5_RESULT.json",
+      "sha256": "c87a96676bc2aec2aefe1db32f6fdfd86f7487cdc6d418911a7df5d78a7868ce",
+      "sizeBytes": 393
+    },
+    "PHASE_5_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/PHASE_5_REPORT.md",
+      "sha256": "141e90d67c9dba881b86a442e33ea1f55d862426d0354ce488c7de78e00a38d2",
+      "sizeBytes": 529
+    },
+    "FINAL_ACCEPTANCE_REPORT.md": {
+      "path": "acceptance/kh02-five-phase-autoclosure-autoclosure_20261031023848/FINAL_ACCEPTANCE_REPORT.md",
+      "sha256": "22ec8b14c2600ca09b569bdab32b9b9717acf01a4123ef08d58ae247dfc64da5",
+      "sizeBytes": 826
+    }
+  },
+  "nextPhase": null,
+  "globalStopReason": null
+}

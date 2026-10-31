@@ -1,0 +1,14 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.555Z",
+  "version": "12.4.3.4.3",
+  "researchRunId": "kh02_run_1793414382448_njsir",
+  "poolCandidatesEvaluated": 3,
+  "recoveryAttempted": true,
+  "additionalVerifiedFoundInPool": 0,
+  "recoveryResult": "ALL_VERIFIED_CANDIDATES_ALREADY_IN_SHORTLIST",
+  "shortlistOutcome": {
+    "verifiedCount": 2,
+    "probableCount": 1,
+    "syntheticBackupsFabricated": false
+  }
+}

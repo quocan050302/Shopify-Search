@@ -1,0 +1,9 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.543Z",
+  "version": "12.4.3.4.3",
+  "syntheticFutureAdRejected": true,
+  "syntheticFutureObservationRejected": true,
+  "actualFutureAdsInDevCount": 0,
+  "actualFutureAdsInHoldoutCount": 0,
+  "leakageSafeguardVerified": true
+}

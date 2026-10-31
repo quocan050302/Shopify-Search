@@ -1,0 +1,13 @@
+{
+  "evaluatedAt": "2026-10-31T02:38:49.209Z",
+  "status": "BLOCKED",
+  "jobId": null,
+  "dataset": "bigquery-public-data.google_trends.top_terms",
+  "region": "US",
+  "queryText": "SELECT term, rank, score, week FROM `bigquery-public-data.google_trends.top_terms` WHERE refresh_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) LIMIT 10",
+  "sqlHash": "8d2231361809e28c05f04a6bdc661261dff73a25822b8513d63f7af40349627a",
+  "bytesProcessed": 0,
+  "bytesBilled": null,
+  "rowCount": 0,
+  "reason": "BLOCKED_CONFIGURATION: Google Cloud Application Default Credentials (ADC) not configured. No service account key, GOOGLE_APPLICATION_CREDENTIALS, or local gcloud ADC file found."
+}
