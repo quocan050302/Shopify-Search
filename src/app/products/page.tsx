@@ -1504,6 +1504,65 @@ export default function ProductsPage() {
                                 </p>
                               </div>
                             )}
+
+                            {item.amazonEvidenceSummary?.visible && (
+                              <div
+                                data-testid="pf-amazon-us-evidence-section"
+                                data-candidate-id={item.candidateId}
+                                data-run-id={item.amazonEvidenceSummary.researchRunId}
+                                data-amazon-asin={item.amazonEvidenceSummary.asin || ""}
+                                data-amazon-parent-asin={item.amazonEvidenceSummary.parentAsin || ""}
+                                data-amazon-variation-asin={item.amazonEvidenceSummary.variationAsin || ""}
+                                data-amazon-canonical-url={item.amazonEvidenceSummary.canonicalAmazonUrl || ""}
+                                data-amazon-identity-match={item.amazonEvidenceSummary.identityMatch}
+                                data-amazon-status={item.amazonEvidenceSummary.status}
+                                data-amazon-observed-at={item.amazonEvidenceSummary.observedAt || ""}
+                                data-amazon-provenance={item.amazonEvidenceSummary.observationClass}
+                                data-amazon-hash={item.amazonEvidenceSummary.rawEvidenceHash || ""}
+                                data-amazon-extracted-hash={item.amazonEvidenceSummary.extractedFieldsHash || ""}
+                                data-amazon-invocation-ref={item.amazonEvidenceSummary.providerInvocationRef || ""}
+                                data-amazon-request-id={item.amazonEvidenceSummary.providerRequestId || ""}
+                                className="mt-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
+                                    Amazon US Pilot Evidence
+                                  </span>
+                                  <span
+                                    data-testid="pf-amazon-us-status-badge"
+                                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                                      item.amazonEvidenceSummary.status === "IDENTITY_VERIFIED"
+                                        ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                                        : item.amazonEvidenceSummary.status === "PARTIAL" ||
+                                          item.amazonEvidenceSummary.status === "OBSERVED_UNVERIFIED"
+                                        ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                                        : "bg-slate-800 text-slate-300 border-slate-700"
+                                    }`}
+                                  >
+                                    {item.amazonEvidenceSummary.status}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 text-[11px] text-slate-300 font-mono">
+                                  <span>
+                                    ASIN: {item.amazonEvidenceSummary.asin || "N/A"} ·{" "}
+                                    {item.amazonEvidenceSummary.identityMatch}
+                                  </span>
+                                  {item.amazonEvidenceSummary.canonicalAmazonUrl && (
+                                    <a
+                                      href={item.amazonEvidenceSummary.canonicalAmazonUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-indigo-400 hover:text-indigo-300 underline truncate max-w-[140px]"
+                                    >
+                                      Amazon US Link
+                                    </a>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 leading-tight">
+                                  {item.amazonEvidenceSummary.nonInflationNotice}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -2552,6 +2611,80 @@ export default function ProductsPage() {
                       </a>
                     </div>
                   )}
+
+                  {(() => {
+                    const amz =
+                      drawerCandidate.canonicalCard?.amazonEvidenceSummary ||
+                      drawerCandidate.candidate.amazonEvidenceSummary ||
+                      drawerOverviewData?.amazonEvidenceSummary ||
+                      null;
+                    if (!amz || !amz.visible) return null;
+                    return (
+                      <div
+                        data-testid="pf-drawer-amazon-us-panel"
+                        data-candidate-id={amz.candidateId}
+                        data-run-id={amz.researchRunId}
+                        data-amazon-asin={amz.asin || ""}
+                        data-amazon-canonical-url={amz.canonicalAmazonUrl || ""}
+                        data-amazon-identity-match={amz.identityMatch}
+                        data-amazon-status={amz.status}
+                        data-amazon-observed-at={amz.observedAt || ""}
+                        data-amazon-provenance={amz.observationClass}
+                        data-amazon-hash={amz.rawEvidenceHash || ""}
+                        className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-white text-xs sm:text-sm">
+                            Amazon US Product Evidence Pilot
+                          </h3>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">
+                            {amz.status} · {amz.identityMatch}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              ASIN / Parent ASIN
+                            </span>
+                            <span className="text-slate-200">
+                              {amz.asin || "N/A"}
+                              {amz.parentAsin ? ` (Parent: ${amz.parentAsin})` : ""}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Provenance / Scope
+                            </span>
+                            <span className="text-slate-200">
+                              {amz.observationClass} · {amz.verificationScope || "UNVERIFIED"}
+                            </span>
+                          </div>
+                        </div>
+                        {amz.canonicalAmazonUrl && (
+                          <div className="text-xs font-mono truncate">
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Canonical Amazon US URL
+                            </span>
+                            <a
+                              href={amz.canonicalAmazonUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-indigo-400 hover:text-indigo-300 underline"
+                            >
+                              {amz.canonicalAmazonUrl}
+                            </a>
+                          </div>
+                        )}
+                        <div className="text-[10px] font-mono text-slate-400 break-all">
+                          Observed: {amz.observedAt || "N/A"} · Hash:{" "}
+                          {amz.rawEvidenceHash ? amz.rawEvidenceHash.slice(0, 16) : "N/A"}
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+                          {amz.nonInflationNotice}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

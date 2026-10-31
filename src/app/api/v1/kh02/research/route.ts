@@ -23,6 +23,10 @@ import {
   updateKH02ResearchRunStatus,
   WorkspacePersistenceError,
 } from "@/services/kh02/persistence/kh02PersistenceService";
+import {
+  loadAmazonEvidenceForRun,
+  summarizeAmazonEvidenceForProduct,
+} from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 
 const ResearchRequestSchema = z.object({
   topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
@@ -32,6 +36,8 @@ const ResearchRequestSchema = z.object({
   maxCandidates: z.number().int().min(3).max(50).default(15),
   sourceMode: z.enum(["LIVE_WITH_CACHE_FALLBACK", "CACHE_ONLY", "LIVE_ONLY"]).optional(),
   metaExecutionPolicy: z.enum(["LIVE_FIRST", "CACHE_SUPPLEMENTED", "CACHE_ONLY", "OFFLINE_FIXTURE"]).optional(),
+  enableAmazonUsPilot: z.boolean().optional(),
+  amazonPilotCandidateUrls: z.record(z.string(), z.string()).optional(),
   mode: z.enum(["async", "sync"]).optional(),
   async: z.boolean().optional(),
   asyncMode: z.boolean().optional(),
@@ -82,6 +88,46 @@ export async function GET(request: NextRequest) {
 
     let leaderboard = rawLeaderboard;
     if (leaderboard) {
+      const effectiveRunId = resolvedRunId || leaderboard.researchRunId;
+      let marketplaceEvidence = Array.isArray(leaderboard.marketplaceEvidence)
+        ? leaderboard.marketplaceEvidence
+        : [];
+      let marketplaceTelemetry = leaderboard.marketplaceTelemetry || null;
+
+      if (effectiveRunId) {
+        const loadedAmz = await loadAmazonEvidenceForRun(context.workspaceId, effectiveRunId);
+        if (loadedAmz.evidenceRows.length > 0) {
+          marketplaceEvidence = loadedAmz.evidenceRows;
+        }
+        if (!marketplaceTelemetry && loadedAmz.telemetry) {
+          marketplaceTelemetry = loadedAmz.telemetry;
+        }
+      }
+
+      if (marketplaceEvidence.length > 0 && effectiveRunId) {
+        const attachSummaryToList = (list: any[] | undefined) => {
+          if (!Array.isArray(list)) return;
+          for (const item of list) {
+            const cand = item?.candidate || item;
+            if (!cand || !cand.candidateId) continue;
+            const summary = summarizeAmazonEvidenceForProduct(
+              cand.candidateId,
+              effectiveRunId,
+              marketplaceEvidence,
+              { telemetry: marketplaceTelemetry }
+            );
+            if (summary.visible) {
+              cand.amazonEvidenceSummary = summary;
+            }
+          }
+        };
+        attachSummaryToList(leaderboard.topThree);
+        attachSummaryToList(leaderboard.researchShortlist?.shortlist);
+        attachSummaryToList(leaderboard.provisionalCandidates);
+        attachSummaryToList(leaderboard.remainingCandidates);
+        attachSummaryToList(leaderboard.insufficientEvidenceCandidates);
+      }
+
       const metaTel = leaderboard.providerTelemetry?.META_ADS;
       const googleTel = leaderboard.providerTelemetry?.GOOGLE_ADS;
       const lookbackCov = leaderboard.lookbackCoverage;
@@ -102,6 +148,8 @@ export async function GET(request: NextRequest) {
       leaderboard = {
         ...leaderboard,
         researchRunId: resolvedRunId || leaderboard.researchRunId,
+        marketplaceEvidence,
+        marketplaceTelemetry,
         sourceCoverage: leaderboard.sourceCoverage || {
           META_ADS: {
             freshLiveAdsCount: metaLiveCount,
@@ -207,7 +255,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { topic, market, lookbackDays, maxCandidates, sourceMode, metaExecutionPolicy } = parseResult.data;
+    const {
+      topic,
+      market,
+      lookbackDays,
+      maxCandidates,
+      sourceMode,
+      metaExecutionPolicy,
+      enableAmazonUsPilot,
+      amazonPilotCandidateUrls,
+    } = parseResult.data;
 
     const isAsync =
       body.asyncMode === true ||
@@ -227,6 +284,8 @@ export async function POST(request: NextRequest) {
         maxCandidates,
         sourceMode,
         metaExecutionPolicy,
+        enableAmazonUsPilot,
+        amazonPilotCandidateUrls,
       });
 
       // Enqueue job for background worker consumption (Single Executor Invariant)
@@ -265,6 +324,8 @@ export async function POST(request: NextRequest) {
       maxCandidates,
       sourceMode,
       metaExecutionPolicy,
+      enableAmazonUsPilot,
+      amazonPilotCandidateUrls,
     });
 
     await updateKH02ResearchRunStatus({
@@ -284,6 +345,8 @@ export async function POST(request: NextRequest) {
         maxCandidates,
         sourceMode,
         metaExecutionPolicy,
+        enableAmazonUsPilot,
+        amazonPilotCandidateUrls,
         workspaceId: context.workspaceId,
         runId,
         signal: request.signal,

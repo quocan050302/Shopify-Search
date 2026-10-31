@@ -17,6 +17,7 @@ import {
   KH02ResearchExecutionContext,
 } from "@/services/kh02/evergreenResearchOrchestrator";
 import { materializeKH02CandidatesToDatabase } from "@/services/kh02/persistence/kh02PersistenceService";
+import { persistAmazonEvidenceAtomically } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 import {
   SWAI_KH02_RELEASE_VERSION,
   getRuntimeBuildSha,
@@ -35,6 +36,8 @@ export interface ResearchInput {
   maxCandidates?: number;
   sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
   metaExecutionPolicy?: string;
+  enableAmazonUsPilot?: boolean;
+  amazonPilotCandidateUrls?: Record<string, string>;
   workspaceId: string;
 }
 
@@ -175,7 +178,8 @@ export function computeResearchIdempotencyKey(
   context: RequestContext
 ): string {
   const normTopic = input.topic.trim().toLowerCase();
-  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}`;
+  const amzSuffix = input.enableAmazonUsPilot ? ":amz1" : "";
+  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}${amzSuffix}`;
   return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
 }
 
@@ -313,6 +317,8 @@ export async function claimNextResearchJob(
       maxCandidates: payload.maxCandidates || 15,
       sourceMode: payload.sourceMode,
       metaExecutionPolicy: payload.metaExecutionPolicy,
+      enableAmazonUsPilot: payload.enableAmazonUsPilot,
+      amazonPilotCandidateUrls: payload.amazonPilotCandidateUrls,
       workspaceId: pendingJob.workspaceId,
     },
   };
@@ -923,6 +929,14 @@ export async function completeResearchJob(
         : "COMPLETED";
 
     await materializeKH02CandidatesToDatabase(result, db).catch(() => null);
+    if (Array.isArray(result.marketplaceEvidence) && result.marketplaceEvidence.length > 0) {
+      await persistAmazonEvidenceAtomically(
+        job.workspaceId,
+        job.id,
+        result.marketplaceEvidence,
+        { db, expectedWorkerId: ownership.workerId }
+      ).catch(() => null);
+    }
 
     // Preserve input metadata, runtime telemetry, and leaderboard result snapshot
     const mergedResultJson = JSON.stringify({
@@ -1160,6 +1174,8 @@ export async function executeResearchJob(
         maxCandidates: job.payload.maxCandidates || 15,
         sourceMode: job.payload.sourceMode,
         metaExecutionPolicy: job.payload.metaExecutionPolicy,
+        enableAmazonUsPilot: job.payload.enableAmazonUsPilot,
+        amazonPilotCandidateUrls: job.payload.amazonPilotCandidateUrls,
         workspaceId: job.workspaceId,
         runId: job.id,
         signal: abortController.signal,

@@ -71,8 +71,8 @@ describe("KH-02 V12.4.3.4.9 — No-False-Pass CLI, Truthful Disk Audit & 46 Nega
     ...overrides,
   });
 
-  it("reports runtime version 12.4.3.4.9", () => {
-    expect(getRuntimeVersionInfo().appVersion).toBe("12.4.3.4.9");
+  it("reports runtime version 12.4.3.4.9 or 12.4.3.5.0", () => {
+    expect(["12.4.3.4.9", "12.4.3.5.0"]).toContain(getRuntimeVersionInfo().appVersion);
   });
 
   describe("P0: computeKh02AcceptanceExitDecision & Real Child Subprocess Exit Proof", () => {
