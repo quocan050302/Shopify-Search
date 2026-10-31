@@ -814,7 +814,7 @@ export async function GET(
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "12.4.3.4.2",
+        version: "12.4.3.4.3",
       },
     });
   } catch (err: any) {

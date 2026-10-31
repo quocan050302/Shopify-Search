@@ -336,6 +336,11 @@ export function evaluateDemandSourceAuthority(
     return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: true };
   }
 
+  if (sources.some((s) => /trending_now|top_terms/i.test(s))) {
+    reasons.push("Demand observation is from Google Trending Now RSS or Google Top Terms discovery signal and cannot verify longitudinal Evergreen demand.");
+    return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: false };
+  }
+
   // Check if DB records lack evidenceReference or use pseudo-reference 'verified-merchant-demand:<domain>' without CSV checksum
   const hasDbProductWithoutRef = observations.some(
     (o) => o.productId && o.evidenceReference === null

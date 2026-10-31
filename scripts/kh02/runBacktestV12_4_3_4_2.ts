@@ -13,6 +13,8 @@ import { prisma } from "@/lib/db";
 import {
   evaluateDemandSourceAuthority,
   hasVerifiableCsvOrProviderLineage,
+  evaluateDemandHistoryEvidence,
+  detectSpecificProductFamily,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import {
   GoogleTrendsBigQueryProvider,
@@ -40,7 +42,7 @@ export interface PolicyScenarioResult {
 }
 
 export interface PolicyScenarioReport {
-  version: "12.4.3.4.2";
+  version: "12.4.3.4.3";
   evaluatedAt: string;
   verdict: "PASS" | "FAIL";
   totalScenarios: number;
@@ -75,7 +77,7 @@ export interface HistoricalReplayResult {
 }
 
 export interface FullBacktestOutput {
-  version: "12.4.3.4.2";
+  version: "12.4.3.4.3";
   evaluatedAt: string;
   policyScenarioVerdict: "PASS" | "FAIL";
   historicalDevVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
@@ -93,6 +95,7 @@ export interface FullBacktestOutput {
  */
 export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
   const originalEnv = { ...process.env };
+  (process.env as any).NODE_ENV = "test";
   const scenarios: PolicyScenarioResult[] = [];
 
   try {
@@ -585,7 +588,7 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
   const holdoutScenariosCount = scenarios.filter((s) => s.split === "HOLDOUT").length;
 
   return {
-    version: "12.4.3.4.2",
+    version: "12.4.3.4.3",
     evaluatedAt: new Date().toISOString(),
     verdict: failedCount === 0 ? "PASS" : "FAIL",
     totalScenarios: scenarios.length,
@@ -646,18 +649,34 @@ export async function runRealHistoricalProductReplay(): Promise<{
   // Verify zero future data leakage in HOLDOUT
   const holdoutFutureLeakage = holdoutAds.filter((a) => a.firstSeenAt > HOLDOUT_CUTOFF);
 
-  // Helper to reconstruct candidate list and run point-in-time ranking
-  const replayPointInTime = (adsList: typeof devAds, asOf: Date, split: "DEV" | "HOLDOUT"): HistoricalReplayResult => {
+  // Helper to reconstruct candidate list and run point-in-time ranking without future leakage
+  const replayPointInTime = async (
+    adsList: typeof devAds,
+    asOf: Date,
+    split: "DEV" | "HOLDOUT"
+  ): Promise<HistoricalReplayResult> => {
     const candidateMap = new Map<string, DiscoveredProductCandidate>();
 
     for (const ad of adsList) {
+      if (ad.firstSeenAt > asOf) continue; // safety guard against future ad observation
+
+      let linkedCandidate = false;
       for (const link of (ad as any).productLinks || []) {
         if (!link.product) continue;
         const p = link.product;
+        // Strict anti-leakage: verify product & link existed at or before asOf
+        if (p.createdAt && new Date(p.createdAt) > asOf) continue;
+        if (link.createdAt && new Date(link.createdAt) > asOf) continue;
+
+        linkedCandidate = true;
         const existing = candidateMap.get(p.id);
         if (existing) {
           existing.totalObservationCount = (existing.totalObservationCount || 1) + 1;
         } else {
+          // Point-in-time identity: verify whether identity verification happened at or before asOf
+          const isHistoricallyVerified = Boolean(
+            p.identityStatus === "VERIFIED" && p.updatedAt && new Date(p.updatedAt) <= asOf
+          );
           candidateMap.set(p.id, {
             candidateId: p.id,
             researchProductId: p.id,
@@ -665,12 +684,50 @@ export async function runRealHistoricalProductReplay(): Promise<{
             canonicalProductName: p.title,
             storeDomain: (p as any).storeDomain || (p.productUrl ? new URL(p.productUrl).hostname : null),
             canonicalProductUrl: p.productUrl || null,
-            identityStatus: (p as any).identityStatus || "PROBABLE",
-            familyKey: (p as any).familyKey || "replayed_family",
+            identityStatus: isHistoricallyVerified ? "VERIFIED" : "PROBABLE",
+            familyKey: detectSpecificProductFamily(p.title) || (p as any).familyKey || "replayed_family",
             totalObservationCount: 1,
             liveObservationsCount: 0,
             matchedQueryIds: [],
             supportingAdIds: [ad.id],
+            sourcePageClassification: (p as any).sourcePageClassification || "ACTUAL_PRODUCT_PAGE",
+            relevanceStatus: (p as any).relevanceStatus || "RELEVANT",
+            audienceRelevance: { isTargetCustomerRelevant: true, categoryFit: "DIRECT_MATCH", audienceConfidence: "CONFIRMED" },
+          } as any);
+        }
+      }
+
+      // If ad had no verified historical product record at asOf, reconstruct strictly from ad observation
+      if (!linkedCandidate) {
+        const adTargetUrl = (ad as any).targetUrl || (ad as any).landingPageUrl || null;
+        const adDomain = adTargetUrl
+          ? new URL(adTargetUrl).hostname
+          : (ad as any).advertiserDomain || "competitor-store.com";
+        const adTitle =
+          (ad as any).headline ||
+          (ad as any).adTitle ||
+          (ad as any).body?.slice(0, 60) ||
+          `Ad Product ${ad.id.slice(-6)}`;
+        const candKey = `cand_hist_${adDomain}_${adTitle.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 30)}`;
+        const existing = candidateMap.get(candKey);
+        if (existing) {
+          existing.totalObservationCount = (existing.totalObservationCount || 1) + 1;
+        } else {
+          candidateMap.set(candKey, {
+            candidateId: candKey,
+            title: adTitle,
+            canonicalProductName: adTitle,
+            storeDomain: adDomain,
+            canonicalProductUrl: adTargetUrl,
+            identityStatus: "PROBABLE",
+            familyKey: detectSpecificProductFamily(adTitle) || "replayed_family",
+            totalObservationCount: 1,
+            liveObservationsCount: 0,
+            matchedQueryIds: [],
+            supportingAdIds: [ad.id],
+            sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
+            relevanceStatus: "RELEVANT",
+            audienceRelevance: { isTargetCustomerRelevant: true, categoryFit: "DIRECT_MATCH", audienceConfidence: "CONFIRMED" },
           } as any);
         }
       }
@@ -682,8 +739,28 @@ export async function runRealHistoricalProductReplay(): Promise<{
       topic: "Pet Gadgets",
     });
 
-    // Check historical demand coverage as of timestamp
-    const hasLongitudinalDemand = false; // Google Free public datasets lack 60+ days niche time-series
+    // RC-07: Real point-in-time historical demand query & evaluation (no hard-coded false)
+    const historicalDemandObservations = await prisma.productDemandObservation.findMany({
+      where: {
+        periodEnd: { lte: asOf },
+        observedAt: { lte: asOf },
+      },
+      take: 100,
+    });
+
+    let hasLongitudinalDemand = false;
+    let demandAssessmentDetail = "No historical demand observations found <= asOf";
+    if (historicalDemandObservations.length >= 3) {
+      const demandAssessment = evaluateDemandHistoryEvidence(
+        historicalDemandObservations as any[],
+        { minimumCoveredDays: 60 }
+      );
+      hasLongitudinalDemand = Boolean(
+        demandAssessment.status === "VERIFIED" && demandAssessment.eligibleForEvergreen
+      );
+      demandAssessmentDetail = `Evaluated ${historicalDemandObservations.length} historical observations: coveredDays=${demandAssessment.coveredDays}, status=${demandAssessment.status}`;
+    }
+
     const demandCoverageStatus = hasLongitudinalDemand
       ? "AUTHORITATIVE_DEMAND_CONFIRMED"
       : "INSUFFICIENT_HISTORICAL_EVIDENCE";
@@ -708,12 +785,12 @@ export async function runRealHistoricalProductReplay(): Promise<{
       futureLeakageCount: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length,
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",
-      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified. Demand coverage honest classification: ${demandCoverageStatus}.`,
+      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified. Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
     };
   };
 
-  const devReplay = replayPointInTime(devAds, DEV_CUTOFF, "DEV");
-  const holdoutReplay = replayPointInTime(holdoutAds, HOLDOUT_CUTOFF, "HOLDOUT");
+  const devReplay = await replayPointInTime(devAds, DEV_CUTOFF, "DEV");
+  const holdoutReplay = await replayPointInTime(holdoutAds, HOLDOUT_CUTOFF, "HOLDOUT");
   const pointInTimeIntegrityPass =
     !devReplay.futureLeakageDetected &&
     !holdoutReplay.futureLeakageDetected &&
@@ -733,7 +810,7 @@ export async function runRealHistoricalProductReplay(): Promise<{
 export async function runBacktestV12_4_3_4_2(
   options: { outputDir?: string } = {}
 ): Promise<FullBacktestOutput> {
-  const outDir = options.outputDir || path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.2_closure");
+  const outDir = options.outputDir || path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure");
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
@@ -754,7 +831,7 @@ export async function runBacktestV12_4_3_4_2(
       : "INSUFFICIENT_HISTORICAL_EVIDENCE";
 
   const output: FullBacktestOutput = {
-    version: "12.4.3.4.2",
+    version: "12.4.3.4.3",
     evaluatedAt: new Date().toISOString(),
     policyScenarioVerdict: policyScenarios.verdict,
     historicalDevVerdict: devReplay.verdict,
@@ -789,7 +866,7 @@ export async function runBacktestV12_4_3_4_2(
     path.join(outDir, "BACKTEST_REPLAY_PROVENANCE.json"),
     JSON.stringify(
       {
-        version: "12.4.3.4.2",
+        version: "12.4.3.4.3",
         evaluatedAt: output.evaluatedAt,
         policyScenarioVerdict: output.policyScenarioVerdict,
         pointInTimeIntegrityVerdict: output.pointInTimeIntegrityVerdict,

@@ -37,13 +37,23 @@ export interface DemandQuery {
   granularity?: "DAY" | "WEEK" | "MONTH";
 }
 
+export type DemandEvidenceClass =
+  | "PRODUCT_SPECIFIC_HISTORICAL_DEMAND"
+  | "CATEGORY_TREND_DISCOVERY"
+  | "GOOGLE_TOP_TERMS_SIGNAL"
+  | "GOOGLE_TRENDING_NOW_EVENT"
+  | "CSV_IMPORTED_UNVERIFIED_ORIGIN"
+  | "VERIFIED_HISTORICAL_SOURCE"
+  | "INSUFFICIENT_COVERAGE";
+
 export interface DemandDataPointResult {
   periodStart: string;
   periodEnd: string;
-  demandValue: number; // 0-100 relative index
+  demandValue: number; // 0-100 relative index or ranking score
   region: string;
   source: string;
-  scale: "GOOGLE_TRENDS_INDEX_0_100";
+  scale: "GOOGLE_TRENDS_INDEX_0_100" | "GOOGLE_TOP_TERMS_RANK_SCORE";
+  evidenceClass?: DemandEvidenceClass;
 }
 
 export interface DemandSeriesResult {
@@ -55,6 +65,7 @@ export interface DemandSeriesResult {
   status: "SUCCESS" | "INSUFFICIENT_DATA" | "BLOCKED" | "FAILED";
   acquiredAt: string;
   provenance: "AUTHORITATIVE_PROVIDER" | "CACHED_OBSERVATION" | "UNVERIFIED";
+  evidenceClass?: DemandEvidenceClass;
   error?: string;
   discoveryOnly?: boolean;
 }
@@ -73,7 +84,10 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
   readonly providerId = "google-trends-bigquery";
   readonly displayName = "Google Trends Public BigQuery (Zero-Cost Free Sandbox)";
 
-  constructor(private customExecutor?: BigQueryExecutor) {}
+  constructor(
+    private customExecutor?: BigQueryExecutor,
+    private customBillingChecker?: (proj: string) => Promise<any>
+  ) {}
 
   async diagnose(): Promise<SourceDiagnosticResult> {
     const zeroSpendEnforced = process.env.ZERO_SPEND_ENFORCED !== "false";
@@ -149,6 +163,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
     // RC-02: Independently verify whether the project has zero-spend billing disabled
     const billingCheck = await verifyGoogleCloudProjectBilling(projectId, {
       credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      customChecker: this.customBillingChecker,
     });
 
     if (!billingCheck.sandboxEligible) {
@@ -196,6 +211,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       status: "BLOCKED",
       acquiredAt: new Date().toISOString(),
       provenance: "UNVERIFIED",
+      evidenceClass: "INSUFFICIENT_COVERAGE",
     };
 
     const diag = await this.diagnose();
@@ -221,7 +237,8 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         region: query.region,
         credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS,
       },
-      this.customExecutor
+      this.customExecutor,
+      this.customBillingChecker
     );
 
     if (bqRes.status === "SUCCESS" && bqRes.rowCount > 0) {
@@ -231,13 +248,15 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         demandValue: typeof r.score === "number" ? r.score : 0,
         region: query.region,
         source: "Google Trends BigQuery (Public Top Terms)",
-        scale: "GOOGLE_TRENDS_INDEX_0_100",
+        scale: "GOOGLE_TOP_TERMS_RANK_SCORE",
+        evidenceClass: "GOOGLE_TOP_TERMS_SIGNAL",
       }));
       return {
         ...result,
         points,
         status: "SUCCESS",
         provenance: "AUTHORITATIVE_PROVIDER",
+        evidenceClass: "GOOGLE_TOP_TERMS_SIGNAL",
       };
     }
 
@@ -246,6 +265,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         ...result,
         status: "BLOCKED",
         error: bqRes.errorMessage || `Query blocked under zero-spend policy (${bqRes.status}).`,
+        evidenceClass: "INSUFFICIENT_COVERAGE",
       };
     }
 
@@ -254,6 +274,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         ...result,
         status: "FAILED",
         error: bqRes.errorMessage || "BigQuery query execution failed.",
+        evidenceClass: "INSUFFICIENT_COVERAGE",
       };
     }
 
@@ -263,6 +284,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       error:
         bqRes.errorMessage ||
         `INSUFFICIENT_COVERAGE: Keyword '${query.term}' not found in Google Trends public BigQuery top terms dataset for ${query.region} (checked ${PUBLIC_GOOGLE_TRENDS_TOP_TERMS_TABLE}). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage.`,
+      evidenceClass: "INSUFFICIENT_COVERAGE",
     };
   }
 }
@@ -332,6 +354,7 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
           region: r.region,
           source: "Google Trends Explore CSV Export",
           scale: "GOOGLE_TRENDS_INDEX_0_100",
+          evidenceClass: "VERIFIED_HISTORICAL_SOURCE",
         });
       }
 
@@ -341,6 +364,7 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
           points: verifiedPoints,
           status: "SUCCESS",
           provenance: "AUTHORITATIVE_PROVIDER",
+          evidenceClass: "VERIFIED_HISTORICAL_SOURCE",
         };
       }
 
@@ -348,12 +372,14 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
         ...result,
         status: "INSUFFICIENT_DATA",
         error: `No verified Google Trends CSV export found in local database for '${query.term}'. Import an official Google Trends CSV export via /api/v1/demand/import.`,
+        evidenceClass: "INSUFFICIENT_COVERAGE",
       };
     } catch (err: any) {
       return {
         ...result,
         status: "FAILED",
         error: `Database lookup error for Google Trends CSV: ${err.message}`,
+        evidenceClass: "INSUFFICIENT_COVERAGE",
       };
     }
   }
@@ -394,6 +420,7 @@ export class GoogleTrendingNowProvider implements HistoricalDemandProvider {
       status: "INSUFFICIENT_DATA",
       acquiredAt: new Date().toISOString(),
       provenance: "UNVERIFIED",
+      evidenceClass: "GOOGLE_TRENDING_NOW_EVENT",
       discoveryOnly: true,
     };
 
@@ -413,6 +440,7 @@ export class GoogleTrendingNowProvider implements HistoricalDemandProvider {
           ...result,
           status: "SUCCESS",
           provenance: "UNVERIFIED",
+          evidenceClass: "GOOGLE_TRENDING_NOW_EVENT",
           discoveryOnly: true,
           points: [], // RC-05: RSS signal is discovery-only; never synthesize longitudinal demand points (value 100)
         };
@@ -422,12 +450,14 @@ export class GoogleTrendingNowProvider implements HistoricalDemandProvider {
         ...result,
         status: "INSUFFICIENT_DATA",
         error: `Keyword '${query.term}' is not currently in Google Trending Now daily searches for ${geo}.`,
+        evidenceClass: "GOOGLE_TRENDING_NOW_EVENT",
       };
     } catch {
       return {
         ...result,
         status: "FAILED",
-        error: "Google Trending Now public RSS request failed or timed out.",
+        error: "Google Trending Now RSS request failed or timed out.",
+        evidenceClass: "GOOGLE_TRENDING_NOW_EVENT",
       };
     }
   }

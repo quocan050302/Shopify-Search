@@ -124,6 +124,15 @@ export interface EvergreenLeaderboardResult {
       queryStatus: SourceRunStatus;
     }
   >;
+  googleAds?: {
+    totalCreativesFound: number;
+    exactProductMatches: number;
+    probableProductMatches: number;
+    brandOnlyMatches: number;
+    rejectedCreatives: number;
+    unmatchedCreatives: number;
+    creativeAssociationLedger: Array<any>;
+  };
 }
 
 export interface ResearchProgressPayload {
@@ -2138,6 +2147,24 @@ export async function runEvergreenProductResearch(
         queryExecuted: Boolean(providerTelemetry.GOOGLE_ADS?.queryExecuted),
         queryStatus: sourceStatuses.GOOGLE_ADS,
       },
+    },
+    googleAds: {
+      totalCreativesFound:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.totalCreativesFound ??
+        (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0),
+      exactProductMatches:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.productAssociatedCount ?? 0,
+      probableProductMatches: (
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger || []
+      ).filter((l: any) => l.associationType === "PROBABLE_PRODUCT_MATCH").length,
+      brandOnlyMatches:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.brandOnlyCount ?? 0,
+      rejectedCreatives:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.rejectedCount ?? 0,
+      unmatchedCreatives:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.unmatchedCount ?? 0,
+      creativeAssociationLedger:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger ?? [],
     },
   };
 
