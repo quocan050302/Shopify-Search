@@ -286,8 +286,14 @@ export async function fetchAuthorizedAmazonProductEvidence(
   const startedAt = input.observedAt || new Date(startedAtMs).toISOString();
   const requestMode: AmazonRequestMode = input.requestMode || "URL_VERIFICATION";
 
-  // 1. If feature flag is OFF and not an explicit unit-test fixture call, do nothing
-  if (!policy.featureEnabled && requestMode !== "TEST_FIXTURE") {
+  const isExplicitFixtureOrImport =
+    requestMode === "TEST_FIXTURE" ||
+    requestMode === "USER_IMPORTED" ||
+    Boolean(input.directSnapshotForImportOrFixture) ||
+    input.mcpSession?.transportMode === "TEST_FIXTURE";
+
+  // 1. If feature flag is OFF and not an explicit fixture/import call, do nothing
+  if (!policy.featureEnabled && !isExplicitFixtureOrImport) {
     return {
       status: "DISABLED",
       evidence: null,
@@ -977,3 +983,4 @@ export async function runAmazonUsPilotEnrichment(
     },
   };
 }
+
