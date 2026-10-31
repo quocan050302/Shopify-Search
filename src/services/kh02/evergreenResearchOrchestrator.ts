@@ -1439,6 +1439,8 @@ export async function runEvergreenProductResearch(
       | "UNMATCHED"
       | "MISSING_DESTINATION"
       | "UPSTREAM_TIMEOUT";
+    associationClassification?: string;
+    sourceMode?: string;
   }> = [];
 
   const googleCreativeRejections: Array<{
@@ -1552,6 +1554,11 @@ export async function runEvergreenProductResearch(
       matchingEvidence: bestEvidence,
       rejectionReason: bestRejectionReason,
       associationVerdict: bestVerdict,
+      associationClassification: bestVerdict,
+      sourceMode:
+        obs.provenance === "LIVE_PROVIDER" || obs.provenance === "REAL_UPSTREAM"
+          ? "LIVE_PROVIDER"
+          : "CACHED",
     });
 
     if (bestVerdict !== "EXACT_PRODUCT_MATCH") {
@@ -1577,6 +1584,7 @@ export async function runEvergreenProductResearch(
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandOnlyCount = uniqueBrandOnlyCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCount = uniqueRejectedCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.unmatchedCount = uniqueUnmatchedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.classifiedDistinct = creativeAssociationLedger.length;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeAssociationLedger = creativeAssociationLedger;
       if (providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown) {
         providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown.productAssociatedEvidence =

@@ -200,6 +200,11 @@ export interface GoogleEnrichmentExecution {
   domainsRateLimited?: number;
   domainsFailed?: number;
   creativesRetrievedCount?: number;
+  rawCreatives?: any[];
+  normalizedDistinct?: number;
+  rejectedBeforeNormalization?: number;
+  classifiedDistinct?: number;
+  normalizedRecords?: any[];
   mcpCallsStarted?: number;
   mcpCallsCompleted?: number;
   cleanupCompleted?: boolean;
@@ -238,6 +243,8 @@ export interface GoogleEnrichmentExecution {
     creativeTitle: string | null;
     candidateIdsEvaluated: string[];
     exactMatchingClassification: string | null;
+    associationClassification?: string;
+    sourceMode?: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
     matchingEvidence: string | null;
     rejectionReason: string | null;
     associationVerdict:
@@ -1663,6 +1670,7 @@ export async function collectGoogleAdvertiserSignals(
 
   let mcpCallsStarted = 0;
   let mcpCallsCompleted = 0;
+  const allRawAds: any[] = [];
 
   recordStep("startup", "COMPLETED", Date.now(), `domainsPlanned=${targetDomains.length}`);
 
@@ -1940,6 +1948,7 @@ export async function collectGoogleAdvertiserSignals(
                   : [];
               creativesReturnedCount += rawAds.length;
               domainCreativesReturned += rawAds.length;
+              allRawAds.push(...rawAds);
 
               mcpInvocations.push({
                 domain: regDomain,
@@ -2135,6 +2144,11 @@ export async function collectGoogleAdvertiserSignals(
       creativeQuerySucceeded,
       creativesReturned: creativesReturnedCount,
       creativesRetrievedCount: creativesReturnedCount,
+      rawCreatives: allRawAds,
+      normalizedDistinct: observations.length,
+      rejectedBeforeNormalization: Math.max(0, allRawAds.length - observations.length),
+      classifiedDistinct: 0,
+      normalizedRecords: observations,
       normalizedObservations: observations.length,
       productLevelMatches: observations.filter(
         (o) => (o.metrics as any)?.productRelevance === "PRODUCT_SPECIFIC",

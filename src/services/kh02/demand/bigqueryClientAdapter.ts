@@ -639,7 +639,10 @@ export async function executeBigQueryTrendsSearch(
       });
       jobId = realRes.jobId;
       actualBytes = realRes.totalBytesProcessed;
-      billedBytes = realRes.totalBytesBilled !== undefined ? realRes.totalBytesBilled : 0;
+      billedBytes =
+        realRes.totalBytesBilled !== undefined && realRes.totalBytesBilled !== null
+          ? realRes.totalBytesBilled
+          : null;
       cacheHit = Boolean(realRes.cacheHit);
       returnedRows = realRes.rows || [];
     } else if (
@@ -875,10 +878,8 @@ export async function executeBigQueryTrendsSearch(
 
       actualBytes = Number(realJson.totalBytesProcessed) || 0;
       billedBytes =
-        realJson.totalBytesBilled !== undefined
+        realJson.totalBytesBilled !== undefined && realJson.totalBytesBilled !== null
           ? Number(realJson.totalBytesBilled)
-          : actualBytes > 0
-          ? 0
           : null;
       cacheHit = Boolean(realJson.cacheHit);
 
