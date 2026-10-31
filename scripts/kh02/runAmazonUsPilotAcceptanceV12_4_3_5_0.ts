@@ -675,11 +675,11 @@ async function main() {
   const unitJsonFile = path.join(os.tmpdir(), `vitest-unit-${Date.now()}.json`);
   const intJsonFile = path.join(os.tmpdir(), `vitest-int-${Date.now()}.json`);
 
-  execSync(`npx vitest run tests/unit/kh02 --reporter=json --outputFile=${unitJsonFile}`, {
+  execSync(`npx vitest run tests/unit/kh02/ --reporter=json --outputFile=${unitJsonFile}`, {
     stdio: "inherit",
   });
   execSync(
-    `npx vitest run tests/integration/kh02 --reporter=json --outputFile=${intJsonFile}`,
+    `npx vitest run tests/integration/kh02/ --reporter=json --outputFile=${intJsonFile}`,
     { stdio: "inherit" }
   );
 
