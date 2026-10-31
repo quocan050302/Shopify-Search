@@ -1,0 +1,13 @@
+{
+  "acceptanceRunId": "autoclosure_20261031092929",
+  "originalResearchRunId": "kh02_run_1793438126794_c2rvz",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "runExecutionMode": "REPLAY_CACHED_OR_PREVIOUS_RUN",
+  "normalizationStageExecuted": false,
+  "evaluatedAt": "2026-10-31T09:29:32.610Z",
+  "rawDistinctCount": 0,
+  "normalizedDistinctCount": 0,
+  "rejectedBeforeNormalizationCount": 0,
+  "records": [],
+  "rejectedRecords": []
+}

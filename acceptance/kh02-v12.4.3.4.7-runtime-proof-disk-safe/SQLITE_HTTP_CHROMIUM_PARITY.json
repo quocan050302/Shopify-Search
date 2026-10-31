@@ -1,0 +1,42 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:40.613Z",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "persistedFromSqliteVerified": true,
+  "dbVsHttpVerdict": "FAIL",
+  "dbVsDomVerdict": "NOT_EXECUTED",
+  "httpVsDomVerdict": "NOT_EXECUTED",
+  "sameRunReconciliationPassed": false,
+  "httpApiParityPassed": false,
+  "chromiumParityPassed": false,
+  "comparedCandidateCount": 1,
+  "comparedFieldCount": 1,
+  "comparedDbFieldCount": 1,
+  "comparedHttpFieldCount": 0,
+  "comparedDomFieldCount": 0,
+  "fieldComparisons": [
+    {
+      "pair": "DB_VS_HTTP",
+      "field": "httpCandidatePayload",
+      "candidateId": "cand_861882032",
+      "required": true,
+      "presentDb": true,
+      "presentHttp": false,
+      "presentDom": false,
+      "expectedNormalizedValue": "cand_861882032",
+      "observedNormalizedValue": null,
+      "sourceEvidenceId": "syncJob:kh02_run_1793438126794_c2rvz#cand_861882032",
+      "verdict": "FAIL"
+    }
+  ],
+  "fieldDiscrepancies": [
+    {
+      "pair": "DB_VS_HTTP",
+      "candidateId": "cand_861882032",
+      "field": "httpCandidatePayload",
+      "expected": "cand_861882032",
+      "actual": null,
+      "source": "HTTP"
+    }
+  ],
+  "reason": "Reconciliation failed or incomplete (dbVsHttp=FAIL, dbVsDom=NOT_EXECUTED, httpVsDom=NOT_EXECUTED, discrepancies=1)."
+}

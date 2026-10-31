@@ -1,0 +1,23 @@
+{
+  "version": "12.4.3.4.3",
+  "evaluatedAt": "2026-10-31T09:29:32.578Z",
+  "policyScenarioVerdict": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "temporalPartitions": {
+    "devWindow": {
+      "start": "2026-06-01T00:00:00.000Z",
+      "end": "2026-10-24T00:00:00.000Z"
+    },
+    "holdoutWindow": {
+      "start": "2026-10-24T00:00:00.000Z",
+      "end": "2026-10-30T12:00:00.000Z"
+    },
+    "zeroOverlapVerified": true,
+    "devRecordsEvaluated": 60,
+    "holdoutRecordsEvaluated": 377,
+    "zeroFutureLeakageVerified": true
+  }
+}

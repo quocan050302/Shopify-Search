@@ -1,0 +1,20 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:40.172Z",
+  "version": "12.4.3.4.7",
+  "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720",
+  "status": "BLOCKED_RESOURCE",
+  "executionProof": null,
+  "configuredSuiteFiles": [
+    "tests/integration/kh02ResearchApi.test.ts",
+    "tests/integration/kh02V12_1_3_Acceptance.test.ts",
+    "tests/integration/kh02V12_1_Persistence.test.ts",
+    "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
+    "tests/integration/kh02V12_1_4_2_LongResearch.test.ts"
+  ],
+  "executedSuiteFiles": [],
+  "totalTests": 0,
+  "passedTests": 0,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "reason": "BLOCKED_RESOURCE: Heavy integration wave was not started because free disk (7.23 GB) is below mandatory 15 GB threshold."
+}
