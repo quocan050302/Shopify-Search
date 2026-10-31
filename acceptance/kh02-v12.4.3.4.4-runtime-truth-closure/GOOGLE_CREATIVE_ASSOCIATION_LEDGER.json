@@ -1,0 +1,93 @@
+{
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "evaluatedAt": "2026-10-31T04:39:17.544Z",
+  "totalClassified": 3,
+  "exactMatches": 0,
+  "probableMatches": 3,
+  "brandOnlyMatches": 0,
+  "unmatched": 0,
+  "rejected": 0,
+  "entries": [
+    {
+      "creativeId": "CR12722150295660920833",
+      "advertiserDomain": "uahpet.com",
+      "sourceMarket": "US",
+      "rawLandingUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "finalDestination": null,
+      "normalizedProductUrl": null,
+      "creativeTitle": null,
+      "candidateIdsEvaluated": [
+        "cand_1788406859",
+        "cand_658748938",
+        "cand_14769098",
+        "cand_1212440541",
+        "cand_834466230",
+        "cand_1613504636",
+        "cand_1272640899",
+        "cand_1587534715",
+        "cand_1466437143",
+        "cand_1832163014"
+      ],
+      "exactMatchingClassification": "PROBABLE",
+      "matchingEvidence": "Same verified store domain (uahpet.com) with brand-level or general catalog creative (no product-specific match).",
+      "rejectionReason": "Insufficient keyword or destination overlap to establish product identity.",
+      "associationVerdict": "PROBABLE_PRODUCT_MATCH",
+      "associationClassification": "PROBABLE_PRODUCT_MATCH",
+      "sourceMode": "LIVE_PROVIDER"
+    },
+    {
+      "creativeId": "CR15110207362696216577",
+      "advertiserDomain": "uahpet.com",
+      "sourceMarket": "US",
+      "rawLandingUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "finalDestination": null,
+      "normalizedProductUrl": null,
+      "creativeTitle": "Keep Pet Food Fresh Longer",
+      "candidateIdsEvaluated": [
+        "cand_1788406859",
+        "cand_658748938",
+        "cand_14769098",
+        "cand_1212440541",
+        "cand_834466230",
+        "cand_1613504636",
+        "cand_1272640899",
+        "cand_1587534715",
+        "cand_1466437143",
+        "cand_1832163014"
+      ],
+      "exactMatchingClassification": "PROBABLE",
+      "matchingEvidence": "Same verified store domain (uahpet.com) with brand-level or general catalog creative (no product-specific match).",
+      "rejectionReason": "Insufficient keyword or destination overlap to establish product identity.",
+      "associationVerdict": "PROBABLE_PRODUCT_MATCH",
+      "associationClassification": "PROBABLE_PRODUCT_MATCH",
+      "sourceMode": "LIVE_PROVIDER"
+    },
+    {
+      "creativeId": "CR00602061274238418945",
+      "advertiserDomain": "uahpet.com",
+      "sourceMarket": "US",
+      "rawLandingUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "finalDestination": null,
+      "normalizedProductUrl": null,
+      "creativeTitle": "Air Purifier for Pet Litter",
+      "candidateIdsEvaluated": [
+        "cand_1788406859",
+        "cand_658748938",
+        "cand_14769098",
+        "cand_1212440541",
+        "cand_834466230",
+        "cand_1613504636",
+        "cand_1272640899",
+        "cand_1587534715",
+        "cand_1466437143",
+        "cand_1832163014"
+      ],
+      "exactMatchingClassification": "PROBABLE",
+      "matchingEvidence": "Same verified store domain (uahpet.com), but creative targets a different product (conflicting product category). Not counted as product-specific evidence.",
+      "rejectionReason": "Insufficient keyword or destination overlap to establish product identity.",
+      "associationVerdict": "PROBABLE_PRODUCT_MATCH",
+      "associationClassification": "PROBABLE_PRODUCT_MATCH",
+      "sourceMode": "LIVE_PROVIDER"
+    }
+  ]
+}

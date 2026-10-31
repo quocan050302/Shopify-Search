@@ -1,0 +1,21 @@
+{
+  "evaluatedAt": "2026-10-31T04:39:24.201Z",
+  "version": "12.4.3.4.4",
+  "devWindow": {
+    "start": "2026-06-01T00:00:00.000Z",
+    "end": "2026-10-24T00:00:00.000Z",
+    "asOf": "2026-10-24T00:00:00.000Z",
+    "observationCount": 19,
+    "candidateCount": 10
+  },
+  "holdoutWindow": {
+    "start": "2026-10-24T00:00:00.000Z",
+    "end": "2026-10-30T12:00:00.000Z",
+    "asOf": "2026-10-30T12:00:00.000Z",
+    "observationCount": 380,
+    "candidateCount": 274
+  },
+  "temporalSeparationStrict": true,
+  "futureDataLeakageDetected": false,
+  "pointInTimeIntegrityVerdict": "PASS"
+}

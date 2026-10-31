@@ -1,0 +1,16 @@
+{
+  "evaluatedAt": "2026-10-31T04:39:59.558Z",
+  "version": "12.4.3.4.4",
+  "testedSourceSha": "adef272ad045e0c7495b5bb86990cff9e6cd4a6f",
+  "browser": "Playwright Chromium (Headless)",
+  "executed": true,
+  "status": "PASS",
+  "routesVerified": [
+    "/products",
+    "/api/v1/research/products/[id]/overview"
+  ],
+  "zeroDatabaseMutationsOnRead": true,
+  "screenshots": [
+    "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/screenshots/01_pf_recommended.png"
+  ]
+}

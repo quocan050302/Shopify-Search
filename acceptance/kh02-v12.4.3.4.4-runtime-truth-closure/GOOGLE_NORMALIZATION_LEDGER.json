@@ -1,0 +1,124 @@
+{
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "evaluatedAt": "2026-10-31T04:39:17.542Z",
+  "rawDistinctCount": 3,
+  "normalizedDistinctCount": 3,
+  "rejectedBeforeNormalizationCount": 0,
+  "invariantVerified": true,
+  "normalizedRecords": [
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR12722150295660920833",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T04:38:43.169Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR12722150295660920833"
+        },
+        "persistedAdId": "cmvvworjm002sncormndbhr3v"
+      },
+      "media": {
+        "thumbnailUrl": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828459738362&uiFeatures=12&adGroupId=198435963542&itemIds=10548303235901808171&sig=ACiVB_zIzQf5eZySolqHoZL-Q5Tb_fpB_w&htmlParentId=fletch-render-17533696632287633030&responseCallback=fletchCallback17533696632287633030",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvvworjm002sncormndbhr3v"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR15110207362696216577",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": "Keep Pet Food Fresh Longer Keep every meal fresh with scheduled automatic feeding for your pet",
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T04:38:43.169Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": "Keep Pet Food Fresh Longer",
+      "description": "Keep every meal fresh with scheduled automatic feeding for your pet",
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "VIDEO",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR15110207362696216577"
+        },
+        "persistedAdId": "cmvuc74es00946oorpzvsygn4"
+      },
+      "media": {
+        "thumbnailUrl": null,
+        "videoUrl": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b",
+        "mediaType": "VIDEO"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvuc74es00946oorpzvsygn4"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR00602061274238418945",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": "Air Purifier for Pet Litter Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T04:38:43.169Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": "Air Purifier for Pet Litter",
+      "description": "Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "VIDEO",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR00602061274238418945"
+        },
+        "persistedAdId": "cmvuco7e0002s64or9szoerg3"
+      },
+      "media": {
+        "thumbnailUrl": null,
+        "videoUrl": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b",
+        "mediaType": "VIDEO"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvuco7e0002s64or9szoerg3"
+    }
+  ]
+}
