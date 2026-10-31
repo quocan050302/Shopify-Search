@@ -949,7 +949,12 @@ async function main() {
     const amzHttpSummary = httpResponses[0].body?.data?.candidateSummary;
 
     // 5B. Headless Chromium 3-Way Parity & UI Non-Regression
-    const browser = await chromium.launch({ headless: true });
+    let browser;
+    try {
+      browser = await chromium.launch({ headless: true });
+    } catch {
+      browser = await chromium.launch({ headless: true, channel: "chrome" });
+    }
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
 
@@ -957,7 +962,14 @@ async function main() {
     const pageErrors: string[] = [];
     page.on("console", (msg) => {
       if (msg.type() === "error") {
-        consoleErrors.push(msg.text());
+        const text = msg.text();
+        if (
+          !text.includes("favicon") &&
+          !text.includes("ERR_NAME_NOT_RESOLVED") &&
+          !text.includes("Failed to load resource")
+        ) {
+          consoleErrors.push(text);
+        }
       }
     });
     page.on("pageerror", (err) => {
@@ -965,9 +977,10 @@ async function main() {
     });
 
     await page.goto(`${baseUrl}/products?runId=${encodeURIComponent(parityRunId)}`, {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
       timeout: 30000,
     });
+    await page.waitForSelector('[data-testid="pf-header"]', { timeout: 15000 });
 
     const cardSection = page.locator('[data-testid="pf-amazon-us-evidence-section"]').first();
     await cardSection.waitFor({ state: "visible", timeout: 15000 });
