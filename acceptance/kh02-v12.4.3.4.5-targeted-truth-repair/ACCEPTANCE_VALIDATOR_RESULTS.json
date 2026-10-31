@@ -1,0 +1,130 @@
+{
+  "version": "12.4.3.4.5",
+  "evaluatedAt": "2026-10-31T05:23:09.306Z",
+  "artifactDir": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.4.5-targeted-truth-repair",
+  "allChecksPassed": true,
+  "totalChecks": 17,
+  "passedChecks": 17,
+  "failedChecks": 0,
+  "checks": [
+    {
+      "checkId": "CHK_01_ARTIFACT_PRESENCE",
+      "name": "All required core acceptance artifacts present",
+      "passed": true,
+      "expected": "0 missing files",
+      "actual": "0 missing: "
+    },
+    {
+      "checkId": "CHK_02_SOURCE_SHA_INTEGRITY",
+      "name": "Tested source SHA matches expected Git commit",
+      "passed": true,
+      "expected": "c7a9b0acf682",
+      "actual": "c7a9b0acf682"
+    },
+    {
+      "checkId": "CHK_03_JUNIT_CONSISTENCY",
+      "name": "Deep JUnit XML consistency with >= 400 testcases and 0 failures",
+      "passed": true,
+      "expected": ">= 400 testcases, failures=0",
+      "actual": "testcases=443, failures=0"
+    },
+    {
+      "checkId": "CHK_04_TEST_COUNT_DEDUPLICATION",
+      "name": "Unique test count differentiated from total executions without fabrication",
+      "passed": true,
+      "expected": "totalTestExecutions >= uniqueTestCount > 0",
+      "actual": "unique=443, totalExec=602"
+    },
+    {
+      "checkId": "CHK_05_CHROMIUM_EXECUTION",
+      "name": "Real Playwright Chromium execution with server readiness, page nav, DOM assertions, and read-only DB verification",
+      "passed": true,
+      "expected": "executed=true, status=PASS, serverReady=true, navSucceeded=true, noFailures",
+      "actual": "executed=true, status=PASS, ready=true, nav=true, failures=0"
+    },
+    {
+      "checkId": "CHK_06_SQLITE_HTTP_BROWSER_PARITY",
+      "name": "SQLite, HTTP API, and Chromium DOM candidate and score reconciliation with >0 fields compared and 0 discrepancies",
+      "passed": true,
+      "expected": "comparedCandidates > 0, comparedFields > 0, 0 field discrepancies",
+      "actual": "cands=1, fields=3, discrepancies=0"
+    },
+    {
+      "checkId": "CHK_07_BIGQUERY_SQL_HASH_PROVENANCE",
+      "name": "BigQuery sqlHash strictly equals SHA-256 of exactExecutedSQL",
+      "passed": true,
+      "expected": "sqlHash === sha256(queryText)",
+      "actual": "valid=true, query=SELECT term, rank, score, week..."
+    },
+    {
+      "checkId": "CHK_08_BIGQUERY_STATUS_TRUTH",
+      "name": "BigQuery status is not falsely reported as EXECUTED without a valid provider jobId",
+      "passed": true,
+      "expected": "status === BLOCKED or (status === EXECUTED with valid jobId)",
+      "actual": "proofStatus=BLOCKED, auditStatus=BLOCKED_CONFIGURATION"
+    },
+    {
+      "checkId": "CHK_09_BIGQUERY_BILLED_BYTES_NOT_FABRICATED",
+      "name": "Unbilled or blocked queries retain bytesBilled: null rather than coerced 0",
+      "passed": true,
+      "expected": "bytesBilled: null when unexecuted or unknown",
+      "actual": "bytesBilled=null"
+    },
+    {
+      "checkId": "CHK_10_GOOGLE_CREATIVE_INVARIANTS",
+      "name": "Google creative pipeline invariant satisfied: rawDistinct === normalizedDistinct + rejectedBeforeNormalization",
+      "passed": true,
+      "expected": "rawDistinct === normalizedDistinct + rejectedBeforeNormalization",
+      "actual": "raw=9, norm=9, rejected=0"
+    },
+    {
+      "checkId": "CHK_11_GOOGLE_MEASURED_TIMELINE",
+      "name": "Google MCP operation timeline reflects actual measured durations rather than static constants",
+      "passed": true,
+      "expected": "Actual measured timestamps and latencies",
+      "actual": "stages=5"
+    },
+    {
+      "checkId": "CHK_12_G15_DYNAMIC_EVALUATION",
+      "name": "G15 Evergreen evaluated candidate-by-candidate against SQLite demand tables, truthfully failing closed",
+      "passed": true,
+      "expected": "Candidate-level evaluation, verdict: INSUFFICIENT_EVIDENCE",
+      "actual": "verdict=INSUFFICIENT_EVIDENCE, entries=3"
+    },
+    {
+      "checkId": "CHK_13_G16_STRICT_IDENTITY",
+      "name": "G16 strictly retains CheckoutChamp funnel as PROBABLE (2/3 verified live), no false upgrades",
+      "passed": true,
+      "expected": "2/3 verified live, UprootClean strictly PROBABLE",
+      "actual": "verifiedCount=2/3, verdict=INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "checkId": "CHK_14_POINT_IN_TIME_INTEGRITY",
+      "name": "Historical DEV and HOLDOUT replay windows strictly disjoint with zero future data leakage",
+      "passed": true,
+      "expected": "zero leakage, disjoint windows",
+      "actual": "leakage=false, separation=true"
+    },
+    {
+      "checkId": "CHK_15_PRODUCTION_REPLAY_PARITY",
+      "name": "Production replay parity evaluated against production logic, truthfully reporting data limitations",
+      "passed": true,
+      "expected": "Evaluated against production evaluators, verdict: INSUFFICIENT_EVIDENCE",
+      "actual": "parityResult=INSUFFICIENT_EVIDENCE, comparisons=2"
+    },
+    {
+      "checkId": "CHK_16_GATE_MATRIX_DYNAMICS",
+      "name": "Release gate matrix computed dynamically from actual execution results with business gates failing closed",
+      "passed": true,
+      "expected": "Dynamic gate derivation (PASS >= 20, INSUFFICIENT >= 2, BLOCKED >= 1)",
+      "actual": "eng=PASS, biz=INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "checkId": "CHK_17_FRESH_BUILD_EXECUTION",
+      "name": "Fresh Next.js production build executed cleanly with command 'next build' and exit code 0",
+      "passed": true,
+      "expected": "command='next build', exitCode=0, buildSucceeded=true",
+      "actual": "cmd=next build, exit=0, success=true"
+    }
+  ]
+}

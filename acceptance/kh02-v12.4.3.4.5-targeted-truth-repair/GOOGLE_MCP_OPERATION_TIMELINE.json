@@ -1,0 +1,231 @@
+{
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "evaluatedAt": "2026-10-31T05:22:24.654Z",
+  "version": "12.4.3.4.5",
+  "stages": [
+    {
+      "stageNumber": 1,
+      "stageName": "DOMAIN_EXTRACTION",
+      "status": "COMPLETED",
+      "domainsTargeted": [
+        "uahpet.com",
+        "kittyspout.com",
+        "uprootclean.com"
+      ],
+      "latencyMs": 0
+    },
+    {
+      "stageNumber": 2,
+      "stageName": "ADVERTISER_LOOKUP",
+      "status": "COMPLETED",
+      "advertisersFound": 3,
+      "latencyMs": null
+    },
+    {
+      "stageNumber": 3,
+      "stageName": "CREATIVE_RETRIEVAL",
+      "status": "COMPLETED",
+      "retrievedCount": 9,
+      "latencyMs": 9690
+    },
+    {
+      "stageNumber": 4,
+      "stageName": "CREATIVE_NORMALIZATION",
+      "status": "COMPLETED",
+      "normalizedCount": 9,
+      "rejectedBeforeNormalizationCount": 0,
+      "latencyMs": 1
+    },
+    {
+      "stageNumber": 5,
+      "stageName": "CANDIDATE_ASSOCIATION",
+      "status": "COMPLETED",
+      "classifiedDistinct": 9,
+      "exactProductMatches": 9,
+      "probableProductMatches": 0,
+      "brandOnlyMatches": 0,
+      "latencyMs": null
+    }
+  ],
+  "mcpInvocations": [
+    {
+      "domain": "uahpet.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uahpet.com"
+      },
+      "startedAt": "2026-10-31T05:21:52.105Z",
+      "completedAt": "2026-10-31T05:21:54.411Z",
+      "durationMs": 2306,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "uahpet.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR11363703404665765889",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T05:21:54.411Z",
+      "completedAt": "2026-10-31T05:22:04.101Z",
+      "durationMs": 9690,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "kittyspout.com"
+      },
+      "startedAt": "2026-10-31T05:22:04.102Z",
+      "completedAt": "2026-10-31T05:22:06.520Z",
+      "durationMs": 2418,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR10162009454036385793",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T05:22:06.520Z",
+      "completedAt": "2026-10-31T05:22:13.320Z",
+      "durationMs": 6800,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    },
+    {
+      "domain": "uprootclean.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uprootclean.com"
+      },
+      "startedAt": "2026-10-31T05:22:13.320Z",
+      "completedAt": "2026-10-31T05:22:15.283Z",
+      "durationMs": 1963,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "uprootclean.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR17310456840001159169",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T05:22:15.283Z",
+      "completedAt": "2026-10-31T05:22:24.372Z",
+      "durationMs": 9089,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    }
+  ],
+  "stepTimeline": [
+    {
+      "step": "startup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:21:51.546Z",
+      "completedAt": "2026-10-31T05:21:51.546Z",
+      "durationMs": 0,
+      "detail": "domainsPlanned=5"
+    },
+    {
+      "step": "connect",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:21:51.546Z",
+      "completedAt": "2026-10-31T05:21:52.102Z",
+      "durationMs": 556
+    },
+    {
+      "step": "toolDiscovery",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:21:52.103Z",
+      "completedAt": "2026-10-31T05:21:52.105Z",
+      "durationMs": 2,
+      "detail": "toolsDiscovered=2"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:21:52.105Z",
+      "completedAt": "2026-10-31T05:21:54.411Z",
+      "durationMs": 2306,
+      "detail": "domain=uahpet.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:21:54.411Z",
+      "completedAt": "2026-10-31T05:22:04.101Z",
+      "durationMs": 9690,
+      "detail": "advertiserId=AR11363703404665765889"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:04.101Z",
+      "completedAt": "2026-10-31T05:22:04.102Z",
+      "durationMs": 1,
+      "detail": "normalized=3"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:04.102Z",
+      "completedAt": "2026-10-31T05:22:06.520Z",
+      "durationMs": 2418,
+      "detail": "domain=kittyspout.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:06.520Z",
+      "completedAt": "2026-10-31T05:22:13.320Z",
+      "durationMs": 6800,
+      "detail": "advertiserId=AR10162009454036385793"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:13.320Z",
+      "completedAt": "2026-10-31T05:22:13.320Z",
+      "durationMs": 0,
+      "detail": "normalized=3"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:13.320Z",
+      "completedAt": "2026-10-31T05:22:15.283Z",
+      "durationMs": 1963,
+      "detail": "domain=uprootclean.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:15.283Z",
+      "completedAt": "2026-10-31T05:22:24.372Z",
+      "durationMs": 9089,
+      "detail": "advertiserId=AR17310456840001159169"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:22:24.372Z",
+      "completedAt": "2026-10-31T05:22:24.372Z",
+      "durationMs": 0,
+      "detail": "normalized=3"
+    }
+  ],
+  "totalDurationMs": 52965
+}

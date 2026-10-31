@@ -1,0 +1,11 @@
+{
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "topic": "Pet Gadgets",
+  "evaluatedAt": "2026-10-31T05:22:24.658Z",
+  "candidateCount": 3,
+  "rawCreativesCount": 9,
+  "normalizedCreativesCount": 9,
+  "classifiedDistinctCount": 9,
+  "pipelineInvariantsSatisfied": true,
+  "reconciliationVerdict": "LIVE_CREATIVES_RECONCILED"
+}

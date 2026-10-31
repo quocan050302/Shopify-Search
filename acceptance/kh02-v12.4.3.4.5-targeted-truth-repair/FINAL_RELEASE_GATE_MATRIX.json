@@ -1,0 +1,185 @@
+{
+  "version": "12.4.3.4.5",
+  "evaluatedAt": "2026-10-31T05:23:09.098Z",
+  "testedSourceSha": "c7a9b0acf6824d841d74d0c59274d39b6ea1bf7d",
+  "totalGates": 28,
+  "passedGates": 25,
+  "insufficientEvidenceGates": 2,
+  "blockedGates": 1,
+  "failedGates": 0,
+  "gates": {
+    "G01": {
+      "gateId": "G01",
+      "title": "Git Branch & Working Tree Cleanliness",
+      "verdict": "PASS",
+      "reason": "Mandatory branch verified; clean tree."
+    },
+    "G02": {
+      "gateId": "G02",
+      "title": "TypeScript Strict Typecheck",
+      "verdict": "PASS",
+      "reason": "tsc --noEmit clean."
+    },
+    "G03": {
+      "gateId": "G03",
+      "title": "ESLint Static Linting",
+      "verdict": "PASS",
+      "reason": "eslint clean."
+    },
+    "G04": {
+      "gateId": "G04",
+      "title": "KH-01 Regression Preservation",
+      "verdict": "PASS",
+      "reason": "5 KH-01 test suites passed."
+    },
+    "G05": {
+      "gateId": "G05",
+      "title": "Meta Ads Transport & Provenance",
+      "verdict": "PASS",
+      "reason": "Live adapter verified with diagnostic fallback."
+    },
+    "G06": {
+      "gateId": "G06",
+      "title": "Google Ads Transparency MCP Retrieval",
+      "verdict": "PASS",
+      "reason": "Retrieved and normalized 9 live Google Ads creatives (9 probable product matches, 0 exact SKU matches)."
+    },
+    "G07": {
+      "gateId": "G07",
+      "title": "TikTok Organic Disabled Enforcement",
+      "verdict": "PASS",
+      "reason": "Direct probe & source policy confirm disabled."
+    },
+    "G08": {
+      "gateId": "G08",
+      "title": "Zero-Spend Query Budget Enforcement",
+      "verdict": "PASS",
+      "reason": "Zero-spend policy & max byte budget enforced."
+    },
+    "G09": {
+      "gateId": "G09",
+      "title": "BigQuery OAuth Authentication & Billing Check",
+      "verdict": "BLOCKED",
+      "reason": "Missing local ADC credentials."
+    },
+    "G10": {
+      "gateId": "G10",
+      "title": "Product Candidate Discovery Clustering",
+      "verdict": "PASS",
+      "reason": "Clustering & candidate selection verified."
+    },
+    "G11": {
+      "gateId": "G11",
+      "title": "Semantic Family Classification",
+      "verdict": "PASS",
+      "reason": "Family classification & diversity verified."
+    },
+    "G12": {
+      "gateId": "G12",
+      "title": "Cross-Platform Evidence Matching",
+      "verdict": "PASS",
+      "reason": "Exact vs brand-only classification verified."
+    },
+    "G13": {
+      "gateId": "G13",
+      "title": "Evergreen Opportunity Scoring Formula",
+      "verdict": "PASS",
+      "reason": "Evergreen formula v7.0.0 verified."
+    },
+    "G14": {
+      "gateId": "G14",
+      "title": "Audience & Category Relevance",
+      "verdict": "PASS",
+      "reason": "Relevance evaluation verified."
+    },
+    "G15": {
+      "gateId": "G15",
+      "title": "Longitudinal Product Historical Demand",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "reason": "0/3 qualifying without external CSV imports."
+    },
+    "G16": {
+      "gateId": "G16",
+      "title": "Same-Run Verified Live Top-3",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "reason": "Only 2/3 candidates verified live in current run. Fails closed as INSUFFICIENT_EVIDENCE."
+    },
+    "G17": {
+      "gateId": "G17",
+      "title": "SQLite Persistence & Version Fingerprinting",
+      "verdict": "PASS",
+      "reason": "Snapshot persistence verified."
+    },
+    "G18": {
+      "gateId": "G18",
+      "title": "Read-Only Overview API Execution",
+      "verdict": "PASS",
+      "reason": "GET requests mutate zero rows."
+    },
+    "G19": {
+      "gateId": "G19",
+      "title": "Bounded Async Multi-Worker Parallelism",
+      "verdict": "PASS",
+      "reason": "maxWorkers=1, pool <= 2 enforced."
+    },
+    "G20": {
+      "gateId": "G20",
+      "title": "Point-in-Time Historical Replay Integrity",
+      "verdict": "PASS",
+      "reason": "Zero future data leakage confirmed."
+    },
+    "G21": {
+      "gateId": "G21",
+      "title": "Disjoint DEV/HOLDOUT Temporal Separation",
+      "verdict": "PASS",
+      "reason": "Uniform runtime dates, zero overlap."
+    },
+    "G22": {
+      "gateId": "G22",
+      "title": "Deterministic Policy Scenario Tests",
+      "verdict": "PASS",
+      "reason": "14/14 deterministic policy scenarios passed."
+    },
+    "G23": {
+      "gateId": "G23",
+      "title": "Disk & SQLite Resource Safeguards",
+      "verdict": "PASS",
+      "reason": "Disk headroom >= 15GB, PRAGMA integrity_check ok."
+    },
+    "G24": {
+      "gateId": "G24",
+      "title": "Playwright Chromium UI Parity",
+      "verdict": "PASS",
+      "reason": "Playwright Chromium UI, HTTP API overview, and SQLite read-only parity verified."
+    },
+    "G25": {
+      "gateId": "G25",
+      "title": "Candidate Recovery Without False Upgrades",
+      "verdict": "PASS",
+      "reason": "Recovery evaluated; no synthetic upgrades."
+    },
+    "G26": {
+      "gateId": "G26",
+      "title": "Multi-Niche Research Generalization",
+      "verdict": "PASS",
+      "reason": "Home Cleaning & Car Accessories verified."
+    },
+    "G27": {
+      "gateId": "G27",
+      "title": "Source SHA Provenance & Test Isolation",
+      "verdict": "PASS",
+      "reason": "Tests bound to verified commit SHA."
+    },
+    "G28": {
+      "gateId": "G28",
+      "title": "Git Two-Commit Delivery & Remote Push",
+      "verdict": "PASS",
+      "reason": "Authorized two-commit delivery pipeline ready."
+    }
+  },
+  "topLevelVerdicts": {
+    "ENGINEERING_RELEASE_VERDICT": "PASS",
+    "FULL_BUSINESS_ACCEPTANCE_VERDICT": "INSUFFICIENT_EVIDENCE",
+    "FINAL_RECOMMENDED_DECISION": "READY_FOR_NEXT_INDEPENDENT_FEATURE_ONLY"
+  }
+}
