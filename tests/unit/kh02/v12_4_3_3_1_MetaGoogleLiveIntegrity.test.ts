@@ -441,8 +441,8 @@ describe("M16: G04 — discoverProductCandidatesFromAds preserves matchedQueryId
 });
 
 describe("M20: GET API side effects & Runtime Version (G20)", () => {
-  it("GET overview route is read-only and SWAI_KH02_RELEASE_VERSION is 12.4.3.3.1, 12.4.3.3.2, 12.4.3.4.1, 12.4.3.4.2, 12.4.3.4.3, or 12.4.3.4.4", () => {
-    expect(["12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4"]).toContain(SWAI_KH02_RELEASE_VERSION);
+  it("GET overview route is read-only and SWAI_KH02_RELEASE_VERSION is 12.4.3.3.1, 12.4.3.3.2, 12.4.3.4.1, 12.4.3.4.2, 12.4.3.4.3, 12.4.3.4.4, or 12.4.3.4.5", () => {
+    expect(["12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4", "12.4.3.4.5"]).toContain(SWAI_KH02_RELEASE_VERSION);
     const routeCode = fs.readFileSync(
       path.resolve(
         process.cwd(),

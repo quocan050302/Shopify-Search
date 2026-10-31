@@ -10,7 +10,7 @@ import { execSync } from "child_process";
 import crypto from "crypto";
 import path from "path";
 
-export const SWAI_KH02_RELEASE_VERSION: string = "12.4.3.4.4";
+export const SWAI_KH02_RELEASE_VERSION: string = "12.4.3.4.5";
 
 export type KH02RuntimeParityStatus =
   | "MATCHED"

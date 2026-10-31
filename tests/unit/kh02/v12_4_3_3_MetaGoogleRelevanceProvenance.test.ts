@@ -1719,11 +1719,11 @@ describe("SWAI KH-02 V12.4.3.3 — Meta & Google Ads Live Discovery, Niche-Accur
       expect(rec.reconciled).toBe(false);
     });
 
-    it("E12: Release version matches 12.4.3.3, 12.4.3.3.1, 12.4.3.3.2, 12.4.3.4.1, 12.4.3.4.2, 12.4.3.4.3, or 12.4.3.4.4 across runtimeVersionService", () => {
-      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    it("E12: Release version matches 12.4.3.3, 12.4.3.3.1, 12.4.3.3.2, 12.4.3.4.1, 12.4.3.4.2, 12.4.3.4.3, 12.4.3.4.4, or 12.4.3.4.5 across runtimeVersionService", () => {
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4", "12.4.3.4.5"]).toContain(SWAI_KH02_RELEASE_VERSION);
       const report = evaluateKH02RuntimeIdentity({ frontendVersion: SWAI_KH02_RELEASE_VERSION });
-      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4"]).toContain(report.releaseVersion);
-      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4"]).toContain(report.appVersion);
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4", "12.4.3.4.5"]).toContain(report.releaseVersion);
+      expect(["12.4.3.3", "12.4.3.3.1", "12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2", "12.4.3.4.3", "12.4.3.4.4", "12.4.3.4.5"]).toContain(report.appVersion);
     });
   });
 
