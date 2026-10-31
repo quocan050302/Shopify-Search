@@ -762,7 +762,8 @@ async function main() {
   console.log("[Stage 5/7] Running 3-way SQLite <-> HTTP GET <-> Chromium DOM parity & read-only HTTP proof...");
   const port = 3250 + Math.floor(Math.random() * 200);
   const baseUrl = `http://127.0.0.1:${port}`;
-  const parityWorkspaceId = "default-workspace";
+  const firstWs = await prisma.workspace.findFirst({ select: { id: true } });
+  const parityWorkspaceId = firstWs?.id || "default-workspace";
   const parityRunId = `kh02_amz_parity_run_${Date.now()}`;
   const parityCandidateId = "cand_amz_parity_1";
   const parityProductId = `prod_amz_parity_${Date.now()}`;
