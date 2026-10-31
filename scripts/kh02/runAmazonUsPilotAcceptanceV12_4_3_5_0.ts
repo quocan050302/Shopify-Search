@@ -696,14 +696,20 @@ async function main() {
       });
     });
 
-  const [unitRes, intRes, buildRes, btOut] = await Promise.all([
-    runShellAsync(`npx vitest run tests/unit/kh02 --reporter=json --outputFile=${unitJsonFile}`),
-    runShellAsync(
-      `npx vitest run tests/integration/kh02 --reporter=json --outputFile=${intJsonFile}`
-    ),
+  const [vitestPairRes, buildRes, btOut] = await Promise.all([
+    (async () => {
+      const u = await runShellAsync(
+        `npx vitest run tests/unit/kh02/ tests/unit/kh01Security.test.ts tests/unit/dbIsolation.test.ts --fileParallelism=false --maxWorkers=1 --reporter=json --outputFile=${unitJsonFile}`
+      );
+      const i = await runShellAsync(
+        `npx vitest run tests/integration/kh02ResearchApi.test.ts tests/integration/kh02V12_1_3_Acceptance.test.ts tests/integration/kh02V12_1_Persistence.test.ts tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts tests/integration/kh02V12_1_4_2_LongResearch.test.ts --fileParallelism=false --maxWorkers=1 --reporter=json --outputFile=${intJsonFile}`
+      );
+      return { unitRes: u, intRes: i };
+    })(),
     runShellAsync("npm run build"),
     runBacktestV12_4_3_4_2({ outputDir: OUTPUT_DIR }),
   ]);
+  const { unitRes, intRes } = vitestPairRes;
 
   if (unitRes.exitCode !== 0 || intRes.exitCode !== 0) {
     throw new Error(
