@@ -373,6 +373,8 @@ export interface SourceObservation {
   persistedAdId?: string | null;
   sourceObservationId?: string | null;
   sourceType?: string | null;
+  sourceMode?: string | null;
+  isCached?: boolean;
   isLiveRecord?: boolean;
 }
 

@@ -934,6 +934,11 @@ export function normalizeGoogleAdsResponse(
         mediaType: format,
       },
       provenance: "REAL_UPSTREAM",
+      sourceMode: "LIVE_PROVIDER",
+      sourceType: "LIVE_PROVIDER",
+      isCached: false,
+      isLiveRecord: true,
+      sourceObservationId: `sobs_google_${creativeId}`,
       evidenceReference: `GoogleAd:${creativeId}`,
     });
   }
@@ -1946,19 +1951,34 @@ export async function collectGoogleAdvertiserSignals(
                 : Array.isArray(adsResult?.ads)
                   ? adsResult.ads
                   : [];
-              creativesReturnedCount += rawAds.length;
-              domainCreativesReturned += rawAds.length;
-              allRawAds.push(...rawAds);
+              const invocationId = `google_mcp_${query.researchRunId || "run"}_${regDomain}_${advId}_${crStartMs}`;
+              const observedIso = new Date().toISOString();
+              const stampedRawAds = rawAds.map((rawAd: any, idx: number) => ({
+                ...rawAd,
+                creative_id: rawAd?.creative_id || rawAd?.id || `google_cr_${advId}_${idx}`,
+                advertiser_id: rawAd?.advertiser_id || advId,
+                domain: rawAd?.domain || regDomain,
+                sourceMode: "LIVE_PROVIDER",
+                provenance: "REAL_UPSTREAM",
+                isCached: false,
+                researchRunId: query.researchRunId || null,
+                observedAt: observedIso,
+                providerRequestId: invocationId,
+                mcpInvocationRef: invocationId,
+              }));
+              creativesReturnedCount += stampedRawAds.length;
+              domainCreativesReturned += stampedRawAds.length;
+              allRawAds.push(...stampedRawAds);
 
               mcpInvocations.push({
                 domain: regDomain,
                 toolName: adsTool,
                 arguments: { advertiser_id: advId, region: query.market || "US" },
                 startedAt: new Date(crStartMs).toISOString(),
-                completedAt: new Date().toISOString(),
+                completedAt: observedIso,
                 durationMs: Math.max(0, Date.now() - crStartMs),
                 status: "SUCCEEDED",
-                returnedCount: rawAds.length,
+                returnedCount: stampedRawAds.length,
                 errorMessage: null,
               });
 
@@ -1966,7 +1986,7 @@ export async function collectGoogleAdvertiserSignals(
               const normResult = normalizeGoogleAdsResponse(adsResult, {
                 requestedDomain: regDomain,
                 topic: query.topic,
-                observedAt: new Date().toISOString(),
+                observedAt: observedIso,
                 toolName: adsTool,
                 requestedMarket: query.market || "US",
                 providerFilterMarket: query.market || "US",
@@ -1979,6 +1999,13 @@ export async function collectGoogleAdvertiserSignals(
               );
 
               for (const obs of normResult.observations) {
+                obs.researchRunId = query.researchRunId || null;
+                obs.sourceMode = "LIVE_PROVIDER";
+                obs.sourceType = "LIVE_PROVIDER";
+                obs.isCached = false;
+                obs.isLiveRecord = true;
+                obs.providerRequestId = invocationId;
+                obs.sourceObservationId = obs.sourceObservationId || `sobs_google_${obs.sourceRecordId}`;
                 observations.push(obs);
               }
             } catch (adsErr: any) {

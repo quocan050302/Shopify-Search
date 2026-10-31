@@ -65,6 +65,30 @@ export interface ProductHistoricalEvidenceRecord {
   sources: string[];
 }
 
+export interface JoinedMetadataLeakageAudit {
+  joinedLinksEvaluatedCount: number;
+  trustedPointInTimeJoinedCount: number;
+  rejectedPostCutoffJoinedCount: number;
+  unverifiedTimestampJoinedCount: number;
+  postCutoffFallbackAppliedCount: number;
+  leakagePrevented: boolean;
+}
+
+export interface PointInTimeAdCandidateMetadataResult {
+  trustedPointInTimeMetadata: boolean;
+  metadataProvenance:
+    | "VERIFIED_POINT_IN_TIME_PRODUCT_METADATA"
+    | "REJECTED_POST_CUTOFF_JOINED_METADATA"
+    | "UNVERIFIED_POINT_IN_TIME_METADATA"
+    | "AD_OBSERVATION_ONLY";
+  candidateId: string;
+  researchProductId: string | null;
+  title: string;
+  storeDomain: string | null;
+  canonicalProductUrl: string | null;
+  identityStatus: "VERIFIED" | "PROBABLE";
+}
+
 export interface HistoricalReplayResult {
   split: "DEV" | "HOLDOUT";
   windowStart: string;
@@ -84,22 +108,117 @@ export interface HistoricalReplayResult {
   distinctFamiliesCount: number;
   futureLeakageDetected: boolean;
   futureLeakageCount: number;
+  joinedMetadataLeakageAudit?: JoinedMetadataLeakageAudit;
   demandCoverageStatus: "INSUFFICIENT_HISTORICAL_EVIDENCE" | "AUTHORITATIVE_DEMAND_CONFIRMED";
   verdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   notes: string;
 }
 
 export interface FullBacktestOutput {
-  version: "12.4.3.4.3";
+  version: "12.4.3.4.3" | "12.4.3.4.6";
   evaluatedAt: string;
   policyScenarioVerdict: "PASS" | "FAIL";
   historicalDevVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   historicalHoldoutVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   pointInTimeIntegrityVerdict: "PASS" | "FAIL";
+  backtestEngineExecuted: "PASS" | "FAIL";
+  businessHistoricalEvidenceSufficient: "PASS" | "INSUFFICIENT_EVIDENCE";
   overallHistoricalBacktestVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   policyScenarios: PolicyScenarioReport;
   historicalDevReplay: HistoricalReplayResult;
   historicalHoldoutReplay: HistoricalReplayResult;
+}
+
+/**
+ * Pure point-in-time joined metadata verifier (V12.4.3.4.6 Phase 5.5).
+ * Checks whether joined ResearchProduct / AdProductLink metadata has creation and update timestamps <= asOf.
+ * If joined product metadata lacks point-in-time proof or has updatedAt > asOf, rejects post-cutoff enriched fields
+ * and falls back strictly to point-in-time ad observation fields.
+ */
+export function resolvePointInTimeAdCandidateMetadata(
+  ad: any,
+  link: any,
+  asOf: Date
+): PointInTimeAdCandidateMetadataResult {
+  const adTargetUrl = ad?.targetUrl || ad?.landingPageUrl || null;
+  let adDomain = ad?.advertiserDomain || "competitor-store.com";
+  if (adTargetUrl) {
+    try {
+      adDomain = new URL(adTargetUrl).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      // keep fallback
+    }
+  }
+  const adTitle =
+    ad?.headline ||
+    ad?.adTitle ||
+    (typeof ad?.body === "string" ? ad.body.slice(0, 60) : null) ||
+    (typeof ad?.bodyText === "string" ? ad.bodyText.slice(0, 60) : null) ||
+    `Ad Product ${String(ad?.id || "000000").slice(-6)}`;
+  const fallbackCandKey = `cand_hist_${adDomain}_${String(adTitle)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "_")
+    .slice(0, 30)}`;
+
+  const p = link?.product;
+  if (!p) {
+    return {
+      trustedPointInTimeMetadata: false,
+      metadataProvenance: "AD_OBSERVATION_ONLY",
+      candidateId: fallbackCandKey,
+      researchProductId: null,
+      title: adTitle,
+      storeDomain: adDomain,
+      canonicalProductUrl: adTargetUrl,
+      identityStatus: "PROBABLE",
+    };
+  }
+
+  const pCreatedAt = p.createdAt ? new Date(p.createdAt) : null;
+  const pUpdatedAt = p.updatedAt ? new Date(p.updatedAt) : null;
+  const lCreatedAt = link?.createdAt ? new Date(link.createdAt) : null;
+
+  const hasValidTimestamps = Boolean(pCreatedAt && pUpdatedAt);
+  const isPostCutoff = Boolean(
+    (pCreatedAt && pCreatedAt > asOf) ||
+      (pUpdatedAt && pUpdatedAt > asOf) ||
+      (lCreatedAt && lCreatedAt > asOf)
+  );
+
+  if (!hasValidTimestamps || isPostCutoff) {
+    return {
+      trustedPointInTimeMetadata: false,
+      metadataProvenance: isPostCutoff
+        ? "REJECTED_POST_CUTOFF_JOINED_METADATA"
+        : "UNVERIFIED_POINT_IN_TIME_METADATA",
+      candidateId: fallbackCandKey,
+      researchProductId: null,
+      title: adTitle,
+      storeDomain: adDomain,
+      canonicalProductUrl: adTargetUrl,
+      identityStatus: "PROBABLE",
+    };
+  }
+
+  let prodDomain = p.storeDomain || null;
+  if (!prodDomain && p.productUrl) {
+    try {
+      prodDomain = new URL(p.productUrl).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      prodDomain = adDomain;
+    }
+  }
+
+  return {
+    trustedPointInTimeMetadata: true,
+    metadataProvenance: "VERIFIED_POINT_IN_TIME_PRODUCT_METADATA",
+    candidateId: String(p.id),
+    researchProductId: String(p.id),
+    title: String(p.title || adTitle),
+    storeDomain: prodDomain || adDomain,
+    canonicalProductUrl: p.productUrl || adTargetUrl,
+    identityStatus: p.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE",
+  };
 }
 
 /**
@@ -591,6 +710,46 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         detail: `Status=${demandAssessment.status}; coveredDays=${demandAssessment.coveredDays}; eligibleForEvergreen=${demandAssessment.eligibleForEvergreen}`,
       });
     }
+
+    // HOLDOUT 08 (V12.4.3.4.6): Joined product metadata acquired after asOf is rejected
+    {
+      const asOf = new Date("2026-02-15T23:59:59.000Z");
+      const mockAd = {
+        id: "ad_hist_1",
+        firstSeenAt: new Date("2026-02-01T00:00:00.000Z"),
+        headline: "Original Historical Ad Headline",
+        landingPageUrl: "https://historical-pet.com/products/feeder",
+        advertiserDomain: "historical-pet.com",
+      };
+      const postCutoffLink = {
+        createdAt: new Date("2026-02-01T00:00:00.000Z"),
+        product: {
+          id: "prod_future_enriched",
+          title: "Post-Cutoff Enriched Product Title From April",
+          productUrl: "https://future-domain.com/products/new-slug",
+          identityStatus: "VERIFIED",
+          createdAt: new Date("2026-02-01T00:00:00.000Z"),
+          updatedAt: new Date("2026-04-02T00:00:00.000Z"), // AFTER asOf!
+        },
+      };
+      const resolved = resolvePointInTimeAdCandidateMetadata(mockAd, postCutoffLink, asOf);
+      const passed =
+        resolved.trustedPointInTimeMetadata === false &&
+        resolved.metadataProvenance === "REJECTED_POST_CUTOFF_JOINED_METADATA" &&
+        resolved.title === "Original Historical Ad Headline" &&
+        resolved.storeDomain === "historical-pet.com";
+      scenarios.push({
+        caseId: "v124346_holdout_08_joined_metadata_post_cutoff_rejected",
+        split: "HOLDOUT",
+        category: "JOINED_METADATA_LEAKAGE_GUARD",
+        description: "Joined ResearchProduct metadata updated after asOf is rejected and falls back strictly to point-in-time ad observation fields",
+        executed: true,
+        passed,
+        assertion: "resolved.trustedPointInTimeMetadata === false && resolved.metadataProvenance === 'REJECTED_POST_CUTOFF_JOINED_METADATA'",
+        observed: resolved,
+        detail: `provenance=${resolved.metadataProvenance}; title=${resolved.title}`,
+      });
+    }
   } finally {
     process.env = { ...originalEnv };
   }
@@ -669,6 +828,14 @@ export async function runRealHistoricalProductReplay(): Promise<{
     split: "DEV" | "HOLDOUT"
   ): Promise<HistoricalReplayResult> => {
     const candidateMap = new Map<string, DiscoveredProductCandidate>();
+    const joinedMetadataLeakageAudit: JoinedMetadataLeakageAudit = {
+      joinedLinksEvaluatedCount: 0,
+      trustedPointInTimeJoinedCount: 0,
+      rejectedPostCutoffJoinedCount: 0,
+      unverifiedTimestampJoinedCount: 0,
+      postCutoffFallbackAppliedCount: 0,
+      leakagePrevented: true,
+    };
 
     for (const ad of adsList) {
       if (ad.firstSeenAt > asOf) continue; // safety guard against future ad observation
@@ -676,35 +843,40 @@ export async function runRealHistoricalProductReplay(): Promise<{
       let linkedCandidate = false;
       for (const link of (ad as any).productLinks || []) {
         if (!link.product) continue;
-        const p = link.product;
-        // Strict anti-leakage: verify product & link existed at or before asOf
-        if (p.createdAt && new Date(p.createdAt) > asOf) continue;
-        if (link.createdAt && new Date(link.createdAt) > asOf) continue;
+        joinedMetadataLeakageAudit.joinedLinksEvaluatedCount++;
 
+        const pitMeta = resolvePointInTimeAdCandidateMetadata(ad, link, asOf);
+        if (!pitMeta.trustedPointInTimeMetadata) {
+          if (pitMeta.metadataProvenance === "REJECTED_POST_CUTOFF_JOINED_METADATA") {
+            joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount++;
+          } else {
+            joinedMetadataLeakageAudit.unverifiedTimestampJoinedCount++;
+          }
+          joinedMetadataLeakageAudit.postCutoffFallbackAppliedCount++;
+          continue; // Fall back to point-in-time ad observation fields below
+        }
+
+        joinedMetadataLeakageAudit.trustedPointInTimeJoinedCount++;
         linkedCandidate = true;
-        const existing = candidateMap.get(p.id);
+        const existing = candidateMap.get(pitMeta.candidateId);
         if (existing) {
           existing.totalObservationCount = (existing.totalObservationCount || 1) + 1;
         } else {
-          // Point-in-time identity: verify whether identity verification happened at or before asOf
-          const isHistoricallyVerified = Boolean(
-            p.identityStatus === "VERIFIED" && p.updatedAt && new Date(p.updatedAt) <= asOf
-          );
-          candidateMap.set(p.id, {
-            candidateId: p.id,
-            researchProductId: p.id,
-            title: p.title,
-            canonicalProductName: p.title,
-            storeDomain: (p as any).storeDomain || (p.productUrl ? new URL(p.productUrl).hostname : null),
-            canonicalProductUrl: p.productUrl || null,
-            identityStatus: isHistoricallyVerified ? "VERIFIED" : "PROBABLE",
-            familyKey: detectSpecificProductFamily(p.title) || (p as any).familyKey || "replayed_family",
+          candidateMap.set(pitMeta.candidateId, {
+            candidateId: pitMeta.candidateId,
+            researchProductId: pitMeta.researchProductId,
+            title: pitMeta.title,
+            canonicalProductName: pitMeta.title,
+            storeDomain: pitMeta.storeDomain,
+            canonicalProductUrl: pitMeta.canonicalProductUrl,
+            identityStatus: pitMeta.identityStatus,
+            familyKey: detectSpecificProductFamily(pitMeta.title) || "replayed_family",
             totalObservationCount: 1,
             liveObservationsCount: 0,
             matchedQueryIds: [],
             supportingAdIds: [ad.id],
-            sourcePageClassification: (p as any).sourcePageClassification || "ACTUAL_PRODUCT_PAGE",
-            relevanceStatus: (p as any).relevanceStatus || "RELEVANT",
+            sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
+            relevanceStatus: "RELEVANT",
             audienceRelevance: { isTargetCustomerRelevant: true, categoryFit: "DIRECT_MATCH", audienceConfidence: "CONFIRMED" },
           } as any);
         }
@@ -712,28 +884,19 @@ export async function runRealHistoricalProductReplay(): Promise<{
 
       // If ad had no verified historical product record at asOf, reconstruct strictly from ad observation
       if (!linkedCandidate) {
-        const adTargetUrl = (ad as any).targetUrl || (ad as any).landingPageUrl || null;
-        const adDomain = adTargetUrl
-          ? new URL(adTargetUrl).hostname
-          : (ad as any).advertiserDomain || "competitor-store.com";
-        const adTitle =
-          (ad as any).headline ||
-          (ad as any).adTitle ||
-          (ad as any).body?.slice(0, 60) ||
-          `Ad Product ${ad.id.slice(-6)}`;
-        const candKey = `cand_hist_${adDomain}_${adTitle.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 30)}`;
-        const existing = candidateMap.get(candKey);
+        const pitFallback = resolvePointInTimeAdCandidateMetadata(ad, null, asOf);
+        const existing = candidateMap.get(pitFallback.candidateId);
         if (existing) {
           existing.totalObservationCount = (existing.totalObservationCount || 1) + 1;
         } else {
-          candidateMap.set(candKey, {
-            candidateId: candKey,
-            title: adTitle,
-            canonicalProductName: adTitle,
-            storeDomain: adDomain,
-            canonicalProductUrl: adTargetUrl,
+          candidateMap.set(pitFallback.candidateId, {
+            candidateId: pitFallback.candidateId,
+            title: pitFallback.title,
+            canonicalProductName: pitFallback.title,
+            storeDomain: pitFallback.storeDomain,
+            canonicalProductUrl: pitFallback.canonicalProductUrl,
             identityStatus: "PROBABLE",
-            familyKey: detectSpecificProductFamily(adTitle) || "replayed_family",
+            familyKey: detectSpecificProductFamily(pitFallback.title) || "replayed_family",
             totalObservationCount: 1,
             liveObservationsCount: 0,
             matchedQueryIds: [],
@@ -832,9 +995,10 @@ export async function runRealHistoricalProductReplay(): Promise<{
       distinctFamiliesCount: shortlistRes.distinctFamiliesCount ?? 0,
       futureLeakageDetected: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length > 0,
       futureLeakageCount: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length,
+      joinedMetadataLeakageAudit,
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",
-      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified. Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
+      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
     };
   };
 
@@ -863,7 +1027,7 @@ export async function runBacktestV12_4_3_4_2(
     options.outputDir ||
     (process.env.SWAI_ACCEPTANCE_OUTPUT_DIR
       ? path.resolve(process.cwd(), process.env.SWAI_ACCEPTANCE_OUTPUT_DIR)
-      : path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.3_closure"));
+      : path.resolve(process.cwd(), "acceptance/kh02-v12.4.3.4.6-strict-evidence-closure"));
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
@@ -874,22 +1038,29 @@ export async function runBacktestV12_4_3_4_2(
   // 2. Run Category B: Real Historical Replay
   const { devReplay, holdoutReplay, pointInTimeIntegrityPass } = await runRealHistoricalProductReplay();
 
-  // 3. Reconcile verdicts
-  const overallVerdict =
-    policyScenarios.verdict === "PASS" &&
-    pointInTimeIntegrityPass &&
+  // 3. Reconcile verdicts (Phase 5.6: separate engine execution vs business historical evidence)
+  const backtestEngineExecuted: "PASS" | "FAIL" =
+    policyScenarios.verdict === "PASS" && pointInTimeIntegrityPass ? "PASS" : "FAIL";
+  const businessHistoricalEvidenceSufficient: "PASS" | "INSUFFICIENT_EVIDENCE" =
     devReplay.demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" &&
     holdoutReplay.demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED"
+      ? "PASS"
+      : "INSUFFICIENT_EVIDENCE";
+
+  const overallVerdict =
+    backtestEngineExecuted === "PASS" && businessHistoricalEvidenceSufficient === "PASS"
       ? "PASS"
       : "INSUFFICIENT_HISTORICAL_EVIDENCE";
 
   const output: FullBacktestOutput = {
-    version: "12.4.3.4.3",
+    version: "12.4.3.4.6",
     evaluatedAt: new Date().toISOString(),
     policyScenarioVerdict: policyScenarios.verdict,
     historicalDevVerdict: devReplay.verdict,
     historicalHoldoutVerdict: holdoutReplay.verdict,
     pointInTimeIntegrityVerdict: pointInTimeIntegrityPass ? "PASS" : "FAIL",
+    backtestEngineExecuted,
+    businessHistoricalEvidenceSufficient,
     overallHistoricalBacktestVerdict: overallVerdict,
     policyScenarios,
     historicalDevReplay: devReplay,

@@ -1421,6 +1421,7 @@ export async function runEvergreenProductResearch(
 
   const creativeAssociationLedger: Array<{
     creativeId: string;
+    researchRunId?: string | null;
     advertiserDomain: string | null;
     sourceMarket: string;
     rawLandingUrl: string | null;
@@ -1428,6 +1429,7 @@ export async function runEvergreenProductResearch(
     normalizedProductUrl: string | null;
     creativeTitle: string | null;
     candidateIdsEvaluated: string[];
+    matchedCandidateId?: string | null;
     exactMatchingClassification: string | null;
     matchingEvidence: string | null;
     rejectionReason: string | null;
@@ -1451,6 +1453,7 @@ export async function runEvergreenProductResearch(
   }> = [];
 
   let uniqueProductAssociatedCount = 0;
+  let uniqueProbableProductCount = 0;
   let uniqueBrandOnlyCount = 0;
   let uniqueRejectedCount = 0;
   let uniqueUnmatchedCount = 0;
@@ -1528,11 +1531,10 @@ export async function runEvergreenProductResearch(
       }
     }
 
-    if (
-      bestVerdict === "EXACT_PRODUCT_MATCH" ||
-      bestVerdict === "PROBABLE_PRODUCT_MATCH"
-    ) {
+    if (bestVerdict === "EXACT_PRODUCT_MATCH") {
       uniqueProductAssociatedCount++;
+    } else if (bestVerdict === "PROBABLE_PRODUCT_MATCH") {
+      uniqueProbableProductCount++;
     } else if (bestVerdict === "BRAND_ONLY_MATCH") {
       uniqueBrandOnlyCount++;
     } else if (bestVerdict === "REJECTED_UNRELATED_CREATIVE") {
@@ -1543,6 +1545,7 @@ export async function runEvergreenProductResearch(
 
     creativeAssociationLedger.push({
       creativeId: cId,
+      researchRunId: runId,
       advertiserDomain: obs.advertiserDomain || null,
       sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
       rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
@@ -1550,6 +1553,7 @@ export async function runEvergreenProductResearch(
       normalizedProductUrl: null,
       creativeTitle: obs.title || null,
       candidateIdsEvaluated: candidates.map((c) => c.candidateId),
+      matchedCandidateId: bestCandidateId,
       exactMatchingClassification: bestClassification,
       matchingEvidence: bestEvidence,
       rejectionReason: bestRejectionReason,
@@ -1576,6 +1580,8 @@ export async function runEvergreenProductResearch(
     providerTelemetry.GOOGLE_ADS.brandAssociatedCount = uniqueBrandOnlyCount;
     if (providerTelemetry.GOOGLE_ADS.enrichmentExecution) {
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.exactProductMatches = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.probableProductMatches = uniqueProbableProductCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = uniqueBrandOnlyCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productEvidenceIds = googleProductEvidenceIds;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCreativeCount = uniqueRejectedCount;
