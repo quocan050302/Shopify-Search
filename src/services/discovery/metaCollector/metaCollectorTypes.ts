@@ -1,0 +1,184 @@
+/**
+ * SWAI V11 — MetaAdsCollector MCP Protocol Types & Schemas
+ */
+
+export interface MetaCollectorCapabilities {
+  extension_version: string;
+  collector_version: string;
+  transport: string;
+  persistent_worker_alive: boolean;
+  operations: string[];
+  supported: {
+    ad_types: string[];
+    statuses: string[];
+    search_types: string[];
+    sort_modes: (string | null)[];
+    export_formats: string[];
+    fields: string[];
+    events: string[];
+  };
+  limits: {
+    default_batch: number;
+    maximum_batch: number;
+    maximum_meta_page: number;
+    max_concurrency: number;
+    maximum_response_bytes: number;
+    maximum_ad_batch: number;
+  };
+}
+
+export interface MetaCollectorCreativeRaw {
+  body?: string | null;
+  caption?: string | null;
+  description?: string | null;
+  title?: string | null;
+  link_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+  video_hd_url?: string | null;
+  video_sd_url?: string | null;
+  thumbnail_url?: string | null;
+  cta_text?: string | null;
+  cta_type?: string | null;
+  original_image_url?: string | null;
+  resized_image_url?: string | null;
+  watermarked_image_url?: string | null;
+  watermarked_video_hd_url?: string | null;
+  watermarked_video_sd_url?: string | null;
+}
+
+export interface MetaCollectorPageRaw {
+  id: string;
+  name: string;
+  profile_picture_url?: string | null;
+  page_url?: string | null;
+  likes?: number | null;
+  verified?: boolean;
+  category?: string | null;
+}
+
+export interface MetaCollectorFilters {
+  start_date?: string | null;
+  end_date?: string | null;
+  media_type?: "ALL" | "IMAGE" | "VIDEO" | "MEME" | "NONE";
+  has_video?: boolean | null;
+  has_image?: boolean | null;
+  missing_data?: "include" | "exclude";
+  min_impressions?: number | null;
+  max_impressions?: number | null;
+  min_spend?: number | null;
+  max_spend?: number | null;
+  publisher_platforms?: string[];
+  languages?: string[];
+}
+
+export interface MetaCollectorRawAd {
+  id: string; // Meta Library ID
+  source_url?: string;
+  collected_at?: string;
+  page?: MetaCollectorPageRaw | null;
+  creatives?: MetaCollectorCreativeRaw[];
+  creative_count?: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  is_active?: boolean;
+  publisher_platforms?: string[];
+  currency?: string | null;
+  spend?: {
+    lower_bound?: number | null;
+    upper_bound?: number | null;
+    currency?: string | null;
+  } | null;
+  impressions?: {
+    lower_bound?: number | null;
+    upper_bound?: number | null;
+  } | null;
+  targeting?: {
+    age_min?: number | null;
+    age_max?: number | null;
+    genders?: string[];
+    locations?: string[];
+  } | null;
+  ad_type?: string | null;
+  categories?: string[];
+  delivery_start_time?: string | null;
+  delivery_stop_time?: string | null;
+  display_format?: string | null;
+  media_type?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+  snapshot_url?: string | null;
+}
+
+export interface MetaCollectorJobState {
+  id: string;
+  state: "QUEUED" | "RUNNING" | "PAUSED" | "COMPLETED" | "FAILED" | "CANCELLED" | string;
+  count: number;
+  stats?: {
+    requests_made?: number;
+    ads_collected?: number;
+    duplicates_skipped?: number;
+    filtered_out?: number;
+    pages_fetched?: number;
+    errors?: number;
+    start_time?: string;
+    end_time?: string;
+    duration_seconds?: number;
+    ads_per_second?: number;
+    active_seconds?: number;
+    [key: string]: unknown;
+  };
+  error?: {
+    code: string;
+    message: string;
+    retryable?: boolean;
+  } | null;
+  created?: string | number;
+  updated?: string | number;
+}
+
+export interface MetaCollectorSearchResponse {
+  result_set_id: string;
+  job: MetaCollectorJobState;
+  ads: MetaCollectorRawAd[];
+  next_offset?: number | null;
+  continuation?: string | null;
+  retrieval_pending: boolean;
+  data_status: "partial" | "query_exhausted" | string;
+  untrusted_ad_content: boolean;
+}
+
+export interface MetaCollectorStoredResults {
+  result_set_id: string;
+  job: MetaCollectorJobState;
+  ads: MetaCollectorRawAd[];
+  next_offset?: number | null;
+  continuation?: string | null;
+  retrieval_pending: boolean;
+  data_status: string;
+  untrusted_ad_content?: boolean;
+}
+
+export interface MetaCollectorInspectItem {
+  ad: MetaCollectorRawAd;
+  enrichment?: string;
+  media?: unknown[];
+  media_status?: string;
+}
+
+export interface MetaCollectorInspectResponse {
+  result_set_id: string;
+  items: MetaCollectorInspectItem[];
+  untrusted_ad_content?: boolean;
+}
+
+export interface MetaCollectorInspectedAd {
+  id: string;
+  ad: MetaCollectorRawAd;
+  enrichment?: string;
+  media?: unknown[];
+  media_downloaded?: boolean;
+  media_paths?: string[];
+}
+

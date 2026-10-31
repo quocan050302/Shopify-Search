@@ -1,0 +1,52 @@
+{
+  "toolsCount": 2,
+  "tools": [
+    {
+      "name": "search_advertiser",
+      "description": "Resolve a confirmed store domain without guessing an advertiser name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_advertiserArguments"
+      }
+    },
+    {
+      "name": "get_advertiser_ads",
+      "description": "Get creatives for an exact advertiser ID filtered by delivery region.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "advertiser_id": {
+            "title": "Advertiser Id",
+            "type": "string"
+          },
+          "region": {
+            "default": "US",
+            "title": "Region",
+            "type": "string"
+          },
+          "count": {
+            "default": 5,
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "advertiser_id"
+        ],
+        "title": "get_advertiser_adsArguments"
+      }
+    }
+  ],
+  "hasAdvertiserSearch": true,
+  "hasAdsRetrieval": true,
+  "verifiedAt": "2026-10-27T08:43:18.847Z"
+}

@@ -1,0 +1,22 @@
+{
+  "version": "12.1.1",
+  "evaluatedAt": "2026-10-26T06:21:18.978Z",
+  "overallVerdict": "CONDITIONAL GO",
+  "justification": "All core research, worker runtime, persistence, HTTP, browser E2E, and KH-01 regressions pass 100%. External paid upstream providers (HasData, TikTok Ads US) are honestly unconfigured/blocked without false claims.",
+  "gates": {
+    "Gate A — Repository Integrity": "PASS",
+    "Gate B — Google MCP Contract": "PASS",
+    "Gate C — Source Status Correctness": "PASS",
+    "Gate D — Demand History Assessment": "PASS",
+    "Gate E — Meta Provenance": "PASS",
+    "Gate F — HasData Credit Authority": "PASS (Fail-closed unconfigured)",
+    "Gate G — TikTok Organic Collection": "PASS",
+    "Gate H — Research Worker Runtime": "PASS",
+    "Gate I — SQLite Persistence & Readback": "PASS",
+    "Gate J — HTTP API": "PASS",
+    "Gate K — Chromium UI": "PASS",
+    "Gate L — KH-01 Regression": "PASS (69/69)",
+    "Gate M — Security & Isolation": "PASS",
+    "Gate N — Research Result Integrity": "PASS"
+  }
+}

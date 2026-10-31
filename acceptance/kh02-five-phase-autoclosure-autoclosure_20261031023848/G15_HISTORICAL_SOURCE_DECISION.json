@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T02:38:49.213Z",
+  "version": "12.4.3.4.3",
+  "feasibilityOutcome": "C",
+  "feasibilityOutcomeLabel": "BLOCKED_CONFIGURATION",
+  "secondaryStructuralOutcome": "E",
+  "secondaryStructuralOutcomeLabel": "UNSUPPORTED_FREE_SOURCE",
+  "g15EvergreenSatisfiableViaFreeBigQuery": false,
+  "g15AlternativeAuthorizedSource": "GOOGLE_TRENDS_CSV_IMPORT",
+  "justification": "ADC credentials missing in local environment; public BigQuery Top Terms dataset does not index long-tail e-commerce product SKUs."
+}

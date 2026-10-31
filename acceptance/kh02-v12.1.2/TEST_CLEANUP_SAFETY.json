@@ -1,0 +1,9 @@
+{
+  "version": "12.1.2",
+  "evaluatedAt": "2026-10-26T06:53:54.653Z",
+  "registryInterface": "TestFixtureRegistry",
+  "cleanupFunction": "cleanupKH02TestFixtures",
+  "unscopedDeleteManyRemoved": true,
+  "sentinelIsolationVerified": true,
+  "verdict": "PASS"
+}

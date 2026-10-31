@@ -1,0 +1,26 @@
+{
+  "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+  "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+  "status": "PASSED",
+  "expectedDatabaseKey": "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+  "observedDatabaseKeys": [
+    "file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db"
+  ],
+  "activeAppDb": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/dev.db",
+  "isolatedTestDb": "file:/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+  "prismaConnectionVerified": true,
+  "markerWriteVerified": true,
+  "markerReadVerified": true,
+  "crossProcessIdentityVerified": false,
+  "activeDatabaseProtected": true,
+  "activeAppDbProtected": true,
+  "isolatedProbeVerified": true,
+  "evidenceOrigin": "ACTUAL_DATABASE_QUERY",
+  "observations": [
+    "Allocated isolated test database at key: file:/private/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/t/swai-isolated-test-dbs/kh01-iso-kh01_rel_1792928286105_f08ae063-1792928337787-ad35972a-7d21-43b2-bfc8-79e228e1182a/isolated.db",
+    "Prisma marker ws_acceptance_kh01_rel_1792928286105_f08ae063 written and verified via readback",
+    "Active application database (/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/dev.db) verified protected from marker leakage"
+  ],
+  "errors": [],
+  "observedAt": "2026-10-25T11:38:57.908Z"
+}

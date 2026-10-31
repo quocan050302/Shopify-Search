@@ -1,0 +1,7 @@
+{
+  "workerOfflineDetected": true,
+  "frontendBehavior": "Renders 'Research queued — worker not running' instead of timeout",
+  "staleWorkerRecoveryTested": true,
+  "reclaimedToPending": true,
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

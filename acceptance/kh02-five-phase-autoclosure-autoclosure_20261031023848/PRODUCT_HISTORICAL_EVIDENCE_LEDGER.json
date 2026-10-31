@@ -1,0 +1,76 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.541Z",
+  "version": "12.4.3.4.3",
+  "devEntries": [
+    {
+      "candidateId": "cand_hist_ergoflow.com_smart_posture_corrector___back",
+      "title": "Smart Posture Corrector & Back Relief Support",
+      "storeDomain": "ergoflow.com",
+      "familyKey": "posture_corrector",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cmvf2gr0h000tp4orwpoxvgq5",
+      "title": "BlendJet 2 Portable Blender",
+      "storeDomain": "blendjet.com",
+      "familyKey": "blender_blendjet",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cmvf2gqx4000jp4ori8hr823c",
+      "title": "The Ridge Minimalist Slim Wallet",
+      "storeDomain": "ridge.com",
+      "familyKey": "gunmetal_wallet",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ],
+  "holdoutEntries": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_272373715",
+      "title": "Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review)",
+      "storeDomain": "order.uprootclean.com",
+      "familyKey": "needs_review",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_1212440541",
+      "title": "Feed Fresh Wet Food Anywhere, Anytime ⏰",
+      "storeDomain": "uahpet.com",
+      "familyKey": "automatic_pet_feeder",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ],
+  "totalProductsEvaluated": 6,
+  "productsMeetingEvergreenDemandCriteria": 0
+}

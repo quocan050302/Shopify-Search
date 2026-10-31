@@ -1,0 +1,22 @@
+{
+  "gateId": "P0-15",
+  "requirement": "Adversarial false-PASS mutation tests evaluate dynamically",
+  "verdict": "PASS",
+  "observedValues": {
+    "CASE_2_MISMATCHED_RUN_ID_FAILS": {
+      "verdict": "FAIL",
+      "expectedVerdict": "FAIL",
+      "passed": true
+    },
+    "CASE_3_CONFIDENCE_MUTATION_FAILS": {
+      "exactMatch": false,
+      "expectedExactMatch": false,
+      "passed": true
+    }
+  },
+  "expectedValues": {
+    "allMutationsCaught": true
+  },
+  "reason": "All adversarial mutation tests passed dynamically",
+  "timestamp": "2026-10-28T01:42:25.833Z"
+}

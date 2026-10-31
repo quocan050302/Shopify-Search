@@ -1,0 +1,15 @@
+{
+  "journeyRunId": "live_journey_1792942161302_8112dff0",
+  "startedAt": "2026-10-25T15:29:21.301Z",
+  "completedAt": "2026-10-25T15:29:58.998Z",
+  "options": {
+    "keyword": "gadget",
+    "market": "US",
+    "limit": 25,
+    "isolatedDb": true,
+    "realSource": true
+  },
+  "workerPid": 22121,
+  "serverBaseUrl": "http://127.0.0.1:53203",
+  "databaseFile": "/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/swai-isolated-test-dbs/live-meta-journey-1792942165970-5da19dea-c1b7-4634-95ae-ab68642387a8/isolated.db"
+}

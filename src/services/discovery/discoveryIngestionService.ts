@@ -22,6 +22,7 @@ export interface IngestionContext {
   workspaceId: string;
   jobId?: string;
   discoveryRunId?: string;
+  runId?: string;
   providerId: string;
   runMode?: "MANUAL" | "SCHEDULED" | "DRY_RUN" | "SIMULATED";
   isQuarantined?: boolean;
@@ -38,7 +39,22 @@ export interface IngestionResultSummary {
   failedCount: number;
   adIds: string[];
   errors: Array<{ identityHash: string; error: string }>;
+  recordTraces?: Array<{
+    rawId: string;
+    digest?: string;
+    decision: "ACCEPTED" | "UPDATED" | "DUPLICATE" | "REJECTED";
+    rejectionReason?: string | null;
+    persistedId?: string | null;
+  }>;
 }
+
+export interface MediaUpsertResult {
+  action: "CREATED" | "UPDATED" | "UNCHANGED";
+  mediaAssetId: string;
+  thumbnailUpdated: boolean;
+  videoUpdated: boolean;
+}
+
 
 /**
  * Resolves or creates the appropriate DataSource row for the platform.
@@ -62,9 +78,9 @@ export async function getDataSourceForPlatform(
               name: "META_AD_LIBRARY",
               displayName: "Meta Ad Library",
               description:
-                "Public Meta Ad Library research via Muse external agent; ads verified on facebook.com/ads/library.",
+                "Public Meta Ad Library research via self-hosted MetaAdsCollector MCP server; ads verified on facebook.com/ads/library.",
               status: "AVAILABLE",
-              capabilities: JSON.stringify(["AD_LIBRARY_RESEARCH", "EXTERNAL_AGENT_DISCOVERY", "COMMERCIAL_ADS"]),
+              capabilities: JSON.stringify(["AD_LIBRARY_RESEARCH", "LOCAL_MCP_DISCOVERY", "COMMERCIAL_ADS"]),
               supportedRegions: JSON.stringify(["US"]),
             }
           : {
@@ -101,6 +117,28 @@ export async function findExistingAdBySourceIdentity(
     return existingIdentity.ad;
   }
 
+  // 1B. For META platform: check cross-provider identity hashes (Muse <-> MetaAdsCollector)
+  if (platform === "META" && sourceExternalId) {
+    const museHash = generateStableSourceHash("META", "muse-ad-library", sourceExternalId);
+    const collectorHash = generateStableSourceHash("META", "meta-ads-collector", sourceExternalId);
+
+    const crossProviderIdentity = await tx.adSourceIdentity.findFirst({
+      where: {
+        platform: "META",
+        OR: [
+          { stableIdentityHash: museHash },
+          { stableIdentityHash: collectorHash },
+          { sourceExternalId },
+        ],
+      },
+      include: { ad: true },
+    });
+
+    if (crossProviderIdentity?.ad) {
+      return crossProviderIdentity.ad;
+    }
+  }
+
   // 2. Secondary lookup by externalAdId scoped to same platform
   if (sourceExternalId) {
     const directMatch = await tx.competitorAd.findFirst({
@@ -119,6 +157,17 @@ export async function findExistingAdBySourceIdentity(
       },
     });
     if (prefixedMatch) return prefixedMatch;
+
+    // Check if externalAdId contains the Library ID (e.g. meta_..._<id>)
+    if (platform === "META") {
+      const containsMatch = await tx.competitorAd.findFirst({
+        where: {
+          platform: "META",
+          externalAdId: { contains: sourceExternalId },
+        },
+      });
+      if (containsMatch) return containsMatch;
+    }
   }
 
   // 3. Fallback lookup by exact canonical URL scoped to same platform
@@ -130,6 +179,117 @@ export async function findExistingAdBySourceIdentity(
   }
 
   return null;
+}
+
+/**
+ * Upserts verified advertisement media asset in the database.
+ * Reusable helper (Phase 4, Items 41-53).
+ * Ensures thumbnailUrl updates independently of videoUrl, preserves legitimate media,
+ * and maintains true mediaType and aspect ratio without overwriting with null.
+ */
+export async function upsertVerifiedAdMedia(
+  tx: PrismaTransactionClient,
+  adId: string,
+  incoming: NormalizedDiscoveredAd
+): Promise<MediaUpsertResult> {
+  const existingMedia = await tx.adMediaAsset.findFirst({
+    where: { adId },
+  });
+
+  const mediaType = incoming.mediaType || (incoming.platform === "META" ? "UNKNOWN" : "VIDEO");
+  const incomingAspect = incoming.aspectRatio && incoming.aspectRatio !== "UNKNOWN" ? incoming.aspectRatio : null;
+
+  if (!existingMedia) {
+    const isReady = Boolean(incoming.thumbnailUrl || incoming.videoUrl);
+    const availability = isReady ? "READY" : (incoming.mediaAvailability || "RESTRICTED");
+
+    const created = await tx.adMediaAsset.create({
+      data: {
+        adId,
+        mediaType,
+        videoUrl: incoming.videoUrl || null,
+        embedUrl: incoming.embedUrl || null,
+        thumbnailUrl: incoming.thumbnailUrl || null,
+        durationSeconds: incoming.durationSeconds || null,
+        aspectRatio: incomingAspect || (mediaType === "IMAGE" ? "1:1" : "9:16"),
+        availability,
+        source: incoming.embedUrl ? "OFFICIAL_EMBED" : incoming.thumbnailUrl ? "SOURCE_ONLY" : "FALLBACK_ONLY",
+      },
+    });
+
+    return {
+      action: "CREATED",
+      mediaAssetId: created.id,
+      thumbnailUpdated: Boolean(incoming.thumbnailUrl),
+      videoUpdated: Boolean(incoming.videoUrl),
+    };
+  }
+
+  // Existing media row exists. Check for legitimate updates without overwriting legitimate values with null.
+  const updateData: Record<string, unknown> = {};
+  let thumbnailUpdated = false;
+  let videoUpdated = false;
+
+  // Rule 42 & 43: If existing thumbnailUrl is missing and incoming has a valid thumbnailUrl, update it.
+  // Updating thumbnail must NOT depend on finding a new videoUrl.
+  if ((!existingMedia.thumbnailUrl || existingMedia.thumbnailUrl.trim() === "") && incoming.thumbnailUrl) {
+    updateData.thumbnailUrl = incoming.thumbnailUrl;
+    thumbnailUpdated = true;
+  }
+
+  // Update video URL if missing in DB and present in incoming record
+  if ((!existingMedia.videoUrl || existingMedia.videoUrl.trim() === "") && incoming.videoUrl) {
+    updateData.videoUrl = incoming.videoUrl;
+    videoUpdated = true;
+  }
+
+  // Update mediaType if previously UNKNOWN and incoming is concrete
+  if (
+    (existingMedia.mediaType === "UNKNOWN" && mediaType !== "UNKNOWN") ||
+    (videoUpdated && mediaType === "VIDEO" && existingMedia.mediaType !== "CAROUSEL")
+  ) {
+    updateData.mediaType = mediaType;
+  }
+
+  // Update aspect ratio if previously unknown/neutral and incoming is specific
+  if (incomingAspect && (!existingMedia.aspectRatio || existingMedia.aspectRatio === "UNKNOWN")) {
+    updateData.aspectRatio = incomingAspect;
+  }
+
+  // Update duration if previously null
+  if (existingMedia.durationSeconds == null && incoming.durationSeconds != null) {
+    updateData.durationSeconds = incoming.durationSeconds;
+  }
+
+  // Update availability to READY if legitimate media is now available
+  const hasValidMedia = Boolean(
+    (updateData.thumbnailUrl || existingMedia.thumbnailUrl) ||
+    (updateData.videoUrl || existingMedia.videoUrl)
+  );
+  if (hasValidMedia && existingMedia.availability !== "READY") {
+    updateData.availability = "READY";
+  }
+
+  if (Object.keys(updateData).length > 0) {
+    updateData.updatedAt = new Date();
+    await tx.adMediaAsset.update({
+      where: { id: existingMedia.id },
+      data: updateData,
+    });
+    return {
+      action: "UPDATED",
+      mediaAssetId: existingMedia.id,
+      thumbnailUpdated,
+      videoUpdated,
+    };
+  }
+
+  return {
+    action: "UNCHANGED",
+    mediaAssetId: existingMedia.id,
+    thumbnailUpdated: false,
+    videoUpdated: false,
+  };
 }
 
 /**
@@ -150,6 +310,7 @@ export async function ingestDiscoveredAds(
     failedCount: 0,
     adIds: [],
     errors: [],
+    recordTraces: [],
   };
 
   if (records.length === 0) return summary;
@@ -164,7 +325,7 @@ export async function ingestDiscoveredAds(
   // Process each record inside a transaction for safety
   for (const record of records) {
     const platform = record.platform === "META" ? "META" : "TIKTOK";
-    const providerId = record.providerId || context.providerId || (platform === "META" ? "muse-ad-library" : "tiktok-topads");
+    const providerId = record.providerId || context.providerId || (platform === "META" ? "meta-ads-collector" : "tiktok-topads");
 
     const stableIdentityHash =
       record.stableIdentityHash ||
@@ -270,8 +431,24 @@ export async function ingestDiscoveredAds(
               observationCount: { increment: 1 },
               ...(context.isQuarantined ? { isSyntheticQuarantine: true } : {}),
               // Update landing page and headline if previously missing
-              headline: targetAd.headline ? targetAd.headline : record.headline || undefined,
-              landingPageUrl: targetAd.landingPageUrl ? targetAd.landingPageUrl : record.landingPageUrl || undefined,
+              headline:
+                targetAd.headline &&
+                targetAd.headline.trim() !== "" &&
+                !/^(Facebook Ad|Top Ad):\s*/i.test(targetAd.headline.trim())
+                  ? targetAd.headline
+                  : record.headline || targetAd.headline || undefined,
+              landingPageUrl:
+                targetAd.landingPageUrl && targetAd.landingPageUrl.trim() !== ""
+                  ? targetAd.landingPageUrl
+                  : record.landingPageUrl || undefined,
+              bodyText:
+                targetAd.bodyText && targetAd.bodyText.trim() !== ""
+                  ? targetAd.bodyText
+                  : record.bodyText || undefined,
+              callToAction:
+                targetAd.callToAction && targetAd.callToAction.trim() !== ""
+                  ? targetAd.callToAction
+                  : record.callToAction || undefined,
             },
           });
         }
@@ -296,43 +473,13 @@ export async function ingestDiscoveredAds(
           },
         });
 
-        // 6. Upsert Media Asset (Honest media type!)
-        const mediaType = record.mediaType || (platform === "META" ? "UNKNOWN" : "VIDEO");
-        const aspectRatio = record.aspectRatio || (mediaType === "VIDEO" ? "9:16" : "1:1");
-
-        const existingMedia = await tx.adMediaAsset.findFirst({
-          where: { adId: targetAd.id },
-        });
-
-        if (!existingMedia) {
-          await tx.adMediaAsset.create({
-            data: {
-              adId: targetAd.id,
-              mediaType,
-              videoUrl: record.videoUrl || null,
-              embedUrl: record.embedUrl || null,
-              thumbnailUrl: record.thumbnailUrl || null,
-              durationSeconds: record.durationSeconds || null,
-              aspectRatio,
-              availability: record.mediaAvailability,
-              source: record.embedUrl ? "OFFICIAL_EMBED" : "SOURCE_ONLY",
-            },
-          });
-        } else if (record.videoUrl && !existingMedia.videoUrl) {
-          await tx.adMediaAsset.update({
-            where: { id: existingMedia.id },
-            data: {
-              videoUrl: record.videoUrl,
-              thumbnailUrl: record.thumbnailUrl || existingMedia.thumbnailUrl,
-              availability: "READY",
-            },
-          });
-        }
+        // 6. Upsert Media Asset (Phase 4: Reusable verified helper)
+        await upsertVerifiedAdMedia(tx, targetAd.id, record);
 
         // 7. Add Factual Ad Observation (UNKNOWN status)
-        const evidenceType = platform === "META" ? "EXTERNAL_AGENT_RESEARCH" : "API_SYNC";
+        const evidenceType = platform === "META" ? "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION" : "API_SYNC";
         const verificationMethod =
-          platform === "META" ? "AD_LIBRARY_WEB_OBSERVED" : "DISCOVERY_INDEX_OBSERVED";
+          platform === "META" ? "META_COLLECTOR_GRAPHQL_ENDPOINT" : "DISCOVERY_INDEX_OBSERVED";
 
         await tx.adObservation.create({
           data: {
@@ -418,16 +565,55 @@ export async function ingestDiscoveredAds(
           },
         });
 
-        return { adId: targetAd.id, isNew };
-      });
+        // 11. Record DiscoveryRunAd association (Run <-> Ad Relational Tracking)
+        const activeRunId = context.discoveryRunId || context.runId;
+        if (activeRunId) {
+          await tx.discoveryRunAd.upsert({
+            where: {
+              runId_adId: {
+                runId: activeRunId,
+                adId: targetAd.id,
+              },
+            },
+            create: {
+              runId: activeRunId,
+              adId: targetAd.id,
+              workspaceId: context.workspaceId || "default-workspace",
+              providerId,
+              libraryId: record.sourceExternalId || null,
+              ingestOutcome: isNew ? "NEW" : "EXISTING",
+              sourceUrl: record.creativeUrl || null,
+              observedAt: now,
+            },
+            update: {
+              observedAt: now,
+              ingestOutcome: isNew ? "NEW" : "EXISTING",
+            },
+          });
+        }
 
-      // Post-transaction outcome updates (transaction-safe)
+        return { adId: targetAd.id, isNew };
+      }, { maxWait: 15000, timeout: 30000 });
+
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
       if (txResult.isNew) {
         summary.newUniqueInserted++;
         summary.newUniqueCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "ACCEPTED",
+          persistedId: txResult.adId,
+        });
       } else {
         summary.existingUpdated++;
         summary.existingCount++;
+        summary.recordTraces?.push({
+          rawId: rawExternalId,
+          digest: stableIdentityHash,
+          decision: "UPDATED",
+          persistedId: txResult.adId,
+        });
       }
       summary.adIds.push(txResult.adId);
     } catch (err: unknown) {
@@ -436,6 +622,14 @@ export async function ingestDiscoveredAds(
       summary.errors.push({
         identityHash: stableIdentityHash,
         error: msg,
+      });
+      const rawExternalId = record.sourceExternalId || record.creativeUrl || stableIdentityHash;
+      summary.recordTraces?.push({
+        rawId: rawExternalId,
+        digest: stableIdentityHash,
+        decision: "REJECTED",
+        rejectionReason: msg,
+        persistedId: null,
       });
       console.warn(`Failed to ingest discovered ad [${stableIdentityHash}]:`, msg);
     }

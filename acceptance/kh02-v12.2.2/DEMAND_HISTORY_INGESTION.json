@@ -1,0 +1,32 @@
+{
+  "source": "DEMAND_HISTORY",
+  "engineStatus": "ENGINE_READY",
+  "temporalPolicyActive": true,
+  "minimumCoverageRequiredDays": 60,
+  "upstreamConfigured": true,
+  "upstreamProvider": "SerpApi Google Trends / Google Trends API",
+  "productDisambiguatedTerm": "Pet Gadgets Ultrasonic Repeller",
+  "pointsRetrieved": 0,
+  "policyStatus": "ENGINE_READY",
+  "assessment": {
+    "status": "INSUFFICIENT_HISTORY",
+    "eligibleForEvergreen": false,
+    "dataPointsCount": 0,
+    "distinctObservationDatesCount": 0,
+    "coveredDays": 0,
+    "meanInterest": null,
+    "stdDev": null,
+    "coefficientOfVariation": null,
+    "demandClass": "INSUFFICIENT_HISTORY",
+    "sourceAuthority": "UNVERIFIED",
+    "temporalCoverageValid": false,
+    "calculationVersion": "12.1.1",
+    "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+    "missingEvidence": [
+      "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+    ],
+    "evaluatedAt": "2026-10-26T16:45:07.318Z"
+  },
+  "liveVerdict": "CONFIGURED_UNPROBED",
+  "evaluatedAt": "2026-10-26T16:45:07.318Z"
+}

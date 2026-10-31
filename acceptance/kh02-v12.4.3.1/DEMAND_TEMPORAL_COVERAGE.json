@@ -1,0 +1,120 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "demandNormSample": {
+    "rawTerm": "Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping",
+    "normalizedTerm": "Stainless Steel Cat Water Fountain",
+    "mappingReason": "Normalized 'Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping' -> 'Stainless Steel Cat Water Fountain' (stripped promotional suffixes/campaign codes/capacities)"
+  },
+  "shortSpanRejectionCheck": {
+    "eligibleForEvergreen": false,
+    "demandClass": "INSUFFICIENT_HISTORY",
+    "stabilityScore": null,
+    "dataPointsCount": 3,
+    "distinctObservationDatesCount": 3,
+    "coveredDays": 7,
+    "meanInterest": null,
+    "stdDev": null,
+    "coefficientOfVariation": null,
+    "trendVelocity": "FLAT",
+    "sourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+    "demandObservationIds": [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    "explanation": "Observations span only 7 days — short-term window cannot substantiate evergreen claims (minimum 60 days required).",
+    "evaluatedAt": "2026-10-29T06:10:08.794Z",
+    "confidencePenaltyReason": "Observations span only 7 days — short-term window cannot substantiate evergreen claims (minimum 60 days required)."
+  },
+  "nicheLookbackCoverages": {
+    "petGadgets90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:08:24.455Z",
+      "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+      "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "diy180D": {
+      "requestedLookbackDays": 180,
+      "queryExecutionTime": "2026-10-29T06:08:39.688Z",
+      "earliestAdFirstSeen": "2026-10-28T09:13:50.715Z",
+      "latestAdLastSeen": "2026-10-29T03:17:57.959Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "kitchen30D": {
+      "requestedLookbackDays": 30,
+      "queryExecutionTime": "2026-10-29T06:08:54.040Z",
+      "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+      "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 46,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "homeDecor90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:08:54.041Z",
+      "earliestAdFirstSeen": "2026-10-27T02:16:46.896Z",
+      "latestAdLastSeen": "2026-10-29T03:17:57.918Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "gardening90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:09:17.419Z",
+      "earliestAdFirstSeen": "2026-07-29T01:55:20.499Z",
+      "latestAdLastSeen": "2026-10-29T01:55:42.951Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "cleaning90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:09:17.419Z",
+      "earliestAdFirstSeen": "2026-10-24T02:45:39.298Z",
+      "latestAdLastSeen": "2026-10-29T03:17:57.947Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 49,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "automaticPetFeeder90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:09:35.306Z",
+      "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+      "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    },
+    "carAccessories90D": {
+      "requestedLookbackDays": 90,
+      "queryExecutionTime": "2026-10-29T06:09:35.307Z",
+      "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+      "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+      "activeAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "freshLiveAdsCount": 0,
+      "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+      "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+    }
+  }
+}

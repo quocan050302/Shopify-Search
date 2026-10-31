@@ -1,0 +1,34 @@
+{
+  "pageLoaded": true,
+  "authorized": true,
+  "researchSubmitted": true,
+  "acceptedRunId": "kh02_run_1793025871647_1bcm6",
+  "terminalStatus": "COMPLETED",
+  "terminalStateObserved": true,
+  "resultsRendered": true,
+  "emptyStateAccurate": false,
+  "displayedCandidateIds": [
+    "cand_1564509370_1"
+  ],
+  "displayedRankOrder": [],
+  "displayedScores": {
+    "cand_1564509370_1": 42
+  },
+  "displayedConfidence": {
+    "cand_1564509370_1": "PROVISIONAL"
+  },
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "httpMatch": true,
+  "cardCount": 1,
+  "screenshots": [
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.2/screenshots/v12_1_4_2_e2e/01_before_research.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.2/screenshots/v12_1_4_2_e2e/02_source_statuses.png",
+    "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.1.4.2/screenshots/v12_1_4_2_e2e/03_leaderboard_results.png"
+  ],
+  "consoleLogs": [],
+  "errors": [],
+  "durationMs": 3447,
+  "verdict": "PASS"
+}

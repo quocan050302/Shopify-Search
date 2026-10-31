@@ -1,0 +1,19 @@
+{
+  "id": "META_CACHE_VS_LIVE",
+  "description": "Cached database records alone do not satisfy live query PASS or report isLive=true",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "queryExecutedInferredFromDb": false
+  },
+  "observed": {
+    "queryExecuted": false
+  },
+  "assertionEvidence": [
+    "queryExecuted: false"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Database record presence correctly does not set queryExecuted"
+}

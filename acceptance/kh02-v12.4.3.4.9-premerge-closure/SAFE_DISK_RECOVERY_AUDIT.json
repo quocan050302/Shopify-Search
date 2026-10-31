@@ -1,0 +1,62 @@
+{
+  "evaluatedAt": "2026-10-31T12:13:51.611Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "measurementStatus": "MEASURED",
+  "guardStatus": "PASS_HEADROOM_SUFFICIENT",
+  "beforeMeasuredAt": "2026-10-31T12:13:51.610Z",
+  "afterMeasuredAt": "2026-10-31T12:13:51.611Z",
+  "beforeFreeBytes": 17610055680,
+  "beforeFreeDiskBytes": 17610055680,
+  "beforeFreeDiskGB": 16.4,
+  "afterFreeBytes": 17610055680,
+  "afterFreeDiskBytes": 17610055680,
+  "afterFreeDiskGB": 16.4,
+  "requiredFreeDiskGB": 15,
+  "shortfallGB": 0,
+  "cleanupAttempted": false,
+  "actionsAttempted": [],
+  "actionsSucceeded": [],
+  "actionsFailed": [],
+  "cleanedTargets": [],
+  "totalVerifiedRemovedBytes": 0,
+  "reclaimedBytes": 0,
+  "reclaimedGB": 0,
+  "netFreeSpaceDeltaBytes": 0,
+  "netFreeSpaceDeltaGB": 0,
+  "heavyWavesUnblocked": true,
+  "protectedPathsUntouched": [
+    "dev.db",
+    "node_modules",
+    ".git",
+    "acceptance",
+    "data/google_trends_csv"
+  ],
+  "protectedPathsVerifiedPresent": [
+    {
+      "path": "dev.db",
+      "exists": true,
+      "untouched": true
+    },
+    {
+      "path": "node_modules",
+      "exists": true,
+      "untouched": true
+    },
+    {
+      "path": ".git",
+      "exists": true,
+      "untouched": true
+    },
+    {
+      "path": "acceptance",
+      "exists": true,
+      "untouched": true
+    },
+    {
+      "path": "data/google_trends_csv",
+      "exists": false,
+      "untouched": true
+    }
+  ]
+}

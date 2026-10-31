@@ -1,0 +1,42 @@
+{
+  "browser": "Chromium",
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "explorerUrl": "http://127.0.0.1:54866/explorer?platform=META&requestId=cmvo0nyy10001bug9tq1tsrtu",
+  "renderedCardCount": 25,
+  "domAdIds": [
+    "cmvo0og57008lbxg9rkcels3x",
+    "cmvo0og52008ebxg9rk8b5br3",
+    "cmvo0og4y0087bxg9kc84jljb",
+    "cmvo0og4t0081bxg9zawmvpxd",
+    "cmvo0og4p007vbxg95434afgf",
+    "cmvo0og4k007obxg9k2b3u8rs",
+    "cmvo0og4f007hbxg9310wg6x0",
+    "cmvo0og4b007abxg9bmr3bdtq",
+    "cmvo0og460073bxg90ahznuhp",
+    "cmvo0og42006wbxg9svka9lx0",
+    "cmvo0og3x006pbxg9vv5ez750",
+    "cmvo0og3s006ibxg904s7cm5d",
+    "cmvo0og3o006bbxg9ljho1flm",
+    "cmvo0og3j0064bxg92101pedg",
+    "cmvo0og3e005xbxg9830upwn7",
+    "cmvo0og3a005rbxg9mubk289v",
+    "cmvo0og35005lbxg9m4ru2nce",
+    "cmvo0og2x005ebxg9huqdj7ry",
+    "cmvo0og2s0057bxg9jr6nkof4",
+    "cmvo0og2n0051bxg9rros6qfl",
+    "cmvo0og2h004ubxg97q5vot0k",
+    "cmvo0og29004nbxg93vi60gn9",
+    "cmvo0og24004hbxg90j0lgigp",
+    "cmvo0og1y004abxg9zo8wlrof",
+    "cmvo0og1r0043bxg9ugrt1k9j"
+  ],
+  "visitedPages": [
+    1,
+    2,
+    3
+  ],
+  "expectedPages": 3,
+  "paginationCompleted": true,
+  "status": "PASSED",
+  "errors": []
+}

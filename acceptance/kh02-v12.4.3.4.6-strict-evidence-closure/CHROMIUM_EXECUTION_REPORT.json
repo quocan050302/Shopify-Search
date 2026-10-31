@@ -1,0 +1,14 @@
+{
+  "executed": false,
+  "status": "BLOCKED",
+  "browserLaunched": false,
+  "serverReady": false,
+  "pageNavigationSucceeded": false,
+  "actualAssertionCount": 0,
+  "assertionFailures": [
+    "Heavy build/server/Chromium wave blocked by disk headroom guard (8.02 GB < 15 GB required per Section 0.5/5.9)."
+  ],
+  "routesVerified": [],
+  "screenshots": [],
+  "durationMs": 0
+}

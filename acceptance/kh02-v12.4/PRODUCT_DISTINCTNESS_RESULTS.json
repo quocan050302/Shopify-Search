@@ -1,0 +1,23 @@
+{
+  "isDistinct": false,
+  "totalCandidatesEvaluated": 2,
+  "distinctCount": 1,
+  "duplicateGroupsCount": 1,
+  "details": [
+    {
+      "candidateId": "c1",
+      "title": "Dog Roller",
+      "canonicalKey": "dog roller",
+      "storeDomain": "store.com",
+      "isDuplicate": false
+    },
+    {
+      "candidateId": "c2",
+      "title": "Dog Roller",
+      "canonicalKey": "dog roller",
+      "storeDomain": "store.com",
+      "isDuplicate": true,
+      "duplicateOf": "c1"
+    }
+  ]
+}

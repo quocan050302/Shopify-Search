@@ -1,0 +1,25 @@
+{
+  "request": {
+    "keywords": [
+      "gadget"
+    ],
+    "market": "US",
+    "requestedLimit": 25,
+    "activeStatus": "ACTIVE",
+    "creativePreference": "ALL",
+    "workspaceId": "ws_live_journey"
+  },
+  "responseStatus": 202,
+  "responseBody": {
+    "success": true,
+    "runId": "cmvnzh2x500012eg9d8lsodjk",
+    "syncJobId": "cmvnzh2x200002eg9vm3qguoo",
+    "status": "PENDING",
+    "provider": "meta-ads-collector",
+    "market": "US",
+    "requestedLimit": 25,
+    "workspaceId": "ws_live_journey",
+    "createdAt": "2026-10-25T15:29:28.074Z"
+  },
+  "durationMs": 73
+}

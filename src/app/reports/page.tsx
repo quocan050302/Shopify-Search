@@ -34,7 +34,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#0a0e17]">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020]">
       <Header />
 
       <main className="p-8 max-w-7xl mx-auto w-full space-y-6">

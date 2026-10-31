@@ -1,0 +1,51 @@
+{
+  "researchRunId": "kh02_run_1793414382448_njsir",
+  "evaluatedAt": "2026-10-31T02:39:42.619Z",
+  "version": "12.4.3.4.3",
+  "stages": [
+    {
+      "stageNumber": 1,
+      "stageName": "DOMAIN_EXTRACTION",
+      "status": "COMPLETED",
+      "domainsTargeted": [
+        "uahpet.com",
+        "kittyspout.com",
+        "uprootclean.com"
+      ],
+      "latencyMs": 120
+    },
+    {
+      "stageNumber": 2,
+      "stageName": "ADVERTISER_LOOKUP",
+      "status": "COMPLETED_EMPTY",
+      "advertisersFound": 3,
+      "latencyMs": 480
+    },
+    {
+      "stageNumber": 3,
+      "stageName": "CREATIVE_RETRIEVAL",
+      "status": "COMPLETED",
+      "retrievedCount": 9,
+      "latencyMs": 3200
+    },
+    {
+      "stageNumber": 4,
+      "stageName": "CREATIVE_NORMALIZATION",
+      "status": "COMPLETED",
+      "normalizedCount": 0,
+      "rejectedBeforeNormalizationCount": 0,
+      "latencyMs": 50
+    },
+    {
+      "stageNumber": 5,
+      "stageName": "CANDIDATE_ASSOCIATION",
+      "status": "COMPLETED",
+      "classifiedDistinct": 0,
+      "exactProductMatches": 0,
+      "probableProductMatches": 0,
+      "brandOnlyMatches": 0,
+      "latencyMs": 65
+    }
+  ],
+  "totalDurationMs": 50738
+}

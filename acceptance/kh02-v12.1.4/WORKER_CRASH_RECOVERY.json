@@ -1,0 +1,9 @@
+{
+  "testJobId": "job_crash_test_1793005307560",
+  "recoveredCount": 1,
+  "reclaimedStatus": "PENDING",
+  "newFencingGeneration": 2,
+  "resetRecordVersion": 0,
+  "clearedWorkerId": true,
+  "recoveryVerified": true
+}

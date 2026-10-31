@@ -1,0 +1,208 @@
+{
+  "executedAt": "2026-10-27T01:59:18.853Z",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "totalProvidersDiscovered": 5,
+  "providers": [
+    {
+      "providerId": "META_ADS",
+      "displayName": "Meta Ad Library (Facebook / Instagram)",
+      "accessClass": "LOCAL_COLLECTOR_AVAILABLE",
+      "readiness": {
+        "providerId": "META_ADS",
+        "accessClass": "LOCAL_COLLECTOR_AVAILABLE",
+        "installed": true,
+        "configured": true,
+        "transportConnected": true,
+        "authenticated": null,
+        "requiredCapabilityAvailable": true,
+        "realQueryExecuted": false,
+        "realQuerySucceeded": false,
+        "realRecordsObserved": 1,
+        "lastSuccessfulQueryAt": null,
+        "dataFreshness": null,
+        "costApprovalRequired": false,
+        "blockerCode": null,
+        "blockerReason": null
+      },
+      "capabilities": {
+        "providerId": "META_ADS",
+        "accessClass": "LOCAL_COLLECTOR_AVAILABLE",
+        "installed": true,
+        "configured": true,
+        "transportConnected": true,
+        "supportedTools": [
+          "search_ads",
+          "fetch_ad_details",
+          "extract_landing_page",
+          "diagnose_collector",
+          "get_collector_health",
+          "check_rate_limits",
+          "export_ads",
+          "import_ads",
+          "reset_rate_limits",
+          "search_advertisers"
+        ],
+        "supportsUS": true,
+        "supportsKeywordSearch": true,
+        "supportsDateFiltering": true,
+        "estimatedCostPerQueryCredits": 0,
+        "pricingSource": "Local MetaAdsCollector MCP (No external API key required)",
+        "blockerReason": null
+      }
+    },
+    {
+      "providerId": "TIKTOK_ADS",
+      "displayName": "TikTok Ads US (Creative Center)",
+      "accessClass": "MANUAL_IMPORT_ONLY",
+      "readiness": {
+        "providerId": "TIKTOK_ADS",
+        "accessClass": "MANUAL_IMPORT_ONLY",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "authenticated": false,
+        "requiredCapabilityAvailable": true,
+        "realQueryExecuted": false,
+        "realQuerySucceeded": false,
+        "realRecordsObserved": 0,
+        "lastSuccessfulQueryAt": null,
+        "dataFreshness": null,
+        "costApprovalRequired": false,
+        "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+        "blockerReason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); manual import available."
+      },
+      "capabilities": {
+        "providerId": "TIKTOK_ADS",
+        "accessClass": "MANUAL_IMPORT_ONLY",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "supportedTools": [
+          "manual_creative_import"
+        ],
+        "supportsUS": true,
+        "supportsKeywordSearch": true,
+        "supportsDateFiltering": true,
+        "estimatedCostPerQueryCredits": 0,
+        "pricingSource": "Manual / Cached Import",
+        "blockerReason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); manual import available."
+      },
+      "recommendedAction": "Configure TIKTOK_CC_COOKIE in .env.local or import verified creative URLs manually."
+    },
+    {
+      "providerId": "TIKTOK_ORGANIC",
+      "displayName": "TikTok Organic Video Research (HasData)",
+      "accessClass": "FREE_API_KEY_REQUIRED",
+      "readiness": {
+        "providerId": "TIKTOK_ORGANIC",
+        "accessClass": "FREE_API_KEY_REQUIRED",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "authenticated": false,
+        "requiredCapabilityAvailable": false,
+        "realQueryExecuted": false,
+        "realQuerySucceeded": false,
+        "realRecordsObserved": 0,
+        "lastSuccessfulQueryAt": null,
+        "dataFreshness": null,
+        "costApprovalRequired": true,
+        "blockerCode": "MISSING_CREDENTIALS",
+        "blockerReason": "HASDATA_API_KEY not configured in environment (1,000 free monthly credits available)."
+      },
+      "capabilities": {
+        "providerId": "TIKTOK_ORGANIC",
+        "accessClass": "FREE_API_KEY_REQUIRED",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "supportedTools": [],
+        "supportsUS": false,
+        "supportsKeywordSearch": true,
+        "supportsDateFiltering": true,
+        "estimatedCostPerQueryCredits": 10,
+        "pricingSource": "HasData Scraper API Documentation (10 credits/search)",
+        "blockerReason": "HASDATA_API_KEY not configured in environment (1,000 free monthly credits available)."
+      },
+      "recommendedAction": "Configure HASDATA_API_KEY in .env.local (free tier includes 1,000 credits/mo at hasdata.com)."
+    },
+    {
+      "providerId": "GOOGLE_ADS",
+      "displayName": "Google Ads Transparency Center",
+      "accessClass": "UNSUPPORTED",
+      "readiness": {
+        "providerId": "GOOGLE_ADS",
+        "accessClass": "UNSUPPORTED",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "authenticated": false,
+        "requiredCapabilityAvailable": false,
+        "realQueryExecuted": false,
+        "realQuerySucceeded": false,
+        "realRecordsObserved": 0,
+        "lastSuccessfulQueryAt": null,
+        "dataFreshness": null,
+        "costApprovalRequired": false,
+        "blockerCode": "MCP_NOT_CONFIGURED",
+        "blockerReason": "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_MCP_URL)."
+      },
+      "capabilities": {
+        "providerId": "GOOGLE_ADS",
+        "accessClass": "UNSUPPORTED",
+        "installed": true,
+        "configured": false,
+        "transportConnected": false,
+        "supportedTools": [],
+        "supportsUS": true,
+        "supportsKeywordSearch": false,
+        "supportsDateFiltering": true,
+        "estimatedCostPerQueryCredits": 0,
+        "pricingSource": "Google Ads Transparency MCP (Free public transparency index)",
+        "blockerReason": "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_MCP_URL)."
+      },
+      "recommendedAction": "Configure GOOGLE_TRANSPARENCY_MCP_URL or command in .env.local for competitor transparency."
+    },
+    {
+      "providerId": "DEMAND_HISTORY",
+      "displayName": "Historical Demand & Trend Stability (Google Trends)",
+      "accessClass": "ZERO_KEY_AUTHORIZED",
+      "readiness": {
+        "providerId": "DEMAND_HISTORY",
+        "accessClass": "ZERO_KEY_AUTHORIZED",
+        "installed": true,
+        "configured": true,
+        "transportConnected": true,
+        "authenticated": null,
+        "requiredCapabilityAvailable": true,
+        "realQueryExecuted": false,
+        "realQuerySucceeded": false,
+        "realRecordsObserved": 0,
+        "lastSuccessfulQueryAt": null,
+        "dataFreshness": null,
+        "costApprovalRequired": false,
+        "blockerCode": null,
+        "blockerReason": null
+      },
+      "capabilities": {
+        "providerId": "DEMAND_HISTORY",
+        "accessClass": "ZERO_KEY_AUTHORIZED",
+        "installed": true,
+        "configured": true,
+        "transportConnected": true,
+        "supportedTools": [
+          "temporal_demand_analysis",
+          "stability_scoring",
+          "trend_persistence_evaluation"
+        ],
+        "supportsUS": true,
+        "supportsKeywordSearch": true,
+        "supportsDateFiltering": true,
+        "estimatedCostPerQueryCredits": 0,
+        "pricingSource": "Internal Demand History & Temporal Stability Policy Engine",
+        "blockerReason": null
+      },
+      "recommendedAction": "Import product demand CSV or execute evergreen research to build temporal history."
+    }
+  ]
+}

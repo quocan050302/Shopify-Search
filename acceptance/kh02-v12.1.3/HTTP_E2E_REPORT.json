@@ -1,0 +1,27 @@
+{
+  "GET /api/v1/kh02/providers/status": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Found 5 providers"
+  },
+  "POST /api/v1/kh02/research": {
+    "status": 202,
+    "ok": true,
+    "responseSnippet": "Accepted runId: kh02_run_1793001894190_2sr2z"
+  },
+  "GET /api/v1/kh02/research/runs/[runId]": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Status: COMPLETED"
+  },
+  "GET /api/v1/kh02/leaderboard": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Restored leaderboard for topic 'Pet Water Fountain'"
+  },
+  "GET /api/v1/kh02/research/runs": {
+    "status": 200,
+    "ok": true,
+    "responseSnippet": "Found 1 historical runs"
+  }
+}

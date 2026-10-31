@@ -1,0 +1,19 @@
+{
+  "evaluatedAt": "2026-10-31T05:22:24.659Z",
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "transportStatus": "CONNECTED",
+  "liveCreativesRetrievedCount": 9,
+  "exactProductSkuMatchesCount": 0,
+  "probableProductMatchesCount": 9,
+  "brandOnlyMatchesCount": 0,
+  "pipelineInvariantPassed": true,
+  "subGates": {
+    "G06_TRANSPORT": "PASS",
+    "G06_LIVE_RETRIEVAL": "PASS",
+    "G06_PIPELINE_RECONCILIATION": "PASS",
+    "GOOGLE_PRODUCT_ASSOCIATION": "FAIL",
+    "GOOGLE_EXACT_PRODUCT_EVIDENCE": "INSUFFICIENT_EVIDENCE"
+  },
+  "overallG06Verdict": "PASS",
+  "overallG06Reason": "Retrieved and normalized 9 live Google Ads creatives (9 probable product matches, 0 exact SKU matches)."
+}

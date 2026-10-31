@@ -1,0 +1,378 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "totalMutations": 16,
+  "caughtCount": 16,
+  "allCaught": true,
+  "mutations": [
+    {
+      "mutationId": "M01",
+      "description": "Inject cached ads as LIVE_PROVIDER",
+      "caughtAndRejected": true,
+      "observed": {
+        "allowLive": false,
+        "provenance": "NONE",
+        "sourceRecordsReturned": 0
+      }
+    },
+    {
+      "mutationId": "M02",
+      "description": "Fabricate upstream ad IDs without upstream completion",
+      "caughtAndRejected": true,
+      "observed": {
+        "returnedCount": 0,
+        "upstreamReturnedCount": null
+      }
+    },
+    {
+      "mutationId": "M03",
+      "description": "Return HTTP 429 but attempt to label Google PASSED",
+      "caughtAndRejected": true,
+      "observed": {
+        "status": "QUERY_FAILED",
+        "domainsRateLimited": 1
+      }
+    },
+    {
+      "mutationId": "M04",
+      "description": "Mark MCP transport-connected as product-data verified",
+      "caughtAndRejected": true,
+      "observed": {
+        "TRANSPORT_CONNECTED": true,
+        "PRODUCT_DISCOVERY_SUPPORTED": false,
+        "capabilityClassification": "ENRICHMENT_ONLY"
+      }
+    },
+    {
+      "mutationId": "M05",
+      "description": "Associate a Google brand advertisement with an unrelated model",
+      "caughtAndRejected": true,
+      "observed": {
+        "classification": "REJECTED_UNRELATED_CREATIVE",
+        "isProductSpecificEvidence": false
+      }
+    },
+    {
+      "mutationId": "M06",
+      "description": "Insert a synthetic demand series and attempt Evergreen promotion",
+      "caughtAndRejected": true,
+      "observed": {
+        "resolvedAuthority": "CACHED_UNVERIFIED",
+        "auditReasons": [
+          "Demand observation uses 'verified-merchant-demand:<domain>' pseudo-reference without a raw Google Trends CSV file, SHA-256 checksum, or provider API response lineage."
+        ]
+      }
+    },
+    {
+      "mutationId": "M07",
+      "description": "Duplicate the same product under three different titles",
+      "caughtAndRejected": true,
+      "observed": {
+        "isDistinct": false,
+        "isFamilyDiverse": false,
+        "totalCandidatesEvaluated": 3,
+        "distinctCount": 1,
+        "distinctProductCount": 1,
+        "distinctFamilyCount": 1,
+        "distinctListingCount": 1,
+        "independentOpportunityCount": 1,
+        "homogeneousFamilyDetected": true,
+        "dominantFamilyKey": "food_feeder",
+        "dominantFamilyLabel": "Food Feeder",
+        "duplicateGroupsCount": 2,
+        "uncertainties": [],
+        "pairwiseDecisions": [
+          {
+            "candidateIds": [
+              "cand_dup_1",
+              "cand_dup_2"
+            ],
+            "listingKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "productKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "familyKeys": [
+              "food_feeder",
+              "food_feeder"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "conflictingEvidence": [],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+          },
+          {
+            "candidateIds": [
+              "cand_dup_1",
+              "cand_dup_3"
+            ],
+            "listingKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "productKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "familyKeys": [
+              "food_feeder",
+              "food_feeder"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "conflictingEvidence": [],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+          },
+          {
+            "candidateIds": [
+              "cand_dup_2",
+              "cand_dup_3"
+            ],
+            "listingKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "productKeys": [
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+              "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "familyKeys": [
+              "food_feeder",
+              "food_feeder"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+            ],
+            "conflictingEvidence": [],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+          }
+        ],
+        "details": [
+          {
+            "candidateId": "cand_dup_1",
+            "title": "Marketing Headline #1",
+            "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "variantKey": null,
+            "familyKey": "food_feeder",
+            "familyLabel": "Food Feeder",
+            "storeDomain": "uahpet.com",
+            "isDuplicate": false
+          },
+          {
+            "candidateId": "cand_dup_2",
+            "title": "Marketing Headline #2",
+            "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "variantKey": null,
+            "familyKey": "food_feeder",
+            "familyLabel": "Food Feeder",
+            "storeDomain": "uahpet.com",
+            "isDuplicate": true,
+            "duplicateOf": "cand_dup_1",
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+          },
+          {
+            "candidateId": "cand_dup_3",
+            "title": "Marketing Headline #3",
+            "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+            "variantKey": null,
+            "familyKey": "food_feeder",
+            "familyLabel": "Food Feeder",
+            "storeDomain": "uahpet.com",
+            "isDuplicate": true,
+            "duplicateOf": "cand_dup_1",
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+          }
+        ]
+      }
+    },
+    {
+      "mutationId": "M08",
+      "description": "Inject an irrelevant service into the Top 3",
+      "caughtAndRejected": true,
+      "observed": {
+        "relevanceStatus": "IRRELEVANT",
+        "discoveryDecision": "CLEARLY_UNRELATED",
+        "isAccepted": false,
+        "score": 0.05,
+        "reasons": [
+          "Rejected non-physical entityType 'SERVICE_OR_COURSE' under PHYSICAL_ECOMMERCE_PRODUCTS policy."
+        ],
+        "topic": "Pet Gadgets",
+        "matchedArchetypeId": null,
+        "audienceRelevance": {
+          "requestedAudience": "PET_GENERAL",
+          "supportedAudiences": [
+            "PET_GENERAL"
+          ],
+          "audienceMatch": "COMPATIBLE",
+          "audienceEvidenceReferences": [
+            "pet_term:\"pet\""
+          ],
+          "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+          "eligibleForPrimaryShortlist": true
+        }
+      }
+    },
+    {
+      "mutationId": "M09",
+      "description": "Return three products only in a fixture while claiming real-provider success",
+      "caughtAndRejected": true,
+      "observed": {
+        "productId": "prod_fix",
+        "canonicalProductName": "pet feeder",
+        "observationIds": [
+          "f1"
+        ],
+        "source": "FIXTURE_SEED",
+        "evidenceReferences": [
+          "fixture:seed"
+        ],
+        "methodologyVersions": [],
+        "keywords": [
+          "pet feeder"
+        ],
+        "values": [
+          80
+        ],
+        "rawCsvFileExists": false,
+        "hasValidFileChecksum": false,
+        "hasProviderRequestLineage": false,
+        "isTemplated76To82Series": false,
+        "isPromotionalCopyKeyword": false,
+        "resolvedAuthority": "FIXTURE_ONLY",
+        "eligibleForEvergreen": false,
+        "demotedFromEvergreen": false,
+        "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+        "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+        "auditReasons": [
+          "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+        ]
+      }
+    },
+    {
+      "mutationId": "M10",
+      "description": "Simulate successful collector startup with zero upstream query attempts",
+      "caughtAndRejected": true,
+      "observed": {
+        "executionStatus": "NOT_RUN",
+        "sourceExecutionStatus": "NOT_RUN",
+        "liveSucceeded": false,
+        "attemptedQueries": 0,
+        "successfulQueries": 0,
+        "failedQueries": 0,
+        "cancelledQueries": 0,
+        "skippedQueries": 0,
+        "notAttemptedQueries": 1,
+        "totalReturned": 0,
+        "sourceRecordsReturned": 0,
+        "uniqueExternalIdsReturned": 0,
+        "persistenceOutcome": {
+          "persistedInsertedCount": null,
+          "persistedUpdatedCount": null,
+          "status": "NOT_EVALUATED"
+        },
+        "qualifiedProductOutcome": {
+          "qualifiedCandidatesCount": null,
+          "status": "NOT_EVALUATED"
+        },
+        "errors": [],
+        "warnings": [
+          "No Meta subqueries were attempted."
+        ]
+      }
+    },
+    {
+      "mutationId": "M11",
+      "description": "Change the active run ID during polling",
+      "caughtAndRejected": true,
+      "observed": {
+        "hasActiveRunIdRef": true,
+        "hasActivePollingTokenRef": true
+      }
+    },
+    {
+      "mutationId": "M12",
+      "description": "Demote historical Evergreen winner backed by synthetic merchant demand",
+      "caughtAndRejected": true,
+      "observed": {
+        "modified": true,
+        "retainedTopThree": 0,
+        "demotedCount": 1
+      }
+    },
+    {
+      "mutationId": "M13",
+      "description": "Count planned archetypes as discovered product families when 0 qualified products",
+      "caughtAndRejected": true,
+      "observed": {
+        "plannedArchetypes": 5,
+        "distinctProductArchetypesObserved": 0
+      }
+    },
+    {
+      "mutationId": "M14",
+      "description": "Report Verified Evergreen when authoritative demand is zero",
+      "caughtAndRejected": true,
+      "observed": {
+        "tier": "INSUFFICIENT_EVIDENCE",
+        "verifiedByGate": false
+      }
+    },
+    {
+      "mutationId": "M15",
+      "description": "Suppress a failed provider error while displaying a green PASSED state",
+      "caughtAndRejected": true,
+      "observed": {
+        "executionStatus": "FAILED"
+      }
+    },
+    {
+      "mutationId": "M16",
+      "description": "Count one Google creative several times against the same product",
+      "caughtAndRejected": true,
+      "observed": {
+        "uniqueGoogleRecIdsCount": 1
+      }
+    }
+  ]
+}

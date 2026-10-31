@@ -1,0 +1,33 @@
+{
+  "version": "12.4.3.2.1",
+  "feederRunId": "kh02_run_1793273119399_i8jf0",
+  "sourceMode": "CACHE_ONLY",
+  "runLevelSourceCoverage": {
+    "currentRunLiveAdsCount": 0,
+    "currentRunCachedAdsCount": 50
+  },
+  "productCardsAdProvenance": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "merchantPageVerified": true,
+      "supportingAdCount": 7,
+      "observationCount": 84,
+      "currentRunLiveAdsCount": 0,
+      "currentRunCachedAdsCount": 7,
+      "distinctAdvertisersCount": 1
+    },
+    {
+      "candidateId": "cand_1783682388",
+      "title": "Automatic Dog Feeder for Easy Daily Meals",
+      "storeDomain": "kingspetboutique.info",
+      "merchantPageVerified": false,
+      "supportingAdCount": 1,
+      "observationCount": 12,
+      "currentRunLiveAdsCount": 0,
+      "currentRunCachedAdsCount": 1,
+      "distinctAdvertisersCount": 1
+    }
+  ]
+}

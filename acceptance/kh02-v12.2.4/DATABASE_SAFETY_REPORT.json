@@ -1,0 +1,7 @@
+{
+  "workspaceScopedQueriesEnforced": true,
+  "tenantIsolationEnforced": true,
+  "silentWorkspaceAutoCreationRemoved": true,
+  "casFencingActive": true,
+  "sqliteForeignKeysIntact": true
+}

@@ -1,0 +1,8 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "capabilityClassification": "ENRICHMENT_ONLY",
+  "productAssociatedCount": 0,
+  "brandOnlyMatchesExcludedFromProductEvidence": true,
+  "g06Verdict": "INSUFFICIENT_EVIDENCE"
+}

@@ -1,0 +1,105 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "suites": [
+    {
+      "suiteId": "tsc_typecheck",
+      "name": "TypeScript Typecheck (tsc --noEmit)",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 3839,
+      "timedOut": false
+    },
+    {
+      "suiteId": "eslint",
+      "name": "ESLint (src)",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 8673,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh01_verify",
+      "name": "KH-01 Regression Suite",
+      "exitCode": 0,
+      "passedTests": 69,
+      "failedTests": 0,
+      "durationMs": 5387,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_1_family",
+      "name": "V12.4.3.3.1 Semantic Family Classification Suite",
+      "exitCode": 0,
+      "passedTests": 19,
+      "failedTests": 0,
+      "durationMs": 1119,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_1_integrity",
+      "name": "V12.4.3.3.1 Meta/Google Live Integrity & Adversarial Suite",
+      "exitCode": 0,
+      "passedTests": 19,
+      "failedTests": 0,
+      "durationMs": 1730,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_provenance",
+      "name": "V12.4.3.3 Meta/Google Provenance Suite (89 tests)",
+      "exitCode": 0,
+      "passedTests": 89,
+      "failedTests": 0,
+      "durationMs": 2494,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_2_demand_identity",
+      "name": "V12.4.3.3.2 Demand Cache & Product Identity Suite",
+      "exitCode": 0,
+      "passedTests": 10,
+      "failedTests": 0,
+      "durationMs": 1712,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_4_1_zero_spend",
+      "name": "V12.4.3.4.1 Zero-Spend Google Free Automation Suite",
+      "exitCode": 0,
+      "passedTests": 26,
+      "failedTests": 0,
+      "durationMs": 2736,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh02_unit_all",
+      "name": "KH-02 Full Unit Regression Suite",
+      "exitCode": 0,
+      "passedTests": 322,
+      "failedTests": 0,
+      "durationMs": 16700,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh02_integration",
+      "name": "KH-02 Integration Suite",
+      "exitCode": 0,
+      "passedTests": 27,
+      "failedTests": 0,
+      "durationMs": 16876,
+      "timedOut": false
+    },
+    {
+      "suiteId": "production_build",
+      "name": "Next.js Production Build",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 11920,
+      "timedOut": false
+    }
+  ]
+}

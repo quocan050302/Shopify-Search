@@ -1,0 +1,6 @@
+{
+  "scenario": "Heartbeat retry attempted after job transitions to COMPLETED or FAILED",
+  "heartbeatMutatesTerminalJob": false,
+  "terminalSnapshotProtected": true,
+  "testOutcome": "PASS"
+}

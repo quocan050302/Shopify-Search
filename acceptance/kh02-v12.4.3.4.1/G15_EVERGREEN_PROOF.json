@@ -1,0 +1,8 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "evaluationScope": "SINGLE_RUN_ISOLATED",
+  "qualifyingProductsCount": 0,
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "reason": "0/3 Verified Evergreen reported honestly (INSUFFICIENT_EVIDENCE: Google Free public sources do not provide 60+ days product-specific demand for these niche items without Explore CSV import; 0 false promotions)"
+}

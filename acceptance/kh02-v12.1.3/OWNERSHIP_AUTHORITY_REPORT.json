@@ -1,0 +1,13 @@
+{
+  "authorityRule": "Single Authority Invariant: Only valid lease owner may update RUNNING job",
+  "columns": [
+    "fencingGeneration",
+    "recordVersion",
+    "workerId",
+    "claimToken",
+    "leaseExpiresAt"
+  ],
+  "workerId": "kh02-worker-47984-mvoz0210",
+  "claimVerified": true,
+  "terminalCommitVerified": true
+}

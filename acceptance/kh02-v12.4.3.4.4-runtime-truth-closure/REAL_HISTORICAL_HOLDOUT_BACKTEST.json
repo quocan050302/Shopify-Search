@@ -1,0 +1,73 @@
+{
+  "split": "HOLDOUT",
+  "windowStart": "2026-10-24T00:00:00.000Z",
+  "windowEnd": "2026-10-30T12:00:00.000Z",
+  "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+  "historicalObservationCount": 380,
+  "reconstructedCandidateCount": 274,
+  "shortlistCount": 3,
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller"
+    },
+    {
+      "candidateId": "cand_272373715",
+      "title": "Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review)",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "order.uprootclean.com",
+      "familyKey": "needs_review"
+    },
+    {
+      "candidateId": "cand_1212440541",
+      "title": "Feed Fresh Wet Food Anywhere, Anytime ⏰",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "uahpet.com",
+      "familyKey": "automatic_pet_feeder"
+    }
+  ],
+  "productEvidenceLedger": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_272373715",
+      "title": "Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review)",
+      "storeDomain": "order.uprootclean.com",
+      "familyKey": "needs_review",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_1212440541",
+      "title": "Feed Fresh Wet Food Anywhere, Anytime ⏰",
+      "storeDomain": "uahpet.com",
+      "familyKey": "automatic_pet_feeder",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed with 380 historical records; zero future leakage verified. Demand evaluation detail: Pet Hair/Lint/Dust Cleaner: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review): 0 obs (INSUFFICIENT_HISTORY, eligible=false); Feed Fresh Wet Food Anywhere, Anytime ⏰: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

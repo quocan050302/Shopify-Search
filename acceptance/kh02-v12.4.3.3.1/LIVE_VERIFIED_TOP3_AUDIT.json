@@ -1,0 +1,185 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "liveOnlyShortlist": {
+    "scenario": "Pet Gadgets (LIVE_ONLY)",
+    "researchRunId": "kh02_run_1793327245714_gkql7",
+    "topic": "Pet Gadgets",
+    "sourceMode": "LIVE_ONLY",
+    "qualifiedCount": 3,
+    "distinctFamiliesCount": 3,
+    "liveVerifiedProductCount": 3,
+    "liveVerifiedTop3": true,
+    "verifiedEvergreenCount": 0,
+    "executedQueryIds": [
+      "kh02_q_r1_1_32894f1d",
+      "kh02_q_r1_2_3835a2db",
+      "kh02_q_r1_3_83557a0c"
+    ],
+    "shortlistProducts": [
+      {
+        "rank": 1,
+        "candidateId": "cand_1212440541",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityStatus": "VERIFIED",
+        "familyKey": "automatic_pet_feeder",
+        "supportingAdIds": [
+          "cmvrzyn23004m6coriy1lwr49",
+          "cmvrzyn2j004s6corb96ke61v"
+        ],
+        "supportingExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_83557a0c"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true
+      },
+      {
+        "rank": 2,
+        "candidateId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "kittyspout.com",
+        "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "identityStatus": "VERIFIED",
+        "familyKey": "pet_water_fountain",
+        "supportingAdIds": [
+          "cmvrzyixu002s6corgmhfjtem"
+        ],
+        "supportingExternalAdIds": [
+          "1067995712370292"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_2_3835a2db"
+        ],
+        "liveObservationsCount": 1,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true
+      },
+      {
+        "rank": 3,
+        "candidateId": "cand_592688578",
+        "title": "Chew Resistant Squeaky Plush Pet Toy",
+        "storeDomain": "livinginurban.com",
+        "canonicalProductUrl": "https://livinginurban.com/products/null-1773399526609",
+        "identityStatus": "VERIFIED",
+        "familyKey": "plush_toy",
+        "supportingAdIds": [
+          "cmvrzyn1800496corko0f36to",
+          "cmvrzyn1m004f6corovcwt882"
+        ],
+        "supportingExternalAdIds": [
+          "1019672154369562",
+          "1686452209316599"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_83557a0c"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true
+      }
+    ]
+  },
+  "liveFallbackShortlist": {
+    "scenario": "Pet Gadgets (LIVE_WITH_CACHE_FALLBACK)",
+    "researchRunId": "kh02_run_1793327245885_raa19",
+    "topic": "Pet Gadgets",
+    "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+    "qualifiedCount": 3,
+    "distinctFamiliesCount": 3,
+    "liveVerifiedProductCount": 3,
+    "liveVerifiedTop3": true,
+    "verifiedEvergreenCount": 0,
+    "executedQueryIds": [
+      "kh02_q_r1_1_5cf0b0f9",
+      "kh02_q_r1_2_37fea34f",
+      "kh02_q_r1_3_4f82d376"
+    ],
+    "shortlistProducts": [
+      {
+        "rank": 1,
+        "candidateId": "cand_1212440541",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityStatus": "VERIFIED",
+        "familyKey": "automatic_pet_feeder",
+        "supportingAdIds": [
+          "cmvrzyn23004m6coriy1lwr49",
+          "cmvrzyn2j004s6corb96ke61v",
+          "cmvrzyn5c005t6cor0yylqvk2",
+          "cmvrzyn3h00546corujh7567u",
+          "cmvrzyn30004y6corojbfmznc",
+          "cmvrzyn4w005n6corlzcsccsh",
+          "cmvrzyn3x005a6corm3d0e51v"
+        ],
+        "supportingExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858",
+          "1595856712093558",
+          "1399013621792652",
+          "1802296680785588",
+          "1393597299374101",
+          "905190415961783"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_4f82d376"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 5,
+        "isLiveVerified": true
+      },
+      {
+        "rank": 2,
+        "candidateId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "kittyspout.com",
+        "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "identityStatus": "VERIFIED",
+        "familyKey": "pet_water_fountain",
+        "supportingAdIds": [
+          "cmvrzyixu002s6corgmhfjtem"
+        ],
+        "supportingExternalAdIds": [
+          "1067995712370292"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_2_37fea34f"
+        ],
+        "liveObservationsCount": 1,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true
+      },
+      {
+        "rank": 3,
+        "candidateId": "cand_592688578",
+        "title": "Chew Resistant Squeaky Plush Pet Toy",
+        "storeDomain": "livinginurban.com",
+        "canonicalProductUrl": "https://livinginurban.com/products/null-1773399526609",
+        "identityStatus": "VERIFIED",
+        "familyKey": "plush_toy",
+        "supportingAdIds": [
+          "cmvrzyn1800496corko0f36to",
+          "cmvrzyn1m004f6corovcwt882"
+        ],
+        "supportingExternalAdIds": [
+          "1019672154369562",
+          "1686452209316599"
+        ],
+        "matchedQueryIds": [
+          "kh02_q_r1_3_4f82d376"
+        ],
+        "liveObservationsCount": 2,
+        "cachedObservationsCount": 0,
+        "isLiveVerified": true
+      }
+    ]
+  },
+  "g16Verdict": "PASS"
+}

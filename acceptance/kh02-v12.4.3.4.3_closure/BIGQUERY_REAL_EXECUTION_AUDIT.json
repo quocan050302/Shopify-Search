@@ -1,0 +1,51 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "clientConfigured": true,
+  "billingVerification": {
+    "verified": false,
+    "billingEnabled": null,
+    "billingAccountName": null,
+    "sandboxEligible": false,
+    "reason": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED: Independent Cloud Billing verification requires authorized credentials (Missing Google Cloud credentials: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.)."
+  },
+  "searchExecutionAttempt": {
+    "jobId": "none",
+    "projectId": "shopify-search-sandbox",
+    "datasetId": "google_trends",
+    "tableId": "bigquery-public-data.google_trends.top_terms",
+    "sqlQuery": "SELECT\n  term,\n  week,\n  score,\n  rank,\n  refresh_date\nFROM `bigquery-public-data.google_trends.top_terms`\nWHERE LOWER(term) = LOWER(@term)\nORDER BY week ASC\nLIMIT 100",
+    "sqlHash": "abf90973fa7f3c2520458b4212d3bf7e415cd8aeab68c2930ea3a033b515beac",
+    "parameters": {
+      "term": "pet gadgets",
+      "region": "US"
+    },
+    "dryRunCompleted": false,
+    "estimatedBytesProcessed": 0,
+    "totalBytesProcessed": 0,
+    "totalBytesBilled": null,
+    "cacheHit": false,
+    "rows": [],
+    "rowCount": 0,
+    "executionTimeMs": 1,
+    "billingVerifiedZeroCost": false,
+    "evidenceClass": "INSUFFICIENT_COVERAGE",
+    "status": "BLOCKED",
+    "errorMessage": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED: Independent Cloud Billing verification requires authorized credentials (Missing Google Cloud credentials: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.)."
+  },
+  "auditLedger": [
+    {
+      "timestamp": "2026-10-31T01:58:57.613Z",
+      "jobId": "mock_bqjob_1793411937613",
+      "projectId": "valid-sandbox-proj",
+      "term": "nano ultrasonic pet water fountain",
+      "estimatedBytes": 1048576,
+      "actualBytesProcessed": 1048576,
+      "actualBytesBilled": 0,
+      "rowCount": 0,
+      "status": "INSUFFICIENT_COVERAGE"
+    }
+  ],
+  "maxBytesPerQuery": 104857600,
+  "zeroSpendPolicyActive": true
+}

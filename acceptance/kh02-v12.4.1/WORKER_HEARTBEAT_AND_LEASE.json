@@ -1,0 +1,24 @@
+{
+  "workerHealth": {
+    "workerId": "kh02-worker-acceptance-22872",
+    "observedAt": "2026-10-28T09:02:42.709Z",
+    "lastHeartbeatAt": "2026-10-28T09:02:42.507Z",
+    "status": "ALIVE",
+    "activeJobId": null,
+    "processedCount": 0,
+    "failureCount": 0,
+    "processStartedAt": "2026-10-28T08:57:52.552Z",
+    "uptimeSeconds": 290,
+    "workerVersion": "12.4.1",
+    "workerBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "workerProcessId": 22872,
+    "dbFingerprint": "6530562482a2",
+    "conflictingWorkerIds": []
+  },
+  "recoveredCount": 0,
+  "historicalAbandonedJob": {
+    "id": "kh02_run_1793168316581_dyrsw",
+    "status": "FAILED",
+    "errorMessage": "Research job failed: exceeded maximum attempts (3) following worker crash."
+  }
+}

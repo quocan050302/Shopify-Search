@@ -1,0 +1,468 @@
+{
+  "googleDiag": {
+    "source": "GOOGLE_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": null,
+    "storedRecordCount": 0,
+    "lastLiveQueryRecordCount": null,
+    "currentRunRecordCount": null,
+    "lastSuccessfulLiveQueryAt": null,
+    "lastProbeAt": "2026-10-29T03:47:51.166Z",
+    "authStatus": "AUTH_NOT_REQUIRED",
+    "transportStatus": "CONNECTED",
+    "capabilityStatus": "VERIFIED",
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-29T03:47:51.166Z",
+    "status": "CONNECTED",
+    "reason": "Google Ads Transparency MCP server connected (2 tools discovered). Operations verified.",
+    "missingRequirements": [],
+    "dimensions": {
+      "adapterInstalled": true,
+      "configured": true,
+      "transportConnected": true,
+      "authenticated": true,
+      "supportedOperationsVerified": true,
+      "queryExecuted": true,
+      "sourceDataVerified": false,
+      "lastLiveQueryAt": null,
+      "blockerCode": null,
+      "storedRecordCount": 0,
+      "lastLiveQueryRecordCount": null,
+      "currentRunRecordCount": null,
+      "lastSuccessfulLiveQueryAt": null,
+      "lastProbeAt": "2026-10-29T03:47:51.166Z",
+      "authStatus": "AUTH_NOT_REQUIRED",
+      "transportStatus": "CONNECTED",
+      "capabilityStatus": "VERIFIED",
+      "queryStatus": "QUERY_FAILED",
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "lastSuccessfulQueryAt": "2026-10-29T03:46:30.918Z",
+      "lastSuccessfulRecordCount": 0,
+      "queryError": "Google Transparency advertiser lookup failed for pestie.com: HTTP 429 upstream rate-limit cooldown active",
+      "liveError": null,
+      "cachedRecordsCount": null,
+      "freshLiveCount": null
+    },
+    "estimatedQueryCost": {
+      "estimatedCredits": 0,
+      "isPaid": false,
+      "knownCost": true,
+      "pricingSource": "Google Ads Transparency MCP (Free public transparency index)"
+    }
+  },
+  "controlledLivePetlibroProbe": {
+    "status": "QUERY_FAILED",
+    "retrievedCount": 0,
+    "productAssociatedCount": 0,
+    "brandAssociatedCount": 0,
+    "enrichmentExecution": {
+      "attemptedDomains": [
+        "petlibro.com"
+      ],
+      "advertiserLookupSucceeded": false,
+      "advertisersFound": 0,
+      "creativeQuerySucceeded": false,
+      "creativesReturned": 0,
+      "normalizedObservations": 0,
+      "productLevelMatches": 0,
+      "brandLevelMatches": 0,
+      "productEvidenceIds": [],
+      "queryErrors": [
+        "Google Transparency advertiser lookup failed for petlibro.com: HTTP 429 upstream rate-limit cooldown active"
+      ],
+      "queryTimestamp": "2026-10-29T03:47:51.854Z",
+      "stateBreakdown": {
+        "configured": true,
+        "transportConnected": true,
+        "toolDiscovered": true,
+        "operationSupported": true,
+        "advertiserLookupAttempted": true,
+        "advertiserFound": false,
+        "adsRetrieved": false,
+        "productAssociatedEvidence": false,
+        "empty": false,
+        "failed": true,
+        "cached": false
+      }
+    },
+    "observations": []
+  },
+  "controlledMcpProductMatchProbe": {
+    "status": "PASSED",
+    "retrievedCount": 2,
+    "enrichmentExecution": {
+      "attemptedDomains": [
+        "petlibro.com"
+      ],
+      "advertiserLookupSucceeded": true,
+      "advertisersFound": 1,
+      "creativeQuerySucceeded": true,
+      "creativesReturned": 2,
+      "normalizedObservations": 2,
+      "productLevelMatches": 1,
+      "brandLevelMatches": 1,
+      "productEvidenceIds": [
+        "CR_LUMA_01"
+      ],
+      "queryErrors": [],
+      "queryTimestamp": "2026-10-29T03:47:51.855Z",
+      "stateBreakdown": {
+        "configured": true,
+        "transportConnected": true,
+        "toolDiscovered": true,
+        "operationSupported": true,
+        "advertiserLookupAttempted": true,
+        "advertiserFound": true,
+        "adsRetrieved": true,
+        "productAssociatedEvidence": true,
+        "empty": false,
+        "failed": false,
+        "cached": false
+      }
+    },
+    "observations": [
+      {
+        "source": "GOOGLE_ADS",
+        "sourceRecordId": "CR_LUMA_01",
+        "sourceUrl": "https://adstransparency.google.com/advertiser/AR_PETLIBRO_US",
+        "landingPageUrl": "https://petlibro.com/products/luma-smart-litter-box",
+        "advertiserOrCreator": "DESIGNLIBRO INC",
+        "advertiserDomain": "petlibro.com",
+        "productMatchHint": "Petlibro Luma Smart Litter Box Automatic Self-Cleaning Litter Box",
+        "reportedPublishedAt": null,
+        "reportedFirstShownAt": null,
+        "reportedLastShownAt": "2026-10-25",
+        "observedAt": "2026-10-29T03:47:51.855Z",
+        "requestedMarket": "US",
+        "verifiedDeliveryMarket": "US",
+        "title": "Petlibro Luma Smart Litter Box Automatic Self-Cleaning Litter Box",
+        "description": null,
+        "metrics": {
+          "lastShown": "2026-10-25",
+          "format": "VIDEO",
+          "productRelevance": "PRODUCT_SPECIFIC",
+          "marketProvenance": {
+            "requestedMarket": "US",
+            "providerFilterMarket": "US",
+            "providerReportedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "verificationStatus": "VERIFIED",
+            "evidenceReference": "GoogleReportedDelivery:CR_LUMA_01"
+          }
+        },
+        "media": {
+          "thumbnailUrl": null,
+          "videoUrl": null,
+          "mediaType": "VIDEO"
+        },
+        "provenance": "REAL_UPSTREAM",
+        "evidenceReference": "GoogleAd:CR_LUMA_01"
+      },
+      {
+        "source": "GOOGLE_ADS",
+        "sourceRecordId": "CR_BRAND_02",
+        "sourceUrl": "https://adstransparency.google.com/advertiser/AR_PETLIBRO_US",
+        "landingPageUrl": "https://petlibro.com/",
+        "advertiserOrCreator": "DESIGNLIBRO INC",
+        "advertiserDomain": "petlibro.com",
+        "productMatchHint": "Official Store - Free Shipping Sitewide",
+        "reportedPublishedAt": null,
+        "reportedFirstShownAt": null,
+        "reportedLastShownAt": "2026-10-24",
+        "observedAt": "2026-10-29T03:47:51.855Z",
+        "requestedMarket": "US",
+        "verifiedDeliveryMarket": "US",
+        "title": "Official Store - Free Shipping Sitewide",
+        "description": null,
+        "metrics": {
+          "lastShown": "2026-10-24",
+          "format": "IMAGE",
+          "productRelevance": "BRAND_RELATED",
+          "marketProvenance": {
+            "requestedMarket": "US",
+            "providerFilterMarket": "US",
+            "providerReportedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "verificationStatus": "VERIFIED",
+            "evidenceReference": "GoogleReportedDelivery:CR_BRAND_02"
+          }
+        },
+        "media": {
+          "thumbnailUrl": null,
+          "videoUrl": null,
+          "mediaType": "IMAGE"
+        },
+        "provenance": "REAL_UPSTREAM",
+        "evidenceReference": "GoogleAd:CR_BRAND_02"
+      }
+    ]
+  },
+  "nicheRunsGoogleTelemetry": {
+    "petGadgets": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+      "queryTimestamp": "2026-10-29T03:46:30.918Z",
+      "retrievedCount": 0,
+      "acceptedCount": 0,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 0,
+      "lastSuccessfulQueryAt": "2026-10-29T03:46:30.918Z",
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "kingspetboutique.info"
+        ],
+        "advertiserLookupSucceeded": true,
+        "advertisersFound": 0,
+        "creativeQuerySucceeded": false,
+        "creativesReturned": 0,
+        "normalizedObservations": 0,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 0,
+        "productEvidenceIds": [],
+        "queryErrors": [],
+        "queryTimestamp": "2026-10-29T03:46:28.733Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": false,
+          "adsRetrieved": false,
+          "productAssociatedEvidence": false,
+          "empty": true,
+          "failed": false,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 0
+    },
+    "diy": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "QUERY_FAILED",
+      "queryTimestamp": "2026-10-29T03:46:47.039Z",
+      "retrievedCount": null,
+      "acceptedCount": null,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": "Google Transparency advertiser lookup failed for pestie.com: HTTP 429 upstream rate-limit cooldown active",
+      "lastSuccessfulRecordCount": null,
+      "lastSuccessfulQueryAt": null,
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "pestie.com"
+        ],
+        "advertiserLookupSucceeded": false,
+        "advertisersFound": 0,
+        "creativeQuerySucceeded": false,
+        "creativesReturned": 0,
+        "normalizedObservations": 0,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 0,
+        "productEvidenceIds": [],
+        "queryErrors": [
+          "Google Transparency advertiser lookup failed for pestie.com: HTTP 429 upstream rate-limit cooldown active"
+        ],
+        "queryTimestamp": "2026-10-29T03:46:47.039Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": false,
+          "adsRetrieved": false,
+          "productAssociatedEvidence": false,
+          "empty": false,
+          "failed": true,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 0
+    },
+    "kitchen": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-29T03:47:18.443Z",
+      "retrievedCount": 2,
+      "acceptedCount": 2,
+      "queryProvenance": "CACHED_SOURCE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 2,
+      "lastSuccessfulQueryAt": "2026-10-29T03:47:18.443Z",
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "beste-store.net"
+        ],
+        "advertiserLookupSucceeded": true,
+        "advertisersFound": 1,
+        "creativeQuerySucceeded": true,
+        "creativesReturned": 2,
+        "normalizedObservations": 2,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 2,
+        "productEvidenceIds": [],
+        "queryErrors": [],
+        "queryTimestamp": "2026-10-29T03:47:05.515Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": true,
+          "adsRetrieved": true,
+          "productAssociatedEvidence": false,
+          "empty": false,
+          "failed": false,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 2
+    },
+    "homeDecor": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-29T03:47:11.994Z",
+      "retrievedCount": 5,
+      "acceptedCount": 5,
+      "queryProvenance": "CACHED_SOURCE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 5,
+      "lastSuccessfulQueryAt": "2026-10-29T03:47:11.994Z",
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "lemonpark.com"
+        ],
+        "advertiserLookupSucceeded": true,
+        "advertisersFound": 1,
+        "creativeQuerySucceeded": true,
+        "creativesReturned": 5,
+        "normalizedObservations": 5,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 5,
+        "productEvidenceIds": [],
+        "queryErrors": [],
+        "queryTimestamp": "2026-10-29T03:46:58.672Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": true,
+          "adsRetrieved": true,
+          "productAssociatedEvidence": false,
+          "empty": false,
+          "failed": false,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 5
+    },
+    "gardening": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-29T03:47:29.042Z",
+      "retrievedCount": 5,
+      "acceptedCount": 5,
+      "queryProvenance": "CACHED_SOURCE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 5,
+      "lastSuccessfulQueryAt": "2026-10-29T03:47:29.042Z",
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "leevalley.com"
+        ],
+        "advertiserLookupSucceeded": true,
+        "advertisersFound": 1,
+        "creativeQuerySucceeded": true,
+        "creativesReturned": 5,
+        "normalizedObservations": 5,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 5,
+        "productEvidenceIds": [],
+        "queryErrors": [],
+        "queryTimestamp": "2026-10-29T03:47:13.543Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": true,
+          "adsRetrieved": true,
+          "productAssociatedEvidence": false,
+          "empty": false,
+          "failed": false,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 5
+    },
+    "cleaning": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+      "queryTimestamp": "2026-10-29T03:47:33.649Z",
+      "retrievedCount": 0,
+      "acceptedCount": 0,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 0,
+      "lastSuccessfulQueryAt": "2026-10-29T03:47:33.649Z",
+      "enrichmentExecution": {
+        "attemptedDomains": [
+          "reemoreemoo.com"
+        ],
+        "advertiserLookupSucceeded": true,
+        "advertisersFound": 0,
+        "creativeQuerySucceeded": false,
+        "creativesReturned": 0,
+        "normalizedObservations": 0,
+        "productLevelMatches": 0,
+        "brandLevelMatches": 0,
+        "productEvidenceIds": [],
+        "queryErrors": [],
+        "queryTimestamp": "2026-10-29T03:47:31.079Z",
+        "stateBreakdown": {
+          "configured": true,
+          "transportConnected": true,
+          "toolDiscovered": true,
+          "operationSupported": true,
+          "advertiserLookupAttempted": true,
+          "advertiserFound": false,
+          "adsRetrieved": false,
+          "productAssociatedEvidence": false,
+          "empty": true,
+          "failed": false,
+          "cached": false
+        }
+      },
+      "productAssociatedCount": 0,
+      "brandAssociatedCount": 0
+    }
+  }
+}

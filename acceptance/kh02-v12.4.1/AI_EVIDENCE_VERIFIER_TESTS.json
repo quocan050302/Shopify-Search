@@ -1,0 +1,241 @@
+{
+  "validVerification": {
+    "verified": true,
+    "evidenceDecision": "ACCEPT",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": true,
+    "accurateQuotations": true,
+    "actualMerchantEvidence": true,
+    "productIdentityConsistent": true,
+    "productRealityEligible": true,
+    "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_ev_1",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "FurZapper 2-Pack",
+      "suggestedProductType": "Pet Hair Remover",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": true,
+      "identityEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "directlyObservedClaims": [
+        {
+          "claim": "Removes pet hair in washer",
+          "sourceRef": "obs_ad_1",
+          "supportingQuote": "Removes pet hair in washer and dryer cycles."
+        }
+      ],
+      "inferredClaims": [],
+      "contradictions": [],
+      "uncertainties": [],
+      "aiConfidence": 0.94,
+      "needsHumanReview": false
+    },
+    "contradictions": [],
+    "unsupportedClaims": [],
+    "hallucinatedSourceRefs": [],
+    "quoteMismatches": [],
+    "promptInjectionDetected": false,
+    "shortlistEligible": true,
+    "exclusionReason": null
+  },
+  "conflictingNameVerification": {
+    "verified": false,
+    "evidenceDecision": "NEEDS_REVIEW",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": true,
+    "accurateQuotations": true,
+    "actualMerchantEvidence": true,
+    "productIdentityConsistent": false,
+    "productRealityEligible": false,
+    "productRealityStatus": "UNRESOLVED",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_ev_1",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "FurZapper 2-Pack",
+      "suggestedProductType": "Pet Hair Remover",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": true,
+      "identityEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "directlyObservedClaims": [
+        {
+          "claim": "Removes pet hair in washer",
+          "sourceRef": "obs_ad_1",
+          "supportingQuote": "Removes pet hair in washer and dryer cycles."
+        }
+      ],
+      "inferredClaims": [],
+      "contradictions": [
+        "AI suggested product name 'Invented Uncorroborated Name XYZ' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+      ],
+      "uncertainties": [],
+      "aiConfidence": 0.94,
+      "needsHumanReview": true
+    },
+    "contradictions": [
+      "AI suggested product name 'Invented Uncorroborated Name XYZ' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+    ],
+    "unsupportedClaims": [],
+    "hallucinatedSourceRefs": [],
+    "quoteMismatches": [],
+    "promptInjectionDetected": false,
+    "shortlistEligible": false,
+    "exclusionReason": "Excluded from product shortlist: Product identity conflict between AI suggestion and merchant evidence."
+  },
+  "wrongAdQuoteVerification": {
+    "verified": false,
+    "evidenceDecision": "NEEDS_REVIEW",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": true,
+    "accurateQuotations": false,
+    "actualMerchantEvidence": true,
+    "productIdentityConsistent": false,
+    "productRealityEligible": false,
+    "productRealityStatus": "UNRESOLVED",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_ev_1",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "FurZapper 2-Pack",
+      "suggestedProductType": "Pet Hair Remover",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": true,
+      "identityEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "directlyObservedClaims": [],
+      "inferredClaims": [],
+      "contradictions": [
+        "Quote 'Hypoallergenic silicone pet laundry disc.' cited sourceRef 'obs_ad_1', but that quote belongs to a different observation.",
+        "AI suggested product name 'Uproot Clean Pet Hair Remover' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+      ],
+      "uncertainties": [],
+      "aiConfidence": 0.94,
+      "needsHumanReview": true
+    },
+    "contradictions": [
+      "Quote 'Hypoallergenic silicone pet laundry disc.' cited sourceRef 'obs_ad_1', but that quote belongs to a different observation.",
+      "AI suggested product name 'Uproot Clean Pet Hair Remover' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+    ],
+    "unsupportedClaims": [
+      "Hypoallergenic silicone"
+    ],
+    "hallucinatedSourceRefs": [],
+    "quoteMismatches": [
+      "Hypoallergenic silicone pet laundry disc."
+    ],
+    "promptInjectionDetected": false,
+    "shortlistEligible": false,
+    "exclusionReason": "Excluded from product shortlist: AI supporting quote mismatch (1 unverified quote(s))."
+  },
+  "hallucinatedRefVerification": {
+    "verified": false,
+    "evidenceDecision": "REJECT",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": false,
+    "accurateQuotations": true,
+    "actualMerchantEvidence": true,
+    "productIdentityConsistent": false,
+    "productRealityEligible": false,
+    "productRealityStatus": "UNRESOLVED",
+    "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_ev_1",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "FurZapper 2-Pack",
+      "suggestedProductType": "Pet Hair Remover",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": true,
+      "identityEvidenceRefs": [
+        "obs_nonexistent_999"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_ad_1"
+      ],
+      "directlyObservedClaims": [],
+      "inferredClaims": [],
+      "contradictions": [
+        "AI suggested product name 'Uproot Clean Pet Hair Remover' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+      ],
+      "uncertainties": [],
+      "aiConfidence": 0.94,
+      "needsHumanReview": true
+    },
+    "contradictions": [
+      "AI suggested product name 'Uproot Clean Pet Hair Remover' conflicts with authoritative merchant product name 'FurZapper 2-Pack' without source corroboration."
+    ],
+    "unsupportedClaims": [],
+    "hallucinatedSourceRefs": [
+      "obs_nonexistent_999"
+    ],
+    "quoteMismatches": [],
+    "promptInjectionDetected": false,
+    "shortlistEligible": false,
+    "exclusionReason": "Excluded from product shortlist: AI cited hallucinated source references (obs_nonexistent_999)."
+  },
+  "injectionVerification": {
+    "verified": false,
+    "evidenceDecision": "REJECT",
+    "validAiResponse": true,
+    "correctCandidateId": true,
+    "validSourceReferences": true,
+    "accurateQuotations": true,
+    "actualMerchantEvidence": false,
+    "productIdentityConsistent": true,
+    "productRealityEligible": false,
+    "productRealityStatus": "REJECTED",
+    "sourcePageClassification": "UNKNOWN_PAGE",
+    "sanitizedResult": {
+      "candidateId": "cand_inj_1",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "Uproot Clean Pet Hair Remover",
+      "suggestedProductType": "Pet Hair Remover",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": false,
+      "identityEvidenceRefs": [
+        "obs_inj"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_inj"
+      ],
+      "directlyObservedClaims": [],
+      "inferredClaims": [],
+      "contradictions": [
+        "Contradiction: AI claimed PHYSICAL_PRODUCT without any merchant URL or physical product evidence in source observations.",
+        "External copy contained adversarial prompt injection instruction; strictly enforcing evidence constraints."
+      ],
+      "uncertainties": [],
+      "aiConfidence": 0.94,
+      "needsHumanReview": true
+    },
+    "contradictions": [
+      "Contradiction: AI claimed PHYSICAL_PRODUCT without any merchant URL or physical product evidence in source observations.",
+      "External copy contained adversarial prompt injection instruction; strictly enforcing evidence constraints."
+    ],
+    "unsupportedClaims": [],
+    "hallucinatedSourceRefs": [],
+    "quoteMismatches": [],
+    "promptInjectionDetected": true,
+    "shortlistEligible": false,
+    "exclusionReason": "Excluded from product shortlist: Potential prompt injection without verified merchant evidence."
+  },
+  "verdict": "PASS"
+}

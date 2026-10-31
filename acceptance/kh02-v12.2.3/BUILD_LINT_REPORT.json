@@ -1,0 +1,10 @@
+{
+  "build": {
+    "exitCode": 1,
+    "passed": false
+  },
+  "lint": {
+    "exitCode": 0,
+    "passed": true
+  }
+}

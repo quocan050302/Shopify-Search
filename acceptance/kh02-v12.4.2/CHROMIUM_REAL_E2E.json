@@ -1,0 +1,201 @@
+{
+  "diy_180d": {
+    "pageLoaded": true,
+    "authorized": true,
+    "researchSubmitted": true,
+    "acceptedRunId": "kh02_run_1793184791598_vcxs0",
+    "terminalStatus": "COMPLETED",
+    "terminalStateObserved": true,
+    "resultsRendered": true,
+    "emptyStateAccurate": false,
+    "displayedCandidateIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ],
+    "displayedRankOrder": [],
+    "displayedScores": {
+      "cand_1453640471": 42,
+      "cand_1316890495": 42
+    },
+    "displayedConfidence": {
+      "cand_1453640471": "45",
+      "cand_1316890495": "45"
+    },
+    "renderedCards": [
+      {
+        "candidateId": "cand_1453640471",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      },
+      {
+        "candidateId": "cand_1316890495",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      }
+    ],
+    "postReloadCandidateIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ],
+    "postReloadScores": {
+      "cand_1453640471": 42,
+      "cand_1316890495": 42
+    },
+    "postReloadCards": [
+      {
+        "candidateId": "cand_1453640471",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      },
+      {
+        "candidateId": "cand_1316890495",
+        "rank": null,
+        "score": 42,
+        "confidence": "45"
+      }
+    ],
+    "postReloadConsistent": true,
+    "unexpectedHttpErrors": [],
+    "hydrationErrors": [],
+    "databaseMatch": true,
+    "httpMatch": true,
+    "shortlistSectionRendered": true,
+    "shortlistCardsCount": 2,
+    "shortlistCandidateIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ],
+    "shortlistTitles": [
+      "🎃Halloween Deal 50% OFF!🛠️Hot Melt Glue Gun – Quick, Precise Bonding f",
+      "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks"
+    ],
+    "rejectedTitles": [
+      "Unidentified Product (Source: Facebook Ad #1405789581235775, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+      "💕iControl: Easy Widgets ThemesREJECTEDDomain unverified · Score: 0/100Reason: Describes a digital mobile app or phone widget theme rather than a physical ecommerce product.",
+      "RELIFE DT-01 Smart Pen Type Mini Multimeter for Mobile Phone Repair Home Maintenance DIY EtcREJECTEDDomain unverified · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+      "Unidentified Product (Source: Facebook Ad #1419890633577284, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: Excluded from product shortlist: Classified as ADVERTISING_CAMPAIGN; not a purchasable physical ecommerce product."
+    ],
+    "erVetBillInShortlist": false,
+    "erVetBillInTopThree": false,
+    "erVetBillInProvisional": false,
+    "nonPhysicalNoiseInShortlist": false,
+    "discoveryIntelligencePanelRendered": true,
+    "coherentFunnelRendered": true,
+    "queryCoverageTableRendered": true,
+    "runtimeVersionBadgeText": "SHA: 6664763",
+    "runtimeParityStatus": "MATCHED",
+    "frontendBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "backendBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "workerBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "authoritativeRunIdInDom": "kh02_run_1793184791598_vcxs0",
+    "postReloadShortlistCandidateIds": [
+      "cand_1453640471",
+      "cand_1316890495"
+    ],
+    "postReloadRunIdInDom": "kh02_run_1793184791598_vcxs0",
+    "cardCount": 2,
+    "screenshots": [
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_01_before_research.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_02_source_statuses.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_03_leaderboard_results.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\diy_180d_04_after_reload.png"
+    ],
+    "consoleLogs": [],
+    "errors": [],
+    "durationMs": 40223,
+    "verdict": "PASS"
+  },
+  "pet_90d": {
+    "pageLoaded": true,
+    "authorized": true,
+    "researchSubmitted": true,
+    "acceptedRunId": "kh02_run_1793184831558_8ordr",
+    "terminalStatus": "COMPLETED",
+    "terminalStateObserved": true,
+    "resultsRendered": true,
+    "emptyStateAccurate": false,
+    "displayedCandidateIds": [
+      "cand_14769098"
+    ],
+    "displayedRankOrder": [],
+    "displayedScores": {
+      "cand_14769098": 54
+    },
+    "displayedConfidence": {
+      "cand_14769098": "45"
+    },
+    "renderedCards": [
+      {
+        "candidateId": "cand_14769098",
+        "rank": null,
+        "score": 54,
+        "confidence": "45"
+      }
+    ],
+    "postReloadCandidateIds": [
+      "cand_14769098"
+    ],
+    "postReloadScores": {
+      "cand_14769098": 54
+    },
+    "postReloadCards": [
+      {
+        "candidateId": "cand_14769098",
+        "rank": null,
+        "score": 54,
+        "confidence": "45"
+      }
+    ],
+    "postReloadConsistent": true,
+    "unexpectedHttpErrors": [],
+    "hydrationErrors": [],
+    "databaseMatch": true,
+    "httpMatch": true,
+    "shortlistSectionRendered": true,
+    "shortlistCardsCount": 1,
+    "shortlistCandidateIds": [
+      "cand_14769098"
+    ],
+    "shortlistTitles": [
+      "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To"
+    ],
+    "rejectedTitles": [
+      "Unidentified Product (Source: Facebook Ad #2395249144231751, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet'.",
+      "DIY Pest ControlREJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet'.",
+      "Unidentified Product (Source: Facebook Ad #1802296680785588, Identity: Needs Review)REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet'.",
+      "Amazon Sold A Fake Cat Fountain Under A Real Brand's Name👆REJECTEDDomain unverified · Score: 0/100Reason: Excluded from product shortlist: Classified as ADVERTISING_CAMPAIGN; not a purchasable physical ecommerce product.",
+      "Amazon Sold Me A Fake Cat Fountain Under A Real Brand's Name👆REJECTEDDomain unverified · Score: 0/100Reason: Excluded from product shortlist: Classified as INFORMATIONAL_CONTENT; not a purchasable physical ecommerce product."
+    ],
+    "erVetBillInShortlist": false,
+    "erVetBillInTopThree": false,
+    "erVetBillInProvisional": false,
+    "nonPhysicalNoiseInShortlist": false,
+    "discoveryIntelligencePanelRendered": true,
+    "coherentFunnelRendered": true,
+    "queryCoverageTableRendered": true,
+    "runtimeVersionBadgeText": "SHA: 6664763",
+    "runtimeParityStatus": "MATCHED",
+    "frontendBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "backendBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "workerBuildSha": "66647631421260cdca998947d851175b14f4853b",
+    "authoritativeRunIdInDom": "kh02_run_1793184831558_8ordr",
+    "postReloadShortlistCandidateIds": [
+      "cand_14769098"
+    ],
+    "postReloadRunIdInDom": "kh02_run_1793184831558_8ordr",
+    "cardCount": 1,
+    "screenshots": [
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_01_before_research.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_02_source_statuses.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_03_leaderboard_results.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.2\\screenshots\\pet_90d_04_after_reload.png"
+    ],
+    "consoleLogs": [],
+    "errors": [],
+    "durationMs": 48721,
+    "verdict": "PASS"
+  }
+}

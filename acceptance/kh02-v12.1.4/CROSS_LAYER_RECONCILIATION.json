@@ -1,0 +1,20 @@
+{
+  "researchRunId": "kh02_run_1793005309937_5qjyp",
+  "status": "COMPLETED",
+  "rawObservationsCount": 1,
+  "candidatesCount": 1,
+  "topThreeCount": 1,
+  "provisionalCount": 0,
+  "candidateIds": [
+    "cand_282145610_1"
+  ],
+  "persistedSnapshotMatchesHttp": true,
+  "browserReconciled": true,
+  "productDiscoveryVerified": true,
+  "reconciliationVerdict": "RECONCILED",
+  "notes": [
+    "DB snapshot verified: 1 candidates (1 ranked, 0 provisional).",
+    "HTTP readback verified: endpoint returned status 'COMPLETED' matching DB.",
+    "Browser reconciled: rendered candidate IDs [cand_282145610_1] match DB snapshot."
+  ]
+}

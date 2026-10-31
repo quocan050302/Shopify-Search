@@ -1,0 +1,485 @@
+[
+  {
+    "stageId": "STAGE_01_GIT_STATE",
+    "name": "Verify Git Branch and Working Copy Invariants",
+    "command": "git branch --show-current && git rev-parse HEAD",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 50,
+    "startedAt": "2026-10-25T11:38:06.152Z",
+    "completedAt": "2026-10-25T11:38:06.152Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_01_CORRECT_BRANCH",
+        "stageId": "STAGE_01_GIT_STATE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:06.152Z",
+        "completedAt": "2026-10-25T11:38:06.152Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Branch: feature/v11-meta-collector-remove-muse (Expected: feature/v11-meta-collector-remove-muse)",
+        "error": null
+      },
+      {
+        "assertionId": "GATE_36_FEATURE_BRANCH_ONLY",
+        "stageId": "STAGE_01_GIT_STATE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:06.152Z",
+        "completedAt": "2026-10-25T11:38:06.152Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Branch feature/v11-meta-collector-remove-muse is not protected main/master/dev",
+        "error": null
+      }
+    ]
+  },
+  {
+    "stageId": "STAGE_02_TYPESCRIPT",
+    "name": "Verify TypeScript Compilation Without Emit",
+    "command": "npx tsc --noEmit",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 2121,
+    "startedAt": "2026-10-25T11:38:06.152Z",
+    "completedAt": "2026-10-25T11:38:08.273Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_10_TYPESCRIPT_PASSED",
+        "stageId": "STAGE_02_TYPESCRIPT",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:06.152Z",
+        "completedAt": "2026-10-25T11:38:08.273Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "npx tsc --noEmit (exitCode: 0)",
+        "error": null
+      }
+    ]
+  },
+  {
+    "stageId": "STAGE_03A_SECURITY_SUITE",
+    "name": "Execute Admin Auth & Multi-Tenant Scoping Security Tests",
+    "command": "npx vitest run tests/unit/adminAuthTrustBoundary.test.ts tests/integration/legacyAdsWorkspaceIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 1132,
+    "startedAt": "2026-10-25T11:38:08.273Z",
+    "completedAt": "2026-10-25T11:38:09.405Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_03_AUTH_TRUST_BOUNDARY",
+        "stageId": "STAGE_03A_SECURITY_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:08.273Z",
+        "completedAt": "2026-10-25T11:38:09.405Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/unit/adminAuthTrustBoundary.test.ts::Admin Authentication Trust Boundary & Deployment Verification resolveTrustedRequestContext rejects spoofed x-forwarded-for header from remote client\" (PASSED, 0.3832079999999962ms)",
+        "error": null
+      },
+      {
+        "assertionId": "GATE_04_WORKSPACE_ISOLATION",
+        "stageId": "STAGE_03A_SECURITY_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:08.273Z",
+        "completedAt": "2026-10-25T11:38:09.405Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/integration/legacyAdsWorkspaceIsolation.test.ts::Legacy Ads API Workspace Scoping & Isolation Integration Workspace A caller querying GET /api/v1/ads receives ONLY Workspace A ads\" (PASSED, 19.00875000000002ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_03A_SECURITY_SUITE",
+      "command": "npx vitest run tests/unit/adminAuthTrustBoundary.test.ts tests/integration/legacyAdsWorkspaceIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:08.273Z",
+      "completedAt": "2026-10-25T11:38:09.405Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/sec_f08ae063.json",
+      "reportSha256": "0570f69abf7f0aa2e8f3818a0c91662112698788ff69919134b0135c49143cb3",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_03B_EXACT_RUN_SUITE",
+    "name": "Execute Exact Research Run 180-Day and Unknown Date Completeness Tests",
+    "command": "npx vitest run tests/integration/exactRunCompleteness.test.ts tests/integration/metaRunAdsIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/exact_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 1233,
+    "startedAt": "2026-10-25T11:38:09.406Z",
+    "completedAt": "2026-10-25T11:38:10.639Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_05_EXACT_RUN_COMPLETENESS",
+        "stageId": "STAGE_03B_EXACT_RUN_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:09.406Z",
+        "completedAt": "2026-10-25T11:38:10.639Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/integration/exactRunCompleteness.test.ts::Exact Research Run Completeness & Canonical Scoping (/api/v1/discovery/meta/requests/:id/ads) retrieves all 25 linked ads across pagination without 30-day age filtering\" (PASSED, 44.927209000000005ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_03B_EXACT_RUN_SUITE",
+      "command": "npx vitest run tests/integration/exactRunCompleteness.test.ts tests/integration/metaRunAdsIsolation.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/exact_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:09.406Z",
+      "completedAt": "2026-10-25T11:38:10.639Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/exact_f08ae063.json",
+      "reportSha256": "7c9292c69d576bd266d603d0e7ea63be84d6926255a65cbc9d8bf291f7311a81",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_03C_READINESS_SUITE",
+    "name": "Execute Meta Collector Readiness Action Policy and Form Submission Guards",
+    "command": "npx vitest run tests/unit/researchActionPolicy.test.ts tests/integration/metaReadinessSubmission.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/readiness_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 1063,
+    "startedAt": "2026-10-25T11:38:10.639Z",
+    "completedAt": "2026-10-25T11:38:11.702Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_06_READINESS_SUBMISSION_POLICY",
+        "stageId": "STAGE_03C_READINESS_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:10.639Z",
+        "completedAt": "2026-10-25T11:38:11.702Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/unit/researchActionPolicy.test.ts::Research Action Policy (deriveResearchAction) returns DIAGNOSTICS with non-submitting button when UNKNOWN\" (PASSED, 0.2313749999999999ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_03C_READINESS_SUITE",
+      "command": "npx vitest run tests/unit/researchActionPolicy.test.ts tests/integration/metaReadinessSubmission.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/readiness_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:10.639Z",
+      "completedAt": "2026-10-25T11:38:11.702Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/readiness_f08ae063.json",
+      "reportSha256": "5a74bd2f65328df27b29a4b2500bb243e876bf9b19df3c27b736d9cd89549690",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_03D_TRUTHFULNESS_SUITE",
+    "name": "Execute KH-01 Acceptance Truthfulness, Assertion Identity, and Verification Tests",
+    "command": "npx vitest run tests/unit/kh01AcceptanceTruthfulness.test.ts tests/integration/metaLiveReconciliation.test.ts tests/unit/runReconciliationInvariants.test.ts tests/unit/adServiceCrossWorkspace.test.ts tests/integration/kh01CrossBoundaryReconciliation.test.ts tests/unit/kh01AssertionIdentity.test.ts tests/unit/kh01ArtifactIntegrity.test.ts tests/unit/kh01FinalVerdict.test.ts tests/unit/kh01LiveSourceIntegrity.test.ts tests/unit/kh01RequiredArtifactInventory.test.ts tests/unit/kh01ScreenshotEvidence.test.ts tests/unit/kh01SuiteExecutionIdentity.test.ts tests/unit/kh01FullLiveArtifacts.test.ts tests/integration/kh01FinalAcceptanceFailClosed.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/truth_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 3061,
+    "startedAt": "2026-10-25T11:38:11.702Z",
+    "completedAt": "2026-10-25T11:38:14.763Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_13_TEST_TRUTHFULNESS_VERIFIED",
+        "stageId": "STAGE_03D_TRUTHFULNESS_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:11.702Z",
+        "completedAt": "2026-10-25T11:38:14.763Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/unit/kh01AcceptanceTruthfulness.test.ts::KH-01 Acceptance Runner Truthfulness & Adversarial Integrity (Section 24) accurately classifies SKIPPED test and does not report it as passed\" (PASSED, 1.3008749999999907ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_03D_TRUTHFULNESS_SUITE",
+      "command": "npx vitest run tests/unit/kh01AcceptanceTruthfulness.test.ts tests/integration/metaLiveReconciliation.test.ts tests/unit/runReconciliationInvariants.test.ts tests/unit/adServiceCrossWorkspace.test.ts tests/integration/kh01CrossBoundaryReconciliation.test.ts tests/unit/kh01AssertionIdentity.test.ts tests/unit/kh01ArtifactIntegrity.test.ts tests/unit/kh01FinalVerdict.test.ts tests/unit/kh01LiveSourceIntegrity.test.ts tests/unit/kh01RequiredArtifactInventory.test.ts tests/unit/kh01ScreenshotEvidence.test.ts tests/unit/kh01SuiteExecutionIdentity.test.ts tests/unit/kh01FullLiveArtifacts.test.ts tests/integration/kh01FinalAcceptanceFailClosed.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/truth_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:11.702Z",
+      "completedAt": "2026-10-25T11:38:14.763Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/truth_f08ae063.json",
+      "reportSha256": "ca9eae5d2adf95d5842c6900cf1bdbdad16fd97549b5573787911cf8be3620ea",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_03E_LEGACY_UNIT_SUITE",
+    "name": "Execute Legacy Unit Suite (DB Isolation, Economics, Job Engine, Active DB Protection)",
+    "command": "npx vitest run tests/unit/kh01Security.test.ts tests/unit/kh01JobExecution.test.ts tests/unit/shopifyDecisionIntegrity.test.ts tests/unit/dbIsolation.test.ts tests/integration/kh01DatabaseIsolation.test.ts tests/unit/kh01ActiveDatabaseProtection.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/unit_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 2589,
+    "startedAt": "2026-10-25T11:38:14.764Z",
+    "completedAt": "2026-10-25T11:38:17.353Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_02_ACTIVE_DB_PROTECTED",
+        "stageId": "STAGE_03E_LEGACY_UNIT_SUITE",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:14.764Z",
+        "completedAt": "2026-10-25T11:38:17.353Z",
+        "evidenceType": "DATABASE_QUERY",
+        "evidenceReference": "Vitest: \"tests/unit/dbIsolation.test.ts::KH-01 — Checkpoint 1: Strict Database Isolation & Canonical Path Safety assertSafeTestDatabase blocks test execution when databaseUrl contains production.db\" (PASSED, 0.5258750000000134ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_03E_LEGACY_UNIT_SUITE",
+      "command": "npx vitest run tests/unit/kh01Security.test.ts tests/unit/kh01JobExecution.test.ts tests/unit/shopifyDecisionIntegrity.test.ts tests/unit/dbIsolation.test.ts tests/integration/kh01DatabaseIsolation.test.ts tests/unit/kh01ActiveDatabaseProtection.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/unit_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:14.764Z",
+      "completedAt": "2026-10-25T11:38:17.353Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/unit_f08ae063.json",
+      "reportSha256": "67577bec82285bb78fb8f05863979170a175ef38e6b1e776c09aafdad34dc699",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_04_CONCURRENCY_RECOVERY",
+    "name": "Execute Active Multi-Worker Concurrency and Crash Recovery Tests",
+    "command": "npx vitest run tests/integration/kh01WorkerConcurrency.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/concurrency_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 1694,
+    "startedAt": "2026-10-25T11:38:17.354Z",
+    "completedAt": "2026-10-25T11:38:19.048Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_08_GENUINE_CONCURRENCY_PROOF",
+        "stageId": "STAGE_04_CONCURRENCY_RECOVERY",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:17.354Z",
+        "completedAt": "2026-10-25T11:38:19.048Z",
+        "evidenceType": "PROCESS_CONCURRENCY_TEST",
+        "evidenceReference": "Vitest: \"tests/integration/kh01WorkerConcurrency.test.ts::KH-01 Checkpoint 4 & 5: Worker Capacity, Slot Lifecycle & Claim Fencing proves true multi-process mutual exclusion across independent Node.js processes sharing SQLite (Section 31)\" (PASSED, 698.5817499999999ms)",
+        "error": null
+      },
+      {
+        "assertionId": "GATE_09_GENUINE_CRASH_RECOVERY",
+        "stageId": "STAGE_04_CONCURRENCY_RECOVERY",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:17.354Z",
+        "completedAt": "2026-10-25T11:38:19.048Z",
+        "evidenceType": "PROCESS_CONCURRENCY_TEST",
+        "evidenceReference": "Vitest: \"tests/integration/kh01WorkerConcurrency.test.ts::KH-01 Checkpoint 4 & 5: Worker Capacity, Slot Lifecycle & Claim Fencing verifies full crash recovery scenario, immutable payload preservation, and stale rejection\" (PASSED, 14.917332999999985ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_04_CONCURRENCY_RECOVERY",
+      "command": "npx vitest run tests/integration/kh01WorkerConcurrency.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/concurrency_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:17.354Z",
+      "completedAt": "2026-10-25T11:38:19.048Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/concurrency_f08ae063.json",
+      "reportSha256": "73f39892aa360a4e4abda2631b1023c5d013051688d823171f42cad705338166",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+    "name": "Execute Actual Worker Subprocess PID, Claim, Pipeline Execution, Cross-Process DB, and Provenance Tests",
+    "command": "npx vitest run tests/integration/kh01ActualWorkerProcess.test.ts tests/integration/kh01PersistenceReadback.test.ts tests/integration/kh01CrossProcessDatabaseIdentity.test.ts tests/integration/kh01WorkerProviderProvenance.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 7043,
+    "startedAt": "2026-10-25T11:38:19.048Z",
+    "completedAt": "2026-10-25T11:38:26.091Z",
+    "assertions": [
+      {
+        "assertionId": "ASSERTION_WORKER_SUBPROCESS_EXECUTION",
+        "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:19.048Z",
+        "completedAt": "2026-10-25T11:38:26.091Z",
+        "evidenceType": "PROCESS_CONCURRENCY_TEST",
+        "evidenceReference": "Vitest: \"tests/integration/kh01ActualWorkerProcess.test.ts::KH-01 Actual Worker Process Execution (FINAL-FIX-01) launches real child discovery-worker.ts subprocess with genuine OS PID and isolated DB\" (PASSED, 973.593583ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_04B_ACTUAL_WORKER_PROCESS",
+      "command": "npx vitest run tests/integration/kh01ActualWorkerProcess.test.ts tests/integration/kh01PersistenceReadback.test.ts tests/integration/kh01CrossProcessDatabaseIdentity.test.ts tests/integration/kh01WorkerProviderProvenance.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:19.048Z",
+      "completedAt": "2026-10-25T11:38:26.091Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/worker_process_f08ae063.json",
+      "reportSha256": "7e41e72c6a0fa36277a50d97cbf0930e9fba0415ce576a6cda7e64344a5dc83c",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_04C_REAL_HTTP_READBACK",
+    "name": "Execute Real HTTP Exact-Run Readback Over TCP",
+    "command": "npx vitest run tests/integration/kh01RealHttpReadback.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/http_readback_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 668,
+    "startedAt": "2026-10-25T11:38:26.092Z",
+    "completedAt": "2026-10-25T11:38:26.760Z",
+    "assertions": [
+      {
+        "assertionId": "ASSERTION_REAL_HTTP_READBACK",
+        "stageId": "STAGE_04C_REAL_HTTP_READBACK",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:26.092Z",
+        "completedAt": "2026-10-25T11:38:26.760Z",
+        "evidenceType": "HTTP_RESPONSE",
+        "evidenceReference": "Vitest: \"tests/integration/kh01RealHttpReadback.test.ts::KH-01 Real HTTP Readback (Part 07, FIX-03 & FIX-04, Invariant 3) succeeds when real HTTP server returns 200 with body.data matching expected IDs\" (PASSED, 11.506875000000008ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_04C_REAL_HTTP_READBACK",
+      "command": "npx vitest run tests/integration/kh01RealHttpReadback.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/http_readback_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:26.092Z",
+      "completedAt": "2026-10-25T11:38:26.760Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/http_readback_f08ae063.json",
+      "reportSha256": "8ed640e6bee369d81c65198e6cf03cb4720b4549987d42fe78ef0529d7ff58b5",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_05_UNIFIED_JOURNEY",
+    "name": "Execute Unified Continuous Journey E2E (Queue to Browser)",
+    "command": "npx vitest run tests/integration/kh01UnifiedJourney.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/journey_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 9989,
+    "startedAt": "2026-10-25T11:38:26.760Z",
+    "completedAt": "2026-10-25T11:38:36.749Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_07_PROVENANCE_INTEGRITY",
+        "stageId": "STAGE_05_UNIFIED_JOURNEY",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:26.760Z",
+        "completedAt": "2026-10-25T11:38:36.749Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "Vitest: \"tests/integration/kh01UnifiedJourney.test.ts::KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Worker -> DB -> HTTP -> Browser) Step 3: Executes the research job via production worker and persists real snapshots\" (PASSED, 24.975458000000003ms)",
+        "error": null
+      },
+      {
+        "assertionId": "GATE_12_UNIFIED_JOURNEY_E2E",
+        "stageId": "STAGE_05_UNIFIED_JOURNEY",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:26.760Z",
+        "completedAt": "2026-10-25T11:38:36.749Z",
+        "evidenceType": "BROWSER_ACTION",
+        "evidenceReference": "Vitest: \"tests/integration/kh01UnifiedJourney.test.ts::KH-01 Checkpoint 6: Unified Continuous Research Journey (Queue -> Worker -> DB -> HTTP -> Browser) Step 6: Navigates Chromium browser to Product Intelligence and validates UI displays worker data\" (PASSED, 7966.493208ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_05_UNIFIED_JOURNEY",
+      "command": "npx vitest run tests/integration/kh01UnifiedJourney.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/journey_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:26.760Z",
+      "completedAt": "2026-10-25T11:38:36.749Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/journey_f08ae063.json",
+      "reportSha256": "f473c02a7967a50dc25014e24b737291c298a58d878a5bcb0be7af94dadbdf72",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  },
+  {
+    "stageId": "STAGE_06_PRODUCTION_BUILD",
+    "name": "Execute Next.js Production Build Validation",
+    "command": "npm run build",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 9893,
+    "startedAt": "2026-10-25T11:38:36.751Z",
+    "completedAt": "2026-10-25T11:38:46.644Z",
+    "assertions": [
+      {
+        "assertionId": "GATE_11_PRODUCTION_BUILD_PASSED",
+        "stageId": "STAGE_06_PRODUCTION_BUILD",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:36.751Z",
+        "completedAt": "2026-10-25T11:38:46.644Z",
+        "evidenceType": "TEST_ASSERTION",
+        "evidenceReference": "npm run build (exitCode: 0)",
+        "error": null
+      }
+    ]
+  },
+  {
+    "stageId": "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+    "name": "Execute Meta Discovery Browser E2E Suite Across 6 Viewports",
+    "command": "npx vitest run tests/e2e/metaDiscoveryFinalAcceptance.test.ts tests/e2e/kh01RealBrowserReadback.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/browser_e2e_f08ae063.json",
+    "status": "PASSED",
+    "exitCode": 0,
+    "durationMs": 11020,
+    "startedAt": "2026-10-25T11:38:46.645Z",
+    "completedAt": "2026-10-25T11:38:57.665Z",
+    "assertions": [
+      {
+        "assertionId": "ASSERTION_STAGE_08_BROWSER_E2E",
+        "stageId": "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+        "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+        "status": "PASSED",
+        "startedAt": "2026-10-25T11:38:46.645Z",
+        "completedAt": "2026-10-25T11:38:57.665Z",
+        "evidenceType": "BROWSER_ACTION",
+        "evidenceReference": "Vitest: \"tests/e2e/metaDiscoveryFinalAcceptance.test.ts::Meta Discovery Final Acceptance E2E (Section 18 & 25) verifies layout responsiveness across all 6 canonical viewports without horizontal overflow (Section 18)\" (PASSED, 1046.0033750000002ms)",
+        "error": null
+      }
+    ],
+    "envelope": {
+      "acceptanceRunId": "kh01_rel_1792928286105_f08ae063",
+      "testedCommitSha": "aba474000f9180e2b4f7917e4d4999cc6e544e2f",
+      "stageId": "STAGE_08_META_DISCOVERY_BROWSER_E2E",
+      "command": "npx vitest run tests/e2e/metaDiscoveryFinalAcceptance.test.ts tests/e2e/kh01RealBrowserReadback.test.ts --reporter=default --reporter=json --outputFile=/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/browser_e2e_f08ae063.json",
+      "startedAt": "2026-10-25T11:38:46.645Z",
+      "completedAt": "2026-10-25T11:38:57.665Z",
+      "processId": null,
+      "exitCode": 0,
+      "reportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/artifacts/v11.5.9/.scratch-kh01_rel_1792928286105_f08ae063/browser_e2e_f08ae063.json",
+      "reportSha256": "37ff8d751552914bff6f88892de878165a0576a2fb69e3fccfca4037aa4936e6",
+      "reportCreatedDuringExecution": true,
+      "executionIdentityVerified": true
+    }
+  }
+]

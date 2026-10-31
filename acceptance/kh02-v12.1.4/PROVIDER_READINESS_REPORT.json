@@ -1,0 +1,50 @@
+{
+  "metaAds": {
+    "ready": true,
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database; live collection requires authorized collector."
+  },
+  "tikTokAds": {
+    "ready": true,
+    "status": "NOT_VERIFIED",
+    "reason": "Automated TikTok US ad provider is unconfigured; manual Creative Center lookup & batch import available."
+  },
+  "tikTokOrganic": {
+    "ready": false,
+    "status": "NOT_CONFIGURED",
+    "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment."
+  },
+  "googleAds": {
+    "ready": false,
+    "status": "NOT_CONFIGURED",
+    "reason": "Google Ads Transparency MCP server is not configured in environment."
+  },
+  "demandHistory": {
+    "ready": true,
+    "status": "CONFIGURED",
+    "reason": "Demand history policy engine active; requires 3+ temporal observations across 60+ days for verified status."
+  },
+  "googleMcpCapabilities": {
+    "transportConnected": false,
+    "toolsDiscovered": [],
+    "supportedOperations": {
+      "domainLookup": false,
+      "advertiserSearch": false,
+      "adsRetrieval": false,
+      "adDetail": false
+    },
+    "matchedTools": {},
+    "discoveredAt": "2026-10-26T09:01:59.413Z"
+  },
+  "hasDataCreditStatus": {
+    "totalCredits": null,
+    "usedCredits": null,
+    "remainingCredits": null,
+    "billingPeriod": null,
+    "retrievedAt": "2026-10-26T09:01:59.413Z",
+    "unit": "CREDITS",
+    "authority": "UNCONFIGURED",
+    "verificationStatus": "UNVERIFIED",
+    "errorMessage": "HASDATA_API_KEY is not configured in environment."
+  }
+}

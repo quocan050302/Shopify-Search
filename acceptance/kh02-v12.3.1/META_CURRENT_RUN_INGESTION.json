@@ -1,0 +1,13 @@
+{
+  "gateId": "P0-05",
+  "requirement": "Fresh observations are recorded even when ad already exists in database (0 new inserts)",
+  "verdict": "PASS",
+  "observedValues": {
+    "reObservedExistingTreatedAsLive": true
+  },
+  "expectedValues": {
+    "reObservedExistingTreatedAsLive": true
+  },
+  "reason": "Live collector marks re-observed existing ads as LIVE_PROVIDER with isFreshLive=true",
+  "timestamp": "2026-10-28T01:42:25.818Z"
+}

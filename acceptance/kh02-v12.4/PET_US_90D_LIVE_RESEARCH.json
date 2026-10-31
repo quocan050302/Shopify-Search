@@ -1,0 +1,12 @@
+{
+  "topic": "pet",
+  "market": "US",
+  "lookbackDays": 90,
+  "candidatesDiscovered": 17,
+  "aiEvaluated": 17,
+  "physicalProducts": 1,
+  "servicesRejected": 2,
+  "informationalRejected": 1,
+  "researchShortlistCount": 1,
+  "verifiedEvergreenCount": 0
+}

@@ -1,0 +1,43 @@
+{
+  "erVetReality": {
+    "status": "NON_PHYSICAL",
+    "productRealityStatus": "NON_PHYSICAL",
+    "sourcePageClassification": "ARTICLE_PAGE",
+    "eligibleForShortlist": false,
+    "isPhysicalProductRealityEligible": false,
+    "reason": "Describes veterinary expenses, cost factors, or informational content rather than a physical product.",
+    "rejectionReasons": [
+      "Describes veterinary expenses, cost factors, or informational content rather than a physical product."
+    ],
+    "conditions": {
+      "correctNiche": true,
+      "physicalProductSupported": false,
+      "productIdentityDefensible": false,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": false,
+      "notServiceArticleInsuranceLeadGen": false,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "uprootCollectionReality": {
+    "status": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+    "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+    "sourcePageClassification": "COLLECTION_PAGE",
+    "eligibleForShortlist": true,
+    "isPhysicalProductRealityEligible": true,
+    "reason": null,
+    "rejectionReasons": [],
+    "conditions": {
+      "correctNiche": true,
+      "physicalProductSupported": true,
+      "productIdentityDefensible": true,
+      "sourceEvidenceAvailable": true,
+      "merchantEvidenceSufficient": true,
+      "notServiceArticleInsuranceLeadGen": true,
+      "notCampaignTitle": true,
+      "noUnresolvedContradiction": true
+    }
+  },
+  "verdict": "PASS"
+}

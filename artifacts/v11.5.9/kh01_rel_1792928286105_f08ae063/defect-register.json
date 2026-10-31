@@ -1,0 +1,158 @@
+[
+  {
+    "id": "FINAL-FIX-01",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01ActualWorkerProcess.test.ts (verified 4 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-FIX-02",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/e2e/metaDiscoveryFinalAcceptance.test.ts (verified 5 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-FIX-03",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ArtifactIntegrity.test.ts (verified 13 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-FIX-04",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/adminAuthTrustBoundary.test.ts (verified 34 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-FIX-05",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01AssertionIdentity.test.ts (verified 8 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-FIX-06",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01FinalVerdict.test.ts (verified 9 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-01",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01LiveSourceIntegrity.test.ts (verified 14 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-02",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01DatabaseIsolation.test.ts (verified 5 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-03",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01RequiredArtifactInventory.test.ts (verified 13 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-04",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ScreenshotEvidence.test.ts (verified 6 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-01",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01CrossProcessDatabaseIdentity.test.ts (verified 4 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-02",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01WorkerProviderProvenance.test.ts (verified 4 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-03",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01FullLiveArtifacts.test.ts (verified 7 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-04",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01SuiteExecutionIdentity.test.ts (verified 4 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-05",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ActiveDatabaseProtection.test.ts (verified 8 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-06",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ArtifactIntegrity.test.ts (verified 13 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-07",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01RequiredArtifactInventory.test.ts (verified 13 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "FINAL-08-08",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01FinalVerdict.test.ts (verified 9 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-01",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01FinalAcceptanceFailClosed.test.ts (verified 15 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-02",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ActiveDatabaseProtection.test.ts (verified 8 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-03",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01FinalAcceptanceFailClosed.test.ts (verified 15 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-04",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01ArtifactIntegrity.test.ts (verified 13 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-05",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01CrossProcessDatabaseIdentity.test.ts (verified 4 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-06",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01FullLiveArtifacts.test.ts (verified 7 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-07",
+    "severity": "P2",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/integration/kh01FinalAcceptanceFailClosed.test.ts (verified 15 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  },
+  {
+    "id": "V1159-08",
+    "severity": "P1",
+    "status": "FIXED_VERIFIED",
+    "evidenceReference": "tests/unit/kh01FinalVerdict.test.ts (verified 9 assertions PASSED on SHA aba474000f9180e2b4f7917e4d4999cc6e544e2f)"
+  }
+]

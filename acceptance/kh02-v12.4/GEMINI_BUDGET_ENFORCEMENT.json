@@ -1,0 +1,6 @@
+{
+  "maxRetries": 3,
+  "maxFallbacks": 2,
+  "circuitBreakerTriggered": true,
+  "passed": true
+}

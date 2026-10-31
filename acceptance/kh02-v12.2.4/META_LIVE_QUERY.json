@@ -1,0 +1,13 @@
+{
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
+  "topic": "Pet Gadgets",
+  "market": "US",
+  "lookbackDays": 90,
+  "upstreamRecordsReturned": 11,
+  "newUniqueInserted": 10,
+  "existingUpdated": 0,
+  "totalCollected": 10,
+  "liveSucceeded": true,
+  "error": null,
+  "executedAt": "2026-10-27T08:43:45.486Z"
+}

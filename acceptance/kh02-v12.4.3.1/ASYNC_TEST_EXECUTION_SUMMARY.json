@@ -1,0 +1,206 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "gitRevision": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+  "sessionStartedAt": "2026-10-29T06:06:43.308Z",
+  "sessionFinishedAt": "2026-10-29T06:10:09.765Z",
+  "completionBarrier": {
+    "passed": true,
+    "incompleteJobs": []
+  },
+  "jobs": [
+    {
+      "suiteId": "tsc_typecheck",
+      "name": "TypeScript Typecheck",
+      "command": "node.exe tsc --noEmit",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:06:43.650Z",
+      "completedAt": "2026-10-29T06:06:47.524Z",
+      "durationMs": 3874,
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalTests": 0,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\tsc.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "eslint",
+      "name": "ESLint",
+      "command": "node.exe eslint.js",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:06:43.660Z",
+      "completedAt": "2026-10-29T06:07:06.503Z",
+      "durationMs": 22843,
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalTests": 0,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\lint.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "kh01_verify",
+      "name": "KH-01 Verification Suite",
+      "command": "node.exe vitest.mjs run kh01Security.test.ts kh01ProductOffer.test.ts kh01LandingPage.test.ts kh01EconomicsOpportunity.test.ts kh01ProductIntelligenceWorkspace.test.ts",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:06:47.524Z",
+      "completedAt": "2026-10-29T06:06:51.815Z",
+      "durationMs": 4291,
+      "exitCode": 0,
+      "passedTests": 69,
+      "failedTests": 0,
+      "totalTests": 69,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\kh01_verify.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "v12_4_3_1_regression",
+      "name": "V12.4.3.1 Mandatory Evidence & Async Regression",
+      "command": "node.exe vitest.mjs run v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:06:51.816Z",
+      "completedAt": "2026-10-29T06:06:53.787Z",
+      "durationMs": 1971,
+      "exitCode": 0,
+      "passedTests": 25,
+      "failedTests": 0,
+      "totalTests": 25,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\v12_4_3_1_regression.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "kh02_unit",
+      "name": "KH-02 Full Unit Regression Suite",
+      "command": "node.exe vitest.mjs run kh02",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:06:53.787Z",
+      "completedAt": "2026-10-29T06:07:52.445Z",
+      "durationMs": 58658,
+      "exitCode": 0,
+      "passedTests": 451,
+      "failedTests": 0,
+      "totalTests": 451,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\kh02_unit.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "historical_backtest",
+      "name": "V12.4.3.1 Historical Backtest (DEV + HOLDOUT)",
+      "command": "node.exe cli.mjs runBacktestV12_4_3_1.ts",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:07:06.504Z",
+      "completedAt": "2026-10-29T06:07:07.962Z",
+      "durationMs": 1458,
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalTests": 0,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\backtest_v12_4_3_1.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "kh02_integration",
+      "name": "KH-02 Integration Suite",
+      "command": "node.exe vitest.mjs run kh02",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:07:52.446Z",
+      "completedAt": "2026-10-29T06:08:06.146Z",
+      "durationMs": 13700,
+      "exitCode": 0,
+      "passedTests": 27,
+      "failedTests": 0,
+      "totalTests": 27,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\kh02_integration.log",
+      "timedOut": false,
+      "logTruncated": false
+    },
+    {
+      "suiteId": "production_build",
+      "name": "Next.js Production Build",
+      "command": "node.exe next build",
+      "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+      "startedAt": "2026-10-29T06:08:06.148Z",
+      "completedAt": "2026-10-29T06:08:15.086Z",
+      "durationMs": 8938,
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "totalTests": 0,
+      "reusedPreviousLog": false,
+      "logFilePath": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.1\\logs\\next_build.log",
+      "timedOut": false,
+      "logTruncated": false
+    }
+  ],
+  "freshnessAudits": [
+    {
+      "suiteId": "tsc_typecheck",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "eslint",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "kh01_verify",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "v12_4_3_1_regression",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "kh02_unit",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "historical_backtest",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "kh02_integration",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "suiteId": "production_build",
+      "audit": {
+        "valid": true,
+        "reasons": []
+      }
+    }
+  ]
+}

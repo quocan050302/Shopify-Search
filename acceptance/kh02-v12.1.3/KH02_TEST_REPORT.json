@@ -1,0 +1,18 @@
+{
+  "unit": {
+    "passed": 11,
+    "failed": 0
+  },
+  "integration": {
+    "passed": 11,
+    "failed": 0
+  },
+  "ownership": {
+    "passed": 1,
+    "failed": 0
+  },
+  "acceptance": {
+    "passed": 3,
+    "failed": 0
+  }
+}

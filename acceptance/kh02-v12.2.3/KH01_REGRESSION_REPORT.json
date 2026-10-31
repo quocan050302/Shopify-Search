@@ -1,0 +1,11 @@
+{
+  "suite": "KH-01 Protection Suite",
+  "command": "npm run kh01:verify",
+  "passed": true,
+  "exitCode": 0,
+  "verifiedAt": "2026-10-27T01:59:18.774Z",
+  "testFilesCount": 5,
+  "totalTestsCount": 69,
+  "passedTestsCount": 69,
+  "zeroRegressions": true
+}

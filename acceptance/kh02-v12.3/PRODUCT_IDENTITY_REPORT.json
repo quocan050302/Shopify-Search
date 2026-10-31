@@ -1,0 +1,59 @@
+{
+  "testCases": [
+    {
+      "rawHeadline": "Hidden Dangers",
+      "classification": "CLICKBAIT_HOOK",
+      "isProductCandidate": false,
+      "extractedModel": null,
+      "identityStatus": "UNRESOLVED",
+      "canonicalProductName": null,
+      "isEligibleAsEvergreenWinner": false
+    },
+    {
+      "rawHeadline": "Ad50fb",
+      "classification": "CAMPAIGN_CODE",
+      "isProductCandidate": false,
+      "extractedModel": null,
+      "identityStatus": "UNRESOLVED",
+      "canonicalProductName": null,
+      "isEligibleAsEvergreenWinner": false
+    },
+    {
+      "rawHeadline": "Wmt004 1",
+      "classification": "INTERNAL_SKU_CODE",
+      "isProductCandidate": false,
+      "extractedModel": null,
+      "identityStatus": "UNRESOLVED",
+      "canonicalProductName": null,
+      "isEligibleAsEvergreenWinner": false
+    },
+    {
+      "rawHeadline": "Grooming Gloves Gg002 L1",
+      "classification": "PRODUCT_CANDIDATE",
+      "isProductCandidate": true,
+      "extractedModel": "Gg002 L1",
+      "identityStatus": "PROBABLE",
+      "canonicalProductName": "Grooming Gloves",
+      "isEligibleAsEvergreenWinner": true
+    },
+    {
+      "rawHeadline": "The #1 Pet Hair/Lint/Dust Cleaner",
+      "classification": "PRODUCT_CANDIDATE",
+      "isProductCandidate": true,
+      "extractedModel": null,
+      "identityStatus": "VERIFIED",
+      "canonicalProductName": "Pet Hair/Lint/Dust Cleaner",
+      "isEligibleAsEvergreenWinner": true
+    },
+    {
+      "rawHeadline": "Ultrasonic Dog Bark Deterrent Device",
+      "classification": "PRODUCT_CANDIDATE",
+      "isProductCandidate": true,
+      "extractedModel": null,
+      "identityStatus": "PROBABLE",
+      "canonicalProductName": "Ultrasonic Dog Bark Deterrent Device",
+      "isEligibleAsEvergreenWinner": true
+    }
+  ],
+  "timestamp": "2026-10-27T16:09:40.908Z"
+}

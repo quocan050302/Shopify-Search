@@ -1,0 +1,21 @@
+{
+  "pageLoaded": true,
+  "researchSubmitted": true,
+  "acceptedRunId": null,
+  "terminalStateObserved": true,
+  "resultsRendered": true,
+  "emptyStateAccurate": false,
+  "displayedCards": 5,
+  "unexpectedHttpErrors": [
+    500
+  ],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "screenshotsCaptured": 3,
+  "errors": [
+    "HTTP 500 from http://localhost:3000/api/v1/kh02/research",
+    "Async research submission failed to return valid acceptedRunId in HTTP 202 response."
+  ],
+  "verdict": "FAIL",
+  "executedAt": "2026-10-26T16:00:40.076Z"
+}

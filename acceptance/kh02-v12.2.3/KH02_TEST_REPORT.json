@@ -1,0 +1,10 @@
+{
+  "unit": {
+    "exitCode": 0,
+    "passed": true
+  },
+  "integration": {
+    "exitCode": 0,
+    "passed": true
+  }
+}

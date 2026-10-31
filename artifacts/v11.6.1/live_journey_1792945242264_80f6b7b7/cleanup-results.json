@@ -1,0 +1,9 @@
+{
+  "browserClosed": true,
+  "workerStopped": true,
+  "nextServerStopped": true,
+  "mcpClosed": true,
+  "prismaDisconnected": true,
+  "isolatedDatabaseDeleted": true,
+  "errors": []
+}

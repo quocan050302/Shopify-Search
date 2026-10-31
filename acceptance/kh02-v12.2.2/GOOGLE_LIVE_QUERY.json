@@ -1,0 +1,17 @@
+{
+  "source": "GOOGLE_ADS",
+  "protocol": "Streamable HTTP / stdio JSON-RPC 2.0 (MCP)",
+  "packageReference": "gads-transparency-mcp (v1.0.1)",
+  "supportedToolNames": [
+    "search_advertiser",
+    "get_advertiser_ads",
+    "get_ad_details"
+  ],
+  "configured": false,
+  "transportStatus": "NOT_CONFIGURED",
+  "authStatus": "NOT_PROBED",
+  "blockerCode": "MCP_NOT_CONFIGURED",
+  "requiredAction": "Configure GOOGLE_TRANSPARENCY_MCP_URL or GOOGLE_TRANSPARENCY_MCP_COMMAND in .env.local.",
+  "liveVerdict": "BLOCKED_EXTERNAL_REQUIREMENT",
+  "evaluatedAt": "2026-10-26T16:45:07.312Z"
+}

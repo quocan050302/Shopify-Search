@@ -1,0 +1,314 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "mutationsTotal": 10,
+  "mutationsCaught": 10,
+  "adversarialSummary": {
+    "Mutation_A_MetaCached50ZeroLive": {
+      "caught": true,
+      "observed": {
+        "G06A_META_TELEMETRY_TRUTH": {
+          "verdict": "PASS",
+          "violations": [],
+          "checkedRuns": 1
+        },
+        "G06B_META_CACHE_FALLBACK_INTEGRITY": {
+          "verdict": "PASS",
+          "violations": [],
+          "cachedRunsCount": 1,
+          "totalCachedObservations": 50
+        },
+        "G06C_META_LIVE_EXECUTION_PROOF": {
+          "verdict": "BLOCKED_EXTERNAL_DEPENDENCY",
+          "liveRunsCount": 0,
+          "totalFreshLiveAds": 0,
+          "totalLiveApiCalls": 0,
+          "reason": "No fresh live Meta upstream query execution occurred in this run batch (CACHE_ONLY / external provider boundary); cached fallback remained truthful."
+        },
+        "overallG06EngineeringVerdict": "PASS",
+        "overallG06LiveVerdict": "BLOCKED_EXTERNAL_DEPENDENCY"
+      }
+    },
+    "Mutation_B_Top3WithoutDemandRefs": {
+      "caught": true,
+      "observed": {
+        "verdict": "FAIL",
+        "totalClaimedWinners": 1,
+        "independentlyVerifiedWinners": 0,
+        "maxVerifiedWinnersInSingleRun": 0,
+        "runsWithThreeVerifiedWinners": [],
+        "disqualifiedWinners": [
+          {
+            "runTopic": "pet gadgets",
+            "candidateId": "c1",
+            "title": "Automatic Pet Feeder",
+            "disqualifiers": [
+              "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+              "Demand source authority 'CACHED_UNVERIFIED' is not authoritative/historical verified.",
+              "Insufficient distinct demand observations (0/3 required).",
+              "Demand coverage (0D) is below mandatory 60D threshold.",
+              "Demand class 'EVERGREEN' is not eligible for Verified Evergreen.",
+              "Candidate lacks traceable source observation record IDs.",
+              "Candidate lacks >= 3 traceable demand observation IDs."
+            ]
+          }
+        ],
+        "winnerEvidenceRecords": [
+          {
+            "candidateId": "c1",
+            "productId": null,
+            "canonicalProductName": "Automatic Pet Feeder",
+            "merchantDomain": "",
+            "canonicalProductUrl": "https://a.com/products/p1",
+            "identityVerified": false,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "CACHED_UNVERIFIED",
+            "demandObservationsCount": 0,
+            "distinctDemandDatesCount": 0,
+            "coveredDays": 0,
+            "demandStabilityScore": 20,
+            "demandClass": "EVERGREEN",
+            "opportunityScore": 80,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [],
+            "demandObservationIds": [],
+            "verifiedByGate": false,
+            "disqualifiers": [
+              "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+              "Demand source authority 'CACHED_UNVERIFIED' is not authoritative/historical verified.",
+              "Insufficient distinct demand observations (0/3 required).",
+              "Demand coverage (0D) is below mandatory 60D threshold.",
+              "Demand class 'EVERGREEN' is not eligible for Verified Evergreen.",
+              "Candidate lacks traceable source observation record IDs.",
+              "Candidate lacks >= 3 traceable demand observation IDs."
+            ]
+          }
+        ]
+      }
+    },
+    "Mutation_C_UnknownDemandAuthority": {
+      "caught": true,
+      "observed": {
+        "sourceAuthority": "ESTIMATED_OR_PROXY",
+        "eligibleForEvergreen": false
+      }
+    },
+    "Mutation_D_CrossProductDemandHistory": {
+      "caught": true,
+      "observed": {
+        "eligibleForEvergreen": false,
+        "disqualifiers": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Cross-product demand mismatch: candidate family 'pet_feeder' cannot be verified by demand keyword 'stainless steel cat water fountain' (family 'water_fountain').).' "
+      }
+    },
+    "Mutation_E_OneProductThreeTitles": {
+      "caught": true,
+      "observed": {
+        "isDistinct": false,
+        "isFamilyDiverse": false,
+        "totalCandidatesEvaluated": 3,
+        "distinctCount": 1,
+        "distinctProductCount": 1,
+        "distinctFamilyCount": 1,
+        "distinctListingCount": 1,
+        "independentOpportunityCount": 1,
+        "homogeneousFamilyDetected": true,
+        "dominantFamilyKey": "item_title",
+        "dominantFamilyLabel": "Item Title",
+        "duplicateGroupsCount": 2,
+        "uncertainties": [],
+        "pairwiseDecisions": [
+          {
+            "candidateIds": [
+              "c1",
+              "c2"
+            ],
+            "listingKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "productKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "familyKeys": [
+              "item_title",
+              "item_title"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "conflictingEvidence": [
+              "Different ad/display titles ('Title 1' vs 'Title 2') overridden by identical canonical product URL."
+            ],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+          },
+          {
+            "candidateIds": [
+              "c1",
+              "c3"
+            ],
+            "listingKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "productKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "familyKeys": [
+              "item_title",
+              "item_title"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "conflictingEvidence": [
+              "Different ad/display titles ('Title 1' vs 'Title 3') overridden by identical canonical product URL."
+            ],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+          },
+          {
+            "candidateIds": [
+              "c2",
+              "c3"
+            ],
+            "listingKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "productKeys": [
+              "url::https://uprootclean.com/products/uproot-cleaner-pro",
+              "url::https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "familyKeys": [
+              "item_title",
+              "item_title"
+            ],
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "areSameListing": true,
+            "areSameActualProduct": true,
+            "areSameVariant": true,
+            "areSameFamily": true,
+            "areDistinctOpportunitiesForBroadNiche": false,
+            "areDistinctOpportunitiesForSpecificQuery": false,
+            "confidence": "EXACT",
+            "uncertainty": null,
+            "supportingEvidence": [
+              "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+            ],
+            "conflictingEvidence": [
+              "Different ad/display titles ('Title 2' vs 'Title 3') overridden by identical canonical product URL."
+            ],
+            "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+          }
+        ],
+        "details": [
+          {
+            "candidateId": "c1",
+            "title": "Title 1",
+            "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "variantKey": null,
+            "familyKey": "item_title",
+            "familyLabel": "Item Title",
+            "storeDomain": "uprootclean.com",
+            "isDuplicate": false
+          },
+          {
+            "candidateId": "c2",
+            "title": "Title 2",
+            "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "variantKey": null,
+            "familyKey": "item_title",
+            "familyLabel": "Item Title",
+            "storeDomain": "uprootclean.com",
+            "isDuplicate": true,
+            "duplicateOf": "c1",
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+          },
+          {
+            "candidateId": "c3",
+            "title": "Title 3",
+            "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+            "variantKey": null,
+            "familyKey": "item_title",
+            "familyLabel": "Item Title",
+            "storeDomain": "uprootclean.com",
+            "isDuplicate": true,
+            "duplicateOf": "c1",
+            "decision": "SAME_LISTING_SAME_PRODUCT",
+            "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+          }
+        ]
+      }
+    },
+    "Mutation_F_CatFeederAudioPsychology": {
+      "caught": true,
+      "observed": {
+        "valid": false,
+        "reason": "Cross-product psychology leakage detected: Pet product contains wireless audio/commuter psychology claims."
+      }
+    },
+    "Mutation_G_ReusedTestLogWithoutExecution": {
+      "caught": true,
+      "observed": {
+        "valid": false,
+        "reasons": [
+          "Suite 'reused_suite' reused a previous log (reusedPreviousLog=true)."
+        ]
+      }
+    },
+    "Mutation_H_ControlledGoogleMcpWhileLive429": {
+      "caught": true,
+      "observed": {
+        "controlledMcpIsFlagged": true,
+        "liveGateVerdict": "INSUFFICIENT_EVIDENCE"
+      }
+    },
+    "Mutation_I_MismatchedFrontendBackendWorkerSha": {
+      "caught": true,
+      "observed": {
+        "runtimeStatus": "VERSION_MISMATCH",
+        "diagnostics": [
+          "Frontend bundle SHA (1111111) does not match backend build SHA (2222222).",
+          "Backend process booted on stale SHA (2222222) while repository HEAD is (7126d67).",
+          "Worker build SHA (3333333) does not match backend build SHA (2222222)."
+        ]
+      }
+    },
+    "Mutation_J_CancelledAsyncJobBeforeCompletion": {
+      "caught": true,
+      "observed": {
+        "passed": false,
+        "incompleteJobs": [
+          "running_unfinished_suite"
+        ]
+      }
+    }
+  }
+}

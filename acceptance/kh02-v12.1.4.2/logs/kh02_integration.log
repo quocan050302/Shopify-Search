@@ -1,0 +1,38 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:integration
+> vitest run tests/integration/kh02
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Navigating to: http://localhost:3000/products
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Triggering async research for 'Pet Hair Remover'...
+
+stdout | tests/integration/kh02BrowserAcceptance.test.ts > SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance > launches Chromium, interacts with /products, and captures visual artifacts
+[Chromium E2E] Testing reload persistence...
+
+ ✓ tests/integration/kh02BrowserAcceptance.test.ts (1 test) 3018ms
+   ✓ SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance (1)
+     ✓ launches Chromium, interacts with /products, and captures visual artifacts 3017ms
+ ✓ tests/integration/kh02HttpServerE2E.test.ts (6 tests) 265ms
+ ✓ tests/integration/kh02V12_1_4_2_LongResearch.test.ts (3 tests) 207ms
+ ✓ tests/integration/kh02V12_1_3_Acceptance.test.ts (4 tests) 280ms
+ ✓ tests/integration/kh02ResearchApi.test.ts (5 tests) 132ms
+ ✓ tests/integration/kh02V12_1_Persistence.test.ts (4 tests) 131ms
+ ✓ tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts (2 tests) 116ms
+
+ Test Files  7 passed (7)
+      Tests  25 passed (25)
+   Start at  21:44:05
+   Duration  5.94s (tests 76%, import 16%, setup 5%, transform 2%, worker 1%)
+
+    Isolate  7 workers spawned · ~66ms startup each (spawn + environment, per file)
+             at least ~399ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+
+=== STDERR ===

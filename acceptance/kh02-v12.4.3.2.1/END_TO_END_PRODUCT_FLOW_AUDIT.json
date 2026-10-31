@@ -1,0 +1,58 @@
+{
+  "version": "12.4.3.2.1",
+  "flows": {
+    "flowA_AutomaticPetFeederE2E": {
+      "executed": true,
+      "runId": "kh02_run_1793273119399_i8jf0",
+      "recommendedCardsCount": 2,
+      "drawerOpened": true,
+      "drawerHasMediaPreview": true,
+      "drawerHasTechnicalVerification": true,
+      "navigatedToProductIntelligence": true,
+      "piRenderedCandidateId": "cand_1212440541",
+      "backToProductFinderPreservedContext": true,
+      "pass": true
+    },
+    "flowB_DogQuerySpeciesIsolation": {
+      "executed": true,
+      "runId": "kh02_run_1793273119433_e412e",
+      "shortlistCount": 6,
+      "zeroCatOnlyContamination": true,
+      "pass": true
+    },
+    "flowC_CatQuerySpeciesIsolation": {
+      "executed": true,
+      "runId": "kh02_run_1793273119448_mdwg3",
+      "shortlistCount": 6,
+      "zeroDogOnlyContamination": true,
+      "pass": true
+    },
+    "flowD_AllCandidatesToIntelligence": {
+      "executed": true,
+      "allCandidatesRowsCount": 13,
+      "candidateInspectorOpened": true,
+      "pass": true
+    },
+    "flowE_ReloadPersistence": {
+      "executed": true,
+      "preReloadRunId": "kh02_run_1793273119399_i8jf0",
+      "postReloadRunId": "kh02_run_1793273119399_i8jf0",
+      "piReloadPreservedGallery": true,
+      "pass": true
+    },
+    "flowF_HistoryRunSwitching": {
+      "executed": true,
+      "historyDrawerOpened": true,
+      "escapeClosedHistoryDrawer": true,
+      "historyRunSwitched": true,
+      "pass": true
+    },
+    "flowG_DirectUrlTamperingGuard": {
+      "executed": true,
+      "testedTamperedUrl": "http://127.0.0.1:3000/products/cmvsy7zqh000jp0orhypwohho/intelligence?runId=kh02_run_1793273119433_e412e&candidateId=cand_nonexistent_tampered_999",
+      "mismatchBannerVisible": true,
+      "mismatchBannerText": "Research Run / Candidate Context Mismatch DetectedCandidate 'cand_nonexistent_tampered_999' was not found in explicitly requested research run 'kh02_run_1793273119433_e412e'. Did not fall back to another run.",
+      "pass": true
+    }
+  }
+}

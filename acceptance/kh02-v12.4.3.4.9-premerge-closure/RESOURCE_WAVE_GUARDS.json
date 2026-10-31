@@ -1,0 +1,36 @@
+{
+  "evaluatedAt": "2026-10-31T12:13:51.791Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "requiredFreeDiskGB": 15,
+  "measurementStatus": "MEASURED",
+  "guardStatus": "PASS_HEADROOM_SUFFICIENT",
+  "heavyWavesUnblocked": true,
+  "waveGuards": [
+    {
+      "waveId": "WAVE_A_RESOURCE_SAFE",
+      "allowed": true,
+      "measuredFreeDiskGB": 16.4
+    },
+    {
+      "waveId": "WAVE_B_FULL_UNIT_AND_INTEGRATION",
+      "allowed": true,
+      "measuredFreeDiskGB": 16.4
+    },
+    {
+      "waveId": "WAVE_C_PRODUCTION_BUILD",
+      "allowed": true,
+      "measuredFreeDiskGB": 16.4
+    },
+    {
+      "waveId": "WAVE_D_ISOLATED_SERVER_AND_CHROMIUM",
+      "allowed": true,
+      "measuredFreeDiskGB": 16.4
+    },
+    {
+      "waveId": "WAVE_E_FRESH_LIVE_RESEARCH",
+      "allowed": true,
+      "measuredFreeDiskGB": 16.4
+    }
+  ]
+}

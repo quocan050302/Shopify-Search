@@ -1,0 +1,33 @@
+{
+  "version": "12.1.2",
+  "evaluatedAt": "2026-10-26T06:53:54.653Z",
+  "baseUrl": "http://localhost:3000",
+  "endpoints": {
+    "GET /api/v1/kh02/providers/status": {
+      "status": 200,
+      "ok": true,
+      "responseSnippet": "Found 5 providers"
+    },
+    "POST /api/v1/kh02/research": {
+      "status": 202,
+      "ok": true,
+      "responseSnippet": "Accepted runId: kh02_run_1792997678668_lyyvv"
+    },
+    "GET /api/v1/kh02/research/runs/[runId]": {
+      "status": 200,
+      "ok": true,
+      "responseSnippet": "Status: COMPLETED"
+    },
+    "GET /api/v1/kh02/leaderboard": {
+      "status": 200,
+      "ok": true,
+      "responseSnippet": "Restored leaderboard for topic 'Pet Water Fountain'"
+    },
+    "GET /api/v1/kh02/research/runs": {
+      "status": 200,
+      "ok": true,
+      "responseSnippet": "Found 1 historical runs"
+    }
+  },
+  "verdict": "PASS"
+}

@@ -1,0 +1,33 @@
+{
+  "pageLoaded": true,
+  "authorized": true,
+  "researchSubmitted": true,
+  "acceptedRunId": "kh02_run_1793090618422_mb5oc",
+  "terminalStatus": "COMPLETED",
+  "terminalStateObserved": true,
+  "resultsRendered": false,
+  "emptyStateAccurate": true,
+  "displayedCandidateIds": [],
+  "displayedRankOrder": [],
+  "displayedScores": {},
+  "displayedConfidence": {},
+  "unexpectedHttpErrors": [],
+  "hydrationErrors": [],
+  "databaseMatch": true,
+  "httpMatch": true,
+  "cardCount": 0,
+  "screenshots": [
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track2_live\\01_before_research.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track2_live\\02_source_statuses.png",
+    "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.2.4\\screenshots\\track2_live\\03_leaderboard_results.png"
+  ],
+  "consoleLogs": [
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[log] [HMR] connected",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[log] [HMR] connected"
+  ],
+  "errors": [],
+  "durationMs": 8828,
+  "verdict": "PASS"
+}

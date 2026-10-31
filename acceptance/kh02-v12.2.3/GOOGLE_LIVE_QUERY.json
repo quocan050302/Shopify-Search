@@ -1,0 +1,6 @@
+{
+  "provider": "GOOGLE_ADS",
+  "queryExecuted": false,
+  "status": "MCP_NOT_CONFIGURED",
+  "reason": "Google Ads Transparency MCP server is not configured in environment. Configuration: Missing, Transport: Not configured."
+}

@@ -1,0 +1,34 @@
+{
+  "version": "12.4.3.2.1",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "gitHead": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+  "freshBuildId": "nOiaqrTL0bv_mkFRh-nGj",
+  "serverReachable": true,
+  "versionEndpointResponse": {
+    "releaseVersion": "12.4.3.2.1",
+    "frontendBuildSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "backendBuildSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "workerBuildSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "sourceRevisionSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "buildRevisionSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "backendBootSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "workerBootSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "databaseFingerprint": "6530562482a2",
+    "backendStartedAt": "2026-10-29T11:25:22.173Z",
+    "workerStartedAt": "2026-10-29T11:25:22.070Z",
+    "dbFingerprint": "6530562482a2",
+    "workerDbFingerprint": "6530562482a2",
+    "conflictingWorkersDetected": false,
+    "diagnostics": [
+      "Frontend, backend, and worker runtime parity verified at V12.4.3.2.1 (871ab66)."
+    ],
+    "runtimeStatus": "MATCHED",
+    "buildSha": "871ab66c6c03821734a614b02f82823bdf6f1f57",
+    "buildTimestamp": "2026-10-29T11:24:35.163Z",
+    "appVersion": "12.4.3.2.1",
+    "workerVersion": "12.4.3.2.1",
+    "environment": "production",
+    "appProcessId": 36660,
+    "workerProcessId": 34176
+  }
+}

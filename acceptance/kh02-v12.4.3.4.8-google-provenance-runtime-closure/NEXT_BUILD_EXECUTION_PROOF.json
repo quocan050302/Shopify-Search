@@ -1,0 +1,27 @@
+{
+  "executed": true,
+  "status": "BUILD_PASS",
+  "allowServerAndChromiumLaunch": true,
+  "sourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "command": "npx next build",
+  "pid": 76957,
+  "startedAt": "2026-10-31T11:10:18.600Z",
+  "completedAt": "2026-10-31T11:10:26.306Z",
+  "durationMs": 7706,
+  "exitCode": 0,
+  "signal": null,
+  "buildIdExists": true,
+  "buildIdValue": "oVMltfeFr4r0jy-lv9xKX",
+  "buildIdMtimeMs": 1793445025565.9553,
+  "buildIdFreshlyUpdated": true,
+  "compileSucceeded": true,
+  "warningsCount": 4,
+  "warningsInventory": [
+    "Turbopack build encountered 1 warning:",
+    "./src/services/kh02/demand/bigqueryClientAdapter.ts:152:10",
+    "Warning: Dynamic filesystem access causes tracing of the whole project",
+    "./src/services/kh02/demand/bigqueryClientAdapter.ts"
+  ],
+  "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure/NEXT_BUILD_LOG.txt",
+  "reason": "Production build BUILD_PASS: pid=76957, exitCode=0, signal=none, buildIdFreshlyUpdated=true."
+}

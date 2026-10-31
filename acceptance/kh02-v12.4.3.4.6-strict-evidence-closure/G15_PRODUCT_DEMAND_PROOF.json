@@ -1,0 +1,24 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:46.633Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "researchRunId": "kh02_run_1793288037069_asnxv",
+  "totalShortlistCandidates": 1,
+  "g15QualifyingCount": 0,
+  "g15RequiredCount": 3,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "entries": [
+    {
+      "candidateId": "cand_1151716850",
+      "title": "News Cordless Electric Garden Pruning Shears M",
+      "storeDomain": "pagemindvibe.com",
+      "familyKey": "pruning_shears_secateurs",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "UNKNOWN_SOURCE",
+      "g15Qualifying": false
+    }
+  ]
+}

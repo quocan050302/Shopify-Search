@@ -1,0 +1,27 @@
+{
+  "executed": true,
+  "status": "BUILD_PASS",
+  "allowServerAndChromiumLaunch": true,
+  "sourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "command": "npx next build",
+  "pid": 90327,
+  "startedAt": "2026-10-31T12:15:20.776Z",
+  "completedAt": "2026-10-31T12:15:29.883Z",
+  "durationMs": 9107,
+  "exitCode": 0,
+  "signal": null,
+  "buildIdExists": true,
+  "buildIdValue": "rxn4lkDckmcDxwT4WrH2b",
+  "buildIdMtimeMs": 1793448929122.0823,
+  "buildIdFreshlyUpdated": true,
+  "compileSucceeded": true,
+  "warningsCount": 4,
+  "warningsInventory": [
+    "Turbopack build encountered 1 warning:",
+    "./src/services/kh02/demand/bigqueryClientAdapter.ts:152:10",
+    "Warning: Dynamic filesystem access causes tracing of the whole project",
+    "./src/services/kh02/demand/bigqueryClientAdapter.ts"
+  ],
+  "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.9-premerge-closure/NEXT_BUILD_LOG.txt",
+  "reason": "Production build BUILD_PASS: pid=90327, exitCode=0, signal=none, buildIdFreshlyUpdated=true."
+}

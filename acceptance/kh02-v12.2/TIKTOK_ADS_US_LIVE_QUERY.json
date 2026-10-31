@@ -1,0 +1,8 @@
+{
+  "source": "TIKTOK_ADS",
+  "automatedLiveProviderStatus": "BLOCKED",
+  "reason": "Verified automated data provider not configured for TikTok Ads US.",
+  "storedCompetitorAdsIndexed": 5,
+  "manualImportSupported": true,
+  "evaluatedAt": "2026-10-26T15:27:08.601Z"
+}

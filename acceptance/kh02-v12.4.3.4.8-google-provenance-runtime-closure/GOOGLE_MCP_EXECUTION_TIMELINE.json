@@ -1,0 +1,326 @@
+{
+  "acceptanceRunId": "autoclosure_20261031110908",
+  "originalResearchRunId": "kh02_run_1793444975958_n0hgb",
+  "researchRunId": "kh02_run_1793444975958_n0hgb",
+  "runExecutionMode": "FRESH_LIVE_CURRENT_RUN",
+  "evaluatedAt": "2026-10-31T11:10:18.220Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "providerInvocationRecords": [
+    {
+      "invocationId": "google_mcp_inv_uahpet.com_AR11363703404665765889_1793444994943",
+      "mcpInvocationRef": "google_mcp_inv_uahpet.com_AR11363703404665765889_1793444994943",
+      "upstreamProviderRequestId": null,
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:9661afb1f5fb655a",
+      "responseEvidenceRef": "mcp:get_advertiser_ads:AR11363703404665765889:9661afb1f5fb655a",
+      "transportId": "mcp_session_default",
+      "transportSessionId": "mcp_session_default",
+      "researchRunId": "kh02_run_1793444975958_n0hgb",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "advertiserId": "AR11363703404665765889",
+      "domain": "uahpet.com",
+      "toolName": "get_advertiser_ads",
+      "requestedMarket": "US",
+      "startedAt": "2026-10-31T11:09:54.943Z",
+      "invocationStartedAt": "2026-10-31T11:09:54.943Z",
+      "completedAt": "2026-10-31T11:10:02.580Z",
+      "invocationCompletedAt": "2026-10-31T11:10:02.580Z",
+      "observationReceivedAt": "2026-10-31T11:10:02.580Z",
+      "durationMs": 7637,
+      "sourceMode": "LIVE_PROVIDER",
+      "isCached": false,
+      "status": "SUCCEEDED",
+      "invocationStatus": "SUCCEEDED",
+      "upstreamCompleted": true,
+      "rawCountReturned": 3,
+      "requestArgumentsHash": "11f28254387614cbb7c506f96c4dfbe3ee7fcc55c94935738dd24d0f21489aa3",
+      "responseEvidenceHash": "9661afb1f5fb655a33cbda83e5ac8a01cfd492d45c1c67e43094406dab152451",
+      "returnedCreativeIds": [
+        "CR15687592804278599681",
+        "CR10612806541364953089",
+        "CR17299028009335914497"
+      ],
+      "actualReturnedCreativeIds": [
+        "CR15687592804278599681",
+        "CR10612806541364953089",
+        "CR17299028009335914497"
+      ],
+      "missingCreativeIdCount": 0,
+      "duplicateCreativeIdCount": 0,
+      "lineageAvailable": true,
+      "errorMessage": null
+    },
+    {
+      "invocationId": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1793445004329",
+      "mcpInvocationRef": "google_mcp_inv_kittyspout.com_AR10162009454036385793_1793445004329",
+      "upstreamProviderRequestId": null,
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:279c072a181728d2",
+      "responseEvidenceRef": "mcp:get_advertiser_ads:AR10162009454036385793:279c072a181728d2",
+      "transportId": "mcp_session_default",
+      "transportSessionId": "mcp_session_default",
+      "researchRunId": "kh02_run_1793444975958_n0hgb",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "advertiserId": "AR10162009454036385793",
+      "domain": "kittyspout.com",
+      "toolName": "get_advertiser_ads",
+      "requestedMarket": "US",
+      "startedAt": "2026-10-31T11:10:04.329Z",
+      "invocationStartedAt": "2026-10-31T11:10:04.329Z",
+      "completedAt": "2026-10-31T11:10:12.462Z",
+      "invocationCompletedAt": "2026-10-31T11:10:12.462Z",
+      "observationReceivedAt": "2026-10-31T11:10:12.462Z",
+      "durationMs": 8133,
+      "sourceMode": "LIVE_PROVIDER",
+      "isCached": false,
+      "status": "SUCCEEDED",
+      "invocationStatus": "SUCCEEDED",
+      "upstreamCompleted": true,
+      "rawCountReturned": 3,
+      "requestArgumentsHash": "5c2c41921ef27d755bdfcc553a6d78e35542f1e1337fbc1ab236af07ce35c1bf",
+      "responseEvidenceHash": "279c072a181728d214897c30c9e01531fc90a75965b076ce8786ffec60bb5f12",
+      "returnedCreativeIds": [
+        "CR10572287106929917953",
+        "CR10069218206024728577",
+        "CR05996783817149382657"
+      ],
+      "actualReturnedCreativeIds": [
+        "CR10572287106929917953",
+        "CR10069218206024728577",
+        "CR05996783817149382657"
+      ],
+      "missingCreativeIdCount": 0,
+      "duplicateCreativeIdCount": 0,
+      "lineageAvailable": true,
+      "errorMessage": null
+    },
+    {
+      "invocationId": "google_mcp_inv_uprootclean.com_AR17310456840001159169_1793445014364",
+      "mcpInvocationRef": "google_mcp_inv_uprootclean.com_AR17310456840001159169_1793445014364",
+      "upstreamProviderRequestId": null,
+      "providerRequestId": null,
+      "providerRequestIdOrigin": "ABSENT",
+      "invocationEvidenceRef": "mcp:get_advertiser_ads:AR17310456840001159169:f8ac26b97998d234",
+      "responseEvidenceRef": "mcp:get_advertiser_ads:AR17310456840001159169:f8ac26b97998d234",
+      "transportId": "mcp_session_default",
+      "transportSessionId": "mcp_session_default",
+      "researchRunId": "kh02_run_1793444975958_n0hgb",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "advertiserId": "AR17310456840001159169",
+      "domain": "uprootclean.com",
+      "toolName": "get_advertiser_ads",
+      "requestedMarket": "US",
+      "startedAt": "2026-10-31T11:10:14.364Z",
+      "invocationStartedAt": "2026-10-31T11:10:14.364Z",
+      "completedAt": "2026-10-31T11:10:18.057Z",
+      "invocationCompletedAt": "2026-10-31T11:10:18.057Z",
+      "observationReceivedAt": "2026-10-31T11:10:18.057Z",
+      "durationMs": 3694,
+      "sourceMode": "LIVE_PROVIDER",
+      "isCached": false,
+      "status": "SUCCEEDED",
+      "invocationStatus": "SUCCEEDED",
+      "upstreamCompleted": true,
+      "rawCountReturned": 3,
+      "requestArgumentsHash": "008bf69d0a49a25832e9601d7aad671be1305550018ac65bdac7af80d40b135a",
+      "responseEvidenceHash": "f8ac26b97998d234ac8d5ab09e489f512b5c6b241abc24b5aa2be966babacd2a",
+      "returnedCreativeIds": [
+        "CR01340272006737690625",
+        "CR09345042876892971009",
+        "CR17010497629718577153"
+      ],
+      "actualReturnedCreativeIds": [
+        "CR01340272006737690625",
+        "CR09345042876892971009",
+        "CR17010497629718577153"
+      ],
+      "missingCreativeIdCount": 0,
+      "duplicateCreativeIdCount": 0,
+      "lineageAvailable": true,
+      "errorMessage": null
+    }
+  ],
+  "mcpInvocations": [
+    {
+      "domain": "uahpet.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uahpet.com"
+      },
+      "startedAt": "2026-10-31T11:09:53.142Z",
+      "completedAt": "2026-10-31T11:09:54.943Z",
+      "durationMs": 1801,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "uahpet.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR11363703404665765889",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T11:09:54.943Z",
+      "completedAt": "2026-10-31T11:10:02.580Z",
+      "durationMs": 7638,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "kittyspout.com"
+      },
+      "startedAt": "2026-10-31T11:10:02.582Z",
+      "completedAt": "2026-10-31T11:10:04.329Z",
+      "durationMs": 1747,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR10162009454036385793",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T11:10:04.329Z",
+      "completedAt": "2026-10-31T11:10:12.462Z",
+      "durationMs": 8133,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    },
+    {
+      "domain": "uprootclean.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uprootclean.com"
+      },
+      "startedAt": "2026-10-31T11:10:12.462Z",
+      "completedAt": "2026-10-31T11:10:14.364Z",
+      "durationMs": 1902,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "uprootclean.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR17310456840001159169",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T11:10:14.364Z",
+      "completedAt": "2026-10-31T11:10:18.057Z",
+      "durationMs": 3694,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    }
+  ],
+  "stepTimeline": [
+    {
+      "step": "startup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:09:52.364Z",
+      "completedAt": "2026-10-31T11:09:52.364Z",
+      "durationMs": 0,
+      "detail": "domainsPlanned=5"
+    },
+    {
+      "step": "connect",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:09:52.364Z",
+      "completedAt": "2026-10-31T11:09:53.140Z",
+      "durationMs": 776
+    },
+    {
+      "step": "toolDiscovery",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:09:53.140Z",
+      "completedAt": "2026-10-31T11:09:53.142Z",
+      "durationMs": 2,
+      "detail": "toolsDiscovered=2"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:09:53.142Z",
+      "completedAt": "2026-10-31T11:09:54.943Z",
+      "durationMs": 1801,
+      "detail": "domain=uahpet.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:09:54.943Z",
+      "completedAt": "2026-10-31T11:10:02.580Z",
+      "durationMs": 7637,
+      "detail": "advertiserId=AR11363703404665765889"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:02.581Z",
+      "completedAt": "2026-10-31T11:10:02.581Z",
+      "durationMs": 0,
+      "detail": "normalized=3"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:02.582Z",
+      "completedAt": "2026-10-31T11:10:04.329Z",
+      "durationMs": 1747,
+      "detail": "domain=kittyspout.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:04.329Z",
+      "completedAt": "2026-10-31T11:10:12.462Z",
+      "durationMs": 8133,
+      "detail": "advertiserId=AR10162009454036385793"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:12.462Z",
+      "completedAt": "2026-10-31T11:10:12.462Z",
+      "durationMs": 0,
+      "detail": "normalized=3"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:12.462Z",
+      "completedAt": "2026-10-31T11:10:14.364Z",
+      "durationMs": 1902,
+      "detail": "domain=uprootclean.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:14.364Z",
+      "completedAt": "2026-10-31T11:10:18.057Z",
+      "durationMs": 3693,
+      "detail": "advertiserId=AR17310456840001159169"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T11:10:18.058Z",
+      "completedAt": "2026-10-31T11:10:18.058Z",
+      "durationMs": 0,
+      "detail": "normalized=3"
+    }
+  ]
+}

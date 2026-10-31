@@ -1,0 +1,9 @@
+{
+  "version": "12.1.2",
+  "evaluatedAt": "2026-10-26T06:53:54.653Z",
+  "atomicClaimVerified": true,
+  "fencingGuardFunction": "updateJobIfClaimOwned",
+  "staleWorkerWriteRejected": true,
+  "monotonicFencingEnforced": true,
+  "verdict": "PASS"
+}

@@ -1,0 +1,352 @@
+{
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "evaluatedAt": "2026-10-31T05:22:24.656Z",
+  "rawDistinctCount": 9,
+  "normalizedDistinctCount": 9,
+  "rejectedBeforeNormalizationCount": 0,
+  "invariantVerified": true,
+  "normalizedRecords": [
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR18441208625369186305",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": "Pet Hair Air Cleaner Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:04.101Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": "Pet Hair Air Cleaner",
+      "description": "Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "VIDEO",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR18441208625369186305"
+        },
+        "persistedAdId": "cmvvybnt7002s2korij5scjmy"
+      },
+      "media": {
+        "thumbnailUrl": null,
+        "videoUrl": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b",
+        "mediaType": "VIDEO"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvvybnt7002s2korij5scjmy"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR10608872651969527809",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:04.101Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR10608872651969527809"
+        },
+        "persistedAdId": "cmvvyfi89002sk8ors9fumkxq"
+      },
+      "media": {
+        "thumbnailUrl": "https://tpc.googlesyndication.com/archive/simgad/17571345017967561473",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvvyfi89002sk8ors9fumkxq"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR12722150295660920833",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR11363703404665765889",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uahpet.com",
+      "advertiserDomain": "uahpet.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:04.101Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR12722150295660920833"
+        },
+        "persistedAdId": "cmvvworjm002sncormndbhr3v"
+      },
+      "media": {
+        "thumbnailUrl": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828459738362&uiFeatures=12&adGroupId=198435963542&itemIds=10548303235901808171&sig=ACiVB_zIzQf5eZySolqHoZL-Q5Tb_fpB_w&htmlParentId=fletch-render-4005106282571251657&responseCallback=fletchCallback4005106282571251657",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvvworjm002sncormndbhr3v"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR02220363273008578561",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR10162009454036385793",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "kittyspout.com",
+      "advertiserDomain": "kittyspout.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:13.320Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR02220363273008578561"
+        },
+        "persistedAdId": "cmvug90hl005nooorndsbu78m"
+      },
+      "media": {
+        "thumbnailUrl": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=5591168468&creativeId=801927216709&uiFeatures=12&adGroupId=191621562621&itemIds=3267509793588795426&sig=ACiVB_xnhu8-cJ8QWOy1fIe-HJ9j3cyDJA&htmlParentId=fletch-render-2546342862604601868&responseCallback=fletchCallback2546342862604601868",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvug90hl005nooorndsbu78m"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR04177211327242043393",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR10162009454036385793",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "kittyspout.com",
+      "advertiserDomain": "kittyspout.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:13.320Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR04177211327242043393"
+        },
+        "persistedAdId": "cmvug90hr005oooorpijpycaq"
+      },
+      "media": {
+        "thumbnailUrl": "https://tpc.googlesyndication.com/archive/simgad/13992534230478887038",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvug90hr005oooorpijpycaq"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR13615728145788305409",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR10162009454036385793",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "kittyspout.com",
+      "advertiserDomain": "kittyspout.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:13.320Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR13615728145788305409"
+        },
+        "persistedAdId": "cmvujg747002sjsorhcm8q7y6"
+      },
+      "media": {
+        "thumbnailUrl": "https://tpc.googlesyndication.com/archive/simgad/5433427268261952730",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvujg747002sjsorhcm8q7y6"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR13418876926890606593",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR17310456840001159169",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uprootclean.com",
+      "advertiserDomain": "uprootclean.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:24.372Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR13418876926890606593"
+        },
+        "persistedAdId": "cmvug7j04002tooorb60lt9cn"
+      },
+      "media": {
+        "thumbnailUrl": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2593925820&creativeId=627101025487&uiFeatures=12&adGroupId=143013346060&itemIds=579725918567401080&sig=ACiVB_wO8yk5vY72PVXoMd_wd4ND9rQ_YA&htmlParentId=fletch-render-4439083325325716992&responseCallback=fletchCallback4439083325325716992",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvug7j04002tooorb60lt9cn"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR15895057600329285633",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR17310456840001159169",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uprootclean.com",
+      "advertiserDomain": "uprootclean.com",
+      "productMatchHint": "Uproot Cleaners Discover the Uproot Clean Bundle – your all-in-one pet hair solution!",
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:24.372Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": "Uproot Cleaners",
+      "description": "Discover the Uproot Clean Bundle – your all-in-one pet hair solution!",
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "VIDEO",
+        "productRelevance": "PRODUCT_SPECIFIC",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR15895057600329285633"
+        },
+        "persistedAdId": "cmvug7izp002sooor6gl62epu"
+      },
+      "media": {
+        "thumbnailUrl": null,
+        "videoUrl": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b",
+        "mediaType": "VIDEO"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvug7izp002sooor6gl62epu"
+    },
+    {
+      "source": "GOOGLE_ADS",
+      "sourceRecordId": "CR12178948318398775297",
+      "sourceUrl": "https://adstransparency.google.com/advertiser/AR17310456840001159169",
+      "landingPageUrl": null,
+      "advertiserOrCreator": "uprootclean.com",
+      "advertiserDomain": "uprootclean.com",
+      "productMatchHint": null,
+      "reportedPublishedAt": null,
+      "reportedFirstShownAt": null,
+      "reportedLastShownAt": "2026-10-31",
+      "observedAt": "2026-10-31T05:22:24.372Z",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "title": null,
+      "description": null,
+      "metrics": {
+        "lastShown": "2026-10-31",
+        "format": "IMAGE",
+        "productRelevance": "BRAND_RELATED",
+        "marketProvenance": {
+          "requestedMarket": "US",
+          "providerFilterMarket": "US",
+          "providerReportedMarket": null,
+          "verifiedDeliveryMarket": null,
+          "verificationStatus": "FILTER_ONLY",
+          "evidenceReference": "GoogleQueryFilter:CR12178948318398775297"
+        },
+        "persistedAdId": "cmvufb0hh002tzcor8st1lu0p"
+      },
+      "media": {
+        "thumbnailUrl": "https://tpc.googlesyndication.com/archive/simgad/7949270907321270859",
+        "videoUrl": null,
+        "mediaType": "IMAGE"
+      },
+      "provenance": "REAL_UPSTREAM",
+      "evidenceReference": "CompetitorAd:cmvufb0hh002tzcor8st1lu0p"
+    }
+  ]
+}

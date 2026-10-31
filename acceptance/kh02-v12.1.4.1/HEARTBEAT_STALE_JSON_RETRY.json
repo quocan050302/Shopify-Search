@@ -1,0 +1,19 @@
+{
+  "mechanism": "buildHeartbeatRetryPayload",
+  "freshMetadataReloadOnConflict": true,
+  "staleMetaReusePrevented": true,
+  "preservedFields": [
+    "lastProgress",
+    "sourceStatuses",
+    "topic",
+    "researchInput",
+    "candidates"
+  ],
+  "updatedFields": [
+    "_runtime.lastHeartbeatAt",
+    "_runtime.leaseExpiresAt",
+    "_runtime.recordVersion"
+  ],
+  "testedIn": "tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts",
+  "testOutcome": "PASS"
+}

@@ -1,0 +1,21 @@
+{
+  "layer": "HTTP to Chromium Browser",
+  "researchRunId": "kh02_run_1793090618422_mb5oc",
+  "track1_fixture": {
+    "acceptedRunId": "kh02_run_1793090600974_hgpw9",
+    "cardsRendered": 1,
+    "reconciled": true
+  },
+  "track2_live": {
+    "acceptedRunId": "kh02_run_1793090618422_mb5oc",
+    "cardsExpectedFromHttp": 0,
+    "cardsRenderedInBrowser": 0,
+    "displayedCandidateIds": [],
+    "emptyStateAccurate": true,
+    "unexpectedHttp500s": 0,
+    "exactMatch": true,
+    "reconciled": true,
+    "reason": null
+  },
+  "verifiedAt": "2026-10-27T08:43:46.280Z"
+}

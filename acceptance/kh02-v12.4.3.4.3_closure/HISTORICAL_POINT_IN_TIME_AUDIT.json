@@ -1,0 +1,20 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "evaluatedAt": "2026-10-31T01:57:48.332Z",
+  "devWindow": {
+    "start": "2024-01-01T00:00:00.000Z",
+    "cutoff": "2024-09-01T23:59:59.999Z"
+  },
+  "holdoutWindow": {
+    "start": "2024-09-02T00:00:00.000Z",
+    "cutoff": "2025-03-31T23:59:59.999Z"
+  },
+  "temporalSeparationEnforced": true,
+  "futureLeakageDetected": false,
+  "pointInTimeIntegrityPass": true,
+  "devObservationsReplayed": 19,
+  "holdoutObservationsReplayed": 380,
+  "reconstructedCandidatesCount": 10,
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+}

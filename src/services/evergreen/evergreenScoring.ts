@@ -670,7 +670,7 @@ export function calculateEvergreenEvidenceConfidence(
 
 // ─── Ranking Engine ───────────────────────────────────────────────────────────
 
-export type ResearchMode = "EVERGREEN" | "EMERGING" | "TRENDING";
+export type ResearchMode = "NEWLY_LAUNCHED" | "EVERGREEN" | "EMERGING" | "TRENDING";
 
 export interface EvergreenRankingFilters {
   mode: ResearchMode;
@@ -718,9 +718,16 @@ export function rankEvergreenAds(
     );
   }
 
-  // Sort by mode
-  if (filters.mode === "EVERGREEN") {
-    // Primary: total score desc, secondary: calendar age desc, tertiary: confidence desc
+  // Sort and filter by mode
+  if (filters.mode === "NEWLY_LAUNCHED") {
+    // Newest ads first (lowest calendar age days), secondary: score desc
+    filtered.sort((a, b) => {
+      const ageDiff = (a.calendarAgeDays ?? 9999) - (b.calendarAgeDays ?? 9999);
+      if (ageDiff !== 0) return ageDiff;
+      return (b.totalScore ?? 0) - (a.totalScore ?? 0);
+    });
+  } else if (filters.mode === "EVERGREEN") {
+    // Longevity-based research ranking: total score desc, secondary: calendar age desc, tertiary: confidence desc
     filtered.sort((a, b) => {
       const scoreDiff = (b.totalScore ?? 0) - (a.totalScore ?? 0);
       if (scoreDiff !== 0) return scoreDiff;
@@ -729,14 +736,31 @@ export function rankEvergreenAds(
       return b.evidenceConfidence - a.evidenceConfidence;
     });
   } else if (filters.mode === "EMERGING") {
-    // Lowest age (newest) first, within EARLY_POTENTIAL or PROMISING categories
-    filtered.sort((a, b) => (a.calendarAgeDays ?? 0) - (b.calendarAgeDays ?? 0));
-  } else {
-    // TRENDING: sort by evidence confidence then score
-    filtered.sort(
-      (a, b) =>
-        b.evidenceConfidence - a.evidenceConfidence || (b.totalScore ?? 0) - (a.totalScore ?? 0)
+    // EMERGING: Requires actual early-stage signals (longevityCategory in EARLY_POTENTIAL or PROMISING,
+    // or age between 7 and 60 days with valid score) rather than just sorting arbitrary ads by young age.
+    filtered = filtered.filter(
+      (s) =>
+        s.longevityCategory === "EARLY_POTENTIAL" ||
+        s.longevityCategory === "PROMISING" ||
+        (s.calendarAgeDays !== null && s.calendarAgeDays >= 7 && s.calendarAgeDays <= 60 && (s.totalScore ?? 0) >= 15)
     );
+    filtered.sort((a, b) => {
+      // Prioritize ads with proven observation evidence first
+      const obsDiff = (b.observationComponent ?? 0) - (a.observationComponent ?? 0);
+      if (obsDiff !== 0) return obsDiff;
+      return (a.calendarAgeDays ?? 0) - (b.calendarAgeDays ?? 0);
+    });
+  } else {
+    // TRENDING / EVIDENCE RANKED: Prioritize measurable observation changes, repeated verified sightings,
+    // and higher evidence confidence over single static sightings.
+    filtered.sort((a, b) => {
+      const aObs = a.observationComponent ?? 0;
+      const bObs = b.observationComponent ?? 0;
+      if (bObs !== aObs) return bObs - aObs;
+      const confDiff = b.evidenceConfidence - a.evidenceConfidence;
+      if (Math.abs(confDiff) > 0.05) return confDiff;
+      return (b.totalScore ?? 0) - (a.totalScore ?? 0);
+    });
   }
 
   return filtered;

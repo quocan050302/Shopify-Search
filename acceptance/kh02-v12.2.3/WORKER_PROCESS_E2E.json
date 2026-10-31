@@ -1,0 +1,11 @@
+{
+  "runId": "kh02_run_1793066365019_full",
+  "stagesObserved": [
+    "QUEUED",
+    "FETCHING_META",
+    "EVALUATING_DEMAND",
+    "SCORING",
+    "COMPLETED"
+  ],
+  "terminalStatus": "COMPLETED"
+}

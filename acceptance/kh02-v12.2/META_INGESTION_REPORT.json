@@ -1,0 +1,6 @@
+{
+  "source": "META_ADS",
+  "indexedCount": 131,
+  "deduplicationMethod": "AdSourceIdentity stableIdentityHash + platform scoped externalAdId",
+  "databaseEffect": "Persists normalized ads into CompetitorAd and AdObservation tables"
+}

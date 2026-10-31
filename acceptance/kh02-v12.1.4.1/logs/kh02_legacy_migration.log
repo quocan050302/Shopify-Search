@@ -1,0 +1,18 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:migration
+> vitest run tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts (2 tests) 128ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  20:52:36
+   Duration  320ms (tests 54%, setup 18%, import 16%, transform 10%, worker 2%)
+
+
+
+=== STDERR ===

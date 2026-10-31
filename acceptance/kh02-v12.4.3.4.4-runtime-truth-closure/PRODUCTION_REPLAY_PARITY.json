@@ -1,0 +1,27 @@
+{
+  "evaluatedAt": "2026-10-31T04:39:24.202Z",
+  "version": "12.4.3.4.4",
+  "asOfInputEvaluated": "2026-10-24T00:00:00.000Z",
+  "productionEvaluatorsApplied": {
+    "clustering": "clusterProductCandidates",
+    "relevance": "evaluateAudienceCategoryRelevance",
+    "distinctness": "detectSpecificProductFamily",
+    "evergreenFormula": "v7.0.0"
+  },
+  "comparisons": [
+    {
+      "candidateId": "uahpet_water_fountain",
+      "productionDecision": "SHORTLIST_QUALIFIED",
+      "replayDecision": "SHORTLIST_QUALIFIED",
+      "parityMatched": true
+    },
+    {
+      "candidateId": "kittyspout_fountain",
+      "productionDecision": "SHORTLIST_QUALIFIED",
+      "replayDecision": "SHORTLIST_QUALIFIED",
+      "parityMatched": true
+    }
+  ],
+  "parityResult": "INSUFFICIENT_EVIDENCE",
+  "reason": "Historical state lacks longitudinal demand series, preventing full historical score convergence."
+}

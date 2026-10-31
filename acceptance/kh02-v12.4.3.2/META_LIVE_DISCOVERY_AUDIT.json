@@ -1,0 +1,534 @@
+{
+  "version": "12.4.3.2",
+  "suppressionGateRemoved": true,
+  "supportedSourceModes": [
+    "LIVE_WITH_CACHE_FALLBACK",
+    "CACHE_ONLY",
+    "LIVE_ONLY"
+  ],
+  "dogRunMetaTelemetry": {
+    "source": "META_ADS",
+    "queryExecuted": true,
+    "queryStatus": "PASSED",
+    "queryTimestamp": "2026-10-29T09:26:46.026Z",
+    "retrievedCount": 50,
+    "acceptedCount": 50,
+    "queryProvenance": "LIVE_PROVIDER",
+    "isLive": true,
+    "queryError": null,
+    "lastSuccessfulRecordCount": 20,
+    "lastSuccessfulQueryAt": "2026-10-29T09:26:46.026Z",
+    "upstreamReturnedCount": 20,
+    "freshLiveCount": 20,
+    "cachedRecordsCount": 30,
+    "persistedInsertedCount": 0,
+    "persistedUpdatedCount": 20,
+    "liveAttempted": true,
+    "liveSucceeded": true,
+    "liveError": null,
+    "lastLiveQueryAt": "2026-10-29T09:26:46.026Z",
+    "lastLiveQueryRecordCount": 20,
+    "lastSuccessfulLiveQueryAt": "2026-10-29T09:26:46.026Z",
+    "auditTraces": [
+      {
+        "rawId": "1536941208479218",
+        "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+      },
+      {
+        "rawId": "1464108218882438",
+        "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyiz0009aworjqixph93"
+      },
+      {
+        "rawId": "1133000522848754",
+        "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyjn000faworwu1dts6g"
+      },
+      {
+        "rawId": "1641348457417375",
+        "digest": "e95e7abd2d294d3761316ba1283628a7",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqykc000laworg3qfh92d"
+      },
+      {
+        "rawId": "2249466188957796",
+        "digest": "ed821df7bed80fa8cac7153f3d29069f",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyl0000raworivkxfbhm"
+      },
+      {
+        "rawId": "1642750633880173",
+        "digest": "09354344bcebc93b92f10782e68891d8",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trww000fwgor0lp8jttq"
+      },
+      {
+        "rawId": "1410922084469845",
+        "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trxo000kwgorhbr1satz"
+      },
+      {
+        "rawId": "1806555653907868",
+        "digest": "58f9024f51d25bac44adb560c712d426",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+      },
+      {
+        "rawId": "1563296449176047",
+        "digest": "45699c99516306b5a9d581c8f3d594af",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+      },
+      {
+        "rawId": "4546541612250472",
+        "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+        "decision": "UPDATED",
+        "persistedId": "cmvrh5afz001ufcort18234su"
+      },
+      {
+        "rawId": "1764530358140196",
+        "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiwo002f6cortsfp1tv7"
+      },
+      {
+        "rawId": "1718454532575959",
+        "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyix9002l6corlkphcnbc"
+      },
+      {
+        "rawId": "1137301772072207",
+        "digest": "1cc15a16b7372407c2e38c714bf167c6",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2kv001c6sor5oxghj8o"
+      },
+      {
+        "rawId": "1067995712370292",
+        "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyixu002s6corgmhfjtem"
+      },
+      {
+        "rawId": "1025226893900208",
+        "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiyv00366corir7asjvw"
+      },
+      {
+        "rawId": "3202991749899349",
+        "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyizq003j6corcljojmjs"
+      },
+      {
+        "rawId": "2174343823475370",
+        "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj04003q6cort0wlap3m"
+      },
+      {
+        "rawId": "1605927994566450",
+        "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj1600426cor9rtxnev0"
+      },
+      {
+        "rawId": "1860647425077112",
+        "digest": "a5450e30a6177a58fd74bb7aa706649c",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2n100226sorh37j76t4"
+      },
+      {
+        "rawId": "1092762023460778",
+        "digest": "a01bc37e806ed87e42f754e5d27a5371",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2nf00286sor1v06nxx0"
+      }
+    ]
+  },
+  "catRunMetaTelemetry": {
+    "source": "META_ADS",
+    "queryExecuted": true,
+    "queryStatus": "PASSED",
+    "queryTimestamp": "2026-10-29T09:26:46.386Z",
+    "retrievedCount": 50,
+    "acceptedCount": 50,
+    "queryProvenance": "LIVE_PROVIDER",
+    "isLive": true,
+    "queryError": null,
+    "lastSuccessfulRecordCount": 20,
+    "lastSuccessfulQueryAt": "2026-10-29T09:26:46.386Z",
+    "upstreamReturnedCount": 20,
+    "freshLiveCount": 20,
+    "cachedRecordsCount": 30,
+    "persistedInsertedCount": 0,
+    "persistedUpdatedCount": 20,
+    "liveAttempted": true,
+    "liveSucceeded": true,
+    "liveError": null,
+    "lastLiveQueryAt": "2026-10-29T09:26:46.386Z",
+    "lastLiveQueryRecordCount": 20,
+    "lastSuccessfulLiveQueryAt": "2026-10-29T09:26:46.386Z",
+    "auditTraces": [
+      {
+        "rawId": "1536941208479218",
+        "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+      },
+      {
+        "rawId": "1464108218882438",
+        "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyiz0009aworjqixph93"
+      },
+      {
+        "rawId": "1133000522848754",
+        "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyjn000faworwu1dts6g"
+      },
+      {
+        "rawId": "1641348457417375",
+        "digest": "e95e7abd2d294d3761316ba1283628a7",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqykc000laworg3qfh92d"
+      },
+      {
+        "rawId": "2249466188957796",
+        "digest": "ed821df7bed80fa8cac7153f3d29069f",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyl0000raworivkxfbhm"
+      },
+      {
+        "rawId": "1642750633880173",
+        "digest": "09354344bcebc93b92f10782e68891d8",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trww000fwgor0lp8jttq"
+      },
+      {
+        "rawId": "1410922084469845",
+        "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trxo000kwgorhbr1satz"
+      },
+      {
+        "rawId": "1806555653907868",
+        "digest": "58f9024f51d25bac44adb560c712d426",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+      },
+      {
+        "rawId": "1563296449176047",
+        "digest": "45699c99516306b5a9d581c8f3d594af",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+      },
+      {
+        "rawId": "4546541612250472",
+        "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+        "decision": "UPDATED",
+        "persistedId": "cmvrh5afz001ufcort18234su"
+      },
+      {
+        "rawId": "1764530358140196",
+        "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiwo002f6cortsfp1tv7"
+      },
+      {
+        "rawId": "1718454532575959",
+        "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyix9002l6corlkphcnbc"
+      },
+      {
+        "rawId": "1137301772072207",
+        "digest": "1cc15a16b7372407c2e38c714bf167c6",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2kv001c6sor5oxghj8o"
+      },
+      {
+        "rawId": "1067995712370292",
+        "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyixu002s6corgmhfjtem"
+      },
+      {
+        "rawId": "1025226893900208",
+        "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiyv00366corir7asjvw"
+      },
+      {
+        "rawId": "3202991749899349",
+        "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyizq003j6corcljojmjs"
+      },
+      {
+        "rawId": "2174343823475370",
+        "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj04003q6cort0wlap3m"
+      },
+      {
+        "rawId": "1605927994566450",
+        "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj1600426cor9rtxnev0"
+      },
+      {
+        "rawId": "1860647425077112",
+        "digest": "a5450e30a6177a58fd74bb7aa706649c",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2n100226sorh37j76t4"
+      },
+      {
+        "rawId": "1092762023460778",
+        "digest": "a01bc37e806ed87e42f754e5d27a5371",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2nf00286sor1v06nxx0"
+      }
+    ]
+  },
+  "liveOnlyRunMetaTelemetry": {
+    "source": "META_ADS",
+    "queryExecuted": true,
+    "queryStatus": "PASSED",
+    "queryTimestamp": "2026-10-29T09:26:46.606Z",
+    "retrievedCount": 30,
+    "acceptedCount": 30,
+    "queryProvenance": "LIVE_PROVIDER",
+    "isLive": true,
+    "queryError": null,
+    "lastSuccessfulRecordCount": 20,
+    "lastSuccessfulQueryAt": "2026-10-29T09:26:46.606Z",
+    "upstreamReturnedCount": 30,
+    "freshLiveCount": 30,
+    "cachedRecordsCount": 0,
+    "persistedInsertedCount": 0,
+    "persistedUpdatedCount": 20,
+    "liveAttempted": true,
+    "liveSucceeded": true,
+    "liveError": null,
+    "lastLiveQueryAt": "2026-10-29T09:26:46.606Z",
+    "lastLiveQueryRecordCount": 20,
+    "lastSuccessfulLiveQueryAt": "2026-10-29T09:26:46.606Z",
+    "auditTraces": [
+      {
+        "rawId": "1536941208479218",
+        "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+      },
+      {
+        "rawId": "1464108218882438",
+        "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyiz0009aworjqixph93"
+      },
+      {
+        "rawId": "1133000522848754",
+        "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyjn000faworwu1dts6g"
+      },
+      {
+        "rawId": "1641348457417375",
+        "digest": "e95e7abd2d294d3761316ba1283628a7",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqykc000laworg3qfh92d"
+      },
+      {
+        "rawId": "2249466188957796",
+        "digest": "ed821df7bed80fa8cac7153f3d29069f",
+        "decision": "UPDATED",
+        "persistedId": "cmvlsqyl0000raworivkxfbhm"
+      },
+      {
+        "rawId": "1642750633880173",
+        "digest": "09354344bcebc93b92f10782e68891d8",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trww000fwgor0lp8jttq"
+      },
+      {
+        "rawId": "1410922084469845",
+        "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0trxo000kwgorhbr1satz"
+      },
+      {
+        "rawId": "1806555653907868",
+        "digest": "58f9024f51d25bac44adb560c712d426",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+      },
+      {
+        "rawId": "1563296449176047",
+        "digest": "45699c99516306b5a9d581c8f3d594af",
+        "decision": "UPDATED",
+        "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+      },
+      {
+        "rawId": "4546541612250472",
+        "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+        "decision": "UPDATED",
+        "persistedId": "cmvrh5afz001ufcort18234su"
+      },
+      {
+        "rawId": "1764530358140196",
+        "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiwo002f6cortsfp1tv7"
+      },
+      {
+        "rawId": "1718454532575959",
+        "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyix9002l6corlkphcnbc"
+      },
+      {
+        "rawId": "1137301772072207",
+        "digest": "1cc15a16b7372407c2e38c714bf167c6",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2kv001c6sor5oxghj8o"
+      },
+      {
+        "rawId": "1067995712370292",
+        "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyixu002s6corgmhfjtem"
+      },
+      {
+        "rawId": "1025226893900208",
+        "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyiyv00366corir7asjvw"
+      },
+      {
+        "rawId": "3202991749899349",
+        "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyizq003j6corcljojmjs"
+      },
+      {
+        "rawId": "2174343823475370",
+        "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj04003q6cort0wlap3m"
+      },
+      {
+        "rawId": "1605927994566450",
+        "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+        "decision": "UPDATED",
+        "persistedId": "cmvrzyj1600426cor9rtxnev0"
+      },
+      {
+        "rawId": "1860647425077112",
+        "digest": "a5450e30a6177a58fd74bb7aa706649c",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2n100226sorh37j76t4"
+      },
+      {
+        "rawId": "1092762023460778",
+        "digest": "a01bc37e806ed87e42f754e5d27a5371",
+        "decision": "UPDATED",
+        "persistedId": "cmvtat2nf00286sor1v06nxx0"
+      }
+    ]
+  },
+  "liveOnlyQueryExecutions": [
+    {
+      "researchRunId": "kh02_1793265996499_w4ho7",
+      "source": "META_ADS",
+      "planned": true,
+      "requestStarted": true,
+      "requestCompleted": true,
+      "upstreamReturnedCount": 10,
+      "uniqueUpstreamIdsCount": 10,
+      "cachedRecordsUsed": 0,
+      "provenance": "LIVE_PROVIDER",
+      "queryId": "kh02_q_r1_1_7c9df8e1",
+      "keyword": "pet hair remover",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "attempted": true,
+      "status": "SUCCEEDED_WITH_RESULTS",
+      "startedAt": "2026-10-29T09:26:37.617Z",
+      "completedAt": "2026-10-29T09:26:42.296Z",
+      "actualApiCalls": 1,
+      "returnedCount": 10,
+      "uniqueReturnedCount": 10,
+      "duplicateCount": 0,
+      "roundNumber": 1,
+      "origin": "DETERMINISTIC_FALLBACK",
+      "archetypeId": "pet_grooming_hair_removal",
+      "expectedProductCategory": "Pet Grooming",
+      "errorCode": null,
+      "errorMessage": null
+    },
+    {
+      "researchRunId": "kh02_1793265996499_w4ho7",
+      "source": "META_ADS",
+      "planned": true,
+      "requestStarted": true,
+      "requestCompleted": true,
+      "upstreamReturnedCount": 10,
+      "uniqueUpstreamIdsCount": 10,
+      "cachedRecordsUsed": 0,
+      "provenance": "LIVE_PROVIDER",
+      "queryId": "kh02_q_r1_2_1c77c740",
+      "keyword": "cat water fountain",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "attempted": true,
+      "status": "SUCCEEDED_WITH_RESULTS",
+      "startedAt": "2026-10-29T09:26:42.296Z",
+      "completedAt": "2026-10-29T09:26:46.097Z",
+      "actualApiCalls": 1,
+      "returnedCount": 10,
+      "uniqueReturnedCount": 10,
+      "duplicateCount": 0,
+      "roundNumber": 1,
+      "origin": "DETERMINISTIC_FALLBACK",
+      "archetypeId": "pet_hydration",
+      "expectedProductCategory": "Pet Hydration",
+      "errorCode": null,
+      "errorMessage": null
+    },
+    {
+      "researchRunId": "kh02_1793265996499_w4ho7",
+      "source": "META_ADS",
+      "planned": true,
+      "requestStarted": true,
+      "requestCompleted": true,
+      "upstreamReturnedCount": 10,
+      "uniqueUpstreamIdsCount": 10,
+      "cachedRecordsUsed": 0,
+      "provenance": "LIVE_PROVIDER",
+      "queryId": "kh02_q_r1_3_e6b27bfe",
+      "keyword": "automatic pet feeder",
+      "searchType": "KEYWORD_EXACT_PHRASE",
+      "attempted": true,
+      "status": "SUCCEEDED_WITH_RESULTS",
+      "startedAt": "2026-10-29T09:27:08.355Z",
+      "completedAt": "2026-10-29T09:27:12.289Z",
+      "actualApiCalls": 1,
+      "returnedCount": 10,
+      "uniqueReturnedCount": 10,
+      "duplicateCount": 0,
+      "roundNumber": 2,
+      "origin": "ADAPTIVE_RECOVERY",
+      "archetypeId": "pet_feeding",
+      "expectedProductCategory": "Pet Feeding",
+      "errorCode": null,
+      "errorMessage": null
+    }
+  ],
+  "r02Verdict": "PASS"
+}

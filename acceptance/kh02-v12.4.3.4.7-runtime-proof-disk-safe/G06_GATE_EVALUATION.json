@@ -1,0 +1,37 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:32.610Z",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "acceptanceRunId": "autoclosure_20261031092929",
+  "originalResearchRunId": "kh02_run_1793438126794_c2rvz",
+  "runExecutionMode": "REPLAY_CACHED_OR_PREVIOUS_RUN",
+  "replayModeDetected": true,
+  "transportStatus": "DISCONNECTED",
+  "liveCreativesRetrievedCount": 0,
+  "exactProductSkuMatchesCount": 0,
+  "probableProductMatchesCount": 0,
+  "brandOnlyMatchesCount": 0,
+  "pipelineInvariantPassed": false,
+  "setReconciliation": {
+    "rawCreativeIds": [],
+    "normalizedCreativeIds": [],
+    "rejectedCreativeIds": [],
+    "unaccountedRawCreativeIds": [],
+    "unknownNormalizedCreativeIds": [],
+    "unknownRejectedCreativeIds": [],
+    "overlapNormalizedAndRejectedIds": [],
+    "runIdMismatchCreativeIds": [],
+    "unknownAssociationCreativeIds": [],
+    "unknownAssociationCandidateIds": [],
+    "setInvariantPassed": false
+  },
+  "subGates": {
+    "G06_TRANSPORT": "FAIL",
+    "G06_LIVE_RETRIEVAL": "FAIL",
+    "G06_CREATIVE_PIPELINE": "FAIL",
+    "G06_PIPELINE_RECONCILIATION": "FAIL",
+    "GOOGLE_PRODUCT_ASSOCIATION": "FAIL",
+    "GOOGLE_EXACT_PRODUCT_EVIDENCE": "INSUFFICIENT_EVIDENCE"
+  },
+  "overallG06Verdict": "FAIL",
+  "overallG06Reason": "Google Ads MCP transport connection failed or lacked invocation proof."
+}

@@ -1,0 +1,35 @@
+{
+  "metaAdsTest": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": true,
+    "recordsReturned": 131,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-26T14:44:29.565Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (131 records observed); live collection supported via local collector.",
+    "missingRequirements": []
+  },
+  "tiktokOrganicTest": {
+    "source": "TIKTOK_ORGANIC",
+    "adapterInstalled": true,
+    "configured": false,
+    "transportConnected": null,
+    "authenticated": false,
+    "discoverySupported": false,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": false,
+    "lastCheckedAt": "2026-10-26T14:44:29.565Z",
+    "status": "CREDENTIALS_REQUIRED",
+    "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment.",
+    "missingRequirements": [
+      "HASDATA_API_KEY"
+    ]
+  },
+  "timestamp": "2026-10-26T14:43:55.502Z"
+}

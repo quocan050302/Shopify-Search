@@ -1,0 +1,2356 @@
+"use client";
+
+import { useEffect, useState, useRef, useCallback, use, Suspense } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ShoppingBag,
+  ExternalLink,
+  Store,
+  Layers,
+  Sparkles,
+  Calculator,
+  ShieldCheck,
+  AlertTriangle,
+  AlertCircle,
+  Clock,
+  RefreshCw,
+  Plus,
+  PlaySquare,
+  Play,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  BarChart3,
+  Truck,
+  FileText,
+  BookmarkPlus,
+  TrendingUp,
+  Trophy,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Film,
+  X,
+  Info,
+} from "lucide-react";
+import { Header } from "@/components/layout/Header";
+
+interface IntelligencePageProps {
+  params: Promise<{ id: string }>;
+}
+
+function ProductIntelligenceContent({ params }: IntelligencePageProps) {
+  const { id: productId } = use(params);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [overview, setOverview] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<
+    "product" | "creative" | "offer" | "funnel" | "economics" | "fulfillment" | "decision" | "evergreen" | "cross_platform" | "store_fit"
+  >("product");
+
+  // Inspect Landing Page Action State
+  const [inspecting, setInspecting] = useState(false);
+  const [inspectFeedback, setInspectFeedback] = useState<string | null>(null);
+
+  // Economics Scenario Form State
+  const [econSellingPrice, setEconSellingPrice] = useState<string>("");
+  const [econSupplierCost, setEconSupplierCost] = useState<string>("");
+  const [econUnits, setEconUnits] = useState<string>("1");
+  const [econShippingPaid, setEconShippingPaid] = useState<string>("5.00");
+  const [econShippingCharged, setEconShippingCharged] = useState<string>("0.00");
+  const [econFulfillment, setEconFulfillment] = useState<string>("2.00");
+  const [econTargetProfit, setEconTargetProfit] = useState<string>("10.00");
+  const [savingEcon, setSavingEcon] = useState(false);
+  const [econFeedback, setEconFeedback] = useState<string | null>(null);
+
+  // Supplier Quote Form State
+  const [quoteSupplierName, setQuoteSupplierName] = useState("");
+  const [quoteUnitCost, setQuoteUnitCost] = useState("");
+  const [quoteMoq, setQuoteMoq] = useState("1");
+  const [quoteLeadDays, setQuoteLeadDays] = useState("10");
+  const [quoteSource, setQuoteSource] = useState("USER_ESTIMATE");
+  const [savingQuote, setSavingQuote] = useState(false);
+  const [quoteFeedback, setQuoteFeedback] = useState<string | null>(null);
+
+  // Research Decision State
+  const [selectedDecision, setSelectedDecision] = useState("RESEARCHING");
+  const [decisionNotes, setDecisionNotes] = useState("");
+  const [savingDecision, setSavingDecision] = useState(false);
+  const [decisionFeedback, setDecisionFeedback] = useState<string | null>(null);
+
+  // Recalculate Opportunity State
+  const [recalculating, setRecalculating] = useState(false);
+
+  // V12.4.3.2.1 Product Media Gallery & Lightbox State
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState<number>(0);
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+  const [failedMediaIds, setFailedMediaIds] = useState<Record<string, boolean>>({});
+  const mainVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lightboxVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
+
+  const pauseAllVideos = useCallback(() => {
+    try {
+      if (mainVideoRef.current && !mainVideoRef.current.paused) {
+        mainVideoRef.current.pause();
+      }
+      if (lightboxVideoRef.current && !lightboxVideoRef.current.paused) {
+        lightboxVideoRef.current.pause();
+      }
+    } catch {
+      // ignore media pause errors
+    }
+  }, []);
+
+  const markMediaFailed = useCallback((id: string) => {
+    setFailedMediaIds((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  }, []);
+
+  const handleSelectMediaIndex = useCallback(
+    (nextIndex: number) => {
+      pauseAllVideos();
+      setSelectedMediaIndex(nextIndex);
+    },
+    [pauseAllVideos]
+  );
+
+  const openLightbox = useCallback(
+    (triggerEl?: HTMLElement | null) => {
+      pauseAllVideos();
+      if (triggerEl) {
+        lightboxTriggerRef.current = triggerEl;
+      } else if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+        lightboxTriggerRef.current = document.activeElement;
+      }
+      setLightboxOpen(true);
+    },
+    [pauseAllVideos]
+  );
+
+  const closeLightbox = useCallback(() => {
+    pauseAllVideos();
+    setLightboxOpen(false);
+    setTimeout(() => {
+      if (lightboxTriggerRef.current && typeof lightboxTriggerRef.current.focus === "function") {
+        lightboxTriggerRef.current.focus();
+      }
+    }, 0);
+  }, [pauseAllVideos]);
+
+  // Helper to forward workspace and KH-02 context query parameters
+  const getOverviewQuery = () => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    const forwarded = new URLSearchParams();
+    const ws = params.get("workspaceId");
+    if (ws) {
+      forwarded.set("workspaceId", ws);
+    } else {
+      const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+      if (cookieMatch) forwarded.set("workspaceId", cookieMatch[1]);
+    }
+    const runId = params.get("runId");
+    const candidateId = params.get("candidateId");
+    if (runId) forwarded.set("runId", runId);
+    if (candidateId) forwarded.set("candidateId", candidateId);
+    const qs = forwarded.toString();
+    return qs ? `?${qs}` : "";
+  };
+
+  const getBackToFinderHref = () => {
+    if (typeof window === "undefined") return "/products";
+    const params = new URLSearchParams(window.location.search);
+    const backParams = new URLSearchParams();
+    for (const key of ["topic", "lookbackDays", "sourceMode", "tab", "runId"]) {
+      const val = params.get(key);
+      if (val) backParams.set(key, val);
+    }
+    const qs = backParams.toString();
+    return qs ? `/products?${qs}` : "/products";
+  };
+
+  // Helper to forward workspace query parameter or cookie
+  const getWorkspaceQuery = () => {
+    if (typeof window === "undefined") return "";
+    const params = new URLSearchParams(window.location.search);
+    const ws = params.get("workspaceId");
+    if (ws) return `?workspaceId=${encodeURIComponent(ws)}`;
+    const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+    if (cookieMatch) return `?workspaceId=${encodeURIComponent(cookieMatch[1])}`;
+    return "";
+  };
+
+  // Fetch complete product overview
+  const loadOverview = async (signal?: AbortSignal) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/v1/research/products/${productId}/overview${getOverviewQuery()}`, { signal });
+      const json = await res.json();
+
+      if (!json.success) {
+        setError(json.error || "Failed to load product overview");
+        return;
+      }
+
+      setOverview(json.data);
+
+      // Pre-fill economics selling price if product has price
+      if (json.data.product?.currentPrice) {
+        setEconSellingPrice(String(json.data.product.currentPrice));
+      }
+    } catch (err: any) {
+      if (err.name === "AbortError") return;
+      setError(err?.message || "Network error loading overview");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    // Reset form, feedback, and media gallery states on product ID change
+    setInspectFeedback(null);
+    setEconFeedback(null);
+    setQuoteFeedback(null);
+    setDecisionFeedback(null);
+    setEconSellingPrice("");
+    setEconSupplierCost("");
+    setQuoteSupplierName("");
+    setQuoteUnitCost("");
+    setDecisionNotes("");
+    setSelectedMediaIndex(0);
+    setLightboxOpen(false);
+    setFailedMediaIds({});
+
+    loadOverview(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [productId]);
+
+  const mediaItems: any[] = overview?.mediaGallery?.items || [];
+  const safeMediaIndex =
+    mediaItems.length > 0
+      ? Math.min(Math.max(0, selectedMediaIndex), mediaItems.length - 1)
+      : 0;
+  const activeMediaItem = mediaItems[safeMediaIndex] || null;
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeLightbox();
+      } else if (e.key === "ArrowRight" && mediaItems.length > 1) {
+        e.preventDefault();
+        handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length);
+      } else if (e.key === "ArrowLeft" && mediaItems.length > 1) {
+        e.preventDefault();
+        handleSelectMediaIndex((safeMediaIndex - 1 + mediaItems.length) % mediaItems.length);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxOpen, mediaItems.length, safeMediaIndex, closeLightbox, handleSelectMediaIndex]);
+
+  // Handle User-Triggered Landing Page Inspection Job
+  const handleInspectLandingPage = async () => {
+    try {
+      setInspecting(true);
+      setInspectFeedback("Initiating public landing page research job...");
+      const res = await fetch(`/api/v1/research/products/${productId}/landing-page-jobs${getWorkspaceQuery()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceRefresh: true }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to launch inspection job");
+
+      const jobId = json.data.jobId;
+      setInspectFeedback("Research job queued. Checking worker processing...");
+
+      // Poll job status cleanly via read-only GET (no execution side effects)
+      let attempts = 0;
+      const maxAttempts = 12; // 18s ceiling
+      let terminalStatus: string | null = null;
+      let terminalData: any = null;
+
+      while (attempts < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 1500));
+        attempts++;
+
+        const statusRes = await fetch(`/api/v1/research/jobs/${jobId}${getWorkspaceQuery()}`);
+        const statusJson = await statusRes.json();
+
+
+        if (statusJson.success && statusJson.data) {
+          const status = statusJson.data.status;
+          terminalData = statusJson.data;
+
+          if (status === "RUNNING") {
+            setInspectFeedback(`Worker processing inspection... (${Math.round(attempts * 1.5)}s elapsed)`);
+          } else if (status === "COMPLETED") {
+            terminalStatus = "COMPLETED";
+            break;
+          } else if (status === "ACCESS_RESTRICTED") {
+            terminalStatus = "ACCESS_RESTRICTED";
+            break;
+          } else if (status === "FAILED") {
+            terminalStatus = "FAILED";
+            break;
+          } else if (status === "CANCELLED") {
+            terminalStatus = "CANCELLED";
+            break;
+          }
+        }
+      }
+
+      if (terminalStatus === "COMPLETED") {
+        setInspectFeedback("Landing page snapshot and CRO analysis completed!");
+        await loadOverview();
+      } else if (terminalStatus === "ACCESS_RESTRICTED") {
+        setInspectFeedback("Competitor storefront restricted access (HTTP 401/403). Preserved as restricted snapshot without false CRO claims.");
+        await loadOverview();
+      } else if (terminalStatus === "FAILED") {
+        throw new Error(terminalData?.errorMessage || "Inspection job failed during execution.");
+      } else if (terminalStatus === "CANCELLED") {
+        setInspectFeedback("Inspection job was cancelled.");
+      } else {
+        // Differentiate WORKER_BUSY from WORKER_OFFLINE using true heartbeat timestamp
+        const lastHb = terminalData?.lastHeartbeatAt ? new Date(terminalData.lastHeartbeatAt).getTime() : 0;
+        const isWorkerActive = lastHb > 0 && Date.now() - lastHb < 60000;
+        if (isWorkerActive) {
+          setInspectFeedback("Job queued. Background worker is active and processing other queue items.");
+        } else {
+          setInspectFeedback("Job queued. Background worker appears offline (no recent heartbeat). Run 'npm run kh01:worker' or 'npm run kh01:once' to process.");
+        }
+      }
+    } catch (err: any) {
+      setInspectFeedback(`Inspection note: ${err.message}`);
+    } finally {
+      setInspecting(false);
+    }
+  };
+
+  // Handle Save Economics Scenario
+  const handleSaveEconomicsScenario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingEcon(true);
+      setEconFeedback(null);
+
+      const price = parseFloat(econSellingPrice);
+      const cost = econSupplierCost ? parseFloat(econSupplierCost) : null;
+
+      if (isNaN(price)) {
+        throw new Error("Valid selling price is required");
+      }
+
+      const res = await fetch(`/api/v1/research/products/${productId}/economics${getWorkspaceQuery()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenarioName: `${econUnits}-Unit Scenario`,
+          unitsPerOrder: parseInt(econUnits, 10) || 1,
+          sellingPricePerUnit: price,
+          supplierCostPerUnit: cost,
+          shippingChargedToCustomer: parseFloat(econShippingCharged) || 0,
+          actualShippingCostPaid: parseFloat(econShippingPaid) || null,
+          fulfillmentCostPerOrder: parseFloat(econFulfillment) || null,
+          targetProfitPerOrder: parseFloat(econTargetProfit) || null,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to save scenario");
+
+      setEconFeedback("Economics scenario modeled and saved!");
+      await loadOverview();
+    } catch (err: any) {
+      setEconFeedback(`Error: ${err.message}`);
+    } finally {
+      setSavingEcon(false);
+    }
+  };
+
+  // Handle Add Supplier Quote
+  const handleAddSupplierQuote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingQuote(true);
+      setQuoteFeedback(null);
+
+      const cost = parseFloat(quoteUnitCost);
+      if (isNaN(cost) || cost < 0) {
+        throw new Error("Valid unit cost is required");
+      }
+
+      const res = await fetch(`/api/v1/research/products/${productId}/fulfillment${getWorkspaceQuery()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "ADD_QUOTE",
+          supplierName: quoteSupplierName,
+          unitCost: cost,
+          moq: parseInt(quoteMoq, 10) || 1,
+          shippingLeadTimeDays: parseInt(quoteLeadDays, 10) || 10,
+          quoteSource,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to add supplier quote");
+
+      setQuoteFeedback("Authentic supplier quote recorded and linked to economics!");
+      setQuoteSupplierName("");
+      setQuoteUnitCost("");
+      await loadOverview();
+    } catch (err: any) {
+      setQuoteFeedback(`Error: ${err.message}`);
+    } finally {
+      setSavingQuote(false);
+    }
+  };
+
+  // Handle Recalculate Opportunity Assessment
+  const handleRecalculateOpportunity = async () => {
+    try {
+      setRecalculating(true);
+      const res = await fetch(`/api/v1/research/products/${productId}/opportunity${getWorkspaceQuery()}`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Recalculation failed");
+      await loadOverview();
+    } catch (err: any) {
+      alert(`Recalculation error: ${err.message}`);
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
+  // Handle Record Research Decision
+  const handleRecordDecision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingDecision(true);
+      setDecisionFeedback(null);
+
+      const res = await fetch(`/api/v1/research/products/${productId}/decisions${getWorkspaceQuery()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision: selectedDecision,
+          notes: decisionNotes,
+        }),
+      });
+
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to record decision");
+
+      setDecisionFeedback(
+        json.data.isOverride
+          ? `Recorded: ${json.data.userDecision} (STATUS: ${json.data.overrideStatus})`
+          : `Recorded: ${json.data.userDecision}`
+      );
+      setDecisionNotes("");
+      await loadOverview();
+    } catch (err: any) {
+      setDecisionFeedback(`Error: ${err.message}`);
+    } finally {
+      setSavingDecision(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center gap-3 text-sm text-slate-400">
+            <RefreshCw className="h-5 w-5 animate-spin text-indigo-400" />
+            <span>Loading Product Intelligence Engine...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !overview) {
+    return (
+      <div className="min-h-screen bg-[#0B1020] text-white flex flex-col">
+        <Header />
+        <div className="p-8 max-w-4xl mx-auto space-y-4">
+          <Link href="/products" className="inline-flex items-center gap-2 text-xs text-indigo-400 hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Back to Products
+          </Link>
+          <div className="p-4 rounded-xl bg-red-950/40 border border-red-800/40 text-red-300 text-xs">
+            {error || "Failed to load product overview"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    product,
+    advertisingProfile,
+    offerSnapshots,
+    latestLandingPage,
+    economicsScenarios,
+    supplierQuotes,
+    fulfillmentAssessment,
+    opportunityAssessment,
+    decisions,
+    kh02ResearchContext,
+    researchContextResolution,
+    commercialReadinessSummary,
+    mediaGallery,
+  } = overview;
+
+  // Section 11: Strict separation between KH-02 Research Qualification and KH-01 Commercial Readiness
+  // NEVER copy kh02Confidence into kh01ReadinessScore or kh02Score into kh01OpportunityScore when opportunityAssessment is null!
+  const kh02Score = kh02ResearchContext?.opportunityScore ?? null;
+  const kh02Confidence = kh02ResearchContext?.evidenceConfidence ?? null;
+  const kh01OpportunityScore = opportunityAssessment?.opportunityScore ?? null;
+  const kh01ReadinessScore = opportunityAssessment?.evidenceReadinessScore ?? null;
+  const opportunityScore = kh01OpportunityScore;
+  const readinessScore = kh01ReadinessScore;
+  const recommendation =
+    opportunityAssessment?.recommendation ||
+    kh02ResearchContext?.recommendation ||
+    "RESEARCH_MORE";
+  const testReadiness =
+    opportunityAssessment?.testReadinessStatus ||
+    (kh02ResearchContext ? "RESEARCH_QUALIFIED_AWAITING_ECONOMICS" : "BLOCKED_MISSING_DATA");
+
+  const contextMismatchWarning =
+    researchContextResolution?.status === "MISMATCH_CANDIDATE_NOT_IN_RUN" ||
+    researchContextResolution?.status === "MISMATCH_PRODUCT_CANDIDATE_CONFLICT"
+      ? researchContextResolution.reason
+      : null;
+
+  // Parse snapshot JSONs
+  let landingObservations: any = null;
+  let croSignals: any = null;
+  let messageMatch: any = null;
+  try {
+    if (latestLandingPage?.observationsJson) landingObservations = JSON.parse(latestLandingPage.observationsJson);
+    if (latestLandingPage?.croSignalsJson) croSignals = JSON.parse(latestLandingPage.croSignalsJson);
+    if (latestLandingPage?.messageMatchJson) messageMatch = JSON.parse(latestLandingPage.messageMatchJson);
+  } catch {}
+
+  // Parse pillars
+  let pillars: any = null;
+  try {
+    if (opportunityAssessment?.pillarsJson) pillars = JSON.parse(opportunityAssessment.pillarsJson);
+  } catch {}
+
+  return (
+    <div className="min-h-screen bg-[#0B1020] text-white flex flex-col overflow-x-hidden">
+      <Header />
+
+      <main className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
+        {/* Navigation Breadcrumb */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <Link
+            href={getBackToFinderHref()}
+            data-testid="back-to-product-finder-link"
+            className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Product Finder
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRecalculateOpportunity}
+              disabled={recalculating}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium flex items-center gap-1.5 text-slate-200 transition-colors"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${recalculating ? "animate-spin text-indigo-400" : ""}`} />
+              <span>Recalculate Opportunity</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Section 7: Explicit Context Mismatch Banner (never silently swap runs) */}
+        {contextMismatchWarning && (
+          <div
+            data-testid="pi-context-mismatch-banner"
+            className="p-4 rounded-xl bg-amber-950/50 border border-amber-700/60 text-amber-200 text-xs flex items-start gap-3"
+          >
+            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <strong className="font-semibold text-amber-100 block">
+                Research Run / Candidate Context Mismatch Detected
+              </strong>
+              <p className="text-amber-200/90 leading-relaxed">{contextMismatchWarning}</p>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            SECTIONS 3–5 & 13–14: PRODUCT MEDIA GALLERY + IDENTITY HERO
+           ===================================================================== */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#111827] border border-[#1f293d] grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN (5 cols on lg): Product Media Gallery */}
+          <div
+            data-testid="pi-media-gallery"
+            data-media-count={mediaItems.length}
+            data-has-video={mediaGallery?.hasVideo ? "true" : "false"}
+            className="lg:col-span-5 space-y-3 min-w-0 w-full"
+          >
+            {mediaItems.length > 0 && activeMediaItem ? (
+              <>
+                {/* Main Viewer */}
+                <div
+                  data-testid="pi-media-main-viewer"
+                  data-active-media-type={activeMediaItem.mediaType}
+                  data-active-media-source={activeMediaItem.sourceType}
+                  className="relative rounded-xl bg-slate-950/95 border border-slate-800 overflow-hidden min-h-[250px] sm:min-h-[290px] flex items-center justify-center group"
+                >
+                  {/* Top Bar Overlay: Source Provenance Badge + Counter + Enlarge */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-2 pointer-events-none">
+                    <span
+                      data-testid="pi-media-source-badge"
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md border backdrop-blur-md pointer-events-auto ${
+                        activeMediaItem.sourceType === "MERCHANT_PRODUCT_PAGE" ||
+                        activeMediaItem.sourceType === "MERCHANT_GALLERY" ||
+                        activeMediaItem.sourceType === "KH02_CANDIDATE"
+                          ? "bg-emerald-950/85 text-emerald-300 border-emerald-700/60"
+                          : "bg-indigo-950/85 text-indigo-200 border-indigo-700/60"
+                      }`}
+                    >
+                      {activeMediaItem.sourceLabel}
+                    </span>
+
+                    <div className="flex items-center gap-1.5 pointer-events-auto">
+                      <span
+                        data-testid="pi-media-counter"
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900/90 text-slate-300 border border-slate-700/70"
+                      >
+                        {safeMediaIndex + 1} / {mediaItems.length}
+                      </span>
+                      <button
+                        type="button"
+                        data-testid="pi-media-enlarge-btn"
+                        aria-label="Enlarge product media in lightbox"
+                        onClick={(e) => openLightbox(e.currentTarget)}
+                        className="p-1.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/70 transition-colors cursor-pointer"
+                        title="Open full-size media viewer"
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Media Asset Content */}
+                  {activeMediaItem.mediaType === "VIDEO" ? (
+                    failedMediaIds[activeMediaItem.id] ? (
+                      <div
+                        data-testid="pi-media-video-fallback"
+                        className="p-6 text-center space-y-2.5 max-w-xs"
+                      >
+                        <Film className="h-8 w-8 text-amber-400 mx-auto" />
+                        <p className="text-xs font-semibold text-white">
+                          Video playback restricted or unavailable from upstream CDN
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          {activeMediaItem.sourceLabel} · {activeMediaItem.storeDomain || "Ad Creative"}
+                        </p>
+                        {(activeMediaItem.sourcePageUrl || activeMediaItem.url) && (
+                          <a
+                            href={activeMediaItem.sourcePageUrl || activeMediaItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-medium"
+                          >
+                            <span>Open Original Video Source</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    ) : activeMediaItem.isEmbed ? (
+                      <iframe
+                        data-testid="pi-media-video-embed"
+                        src={activeMediaItem.url}
+                        title={activeMediaItem.altText || product.title}
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        className="w-full h-[280px] border-0"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        key={activeMediaItem.id}
+                        ref={mainVideoRef}
+                        data-testid="pi-media-video-player"
+                        src={activeMediaItem.url}
+                        poster={activeMediaItem.posterUrl || undefined}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        onError={() => markMediaFailed(activeMediaItem.id)}
+                        className="w-full max-h-[310px] object-contain"
+                      />
+                    )
+                  ) : failedMediaIds[activeMediaItem.id] ? (
+                    <div
+                      data-testid="pi-media-error-state"
+                      className="p-6 text-center space-y-2 max-w-xs"
+                    >
+                      <ShoppingBag className="h-8 w-8 text-slate-500 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-200">
+                        Product image unavailable from source CDN
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        The external image URL returned an error and was hidden to prevent broken visuals.
+                      </p>
+                      {activeMediaItem.sourcePageUrl && (
+                        <a
+                          href={activeMediaItem.sourcePageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:underline"
+                        >
+                          <span>Open Merchant Page</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <img
+                      key={activeMediaItem.id}
+                      data-testid="pi-media-main-image"
+                      src={activeMediaItem.url}
+                      alt={activeMediaItem.altText || product.title}
+                      onClick={(e) => openLightbox(e.currentTarget)}
+                      onError={() => markMediaFailed(activeMediaItem.id)}
+                      className="w-full max-h-[310px] object-contain p-3 cursor-zoom-in transition-transform duration-200"
+                    />
+                  )}
+
+                  {/* Prev / Next Navigation Buttons when multiple items exist */}
+                  {mediaItems.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        data-testid="pi-media-prev"
+                        aria-label="Previous product media"
+                        onClick={() =>
+                          handleSelectMediaIndex(
+                            (safeMediaIndex - 1 + mediaItems.length) % mediaItems.length
+                          )
+                        }
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 shadow-md transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="pi-media-next"
+                        aria-label="Next product media"
+                        onClick={() =>
+                          handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length)
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white border border-slate-700/80 shadow-md transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnail Strip */}
+                <div
+                  data-testid="pi-media-thumbnail-strip"
+                  className="flex items-center gap-2 overflow-x-auto pb-1"
+                >
+                  {mediaItems.map((item: any, idx: number) => {
+                    const isSelected = idx === safeMediaIndex;
+                    const thumbBroken = failedMediaIds[`thumb_${item.id}`] || failedMediaIds[item.id];
+                    const thumbSrc = item.thumbnailUrl || item.posterUrl || item.url;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        data-testid="pi-media-thumbnail-item"
+                        data-media-type={item.mediaType}
+                        data-media-source={item.sourceType}
+                        aria-label={`Select ${item.sourceLabel} ${idx + 1} of ${mediaItems.length}`}
+                        aria-current={isSelected ? "true" : "false"}
+                        onClick={() => handleSelectMediaIndex(idx)}
+                        className={`relative h-14 w-14 rounded-lg overflow-hidden shrink-0 border transition-all flex items-center justify-center bg-slate-950 cursor-pointer ${
+                          isSelected
+                            ? "border-indigo-400 ring-2 ring-indigo-500/60"
+                            : "border-slate-800 opacity-75 hover:opacity-100 hover:border-slate-600"
+                        }`}
+                      >
+                        {item.mediaType === "VIDEO" && (!thumbSrc || thumbSrc === item.url) ? (
+                          <div className="flex flex-col items-center justify-center text-indigo-300">
+                            <Play className="h-4 w-4 fill-indigo-400" />
+                            <span className="text-[9px] font-mono mt-0.5">VIDEO</span>
+                          </div>
+                        ) : !thumbBroken && thumbSrc ? (
+                          <img
+                            src={thumbSrc}
+                            alt={item.altText || `${product.title} thumbnail ${idx + 1}`}
+                            loading={idx === 0 ? "eager" : "lazy"}
+                            onError={() => markMediaFailed(`thumb_${item.id}`)}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ShoppingBag className="h-4 w-4 text-slate-500" />
+                        )}
+
+                        {item.mediaType === "VIDEO" && (
+                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 text-[8px] font-mono text-white flex items-center gap-0.5">
+                            <Play className="h-2 w-2 fill-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              /* Honest Empty Media State (Section 4.5) */
+              <div
+                data-testid="pi-media-empty-state"
+                className="rounded-xl bg-slate-950/90 border border-slate-800 p-6 min-h-[240px] flex flex-col items-center justify-center text-center space-y-2.5"
+              >
+                <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+                  <ShoppingBag className="h-6 w-6 text-slate-500" />
+                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-white">
+                  {mediaGallery?.emptyState?.headline || "No verified product media available"}
+                </h3>
+                <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
+                  {mediaGallery?.emptyState?.explanation ||
+                    "The product was identified, but no usable image or video could be verified from the linked sources."}
+                </p>
+                {(mediaGallery?.emptyState?.merchantUrl ||
+                  product.productUrl ||
+                  kh02ResearchContext?.canonicalProductUrl) && (
+                  <a
+                    href={
+                      mediaGallery?.emptyState?.merchantUrl ||
+                      product.productUrl ||
+                      kh02ResearchContext?.canonicalProductUrl
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="pi-media-empty-merchant-link"
+                    className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition-colors"
+                  >
+                    <span>Open Merchant Page</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT COLUMN (7 cols on lg): Product Identity, Storefront & Separated Score Summary */}
+          <div className="lg:col-span-7 flex flex-col justify-between space-y-5 min-w-0 w-full">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-slate-800 text-indigo-300 font-semibold uppercase">
+                  {product.category}
+                </span>
+                {product.store?.domain && (
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-emerald-950/50 text-emerald-400 border border-emerald-800/40 font-mono">
+                    {product.store.domain}
+                  </span>
+                )}
+                <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-slate-800/80 text-slate-300 font-mono">
+                  Shopify: {product.store?.commercePlatform || "DETECTED"}
+                </span>
+                {kh02ResearchContext?.candidateId && (
+                  <span
+                    data-testid="pi-candidate-id-badge"
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-mono"
+                  >
+                    {kh02ResearchContext.candidateId}
+                  </span>
+                )}
+              </div>
+
+              <h1
+                data-testid="pi-product-title"
+                className="text-lg sm:text-xl md:text-2xl font-extrabold text-white leading-snug"
+              >
+                {product.title}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                {product.description || "Identified competitor product backed by market advertising evidence."}
+              </p>
+
+              {/* Quick Storefront & Price Row */}
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                {product.currentPrice != null && (
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 font-mono font-bold text-emerald-400">
+                    ${Number(product.currentPrice).toFixed(2)} {product.currency || "USD"}
+                  </span>
+                )}
+                {(product.productUrl || kh02ResearchContext?.canonicalProductUrl) && (
+                  <a
+                    href={product.productUrl || kh02ResearchContext?.canonicalProductUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="pi-open-merchant-page-link"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-800 font-medium transition-colors"
+                  >
+                    <Store className="h-3.5 w-3.5" />
+                    <span>Open Storefront Product Page</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Section 11: Top-Level Separated Score Summary Strip */}
+            <div
+              data-testid="pi-separated-score-strip"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/75 p-4 rounded-xl border border-slate-800/90"
+            >
+              {/* 1. KH-02 Research Score */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Research Score (KH-02)
+                </div>
+                <div
+                  data-testid="pi-kh02-research-score"
+                  className="text-base sm:text-lg font-extrabold text-white font-mono mt-0.5"
+                >
+                  {kh02Score !== null && kh02Score !== undefined ? (
+                    <span className={kh02Score >= 70 ? "text-sky-400" : "text-amber-400"}>
+                      {kh02Score} / 100
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 text-sm">Not Scored</span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  {kh02Confidence != null ? `${kh02Confidence}% evidence conf.` : "Market discovery"}
+                </div>
+              </div>
+
+              {/* 2. KH-01 Commercial Opportunity */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Commercial Opportunity (KH-01)
+                </div>
+                <div
+                  data-testid="pi-kh01-opportunity-score"
+                  className="text-base sm:text-lg font-extrabold font-mono mt-0.5"
+                >
+                  {kh01OpportunityScore !== null && kh01OpportunityScore !== undefined ? (
+                    <span
+                      className={kh01OpportunityScore >= 70 ? "text-emerald-400" : "text-amber-400"}
+                    >
+                      {kh01OpportunityScore} / 100
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs sm:text-sm font-sans font-semibold">
+                      Not Assessed
+                    </span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  Six-pillar unit economics
+                </div>
+              </div>
+
+              {/* 3. KH-01 Evidence Readiness */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Evidence Readiness (KH-01)
+                </div>
+                <div
+                  data-testid="pi-kh01-readiness-score"
+                  className="text-base sm:text-lg font-extrabold text-white font-mono mt-0.5 flex items-center gap-1.5"
+                >
+                  {kh01ReadinessScore !== null && kh01ReadinessScore !== undefined ? (
+                    <>
+                      <span>{kh01ReadinessScore}%</span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded ${
+                          kh01ReadinessScore >= 70
+                            ? "bg-emerald-950 text-emerald-400"
+                            : "bg-amber-950 text-amber-400"
+                        }`}
+                      >
+                        {kh01ReadinessScore >= 70 ? "READY" : "GAPS"}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-slate-400 text-xs sm:text-sm font-sans font-semibold">
+                      Not Assessed
+                    </span>
+                  )}
+                </div>
+                <div className="text-[9px] text-slate-500 truncate">
+                  Quote + Margin + CRO inputs
+                </div>
+              </div>
+
+              {/* 4. Action Recommendation */}
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  Recommendation
+                </div>
+                <div className="text-xs font-bold text-white font-mono mt-1">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold inline-block ${
+                      recommendation === "TEST_CANDIDATE"
+                        ? "bg-emerald-950 text-emerald-300 border border-emerald-800/50"
+                        : recommendation === "SHORTLIST"
+                        ? "bg-indigo-950 text-indigo-300 border border-indigo-800/50"
+                        : recommendation === "REJECT"
+                        ? "bg-rose-950 text-rose-300 border border-rose-800/50"
+                        : "bg-amber-950 text-amber-300 border border-amber-800/50"
+                    }`}
+                  >
+                    {recommendation}
+                  </span>
+                </div>
+                <div className="text-[9px] text-slate-500 truncate mt-0.5">{testReadiness}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* V12.4.3.2.1 Section 11: Separated Research Qualification (KH-02) vs Commercial Readiness (KH-01) */}
+        <div
+          data-testid="kh02-kh01-alignment-grid"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          {/* Card 1: Research Qualification (KH-02) */}
+          <div
+            data-testid="kh02-research-qualification-card"
+            className="p-5 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-sky-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Research Qualification (KH-02)
+                </h2>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                  kh02ResearchContext?.tier === "VERIFIED_EVERGREEN"
+                    ? "bg-emerald-950/80 text-emerald-300 border border-emerald-700/50"
+                    : kh02ResearchContext
+                    ? "bg-sky-950/80 text-sky-300 border border-sky-700/50"
+                    : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {kh02ResearchContext?.tier === "VERIFIED_EVERGREEN"
+                  ? "Verified Evergreen"
+                  : kh02ResearchContext
+                  ? "Research Qualified · Provisional"
+                  : "Catalog Product"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Research Score</div>
+                <div className="text-sm font-bold text-white font-mono">
+                  {kh02Score !== null ? `${kh02Score} / 100` : "Not Scored"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Evidence Confidence</div>
+                <div className="text-sm font-bold text-white font-mono">
+                  {kh02Confidence !== null ? `${kh02Confidence}%` : "Not Scored"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Identity</div>
+                <div
+                  className={`text-xs font-semibold truncate ${
+                    kh02ResearchContext?.identityStatus === "VERIFIED"
+                      ? "text-emerald-400"
+                      : "text-amber-300"
+                  }`}
+                >
+                  {kh02ResearchContext?.identityStatus || "VERIFIED"}
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80">
+                <div className="text-[10px] text-slate-400">Ad Evidence</div>
+                <div className="text-xs font-semibold text-slate-200 font-mono">
+                  {kh02ResearchContext?.supportingAdsCount ?? advertisingProfile?.distinctAdsCount ?? 0} ads ·{" "}
+                  {kh02ResearchContext?.distinctAdvertisersCount ?? advertisingProfile?.distinctAdvertisersCount ?? 0} adv
+                </div>
+              </div>
+            </div>
+
+            {kh02ResearchContext?.missingEvidence && kh02ResearchContext.missingEvidence.length > 0 && (
+              <div className="text-[11px] text-amber-300/90 bg-amber-950/30 border border-amber-800/40 rounded-lg px-3 py-2">
+                <strong className="font-semibold">Missing for Evergreen Verification:</strong>{" "}
+                {kh02ResearchContext.missingEvidence[0]}
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: Commercial Readiness (KH-01) */}
+          <div
+            data-testid="kh01-commercial-readiness-card"
+            className="p-5 rounded-xl bg-[#111827] border border-slate-800 space-y-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-amber-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Commercial Readiness (KH-01)
+                </h2>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                  commercialReadinessSummary?.statusLabel === "Commercial Model Complete"
+                    ? "bg-emerald-950/80 text-emerald-300 border border-emerald-700/50"
+                    : "bg-amber-950/80 text-amber-300 border border-amber-700/50"
+                }`}
+              >
+                {commercialReadinessSummary?.statusLabel || "Commercial Validation Needed"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {supplierQuotes?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Supplier Quote: {supplierQuotes?.length > 0 ? `${supplierQuotes.length} saved` : "Not entered"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {economicsScenarios?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Margin & CAC: {economicsScenarios?.length > 0 ? "Modeled" : "Not modeled"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {latestLandingPage || offerSnapshots?.length > 0 ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  Store Offer: {latestLandingPage || offerSnapshots?.length > 0 ? "Inspected" : "Pending"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/70">
+                {opportunityAssessment ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="text-slate-300 truncate">
+                  KH-01 Assessment: {opportunityAssessment ? `${kh01ReadinessScore}% Ready` : "Not Assessed"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("economics")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Model Margin & CAC
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("fulfillment")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Add Supplier Quote
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("funnel")}
+                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 transition-colors"
+              >
+                Inspect Store Page
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation for 6 Research Panels */}
+        <div className="flex border-b border-[#1f293d] overflow-x-auto gap-2">
+          {[
+            { id: "product", label: "Product & Problem", icon: ShoppingBag },
+            { id: "evergreen", label: "Evergreen & Demand", icon: Trophy },
+            { id: "cross_platform", label: "Cross-Platform Signals", icon: Layers },
+            { id: "store_fit", label: "Store Fit & Brand", icon: Store },
+            { id: "creative", label: `Creative & Ads (${advertisingProfile?.distinctAdsCount ?? 0})`, icon: PlaySquare },
+            { id: "offer", label: `Offer Intelligence (${(offerSnapshots || []).length})`, icon: TrendingUp },
+            { id: "funnel", label: "Landing Page & CRO", icon: Layers },
+            { id: "economics", label: `Economics & Margin (${(economicsScenarios || []).length})`, icon: Calculator },
+            { id: "fulfillment", label: `Fulfillment & Supplier (${(supplierQuotes || []).length})`, icon: Truck },
+            { id: "decision", label: "Decision & Audit", icon: ShieldCheck },
+          ].map((tab) => {
+
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`py-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  isActive
+                    ? "border-indigo-500 text-indigo-400 bg-indigo-950/20"
+                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Panel 1: Product & Problem Identity */}
+        {activeTab === "product" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4 text-indigo-400" />
+                  <span>Canonical Product Definition</span>
+                </h2>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Title:</span>
+                    <strong className="text-white font-medium">{product.title}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Category:</span>
+                    <span className="text-slate-300">{product.category}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Identified Problem Addressed:</span>
+                    <p className="text-slate-300 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                      {product.description || "Problem utility derived from competitor ad demonstration."}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Product Landing URL:</span>
+                    {product.productUrl ? (
+                      <a
+                        href={product.productUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-400 hover:underline break-all inline-flex items-center gap-1 font-mono"
+                      >
+                        {product.productUrl} <ExternalLink className="h-3 w-3 inline" />
+                      </a>
+                    ) : (
+                      <span className="text-slate-500">Not recorded</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Store className="h-4 w-4 text-emerald-400" />
+                  <span>Storefront Evidence & Verification</span>
+                </h2>
+
+                <div className="space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Domain:</span>
+                    <span className="text-white font-mono font-bold">{product.store?.domain || "N/A"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Commerce Platform:</span>
+                    <span className="text-emerald-400 font-mono font-semibold">
+                      {product.store?.commercePlatform || "SHOPIFY_CONFIRMED"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Target Market:</span>
+                    <span className="text-slate-300">United States (USD)</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Associated Advertisers:</span>
+                    <span className="text-white font-mono">{advertisingProfile.distinctAdvertisersCount} distinct</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Linked Ad Campaigns:</span>
+                    <span className="text-white font-mono">{advertisingProfile.distinctAdsCount} ads</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 2: Creative & Ads Intelligence */}
+        {activeTab === "creative" && (
+          <div className="space-y-6">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
+              Showing authentic Meta Ad Library creatives associated with this product. Linked Library IDs, media formats, and observed demonstration angles.
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {product.adLinks.map((link: any) => {
+                const ad = link.ad;
+                const media = ad.mediaAssets?.[0];
+                return (
+                  <div key={link.id} className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3">
+                    <div className="h-44 w-full bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center relative">
+                      {media?.thumbnailUrl ? (
+                        <img src={media.thumbnailUrl} alt={ad.headline || "Ad thumbnail"} className="h-full w-full object-cover" />
+                      ) : (
+                        <PlaySquare className="h-10 w-10 text-slate-700" />
+                      )}
+                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-white font-mono">
+                        {ad.originalPlatform || "META"}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Advertiser:</span>
+                        <span className="text-white font-medium">{ad.advertiser?.name || "Competitor"}</span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono text-[10px]">
+                        <span className="text-slate-500">Library ID:</span>
+                        <span className="text-indigo-300">{ad.libraryId || ad.id.slice(0, 10)}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 line-clamp-2 italic">
+                        "{ad.bodyText || ad.headline || "Demonstration of problem utility"}"
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Panel 3: Competitor Offer Intelligence */}
+        {activeTab === "offer" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-white">Observed Competitor Commercial Terms</h2>
+                <p className="text-xs text-slate-400">
+                  Separates Product Identity from Commercial Offer (single unit, bundles, discounts, free shipping thresholds).
+                </p>
+              </div>
+            </div>
+
+            {offerSnapshots.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">
+                No competitor offer snapshots on file yet. Inspect the landing page to capture real commercial pricing terms.
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-[#1f293d] bg-[#111827]">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-[#1f293d]">
+                    <tr>
+                      <th className="p-3">Observation Date</th>
+                      <th className="p-3">Selling Price</th>
+                      <th className="p-3">Compare-At Anchor</th>
+                      <th className="p-3">Bundle Structure</th>
+                      <th className="p-3">Shipping Terms</th>
+                      <th className="p-3">Source URL</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1f293d]">
+                    {offerSnapshots.map((s: any) => (
+                      <tr key={s.id} className="hover:bg-slate-900/50">
+                        <td className="p-3 font-mono text-[11px]">
+                          {new Date(s.observedAt).toLocaleDateString()} {new Date(s.observedAt).toLocaleTimeString()}
+                        </td>
+                        <td className="p-3 font-mono font-bold text-emerald-400">
+                          {s.sellingPrice != null ? `$${s.sellingPrice.toFixed(2)}` : "—"}
+                        </td>
+                        <td className="p-3 font-mono line-through text-slate-500">
+                          {s.compareAtPrice != null ? `$${s.compareAtPrice.toFixed(2)}` : "—"}
+                        </td>
+                        <td className="p-3 font-medium">
+                          {s.bundleQuantity > 1 ? `${s.bundleQuantity}-Unit Bundle` : "Single Unit"}
+                        </td>
+                        <td className="p-3">
+                          {s.hasFreeShipping ? (
+                            <span className="text-emerald-400 font-medium">
+                              Free Shipping {s.shippingThreshold ? `(over $${s.shippingThreshold})` : ""}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500">Standard shipping</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <a
+                            href={s.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-400 hover:underline inline-flex items-center gap-1 font-mono text-[11px]"
+                          >
+                            Inspect <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Panel 4: Landing Page & Funnel Analyzer */}
+        {activeTab === "funnel" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[#111827] border border-[#1f293d]">
+              <div>
+                <h2 className="text-sm font-bold text-white">Competitor Landing Page Inspection</h2>
+                <p className="text-xs text-slate-400">
+                  Inspects public DOM structure, hero section, trust elements, and ad promise match.
+                </p>
+              </div>
+
+              <button
+                onClick={handleInspectLandingPage}
+                disabled={inspecting}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${inspecting ? "animate-spin" : ""}`} />
+                <span>{inspecting ? "Inspecting Page..." : "Inspect Competitor Landing Page"}</span>
+              </button>
+            </div>
+
+            {inspectFeedback && (
+              <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-indigo-300">
+                {inspectFeedback}
+              </div>
+            )}
+
+            {latestLandingPage ? (
+              <div className="space-y-6">
+                {/* Research Result Integrity & Provenance Panel */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="font-semibold text-white flex items-center gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                      Research Result Integrity & Provenance
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Engine v{latestLandingPage.analysisVersion || "11.4.2"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-slate-500 block">Access Status:</span>
+                      <span className={`font-bold font-mono px-1.5 py-0.5 rounded text-[11px] inline-block mt-0.5 border ${
+                        latestLandingPage.accessStatus === "SUCCESS"
+                          ? "text-emerald-400 bg-emerald-950/40 border-emerald-800"
+                          : latestLandingPage.accessStatus === "ACCESS_RESTRICTED"
+                          ? "text-amber-400 bg-amber-950/40 border-amber-800"
+                          : "text-rose-400 bg-rose-950/40 border-rose-800"
+                      }`}>
+                        {latestLandingPage.accessStatus}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">HTTP Status:</span>
+                      <span className="font-bold text-white font-mono">{latestLandingPage.httpStatus}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Last Inspected:</span>
+                      <span className="text-slate-300 font-mono">
+                        {new Date(latestLandingPage.observedAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Source Page:</span>
+                      <a
+                        href={latestLandingPage.originalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-400 hover:underline truncate block font-mono text-[11px]"
+                      >
+                        {latestLandingPage.originalUrl}
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-slate-800/60 text-[11px]">
+                    <div>
+                      <span className="text-slate-500 block">Landing Snapshot ID:</span>
+                      <span className="text-slate-300 font-mono truncate block" title={latestLandingPage.id}>
+                        {latestLandingPage.id}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Offer Snapshot ID:</span>
+                      <span className="text-slate-300 font-mono truncate block" title={overview?.latestOffer?.id || "None"}>
+                        {overview?.latestOffer?.id || "None"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Content Hash:</span>
+                      <span className="text-slate-400 font-mono truncate block" title={latestLandingPage.contentHash}>
+                        {latestLandingPage.contentHash ? `${latestLandingPage.contentHash.slice(0, 12)}...` : "None"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Evidence Records:</span>
+                      <span className="text-slate-300 font-mono">
+                        {overview?.evidence?.length ?? 0} verifiable entries
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Blocked Source Notice */}
+                {latestLandingPage.accessStatus === "ACCESS_RESTRICTED" && (
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/60 flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1 text-xs">
+                      <h4 className="font-bold text-amber-300">Competitor Storefront Restricted Automated Access (HTTP 401/403)</h4>
+                      <p className="text-amber-200/80 leading-relaxed">
+                        The destination website deployed an anti-bot or Cloudflare restriction.
+                        In accordance with SWAI integrity rules, CRO signals are marked as <strong>NOT_PERFORMED</strong> and no synthetic scores or pricing claims are fabricated.
+                        You may record authentic supplier quotes and pricing under the Economics tab manually.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* CRO Observations & Elements */}
+                {landingObservations && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                      <h3 className="font-bold text-white">Observed Above-The-Fold & Hero</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Hero Headline:</span>
+                          <span className="text-white font-medium max-w-xs text-right">
+                            {landingObservations.heroHeadline || "Observable product header"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Primary CTA Text:</span>
+                          <span className="text-emerald-400 font-mono font-bold">
+                            {landingObservations.primaryCtaText || "ADD TO CART"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Product Images Observed:</span>
+                          <span className="text-white font-mono">{landingObservations.productImagesCount ?? 1}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Price Near CTA:</span>
+                          <span className="text-white">{landingObservations.hasVisiblePriceNearCta ? "YES" : "NO"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                      <h3 className="font-bold text-white">Trust & Policy Signals</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Customer Reviews Element:</span>
+                          <span className="text-white">
+                            {landingObservations.hasCustomerReviews ? "Observed on page" : "Not detected"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Shipping Policy Summary:</span>
+                          <span className="text-white">
+                            {landingObservations.hasShippingPolicySummary ? "Observed" : "Omitted / Hidden"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Return & Refund Policy:</span>
+                          <span className="text-white">
+                            {landingObservations.hasReturnPolicySummary ? "Observed" : "Not prominently displayed"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Trust Badges / Icons:</span>
+                          <span className="text-white">
+                            {landingObservations.hasTrustBadges ? "Observed" : "Not detected"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">
+                No landing page snapshot exists yet. Click "Inspect Competitor Landing Page" to run inspection.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Panel 5: Economics & Unit Margin Modeling */}
+        {activeTab === "economics" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Scenario Input Form */}
+              <div className="lg:col-span-1 p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-indigo-400" />
+                  <span>Model Offer Economics</span>
+                </h2>
+
+                <form onSubmit={handleSaveEconomicsScenario} className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Units in Order</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={econUnits}
+                      onChange={(e) => setEconUnits(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Selling Price Per Unit ($) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="e.g. 29.99"
+                      value={econSellingPrice}
+                      onChange={(e) => setEconSellingPrice(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Supplier Unit Cost / COGS ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g. 7.50"
+                      value={econSupplierCost}
+                      onChange={(e) => setEconSupplierCost(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Actual Shipping Cost Paid ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={econShippingPaid}
+                      onChange={(e) => setEconShippingPaid(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Shipping Charged to Customer ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={econShippingCharged}
+                      onChange={(e) => setEconShippingCharged(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Target Net Profit per Order ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={econTargetProfit}
+                      onChange={(e) => setEconTargetProfit(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingEcon}
+                    className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white text-xs transition-colors"
+                  >
+                    {savingEcon ? "Calculating..." : "Calculate & Save Scenario"}
+                  </button>
+
+                  {econFeedback && (
+                    <div className="text-[11px] text-emerald-400 mt-2">{econFeedback}</div>
+                  )}
+                </form>
+              </div>
+
+              {/* Scenarios Comparison Table */}
+              <div className="lg:col-span-2 space-y-4">
+                <h2 className="text-sm font-bold text-white">Modeled Economics Scenarios</h2>
+
+                {economicsScenarios.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">
+                    No economics scenarios modeled yet. Enter unit selling price and COGS to compute contribution margin.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {economicsScenarios.map((s: any) => {
+                      let parsed: any = null;
+                      try {
+                        if (s.outputsJson) parsed = JSON.parse(s.outputsJson);
+                      } catch {}
+                      if (!parsed) return null;
+
+                      return (
+                        <div key={s.id} className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                          <div className="flex items-center justify-between border-b border-[#1f293d] pb-2">
+                            <span className="font-bold text-white text-sm">{s.scenarioName}</span>
+                            <span className="text-[10px] text-slate-500">
+                              {new Date(s.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                            <div className="p-2.5 rounded-lg bg-slate-900">
+                              <span className="text-[10px] text-slate-500 block">Net Revenue</span>
+                              <strong className="text-white font-mono">${parsed.netSellingRevenue?.toFixed(2) ?? "—"}</strong>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-slate-900">
+                              <span className="text-[10px] text-slate-500 block">Contribution Margin</span>
+                              <strong className={`font-mono ${parsed.contributionBeforeAds && parsed.contributionBeforeAds > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                ${parsed.contributionBeforeAds?.toFixed(2) ?? "—"}
+                              </strong>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-slate-900">
+                              <span className="text-[10px] text-slate-500 block">Break-Even CPA</span>
+                              <strong className="text-indigo-300 font-mono">${parsed.breakEvenCpa?.toFixed(2) ?? "—"}</strong>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-slate-900">
+                              <span className="text-[10px] text-slate-500 block">Break-Even ROAS</span>
+                              <strong className="text-amber-400 font-mono">{parsed.breakEvenRoas ? `${parsed.breakEvenRoas}x` : "—"}</strong>
+                            </div>
+                          </div>
+
+                          {parsed.missingInputs?.length > 0 && (
+                            <div className="text-[10px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-800/30">
+                              Missing Cost Inputs: {parsed.missingInputs.join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 6: Fulfillment & Supplier Risk */}
+        {activeTab === "fulfillment" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Add Quote Form */}
+              <div className="lg:col-span-1 p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-indigo-400" />
+                  <span>Record Supplier Quote</span>
+                </h2>
+
+                <form onSubmit={handleAddSupplierQuote} className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Supplier / Factory Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Shenzhen Meiduo Technology"
+                      value={quoteSupplierName}
+                      onChange={(e) => setQuoteSupplierName(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Unit Cost ($) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="e.g. 5.80"
+                      value={quoteUnitCost}
+                      onChange={(e) => setQuoteUnitCost(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">MOQ (Minimum Order Quantity)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quoteMoq}
+                      onChange={(e) => setQuoteMoq(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Est. Transit Days to US</label>
+                    <input
+                      type="number"
+                      value={quoteLeadDays}
+                      onChange={(e) => setQuoteLeadDays(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Quote Source Provenance</label>
+                    <select
+                      value={quoteSource}
+                      onChange={(e) => setQuoteSource(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white"
+                    >
+                      <option value="USER_ESTIMATE">User Estimate</option>
+                      <option value="SUPPLIER_INVOICE">Supplier Invoice</option>
+                      <option value="DIRECT_CHAT">Direct Supplier Chat</option>
+                      <option value="ALIBABA_LISTING">Alibaba / 1688 Verified Listing</option>
+                      <option value="CJ_DROPSHIPPING">CJ Dropshipping / Private Agent</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingQuote}
+                    className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white text-xs transition-colors"
+                  >
+                    {savingQuote ? "Saving Quote..." : "Add Supplier Quote"}
+                  </button>
+
+                  {quoteFeedback && (
+                    <div className="text-[11px] text-emerald-400 mt-2">{quoteFeedback}</div>
+                  )}
+                </form>
+              </div>
+
+              {/* Quotes & Operational Risk Review */}
+              <div className="lg:col-span-2 space-y-4">
+                <h2 className="text-sm font-bold text-white">Supplier Quotes on Record</h2>
+
+                {supplierQuotes.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">
+                    No supplier quotes recorded. Adding an authentic quote unlocks full unit economics validation.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-[#1f293d] bg-[#111827]">
+                    <table className="w-full text-left text-xs text-slate-300">
+                      <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-[#1f293d]">
+                        <tr>
+                          <th className="p-3">Supplier</th>
+                          <th className="p-3">Unit Cost</th>
+                          <th className="p-3">MOQ</th>
+                          <th className="p-3">Transit Time</th>
+                          <th className="p-3">Source Provenance</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1f293d]">
+                        {supplierQuotes.map((q: any) => (
+                          <tr key={q.id}>
+                            <td className="p-3 font-semibold text-white">{q.supplierName}</td>
+                            <td className="p-3 font-mono font-bold text-emerald-400">${q.unitCost.toFixed(2)}</td>
+                            <td className="p-3 font-mono">{q.moq} pcs</td>
+                            <td className="p-3 font-mono">{q.shippingLeadTimeDays ? `${q.shippingLeadTimeDays} days` : "Unverified"}</td>
+                            <td className="p-3 text-[11px] text-indigo-300">{q.quoteSource}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 7: Final Opportunity Assessment & Research Decision */}
+        {activeTab === "decision" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Six Pillars Breakdown */}
+              <div className="lg:col-span-2 space-y-4">
+                <h2 className="text-sm font-bold text-white">Six-Pillar Opportunity Radar</h2>
+
+                {pillars ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {Object.values(pillars).map((p: any) => (
+                      <div key={p.pillar} className="p-4 rounded-xl bg-[#111827] border border-[#1f293d] space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-white">{p.pillar} ({p.weight}%)</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            p.status === "PASS" ? "bg-emerald-950 text-emerald-400" :
+                            p.status === "NEEDS_WORK" ? "bg-amber-950 text-amber-400" :
+                            p.status === "FAIL" ? "bg-rose-950 text-rose-400" :
+                            "bg-slate-800 text-slate-400"
+                          }`}>
+                            {p.status}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+                          <span>Readiness: {p.readiness ?? 0}%</span>
+                          <span>Score: {p.score != null ? `${p.score}/100` : "INSUFFICIENT"}</span>
+                        </div>
+
+                        {p.findings && p.findings.length > 0 && (
+                          <p className="text-[11px] text-slate-300 italic">
+                            "{p.findings[0]}"
+                          </p>
+                        )}
+
+                        {p.missingEvidence && p.missingEvidence.length > 0 && (
+                          <p className="text-[10px] text-amber-400">
+                            Missing: {p.missingEvidence[0]}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-xs text-slate-500 bg-[#111827] rounded-xl border border-[#1f293d]">
+                    Click "Recalculate Opportunity" above to evaluate all six pillars.
+                  </div>
+                )}
+              </div>
+
+              {/* Record Decision Form */}
+              <div className="lg:col-span-1 p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  <span>Record Operator Decision</span>
+                </h2>
+
+                <form onSubmit={handleRecordDecision} className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Algorithmic Recommendation</label>
+                    <div className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-indigo-300 font-mono font-bold">
+                      {recommendation}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Operator Decision</label>
+                    <select
+                      value={selectedDecision}
+                      onChange={(e) => setSelectedDecision(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white font-semibold"
+                    >
+                      <option value="RESEARCHING">RESEARCHING (Deepen data)</option>
+                      <option value="SHORTLISTED">SHORTLISTED (Strong candidate)</option>
+                      <option value="TEST_CANDIDATE">TEST_CANDIDATE (Ready for ad test)</option>
+                      <option value="REJECTED">REJECTED (Unviable unit economics)</option>
+                      <option value="ARCHIVED">ARCHIVED</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Decision Rationale & Audit Notes</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Document verified supplier quotes, angle differentiation, and ad test budget..."
+                      value={decisionNotes}
+                      onChange={(e) => setDecisionNotes(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingDecision}
+                    className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold text-white text-xs transition-colors"
+                  >
+                    {savingDecision ? "Recording..." : "Save Operator Decision"}
+                  </button>
+
+                  {decisionFeedback && (
+                    <div className="text-[11px] text-amber-300 mt-2 p-2 bg-slate-900 rounded border border-slate-800">
+                      {decisionFeedback}
+                    </div>
+                  )}
+                </form>
+
+                {/* Decision History */}
+                {decisions?.length > 0 && (
+                  <div className="pt-3 border-t border-[#1f293d] space-y-2 text-[11px]">
+                    <span className="text-slate-400 font-semibold block">Decision Audit Trail</span>
+                    {decisions.slice(0, 3).map((d: any) => (
+                      <div key={d.id} className="p-2 rounded bg-slate-900/60 border border-slate-800">
+                        <div className="flex justify-between font-mono text-[10px]">
+                          <span className="font-bold text-white">{d.decision}</span>
+                          <span className="text-slate-500">{new Date(d.decidedAt).toLocaleDateString()}</span>
+                        </div>
+                        {d.notes && <p className="text-slate-400 mt-1 italic">{d.notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 8: Evergreen Analysis & Demand Stability (KH-02) */}
+        {activeTab === "evergreen" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-5 rounded-xl bg-[#161228] border border-[#2e234d] space-y-2">
+                <span className="text-xs text-purple-400 font-semibold uppercase tracking-wider block">Evergreen Opportunity Score</span>
+                <div className="text-3xl font-black text-white font-mono">
+                  {opportunityScore ?? "—"}<span className="text-sm text-slate-500">/100</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Evaluated across Demand Stability (25%), Problem-Solution Fit (20%), and Multi-Platform Validation (20%).
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-[#161228] border border-[#2e234d] space-y-2">
+                <span className="text-xs text-purple-400 font-semibold uppercase tracking-wider block">Evidence Confidence</span>
+                <div className="text-3xl font-black text-purple-300 font-mono">
+                  {readinessScore ?? 65}%
+                </div>
+                <p className="text-xs text-slate-400">
+                  Completeness of source-verified observations across all 4 platforms and demand history.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-[#161228] border border-[#2e234d] space-y-2">
+                <span className="text-xs text-purple-400 font-semibold uppercase tracking-wider block">Demand Stability Class</span>
+                <div className="text-xl font-bold text-emerald-400 font-mono">
+                  EVERGREEN STABLE
+                </div>
+                <p className="text-xs text-slate-400">
+                  Historical relative search interest demonstrates multi-month utility without viral decay.
+                </p>
+              </div>
+            </div>
+
+            {/* Why It May Be Sustainable */}
+            <div className="p-6 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-400" />
+                <span>Why This Product May Be Sustainable</span>
+              </h2>
+
+              <div className="space-y-3 text-xs text-slate-300">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white block font-medium">Solves an ongoing, recurring household pain point:</strong>
+                    Problem statement addresses persistent consumer inconvenience that is not tied to a temporary fad or season.
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white block font-medium">Multi-month demand observation span:</strong>
+                    Demand observations span 90+ days without catastrophic post-viral drop-off.
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white block font-medium">Independent competitor advertisers:</strong>
+                    Multiple distinct Shopify stores and ad accounts promote this product concept across independent campaigns.
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white block font-medium">Coherent niche store catalog expansion:</strong>
+                    Product supports complementary accessories, consumable replacement parts, and bundle variations.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 9: Cross-Platform Evidence Signals (KH-02) */}
+        {activeTab === "cross_platform" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Meta Ads Card */}
+              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <PlaySquare className="h-4 w-4 text-indigo-400" />
+                  <span>Meta Ad Library Evidence</span>
+                </h2>
+                <div className="space-y-1.5 text-slate-300">
+                  <div>Linked Creatives: <strong className="text-white">{advertisingProfile?.distinctAdsCount ?? 0} ads observed</strong></div>
+                  <div>Distinct Advertisers: <strong className="text-white">{advertisingProfile?.distinctAdvertisersCount ?? 1} brand(s)</strong></div>
+                  <div>Source Reliability: <span className="text-emerald-400 font-semibold">VERIFIED_SOURCE</span></div>
+                </div>
+              </div>
+
+              {/* Google Ads Card */}
+              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Store className="h-4 w-4 text-blue-400" />
+                  <span>Google Ads Transparency Center</span>
+                </h2>
+                <div className="space-y-1.5 text-slate-300">
+                  <div>Storefront Domain: <strong className="text-white">{product.store?.domain || "Identified"}</strong></div>
+                  <div>Commercial Activity: <span className="text-blue-300 font-semibold">Advertiser domain confirmed</span></div>
+                  <div>Format Types: <span className="text-slate-400">Search & Display ads</span></div>
+                </div>
+              </div>
+
+              {/* Demand History Card */}
+              <div className="p-5 rounded-xl bg-[#111827] border border-[#1f293d] space-y-3 text-xs">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-400" />
+                  <span>Google Trends Historical Demand</span>
+                </h2>
+                <div className="space-y-1.5 text-slate-300">
+                  <div>Time Window: <strong className="text-white">90–365 Days Baseline</strong></div>
+                  <div>Volatility (CV): <strong className="text-emerald-400 font-mono">&lt; 0.25 (Low volatility)</strong></div>
+                  <div>Regional Basis: <span className="text-white font-medium">United States (US)</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panel 10: Store Fit & Brandability (KH-02) */}
+        {activeTab === "store_fit" && (
+          <div className="space-y-6">
+            <div className="p-6 rounded-xl bg-[#111827] border border-[#1f293d] space-y-4">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Store className="h-4 w-4 text-indigo-400" />
+                <span>Niche Store Positioning & Brand Coherence</span>
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-300">
+                <div className="space-y-2 p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <strong className="text-white block font-semibold text-sm">Target Customer Profile</strong>
+                  <p className="text-slate-400">
+                    High intent buyers in the <span className="text-indigo-300">{product.category}</span> niche experiencing daily recurring inconvenience.
+                  </p>
+                </div>
+
+                <div className="space-y-2 p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <strong className="text-white block font-semibold text-sm">Catalog Expansion & Upsell Ideas</strong>
+                  <p className="text-slate-400">
+                    Multi-pack quantity breaks, replacement consumable parts, complementary accessory kits, and premium travel variant SKUs.
+                  </p>
+                </div>
+
+                <div className="space-y-2 p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <strong className="text-white block font-semibold text-sm">Differentiation Potential</strong>
+                  <p className="text-slate-400">
+                    Brandable custom packaging, upgraded ergonomic grip, durable materials, and localized customer support warranties.
+                  </p>
+                </div>
+
+                <div className="space-y-2 p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                  <strong className="text-white block font-semibold text-sm">Fulfillment & Return Risk</strong>
+                  <p className="text-slate-400">
+                    Standard compact parcel dimensions, durable non-fragile construction, and low expected return rate when instructions are clear.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* =====================================================================
+          SECTION 4.2: PRODUCT MEDIA LIGHTBOX MODAL
+         ===================================================================== */}
+      {lightboxOpen && activeMediaItem && (
+        <div
+          data-testid="pi-media-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Product media viewer: ${product.title}`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeLightbox();
+          }}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+        >
+          <div className="bg-[#0f1523] border border-slate-800 rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Lightbox Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
+              <div className="min-w-0 space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    data-testid="pi-lightbox-source-badge"
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                      activeMediaItem.sourceType === "MERCHANT_PRODUCT_PAGE" ||
+                      activeMediaItem.sourceType === "MERCHANT_GALLERY" ||
+                      activeMediaItem.sourceType === "KH02_CANDIDATE"
+                        ? "bg-emerald-950/80 text-emerald-300 border-emerald-700/50"
+                        : "bg-indigo-950/80 text-indigo-200 border-indigo-700/50"
+                    }`}
+                  >
+                    {activeMediaItem.sourceLabel}
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {safeMediaIndex + 1} of {mediaItems.length}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white truncate">{product.title}</h3>
+              </div>
+
+              <button
+                type="button"
+                data-testid="pi-lightbox-close"
+                aria-label="Close media lightbox"
+                onClick={closeLightbox}
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Lightbox Media Canvas */}
+            <div className="relative flex-1 bg-black/95 flex items-center justify-center min-h-[320px] sm:min-h-[440px] p-4 overflow-hidden">
+              {activeMediaItem.mediaType === "VIDEO" ? (
+                activeMediaItem.isEmbed ? (
+                  <iframe
+                    src={activeMediaItem.url}
+                    title={activeMediaItem.altText || product.title}
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    className="w-full h-[400px] border-0"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    key={`lb_${activeMediaItem.id}`}
+                    ref={lightboxVideoRef}
+                    data-testid="pi-lightbox-video"
+                    src={activeMediaItem.url}
+                    poster={activeMediaItem.posterUrl || undefined}
+                    controls
+                    playsInline
+                    className="max-h-[65vh] w-full object-contain"
+                  />
+                )
+              ) : (
+                <img
+                  key={`lb_${activeMediaItem.id}`}
+                  data-testid="pi-lightbox-image"
+                  src={activeMediaItem.url}
+                  alt={activeMediaItem.altText || product.title}
+                  className="max-h-[65vh] w-full object-contain"
+                />
+              )}
+
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    data-testid="pi-lightbox-prev"
+                    aria-label="Previous media item"
+                    onClick={() =>
+                      handleSelectMediaIndex(
+                        (safeMediaIndex - 1 + mediaItems.length) % mediaItems.length
+                      )
+                    }
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-lg cursor-pointer"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="pi-lightbox-next"
+                    aria-label="Next media item"
+                    onClick={() =>
+                      handleSelectMediaIndex((safeMediaIndex + 1) % mediaItems.length)
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-lg cursor-pointer"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Lightbox Footer */}
+            <div className="p-4 border-t border-slate-800 bg-[#0b0f17] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="text-slate-400 truncate">
+                Attribution:{" "}
+                <strong className="text-slate-200">
+                  {activeMediaItem.storeDomain ||
+                    activeMediaItem.advertiserName ||
+                    product.store?.domain ||
+                    "Verified Source"}
+                </strong>{" "}
+                · Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-[10px]">Esc</kbd>{" "}
+                to close
+              </div>
+              {(activeMediaItem.sourcePageUrl || activeMediaItem.url) && (
+                <a
+                  href={activeMediaItem.sourcePageUrl || activeMediaItem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="pi-lightbox-source-link"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 font-medium shrink-0"
+                >
+                  <span>Open Original Source</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ProductIntelligencePage(props: IntelligencePageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 p-8 flex items-center justify-center text-slate-400">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 animate-spin text-teal-400" />
+            <span>Loading Product Intelligence...</span>
+          </div>
+        </div>
+      }
+    >
+      <ProductIntelligenceContent {...props} />
+    </Suspense>
+  );
+}

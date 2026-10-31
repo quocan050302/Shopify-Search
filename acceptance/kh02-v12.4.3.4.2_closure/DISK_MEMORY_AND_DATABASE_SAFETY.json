@@ -1,0 +1,25 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "disk": {
+    "freeBeforeGB": 51.11,
+    "freeAfterGB": 51.11,
+    "headroomVerified": true,
+    "requiredMinGB": 15
+  },
+  "database": {
+    "sqlitePreCheck": {
+      "ok": true,
+      "result": "ok"
+    },
+    "sqlitePostCheck": {
+      "ok": true,
+      "result": "ok"
+    },
+    "integrityVerified": true
+  },
+  "memory": {
+    "totalSystemBytes": 34088599552,
+    "freeSystemBytes": 15103496192
+  }
+}

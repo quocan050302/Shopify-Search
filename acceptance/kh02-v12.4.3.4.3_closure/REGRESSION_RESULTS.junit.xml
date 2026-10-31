@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="KH02_Regression_Suites" tests="651" failures="0" time="81.48">
+  <testsuite name="TypeScript Typecheck (tsc --noEmit)" tests="1" failures="0" time="6.12">
+    <testcase name="tsc_typecheck" classname="kh02.regression.tsc_typecheck" time="6.12">
+    </testcase>
+  </testsuite>
+  <testsuite name="ESLint (src)" tests="1" failures="0" time="5.67">
+    <testcase name="eslint" classname="kh02.regression.eslint" time="5.67">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-01 Regression Suite" tests="69" failures="0" time="5.25">
+    <testcase name="kh01_verify" classname="kh02.regression.kh01_verify" time="5.25">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.1 Semantic Family Classification Suite" tests="19" failures="0" time="1.08">
+    <testcase name="v12_4_3_3_1_family" classname="kh02.regression.v12_4_3_3_1_family" time="1.08">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.1 Meta/Google Live Integrity & Adversarial Suite" tests="19" failures="0" time="1.60">
+    <testcase name="v12_4_3_3_1_integrity" classname="kh02.regression.v12_4_3_3_1_integrity" time="1.60">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3 Meta/Google Provenance Suite (89 tests)" tests="89" failures="0" time="2.62">
+    <testcase name="v12_4_3_3_provenance" classname="kh02.regression.v12_4_3_3_provenance" time="2.62">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.2 Demand Cache & Product Identity Suite" tests="10" failures="0" time="1.98">
+    <testcase name="v12_4_3_3_2_demand_identity" classname="kh02.regression.v12_4_3_3_2_demand_identity" time="1.98">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.4.1 Zero-Spend Google Free Automation Suite" tests="26" failures="0" time="2.65">
+    <testcase name="v12_4_3_4_1_zero_spend" classname="kh02.regression.v12_4_3_4_1_zero_spend" time="2.65">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.4.2 Closure Adversarial & Runtime Truth Suite (34 tests)" tests="34" failures="0" time="1.74">
+    <testcase name="v12_4_3_4_2_adversarial" classname="kh02.regression.v12_4_3_4_2_adversarial" time="1.74">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-02 Full Unit Regression Suite" tests="356" failures="0" time="16.17">
+    <testcase name="kh02_unit_all" classname="kh02.regression.kh02_unit_all" time="16.17">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-02 Integration Suite" tests="26" failures="0" time="18.10">
+    <testcase name="kh02_integration" classname="kh02.regression.kh02_integration" time="18.10">
+    </testcase>
+  </testsuite>
+  <testsuite name="Next.js Production Build" tests="1" failures="0" time="18.51">
+    <testcase name="production_build" classname="kh02.regression.production_build" time="18.51">
+    </testcase>
+  </testsuite>
+</testsuites>

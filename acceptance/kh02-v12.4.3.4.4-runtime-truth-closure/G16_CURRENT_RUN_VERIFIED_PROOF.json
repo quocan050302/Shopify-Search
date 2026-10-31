@@ -1,0 +1,47 @@
+{
+  "evaluatedAt": "2026-10-31T04:39:24.210Z",
+  "version": "12.4.3.4.4",
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "totalCandidates": 3,
+  "verifiedLiveCount": 2,
+  "requiredCount": 3,
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "entries": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "isLiveVerified": true,
+      "liveObservationsCount": 2,
+      "verificationMethod": "STORE_METADATA_JSON_LD",
+      "isCheckoutChampFunnel": false,
+      "notes": "Standard store merchant with verified product page and identity."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "isLiveVerified": true,
+      "liveObservationsCount": 1,
+      "verificationMethod": "STORE_METADATA_JSON_LD",
+      "isCheckoutChampFunnel": false,
+      "notes": "Standard store merchant with verified product page and identity."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "identityStatus": "PROBABLE",
+      "isLiveVerified": false,
+      "liveObservationsCount": 10,
+      "verificationMethod": "FUNNEL_PROBABLE_NO_JSON_LD",
+      "isCheckoutChampFunnel": true,
+      "notes": "CheckoutChamp multi-step sales funnel without root store JSON-LD schema. Retained strictly as PROBABLE under anti-gaming identity rules."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source": "TIKTOK_ORGANIC",
+  "transportType": "REST",
+  "endpoint": "https://api.hasdata.com/scrape/tiktok/search",
+  "usageEndpoint": "https://api.hasdata.com/user/me/usage",
+  "creditsPerQuery": 10,
+  "knownCost": true,
+  "status": "CREDENTIALS_REQUIRED",
+  "configured": false,
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "transportStatus": "NOT_TESTED",
+  "blockerCode": "MISSING_CREDENTIALS",
+  "requiredAction": "Configure HASDATA_API_KEY in environment to enable live video queries.",
+  "creditVerificationStatus": "UNVERIFIED",
+  "creditErrorMessage": "HASDATA_API_KEY is not configured in environment.",
+  "liveVerdict": "BLOCKED_EXTERNAL_REQUIREMENT",
+  "evaluatedAt": "2026-10-26T16:45:07.312Z"
+}

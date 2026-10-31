@@ -1,0 +1,240 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:44.923Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "ENGINEERING_ACCEPTANCE": "PASS",
+  "KH02_BUSINESS_ACCEPTANCE": "INSUFFICIENT_EVIDENCE",
+  "AMAZON_WALMART_PILOT_READINESS": "READY_FOR_ISOLATED_PILOT",
+  "overallEngineeringVerdict": "PASS",
+  "engineeringReleaseDecision": "READY_ENGINEERING",
+  "overallBusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "businessReleaseDecision": "NOT_READY_INSUFFICIENT_BUSINESS_EVIDENCE",
+  "amazonWalmartPilotReadiness": "READY_FOR_ISOLATED_PILOT",
+  "failedEngineeringGates": [],
+  "gates": {
+    "G01": {
+      "status": "PASS",
+      "reason": "Mandatory branch & SHA verified.",
+      "executionId": "preflight_autoclosure_20261031121351",
+      "rawArtifact": "PRE_FLIGHT_GIT_AND_RESOURCE.json",
+      "verificationFunction": "runFivePhaseAutoClosure",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G02": {
+      "status": "PASS",
+      "reason": "tsc --noEmit exited with 0 (pid=89983).",
+      "executionId": "tsc_pid_89983",
+      "rawArtifact": "logs/tsc.log",
+      "verificationFunction": "spawnFreshChildSuite(tsc_typecheck)",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G03": {
+      "status": "PASS",
+      "reason": "ESLint static check exited with 0 (pid=89999).",
+      "executionId": "eslint_pid_89999",
+      "rawArtifact": "logs/eslint.log",
+      "verificationFunction": "spawnFreshChildSuite(eslint_check)",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G04": {
+      "status": "PASS",
+      "reason": "KH-01 security & DB isolation unit suite (41/41 passed, pid=90007).",
+      "executionId": "kh01_pid_90007",
+      "rawArtifact": "json_reports/kh01_isolation_unit.json",
+      "verificationFunction": "spawnFreshChildSuite(kh01_isolation_unit)",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G05": {
+      "status": "PASS",
+      "reason": "Meta Ads live lineage predicates verified (13/13 G16 cases).",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "DEFECT_REPRODUCTION_AND_CLOSURE.json",
+      "verificationFunction": "runG16NegativeTests",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G06": {
+      "status": "PASS",
+      "reason": "Retrieved and set-reconciled 9 live Google Ads creatives (8 probable product matches, 0 brand-only matches, 1 exact SKU matches).",
+      "executionId": "g06_autoclosure_20261031121351",
+      "rawArtifact": "G06_GATE_EVALUATION.json",
+      "verificationFunction": "evaluateGoogleMcpGates",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G07": {
+      "status": "BLOCKED",
+      "reason": "BigQuery ADC credentials not configured locally; zero-spend fail-closed verified in policy scenario DEV_01/DEV_02/HOLDOUT_01.",
+      "executionId": "backtest_policy_autoclosure_20261031121351",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G08": {
+      "status": "PASS",
+      "reason": "Zero-spend query budget & TikTok Organic disablement verified in policy scenario suite.",
+      "executionId": "backtest_policy_autoclosure_20261031121351",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G09": {
+      "status": "PASS",
+      "reason": "Product candidate discovery clustering verified via policy & unit suites.",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "clusterProductCandidates",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G10": {
+      "status": "PASS",
+      "reason": "Semantic product family classification verified.",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "detectSpecificProductFamily",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G11": {
+      "status": "PASS",
+      "reason": "Cross-platform evidence matching & brand-only rejection verified (20/20 cases).",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "GOOGLE_PRODUCT_ASSOCIATION_PROOF.json",
+      "verificationFunction": "matchCrossPlatformProductEvidence",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G12": {
+      "status": "PASS",
+      "reason": "Evergreen opportunity scoring & temporal demand honesty verified.",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "evaluateDemandHistoryEvidence",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G13": {
+      "status": "PASS",
+      "reason": "Audience & category relevance + Top-3 candidate recovery verified.",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "selectTopResearchShortlist",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G14": {
+      "status": "PASS",
+      "reason": "Strict G16 live lineage & merchant proof predicates verified (13/13 cases).",
+      "executionId": "kh02_unit_pid_90015",
+      "rawArtifact": "G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "verificationFunction": "evaluateG16Candidate",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G15": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "0/3 candidates have >= 60d historical demand (queryMode=EXACT_PRODUCT_IDENTITY).",
+      "executionId": "g15_autoclosure_20261031121351",
+      "rawArtifact": "G15_PRODUCT_DEMAND_PROOF.json",
+      "verificationFunction": "queryAndEvaluateG15CandidateDemand",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G16": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Only 2/3 candidates qualified as live-verified in run 'kh02_run_1793448875844_coess'. Only 2/3 distinct canonical products among live-verified candidates. Only 2/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE.",
+      "executionId": "g16_autoclosure_20261031121351",
+      "rawArtifact": "G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "verificationFunction": "evaluateG16Top3",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G17": {
+      "status": "PASS",
+      "reason": "Independent persisted SQLite snapshot loaded.",
+      "executionId": "sqlite_snap_autoclosure_20261031121351",
+      "rawArtifact": "PERSISTED_SQLITE_SNAPSHOT_PROOF.json",
+      "verificationFunction": "loadPersistedRunSnapshotFromSqlite",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G18": {
+      "status": "PASS",
+      "reason": "Chromium status=PASS",
+      "executionId": "chromium_autoclosure_20261031121351",
+      "rawArtifact": "CHROMIUM_EXECUTION_REPORT.json",
+      "verificationFunction": "runLiveChromiumAcceptance",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G19": {
+      "status": "PASS",
+      "reason": "Three-way reconciliation passed (49 field checks across SQLite, HTTP API, and Chromium DOM).",
+      "executionId": "parity_autoclosure_20261031121351",
+      "rawArtifact": "SQLITE_HTTP_CHROMIUM_PARITY.json",
+      "verificationFunction": "reconcileSqliteHttpChromium",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G20": {
+      "status": "PASS",
+      "reason": "Real HTTP 200 GET verified and SHA-256 content digests unchanged across all 5 tables.",
+      "executionId": "http_readonly_autoclosure_20261031121351",
+      "rawArtifact": "READ_ONLY_DB_CONTENT_INTEGRITY.json",
+      "verificationFunction": "assessReadOnlyMutation",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G21": {
+      "status": "PASS",
+      "reason": "476/476 unique tests passed; integration=EXECUTED.",
+      "executionId": "wave_a_autoclosure_20261031121351",
+      "rawArtifact": "UNIQUE_TEST_AND_RETRY_REPORT.json",
+      "verificationFunction": "buildTestExecutionTruthTable",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G22": {
+      "status": "PASS",
+      "reason": "15/15 deterministic policy scenarios passed.",
+      "executionId": "backtest_policy_autoclosure_20261031121351",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G23": {
+      "status": "PASS",
+      "reason": "Free disk=16.91 GB (min required=15 GB), SQLite=ok.",
+      "executionId": "safety_autoclosure_20261031121351",
+      "rawArtifact": "DISK_RAM_SQLITE_SAFETY.json",
+      "verificationFunction": "measureDiskFreeGB",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G24": {
+      "status": "PASS",
+      "reason": "Async completion barrier verified.",
+      "executionId": "barrier_autoclosure_20261031121351",
+      "rawArtifact": "ASYNC_WORKER_BARRIER.json",
+      "verificationFunction": "validateCompletionBarrier",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G25": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 60 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Auto Detailing Putty Gel: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Uproot Clean Pet Hair Remover - The Original: 0 obs (INSUFFICIENT_HISTORY, eligible=false); BlendJet 2 Portable Blender: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE.",
+      "executionId": "backtest_dev_autoclosure_20261031121351",
+      "rawArtifact": "REAL_HISTORICAL_DEV_BACKTEST.json",
+      "verificationFunction": "runRealHistoricalProductReplay",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G26": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 377 historical records; zero future leakage verified (rejectedPostCutoffJoined=20). Demand evaluation detail: Car Fender Panel Dent Edge Repair Tools: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Natural Relief in Weeks: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Petnimo 1 Stainless Steel Cat Fountain No Motor In Water: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE.",
+      "executionId": "backtest_holdout_autoclosure_20261031121351",
+      "rawArtifact": "REAL_HISTORICAL_HOLDOUT_BACKTEST.json",
+      "verificationFunction": "runRealHistoricalProductReplay",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G27": {
+      "status": "PASS",
+      "reason": "Point-in-time replay & joined metadata leakage guard verified.",
+      "executionId": "pit_audit_autoclosure_20261031121351",
+      "rawArtifact": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "verificationFunction": "resolvePointInTimeAdCandidateMetadata",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    },
+    "G28": {
+      "status": "PASS",
+      "reason": "46/46 physical-file mutations caught and rejected.",
+      "executionId": "neg_controls_autoclosure_20261031121351",
+      "rawArtifact": "PHYSICAL_NEGATIVE_CONTROLS.json",
+      "verificationFunction": "runNegativeControlSuite",
+      "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97"
+    }
+  }
+}

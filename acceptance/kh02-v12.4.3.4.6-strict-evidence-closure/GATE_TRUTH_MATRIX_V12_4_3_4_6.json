@@ -1,0 +1,128 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:49.842Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "overallEngineeringVerdict": "FAIL",
+  "overallBusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "failedEngineeringGates": [
+    "G06",
+    "G18",
+    "G19",
+    "G21",
+    "G23"
+  ],
+  "gates": {
+    "G01": {
+      "status": "PASS",
+      "reason": "Mandatory branch & SHA verified."
+    },
+    "G02": {
+      "status": "PASS",
+      "reason": "tsc --noEmit execution."
+    },
+    "G03": {
+      "status": "PASS",
+      "reason": "Static lint rules preserved."
+    },
+    "G04": {
+      "status": "PASS",
+      "reason": "KH-01 isolation preserved."
+    },
+    "G05": {
+      "status": "PASS",
+      "reason": "Meta Ads live lineage predicates enforced."
+    },
+    "G06": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Zero explicitly live, non-cached Google Ads creatives verified for current researchRunId."
+    },
+    "G07": {
+      "status": "BLOCKED",
+      "reason": "BigQuery ADC credentials not configured locally; zero-spend fail-closed verified."
+    },
+    "G08": {
+      "status": "PASS",
+      "reason": "Zero-spend query budget enforced."
+    },
+    "G09": {
+      "status": "PASS",
+      "reason": "Product candidate discovery clustering verified."
+    },
+    "G10": {
+      "status": "PASS",
+      "reason": "Semantic family classification verified."
+    },
+    "G11": {
+      "status": "PASS",
+      "reason": "Cross-platform evidence matching verified."
+    },
+    "G12": {
+      "status": "PASS",
+      "reason": "Evergreen opportunity scoring formula verified."
+    },
+    "G13": {
+      "status": "PASS",
+      "reason": "Audience & category relevance verified."
+    },
+    "G14": {
+      "status": "PASS",
+      "reason": "Strict G16 live lineage & merchant proof predicates verified."
+    },
+    "G15": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "0/3 candidates have >= 60d historical demand."
+    },
+    "G16": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793288037069_asnxv'. Only 0/3 distinct canonical products among live-verified candidates. Only 0/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE."
+    },
+    "G17": {
+      "status": "PASS",
+      "reason": "Independent persisted SQLite snapshot loaded."
+    },
+    "G18": {
+      "status": "FAIL",
+      "reason": "Blocked by disk headroom guard (8.02 GB < 15 GB)."
+    },
+    "G19": {
+      "status": "FAIL",
+      "reason": "Reconciliation failed or incomplete (dbVsHttp=FAIL, dbVsDom=NOT_EXECUTED, httpVsDom=NOT_EXECUTED, discrepancies=1)."
+    },
+    "G20": {
+      "status": "PASS",
+      "reason": "SHA-256 content digests and row counts unchanged across all 5 tables."
+    },
+    "G21": {
+      "status": "FAIL",
+      "reason": "Focused suite passed (13/13); full 400+ test wave blocked by < 15 GB disk guard."
+    },
+    "G22": {
+      "status": "PASS",
+      "reason": "15/15 deterministic policy scenarios passed."
+    },
+    "G23": {
+      "status": "FAIL",
+      "reason": "Free disk=8.02 GB (min required=15 GB), SQLite=ok."
+    },
+    "G24": {
+      "status": "PASS",
+      "reason": "Async completion barrier verified."
+    },
+    "G25": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 60 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Auto Detailing Putty Gel: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Uproot Clean Pet Hair Remover - The Original: 0 obs (INSUFFICIENT_HISTORY, eligible=false); BlendJet 2 Portable Blender: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+    },
+    "G26": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 377 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Synthetic Fixture: Ultimate Pet Hair Cleaner Pro: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Car Fender Panel Dent Edge Repair Tools: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Natural Relief in Weeks: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+    },
+    "G27": {
+      "status": "PASS",
+      "reason": "Point-in-time replay & joined metadata leakage guard verified."
+    },
+    "G28": {
+      "status": "PASS",
+      "reason": "26/26 physical-file mutations caught and rejected."
+    }
+  }
+}

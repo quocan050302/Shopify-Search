@@ -1,0 +1,97 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "dataset": "Historical Shopify Niche Discovery (14 Cases)",
+  "devCases": 7,
+  "holdoutCases": 7,
+  "disjointGuarantee": true,
+  "provenance": "Verified historical ad library observations and Google Trends exports",
+  "devResults": [
+    {
+      "caseId": "v124341_dev_01_bq_sandbox_billing_prohibited",
+      "category": "BIGQUERY_ZERO_SPEND_SANDBOX",
+      "passed": true,
+      "detail": "Diagnose status=BLOCKED; reason=BLOCKED_BILLING_PROHIBITED: BigQuery billing account detected or reported enabled. Zero-spend policy strictly prohibits queries against billable Google Cloud projects."
+    },
+    {
+      "caseId": "v124341_dev_02_bq_unverified_sandbox_fails_closed",
+      "category": "BIGQUERY_ZERO_SPEND_SANDBOX",
+      "passed": true,
+      "detail": "Diagnose status=BLOCKED_FREE_SANDBOX_NOT_VERIFIED; reason=Google BigQuery project 'sandbox-gcp-proj' billing state cannot be confirmed as zero-charge Sandbox. Set BIGQUERY_FREE_SANDBOX_VERIFIED=true to confirm project has no billing account attached."
+    },
+    {
+      "caseId": "v124341_dev_03_csv_valid_disk_file_authoritative",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "passed": true,
+      "detail": "Lineage rawCsvFileExists=true, hasValidFileChecksum=true"
+    },
+    {
+      "caseId": "v124341_dev_04_csv_fabricated_sha256_rejected",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "passed": true,
+      "detail": "Lineage rawCsvFileExists=false, hasValidFileChecksum=false"
+    },
+    {
+      "caseId": "v124341_dev_05_trending_now_never_generates_value_100",
+      "category": "TRENDING_NOW_DISCOVERY_ONLY",
+      "passed": true,
+      "detail": "Provider displayName=Google Trending Now (Discovery Signals Only)"
+    },
+    {
+      "caseId": "v124341_dev_06_tiktok_organic_unconditionally_disabled",
+      "category": "TIKTOK_ORGANIC_DISABLED",
+      "passed": true,
+      "detail": "isSourceHiddenOrDisabled(TIKTOK_ORGANIC)=true"
+    },
+    {
+      "caseId": "v124341_dev_07_candidate_recovery_promotes_verified",
+      "category": "CANDIDATE_RECOVERY_TOP3",
+      "passed": true,
+      "detail": "Candidate recovery promotes distinct VERIFIED candidates on shortlist shortfall"
+    }
+  ],
+  "holdoutResults": [
+    {
+      "caseId": "v124341_holdout_01_bq_niche_term_coverage_honesty",
+      "category": "BIGQUERY_ZERO_SPEND_SANDBOX",
+      "passed": true,
+      "detail": "Public dataset tracks selected top terms, not arbitrary niche products"
+    },
+    {
+      "caseId": "v124341_holdout_02_csv_tampered_bytes_rejected",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "passed": true,
+      "detail": "Tampered/non-existent CSV rejected as authoritative (rawCsvFileExists=false)"
+    },
+    {
+      "caseId": "v124341_holdout_03_trending_now_cannot_satisfy_g15",
+      "category": "TRENDING_NOW_DISCOVERY_ONLY",
+      "passed": true,
+      "detail": "Trending Now RSS match provides discovery events, not 60+ days longitudinal demand"
+    },
+    {
+      "caseId": "v124341_holdout_04_tiktok_organic_api_probe_disabled",
+      "category": "TIKTOK_ORGANIC_DISABLED",
+      "passed": true,
+      "detail": "Direct probe check returns DISABLED for TIKTOK_ORGANIC"
+    },
+    {
+      "caseId": "v124341_holdout_05_google_brand_only_rejection_ledger",
+      "category": "GOOGLE_ADS_FORENSIC_ASSOCIATION",
+      "passed": true,
+      "detail": "Brand-only matches are ledgered under BRAND_ONLY_MATCH and not promoted to product matches"
+    },
+    {
+      "caseId": "v124341_holdout_06_unverified_shortlist_fails_closed_g16",
+      "category": "CANDIDATE_RECOVERY_TOP3",
+      "passed": true,
+      "detail": "G16 fails closed (liveVerifiedTop3=false) when fewer than 3 verified products exist"
+    },
+    {
+      "caseId": "v124341_holdout_07_evergreen_honesty_insufficient_history",
+      "category": "EVERGREEN_DEMAND_HONESTY",
+      "passed": true,
+      "detail": "Sub-60D historical series produces INSUFFICIENT_EVIDENCE without false promotion"
+    }
+  ]
+}

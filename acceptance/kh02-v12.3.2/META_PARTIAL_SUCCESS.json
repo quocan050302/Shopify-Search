@@ -1,0 +1,23 @@
+{
+  "id": "META_PARTIAL_SUCCESS",
+  "description": "Meta partial success retains retrieved observations and preserves errors",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+    "liveSucceeded": true,
+    "hasErrors": true
+  },
+  "observed": {
+    "executionStatus": "PARTIAL_SUCCESS_WITH_RESULTS",
+    "liveSucceeded": true,
+    "errorCount": 1
+  },
+  "assertionEvidence": [
+    "Execution status: PARTIAL_SUCCESS_WITH_RESULTS, error: Subquery 'pet hair remover' failed: Upstream rate limit"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Partial success correctly records PARTIAL_SUCCESS_WITH_RESULTS and preserves errors"
+}

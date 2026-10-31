@@ -1,0 +1,81 @@
+{
+  "split": "HOLDOUT",
+  "windowStart": "2026-10-24T00:00:00.000Z",
+  "windowEnd": "2026-10-30T12:00:00.000Z",
+  "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+  "historicalObservationCount": 377,
+  "reconstructedCandidateCount": 307,
+  "shortlistCount": 3,
+  "shortlistProducts": [
+    {
+      "candidateId": "cmvmbtssi0003m1g9kow02t13",
+      "title": "Synthetic Fixture: Ultimate Pet Hair Cleaner Pro",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller"
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "title": "Car Fender Panel Dent Edge Repair Tools",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "repair_tools"
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "title": "Natural Relief in Weeks",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "shop.pipitea.com",
+      "familyKey": "relief_weeks"
+    }
+  ],
+  "productEvidenceLedger": [
+    {
+      "candidateId": "cmvmbtssi0003m1g9kow02t13",
+      "title": "Synthetic Fixture: Ultimate Pet Hair Cleaner Pro",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "title": "Car Fender Panel Dent Edge Repair Tools",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "repair_tools",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "title": "Natural Relief in Weeks",
+      "storeDomain": "shop.pipitea.com",
+      "familyKey": "relief_weeks",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 46,
+    "trustedPointInTimeJoinedCount": 46,
+    "rejectedPostCutoffJoinedCount": 0,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 0,
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed with 377 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Synthetic Fixture: Ultimate Pet Hair Cleaner Pro: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Car Fender Panel Dent Edge Repair Tools: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Natural Relief in Weeks: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

@@ -1,0 +1,31 @@
+{
+  "version": "12.1.1",
+  "executedAt": "2026-10-26T06:21:18.978Z",
+  "browserResult": {
+    "verified": true,
+    "browserType": "Chromium (Headless)",
+    "durationMs": 4926,
+    "pageLoaded": true,
+    "sourceStatusBarVerified": true,
+    "researchTriggered": true,
+    "resultsRendered": true,
+    "cardCount": 70,
+    "screenshots": [
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.1\\screenshots\\01_before_research.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.1\\screenshots\\02_source_statuses.png",
+      "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.1.1\\screenshots\\03_leaderboard_results.png"
+    ],
+    "consoleLogs": [
+      "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "[log] [HMR] connected",
+      "[error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <LoadingBoundary name=\"products/\" loading={null}>\n      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n        <RedirectBoundary>\n          <RedirectErrorBoundary router={{...}}>\n            <InnerLayoutRouter url=\"/products\" tree={[...]} params={{}} renderTree={{...}} segmentPath={[...]} ...>\n              <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n                <SegmentTrieNode>\n                <ClientPageRoot Component={function ProductsPage} serverProvidedParams={null}>\n                  <ProductsPage params={Promise} searchParams={Promise}>\n                    <div className=\"flex-1 fle...\">\n                      <Header onImportSuccess={function onImportSuccess}>\n                        <header className=\"h-16 borde...\">\n                          <div>\n                          <div ref={{current:null}} className=\"relative w...\">\n                            <div className=\"relative\">\n                              <Search>\n                              <input\n                                ref={{current:null}}\n                                type=\"text\"\n                                value=\"\"\n                                onChange={function onChange}\n                                onFocus={function onFocus}\n                                placeholder=\"Search ads, products, brands... (⌘K)\"\n                                className=\"w-full pl-9 pr-8 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 ...\"\n-                               style={{caret-color:\"transparent\"}}\n                              >\n                          ...\n                      <main className=\"p-6 md:p-8...\">\n                        <div>\n                        <div className=\"p-5 rounde...\">\n                          <div className=\"grid grid-...\">\n                            <div className=\"md:col-spa...\">\n                              <Search>\n                              <input\n                                type=\"text\"\n                                placeholder=\"Enter niche or topic (e.g. Pet Gadgets, Home Cleaning, Kitchen Organizati...\"\n                                value=\"Pet Gadgets\"\n                                onChange={function onChange}\n                                onKeyDown={function onKeyDown}\n                                className=\"w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0e0b1c] border border-[#3b2d63] te...\"\n-                               style={{caret-color:\"transparent\"}}\n                              >\n                            ...\n                          ...\n                        ...\n              ...\n            ...\n",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "errors": []
+  }
+}

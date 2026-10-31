@@ -1,0 +1,13 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "importPath": "data/google_trends_imports/",
+  "validationCriteria": [
+    "File exists on disk matching declared SHA-256",
+    "CSV header contains official Google Trends markers",
+    "Exact query matched to candidate canonical name or query",
+    "Time series contains at least 60 days of weekly/daily data",
+    "Recomputed SHA-256 matches disk filename exactly"
+  ],
+  "verifiedImportsCount": 3
+}

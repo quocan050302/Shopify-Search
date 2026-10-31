@@ -1,0 +1,29 @@
+{
+  "version": "12.4.3.2.1",
+  "securityProbes": {
+    "jsSchemeRejected": true,
+    "dataSchemeRejected": true,
+    "fileSchemeRejected": true,
+    "loopbackRejected": true,
+    "privateIpRejected": true,
+    "metadataIpRejected": true,
+    "unsplashRejected": true,
+    "picsumRejected": true
+  },
+  "scenario13_SsrfAndSchemes": {
+    "scenarioId": "SCENARIO_13_UNSAFE_SCHEMES_AND_SSRF_BLOCKED",
+    "passed": true,
+    "observed": {
+      "totalCount": 0,
+      "rejectedCount": 5
+    }
+  },
+  "scenario14_StockAndPlaceholder": {
+    "scenarioId": "SCENARIO_14_STOCK_AND_PLACEHOLDER_IMAGES_BLOCKED",
+    "passed": true,
+    "observed": {
+      "totalCount": 0,
+      "rejectedCount": 3
+    }
+  }
+}

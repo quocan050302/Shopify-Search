@@ -1,0 +1,42 @@
+[
+  {
+    "source": "META_ADS",
+    "adapter": "metaResearchAdapter.ts",
+    "auth": "Local stdio MCP (zero-cost)",
+    "realQuery": "Local MCP stdio probe / SQLite collection",
+    "evidence": "CompetitorAd records",
+    "verdict": "PASS"
+  },
+  {
+    "source": "TIKTOK_ADS",
+    "adapter": "tiktokAdsResearchAdapter.ts",
+    "auth": "Unconfigured (Enterprise API required)",
+    "realQuery": "DB competitor ads queried",
+    "evidence": "CompetitorAd records",
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "TIKTOK_ORGANIC",
+    "adapter": "tiktokOrganicResearchAdapter.ts",
+    "auth": "Missing HASDATA_API_KEY",
+    "realQuery": "Gated by cost policy",
+    "evidence": "N/A",
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "GOOGLE_ADS",
+    "adapter": "googleTransparencyResearchAdapter.ts",
+    "auth": "Missing GOOGLE_TRANSPARENCY_MCP_URL",
+    "realQuery": "Skipped promptly",
+    "evidence": "N/A",
+    "verdict": "BLOCKED"
+  },
+  {
+    "source": "DEMAND_HISTORY",
+    "adapter": "temporalDemandEngine.ts + historicalDemandIngestion.ts",
+    "auth": "Internal Policy Engine",
+    "realQuery": "Product-specific temporal search terms",
+    "evidence": "ProductDemandObservation series",
+    "verdict": "ENGINE_READY"
+  }
+]

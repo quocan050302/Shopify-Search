@@ -1,0 +1,15 @@
+{
+  "gateId": "P0-10",
+  "requirement": "Shortlist distinctness prevents duplicate products and reports explicit shortfall",
+  "verdict": "PASS",
+  "observedValues": {
+    "qualifiedCount": 1,
+    "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3)."
+  },
+  "expectedValues": {
+    "qualifiedCount": 1,
+    "hasShortfallReason": true
+  },
+  "reason": "Duplicates collapsed to 1 distinct product; explicit shortfall reported",
+  "timestamp": "2026-10-28T01:42:25.827Z"
+}

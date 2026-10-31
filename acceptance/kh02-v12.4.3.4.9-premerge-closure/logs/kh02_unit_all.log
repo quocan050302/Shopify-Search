@@ -1,0 +1,52 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts (14 tests) 4691ms
+   ✓ KH-02 V12.4.3.4.9 — No-False-Pass CLI, Truthful Disk Audit & 46 Negative Controls (14)
+     ✓ P0: computeKh02AcceptanceExitDecision & Real Child Subprocess Exit Proof (7)
+       ✓ spawns real child CLI subprocesses via executeCliSubprocessExitProofSuite and verifies exit code 0 for valid baseline and nonzero exit codes (2, 3, 4, 1) for forced failures 4111ms
+     ✓ Validator CHK_17, CHK_18 & 46 Physical-File Negative Control Mutations (MUT_01..MUT_46) (1)
+       ✓ passes all 20 validator checks on canonical baseline and catches all 46 physical-file mutations (MUT_01..MUT_46) 555ms
+ ✓ tests/unit/kh02/ai/geminiModelRouter.test.ts (14 tests) 3196ms
+   ✓ SWAI KH-02 V12.4 — Gemini Model Router & Error Classification (14)
+     ✓ retries up to 3 times on 503 before succeeding on same model 622ms
+     ✓ exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds 866ms
+     ✓ opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate 936ms
+     ✓ enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly 536ms
+ ✓ tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts (13 tests) 798ms
+   ✓ V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth (13)
+     ✓ Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations (3)
+       ✓ validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 589ms
+ ✓ tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts (12 tests) 583ms
+   ✓ KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth (12)
+     ✓ Phase 5: G15 Exact Identity Query & 33 Physical-File Negative Control Mutations (2)
+       ✓ catches all 33 physical-file negative control mutations (MUT_01 through MUT_33) 523ms
+ ✓ tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts (18 tests) 258ms
+ ✓ tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts (22 tests) 578ms
+   ✓ KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure (22)
+     ✓ Google MCP Negative Suite (G06-NEG-01..20) & 40 Physical-File Negative Control Mutations (MUT_01..40) (2)
+       ✓ catches and rejects all 40 physical-file negative control mutations (MUT_01..MUT_40 covering N01..N15) 564ms
+ ✓ tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts (25 tests) 220ms
+ ✓ tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts (89 tests) 231ms
+ ✓ tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts (10 tests) 142ms
+ ✓ tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts (34 tests) 98ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts (19 tests) 93ms
+ ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 86ms
+ ✓ tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts (15 tests) 91ms
+ ✓ tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts (16 tests) 51ms
+ ✓ tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts (8 tests) 34ms
+ ✓ tests/unit/kh02/ai/geminiProductClassification.test.ts (6 tests) 41ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts (19 tests) 31ms
+ ✓ tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts (19 tests) 29ms
+ ✓ tests/unit/kh02/ai/geminiEvidenceValidation.test.ts (7 tests) 14ms
+ ✓ tests/unit/kh02/ai/geminiModelDiscovery.test.ts (7 tests) 4ms
+
+ Test Files  20 passed (20)
+      Tests  417 passed (417)
+   Start at  19:14:17
+   Duration  18.22s (tests 68%, import 24%, setup 5%, transform 2%, worker 1%)
+
+    Isolate  20 workers spawned · ~75ms startup each (spawn + environment, per file)
+             at least ~1.42s faster with isolate: false — reuses workers across files instead of one per file
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.9-premerge-closure/json_reports/kh02_unit_all.json

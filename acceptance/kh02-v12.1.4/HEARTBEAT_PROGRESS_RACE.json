@@ -1,0 +1,10 @@
+{
+  "description": "Concurrency race between active owner progress update and heartbeat lease renewal",
+  "synchronizationPrimitives": [
+    "withJobLock in-process mutex",
+    "Database CAS conditional update",
+    "Same-owner version conflict retry"
+  ],
+  "testOutcome": "PASS",
+  "verifiedIn": "tests/unit/kh02V12_1_4_AtomicCas.test.ts"
+}

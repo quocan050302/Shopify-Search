@@ -1,0 +1,17 @@
+{
+  "journeyRunId": "live_journey_1792942161302_8112dff0",
+  "discoveryRunId": "cmvnzh2x500012eg9d8lsodjk",
+  "evidenceDirectory": "artifacts/v11.6.0/live_journey_1792942161302_8112dff0",
+  "keyword": "gadget",
+  "market": "US",
+  "requestedLimit": 25,
+  "retrievedCount": 25,
+  "validCount": 25,
+  "persistedCount": 25,
+  "httpCount": 25,
+  "browserRenderedCount": 24,
+  "status": "COMPLETED",
+  "sourceProvenance": "REAL_UPSTREAM",
+  "countsReconciled": true,
+  "completedAt": "2026-10-25T15:29:58.998Z"
+}

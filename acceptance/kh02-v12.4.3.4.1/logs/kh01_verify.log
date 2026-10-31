@@ -1,0 +1,48 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mStarting Step 1...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 1
+Starting Step 2...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 2
+Starting Step 3...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 3
+Starting Step 4...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 4
+Starting Step 5...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 5
+Starting Step 6...
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mPassed Step 6
+
+[90mstdout[2m | tests/integration/kh01ProductIntelligenceWorkspace.test.ts[2m > [22m[2mKH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow[2m > [22m[2mexecutes complete end-to-end product research workflow without data fabrication
+[22m[39mStarting Step 7...
+
+ [32m✓[39m tests/integration/kh01ProductIntelligenceWorkspace.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 798[2mms[22m[39m
+   [32m✓[39m KH-01.E — INTEGRATION_FIXTURE: End-to-End Product Intelligence Integration Workflow [2m(2)[22m
+     [33m[2m✓[22m[39m executes complete end-to-end product research workflow without data fabrication[33m 646[2mms[22m[39m
+ [32m✓[39m tests/unit/kh01Security.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 527[2mms[22m[39m
+ [32m✓[39m tests/unit/kh01EconomicsOpportunity.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m tests/unit/kh01LandingPage.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/unit/kh01ProductOffer.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m69 passed[39m[22m[90m (69)[39m
+[2m   Start at [22m 15:57:20
+[2m   Duration [22m 4.79s[2m (tests 38%, import 27%, setup 20%, transform 13%, worker 2%)[22m
+
+[2m    Isolate [22m [33m5 workers spawned[39m[2m · ~183ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~734ms faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

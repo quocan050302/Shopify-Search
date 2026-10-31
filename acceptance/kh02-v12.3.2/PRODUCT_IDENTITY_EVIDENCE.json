@@ -1,0 +1,24 @@
+{
+  "id": "PRODUCT_IDENTITY",
+  "description": "Product identity rejects campaign codes and does not verify products from slug alone",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "wmtVerified": false,
+    "wmtEligible": false,
+    "slugOnlyVerified": false
+  },
+  "observed": {
+    "wmtIdentityStatus": "UNRESOLVED",
+    "wmtEligible": false,
+    "slugOnlyStatus": "PROBABLE"
+  },
+  "assertionEvidence": [
+    "Wmt008 status: UNRESOLVED",
+    "Slug only status: PROBABLE"
+  ],
+  "executionCommand": null,
+  "exitCode": null,
+  "runId": null,
+  "reason": "Campaign codes rejected; slug alone produces PROBABLE (not VERIFIED) per Section 9.7"
+}

@@ -1,0 +1,10 @@
+{
+  "source": "META_ADS",
+  "collectorVersion": "1.7.0",
+  "pythonBin": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+  "transportConnected": true,
+  "authenticated": true,
+  "status": "SOURCE_ACCESS_VERIFIED",
+  "databaseRecordsIndexed": 141,
+  "verifiedAt": "2026-10-26T16:00:30.048Z"
+}

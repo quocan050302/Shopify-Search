@@ -1,0 +1,18 @@
+{
+  "gateId": "P0-08",
+  "requirement": "Product identity does not accept campaign codes or SKU sequences as verified product names",
+  "verdict": "PASS",
+  "observedValues": {
+    "headlineClass": "INTERNAL_SKU_CODE",
+    "isProductCandidate": false,
+    "identityStatus": "UNRESOLVED",
+    "isEligible": false
+  },
+  "expectedValues": {
+    "isProductCandidate": false,
+    "identityStatus": "UNRESOLVED",
+    "isEligible": false
+  },
+  "reason": "Wmt008 L4v2 Mustyclothes was rejected from product candidates and winner eligibility",
+  "timestamp": "2026-10-28T01:42:25.824Z"
+}

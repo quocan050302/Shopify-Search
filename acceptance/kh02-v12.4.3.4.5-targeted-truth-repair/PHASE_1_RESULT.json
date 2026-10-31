@@ -1,0 +1,13 @@
+{
+  "phaseId": "PHASE_1",
+  "status": "COMPLETED_WITH_EXTERNAL_BLOCKERS",
+  "startedAt": "2026-10-31T05:21:31.490Z",
+  "completedAt": "2026-10-31T05:21:31.505Z",
+  "googleAuthType": "NONE",
+  "hasToken": false,
+  "projectId": null,
+  "billingVerifiedZeroCost": false,
+  "zeroSpendEnforced": true,
+  "realQueryExecuted": false,
+  "reason": "Blocked: Missing Google Cloud ADC credentials."
+}

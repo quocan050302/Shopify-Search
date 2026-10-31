@@ -1,0 +1,99 @@
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local, .env
+✓ Running next.config.ts took 62ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.2s
+  Running TypeScript ...
+  Finished TypeScript in 3.3s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/53) ...
+  Generating static pages using 7 workers (13/53) 
+  Generating static pages using 7 workers (26/53) 
+  Generating static pages using 7 workers (39/53) 
+✓ Generating static pages using 7 workers (53/53) in 493ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /analyzer
+├ ƒ /api/v1/ads
+├ ƒ /api/v1/ads/[id]
+├ ƒ /api/v1/ads/[id]/analyze
+├ ƒ /api/v1/ads/[id]/product-candidate
+├ ƒ /api/v1/ads/batch
+├ ƒ /api/v1/audit/integrity
+├ ƒ /api/v1/auth/status
+├ ƒ /api/v1/demand/import
+├ ƒ /api/v1/discovery/config
+├ ƒ /api/v1/discovery/jobs
+├ ƒ /api/v1/discovery/jobs/[id]
+├ ƒ /api/v1/discovery/jobs/[id]/cancel
+├ ƒ /api/v1/discovery/meta/provider/health
+├ ƒ /api/v1/discovery/meta/requests
+├ ƒ /api/v1/discovery/meta/requests/[id]
+├ ƒ /api/v1/discovery/meta/requests/[id]/ads
+├ ƒ /api/v1/discovery/meta/requests/[id]/cancel
+├ ƒ /api/v1/discovery/meta/requests/[id]/retry
+├ ƒ /api/v1/discovery/providers
+├ ƒ /api/v1/discovery/run
+├ ƒ /api/v1/discovery/stats
+├ ƒ /api/v1/evergreen/ads
+├ ƒ /api/v1/evergreen/ads/[id]
+├ ƒ /api/v1/evergreen/rankings
+├ ƒ /api/v1/health
+├ ƒ /api/v1/kh02/leaderboard
+├ ƒ /api/v1/kh02/product-matches/[matchId]/review
+├ ƒ /api/v1/kh02/providers/discover
+├ ƒ /api/v1/kh02/providers/status
+├ ƒ /api/v1/kh02/providers/test-connection
+├ ƒ /api/v1/kh02/research
+├ ƒ /api/v1/kh02/research/active
+├ ƒ /api/v1/kh02/research/runs
+├ ƒ /api/v1/kh02/research/runs/[runId]
+├ ƒ /api/v1/kh02/version
+├ ƒ /api/v1/kh02/worker/status
+├ ƒ /api/v1/links/validate
+├ ƒ /api/v1/media/upload
+├ ƒ /api/v1/products
+├ ƒ /api/v1/products/[id]
+├ ƒ /api/v1/providers
+├ ƒ /api/v1/providers/feasibility
+├ ƒ /api/v1/reports/export
+├ ƒ /api/v1/research/jobs/[jobId]
+├ ƒ /api/v1/research/products/[id]/decisions
+├ ƒ /api/v1/research/products/[id]/economics
+├ ƒ /api/v1/research/products/[id]/fulfillment
+├ ƒ /api/v1/research/products/[id]/funnel
+├ ƒ /api/v1/research/products/[id]/landing-page-jobs
+├ ƒ /api/v1/research/products/[id]/offers
+├ ƒ /api/v1/research/products/[id]/opportunity
+├ ƒ /api/v1/research/products/[id]/overview
+├ ƒ /api/v1/research/products/from-ad
+├ ƒ /api/v1/search
+├ ƒ /api/v1/settings/budgets
+├ ƒ /api/v1/settings/credentials
+├ ƒ /api/v1/settings/credentials/test
+├ ƒ /api/v1/settings/integrations
+├ ƒ /api/v1/test/db-observation
+├ ƒ /api/v1/watchlists
+├ ○ /discovery
+├ ○ /explorer
+├ ○ /meta-discovery
+├ ○ /my-store
+├ ○ /products
+├   /products/[id]/intelligence
+│ └ ◐ /products/[id]/intelligence
+├ ○ /reports
+├ ○ /settings
+├ ○ /tracker
+└ ○ /watchlist
+
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand
+

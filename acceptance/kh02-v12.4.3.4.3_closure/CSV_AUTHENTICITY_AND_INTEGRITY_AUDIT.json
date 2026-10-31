@@ -1,0 +1,14 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "importPath": "data/google_trends_imports/",
+  "cryptographicIntegrity": "SHA-256 hash matches disk file content exactly",
+  "sourceAuthenticityCriteria": [
+    "Official Google Trends headers present",
+    "Explicit user/provider lineage provenance",
+    "No generated test fixtures in production imports dir"
+  ],
+  "testFixtureSeparation": "Test fixtures classified as FIXTURE_ONLY and excluded from verified imports",
+  "temporalSufficiencyThresholdDays": 60,
+  "verifiedImportsCount": 3
+}

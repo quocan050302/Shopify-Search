@@ -1,0 +1,14 @@
+{
+  "source": "TIKTOK_ADS",
+  "status": "MANUAL_RESEARCH_ONLY",
+  "configured": false,
+  "transportStatus": "NOT_CONFIGURED",
+  "authStatus": "CREDENTIALS_REQUIRED",
+  "blockerCode": "NO_AUTHORIZED_US_AD_PROVIDER",
+  "requiredAction": "Configure TIKTOK_CC_COOKIE in .env.local or import verified TikTok ad creatives manually.",
+  "hasCcCookie": false,
+  "hasApifyToken": false,
+  "storedRecords": 0,
+  "liveVerdict": "BLOCKED_EXTERNAL_REQUIREMENT",
+  "evaluatedAt": "2026-10-26T16:45:07.311Z"
+}

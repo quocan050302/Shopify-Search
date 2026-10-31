@@ -1,0 +1,138 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "nichePlans": [
+    {
+      "niche": "Pet Gadgets",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "pet_grooming_hair_removal",
+        "pet_hydration",
+        "pet_feeding",
+        "pet_cleaning_litter",
+        "pet_safety_travel"
+      ],
+      "queriesCount": 6,
+      "sampleQueries": [
+        "pet hair remover",
+        "cat water fountain",
+        "automatic pet feeder",
+        "cat litter mat"
+      ]
+    },
+    {
+      "niche": "DIY Tools",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "home_repair_kits",
+        "diy_crafting_tools",
+        "diy_home_decor_upgrades",
+        "woodworking_jigs",
+        "furniture_restoration"
+      ],
+      "queriesCount": 10,
+      "sampleQueries": [
+        "wall repair kit",
+        "cordless hot glue gun",
+        "decorative switch plate covers",
+        "pocket hole jig"
+      ]
+    },
+    {
+      "niche": "Kitchen Gadgets",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "food_prep_choppers",
+        "cooking_dispensers",
+        "kitchen_sink_organizers",
+        "food_preservation"
+      ],
+      "queriesCount": 5,
+      "sampleQueries": [
+        "vegetable chopper",
+        "oil sprayer",
+        "kitchen sink strainer",
+        "portable vacuum sealer"
+      ]
+    },
+    {
+      "niche": "Automatic Pet Feeder",
+      "intentType": "SPECIFIC_PRODUCT",
+      "plannedArchetypes": [
+        "specific_automatic_pet_feeder",
+        "specific_automatic_pet_feeder_smart_dispenser",
+        "specific_automatic_pet_feeder_timed_food_dispenser",
+        "specific_automatic_pet_feeder_wet_dry_feeder"
+      ],
+      "queriesCount": 4,
+      "sampleQueries": [
+        "automatic pet feeder",
+        "smart pet feeder",
+        "timed pet food dispenser",
+        "automatic dog cat feeder"
+      ]
+    },
+    {
+      "niche": "Dog Gadgets",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "dog_grooming_shedding",
+        "dog_walking_harness",
+        "dog_training_bark_control",
+        "dog_hydration_feeding",
+        "dog_car_travel"
+      ],
+      "queriesCount": 6,
+      "sampleQueries": [
+        "dog grooming brush",
+        "no pull dog harness",
+        "ultrasonic dog bark deterrent",
+        "portable dog water bottle"
+      ]
+    },
+    {
+      "niche": "Cat Gadgets",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "cat_hydration_fountain",
+        "cat_litter_hygiene",
+        "cat_interactive_play",
+        "cat_grooming_scratch",
+        "cat_feeding_dispenser"
+      ],
+      "queriesCount": 6,
+      "sampleQueries": [
+        "cat water fountain",
+        "cat litter mat",
+        "interactive cat toy",
+        "cat steam brush"
+      ]
+    },
+    {
+      "niche": "Car Accessories",
+      "intentType": "BROAD_CATEGORY",
+      "plannedArchetypes": [
+        "car_cleaning_vacuum",
+        "car_phone_mount",
+        "car_organization_storage",
+        "car_safety_inflator"
+      ],
+      "queriesCount": 4,
+      "sampleQueries": [
+        "portable car vacuum",
+        "magnetic car phone mount",
+        "car trunk organizer",
+        "portable tire inflator"
+      ]
+    }
+  ],
+  "archetypeStageSeparationCheck": {
+    "mutationId": "M13",
+    "description": "Count planned archetypes as discovered product families when 0 qualified products",
+    "caughtAndRejected": true,
+    "observed": {
+      "plannedArchetypes": 5,
+      "distinctProductArchetypesObserved": 0
+    }
+  }
+}

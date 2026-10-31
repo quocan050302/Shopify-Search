@@ -1,0 +1,40 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/integration/kh02HttpServerE2E.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 2984[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance [2m(6)[22m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/providers/status reports live capability and truthful readiness[33m 330[2mms[22m[39m
+     [33m[2m✓[22m[39m POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot[33m 916[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/leaderboard restores the latest completed snapshot on reload[33m 566[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/research/runs returns historical runs with workspace scoping[33m 861[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_2_LongResearch.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2361[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Integration: Long-Running Research & Worker Lifecycle [2m(3)[22m
+     [33m[2m✓[22m[39m executes complete async research lifecycle from enqueue to worker claim and terminal snapshot[33m 938[2mms[22m[39m
+     [33m[2m✓[22m[39m detects worker offline when job is PENDING and no active heartbeat exists[33m 685[2mms[22m[39m
+     [33m[2m✓[22m[39m recovers stale job after worker crash and allows subsequent worker to finish research[33m 737[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/geminiWorkerPipeline.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1311[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integration [2m(2)[22m
+     [33m[2m✓[22m[39m executes complete research orchestrator pipeline and applies AI Product Reality Gate[33m 1006[2mms[22m[39m
+     [33m[2m✓[22m[39m gracefully completes with UNAVAILABLE telemetry when AI fails or key is missing[33m 304[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_3_Acceptance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1726[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E [2m(4)[22m
+     [33m[2m✓[22m[39m executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback[33m 1010[2mms[22m[39m
+     [33m[2m✓[22m[39m reconciles research across database, HTTP readback, and snapshot layers[33m 368[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02ResearchApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 315[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_Persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 721[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — Persistence & Workspace Isolation [2m(4)[22m
+     [33m[2m✓[22m[39m creates a persistent research run with PENDING status and tracks progress[33m 553[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 314[2mms[22m[39m
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Notice] SWAI server at http://127.0.0.1:3000 is offline; skipping standalone browser test.
+
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m27 passed[39m[22m[90m (27)[39m
+[2m   Start at [22m 15:57:45
+[2m   Duration [22m 16.24s[2m (tests 66%, import 24%, setup 6%, transform 3%, worker 1%)[22m
+
+[2m    Isolate [22m [33m8 workers spawned[39m[2m · ~163ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~1.14s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

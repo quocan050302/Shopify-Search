@@ -1,0 +1,781 @@
+{
+  "version": "12.4.3.2",
+  "dogQueryShortlist": [
+    {
+      "candidateId": "cand_1838011041",
+      "researchProductId": "cmvsy7zeg0001p0orsexc5psw",
+      "title": "Reusable Pet Hair Remover Roller",
+      "canonicalProductName": "Reusable Pet Hair Remover Roller",
+      "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+      "storeDomain": "livlandco.com",
+      "familyKey": "pet_hair_remover_roller",
+      "familyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+      "identityStatus": "VERIFIED",
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "DOG",
+          "CAT",
+          "PET_GENERAL",
+          "CAR"
+        ],
+        "audienceMatch": "COMPATIBLE",
+        "audienceEvidenceReferences": [
+          "dog_term:\"dog\"",
+          "cat_term:\"cat\"",
+          "pet_term:\"pet\"",
+          "car_term:\"car\""
+        ],
+        "relevanceReason": "Multi-pet product explicitly supports both dogs and cats.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": "cmvsy7zeg0001p0orsexc5psw",
+        "canonicalName": "Reusable Pet Hair Remover Roller",
+        "rawTerm": "Reusable Pet Hair Remover Roller",
+        "normalizedTerm": "Reusable Pet Hair Remover Roller",
+        "searchTermUsed": "Reusable Pet Hair Remover Roller",
+        "mappingReason": "Used clean product name 'Reusable Pet Hair Remover Roller' directly",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 152,
+        "observationPointsCount": 6,
+        "coverageGaps": [
+          "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+        ],
+        "assessment": {
+          "status": "UNVERIFIED",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 6,
+          "distinctObservationDatesCount": 6,
+          "coveredDays": 152,
+          "meanInterest": 78.8,
+          "stdDev": 2.1,
+          "coefficientOfVariation": 0.03,
+          "demandClass": "EVERGREEN_STABLE",
+          "sourceAuthority": "CACHED_UNVERIFIED",
+          "temporalCoverageValid": true,
+          "productAttributionValid": false,
+          "demandObservationIds": [
+            "cmvsy7znm0003p0or42qkebmn",
+            "cmvsy7znu0004p0oraa6lift3",
+            "cmvsy7zo10005p0or3kn60dae",
+            "cmvsy7zo60006p0ordbxjay4n",
+            "cmvsy7zoa0007p0or46h397m6",
+            "cmvsy7zof0008p0orleiz2r5t"
+          ],
+          "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+          "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+          "calculationVersion": "12.4.3.2",
+          "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).",
+          "missingEvidence": [
+            "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+          ],
+          "evaluatedAt": "2026-10-29T09:27:32.397Z"
+        },
+        "dataPoints": [
+          {
+            "id": "cmvsy7znm0003p0or42qkebmn",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-06-01T02:53:15.196Z",
+            "periodEnd": "2026-06-08T02:53:15.196Z",
+            "demandValue": 76,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-06-01T02:53:15.196Z",
+            "value": 76
+          },
+          {
+            "id": "cmvsy7znu0004p0oraa6lift3",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-01T02:53:15.196Z",
+            "periodEnd": "2026-07-08T02:53:15.196Z",
+            "demandValue": 79,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-01T02:53:15.196Z",
+            "value": 79
+          },
+          {
+            "id": "cmvsy7zo10005p0or3kn60dae",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-31T02:53:15.196Z",
+            "periodEnd": "2026-08-07T02:53:15.196Z",
+            "demandValue": 77,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-31T02:53:15.196Z",
+            "value": 77
+          },
+          {
+            "id": "cmvsy7zo60006p0ordbxjay4n",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-08-30T02:53:15.196Z",
+            "periodEnd": "2026-09-06T02:53:15.196Z",
+            "demandValue": 81,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-08-30T02:53:15.196Z",
+            "value": 81
+          },
+          {
+            "id": "cmvsy7zoa0007p0or46h397m6",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-09-29T02:53:15.196Z",
+            "periodEnd": "2026-10-06T02:53:15.196Z",
+            "demandValue": 78,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-09-29T02:53:15.196Z",
+            "value": 78
+          },
+          {
+            "id": "cmvsy7zof0008p0orleiz2r5t",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "keyword": "Reusable Pet Hair Remover Roller",
+            "evidenceReference": "verified-merchant-demand:livlandco.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-10-24T02:53:15.196Z",
+            "periodEnd": "2026-10-31T02:53:15.196Z",
+            "demandValue": 82,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-10-24T02:53:15.196Z",
+            "value": 82
+          }
+        ],
+        "sourceStatus": "INSUFFICIENT_HISTORY"
+      },
+      "evergreenVerification": null
+    },
+    {
+      "candidateId": "cand_14769098",
+      "researchProductId": null,
+      "title": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+      "canonicalProductName": "FurFree - No more pet hair on furniture, clothes, and carpets.",
+      "canonicalProductUrl": "https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+      "storeDomain": "aureluxe.ch",
+      "familyKey": "clothes_carpets",
+      "familyLabel": "Clothes Carpets",
+      "identityStatus": "PROBABLE",
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "DOG",
+          "CAT",
+          "PET_GENERAL",
+          "CAR"
+        ],
+        "audienceMatch": "COMPATIBLE",
+        "audienceEvidenceReferences": [
+          "dog_term:\"dog\"",
+          "cat_term:\"cat\"",
+          "pet_term:\"pet\"",
+          "car_term:\"car\""
+        ],
+        "relevanceReason": "Multi-pet product explicitly supports both dogs and cats.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": null,
+        "canonicalName": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+        "rawTerm": "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To",
+        "normalizedTerm": "Pet Hair Remover Roller Dog Cat",
+        "searchTermUsed": "Pet Hair Remover Roller Dog Cat",
+        "mappingReason": "Normalized 'Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal To' -> 'Pet Hair Remover Roller Dog Cat' (stripped promotional suffixes/capacities for clean product demand query)",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 0,
+        "observationPointsCount": 0,
+        "coverageGaps": [
+          "No demand observations provided.",
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+        ],
+        "assessment": {
+          "status": "INSUFFICIENT_HISTORY",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "meanInterest": null,
+          "stdDev": null,
+          "coefficientOfVariation": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "temporalCoverageValid": false,
+          "productAttributionValid": false,
+          "demandObservationIds": [],
+          "calculationVersion": "12.4.3.1",
+          "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "missingEvidence": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          ],
+          "evaluatedAt": "2026-10-29T09:27:32.395Z"
+        },
+        "dataPoints": [],
+        "sourceStatus": "ENGINE_READY"
+      },
+      "evergreenVerification": null
+    },
+    {
+      "candidateId": "cand_1783682388",
+      "researchProductId": null,
+      "title": "Automatic Pet Feeder Drinking Fountain",
+      "canonicalProductName": "Automatic Dog Feeder for Easy Daily Meals",
+      "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+      "storeDomain": "kingspetboutique.info",
+      "familyKey": "automatic_pet_feeder",
+      "familyLabel": "Automatic Pet Feeder",
+      "identityStatus": "PROBABLE",
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "DOG",
+          "PET_GENERAL"
+        ],
+        "audienceMatch": "EXACT",
+        "audienceEvidenceReferences": [
+          "dog_term:\"dog\"",
+          "pet_term:\"pet\""
+        ],
+        "relevanceReason": "Product explicitly targets dogs.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": null,
+        "canonicalName": "Automatic Pet Feeder Drinking Fountain",
+        "rawTerm": "Automatic Pet Feeder Drinking Fountain",
+        "normalizedTerm": "Automatic Pet Feeder Drinking Fountain",
+        "searchTermUsed": "Automatic Pet Feeder Drinking Fountain",
+        "mappingReason": "Used clean product name 'Automatic Pet Feeder Drinking Fountain' directly",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 0,
+        "observationPointsCount": 0,
+        "coverageGaps": [
+          "No demand observations provided.",
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+        ],
+        "assessment": {
+          "status": "INSUFFICIENT_HISTORY",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "meanInterest": null,
+          "stdDev": null,
+          "coefficientOfVariation": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "temporalCoverageValid": false,
+          "productAttributionValid": false,
+          "demandObservationIds": [],
+          "calculationVersion": "12.4.3.1",
+          "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "missingEvidence": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          ],
+          "evaluatedAt": "2026-10-29T09:27:32.396Z"
+        },
+        "dataPoints": [],
+        "sourceStatus": "ENGINE_READY"
+      },
+      "evergreenVerification": null
+    }
+  ],
+  "catQueryShortlist": [
+    {
+      "candidateId": "cand_1587534715",
+      "researchProductId": null,
+      "title": "The KittySpout™ - Wireless Fountain",
+      "canonicalProductName": "The KittySpout™ - Wireless Fountain",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "storeDomain": "kittyspout.com",
+      "familyKey": "kittyspout_fountain",
+      "familyLabel": "Kittyspout Fountain",
+      "identityStatus": "VERIFIED",
+      "audienceRelevance": {
+        "requestedAudience": "CAT",
+        "supportedAudiences": [
+          "CAT"
+        ],
+        "audienceMatch": "EXACT",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cat\""
+        ],
+        "relevanceReason": "Product explicitly targets cats.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": null,
+        "canonicalName": "The KittySpout™ - Wireless Fountain",
+        "rawTerm": "The KittySpout™ - Wireless Fountain",
+        "normalizedTerm": "The KittySpout - Wireless Fountain",
+        "searchTermUsed": "The KittySpout - Wireless Fountain",
+        "mappingReason": "Normalized 'The KittySpout™ - Wireless Fountain' -> 'The KittySpout - Wireless Fountain' (stripped promotional suffixes/capacities for clean product demand query)",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 0,
+        "observationPointsCount": 0,
+        "coverageGaps": [
+          "No demand observations provided.",
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+        ],
+        "assessment": {
+          "status": "INSUFFICIENT_HISTORY",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "meanInterest": null,
+          "stdDev": null,
+          "coefficientOfVariation": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "temporalCoverageValid": false,
+          "productAttributionValid": false,
+          "demandObservationIds": [],
+          "calculationVersion": "12.4.3.1",
+          "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "missingEvidence": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          ],
+          "evaluatedAt": "2026-10-29T09:26:49.400Z"
+        },
+        "dataPoints": [],
+        "sourceStatus": "ENGINE_READY"
+      },
+      "evergreenVerification": null
+    },
+    {
+      "candidateId": "cand_1212440541",
+      "researchProductId": "cmvsy7zqh000jp0orhypwohho",
+      "title": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "storeDomain": "uahpet.com",
+      "familyKey": "cooling_warming",
+      "familyLabel": "Cooling Warming",
+      "identityStatus": "VERIFIED",
+      "audienceRelevance": {
+        "requestedAudience": "CAT",
+        "supportedAudiences": [
+          "CAT",
+          "PET_GENERAL"
+        ],
+        "audienceMatch": "EXACT",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cats\"",
+          "pet_term:\"pet\""
+        ],
+        "relevanceReason": "Product explicitly targets cats.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": "cmvsy7zqh000jp0orhypwohho",
+        "canonicalName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "rawTerm": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "normalizedTerm": "Automatic Wet Food Cat Feeder with",
+        "searchTermUsed": "Automatic Wet Food Cat Feeder with",
+        "mappingReason": "Normalized 'Automatic Wet Food Cat Feeder with Cooling & Warming' -> 'Automatic Wet Food Cat Feeder with' (stripped promotional suffixes/capacities for clean product demand query)",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 152,
+        "observationPointsCount": 6,
+        "coverageGaps": [
+          "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+        ],
+        "assessment": {
+          "status": "UNVERIFIED",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 6,
+          "distinctObservationDatesCount": 6,
+          "coveredDays": 152,
+          "meanInterest": 78.8,
+          "stdDev": 2.1,
+          "coefficientOfVariation": 0.03,
+          "demandClass": "EVERGREEN_STABLE",
+          "sourceAuthority": "CACHED_UNVERIFIED",
+          "temporalCoverageValid": true,
+          "productAttributionValid": false,
+          "demandObservationIds": [
+            "cmvsy7zsf000rp0orbgbi6tiu",
+            "cmvsy7zsl000sp0orl8wkum7g",
+            "cmvsy7zsr000tp0or4w85v2ug",
+            "cmvsy7zsy000up0oriz6hihpd",
+            "cmvsy7zt3000vp0orzpca0gas",
+            "cmvsy7ztc000wp0orr1ypsqg4"
+          ],
+          "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+          "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+          "calculationVersion": "12.4.3.2",
+          "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).",
+          "missingEvidence": [
+            "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+          ],
+          "evaluatedAt": "2026-10-29T09:26:49.391Z"
+        },
+        "dataPoints": [
+          {
+            "id": "cmvsy7zsf000rp0orbgbi6tiu",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-06-01T02:53:15.373Z",
+            "periodEnd": "2026-06-08T02:53:15.373Z",
+            "demandValue": 76,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-06-01T02:53:15.373Z",
+            "value": 76
+          },
+          {
+            "id": "cmvsy7zsl000sp0orl8wkum7g",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-01T02:53:15.373Z",
+            "periodEnd": "2026-07-08T02:53:15.373Z",
+            "demandValue": 79,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-01T02:53:15.373Z",
+            "value": 79
+          },
+          {
+            "id": "cmvsy7zsr000tp0or4w85v2ug",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-31T02:53:15.373Z",
+            "periodEnd": "2026-08-07T02:53:15.373Z",
+            "demandValue": 77,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-31T02:53:15.373Z",
+            "value": 77
+          },
+          {
+            "id": "cmvsy7zsy000up0oriz6hihpd",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-08-30T02:53:15.373Z",
+            "periodEnd": "2026-09-06T02:53:15.373Z",
+            "demandValue": 81,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-08-30T02:53:15.373Z",
+            "value": 81
+          },
+          {
+            "id": "cmvsy7zt3000vp0orzpca0gas",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-09-29T02:53:15.373Z",
+            "periodEnd": "2026-10-06T02:53:15.373Z",
+            "demandValue": 78,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-09-29T02:53:15.373Z",
+            "value": 78
+          },
+          {
+            "id": "cmvsy7ztc000wp0orr1ypsqg4",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "keyword": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "evidenceReference": "verified-merchant-demand:uahpet.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-10-24T02:53:15.373Z",
+            "periodEnd": "2026-10-31T02:53:15.373Z",
+            "demandValue": 82,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-10-24T02:53:15.373Z",
+            "value": 82
+          }
+        ],
+        "sourceStatus": "INSUFFICIENT_HISTORY"
+      },
+      "evergreenVerification": null
+    },
+    {
+      "candidateId": "cand_1788406859",
+      "researchProductId": "cmvsy7zoq000ap0or4ly9ciih",
+      "title": "Pawira Stainless Steel Water Fountain",
+      "canonicalProductName": "Pawira Stainless Steel Water Fountain",
+      "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+      "storeDomain": "pawira.com",
+      "familyKey": "water_fountain",
+      "familyLabel": "Water Fountain",
+      "identityStatus": "VERIFIED",
+      "audienceRelevance": {
+        "requestedAudience": "CAT",
+        "supportedAudiences": [
+          "CAT",
+          "PET_GENERAL"
+        ],
+        "audienceMatch": "EXACT",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cat\"",
+          "pet_term:\"pet\""
+        ],
+        "relevanceReason": "Product explicitly targets cats.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "demandResolution": {
+        "productId": "cmvsy7zoq000ap0or4ly9ciih",
+        "canonicalName": "Pawira Stainless Steel Water Fountain",
+        "rawTerm": "Pawira Stainless Steel Water Fountain",
+        "normalizedTerm": "Pawira Stainless Steel Water Fountain",
+        "searchTermUsed": "Pawira Stainless Steel Water Fountain",
+        "mappingReason": "Used clean product name 'Pawira Stainless Steel Water Fountain' directly",
+        "requestedLookbackDays": 90,
+        "actualCoveredDays": 152,
+        "observationPointsCount": 6,
+        "coverageGaps": [
+          "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+        ],
+        "assessment": {
+          "status": "UNVERIFIED",
+          "eligibleForEvergreen": false,
+          "dataPointsCount": 6,
+          "distinctObservationDatesCount": 6,
+          "coveredDays": 152,
+          "meanInterest": 78.8,
+          "stdDev": 2.1,
+          "coefficientOfVariation": 0.03,
+          "demandClass": "EVERGREEN_STABLE",
+          "sourceAuthority": "CACHED_UNVERIFIED",
+          "temporalCoverageValid": true,
+          "productAttributionValid": false,
+          "demandObservationIds": [
+            "cmvsy7zp6000cp0or152bdoqj",
+            "cmvsy7zpc000dp0orbx694akm",
+            "cmvsy7zph000ep0orzu1au04r",
+            "cmvsy7zpp000fp0orb7jmcogp",
+            "cmvsy7zpu000gp0oryg05yxy6",
+            "cmvsy7zq3000hp0ory58q7t5b"
+          ],
+          "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+          "commercialInterpretationNote": "Reflects relative search interest index (0-100), not verified store orders, revenue, conversion rate, or ROAS.",
+          "calculationVersion": "12.4.3.2",
+          "explanation": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage.).",
+          "missingEvidence": [
+            "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+          ],
+          "evaluatedAt": "2026-10-29T09:26:49.388Z"
+        },
+        "dataPoints": [
+          {
+            "id": "cmvsy7zp6000cp0or152bdoqj",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-06-01T02:53:15.258Z",
+            "periodEnd": "2026-06-08T02:53:15.258Z",
+            "demandValue": 76,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-06-01T02:53:15.258Z",
+            "value": 76
+          },
+          {
+            "id": "cmvsy7zpc000dp0orbx694akm",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-01T02:53:15.258Z",
+            "periodEnd": "2026-07-08T02:53:15.258Z",
+            "demandValue": 79,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-01T02:53:15.258Z",
+            "value": 79
+          },
+          {
+            "id": "cmvsy7zph000ep0orzu1au04r",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-07-31T02:53:15.258Z",
+            "periodEnd": "2026-08-07T02:53:15.258Z",
+            "demandValue": 77,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-07-31T02:53:15.258Z",
+            "value": 77
+          },
+          {
+            "id": "cmvsy7zpp000fp0orb7jmcogp",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-08-30T02:53:15.258Z",
+            "periodEnd": "2026-09-06T02:53:15.258Z",
+            "demandValue": 81,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-08-30T02:53:15.258Z",
+            "value": 81
+          },
+          {
+            "id": "cmvsy7zpu000gp0oryg05yxy6",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-09-29T02:53:15.258Z",
+            "periodEnd": "2026-10-06T02:53:15.258Z",
+            "demandValue": 78,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-09-29T02:53:15.258Z",
+            "value": 78
+          },
+          {
+            "id": "cmvsy7zq3000hp0ory58q7t5b",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "keyword": "Pawira Stainless Steel Water Fountain",
+            "evidenceReference": "verified-merchant-demand:pawira.com",
+            "methodologyVersion": "12.4.3",
+            "isFixture": false,
+            "periodStart": "2026-10-24T02:53:15.258Z",
+            "periodEnd": "2026-10-31T02:53:15.258Z",
+            "demandValue": 82,
+            "region": "US",
+            "source": "GOOGLE_TRENDS_CSV",
+            "date": "2026-10-24T02:53:15.258Z",
+            "value": 82
+          }
+        ],
+        "sourceStatus": "INSUFFICIENT_HISTORY"
+      },
+      "evergreenVerification": null
+    }
+  ],
+  "directProbes": {
+    "automaticWetFoodCatFeederForDogQuery": {
+      "relevanceStatus": "IRRELEVANT",
+      "discoveryDecision": "CLEARLY_UNRELATED",
+      "isAccepted": false,
+      "score": 0.08,
+      "reasons": [
+        "Excluded — Product is marketed for cats, while this search targets dogs."
+      ],
+      "topic": "dog",
+      "matchedArchetypeId": null,
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "CAT"
+        ],
+        "audienceMatch": "CONTRADICTORY",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cat\""
+        ],
+        "relevanceReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+        "eligibleForPrimaryShortlist": false
+      }
+    },
+    "pawspickCatWaterFountainForDogQuery": {
+      "relevanceStatus": "IRRELEVANT",
+      "discoveryDecision": "CLEARLY_UNRELATED",
+      "isAccepted": false,
+      "score": 0.08,
+      "reasons": [
+        "Excluded — Product is marketed for cats, while this search targets dogs."
+      ],
+      "topic": "dog",
+      "matchedArchetypeId": null,
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "CAT"
+        ],
+        "audienceMatch": "CONTRADICTORY",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cat\""
+        ],
+        "relevanceReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+        "eligibleForPrimaryShortlist": false
+      }
+    },
+    "womensLeggingsForMenQuery": {
+      "requestedAudience": "MEN",
+      "supportedAudiences": [
+        "WOMEN"
+      ],
+      "audienceMatch": "CONTRADICTORY",
+      "audienceEvidenceReferences": [
+        "women_term:\"women\""
+      ],
+      "relevanceReason": "Excluded — Product is marketed for women, while this search targets men.",
+      "eligibleForPrimaryShortlist": false
+    },
+    "toddlerToyForAdultsQuery": {
+      "requestedAudience": "ADULTS",
+      "supportedAudiences": [
+        "KIDS"
+      ],
+      "audienceMatch": "CONTRADICTORY",
+      "audienceEvidenceReferences": [
+        "kids_term:\"toddler\""
+      ],
+      "relevanceReason": "Excluded — Product is marketed for kids, while this search targets adults.",
+      "eligibleForPrimaryShortlist": false
+    },
+    "motorcycleHelmetForCarQuery": {
+      "requestedAudience": "CAR",
+      "supportedAudiences": [
+        "MOTORCYCLE"
+      ],
+      "audienceMatch": "CONTRADICTORY",
+      "audienceEvidenceReferences": [
+        "motorcycle_term:\"motorcycle\""
+      ],
+      "relevanceReason": "Excluded — Product is marketed for motorcycle, while this search targets car.",
+      "eligibleForPrimaryShortlist": false
+    }
+  }
+}

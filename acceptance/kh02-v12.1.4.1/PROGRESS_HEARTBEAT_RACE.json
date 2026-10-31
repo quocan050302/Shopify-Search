@@ -1,0 +1,7 @@
+{
+  "scenario": "T1 Heartbeat reads v=1; T2 Progress writes v=2 with lastProgress='SCORING'; T1 CAS(v=1) fails; T1 reloads v=2, merges heartbeat without overwriting SCORING, writes v=3",
+  "resultProgressPreserved": true,
+  "lastProgressState": "SCORING",
+  "finalRecordVersion": 3,
+  "testOutcome": "PASS"
+}

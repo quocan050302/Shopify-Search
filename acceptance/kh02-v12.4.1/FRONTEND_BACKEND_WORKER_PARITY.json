@@ -1,0 +1,34 @@
+{
+  "expectedSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+  "releaseVersion": "12.4.1",
+  "httpVersionData": {
+    "releaseVersion": "12.4.1",
+    "frontendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "backendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "workerBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "backendStartedAt": "2026-10-28T09:02:48.864Z",
+    "workerStartedAt": "2026-10-28T09:02:48.789Z",
+    "dbFingerprint": "6530562482a2",
+    "workerDbFingerprint": "6530562482a2",
+    "conflictingWorkersDetected": false,
+    "diagnostics": [
+      "Frontend, backend, and worker runtime parity verified at V12.4.1 (07ffcac)."
+    ],
+    "runtimeStatus": "MATCHED",
+    "buildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "buildTimestamp": "2026-10-28T08:58:18.178Z",
+    "appVersion": "12.4.1",
+    "workerVersion": "12.4.1",
+    "environment": "production",
+    "appProcessId": 6740,
+    "workerProcessId": 20968
+  },
+  "browserDom": {
+    "runtimeVersionBadgeText": "SHA: 07ffcac",
+    "runtimeParityStatus": "MATCHED",
+    "frontendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "backendBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f",
+    "workerBuildSha": "07ffcac8bad6407f09fa658ed21ee46f00b1027f"
+  },
+  "verdict": "PASS"
+}

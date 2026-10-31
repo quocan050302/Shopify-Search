@@ -1,0 +1,10 @@
+{
+  "internalImplementationVerdict": "PASS",
+  "metaLiveVerdict": "PASS",
+  "tiktokAdsUSLiveVerdict": "BLOCKED",
+  "tiktokOrganicLiveVerdict": "BLOCKED",
+  "googleTransparencyLiveVerdict": "BLOCKED",
+  "demandHistoryLiveVerdict": "ENGINE_READY",
+  "productIdentityVerdict": "PASS",
+  "realSourceE2EVerdict": "PASS"
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   LayoutGrid,
@@ -17,17 +18,24 @@ import {
   RefreshCw,
   Flame,
   Compass,
+  Sparkles,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { AdCard } from "@/components/ads/AdCard";
 import { AdDetailDrawer } from "@/components/ads/AdDetailDrawer";
 
-type ResearchMode = "EVERGREEN" | "EMERGING" | "TRENDING";
+type ResearchMode = "NEWLY_LAUNCHED" | "EVERGREEN" | "EMERGING" | "TRENDING";
 
 const MODE_CONFIG: Record<
   ResearchMode,
   { label: string; icon: React.ReactNode; description: string; color: string }
 > = {
+  NEWLY_LAUNCHED: {
+    label: "Newly Launched",
+    icon: <Sparkles className="h-3.5 w-3.5" />,
+    description: "Recent commercial ads in the US — prioritize fresh product testing and new entrants",
+    color: "text-rose-400 border-rose-500/30 bg-rose-500/10",
+  },
   EVERGREEN: {
     label: "Evergreen",
     icon: <Leaf className="h-3.5 w-3.5" />,
@@ -41,12 +49,21 @@ const MODE_CONFIG: Record<
     color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
   },
   TRENDING: {
-    label: "Trending",
+    label: "Evidence Ranked",
     icon: <TrendingUp className="h-3.5 w-3.5" />,
-    description: "Ads sorted by evidence confidence — may include short-lived signals",
+    description: "Ranked by multi-observation continuity and evidence confidence",
     color: "text-sky-400 border-sky-500/30 bg-sky-500/10",
   },
 };
+
+const LAUNCH_AGE_OPTIONS = [
+  { value: "7", label: "Launched within 7 days" },
+  { value: "14", label: "Launched within 14 days" },
+  { value: "30", label: "Launched within 30 days (Default)" },
+  { value: "60", label: "Launched within 60 days" },
+  { value: "90", label: "Launched within 90 days" },
+  { value: "180", label: "Launched within 180 days" },
+];
 
 const AGE_FILTER_OPTIONS = [
   { value: "", label: "Any age" },
@@ -97,34 +114,117 @@ function EvidenceSourceBadge({ source }: { source?: string }) {
   );
 }
 
-export default function ExplorerPage() {
+export type ExplorerScope =
+  | { kind: "EXACT_RUN"; runId: string }
+  | { kind: "RESEARCH"; mode: ResearchMode };
+
+export function resolveExplorerScope(
+  searchParams: URLSearchParams | { get: (k: string) => string | null } | null,
+  fallbackMode: ResearchMode = "NEWLY_LAUNCHED"
+): ExplorerScope {
+  const reqId = searchParams?.get("requestId");
+  if (reqId && reqId.trim()) {
+    return { kind: "EXACT_RUN", runId: reqId.trim() };
+  }
+  const mode = searchParams?.get("mode") as ResearchMode;
+  if (mode && (mode === "NEWLY_LAUNCHED" || mode === "EVERGREEN" || mode === "EMERGING" || mode === "TRENDING")) {
+    return { kind: "RESEARCH", mode };
+  }
+  return { kind: "RESEARCH", mode: fallbackMode };
+}
+
+function ExactRunContextBanner({
+  runId,
+  totalCount,
+  onExit,
+}: {
+  runId: string;
+  totalCount: number;
+  onExit: () => void;
+}) {
+  return (
+    <div
+      data-testid="exact-run-context-banner"
+      className="flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-indigo-950/60 to-slate-900 border border-indigo-500/50 text-xs shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold text-[10px] tracking-wide border border-indigo-500/30">
+              EXACT RUN RESULTS
+            </span>
+            <span className="text-white font-medium">
+              Run ID: <strong className="font-mono text-indigo-300">{runId}</strong>
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Showing authentic run-linked advertisements without 30-day age filtering.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onExit}
+        data-testid="exit-run-view-btn"
+        className="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+      >
+        Exit Run View ✕
+      </button>
+    </div>
+  );
+}
+
+function ExplorerContent() {
   const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAd, setSelectedAd] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Research mode
-  const [researchMode, setResearchMode] = useState<ResearchMode>("EVERGREEN");
+  const [researchMode, setResearchMode] = useState<ResearchMode>("NEWLY_LAUNCHED");
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [platform, setPlatform] = useState("META"); // Meta is primary platform
   const [category, setCategory] = useState("ALL");
   const [minAgeDays, setMinAgeDays] = useState("");
+  const [launchWithinDays, setLaunchWithinDays] = useState("30");
+  const searchParams = useSearchParams();
+  const initialRequestId = searchParams?.get("requestId") || null;
+
+  const [sortBy, setSortBy] = useState<"launch_date" | "first_seen" | "score">("launch_date");
+  const [unknownDateCount, setUnknownDateCount] = useState(0);
+  const [requestId, setRequestId] = useState<string | null>(initialRequestId);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Read URL query parameters on initial mount
+  // Read URL query parameters reactively
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sp = new URLSearchParams(window.location.search);
-      const urlPlatform = sp.get("platform");
-      if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
-      const urlMode = sp.get("mode");
-      if (urlMode && (urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
-        setResearchMode(urlMode as ResearchMode);
-      }
+    if (!searchParams) return;
+    const urlPlatform = searchParams.get("platform");
+    if (urlPlatform) setPlatform(urlPlatform.toUpperCase());
+
+    const urlMode = searchParams.get("mode");
+    if (urlMode && (urlMode === "NEWLY_LAUNCHED" || urlMode === "EVERGREEN" || urlMode === "EMERGING" || urlMode === "TRENDING")) {
+      setResearchMode(urlMode as ResearchMode);
     }
-  }, []);
+
+    const urlQuery = searchParams.get("query");
+    if (urlQuery) setSearchQuery(urlQuery);
+
+    const urlLaunch = searchParams.get("launchWithinDays");
+    if (urlLaunch) setLaunchWithinDays(urlLaunch);
+
+    const urlSort = searchParams.get("sortBy");
+    if (urlSort && (urlSort === "launch_date" || urlSort === "first_seen" || urlSort === "score")) {
+      setSortBy(urlSort as any);
+    }
+
+    const urlRequestId = searchParams.get("requestId");
+    setRequestId(urlRequestId || null);
+  }, [searchParams]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -135,15 +235,47 @@ export default function ExplorerPage() {
     try {
       setLoading(true);
       setError(null);
+
+      // Exact Run Mode: Call canonical run-scoped API without 30-day age filtering or mode ranking
+      const effectiveRequestId = requestId || searchParams?.get("requestId");
+      if (effectiveRequestId) {
+        const exactRunUrl = `/api/v1/discovery/meta/requests/${encodeURIComponent(effectiveRequestId)}/ads?page=${page}&pageSize=12`;
+        const res = await fetch(exactRunUrl);
+        const json = await res.json();
+
+        if (json.success && Array.isArray(json.data)) {
+          setAds(json.data);
+          setTotalPages(json.pagination?.totalPages || 1);
+          setTotalCount(json.pagination?.total || 0);
+          setUnknownDateCount(0);
+          return;
+        }
+
+        setAds([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setError(json.message || json.error || `No advertisements found for research run '${effectiveRequestId}'.`);
+        return;
+      }
+
+      // Discovery Research Mode
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: "12",
         mode: researchMode,
       });
 
+      if (researchMode === "NEWLY_LAUNCHED") {
+        params.append("launchWithinDays", launchWithinDays);
+        params.append("sortBy", sortBy);
+      } else {
+        if (minAgeDays) params.append("minAgeDays", minAgeDays);
+        params.append("sortBy", sortBy === "launch_date" ? "default" : sortBy);
+      }
+
       if (searchQuery.trim()) params.append("query", searchQuery.trim());
       if (platform !== "ALL") params.append("platform", platform);
-      if (minAgeDays) params.append("minAgeDays", minAgeDays);
+      if (category !== "ALL") params.append("category", category);
 
       // Use evergreen API for mode-based ranking
       const evRes = await fetch(`/api/v1/evergreen/ads?${params.toString()}`);
@@ -151,12 +283,13 @@ export default function ExplorerPage() {
 
       if (evJson.success) {
         setAds(evJson.data);
-        setTotalPages(evJson.pagination.totalPages || 1);
-        setTotalCount(evJson.pagination.total || 0);
+        setTotalPages(evJson.pagination?.totalPages || 1);
+        setTotalCount(evJson.pagination?.total || 0);
+        setUnknownDateCount(evJson.meta?.unknownDateCount || 0);
         return;
       }
 
-      // Fallback to legacy ads API
+      // Fallback to legacy ads API ONLY in general discovery mode (workspace-scoped)
       const legacyParams = new URLSearchParams({
         page: page.toString(),
         pageSize: "12",
@@ -170,8 +303,10 @@ export default function ExplorerPage() {
 
       if (legacyJson.success) {
         setAds(legacyJson.data);
-        setTotalPages(legacyJson.pagination.totalPages || 1);
-        setTotalCount(legacyJson.pagination.total || 0);
+        setTotalPages(legacyJson.pagination?.totalPages || 1);
+        setTotalCount(legacyJson.pagination?.total || 0);
+      } else {
+        setError(legacyJson.message || "Failed to load advertisements.");
       }
     } catch (err: any) {
       console.error("Failed to fetch ads:", err);
@@ -181,9 +316,19 @@ export default function ExplorerPage() {
     }
   };
 
+  const handleExitRunView = () => {
+    setRequestId(null);
+    setPage(1);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("requestId");
+      window.history.pushState({}, "", url.pathname + (url.search ? url.search : ""));
+    }
+  };
+
   useEffect(() => {
     fetchAds();
-  }, [page, platform, category, researchMode, minAgeDays]);
+  }, [page, platform, category, researchMode, minAgeDays, launchWithinDays, sortBy, requestId]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +339,7 @@ export default function ExplorerPage() {
   const modeInfo = MODE_CONFIG[researchMode];
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#0a0e17]">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#0B1020]">
       <Header onImportSuccess={fetchAds} />
 
       <main className="p-8 max-w-7xl mx-auto w-full space-y-6">
@@ -236,43 +381,75 @@ export default function ExplorerPage() {
           </div>
         </div>
 
-        {/* Research Mode Tabs */}
-        <div className="flex items-start gap-2 flex-wrap">
-          {(Object.keys(MODE_CONFIG) as ResearchMode[]).map((mode) => {
-            const cfg = MODE_CONFIG[mode];
-            const isActive = researchMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => {
-                  setResearchMode(mode);
-                  setPage(1);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                  isActive
-                    ? cfg.color
-                    : "text-slate-500 border-slate-700/50 hover:text-slate-300 hover:border-slate-600"
-                }`}
-              >
-                {cfg.icon}
-                {cfg.label}
-              </button>
-            );
-          })}
-          <span className="text-[10px] text-slate-600 self-center ml-1 max-w-xs">
-            {modeInfo.description}
-          </span>
-        </div>
+        {/* Exact Run Context Banner */}
+        {requestId ? (
+          <ExactRunContextBanner
+            runId={requestId}
+            totalCount={totalCount}
+            onExit={handleExitRunView}
+          />
+        ) : (
+          <>
+            {/* Research Mode Tabs */}
+            <div className="flex items-start gap-2 flex-wrap">
+              {(Object.keys(MODE_CONFIG) as ResearchMode[]).map((mode) => {
+                const cfg = MODE_CONFIG[mode];
+                const isActive = researchMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setResearchMode(mode);
+                      if (mode === "NEWLY_LAUNCHED") {
+                        setSortBy("launch_date");
+                      }
+                      setPage(1);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                      isActive
+                        ? cfg.color
+                        : "text-slate-500 border-slate-700/50 hover:text-slate-300 hover:border-slate-600"
+                    }`}
+                  >
+                    {cfg.icon}
+                    {cfg.label}
+                  </button>
+                );
+              })}
+              <span className="text-[10px] text-slate-600 self-center ml-1 max-w-xs">
+                {modeInfo.description}
+              </span>
+            </div>
 
-        {/* Disclaimer — Evergreen mode */}
-        {researchMode === "EVERGREEN" && (
-          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/20 border border-amber-800/20 text-[10px] text-amber-600/80">
-            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-600" />
-            <span>
-              <strong>Research Signal Only.</strong> Longevity tiers reflect evidence quality,
-              not confirmed profitability. Long-running ads do not guarantee sales or positive ROAS.
-            </span>
-          </div>
+            {/* Banner — Newly Launched mode */}
+            {researchMode === "NEWLY_LAUNCHED" && (
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg bg-rose-950/20 border border-rose-500/30 text-xs text-rose-300">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 shrink-0 text-rose-400" />
+                  <span>
+                    <strong>Fresh Commercial Ads (US):</strong> Showing ads launched within the last{" "}
+                    <span className="font-bold text-white underline">{launchWithinDays} days</span> (Meta delivery start date).
+                  </span>
+                </div>
+                {unknownDateCount > 0 && (
+                  <span className="text-[10px] text-slate-500 shrink-0">
+                    {unknownDateCount} ad{unknownDateCount !== 1 ? "s" : ""} with unrecorded launch date excluded
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Disclaimer — Evergreen mode */}
+            {researchMode === "EVERGREEN" && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/20 border border-amber-800/20 text-[10px] text-amber-600/80">
+                <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-600" />
+                <span>
+                  <strong>Research Signal Only.</strong> Longevity tiers reflect evidence quality,
+                  not confirmed profitability. Long-running ads do not guarantee sales or positive ROAS.
+                </span>
+              </div>
+            )}
+          </>
         )}
 
         {/* Filter Controls */}
@@ -320,17 +497,58 @@ export default function ExplorerPage() {
                 </select>
               </div>
 
-              {/* Min Age */}
+              {/* Age / Launch Window selector — hidden in exact run mode */}
+              {!requestId && (
+                researchMode === "NEWLY_LAUNCHED" ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">Launch Window:</span>
+                    <select
+                      value={launchWithinDays}
+                      onChange={(e) => { setLaunchWithinDays(e.target.value); setPage(1); }}
+                      className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-rose-500 text-xs"
+                    >
+                      {LAUNCH_AGE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">Min Age:</span>
+                    <select
+                      value={minAgeDays}
+                      onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
+                      className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                    >
+                      {AGE_FILTER_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              )}
+
+              {/* Sort By */}
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 font-medium">Min Age:</span>
+                <span className="text-slate-500 font-medium">Sort:</span>
                 <select
-                  value={minAgeDays}
-                  onChange={(e) => { setMinAgeDays(e.target.value); setPage(1); }}
-                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs"
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value as any); setPage(1); }}
+                  className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 focus:outline-none focus:border-indigo-500 text-xs cursor-pointer"
                 >
-                  {AGE_FILTER_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
+                  {researchMode === "NEWLY_LAUNCHED" ? (
+                    <>
+                      <option value="launch_date">Launch Date (Newest first)</option>
+                      <option value="first_seen">SWAI Discovery Date</option>
+                      <option value="score">Research Priority Score</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="score">Longevity Score / Priority</option>
+                      <option value="launch_date">Launch Date (Newest first)</option>
+                      <option value="first_seen">SWAI Discovery Date</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -398,11 +616,16 @@ export default function ExplorerPage() {
             </p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
             {ads.map((ad) => {
               const evScore = ad.evergreenScore;
               return (
-                <div key={ad.id || ad.adId} className="relative group">
+                <div
+                  key={ad.id || ad.adId}
+                  className="relative group"
+                  data-testid={requestId ? "exact-run-ad-card" : "ad-card"}
+                  data-ad-id={ad.id || ad.adId}
+                >
                   <AdCard
                     ad={{
                       ...ad,
@@ -520,10 +743,34 @@ export default function ExplorerPage() {
         )}
       </main>
 
-      <AdDetailDrawer
-        ad={selectedAd}
-        onClose={() => setSelectedAd(null)}
-      />
+      {selectedAd && (() => {
+        const selectedIndex = ads.findIndex((a) => (a.id || a.adId) === (selectedAd.id || selectedAd.adId));
+        const handleNext = selectedIndex >= 0 && selectedIndex < ads.length - 1 ? () => setSelectedAd(ads[selectedIndex + 1]) : undefined;
+        const handlePrev = selectedIndex > 0 ? () => setSelectedAd(ads[selectedIndex - 1]) : undefined;
+        return (
+          <AdDetailDrawer
+            ad={selectedAd}
+            onClose={() => setSelectedAd(null)}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onProductCandidateSaved={() => fetchAds()}
+          />
+        );
+      })()}
     </div>
+  );
+}
+
+export default function ExplorerPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 min-h-screen bg-[#0B1020] flex items-center justify-center text-slate-400 text-sm">
+          Loading Ads Explorer...
+        </div>
+      }
+    >
+      <ExplorerContent />
+    </Suspense>
   );
 }

@@ -1,0 +1,47 @@
+{
+  "meta_ads": {
+    "configured": true,
+    "connected": true,
+    "queried": true,
+    "persisted": true,
+    "shownInUI": false,
+    "blocker": null,
+    "requiredAction": null
+  },
+  "tiktok_ads": {
+    "configured": false,
+    "connected": false,
+    "queried": false,
+    "persisted": false,
+    "shownInUI": true,
+    "blocker": "NO_AUTHORIZED_US_AD_PROVIDER",
+    "requiredAction": "Configure TIKTOK_CC_COOKIE in .env.local or import verified TikTok ad creatives manually."
+  },
+  "tiktok_organic": {
+    "configured": false,
+    "connected": false,
+    "queried": false,
+    "persisted": false,
+    "shownInUI": false,
+    "blocker": "MISSING_CREDENTIALS",
+    "requiredAction": "Configure HASDATA_API_KEY in environment to enable live video queries."
+  },
+  "google_ads": {
+    "configured": false,
+    "connected": false,
+    "queried": false,
+    "persisted": false,
+    "shownInUI": false,
+    "blocker": "MCP_NOT_CONFIGURED",
+    "requiredAction": "Configure GOOGLE_TRANSPARENCY_MCP_URL or GOOGLE_TRANSPARENCY_MCP_COMMAND in .env.local."
+  },
+  "demand_history": {
+    "configured": true,
+    "connected": false,
+    "queried": false,
+    "persisted": false,
+    "shownInUI": true,
+    "blocker": "UPSTREAM_PROVIDER_NOT_CONFIGURED",
+    "requiredAction": "Configure SERPAPI_API_KEY / GOOGLE_TRENDS_API_KEY or import product demand observations via CSV."
+  }
+}

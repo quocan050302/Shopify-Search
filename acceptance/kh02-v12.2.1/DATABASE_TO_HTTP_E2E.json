@@ -1,0 +1,7 @@
+{
+  "reconciliationStatus": "RECONCILED",
+  "sourcesReportedByHttp": 5,
+  "expectedSources": 5,
+  "endpoint": "http://localhost:3000/api/v1/kh02/providers/status",
+  "executedAt": "2026-10-26T16:00:38.237Z"
+}

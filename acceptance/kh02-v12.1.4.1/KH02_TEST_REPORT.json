@@ -1,0 +1,36 @@
+{
+  "unit": {
+    "exitCode": 0,
+    "testsPassed": 89
+  },
+  "heartbeatRetry": {
+    "exitCode": 0,
+    "testsPassed": 7
+  },
+  "reconciliation": {
+    "exitCode": 0,
+    "testsPassed": 16
+  },
+  "legacyMigration": {
+    "exitCode": 0,
+    "testsPassed": 2
+  },
+  "atomicCas": {
+    "exitCode": 0,
+    "testsPassed": 7
+  },
+  "ownership": {
+    "exitCode": 0,
+    "testsPassed": 5
+  },
+  "integration": {
+    "exitCode": 0,
+    "testsPassed": 22
+  },
+  "build": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0
+  }
+}

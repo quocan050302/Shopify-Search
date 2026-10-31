@@ -1,0 +1,7 @@
+{
+  "provider": "TIKTOK_ORGANIC",
+  "queryExecuted": false,
+  "status": "CREDENTIALS_REQUIRED",
+  "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment. Configuration: Missing, Authentication: Credentials required, Transport: Not tested.",
+  "creditsConsumed": 0
+}

@@ -1,0 +1,123 @@
+{
+  "version": "12.4.3.4.4",
+  "evaluatedAt": "2026-10-31T04:39:59.581Z",
+  "artifactDir": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3.4.4-runtime-truth-closure",
+  "allChecksPassed": true,
+  "totalChecks": 16,
+  "passedChecks": 16,
+  "failedChecks": 0,
+  "checks": [
+    {
+      "checkId": "CHK_01_ARTIFACT_PRESENCE",
+      "name": "All required core acceptance artifacts present",
+      "passed": true,
+      "expected": "0 missing files",
+      "actual": "0 missing: "
+    },
+    {
+      "checkId": "CHK_02_SOURCE_SHA_INTEGRITY",
+      "name": "Tested source SHA matches expected Git commit",
+      "passed": true,
+      "expected": "adef272ad045",
+      "actual": "adef272ad045"
+    },
+    {
+      "checkId": "CHK_03_JUNIT_CONSISTENCY",
+      "name": "JUnit XML exists and contains valid testsuite elements",
+      "passed": true,
+      "expected": "Valid JUnit XML with testsuites",
+      "actual": "Length 144764 bytes"
+    },
+    {
+      "checkId": "CHK_04_TEST_COUNT_DEDUPLICATION",
+      "name": "Unique test count differentiated from total executions without fabrication",
+      "passed": true,
+      "expected": "totalTestExecutions >= uniqueTestCount > 0",
+      "actual": "unique=434, totalExec=593"
+    },
+    {
+      "checkId": "CHK_05_CHROMIUM_EXECUTION",
+      "name": "Real Playwright Chromium execution against running server with read-only GET DB assertion",
+      "passed": true,
+      "expected": "executed=true, zeroDatabaseMutationsOnRead=true",
+      "actual": "executed=true, status=PASS, mutationsOnRead=true"
+    },
+    {
+      "checkId": "CHK_06_SQLITE_HTTP_BROWSER_PARITY",
+      "name": "SQLite, HTTP API, and Chromium DOM candidate and score reconciliation passed with 0 discrepancies",
+      "passed": true,
+      "expected": "0 field discrepancies across SQLite/HTTP/DOM",
+      "actual": "0 discrepancies"
+    },
+    {
+      "checkId": "CHK_07_BIGQUERY_SQL_HASH_PROVENANCE",
+      "name": "BigQuery sqlHash strictly equals SHA-256 of exactExecutedSQL",
+      "passed": true,
+      "expected": "sqlHash === sha256(queryText)",
+      "actual": "valid=true, query=SELECT term, rank, score, week..."
+    },
+    {
+      "checkId": "CHK_08_BIGQUERY_STATUS_TRUTH",
+      "name": "BigQuery status is not falsely reported as EXECUTED without a valid provider jobId",
+      "passed": true,
+      "expected": "status === BLOCKED or (status === EXECUTED with valid jobId)",
+      "actual": "status=BLOCKED, jobId=null"
+    },
+    {
+      "checkId": "CHK_09_BIGQUERY_BILLED_BYTES_NOT_FABRICATED",
+      "name": "Unbilled or blocked queries retain bytesBilled: null rather than coerced 0",
+      "passed": true,
+      "expected": "bytesBilled: null when unexecuted or unknown",
+      "actual": "bytesBilled=null"
+    },
+    {
+      "checkId": "CHK_10_GOOGLE_CREATIVE_INVARIANTS",
+      "name": "Google creative pipeline invariant satisfied: rawDistinct === normalizedDistinct + rejectedBeforeNormalization",
+      "passed": true,
+      "expected": "rawDistinct === normalizedDistinct + rejectedBeforeNormalization",
+      "actual": "raw=3, norm=3, rejected=0"
+    },
+    {
+      "checkId": "CHK_11_GOOGLE_MEASURED_TIMELINE",
+      "name": "Google MCP operation timeline reflects actual measured durations rather than static constants",
+      "passed": true,
+      "expected": "Actual measured timestamps and latencies",
+      "actual": "stages=5"
+    },
+    {
+      "checkId": "CHK_12_G15_DYNAMIC_EVALUATION",
+      "name": "G15 Evergreen evaluated candidate-by-candidate against SQLite demand tables, truthfully failing closed",
+      "passed": true,
+      "expected": "Candidate-level evaluation, verdict: INSUFFICIENT_EVIDENCE",
+      "actual": "verdict=INSUFFICIENT_EVIDENCE, entries=3"
+    },
+    {
+      "checkId": "CHK_13_G16_STRICT_IDENTITY",
+      "name": "G16 strictly retains CheckoutChamp funnel as PROBABLE (2/3 verified live), no false upgrades",
+      "passed": true,
+      "expected": "2/3 verified live, UprootClean strictly PROBABLE",
+      "actual": "verifiedCount=2/3, verdict=INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "checkId": "CHK_14_POINT_IN_TIME_INTEGRITY",
+      "name": "Historical DEV and HOLDOUT replay windows strictly disjoint with zero future data leakage",
+      "passed": true,
+      "expected": "zero leakage, disjoint windows",
+      "actual": "leakage=false, separation=true"
+    },
+    {
+      "checkId": "CHK_15_PRODUCTION_REPLAY_PARITY",
+      "name": "Production replay parity evaluated against production logic, truthfully reporting data limitations",
+      "passed": true,
+      "expected": "Evaluated against production evaluators, verdict: INSUFFICIENT_EVIDENCE",
+      "actual": "parityResult=INSUFFICIENT_EVIDENCE, comparisons=2"
+    },
+    {
+      "checkId": "CHK_16_GATE_MATRIX_DYNAMICS",
+      "name": "Release gate matrix computed from actual execution results with business gates failing closed",
+      "passed": true,
+      "expected": "Engineering PASS, Business INSUFFICIENT_EVIDENCE, Recommendation READY_FOR_NEXT_INDEPENDENT_FEATURE_ONLY",
+      "actual": "eng=PASS, biz=INSUFFICIENT_EVIDENCE"
+    }
+  ]
+}

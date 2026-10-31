@@ -1,0 +1,21 @@
+{
+  "id": "META_BUDGET_INTEGRITY",
+  "description": "Meta query budget enforces atomic capacity reservation across all 12 mandatory scenarios",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "exitCode": 0,
+    "passedScenarios": 12
+  },
+  "observed": {
+    "exitCode": 0,
+    "passedScenarios": 12
+  },
+  "assertionEvidence": [
+    "All 12 scenarios passed: 12/12"
+  ],
+  "executionCommand": "npx vitest run tests/unit/kh02MetaGlobalBudget.test.ts",
+  "exitCode": 0,
+  "runId": null,
+  "reason": "All 12 budget scenarios passed: atomic reservation, failures retained, pagination, retry"
+}

@@ -1,0 +1,63 @@
+{
+  "runId": "cmvo1b3sv000182g931m985su",
+  "totalNormalized": 25,
+  "rejectedCount": 0,
+  "mediaTypesCount": {
+    "VIDEO": 19,
+    "IMAGE": 5,
+    "CAROUSEL": 1
+  },
+  "advertisersCount": 19,
+  "sampleNormalizedAds": [
+    {
+      "libraryId": "908825735077255",
+      "advertiser": "Health & Science",
+      "headline": "Pain Relief Backed By Science",
+      "mediaType": "VIDEO",
+      "landingPageUrl": "https://artuvate.co/products/fisiorest",
+      "originalAdUrl": "https://www.facebook.com/ads/library/?id=908825735077255",
+      "sourceReportedStartAt": "2026-08-02T07:00:00.000Z",
+      "status": "UNKNOWN"
+    },
+    {
+      "libraryId": "378025798657980",
+      "advertiser": "TubShroom",
+      "headline": "2018 Gadget of the Year",
+      "mediaType": "VIDEO",
+      "landingPageUrl": "http://bit.ly/_TubShroom",
+      "originalAdUrl": "https://www.facebook.com/ads/library/?id=378025798657980",
+      "sourceReportedStartAt": "2024-08-08T07:00:00.000Z",
+      "status": "UNKNOWN"
+    },
+    {
+      "libraryId": "1019815643712974",
+      "advertiser": "Everything Envy",
+      "headline": "Facebook Ad: 1019815643712974",
+      "mediaType": "VIDEO",
+      "landingPageUrl": "https://urlgeni.us/amzn/portabledryerigstories_EE",
+      "originalAdUrl": "https://www.facebook.com/ads/library/?id=1019815643712974",
+      "sourceReportedStartAt": "2026-05-08T07:00:00.000Z",
+      "status": "UNKNOWN"
+    },
+    {
+      "libraryId": "687157490751502",
+      "advertiser": "Everything Envy",
+      "headline": "Facebook Ad: 687157490751502",
+      "mediaType": "VIDEO",
+      "landingPageUrl": "https://urlgeni.us/amzn/haircatcherigstories_EE",
+      "originalAdUrl": "https://www.facebook.com/ads/library/?id=687157490751502",
+      "sourceReportedStartAt": "2025-11-05T08:00:00.000Z",
+      "status": "UNKNOWN"
+    },
+    {
+      "libraryId": "1731415471213048",
+      "advertiser": "Buckley Belts",
+      "headline": "🔥New Deal Just Dropped. Save BIG today.",
+      "mediaType": "VIDEO",
+      "landingPageUrl": "https://www.buckleybelts.com/pages/6-reasons-buckley-is-the-gift-he-ll-actually-use",
+      "originalAdUrl": "https://www.facebook.com/ads/library/?id=1731415471213048",
+      "sourceReportedStartAt": "2026-07-10T07:00:00.000Z",
+      "status": "UNKNOWN"
+    }
+  ]
+}

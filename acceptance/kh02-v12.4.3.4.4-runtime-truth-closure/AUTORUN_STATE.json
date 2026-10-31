@@ -1,0 +1,174 @@
+{
+  "runId": "autoclosure_20261031043804",
+  "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "baselineSha": "adef272ad045e0c7495b5bb86990cff9e6cd4a6f",
+  "sourceShaUnderTest": "adef272ad045e0c7495b5bb86990cff9e6cd4a6f",
+  "phaseId": "ALL_PHASES_COMPLETED",
+  "phaseStatus": "COMPLETED",
+  "startedAt": "2026-10-31T04:38:05.545Z",
+  "completedAt": "2026-10-31T04:39:59.582Z",
+  "jobsScheduled": 15,
+  "jobsCompleted": 5,
+  "jobsFailed": 0,
+  "jobsSkipped": 0,
+  "blockers": [],
+  "artifactHashes": {
+    "BIGQUERY_AUTH_AND_BILLING_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/BIGQUERY_AUTH_AND_BILLING_AUDIT.json",
+      "sha256": "d0040ff51c2d06c2e9f4e8f27e4be79617e0843bf6d69c9f78e2498ef03dea34",
+      "sizeBytes": 1068
+    },
+    "BIGQUERY_REAL_QUERY_PROOF.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/BIGQUERY_REAL_QUERY_PROOF.json",
+      "sha256": "900dc0bca71c16caea2369785038f56759f1b03e1335e347c0aa92339a0070f2",
+      "sizeBytes": 677
+    },
+    "BIGQUERY_COST_AND_BYTES_LEDGER.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/BIGQUERY_COST_AND_BYTES_LEDGER.json",
+      "sha256": "8cdf73c8e0338fcd2d131f1b1f6cafcf52af7ce640e1455bc1d45645a6ecf918",
+      "sizeBytes": 305
+    },
+    "PRODUCT_KEYWORD_COVERAGE_MATRIX.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/PRODUCT_KEYWORD_COVERAGE_MATRIX.json",
+      "sha256": "8ba5fe79d4641852727cf9be1f9861ad165dc5d196b8914fe5b4cebfc80cdf80",
+      "sizeBytes": 9660
+    },
+    "PHASE_1_RESULT.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/PHASE_1_RESULT.json",
+      "sha256": "8c487a980952697851b36e4396b3ebc7a0b51204013f98a605f8b763029aba45",
+      "sizeBytes": 389
+    },
+    "GOOGLE_MCP_OPERATION_TIMELINE.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/GOOGLE_MCP_OPERATION_TIMELINE.json",
+      "sha256": "1f8577852e01a76ae7db5ec25773a7bbf13b975d2e1c734f8b6397272dd68110",
+      "sizeBytes": 5391
+    },
+    "GOOGLE_RAW_CREATIVE_MANIFEST.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/GOOGLE_RAW_CREATIVE_MANIFEST.json",
+      "sha256": "6a190e615229613ff1eafacb0ed772b46c979e2d66e5abc6c82caaac145274fe",
+      "sizeBytes": 3290
+    },
+    "GOOGLE_NORMALIZATION_LEDGER.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/GOOGLE_NORMALIZATION_LEDGER.json",
+      "sha256": "9e168a02ff72250920186b540216b0991174a1c403baaa10d26d6667ffddde07",
+      "sizeBytes": 5577
+    },
+    "GOOGLE_CREATIVE_ASSOCIATION_LEDGER.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/GOOGLE_CREATIVE_ASSOCIATION_LEDGER.json",
+      "sha256": "6a42970ff1f795bfcb0824fb133715e4af5ed07ec6a27141babcdc252374e556",
+      "sizeBytes": 3553
+    },
+    "GOOGLE_SAME_RUN_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/GOOGLE_SAME_RUN_RECONCILIATION.json",
+      "sha256": "5b048641d3d2a433dd983122ce64c5090958a4c847bfe3d00882b27c9864f7db",
+      "sizeBytes": 333
+    },
+    "REAL_HISTORICAL_DEV_BACKTEST.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REAL_HISTORICAL_DEV_BACKTEST.json",
+      "sha256": "f101cfb48ec19090ae195e35e3280523176626eee172aebbfde55bda3983615e",
+      "sizeBytes": 2725
+    },
+    "REAL_HISTORICAL_HOLDOUT_BACKTEST.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REAL_HISTORICAL_HOLDOUT_BACKTEST.json",
+      "sha256": "5c466d124240b8c32b3ecf5e11b5ac45afe5f8783c377611fdc84d50a8db62ac",
+      "sizeBytes": 2801
+    },
+    "HISTORICAL_POINT_IN_TIME_AUDIT.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "sha256": "af99f500e611cf5643e33fcf3085d5f4ee21df5ed19b2b7e78fa03b563ce1ddc",
+      "sizeBytes": 585
+    },
+    "PRODUCTION_REPLAY_PARITY.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/PRODUCTION_REPLAY_PARITY.json",
+      "sha256": "be7b864a77233804cdd19489be630dfb8e123358609883838869e515c48900e4",
+      "sizeBytes": 896
+    },
+    "G15_PRODUCT_DEMAND_PROOF.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/G15_PRODUCT_DEMAND_PROOF.json",
+      "sha256": "aef058e46517a932428438739995f139cd6edaa9c7637e9305708758affca8bb",
+      "sizeBytes": 1843
+    },
+    "G16_CURRENT_RUN_VERIFIED_PROOF.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "sha256": "a2060ff0672dfe82dac14ace34aa32c4ab7aa2a9b94b0ae6574301b9eb4a564a",
+      "sizeBytes": 1850
+    },
+    "REAL_TEST_EXECUTION_MANIFEST.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REAL_TEST_EXECUTION_MANIFEST.json",
+      "sha256": "2b308573372df79f8cd5977d6fd74e5b2c9d98029fdf3bb5839f3850627774b4",
+      "sizeBytes": 258534
+    },
+    "UNIQUE_TEST_COUNT_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/UNIQUE_TEST_COUNT_RECONCILIATION.json",
+      "sha256": "4bc453a3f50bd64f4127222a9d6a4416a499e33e63001086b3a1e58fbc8e616c",
+      "sizeBytes": 516
+    },
+    "FULL_REGRESSION_RESULTS.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/FULL_REGRESSION_RESULTS.json",
+      "sha256": "0e348482c5f96ef34ac9590367822077ef763d7feda90fccfeb6eb65860222aa",
+      "sizeBytes": 7645
+    },
+    "REGRESSION_RESULTS.junit.xml": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REGRESSION_RESULTS.junit.xml",
+      "sha256": "07a291a4d900f2246317306f12cf0e2b0d954df88a92fe2ac50992c5019c806a",
+      "sizeBytes": 146154
+    },
+    "REAL_CHROMIUM_EXECUTION.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REAL_CHROMIUM_EXECUTION.json",
+      "sha256": "4abb6b0fb892acd5f31b6b396e2bd1d1594b8c9aa4172160e68d6f25352f70d5",
+      "sizeBytes": 469
+    },
+    "SQLITE_HTTP_CHROMIUM_RECONCILIATION.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/SQLITE_HTTP_CHROMIUM_RECONCILIATION.json",
+      "sha256": "c508074a546c1318b4cd58e35bbad145817548357b04238d74c16ba6e2e23205",
+      "sizeBytes": 256
+    },
+    "ASYNC_WORKER_EXECUTION.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/ASYNC_WORKER_EXECUTION.json",
+      "sha256": "eb89508e61100ec886bbe6b47788bc42f371c1132e82f5dc0f4eb9468b1f6811",
+      "sizeBytes": 11517
+    },
+    "DISK_RAM_SQLITE_SAFETY.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/DISK_RAM_SQLITE_SAFETY.json",
+      "sha256": "00f0518531c304faa9a588d07e767f1a374f3535041d1002fbccb853c514aff4",
+      "sizeBytes": 226
+    },
+    "NEGATIVE_CONTROL_RESULTS.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/NEGATIVE_CONTROL_RESULTS.json",
+      "sha256": "95b9016b6d8e9c3464124e986f2ab546939f9422d3a062fad192c902facae354",
+      "sizeBytes": 3615
+    },
+    "FINAL_RELEASE_GATE_MATRIX.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/FINAL_RELEASE_GATE_MATRIX.json",
+      "sha256": "2fde5263d9f7d576fffd01647e7d82f7ee81149798bfcf046e305200113ce94f",
+      "sizeBytes": 5566
+    },
+    "ROOT_CAUSE_CLOSURE_MATRIX.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/ROOT_CAUSE_CLOSURE_MATRIX.json",
+      "sha256": "a9862de4b871cca328fb27f89b89a06c18a3e1382d3134e2b37076a5cbc67d08",
+      "sizeBytes": 2881
+    },
+    "REMAINING_BLOCKERS.md": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/REMAINING_BLOCKERS.md",
+      "sha256": "99e4f423dc4daca98cefe3f6492b06abc9e1b3de8675b50a3941bc1c1a5cab04",
+      "sizeBytes": 1010
+    },
+    "SOURCE_SHA_PROVENANCE.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/SOURCE_SHA_PROVENANCE.json",
+      "sha256": "c90f8c11d0a88926978c223ed8608137aaaf8dedcad0851dd29d9255a8baeac3",
+      "sizeBytes": 292
+    },
+    "FINAL_ACCEPTANCE_REPORT.md": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/FINAL_ACCEPTANCE_REPORT.md",
+      "sha256": "ef1389d6a3e097f62008cb5223c337a82360301fee92af1ab35ba5fedc32654f",
+      "sizeBytes": 1066
+    },
+    "ACCEPTANCE_VALIDATOR_RESULTS.json": {
+      "path": "acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/ACCEPTANCE_VALIDATOR_RESULTS.json",
+      "sha256": "868d6f24da00cc16e5e0800f14d6cf35321f392d02eeb53e9af8e2679763282f",
+      "sizeBytes": 5099
+    }
+  },
+  "nextPhase": null,
+  "globalStopReason": null
+}

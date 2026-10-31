@@ -1,0 +1,99 @@
+{
+  "version": "12.4.3.2",
+  "splitGateEvaluation": {
+    "G06A_META_TELEMETRY_TRUTH": {
+      "verdict": "PASS",
+      "violations": [],
+      "checkedRuns": 8
+    },
+    "G06B_META_CACHE_FALLBACK_INTEGRITY": {
+      "verdict": "PASS",
+      "violations": [],
+      "cachedRunsCount": 7,
+      "totalCachedObservations": 310
+    },
+    "G06C_META_LIVE_EXECUTION_PROOF": {
+      "verdict": "PASS",
+      "liveRunsCount": 3,
+      "totalFreshLiveAds": 70,
+      "totalLiveApiCalls": 7,
+      "reason": "Verified 3 live Meta execution run(s) with 70 fresh live ad(s) across 7 upstream API call(s)."
+    },
+    "overallG06EngineeringVerdict": "PASS",
+    "overallG06LiveVerdict": "PASS"
+  },
+  "runs": [
+    {
+      "researchRunId": "kh02_run_1793266052412_c2pom",
+      "topic": "dog",
+      "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+      "freshLiveAdsCount": 20,
+      "historicalCachedAdsCount": 30,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 2
+    },
+    {
+      "researchRunId": "kh02_run_1793266052426_8ucdx",
+      "topic": "cat",
+      "sourceMode": "LIVE_WITH_CACHE_FALLBACK",
+      "freshLiveAdsCount": 20,
+      "historicalCachedAdsCount": 30,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 2
+    },
+    {
+      "researchRunId": "kh02_run_1793266052440_6ge2c",
+      "topic": "dog",
+      "sourceMode": "LIVE_ONLY",
+      "freshLiveAdsCount": 30,
+      "historicalCachedAdsCount": 0,
+      "queryExecutionsCount": 3,
+      "attemptedSubqueriesCount": 3
+    },
+    {
+      "researchRunId": "kh02_run_1793266052450_68mz0",
+      "topic": "pet gadgets",
+      "sourceMode": "CACHE_ONLY",
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 0
+    },
+    {
+      "researchRunId": "kh02_run_1793266061208_7qv9r",
+      "topic": "pet gadgets",
+      "sourceMode": "CACHE_ONLY",
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 0
+    },
+    {
+      "researchRunId": "kh02_1793265996499_dy890",
+      "topic": "diy",
+      "sourceMode": "CACHE_ONLY",
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 0
+    },
+    {
+      "researchRunId": "kh02_1793265996499_1pnxu",
+      "topic": "gardening",
+      "sourceMode": "CACHE_ONLY",
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 0
+    },
+    {
+      "researchRunId": "kh02_1793265996499_8macm",
+      "topic": "automatic pet feeder",
+      "sourceMode": "CACHE_ONLY",
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50,
+      "queryExecutionsCount": 2,
+      "attemptedSubqueriesCount": 0
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "metaRecall10xMultiplierPreserved": true,
+  "v12433ArtifactsPreserved": true,
+  "productMediaResolverUntouched": true,
+  "protectedFilesUntouched": true,
+  "chromiumDrawerOpened": true,
+  "chromiumProductIntelligenceGalleryRendered": true,
+  "kh01RegressionPass": true
+}

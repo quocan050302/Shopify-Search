@@ -1,0 +1,27 @@
+{
+  "query": "chewy.com",
+  "advertisersFound": 1,
+  "advertiserId": "AR01709643824168435713",
+  "creativesCount": 5,
+  "creativesSample": [
+    {
+      "advertiser_id": "AR01709643824168435713",
+      "creative_id": "CR13823576757296431105",
+      "format": "image",
+      "last_shown": "2026-10-27",
+      "content": {
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/5395440296760085063"
+      }
+    },
+    {
+      "advertiser_id": "AR01709643824168435713",
+      "creative_id": "CR04701057974255222785",
+      "format": "text",
+      "last_shown": "2026-10-27",
+      "content": {
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2893298971&creativeId=813005709754&uiFeatures=12&adGroupId=198262805235&sig=ACiVB_xbL_ZuahxFM-WNPpv37MrUumlnPQ&htmlParentId=fletch-render-15223417697248776029&responseCallback=fletchCallback15223417697248776029"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}

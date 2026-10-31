@@ -25,6 +25,7 @@ export interface WorkerStatus {
 }
 
 let isRunning = false;
+let isProcessingPoll = false;
 let pollTimer: NodeJS.Timeout | null = null;
 const status: WorkerStatus = {
   isRunning: false,
@@ -155,10 +156,16 @@ export async function recoverInterruptedDiscoveryJobs(): Promise<number> {
  * 4. Finds and executes due scheduled jobs with preflight checks and backoff
  */
 export async function processDueSchedulesOnce(): Promise<void> {
-  status.lastPollAt = new Date();
+  if (isProcessingPoll) {
+    console.log("[DiscoveryWorker] Polling iteration already in progress; skipping overlapping poll.");
+    return;
+  }
+  isProcessingPoll = true;
+  try {
+    status.lastPollAt = new Date();
 
-  // 1. Persist cross-process heartbeat
-  await persistWorkerHeartbeat("RUNNING");
+    // 1. Persist cross-process heartbeat
+    await persistWorkerHeartbeat("RUNNING");
 
   // 2. Recover stale crashed jobs
   await recoverInterruptedDiscoveryJobs();
@@ -214,9 +221,11 @@ export async function processDueSchedulesOnce(): Promise<void> {
         }
       }
 
+      const scheduledPlatform = schedule.providerId.toLowerCase().includes("meta") ? "META" : "TIKTOK";
+
       const query: DiscoveryQuery = {
         workspaceId: schedule.workspaceId,
-        platform: "TIKTOK",
+        platform: scheduledPlatform,
         market: schedule.targetMarket || "US",
         keywords,
         industries,
@@ -244,6 +253,9 @@ export async function processDueSchedulesOnce(): Promise<void> {
     } finally {
       status.activeJobsCount = Math.max(0, status.activeJobsCount - 1);
     }
+  }
+  } finally {
+    isProcessingPoll = false;
   }
 }
 

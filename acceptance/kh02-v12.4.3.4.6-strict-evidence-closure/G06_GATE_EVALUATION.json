@@ -1,0 +1,33 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:46.636Z",
+  "researchRunId": "kh02_run_1793288037069_asnxv",
+  "transportStatus": "CONNECTED",
+  "liveCreativesRetrievedCount": 0,
+  "exactProductSkuMatchesCount": 0,
+  "probableProductMatchesCount": 0,
+  "brandOnlyMatchesCount": 0,
+  "pipelineInvariantPassed": true,
+  "setReconciliation": {
+    "rawCreativeIds": [],
+    "normalizedCreativeIds": [],
+    "rejectedCreativeIds": [],
+    "unaccountedRawCreativeIds": [],
+    "unknownNormalizedCreativeIds": [],
+    "unknownRejectedCreativeIds": [],
+    "overlapNormalizedAndRejectedIds": [],
+    "runIdMismatchCreativeIds": [],
+    "unknownAssociationCreativeIds": [],
+    "unknownAssociationCandidateIds": [],
+    "setInvariantPassed": true
+  },
+  "subGates": {
+    "G06_TRANSPORT": "PASS",
+    "G06_LIVE_RETRIEVAL": "INSUFFICIENT_EVIDENCE",
+    "G06_CREATIVE_PIPELINE": "PASS",
+    "G06_PIPELINE_RECONCILIATION": "PASS",
+    "GOOGLE_PRODUCT_ASSOCIATION": "PASS",
+    "GOOGLE_EXACT_PRODUCT_EVIDENCE": "INSUFFICIENT_EVIDENCE"
+  },
+  "overallG06Verdict": "INSUFFICIENT_EVIDENCE",
+  "overallG06Reason": "Zero explicitly live, non-cached Google Ads creatives verified for current researchRunId."
+}

@@ -1,0 +1,41 @@
+{
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "evaluatedAt": "2026-10-31T04:39:17.541Z",
+  "rawCount": 3,
+  "creatives": [
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR12722150295660920833",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828459738362&uiFeatures=12&adGroupId=198435963542&itemIds=10548303235901808171&sig=ACiVB_zIzQf5eZySolqHoZL-Q5Tb_fpB_w&htmlParentId=fletch-render-17533696632287633030&responseCallback=fletchCallback17533696632287633030"
+      }
+    },
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR15110207362696216577",
+      "format": "video",
+      "last_shown": "2026-10-31",
+      "content": {
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828044186117&uiFeatures=12&adGroupId=203565426360&itemIds=15649406396039276463,10548303235901808171,6128832964248786178,9753198712321213086,16848384050506009317,2841218305894893447&assets=%3DH4sIAAAAAAAAAOMy5-LkWHm2-UEfswAHFyfHiy_9LZe4BRi5ODnObv88_y-XABsXJ8fsjj0TDvII8IDU_ul68YpJQBMAd_2hkjkAAAA&sig=ACiVB_wlAiue-SXX8rcE9Ng_2H-9Er6OOg&htmlParentId=fletch-render-6896491224606149151&responseCallback=fletchCallback6896491224606149151",
+        "headline": "Keep Pet Food Fresh Longer",
+        "description": "Keep every meal fresh with scheduled automatic feeding for your pet",
+        "video_url": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b"
+      }
+    },
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR00602061274238418945",
+      "format": "video",
+      "last_shown": "2026-10-31",
+      "content": {
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828044186126&uiFeatures=12&adGroupId=203565426400&itemIds=15649406396039276463,2841218305894893447,9753198712321213086,16848384050506009317,6128832964248786178,2275451443882751084&assets=%3DH4sIAAAAAAAAAOMy5-LkmDdz3dlLnAKMXJwcZ7d_nv-XS4CNi5Nj5Z-uF6-YBDS5ODmWzd8z4SCPAA9I9Gzzgz5mAQ4pdo73PTeOvuUCAJN6I_ZCAAAA&sig=ACiVB_x2wMWeiobe5_ST9HiNwOvvTWjx3g&htmlParentId=fletch-render-5585953195938417921&responseCallback=fletchCallback5585953195938417921",
+        "headline": "Air Purifier for Pet Litter",
+        "description": "Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+        "video_url": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b"
+      }
+    }
+  ],
+  "upstreamTransportStatus": "PASSED"
+}

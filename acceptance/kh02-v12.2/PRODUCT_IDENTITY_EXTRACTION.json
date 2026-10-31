@@ -1,0 +1,41 @@
+{
+  "testedAdIdHeadline": "Facebook Ad: 893760707134895",
+  "adIdClassification": {
+    "rawHeadline": "Facebook Ad: 893760707134895",
+    "classification": "AD_IDENTIFIER",
+    "headlineClass": "AD_IDENTIFIER",
+    "isEligibleProductName": false,
+    "isEligibleAsProductName": false,
+    "cleanTitle": null,
+    "normalizedCleanText": "",
+    "adIdentifier": "893760707134895",
+    "confidence": 0.98,
+    "reason": "Matched raw ad creative identifier pattern: Facebook Ad: 893760707134895"
+  },
+  "testedCtaHeadline": "Sign up now for 50% off your order!",
+  "ctaClassification": {
+    "rawHeadline": "Sign up now for 50% off your order!",
+    "classification": "PROMOTIONAL_CTA",
+    "headlineClass": "PROMOTIONAL_CTA",
+    "isEligibleProductName": false,
+    "isEligibleAsProductName": false,
+    "cleanTitle": null,
+    "normalizedCleanText": "",
+    "adIdentifier": null,
+    "confidence": 0.95,
+    "reason": "Matched promotional discount or CTA pattern: \\b(sign\\s*up\\s*(now|today)?\\s*(for)?\\s*\\d+%\\s*off)\\b"
+  },
+  "testedValidHeadline": "Ultrasonic Anti-Barking Device",
+  "validClassification": {
+    "rawHeadline": "Ultrasonic Anti-Barking Device",
+    "classification": "PRODUCT_CANDIDATE",
+    "headlineClass": "PRODUCT_CANDIDATE",
+    "isEligibleProductName": true,
+    "isEligibleAsProductName": true,
+    "cleanTitle": "Ultrasonic Anti-Barking Device",
+    "normalizedCleanText": "Ultrasonic Anti-Barking Device",
+    "adIdentifier": null,
+    "confidence": 0.92,
+    "reason": "Plausible commercial product title"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "version": "12.1.1",
+  "evaluatedAt": "2026-10-26T06:21:18.978Z",
+  "providers": {
+    "META_ADS": {
+      "ready": true,
+      "status": "SOURCE_DATA_VERIFIED",
+      "reason": "Meta competitor ads available via local database and verified collector."
+    },
+    "TIKTOK_ADS": {
+      "ready": true,
+      "status": "NOT_VERIFIED",
+      "reason": "Automated TikTok US ad provider is unconfigured; manual Creative Center lookup & batch import available."
+    },
+    "TIKTOK_ORGANIC": {
+      "ready": false,
+      "status": "NOT_CONFIGURED",
+      "reason": "TikTok Organic API key (HASDATA_API_KEY) not configured in environment."
+    },
+    "GOOGLE_ADS": {
+      "ready": false,
+      "status": "NOT_CONFIGURED",
+      "reason": "Google Ads Transparency MCP server is not configured in environment."
+    },
+    "DEMAND_HISTORY": {
+      "ready": true,
+      "status": "SOURCE_DATA_VERIFIED",
+      "reason": "Historical demand repository active; supports Google Trends time series."
+    }
+  },
+  "liveSourceSummary": {
+    "metaAds": "VERIFIED",
+    "tiktokAdsUS": "NOT_VERIFIED",
+    "tiktokOrganic": "NOT_CONFIGURED",
+    "googleAds": "NOT_CONFIGURED",
+    "demandHistory": "VERIFIED"
+  }
+}

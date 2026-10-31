@@ -1,0 +1,81 @@
+{
+  "success": true,
+  "result": "SUCCESS_FALLBACK_RESULT",
+  "modelUsed": "fallback-working",
+  "telemetry": {
+    "totalAttempts": 5,
+    "modelsAttempted": [
+      "primary-503",
+      "fallback-working"
+    ],
+    "successfulModelId": "fallback-working",
+    "fallbackCount": 1,
+    "executionHistory": [
+      {
+        "modelId": "primary-503",
+        "attemptsCount": 4,
+        "retriesExhausted": true,
+        "successful": false,
+        "attempts": [
+          {
+            "attemptNumber": 1,
+            "modelId": "primary-503",
+            "statusCode": 503,
+            "errorClassification": "TRANSIENT_OVERLOAD",
+            "errorMessage": "503 Service Unavailable",
+            "durationMs": 1,
+            "timestamp": "2026-10-28T05:44:47.371Z",
+            "delayMs": 129
+          },
+          {
+            "attemptNumber": 2,
+            "modelId": "primary-503",
+            "statusCode": 503,
+            "errorClassification": "TRANSIENT_OVERLOAD",
+            "errorMessage": "503 Service Unavailable",
+            "durationMs": 0,
+            "timestamp": "2026-10-28T05:44:47.509Z",
+            "delayMs": 477
+          },
+          {
+            "attemptNumber": 3,
+            "modelId": "primary-503",
+            "statusCode": 503,
+            "errorClassification": "TRANSIENT_OVERLOAD",
+            "errorMessage": "503 Service Unavailable",
+            "durationMs": 0,
+            "timestamp": "2026-10-28T05:44:47.994Z",
+            "delayMs": 293
+          },
+          {
+            "attemptNumber": 4,
+            "modelId": "primary-503",
+            "statusCode": 503,
+            "errorClassification": "TRANSIENT_OVERLOAD",
+            "errorMessage": "503 Service Unavailable",
+            "durationMs": 0,
+            "timestamp": "2026-10-28T05:44:48.291Z"
+          }
+        ]
+      },
+      {
+        "modelId": "fallback-working",
+        "attemptsCount": 1,
+        "retriesExhausted": false,
+        "successful": true,
+        "attempts": [
+          {
+            "attemptNumber": 1,
+            "modelId": "fallback-working",
+            "statusCode": 200,
+            "durationMs": 0,
+            "timestamp": "2026-10-28T05:44:48.291Z"
+          }
+        ]
+      }
+    ],
+    "circuitBreakerTriggered": false,
+    "totalDurationMs": 921
+  },
+  "error": null
+}

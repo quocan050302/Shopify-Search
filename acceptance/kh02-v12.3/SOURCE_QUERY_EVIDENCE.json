@@ -1,0 +1,88 @@
+{
+  "authoritativeRunId": "kh02_run_1793117384742_eqabj",
+  "workspaceId": "acceptance_v12_3_ws",
+  "market": "US",
+  "topic": "Pet Gadgets",
+  "sources": {
+    "META_ADS": {
+      "status": "PASSED",
+      "retrievedCount": 30,
+      "acceptedCount": 30,
+      "observationsSample": [
+        {
+          "id": "cmvqvm7t8002y23g95smyus54",
+          "title": "Facebook Ad: 1802296680785588",
+          "advertiser": "UahPet",
+          "provenance": "LIVE_PROVIDER"
+        },
+        {
+          "id": "cmvqvm7t1002s23g9obyhxwra",
+          "title": "Fresh Meals. Smarter Feeding.",
+          "advertiser": "UahPet",
+          "provenance": "LIVE_PROVIDER"
+        },
+        {
+          "id": "cmvqvm7sw002m23g9hzdgczg8",
+          "title": "Portable Pet Water Bottle with Food Container",
+          "advertiser": "UrbanNest",
+          "provenance": "LIVE_PROVIDER"
+        }
+      ]
+    },
+    "TIKTOK_ADS": {
+      "status": "TEMPORARILY_DISABLED",
+      "outboundCalls": 0,
+      "subprocesses": 0
+    },
+    "TIKTOK_ORGANIC": {
+      "status": "TEMPORARILY_DISABLED",
+      "outboundCalls": 0,
+      "subprocesses": 0
+    },
+    "GOOGLE_ADS": {
+      "status": "CONNECTED",
+      "diagnosticLookup": {
+        "query": "chewy.com",
+        "advertisersFound": 1,
+        "advertiserId": "AR01709643824168435713",
+        "creativesCount": 5,
+        "creativesSample": [
+          {
+            "advertiser_id": "AR01709643824168435713",
+            "creative_id": "CR13823576757296431105",
+            "format": "image",
+            "last_shown": "2026-10-27",
+            "content": {
+              "image_url": "https://tpc.googlesyndication.com/archive/simgad/5395440296760085063"
+            }
+          },
+          {
+            "advertiser_id": "AR01709643824168435713",
+            "creative_id": "CR04701057974255222785",
+            "format": "text",
+            "last_shown": "2026-10-27",
+            "content": {
+              "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2893298971&creativeId=813005709754&uiFeatures=12&adGroupId=198262805235&sig=ACiVB_xbL_ZuahxFM-WNPpv37MrUumlnPQ&htmlParentId=fletch-render-15223417697248776029&responseCallback=fletchCallback15223417697248776029"
+            }
+          }
+        ],
+        "status": "SUCCESS"
+      },
+      "sameRunEnrichment": {
+        "candidateId": "cand_1613504636",
+        "domain": "cc.uprootclean.com",
+        "advertisersFound": 0,
+        "advertiserId": null,
+        "creativesCount": 0,
+        "creativesSample": [],
+        "status": "SUCCEEDED_EMPTY",
+        "timestamp": "2026-10-27T16:10:08.291Z"
+      }
+    },
+    "DEMAND_HISTORY": {
+      "status": "BLOCKED_EXTERNAL_REQUIREMENT",
+      "blockerReason": "SERPAPI_API_KEY is not configured in local environment. Paid operations remain disabled (AUTO_PAID_RESEARCH=false)."
+    }
+  },
+  "timestamp": "2026-10-27T16:10:08.370Z"
+}

@@ -1,0 +1,37 @@
+{
+  "authProbe": {
+    "configured": true,
+    "variableName": "GEMINI_API_KEY",
+    "keyLength": 53,
+    "keyPrefix": null,
+    "authStatus": "AUTHENTICATED",
+    "authenticated": true,
+    "testedAt": "2026-10-28T09:02:43.130Z",
+    "errorMessage": null
+  },
+  "discoveredCount": 60,
+  "eligibleModels": [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+    "gemini-3.5-flash",
+    "gemma-4-26b-a4b-it",
+    "gemma-4-31b-it",
+    "gemini-3.1-pro-preview",
+    "gemini-pro-latest",
+    "gemini-3-flash-preview",
+    "gemini-3.1-pro-preview-customtools",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-omni-flash-preview",
+    "gemini-omni-1.1-flash",
+    "gemini-4-argon",
+    "antigravity-preview-05-2026",
+    "antigravity-preview-09-2026",
+    "antigravity-preview-latest"
+  ],
+  "primaryModel": "gemini-3.5-flash-lite"
+}

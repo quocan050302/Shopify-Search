@@ -1,0 +1,15 @@
+{
+  "source": "META_ADS",
+  "adapterInstalled": true,
+  "configured": true,
+  "transportConnected": true,
+  "authenticated": true,
+  "discoverySupported": true,
+  "queryExecuted": true,
+  "recordsReturned": 131,
+  "provenanceVerified": true,
+  "lastCheckedAt": "2026-10-26T14:44:29.561Z",
+  "status": "SOURCE_ACCESS_VERIFIED",
+  "reason": "Meta competitor ads indexed in database (131 records observed); live collection supported via local collector.",
+  "missingRequirements": []
+}

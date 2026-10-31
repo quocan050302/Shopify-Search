@@ -1,0 +1,29 @@
+{
+  "gateId": "KH02_REGRESSION",
+  "verdict": "PASS",
+  "executed": true,
+  "actualAssertion": "KH-02 unit and integration test suites pass with 0 failures",
+  "expected": {
+    "unitExitCode": 0,
+    "integrationExitCode": 0,
+    "minUnitPassed": 355,
+    "minIntegrationPassed": 26
+  },
+  "observed": {
+    "unitExitCode": 0,
+    "unitPassed": 361,
+    "integrationExitCode": 0,
+    "integrationPassed": 27
+  },
+  "executionCommand": "npm run kh02:test:unit && npm run kh02:test:integration",
+  "exitCode": 0,
+  "runId": null,
+  "evidenceRefs": [
+    "logs/kh02_unit.log",
+    "logs/kh02_integration.log"
+  ],
+  "evidenceLocation": "acceptance/kh02-v12.4.1/KH02_REGRESSION.json",
+  "reason": "KH-02 verified: 361 unit + 27 integration tests passed",
+  "executedAt": "2026-10-28T09:02:42.506Z",
+  "environment": "win32-node-v22.14.0-db-6530562482a2"
+}

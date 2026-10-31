@@ -1,0 +1,145 @@
+{
+  "baselineCommitReviewed": "05657392bc7dfcc96fd62803b468fbdf04a84679",
+  "currentHeadVerified": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+  "findings": [
+    {
+      "findingId": "F01",
+      "title": "Distinctness depended on canonicalProductName/displayName/title instead of product identity",
+      "existedAtBaseline": true,
+      "baselineReproduction": "Two candidates sharing canonicalProductUrl with different ad titles returned distinctCount=2 and isDistinct=true in evaluateShortlistDistinctness()",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/productDistinctnessEngine.ts",
+        "src/services/kh02/identity/productCandidateDiscovery.ts",
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "verificationTests": [
+        "B11",
+        "B12",
+        "B13",
+        "B17",
+        "B21",
+        "G03_UNIFIED_PRODUCT_DISTINCTNESS"
+      ]
+    },
+    {
+      "findingId": "F02",
+      "title": "Identity returned VERIFIED even when merchant metadata failed (403/404/timeout) or raw headline was 'Facebook Ad: 123...'",
+      "existedAtBaseline": true,
+      "baselineReproduction": "resolveProductIdentity() treated /products/<handle> + rawHeadlines.length > 0 as independent corroboration, returning VERIFIED on HTTP 403 or 'Facebook Ad: 123...'",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/productIdentityResolver.ts",
+        "src/services/kh02/identity/productMetadataExtractor.ts"
+      ],
+      "verificationTests": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "G02_EVIDENCE_TRUE_IDENTITY"
+      ]
+    },
+    {
+      "findingId": "F03",
+      "title": "Merchant metadata extracted SKU/GTIN/model/variantId from JSON-LD, but identity resolver returned sku: null",
+      "existedAtBaseline": true,
+      "baselineReproduction": "fetchVerifiedProductPageMetadata() parsed JSON-LD sku, but resolveProductIdentity() hardcoded sku: null in the verified merchant branch",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/productMetadataExtractor.ts",
+        "src/services/kh02/identity/productIdentityResolver.ts",
+        "src/services/kh02/identity/productCandidateDiscovery.ts"
+      ],
+      "verificationTests": [
+        "A06",
+        "A07",
+        "G02_EVIDENCE_TRUE_IDENTITY"
+      ]
+    },
+    {
+      "findingId": "F04",
+      "title": "Adaptive Round 2 recovery decided before post-gate identity/reality/distinctness filtering",
+      "existedAtBaseline": true,
+      "baselineReproduction": "Round 2 decision checked preliminary discoveredCandidates count before metadata/AI/reality/distinctness gates reduced qualified products below 3",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/discovery/discoveryQueryPlanner.ts",
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "verificationTests": [
+        "C22",
+        "C24",
+        "G05_ADAPTIVE_POST_GATE_RECOVERY"
+      ]
+    },
+    {
+      "findingId": "F05",
+      "title": "Candidates truncated via slice(0, maxCandidates) before verification without refilling from unverified queue",
+      "existedAtBaseline": true,
+      "baselineReproduction": "enrichProductCandidatesWithEvidence() sliced the top maxCandidates upfront and discarded remaining candidates even when top candidates failed verification or merged",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/productCandidateDiscovery.ts",
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "verificationTests": [
+        "C23",
+        "G05_ADAPTIVE_POST_GATE_RECOVERY"
+      ]
+    },
+    {
+      "findingId": "F06",
+      "title": "Google Ads Transparency connected with 0 product matches or brand-only ads needed strict state separation",
+      "existedAtBaseline": true,
+      "baselineReproduction": "Google enrichment lacked granular stateBreakdown separating transportConnected, adsRetrieved, brandAssociatedCount, and productAssociatedEvidence",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/crossPlatformProductMatcher.ts",
+        "src/services/kh02/providers/googleTransparencyResearchAdapter.ts",
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "verificationTests": [
+        "D31",
+        "D32",
+        "D33",
+        "D34",
+        "D35",
+        "D36",
+        "G07_GOOGLE_TRANSPARENCY_PRODUCT_EVIDENCE"
+      ]
+    },
+    {
+      "findingId": "F07",
+      "title": "Kitchen 3/3 shortlist contained three oil dispensers without product family clustering or diversity audit",
+      "existedAtBaseline": true,
+      "baselineReproduction": "KITCHEN_US_30D_REAL_RUN.json returned 3 oil spray/dispenser listings without reporting that all 3 belong to 1 homogeneous product family (OIL_DISPENSER_SPRAYER)",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "src/services/kh02/identity/productDistinctnessEngine.ts",
+        "src/services/kh02/identity/productCandidateDiscovery.ts",
+        "src/services/kh02/identity/productRelevanceEvaluator.ts"
+      ],
+      "verificationTests": [
+        "B16",
+        "B19",
+        "B20",
+        "G04_PRODUCT_FAMILY_DIVERSITY"
+      ]
+    },
+    {
+      "findingId": "F08",
+      "title": "Acceptance L05 aggregation omitted Kitchen/Cleaning runs and recorded parent commit SHA",
+      "existedAtBaseline": true,
+      "baselineReproduction": "runAcceptanceV12_4_2.ts computed maxLiveShortlistQualified over only 4 of 6 niches and wrote artifacts before final commit",
+      "fixedInV12_4_3": true,
+      "filesModified": [
+        "scripts/kh02/runAcceptanceV12_4_3.ts"
+      ],
+      "verificationTests": [
+        "G11_SHORTLIST_QUALITY_KITCHEN_AND_REGRESSION_NICHES"
+      ]
+    }
+  ]
+}

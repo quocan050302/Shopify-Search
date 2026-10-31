@@ -1,0 +1,6 @@
+{
+  "bannerTestId": "kh02-last-completed-research-banner",
+  "authoritativeRunMetaTestId": "kh02-authoritative-run-meta",
+  "historicalSnapshotLabeledDuringActiveRun": true,
+  "postReloadRunIdMatchesAuthoritative": true
+}

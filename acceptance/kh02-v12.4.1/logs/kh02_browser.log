@@ -1,0 +1,26 @@
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:browser
+> vitest run tests/integration/kh02BrowserAcceptance.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Navigating to: http://127.0.0.1:3000/products
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Triggering async research for 'Pet Hair Remover'...
+
+[90mstdout[2m | tests/integration/kh02BrowserAcceptance.test.ts[2m > [22m[2mSWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance[2m > [22m[2mlaunches Chromium, interacts with /products, and captures visual artifacts
+[22m[39m[Chromium E2E] Testing reload persistence...
+
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 5270[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance [2m(1)[22m
+     [33m[2m✓[22m[39m launches Chromium, interacts with /products, and captures visual artifacts[33m 5268[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 16:03:45
+[2m   Duration [22m 8.21s[2m (tests 66%, setup 30%, import 5%)[22m
+
+

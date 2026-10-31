@@ -1,0 +1,1656 @@
+{
+  "releaseVersion": "12.4.3.1",
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "gitBranch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "gitHead": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+  "executedAt": "2026-10-29T06:10:09.765Z",
+  "counts": {
+    "total": 23,
+    "PASS": 21,
+    "FAIL": 0,
+    "INSUFFICIENT_EVIDENCE": 2,
+    "BLOCKED": 0,
+    "NOT_RUN": 0
+  },
+  "internalEngineeringReady": true,
+  "realSourceVerifiedEvergreenReady": false,
+  "finalDecision": "ENGINEERING_READY_LIVE_EVIDENCE_INCOMPLETE",
+  "gates": {
+    "P01": {
+      "gateId": "P01",
+      "meaning": "Branch and runtime revision integrity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Active branch is feature/kh02-v12.1.3-runtime-truth-closure, releaseVersion is 12.4.3.1, and HEAD revision is resolved",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "releaseVersion": "12.4.3.1"
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "headSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+        "releaseVersion": "12.4.3.1"
+      },
+      "executionCommand": "git branch --show-current && git rev-parse HEAD",
+      "exitCode": 0,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "EXECUTION_MANIFEST.json",
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/EXECUTION_MANIFEST.json",
+      "reason": "Branch=feature/kh02-v12.1.3-runtime-truth-closure, HEAD=7126d67, ReleaseVersion=12.4.3.1",
+      "executedAt": "2026-10-29T06:10:08.789Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P02": {
+      "gateId": "P02",
+      "meaning": "Meta real-query provenance integrity",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Zero synthetic Meta query executions are fabricated from cached observations (G06A), and live upstream Meta query return is reported separately from cached SQLite observations (G06C)",
+      "expected": {
+        "telemetryViolationsCount": 0,
+        "liveAdsRequiredForPass": "> 0"
+      },
+      "observed": {
+        "g06aTelemetryTruth": {
+          "verdict": "PASS",
+          "violations": [],
+          "checkedRuns": 8
+        },
+        "g06cLiveProof": {
+          "verdict": "BLOCKED_EXTERNAL_DEPENDENCY",
+          "liveRunsCount": 0,
+          "totalFreshLiveAds": 0,
+          "totalLiveApiCalls": 0,
+          "reason": "No fresh live Meta upstream query execution occurred in this run batch (CACHE_ONLY / external provider boundary); cached fallback remained truthful."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "META_QUERY_PROVENANCE.json",
+        "META_CACHE_VS_LIVE_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/META_QUERY_PROVENANCE.json",
+      "reason": "Engineering provenance truth passed with 0 synthetic query executions across 8 runs; live upstream Meta collector returned 0 fresh live ads (operating in CACHE_ONLY mode)",
+      "executedAt": "2026-10-29T06:10:08.790Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P03": {
+      "gateId": "P03",
+      "meaning": "Meta cached-data separation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Cached SQLite Meta observations are explicitly separated from live upstream returns; CACHE_ONLY runs emit NOT_ATTEMPTED (attempted=false, actualApiCalls=0, upstreamReturnedCount=null) and never claim SUCCEEDED_WITH_RESULTS",
+      "expected": {
+        "telemetryTruthVerdict": "PASS",
+        "cacheFallbackIntegrityVerdict": "PASS"
+      },
+      "observed": {
+        "g06aTelemetryTruth": {
+          "verdict": "PASS",
+          "violations": [],
+          "checkedRuns": 8
+        },
+        "g06bCacheFallbackIntegrity": {
+          "verdict": "PASS",
+          "violations": [],
+          "cachedRunsCount": 8,
+          "totalCachedObservations": 395
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "META_CACHE_VS_LIVE_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/META_CACHE_VS_LIVE_AUDIT.json",
+      "reason": "Cached SQLite Meta observations (395 records across 8 runs) and unattempted query lifecycles are strictly separated from live upstream executions",
+      "executedAt": "2026-10-29T06:10:08.790Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P04": {
+      "gateId": "P04",
+      "meaning": "Query-to-source-to-DB reconciliation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every planned query reconciles with queryExecutions, queryYields, and SQLite Ad records; unattempted queries report 0 newlyInsertedCount, 0 reobservedExistingCount, and 0 actualAdsReturned without substring-matching the shared cache pool",
+      "expected": {
+        "totalUnattemptedWithFakeYield": 0
+      },
+      "observed": {
+        "runsReconciled": 8,
+        "queryDbReconciliation": [
+          {
+            "topic": "pet gadgets",
+            "researchRunId": "kh02_run_1793254102976_uw326",
+            "plannedQueriesCount": 6,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          },
+          {
+            "topic": "diy",
+            "researchRunId": "kh02_run_1793254118806_w60gg",
+            "plannedQueriesCount": 10,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          },
+          {
+            "topic": "kitchen",
+            "researchRunId": "kh02_1793254134040_uux5p",
+            "plannedQueriesCount": 5,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 46
+          },
+          {
+            "topic": "home decor",
+            "researchRunId": "kh02_1793254134041_06e55",
+            "plannedQueriesCount": 4,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          },
+          {
+            "topic": "gardening",
+            "researchRunId": "kh02_1793254157419_g3tta",
+            "plannedQueriesCount": 6,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          },
+          {
+            "topic": "cleaning",
+            "researchRunId": "kh02_1793254157419_nhtqj",
+            "plannedQueriesCount": 4,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 49
+          },
+          {
+            "topic": "automatic pet feeder",
+            "researchRunId": "kh02_1793254175306_z6pp1",
+            "plannedQueriesCount": 4,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          },
+          {
+            "topic": "car accessories",
+            "researchRunId": "kh02_1793254175307_z88xy",
+            "plannedQueriesCount": 4,
+            "queryExecutionsCount": 2,
+            "queryYieldsCount": 2,
+            "unattemptedWithFakeYieldCount": 0,
+            "freshLiveAdsCount": 0,
+            "historicalCachedAdsCount": 50
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "QUERY_TO_AD_DB_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/QUERY_TO_AD_DB_RECONCILIATION.json",
+      "reason": "All 8 runs reconciled planned queries -> queryExecutions -> queryYields -> SQLite with 0 false cached attributions",
+      "executedAt": "2026-10-29T06:10:08.790Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P05": {
+      "gateId": "P05",
+      "meaning": "Product identity verification",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Merchant product identity requires fetched page verification; HTTP 403/404/challenge stay PROBABLE, contradictions become AMBIGUOUS, and JSON-LD SKU/GTIN/model/brand/variantId propagate intact",
+      "expected": {
+        "http403Status": "PROBABLE",
+        "verifiedJsonLdStatus": "VERIFIED",
+        "contradictionStatus": "AMBIGUOUS"
+      },
+      "observed": {
+        "http403Status": "PROBABLE",
+        "verifiedJsonLdStatus": "VERIFIED",
+        "verifiedSku": "PS-FOUNTAIN-25L",
+        "contradictionStatus": "AMBIGUOUS"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json",
+      "reason": "Product identity verification and contradiction detection verified",
+      "executedAt": "2026-10-29T06:10:08.792Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P06": {
+      "gateId": "P06",
+      "meaning": "Product distinctness and family diversity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Unified 6-level product distinctness merges duplicate canonical URLs across ad creatives (distinctCount=1) and enforces product family diversity across broad-category shortlists",
+      "expected": {
+        "consolidatedCount": 1,
+        "manualThreeTitlesDistinctCount": 1
+      },
+      "observed": {
+        "consolidatedCount": 1,
+        "manualThreeTitlesDistinctCount": 1,
+        "nicheShortlistDistinctCounts": {
+          "petGadgets": 3,
+          "diy": 3,
+          "kitchen": 3,
+          "cleaning": 3
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "RESEARCH_SHORTLIST_DISTINCTNESS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/RESEARCH_SHORTLIST_DISTINCTNESS.json",
+      "reason": "Unified 6-level product distinctness and family diversity verified",
+      "executedAt": "2026-10-29T06:10:08.794Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P07": {
+      "gateId": "P07",
+      "meaning": "Demand source authority validation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Demand evaluator enforces explicit sourceAuthority (AUTHORITATIVE_VERIFIED, HISTORICAL_SOURCE_VERIFIED, ESTIMATED_OR_PROXY, CACHED_UNVERIFIED, FIXTURE_ONLY, UNKNOWN_SOURCE) and rejects fixture rows, unverified DB rows, broad category proxy terms, and cross-product demand contamination",
+      "expected": {
+        "fixtureAuthority": "FIXTURE_ONLY",
+        "fixtureEligible": false,
+        "crossProductEligible": false,
+        "authoritativeEligible": true
+      },
+      "observed": {
+        "fixtureSeriesEval": {
+          "sourceAuthority": "FIXTURE_ONLY",
+          "eligibleForEvergreen": false
+        },
+        "crossProductSeriesEval": {
+          "sourceAuthority": "CACHED_UNVERIFIED",
+          "eligibleForEvergreen": false,
+          "disqualifiers": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Cross-product demand mismatch: candidate family 'pet_feeder' cannot be verified by demand keyword 'stainless steel cat water fountain' (family 'water_fountain').).' "
+        },
+        "authoritativeSeriesEval": {
+          "sourceAuthority": "AUTHORITATIVE_VERIFIED",
+          "eligibleForEvergreen": true
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "DEMAND_HISTORY_AUTHORITY_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/DEMAND_HISTORY_AUTHORITY_AUDIT.json",
+      "reason": "Demand source authority and product-level lineage validation verified",
+      "executedAt": "2026-10-29T06:10:08.794Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P08": {
+      "gateId": "P08",
+      "meaning": "Demand temporal coverage validation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Requested lookback (30D, 90D, 180D) and actualCoveredDays are reported independently; series <60D or <3 distinct timestamps are rejected from Evergreen eligibility",
+      "expected": {
+        "shortSpanEligible": false,
+        "petRequestedLookback": 90,
+        "diyRequestedLookback": 180,
+        "kitchenRequestedLookback": 30
+      },
+      "observed": {
+        "demandNormSample": {
+          "rawTerm": "Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping",
+          "normalizedTerm": "Stainless Steel Cat Water Fountain",
+          "mappingReason": "Normalized 'Facebook Ad: 889911 | 50% OFF Stainless Steel Cat Water Fountain 2.5L - Free Shipping' -> 'Stainless Steel Cat Water Fountain' (stripped promotional suffixes/campaign codes/capacities)"
+        },
+        "shortSpanCoveredDays": 7,
+        "shortSpanEligible": false,
+        "petLookback": {
+          "requestedLookbackDays": 90,
+          "queryExecutionTime": "2026-10-29T06:08:24.455Z",
+          "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+          "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 50,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "diyLookback": {
+          "requestedLookbackDays": 180,
+          "queryExecutionTime": "2026-10-29T06:08:39.688Z",
+          "earliestAdFirstSeen": "2026-10-28T09:13:50.715Z",
+          "latestAdLastSeen": "2026-10-29T03:17:57.959Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 50,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        },
+        "kitchenLookback": {
+          "requestedLookbackDays": 30,
+          "queryExecutionTime": "2026-10-29T06:08:54.040Z",
+          "earliestAdFirstSeen": "2026-10-24T02:45:39.235Z",
+          "latestAdLastSeen": "2026-10-29T03:17:02.732Z",
+          "activeAdsCount": 0,
+          "historicalCachedAdsCount": 46,
+          "freshLiveAdsCount": 0,
+          "historicalCoverageMode": "HISTORICAL_CACHE_ONLY",
+          "providerLimitationNote": "Live Meta Ad Library search retrieves currently active ads at query execution time; historical coverage within the requested lookback window is supplemented by verified timestamped observations stored in SQLite."
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "DEMAND_TEMPORAL_COVERAGE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/DEMAND_TEMPORAL_COVERAGE.json",
+      "reason": "Demand temporal coverage and lookback horizon separation verified",
+      "executedAt": "2026-10-29T06:10:08.794Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P09": {
+      "gateId": "P09",
+      "meaning": "Per-product Evergreen eligibility",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Every candidate produces independent EvergreenVerificationEvidence and 5 separated CandidateVerificationDimensions; zero candidates are promoted to VERIFIED_EVERGREEN without verified merchant identity, physical product reality, and >=60D authoritative/verified product demand",
+      "expected": {
+        "disqualifiedWinnersCount": 0
+      },
+      "observed": {
+        "disqualifiedWinnersCount": 0,
+        "totalClaimedWinners": 9,
+        "independentlyVerifiedWinners": 9
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json",
+      "reason": "Zero false Evergreen promotions occurred across all 8 runs; all 5 verification dimensions are separated",
+      "executedAt": "2026-10-29T06:10:08.798Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P10": {
+      "gateId": "P10",
+      "meaning": "Independent Top 3 verification",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "G12 / P10 independently recomputes Evergreen eligibility for every Top 3 winner from raw evidence (never trusting topThree.length >= 3); reports INSUFFICIENT_EVIDENCE honestly when <3 live candidates have >=60D authoritative product demand",
+      "expected": {
+        "independentlyVerifiedWinnersInAtLeastOneRun": 3,
+        "falsePromotions": 0
+      },
+      "observed": {
+        "verdict": "PASS",
+        "totalClaimedWinners": 9,
+        "independentlyVerifiedWinners": 9,
+        "maxVerifiedWinnersInSingleRun": 3,
+        "runsWithThreeVerifiedWinners": [
+          "pet gadgets",
+          "diy"
+        ],
+        "disqualifiedWinners": [],
+        "winnerEvidenceRecords": [
+          {
+            "candidateId": "cand_1212440541",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "merchantDomain": "uahpet.com",
+            "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 79,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [
+              "cmvrzyn5c005t6cor0yylqvk2",
+              "cmvrzyn3h00546corujh7567u",
+              "cmvrzyn2j004s6corb96ke61v"
+            ],
+            "demandObservationIds": [
+              "cmvsy7zsf000rp0orbgbi6tiu",
+              "cmvsy7zsl000sp0orl8wkum7g",
+              "cmvsy7zsr000tp0or4w85v2ug",
+              "cmvsy7zsy000up0oriz6hihpd",
+              "cmvsy7zt3000vp0orzpca0gas",
+              "cmvsy7ztc000wp0orr1ypsqg4"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_1838011041",
+            "productId": "cmvsy7zeg0001p0orsexc5psw",
+            "canonicalProductName": "Reusable Pet Hair Remover Roller",
+            "merchantDomain": "livlandco.com",
+            "canonicalProductUrl": "https://livlandco.com/products/reusable-pet-hair-remover-roller",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 68,
+            "evidenceConfidence": 70,
+            "observationRecordIds": [
+              "cmvrzyiu0001d6coruwq7iaw0"
+            ],
+            "demandObservationIds": [
+              "cmvsy7znm0003p0or42qkebmn",
+              "cmvsy7znu0004p0oraa6lift3",
+              "cmvsy7zo10005p0or3kn60dae",
+              "cmvsy7zo60006p0ordbxjay4n",
+              "cmvsy7zoa0007p0or46h397m6",
+              "cmvsy7zof0008p0orleiz2r5t"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_1788406859",
+            "productId": "cmvsy7zoq000ap0or4ly9ciih",
+            "canonicalProductName": "Pawira Stainless Steel Water Fountain",
+            "merchantDomain": "pawira.com",
+            "canonicalProductUrl": "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 68,
+            "evidenceConfidence": 70,
+            "observationRecordIds": [
+              "cmvrzyj04003q6cort0wlap3m"
+            ],
+            "demandObservationIds": [
+              "cmvsy7zp6000cp0or152bdoqj",
+              "cmvsy7zpc000dp0orbx694akm",
+              "cmvsy7zph000ep0orzu1au04r",
+              "cmvsy7zpp000fp0orb7jmcogp",
+              "cmvsy7zpu000gp0oryg05yxy6",
+              "cmvsy7zq3000hp0ory58q7t5b"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_739320169",
+            "productId": "cmvsy8699002gp0orwl4eryuh",
+            "canonicalProductName": "Brooke Wallpaper",
+            "merchantDomain": "lemonpark.com",
+            "canonicalProductUrl": "https://lemonpark.com/products/brooke-wallpaper",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 74,
+            "evidenceConfidence": 70,
+            "observationRecordIds": [
+              "cmvrzzjru000kt4orcex37vcu",
+              "cmvrzetk5000tlsorigg7hc2z"
+            ],
+            "demandObservationIds": [
+              "cmvsy869u002jp0or7mzpwg8n",
+              "cmvsy86a0002kp0orlmyz42rz",
+              "cmvsy86a7002lp0or7dwnivpr",
+              "cmvsy86ab002mp0orrl7q3zb0",
+              "cmvsy86af002np0orxvczjr8r",
+              "cmvsy86am002op0orvamtgpmv"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_1316890495",
+            "productId": "cmvsy85zn000yp0ore89xpw92",
+            "canonicalProductName": "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+            "merchantDomain": "vipbugo.com",
+            "canonicalProductUrl": "https://vipbugo.com/products/hot-glue-lt-1",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 73,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [
+              "cmvrzxmcv000m6cor8w1qwnhy"
+            ],
+            "demandObservationIds": [
+              "cmvsy86010010p0or2bz21l17",
+              "cmvsy86050011p0orsjdtoig7",
+              "cmvsy86090012p0orkrkrcm9o",
+              "cmvsy860d0013p0or5gyesvqo",
+              "cmvsy860m0014p0ordbo8fmu6",
+              "cmvsy860u0015p0oreqn8xdwr"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_887687049",
+            "productId": "cmvsy864i001pp0or0a8ff2vx",
+            "canonicalProductName": "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off",
+            "merchantDomain": "acompactly.com",
+            "canonicalProductUrl": "https://acompactly.com/products/easy-fill-wall-repair-paste-kit",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 73,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [
+              "cmvrzxmb600016cor39ruhbkb"
+            ],
+            "demandObservationIds": [
+              "cmvsy864y001rp0or94dwo073",
+              "cmvsy8652001sp0orfb0xfu3t",
+              "cmvsy8659001tp0orhc1f88dg",
+              "cmvsy865e001up0orcxurlln0",
+              "cmvsy865i001vp0orug34v3a2",
+              "cmvsy865p001wp0orh0l7rvy0"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_739320169",
+            "productId": "cmvsy8699002gp0orwl4eryuh",
+            "canonicalProductName": "Brooke Wallpaper",
+            "merchantDomain": "lemonpark.com",
+            "canonicalProductUrl": "https://lemonpark.com/products/brooke-wallpaper",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 74,
+            "evidenceConfidence": 70,
+            "observationRecordIds": [
+              "cmvrzzjru000kt4orcex37vcu",
+              "cmvrzetk5000tlsorigg7hc2z"
+            ],
+            "demandObservationIds": [
+              "cmvsy869u002jp0or7mzpwg8n",
+              "cmvsy86a0002kp0orlmyz42rz",
+              "cmvsy86a7002lp0or7dwnivpr",
+              "cmvsy86ab002mp0orrl7q3zb0",
+              "cmvsy86af002np0orxvczjr8r",
+              "cmvsy86am002op0orvamtgpmv"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_2112012920",
+            "productId": "cmvsy867l0027p0ort3vvnxxg",
+            "canonicalProductName": "Burnett Wallpaper",
+            "merchantDomain": "wallblush.com",
+            "canonicalProductUrl": "https://wallblush.com/products/burnett-wallpaper",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 73,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [
+              "cmvrzzjre000et4or9s03n1n8"
+            ],
+            "demandObservationIds": [
+              "cmvsy867z0029p0orauyn512q",
+              "cmvsy8687002ap0orsxa9s4ys",
+              "cmvsy868f002bp0orom5jqm0i",
+              "cmvsy868k002cp0ory0qym961",
+              "cmvsy868o002dp0orofit3u9l",
+              "cmvsy868v002ep0oroaflgbj4"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          },
+          {
+            "candidateId": "cand_1212440541",
+            "productId": "cmvsy7zqh000jp0orhypwohho",
+            "canonicalProductName": "Automatic Wet Food Cat Feeder with Cooling & Warming",
+            "merchantDomain": "uahpet.com",
+            "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+            "identityVerified": true,
+            "physicalProductVerified": true,
+            "relevanceVerified": true,
+            "demandSourceAuthority": "HISTORICAL_SOURCE_VERIFIED",
+            "demandObservationsCount": 6,
+            "distinctDemandDatesCount": 6,
+            "coveredDays": 152,
+            "demandStabilityScore": 25,
+            "demandClass": "EVERGREEN_STABLE",
+            "opportunityScore": 81,
+            "evidenceConfidence": 80,
+            "observationRecordIds": [
+              "cmvrzyn5c005t6cor0yylqvk2",
+              "cmvrzyn3h00546corujh7567u",
+              "cmvrzyn2j004s6corb96ke61v",
+              "cmvrzyn30004y6corojbfmznc",
+              "cmvrzyn4w005n6corlzcsccsh",
+              "cmvrzyn3x005a6corm3d0e51v",
+              "cmvrzyn23004m6coriy1lwr49"
+            ],
+            "demandObservationIds": [
+              "cmvsy7zsf000rp0orbgbi6tiu",
+              "cmvsy7zsl000sp0orl8wkum7g",
+              "cmvsy7zsr000tp0or4w85v2ug",
+              "cmvsy7zsy000up0oriz6hihpd",
+              "cmvsy7zt3000vp0orzpca0gas",
+              "cmvsy7ztc000wp0orr1ypsqg4"
+            ],
+            "verifiedByGate": true,
+            "disqualifiers": []
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json",
+      "reason": "3/3 Verified Evergreen winners independently verified in pet gadgets, diy",
+      "executedAt": "2026-10-29T06:10:08.798Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P11": {
+      "gateId": "P11",
+      "meaning": "Specific-query relevance",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Specific-product query ('automatic pet feeder') admits only pet feeder products and rejects sibling niche items (water fountain, pet hair roller) as IRRELEVANT",
+      "expected": {
+        "fountainOnFeederQuery": "IRRELEVANT",
+        "rollerOnFeederQuery": "IRRELEVANT",
+        "feederOnFeederQuery": "RELEVANT",
+        "liveSpecificRunOffTopicCount": 0
+      },
+      "observed": {
+        "fountainOnFeederQuery": "IRRELEVANT",
+        "rollerOnFeederQuery": "IRRELEVANT",
+        "feederOnFeederQuery": "RELEVANT",
+        "liveSpecificRunShortlistTitles": [
+          "Automatic Wet Food Cat Feeder with Cooling & Warming",
+          "Automatic Pet Feeder Drinking Fountain"
+        ],
+        "liveSpecificRunOffTopicCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_1793254175306_z6pp1",
+      "evidenceRefs": [
+        "SPECIFIC_QUERY_RELEVANCE.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/SPECIFIC_QUERY_RELEVANCE.json",
+      "reason": "Specific-product query isolation verified in unit checks and live 'automatic pet feeder' run (0 off-topic products)",
+      "executedAt": "2026-10-29T06:10:08.798Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P12": {
+      "gateId": "P12",
+      "meaning": "Customer psychology evidence isolation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Customer psychology is strictly bound to candidateId, canonicalProductName, productDomain, and supportingAdIds; 'no Wi-Fi, no Bluetooth' cat feeder ad receives PET psychology with 0 audio/commuter contamination",
+      "expected": {
+        "uahpetProductDomain": "PET",
+        "uahpetAligned": true,
+        "misalignedLiveCount": 0
+      },
+      "observed": {
+        "uahpetProductDomain": "PET",
+        "uahpetAlignment": {
+          "valid": true,
+          "reason": null
+        },
+        "totalShortlistChecked": 20,
+        "misalignedLiveCount": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "PSYCHOLOGY_SOURCE_ASSOCIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/PSYCHOLOGY_SOURCE_ASSOCIATION.json",
+      "reason": "Customer psychology isolation verified across uahpet.com reproducer and 20 shortlist candidates (0 misalignments)",
+      "executedAt": "2026-10-29T06:10:08.799Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P13": {
+      "gateId": "P13",
+      "meaning": "Google product-level evidence truth",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "actualAssertion": "Google Ads Transparency exposes all 11 stateBreakdown flags, distinguishes controlled MCP from live MCP, never treats HTTP 429 as SUCCEEDED_EMPTY, and requires live product-level matches for live PASS",
+      "expected": {
+        "engineeringContractValid": true,
+        "liveProductMatchesRequiredForPass": "> 0"
+      },
+      "observed": {
+        "googleDiag": {
+          "status": "CONNECTED",
+          "transportConnected": true
+        },
+        "livePetlibroProbe": {
+          "status": "QUERY_FAILED",
+          "retrievedCount": 0,
+          "enrichmentExecution": {
+            "attemptedDomains": [
+              "petlibro.com"
+            ],
+            "advertiserLookupSucceeded": false,
+            "advertisersFound": 0,
+            "creativeQuerySucceeded": false,
+            "creativesReturned": 0,
+            "normalizedObservations": 0,
+            "productLevelMatches": 0,
+            "brandLevelMatches": 0,
+            "productEvidenceIds": [],
+            "queryErrors": [
+              "Google Transparency advertiser lookup failed for petlibro.com: HTTP 429 upstream rate-limit cooldown active"
+            ],
+            "queryTimestamp": "2026-10-29T06:10:09.524Z",
+            "isControlledMcp": false,
+            "stateBreakdown": {
+              "configured": true,
+              "transportConnected": true,
+              "toolDiscovered": true,
+              "operationSupported": true,
+              "advertiserLookupAttempted": true,
+              "queryAttempted": true,
+              "querySucceeded": false,
+              "advertiserFound": false,
+              "adsRetrieved": false,
+              "creativesReturned": false,
+              "brandLevelMatch": false,
+              "productLevelMatch": false,
+              "productAssociatedEvidence": false,
+              "productEvidencePersisted": false,
+              "currentRunProductEvidenceAvailable": false,
+              "empty": false,
+              "failed": true,
+              "cached": false
+            }
+          }
+        },
+        "controlledMcpProbe": {
+          "status": "PASSED",
+          "enrichmentExecution": {
+            "attemptedDomains": [
+              "petlibro.com"
+            ],
+            "advertiserLookupSucceeded": true,
+            "advertisersFound": 1,
+            "creativeQuerySucceeded": true,
+            "creativesReturned": 2,
+            "normalizedObservations": 2,
+            "productLevelMatches": 1,
+            "brandLevelMatches": 1,
+            "productEvidenceIds": [
+              "CR_LUMA_01"
+            ],
+            "queryErrors": [],
+            "queryTimestamp": "2026-10-29T06:10:09.524Z",
+            "isControlledMcp": true,
+            "stateBreakdown": {
+              "configured": true,
+              "transportConnected": true,
+              "toolDiscovered": true,
+              "operationSupported": true,
+              "advertiserLookupAttempted": true,
+              "queryAttempted": true,
+              "querySucceeded": true,
+              "advertiserFound": true,
+              "adsRetrieved": true,
+              "creativesReturned": true,
+              "brandLevelMatch": true,
+              "productLevelMatch": true,
+              "productAssociatedEvidence": true,
+              "productEvidencePersisted": true,
+              "currentRunProductEvidenceAvailable": true,
+              "empty": false,
+              "failed": false,
+              "cached": false
+            }
+          }
+        },
+        "liveGoogleProductMatchesAcrossRuns": 0
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "GOOGLE_SOURCE_TRUTH.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/GOOGLE_SOURCE_TRUTH.json",
+      "reason": "Google MCP engineering contract and 11-state breakdown verified (controlled MCP productLevelMatches=1, brandLevelMatches=1); live upstream Google returned status=QUERY_FAILED with 0 live product-level matches",
+      "executedAt": "2026-10-29T06:10:09.525Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P14": {
+      "gateId": "P14",
+      "meaning": "TikTok disabled/unconfigured isolation",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "TIKTOK_ADS, TIKTOK_ADS_US, and TIKTOK_ORGANIC remain TEMPORARILY_DISABLED with 0 outbound calls and 0 cross-platform score contribution across all runs",
+      "expected": {
+        "tiktokAdsStatus": "TEMPORARILY_DISABLED",
+        "tiktokOrganicStatus": "TEMPORARILY_DISABLED",
+        "outboundCalls": 0
+      },
+      "observed": {
+        "tiktokAdsStatus": "TEMPORARILY_DISABLED",
+        "tiktokOrganicStatus": "TEMPORARILY_DISABLED",
+        "allRunsZeroOutboundCalls": true
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": null,
+      "evidenceRefs": [
+        "TIKTOK_SOURCE_ISOLATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/TIKTOK_SOURCE_ISOLATION.json",
+      "reason": "TikTok sources strictly isolated with 0 outbound calls and 0 false cross-platform points",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P15": {
+      "gateId": "P15",
+      "meaning": "KH-01 regression",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Fresh execution of KH-01 verification suite passes 69/69 tests with 0 regressions",
+      "expected": {
+        "exitCode": 0,
+        "passedTests": 69,
+        "failedTests": 0,
+        "reusedPreviousLog": false
+      },
+      "observed": {
+        "exitCode": 0,
+        "passedTests": 69,
+        "failedTests": 0,
+        "durationMs": 4291,
+        "reusedPreviousLog": false
+      },
+      "executionCommand": "npm run kh01:verify",
+      "exitCode": 0,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "logs/kh01_verify.log",
+        "ASYNC_TEST_EXECUTION_SUMMARY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/ASYNC_TEST_EXECUTION_SUMMARY.json",
+      "reason": "KH-01 regression passed freshly (69/69 tests in 4291ms)",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P16": {
+      "gateId": "P16",
+      "meaning": "KH-02 regression",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Fresh execution of TypeScript (0 errors), ESLint (0 errors), V12.4.3.1 Regression (>=25 passed), KH-02 Unit (>=450 passed), and KH-02 Integration (27/27 passed) all succeed",
+      "expected": {
+        "tscExitCode": 0,
+        "lintExitCode": 0,
+        "v12_4_3_1RegressionPassed": ">= 25",
+        "kh02UnitPassed": ">= 450",
+        "kh02IntegrationPassed": ">= 27"
+      },
+      "observed": {
+        "tscExitCode": 0,
+        "lintExitCode": 0,
+        "v12_4_3_1Regression": {
+          "passed": 25,
+          "failed": 0
+        },
+        "kh02Unit": {
+          "passed": 451,
+          "failed": 0
+        },
+        "kh02Integration": {
+          "passed": 27,
+          "failed": 0
+        }
+      },
+      "executionCommand": "npx tsc --noEmit && npm run lint && npm run kh02:v12.4.3.1:regression && npm run kh02:test:unit && npm run kh02:test:integration",
+      "exitCode": 0,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "logs/tsc.log",
+        "logs/lint.log",
+        "logs/v12_4_3_1_regression.log",
+        "logs/kh02_unit.log",
+        "logs/kh02_integration.log"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/ASYNC_TEST_EXECUTION_SUMMARY.json",
+      "reason": "All KH-02 suites passed freshly (TSC=0, Lint=0, V12.4.3.1=25, Unit=451, Int=27)",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P17": {
+      "gateId": "P17",
+      "meaning": "Historical backtest and holdout",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Disjoint DEV and HOLDOUT historical backtest passes with 0 gold-label leakage, 0 synthetic Meta false positives, 0 false Evergreen promotions, and 0 psychology misalignments",
+      "expected": {
+        "verdict": "PASS",
+        "disjointConfirmed": true,
+        "syntheticMetaFP": 0,
+        "evergreenFP": 0,
+        "psychologyMisaligned": 0
+      },
+      "observed": {
+        "verdict": "PASS",
+        "antiOverfittingAudit": {
+          "labelLeakageDetected": false,
+          "devCaseCount": 4,
+          "holdoutCaseCount": 4,
+          "groupOverlap": [],
+          "domainOverlap": [],
+          "productOverlap": [],
+          "disjointConfirmed": true
+        },
+        "fixedOverall": {
+          "caseCount": 8,
+          "syntheticMetaQueryExecutionCount": 0,
+          "specificProductRelevancePrecision": 1,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 1,
+          "customerPsychologyMisalignmentCount": 0,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "falsePassGateCount": 0
+        },
+        "fixedHoldout": {
+          "caseCount": 4,
+          "syntheticMetaQueryExecutionCount": 0,
+          "specificProductRelevancePrecision": 1,
+          "specificProductRelevanceRecall": 1,
+          "demandAuthorityAccuracy": 1,
+          "customerPsychologyMisalignmentCount": 0,
+          "evergreenVerificationPrecision": 1,
+          "falseEvergreenPromotionCount": 0,
+          "falsePassGateCount": 0
+        },
+        "deltas": {
+          "syntheticMetaQueryEliminated": 6,
+          "psychologyMisalignmentEliminated": 2,
+          "falseEvergreenPromotionEliminated": 6,
+          "falsePassGateEliminated": 2,
+          "specificProductPrecisionGain": 0.25
+        }
+      },
+      "executionCommand": "npx tsx scripts/kh02/runBacktestV12_4_3_1.ts",
+      "exitCode": 0,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "BACKTEST_DEV_VS_HOLDOUT.json",
+        "BACKTEST_REGRESSION_COMPARISON.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/BACKTEST_DEV_VS_HOLDOUT.json",
+      "reason": "Backtest PASS (SyntheticMeta: 6->0, FalseEvergreen: 6->0, PsychMisalign: 2->0)",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P18": {
+      "gateId": "P18",
+      "meaning": "Production build",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Fresh Next.js production build completes with exitCode=0 and generates a new .next/BUILD_ID for the current revision",
+      "expected": {
+        "exitCode": 0,
+        "freshBuildIdPresent": true,
+        "reusedPreviousLog": false
+      },
+      "observed": {
+        "exitCode": 0,
+        "buildId": "rMci9NEpU5322FoutAzqL",
+        "durationMs": 8938,
+        "reusedPreviousLog": false
+      },
+      "executionCommand": "npm run build",
+      "exitCode": 0,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "logs/next_build.log",
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/RUNTIME_BUILD_PARITY.json",
+      "reason": "Fresh Next.js production build succeeded in 8938ms (BUILD_ID=rMci9NEpU5322FoutAzqL)",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P19": {
+      "gateId": "P19",
+      "meaning": "Frontend/backend/worker parity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Frontend bundle, backend server, KH-02 worker, Git revision, and SQLite database fingerprint report releaseVersion=12.4.3.1 and runtimeStatus=MATCHED in both /api/v1/kh02/version and Chromium DOM",
+      "expected": {
+        "releaseVersion": "12.4.3.1",
+        "apiRuntimeStatus": "MATCHED",
+        "browserDomRuntimeStatus": "MATCHED"
+      },
+      "observed": {
+        "apiVersionResponse": {
+          "releaseVersion": "12.4.3.1",
+          "frontendBuildSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "backendBuildSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "workerBuildSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "sourceRevisionSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "buildRevisionSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "backendBootSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "workerBootSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "databaseFingerprint": "6530562482a2",
+          "backendStartedAt": "2026-10-29T06:08:18.394Z",
+          "workerStartedAt": "2026-10-29T06:08:18.254Z",
+          "dbFingerprint": "6530562482a2",
+          "workerDbFingerprint": "6530562482a2",
+          "conflictingWorkersDetected": false,
+          "diagnostics": [
+            "Frontend, backend, and worker runtime parity verified at V12.4.3.1 (7126d67)."
+          ],
+          "runtimeStatus": "MATCHED",
+          "buildSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+          "buildTimestamp": "2026-10-29T06:08:06.781Z",
+          "appVersion": "12.4.3.1",
+          "workerVersion": "12.4.3.1",
+          "environment": "production",
+          "appProcessId": 11028,
+          "workerProcessId": 25192
+        },
+        "browserDomRuntimeStatus": "MATCHED",
+        "browserDomFrontendSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+        "browserDomBackendSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2",
+        "browserDomWorkerSha": "7126d67d5b305d7c3984fb2e5a2a71b1e2771ed2"
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "RUNTIME_BUILD_PARITY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/RUNTIME_BUILD_PARITY.json",
+      "reason": "Runtime parity MATCHED at V12.4.3.1 (7126d67) across API and Chromium DOM",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P20": {
+      "gateId": "P20",
+      "meaning": "Chromium E2E and browser reload",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Headless Chromium E2E for Pet Gadgets (90D) and DIY (180D) reconciles SQLite -> HTTP API -> DOM before and after browser reload with 0 HTTP 500s, 0 hydration errors, and HTTP 400 on empty/whitespace queries",
+      "expected": {
+        "petVerdict": "PASS",
+        "diyVerdict": "PASS",
+        "emptyQueryStatus": 400,
+        "whitespaceQueryStatus": 400
+      },
+      "observed": {
+        "pet": {
+          "runId": "kh02_run_1793254102976_uw326",
+          "httpRunId": "kh02_run_1793254102976_uw326",
+          "domRunIdBeforeReload": "kh02_run_1793254102976_uw326",
+          "domRunIdAfterReload": "kh02_run_1793254102976_uw326",
+          "verdict": "PASS"
+        },
+        "diy": {
+          "runId": "kh02_run_1793254118806_w60gg",
+          "httpRunId": "kh02_run_1793254118806_w60gg",
+          "domRunIdBeforeReload": "kh02_run_1793254118806_w60gg",
+          "domRunIdAfterReload": "kh02_run_1793254118806_w60gg",
+          "verdict": "PASS"
+        },
+        "emptyQueryStatus": 400,
+        "whitespaceQueryStatus": 400
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "kh02_run_1793254102976_uw326",
+      "evidenceRefs": [
+        "SQLITE_HTTP_BROWSER_RECONCILIATION.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/SQLITE_HTTP_BROWSER_RECONCILIATION.json",
+      "reason": "Chromium E2E and browser reload reconciliation passed for both Pet Gadgets (90D) and DIY (180D)",
+      "executedAt": "2026-10-29T06:10:09.684Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P21": {
+      "gateId": "P21",
+      "meaning": "Fresh-test-execution integrity",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 8 async validation jobs executed as fresh child processes in this session (reusedPreviousLog=false), reached terminal state before aggregation, and matched current Git revision",
+      "expected": {
+        "allCompleted": true,
+        "allFreshValid": true
+      },
+      "observed": {
+        "completionBarrier": {
+          "passed": true,
+          "incompleteJobs": []
+        },
+        "freshnessAudits": [
+          {
+            "suiteId": "tsc_typecheck",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "eslint",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "kh01_verify",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "v12_4_3_1_regression",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "kh02_unit",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "historical_backtest",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "kh02_integration",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          },
+          {
+            "suiteId": "production_build",
+            "audit": {
+              "valid": true,
+              "reasons": []
+            }
+          }
+        ]
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "ASYNC_TEST_EXECUTION_SUMMARY.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/ASYNC_TEST_EXECUTION_SUMMARY.json",
+      "reason": "All 8 validation suites executed freshly with 0 reused logs",
+      "executedAt": "2026-10-29T06:10:09.685Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P23": {
+      "gateId": "P23",
+      "meaning": "No-false-PASS adversarial audit",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "All 10 adversarial false-PASS mutations (Mutations A–J, Section 19) are detected and rejected by the V12.4.3.1 acceptance gates",
+      "expected": {
+        "mutationsCaught": 10,
+        "mutationsTotal": 10
+      },
+      "observed": {
+        "mutationsCaught": 10,
+        "mutationsTotal": 10,
+        "adversarialSummary": {
+          "Mutation_A_MetaCached50ZeroLive": {
+            "caught": true,
+            "observed": {
+              "G06A_META_TELEMETRY_TRUTH": {
+                "verdict": "PASS",
+                "violations": [],
+                "checkedRuns": 1
+              },
+              "G06B_META_CACHE_FALLBACK_INTEGRITY": {
+                "verdict": "PASS",
+                "violations": [],
+                "cachedRunsCount": 1,
+                "totalCachedObservations": 50
+              },
+              "G06C_META_LIVE_EXECUTION_PROOF": {
+                "verdict": "BLOCKED_EXTERNAL_DEPENDENCY",
+                "liveRunsCount": 0,
+                "totalFreshLiveAds": 0,
+                "totalLiveApiCalls": 0,
+                "reason": "No fresh live Meta upstream query execution occurred in this run batch (CACHE_ONLY / external provider boundary); cached fallback remained truthful."
+              },
+              "overallG06EngineeringVerdict": "PASS",
+              "overallG06LiveVerdict": "BLOCKED_EXTERNAL_DEPENDENCY"
+            }
+          },
+          "Mutation_B_Top3WithoutDemandRefs": {
+            "caught": true,
+            "observed": {
+              "verdict": "FAIL",
+              "totalClaimedWinners": 1,
+              "independentlyVerifiedWinners": 0,
+              "maxVerifiedWinnersInSingleRun": 0,
+              "runsWithThreeVerifiedWinners": [],
+              "disqualifiedWinners": [
+                {
+                  "runTopic": "pet gadgets",
+                  "candidateId": "c1",
+                  "title": "Automatic Pet Feeder",
+                  "disqualifiers": [
+                    "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+                    "Demand source authority 'CACHED_UNVERIFIED' is not authoritative/historical verified.",
+                    "Insufficient distinct demand observations (0/3 required).",
+                    "Demand coverage (0D) is below mandatory 60D threshold.",
+                    "Demand class 'EVERGREEN' is not eligible for Verified Evergreen.",
+                    "Candidate lacks traceable source observation record IDs.",
+                    "Candidate lacks >= 3 traceable demand observation IDs."
+                  ]
+                }
+              ],
+              "winnerEvidenceRecords": [
+                {
+                  "candidateId": "c1",
+                  "productId": null,
+                  "canonicalProductName": "Automatic Pet Feeder",
+                  "merchantDomain": "",
+                  "canonicalProductUrl": "https://a.com/products/p1",
+                  "identityVerified": false,
+                  "physicalProductVerified": true,
+                  "relevanceVerified": true,
+                  "demandSourceAuthority": "CACHED_UNVERIFIED",
+                  "demandObservationsCount": 0,
+                  "distinctDemandDatesCount": 0,
+                  "coveredDays": 0,
+                  "demandStabilityScore": 20,
+                  "demandClass": "EVERGREEN",
+                  "opportunityScore": 80,
+                  "evidenceConfidence": 80,
+                  "observationRecordIds": [],
+                  "demandObservationIds": [],
+                  "verifiedByGate": false,
+                  "disqualifiers": [
+                    "Product identity is not verified with a canonical /products/ merchant URL and domain.",
+                    "Demand source authority 'CACHED_UNVERIFIED' is not authoritative/historical verified.",
+                    "Insufficient distinct demand observations (0/3 required).",
+                    "Demand coverage (0D) is below mandatory 60D threshold.",
+                    "Demand class 'EVERGREEN' is not eligible for Verified Evergreen.",
+                    "Candidate lacks traceable source observation record IDs.",
+                    "Candidate lacks >= 3 traceable demand observation IDs."
+                  ]
+                }
+              ]
+            }
+          },
+          "Mutation_C_UnknownDemandAuthority": {
+            "caught": true,
+            "observed": {
+              "sourceAuthority": "ESTIMATED_OR_PROXY",
+              "eligibleForEvergreen": false
+            }
+          },
+          "Mutation_D_CrossProductDemandHistory": {
+            "caught": true,
+            "observed": {
+              "eligibleForEvergreen": false,
+              "disqualifiers": "Demand source authority 'CACHED_UNVERIFIED' is not eligible for Verified Evergreen (Cross-product demand mismatch: candidate family 'pet_feeder' cannot be verified by demand keyword 'stainless steel cat water fountain' (family 'water_fountain').).' "
+            }
+          },
+          "Mutation_E_OneProductThreeTitles": {
+            "caught": true,
+            "observed": {
+              "isDistinct": false,
+              "isFamilyDiverse": false,
+              "totalCandidatesEvaluated": 3,
+              "distinctCount": 1,
+              "distinctProductCount": 1,
+              "distinctFamilyCount": 1,
+              "distinctListingCount": 1,
+              "independentOpportunityCount": 1,
+              "homogeneousFamilyDetected": true,
+              "dominantFamilyKey": "item_title",
+              "dominantFamilyLabel": "Item Title",
+              "duplicateGroupsCount": 2,
+              "uncertainties": [],
+              "pairwiseDecisions": [
+                {
+                  "candidateIds": [
+                    "c1",
+                    "c2"
+                  ],
+                  "listingKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "productKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "familyKeys": [
+                    "item_title",
+                    "item_title"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "conflictingEvidence": [
+                    "Different ad/display titles ('Title 1' vs 'Title 2') overridden by identical canonical product URL."
+                  ],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+                },
+                {
+                  "candidateIds": [
+                    "c1",
+                    "c3"
+                  ],
+                  "listingKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "productKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "familyKeys": [
+                    "item_title",
+                    "item_title"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "conflictingEvidence": [
+                    "Different ad/display titles ('Title 1' vs 'Title 3') overridden by identical canonical product URL."
+                  ],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+                },
+                {
+                  "candidateIds": [
+                    "c2",
+                    "c3"
+                  ],
+                  "listingKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "productKeys": [
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                    "url::https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "familyKeys": [
+                    "item_title",
+                    "item_title"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uprootclean.com/products/uproot-cleaner-pro"
+                  ],
+                  "conflictingEvidence": [
+                    "Different ad/display titles ('Title 2' vs 'Title 3') overridden by identical canonical product URL."
+                  ],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+                }
+              ],
+              "details": [
+                {
+                  "candidateId": "c1",
+                  "title": "Title 1",
+                  "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "variantKey": null,
+                  "familyKey": "item_title",
+                  "familyLabel": "Item Title",
+                  "storeDomain": "uprootclean.com",
+                  "isDuplicate": false
+                },
+                {
+                  "candidateId": "c2",
+                  "title": "Title 2",
+                  "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "variantKey": null,
+                  "familyKey": "item_title",
+                  "familyLabel": "Item Title",
+                  "storeDomain": "uprootclean.com",
+                  "isDuplicate": true,
+                  "duplicateOf": "c1",
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+                },
+                {
+                  "candidateId": "c3",
+                  "title": "Title 3",
+                  "canonicalKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "listingKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "productKey": "url::https://uprootclean.com/products/uproot-cleaner-pro",
+                  "variantKey": null,
+                  "familyKey": "item_title",
+                  "familyLabel": "Item Title",
+                  "storeDomain": "uprootclean.com",
+                  "isDuplicate": true,
+                  "duplicateOf": "c1",
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uprootclean.com/products/uproot-cleaner-pro)."
+                }
+              ]
+            }
+          },
+          "Mutation_F_CatFeederAudioPsychology": {
+            "caught": true,
+            "observed": {
+              "valid": false,
+              "reason": "Cross-product psychology leakage detected: Pet product contains wireless audio/commuter psychology claims."
+            }
+          },
+          "Mutation_G_ReusedTestLogWithoutExecution": {
+            "caught": true,
+            "observed": {
+              "valid": false,
+              "reasons": [
+                "Suite 'reused_suite' reused a previous log (reusedPreviousLog=true)."
+              ]
+            }
+          },
+          "Mutation_H_ControlledGoogleMcpWhileLive429": {
+            "caught": true,
+            "observed": {
+              "controlledMcpIsFlagged": true,
+              "liveGateVerdict": "INSUFFICIENT_EVIDENCE"
+            }
+          },
+          "Mutation_I_MismatchedFrontendBackendWorkerSha": {
+            "caught": true,
+            "observed": {
+              "runtimeStatus": "VERSION_MISMATCH",
+              "diagnostics": [
+                "Frontend bundle SHA (1111111) does not match backend build SHA (2222222).",
+                "Backend process booted on stale SHA (2222222) while repository HEAD is (7126d67).",
+                "Worker build SHA (3333333) does not match backend build SHA (2222222)."
+              ]
+            }
+          },
+          "Mutation_J_CancelledAsyncJobBeforeCompletion": {
+            "caught": true,
+            "observed": {
+              "passed": false,
+              "incompleteJobs": [
+                "running_unfinished_suite"
+              ]
+            }
+          }
+        }
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "ADVERSARIAL_FALSE_PASS_TESTS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/ADVERSARIAL_FALSE_PASS_TESTS.json",
+      "reason": "10/10 adversarial false-PASS mutations caught and rejected",
+      "executedAt": "2026-10-29T06:10:09.728Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    },
+    "P22": {
+      "gateId": "P22",
+      "meaning": "Resource/disk/SQLite safety",
+      "verdict": "PASS",
+      "executed": true,
+      "actualAssertion": "Disk headroom remains >1.5GB, bounded async concurrency never exceeds 2, SQLite integrity_check is 'ok' before and after execution, temp scratch data is cleaned, and 0 orphaned child processes remain",
+      "expected": {
+        "sqliteIntegrity": "ok",
+        "orphanedProcessCount": 0,
+        "tempScratchCleaned": true
+      },
+      "observed": {
+        "freeDiskBeforeGB": 53.19,
+        "freeDiskAfterGB": 53.18,
+        "sqlitePreCheck": {
+          "ok": true,
+          "result": "ok"
+        },
+        "sqlitePostCheck": {
+          "ok": true,
+          "result": "ok"
+        },
+        "orphanedProcessCount": 0,
+        "tempScratchCleaned": true,
+        "peakConcurrency": 2
+      },
+      "executionCommand": null,
+      "exitCode": null,
+      "runId": "v12_4_3_1_1793254003307",
+      "evidenceRefs": [
+        "DISK_SAFETY_AUDIT.json",
+        "TEST_RUNTIME_AND_RESOURCE_METRICS.json"
+      ],
+      "evidenceLocation": "acceptance/kh02-v12.4.3.1/DISK_SAFETY_AUDIT.json",
+      "reason": "Disk safe (53.18GB free), SQLite integrity=ok, 0 orphaned processes",
+      "executedAt": "2026-10-29T06:10:09.765Z",
+      "environment": "win32-node-v22.14.0-db-6530562482a2"
+    }
+  }
+}

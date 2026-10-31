@@ -1,0 +1,361 @@
+{
+  "liveSwitchEval": {
+    "success": true,
+    "result": {
+      "candidateId": "cand_switch_sticker",
+      "commercialEntityType": "PHYSICAL_PRODUCT",
+      "suggestedProductName": "Multicolor Rose Floral Pattern Switch Sticker",
+      "suggestedProductType": "Home Decor",
+      "nicheRelevance": "HIGH",
+      "isLikelySellableProduct": true,
+      "identityEvidenceRefs": [
+        "obs_switch_1"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_switch_1"
+      ],
+      "directlyObservedClaims": [
+        {
+          "claim": "The product is a peel-and-stick decorative switch plate cover.",
+          "sourceRef": "obs_switch_1",
+          "supportingQuote": "Upgrade your wall light switches in seconds with peel-and-stick decorative switch plate covers."
+        }
+      ],
+      "inferredClaims": [
+        "The product is designed for home improvement and DIY wall upgrades."
+      ],
+      "contradictions": [],
+      "uncertainties": [],
+      "aiConfidence": 1,
+      "needsHumanReview": false
+    },
+    "verification": {
+      "verified": true,
+      "evidenceDecision": "ACCEPT",
+      "validAiResponse": true,
+      "correctCandidateId": true,
+      "validSourceReferences": true,
+      "accurateQuotations": true,
+      "actualMerchantEvidence": true,
+      "productIdentityConsistent": true,
+      "productRealityEligible": true,
+      "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+      "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+      "sanitizedResult": {
+        "candidateId": "cand_switch_sticker",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Multicolor Rose Floral Pattern Switch Sticker",
+        "suggestedProductType": "Home Decor",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "obs_switch_1"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_switch_1"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "The product is a peel-and-stick decorative switch plate cover.",
+            "sourceRef": "obs_switch_1",
+            "supportingQuote": "Upgrade your wall light switches in seconds with peel-and-stick decorative switch plate covers."
+          }
+        ],
+        "inferredClaims": [
+          "The product is designed for home improvement and DIY wall upgrades."
+        ],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 1,
+        "needsHumanReview": false
+      },
+      "contradictions": [],
+      "unsupportedClaims": [],
+      "hallucinatedSourceRefs": [],
+      "quoteMismatches": [],
+      "promptInjectionDetected": false,
+      "shortlistEligible": true,
+      "exclusionReason": null
+    },
+    "modelUsed": "gemini-3.5-flash-lite",
+    "fromCache": false,
+    "exclusionReason": null,
+    "shortlistEligible": true,
+    "schemaValidationFailed": false,
+    "retryTelemetry": {
+      "totalAttempts": 1,
+      "retriesExecuted": 0,
+      "requestsStarted": 1,
+      "requestsCompleted": 1,
+      "requestsFailed": 0,
+      "modelsAttempted": [
+        "gemini-3.5-flash-lite"
+      ],
+      "successfulModelId": "gemini-3.5-flash-lite",
+      "fallbackCount": 0,
+      "executionHistory": [
+        {
+          "modelId": "gemini-3.5-flash-lite",
+          "attemptsCount": 1,
+          "retriesExhausted": false,
+          "successful": true,
+          "attempts": [
+            {
+              "attemptNumber": 1,
+              "modelId": "gemini-3.5-flash-lite",
+              "statusCode": 200,
+              "durationMs": 1735,
+              "timestamp": "2026-10-28T10:53:04.609Z"
+            }
+          ]
+        }
+      ],
+      "circuitBreakerTriggered": false,
+      "canceled": false,
+      "deadlineExceeded": false,
+      "budgetExhausted": false,
+      "totalDurationMs": 1735
+    },
+    "tokensUsed": 760,
+    "error": null
+  },
+  "livePosEval": {
+    "success": true,
+    "result": {
+      "candidateId": "cand_pos_printer",
+      "commercialEntityType": "LEAD_GENERATION",
+      "suggestedProductName": "Rongta 80mm POS Thermal Receipt Printer",
+      "suggestedProductType": "Thermal Receipt Printer",
+      "nicheRelevance": "LOW",
+      "isLikelySellableProduct": false,
+      "identityEvidenceRefs": [
+        "obs_pos_1"
+      ],
+      "relevanceEvidenceRefs": [
+        "obs_pos_1"
+      ],
+      "directlyObservedClaims": [
+        {
+          "claim": "The product is an 80mm POS thermal printer with auto cutter USB and LAN",
+          "sourceRef": "obs_pos_1",
+          "supportingQuote": "Hot Sell 80mm POS Thermal Printer with Auto Cutter USB LAN"
+        }
+      ],
+      "inferredClaims": [
+        "The item is manufactured by Rongta and sold wholesale via Alibaba"
+      ],
+      "contradictions": [
+        "Contradiction: AI returned PHYSICAL_PRODUCT, but deterministic source verification identified LEAD_GENERATION (Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.)."
+      ],
+      "uncertainties": [
+        "The product is a B2B wholesale electronics item which has low relevance for a standard direct-to-consumer DIY Shopify store."
+      ],
+      "aiConfidence": 0.95,
+      "needsHumanReview": true
+    },
+    "verification": {
+      "verified": false,
+      "evidenceDecision": "REJECT",
+      "validAiResponse": true,
+      "correctCandidateId": true,
+      "validSourceReferences": true,
+      "accurateQuotations": true,
+      "actualMerchantEvidence": true,
+      "productIdentityConsistent": true,
+      "productRealityEligible": false,
+      "productRealityStatus": "NON_PHYSICAL",
+      "sourcePageClassification": "UNKNOWN_PAGE",
+      "sanitizedResult": {
+        "candidateId": "cand_pos_printer",
+        "commercialEntityType": "LEAD_GENERATION",
+        "suggestedProductName": "Rongta 80mm POS Thermal Receipt Printer",
+        "suggestedProductType": "Thermal Receipt Printer",
+        "nicheRelevance": "LOW",
+        "isLikelySellableProduct": false,
+        "identityEvidenceRefs": [
+          "obs_pos_1"
+        ],
+        "relevanceEvidenceRefs": [
+          "obs_pos_1"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "The product is an 80mm POS thermal printer with auto cutter USB and LAN",
+            "sourceRef": "obs_pos_1",
+            "supportingQuote": "Hot Sell 80mm POS Thermal Printer with Auto Cutter USB LAN"
+          }
+        ],
+        "inferredClaims": [
+          "The item is manufactured by Rongta and sold wholesale via Alibaba"
+        ],
+        "contradictions": [
+          "Contradiction: AI returned PHYSICAL_PRODUCT, but deterministic source verification identified LEAD_GENERATION (Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.)."
+        ],
+        "uncertainties": [
+          "The product is a B2B wholesale electronics item which has low relevance for a standard direct-to-consumer DIY Shopify store."
+        ],
+        "aiConfidence": 0.95,
+        "needsHumanReview": true
+      },
+      "contradictions": [
+        "Contradiction: AI returned PHYSICAL_PRODUCT, but deterministic source verification identified LEAD_GENERATION (Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.)."
+      ],
+      "unsupportedClaims": [],
+      "hallucinatedSourceRefs": [],
+      "quoteMismatches": [],
+      "promptInjectionDetected": false,
+      "shortlistEligible": false,
+      "exclusionReason": "Excluded from product shortlist: Classified as LEAD_GENERATION; not a purchasable physical ecommerce product."
+    },
+    "modelUsed": "gemini-3.5-flash-lite",
+    "fromCache": false,
+    "exclusionReason": "Excluded from product shortlist: Classified as LEAD_GENERATION; not a purchasable physical ecommerce product.",
+    "shortlistEligible": false,
+    "schemaValidationFailed": false,
+    "retryTelemetry": {
+      "totalAttempts": 1,
+      "retriesExecuted": 0,
+      "requestsStarted": 1,
+      "requestsCompleted": 1,
+      "requestsFailed": 0,
+      "modelsAttempted": [
+        "gemini-3.5-flash-lite"
+      ],
+      "successfulModelId": "gemini-3.5-flash-lite",
+      "fallbackCount": 0,
+      "executionHistory": [
+        {
+          "modelId": "gemini-3.5-flash-lite",
+          "attemptsCount": 1,
+          "retriesExhausted": false,
+          "successful": true,
+          "attempts": [
+            {
+              "attemptNumber": 1,
+              "modelId": "gemini-3.5-flash-lite",
+              "statusCode": 200,
+              "durationMs": 1601,
+              "timestamp": "2026-10-28T10:53:06.214Z"
+            }
+          ]
+        }
+      ],
+      "circuitBreakerTriggered": false,
+      "canceled": false,
+      "deadlineExceeded": false,
+      "budgetExhausted": false,
+      "totalDurationMs": 1601
+    },
+    "tokensUsed": 794,
+    "error": null
+  },
+  "modeD_Planner": {
+    "executed": true,
+    "plannerStatus": "COMPLETED",
+    "actualModelUsed": "gemini-3.5-flash-lite",
+    "promptVersion": "kh02_discovery_planner_v1.0.0",
+    "schemaVersion": "1.0.0",
+    "topicsEvaluated": [
+      {
+        "topic": "diy",
+        "plannerStatus": "COMPLETED_GEMINI",
+        "actualModelUsed": "gemini-3.5-flash-lite",
+        "fallbackUsed": false,
+        "attemptsCount": 1,
+        "latencyMs": 3705,
+        "archetypesGenerated": 5,
+        "archetypeLabels": [
+          "Home Repair Kits",
+          "DIY Crafting Tools",
+          "Decorative Home Hardware & Wall Decor",
+          "Woodworking Jigs & Clamps",
+          "Furniture & Surface Restoration"
+        ],
+        "validatedQueriesCount": 10,
+        "validatedQueries": [
+          {
+            "queryText": "wall repair kit",
+            "archetypeId": "wall_repair_kit",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "cordless hot glue gun",
+            "archetypeId": "cordless_hot_glue_gun",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "decorative switch plate covers",
+            "archetypeId": "decorative_switch_plate_covers",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "pocket hole jig",
+            "archetypeId": "pocket_hole_jig",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "wood scratch repair markers",
+            "archetypeId": "furniture_scratch_repair",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "drywall patch tool",
+            "archetypeId": "wall_repair_kit",
+            "origin": "GEMINI_PLANNER"
+          }
+        ],
+        "rejectedQueriesCount": 0
+      },
+      {
+        "topic": "gardening",
+        "plannerStatus": "COMPLETED_GEMINI",
+        "actualModelUsed": "gemini-3.5-flash-lite",
+        "fallbackUsed": false,
+        "attemptsCount": 1,
+        "latencyMs": 3796,
+        "archetypesGenerated": 5,
+        "archetypeLabels": [
+          "Plant Watering & Irrigation",
+          "Seed Starting & Propagation",
+          "Pruning & Cutting Tools",
+          "Plant Supports & Trellises",
+          "Soil Testing & Monitoring"
+        ],
+        "validatedQueriesCount": 10,
+        "validatedQueries": [
+          {
+            "queryText": "self watering planter",
+            "archetypeId": "self_watering_planter",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "full spectrum grow light",
+            "archetypeId": "plant_growth_light",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "folding garden kneeler",
+            "archetypeId": "ergonomic_garden_kneeler",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "obelisk garden trellis",
+            "archetypeId": "vertical_plant_trellis",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "digital soil moisture meter",
+            "archetypeId": "soil_moisture_meter",
+            "origin": "GEMINI_PLANNER"
+          },
+          {
+            "queryText": "indoor plant watering spike",
+            "archetypeId": "self_watering_planter",
+            "origin": "GEMINI_PLANNER"
+          }
+        ],
+        "rejectedQueriesCount": 0
+      }
+    ]
+  }
+}

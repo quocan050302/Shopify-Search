@@ -1,0 +1,39 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.557Z",
+  "version": "12.4.3.4.3",
+  "researchRunId": "kh02_run_1793414382448_njsir",
+  "top3Candidates": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "familyKey": "automatic_pet_feeder",
+      "identityStatus": "VERIFIED",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Status": "VERIFIED",
+      "evergreenScore": null
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "familyKey": "pet_water_fountain",
+      "identityStatus": "VERIFIED",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Status": "VERIFIED",
+      "evergreenScore": null
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "familyKey": "pet_hair_remover_roller",
+      "identityStatus": "PROBABLE",
+      "g15Status": "INSUFFICIENT_EVIDENCE",
+      "g16Status": "PROBABLE",
+      "evergreenScore": null
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "top3DiversitySatisfied": true
+}

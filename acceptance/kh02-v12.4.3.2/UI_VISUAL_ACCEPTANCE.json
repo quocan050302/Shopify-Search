@@ -1,0 +1,165 @@
+{
+  "version": "12.4.3.2",
+  "informationArchitecture": {
+    "headerPresent": true,
+    "commandBarPresent": true,
+    "statusSummaryPresent": true,
+    "tabsPresent": true,
+    "recommendedTabPresent": true,
+    "allCandidatesTabPresent": true,
+    "evidenceDiagnosticsTabPresent": true,
+    "statusSummaryMetricCount": 4,
+    "pass": true
+  },
+  "canonicalCardAudit": {
+    "recommendedCardsCount": 5,
+    "renderedCandidateIds": [
+      "cand_1838011041",
+      "cand_14769098",
+      "cand_1783682388",
+      "cand_1613504636",
+      "cand_1272640899"
+    ],
+    "renderedProductKeys": [
+      "livlandco.com::pid::15402497704125",
+      "url::https://aureluxe.ch/products/pet-hair-remover-roller-dog-cat-fur-remover-with-self-cleaning-base-efficient-animal-hair-removal-tool-perfect-for-furni",
+      "url::https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+      "merchant_tokens::cc.uprootclean.com::pet_hair_remover_roller::cleaner_dust_hair_lint",
+      "merchant_tokens::smartcarting.com::fur_coat::coat_couch_finally_fur_lost"
+    ],
+    "duplicateIds": [],
+    "legacyDuplicateShortlistCardsInRecommended": 0,
+    "legacyDuplicateProvisionalCardsInRecommended": 0,
+    "pass": true
+  },
+  "progressiveDisclosure": {
+    "diagnosticsHiddenOnRecommendedTab": true,
+    "diagnosticsVisibleOnDiagnosticsTab": true,
+    "candidateExplorerVisibleOnAllCandidatesTab": true,
+    "slideOverDrawerOpensAndCloses": true,
+    "historyDrawerOpensAndCloses": true,
+    "pass": true
+  },
+  "responsiveAudit": {
+    "desktop1440": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "noHorizontalOverflow": true
+    },
+    "tablet768": {
+      "width": 768,
+      "scrollWidth": 768,
+      "noHorizontalOverflow": true
+    },
+    "mobile375": {
+      "width": 375,
+      "scrollWidth": 375,
+      "noHorizontalOverflow": true,
+      "mobileCardsVisible": true
+    },
+    "mobile320": {
+      "width": 320,
+      "scrollWidth": 320,
+      "noHorizontalOverflow": true
+    },
+    "pass": true
+  },
+  "screenshotsCaptured": {
+    "01_product_finder_initial_desktop.png": {
+      "filename": "01_product_finder_initial_desktop.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/01_product_finder_initial_desktop.png",
+      "exists": true,
+      "sizeBytes": 174826,
+      "viewport": "1440x900",
+      "description": "Initial desktop load of redesigned Product Finder (/products) with 4-section architecture"
+    },
+    "02_product_finder_search_desktop.png": {
+      "filename": "02_product_finder_search_desktop.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/02_product_finder_search_desktop.png",
+      "exists": true,
+      "sizeBytes": 183122,
+      "viewport": "1440x900",
+      "description": "Unified Research Command Bar with topic 'dog', lookback selector, and source mode selector"
+    },
+    "03_product_finder_recommended_results.png": {
+      "filename": "03_product_finder_recommended_results.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/03_product_finder_recommended_results.png",
+      "exists": true,
+      "sizeBytes": 323188,
+      "viewport": "1440x900",
+      "description": "Recommended tab displaying single canonical product cards with zero cross-section duplication"
+    },
+    "08_product_finder_research_progress.png": {
+      "filename": "08_product_finder_research_progress.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/08_product_finder_research_progress.png",
+      "exists": true,
+      "sizeBytes": 194642,
+      "viewport": "1440x900",
+      "description": "Slide-Over Product Research Detail Drawer showing verified product identity, demand provenance, customer psychology, and ad creative links"
+    },
+    "04_product_finder_all_candidates.png": {
+      "filename": "04_product_finder_all_candidates.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/04_product_finder_all_candidates.png",
+      "exists": true,
+      "sizeBytes": 322134,
+      "viewport": "1440x900",
+      "description": "All Candidates explorer tab with status filter pills, family/merchant/audience filters, and structured rejection reasons"
+    },
+    "05_product_finder_evidence_diagnostics.png": {
+      "filename": "05_product_finder_evidence_diagnostics.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/05_product_finder_evidence_diagnostics.png",
+      "exists": true,
+      "sizeBytes": 169752,
+      "viewport": "1440x900",
+      "description": "Evidence & Diagnostics tab with provider cards, query execution table, 13-stage candidate funnel, and runtime parity"
+    },
+    "06_product_finder_source_failure.png": {
+      "filename": "06_product_finder_source_failure.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/06_product_finder_source_failure.png",
+      "exists": true,
+      "sizeBytes": 138675,
+      "viewport": "1440x900",
+      "description": "LIVE_ONLY mode showing truthful upstream Meta live query status without silent cache fallback"
+    },
+    "07_product_finder_cache_only.png": {
+      "filename": "07_product_finder_cache_only.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/07_product_finder_cache_only.png",
+      "exists": true,
+      "sizeBytes": 138986,
+      "viewport": "1440x900",
+      "description": "CACHE_ONLY mode showing explicit Cache Only badge and NOT_ATTEMPTED upstream queries"
+    },
+    "09_product_finder_tablet.png": {
+      "filename": "09_product_finder_tablet.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/09_product_finder_tablet.png",
+      "exists": true,
+      "sizeBytes": 119573,
+      "viewport": "768x1024",
+      "description": "Tablet responsive layout (768x1024) of Product Finder with stacked command controls and clean cards"
+    },
+    "10_product_finder_mobile.png": {
+      "filename": "10_product_finder_mobile.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/10_product_finder_mobile.png",
+      "exists": true,
+      "sizeBytes": 50068,
+      "viewport": "375x812",
+      "description": "Mobile responsive layout (375x812) of Product Finder with zero horizontal overflow"
+    },
+    "11_product_intelligence_research_context.png": {
+      "filename": "11_product_intelligence_research_context.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/11_product_intelligence_research_context.png",
+      "exists": true,
+      "sizeBytes": 141001,
+      "viewport": "1440x900",
+      "description": "Product Intelligence page showing side-by-side Research Qualification (KH-02) vs Commercial Readiness (KH-01) reconciliation and Back to Product Finder link"
+    },
+    "12_product_intelligence_commercial_readiness.png": {
+      "filename": "12_product_intelligence_commercial_readiness.png",
+      "fullPath": "acceptance/kh02-v12.4.3.2/screenshots/12_product_intelligence_commercial_readiness.png",
+      "exists": true,
+      "sizeBytes": 141332,
+      "viewport": "1440x900",
+      "description": "Product Intelligence page scrolled to Commercial Readiness metrics and Customer Psychology evidence sections"
+    }
+  }
+}

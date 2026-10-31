@@ -1,0 +1,12 @@
+{
+  "version": "12.4.3.4.4",
+  "evaluatedAt": "2026-10-31T04:39:52.606Z",
+  "testedSourceSha": "adef272ad045e0c7495b5bb86990cff9e6cd4a6f",
+  "totalTestExecutions": 593,
+  "totalExecutionsReportedAcrossSuites": 593,
+  "uniqueTestCount": 434,
+  "uniquePassedTests": 434,
+  "uniqueFailedTests": 0,
+  "duplicatedExecutionsCount": 159,
+  "explanation": "Deduplication differentiates unique unit/integration tests from repeated executions in composite suites (e.g. kh02_unit_all overlapping individual targeted suites)."
+}

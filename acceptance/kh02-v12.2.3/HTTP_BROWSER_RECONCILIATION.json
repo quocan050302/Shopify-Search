@@ -1,0 +1,13 @@
+{
+  "layer": "HTTP to Browser",
+  "track1_fixture": {
+    "acceptedRunId": "kh02_run_1793066373487_x3d0d",
+    "cardsRendered": 1,
+    "reconciled": true
+  },
+  "track2_live": {
+    "acceptedRunId": "kh02_run_1793066388023_vdss5",
+    "cardsRendered": 0,
+    "reconciled": true
+  }
+}

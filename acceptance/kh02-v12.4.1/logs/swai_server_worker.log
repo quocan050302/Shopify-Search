@@ -1,0 +1,51 @@
+[SWAI-LAUNCHER] Starting Next.js (DEV)
+[SWAI-LAUNCHER] Binding Interface: 127.0.0.1:3000
+[SWAI-LAUNCHER] Deployment Mode:   LOCAL_DESKTOP
+[SWAI-LAUNCHER] Auth Required:     false
+[SWAI-LAUNCHER] Supervised Worker: Enabled
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local, .env
+✓ Ready in 1368ms
+✓ Running next.config.ts took 244ms
+[KH-02 Worker] Initialized kh02-worker-17492-mvru2rjt | Release: V12.4.1 | SHA: 07ffcac | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+- Cache Components enabled
+- Partial Prefetching enabled
+
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 343ms
+✓ Running next.config.ts took 196ms
+[KH-02 Worker] Initialized kh02-worker-21864-mvrux34f | Release: V12.4.1 | SHA: 07ffcac | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 297ms
+✓ Running next.config.ts took 160ms
+[KH-02 Worker] Initialized kh02-worker-6708-mvrvc59q | Release: V12.4.1 | SHA: 07ffcac | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+[KH-02 Worker] Claimed job kh02_run_1793177088751_xdoy5 for topic 'pet' (Workspace: acceptance_v12_2_3_ws)
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+[KH-02 Worker] Finished job kh02_run_1793177088751_xdoy5: COMPLETED
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 266ms
+✓ Running next.config.ts took 97ms
+[KH-02 Worker] Initialized kh02-worker-15380-mvrvo4yu | Release: V12.4.1 | SHA: 07ffcac | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+[KH-02 Worker] Claimed job kh02_run_1793177647644_txtif for topic 'pet' (Workspace: acceptance_v12_2_3_ws)
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+[KH-02 Worker] Finished job kh02_run_1793177647644_txtif: COMPLETED
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 248ms
+✓ Running next.config.ts took 94ms
+[KH-02 Worker] Initialized kh02-worker-20968-mvrvze8l | Release: V12.4.1 | SHA: 07ffcac | DB Fingerprint: 6530562482a2 | Mode: DAEMON
+[KH-02 Worker] Claimed job kh02_run_1793178172891_opcyi for topic 'pet' (Workspace: acceptance_v12_2_3_ws)
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+[KH-02 Worker] Finished job kh02_run_1793178172891_opcyi: COMPLETED

@@ -1,0 +1,87 @@
+{
+  "version": "12.4.3.3.1",
+  "testedSourceSha": "f4a7eea16a947b44bd5943c6ee39c53a55c365b7",
+  "suites": [
+    {
+      "suiteId": "tsc_typecheck",
+      "name": "TypeScript Typecheck (tsc --noEmit)",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 3675,
+      "timedOut": false
+    },
+    {
+      "suiteId": "eslint",
+      "name": "ESLint (src)",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 4945,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh01_verify",
+      "name": "KH-01 Regression Suite",
+      "exitCode": 0,
+      "passedTests": 69,
+      "failedTests": 0,
+      "durationMs": 5060,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_1_family",
+      "name": "V12.4.3.3.1 Semantic Family Classification Suite",
+      "exitCode": 0,
+      "passedTests": 15,
+      "failedTests": 0,
+      "durationMs": 939,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_1_integrity",
+      "name": "V12.4.3.3.1 Meta/Google Live Integrity & Adversarial Suite",
+      "exitCode": 0,
+      "passedTests": 17,
+      "failedTests": 0,
+      "durationMs": 1922,
+      "timedOut": false
+    },
+    {
+      "suiteId": "v12_4_3_3_provenance",
+      "name": "V12.4.3.3 Meta/Google Provenance Suite (89 tests)",
+      "exitCode": 0,
+      "passedTests": 89,
+      "failedTests": 0,
+      "durationMs": 2223,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh02_unit_all",
+      "name": "KH-02 Full Unit Regression Suite",
+      "exitCode": 0,
+      "passedTests": 607,
+      "failedTests": 0,
+      "durationMs": 64502,
+      "timedOut": false
+    },
+    {
+      "suiteId": "kh02_integration",
+      "name": "KH-02 Integration Suite",
+      "exitCode": 0,
+      "passedTests": 27,
+      "failedTests": 0,
+      "durationMs": 14672,
+      "timedOut": false
+    },
+    {
+      "suiteId": "production_build",
+      "name": "Next.js Production Build",
+      "exitCode": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "durationMs": 12710,
+      "timedOut": false
+    }
+  ]
+}

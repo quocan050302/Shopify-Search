@@ -1,0 +1,6 @@
+{
+  "legacyHistoricalJobsPreserved": true,
+  "historicalCompletedJobsReadable": true,
+  "sharedKh01JobCompatibility": true,
+  "backwardCompatibleNullableDefaults": true
+}

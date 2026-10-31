@@ -1,0 +1,15 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "providerMode": "GOOGLE_FREE_ONLY",
+  "methodology": "google_free_demand_live",
+  "serpApiIsolated": true,
+  "serpApiCallsMade": 0,
+  "forensicDbDemandAudit": {
+    "totalObservations": 96,
+    "authoritativeCount": 0,
+    "cachedUnverifiedCount": 60,
+    "fixtureCount": 36
+  },
+  "demandLineageIntegrity": "PASS"
+}

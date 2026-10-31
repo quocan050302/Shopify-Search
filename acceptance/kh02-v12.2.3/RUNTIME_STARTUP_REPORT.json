@@ -1,0 +1,7 @@
+{
+  "serverUrl": "http://localhost:3000",
+  "serverResponding": true,
+  "workerAttached": true,
+  "databaseFile": "dev.db",
+  "startedAt": "2026-10-27T01:59:04.018Z"
+}

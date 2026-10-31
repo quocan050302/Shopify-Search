@@ -1,0 +1,842 @@
+{
+  "runId": "kh02_run_1793178172891_opcyi",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "topic": "pet",
+  "market": "US",
+  "lookbackDays": 90,
+  "status": "COMPLETED",
+  "effectiveJobState": "COMPLETED",
+  "candidatesDiscovered": 16,
+  "verifiedEvergreenCount": 0,
+  "researchShortlistCount": 1,
+  "provisionalCount": 1,
+  "rejectedCount": 2,
+  "shortlist": [
+    {
+      "candidateId": "cand_1778107836",
+      "title": "Pet Hair Removers",
+      "canonicalProductName": "Pet Hair Removers",
+      "displayName": "Pet Hair Removers",
+      "originalAdHeadline": "The #1 Pet Hair/Lint/Dust Cleaner",
+      "originalCreativeCode": "pet-hair-removers",
+      "brand": "Uproot Clean",
+      "model": null,
+      "sku": null,
+      "category": "Pet Hair Removal Tool",
+      "problemStatement": "The #1 Pet Hair/Lint/Dust Cleaner That musty smell in your house isn't your dog",
+      "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+      "thumbnailUrl": "https://scontent.fhan3-4.fna.fbcdn.net/v/t39.35426-6/819300828_2309677946554569_2819731428621755660_n.jpg?_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=ecqIrcGqDS8Q7kNvwGPf-XM&_nc_oc=AdpOvkaKO4wv-tc88qT80yI2tMmC2FqCfluPGRGPlol9uZr2aGzHosam4OalSioiEvo&_nc_zt=14&_nc_ht=scontent.fhan3-4.fna&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&oh=00_AQMrTMYAWZU0O5vRGnMrybRM4NEEWpKswbDW3XkRN6udOQ&oe=6AE1D351",
+      "videoUrl": "https://video.fhan4-4.fna.fbcdn.net/o1/v/t2/f2/m366/AQPRt6vRYNBXm5lYjpiNK_is-BfrFUIAbUsAkb6k0ViHbJPiAAnTHrVi4tQFObbhmIZ3OIbayZJz79nYG_451ujiF94M8YE388hX3PhUk6oCHA.mp4?_nc_cat=109&_nc_oc=AdqDj67gIk3TYK06tUsLNibtpmtlzDQsK_yORWdHb3SJkg1CQ1ASs-CGaqusUPBB1JU&_nc_sid=b66105&_nc_ht=video.fhan4-4.fna.fbcdn.net&_nc_ohc=xxmULzFC8vsQ7kNvwGtr2hO&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyNTcwMjQ1NTMyMTI0MzgsImFzc2V0X2FnZV9kYXlzIjoxNzYsInZpX3VzZWNhc2VfaWQiOjEwMTM5LCJkdXJhdGlvbl9zIjozMywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=17b925a5cb3e34ce&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80RDRGN0EwMDNDRDZBRUU2RUQzM0I3MzUzOTQ0OTQ5MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzlDNEZDNzg4OTFGRDg5RjcxM0U3QThFMzI1MEFDNUJDX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACas6L7futC7BBUCKAJDMywXQEDHrhR64UgYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQOqRG6dRpbY_ACYJB2sgpRCq0-FYv34fgkY7VBHN0OcAQ&oe=6AE1F3BB",
+      "mediaSourceAdId": "cmvlsqyjn000faworwu1dts6g",
+      "canonicalProductUrl": "https://www.uprootclean.co/collections/pet-hair-removers",
+      "storeDomain": "uprootclean.co",
+      "advertiserNames": [
+        "Uproot Clean"
+      ],
+      "supportingAdIds": [
+        "cmvlsqyjn000faworwu1dts6g"
+      ],
+      "supportingSourceTypes": [
+        "META_ADS"
+      ],
+      "totalObservationCount": 1,
+      "distinctAdvertisersCount": 1,
+      "earliestObservationDate": "2026-10-28T09:03:03.147Z",
+      "latestObservationDate": "2026-10-28T09:03:03.147Z",
+      "identityConfidence": "HIGH_CONFIDENCE",
+      "sourceObservations": [
+        {
+          "source": "META_ADS",
+          "sourceRecordId": "cmvlsqyjn000faworwu1dts6g",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=1133000522848754",
+          "landingPageUrl": null,
+          "sourceExternalAdId": "1133000522848754",
+          "storeDomainEvidence": null,
+          "advertiserOrCreator": "Uproot Clean",
+          "advertiserDomain": null,
+          "productMatchHint": "The #1 Pet Hair/Lint/Dust Cleaner",
+          "reportedPublishedAt": null,
+          "reportedFirstShownAt": "2026-10-24T02:45:39.298Z",
+          "reportedLastShownAt": "2026-10-28T09:03:02.758Z",
+          "observedAt": "2026-10-28T09:03:03.147Z",
+          "requestedMarket": "US",
+          "verifiedDeliveryMarket": "US",
+          "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+          "description": "That musty smell in your house isn't your dog. It's what's buried in your carpet. 🤢\nPet hair locks between carpet fibers using microscopic hooks. Foot traffic pushes it deeper. Static holds it tighter. Your vacuum only touches the surface - suction pulls up, but embedded hair is stuck sideways.\n\nWithin weeks, trapped hair breeds bacteria. Every step launches particles into the air. That's your \"musty house\" smell. It was never the dog.\n\nThe Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds. \n\nWorks on carpet, furniture, car seats, stairs - anywhere hair gets trapped in fabric.\n\nNo cords. No charging. No clogged roller heads. Just grab it and scrape.\n\nTry it risk-free for 60 days. If it doesn't pull out a disgusting amount of hidden hair, full refund. No questions asked!\n\nTap Shop Now to find out what's really in your carpet.\nhttps://www.uprootclean.co/collections/pet-hair-removers",
+          "metrics": {
+            "daysRunning": 1,
+            "status": "UNKNOWN",
+            "observationsCount": 10,
+            "dataConfidence": "OBSERVED",
+            "marketVerification": "VERIFIED",
+            "isFreshLive": true
+          },
+          "media": {
+            "thumbnailUrl": "https://scontent.fhan3-4.fna.fbcdn.net/v/t39.35426-6/819300828_2309677946554569_2819731428621755660_n.jpg?_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=ecqIrcGqDS8Q7kNvwGPf-XM&_nc_oc=AdpOvkaKO4wv-tc88qT80yI2tMmC2FqCfluPGRGPlol9uZr2aGzHosam4OalSioiEvo&_nc_zt=14&_nc_ht=scontent.fhan3-4.fna&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&oh=00_AQMrTMYAWZU0O5vRGnMrybRM4NEEWpKswbDW3XkRN6udOQ&oe=6AE1D351",
+            "videoUrl": "https://video.fhan4-4.fna.fbcdn.net/o1/v/t2/f2/m366/AQPRt6vRYNBXm5lYjpiNK_is-BfrFUIAbUsAkb6k0ViHbJPiAAnTHrVi4tQFObbhmIZ3OIbayZJz79nYG_451ujiF94M8YE388hX3PhUk6oCHA.mp4?_nc_cat=109&_nc_oc=AdqDj67gIk3TYK06tUsLNibtpmtlzDQsK_yORWdHb3SJkg1CQ1ASs-CGaqusUPBB1JU&_nc_sid=b66105&_nc_ht=video.fhan4-4.fna.fbcdn.net&_nc_ohc=xxmULzFC8vsQ7kNvwGtr2hO&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyNTcwMjQ1NTMyMTI0MzgsImFzc2V0X2FnZV9kYXlzIjoxNzYsInZpX3VzZWNhc2VfaWQiOjEwMTM5LCJkdXJhdGlvbl9zIjozMywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=17b925a5cb3e34ce&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80RDRGN0EwMDNDRDZBRUU2RUQzM0I3MzUzOTQ0OTQ5MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzlDNEZDNzg4OTFGRDg5RjcxM0U3QThFMzI1MEFDNUJDX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACas6L7futC7BBUCKAJDMywXQEDHrhR64UgYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQOqRG6dRpbY_ACYJB2sgpRCq0-FYv34fgkY7VBHN0OcAQ&oe=6AE1F3BB",
+            "mediaType": "VIDEO"
+          },
+          "provenance": "LIVE_PROVIDER",
+          "evidenceReference": "CompetitorAd:cmvlsqyjn000faworwu1dts6g"
+        }
+      ],
+      "identityStatus": "PROBABLE",
+      "resolutionSource": "Ecommerce Path Slug Extraction",
+      "requiresManualReview": false,
+      "identityEvidenceReferences": [
+        "URL Path: pet-hair-removers"
+      ],
+      "isEligibleAsEvergreenWinner": false,
+      "relevanceStatus": "RELEVANT",
+      "relevanceScore": 0.95,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet, pet hair remover."
+      ],
+      "psychologyProfile": {
+        "targetCustomer": {
+          "claimText": "Dog owners seeking dedicated, supportive resting space for their pets",
+          "evidenceReference": "Observed mention: \"dog\" in Facebook Ad #1133000522848754",
+          "evidenceType": "AD_COPY",
+          "confidence": 0.75,
+          "status": "INFERRED",
+          "uncertaintyNote": "Explicit customer demographic not in copy; inferred from dog mention."
+        },
+        "situationOrUseCase": {
+          "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "functionalProblem": {
+          "claimText": "Excessive Pet Hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+          "evidenceReference": "Observed quote: \"Pet Hair\" in Facebook Ad #1133000522848754",
+          "evidenceType": "AD_COPY",
+          "confidence": 0.9,
+          "status": "OBSERVED"
+        },
+        "emotionalPain": {
+          "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "desiredOutcome": {
+          "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "purchaseTrigger": {
+          "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "mainObjections": {
+          "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+        },
+        "trustRequirements": {
+          "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "HYPOTHESIS"
+        },
+        "demonstrationPotential": {
+          "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "INFERRED"
+        },
+        "existingAlternatives": {
+          "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "INFERRED"
+        },
+        "differentiationHypothesis": {
+          "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "HEADLINE",
+          "confidence": 0.78,
+          "status": "HYPOTHESIS"
+        },
+        "suggestedMessagingAngle": {
+          "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+          "evidenceReference": "Facebook Ad #1133000522848754",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+        },
+        "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+      },
+      "sourcePageClassification": "COLLECTION_PAGE",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "productRealityReason": null,
+      "researchProductId": null,
+      "aiIntelligence": {
+        "candidateId": "cand_1778107836",
+        "commercialEntityType": "PHYSICAL_PRODUCT",
+        "suggestedProductName": "Uproot Pet Hair Remover",
+        "suggestedProductType": "Pet Hair Removal Tool",
+        "nicheRelevance": "HIGH",
+        "isLikelySellableProduct": true,
+        "identityEvidenceRefs": [
+          "cmvlsqyjn000faworwu1dts6g"
+        ],
+        "relevanceEvidenceRefs": [
+          "cmvlsqyjn000faworwu1dts6g"
+        ],
+        "directlyObservedClaims": [
+          {
+            "claim": "The product is a pet hair remover tool featuring a grooved metal edge designed to scrape embedded hair out of carpets and fabric.",
+            "sourceRef": "cmvlsqyjn000faworwu1dts6g",
+            "supportingQuote": "The Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds."
+          }
+        ],
+        "inferredClaims": [
+          "The product is reusable and requires no electricity or batteries.",
+          "The product can be used on carpets, furniture, car seats, and stairs."
+        ],
+        "contradictions": [],
+        "uncertainties": [],
+        "aiConfidence": 1,
+        "needsHumanReview": false
+      },
+      "aiVerification": {
+        "verified": true,
+        "evidenceDecision": "ACCEPT",
+        "validAiResponse": true,
+        "correctCandidateId": true,
+        "validSourceReferences": true,
+        "accurateQuotations": true,
+        "actualMerchantEvidence": true,
+        "productIdentityConsistent": true,
+        "productRealityEligible": true,
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "sourcePageClassification": "COLLECTION_PAGE",
+        "sanitizedResult": {
+          "candidateId": "cand_1778107836",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Uproot Pet Hair Remover",
+          "suggestedProductType": "Pet Hair Removal Tool",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "cmvlsqyjn000faworwu1dts6g"
+          ],
+          "relevanceEvidenceRefs": [
+            "cmvlsqyjn000faworwu1dts6g"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The product is a pet hair remover tool featuring a grooved metal edge designed to scrape embedded hair out of carpets and fabric.",
+              "sourceRef": "cmvlsqyjn000faworwu1dts6g",
+              "supportingQuote": "The Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds."
+            }
+          ],
+          "inferredClaims": [
+            "The product is reusable and requires no electricity or batteries.",
+            "The product can be used on carpets, furniture, car seats, and stairs."
+          ],
+          "contradictions": [],
+          "uncertainties": [],
+          "aiConfidence": 1,
+          "needsHumanReview": false
+        },
+        "contradictions": [],
+        "unsupportedClaims": [],
+        "hallucinatedSourceRefs": [],
+        "quoteMismatches": [],
+        "promptInjectionDetected": false,
+        "shortlistEligible": true,
+        "exclusionReason": null
+      },
+      "aiShortlistEligible": true,
+      "aiExclusionReason": null,
+      "aiFromCache": false,
+      "aiModelUsed": "gemini-3.5-flash-lite"
+    }
+  ],
+  "provisionalItems": [
+    {
+      "rank": null,
+      "candidate": {
+        "candidateId": "cand_1778107836",
+        "title": "Pet Hair Removers",
+        "canonicalProductName": "Pet Hair Removers",
+        "displayName": "Pet Hair Removers",
+        "originalAdHeadline": "The #1 Pet Hair/Lint/Dust Cleaner",
+        "originalCreativeCode": "pet-hair-removers",
+        "brand": "Uproot Clean",
+        "model": null,
+        "sku": null,
+        "category": "Pet Hair Removal Tool",
+        "problemStatement": "The #1 Pet Hair/Lint/Dust Cleaner That musty smell in your house isn't your dog",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": "https://scontent.fhan3-4.fna.fbcdn.net/v/t39.35426-6/819300828_2309677946554569_2819731428621755660_n.jpg?_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=ecqIrcGqDS8Q7kNvwGPf-XM&_nc_oc=AdpOvkaKO4wv-tc88qT80yI2tMmC2FqCfluPGRGPlol9uZr2aGzHosam4OalSioiEvo&_nc_zt=14&_nc_ht=scontent.fhan3-4.fna&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&oh=00_AQMrTMYAWZU0O5vRGnMrybRM4NEEWpKswbDW3XkRN6udOQ&oe=6AE1D351",
+        "videoUrl": "https://video.fhan4-4.fna.fbcdn.net/o1/v/t2/f2/m366/AQPRt6vRYNBXm5lYjpiNK_is-BfrFUIAbUsAkb6k0ViHbJPiAAnTHrVi4tQFObbhmIZ3OIbayZJz79nYG_451ujiF94M8YE388hX3PhUk6oCHA.mp4?_nc_cat=109&_nc_oc=AdqDj67gIk3TYK06tUsLNibtpmtlzDQsK_yORWdHb3SJkg1CQ1ASs-CGaqusUPBB1JU&_nc_sid=b66105&_nc_ht=video.fhan4-4.fna.fbcdn.net&_nc_ohc=xxmULzFC8vsQ7kNvwGtr2hO&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyNTcwMjQ1NTMyMTI0MzgsImFzc2V0X2FnZV9kYXlzIjoxNzYsInZpX3VzZWNhc2VfaWQiOjEwMTM5LCJkdXJhdGlvbl9zIjozMywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=17b925a5cb3e34ce&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80RDRGN0EwMDNDRDZBRUU2RUQzM0I3MzUzOTQ0OTQ5MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzlDNEZDNzg4OTFGRDg5RjcxM0U3QThFMzI1MEFDNUJDX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACas6L7futC7BBUCKAJDMywXQEDHrhR64UgYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQOqRG6dRpbY_ACYJB2sgpRCq0-FYv34fgkY7VBHN0OcAQ&oe=6AE1F3BB",
+        "mediaSourceAdId": "cmvlsqyjn000faworwu1dts6g",
+        "canonicalProductUrl": "https://www.uprootclean.co/collections/pet-hair-removers",
+        "storeDomain": "uprootclean.co",
+        "advertiserNames": [
+          "Uproot Clean"
+        ],
+        "supportingAdIds": [
+          "cmvlsqyjn000faworwu1dts6g"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-28T09:03:03.147Z",
+        "latestObservationDate": "2026-10-28T09:03:03.147Z",
+        "identityConfidence": "HIGH_CONFIDENCE",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "cmvlsqyjn000faworwu1dts6g",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=1133000522848754",
+            "landingPageUrl": null,
+            "sourceExternalAdId": "1133000522848754",
+            "storeDomainEvidence": null,
+            "advertiserOrCreator": "Uproot Clean",
+            "advertiserDomain": null,
+            "productMatchHint": "The #1 Pet Hair/Lint/Dust Cleaner",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": "2026-10-24T02:45:39.298Z",
+            "reportedLastShownAt": "2026-10-28T09:03:02.758Z",
+            "observedAt": "2026-10-28T09:03:03.147Z",
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": "US",
+            "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+            "description": "That musty smell in your house isn't your dog. It's what's buried in your carpet. 🤢\nPet hair locks between carpet fibers using microscopic hooks. Foot traffic pushes it deeper. Static holds it tighter. Your vacuum only touches the surface - suction pulls up, but embedded hair is stuck sideways.\n\nWithin weeks, trapped hair breeds bacteria. Every step launches particles into the air. That's your \"musty house\" smell. It was never the dog.\n\nThe Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds. \n\nWorks on carpet, furniture, car seats, stairs - anywhere hair gets trapped in fabric.\n\nNo cords. No charging. No clogged roller heads. Just grab it and scrape.\n\nTry it risk-free for 60 days. If it doesn't pull out a disgusting amount of hidden hair, full refund. No questions asked!\n\nTap Shop Now to find out what's really in your carpet.\nhttps://www.uprootclean.co/collections/pet-hair-removers",
+            "metrics": {
+              "daysRunning": 1,
+              "status": "UNKNOWN",
+              "observationsCount": 10,
+              "dataConfidence": "OBSERVED",
+              "marketVerification": "VERIFIED",
+              "isFreshLive": true
+            },
+            "media": {
+              "thumbnailUrl": "https://scontent.fhan3-4.fna.fbcdn.net/v/t39.35426-6/819300828_2309677946554569_2819731428621755660_n.jpg?_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=ecqIrcGqDS8Q7kNvwGPf-XM&_nc_oc=AdpOvkaKO4wv-tc88qT80yI2tMmC2FqCfluPGRGPlol9uZr2aGzHosam4OalSioiEvo&_nc_zt=14&_nc_ht=scontent.fhan3-4.fna&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&oh=00_AQMrTMYAWZU0O5vRGnMrybRM4NEEWpKswbDW3XkRN6udOQ&oe=6AE1D351",
+              "videoUrl": "https://video.fhan4-4.fna.fbcdn.net/o1/v/t2/f2/m366/AQPRt6vRYNBXm5lYjpiNK_is-BfrFUIAbUsAkb6k0ViHbJPiAAnTHrVi4tQFObbhmIZ3OIbayZJz79nYG_451ujiF94M8YE388hX3PhUk6oCHA.mp4?_nc_cat=109&_nc_oc=AdqDj67gIk3TYK06tUsLNibtpmtlzDQsK_yORWdHb3SJkg1CQ1ASs-CGaqusUPBB1JU&_nc_sid=b66105&_nc_ht=video.fhan4-4.fna.fbcdn.net&_nc_ohc=xxmULzFC8vsQ7kNvwGtr2hO&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjEyNTcwMjQ1NTMyMTI0MzgsImFzc2V0X2FnZV9kYXlzIjoxNzYsInZpX3VzZWNhc2VfaWQiOjEwMTM5LCJkdXJhdGlvbl9zIjozMywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=17b925a5cb3e34ce&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80RDRGN0EwMDNDRDZBRUU2RUQzM0I3MzUzOTQ0OTQ5MV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50LzlDNEZDNzg4OTFGRDg5RjcxM0U3QThFMzI1MEFDNUJDX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACas6L7futC7BBUCKAJDMywXQEDHrhR64UgYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=z0MOYy8hJmNo5yvCD5bEqw&_nc_ss=7a289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQOqRG6dRpbY_ACYJB2sgpRCq0-FYv34fgkY7VBHN0OcAQ&oe=6AE1F3BB",
+              "mediaType": "VIDEO"
+            },
+            "provenance": "LIVE_PROVIDER",
+            "evidenceReference": "CompetitorAd:cmvlsqyjn000faworwu1dts6g"
+          }
+        ],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "Ecommerce Path Slug Extraction",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "URL Path: pet-hair-removers"
+        ],
+        "isEligibleAsEvergreenWinner": false,
+        "relevanceStatus": "RELEVANT",
+        "relevanceScore": 0.95,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, pet hair remover."
+        ],
+        "psychologyProfile": {
+          "targetCustomer": {
+            "claimText": "Dog owners seeking dedicated, supportive resting space for their pets",
+            "evidenceReference": "Observed mention: \"dog\" in Facebook Ad #1133000522848754",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Explicit customer demographic not in copy; inferred from dog mention."
+          },
+          "situationOrUseCase": {
+            "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Excessive Pet Hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+            "evidenceReference": "Observed quote: \"Pet Hair\" in Facebook Ad #1133000522848754",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.9,
+            "status": "OBSERVED"
+          },
+          "emotionalPain": {
+            "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+            "evidenceReference": "Facebook Ad #1133000522848754",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "COLLECTION_PAGE",
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "researchProductId": null,
+        "aiIntelligence": {
+          "candidateId": "cand_1778107836",
+          "commercialEntityType": "PHYSICAL_PRODUCT",
+          "suggestedProductName": "Uproot Pet Hair Remover",
+          "suggestedProductType": "Pet Hair Removal Tool",
+          "nicheRelevance": "HIGH",
+          "isLikelySellableProduct": true,
+          "identityEvidenceRefs": [
+            "cmvlsqyjn000faworwu1dts6g"
+          ],
+          "relevanceEvidenceRefs": [
+            "cmvlsqyjn000faworwu1dts6g"
+          ],
+          "directlyObservedClaims": [
+            {
+              "claim": "The product is a pet hair remover tool featuring a grooved metal edge designed to scrape embedded hair out of carpets and fabric.",
+              "sourceRef": "cmvlsqyjn000faworwu1dts6g",
+              "supportingQuote": "The Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds."
+            }
+          ],
+          "inferredClaims": [
+            "The product is reusable and requires no electricity or batteries.",
+            "The product can be used on carpets, furniture, car seats, and stairs."
+          ],
+          "contradictions": [],
+          "uncertainties": [],
+          "aiConfidence": 1,
+          "needsHumanReview": false
+        },
+        "aiVerification": {
+          "verified": true,
+          "evidenceDecision": "ACCEPT",
+          "validAiResponse": true,
+          "correctCandidateId": true,
+          "validSourceReferences": true,
+          "accurateQuotations": true,
+          "actualMerchantEvidence": true,
+          "productIdentityConsistent": true,
+          "productRealityEligible": true,
+          "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+          "sourcePageClassification": "COLLECTION_PAGE",
+          "sanitizedResult": {
+            "candidateId": "cand_1778107836",
+            "commercialEntityType": "PHYSICAL_PRODUCT",
+            "suggestedProductName": "Uproot Pet Hair Remover",
+            "suggestedProductType": "Pet Hair Removal Tool",
+            "nicheRelevance": "HIGH",
+            "isLikelySellableProduct": true,
+            "identityEvidenceRefs": [
+              "cmvlsqyjn000faworwu1dts6g"
+            ],
+            "relevanceEvidenceRefs": [
+              "cmvlsqyjn000faworwu1dts6g"
+            ],
+            "directlyObservedClaims": [
+              {
+                "claim": "The product is a pet hair remover tool featuring a grooved metal edge designed to scrape embedded hair out of carpets and fabric.",
+                "sourceRef": "cmvlsqyjn000faworwu1dts6g",
+                "supportingQuote": "The Uproot Pet Hair Remover scrapes out what vacuums structurally cannot. A grooved metal edge that grabs embedded hair through friction and rips it free in seconds."
+              }
+            ],
+            "inferredClaims": [
+              "The product is reusable and requires no electricity or batteries.",
+              "The product can be used on carpets, furniture, car seats, and stairs."
+            ],
+            "contradictions": [],
+            "uncertainties": [],
+            "aiConfidence": 1,
+            "needsHumanReview": false
+          },
+          "contradictions": [],
+          "unsupportedClaims": [],
+          "hallucinatedSourceRefs": [],
+          "quoteMismatches": [],
+          "promptInjectionDetected": false,
+          "shortlistEligible": true,
+          "exclusionReason": null
+        },
+        "aiShortlistEligible": true,
+        "aiExclusionReason": null,
+        "aiFromCache": false,
+        "aiModelUsed": "gemini-3.5-flash-lite"
+      },
+      "score": {
+        "candidateId": "cand_1778107836",
+        "opportunityScore": 47,
+        "evidenceConfidence": 55,
+        "scoreStatus": "PROVISIONAL",
+        "formulaVersion": "12.1.0",
+        "demandClass": "INSUFFICIENT_HISTORY",
+        "pillars": {
+          "demandStability": {
+            "score": null,
+            "maxWeight": 25,
+            "status": "MISSING_DATA",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+          },
+          "problemSolutionFit": {
+            "score": 12,
+            "maxWeight": 20,
+            "status": "MODERATE",
+            "explanation": "The #1 Pet Hair/Lint/Dust Cleaner That musty smell in your house isn't your dog"
+          },
+          "multiPlatformValidation": {
+            "score": 8,
+            "maxWeight": 20,
+            "status": "MODERATE",
+            "explanation": "Observed across 1 platform source(s): META_ADS."
+          },
+          "brandabilityStoreFit": {
+            "score": 15,
+            "maxWeight": 15,
+            "status": "PASS",
+            "explanation": "Well-suited for dedicated Pet Hair Removal Tool branded store (uprootclean.co)."
+          },
+          "creativeDepth": {
+            "score": 6,
+            "maxWeight": 10,
+            "status": "MODERATE",
+            "explanation": "1 distinct creative variation(s) observed with video demonstration."
+          },
+          "competitionSustainability": {
+            "score": 3,
+            "maxWeight": 10,
+            "status": "MODERATE",
+            "explanation": "1 independent advertiser(s) actively running campaigns."
+          }
+        },
+        "strengths": [
+          "Clear customer problem addressed: \"The #1 Pet Hair/Lint/Dust Cleaner That musty smell in your house isn't your dog\"",
+          "Identified commercial domain: uprootclean.co with branded catalog potential.",
+          "Video demonstration creative available for product hook evaluation."
+        ],
+        "risks": [
+          "Concentration risk: Evidence currently limited to a single advertiser."
+        ],
+        "missingEvidence": [
+          "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+          "Single-platform evidence: Lacks corroboration on secondary ad or social channels."
+        ],
+        "recommendation": "RESEARCH_MORE",
+        "recommendationRationale": "Moderate score (47/100). Requires additional demand history and creative validation.",
+        "evaluatedAt": "2026-10-28T09:03:35.646Z",
+        "tier": "PROVISIONAL_OPPORTUNITY"
+      }
+    }
+  ],
+  "aiTelemetry": {
+    "provider": "GOOGLE_GEMINI",
+    "aiStatus": "COMPLETED",
+    "authStatus": "AUTHENTICATED",
+    "modelsDiscoveredCount": 60,
+    "eligibleModelsCount": 21,
+    "primaryModelId": "gemini-3.5-flash-lite",
+    "fallbackModels": [
+      "gemini-flash-lite-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash",
+      "gemma-4-26b-a4b-it",
+      "gemma-4-31b-it",
+      "gemini-3.1-pro-preview",
+      "gemini-pro-latest",
+      "gemini-3-flash-preview",
+      "gemini-3.1-pro-preview-customtools",
+      "gemini-3.1-flash-lite-preview",
+      "gemini-omni-flash-preview",
+      "gemini-omni-1.1-flash",
+      "gemini-4-argon",
+      "antigravity-preview-05-2026",
+      "antigravity-preview-09-2026",
+      "antigravity-preview-latest"
+    ],
+    "actualModelUsed": "gemini-3.5-flash-lite",
+    "successfulModelIds": [
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest"
+    ],
+    "modelsAttempted": [
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest"
+    ],
+    "fallbackUsed": true,
+    "fallbackTransitionsCount": 1,
+    "totalAnalysesAttempted": 15,
+    "totalAnalysesCompleted": 15,
+    "liveAnalysesCompleted": 15,
+    "cachedAnalysesReused": 0,
+    "totalAnalysesFailed": 0,
+    "skippedAnalysesCount": 0,
+    "unavailableAnalysesCount": 0,
+    "requestsStarted": 20,
+    "requestsCompleted": 15,
+    "requestsFailed": 5,
+    "retriesExecuted": 4,
+    "tokensConsumed": 18037,
+    "actualBillableUsage": null,
+    "globalBudgetRemaining": 5,
+    "physicalProductsCount": 14,
+    "servicesRejectedCount": 0,
+    "contentRejectedCount": 1,
+    "insuranceLeadGenRejectedCount": 0,
+    "unknownClassificationsCount": 0,
+    "evidenceContradictionsCount": 0,
+    "invalidAIOutputsRejectedCount": 0
+  },
+  "sourceTelemetry": {
+    "META_ADS": {
+      "source": "META_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-28T09:03:03.147Z",
+      "retrievedCount": 17,
+      "acceptedCount": 17,
+      "queryProvenance": "LIVE_PROVIDER",
+      "isLive": true,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 17,
+      "lastSuccessfulQueryAt": "2026-10-28T09:03:03.147Z",
+      "upstreamReturnedCount": 17,
+      "freshLiveCount": 17,
+      "cachedRecordsCount": 0,
+      "persistedInsertedCount": 0,
+      "persistedUpdatedCount": 17,
+      "liveAttempted": true,
+      "liveSucceeded": true,
+      "liveError": null,
+      "lastLiveQueryAt": "2026-10-28T09:03:03.147Z",
+      "lastLiveQueryRecordCount": 17,
+      "lastSuccessfulLiveQueryAt": "2026-10-28T09:03:03.147Z",
+      "auditTraces": [
+        {
+          "rawId": "1394681365927207",
+          "digest": "c56ef12bd5721a077eb5edbe966c6628",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21do900014gorux4x9zzo"
+        },
+        {
+          "rawId": "2619370888493232",
+          "digest": "be88d5ccc8fc16535121dc8d2d069720",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21dpt00064gorn2vort8a"
+        },
+        {
+          "rawId": "1409887821066414",
+          "digest": "e4fd632fc74af014202926a58baf5b75",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21dqq000b4gor1w9t6w05"
+        },
+        {
+          "rawId": "1395097056025193",
+          "digest": "c6acf0ca3e54eb510d484ff389d41172",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21drj000g4gorlvwnmgql"
+        },
+        {
+          "rawId": "1536941208479218",
+          "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+          "decision": "UPDATED",
+          "persistedId": "cmvlsqyhy0003awor2cubpbuq"
+        },
+        {
+          "rawId": "1778772883252421",
+          "digest": "92da39c877d0c0db674acc93d612add1",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21dtd000o4gor6os6ozvj"
+        },
+        {
+          "rawId": "2688711491543464",
+          "digest": "f684060c0fb534bb1ff7a921a5d36e5e",
+          "decision": "UPDATED",
+          "persistedId": "cmvq21du8000t4gorrxhd3a6d"
+        },
+        {
+          "rawId": "1464108218882438",
+          "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+          "decision": "UPDATED",
+          "persistedId": "cmvlsqyiz0009aworjqixph93"
+        },
+        {
+          "rawId": "1133000522848754",
+          "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+          "decision": "UPDATED",
+          "persistedId": "cmvlsqyjn000faworwu1dts6g"
+        },
+        {
+          "rawId": "1501129465377642",
+          "digest": "9d77606376724215e77b7d5399a8613f",
+          "decision": "UPDATED",
+          "persistedId": "cmvrh5abo0010fcorfxmee1rj"
+        },
+        {
+          "rawId": "1641348457417375",
+          "digest": "e95e7abd2d294d3761316ba1283628a7",
+          "decision": "UPDATED",
+          "persistedId": "cmvlsqykc000laworg3qfh92d"
+        },
+        {
+          "rawId": "2249466188957796",
+          "digest": "ed821df7bed80fa8cac7153f3d29069f",
+          "decision": "UPDATED",
+          "persistedId": "cmvlsqyl0000raworivkxfbhm"
+        },
+        {
+          "rawId": "1642750633880173",
+          "digest": "09354344bcebc93b92f10782e68891d8",
+          "decision": "UPDATED",
+          "persistedId": "cmvq0trww000fwgor0lp8jttq"
+        },
+        {
+          "rawId": "1410922084469845",
+          "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+          "decision": "UPDATED",
+          "persistedId": "cmvq0trxo000kwgorhbr1satz"
+        },
+        {
+          "rawId": "1806555653907868",
+          "digest": "58f9024f51d25bac44adb560c712d426",
+          "decision": "UPDATED",
+          "persistedId": "cmvq0tryb000pwgorf9nb1cw7"
+        },
+        {
+          "rawId": "1563296449176047",
+          "digest": "45699c99516306b5a9d581c8f3d594af",
+          "decision": "UPDATED",
+          "persistedId": "cmvq0tryv000uwgorvjr4hq8v"
+        },
+        {
+          "rawId": "4546541612250472",
+          "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+          "decision": "UPDATED",
+          "persistedId": "cmvrh5afz001ufcort18234su"
+        }
+      ]
+    },
+    "TIKTOK_ADS": {
+      "source": "TIKTOK_ADS",
+      "queryExecuted": false,
+      "queryStatus": "TEMPORARILY_DISABLED",
+      "queryTimestamp": null,
+      "retrievedCount": null,
+      "acceptedCount": null,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": null,
+      "lastSuccessfulQueryAt": null
+    },
+    "TIKTOK_ORGANIC": {
+      "source": "TIKTOK_ORGANIC",
+      "queryExecuted": false,
+      "queryStatus": "TEMPORARILY_DISABLED",
+      "queryTimestamp": null,
+      "retrievedCount": null,
+      "acceptedCount": null,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": null,
+      "lastSuccessfulQueryAt": null
+    },
+    "GOOGLE_ADS": {
+      "source": "GOOGLE_ADS",
+      "queryExecuted": true,
+      "queryStatus": "QUERY_SUCCEEDED_EMPTY",
+      "queryTimestamp": "2026-10-28T09:03:35.629Z",
+      "retrievedCount": 0,
+      "acceptedCount": 0,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 0,
+      "lastSuccessfulQueryAt": "2026-10-28T09:03:35.629Z",
+      "productAssociatedCount": 0
+    },
+    "DEMAND_HISTORY": {
+      "source": "DEMAND_HISTORY",
+      "queryExecuted": false,
+      "queryStatus": "NOT_VERIFIED",
+      "queryTimestamp": null,
+      "retrievedCount": null,
+      "acceptedCount": null,
+      "queryProvenance": "NONE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": null,
+      "lastSuccessfulQueryAt": null
+    }
+  }
+}

@@ -1,0 +1,457 @@
+{
+  "releaseVersion": "12.4.3",
+  "versionHandshake": {
+    "releaseVersion": "12.4.3",
+    "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "backendStartedAt": "2026-10-29T03:46:19.565Z",
+    "workerStartedAt": "2026-10-29T03:46:19.236Z",
+    "dbFingerprint": "6530562482a2",
+    "workerDbFingerprint": "6530562482a2",
+    "conflictingWorkersDetected": false,
+    "diagnostics": [
+      "Frontend, backend, and worker runtime parity verified at V12.4.3 (577aa2d)."
+    ],
+    "runtimeStatus": "MATCHED",
+    "buildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+    "buildTimestamp": "2026-10-29T03:16:15.201Z",
+    "appVersion": "12.4.3",
+    "workerVersion": "12.4.3",
+    "environment": "production",
+    "appProcessId": 19908,
+    "workerProcessId": 20232
+  },
+  "emptyQueryHttpStatus": 400,
+  "whitespaceQueryHttpStatus": 400,
+  "petGadgets90D": {
+    "runId": "kh02_run_1793245584051_wvonl",
+    "httpRunId": "kh02_run_1793245584051_wvonl",
+    "browserE2E": {
+      "pageLoaded": true,
+      "authorized": true,
+      "researchSubmitted": true,
+      "acceptedRunId": "kh02_run_1793245584051_wvonl",
+      "terminalStatus": "COMPLETED",
+      "terminalStateObserved": true,
+      "resultsRendered": true,
+      "emptyStateAccurate": false,
+      "displayedCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859",
+        "cand_14769098",
+        "cand_1613504636",
+        "cand_1272640899",
+        "cand_1971924954",
+        "cand_1783682388"
+      ],
+      "displayedRankOrder": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
+      ],
+      "displayedScores": {
+        "cand_1212440541": 78,
+        "cand_1838011041": 67,
+        "cand_1788406859": 67,
+        "cand_14769098": 60,
+        "cand_1613504636": 60,
+        "cand_1272640899": 52,
+        "cand_1971924954": 52,
+        "cand_1783682388": 46
+      },
+      "displayedConfidence": {
+        "cand_1212440541": "80",
+        "cand_1838011041": "70",
+        "cand_1788406859": "70",
+        "cand_14769098": "55",
+        "cand_1613504636": "55",
+        "cand_1272640899": "45",
+        "cand_1971924954": "45",
+        "cand_1783682388": "45"
+      },
+      "renderedCards": [
+        {
+          "candidateId": "cand_1212440541",
+          "rank": 1,
+          "score": 78,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_1838011041",
+          "rank": 2,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "rank": 3,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_14769098",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1613504636",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1272640899",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1971924954",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1783682388",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        }
+      ],
+      "postReloadCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859",
+        "cand_14769098",
+        "cand_1613504636",
+        "cand_1272640899",
+        "cand_1971924954",
+        "cand_1783682388"
+      ],
+      "postReloadScores": {
+        "cand_1212440541": 78,
+        "cand_1838011041": 67,
+        "cand_1788406859": 67,
+        "cand_14769098": 60,
+        "cand_1613504636": 60,
+        "cand_1272640899": 52,
+        "cand_1971924954": 52,
+        "cand_1783682388": 46
+      },
+      "postReloadCards": [
+        {
+          "candidateId": "cand_1212440541",
+          "rank": 1,
+          "score": 78,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_1838011041",
+          "rank": 2,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1788406859",
+          "rank": 3,
+          "score": 67,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_14769098",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1613504636",
+          "rank": null,
+          "score": 60,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1272640899",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1971924954",
+          "rank": null,
+          "score": 52,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_1783682388",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        }
+      ],
+      "postReloadConsistent": true,
+      "unexpectedHttpErrors": [],
+      "hydrationErrors": [],
+      "databaseMatch": true,
+      "httpMatch": true,
+      "shortlistSectionRendered": true,
+      "shortlistCardsCount": 3,
+      "shortlistCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
+      ],
+      "shortlistTitles": [
+        "Automatic Wet Food Cat Feeder with Cooling & Warming",
+        "Reusable Pet Hair Remover Roller",
+        "Pawira Stainless Steel Water Fountain"
+      ],
+      "rejectedTitles": [
+        "Unidentified Product (Source: Ad #cmvrzh8b5008tlsorla007t84, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "News Sakerplus Microfiber Spray Mop With Washable Pads XyREJECTEDm.sakerplus.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "Unidentified Product (Source: Ad #cmvrh5abo0010fcorfxmee1rj, Identity: Needs Review)REJECTEDorder.uprootclean.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'pet gadgets'.",
+        "Amazon Sold A Fake Cat Fountain Under A Real Brand's Name👆REJECTEDpawira.com · Score: 0/100Reason: Excluded: Classified as non-physical entity (PHYSICAL_PRODUCT)."
+      ],
+      "erVetBillInShortlist": false,
+      "erVetBillInTopThree": false,
+      "erVetBillInProvisional": false,
+      "nonPhysicalNoiseInShortlist": false,
+      "discoveryIntelligencePanelRendered": true,
+      "coherentFunnelRendered": true,
+      "queryCoverageTableRendered": true,
+      "runtimeVersionBadgeText": "SHA: 577aa2d",
+      "runtimeParityStatus": "VERSION_MISMATCH",
+      "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "authoritativeRunIdInDom": "kh02_run_1793245584051_wvonl",
+      "postReloadShortlistCandidateIds": [
+        "cand_1212440541",
+        "cand_1838011041",
+        "cand_1788406859"
+      ],
+      "postReloadRunIdInDom": "kh02_run_1793245584051_wvonl",
+      "cardCount": 8,
+      "screenshots": [
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\pet_gadgets_90d_04_after_reload.png"
+      ],
+      "consoleLogs": [],
+      "errors": [],
+      "durationMs": 16625,
+      "verdict": "PASS"
+    }
+  },
+  "diy180D": {
+    "runId": "kh02_run_1793245600359_r7l49",
+    "httpRunId": "kh02_run_1793245600359_r7l49",
+    "browserE2E": {
+      "pageLoaded": true,
+      "authorized": true,
+      "researchSubmitted": true,
+      "acceptedRunId": "kh02_run_1793245600359_r7l49",
+      "terminalStatus": "PARTIALLY_COMPLETED",
+      "terminalStateObserved": true,
+      "resultsRendered": true,
+      "emptyStateAccurate": false,
+      "displayedCandidateIds": [
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049",
+        "cand_988616984",
+        "cand_1262566191",
+        "cand_698946292"
+      ],
+      "displayedRankOrder": [
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049"
+      ],
+      "displayedScores": {
+        "cand_739320169": 73,
+        "cand_1316890495": 72,
+        "cand_887687049": 72,
+        "cand_988616984": 51,
+        "cand_1262566191": 46,
+        "cand_698946292": 46
+      },
+      "displayedConfidence": {
+        "cand_739320169": "70",
+        "cand_1316890495": "80",
+        "cand_887687049": "80",
+        "cand_988616984": "55",
+        "cand_1262566191": "45",
+        "cand_698946292": "45"
+      },
+      "renderedCards": [
+        {
+          "candidateId": "cand_739320169",
+          "rank": 1,
+          "score": 73,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1316890495",
+          "rank": 2,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_887687049",
+          "rank": 3,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_988616984",
+          "rank": null,
+          "score": 51,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1262566191",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_698946292",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        }
+      ],
+      "postReloadCandidateIds": [
+        "cand_739320169",
+        "cand_1316890495",
+        "cand_887687049",
+        "cand_988616984",
+        "cand_1262566191",
+        "cand_698946292"
+      ],
+      "postReloadScores": {
+        "cand_739320169": 73,
+        "cand_1316890495": 72,
+        "cand_887687049": 72,
+        "cand_988616984": 51,
+        "cand_1262566191": 46,
+        "cand_698946292": 46
+      },
+      "postReloadCards": [
+        {
+          "candidateId": "cand_739320169",
+          "rank": 1,
+          "score": 73,
+          "confidence": "70"
+        },
+        {
+          "candidateId": "cand_1316890495",
+          "rank": 2,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_887687049",
+          "rank": 3,
+          "score": 72,
+          "confidence": "80"
+        },
+        {
+          "candidateId": "cand_988616984",
+          "rank": null,
+          "score": 51,
+          "confidence": "55"
+        },
+        {
+          "candidateId": "cand_1262566191",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        },
+        {
+          "candidateId": "cand_698946292",
+          "rank": null,
+          "score": 46,
+          "confidence": "45"
+        }
+      ],
+      "postReloadConsistent": true,
+      "unexpectedHttpErrors": [],
+      "hydrationErrors": [],
+      "databaseMatch": true,
+      "httpMatch": true,
+      "shortlistSectionRendered": true,
+      "shortlistCardsCount": 3,
+      "shortlistCandidateIds": [
+        "cand_2112012920",
+        "cand_1316890495",
+        "cand_887687049"
+      ],
+      "shortlistTitles": [
+        "Burnett Wallpaper",
+        "Rechargeable Hot Melt Glue Gun with Stand and 10 Glue Sticks",
+        "Easy-Fill Wall Repair Paste Kit - 🔥 Free Bonus: Scraper & Sandpaper 🔥 / Buy 1 Set  · 33% Off"
+      ],
+      "rejectedTitles": [
+        "RELIFE DT-01 Smart Pen Type Mini Multimeter for Mobile Phone Repair Home Maintenance DIY EtcREJECTEDapp.alibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Unidentified Product (Source: Facebook Ad #1405789581235775, Identity: Needs Review)REJECTEDamzlink.to · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "must-have essential every new cat parent needs in their home! 🎁✨🐱REJECTEDDomain unverified · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "💕iControl: Easy Widgets ThemesREJECTEDDomain unverified · Score: 0/100Reason: Describes a digital mobile app or phone widget theme rather than a physical ecommerce product.",
+        "Clean Without Bending OverREJECTEDamazon.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "✨7 In 1 Electric Spin ScrubberREJECTEDreemoreemoo.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Cordless Electric Spin Scrubber With 5 Replaceable Brush HeadsREJECTEDrealgalaxystore.myshopify.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Scrubbing the bathroom was ruining my back 😩🧼REJECTEDsmartcarting.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "News Sakerplus Microfiber Spray Mop With Washable Pads XyREJECTEDm.sakerplus.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Scrubbing the bathroom was ruining my back 😩🧼REJECTEDitsblossom.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "8dgfdf Electric CleanREJECTEDforubom.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Pet Hair Remover Roller Dog Cat Fur Remover With Self Cleaning Base Efficient Animal Hair Removal ToREJECTEDaureluxe.ch · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Pawira Stainless Steel Water FountainREJECTEDpawira.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Reusable Pet Hair Remover RollerREJECTEDlivlandco.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Unidentified Product (HOMEPAGE: taybahexpress.online, Review Required)REJECTEDtaybahexpress.online · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'.",
+        "Multi Purpose Manual Fruit Mandoline Vegetable Chopper Slicer Cutter Grater Set for KitchenREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Kitchen Sink Caddy Sponge Holder Silicone Plastic Soap Holder Hanging Ajustable Strap Faucet Caddy wREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "Manual 16 in 1 Vegetable Chopper Slicer Dicer Vegetable Cutter for Vegetables with ContainerREJECTEDalibaba.com · Score: 0/100Reason: Describes a lead generation form, B2B wholesale inquiry, casino ad, or charity donation rather than a physical consumer product.",
+        "DIY Pest ControlREJECTEDpestie.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Unidentified Product (HOMEPAGE: wallart.com, Review Required)REJECTEDwallart.com · Score: 0/100Reason: Excluded: Campaign code or internal ad identifier.",
+        "Your Walls Called... ☎️  --- They Want A Makeover!REJECTEDloomwell.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Easier & Cleaner Than Paint.REJECTEDwallpops.com · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Must Have DIY ToolREJECTEDampd.to · Score: 0/100Reason: Excluded: Destination URL redirected or resolved to a generic store homepage rather than a product page.",
+        "Disney&#x27;s Cinderella Dress-Up Accessory Set with Tiara & Shoes - Walmart.comREJECTEDwalmart.com · Score: 0/100Reason: No keyword or niche alignment found with topic 'diy'."
+      ],
+      "erVetBillInShortlist": false,
+      "erVetBillInTopThree": false,
+      "erVetBillInProvisional": false,
+      "nonPhysicalNoiseInShortlist": false,
+      "discoveryIntelligencePanelRendered": true,
+      "coherentFunnelRendered": true,
+      "queryCoverageTableRendered": true,
+      "runtimeVersionBadgeText": "SHA: 577aa2d",
+      "runtimeParityStatus": "VERSION_MISMATCH",
+      "frontendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "backendBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "workerBuildSha": "577aa2d2eddb3e0c59518dbf8c7e8bf0e4ed769b",
+      "authoritativeRunIdInDom": "kh02_run_1793245600359_r7l49",
+      "postReloadShortlistCandidateIds": [
+        "cand_2112012920",
+        "cand_1316890495",
+        "cand_887687049"
+      ],
+      "postReloadRunIdInDom": "kh02_run_1793245600359_r7l49",
+      "cardCount": 6,
+      "screenshots": [
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_01_before_research.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_02_source_statuses.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_03_leaderboard_results.png",
+        "D:\\Project_github\\Running-Ads\\acceptance\\kh02-v12.4.3\\screenshots\\diy_180d_04_after_reload.png"
+      ],
+      "consoleLogs": [],
+      "errors": [],
+      "durationMs": 16407,
+      "verdict": "PASS"
+    }
+  }
+}

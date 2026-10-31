@@ -1,0 +1,10 @@
+{
+  "source": "GOOGLE_ADS",
+  "mcpServerStatus": "MCP_NOT_CONFIGURED",
+  "reason": "Google Ads Transparency MCP server is not configured in environment (GOOGLE_TRANSPARENCY_LIVE: BLOCKED).",
+  "supportedOperations": [
+    "domainLookup",
+    "advertiserSearch",
+    "adsRetrieval"
+  ]
+}

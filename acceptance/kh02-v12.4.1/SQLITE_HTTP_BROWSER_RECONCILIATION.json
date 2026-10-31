@@ -1,0 +1,43 @@
+{
+  "acceptedRunId": "kh02_run_1793178172891_opcyi",
+  "sqlite": {
+    "runId": "kh02_run_1793178172891_opcyi",
+    "status": "COMPLETED",
+    "effectiveJobState": "COMPLETED",
+    "shortlistCandidateIds": [
+      "cand_1778107836"
+    ],
+    "rankedCandidateIds": [],
+    "provisionalCandidateIds": [
+      "cand_1778107836"
+    ]
+  },
+  "http": {
+    "runEndpointRunId": "kh02_run_1793178172891_opcyi",
+    "leaderboardEndpointRunId": "kh02_run_1793178172891_opcyi",
+    "shortlistCandidateIds": [
+      "cand_1778107836"
+    ]
+  },
+  "browserDom": {
+    "authoritativeRunIdInDom": "kh02_run_1793178172891_opcyi",
+    "postReloadRunIdInDom": "kh02_run_1793178172891_opcyi",
+    "shortlistCandidateIds": [
+      "cand_1778107836"
+    ],
+    "postReloadShortlistCandidateIds": [
+      "cand_1778107836"
+    ],
+    "shortlistTitles": [
+      "Pet Hair Removers"
+    ],
+    "displayedCandidateIds": [
+      "cand_1778107836"
+    ],
+    "postReloadCandidateIds": [
+      "cand_1778107836"
+    ],
+    "erVetBillInShortlist": false
+  },
+  "reconciled": true
+}

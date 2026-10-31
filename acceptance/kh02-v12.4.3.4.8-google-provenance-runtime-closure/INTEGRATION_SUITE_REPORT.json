@@ -1,0 +1,41 @@
+{
+  "evaluatedAt": "2026-10-31T11:09:35.754Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "status": "EXECUTED",
+  "executionProof": {
+    "suiteId": "kh02_integration",
+    "command": "node vitest.mjs run kh02ResearchApi.test.ts kh02V12_1_3_Acceptance.test.ts kh02V12_1_Persistence.test.ts kh02V12_1_4_1_LegacyMigration.test.ts kh02V12_1_4_2_LongResearch.test.ts",
+    "pid": 76766,
+    "sourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+    "expectedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+    "shaMatches": true,
+    "startedAt": "2026-10-31T11:09:16.355Z",
+    "completedAt": "2026-10-31T11:09:21.091Z",
+    "durationMs": 4736,
+    "exitCode": 0,
+    "signal": null,
+    "jsonReportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure/json_reports/kh02_integration.json",
+    "jsonReportExists": true,
+    "validExecutionRecord": true
+  },
+  "configuredSuiteFiles": [
+    "tests/integration/kh02ResearchApi.test.ts",
+    "tests/integration/kh02V12_1_3_Acceptance.test.ts",
+    "tests/integration/kh02V12_1_Persistence.test.ts",
+    "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
+    "tests/integration/kh02V12_1_4_2_LongResearch.test.ts"
+  ],
+  "executedSuiteFiles": [
+    "tests/integration/kh02ResearchApi.test.ts",
+    "tests/integration/kh02V12_1_3_Acceptance.test.ts",
+    "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
+    "tests/integration/kh02V12_1_4_2_LongResearch.test.ts",
+    "tests/integration/kh02V12_1_Persistence.test.ts"
+  ],
+  "totalTests": 18,
+  "passedTests": 18,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "reason": "EXECUTED: Verified 18/18 integration tests across 5 suite files from child PID 76766."
+}

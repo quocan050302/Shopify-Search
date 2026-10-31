@@ -1,0 +1,6 @@
+{
+  "frontendSha": "cbffd4174af6d38f19c4327019c3d94b977d5cab",
+  "workerSha": "cbffd4174af6d38f19c4327019c3d94b977d5cab",
+  "match": true,
+  "databaseIdentity": "prisma/dev.db"
+}

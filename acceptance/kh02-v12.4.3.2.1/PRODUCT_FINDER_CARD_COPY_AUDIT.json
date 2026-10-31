@@ -1,0 +1,31 @@
+{
+  "version": "12.4.3.2.1",
+  "cardsAuditedCount": 2,
+  "rawTechnicalMetadataLeakCount": 0,
+  "cards": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "titleSourceLabel": "Merchant-Verified Title",
+      "whyItFitsYourSearch": "UAHPET Fresh Food Automatic Pet Feeder for cat owners (Perfect for multi-pet households 🎉 New Arrival: UAHPET Fresh Food Automatic Pet Feeder), matching your \"Automatic Pet Feeder\" search and verified on uahpet.com.",
+      "drawerTechnicalVerificationSummary": "Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (10532085367078), ecommerce product DOM.",
+      "verifiedEvidenceItems": [
+        "Merchant product page verified",
+        "Physical product supported",
+        "Historical advertising observations: 7 distinct ads · 84 total obs (Meta Ads)"
+      ]
+    },
+    {
+      "candidateId": "cand_1783682388",
+      "title": "Automatic Dog Feeder for Easy Daily Meals",
+      "titleSourceLabel": "Ad-Claimed Product Name",
+      "whyItFitsYourSearch": "Automatic Dog Feeder for Easy Daily Meals for dog owners (Automatic Dog Feeder for Easy Daily Meals Explore our fabulous pets product), matching your \"Automatic Pet Feeder\" search and supported by 1 linked advertising creative(s) for kingspetboutique.info.",
+      "drawerTechnicalVerificationSummary": "Merchant fetch returned HTTP_ERROR; identity kept as PROBABLE from URL locator /products/automatic-pet-feeder-drinking-fountain (Section 4.3).",
+      "verifiedEvidenceItems": [
+        "Ad-supported product (merchant page unverified)",
+        "Physical product supported",
+        "Historical advertising observations: 1 distinct ad · 12 total obs (Meta Ads)"
+      ]
+    }
+  ]
+}

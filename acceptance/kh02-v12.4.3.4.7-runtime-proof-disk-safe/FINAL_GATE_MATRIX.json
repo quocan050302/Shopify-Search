@@ -1,0 +1,243 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:41.018Z",
+  "version": "12.4.3.4.7",
+  "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720",
+  "overallEngineeringVerdict": "FAIL",
+  "engineeringReleaseDecision": "NOT_READY_RESOURCE_BLOCKED",
+  "overallBusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "businessReleaseDecision": "NOT_READY_INSUFFICIENT_BUSINESS_EVIDENCE",
+  "failedEngineeringGates": [
+    "G06",
+    "G18",
+    "G19",
+    "G20",
+    "G21",
+    "G23"
+  ],
+  "gates": {
+    "G01": {
+      "status": "PASS",
+      "reason": "Mandatory branch & SHA verified.",
+      "executionId": "preflight_autoclosure_20261031092929",
+      "rawArtifact": "PRE_FLIGHT_GIT_AND_RESOURCE.json",
+      "verificationFunction": "runFivePhaseAutoClosure",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G02": {
+      "status": "PASS",
+      "reason": "tsc --noEmit exited with 0 (pid=63093).",
+      "executionId": "tsc_pid_63093",
+      "rawArtifact": "logs/tsc.log",
+      "verificationFunction": "spawnFreshChildSuite(tsc_typecheck)",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G03": {
+      "status": "PASS",
+      "reason": "ESLint static check exited with 0 (pid=63094).",
+      "executionId": "eslint_pid_63094",
+      "rawArtifact": "logs/eslint.log",
+      "verificationFunction": "spawnFreshChildSuite(eslint_check)",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G04": {
+      "status": "PASS",
+      "reason": "KH-01 security & DB isolation unit suite (41/41 passed, pid=63105).",
+      "executionId": "kh01_pid_63105",
+      "rawArtifact": "json_reports/kh01_isolation_unit.json",
+      "verificationFunction": "spawnFreshChildSuite(kh01_isolation_unit)",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G05": {
+      "status": "PASS",
+      "reason": "Meta Ads live lineage predicates verified (13/13 G16 cases).",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "DEFECT_REPRODUCTION_AND_CLOSURE.json",
+      "verificationFunction": "runG16NegativeTests",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G06": {
+      "status": "FAIL",
+      "reason": "Google Ads MCP transport connection failed or lacked invocation proof.",
+      "executionId": "g06_autoclosure_20261031092929",
+      "rawArtifact": "G06_GATE_EVALUATION.json",
+      "verificationFunction": "evaluateGoogleMcpGates",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G07": {
+      "status": "BLOCKED",
+      "reason": "BigQuery ADC credentials not configured locally; zero-spend fail-closed verified in policy scenario DEV_01/DEV_02/HOLDOUT_01.",
+      "executionId": "backtest_policy_autoclosure_20261031092929",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G08": {
+      "status": "PASS",
+      "reason": "Zero-spend query budget & TikTok Organic disablement verified in policy scenario suite.",
+      "executionId": "backtest_policy_autoclosure_20261031092929",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G09": {
+      "status": "PASS",
+      "reason": "Product candidate discovery clustering verified via policy & unit suites.",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "clusterProductCandidates",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G10": {
+      "status": "PASS",
+      "reason": "Semantic product family classification verified.",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "detectSpecificProductFamily",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G11": {
+      "status": "PASS",
+      "reason": "Cross-platform evidence matching & brand-only rejection verified (15/15 cases).",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "GOOGLE_PRODUCT_ASSOCIATION_PROOF.json",
+      "verificationFunction": "matchCrossPlatformProductEvidence",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G12": {
+      "status": "PASS",
+      "reason": "Evergreen opportunity scoring & temporal demand honesty verified.",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "evaluateDemandHistoryEvidence",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G13": {
+      "status": "PASS",
+      "reason": "Audience & category relevance + Top-3 candidate recovery verified.",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "selectTopResearchShortlist",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G14": {
+      "status": "PASS",
+      "reason": "Strict G16 live lineage & merchant proof predicates verified (13/13 cases).",
+      "executionId": "kh02_unit_pid_63118",
+      "rawArtifact": "G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "verificationFunction": "evaluateG16Candidate",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G15": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "0/3 candidates have >= 60d historical demand (queryMode=EXACT_PRODUCT_IDENTITY).",
+      "executionId": "g15_autoclosure_20261031092929",
+      "rawArtifact": "G15_PRODUCT_DEMAND_PROOF.json",
+      "verificationFunction": "queryAndEvaluateG15CandidateDemand",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G16": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793438126794_c2rvz'. Only 0/3 distinct canonical products among live-verified candidates. Only 0/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE.",
+      "executionId": "g16_autoclosure_20261031092929",
+      "rawArtifact": "G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "verificationFunction": "evaluateG16Top3",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G17": {
+      "status": "PASS",
+      "reason": "Independent persisted SQLite snapshot loaded.",
+      "executionId": "sqlite_snap_autoclosure_20261031092929",
+      "rawArtifact": "PERSISTED_SQLITE_SNAPSHOT_PROOF.json",
+      "verificationFunction": "loadPersistedRunSnapshotFromSqlite",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G18": {
+      "status": "FAIL",
+      "reason": "Blocked by disk headroom guard (7.23 GB < 15 GB).",
+      "executionId": null,
+      "rawArtifact": "CHROMIUM_EXECUTION_REPORT.json",
+      "verificationFunction": "runLiveChromiumAcceptance",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G19": {
+      "status": "FAIL",
+      "reason": "Reconciliation failed or incomplete (dbVsHttp=FAIL, dbVsDom=NOT_EXECUTED, httpVsDom=NOT_EXECUTED, discrepancies=1).",
+      "executionId": "parity_autoclosure_20261031092929",
+      "rawArtifact": "SQLITE_HTTP_CHROMIUM_PARITY.json",
+      "verificationFunction": "reconcileSqliteHttpChromium",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G20": {
+      "status": "FAIL",
+      "reason": "HTTP_NOT_EXECUTED: Read-only HTTP endpoint could not be probed because isolated server was not running; only DB-only snapshot digest was verified.",
+      "executionId": null,
+      "rawArtifact": "READ_ONLY_DB_CONTENT_INTEGRITY.json",
+      "verificationFunction": "assessReadOnlyMutation",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G21": {
+      "status": "FAIL",
+      "reason": "Wave A passed (66/66 unique tests, 0 failures); full 400+ test & integration wave blocked by < 15 GB disk guard (integration=BLOCKED_RESOURCE).",
+      "executionId": "wave_a_autoclosure_20261031092929",
+      "rawArtifact": "UNIQUE_TEST_AND_RETRY_REPORT.json",
+      "verificationFunction": "buildTestExecutionTruthTable",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G22": {
+      "status": "PASS",
+      "reason": "15/15 deterministic policy scenarios passed.",
+      "executionId": "backtest_policy_autoclosure_20261031092929",
+      "rawArtifact": "POLICY_SCENARIO_RESULTS.json",
+      "verificationFunction": "runPolicyScenarioTests",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G23": {
+      "status": "FAIL",
+      "reason": "Free disk=6.22 GB (min required=15 GB), SQLite=ok.",
+      "executionId": "safety_autoclosure_20261031092929",
+      "rawArtifact": "DISK_RAM_SQLITE_SAFETY.json",
+      "verificationFunction": "measureDiskFreeGB",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G24": {
+      "status": "PASS",
+      "reason": "Async completion barrier verified.",
+      "executionId": "barrier_autoclosure_20261031092929",
+      "rawArtifact": "ASYNC_WORKER_BARRIER.json",
+      "verificationFunction": "validateCompletionBarrier",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G25": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 60 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Auto Detailing Putty Gel: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Uproot Clean Pet Hair Remover - The Original: 0 obs (INSUFFICIENT_HISTORY, eligible=false); BlendJet 2 Portable Blender: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE.",
+      "executionId": "backtest_dev_autoclosure_20261031092929",
+      "rawArtifact": "REAL_HISTORICAL_DEV_BACKTEST.json",
+      "verificationFunction": "runRealHistoricalProductReplay",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G26": {
+      "status": "INSUFFICIENT_EVIDENCE",
+      "reason": "Point-in-time replay executed with 377 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Synthetic Fixture: Ultimate Pet Hair Cleaner Pro: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Car Fender Panel Dent Edge Repair Tools: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Natural Relief in Weeks: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE.",
+      "executionId": "backtest_holdout_autoclosure_20261031092929",
+      "rawArtifact": "REAL_HISTORICAL_HOLDOUT_BACKTEST.json",
+      "verificationFunction": "runRealHistoricalProductReplay",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G27": {
+      "status": "PASS",
+      "reason": "Point-in-time replay & joined metadata leakage guard verified.",
+      "executionId": "pit_audit_autoclosure_20261031092929",
+      "rawArtifact": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "verificationFunction": "resolvePointInTimeAdCandidateMetadata",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    },
+    "G28": {
+      "status": "PASS",
+      "reason": "33/33 physical-file mutations caught and rejected.",
+      "executionId": "neg_controls_autoclosure_20261031092929",
+      "rawArtifact": "PHYSICAL_NEGATIVE_CONTROLS.json",
+      "verificationFunction": "runNegativeControlSuite",
+      "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720"
+    }
+  }
+}

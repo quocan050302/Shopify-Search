@@ -1,0 +1,135 @@
+{
+  "allMutationsCaught": true,
+  "allPassed": true,
+  "totalMutations": 11,
+  "passedMutations": 11,
+  "mutations": [
+    {
+      "mutationId": "MUTATION_A",
+      "description": "Product with zero verified media must report emptyState.isEmpty=true and totalCount=0",
+      "targetGateIds": [
+        "M01",
+        "M07"
+      ],
+      "injectedDefect": "Zero product images and zero ad media assets",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Gallery resolved with isEmpty=true, totalCount=0"
+    },
+    {
+      "mutationId": "MUTATION_B",
+      "description": "Inject Unsplash and placehold.co stock images into Product Media Resolver",
+      "targetGateIds": [
+        "M02",
+        "M22"
+      ],
+      "injectedDefect": "productImageUrl='https://images.unsplash.com/...', candidateThumbnailUrl='https://placehold.co/600x400'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Rejected stock/placeholder media domain 'images.unsplash.com'."
+    },
+    {
+      "mutationId": "MUTATION_C",
+      "description": "Inject javascript: URI, 127.0.0.1 SSRF URL, and untrusted iframe embed domain",
+      "targetGateIds": [
+        "M06",
+        "M22"
+      ],
+      "injectedDefect": "javascript:alert(1), http://127.0.0.1:8080/..., https://evil-tracker.org/embed/...",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Rejected unsafe URL scheme in 'javascript:alert(document.cookie)'. Only http/https public media URLs are permitted. | Rejected private or loopback host '127.0.0.1' (SSRF protection). | Rejected untrusted iframe embed domain 'evil-tracker.org'."
+    },
+    {
+      "mutationId": "MUTATION_D",
+      "description": "Inject cross-domain unrelated product media into uahpet.com product gallery",
+      "targetGateIds": [
+        "M03",
+        "M22"
+      ],
+      "injectedDefect": "mediaStoreDomain='unrelated-apparel-boutique.com' on targetStoreDomain='uahpet.com'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Media product handle 'summer-dress' conflicts with target product handle 'automatic-feeder'."
+    },
+    {
+      "mutationId": "MUTATION_E",
+      "description": "Inject 'Merchant product page verified' onto PROBABLE + HTTP_ERROR candidate",
+      "targetGateIds": [
+        "M15"
+      ],
+      "injectedDefect": "identityStatus=PROBABLE, fetchOutcome=HTTP_ERROR with merchantPageVerified=true",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Candidate cand_1783682388 (Automatic Dog Feeder for Easy Daily Meals) has identityStatus=PROBABLE, fetchOutcome=HTTP_ERROR but merchantPageVerified=true."
+    },
+    {
+      "mutationId": "MUTATION_F",
+      "description": "Inject raw 'Resolved from OpenGraph/DOM title' string into primary card whyItMatters",
+      "targetGateIds": [
+        "M17"
+      ],
+      "injectedDefect": "whyItMatters='Resolved from OpenGraph/DOM title on ...'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Candidate cand_mut_f (Automatic Wet Food Cat Feeder) leaks technical metadata string in whyItMatters: \"Resolved from OpenGraph/DOM title on https://www.uahpet.com/products/feeder\""
+    },
+    {
+      "mutationId": "MUTATION_G",
+      "description": "Copy KH-02 confidence (85%) into KH-01 Evidence Readiness when opportunityAssessment is null",
+      "targetGateIds": [
+        "M18"
+      ],
+      "injectedDefect": "opportunityAssessment=null but displayedKh01Readiness='85%'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "KH-01 Evidence Readiness displayed '85%' when opportunityAssessment is null (leaked KH-02 confidence 85%)."
+    },
+    {
+      "mutationId": "MUTATION_H",
+      "description": "Map non-existent r.value (undefined) instead of r.demandValue in DEMAND_SOURCE_FORENSIC_AUDIT",
+      "targetGateIds": [
+        "M21"
+      ],
+      "injectedDefect": "observations[0].value = undefined",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Series 'Automatic Pet Feeder' has null/undefined entries in rawValues."
+    },
+    {
+      "mutationId": "MUTATION_I",
+      "description": "Inject 3 duplicate/size-variant Shopify CDN URLs and verify strict deduplication to 1 item",
+      "targetGateIds": [
+        "M04",
+        "M12"
+      ],
+      "injectedDefect": "3 size variants (_1024x1024, _400x400, _800x800) of same product image",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Resolved 1 unique item and deduplicated 2 variants"
+    },
+    {
+      "mutationId": "MUTATION_J",
+      "description": "Inject mismatched frontendVersion (12.4.3.2) vs backend releaseVersion (12.4.3.2.1)",
+      "targetGateIds": [
+        "M25"
+      ],
+      "injectedDefect": "frontendVersion='12.4.3.2', backendVersion='12.4.3.2.1'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Runtime status evaluated to VERSION_MISMATCH"
+    },
+    {
+      "mutationId": "MUTATION_K",
+      "description": "Inject reusedPreviousLog=true and mismatched gitCommitSha into test execution provenance",
+      "targetGateIds": [
+        "M28",
+        "M32"
+      ],
+      "injectedDefect": "reusedPreviousLog=true, headSha='stale_sha_000000'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Suite 'mut_k_suite' reused a previous log (reusedPreviousLog=true)."
+    }
+  ]
+}

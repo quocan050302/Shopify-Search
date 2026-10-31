@@ -1,0 +1,198 @@
+{
+  "shortlistRulesRes": {
+    "shortlist": [
+      {
+        "candidateId": "cand_632882629",
+        "title": "Pet Hair Removers",
+        "canonicalProductName": "Pet Hair Removers",
+        "displayName": "Pet Hair Removers",
+        "originalAdHeadline": "Pet Hair Removers — Uproot Clean Reusable Fur Scraper",
+        "originalCreativeCode": "pet-hair-removers",
+        "brand": null,
+        "model": null,
+        "sku": null,
+        "category": "pet",
+        "problemStatement": null,
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "obs_uproot_col",
+        "canonicalProductUrl": "https://uprootclean.co/collections/pet-hair-removers",
+        "storeDomain": "uprootclean.co",
+        "advertiserNames": [],
+        "supportingAdIds": [
+          "obs_uproot_col"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "distinctAdvertisersCount": 0,
+        "earliestObservationDate": "2026-10-28T09:02:44.393Z",
+        "latestObservationDate": "2026-10-28T09:02:44.393Z",
+        "identityConfidence": "HIGH_CONFIDENCE",
+        "sourceObservations": [
+          {
+            "sourceRecordId": "obs_uproot_col",
+            "source": "META_ADS",
+            "observedAt": "2026-10-28T09:02:44.393Z",
+            "requestedMarket": "US",
+            "title": "Pet Hair Removers — Uproot Clean Reusable Fur Scraper",
+            "description": "Remove embedded dog and cat hair from carpets, couches, and fabrics with our reusable pet hair remover tool.",
+            "landingPageUrl": "https://uprootclean.co/collections/pet-hair-removers",
+            "advertiserName": "Uproot Clean",
+            "provenance": "CACHED_SOURCE"
+          }
+        ],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "Ecommerce Path Slug Extraction",
+        "requiresManualReview": true,
+        "identityEvidenceReferences": [
+          "URL Path: pet-hair-removers"
+        ],
+        "isEligibleAsEvergreenWinner": false,
+        "relevanceStatus": "RELEVANT",
+        "relevanceScore": 0.95,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, dog, cat."
+        ],
+        "psychologyProfile": {
+          "targetCustomer": {
+            "claimText": "Pet owners with multiple animals (cats and dogs) dealing with everyday pet care challenges",
+            "evidenceReference": "Observed quotes: \"cat\", \"dog\" in Facebook Ad #obs_uproot_col",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.88,
+            "status": "OBSERVED"
+          },
+          "situationOrUseCase": {
+            "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Excessive Pet Hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+            "evidenceReference": "Observed quote: \"Pet Hair\" in Facebook Ad #obs_uproot_col",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.9,
+            "status": "OBSERVED"
+          },
+          "emotionalPain": {
+            "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+            "evidenceReference": "Observed quote: \"reusable\" in Facebook Ad #obs_uproot_col",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Single-word quote \"reusable\" does not directly substantiate the full claim assertion (10 terms)."
+          },
+          "purchaseTrigger": {
+            "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+            "evidenceReference": "Facebook Ad #obs_uproot_col",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "COLLECTION_PAGE",
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "productRealityReason": null
+      }
+    ],
+    "requestedCount": 3,
+    "qualifiedCount": 1,
+    "shortfallReason": "Only 1 independently identifiable, niche-relevant product(s) were supported by available source evidence (requested 3).",
+    "distinctnessSummary": "1 distinct products identified: Pet Hair Removers",
+    "distinctnessEvaluation": {
+      "isDistinct": true,
+      "totalCandidatesEvaluated": 1,
+      "distinctCount": 1,
+      "duplicateGroupsCount": 0,
+      "details": [
+        {
+          "candidateId": "cand_632882629",
+          "title": "Pet Hair Removers",
+          "canonicalKey": "pet hair removers",
+          "storeDomain": "uprootclean.co",
+          "isDuplicate": false
+        }
+      ]
+    }
+  },
+  "distinctCheck": {
+    "isDistinct": false,
+    "totalCandidatesEvaluated": 2,
+    "distinctCount": 1,
+    "duplicateGroupsCount": 1,
+    "details": [
+      {
+        "candidateId": "c1",
+        "title": "Uproot Pro",
+        "canonicalKey": "uproot pro",
+        "storeDomain": "uprootclean.co",
+        "isDuplicate": false
+      },
+      {
+        "candidateId": "c2",
+        "title": "Uproot Pro",
+        "canonicalKey": "uproot pro",
+        "storeDomain": "uprootclean.co",
+        "isDuplicate": true,
+        "duplicateOf": "c1"
+      }
+    ]
+  },
+  "verdict": "PASS"
+}

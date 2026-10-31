@@ -1,0 +1,565 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "petGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1212440541",
+      "researchProductId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "familyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvrzyn23004m6coriy1lwr49",
+        "cmvrzyn2j004s6corb96ke61v",
+        "cmvrzyn3h00546corujh7567u",
+        "cmvrzyn5c005t6cor0yylqvk2",
+        "cmvrzyn30004y6corojbfmznc",
+        "cmvrzyn4w005n6corlzcsccsh",
+        "cmvrzyn3x005a6corm3d0e51v"
+      ],
+      "supportingExternalAdIds": [
+        "2046326005986245",
+        "2128156051108858",
+        "1399013621792652",
+        "1595856712093558",
+        "1802296680785588",
+        "1393597299374101",
+        "905190415961783"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_d6de1688"
+      ],
+      "liveObservationsCount": 2,
+      "cachedObservationsCount": 5,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 2,
+        "uniqueLiveExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_3_d6de1688",
+            "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+            "upstreamAdId": "2046326005986245",
+            "persistedAdId": "cmvrzyn23004m6coriy1lwr49",
+            "sourceObservationId": "cmvuqqvfs005d0worfp0vsw0h",
+            "candidateId": "cand_1212440541",
+            "researchProductId": "cand_1212440541"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_3_d6de1688",
+            "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+            "upstreamAdId": "2128156051108858",
+            "persistedAdId": "cmvrzyn2j004s6corb96ke61v",
+            "sourceObservationId": "cmvuqqvg6005h0worhmdkf5sc",
+            "candidateId": "cand_1212440541",
+            "researchProductId": "cand_1212440541"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1587534715",
+      "researchProductId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_water_fountain",
+      "supportingAdIds": [
+        "cmvrzyixu002s6corgmhfjtem"
+      ],
+      "supportingExternalAdIds": [
+        "1067995712370292"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_2_882223e8"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 1,
+        "uniqueLiveExternalAdIds": [
+          "1067995712370292"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_2_882223e8",
+            "providerRequestId": "4f7b99eb07fb40389fc616dcd7c71bc9",
+            "upstreamAdId": "1067995712370292",
+            "persistedAdId": "cmvrzyixu002s6corgmhfjtem",
+            "sourceObservationId": "cmvuqqvca00490worp620gq5x",
+            "candidateId": "cand_1587534715",
+            "researchProductId": "cand_1587534715"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1613504636",
+      "researchProductId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "identityStatus": "PROBABLE",
+      "familyKey": "pet_hair_remover_roller",
+      "supportingAdIds": [
+        "cmvlsqyhy0003awor2cubpbuq",
+        "cmvlsqyiz0009aworjqixph93",
+        "cmvlsqyjn000faworwu1dts6g",
+        "cmvlsqykc000laworg3qfh92d",
+        "cmvlsqyl0000raworivkxfbhm",
+        "cmvq0trww000fwgor0lp8jttq",
+        "cmvq0trxo000kwgorhbr1satz",
+        "cmvq0tryb000pwgorf9nb1cw7",
+        "cmvq0tryv000uwgorvjr4hq8v",
+        "cmvrh5afz001ufcort18234su"
+      ],
+      "supportingExternalAdIds": [
+        "1536941208479218",
+        "1464108218882438",
+        "1133000522848754",
+        "1641348457417375",
+        "2249466188957796",
+        "1642750633880173",
+        "1410922084469845",
+        "1806555653907868",
+        "1563296449176047",
+        "4546541612250472"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_1_b42eb56b"
+      ],
+      "liveObservationsCount": 10,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": false,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 10,
+        "uniqueLiveExternalAdIds": [
+          "1536941208479218",
+          "1464108218882438",
+          "1133000522848754",
+          "1641348457417375",
+          "2249466188957796",
+          "1642750633880173",
+          "1410922084469845",
+          "1806555653907868",
+          "1563296449176047",
+          "4546541612250472"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [
+          "NOT_VERIFIED_IDENTITY"
+        ],
+        "rejectionReasons": [
+          "Candidate identityStatus is not VERIFIED."
+        ],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1536941208479218",
+            "persistedAdId": "cmvlsqyhy0003awor2cubpbuq",
+            "sourceObservationId": "cmvuqqv75002t0woryn25jzrr",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1464108218882438",
+            "persistedAdId": "cmvlsqyiz0009aworjqixph93",
+            "sourceObservationId": "cmvuqqv7j002x0worcmvqq78g",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1133000522848754",
+            "persistedAdId": "cmvlsqyjn000faworwu1dts6g",
+            "sourceObservationId": "cmvuqqv7x00310woraydsr0bc",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1641348457417375",
+            "persistedAdId": "cmvlsqykc000laworg3qfh92d",
+            "sourceObservationId": "cmvuqqv8p00350workwesqmms",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "2249466188957796",
+            "persistedAdId": "cmvlsqyl0000raworivkxfbhm",
+            "sourceObservationId": "cmvuqqv9300390worybu7tkxg",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1642750633880173",
+            "persistedAdId": "cmvq0trww000fwgor0lp8jttq",
+            "sourceObservationId": "cmvuqqv9r003h0wor9menlwq9",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1410922084469845",
+            "persistedAdId": "cmvq0trxo000kwgorhbr1satz",
+            "sourceObservationId": "cmvuqqv9g003d0wor2dyftjt1",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1806555653907868",
+            "persistedAdId": "cmvq0tryb000pwgorf9nb1cw7",
+            "sourceObservationId": "cmvuqqva4003l0worvq4jvcas",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "1563296449176047",
+            "persistedAdId": "cmvq0tryv000uwgorvjr4hq8v",
+            "sourceObservationId": "cmvuqqvag003p0wor7dfb088o",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_1_b42eb56b",
+            "providerRequestId": "c47248c25510451ab0d0554a7820e6b8",
+            "upstreamAdId": "4546541612250472",
+            "persistedAdId": "cmvrh5afz001ufcort18234su",
+            "sourceObservationId": "cmvuqqvat003t0wor1tfp0cbd",
+            "candidateId": "cand_1613504636",
+            "researchProductId": "cand_1613504636"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "waterFountainCountInShortlist": 1,
+  "homeCleaningGadgetsShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_824704036",
+      "researchProductId": "cand_824704036",
+      "title": "Steam Genie ™ Pro",
+      "storeDomain": "getgenieproducts.com",
+      "canonicalProductUrl": "https://getgenieproducts.com/products/steam-genie-pro",
+      "identityStatus": "VERIFIED",
+      "familyKey": "steam_genie",
+      "supportingAdIds": [
+        "cmvuc6j4q008x6oorn4csai1g",
+        "cmvuqsqt9007s0wor9asngout",
+        "cmvuqsqtq007y0worb3qjktwn"
+      ],
+      "supportingExternalAdIds": [
+        "2302991560230745",
+        "2058454264747703",
+        "1722895358905476"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_f0b8073a"
+      ],
+      "liveObservationsCount": 3,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 3,
+        "uniqueLiveExternalAdIds": [
+          "2302991560230745",
+          "2058454264747703",
+          "1722895358905476"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350998015_9sp54",
+            "executedQueryId": "kh02_q_r1_3_f0b8073a",
+            "providerRequestId": "3b85feae663d4a778ba3735a627770a4",
+            "upstreamAdId": "2302991560230745",
+            "persistedAdId": "cmvuc6j4q008x6oorn4csai1g",
+            "sourceObservationId": "cmvuqsqrb00750wor5qs3bjmc",
+            "candidateId": "cand_824704036",
+            "researchProductId": "cand_824704036"
+          },
+          {
+            "researchRunId": "kh02_run_1793350998015_9sp54",
+            "executedQueryId": "kh02_q_r1_3_f0b8073a",
+            "providerRequestId": "3b85feae663d4a778ba3735a627770a4",
+            "upstreamAdId": "2058454264747703",
+            "persistedAdId": "cmvuqsqt9007s0wor9asngout",
+            "sourceObservationId": "cmvuqsqtc007v0wor2v9721ka",
+            "candidateId": "cand_824704036",
+            "researchProductId": "cand_824704036"
+          },
+          {
+            "researchRunId": "kh02_run_1793350998015_9sp54",
+            "executedQueryId": "kh02_q_r1_3_f0b8073a",
+            "providerRequestId": "3b85feae663d4a778ba3735a627770a4",
+            "upstreamAdId": "1722895358905476",
+            "persistedAdId": "cmvuqsqtq007y0worb3qjktwn",
+            "sourceObservationId": "cmvuqsqtt00810wor3v97uh3o",
+            "candidateId": "cand_824704036",
+            "researchProductId": "cand_824704036"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1755250006",
+      "researchProductId": "cand_1755250006",
+      "title": "Euroflex Vapour Pro - The World's Best Steam Cleaner",
+      "storeDomain": "euroflexproducts.com",
+      "canonicalProductUrl": "https://euroflexproducts.com/steam-cleaners-and-steam-mops/vapour-pro-m4s-steam-cleaner",
+      "identityStatus": "VERIFIED",
+      "familyKey": "steam_cleaner_mop",
+      "supportingAdIds": [
+        "cmvuqsqst007m0wor04pon77s"
+      ],
+      "supportingExternalAdIds": [
+        "911175178499929"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_f0b8073a"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 1,
+        "uniqueLiveExternalAdIds": [
+          "911175178499929"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350998015_9sp54",
+            "executedQueryId": "kh02_q_r1_3_f0b8073a",
+            "providerRequestId": "3b85feae663d4a778ba3735a627770a4",
+            "upstreamAdId": "911175178499929",
+            "persistedAdId": "cmvuqsqst007m0wor04pon77s",
+            "sourceObservationId": "cmvuqsqsw007p0wort8z83ejg",
+            "candidateId": "cand_1755250006",
+            "researchProductId": "cand_1755250006"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1162625533",
+      "researchProductId": "cand_1162625533",
+      "title": "7-in-1 Electric Spin Scrubber",
+      "storeDomain": "reemoreemoo.com",
+      "canonicalProductUrl": "https://reemoreemoo.com/products/✨7-in-1-electric-spin-scrubber",
+      "identityStatus": "VERIFIED",
+      "familyKey": "electric_spin_scrubber",
+      "supportingAdIds": [
+        "cmvuc6iym006t6oor6cfmdzr3",
+        "cmvrzh3iy007alsorzrbpvdog"
+      ],
+      "supportingExternalAdIds": [
+        "1051707024111555",
+        "1566151217776652"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 2,
+      "isLiveVerified": false,
+      "lineageVerification": {
+        "valid": false,
+        "authenticatedLiveObservationCount": 0,
+        "uniqueLiveExternalAdIds": [],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [
+          "MISSING_QUERY_ID"
+        ],
+        "rejectionReasons": [
+          "Candidate has empty matchedQueryIds array."
+        ],
+        "verifiedLinks": []
+      },
+      "demandCoverageDays": 0
+    }
+  ],
+  "carAccessoriesShortlist": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1832163014",
+      "researchProductId": "cand_1832163014",
+      "title": "Wireless Handheld Car Vacuum Cleaner - GREY (Enhanced Edition🔥Vacuum + Blow Available） / 1SET",
+      "storeDomain": "reserivation.com",
+      "canonicalProductUrl": "https://reserivation.com/products/power-2-2-2-4-2-3-5-3-3",
+      "identityStatus": "VERIFIED",
+      "familyKey": "cordless_vacuum_cleaner",
+      "supportingAdIds": [
+        "cmvud4u56001cbcormqw5pgil"
+      ],
+      "supportingExternalAdIds": [
+        "1764069101564333"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false,
+      "lineageVerification": {
+        "valid": false,
+        "authenticatedLiveObservationCount": 0,
+        "uniqueLiveExternalAdIds": [],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [
+          "MISSING_QUERY_ID"
+        ],
+        "rejectionReasons": [
+          "Candidate has empty matchedQueryIds array."
+        ],
+        "verifiedLinks": []
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1816307487",
+      "researchProductId": "cand_1816307487",
+      "title": "Foldable Car Boot Organiser and Trunk Organizer with Logo",
+      "storeDomain": "sarenie.com",
+      "canonicalProductUrl": "https://sarenie.com/products/foldable-car-trunk-organizer",
+      "identityStatus": "VERIFIED",
+      "familyKey": "car_organizer_storage",
+      "supportingAdIds": [
+        "cmvud4uhu003sbcorrxlhkoo0"
+      ],
+      "supportingExternalAdIds": [
+        "28592845963711449"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false,
+      "lineageVerification": {
+        "valid": false,
+        "authenticatedLiveObservationCount": 0,
+        "uniqueLiveExternalAdIds": [],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [
+          "MISSING_QUERY_ID"
+        ],
+        "rejectionReasons": [
+          "Candidate has empty matchedQueryIds array."
+        ],
+        "verifiedLinks": []
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1360772576",
+      "researchProductId": "cand_1360772576",
+      "title": "Magnetic Suction Car Phone Mount – Nano vacuum, one-handed & multi-angle – Stable & secure for every",
+      "storeDomain": "definitein.com",
+      "canonicalProductUrl": "https://definitein.com/products/magnetic-suction-3",
+      "identityStatus": "VERIFIED",
+      "familyKey": "car_phone_mount",
+      "supportingAdIds": [
+        "cmvud4ued002nbcorioebva36"
+      ],
+      "supportingExternalAdIds": [
+        "2633546760433732"
+      ],
+      "matchedQueryIds": [],
+      "liveObservationsCount": 0,
+      "cachedObservationsCount": 1,
+      "isLiveVerified": false,
+      "lineageVerification": {
+        "valid": false,
+        "authenticatedLiveObservationCount": 0,
+        "uniqueLiveExternalAdIds": [],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [
+          "MISSING_QUERY_ID"
+        ],
+        "rejectionReasons": [
+          "Candidate has empty matchedQueryIds array."
+        ],
+        "verifiedLinks": []
+      },
+      "demandCoverageDays": 0
+    }
+  ],
+  "kittyspoutPawiraCollapseProof": {
+    "kittyspoutFamily": "pet_water_fountain",
+    "pawiraFamily": "pet_water_fountain",
+    "distinctFamilyCount": 1
+  },
+  "electricSpinScrubberCollapseProof": {
+    "brushSetFamily": "electric_spin_scrubber",
+    "spinScrubberFamily": "electric_spin_scrubber"
+  },
+  "malformedNullSlugDowngradeProof": {
+    "identityStatus": "PROBABLE",
+    "isEligibleAsEvergreenWinner": false
+  },
+  "probableExcludedFromLiveVerifiedProof": {
+    "qualifiedCount": 1,
+    "liveVerifiedProductCount": 0,
+    "liveVerifiedTop3": false
+  },
+  "g12Verdict": "PASS",
+  "g16Verdict": "INSUFFICIENT_EVIDENCE"
+}

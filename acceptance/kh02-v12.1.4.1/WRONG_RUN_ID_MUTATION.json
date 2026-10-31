@@ -1,0 +1,13 @@
+{
+  "mutation": "Injected mismatched browser runId ('wrong_run_id_999')",
+  "detected": true,
+  "mismatches": [
+    {
+      "field": "browserRunId",
+      "expected": "run_mutation_base",
+      "actual": "wrong_run_id_999",
+      "reason": "Browser evidenced runId 'wrong_run_id_999' does not match DB runId 'run_mutation_base'"
+    }
+  ],
+  "testOutcome": "PASS"
+}

@@ -1,0 +1,87 @@
+{
+  "totalMutations": 10,
+  "passedMutations": 10,
+  "allPassed": true,
+  "mutations": [
+    {
+      "mutationId": "MUTATION_A",
+      "description": "Inject synthetic attempted=true and actualApiCalls=1 during CACHE_ONLY Meta run",
+      "injectedDefect": "attempted: true, actualApiCalls: 1 on CACHE_ONLY run",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "[Pet Gadgets] Synthetic execution: queryId='q_mut_a' has attempted=true during cache-only run."
+    },
+    {
+      "mutationId": "MUTATION_B",
+      "description": "Inject verified-merchant-demand:pawspick.com templated [76,79,77,81,78,82] series as Evergreen",
+      "injectedDefect": "source=GOOGLE_TRENDS_CSV, evidenceReference=verified-merchant-demand:pawspick.com",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Demand series matches the unbacked templated [76, 79, 77, 81, 78, 82] sequence without raw CSV or provider API lineage."
+    },
+    {
+      "mutationId": "MUTATION_C",
+      "description": "Inject cat-only Automatic Wet Food Cat Feeder into 'dog' Research Shortlist",
+      "injectedDefect": "Cat-only product in 'dog' shortlist",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "[dog] Candidate 'Automatic Wet Food Cat Feeder' (cand_mut_c) violates target audience 'DOG': Excluded — Product is marketed for cats, while this search targets dogs."
+    },
+    {
+      "mutationId": "MUTATION_D",
+      "description": "Inject dog-only Anti-Bark Dog Collar into 'cat' Research Shortlist",
+      "injectedDefect": "Dog-only product in 'cat' shortlist",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "[cat] Candidate 'Rechargeable Ultrasonic Anti-Bark Dog Collar' (cand_mut_d) violates target audience 'CAT': Excluded — Product is marketed for dogs, while this search targets cats."
+    },
+    {
+      "mutationId": "MUTATION_E",
+      "description": "Attempt to classify Multi-Pet Household ownership as OBSERVED from generic 'dog and cat' ad mention",
+      "injectedDefect": "Ad mentions 'dog hair and cat hair' without multi-pet household ownership claim",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Classified targetCustomer.status as 'INFERRED' instead of OBSERVED"
+    },
+    {
+      "mutationId": "MUTATION_F",
+      "description": "Inject contradictory 'Classified as non-physical entity (PHYSICAL_PRODUCT)' exclusion reason",
+      "injectedDefect": "productRealityReason contains 'non-physical entity (PHYSICAL_PRODUCT)'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Candidate 'Wireless Pet Fountain' (cand_mut_f) contains contradictory exclusion reason: \"Excluded: AI Review classified candidate as non-physical entity (PHYSICAL_PRODUCT).\""
+    },
+    {
+      "mutationId": "MUTATION_G",
+      "description": "Inject duplicate product card into Recommended view",
+      "injectedDefect": "Same candidateId rendered twice in Recommended cards",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Detected duplicate card IDs: cand_dup_1, cand_dup_1 (duplicate URL: uahpet.com/products/fountain)"
+    },
+    {
+      "mutationId": "MUTATION_H",
+      "description": "Inject 50 cached observations into a LIVE_ONLY run when upstream returns 0 live ads",
+      "injectedDefect": "sourceMode=LIVE_ONLY with historicalCachedAdsCount=50",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "LIVE_ONLY violation: historicalCachedAdsCount=50 mixed into LIVE_ONLY run."
+    },
+    {
+      "mutationId": "MUTATION_I",
+      "description": "Inject mismatched frontendBuildSha (1111111) vs backendBuildSha (2222222)",
+      "injectedDefect": "frontendBuildSha !== backendBuildSha",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Runtime status evaluated to VERSION_MISMATCH"
+    },
+    {
+      "mutationId": "MUTATION_J",
+      "description": "Inject reusedPreviousLog=true and mismatched gitCommitSha into test execution provenance",
+      "injectedDefect": "reusedPreviousLog=true, headSha='stale_sha_000000'",
+      "detectedAndRejected": true,
+      "gateVerdictUnderMutation": "FAIL",
+      "reason": "Suite 'mut_j_suite' reused a previous log (reusedPreviousLog=true)."
+    }
+  ]
+}

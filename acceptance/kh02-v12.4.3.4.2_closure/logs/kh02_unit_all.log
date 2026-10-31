@@ -1,0 +1,40 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02/ai/geminiModelRouter.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3270[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Gemini Model Router & Error Classification [2m(14)[22m
+     [33m[2m✓[22m[39m retries up to 3 times on 503 before succeeding on same model[33m 739[2mms[22m[39m
+     [33m[2m✓[22m[39m exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds[33m 676[2mms[22m[39m
+     [33m[2m✓[22m[39m opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate[33m 769[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly[33m 475[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces global call budget across candidates via GeminiRunBudgetTracker[33m 583[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 547[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4.1 — Zero-Spend Google Free Data Automation & Acceptance Suite [2m(8)[22m
+     [32m✓[39m RC-01 & Phase 2: BigQuery Zero-Spend Policy & Fail-Closed Enforcement [2m(3)[22m
+       [33m[2m✓[22m[39m returns BLOCKED_FREE_SANDBOX_NOT_VERIFIED when BIGQUERY_FREE_SANDBOX_VERIFIED is not true[33m 488[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts [2m([22m[2m89 tests[22m[2m)[22m[33m 432[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 1087[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled [2m(18)[22m
+     [32m✓[39m Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode [2m(4)[22m
+       [33m[2m✓[22m[39m A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode[33m 1061[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 421[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 195[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 79[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiProductClassification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiEvidenceValidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m322 passed[39m[22m[90m (322)[39m
+[2m   Start at [22m 17:34:39
+[2m   Duration [22m 14.90s[2m (tests 52%, import 32%, setup 13%, transform 2%, worker 1%)[22m
+
+[2m     Import [22m [33m85 modules were evaluated 373 times[39m[2m · 4.07s total, 32% of tracked time[22m
+[2m            [22m [2m~3.14s faster with [22m[33misolate: false[39m[2m — shared modules are evaluated once per worker instead of once per file[22m
+[2m            [22m [2mlearn more: https://vitest.dev/guide/improving-performance#test-isolation[22m
+

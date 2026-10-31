@@ -1,0 +1,14 @@
+{
+  "gateId": "P0-14",
+  "requirement": "Source-to-run reconciliation rejects unaudited upstream traces without workspace fallback",
+  "verdict": "PASS",
+  "observedValues": {
+    "exactMatch": false,
+    "reason": "Source to Database Reconciliation Unverified: missing upstream audit trace envelope. Upstream query audit is required."
+  },
+  "expectedValues": {
+    "exactMatch": false
+  },
+  "reason": "Missing audited traces correctly failed reconciliation",
+  "timestamp": "2026-10-28T01:42:25.831Z"
+}

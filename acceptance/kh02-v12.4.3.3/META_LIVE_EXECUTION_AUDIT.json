@@ -1,0 +1,568 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "collectorDiagnostics": {
+    "source": "META_ADS",
+    "adapterInstalled": true,
+    "configured": true,
+    "transportConnected": true,
+    "authenticated": true,
+    "discoverySupported": true,
+    "queryExecuted": false,
+    "recordsReturned": 0,
+    "provenanceVerified": true,
+    "lastCheckedAt": "2026-10-29T15:22:47.543Z",
+    "status": "SOURCE_ACCESS_VERIFIED",
+    "reason": "Meta competitor ads indexed in database (319 records); live collector active (v1.7.0).",
+    "missingRequirements": [],
+    "pythonBin": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+    "collectorVersion": null,
+    "databaseRecordsIndexed": 319,
+    "collectorInstalled": true,
+    "collectorConfigured": true,
+    "transportReachable": true,
+    "queryCapabilityAvailable": true,
+    "actualQueryAttempted": false,
+    "upstreamQueryCompleted": false,
+    "rawAdsReturned": 0,
+    "validObservationsNormalized": 0,
+    "recordsPersisted": 0,
+    "recordsAssociatedWithCandidates": 0
+  },
+  "policyReconciliationChecks": {
+    "liveOnlyWithCachePolicyConflict": {
+      "policy": "CACHE_ONLY",
+      "requestedSourceMode": "LIVE_ONLY",
+      "allowLive": false,
+      "allowCacheFallback": false,
+      "policyConflict": true,
+      "conflictReason": "Conflicting execution configuration: sourceMode=LIVE_ONLY cannot be combined with metaExecutionPolicy=CACHE_ONLY."
+    },
+    "cacheOnlyMode": {
+      "policy": "CACHE_ONLY",
+      "requestedSourceMode": "CACHE_ONLY",
+      "allowLive": false,
+      "allowCacheFallback": true,
+      "policyConflict": false,
+      "conflictReason": null
+    }
+  },
+  "liveOnlyRunExecution": {
+    "telemetry": {
+      "source": "META_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-29T15:22:55.619Z",
+      "retrievedCount": 20,
+      "acceptedCount": 18,
+      "queryProvenance": "LIVE_PROVIDER",
+      "isLive": true,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 20,
+      "lastSuccessfulQueryAt": "2026-10-29T15:22:55.619Z",
+      "upstreamReturnedCount": 20,
+      "freshLiveCount": 18,
+      "cachedRecordsCount": 0,
+      "persistedInsertedCount": 0,
+      "persistedUpdatedCount": 20,
+      "liveAttempted": true,
+      "liveSucceeded": true,
+      "liveError": null,
+      "lastLiveQueryAt": "2026-10-29T15:22:55.619Z",
+      "lastLiveQueryRecordCount": 20,
+      "lastSuccessfulLiveQueryAt": "2026-10-29T15:22:55.619Z",
+      "auditTraces": [
+        {
+          "rawId": "1536941208479218",
+          "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdmp000uimg91229pnuq"
+        },
+        {
+          "rawId": "1464108218882438",
+          "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdn9001cimg996p166uf"
+        },
+        {
+          "rawId": "1133000522848754",
+          "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdnm001oimg9i4e3ejs2"
+        },
+        {
+          "rawId": "1641348457417375",
+          "digest": "e95e7abd2d294d3761316ba1283628a7",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdoh002iimg9f3ngoctx"
+        },
+        {
+          "rawId": "2249466188957796",
+          "digest": "ed821df7bed80fa8cac7153f3d29069f",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdp50036img9nt00uzw5"
+        },
+        {
+          "rawId": "1642750633880173",
+          "digest": "09354344bcebc93b92f10782e68891d8",
+          "decision": "UPDATED",
+          "persistedId": "cmvkxf39g0003mug956198pnw"
+        },
+        {
+          "rawId": "1410922084469845",
+          "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+          "decision": "UPDATED",
+          "persistedId": "cmvkxf39t0009mug9u2oigd3c"
+        },
+        {
+          "rawId": "1806555653907868",
+          "digest": "58f9024f51d25bac44adb560c712d426",
+          "decision": "UPDATED",
+          "persistedId": "cmvquan2u009yx1g9lyq4ofgn"
+        },
+        {
+          "rawId": "1563296449176047",
+          "digest": "45699c99516306b5a9d581c8f3d594af",
+          "decision": "UPDATED",
+          "persistedId": "cmvquan3400a4x1g95xqkohzd"
+        },
+        {
+          "rawId": "4546541612250472",
+          "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastx6001z8eg9ty1hiuir"
+        },
+        {
+          "rawId": "1764530358140196",
+          "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxg00268eg91t8tblzk"
+        },
+        {
+          "rawId": "1718454532575959",
+          "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxq002c8eg9xkn13v52"
+        },
+        {
+          "rawId": "1137301772072207",
+          "digest": "1cc15a16b7372407c2e38c714bf167c6",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bp9001c1pg9jpp4097x"
+        },
+        {
+          "rawId": "1067995712370292",
+          "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxx002j8eg9368mmj4t"
+        },
+        {
+          "rawId": "1025226893900208",
+          "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyc002x8eg9xaggkhyz"
+        },
+        {
+          "rawId": "3202991749899349",
+          "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyq003a8eg92p6w2ime"
+        },
+        {
+          "rawId": "2174343823475370",
+          "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyw003h8eg9ysg1m9sj"
+        },
+        {
+          "rawId": "1605927994566450",
+          "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastz9003t8eg9ckv0nwgm"
+        },
+        {
+          "rawId": "1860647425077112",
+          "digest": "a5450e30a6177a58fd74bb7aa706649c",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bqj00221pg91txrdfeq"
+        },
+        {
+          "rawId": "1092762023460778",
+          "digest": "a01bc37e806ed87e42f754e5d27a5371",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bqu00281pg9h3qa9xyw"
+        }
+      ]
+    },
+    "sourceCoverage": {
+      "freshLiveAdsCount": 18,
+      "historicalCachedAdsCount": 0,
+      "totalObservationsCount": 18,
+      "queryExecuted": true,
+      "queryStatus": "PASSED"
+    },
+    "queryExecutions": [
+      {
+        "queryId": "kh02_q_r1_1_f6b30862",
+        "keyword": "pet hair remover",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "attempted": true,
+        "status": "SUCCEEDED_WITH_RESULTS",
+        "startedAt": "2026-10-29T15:22:48.571Z",
+        "completedAt": "2026-10-29T15:22:52.477Z",
+        "actualApiCalls": 1,
+        "returnedCount": 10,
+        "uniqueReturnedCount": 10,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "pet_grooming_hair_removal",
+        "expectedProductCategory": "Pet Grooming",
+        "errorCode": null,
+        "errorMessage": null,
+        "requestStarted": true,
+        "requestCompleted": true,
+        "upstreamReturnedCount": 10,
+        "uniqueUpstreamIdsCount": 10,
+        "cachedRecordsUsed": 0,
+        "provenance": "LIVE_PROVIDER",
+        "researchRunId": "kh02_1793287368052_4bnn1",
+        "source": "META_ADS",
+        "planned": true
+      },
+      {
+        "queryId": "kh02_q_r1_2_9361979a",
+        "keyword": "cat water fountain",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "attempted": true,
+        "status": "SUCCEEDED_WITH_RESULTS",
+        "startedAt": "2026-10-29T15:22:52.477Z",
+        "completedAt": "2026-10-29T15:22:55.304Z",
+        "actualApiCalls": 1,
+        "returnedCount": 10,
+        "uniqueReturnedCount": 10,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "pet_hydration",
+        "expectedProductCategory": "Pet Hydration",
+        "errorCode": null,
+        "errorMessage": null,
+        "requestStarted": true,
+        "requestCompleted": true,
+        "upstreamReturnedCount": 10,
+        "uniqueUpstreamIdsCount": 10,
+        "cachedRecordsUsed": 0,
+        "provenance": "LIVE_PROVIDER",
+        "researchRunId": "kh02_1793287368052_4bnn1",
+        "source": "META_ADS",
+        "planned": true
+      }
+    ]
+  },
+  "liveWithCacheFallbackExecution": {
+    "telemetry": {
+      "source": "META_ADS",
+      "queryExecuted": true,
+      "queryStatus": "PASSED",
+      "queryTimestamp": "2026-10-29T15:23:29.364Z",
+      "retrievedCount": 52,
+      "acceptedCount": 50,
+      "queryProvenance": "LIVE_PROVIDER",
+      "isLive": true,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 20,
+      "lastSuccessfulQueryAt": "2026-10-29T15:23:29.364Z",
+      "upstreamReturnedCount": 20,
+      "freshLiveCount": 18,
+      "cachedRecordsCount": 32,
+      "persistedInsertedCount": 0,
+      "persistedUpdatedCount": 20,
+      "liveAttempted": true,
+      "liveSucceeded": true,
+      "liveError": null,
+      "lastLiveQueryAt": "2026-10-29T15:23:29.364Z",
+      "lastLiveQueryRecordCount": 20,
+      "lastSuccessfulLiveQueryAt": "2026-10-29T15:23:29.364Z",
+      "auditTraces": [
+        {
+          "rawId": "1536941208479218",
+          "digest": "e99ae57635e7afb99bc0e3080771b6b3",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdmp000uimg91229pnuq"
+        },
+        {
+          "rawId": "1464108218882438",
+          "digest": "03f18966b5c8cdbbca74e0cf77f1375d",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdn9001cimg996p166uf"
+        },
+        {
+          "rawId": "1133000522848754",
+          "digest": "70c4027c1454b7bdf3b6d2e02244da88",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdnm001oimg9i4e3ejs2"
+        },
+        {
+          "rawId": "1641348457417375",
+          "digest": "e95e7abd2d294d3761316ba1283628a7",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdoh002iimg9f3ngoctx"
+        },
+        {
+          "rawId": "2249466188957796",
+          "digest": "ed821df7bed80fa8cac7153f3d29069f",
+          "decision": "UPDATED",
+          "persistedId": "cmvmlpdp50036img9nt00uzw5"
+        },
+        {
+          "rawId": "1642750633880173",
+          "digest": "09354344bcebc93b92f10782e68891d8",
+          "decision": "UPDATED",
+          "persistedId": "cmvkxf39g0003mug956198pnw"
+        },
+        {
+          "rawId": "1410922084469845",
+          "digest": "510f5873ead61d4fc38a78ddc36b59c2",
+          "decision": "UPDATED",
+          "persistedId": "cmvkxf39t0009mug9u2oigd3c"
+        },
+        {
+          "rawId": "1806555653907868",
+          "digest": "58f9024f51d25bac44adb560c712d426",
+          "decision": "UPDATED",
+          "persistedId": "cmvquan2u009yx1g9lyq4ofgn"
+        },
+        {
+          "rawId": "1563296449176047",
+          "digest": "45699c99516306b5a9d581c8f3d594af",
+          "decision": "UPDATED",
+          "persistedId": "cmvquan3400a4x1g95xqkohzd"
+        },
+        {
+          "rawId": "4546541612250472",
+          "digest": "9aa985e43ac0ba514f0d14c1ec016112",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastx6001z8eg9ty1hiuir"
+        },
+        {
+          "rawId": "1764530358140196",
+          "digest": "50b41af84c6cd2eff9fe7d4ac4580782",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxg00268eg91t8tblzk"
+        },
+        {
+          "rawId": "1718454532575959",
+          "digest": "eb74320b03ab1c201e8a75bfd9e17e8e",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxq002c8eg9xkn13v52"
+        },
+        {
+          "rawId": "1137301772072207",
+          "digest": "1cc15a16b7372407c2e38c714bf167c6",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bp9001c1pg9jpp4097x"
+        },
+        {
+          "rawId": "1067995712370292",
+          "digest": "1d82b12cfb4c0ba7f7883f0889e13c85",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastxx002j8eg9368mmj4t"
+        },
+        {
+          "rawId": "1025226893900208",
+          "digest": "326d05c6727cdcddd11ffbf9ad9bf03e",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyc002x8eg9xaggkhyz"
+        },
+        {
+          "rawId": "3202991749899349",
+          "digest": "931f4e61bab4da7efaf2b9e90ccdeb8a",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyq003a8eg92p6w2ime"
+        },
+        {
+          "rawId": "2174343823475370",
+          "digest": "3aed363d8c32e98a2d428546c6b1a52c",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastyw003h8eg9ysg1m9sj"
+        },
+        {
+          "rawId": "1605927994566450",
+          "digest": "af6eab47dd264e47b96aaf2a62de73c8",
+          "decision": "UPDATED",
+          "persistedId": "cmvsastz9003t8eg9ckv0nwgm"
+        },
+        {
+          "rawId": "1860647425077112",
+          "digest": "a5450e30a6177a58fd74bb7aa706649c",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bqj00221pg91txrdfeq"
+        },
+        {
+          "rawId": "1092762023460778",
+          "digest": "a01bc37e806ed87e42f754e5d27a5371",
+          "decision": "UPDATED",
+          "persistedId": "cmvtl5bqu00281pg9h3qa9xyw"
+        }
+      ]
+    },
+    "sourceCoverage": {
+      "freshLiveAdsCount": 18,
+      "historicalCachedAdsCount": 32,
+      "totalObservationsCount": 50,
+      "queryExecuted": true,
+      "queryStatus": "PASSED"
+    },
+    "queryExecutions": [
+      {
+        "queryId": "kh02_q_r1_1_966a6f6c",
+        "keyword": "pet hair remover",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "attempted": true,
+        "status": "SUCCEEDED_WITH_RESULTS",
+        "startedAt": "2026-10-29T15:23:20.667Z",
+        "completedAt": "2026-10-29T15:23:24.696Z",
+        "actualApiCalls": 1,
+        "returnedCount": 10,
+        "uniqueReturnedCount": 10,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "pet_grooming_hair_removal",
+        "expectedProductCategory": "Pet Grooming",
+        "errorCode": null,
+        "errorMessage": null,
+        "requestStarted": true,
+        "requestCompleted": true,
+        "upstreamReturnedCount": 10,
+        "uniqueUpstreamIdsCount": 10,
+        "cachedRecordsUsed": 0,
+        "provenance": "LIVE_PROVIDER",
+        "researchRunId": "kh02_1793287399997_01gaf",
+        "source": "META_ADS",
+        "planned": true
+      },
+      {
+        "queryId": "kh02_q_r1_2_a297b0f2",
+        "keyword": "cat water fountain",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "attempted": true,
+        "status": "SUCCEEDED_WITH_RESULTS",
+        "startedAt": "2026-10-29T15:23:24.696Z",
+        "completedAt": "2026-10-29T15:23:29.101Z",
+        "actualApiCalls": 1,
+        "returnedCount": 10,
+        "uniqueReturnedCount": 10,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "pet_hydration",
+        "expectedProductCategory": "Pet Hydration",
+        "errorCode": null,
+        "errorMessage": null,
+        "requestStarted": true,
+        "requestCompleted": true,
+        "upstreamReturnedCount": 10,
+        "uniqueUpstreamIdsCount": 10,
+        "cachedRecordsUsed": 0,
+        "provenance": "LIVE_PROVIDER",
+        "researchRunId": "kh02_1793287399997_01gaf",
+        "source": "META_ADS",
+        "planned": true
+      }
+    ]
+  },
+  "cacheOnlyExecution": {
+    "telemetry": {
+      "source": "META_ADS",
+      "queryExecuted": false,
+      "queryStatus": "CACHE_ONLY",
+      "queryTimestamp": "2026-10-29T15:23:52.740Z",
+      "retrievedCount": 12,
+      "acceptedCount": 12,
+      "queryProvenance": "CACHED_SOURCE",
+      "isLive": false,
+      "queryError": null,
+      "lastSuccessfulRecordCount": 12,
+      "lastSuccessfulQueryAt": "2026-10-29T15:23:52.740Z",
+      "upstreamReturnedCount": null,
+      "freshLiveCount": 0,
+      "cachedRecordsCount": 12,
+      "persistedInsertedCount": 0,
+      "persistedUpdatedCount": 0,
+      "liveAttempted": false,
+      "liveSucceeded": false,
+      "liveError": null,
+      "lastLiveQueryAt": null,
+      "lastLiveQueryRecordCount": null,
+      "lastSuccessfulLiveQueryAt": null,
+      "auditTraces": []
+    },
+    "sourceCoverage": {
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 12,
+      "totalObservationsCount": 12,
+      "queryExecuted": false,
+      "queryStatus": "CACHE_ONLY"
+    },
+    "queryExecutions": [
+      {
+        "queryId": "kh02_q_r1_1_11427908",
+        "researchRunId": "kh02_1793287432467_w6qwz",
+        "source": "META_ADS",
+        "keyword": "automatic pet feeder",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "planned": true,
+        "attempted": false,
+        "requestStarted": false,
+        "requestCompleted": false,
+        "actualApiCalls": 0,
+        "status": "NOT_ATTEMPTED",
+        "upstreamReturnedCount": null,
+        "uniqueUpstreamIdsCount": null,
+        "cachedRecordsUsed": 12,
+        "startedAt": null,
+        "completedAt": null,
+        "returnedCount": 0,
+        "uniqueReturnedCount": 0,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "specific_automatic_pet_feeder",
+        "expectedProductCategory": "Automatic Pet Feeder (Primary SKU)",
+        "errorCode": null,
+        "errorMessage": null,
+        "provenance": "CACHED_SOURCE"
+      },
+      {
+        "queryId": "kh02_q_r1_2_399175a1",
+        "researchRunId": "kh02_1793287432467_w6qwz",
+        "source": "META_ADS",
+        "keyword": "smart pet feeder",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "planned": true,
+        "attempted": false,
+        "requestStarted": false,
+        "requestCompleted": false,
+        "actualApiCalls": 0,
+        "status": "NOT_ATTEMPTED",
+        "upstreamReturnedCount": null,
+        "uniqueUpstreamIdsCount": null,
+        "cachedRecordsUsed": 12,
+        "startedAt": null,
+        "completedAt": null,
+        "returnedCount": 0,
+        "uniqueReturnedCount": 0,
+        "duplicateCount": 0,
+        "roundNumber": 1,
+        "origin": "DETERMINISTIC_FALLBACK",
+        "archetypeId": "specific_automatic_pet_feeder_smart_dispenser",
+        "expectedProductCategory": "Automatic Pet Feeder (Smart & Timed Models)",
+        "errorCode": null,
+        "errorMessage": null,
+        "provenance": "CACHED_SOURCE"
+      }
+    ]
+  }
+}

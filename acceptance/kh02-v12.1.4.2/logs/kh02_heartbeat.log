@@ -1,0 +1,18 @@
+=== STDOUT ===
+
+> shopify-winning-ads-intelligence@0.1.0 kh02:test:heartbeat
+> vitest run tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts
+
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts (7 tests) 240ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  21:44:03
+   Duration  535ms (tests 52%, import 30%, transform 9%, setup 9%, worker 1%)
+
+
+
+=== STDERR ===

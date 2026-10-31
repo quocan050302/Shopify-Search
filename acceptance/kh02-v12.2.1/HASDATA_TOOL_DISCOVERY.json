@@ -1,0 +1,9 @@
+{
+  "provider": "HasData TikTok MCP",
+  "supportedToolsCandidate": [
+    "search_videos",
+    "get_video_details",
+    "get_user_info"
+  ],
+  "status": "BLOCKED_MISSING_CREDENTIALS"
+}

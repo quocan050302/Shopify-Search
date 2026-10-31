@@ -1,0 +1,86 @@
+{
+  "sessionRunId": "v12_4_3_1_1793254003307",
+  "verdict": "PASS",
+  "reconciliation": [
+    {
+      "topic": "pet gadgets",
+      "researchRunId": "kh02_run_1793254102976_uw326",
+      "plannedQueriesCount": 6,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    },
+    {
+      "topic": "diy",
+      "researchRunId": "kh02_run_1793254118806_w60gg",
+      "plannedQueriesCount": 10,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    },
+    {
+      "topic": "kitchen",
+      "researchRunId": "kh02_1793254134040_uux5p",
+      "plannedQueriesCount": 5,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 46
+    },
+    {
+      "topic": "home decor",
+      "researchRunId": "kh02_1793254134041_06e55",
+      "plannedQueriesCount": 4,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    },
+    {
+      "topic": "gardening",
+      "researchRunId": "kh02_1793254157419_g3tta",
+      "plannedQueriesCount": 6,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    },
+    {
+      "topic": "cleaning",
+      "researchRunId": "kh02_1793254157419_nhtqj",
+      "plannedQueriesCount": 4,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 49
+    },
+    {
+      "topic": "automatic pet feeder",
+      "researchRunId": "kh02_1793254175306_z6pp1",
+      "plannedQueriesCount": 4,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    },
+    {
+      "topic": "car accessories",
+      "researchRunId": "kh02_1793254175307_z88xy",
+      "plannedQueriesCount": 4,
+      "queryExecutionsCount": 2,
+      "queryYieldsCount": 2,
+      "unattemptedWithFakeYieldCount": 0,
+      "freshLiveAdsCount": 0,
+      "historicalCachedAdsCount": 50
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "KH01_REGRESSION",
+  "description": "KH-01 protection suite passes completely with zero regressions",
+  "executed": true,
+  "verdict": "PASS",
+  "expected": {
+    "exitCode": 0,
+    "testsPassed": 69
+  },
+  "observed": {
+    "exitCode": 0,
+    "testsPassed": 69,
+    "totalTests": 69
+  },
+  "assertionEvidence": [
+    "Passed: 69/69"
+  ],
+  "executionCommand": "npm run kh01:verify",
+  "exitCode": 0,
+  "runId": null,
+  "reason": "KH-01 verified: 69/69 tests passed"
+}

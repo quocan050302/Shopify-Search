@@ -1,0 +1,442 @@
+{
+  "version": "12.4.3.2",
+  "hasContradictoryNonPhysicalProductMessage": false,
+  "allCarryStructuredCandidateRejectionDetail": true,
+  "rejectedCandidatesSample": [
+    {
+      "candidateId": "cand_1094176151",
+      "title": "Unidentified Product (COLLECTION_PAGE: pawspick.com, Review Required)",
+      "canonicalProductName": null,
+      "displayName": "Unidentified Product (COLLECTION_PAGE: pawspick.com, Review Required)",
+      "originalAdHeadline": "Shop All Pet Supplies Collection",
+      "originalCreativeCode": null,
+      "adClaimedProductName": null,
+      "merchantVerifiedProductName": null,
+      "brand": null,
+      "model": null,
+      "sku": null,
+      "gtin": null,
+      "merchantProductId": null,
+      "variantId": null,
+      "category": "dog",
+      "problemStatement": "Shop All Pet Supplies Collection Browse our full catalog of pet accessories",
+      "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+      "thumbnailUrl": null,
+      "videoUrl": null,
+      "mediaSourceAdId": "ad_collection_1",
+      "requestedUrl": "https://pawspick.com/collections/all",
+      "resolvedFinalUrl": "https://pawspick.com/collections/all",
+      "declaredCanonicalUrl": null,
+      "normalizedProductUrl": "https://pawspick.com/collections/all",
+      "canonicalProductUrl": "https://pawspick.com/collections/all",
+      "storeDomain": "pawspick.com",
+      "imageReferences": [],
+      "advertiserNames": [],
+      "supportingAdIds": [
+        "ad_collection_1"
+      ],
+      "supportingSourceTypes": [
+        "META_ADS"
+      ],
+      "totalObservationCount": 1,
+      "distinctAdvertisersCount": 0,
+      "earliestObservationDate": "2026-10-29T09:28:16.685Z",
+      "latestObservationDate": "2026-10-29T09:28:16.685Z",
+      "identityConfidence": "AMBIGUOUS",
+      "sourceObservations": [
+        {
+          "source": "META_ADS",
+          "sourceRecordId": "ad_collection_1",
+          "sourceExternalAdId": "ad_collection_1",
+          "sourceUrl": null,
+          "landingPageUrl": "https://pawspick.com/collections/all",
+          "storeDomainEvidence": null,
+          "advertiserOrCreator": null,
+          "advertiserDomain": "pawspick.com",
+          "productMatchHint": "Shop All Pet Supplies Collection",
+          "reportedPublishedAt": null,
+          "reportedFirstShownAt": null,
+          "reportedLastShownAt": null,
+          "observedAt": "2026-10-29T09:28:16.685Z",
+          "requestedMarket": "US",
+          "verifiedDeliveryMarket": "US",
+          "title": "Shop All Pet Supplies Collection",
+          "description": "Browse our full catalog of pet accessories.",
+          "metrics": {},
+          "media": {
+            "thumbnailUrl": null,
+            "videoUrl": null,
+            "mediaType": null
+          },
+          "provenance": "LIVE_PROVIDER",
+          "evidenceReference": "Ad:ad_collection_1"
+        }
+      ],
+      "identityStatus": "UNRESOLVED",
+      "resolutionSource": "COLLECTION_PAGE Without Specific Product Identity",
+      "requiresManualReview": true,
+      "identityEvidenceReferences": [
+        "Page Classification: COLLECTION_PAGE"
+      ],
+      "fetchOutcome": "NOT_FETCHED",
+      "evidenceTimestamp": null,
+      "verificationReason": "Destination is a COLLECTION_PAGE and ad copy lacks a specific product name.",
+      "verificationLimitations": [
+        "Landing URL resolves to COLLECTION_PAGE rather than a single-SKU product page."
+      ],
+      "contradictions": [],
+      "hasUnresolvedContradiction": false,
+      "isEligibleAsEvergreenWinner": false,
+      "relevanceStatus": "RELEVANT",
+      "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+      "matchedArchetypeId": null,
+      "matchedQueryIds": [],
+      "relevanceScore": 0.92,
+      "relevanceReasons": [
+        "Strong niche match on terms: pet."
+      ],
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "PET_GENERAL"
+        ],
+        "audienceMatch": "COMPATIBLE",
+        "audienceEvidenceReferences": [
+          "pet_term:\"pet\""
+        ],
+        "relevanceReason": "General pet product compatible with dogs.",
+        "eligibleForPrimaryShortlist": true
+      },
+      "psychologyProfile": {
+        "canonicalProductName": "Unidentified Product (COLLECTION_PAGE: pawspick.com, Review Required)",
+        "productDomain": "PET",
+        "targetCustomer": {
+          "claimText": "Consumers actively seeking solutions related to dog",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.65,
+          "status": "INFERRED",
+          "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+        },
+        "situationOrUseCase": {
+          "claimText": "Regular routine use in the home when utilizing unidentified product (collection_page: pawspick.com, review required)",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "functionalProblem": {
+          "claimText": "Everyday inconvenience and friction addressed by Unidentified Product (COLLECTION_PAGE: pawspick.com, Review Required)",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "HEADLINE",
+          "confidence": 0.65,
+          "status": "INFERRED",
+          "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+        },
+        "emotionalPain": {
+          "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "desiredOutcome": {
+          "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "purchaseTrigger": {
+          "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "mainObjections": {
+          "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+        },
+        "trustRequirements": {
+          "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "HYPOTHESIS"
+        },
+        "demonstrationPotential": {
+          "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "existingAlternatives": {
+          "claimText": "Conventional manual household tools or unspecialized generic accessories",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "INFERRED"
+        },
+        "differentiationHypothesis": {
+          "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "HEADLINE",
+          "confidence": 0.78,
+          "status": "HYPOTHESIS"
+        },
+        "suggestedMessagingAngle": {
+          "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+          "evidenceReference": "Facebook Ad #ad_collection_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+        },
+        "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+      },
+      "sourcePageClassification": "COLLECTION_PAGE",
+      "listingKey": "url::https://pawspick.com/collections/all",
+      "productKey": "merchant_tokens::pawspick.com::review_required::collection_com_page_pawspick_required_review_unidentified",
+      "variantKey": null,
+      "familyKey": "review_required",
+      "familyLabel": "Review Required",
+      "productRealityStatus": "UNRESOLVED",
+      "productRealityReason": "Excluded — Product identity is unresolved.",
+      "rejectionDetail": {
+        "reasonCode": "UNRESOLVED_PRODUCT_IDENTITY",
+        "reasonText": "Excluded — Product identity is unresolved.",
+        "evidenceReferences": [
+          "Page Classification: COLLECTION_PAGE",
+          "Ad:ad_collection_1",
+          "URL:https://pawspick.com/collections/all"
+        ],
+        "detectedEntityType": "PHYSICAL_PRODUCT"
+      }
+    },
+    {
+      "candidateId": "cand_1046589313",
+      "title": "Automatic Wet Food Cat Feeder",
+      "canonicalProductName": "Automatic Wet Food Cat Feeder",
+      "displayName": "Automatic Wet Food Cat Feeder",
+      "originalAdHeadline": "Automatic Wet Food Cat Feeder",
+      "originalCreativeCode": "automatic-wet-food-cat-feeder",
+      "adClaimedProductName": "Automatic Wet Food Cat Feeder",
+      "merchantVerifiedProductName": null,
+      "brand": null,
+      "model": null,
+      "sku": null,
+      "gtin": null,
+      "merchantProductId": null,
+      "variantId": null,
+      "category": "dog",
+      "problemStatement": "Automatic Wet Food Cat Feeder Keep cat wet food fresh all day",
+      "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+      "thumbnailUrl": null,
+      "videoUrl": null,
+      "mediaSourceAdId": "ad_cat_for_dog_1",
+      "requestedUrl": "https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "resolvedFinalUrl": "https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "declaredCanonicalUrl": null,
+      "normalizedProductUrl": "https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "canonicalProductUrl": "https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "storeDomain": "pawspick.com",
+      "imageReferences": [],
+      "advertiserNames": [],
+      "supportingAdIds": [
+        "ad_cat_for_dog_1"
+      ],
+      "supportingSourceTypes": [
+        "META_ADS"
+      ],
+      "totalObservationCount": 1,
+      "distinctAdvertisersCount": 0,
+      "earliestObservationDate": "2026-10-29T09:28:16.685Z",
+      "latestObservationDate": "2026-10-29T09:28:16.685Z",
+      "identityConfidence": "HIGH_CONFIDENCE",
+      "sourceObservations": [
+        {
+          "source": "META_ADS",
+          "sourceRecordId": "ad_cat_for_dog_1",
+          "sourceExternalAdId": "ad_cat_for_dog_1",
+          "sourceUrl": null,
+          "landingPageUrl": "https://pawspick.com/products/automatic-wet-food-cat-feeder",
+          "storeDomainEvidence": null,
+          "advertiserOrCreator": null,
+          "advertiserDomain": "pawspick.com",
+          "productMatchHint": "Automatic Wet Food Cat Feeder",
+          "reportedPublishedAt": null,
+          "reportedFirstShownAt": null,
+          "reportedLastShownAt": null,
+          "observedAt": "2026-10-29T09:28:16.685Z",
+          "requestedMarket": "US",
+          "verifiedDeliveryMarket": "US",
+          "title": "Automatic Wet Food Cat Feeder",
+          "description": "Keep cat wet food fresh all day.",
+          "metrics": {},
+          "media": {
+            "thumbnailUrl": null,
+            "videoUrl": null,
+            "mediaType": null
+          },
+          "provenance": "LIVE_PROVIDER",
+          "evidenceReference": "Ad:ad_cat_for_dog_1"
+        }
+      ],
+      "identityStatus": "PROBABLE",
+      "resolutionSource": "Product URL Locator (/products/automatic-wet-food-cat-feeder) Pending Merchant Metadata Verification",
+      "requiresManualReview": false,
+      "identityEvidenceReferences": [
+        "Product Handle: automatic-wet-food-cat-feeder",
+        "Canonical URL: https://pawspick.com/products/automatic-wet-food-cat-feeder",
+        "Ad Copy Headline: Automatic Wet Food Cat Feeder"
+      ],
+      "fetchOutcome": "NOT_FETCHED",
+      "evidenceTimestamp": null,
+      "verificationReason": "Identified candidate 'Automatic Wet Food Cat Feeder' from product URL locator /products/automatic-wet-food-cat-feeder; awaiting live merchant metadata verification.",
+      "verificationLimitations": [
+        "Merchant product page metadata has not been verified yet; URL locator and ad copy establish PROBABLE identity only."
+      ],
+      "contradictions": [],
+      "hasUnresolvedContradiction": false,
+      "isEligibleAsEvergreenWinner": false,
+      "relevanceStatus": "IRRELEVANT",
+      "discoveryRelevanceDecision": "CLEARLY_UNRELATED",
+      "matchedArchetypeId": null,
+      "matchedQueryIds": [],
+      "relevanceScore": 0.08,
+      "relevanceReasons": [
+        "Excluded — Product is marketed for cats, while this search targets dogs."
+      ],
+      "audienceRelevance": {
+        "requestedAudience": "DOG",
+        "supportedAudiences": [
+          "CAT"
+        ],
+        "audienceMatch": "CONTRADICTORY",
+        "audienceEvidenceReferences": [
+          "cat_term:\"cat\""
+        ],
+        "relevanceReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+        "eligibleForPrimaryShortlist": false
+      },
+      "psychologyProfile": {
+        "canonicalProductName": "Automatic Wet Food Cat Feeder",
+        "productDomain": "PET",
+        "targetCustomer": {
+          "claimText": "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
+          "evidenceReference": "Observed mention: \"Cat\" in Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "AD_COPY",
+          "confidence": 0.75,
+          "status": "INFERRED",
+          "uncertaintyNote": "Explicit customer demographic not in copy; inferred from cat mention."
+        },
+        "situationOrUseCase": {
+          "claimText": "Daily automated hydration and feeding, especially during work hours or short travel",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "functionalProblem": {
+          "claimText": "Inconvenience of manual daily feeding schedules and concerns about pet hydration when away from home",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "emotionalPain": {
+          "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "desiredOutcome": {
+          "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "purchaseTrigger": {
+          "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "INFERRED"
+        },
+        "mainObjections": {
+          "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+        },
+        "trustRequirements": {
+          "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "HYPOTHESIS"
+        },
+        "demonstrationPotential": {
+          "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.75,
+          "status": "INFERRED"
+        },
+        "existingAlternatives": {
+          "claimText": "Conventional manual household tools or unspecialized generic accessories",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.85,
+          "status": "INFERRED"
+        },
+        "differentiationHypothesis": {
+          "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "HEADLINE",
+          "confidence": 0.78,
+          "status": "HYPOTHESIS"
+        },
+        "suggestedMessagingAngle": {
+          "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+          "evidenceReference": "Facebook Ad #ad_cat_for_dog_1",
+          "evidenceType": "MARKET_KNOWLEDGE",
+          "confidence": 0.8,
+          "status": "HYPOTHESIS",
+          "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+        },
+        "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+      },
+      "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+      "listingKey": "url::https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "productKey": "url::https://pawspick.com/products/automatic-wet-food-cat-feeder",
+      "variantKey": null,
+      "familyKey": "food_feeder",
+      "familyLabel": "Food Feeder",
+      "productRealityStatus": "REJECTED",
+      "productRealityReason": "Excluded — Product is marketed for cats, while this search targets dogs.",
+      "rejectionDetail": {
+        "reasonCode": "TARGET_AUDIENCE_MISMATCH",
+        "reasonText": "Excluded — Product is marketed for cats, while this search targets dogs.",
+        "evidenceReferences": [
+          "Product Handle: automatic-wet-food-cat-feeder",
+          "Canonical URL: https://pawspick.com/products/automatic-wet-food-cat-feeder",
+          "Ad Copy Headline: Automatic Wet Food Cat Feeder",
+          "Ad:ad_cat_for_dog_1",
+          "URL:https://pawspick.com/products/automatic-wet-food-cat-feeder"
+        ],
+        "detectedEntityType": "PHYSICAL_PRODUCT"
+      }
+    }
+  ]
+}

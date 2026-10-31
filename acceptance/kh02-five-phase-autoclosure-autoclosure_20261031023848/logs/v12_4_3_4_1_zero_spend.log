@@ -1,0 +1,14 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 859[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled [2m(18)[22m
+     [32m✓[39m Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode [2m(4)[22m
+       [33m[2m✓[22m[39m A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode[33m 830[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m26 passed[39m[22m[90m (26)[39m
+[2m   Start at [22m 09:39:55
+[2m   Duration [22m 2.43s[2m (tests 44%, import 36%, setup 12%, transform 6%, worker 1%)[22m
+

@@ -1,0 +1,264 @@
+{
+  "diy": [
+    {
+      "archetypeId": "wall_repair_kit",
+      "productCategory": "Home Repair Kits",
+      "customerProblem": "Holes, cracks, and dents in drywall requiring quick cosmetic patching without professional contractor help.",
+      "relevanceReason": "Directly addresses home improvement tasks that everyday consumers perform themselves.",
+      "searchQueries": [
+        {
+          "phrase": "wall repair kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "High-intent search phrase used in DTC home improvement ads."
+        },
+        {
+          "phrase": "drywall patch kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Captures exact product variants sold by ecommerce brands."
+        }
+      ]
+    },
+    {
+      "archetypeId": "cordless_hot_glue_gun",
+      "productCategory": "DIY Crafting Tools",
+      "customerProblem": "Tethered cord restrictions when bonding crafting materials, home decor, or quick fixes.",
+      "relevanceReason": "Essential portable tool for everyday DIY projects and crafts.",
+      "searchQueries": [
+        {
+          "phrase": "cordless hot glue gun",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Targets popular rechargeable crafting tools featured in social media ads."
+        },
+        {
+          "phrase": "mini glue gun",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Common alternative product description for compact DIY adhesive tools."
+        }
+      ]
+    },
+    {
+      "archetypeId": "decorative_switch_plate_covers",
+      "productCategory": "Decorative Home Hardware & Wall Decor",
+      "customerProblem": "Boring standard plastic light switch plates that do not match interior room aesthetics.",
+      "relevanceReason": "Popular aesthetic DIY upgrade for home decor enthusiasts.",
+      "searchQueries": [
+        {
+          "phrase": "decorative switch plate covers",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Pinpoints home accessory items frequently advertised on visual discovery platforms."
+        },
+        {
+          "phrase": "brass outlet covers",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Finds specific material variations sold by home hardware brands."
+        }
+      ]
+    },
+    {
+      "archetypeId": "pocket_hole_jig",
+      "productCategory": "Woodworking Jigs & Clamps",
+      "customerProblem": "Difficulty creating strong, hidden joints when building custom wooden furniture.",
+      "relevanceReason": "Core woodworking accessory for intermediate home improvement hobbyists.",
+      "searchQueries": [
+        {
+          "phrase": "pocket hole jig",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Standard industry terminology for consumer woodworking tools."
+        },
+        {
+          "phrase": "woodworking joint kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Captures bundled woodworking hardware packages."
+        }
+      ]
+    },
+    {
+      "archetypeId": "wood_scratch_repair_markers",
+      "productCategory": "Furniture & Surface Restoration",
+      "customerProblem": "Scratches, scuffs, and discoloration on wooden furniture and flooring.",
+      "relevanceReason": "Enables easy furniture restoration without requiring professional refinishing services.",
+      "searchQueries": [
+        {
+          "phrase": "wood scratch repair markers",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "High-converting product title for household touch-up kits."
+        },
+        {
+          "phrase": "furniture touch up kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Identifies comprehensive surface restoration sets."
+        }
+      ]
+    }
+  ],
+  "gardening": [
+    {
+      "archetypeId": "self_watering_planter",
+      "productCategory": "Plant Watering & Irrigation",
+      "customerProblem": "Plants drying out quickly due to infrequent watering or busy schedules.",
+      "relevanceReason": "Provides an automated watering solution for home gardeners seeking low-maintenance plant care.",
+      "searchQueries": [
+        {
+          "phrase": "self watering planter",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Directly targets high-volume DTC ads for self-watering pots and planters."
+        },
+        {
+          "phrase": "automatic plant waterer",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 2,
+          "rationale": "Captures related drip-irrigation spikes and vacation plant watering stakes."
+        }
+      ]
+    },
+    {
+      "archetypeId": "heavy_duty_pruning_shears",
+      "productCategory": "Pruning & Cutting Tools",
+      "customerProblem": "Hand fatigue and dull blades when trimming thick branches or harvesting plants.",
+      "relevanceReason": "Essential handheld gardening tool frequently featured in direct-to-consumer video demonstrations.",
+      "searchQueries": [
+        {
+          "phrase": "ratchet pruning shears",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Finds popular ergonomic hand pruners sold heavily via social media ads."
+        },
+        {
+          "phrase": "gardening pruning shears",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 2,
+          "rationale": "Expands to broader high-performing cutting tool creative variants."
+        }
+      ]
+    },
+    {
+      "archetypeId": "indoor_seed_starting_kit",
+      "productCategory": "Seed Starting & Propagation",
+      "customerProblem": "Difficulty germinating seeds indoors without proper light, warmth, and humidity control.",
+      "relevanceReason": "Appeals to gardeners starting vegetables and flowers ahead of the spring planting season.",
+      "searchQueries": [
+        {
+          "phrase": "seed starting kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Targets propagator trays with built-in LED grow lights sold by DTC brands."
+        },
+        {
+          "phrase": "indoor greenhouse kit",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 2,
+          "rationale": "Captures mini greenhouse structures marketed to home plant hobbyists."
+        }
+      ]
+    },
+    {
+      "archetypeId": "metal_plant_trellis",
+      "productCategory": "Plant Supports & Trellises",
+      "customerProblem": "Vining houseplants and climbing garden vegetables sprawling messily across floors or soil.",
+      "relevanceReason": "Combines aesthetic room decor with functional plant support for climbing species.",
+      "searchQueries": [
+        {
+          "phrase": "decorative plant trellis",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Finds aesthetic metal and wooden trellises popular on Instagram and TikTok ads."
+        },
+        {
+          "phrase": "climbing plant support",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 2,
+          "rationale": "Retrieves functional stakes and rings used for indoor and outdoor vines."
+        }
+      ]
+    },
+    {
+      "archetypeId": "digital_soil_meter",
+      "productCategory": "Soil Testing & Monitoring",
+      "customerProblem": "Uncertainty regarding soil moisture levels, pH balance, and sunlight requirements leading to plant failure.",
+      "relevanceReason": "Provides actionable diagnostic data for home gardeners trying to optimize plant health.",
+      "searchQueries": [
+        {
+          "phrase": "soil moisture meter",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Directly targets affordable diagnostic probes frequently advertised as gifts or essential tools."
+        },
+        {
+          "phrase": "digital soil tester",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 2,
+          "rationale": "Uncovers multi-function pH and light meters marketed to gardening enthusiasts."
+        }
+      ]
+    }
+  ],
+  "unfamiliar": [
+    {
+      "archetypeId": "ergonomic_desk_tool",
+      "productCategory": "ergonomic desk Tools & Gadgets",
+      "customerProblem": "Consumers looking for practical handheld tools or devices for ergonomic desk.",
+      "relevanceReason": "Physical tool archetype for ergonomic desk.",
+      "searchQueries": [
+        {
+          "phrase": "ergonomic desk tool",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 1,
+          "rationale": "Targets concrete physical tools in the ergonomic desk niche."
+        }
+      ]
+    },
+    {
+      "archetypeId": "ergonomic_desk_kit",
+      "productCategory": "ergonomic desk Starter & Repair Kits",
+      "customerProblem": "Consumers seeking all-in-one physical kits for ergonomic desk.",
+      "relevanceReason": "Bundled physical kit archetype for ergonomic desk.",
+      "searchQueries": [
+        {
+          "phrase": "ergonomic desk kit",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 2,
+          "rationale": "Targets complete physical product kits in the ergonomic desk niche."
+        }
+      ]
+    },
+    {
+      "archetypeId": "ergonomic_desk_organizer",
+      "productCategory": "ergonomic desk Storage & Organizers",
+      "customerProblem": "Keeping ergonomic desk gear and spaces neat and accessible.",
+      "relevanceReason": "Physical storage and holder products for ergonomic desk.",
+      "searchQueries": [
+        {
+          "phrase": "ergonomic desk organizer",
+          "searchType": "KEYWORD_EXACT_PHRASE",
+          "priority": 3,
+          "rationale": "Targets physical organizers and holders for ergonomic desk."
+        }
+      ]
+    },
+    {
+      "archetypeId": "ergonomic_desk_accessories",
+      "productCategory": "ergonomic desk Essential Accessories",
+      "customerProblem": "Everyday replacement parts, covers, and protective accessories for ergonomic desk.",
+      "relevanceReason": "Physical consumer accessories for ergonomic desk.",
+      "searchQueries": [
+        {
+          "phrase": "ergonomic desk holder",
+          "searchType": "KEYWORD_UNORDERED",
+          "priority": 4,
+          "rationale": "Targets physical mounting/holder accessories for ergonomic desk."
+        }
+      ]
+    }
+  ]
+}

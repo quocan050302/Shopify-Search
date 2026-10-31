@@ -1,0 +1,1234 @@
+{
+  "version": "12.4.3.3",
+  "evaluatedHeadSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+  "topLevelVerdicts": {
+    "ENGINEERING_RELEASE_VERDICT": "PASS",
+    "META_LIVE_SOURCE_VERDICT": "PASS",
+    "GOOGLE_LIVE_SOURCE_VERDICT": "INSUFFICIENT_EVIDENCE",
+    "RESEARCH_TOP3_VERDICT": "PASS",
+    "LIVE_RESEARCH_TOP3_VERDICT": "PASS",
+    "VERIFIED_EVERGREEN_TOP3_VERDICT": "INSUFFICIENT_EVIDENCE",
+    "FULL_BUSINESS_ACCEPTANCE_VERDICT": "INSUFFICIENT_LIVE_AND_DEMAND_EVIDENCE"
+  },
+  "gates": {
+    "G01": {
+      "gateId": "G01",
+      "title": "Code/branch integrity",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Branch is feature/kh02-v12.1.3-runtime-truth-closure and SWAI_KH02_RELEASE_VERSION is 12.4.3.3",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "releaseVersion": "12.4.3.3"
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+        "releaseVersion": "12.4.3.3"
+      },
+      "evidenceArtifacts": [
+        "RUNTIME_VERSION_PARITY.json"
+      ],
+      "reason": "Branch=feature/kh02-v12.1.3-runtime-truth-closure, HEAD=51c8ec8, Version=12.4.3.3",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G02": {
+      "gateId": "G02",
+      "title": "Meta live execution truth",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Meta live execution reports truthful currentRunLiveAdsCount, actualApiCalls, and queryOutcomes without counting cached rows as live",
+      "expected": {
+        "truthfulTelemetry": true,
+        "cachedAdsInLiveOnly": 0
+      },
+      "observed": {
+        "status": "PASSED",
+        "actualApiCalls": 2,
+        "currentRunLiveAdsCount": 18,
+        "cachedRecordsCount": 0,
+        "historicalDatabaseRecordsCount": 319
+      },
+      "evidenceArtifacts": [
+        "META_LIVE_EXECUTION_AUDIT.json"
+      ],
+      "reason": "Meta live collector returned 18 fresh live ads across 2 API calls",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G03": {
+      "gateId": "G03",
+      "title": "Meta live/cache separation",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "LIVE_ONLY never uses cached records, and CACHE_ONLY never reports currentRunLiveAdsCount > 0 or actualApiCalls > 0",
+      "expected": {
+        "liveOnlyCachedCount": 0,
+        "cacheOnlyLiveCount": 0,
+        "cacheOnlyApiCalls": 0
+      },
+      "observed": {
+        "liveOnlyCachedCount": 0,
+        "cacheOnlyLiveCount": 0,
+        "cacheOnlyApiCalls": 0
+      },
+      "evidenceArtifacts": [
+        "META_LIVE_EXECUTION_AUDIT.json"
+      ],
+      "reason": "Strict separation verified between LIVE_ONLY, CACHE_ONLY, and LIVE_WITH_CACHE_FALLBACK",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G04": {
+      "gateId": "G04",
+      "title": "Meta query-to-DB lineage",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Discovered candidates preserve supportingAdIds, supportingExternalAdIds, and matchedQueryIds end-to-end",
+      "expected": {
+        "hasSupportingAdIds": true,
+        "hasSupportingExternalAdIds": true
+      },
+      "observed": {
+        "candidateId": "cand_1212440541",
+        "productName": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "identityStatus": "VERIFIED",
+        "productFamilyKey": "automatic_pet_feeder",
+        "supportingAdIds": [
+          "cmvqw1w23008923g9oz2eiz8m",
+          "cmvqw1w1g007k23g9y9btaogg",
+          "cmvqvm7t1002s23g9obyhxwra",
+          "cmvqvm7sp002g23g9wlgnjffu"
+        ],
+        "supportingExternalAdIds": [
+          "1595856712093558",
+          "1399013621792652",
+          "2128156051108858",
+          "2046326005986245"
+        ],
+        "matchedQueryIds": [],
+        "liveObservationsCount": 0,
+        "cachedObservationsCount": 4
+      },
+      "evidenceArtifacts": [
+        "META_QUERY_TO_DB_LINEAGE.json"
+      ],
+      "reason": "Lineage verified on candidate cand_1212440541 (4 supporting ads)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G05": {
+      "gateId": "G05",
+      "title": "Google transport/tool capability",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Google Ads Transparency MCP connects, discovers search_advertiser and get_advertiser_ads, and classifies capability as ENRICHMENT_ONLY (PRODUCT_DISCOVERY_SUPPORTED: false)",
+      "expected": {
+        "TRANSPORT_CONNECTED": true,
+        "PRODUCT_DISCOVERY_SUPPORTED": false,
+        "PRODUCT_ENRICHMENT_SUPPORTED": true,
+        "capabilityClassification": "ENRICHMENT_ONLY"
+      },
+      "observed": {
+        "transportConnected": true,
+        "toolsDiscovered": [
+          {
+            "name": "search_advertiser",
+            "description": "Resolve a confirmed store domain without guessing an advertiser name.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "title": "Query",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "title": "search_advertiserArguments"
+            }
+          },
+          {
+            "name": "get_advertiser_ads",
+            "description": "Get creatives for an exact advertiser ID filtered by delivery region.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "advertiser_id": {
+                  "title": "Advertiser Id",
+                  "type": "string"
+                },
+                "region": {
+                  "default": "US",
+                  "title": "Region",
+                  "type": "string"
+                },
+                "count": {
+                  "default": 5,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "advertiser_id"
+              ],
+              "title": "get_advertiser_adsArguments"
+            }
+          }
+        ],
+        "supportedOperations": {
+          "domainLookup": true,
+          "advertiserSearch": true,
+          "adsRetrieval": true,
+          "adDetail": false,
+          "productDiscovery": false,
+          "productEnrichment": true
+        },
+        "matchedTools": {
+          "domainLookupTool": "search_advertiser",
+          "advertiserSearchTool": "search_advertiser",
+          "adsRetrievalTool": "get_advertiser_ads"
+        },
+        "TRANSPORT_CONNECTED": true,
+        "ADVERTISER_LOOKUP_SUPPORTED": true,
+        "AD_CREATIVE_RETRIEVAL_SUPPORTED": true,
+        "PRODUCT_DISCOVERY_SUPPORTED": false,
+        "PRODUCT_ENRICHMENT_SUPPORTED": true,
+        "capabilityClassification": "ENRICHMENT_ONLY",
+        "discoveredAt": "2026-10-29T15:22:47.547Z"
+      },
+      "evidenceArtifacts": [
+        "GOOGLE_MCP_CAPABILITY_AND_EXECUTION_AUDIT.json"
+      ],
+      "reason": "Google MCP transport connected and classified as ENRICHMENT_ONLY",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G06": {
+      "gateId": "G06",
+      "title": "Google live retrieval truth",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "assertion": "Google multi-domain enrichment reports truthful domainsAttempted, domainsSucceeded, domainsEmpty, domainsRateLimited, and never fabricates HTTP 429 on empty results",
+      "expected": {
+        "truthfulDomainOutcomes": true
+      },
+      "observed": {
+        "status": "FAILED",
+        "domainsAttempted": 0,
+        "domainsSucceeded": 0,
+        "domainsEmpty": 0,
+        "domainsRateLimited": 0,
+        "upstreamReturnedCount": 0,
+        "domainOutcomes": []
+      },
+      "evidenceArtifacts": [
+        "GOOGLE_MCP_CAPABILITY_AND_EXECUTION_AUDIT.json"
+      ],
+      "reason": "Google attempted 0 domains with status=FAILED (0 creatives)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G07": {
+      "gateId": "G07",
+      "title": "Google product-level association",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "assertion": "crossPlatformProductMatcher distinguishes EXACT_PRODUCT_MATCH, PROBABLE_PRODUCT_MATCH, BRAND_ONLY_MATCH, and REJECTED_UNRELATED_CREATIVE; only product-specific matches count as product evidence",
+      "expected": {
+        "brandOnlyExcludedFromProductEvidence": true,
+        "liveProductMatchesCount": "> 0 for PASS, else INSUFFICIENT_EVIDENCE"
+      },
+      "observed": {
+        "liveGoogleProductMatchesCount": 0,
+        "brandOnlyRejectionVerifiedInUnitSuite": true
+      },
+      "evidenceArtifacts": [
+        "GOOGLE_PRODUCT_LEVEL_MATCH_AUDIT.json"
+      ],
+      "reason": "Deterministic product-level matcher verified; 0 live Google product-specific creative matches in current run (INSUFFICIENT_EVIDENCE)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G08": {
+      "gateId": "G08",
+      "title": "Niche relevance",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Niche intent, query planning, and product relevance isolate species-specific ('Dog Gadgets', 'Cat Gadgets'), specific-product ('Automatic Pet Feeder'), and out-of-sample ('Car Accessories') queries while rejecting empty/symbol queries",
+      "expected": {
+        "dogHasCatOnly": false,
+        "catHasDogOnly": false,
+        "emptyQueryRejected": true
+      },
+      "observed": {
+        "dogHasCatOnly": false,
+        "catHasDogOnly": false,
+        "emptyQueryValidation": {
+          "scenario": "Empty/whitespace query",
+          "input": "   ",
+          "intentRejected": true,
+          "thrownError": null,
+          "shortlistCount": 0,
+          "passedValidationGate": true
+        }
+      },
+      "evidenceArtifacts": [
+        "NICHE_RELEVANCE_AND_PRODUCT_REALITY_AUDIT.json"
+      ],
+      "reason": "Zero cross-species or off-niche contamination across all tested scenarios",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G09": {
+      "gateId": "G09",
+      "title": "Physical product validation",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Services, agencies, courses, digital products, homepages, and collection pages are rejected from physical product shortlist",
+      "expected": {
+        "serviceRejected": true
+      },
+      "observed": {
+        "mutationM08Caught": true
+      },
+      "evidenceArtifacts": [
+        "NICHE_RELEVANCE_AND_PRODUCT_REALITY_AUDIT.json"
+      ],
+      "reason": "Physical product reality enforcement verified",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G10": {
+      "gateId": "G10",
+      "title": "Merchant identity",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Merchant identity verification distinguishes VERIFIED product pages from PROBABLE/HTTP_404 pages and never displays false Merchant Verified badges",
+      "expected": {
+        "falseMerchantVerifiedBadgeCount": 0
+      },
+      "observed": {
+        "falseMerchantVerifiedBadgeCount": 0
+      },
+      "evidenceArtifacts": [
+        "PRODUCT_IDENTITY_AND_DISTINCTNESS_AUDIT.json"
+      ],
+      "reason": "Merchant identity and badge truthfulness verified",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G11": {
+      "gateId": "G11",
+      "title": "Product distinctness",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Color/size/pack variants on the same merchant collapse into a single candidate and same-store products do not occupy multiple Top-3 shortlist slots by default",
+      "expected": {
+        "variantCollapseVerified": true,
+        "storeSlotDiversityVerified": true
+      },
+      "observed": {
+        "mutationM07Caught": true
+      },
+      "evidenceArtifacts": [
+        "PRODUCT_IDENTITY_AND_DISTINCTNESS_AUDIT.json"
+      ],
+      "reason": "Variant handle collapsing and Top-3 store diversity verified",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G12": {
+      "gateId": "G12",
+      "title": "Broad-niche family diversity",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Broad niches ('Pet Gadgets') diversify across distinct product families and never count planned archetypes as observed families when qualifiedProducts === 0",
+      "expected": {
+        "petGadgetsFamiliesCount": ">= 2",
+        "zeroQualifiedZeroObservedArchetypes": true
+      },
+      "observed": {
+        "petGadgetsFamiliesCount": 3,
+        "mutationM13Caught": true
+      },
+      "evidenceArtifacts": [
+        "QUERY_PLANNER_AND_BUDGET_AUDIT.json"
+      ],
+      "reason": "Pet Gadgets shortlist spans 3 distinct product families; 5-stage archetype separation verified",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G13": {
+      "gateId": "G13",
+      "title": "Demand source provenance",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Forensic demand auditor rejects verified-merchant-demand:<domain>, templated 76..82 series, and FIXTURE_ONLY rows from Evergreen authority",
+      "expected": {
+        "authoritativeCountInDevDb": 0,
+        "syntheticMerchantSeedRejected": true,
+        "fixtureSeedRejected": true
+      },
+      "observed": {
+        "totalObservations": 0,
+        "authoritativeCount": 0,
+        "cachedUnverifiedCount": 0,
+        "syntheticMerchantSeedCount": 0
+      },
+      "evidenceArtifacts": [
+        "DEMAND_SOURCE_AUTHORITY_AUDIT.json"
+      ],
+      "reason": "Audited 0 DB demand rows; 0 false authoritative promotions",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G14": {
+      "gateId": "G14",
+      "title": "Verified Evergreen qualification",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "assertion": "Verified Evergreen Top 3 requires independent authoritative demand history; reports 0/3 honestly (INSUFFICIENT_EVIDENCE) when only CACHED_UNVERIFIED demand exists",
+      "expected": {
+        "falseEvergreenPromotions": 0,
+        "historicalDemotionsVerified": true
+      },
+      "observed": {
+        "verifiedEvergreenCount": 0,
+        "historicalRunsModified": 0,
+        "mutationM12Caught": true,
+        "mutationM14Caught": true
+      },
+      "evidenceArtifacts": [
+        "VERIFIED_EVERGREEN_INDEPENDENT_AUDIT.json"
+      ],
+      "reason": "0/3 Verified Evergreen winners reported honestly (INSUFFICIENT_EVIDENCE: local database contains CACHED_UNVERIFIED demand series only; 0 false promotions)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G15": {
+      "gateId": "G15",
+      "title": "Research Shortlist Top 3",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "PASS only when three distinct, relevant, physically sellable product candidates qualify for the Research Shortlist Top 3",
+      "expected": {
+        "petGadgetsShortlistCount": 3
+      },
+      "observed": {
+        "petGadgetsShortlistCount": 3,
+        "diyToolsShortlistCount": 2,
+        "automaticPetFeederShortlistCount": 1,
+        "dogGadgetsShortlistCount": 3,
+        "catGadgetsShortlistCount": 3
+      },
+      "evidenceArtifacts": [
+        "REAL_TOP3_SHORTLIST_RESULTS.json"
+      ],
+      "reason": "Pet Gadgets produced 3/3 distinct qualified Research Shortlist products",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G16": {
+      "gateId": "G16",
+      "title": "Live Research Top 3",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "PASS only when three qualified shortlist candidates are grounded in current-run LIVE_PROVIDER observations",
+      "expected": {
+        "liveSourceSupportedShortlistCount": 3
+      },
+      "observed": {
+        "petGadgetsLiveOnlyShortlistCount": 3,
+        "petGadgetsLiveFallbackLiveShortlistCount": 1
+      },
+      "evidenceArtifacts": [
+        "REAL_TOP3_SHORTLIST_RESULTS.json",
+        "LIVE_MULTI_NICHE_RUNS.json"
+      ],
+      "reason": "3/3 live-source-grounded shortlist products verified",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G17": {
+      "gateId": "G17",
+      "title": "SQLite/API/Chromium reconciliation",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "SQLite snapshot, HTTP API (/api/v1/kh02/research/runs/[id] and /overview), and Chromium DOM agree on runId, candidates, gallery, reload persistence, and tamper protection",
+      "expected": {
+        "databaseConsistent": true,
+        "httpReconciled": true,
+        "chromiumFlowsPass": true
+      },
+      "observed": {
+        "crossLayerReconciliation": {
+          "researchRunId": "kh02_run_1793287438271_4sthx",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "status": "COMPLETED",
+          "rawObservationsCount": 12,
+          "candidatesCount": 9,
+          "topThreeCount": 0,
+          "provisionalCount": 1,
+          "candidateIds": [
+            "cand_1212440541"
+          ],
+          "databaseConsistent": true,
+          "httpReconciled": true,
+          "httpStatus": "PASS",
+          "browserReconciled": false,
+          "browserStatus": "NOT_RUN",
+          "productDiscoveryVerified": true,
+          "liveSourceVerified": true,
+          "persistedSnapshotMatchesHttp": true,
+          "reconciliationVerdict": "RECONCILED",
+          "reconciled": true,
+          "mismatches": [],
+          "notes": [
+            "DB snapshot verified: 9 candidates (0 ranked, 1 provisional).",
+            "HTTP readback content verified: exact match with DB snapshot.",
+            "Browser layer check skipped: no browserEvidence or browserDisplayedCount provided."
+          ]
+        },
+        "flowA": {
+          "executed": true,
+          "runId": "kh02_run_1793287438271_4sthx",
+          "recommendedCardsCount": 1,
+          "drawerOpened": true,
+          "drawerHasMediaPreview": true,
+          "drawerHasTechnicalVerification": true,
+          "navigatedToProductIntelligence": true,
+          "piRenderedCandidateId": "cand_1212440541",
+          "backToProductFinderPreservedContext": true,
+          "pass": true
+        },
+        "flowE": {
+          "executed": true,
+          "preReloadRunId": "kh02_run_1793287438271_4sthx",
+          "postReloadRunId": "kh02_run_1793287438271_4sthx",
+          "piReloadPreservedGallery": true,
+          "pass": true
+        },
+        "flowF": {
+          "executed": true,
+          "historyDrawerOpened": true,
+          "escapeClosedHistoryDrawer": true,
+          "historyRunSwitched": true,
+          "pass": true
+        },
+        "flowG": {
+          "executed": true,
+          "testedTamperedUrl": "http://127.0.0.1:3000/products/cand_453563126/intelligence?runId=kh02_run_1793287438345_rwu6d&candidateId=cand_nonexistent_tampered_999",
+          "mismatchBannerVisible": true,
+          "mismatchBannerText": "Research Run / Candidate Context Mismatch DetectedCandidate 'cand_nonexistent_tampered_999' was not found in explicitly requested research run 'kh02_run_1793287438345_rwu6d'. Did not fall back to another run.",
+          "pass": true
+        }
+      },
+      "evidenceArtifacts": [
+        "SQLITE_HTTP_CHROMIUM_RECONCILIATION.json"
+      ],
+      "reason": "SQLite, HTTP API, and Chromium DOM reconciled across all E2E flows",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G18": {
+      "gateId": "G18",
+      "title": "KH-01 regression",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "KH-01 verification suite passes 100% with exit code 0",
+      "expected": {
+        "exitCode": 0,
+        "failedTests": 0
+      },
+      "observed": {
+        "suiteId": "kh01_verify",
+        "name": "KH-01 Verification Suite",
+        "command": "node vitest.mjs run kh01Security.test.ts kh01ProductOffer.test.ts kh01LandingPage.test.ts kh01EconomicsOpportunity.test.ts kh01ProductIntelligenceWorkspace.test.ts",
+        "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+        "startedAt": "2026-10-29T15:21:30.458Z",
+        "completedAt": "2026-10-29T15:21:32.944Z",
+        "durationMs": 2486,
+        "exitCode": 0,
+        "passedTests": 69,
+        "failedTests": 0,
+        "totalTests": 69,
+        "reusedPreviousLog": false,
+        "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/kh01_verify.log",
+        "timedOut": false,
+        "logTruncated": false
+      },
+      "evidenceArtifacts": [
+        "KH01_KH02_REGRESSION_RESULTS.json"
+      ],
+      "reason": "KH-01 suite passed (69 tests)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G19": {
+      "gateId": "G19",
+      "title": "KH-02 regression",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "V12.4.3.3 (89 tests), V12.4.3.2.1, V12.4.3.2, V12.4.3.1, KH-02 full unit, and KH-02 integration suites all exit with code 0",
+      "expected": {
+        "allExitZero": true
+      },
+      "observed": {
+        "v12_4_3_3_regression": {
+          "suiteId": "v12_4_3_3_regression",
+          "name": "V12.4.3.3 Meta, Google, Relevance, Distinctness & Provenance Suite",
+          "command": "node vitest.mjs run v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:31.111Z",
+          "completedAt": "2026-10-29T15:21:32.327Z",
+          "durationMs": 1216,
+          "exitCode": 0,
+          "passedTests": 89,
+          "failedTests": 0,
+          "totalTests": 89,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/v12_4_3_3_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "v12_4_3_2_1_regression": {
+          "suiteId": "v12_4_3_2_1_regression",
+          "name": "V12.4.3.2.1 Product Media Gallery & Flow Integrity Regression",
+          "command": "node vitest.mjs run v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:32.327Z",
+          "completedAt": "2026-10-29T15:21:32.980Z",
+          "durationMs": 653,
+          "exitCode": 0,
+          "passedTests": 19,
+          "failedTests": 0,
+          "totalTests": 19,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/v12_4_3_2_1_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "v12_4_3_2_regression": {
+          "suiteId": "v12_4_3_2_regression",
+          "name": "V12.4.3.2 Live Discovery, Demand Audit, Audience & UX Regression",
+          "command": "node vitest.mjs run v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:32.944Z",
+          "completedAt": "2026-10-29T15:21:33.592Z",
+          "durationMs": 648,
+          "exitCode": 0,
+          "passedTests": 16,
+          "failedTests": 0,
+          "totalTests": 16,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/v12_4_3_2_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "v12_4_3_1_regression": {
+          "suiteId": "v12_4_3_1_regression",
+          "name": "V12.4.3.1 Evidence Provenance & Async Truth Regression",
+          "command": "node vitest.mjs run v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:32.980Z",
+          "completedAt": "2026-10-29T15:21:33.880Z",
+          "durationMs": 900,
+          "exitCode": 0,
+          "passedTests": 25,
+          "failedTests": 0,
+          "totalTests": 25,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/v12_4_3_1_regression.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "kh02_unit": {
+          "suiteId": "kh02_unit",
+          "name": "KH-02 Full Unit Regression Suite",
+          "command": "node vitest.mjs run kh02",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:33.592Z",
+          "completedAt": "2026-10-29T15:21:54.031Z",
+          "durationMs": 20439,
+          "exitCode": 0,
+          "passedTests": 575,
+          "failedTests": 0,
+          "totalTests": 575,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/kh02_unit.log",
+          "timedOut": false,
+          "logTruncated": false
+        },
+        "kh02_integration": {
+          "suiteId": "kh02_integration",
+          "name": "KH-02 Integration Suite",
+          "command": "node vitest.mjs run kh02",
+          "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "startedAt": "2026-10-29T15:21:54.032Z",
+          "completedAt": "2026-10-29T15:22:39.261Z",
+          "durationMs": 45229,
+          "exitCode": 0,
+          "passedTests": 27,
+          "failedTests": 0,
+          "totalTests": 27,
+          "reusedPreviousLog": false,
+          "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.3/logs/kh02_integration.log",
+          "timedOut": false,
+          "logTruncated": false
+        }
+      },
+      "evidenceArtifacts": [
+        "KH01_KH02_REGRESSION_RESULTS.json"
+      ],
+      "reason": "KH-02 suites passed: V12.4.3.3 (89), KH-02 Unit (575), KH-02 Integration (27)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G20": {
+      "gateId": "G20",
+      "title": "Backtest DEV/HOLDOUT",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Disjoint DEV and HOLDOUT historical backtest sets pass 100% with zero overlap",
+      "expected": {
+        "verdict": "PASS",
+        "zeroOverlapVerified": true
+      },
+      "observed": {
+        "verdict": "PASS",
+        "devSummary": {
+          "split": "DEV",
+          "totalCases": 6,
+          "passedCases": 6,
+          "merchantPrimaryAccuracyRate": 1,
+          "videoPlayableAccuracyRate": 1,
+          "stockAndSsrfRejectionCount": 5,
+          "crossProductContaminationCount": 0,
+          "falseMerchantVerifiedBadgeCount": 0,
+          "technicalMetadataLeakInWhyItFitsCount": 0,
+          "broadVsSpeciesAccuracyRate": 1
+        },
+        "holdoutSummary": {
+          "split": "HOLDOUT",
+          "totalCases": 6,
+          "passedCases": 6,
+          "merchantPrimaryAccuracyRate": 1,
+          "videoPlayableAccuracyRate": 1,
+          "stockAndSsrfRejectionCount": 5,
+          "crossProductContaminationCount": 0,
+          "falseMerchantVerifiedBadgeCount": 0,
+          "technicalMetadataLeakInWhyItFitsCount": 0,
+          "broadVsSpeciesAccuracyRate": 1
+        },
+        "antiOverfittingAudit": {
+          "devCaseIds": [
+            "v124321_dev_01_pawspick_wet_feeder_gallery",
+            "v124321_dev_02_dog_feeder_probable_http404",
+            "v124321_dev_03_stock_and_ssrf_media_rejection",
+            "v124321_dev_04_cross_product_media_guard",
+            "v124321_dev_05_broad_pet_feeder_accepts_cat_and_dog",
+            "v124321_dev_06_species_query_dog_rejects_cat_feeder"
+          ],
+          "holdoutCaseIds": [
+            "v124321_holdout_01_orthopedic_dog_bed_gallery_and_video",
+            "v124321_holdout_02_cat_fountain_http403_probable",
+            "v124321_holdout_03_stock_picsum_and_private_ip_rejection",
+            "v124321_holdout_04_cross_product_contamination_blocked",
+            "v124321_holdout_05_cat_query_rejects_dog_only_harness",
+            "v124321_holdout_06_empty_media_honest_fallback"
+          ],
+          "overlapCount": 0,
+          "zeroOverlapVerified": true
+        }
+      },
+      "evidenceArtifacts": [
+        "HISTORICAL_BACKTEST_DEV_HOLDOUT.json"
+      ],
+      "reason": "Backtest PASS: DEV 6/6, HOLDOUT 6/6",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G21": {
+      "gateId": "G21",
+      "title": "Adversarial false-PASS tests",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All 16 mandatory false-PASS mutations (M01–M16) are caught and rejected",
+      "expected": {
+        "totalMutations": 16,
+        "caughtCount": 16,
+        "allCaught": true
+      },
+      "observed": {
+        "totalMutations": 16,
+        "caughtCount": 16,
+        "allCaught": true,
+        "mutations": [
+          {
+            "mutationId": "M01",
+            "description": "Inject cached ads as LIVE_PROVIDER",
+            "caughtAndRejected": true,
+            "observed": {
+              "allowLive": false,
+              "provenance": "NONE",
+              "sourceRecordsReturned": 0
+            }
+          },
+          {
+            "mutationId": "M02",
+            "description": "Fabricate upstream ad IDs without upstream completion",
+            "caughtAndRejected": true,
+            "observed": {
+              "returnedCount": 0,
+              "upstreamReturnedCount": null
+            }
+          },
+          {
+            "mutationId": "M03",
+            "description": "Return HTTP 429 but attempt to label Google PASSED",
+            "caughtAndRejected": true,
+            "observed": {
+              "status": "QUERY_FAILED",
+              "domainsRateLimited": 1
+            }
+          },
+          {
+            "mutationId": "M04",
+            "description": "Mark MCP transport-connected as product-data verified",
+            "caughtAndRejected": true,
+            "observed": {
+              "TRANSPORT_CONNECTED": true,
+              "PRODUCT_DISCOVERY_SUPPORTED": false,
+              "capabilityClassification": "ENRICHMENT_ONLY"
+            }
+          },
+          {
+            "mutationId": "M05",
+            "description": "Associate a Google brand advertisement with an unrelated model",
+            "caughtAndRejected": true,
+            "observed": {
+              "classification": "REJECTED_UNRELATED_CREATIVE",
+              "isProductSpecificEvidence": false
+            }
+          },
+          {
+            "mutationId": "M06",
+            "description": "Insert a synthetic demand series and attempt Evergreen promotion",
+            "caughtAndRejected": true,
+            "observed": {
+              "resolvedAuthority": "CACHED_UNVERIFIED",
+              "auditReasons": [
+                "Demand observation uses 'verified-merchant-demand:<domain>' pseudo-reference without a raw Google Trends CSV file, SHA-256 checksum, or provider API response lineage."
+              ]
+            }
+          },
+          {
+            "mutationId": "M07",
+            "description": "Duplicate the same product under three different titles",
+            "caughtAndRejected": true,
+            "observed": {
+              "isDistinct": false,
+              "isFamilyDiverse": false,
+              "totalCandidatesEvaluated": 3,
+              "distinctCount": 1,
+              "distinctProductCount": 1,
+              "distinctFamilyCount": 1,
+              "distinctListingCount": 1,
+              "independentOpportunityCount": 1,
+              "homogeneousFamilyDetected": true,
+              "dominantFamilyKey": "food_feeder",
+              "dominantFamilyLabel": "Food Feeder",
+              "duplicateGroupsCount": 2,
+              "uncertainties": [],
+              "pairwiseDecisions": [
+                {
+                  "candidateIds": [
+                    "cand_dup_1",
+                    "cand_dup_2"
+                  ],
+                  "listingKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "productKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "familyKeys": [
+                    "food_feeder",
+                    "food_feeder"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "conflictingEvidence": [],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+                },
+                {
+                  "candidateIds": [
+                    "cand_dup_1",
+                    "cand_dup_3"
+                  ],
+                  "listingKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "productKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "familyKeys": [
+                    "food_feeder",
+                    "food_feeder"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "conflictingEvidence": [],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+                },
+                {
+                  "candidateIds": [
+                    "cand_dup_2",
+                    "cand_dup_3"
+                  ],
+                  "listingKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "productKeys": [
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                    "url::https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "familyKeys": [
+                    "food_feeder",
+                    "food_feeder"
+                  ],
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "areSameListing": true,
+                  "areSameActualProduct": true,
+                  "areSameVariant": true,
+                  "areSameFamily": true,
+                  "areDistinctOpportunitiesForBroadNiche": false,
+                  "areDistinctOpportunitiesForSpecificQuery": false,
+                  "confidence": "EXACT",
+                  "uncertainty": null,
+                  "supportingEvidence": [
+                    "Both candidates resolve to the exact same normalized product URL: https://uahpet.com/products/automatic-wet-food-cat-feeder"
+                  ],
+                  "conflictingEvidence": [],
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+                }
+              ],
+              "details": [
+                {
+                  "candidateId": "cand_dup_1",
+                  "title": "Marketing Headline #1",
+                  "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "variantKey": null,
+                  "familyKey": "food_feeder",
+                  "familyLabel": "Food Feeder",
+                  "storeDomain": "uahpet.com",
+                  "isDuplicate": false
+                },
+                {
+                  "candidateId": "cand_dup_2",
+                  "title": "Marketing Headline #2",
+                  "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "variantKey": null,
+                  "familyKey": "food_feeder",
+                  "familyLabel": "Food Feeder",
+                  "storeDomain": "uahpet.com",
+                  "isDuplicate": true,
+                  "duplicateOf": "cand_dup_1",
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+                },
+                {
+                  "candidateId": "cand_dup_3",
+                  "title": "Marketing Headline #3",
+                  "canonicalKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "listingKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "productKey": "url::https://uahpet.com/products/automatic-wet-food-cat-feeder",
+                  "variantKey": null,
+                  "familyKey": "food_feeder",
+                  "familyLabel": "Food Feeder",
+                  "storeDomain": "uahpet.com",
+                  "isDuplicate": true,
+                  "duplicateOf": "cand_dup_1",
+                  "decision": "SAME_LISTING_SAME_PRODUCT",
+                  "reason": "Both candidates point to the exact same canonical product URL (https://uahpet.com/products/automatic-wet-food-cat-feeder)."
+                }
+              ]
+            }
+          },
+          {
+            "mutationId": "M08",
+            "description": "Inject an irrelevant service into the Top 3",
+            "caughtAndRejected": true,
+            "observed": {
+              "relevanceStatus": "IRRELEVANT",
+              "discoveryDecision": "CLEARLY_UNRELATED",
+              "isAccepted": false,
+              "score": 0.05,
+              "reasons": [
+                "Rejected non-physical entityType 'SERVICE_OR_COURSE' under PHYSICAL_ECOMMERCE_PRODUCTS policy."
+              ],
+              "topic": "Pet Gadgets",
+              "matchedArchetypeId": null,
+              "audienceRelevance": {
+                "requestedAudience": "PET_GENERAL",
+                "supportedAudiences": [
+                  "PET_GENERAL"
+                ],
+                "audienceMatch": "COMPATIBLE",
+                "audienceEvidenceReferences": [
+                  "pet_term:\"pet\""
+                ],
+                "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+                "eligibleForPrimaryShortlist": true
+              }
+            }
+          },
+          {
+            "mutationId": "M09",
+            "description": "Return three products only in a fixture while claiming real-provider success",
+            "caughtAndRejected": true,
+            "observed": {
+              "productId": "prod_fix",
+              "canonicalProductName": "pet feeder",
+              "observationIds": [
+                "f1"
+              ],
+              "source": "FIXTURE_SEED",
+              "evidenceReferences": [
+                "fixture:seed"
+              ],
+              "methodologyVersions": [],
+              "keywords": [
+                "pet feeder"
+              ],
+              "values": [
+                80
+              ],
+              "rawCsvFileExists": false,
+              "hasValidFileChecksum": false,
+              "hasProviderRequestLineage": false,
+              "isTemplated76To82Series": false,
+              "isPromotionalCopyKeyword": false,
+              "resolvedAuthority": "FIXTURE_ONLY",
+              "eligibleForEvergreen": false,
+              "demotedFromEvergreen": false,
+              "evidenceKind": "SEARCH_INTEREST_NOT_SALES",
+              "commercialNote": "Google Trends observations measure relative search interest (0-100 index), NOT store orders, revenue, conversion rate, or unit sales.",
+              "auditReasons": [
+                "Demand observations originate from test fixture records (FIXTURE_ONLY) and cannot verify production Evergreen winners."
+              ]
+            }
+          },
+          {
+            "mutationId": "M10",
+            "description": "Simulate successful collector startup with zero upstream query attempts",
+            "caughtAndRejected": true,
+            "observed": {
+              "executionStatus": "NOT_RUN",
+              "sourceExecutionStatus": "NOT_RUN",
+              "liveSucceeded": false,
+              "attemptedQueries": 0,
+              "successfulQueries": 0,
+              "failedQueries": 0,
+              "cancelledQueries": 0,
+              "skippedQueries": 0,
+              "notAttemptedQueries": 1,
+              "totalReturned": 0,
+              "sourceRecordsReturned": 0,
+              "uniqueExternalIdsReturned": 0,
+              "persistenceOutcome": {
+                "persistedInsertedCount": null,
+                "persistedUpdatedCount": null,
+                "status": "NOT_EVALUATED"
+              },
+              "qualifiedProductOutcome": {
+                "qualifiedCandidatesCount": null,
+                "status": "NOT_EVALUATED"
+              },
+              "errors": [],
+              "warnings": [
+                "No Meta subqueries were attempted."
+              ]
+            }
+          },
+          {
+            "mutationId": "M11",
+            "description": "Change the active run ID during polling",
+            "caughtAndRejected": true,
+            "observed": {
+              "hasActiveRunIdRef": true,
+              "hasActivePollingTokenRef": true
+            }
+          },
+          {
+            "mutationId": "M12",
+            "description": "Demote historical Evergreen winner backed by synthetic merchant demand",
+            "caughtAndRejected": true,
+            "observed": {
+              "modified": true,
+              "retainedTopThree": 0,
+              "demotedCount": 1
+            }
+          },
+          {
+            "mutationId": "M13",
+            "description": "Count planned archetypes as discovered product families when 0 qualified products",
+            "caughtAndRejected": true,
+            "observed": {
+              "plannedArchetypes": 5,
+              "distinctProductArchetypesObserved": 0
+            }
+          },
+          {
+            "mutationId": "M14",
+            "description": "Report Verified Evergreen when authoritative demand is zero",
+            "caughtAndRejected": true,
+            "observed": {
+              "tier": "INSUFFICIENT_EVIDENCE",
+              "verifiedByGate": false
+            }
+          },
+          {
+            "mutationId": "M15",
+            "description": "Suppress a failed provider error while displaying a green PASSED state",
+            "caughtAndRejected": true,
+            "observed": {
+              "executionStatus": "FAILED"
+            }
+          },
+          {
+            "mutationId": "M16",
+            "description": "Count one Google creative several times against the same product",
+            "caughtAndRejected": true,
+            "observed": {
+              "uniqueGoogleRecIdsCount": 1
+            }
+          }
+        ]
+      },
+      "evidenceArtifacts": [
+        "ADVERSARIAL_FALSE_PASS_RESULTS.json"
+      ],
+      "reason": "All 16/16 mandatory false-PASS mutations (M01–M16) caught and rejected",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G22": {
+      "gateId": "G22",
+      "title": "Build/typecheck/lint",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "tsc --noEmit, eslint, and next build all exit with code 0 and generate a fresh .next/BUILD_ID",
+      "expected": {
+        "tscExit": 0,
+        "eslintExit": 0,
+        "buildExit": 0,
+        "hasFreshBuildId": true
+      },
+      "observed": {
+        "tscExit": 0,
+        "eslintExit": 0,
+        "buildExit": 0,
+        "freshBuildId": "hKjy4lurvjEiUjpD60s1M"
+      },
+      "evidenceArtifacts": [
+        "KH01_KH02_REGRESSION_RESULTS.json"
+      ],
+      "reason": "tsc (0), eslint (0), and next build (0, BUILD_ID=hKjy4lurvjEiUjpD60s1M) succeeded",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G23": {
+      "gateId": "G23",
+      "title": "Async/runtime/disk hygiene",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Bounded async pool (<= 2), completion barrier passed, SQLite integrity 'ok', free disk >= 1.5GB, and scratch cleaned",
+      "expected": {
+        "barrierPassed": true,
+        "maxConcurrency": "<= 2",
+        "sqliteIntegrity": "ok"
+      },
+      "observed": {
+        "barrierPassed": true,
+        "maxObservedConcurrency": 2,
+        "freeDiskBeforeGb": 9.39,
+        "freeDiskAfterGb": 10.38,
+        "sqlitePreCheck": {
+          "ok": true,
+          "result": "ok"
+        },
+        "sqlitePostCheck": {
+          "ok": true,
+          "result": "ok"
+        },
+        "scratchCleaned": true
+      },
+      "evidenceArtifacts": [
+        "ASYNC_TEST_EXECUTION_AND_DISK_AUDIT.json"
+      ],
+      "reason": "Completion barrier passed, peakConcurrency=2, FreeDisk=10.38GB, SQLite=ok",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    },
+    "G24": {
+      "gateId": "G24",
+      "title": "Exact revision provenance",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All executed suites and runtime frontend/backend/worker share exact HEAD SHA and releaseVersion=12.4.3.3 with 0 reused logs",
+      "expected": {
+        "releaseVersion": "12.4.3.3",
+        "runtimeStatus": "MATCHED",
+        "reusedLogs": 0
+      },
+      "observed": {
+        "headSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+        "versionResponse": {
+          "releaseVersion": "12.4.3.3",
+          "frontendBuildSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "backendBuildSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "workerBuildSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "sourceRevisionSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "buildRevisionSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "backendBootSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "workerBootSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "databaseFingerprint": "a450482f69e2",
+          "backendStartedAt": "2026-10-29T13:25:24.190Z",
+          "workerStartedAt": "2026-10-29T15:23:59.106Z",
+          "dbFingerprint": "a450482f69e2",
+          "workerDbFingerprint": "a450482f69e2",
+          "conflictingWorkersDetected": false,
+          "diagnostics": [
+            "Frontend, backend, and worker runtime parity verified at V12.4.3.3 (51c8ec8)."
+          ],
+          "runtimeStatus": "MATCHED",
+          "buildSha": "51c8ec8314b5e92834813d26ccfb9862d6a8e42e",
+          "buildTimestamp": "2026-10-29T13:25:18.814Z",
+          "appVersion": "12.4.3.3",
+          "workerVersion": "12.4.3.3",
+          "environment": "development",
+          "appProcessId": 8681,
+          "workerProcessId": 22475
+        },
+        "reusedLogsCount": 0
+      },
+      "evidenceArtifacts": [
+        "RUNTIME_VERSION_PARITY.json"
+      ],
+      "reason": "Exact revision provenance verified at v12.4.3.3 (SHA=51c8ec8)",
+      "executedAt": "2026-10-29T15:24:42.303Z"
+    }
+  }
+}
