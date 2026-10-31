@@ -1157,6 +1157,9 @@ export function createGoogleTransparencyMcpClient(config?: {
           env: {
             ...process.env,
             PYTHONUNBUFFERED: "1",
+            PYTHONUTF8: "1",
+            PYTHONIOENCODING: "utf-8",
+            LANG: "en_US.UTF-8",
           },
         });
         mcpClient = new Client(

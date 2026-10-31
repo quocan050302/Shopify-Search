@@ -93,10 +93,10 @@ describe("SWAI KH-02 V12.4.3.3.2 — Authoritative Demand, Identity & Top-3 Inte
   });
 
   describe("1. Runtime Version & Parity (V12.4.3.3.2)", () => {
-    it("reports release version 12.4.3.3.2 or 12.4.3.4.1", () => {
-      expect(["12.4.3.3.2", "12.4.3.4.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    it("reports release version 12.4.3.3.2, 12.4.3.4.1, or 12.4.3.4.2", () => {
+      expect(["12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
       const runtime = evaluateKH02RuntimeIdentity();
-      expect(["12.4.3.3.2", "12.4.3.4.1"]).toContain(runtime.releaseVersion);
+      expect(["12.4.3.3.2", "12.4.3.4.1", "12.4.3.4.2"]).toContain(runtime.releaseVersion);
     });
   });
 

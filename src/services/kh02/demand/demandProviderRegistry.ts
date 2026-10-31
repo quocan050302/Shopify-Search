@@ -12,6 +12,12 @@ import type { SourceDiagnosticResult } from "../providers/sourceRegistry";
 import { prisma } from "@/lib/db";
 import { hasVerifiableCsvOrProviderLineage } from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+import {
+  executeBigQueryTrendsSearch,
+  verifyGoogleCloudProjectBilling,
+  PUBLIC_GOOGLE_TRENDS_TOP_TERMS_TABLE,
+  type BigQueryExecutor,
+} from "./bigqueryClientAdapter";
 
 export type DemandProviderMode = "GOOGLE_FREE_ONLY" | "SERPAPI_LEGACY";
 
@@ -66,6 +72,8 @@ export interface HistoricalDemandProvider {
 export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
   readonly providerId = "google-trends-bigquery";
   readonly displayName = "Google Trends Public BigQuery (Zero-Cost Free Sandbox)";
+
+  constructor(private customExecutor?: BigQueryExecutor) {}
 
   async diagnose(): Promise<SourceDiagnosticResult> {
     const zeroSpendEnforced = process.env.ZERO_SPEND_ENFORCED !== "false";
@@ -138,8 +146,12 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       };
     }
 
-    const isSandboxVerified = process.env.BIGQUERY_FREE_SANDBOX_VERIFIED === "true";
-    if (!isSandboxVerified) {
+    // RC-02: Independently verify whether the project has zero-spend billing disabled
+    const billingCheck = await verifyGoogleCloudProjectBilling(projectId, {
+      credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    });
+
+    if (!billingCheck.sandboxEligible) {
       return {
         source: "DEMAND_HISTORY",
         adapterInstalled: true,
@@ -152,7 +164,7 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
         provenanceVerified: false,
         lastCheckedAt: new Date().toISOString(),
         status: "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
-        reason: `Google BigQuery project '${projectId}' billing state cannot be confirmed as zero-charge Sandbox. Set BIGQUERY_FREE_SANDBOX_VERIFIED=true to confirm project has no billing account attached.`,
+        reason: billingCheck.reason || `Google BigQuery project '${projectId}' billing state cannot be confirmed as zero-charge Sandbox. Set BIGQUERY_FREE_SANDBOX_VERIFIED=true to confirm project has no billing account attached.`,
         missingRequirements: ["BIGQUERY_FREE_SANDBOX_VERIFIED"],
       };
     }
@@ -195,11 +207,62 @@ export class GoogleTrendsBigQueryProvider implements HistoricalDemandProvider {
       };
     }
 
-    const checkedDataset = "bigquery-public-data.google_trends.top_terms";
+    const projectId =
+      process.env.BIGQUERY_PROJECT_ID?.trim() ||
+      process.env.GCP_PROJECT_ID?.trim() ||
+      process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
+      "";
+
+    // RC-01: Execute real parameterized query with dry-run and byte budget enforcement
+    const bqRes = await executeBigQueryTrendsSearch(
+      {
+        projectId,
+        term: query.term,
+        region: query.region,
+        credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      },
+      this.customExecutor
+    );
+
+    if (bqRes.status === "SUCCESS" && bqRes.rowCount > 0) {
+      const points: DemandDataPointResult[] = bqRes.rows.map((r) => ({
+        periodStart: r.week || r.refresh_date || new Date().toISOString(),
+        periodEnd: r.week || r.refresh_date || new Date().toISOString(),
+        demandValue: typeof r.score === "number" ? r.score : 0,
+        region: query.region,
+        source: "Google Trends BigQuery (Public Top Terms)",
+        scale: "GOOGLE_TRENDS_INDEX_0_100",
+      }));
+      return {
+        ...result,
+        points,
+        status: "SUCCESS",
+        provenance: "AUTHORITATIVE_PROVIDER",
+      };
+    }
+
+    if (bqRes.status === "BUDGET_EXCEEDED" || bqRes.status === "BILLING_PROHIBITED" || bqRes.status === "BLOCKED") {
+      return {
+        ...result,
+        status: "BLOCKED",
+        error: bqRes.errorMessage || `Query blocked under zero-spend policy (${bqRes.status}).`,
+      };
+    }
+
+    if (bqRes.status === "FAILED") {
+      return {
+        ...result,
+        status: "FAILED",
+        error: bqRes.errorMessage || "BigQuery query execution failed.",
+      };
+    }
+
     return {
       ...result,
       status: "INSUFFICIENT_DATA",
-      error: `INSUFFICIENT_COVERAGE: Keyword '${query.term}' not found in Google Trends public BigQuery top terms dataset for ${query.region} (checked ${checkedDataset}). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage.`,
+      error:
+        bqRes.errorMessage ||
+        `INSUFFICIENT_COVERAGE: Keyword '${query.term}' not found in Google Trends public BigQuery top terms dataset for ${query.region} (checked ${PUBLIC_GOOGLE_TRENDS_TOP_TERMS_TABLE}). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage.`,
     };
   }
 }
@@ -216,15 +279,16 @@ export class GoogleTrendsCsvImportProvider implements HistoricalDemandProvider {
       source: "DEMAND_HISTORY",
       adapterInstalled: true,
       configured: true,
-      transportConnected: true,
-      authenticated: true,
+      // RC-08 fix: Local adapter does not connect to external Google transport
+      transportConnected: false,
+      authenticated: false,
       discoverySupported: true,
       queryExecuted: false,
       recordsReturned: null,
       provenanceVerified: true,
       lastCheckedAt: new Date().toISOString(),
       status: "CONFIGURED",
-      reason: "Google Trends Explore CSV import repository ready for official CSV exports.",
+      reason: "Local Google Trends CSV import repository ready (local filesystem/database adapter; no external transport connection).",
       missingRequirements: [],
     };
   }
@@ -387,7 +451,8 @@ export class GoogleFreeDemandProvider implements HistoricalDemandProvider {
     const isBqConfigured = bqDiag.status === "CONFIGURED";
     const isCsvConfigured = csvDiag.status === "CONFIGURED";
     const isConfigured = isBqConfigured || isCsvConfigured;
-    const isTransportConnected = bqDiag.transportConnected === true || csvDiag.transportConnected === true;
+    // RC-08 fix: CSV adapter is local; external transport is active only when BigQuery sandbox connects
+    const isTransportConnected = bqDiag.transportConnected === true;
     const isAuthenticated = bqDiag.authenticated === true;
 
     const missingRequirements: string[] = [];

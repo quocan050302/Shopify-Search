@@ -1,0 +1,16 @@
+{
+  "split": "DEV",
+  "windowStart": "2026-07-19T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+  "historicalObservationCount": 19,
+  "reconstructedCandidateCount": 15,
+  "shortlistCount": 0,
+  "shortlistProducts": [],
+  "distinctFamiliesCount": 0,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed with 19 historical records; zero future leakage verified. Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}
