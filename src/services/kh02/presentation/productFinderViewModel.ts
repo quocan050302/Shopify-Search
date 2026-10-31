@@ -5,7 +5,7 @@ import type {
   ProductAmazonEvidenceSummary,
 } from "../types";
 import { validateAndNormalizeMediaUrl } from "../media/productMediaResolver";
-import { summarizeAmazonEvidenceForProduct } from "../marketplace/marketplaceEvidencePersistence";
+import { summarizeAmazonEvidenceForProduct } from "../marketplace/marketplaceEvidenceTypes";
 
 export type CanonicalQualificationTier =
   | "VERIFIED_EVERGREEN"

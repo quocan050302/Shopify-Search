@@ -20,15 +20,16 @@ import {
   AmazonPolicyContext,
   AmazonProductEvidence,
   MarketplaceEvidenceStatus,
+  NON_INFLATION_NOTICE,
   ProductAmazonEvidenceSummary,
   computeDeterministicEvidenceHash,
   resolveAmazonUsPolicyContext,
+  summarizeAmazonEvidenceForProduct,
 } from "./marketplaceEvidenceTypes";
 
-export const AMAZON_EVIDENCE_SUBJECT_TYPE = "AMAZON_US_MARKETPLACE";
+export { NON_INFLATION_NOTICE, summarizeAmazonEvidenceForProduct };
 
-export const NON_INFLATION_NOTICE =
-  "Listing existence corroborates product identity only; never implies unit sales, 60-day demand (G15), or live ad/merchant verification (G16).";
+export const AMAZON_EVIDENCE_SUBJECT_TYPE = "AMAZON_US_MARKETPLACE";
 
 export function computeAmazonEvidenceCompositeId(
   workspaceId: string,
@@ -320,159 +321,5 @@ export async function loadAmazonEvidenceForRun(
     evidenceRows,
     telemetry,
     isLegacyRunWithoutMarketplaceEvidence,
-  };
-}
-
-function formatStatusLabel(status: MarketplaceEvidenceStatus): string {
-  switch (status) {
-    case "IDENTITY_VERIFIED":
-      return "Amazon US Identity Verified";
-    case "OBSERVED_UNVERIFIED":
-      return "Amazon US Listing Observed (Unverified Match)";
-    case "PARTIAL":
-      return "Amazon US Listing Observed (Partial Metadata)";
-    case "BLOCKED_POLICY":
-      return "Amazon US Blocked by Policy Guard";
-    case "BLOCKED_PROVIDER":
-      return "Amazon US Access Blocked by Provider";
-    case "CAPTCHA_BLOCKED":
-      return "Amazon US CAPTCHA Challenge";
-    case "RATE_LIMITED":
-      return "Amazon US Rate Limited (Budget Cap)";
-    case "TIMED_OUT":
-      return "Amazon US Timed Out";
-    case "QUERY_SUCCEEDED_EMPTY":
-      return "Amazon US No Product Found";
-    case "NOT_AUTHORIZED":
-      return "Amazon US Not Authorized";
-    case "NOT_ATTEMPTED":
-      return "Amazon US Not Attempted";
-    case "DISABLED":
-      return "Amazon US Pilot Disabled";
-    case "FAILED":
-    default:
-      return "Amazon US Verification Rejected";
-  }
-}
-
-function formatIdentityMatchLabel(match: AmazonProductEvidence["identityMatch"]): string {
-  switch (match) {
-    case "EXACT_PRODUCT":
-      return "Exact Product Match";
-    case "PROBABLE_PRODUCT":
-      return "Probable Product Match";
-    case "BRAND_ONLY":
-      return "Brand-Only Match (Product Unverified)";
-    case "AMBIGUOUS":
-      return "Ambiguous Match";
-    case "NO_MATCH":
-    default:
-      return "No Verified Match";
-  }
-}
-
-/**
- * Summarizes persisted Amazon US product evidence for a single KH-02 candidate.
- * - Preserves exact persisted values (`asin`, `canonicalAmazonUrl`, `identityMatch`, `status`,
- *   `observedAt`, `providerInvocationRef`, `providerRequestId`, `rawEvidenceHash`, `extractedFieldsHash`).
- * - When `evidenceRows` has no match for `(runId, candidateId)` and feature flag is OFF (or legacy run),
- *   returns `visible: false` so UI remains completely unchanged.
- */
-export function summarizeAmazonEvidenceForProduct(
-  candidateId: string,
-  runId: string,
-  evidenceRows: AmazonProductEvidence[] | undefined | null,
-  options?: {
-    policyContext?: AmazonPolicyContext;
-    telemetry?: AmazonMarketplaceTelemetry | null;
-  }
-): ProductAmazonEvidenceSummary {
-  const rows = Array.isArray(evidenceRows) ? evidenceRows : [];
-  const matchingRows = rows.filter(
-    (r) =>
-      r &&
-      r.candidateId === candidateId &&
-      (!runId || r.researchRunId === runId) &&
-      r.provider === "AMAZON_US"
-  );
-
-  // Prefer positive/verified match if multiple exist, otherwise first matching record
-  const bestRow =
-    matchingRows.find((r) => r.status === "IDENTITY_VERIFIED") ||
-    matchingRows.find((r) => r.status === "PARTIAL" || r.status === "OBSERVED_UNVERIFIED") ||
-    matchingRows[0] ||
-    null;
-
-  if (bestRow) {
-    return {
-      candidateId,
-      researchRunId: bestRow.researchRunId,
-      provider: "AMAZON_US",
-      visible: true,
-      status: bestRow.status,
-      statusLabel: formatStatusLabel(bestRow.status),
-      asin: bestRow.asin,
-      parentAsin: bestRow.parentAsin,
-      variationAsin: bestRow.variationAsin,
-      canonicalAmazonUrl: bestRow.canonicalAmazonUrl,
-      productTitle: bestRow.productTitle,
-      brand: bestRow.brand,
-      price: bestRow.price,
-      currency: bestRow.currency,
-      availability: bestRow.availability,
-      identityMatch: bestRow.identityMatch,
-      identityMatchLabel: formatIdentityMatchLabel(bestRow.identityMatch),
-      observationClass: bestRow.observationClass,
-      verificationScope: bestRow.verificationScope,
-      observedAt: bestRow.observedAt,
-      providerInvocationRef: bestRow.providerInvocationRef,
-      providerRequestId: bestRow.providerRequestId,
-      rawEvidenceHash: bestRow.rawEvidenceHash,
-      extractedFieldsHash: bestRow.extractedFieldsHash,
-      matchingReasons: [...(bestRow.matchingReasons || [])],
-      missingFields: [...(bestRow.missingFields || [])],
-      rejectionReasons: [...(bestRow.rejectionReasons || [])],
-      nonInflationNotice: NON_INFLATION_NOTICE,
-    };
-  }
-
-  const policy = options?.policyContext || resolveAmazonUsPolicyContext();
-  const telemetryStatus = options?.telemetry?.runStatus;
-  const fallbackStatus: MarketplaceEvidenceStatus =
-    telemetryStatus && telemetryStatus !== "DISABLED"
-      ? "NOT_ATTEMPTED"
-      : policy.featureEnabled
-      ? "NOT_ATTEMPTED"
-      : "DISABLED";
-
-  return {
-    candidateId,
-    researchRunId: runId,
-    provider: "AMAZON_US",
-    visible: false,
-    status: fallbackStatus,
-    statusLabel: formatStatusLabel(fallbackStatus),
-    asin: null,
-    parentAsin: null,
-    variationAsin: null,
-    canonicalAmazonUrl: null,
-    productTitle: null,
-    brand: null,
-    price: null,
-    currency: null,
-    availability: null,
-    identityMatch: "NO_MATCH",
-    identityMatchLabel: formatIdentityMatchLabel("NO_MATCH"),
-    observationClass: "UNVERIFIED",
-    verificationScope: null,
-    observedAt: null,
-    providerInvocationRef: null,
-    providerRequestId: null,
-    rawEvidenceHash: null,
-    extractedFieldsHash: null,
-    matchingReasons: [],
-    missingFields: [],
-    rejectionReasons: [],
-    nonInflationNotice: NON_INFLATION_NOTICE,
   };
 }
