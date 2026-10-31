@@ -1422,6 +1422,12 @@ export async function runEvergreenProductResearch(
   const creativeAssociationLedger: Array<{
     creativeId: string;
     researchRunId?: string | null;
+    providerRequestId?: string | null;
+    upstreamProviderRequestId?: string | null;
+    providerRequestIdOrigin?: "UPSTREAM" | "ABSENT";
+    mcpInvocationRef?: string | null;
+    lineageMethod?: string | null;
+    responseEvidenceHash?: string | null;
     advertiserDomain: string | null;
     sourceMarket: string;
     rawLandingUrl: string | null;
@@ -1547,6 +1553,13 @@ export async function runEvergreenProductResearch(
     creativeAssociationLedger.push({
       creativeId: cId,
       researchRunId: obs.researchRunId ?? null,
+      providerRequestId: obs.providerRequestId ?? null,
+      upstreamProviderRequestId: obs.upstreamProviderRequestId ?? null,
+      providerRequestIdOrigin:
+        obs.providerRequestIdOrigin ?? (obs.providerRequestId ? "UPSTREAM" : "ABSENT"),
+      mcpInvocationRef: obs.mcpInvocationRef ?? null,
+      lineageMethod: obs.lineageMethod ?? null,
+      responseEvidenceHash: obs.responseEvidenceHash ?? null,
       advertiserDomain: obs.advertiserDomain || null,
       sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
       rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,

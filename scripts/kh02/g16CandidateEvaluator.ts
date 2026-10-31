@@ -14,6 +14,7 @@ export interface NormalizedObservationIdentity {
   sourceRecordId: string | null;
   upstreamAdId: string | null;
   providerRequestId: string | null;
+  mcpInvocationRef?: string | null;
   evidenceReference: string | null;
   researchRunId: string | null;
   executionRunId: string | null;
@@ -185,6 +186,7 @@ export function normalizeObservationIdentity(observation: any): NormalizedObserv
       sourceRecordId: null,
       upstreamAdId: null,
       providerRequestId: null,
+      mcpInvocationRef: null,
       evidenceReference: null,
       researchRunId: null,
       executionRunId: null,
@@ -213,8 +215,8 @@ export function normalizeObservationIdentity(observation: any): NormalizedObserv
     cleanNonBlankString(observation.creative_id);
   const providerRequestId =
     cleanNonBlankString(observation.providerRequestId) ||
-    cleanNonBlankString(observation.metrics?.providerRequestId) ||
-    cleanNonBlankString(observation.mcpInvocationRef);
+    cleanNonBlankString(observation.metrics?.providerRequestId);
+  const mcpInvocationRef = cleanNonBlankString(observation.mcpInvocationRef);
   const evidenceReference =
     cleanNonBlankString(observation.evidenceReference) ||
     cleanNonBlankString(observation.queryId) ||
@@ -248,6 +250,7 @@ export function normalizeObservationIdentity(observation: any): NormalizedObserv
     sourceRecordId,
     upstreamAdId,
     providerRequestId,
+    mcpInvocationRef,
     evidenceReference,
     researchRunId,
     executionRunId,
@@ -296,7 +299,9 @@ export function isAuthenticallyLiveObservation(
     return false;
   }
 
-  const hasRequestOrEvidenceMetadata = Boolean(norm.providerRequestId || norm.evidenceReference);
+  const hasRequestOrEvidenceMetadata = Boolean(
+    norm.providerRequestId || norm.mcpInvocationRef || norm.evidenceReference
+  );
   if (!hasRequestOrEvidenceMetadata) {
     return false;
   }

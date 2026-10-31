@@ -335,6 +335,44 @@ export interface IntelligenceQuery {
   maxLiveDomains?: number;
 }
 
+export type GoogleRequestIdOrigin = "UPSTREAM" | "ABSENT";
+
+export type GoogleLineageMethod =
+  | "UPSTREAM_PROVIDER_REQUEST_ID"
+  | "VERIFIED_LOCAL_INVOCATION_ONLY"
+  | "UNVERIFIED"
+  | "UNVERIFIED_REJECTED";
+
+export interface GoogleMcpInvocationProvenance {
+  upstreamProviderRequestId: string | null;
+  providerRequestId: string | null; // compatibility alias: UPSTREAM ONLY
+  mcpInvocationRef: string | null; // OUR local invocation reference
+  providerRequestIdOrigin: GoogleRequestIdOrigin;
+  invocationEvidenceRef: string | null;
+  transportSessionId: string | null;
+  researchRunId: string | null;
+  workspaceId?: string | null;
+  advertiserId: string | null;
+  domain?: string | null;
+  toolName: string;
+  requestedMarket?: string | null;
+  invocationStartedAt: string;
+  invocationCompletedAt: string;
+  observationReceivedAt: string;
+  invocationStatus:
+    | "SUCCEEDED"
+    | "FAILED"
+    | "TIMEOUT"
+    | "TIMED_OUT"
+    | "BLOCKED"
+    | "BOT_BLOCKED";
+  requestArgumentsHash: string | null;
+  responseEvidenceHash: string | null;
+  actualReturnedCreativeIds: string[];
+  sourceMode: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
+  isCached: boolean;
+}
+
 export interface SourceObservation {
   source: IntelligenceSource;
   sourceRecordId: string;
@@ -367,8 +405,16 @@ export interface SourceObservation {
   researchProductId?: string | null;
   matchedQueryIds?: string[];
   researchRunId?: string | null;
+  workspaceId?: string | null;
   queryId?: string | null;
   providerRequestId?: string | null;
+  upstreamProviderRequestId?: string | null;
+  mcpInvocationRef?: string | null;
+  providerRequestIdOrigin?: GoogleRequestIdOrigin;
+  lineageMethod?: GoogleLineageMethod;
+  invocationEvidenceRef?: string | null;
+  requestArgumentsHash?: string | null;
+  responseEvidenceHash?: string | null;
   upstreamAdId?: string | null;
   persistedAdId?: string | null;
   sourceObservationId?: string | null;

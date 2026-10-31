@@ -72,20 +72,20 @@ import {
 } from "./g16CandidateEvaluator";
 
 // ─── RUN CONSTANTS & DIRECTORIES ─────────────────────────────────────────────
-const VERSION = "12.4.3.4.7";
+const VERSION = "12.4.3.4.8";
 const MANDATORY_BRANCH = "feature/kh02-v12.1.3-runtime-truth-closure";
 const MIN_FREE_DISK_GB = 15;
 const RUN_ID = `autoclosure_${new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14)}`;
 const OUTPUT_DIR = path.resolve(
   process.cwd(),
-  "acceptance/kh02-v12.4.3.4.7-runtime-proof-disk-safe"
+  "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure"
 );
 const LOGS_DIR = path.join(OUTPUT_DIR, "logs");
 const SCREENSHOTS_DIR = path.join(OUTPUT_DIR, "screenshots");
 const JSON_REPORTS_DIR = path.join(OUTPUT_DIR, "json_reports");
 
 process.env.SWAI_ACCEPTANCE_OUTPUT_DIR =
-  "acceptance/kh02-v12.4.3.4.7-runtime-proof-disk-safe";
+  "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure";
 process.env.DEMAND_PROVIDER_MODE = "GOOGLE_FREE_ONLY";
 process.env.ZERO_SPEND_ENFORCED = "true";
 
@@ -945,10 +945,19 @@ export function writeCanonicalValidBaselineFixture(
     version: VERSION,
     branch: MANDATORY_BRANCH,
     headSha,
+    testedSourceSha: headSha,
     cpuCores: os.cpus().length,
     totalRamGB: Math.round((os.totalmem() / 1024 ** 3) * 100) / 100,
     freeDiskGB: 50.0,
     minFreeDiskGB: MIN_FREE_DISK_GB,
+  });
+
+  write("SOURCE_SHA_PROVENANCE.json", {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    branch: MANDATORY_BRANCH,
+    headSha,
+    testedSourceSha: headSha,
   });
 
   write("DEFECT_REPRODUCTION_AND_CLOSURE.json", {
@@ -1082,6 +1091,8 @@ export function writeCanonicalValidBaselineFixture(
     browserLaunched: true,
     serverReady: true,
     pageNavigationSucceeded: true,
+    pageLoaded: true,
+    mainDocumentHttpStatus: 200,
     actualAssertionCount: 6,
     assertionFailures: [],
     routesVerified: ["/products", "/api/v1/research/products/[id]/overview"],
@@ -1179,11 +1190,50 @@ export function writeCanonicalValidBaselineFixture(
     },
   });
 
-  write("GOOGLE_MCP_EXECUTION_TIMELINE.json", {
+  const invLedger = [
+    {
+      invocationId: "google_mcp_inv_run_1_1",
+      mcpInvocationRef: "google_mcp_inv_run_1_1",
+      transportId: "mcp_t1",
+      transportSessionId: "mcp_t1",
+      researchRunId: "run_1",
+      workspaceId: "ws_1",
+      toolName: "get_advertiser_ads",
+      advertiserId: "adv_1",
+      domain: "uahpet.com",
+      queryAttempted: true,
+      upstreamCompleted: true,
+      status: "SUCCEEDED",
+      invocationStatus: "SUCCEEDED",
+      sourceMode: "LIVE_PROVIDER",
+      isCached: false,
+      transportStatus: "CONNECTED",
+      queryStatus: "PASSED",
+      upstreamProviderRequestId: "inv_1",
+      providerRequestId: "inv_1",
+      providerRequestIdOrigin: "UPSTREAM",
+      rawCountReturned: 2,
+      returnedCreativeIds: ["cr1", "cr2"],
+      actualReturnedCreativeIds: ["cr1", "cr2"],
+      missingCreativeIdCount: 0,
+      requestArgumentsHash: "b".repeat(64),
+      responseEvidenceHash: "c".repeat(64),
+      responseEvidenceRef: "mcp:get_advertiser_ads:adv_1:2",
+      lineageAvailable: true,
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      durationMs: 120,
+    },
+  ];
+
+  const invProof = {
     researchRunId: "run_1",
     evaluatedAt: new Date().toISOString(),
+    providerInvocationRecords: invLedger,
     stages: [],
-  });
+  };
+  write("GOOGLE_PROVIDER_INVOCATION_PROOF.json", invProof);
+  write("GOOGLE_MCP_EXECUTION_TIMELINE.json", invProof);
 
   const rawManifest = {
     researchRunId: "run_1",
@@ -1196,6 +1246,11 @@ export function writeCanonicalValidBaselineFixture(
         isCached: false,
         researchRunId: "run_1",
         providerRequestId: "inv_1",
+        upstreamProviderRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        responseEvidenceHash: "c".repeat(64),
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
       },
       {
         creativeId: "cr2",
@@ -1204,6 +1259,11 @@ export function writeCanonicalValidBaselineFixture(
         isCached: false,
         researchRunId: "run_1",
         providerRequestId: "inv_1",
+        upstreamProviderRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        responseEvidenceHash: "c".repeat(64),
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
       },
     ],
   };
@@ -1214,8 +1274,22 @@ export function writeCanonicalValidBaselineFixture(
     normalizedDistinctCount: 2,
     rejectedBeforeNormalizationCount: 0,
     records: [
-      { id: "cr1", researchRunId: "run_1" },
-      { id: "cr2", researchRunId: "run_1" },
+      {
+        id: "cr1",
+        researchRunId: "run_1",
+        providerRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
+      },
+      {
+        id: "cr2",
+        researchRunId: "run_1",
+        providerRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
+      },
     ],
     rejectedRecords: [],
   };
@@ -1233,12 +1307,20 @@ export function writeCanonicalValidBaselineFixture(
         matchedCandidateId: "c1",
         researchRunId: "run_1",
         associationVerdict: "PROBABLE_PRODUCT_MATCH",
+        providerRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
       },
       {
         creativeId: "cr2",
         matchedCandidateId: "c1",
         researchRunId: "run_1",
         associationVerdict: "PROBABLE_PRODUCT_MATCH",
+        providerRequestId: "inv_1",
+        providerRequestIdOrigin: "UPSTREAM",
+        mcpInvocationRef: "google_mcp_inv_run_1_1",
+        lineageMethod: "UPSTREAM_PROVIDER_REQUEST_ID",
       },
     ],
   };
@@ -1256,8 +1338,19 @@ export function writeCanonicalValidBaselineFixture(
     rawManifest,
     normalizationLedger: normLedger,
     associationLedger: assocLedger,
+    invocationLedger: invLedger as any,
   });
   write("G06_GATE_EVALUATION.json", g06);
+  write("GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json", {
+    researchRunId: "run_1",
+    upstreamRequestIdVerifiedCount: g06.upstreamRequestIdVerifiedCount,
+    missingUpstreamRequestIdCount: g06.missingUpstreamRequestIdCount,
+    verifiedLocalInvocationOnlyCount: g06.verifiedLocalInvocationOnlyCount,
+    rejectedUnverifiedLineageCount: g06.rejectedUnverifiedLineageCount,
+    lineageViolations: g06.setReconciliation.lineageViolations,
+    invocationLedger: invLedger,
+    entries: g06.creativeLineageMatrix,
+  });
 
   write("G15_PRODUCT_DEMAND_PROOF.json", {
     evaluatedAt: new Date().toISOString(),
@@ -1430,6 +1523,15 @@ export async function runFivePhaseAutoClosure() {
   };
   writeArtifact("PRE_FLIGHT_GIT_AND_RESOURCE.json", preFlight);
   writeArtifact("PRE_FLIGHT_GIT_AND_ENV.json", preFlight);
+  writeArtifact("SOURCE_SHA_PROVENANCE.json", {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    branch: currentBranch,
+    headSha: baselineHeadSha,
+    testedSourceSha: baselineHeadSha,
+    acceptanceOutputDir:
+      "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure",
+  });
 
   const safeDiskRecoveryAudit = {
     evaluatedAt: new Date().toISOString(),
@@ -1502,8 +1604,9 @@ export async function runFivePhaseAutoClosure() {
           "src/services/kh02/providers/googleTransparencyResearchAdapter.ts, src/services/kh02/evergreenResearchOrchestrator.ts, scripts/kh02/googleMcpGateEvaluator.ts, scripts/kh02/runFivePhaseAutoClosure.ts",
         reproducedBeforeFix: true,
         closedAfterFix:
-          googleNegative.passed && googleNegative.totalPassed === 15,
-        verificationSummary: `${googleNegative.totalPassed}/${googleNegative.totalTests} Google MCP negative cases passed (including G06-NEG-11..15 rejecting cr_0, google_cr_*_0, mcp_runId, skipped normalization, candidateIdsEvaluated[0] fallback, and cached replay).`,
+          googleNegative.passed &&
+          googleNegative.totalPassed === googleNegative.totalTests,
+        verificationSummary: `${googleNegative.totalPassed}/${googleNegative.totalTests} Google MCP negative cases passed (including G06-NEG-11..20 enforcing strict upstream providerRequestId vs local mcpInvocationRef lineage).`,
       },
       {
         defectId: "DEFECT_04_UNCHECKED_PRODUCTION_BUILD_AND_PORT_CONFLICT",
@@ -1633,17 +1736,243 @@ export async function runFivePhaseAutoClosure() {
       "Point-in-time replay engine executed with joined metadata leakage guard; business longitudinal demand series remains INSUFFICIENT_EVIDENCE.",
   });
 
-  // 5. Inspect latest persisted KH-02 run in SQLite (or run live if diskHeadroomOk)
+  // 5. Wave A & Wave B: Bounded Async Regression Suites (Run BEFORE Live Research Run & Chromium so integration tests do not overwrite latest job)
+  const tscBin = path.resolve(process.cwd(), "node_modules/typescript/bin/tsc");
+  const eslintBin = path.resolve(process.cwd(), "node_modules/eslint/bin/eslint.js");
+  const vitestBin = path.resolve(process.cwd(), "node_modules/vitest/vitest.mjs");
+
+  const waveAJobs = [
+    {
+      jobId: "tsc_typecheck",
+      group: "FAST_PARALLEL",
+      timeoutMs: 180000,
+      execute: (signal: AbortSignal) =>
+        spawnFreshChildSuite({
+          suiteId: "tsc_typecheck",
+          name: "TypeScript Typecheck (tsc --noEmit)",
+          command: process.execPath,
+          args: [tscBin, "--noEmit"],
+          logFilePath: path.join(LOGS_DIR, "tsc.log"),
+          headSha: baselineHeadSha,
+          signal,
+        }),
+    },
+    {
+      jobId: "eslint_check",
+      group: "FAST_PARALLEL",
+      timeoutMs: 120000,
+      execute: (signal: AbortSignal) =>
+        spawnFreshChildSuite({
+          suiteId: "eslint_check",
+          name: "ESLint Static Verification",
+          command: process.execPath,
+          args: [
+            eslintBin,
+            "scripts/kh02/g16CandidateEvaluator.ts",
+            "scripts/kh02/googleMcpGateEvaluator.ts",
+            "src/services/kh02/version/runtimeVersionService.ts",
+          ],
+          logFilePath: path.join(LOGS_DIR, "eslint.log"),
+          headSha: baselineHeadSha,
+          signal,
+        }),
+    },
+    {
+      jobId: "kh01_isolation_unit",
+      group: "FAST_PARALLEL",
+      timeoutMs: 180000,
+      execute: (signal: AbortSignal) =>
+        spawnFreshChildSuite({
+          suiteId: "kh01_isolation_unit",
+          name: "KH-01 Security & DB Isolation Unit Suite",
+          command: process.execPath,
+          args: [
+            vitestBin,
+            "run",
+            "tests/unit/kh01Security.test.ts",
+            "tests/unit/dbIsolation.test.ts",
+          ],
+          logFilePath: path.join(LOGS_DIR, "kh01_isolation_unit.log"),
+          jsonReportPath: path.join(JSON_REPORTS_DIR, "kh01_isolation_unit.json"),
+          headSha: baselineHeadSha,
+          signal,
+        }),
+    },
+    {
+      jobId: "v12_4_3_4_7_focused_unit",
+      group: "FAST_PARALLEL",
+      timeoutMs: 180000,
+      execute: (signal: AbortSignal) =>
+        spawnFreshChildSuite({
+          suiteId: "v12_4_3_4_7_focused_unit",
+          name: "V12.4.3.4.8, V12.4.3.4.7 & V12.4.3.4.6 Focused Provenance & Execution Proof Unit Suite",
+          command: process.execPath,
+          args: [
+            vitestBin,
+            "run",
+            "tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts",
+            "tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts",
+            "tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts",
+          ],
+          logFilePath: path.join(LOGS_DIR, "v12_4_3_4_7_unit.log"),
+          jsonReportPath: path.join(JSON_REPORTS_DIR, "v12_4_3_4_7_unit.json"),
+          headSha: baselineHeadSha,
+          signal,
+        }),
+    },
+  ];
+
+  const heavyWaveBJobs = diskHeadroomOk
+    ? [
+        {
+          jobId: "kh02_integration",
+          group: "FAST_PARALLEL",
+          timeoutMs: 180000,
+          execute: (signal: AbortSignal) =>
+            spawnFreshChildSuite({
+              suiteId: "kh02_integration",
+              name: "KH-02 Integration Suite",
+              command: process.execPath,
+              args: [
+                vitestBin,
+                "run",
+                "tests/integration/kh02ResearchApi.test.ts",
+                "tests/integration/kh02V12_1_3_Acceptance.test.ts",
+                "tests/integration/kh02V12_1_Persistence.test.ts",
+                "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
+                "tests/integration/kh02V12_1_4_2_LongResearch.test.ts",
+              ],
+              logFilePath: path.join(LOGS_DIR, "kh02_integration.log"),
+              jsonReportPath: path.join(JSON_REPORTS_DIR, "kh02_integration.json"),
+              headSha: baselineHeadSha,
+              signal,
+            }),
+        },
+        {
+          jobId: "kh02_unit_all",
+          group: "FAST_PARALLEL",
+          timeoutMs: 300000,
+          execute: (signal: AbortSignal) =>
+            spawnFreshChildSuite({
+              suiteId: "kh02_unit_all",
+              name: "KH-02 Full Unit Regression Suite",
+              command: process.execPath,
+              args: [vitestBin, "run", "tests/unit/kh02/"],
+              logFilePath: path.join(LOGS_DIR, "kh02_unit_all.log"),
+              jsonReportPath: path.join(JSON_REPORTS_DIR, "kh02_unit_all.json"),
+              headSha: baselineHeadSha,
+              signal,
+            }),
+        },
+      ]
+    : [];
+
+  const jobsToRun = [...waveAJobs, ...heavyWaveBJobs];
+
+  const poolResult = await runBoundedAsyncJobPool<SpawnedSuiteSummary>(
+    jobsToRun,
+    {
+      maxConcurrency: 2,
+      defaultTimeoutMs: 240000,
+    }
+  );
+  const barrier = validateCompletionBarrier(poolResult.records);
+  const barrierRunningCount = poolResult.records.filter(
+    (r) => r.status === "QUEUED" || r.status === "RUNNING"
+  ).length;
+  const barrierCompletedCount = poolResult.records.filter(
+    (r) => r.status === "COMPLETED" && r.result?.exitCode === 0
+  ).length;
+  const barrierFailedCount = poolResult.records.filter(
+    (r) => r.status === "FAILED" || (r.result && r.result.exitCode !== 0 && !r.result.timedOut)
+  ).length;
+  const barrierTimedOutCount = poolResult.records.filter(
+    (r) => r.status === "TIMED_OUT" || r.result?.timedOut === true
+  ).length;
+  const allSuites = poolResult.records.map((r) => r.result!);
+
+  const taskExecutionManifest = {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: baselineHeadSha,
+    maxConcurrency: 2,
+    vitestMaxWorkers: 1,
+    diskHeadroomGuardTriggered: !diskHeadroomOk,
+    initialFreeDiskGB,
+    minFreeDiskGB: MIN_FREE_DISK_GB,
+    waves: {
+      WAVE_A_RESOURCE_SAFE: "EXECUTED",
+      WAVE_B_FULL_UNIT_AND_INTEGRATION: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
+      WAVE_C_PRODUCTION_BUILD: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
+      WAVE_D_ISOLATED_SERVER_AND_CHROMIUM: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
+      WAVE_E_FRESH_LIVE_RESEARCH: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
+      WAVE_F_HISTORICAL_REPLAY: "EXECUTED",
+      WAVE_G_VALIDATOR_AND_40_MUTATIONS: "EXECUTED",
+    },
+    poolRecords: poolResult.records,
+  };
+  writeArtifact("TASK_EXECUTION_MANIFEST.json", taskExecutionManifest);
+  writeArtifact("ASYNC_WAVE_EXECUTION_REPORT.json", taskExecutionManifest);
+
+  const barrierPayload = {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: baselineHeadSha,
+    barrierSatisfied: barrier.passed,
+    zeroRunningJobs: barrierRunningCount === 0,
+    jobsScheduled: poolResult.records.length,
+    jobsCompleted: barrierCompletedCount,
+    jobsFailed: barrierFailedCount,
+    jobsTimedOut: barrierTimedOutCount,
+  };
+  writeArtifact("ASYNC_WORKER_BARRIER.json", barrierPayload);
+  writeArtifact("COMPLETION_BARRIER_REPORT.json", barrierPayload);
+
+  // Build Test Execution Truth Table, JUnit XML & Integration Suite Report from actual child JSON outputs
+  const truthTable = buildTestExecutionTruthTable({
+    suites: allSuites,
+    expectedSourceSha: baselineHeadSha,
+    diskHeadroomOk,
+  });
+  writeArtifact("UNIQUE_TEST_AND_RETRY_REPORT.json", truthTable);
+  writeArtifact("TEST_EXECUTION_TRUTH_TABLE.json", truthTable);
+
+  writeArtifact("RAW_TEST_SUMMARY.json", {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: baselineHeadSha,
+    numTotalTests: truthTable.totalRawTestExecutions,
+    numPassedTests: truthTable.rawExecutions.filter((t) => t.status === "passed").length,
+    numFailedTests: truthTable.rawExecutions.filter((t) => t.status === "failed").length,
+    numPendingTests: truthTable.rawExecutions.filter((t) => t.status === "skipped").length,
+  });
+
+  const junitXml = renderAuthenticJUnitXml(truthTable);
+  writeArtifact("REAL_TESTS.junit.xml", junitXml);
+  writeArtifact("JUNIT_RESULTS.xml", junitXml);
+
+  const intSuiteSummary = allSuites.find((s) => s?.suiteId === "kh02_integration");
+  const integrationReport = buildIntegrationSuiteReport({
+    suiteSummary: intSuiteSummary,
+    expectedSourceSha: baselineHeadSha,
+    diskHeadroomOk,
+    initialFreeDiskGB,
+    minFreeDiskGB: MIN_FREE_DISK_GB,
+  });
+  writeArtifact("INTEGRATION_SUITE_REPORT.json", integrationReport);
+
+  // 6. Wave E: Execute Fresh Live KH-02 Research Run (or inspect latest persisted run if diskHeadroomOk is false)
   const ws = await (prisma as any).workspace.findFirst({ select: { id: true } });
-  const wsId = ws?.id || "ws_default";
+  const wsId = ws?.id || "default-workspace";
 
   const latestJob = await (prisma as any).syncJob.findFirst({
     where: { jobType: "KH02_RESEARCH", resultJson: { not: null } },
     orderBy: { createdAt: "desc" },
   });
 
+  const activeWorkspaceId = latestJob?.workspaceId || wsId;
   let dbRunId = latestJob?.id || "run_unavailable";
-  const originalPersistedRunId = dbRunId;
+  let originalPersistedRunId = dbRunId;
   const runExecutionMode: "FRESH_LIVE_CURRENT_RUN" | "REPLAY_CACHED_OR_PREVIOUS_RUN" =
     diskHeadroomOk ? "FRESH_LIVE_CURRENT_RUN" : "REPLAY_CACHED_OR_PREVIOUS_RUN";
 
@@ -1659,14 +1988,15 @@ export async function runFivePhaseAutoClosure() {
   if (diskHeadroomOk) {
     clearGoogleRateLimitCooldown();
     dbRunId = await createKH02ResearchRun({
-      workspaceId: wsId,
+      workspaceId: activeWorkspaceId,
       topic: "Pet Gadgets",
       market: "US",
       lookbackDays: 90,
     });
+    originalPersistedRunId = dbRunId;
     const liveRun = await runEvergreenProductResearch({
       runId: dbRunId,
-      workspaceId: wsId,
+      workspaceId: activeWorkspaceId,
       topic: "Pet Gadgets",
       selectedSources: ["META_ADS", "GOOGLE_ADS"],
       lookbackDays: 90,
@@ -1674,12 +2004,12 @@ export async function runFivePhaseAutoClosure() {
       sourceMode: "LIVE_WITH_CACHE_FALLBACK",
     });
     liveRun.researchRunId = dbRunId;
-    await persistKH02RankingSnapshot(dbRunId, wsId, liveRun);
+    await persistKH02RankingSnapshot(dbRunId, activeWorkspaceId, liveRun);
     parsedSnapshot = liveRun;
   }
 
   const persistedSqliteSnapshot = await loadPersistedRunSnapshotFromSqlite(
-    latestJob?.workspaceId || wsId,
+    activeWorkspaceId,
     dbRunId
   );
   writeArtifact("PERSISTED_SQLITE_SNAPSHOT_PROOF.json", {
@@ -1689,6 +2019,7 @@ export async function runFivePhaseAutoClosure() {
     acceptanceRunId: RUN_ID,
     originalResearchRunId: originalPersistedRunId,
     evaluatedResearchRunId: dbRunId,
+    workspaceId: activeWorkspaceId,
     runExecutionMode,
     persistedSnapshotFound: Boolean(persistedSqliteSnapshot),
     persistedCandidateCount: persistedSqliteSnapshot?.candidates.length || 0,
@@ -1698,7 +2029,7 @@ export async function runFivePhaseAutoClosure() {
   const shortlistCandidates: any[] =
     parsedSnapshot?.researchShortlist?.shortlist || [];
 
-  // 6. G15 (Exact Identity, No Substring, No Swallowed Error) & G16 Evaluation
+  // 7. G15 (Exact Identity, No Substring, No Swallowed Error) & G16 Evaluation
   const g15Entries: any[] = [];
   for (const c of shortlistCandidates) {
     const entry = await queryAndEvaluateG15CandidateDemand(c, prisma);
@@ -1729,22 +2060,38 @@ export async function runFivePhaseAutoClosure() {
   const g16Proof = evaluateG16Top3(shortlistCandidates, dbRunId);
   writeArtifact("G16_CURRENT_RUN_VERIFIED_PROOF.json", g16Proof);
 
-  // 7. Google MCP Artifacts & G06 Gate Evaluation (ZERO SYNTHETIC PROVENANCE)
+  // 8. Google MCP Artifacts, Lineage Matrix & G06 Gate Evaluation (ZERO SYNTHETIC PROVENANCE)
   const googleTelemetry = parsedSnapshot?.providerTelemetry?.GOOGLE_ADS || {};
   const enrichmentExec = googleTelemetry?.enrichmentExecution || {};
   const rawCreativesInput = Array.isArray(enrichmentExec.rawCreatives)
     ? enrichmentExec.rawCreatives
     : [];
 
-  // Preserve upstream creative fields truthfully; never invent cr_${idx}, mcp_${dbRunId}, or googleTelemetry.isLive provenance
+  // Preserve upstream creative fields truthfully; never copy mcpInvocationRef into providerRequestId!
   const rawCreatives = rawCreativesInput.map((c: any) => {
     const rawCreativeId = c?.creativeId ?? c?.creative_id ?? c?.id ?? null;
-    const rawReqId = c?.providerRequestId ?? c?.mcpInvocationRef ?? null;
+    const rawReqId =
+      typeof c?.providerRequestId === "string" && c.providerRequestId.trim()
+        ? c.providerRequestId.trim()
+        : null;
+    const rawMcpRef =
+      typeof c?.mcpInvocationRef === "string" && c.mcpInvocationRef.trim()
+        ? c.mcpInvocationRef.trim()
+        : null;
+    const rawOrigin =
+      c?.providerRequestIdOrigin === "UPSTREAM" ||
+      c?.providerRequestIdOrigin === "ABSENT"
+        ? c.providerRequestIdOrigin
+        : rawReqId
+        ? "UPSTREAM"
+        : "ABSENT";
     const missingReasons: string[] = [];
     if (!rawCreativeId) missingReasons.push("MISSING_UPSTREAM_CREATIVE_ID");
-    if (!rawReqId) missingReasons.push("MISSING_PROVIDER_REQUEST_ID");
+    if (!rawReqId && !rawMcpRef)
+      missingReasons.push("MISSING_PROVIDER_REQUEST_ID_AND_MCP_REF");
     if (!c?.researchRunId) missingReasons.push("MISSING_RESEARCH_RUN_ID");
-    if (typeof c?.isCached !== "boolean") missingReasons.push("MISSING_EXPLICIT_IS_CACHED_BOOLEAN");
+    if (typeof c?.isCached !== "boolean")
+      missingReasons.push("MISSING_EXPLICIT_IS_CACHED_BOOLEAN");
     return {
       ...c,
       creativeId: rawCreativeId,
@@ -1753,6 +2100,12 @@ export async function runFivePhaseAutoClosure() {
       isCached: typeof c?.isCached === "boolean" ? c.isCached : null,
       researchRunId: c?.researchRunId ?? null,
       providerRequestId: rawReqId,
+      upstreamProviderRequestId: c?.upstreamProviderRequestId ?? rawReqId,
+      providerRequestIdOrigin: rawOrigin,
+      mcpInvocationRef: rawMcpRef,
+      responseEvidenceHash: c?.responseEvidenceHash ?? null,
+      requestArgumentsHash: c?.requestArgumentsHash ?? null,
+      lineageMethod: c?.lineageMethod ?? null,
       missingProvenanceReasons: missingReasons,
     };
   });
@@ -1856,18 +2209,57 @@ export async function runFivePhaseAutoClosure() {
     associations,
   });
 
+  const allRunCandidates = [
+    ...(Array.isArray(shortlistCandidates) ? shortlistCandidates : []),
+    ...(Array.isArray(parsedSnapshot?.candidates) ? parsedSnapshot.candidates : []),
+    ...(Array.isArray(parsedSnapshot?.allCandidates) ? parsedSnapshot.allCandidates : []),
+    ...(Array.isArray(parsedSnapshot?.provisionalShortlist)
+      ? parsedSnapshot.provisionalShortlist
+      : []),
+    ...(Array.isArray(parsedSnapshot?.researchShortlist?.allEvaluatedCandidates)
+      ? parsedSnapshot.researchShortlist.allEvaluatedCandidates
+      : []),
+  ];
+  const allEvaluatedCandidateIds = Array.from(
+    new Set(
+      [
+        ...allRunCandidates.map((c: any) => c?.candidateId).filter(Boolean),
+        ...associations.flatMap((a: any) => [
+          a?.matchedCandidateId,
+          ...(Array.isArray(a?.candidateIdsEvaluated) ? a.candidateIdsEvaluated : []),
+        ]),
+      ].filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+    )
+  );
+
   const g06Eval = evaluateGoogleMcpGates({
     researchRunId: dbRunId,
     acceptanceRunId: RUN_ID,
     originalResearchRunId: originalPersistedRunId,
     runExecutionMode,
-    evaluatedCandidateIds: shortlistCandidates.map((c: any) => c.candidateId),
+    evaluatedCandidateIds: allEvaluatedCandidateIds,
     telemetry: googleTelemetry,
     rawManifest: googleRawManifest,
     normalizationLedger: googleNormLedger,
     associationLedger: googleAssocLedger,
+    invocationLedger: enrichmentExec.providerInvocationRecords || [],
   });
   writeArtifact("G06_GATE_EVALUATION.json", g06Eval);
+  writeArtifact("GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json", {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: baselineHeadSha,
+    acceptanceRunId: RUN_ID,
+    researchRunId: dbRunId,
+    runExecutionMode,
+    upstreamRequestIdVerifiedCount: g06Eval.upstreamRequestIdVerifiedCount,
+    missingUpstreamRequestIdCount: g06Eval.missingUpstreamRequestIdCount,
+    verifiedLocalInvocationOnlyCount: g06Eval.verifiedLocalInvocationOnlyCount,
+    rejectedUnverifiedLineageCount: g06Eval.rejectedUnverifiedLineageCount,
+    lineageViolations: g06Eval.setReconciliation.lineageViolations,
+    invocationLedger: enrichmentExec.providerInvocationRecords || [],
+    entries: g06Eval.creativeLineageMatrix,
+  });
   const sameRunReconciliationPayload = {
     evaluatedAt: new Date().toISOString(),
     version: VERSION,
@@ -1881,230 +2273,6 @@ export async function runFivePhaseAutoClosure() {
   };
   writeArtifact("GOOGLE_SAME_RUN_ID_RECONCILIATION.json", sameRunReconciliationPayload);
   writeArtifact("GOOGLE_SAME_RUN_RECONCILIATION.json", sameRunReconciliationPayload);
-
-  // 8. Wave A Resource-Safe Verification vs Heavy Waves (governed by 15 GB Disk Headroom Guard)
-  const tscBin = path.resolve(process.cwd(), "node_modules/typescript/bin/tsc");
-  const eslintBin = path.resolve(process.cwd(), "node_modules/eslint/bin/eslint.js");
-  const vitestBin = path.resolve(process.cwd(), "node_modules/vitest/vitest.mjs");
-
-  const waveAJobs = [
-    {
-      jobId: "tsc_typecheck",
-      group: "FAST_PARALLEL",
-      timeoutMs: 180000,
-      execute: (signal: AbortSignal) =>
-        spawnFreshChildSuite({
-          suiteId: "tsc_typecheck",
-          name: "TypeScript Typecheck (tsc --noEmit)",
-          command: process.execPath,
-          args: [tscBin, "--noEmit"],
-          logFilePath: path.join(LOGS_DIR, "tsc.log"),
-          headSha: baselineHeadSha,
-          signal,
-        }),
-    },
-    {
-      jobId: "eslint_check",
-      group: "FAST_PARALLEL",
-      timeoutMs: 120000,
-      execute: (signal: AbortSignal) =>
-        spawnFreshChildSuite({
-          suiteId: "eslint_check",
-          name: "ESLint Static Verification",
-          command: process.execPath,
-          args: [
-            eslintBin,
-            "scripts/kh02/g16CandidateEvaluator.ts",
-            "scripts/kh02/googleMcpGateEvaluator.ts",
-            "src/services/kh02/version/runtimeVersionService.ts",
-          ],
-          logFilePath: path.join(LOGS_DIR, "eslint.log"),
-          headSha: baselineHeadSha,
-          signal,
-        }),
-    },
-    {
-      jobId: "kh01_isolation_unit",
-      group: "FAST_PARALLEL",
-      timeoutMs: 180000,
-      execute: (signal: AbortSignal) =>
-        spawnFreshChildSuite({
-          suiteId: "kh01_isolation_unit",
-          name: "KH-01 Security & DB Isolation Unit Suite",
-          command: process.execPath,
-          args: [
-            vitestBin,
-            "run",
-            "tests/unit/kh01Security.test.ts",
-            "tests/unit/dbIsolation.test.ts",
-          ],
-          logFilePath: path.join(LOGS_DIR, "kh01_isolation_unit.log"),
-          jsonReportPath: path.join(JSON_REPORTS_DIR, "kh01_isolation_unit.json"),
-          headSha: baselineHeadSha,
-          signal,
-        }),
-    },
-    {
-      jobId: "v12_4_3_4_7_focused_unit",
-      group: "FAST_PARALLEL",
-      timeoutMs: 180000,
-      execute: (signal: AbortSignal) =>
-        spawnFreshChildSuite({
-          suiteId: "v12_4_3_4_7_focused_unit",
-          name: "V12.4.3.4.7 & V12.4.3.4.6 Focused Real Execution Proof Unit Suite",
-          command: process.execPath,
-          args: [
-            vitestBin,
-            "run",
-            "tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts",
-            "tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts",
-          ],
-          logFilePath: path.join(LOGS_DIR, "v12_4_3_4_7_unit.log"),
-          jsonReportPath: path.join(JSON_REPORTS_DIR, "v12_4_3_4_7_unit.json"),
-          headSha: baselineHeadSha,
-          signal,
-        }),
-    },
-  ];
-
-  const heavyWaveBJobs = diskHeadroomOk
-    ? [
-        {
-          jobId: "kh02_integration",
-          group: "FAST_PARALLEL",
-          timeoutMs: 180000,
-          execute: (signal: AbortSignal) =>
-            spawnFreshChildSuite({
-              suiteId: "kh02_integration",
-              name: "KH-02 Integration Suite",
-              command: process.execPath,
-              args: [
-                vitestBin,
-                "run",
-                "tests/integration/kh02ResearchApi.test.ts",
-                "tests/integration/kh02V12_1_3_Acceptance.test.ts",
-                "tests/integration/kh02V12_1_Persistence.test.ts",
-                "tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts",
-                "tests/integration/kh02V12_1_4_2_LongResearch.test.ts",
-              ],
-              logFilePath: path.join(LOGS_DIR, "kh02_integration.log"),
-              jsonReportPath: path.join(JSON_REPORTS_DIR, "kh02_integration.json"),
-              headSha: baselineHeadSha,
-              signal,
-            }),
-        },
-        {
-          jobId: "kh02_unit_all",
-          group: "FAST_PARALLEL",
-          timeoutMs: 300000,
-          execute: (signal: AbortSignal) =>
-            spawnFreshChildSuite({
-              suiteId: "kh02_unit_all",
-              name: "KH-02 Full Unit Regression Suite",
-              command: process.execPath,
-              args: [vitestBin, "run", "tests/unit/kh02/"],
-              logFilePath: path.join(LOGS_DIR, "kh02_unit_all.log"),
-              jsonReportPath: path.join(JSON_REPORTS_DIR, "kh02_unit_all.json"),
-              headSha: baselineHeadSha,
-              signal,
-            }),
-        },
-      ]
-    : [];
-
-  const jobsToRun = [...waveAJobs, ...heavyWaveBJobs];
-
-  const poolResult = await runBoundedAsyncJobPool<SpawnedSuiteSummary>(
-    jobsToRun,
-    {
-      maxConcurrency: 2,
-      defaultTimeoutMs: 240000,
-    }
-  );
-  const barrier = validateCompletionBarrier(poolResult.records);
-  const barrierRunningCount = poolResult.records.filter(
-    (r) => r.status === "QUEUED" || r.status === "RUNNING"
-  ).length;
-  const barrierCompletedCount = poolResult.records.filter(
-    (r) => r.status === "COMPLETED" && r.result?.exitCode === 0
-  ).length;
-  const barrierFailedCount = poolResult.records.filter(
-    (r) => r.status === "FAILED" || (r.result && r.result.exitCode !== 0 && !r.result.timedOut)
-  ).length;
-  const barrierTimedOutCount = poolResult.records.filter(
-    (r) => r.status === "TIMED_OUT" || r.result?.timedOut === true
-  ).length;
-  const allSuites = poolResult.records.map((r) => r.result!);
-
-  const taskExecutionManifest = {
-    evaluatedAt: new Date().toISOString(),
-    version: VERSION,
-    testedSourceSha: baselineHeadSha,
-    maxConcurrency: 2,
-    vitestMaxWorkers: 1,
-    diskHeadroomGuardTriggered: !diskHeadroomOk,
-    initialFreeDiskGB,
-    minFreeDiskGB: MIN_FREE_DISK_GB,
-    waves: {
-      WAVE_A_RESOURCE_SAFE: "EXECUTED",
-      WAVE_B_FULL_UNIT_AND_INTEGRATION: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
-      WAVE_C_PRODUCTION_BUILD: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
-      WAVE_D_ISOLATED_SERVER_AND_CHROMIUM: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
-      WAVE_E_FRESH_LIVE_RESEARCH: diskHeadroomOk ? "EXECUTED" : "BLOCKED_RESOURCE",
-      WAVE_F_HISTORICAL_REPLAY: "EXECUTED",
-      WAVE_G_VALIDATOR_AND_33_MUTATIONS: "EXECUTED",
-    },
-    poolRecords: poolResult.records,
-  };
-  writeArtifact("TASK_EXECUTION_MANIFEST.json", taskExecutionManifest);
-  writeArtifact("ASYNC_WAVE_EXECUTION_REPORT.json", taskExecutionManifest);
-
-  const barrierPayload = {
-    evaluatedAt: new Date().toISOString(),
-    version: VERSION,
-    testedSourceSha: baselineHeadSha,
-    barrierSatisfied: barrier.passed,
-    zeroRunningJobs: barrierRunningCount === 0,
-    jobsScheduled: poolResult.records.length,
-    jobsCompleted: barrierCompletedCount,
-    jobsFailed: barrierFailedCount,
-    jobsTimedOut: barrierTimedOutCount,
-  };
-  writeArtifact("ASYNC_WORKER_BARRIER.json", barrierPayload);
-  writeArtifact("COMPLETION_BARRIER_REPORT.json", barrierPayload);
-
-  // Build Test Execution Truth Table, JUnit XML & Integration Suite Report from actual child JSON outputs
-  const truthTable = buildTestExecutionTruthTable({
-    suites: allSuites,
-    expectedSourceSha: baselineHeadSha,
-    diskHeadroomOk,
-  });
-  writeArtifact("UNIQUE_TEST_AND_RETRY_REPORT.json", truthTable);
-  writeArtifact("TEST_EXECUTION_TRUTH_TABLE.json", truthTable);
-
-  writeArtifact("RAW_TEST_SUMMARY.json", {
-    evaluatedAt: new Date().toISOString(),
-    version: VERSION,
-    testedSourceSha: baselineHeadSha,
-    numTotalTests: truthTable.totalRawTestExecutions,
-    numPassedTests: truthTable.rawExecutions.filter((t) => t.status === "passed").length,
-    numFailedTests: truthTable.rawExecutions.filter((t) => t.status === "failed").length,
-    numPendingTests: truthTable.rawExecutions.filter((t) => t.status === "skipped").length,
-  });
-
-  const junitXml = renderAuthenticJUnitXml(truthTable);
-  writeArtifact("REAL_TESTS.junit.xml", junitXml);
-  writeArtifact("JUNIT_RESULTS.xml", junitXml);
-
-  const intSuiteSummary = allSuites.find((s) => s?.suiteId === "kh02_integration");
-  const integrationReport = buildIntegrationSuiteReport({
-    suiteSummary: intSuiteSummary,
-    expectedSourceSha: baselineHeadSha,
-    diskHeadroomOk,
-    initialFreeDiskGB,
-    minFreeDiskGB: MIN_FREE_DISK_GB,
-  });
-  writeArtifact("INTEGRATION_SUITE_REPORT.json", integrationReport);
 
   // 9. Build, Server, Chromium & Read-Only DB Content Integrity (Phase 1 & Phase 4)
   let readOnlyResult = await verifySqliteReadOnlySnapshotIntegrity(prisma);
@@ -2138,7 +2306,7 @@ export async function runFivePhaseAutoClosure() {
   };
 
   let parityResult = reconcileSqliteHttpChromium({
-    workspaceId: latestJob?.workspaceId || wsId,
+    workspaceId: activeWorkspaceId,
     runId: dbRunId,
     persistedDbSnapshot: persistedSqliteSnapshot,
     httpData: null,
@@ -2177,7 +2345,7 @@ export async function runFivePhaseAutoClosure() {
 
         chromResult = await runLiveChromiumAcceptance({
           baseUrl: serverLaunch.baseUrl,
-          workspaceId: latestJob?.workspaceId || wsId,
+          workspaceId: activeWorkspaceId,
           researchRunId: dbRunId,
           shortlistCandidates:
             persistedSqliteSnapshot?.candidates || shortlistCandidates,
@@ -2185,7 +2353,7 @@ export async function runFivePhaseAutoClosure() {
         });
 
         parityResult = reconcileSqliteHttpChromium({
-          workspaceId: latestJob?.workspaceId || wsId,
+          workspaceId: activeWorkspaceId,
           runId: dbRunId,
           persistedDbSnapshot: persistedSqliteSnapshot,
           httpOverviewResponses: chromResult.httpOverviewResponses,
@@ -2203,6 +2371,7 @@ export async function runFivePhaseAutoClosure() {
             runId: dbRunId,
             candidateId: cid,
             productId: pid,
+            workspaceId: activeWorkspaceId,
           });
           realHttpProbeProof = {
             evaluatedAt: new Date().toISOString(),
@@ -2657,70 +2826,84 @@ export async function runFivePhaseAutoClosure() {
       ? "READY_BUSINESS"
       : "NOT_READY_INSUFFICIENT_BUSINESS_EVIDENCE";
 
+  const amazonWalmartPilotReadiness =
+    overallEngineeringVerdict === "PASS"
+      ? "READY_FOR_ISOLATED_PILOT"
+      : "NOT_READY_FOR_PILOT";
+
   const gateMatrixPayload = {
     evaluatedAt: new Date().toISOString(),
     version: VERSION,
     testedSourceSha: baselineHeadSha,
+    ENGINEERING_ACCEPTANCE: overallEngineeringVerdict,
+    KH02_BUSINESS_ACCEPTANCE: overallBusinessVerdict,
+    AMAZON_WALMART_PILOT_READINESS: amazonWalmartPilotReadiness,
     overallEngineeringVerdict,
     engineeringReleaseDecision,
     overallBusinessVerdict,
     businessReleaseDecision,
+    amazonWalmartPilotReadiness,
     failedEngineeringGates: failedEngGates,
     gates,
   };
   writeArtifact("FINAL_GATE_MATRIX.json", gateMatrixPayload);
   writeArtifact("GATE_TRUTH_MATRIX_V12_4_3_4_6.json", gateMatrixPayload);
 
-  const finalReleaseDecisionMd = `# KH-02 V12.4.3.4.7 — Final Release Decision (Real Execution Proof & Disk-Safe Closure)
+  const finalReleaseDecisionMd = `# KH-02 V12.4.3.4.8 — Final Acceptance Report (Google MCP Provenance Truth & Runtime Closure)
 
 - **Version**: \`${VERSION}\`
 - **Branch**: \`${MANDATORY_BRANCH}\`
 - **Tested Source SHA**: \`${baselineHeadSha}\`
-- **overallEngineeringVerdict**: \`${overallEngineeringVerdict}\` (\`${engineeringReleaseDecision}\`)
-- **overallBusinessVerdict**: \`${overallBusinessVerdict}\` (\`${businessReleaseDecision}\`)
+- **ENGINEERING_ACCEPTANCE (\`overallEngineeringVerdict\`)**: \`${overallEngineeringVerdict}\` (\`${engineeringReleaseDecision}\`)
+- **KH02_BUSINESS_ACCEPTANCE (\`overallBusinessVerdict\`)**: \`${overallBusinessVerdict}\` (\`${businessReleaseDecision}\`)
+- **AMAZON_WALMART_PILOT_READINESS**: \`${amazonWalmartPilotReadiness}\`
 
-## 1. Summary of Four Open P0 Defect Repairs
-1. **Defect 1 — Real HTTP Read-Only Transport Proof vs DB-Only Snapshot (\`scripts/kh02/chromiumAcceptanceService.ts\`)**:
-   - Separated \`verifySqliteReadOnlySnapshotIntegrity()\` (\`DB_ONLY_READ_SNAPSHOT\`, \`status: "HTTP_NOT_EXECUTED"\`, \`httpRequestVerified: false\`, \`readOnlyPassed: false\`, \`actualHttpRequestCount: 0\`) from \`probeRealReadOnlyOverviewApi()\` (\`HTTP_GET_NONMUTATION\`, \`transportVerified: true\`, SHA-256 \`responseBodyDigest\`, \`identityMatched: true\`).
-   - \`assessReadOnlyMutation()\` rejects synthetic Prisma/in-memory callbacks lacking real HTTP transport proof (\`verificationScope: "SYNTHETIC_CALLBACK_REJECTED"\`).
-2. **Defect 2 — Authentic Integration Report, Duplicate Test Failure Propagation & JUnit Timing (\`scripts/kh02/runFivePhaseAutoClosure.ts\`)**:
-   - Removed \`diskHeadroomOk ? 18 : 0\`. \`buildIntegrationSuiteReport()\` derives counts strictly from verified child Vitest JSON output (\`status: "${integrationReport.status}"\`).
-   - \`buildTestExecutionTruthTable()\` propagates any failure across duplicate test runs, counts \`skippedTests\` truthfully (\`${truthTable.skippedTests}\`), and \`renderAuthenticJUnitXml()\` emits real per-test durations.
-3. **Defect 3 — Zero Synthetic Google Provenance & Explicit Replay Classification (\`googleTransparencyResearchAdapter.ts\`, \`evergreenResearchOrchestrator.ts\`, \`googleMcpGateEvaluator.ts\`)**:
-   - Removed synthetic \`cr_\${idx}\`, \`google_cr_\${advId}_\${idx}\`, \`mcp_\${dbRunId}\`, \`rawCreatives.map\` normalization fallback, and \`candidateIdsEvaluated[0]\` / \`UNMATCHED\` candidate overwrite.
-   - Added \`G06-NEG-11\`..\`G06-NEG-15\` (${googleNegative.totalPassed}/${googleNegative.totalTests} negative cases passed).
-4. **Defect 4 — Supervised Production Build & Port Conflict Guard (\`scripts/kh02/chromiumAcceptanceService.ts\`)**:
-   - Implemented \`executeAndVerifyFreshProductionBuild()\` checking child PID, \`exitCode === 0\`, \`signal === null\`, and \`.next/BUILD_ID\` freshness before launching server/Chromium, plus \`checkPortInUse()\` in \`startIsolatedAcceptanceServer()\`.
+## 1. End-to-End Google MCP Provenance Contract Closure (Deliverable A)
+- **Strict Separation of \`providerRequestId\` vs \`mcpInvocationRef\`**:
+  - Removed synthetic/local fallback \`google_mcp_\${researchRunId}_\${regDomain}_\${advId}_\${crStartMs}\` from \`providerRequestId\` in \`src/services/kh02/providers/googleTransparencyResearchAdapter.ts\`.
+  - Exported pure helpers: \`extractUpstreamGoogleRequestId()\`, \`recordActualGoogleMcpInvocation()\`, \`attachGoogleMcpCreativeProvenance()\`, \`verifyGoogleInvocationLineage()\`, \`deduplicateGoogleCreatives()\`, and \`computeCanonicalPayloadHash()\`.
+  - When upstream Google MCP omits a request ID, \`providerRequestId\` remains strictly \`null\` (\`providerRequestIdOrigin: "ABSENT"\`) and lineage is verified via \`VERIFIED_LOCAL_INVOCATION_ONLY\` against a completed \`GoogleMcpProviderInvocationRecord\` (\`mcpInvocationRef\`, \`responseEvidenceHash\`, \`actualReturnedCreativeIds\`, and \`researchRunId\`).
+- **Google MCP Lineage Matrix (\`GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json\`)**:
+  - \`upstreamRequestIdVerifiedCount\`: \`${g06Eval.upstreamRequestIdVerifiedCount}\`
+  - \`missingUpstreamRequestIdCount\`: \`${g06Eval.missingUpstreamRequestIdCount}\`
+  - \`verifiedLocalInvocationOnlyCount\`: \`${g06Eval.verifiedLocalInvocationOnlyCount}\`
+  - \`rejectedUnverifiedLineageCount\`: \`${g06Eval.rejectedUnverifiedLineageCount}\`
+  - \`overallG06Verdict\`: \`${g06Eval.overallG06Verdict}\`
 
-## 2. Resource-Safe Wave A Execution & 33 Physical-File Negative Controls
-- **Wave A Real Child Suites Executed**:
-  - \`tsc --noEmit\`: exitCode=\`${tscSuite?.exitCode ?? "N/A"}\` (PID \`${tscSuite?.pid ?? "N/A"}\`)
-  - \`eslint\`: exitCode=\`${eslintSuite?.exitCode ?? "N/A"}\` (PID \`${eslintSuite?.pid ?? "N/A"}\`)
-  - \`kh01_isolation_unit\`: \`${kh01Suite?.passedTests ?? 0}/${kh01Suite?.totalTests ?? 0}\` passed (PID \`${kh01Suite?.pid ?? "N/A"}\`)
-  - \`v12_4_3_4_7_focused_unit\`: \`${focusedKh02Suite?.passedTests ?? 0}/${focusedKh02Suite?.totalTests ?? 0}\` passed (PID \`${focusedKh02Suite?.pid ?? "N/A"}\`)
-  - **Total Unique Tests Executed in Wave A**: \`${truthTable.uniqueTestsPassed}/${truthTable.uniqueTestsExecuted}\` passed (\`0\` failed, \`${truthTable.skippedTests}\` skipped).
-- **Physical-File Negative Control Suite**: \`${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations}\` mutations (\`MUT_01\`..\`MUT_33\`) caught and rejected.
+## 2. Full Runtime Verification at Frozen Source SHA (Deliverable B)
+- **Disk & SQLite Safety**: Free disk \`${finalFreeDiskGB} GB\` (\`>= ${MIN_FREE_DISK_GB} GB\` mandatory threshold); SQLite \`PRAGMA integrity_check = ${sqliteCheck.result}\`.
+- **Regression & Integration Truth Table**:
+  - Unique tests executed: \`${truthTable.uniqueTestsPassed}/${truthTable.uniqueTestsExecuted}\` passed (\`${truthTable.failedTests}\` failed, \`${truthTable.skippedTests}\` skipped).
+  - Integration suite status: \`${integrationReport.status}\` (\`${integrationReport.passedTests}/${integrationReport.totalTests}\` passed).
+- **Production Build, Isolated Server, Chromium E2E, 3-Way Parity & Real HTTP Read-Only Probe**:
+  - Chromium status: \`${chromResult.status}\` (\`mainDocumentHttpStatus=${chromResult.mainDocumentHttpStatus ?? "N/A"}\`, \`actualAssertionCount=${chromResult.actualAssertionCount}\`).
+  - Three-way parity (\`SQLite <-> HTTP API <-> Chromium DOM\`): \`sameRunReconciliationPassed=${parityResult.sameRunReconciliationPassed}\` (\`dbVsHttp=${parityResult.dbVsHttpVerdict}\`, \`dbVsDom=${parityResult.dbVsDomVerdict}\`, \`httpVsDom=${parityResult.httpVsDomVerdict}\`).
+  - Read-only HTTP GET non-mutation probe: \`readOnlyPassed=${readOnlyResult.readOnlyPassed}\`, \`httpRequestVerified=${readOnlyResult.httpRequestVerified}\`, \`verificationScope=${readOnlyResult.verificationScope}\`.
+- **Physical-File Negative Control Suite**: \`${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations}\` mutations (\`MUT_01\`..\`MUT_40\`) caught and rejected.
 
-## 3. Disk Headroom & Remaining Blockers
-- **Measured Free Disk**: \`${finalFreeDiskGB} GB\` (mandatory threshold: \`${MIN_FREE_DISK_GB} GB\`, shortfall: \`${Math.max(0, Math.round((MIN_FREE_DISK_GB - finalFreeDiskGB) * 100) / 100)} GB\`).
-- **Failed / Resource-Blocked Engineering Gates**: \`${failedEngGates.length > 0 ? failedEngGates.join(", ") : "NONE"}\`.
+## 3. Three-Verdict Release & Pilot Readiness Decision
+1. **\`ENGINEERING_ACCEPTANCE\`**: \`${overallEngineeringVerdict}\` — Failed engineering gates: \`${failedEngGates.length > 0 ? failedEngGates.join(", ") : "NONE"}\`.
+2. **\`KH02_BUSINESS_ACCEPTANCE\`**: \`${overallBusinessVerdict}\` — Business gates \`G07=${gates.G07.status}\`, \`G15=${gates.G15.status}\`, \`G16=${gates.G16.status}\`, \`G25=${gates.G25.status}\`, \`G26=${gates.G26.status}\` remain truthfully reported without inflation.
+3. **\`AMAZON_WALMART_PILOT_READINESS\`**: \`${amazonWalmartPilotReadiness}\` — ${
+    amazonWalmartPilotReadiness === "READY_FOR_ISOLATED_PILOT"
+      ? "All KH-02 engineering provenance, persistence, parity, read-only non-mutation, and validator gates pass on the frozen source SHA; safe to begin an isolated Amazon US Playwright MCP / Walmart US Jina Reader pilot in a separate module without weakening KH-02 business gates."
+      : "Blocked until all mandatory KH-02 engineering gates pass."
+  }
 `;
+  writeArtifact("FINAL_ACCEPTANCE_REPORT.md", finalReleaseDecisionMd);
   writeArtifact("FINAL_RELEASE_DECISION.md", finalReleaseDecisionMd);
   writeArtifact("FINAL_RELEASE_DECISION_V12_4_3_4_6.md", finalReleaseDecisionMd);
 
-  const remainingBlockersMd = `# KH-02 V12.4.3.4.7 — Remaining External & Environmental Blockers
+  const remainingBlockersMd = `# KH-02 V12.4.3.4.8 — Remaining External & Business Data Blockers
 
-## 1. Host Disk Headroom Blocker (Engineering Waves B, C, D, E)
-- **Measured Free Disk After Safe Cleanup**: \`${finalFreeDiskGB} GB\` (\`minFreeDiskGB = ${MIN_FREE_DISK_GB} GB\`, shortfall \`${Math.max(0, Math.round((MIN_FREE_DISK_GB - finalFreeDiskGB) * 100) / 100)} GB\`).
-- **Blocked Waves**:
-  - **Wave B**: Full KH-02 unit suite (400+ tests) & 5 integration suites (\`G21\`).
-  - **Wave C**: Fresh \`next build\` production build (\`NEXT_BUILD_EXECUTION_PROOF.json\`).
-  - **Wave D**: Isolated Next.js server, Playwright Chromium E2E (\`G18\`), three-way SQLite/HTTP/DOM parity (\`G19\`), and real HTTP GET read-only probe (\`G20\`).
-  - **Wave E**: Fresh current-run live Meta & Google research execution (\`G06\` evaluated in \`REPLAY_CACHED_OR_PREVIOUS_RUN\` mode).
+## 1. Host Disk & Engineering Wave Status
+- **Measured Free Disk**: \`${finalFreeDiskGB} GB\` (\`minFreeDiskGB = ${MIN_FREE_DISK_GB} GB\`).
+- **Failed Engineering Gates**: \`${failedEngGates.length > 0 ? failedEngGates.join(", ") : "NONE (0 failed engineering gates)"}\`.
 
-## 2. Longitudinal 60+ Day Product Demand Evidence (Business Gates G07, G15, G25, G26)
-- **BigQuery Public Trends (\`G07\`)**: Local Application Default Credentials (\`GOOGLE_APPLICATION_CREDENTIALS\`) are not configured; zero-spend fail-closed guard is active.
-- **Current Shortlist & Historical Replay Demand (\`G15\`, \`G25\`, \`G26\`)**: \`0/3\` shortlisted Pet Gadgets products have \`>= 60\` covered days of product-specific longitudinal demand observations in SQLite or \`data/google_trends_csv/\`.
+## 2. Longitudinal 60+ Day Product Demand & Third Verified Live Merchant (Business Gates G07, G15, G16, G25, G26)
+- **BigQuery Public Trends (\`G07\`)**: Local Application Default Credentials (\`GOOGLE_APPLICATION_CREDENTIALS\`) are not configured; zero-spend fail-closed guard is active (\`status: BLOCKED\`).
+- **Current Shortlist & Historical Replay Demand (\`G15\`, \`G25\`, \`G26\`)**: \`${g15Proof.g15QualifyingCount}/3\` shortlisted Pet Gadgets products have \`>= 60\` covered days of product-specific longitudinal demand observations in SQLite or \`data/google_trends_csv/\` (\`status: INSUFFICIENT_EVIDENCE\`).
+- **Current-Run Live Verified Top-3 Shortlist (\`G16\`)**: \`${g16Proof.verifiedLiveCount}/3\` candidates satisfy all strict G16 predicates (CheckoutChamp funnel \`cc.uprootclean.com\` is retained strictly as \`PROBABLE\` under anti-gaming identity rules; \`status: ${g16Proof.g16Verdict}\`).
 `;
   writeArtifact("REMAINING_BLOCKERS.md", remainingBlockersMd);
 

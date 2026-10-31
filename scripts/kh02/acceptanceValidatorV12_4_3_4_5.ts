@@ -189,9 +189,16 @@ export function validateAcceptanceArtifacts(
     });
   };
 
-  // 1. Check all 32 mandatory files exist and are non-empty
+  // 1. Check all mandatory files exist and are non-empty
   const missingFiles: string[] = [];
-  for (const filename of MANDATORY_ACCEPTANCE_ARTIFACTS) {
+  const requiredArtifactList: string[] = [...MANDATORY_ACCEPTANCE_ARTIFACTS];
+  if (acceptanceDir.includes("12.4.3.4.8")) {
+    requiredArtifactList.push(
+      "SOURCE_SHA_PROVENANCE.json",
+      "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json"
+    );
+  }
+  for (const filename of requiredArtifactList) {
     if (options?.skipSelfMutationReportCheck && filename === "NEGATIVE_CONTROL_MUTATION_SUITE.json") {
       continue;
     }
@@ -207,26 +214,34 @@ export function validateAcceptanceArtifacts(
   }
   addCheck(
     "CHK_01_MANDATORY_FILES_PRESENT",
-    "All 32 mandatory acceptance artifacts exist and are non-empty",
+    "All mandatory acceptance artifacts exist and are non-empty",
     missingFiles.length === 0,
     missingFiles.length > 0 ? `Missing or empty files: ${missingFiles.join(", ")}` : undefined
   );
 
-  // 2. Pre-flight Git and Env
+  // 2. Pre-flight Git, Env, and Source SHA Provenance
   const preFlight = safeReadJson(path.join(acceptanceDir, "PRE_FLIGHT_GIT_AND_ENV.json"));
+  const shaProvenance = safeReadJson(path.join(acceptanceDir, "SOURCE_SHA_PROVENANCE.json"));
+  const shaProvenanceOk =
+    !shaProvenance ||
+    (typeof shaProvenance.testedSourceSha === "string" &&
+      shaProvenance.testedSourceSha.length >= 7 &&
+      shaProvenance.testedSourceSha === preFlight?.headSha &&
+      shaProvenance.branch === "feature/kh02-v12.1.3-runtime-truth-closure");
   const preFlightOk = Boolean(
     preFlight &&
       preFlight.branch === "feature/kh02-v12.1.3-runtime-truth-closure" &&
       typeof preFlight.headSha === "string" &&
       preFlight.headSha.length >= 7 &&
       typeof preFlight.freeDiskGB === "number" &&
-      preFlight.freeDiskGB >= 15
+      preFlight.freeDiskGB >= 15 &&
+      shaProvenanceOk
   );
   addCheck(
     "CHK_02_PREFLIGHT_VALID",
-    "PRE_FLIGHT_GIT_AND_ENV has valid branch, headSha, and freeDiskGB >= 15",
+    "PRE_FLIGHT_GIT_AND_ENV and SOURCE_SHA_PROVENANCE have matching branch, testedSourceSha === headSha, and freeDiskGB >= 15",
     preFlightOk,
-    !preFlightOk ? "Invalid branch, missing headSha, or freeDiskGB < 15" : undefined
+    !preFlightOk ? "Invalid branch, SOURCE_SHA_PROVENANCE mismatch, missing headSha, or freeDiskGB < 15" : undefined
   );
 
   // 2b. Defect reproduction and closure proof
@@ -300,6 +315,8 @@ export function validateAcceptanceArtifacts(
       typeof truthTable.uniqueTestsPassed === "number" &&
       truthTable.uniqueTestsPassed === truthTable.uniqueTestsExecuted &&
       truthTable.failedTests === 0 &&
+      (truthTable.failedExecutionsCount === undefined || truthTable.failedExecutionsCount === 0) &&
+      (truthTable.zeroFailedTests === undefined || truthTable.zeroFailedTests === true) &&
       typeof truthTable.skippedTests === "number" &&
       truthTable.uniqueTestsExecuted ===
         truthTable.uniqueTestsPassed + truthTable.failedTests + truthTable.skippedTests &&
@@ -422,6 +439,11 @@ export function validateAcceptanceArtifacts(
       chromiumExec.browserLaunched === true &&
       chromiumExec.serverReady === true &&
       chromiumExec.pageNavigationSucceeded === true &&
+      chromiumExec.pageLoaded !== false &&
+      (chromiumExec.mainDocumentHttpStatus === undefined ||
+        (typeof chromiumExec.mainDocumentHttpStatus === "number" &&
+          chromiumExec.mainDocumentHttpStatus >= 200 &&
+          chromiumExec.mainDocumentHttpStatus < 400)) &&
       typeof chromiumExec.actualAssertionCount === "number" &&
       chromiumExec.actualAssertionCount >= 4 &&
       Array.isArray(chromiumExec.assertionFailures) &&
@@ -545,24 +567,100 @@ export function validateAcceptanceArtifacts(
   const gAssoc = safeReadJson(path.join(acceptanceDir, "GOOGLE_CREATIVE_ASSOCIATION_LEDGER.json"));
   const gAssocProof = safeReadJson(path.join(acceptanceDir, "GOOGLE_PRODUCT_ASSOCIATION_PROOF.json"));
   const g06Eval = safeReadJson(path.join(acceptanceDir, "G06_GATE_EVALUATION.json"));
+  const gLineageMatrix = safeReadJson(path.join(acceptanceDir, "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json"));
 
   const rawCreativesList: any[] = Array.isArray(gRaw?.creatives) ? gRaw.creatives : [];
   const hasSyntheticGoogleIds = rawCreativesList.some((c: any) => {
     const cid = String(c?.creativeId ?? c?.creative_id ?? c?.id ?? "").trim();
-    const reqId = String(c?.providerRequestId ?? c?.mcpInvocationRef ?? "").trim();
+    const provReqId =
+      typeof c?.providerRequestId === "string" ? c.providerRequestId.trim() : null;
+    const mcpInvRef =
+      typeof c?.mcpInvocationRef === "string" ? c.mcpInvocationRef.trim() : null;
+    const reqId = String(provReqId ?? mcpInvRef ?? "").trim();
     const runId = String(gRaw?.researchRunId ?? "").trim();
+    const declaredOrigin = c?.providerRequestIdOrigin;
     return (
-      /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid) ||
+      /^cr_\d+$/.test(cid) ||
+      /^google_cr_.*_\d+$/i.test(cid) ||
       /^(?:mcp_|synthetic_|fake_)/i.test(reqId) ||
+      (provReqId !== null &&
+        provReqId !== "" &&
+        (/^(?:google_mcp_|local_)/i.test(provReqId) ||
+          (mcpInvRef !== null && provReqId === mcpInvRef))) ||
+      (declaredOrigin === "UPSTREAM" && (!provReqId || provReqId === "")) ||
+      (declaredOrigin === "ABSENT" && provReqId !== null && provReqId !== "") ||
       (runId && reqId === `mcp_${runId}`)
     );
   });
+
+  // Validate GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json when present
+  let lineageMatrixValid = true;
+  if (gLineageMatrix && typeof gLineageMatrix === "object") {
+    const matrixEntries: any[] = Array.isArray(gLineageMatrix.entries)
+      ? gLineageMatrix.entries
+      : Array.isArray(gLineageMatrix.creativeLineageMatrix)
+      ? gLineageMatrix.creativeLineageMatrix
+      : [];
+    const invLedger: any[] = Array.isArray(gLineageMatrix.invocationLedger)
+      ? gLineageMatrix.invocationLedger
+      : [];
+    const targetRunId = String(gLineageMatrix.researchRunId || gRaw?.researchRunId || "").trim();
+
+    for (const entry of matrixEntries) {
+      const eOrigin = entry?.providerRequestIdOrigin;
+      const eReqId = entry?.providerRequestId ?? null;
+      const eMcpRef = entry?.mcpInvocationRef ?? null;
+      const eMethod = entry?.lineageMethod;
+
+      if (eOrigin === "UPSTREAM" && (!eReqId || /^(?:google_mcp_|mcp_|local_|synthetic_|fake_)/i.test(String(eReqId)))) {
+        lineageMatrixValid = false;
+      }
+      if (eOrigin === "ABSENT" && eReqId !== null) {
+        lineageMatrixValid = false;
+      }
+      if (eReqId && eMcpRef && eReqId === eMcpRef) {
+        lineageMatrixValid = false;
+      }
+      if (eMethod === "VERIFIED_LOCAL_INVOCATION_ONLY") {
+        if (eReqId !== null || eOrigin !== "ABSENT" || !eMcpRef || !entry?.responseEvidenceHash) {
+          lineageMatrixValid = false;
+        }
+        if (invLedger.length > 0) {
+          const matchedInv = invLedger.find(
+            (inv: any) =>
+              (inv?.mcpInvocationRef === eMcpRef || inv?.invocationId === eMcpRef) &&
+              inv?.status === "SUCCEEDED"
+          );
+          const returnedIds: string[] = Array.isArray(matchedInv?.returnedCreativeIds)
+            ? matchedInv.returnedCreativeIds
+            : Array.isArray(matchedInv?.actualReturnedCreativeIds)
+            ? matchedInv.actualReturnedCreativeIds
+            : [];
+          if (
+            !matchedInv ||
+            matchedInv.researchRunId !== targetRunId ||
+            matchedInv.responseEvidenceHash !== entry.responseEvidenceHash ||
+            !returnedIds.includes(entry.creativeId)
+          ) {
+            lineageMatrixValid = false;
+          }
+        }
+      }
+    }
+    if (
+      g06Eval?.overallG06Verdict === "PASS" &&
+      typeof gLineageMatrix.rejectedUnverifiedLineageCount === "number" &&
+      gLineageMatrix.rejectedUnverifiedLineageCount > 0
+    ) {
+      lineageMatrixValid = false;
+    }
+  }
 
   const explicitLiveCreatives = rawCreativesList.filter((c: any) => {
     if (!c || c.isCached !== false) return false;
     const cid = String(c.creativeId ?? c.creative_id ?? c.id ?? "").trim();
     const reqId = String(c.providerRequestId ?? c.mcpInvocationRef ?? "").trim();
-    if (!cid || /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid)) return false;
+    if (!cid || /^cr_\d+$/.test(cid) || /^google_cr_.*_\d+$/i.test(cid)) return false;
     if (!reqId || /^(?:mcp_|synthetic_|fake_)/i.test(reqId)) return false;
     return (
       (c.sourceMode === "LIVE_PROVIDER" ||
@@ -608,6 +706,7 @@ export function validateAcceptanceArtifacts(
       normStageExecutedValid &&
       replayModeHonest &&
       !hasSyntheticGoogleIds &&
+      lineageMatrixValid &&
       typeof gRaw.rawCount === "number" &&
       gRaw.rawCount === rawCreativesList.length &&
       gRaw.rawCount === (gNorm.normalizedDistinctCount || 0) + (gNorm.rejectedBeforeNormalizationCount || 0) &&
@@ -1418,6 +1517,170 @@ export function runNegativeControlSuite(baselineAcceptanceDir: string): Negative
           data.gates.G03.executionId = null;
         }
         fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    // ── V12.4.3.4.8 Phase 3.2: 8 Additional Provenance & Runtime Truth Mutations (MUT_34 .. MUT_41) ──
+    {
+      mutationId: "MUT_34_N01_CORRUPT_PROVIDER_REQUEST_ID_ORIGIN",
+      description: "N01: GOOGLE_RAW_CREATIVE_MANIFEST creative has providerRequestIdOrigin='UPSTREAM' with providerRequestId=null",
+      targetArtifact: "GOOGLE_RAW_CREATIVE_MANIFEST.json",
+      injectedDefect: "providerRequestIdOrigin='UPSTREAM' with providerRequestId=null",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "GOOGLE_RAW_CREATIVE_MANIFEST.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        if (Array.isArray(data.creatives) && data.creatives[0]) {
+          data.creatives[0].providerRequestId = null;
+          data.creatives[0].providerRequestIdOrigin = "UPSTREAM";
+          data.creatives[0].mcpInvocationRef = "google_mcp_inv_1";
+        }
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_35_N02_LOCAL_INVOCATION_ID_AS_UPSTREAM_REQUEST_ID",
+      description: "N02: GOOGLE_RAW_CREATIVE_MANIFEST sets providerRequestId equal to local mcpInvocationRef ('google_mcp_...')",
+      targetArtifact: "GOOGLE_RAW_CREATIVE_MANIFEST.json",
+      injectedDefect: "providerRequestId='google_mcp_run_123' === mcpInvocationRef",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "GOOGLE_RAW_CREATIVE_MANIFEST.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        if (Array.isArray(data.creatives) && data.creatives[0]) {
+          data.creatives[0].providerRequestId = "google_mcp_run_123_uahpet_1";
+          data.creatives[0].mcpInvocationRef = "google_mcp_run_123_uahpet_1";
+          data.creatives[0].providerRequestIdOrigin = "UPSTREAM";
+        }
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_36_N03_LOCAL_INVOCATION_WITHOUT_MATCHING_COMPLETED_CALL",
+      description: "N03: GOOGLE_REQUEST_ID_LINEAGE_MATRIX has VERIFIED_LOCAL_INVOCATION_ONLY entry without matching SUCCEEDED call in invocationLedger",
+      targetArtifact: "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json",
+      injectedDefect: "invocationLedger empty while entry claims VERIFIED_LOCAL_INVOCATION_ONLY",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json");
+        fs.writeFileSync(
+          p,
+          JSON.stringify(
+            {
+              researchRunId: "run_1",
+              rejectedUnverifiedLineageCount: 0,
+              invocationLedger: [
+                {
+                  mcpInvocationRef: "google_mcp_inv_other",
+                  status: "FAILED",
+                  researchRunId: "run_1",
+                  responseEvidenceHash: "hash_1",
+                  returnedCreativeIds: [],
+                },
+              ],
+              entries: [
+                {
+                  creativeId: "CR-1",
+                  providerRequestId: null,
+                  providerRequestIdOrigin: "ABSENT",
+                  mcpInvocationRef: "google_mcp_inv_missing",
+                  responseEvidenceHash: "hash_1",
+                  lineageMethod: "VERIFIED_LOCAL_INVOCATION_ONLY",
+                  verified: true,
+                },
+              ],
+            },
+            null,
+            2
+          ),
+          "utf8"
+        );
+      },
+    },
+    {
+      mutationId: "MUT_37_N04_N05_N06_LINEAGE_CREATIVE_HASH_OR_RUN_MISMATCH",
+      description: "N04/N05/N06: GOOGLE_REQUEST_ID_LINEAGE_MATRIX has creative missing from returnedCreativeIds or missing responseEvidenceHash",
+      targetArtifact: "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json",
+      injectedDefect: "creativeId not in returnedCreativeIds and missing responseEvidenceHash",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json");
+        fs.writeFileSync(
+          p,
+          JSON.stringify(
+            {
+              researchRunId: "run_1",
+              rejectedUnverifiedLineageCount: 0,
+              invocationLedger: [
+                {
+                  mcpInvocationRef: "google_mcp_inv_1",
+                  status: "SUCCEEDED",
+                  researchRunId: "run_wrong",
+                  responseEvidenceHash: "hash_1",
+                  returnedCreativeIds: ["CR-OTHER"],
+                },
+              ],
+              entries: [
+                {
+                  creativeId: "CR-1",
+                  providerRequestId: null,
+                  providerRequestIdOrigin: "ABSENT",
+                  mcpInvocationRef: "google_mcp_inv_1",
+                  responseEvidenceHash: null,
+                  lineageMethod: "VERIFIED_LOCAL_INVOCATION_ONLY",
+                  verified: true,
+                },
+              ],
+            },
+            null,
+            2
+          ),
+          "utf8"
+        );
+      },
+    },
+    {
+      mutationId: "MUT_38_N10_CHROMIUM_MAIN_DOC_HTTP_500_CLAIMS_PASS",
+      description: "N10: CHROMIUM_EXECUTION_REPORT has mainDocumentHttpStatus=500 and pageLoaded=false while status='PASS'",
+      targetArtifact: "CHROMIUM_EXECUTION_REPORT.json",
+      injectedDefect: "mainDocumentHttpStatus=500 & pageLoaded=false with status='PASS'",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "CHROMIUM_EXECUTION_REPORT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.mainDocumentHttpStatus = 500;
+        data.pageLoaded = false;
+        data.status = "PASS";
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_39_N13_FAILED_DUPLICATE_TEST_HIDDEN_BY_RETRY",
+      description: "N13: TEST_EXECUTION_TRUTH_TABLE has failedExecutionsCount=2 while failedTests=0 and zeroFailedTests=true",
+      targetArtifact: "TEST_EXECUTION_TRUTH_TABLE.json",
+      injectedDefect: "failedExecutionsCount=2 masked by retry",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "TEST_EXECUTION_TRUTH_TABLE.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.failedExecutionsCount = 2;
+        data.failedTests = 0;
+        data.zeroFailedTests = true;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_40_N15_SOURCE_SHA_PROVENANCE_MISMATCH",
+      description: "N15: SOURCE_SHA_PROVENANCE has testedSourceSha!='headSha' in PRE_FLIGHT_GIT_AND_ENV",
+      targetArtifact: "SOURCE_SHA_PROVENANCE.json",
+      injectedDefect: "testedSourceSha='deadbeef...' != preFlight.headSha",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "SOURCE_SHA_PROVENANCE.json");
+        fs.writeFileSync(
+          p,
+          JSON.stringify(
+            {
+              branch: "feature/kh02-v12.1.3-runtime-truth-closure",
+              testedSourceSha: "deadbeef00000000000000000000000000000000",
+            },
+            null,
+            2
+          ),
+          "utf8"
+        );
       },
     },
   ];

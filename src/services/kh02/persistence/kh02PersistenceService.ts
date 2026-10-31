@@ -503,11 +503,16 @@ export async function persistKH02RankingSnapshot(
   workspaceId: string,
   result: EvergreenLeaderboardResult
 ): Promise<void> {
-  // Synchronize researchRunId across snapshot, queryExecutions, and candidate source observations when persisted under a DB run ID
+  const previousInMemoryRunId = result.researchRunId || null;
+  // Synchronize researchRunId across snapshot, queryExecutions, and current-run live observations when persisted under a DB run ID
   result.researchRunId = runId;
   if (Array.isArray((result as any).queryExecutions)) {
     for (const q of (result as any).queryExecutions) {
-      if (q && typeof q === "object") {
+      if (
+        q &&
+        typeof q === "object" &&
+        (!q.researchRunId || q.researchRunId === previousInMemoryRunId)
+      ) {
         q.researchRunId = runId;
       }
     }
@@ -526,11 +531,40 @@ export async function persistKH02RankingSnapshot(
       const cand = item?.candidate || item;
       if (!cand || !Array.isArray(cand.sourceObservations)) continue;
       for (const obs of cand.sourceObservations) {
-        if (obs && typeof obs === "object") {
+        if (
+          obs &&
+          typeof obs === "object" &&
+          obs.isCached !== true &&
+          obs.sourceMode !== "CACHE_ONLY" &&
+          (!obs.researchRunId || obs.researchRunId === previousInMemoryRunId)
+        ) {
           obs.researchRunId = runId;
         }
       }
     }
+  }
+
+  const googleExec = (result as any)?.providerTelemetry?.GOOGLE_ADS?.enrichmentExecution;
+  if (googleExec && typeof googleExec === "object") {
+    const syncRunIdOnArray = (arr: any[] | undefined) => {
+      if (!Array.isArray(arr)) return;
+      for (const rec of arr) {
+        if (
+          rec &&
+          typeof rec === "object" &&
+          rec.isCached !== true &&
+          rec.sourceMode !== "CACHE_ONLY" &&
+          (!rec.researchRunId || rec.researchRunId === previousInMemoryRunId)
+        ) {
+          rec.researchRunId = runId;
+        }
+      }
+    };
+    syncRunIdOnArray(googleExec.rawCreatives);
+    syncRunIdOnArray(googleExec.normalizedRecords);
+    syncRunIdOnArray(googleExec.rejectedRecords);
+    syncRunIdOnArray(googleExec.providerInvocationRecords);
+    syncRunIdOnArray(googleExec.creativeAssociationLedger);
   }
 
   // V12.4.3.3 Section 9: Idempotently materialize discovered candidates into ResearchProduct

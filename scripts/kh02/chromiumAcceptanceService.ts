@@ -78,6 +78,7 @@ export interface RealHttpReadOnlyProbeOptions {
   runId: string;
   candidateId: string;
   productId?: string;
+  workspaceId?: string;
   signal?: AbortSignal;
   fetchImpl?: typeof fetch;
 }
@@ -149,6 +150,8 @@ export interface ChromiumExecutionResult {
   browserLaunched: boolean;
   serverReady: boolean;
   pageNavigationSucceeded: boolean;
+  pageLoaded?: boolean;
+  mainDocumentHttpStatus?: number | null;
   actualAssertionCount: number;
   assertionFailures: string[];
   routesVerified: string[];
@@ -360,6 +363,14 @@ export async function loadPersistedRunSnapshotFromSqlite(
       if (!cid) return;
       if (typeof item?.score?.totalScore === "number") {
         scoreByCandidateId.set(cid, Math.round(item.score.totalScore));
+      } else if (typeof item?.score?.opportunityScore === "number") {
+        scoreByCandidateId.set(cid, Math.round(item.score.opportunityScore));
+      } else if (typeof cand?.score?.opportunityScore === "number") {
+        scoreByCandidateId.set(cid, Math.round(cand.score.opportunityScore));
+      } else if (typeof cand?.opportunityScore === "number") {
+        scoreByCandidateId.set(cid, Math.round(cand.opportunityScore));
+      } else if (typeof cand?.evergreenScore === "number") {
+        scoreByCandidateId.set(cid, Math.round(cand.evergreenScore));
       } else if (typeof cand?.researchScore === "number") {
         scoreByCandidateId.set(cid, Math.round(cand.researchScore));
       }
@@ -415,7 +426,11 @@ export async function loadPersistedRunSnapshotFromSqlite(
     const rank = idx + 1;
     const score =
       scoreByCandidateId.get(c.candidateId) ??
-      (typeof c.relevanceScore === "number" ? Math.round(c.relevanceScore) : null);
+      (typeof parsed?.rankedScores?.[c.candidateId] === "number"
+        ? Math.round(parsed.rankedScores[c.candidateId])
+        : typeof c.relevanceScore === "number"
+        ? Math.round(c.relevanceScore)
+        : null);
 
     persistedCandidates.push({
       candidateId: String(c.candidateId),
@@ -717,12 +732,14 @@ export async function startIsolatedAcceptanceServer(
 
   const isWin = process.platform === "win32";
   const cmd = isWin ? "npx.cmd" : "npx";
-  const args = ["next", "start", "-p", String(effectivePort)];
+  const args = ["next", "start", "-H", "127.0.0.1", "-p", String(effectivePort)];
 
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
     env: {
       ...process.env,
+      HOST: "127.0.0.1",
+      HOSTNAME: "127.0.0.1",
       PORT: String(effectivePort),
       NODE_ENV: "production",
     },
@@ -869,6 +886,17 @@ export async function runLiveChromiumAcceptance(
     }
     browserLaunched = true;
     context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    if (options.workspaceId && /^https?:\/\//i.test(baseUrl)) {
+      await context
+        .addCookies([
+          {
+            name: "swai_workspace_id",
+            value: options.workspaceId,
+            url: baseUrl,
+          },
+        ])
+        .catch(() => {});
+    }
     const page: Page = await context.newPage();
 
     if (signal?.aborted) {
@@ -877,12 +905,17 @@ export async function runLiveChromiumAcceptance(
 
     const targetUrl = `${baseUrl}/products?runId=${encodeURIComponent(
       researchRunId
-    )}&topic=Pet+Gadgets&tab=RECOMMENDED`;
+    )}&topic=Pet+Gadgets&tab=RECOMMENDED${
+      options.workspaceId
+        ? `&workspaceId=${encodeURIComponent(options.workspaceId)}`
+        : ""
+    }`;
 
     const navResponse = await page.goto(targetUrl, {
       waitUntil: "domcontentloaded",
       timeout: 25000,
     });
+    const mainDocumentHttpStatus = navResponse ? navResponse.status() : null;
 
     if (!navResponse || navResponse.status() >= 400) {
       assertionFailures.push(
@@ -977,7 +1010,11 @@ export async function runLiveChromiumAcceptance(
         if (!cid) continue;
         const apiUrl = `${baseUrl}/api/v1/research/products/${encodeURIComponent(
           pid
-        )}/overview?runId=${encodeURIComponent(researchRunId)}&candidateId=${encodeURIComponent(cid)}`;
+        )}/overview?runId=${encodeURIComponent(researchRunId)}&candidateId=${encodeURIComponent(cid)}${
+          options.workspaceId
+            ? `&workspaceId=${encodeURIComponent(options.workspaceId)}`
+            : ""
+        }`;
 
         const apiRes = await fetch(apiUrl);
         const apiOk = apiRes.ok;
@@ -1026,6 +1063,8 @@ export async function runLiveChromiumAcceptance(
       browserLaunched,
       serverReady: true,
       pageNavigationSucceeded,
+      pageLoaded: pageNavigationSucceeded,
+      mainDocumentHttpStatus,
       actualAssertionCount,
       assertionFailures,
       routesVerified,
@@ -1083,8 +1122,11 @@ function extractNormalizedHttpCandidate(rawPayload: any): NormalizedHttpCandidat
 
   const researchRunId =
     resCtx?.resolvedResearchRunId ??
+    resCtx?.resolvedRunId ??
     ctx?.researchRunId ??
+    ctx?.runId ??
     data.researchRunId ??
+    data.runId ??
     null;
 
   const candidateId =
@@ -1118,6 +1160,7 @@ function extractNormalizedHttpCandidate(rawPayload: any): NormalizedHttpCandidat
 
   const rawScore =
     ctx?.evergreenScore ??
+    ctx?.opportunityScore ??
     ctx?.researchScore ??
     ctx?.score ??
     data.score ??
@@ -1892,6 +1935,7 @@ export async function probeRealReadOnlyOverviewApi(
     runId,
     candidateId,
     productId,
+    workspaceId,
     signal,
     fetchImpl = fetch,
   } = options;
@@ -1902,7 +1946,7 @@ export async function probeRealReadOnlyOverviewApi(
     effectiveProductId
   )}/overview?runId=${encodeURIComponent(runId)}&candidateId=${encodeURIComponent(
     candidateId
-  )}`;
+  )}${workspaceId ? `&workspaceId=${encodeURIComponent(workspaceId)}` : ""}`;
 
   if (!/^https?:\/\//i.test(cleanBase) || !runId || !candidateId) {
     return {

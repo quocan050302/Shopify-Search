@@ -12,17 +12,28 @@
  *    (product-specific SKU match requiring destination product URL/handle or SKU/title + domain proof, never probable or brand-only).
  */
 
+import {
+  verifyGoogleInvocationLineage,
+  isFakeOrLocalGoogleRequestId,
+  type GoogleMcpProviderInvocationRecord,
+  type GoogleLineageMethod,
+  type GoogleRequestIdOrigin,
+} from "../../src/services/kh02/providers/googleTransparencyResearchAdapter";
+
 export interface GoogleMcpGateInput {
   researchRunId: string;
   acceptanceRunId?: string;
   originalResearchRunId?: string;
   runExecutionMode?: "FRESH_LIVE_CURRENT_RUN" | "REPLAY_CACHED_OR_PREVIOUS_RUN";
   evaluatedCandidateIds?: string[];
+  invocationLedger?: Array<Partial<GoogleMcpProviderInvocationRecord> & Record<string, any>>;
   telemetry: any;
   rawManifest: {
-    rawCount: number;
+    rawCount?: number;
+    researchRunId?: string;
     creatives: any[];
     upstreamTransportStatus?: string;
+    [key: string]: any;
   };
   normalizationLedger: {
     normalizationStageExecuted?: boolean;
@@ -59,7 +70,19 @@ export interface SetReconciliationAudit {
   runIdMismatchCreativeIds: string[];
   unknownAssociationCreativeIds: string[];
   unknownAssociationCandidateIds: string[];
+  lineageViolations?: string[];
   setInvariantPassed: boolean;
+}
+
+export interface CreativeLineageMatrixEntry {
+  creativeId: string | null;
+  providerRequestId: string | null;
+  providerRequestIdOrigin: GoogleRequestIdOrigin;
+  mcpInvocationRef: string | null;
+  responseEvidenceHash?: string | null;
+  lineageMethod: GoogleLineageMethod;
+  verified: boolean;
+  rejectionReason: string | null;
 }
 
 export interface GoogleMcpGateEvaluationResult {
@@ -71,6 +94,11 @@ export interface GoogleMcpGateEvaluationResult {
   replayModeDetected?: boolean;
   transportStatus: "CONNECTED" | "DISCONNECTED" | "ERROR";
   liveCreativesRetrievedCount: number;
+  upstreamRequestIdVerifiedCount: number;
+  missingUpstreamRequestIdCount: number;
+  verifiedLocalInvocationOnlyCount: number;
+  rejectedUnverifiedLineageCount: number;
+  creativeLineageMatrix: CreativeLineageMatrixEntry[];
   exactProductSkuMatchesCount: number;
   probableProductMatchesCount: number;
   brandOnlyMatchesCount: number;
@@ -90,14 +118,17 @@ export interface GoogleMcpGateEvaluationResult {
 
 export function isSyntheticCreativeId(cid: string | null | undefined): boolean {
   if (!cid) return true;
-  return /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid.trim());
+  const s = cid.trim();
+  return /^cr_\d+$/.test(s) || /^(?:google_cr_.*_\d+|synthetic_.*|fake_.*)$/i.test(s);
 }
 
 export function isSyntheticProviderRequestId(reqId: string | null | undefined, runId?: string): boolean {
   if (!reqId) return true;
   const trimmed = reqId.trim();
-  if (runId && trimmed === `mcp_${runId}`) return true;
-  return /^(?:mcp_(?:run|job_|autoclosure_)|synthetic_|fake_)/i.test(trimmed);
+  if (runId && (trimmed === `mcp_${runId}` || trimmed.startsWith(`google_mcp_${runId}`))) {
+    return true;
+  }
+  return isFakeOrLocalGoogleRequestId(trimmed);
 }
 
 function cleanId(val: unknown): string | null {
@@ -122,11 +153,12 @@ function extractCreativeId(item: any): string | null {
 /**
  * Pure predicate: returns true ONLY when a Google creative has explicit live provenance,
  * `isCached === false` (never undefined or true), non-empty creative ID, current-run `researchRunId` match,
- * and non-empty `providerRequestId` / `mcpInvocationRef`.
+ * and verified upstream `providerRequestId` OR verified `mcpInvocationRef` (with `providerRequestId === null`).
  */
 export function isExplicitlyLiveGoogleCreative(
   creative: any,
-  currentResearchRunId: string
+  currentResearchRunId: string,
+  invocationLedger?: GoogleMcpProviderInvocationRecord[]
 ): boolean {
   if (!creative || typeof creative !== "object") return false;
   const targetRunId = cleanId(currentResearchRunId);
@@ -159,9 +191,38 @@ export function isExplicitlyLiveGoogleCreative(
     return false;
   }
 
-  const reqRef = cleanId(creative.providerRequestId) || cleanId(creative.mcpInvocationRef);
-  if (!reqRef || isSyntheticProviderRequestId(reqRef, targetRunId)) {
+  const provReqId = cleanId(creative.providerRequestId);
+  const mcpInvRef = cleanId(creative.mcpInvocationRef);
+  const declaredOrigin = cleanId(creative.providerRequestIdOrigin);
+
+  // Corrupt origin declarations fail closed immediately
+  if (declaredOrigin === "UPSTREAM" && !provReqId) {
     return false;
+  }
+  if (declaredOrigin === "ABSENT" && provReqId !== null) {
+    return false;
+  }
+
+  // If providerRequestId is present, it must NOT be a local/synthetic ID and must NOT equal mcpInvocationRef
+  if (provReqId) {
+    if (isSyntheticProviderRequestId(provReqId, targetRunId)) {
+      return false;
+    }
+    if (mcpInvRef && provReqId === mcpInvRef) {
+      return false;
+    }
+  } else {
+    // If providerRequestId is null, mcpInvocationRef must be present and non-synthetic
+    if (!mcpInvRef || /^(?:mcp_(?:run|job_|autoclosure_)|synthetic_|fake_)/i.test(mcpInvRef)) {
+      return false;
+    }
+  }
+
+  if (Array.isArray(invocationLedger)) {
+    const lineageRes = verifyGoogleInvocationLineage(creative, invocationLedger, targetRunId);
+    if (!lineageRes.verified) {
+      return false;
+    }
   }
 
   return true;
@@ -235,15 +296,130 @@ export function evaluateGoogleMcpGates(
   const replayModeDetected =
     input.runExecutionMode === "REPLAY_CACHED_OR_PREVIOUS_RUN" ||
     Boolean(
-      input.acceptanceRunId &&
+      input.runExecutionMode !== "FRESH_LIVE_CURRENT_RUN" &&
+        input.acceptanceRunId &&
         input.originalResearchRunId &&
         cleanId(input.acceptanceRunId) !== cleanId(input.originalResearchRunId)
     );
 
   const rawCreatives = Array.isArray(rawManifest?.creatives) ? rawManifest.creatives : [];
+  const invocationLedger: GoogleMcpProviderInvocationRecord[] | undefined =
+    Array.isArray(input.invocationLedger) && input.invocationLedger.length > 0
+      ? input.invocationLedger
+      : Array.isArray(telemetry?.enrichmentExecution?.providerInvocationRecords) &&
+        telemetry.enrichmentExecution.providerInvocationRecords.length > 0
+      ? telemetry.enrichmentExecution.providerInvocationRecords
+      : undefined;
+
+  let upstreamRequestIdVerifiedCount = 0;
+  let missingUpstreamRequestIdCount = 0;
+  let verifiedLocalInvocationOnlyCount = 0;
+  let rejectedUnverifiedLineageCount = 0;
+  const creativeLineageMatrix: CreativeLineageMatrixEntry[] = [];
+  const lineageViolations: string[] = [];
+
+  for (const c of rawCreatives) {
+    const cid = extractCreativeId(c);
+    const provReqId = cleanId(c?.providerRequestId);
+    const mcpInvRef = cleanId(c?.mcpInvocationRef);
+    const declaredOrigin = cleanId(c?.providerRequestIdOrigin);
+    const effectiveOrigin: GoogleRequestIdOrigin =
+      declaredOrigin === "UPSTREAM" || declaredOrigin === "ABSENT"
+        ? declaredOrigin
+        : provReqId
+        ? "UPSTREAM"
+        : "ABSENT";
+
+    if (!provReqId) {
+      missingUpstreamRequestIdCount++;
+    }
+
+    // Check explicit provenance corruption on creatives claiming current-run live status
+    const claimsCurrentLive =
+      c?.isCached === false &&
+      (cleanId(c?.sourceMode) === "LIVE_PROVIDER" ||
+        cleanId(c?.provenance) === "LIVE_PROVIDER" ||
+        cleanId(c?.provenance) === "REAL_UPSTREAM") &&
+      cleanId(c?.researchRunId) === cleanRunId;
+
+    if (declaredOrigin === "UPSTREAM" && !provReqId) {
+      lineageViolations.push(`${cid || "unknown"}:corrupt_origin_upstream_with_null_id`);
+    }
+    if (declaredOrigin === "ABSENT" && provReqId !== null) {
+      lineageViolations.push(`${cid || "unknown"}:corrupt_origin_absent_with_id`);
+    }
+    if (provReqId && mcpInvRef && provReqId === mcpInvRef) {
+      lineageViolations.push(`${cid || "unknown"}:local_invocation_copied_to_provider_request_id`);
+    }
+    if (provReqId && isSyntheticProviderRequestId(provReqId, cleanRunId)) {
+      lineageViolations.push(`${cid || "unknown"}:synthetic_or_local_provider_request_id`);
+    }
+
+    if (invocationLedger && !replayModeDetected) {
+      const lRes = verifyGoogleInvocationLineage(c, invocationLedger, cleanRunId);
+      creativeLineageMatrix.push({
+        creativeId: cid,
+        providerRequestId: provReqId,
+        providerRequestIdOrigin: effectiveOrigin,
+        mcpInvocationRef: mcpInvRef,
+        responseEvidenceHash: cleanId(c?.responseEvidenceHash) || null,
+        lineageMethod: lRes.lineageMethod,
+        verified: lRes.verified,
+        rejectionReason: lRes.rejectionReason,
+      });
+      if (lRes.verified) {
+        if (lRes.lineageMethod === "UPSTREAM_PROVIDER_REQUEST_ID") {
+          upstreamRequestIdVerifiedCount++;
+        } else if (lRes.lineageMethod === "VERIFIED_LOCAL_INVOCATION_ONLY") {
+          verifiedLocalInvocationOnlyCount++;
+        }
+      } else {
+        rejectedUnverifiedLineageCount++;
+        if (claimsCurrentLive) {
+          lineageViolations.push(
+            `${cid || "unknown"}:${lRes.rejectionReason || "unverified_lineage"}`
+          );
+        }
+      }
+    } else {
+      const isLive =
+        !replayModeDetected && isExplicitlyLiveGoogleCreative(c, cleanRunId, invocationLedger);
+      const method: GoogleLineageMethod = !isLive
+        ? "UNVERIFIED_REJECTED"
+        : provReqId
+        ? "UPSTREAM_PROVIDER_REQUEST_ID"
+        : "VERIFIED_LOCAL_INVOCATION_ONLY";
+      if (isLive) {
+        if (method === "UPSTREAM_PROVIDER_REQUEST_ID") {
+          upstreamRequestIdVerifiedCount++;
+        } else {
+          verifiedLocalInvocationOnlyCount++;
+        }
+      } else {
+        rejectedUnverifiedLineageCount++;
+      }
+      creativeLineageMatrix.push({
+        creativeId: cid,
+        providerRequestId: provReqId,
+        providerRequestIdOrigin: effectiveOrigin,
+        mcpInvocationRef: mcpInvRef,
+        responseEvidenceHash: cleanId(c?.responseEvidenceHash) || null,
+        lineageMethod: method,
+        verified: isLive,
+        rejectionReason: isLive
+          ? null
+          : replayModeDetected
+          ? "REPLAY_MODE"
+          : "FAILED_EXPLICIT_LIVE_PREDICATE",
+      });
+    }
+  }
+
   const liveCreatives = replayModeDetected
     ? []
-    : rawCreatives.filter((c: any) => isExplicitlyLiveGoogleCreative(c, cleanRunId));
+    : rawCreatives.filter((c: any) =>
+        isExplicitlyLiveGoogleCreative(c, cleanRunId, invocationLedger)
+      );
   const liveCount = liveCreatives.length;
 
   // 3. Set-Based Creative Pipeline Reconciliation
@@ -332,6 +508,7 @@ export function evaluateGoogleMcpGates(
     unknownRejectedCreativeIds.length === 0 &&
     unaccountedRawCreativeIds.length === 0 &&
     runIdMismatchCreativeIds.length === 0 &&
+    lineageViolations.length === 0 &&
     rawCreatives.length === normIdSet.size + adapterRejIdSet.size + missingIdRejectionsCount;
 
   // 4. Association Ledger Integrity & Exact vs Probable/Brand Classification
@@ -476,6 +653,11 @@ export function evaluateGoogleMcpGates(
     replayModeDetected,
     transportStatus: transportOk ? "CONNECTED" : "DISCONNECTED",
     liveCreativesRetrievedCount: liveCount,
+    upstreamRequestIdVerifiedCount,
+    missingUpstreamRequestIdCount,
+    verifiedLocalInvocationOnlyCount,
+    rejectedUnverifiedLineageCount,
+    creativeLineageMatrix,
     exactProductSkuMatchesCount: exactCount,
     probableProductMatchesCount: probableCount,
     brandOnlyMatchesCount: brandCount,
@@ -491,6 +673,7 @@ export function evaluateGoogleMcpGates(
       runIdMismatchCreativeIds,
       unknownAssociationCreativeIds,
       unknownAssociationCandidateIds,
+      lineageViolations,
       setInvariantPassed,
     },
     subGates: {
@@ -845,6 +1028,163 @@ export function runGoogleGateNegativeTests(): {
         return (
           res.setReconciliation.setInvariantPassed === false &&
           res.subGates.G06_CREATIVE_PIPELINE === "FAIL" &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-16",
+      description: "Verified local MCP invocation with providerRequestId=null and providerRequestIdOrigin='ABSENT' passes via VERIFIED_LOCAL_INVOCATION_ONLY",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.invocationLedger = [
+          {
+            invocationId: "google_mcp_inv_uahpet_1",
+            mcpInvocationRef: "google_mcp_inv_uahpet_1",
+            providerRequestId: null,
+            upstreamProviderRequestId: null,
+            providerRequestIdOrigin: "ABSENT",
+            transportId: "mcp_t1",
+            researchRunId: base.researchRunId,
+            toolName: "get_advertiser_ads",
+            advertiserId: "adv_1",
+            domain: "uahpet.com",
+            requestArgumentsHash: "arg_hash_1",
+            responseEvidenceHash: "resp_hash_1",
+            startedAt: "2026-10-31T00:00:00.000Z",
+            completedAt: "2026-10-31T00:00:01.000Z",
+            durationMs: 1000,
+            sourceMode: "LIVE_PROVIDER",
+            status: "SUCCEEDED",
+            invocationStatus: "SUCCEEDED",
+            returnedCreativeIds: ["cr1", "cr2", "cr3"],
+            actualReturnedCreativeIds: ["cr1", "cr2", "cr3"],
+            missingCreativeIdCount: 0,
+            responseEvidenceRef: "mcp:get_advertiser_ads:adv_1:3:resp_hash_1",
+            lineageAvailable: true,
+          },
+        ];
+        base.rawManifest.creatives = base.rawManifest.creatives.map((c) => ({
+          ...c,
+          providerRequestId: null,
+          upstreamProviderRequestId: null,
+          providerRequestIdOrigin: "ABSENT",
+          mcpInvocationRef: "google_mcp_inv_uahpet_1",
+          responseEvidenceHash: "resp_hash_1",
+        }));
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.overallG06Verdict === "PASS" &&
+          res.liveCreativesRetrievedCount === 3 &&
+          res.verifiedLocalInvocationOnlyCount === 3 &&
+          res.upstreamRequestIdVerifiedCount === 0 &&
+          res.missingUpstreamRequestIdCount === 3 &&
+          res.rejectedUnverifiedLineageCount === 0
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-17",
+      description: "Local google_mcp_${runId} fallback stored as providerRequestId is rejected and fails G06",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.rawManifest.creatives = base.rawManifest.creatives.map((c) => ({
+          ...c,
+          providerRequestId: `google_mcp_${base.researchRunId}_uahpet.com_adv1_12345`,
+          providerRequestIdOrigin: "UPSTREAM",
+          mcpInvocationRef: "google_mcp_inv_uahpet_1",
+        }));
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.liveCreativesRetrievedCount === 0 &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-18",
+      description: "mcpInvocationRef copied into providerRequestId is rejected and fails G06",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.rawManifest.creatives = base.rawManifest.creatives.map((c) => ({
+          ...c,
+          providerRequestId: "google_mcp_inv_uahpet_1",
+          mcpInvocationRef: "google_mcp_inv_uahpet_1",
+        }));
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.liveCreativesRetrievedCount === 0 &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-19",
+      description: "Corrupt providerRequestIdOrigin ('UPSTREAM' with null providerRequestId or 'ABSENT' with non-null providerRequestId) fails G06",
+      exec: () => {
+        const base1 = makeValidGoogleGateInput();
+        base1.rawManifest.creatives[0] = {
+          ...base1.rawManifest.creatives[0],
+          providerRequestId: null,
+          providerRequestIdOrigin: "UPSTREAM",
+          mcpInvocationRef: "google_mcp_inv_1",
+        };
+        const res1 = evaluateGoogleMcpGates(base1);
+
+        const base2 = makeValidGoogleGateInput();
+        base2.rawManifest.creatives[0] = {
+          ...base2.rawManifest.creatives[0],
+          providerRequestId: "real_upstream_req_1",
+          providerRequestIdOrigin: "ABSENT",
+          mcpInvocationRef: "google_mcp_inv_1",
+        };
+        const res2 = evaluateGoogleMcpGates(base2);
+        return res1.overallG06Verdict === "FAIL" && res2.overallG06Verdict === "FAIL";
+      },
+    },
+    {
+      testId: "G06-NEG-20",
+      description: "Creative not present in invocationLedger returnedCreativeIds or with mismatched responseEvidenceHash is rejected and fails G06",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.invocationLedger = [
+          {
+            invocationId: "google_mcp_inv_uahpet_1",
+            mcpInvocationRef: "google_mcp_inv_uahpet_1",
+            providerRequestId: null,
+            upstreamProviderRequestId: null,
+            providerRequestIdOrigin: "ABSENT",
+            transportId: "mcp_t1",
+            researchRunId: base.researchRunId,
+            toolName: "get_advertiser_ads",
+            advertiserId: "adv_1",
+            domain: "uahpet.com",
+            requestArgumentsHash: "arg_hash_1",
+            responseEvidenceHash: "resp_hash_1",
+            startedAt: "2026-10-31T00:00:00.000Z",
+            completedAt: "2026-10-31T00:00:01.000Z",
+            durationMs: 1000,
+            sourceMode: "LIVE_PROVIDER",
+            status: "SUCCEEDED",
+            invocationStatus: "SUCCEEDED",
+            returnedCreativeIds: ["cr1", "cr2"], // cr3 missing from ledger!
+            actualReturnedCreativeIds: ["cr1", "cr2"],
+            missingCreativeIdCount: 0,
+            responseEvidenceRef: "mcp:get_advertiser_ads:adv_1:2:resp_hash_1",
+            lineageAvailable: true,
+          },
+        ];
+        base.rawManifest.creatives = base.rawManifest.creatives.map((c) => ({
+          ...c,
+          providerRequestId: null,
+          upstreamProviderRequestId: null,
+          providerRequestIdOrigin: "ABSENT",
+          mcpInvocationRef: "google_mcp_inv_uahpet_1",
+          responseEvidenceHash: "resp_hash_1",
+        }));
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.rejectedUnverifiedLineageCount === 1 &&
           res.overallG06Verdict === "FAIL"
         );
       },

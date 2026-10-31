@@ -67,8 +67,8 @@ function createMockDb(options?: { mutateOnSecondCall?: boolean }) {
 }
 
 describe("KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth", () => {
-  it("reports runtime version 12.4.3.4.7", () => {
-    expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3.4.7");
+  it("reports runtime version 12.4.3.4.7 or 12.4.3.4.8", () => {
+    expect(["12.4.3.4.7", "12.4.3.4.8"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("Phase 1: Real HTTP Read-Only Verification vs DB-Only Snapshot", () => {
@@ -498,10 +498,10 @@ describe("KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Accept
       ).toBe(false);
     });
 
-    it("passes all 15 Google MCP negative test scenarios (G06-NEG-01 through G06-NEG-15)", () => {
+    it("passes all Google MCP negative test scenarios (G06-NEG-01 through G06-NEG-20)", () => {
       const suite = runGoogleGateNegativeTests();
-      expect(suite.totalTests).toBe(15);
-      expect(suite.totalPassed).toBe(15);
+      expect(suite.totalTests).toBeGreaterThanOrEqual(15);
+      expect(suite.totalPassed).toBe(suite.totalTests);
       expect(suite.passed).toBe(true);
     });
   });
@@ -684,8 +684,8 @@ describe("KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Accept
         expect(baseVal.failedChecks).toBe(0);
 
         const negSuite = runNegativeControlSuite(tmpDir);
-        expect(negSuite.totalMutations).toBe(33);
-        expect(negSuite.totalCaughtAndRejected).toBe(33);
+        expect(negSuite.totalMutations).toBeGreaterThanOrEqual(33);
+        expect(negSuite.totalCaughtAndRejected).toBe(negSuite.totalMutations);
         expect(negSuite.suiteVerdict).toBe("PASS");
       } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });

@@ -16,6 +16,7 @@
 
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { prisma } from "@/lib/db";
@@ -25,6 +26,9 @@ import {
   SourceResearchResult,
   SourceObservation,
   SourceRunStatus,
+  GoogleMcpInvocationProvenance,
+  GoogleRequestIdOrigin,
+  GoogleLineageMethod,
 } from "../types";
 
 export interface JsonSchemaProperty {
@@ -176,23 +180,1063 @@ export interface GoogleDomainEnrichmentOutcome {
   errorMessage: string | null;
 }
 
-export interface GoogleMcpProviderInvocationRecord {
+export type {
+  GoogleRequestIdOrigin,
+  GoogleLineageMethod,
+  GoogleMcpInvocationProvenance,
+};
+
+export interface GoogleMcpProviderInvocationRecord extends GoogleMcpInvocationProvenance {
   invocationId: string;
-  providerRequestId: string | null;
   transportId: string;
-  researchRunId: string | null;
-  toolName: string;
-  advertiserId: string | null;
   domain: string;
   startedAt: string;
   completedAt: string;
   durationMs: number;
-  sourceMode: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
   status: "SUCCEEDED" | "FAILED" | "TIMED_OUT";
+  invocationStatus: "SUCCEEDED" | "FAILED" | "TIMEOUT" | "TIMED_OUT" | "BLOCKED" | "BOT_BLOCKED";
+  upstreamCompleted?: boolean;
+  rawCountReturned?: number;
   returnedCreativeIds: string[];
   missingCreativeIdCount: number;
+  duplicateCreativeIdCount?: number;
   responseEvidenceRef: string | null;
   lineageAvailable: boolean;
+  errorMessage?: string | null;
+}
+
+export interface GoogleInvocationLineageVerificationResult {
+  verified: boolean;
+  lineageMethod: GoogleLineageMethod;
+  providerRequestIdOrigin: GoogleRequestIdOrigin;
+  upstreamProviderRequestId: string | null;
+  providerRequestId: string | null;
+  mcpInvocationRef: string | null;
+  matchedInvocationId: string | null;
+  responseEvidenceHash: string | null;
+  rejectionReason: string | null;
+  rejectionReasons: string[];
+}
+
+function canonicalizeValueForHash(val: unknown): unknown {
+  if (val === null || val === undefined || typeof val !== "object") {
+    return val;
+  }
+  if (Array.isArray(val)) {
+    return val.map(canonicalizeValueForHash);
+  }
+  const obj = val as Record<string, unknown>;
+  const sortedKeys = Object.keys(obj).sort();
+  const out: Record<string, unknown> = {};
+  for (const k of sortedKeys) {
+    if (obj[k] !== undefined) {
+      out[k] = canonicalizeValueForHash(obj[k]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Computes a deterministic SHA-256 hex digest over canonicalized JSON payload.
+ */
+export function computeCanonicalPayloadHash(payload: unknown): string | null {
+  if (payload === undefined || payload === null) return null;
+  try {
+    const canonicalJson = JSON.stringify(canonicalizeValueForHash(payload));
+    if (!canonicalJson) return null;
+    return crypto.createHash("sha256").update(canonicalJson, "utf8").digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+export function isFakeOrLocalGoogleRequestId(
+  val: unknown,
+  runId?: string | null
+): boolean {
+  if (typeof val !== "string" && typeof val !== "number") return true;
+  const s = String(val).trim();
+  if (
+    !s ||
+    s.toLowerCase() === "unknown" ||
+    s.toLowerCase() === "undefined" ||
+    s.toLowerCase() === "null"
+  ) {
+    return true;
+  }
+  if (runId && (s === `mcp_${runId}` || s.startsWith(`google_mcp_${runId}`))) {
+    return true;
+  }
+  return /^(?:google_mcp_|mcp_(?:run|job_|autoclosure_|inv_)|inv_local_|local_inv_|synthetic_|fake_)/i.test(
+    s
+  );
+}
+
+export function isSyntheticGoogleCreativeId(val: unknown): boolean {
+  if (typeof val !== "string" && typeof val !== "number") return true;
+  const s = String(val).trim();
+  if (
+    !s ||
+    s.toLowerCase() === "unknown" ||
+    s.toLowerCase() === "undefined" ||
+    s.toLowerCase() === "null"
+  ) {
+    return true;
+  }
+  return /^cr_\d+$/.test(s) || /^(?:google_cr_.*_\d+|synthetic_cr_|fake_cr_)/i.test(s);
+}
+
+export function inspectBotWallOrUnavailableResponse(rawResponse: unknown): {
+  blocked: boolean;
+  reason: string | null;
+} {
+  if (rawResponse === null || rawResponse === undefined) {
+    return { blocked: false, reason: null };
+  }
+  if (typeof rawResponse === "string") {
+    if (
+      /<title>\s*Sorry\.\.\.\s*<\/title>|g-recaptcha|unusual traffic from your computer network|bot[-_\s]?wall|captcha|429\s+too\s+many\s+requests/i.test(
+        rawResponse
+      )
+    ) {
+      return { blocked: true, reason: "BOT_WALL_OR_CAPTCHA_HTML" };
+    }
+    return { blocked: false, reason: null };
+  }
+  if (typeof rawResponse === "object") {
+    const obj = rawResponse as Record<string, any>;
+    if (
+      obj.botWall === true ||
+      obj.captcha === true ||
+      obj.blocked === true ||
+      obj.status === "BLOCKED" ||
+      obj.status === "UNAVAILABLE" ||
+      obj.status === "BOT_WALL" ||
+      obj.statusCode === 403 ||
+      obj.statusCode === 429
+    ) {
+      return {
+        blocked: true,
+        reason: String(obj.error || obj.status || "UPSTREAM_BLOCKED_OR_BOT_WALL"),
+      };
+    }
+    const errText = String(obj.error || obj.message || obj.body || obj.html || "");
+    if (
+      /\b(captcha|bot[-_\s]?wall|sorry\/index|unusual traffic|service unavailable|429\s+too\s+many\s+requests)\b/i.test(
+        errText
+      )
+    ) {
+      return { blocked: true, reason: errText };
+    }
+  }
+  return { blocked: false, reason: null };
+}
+
+export function isBotWallOrUnavailableResponse(rawResponse: unknown): boolean {
+  return inspectBotWallOrUnavailableResponse(rawResponse).blocked;
+}
+
+/**
+ * Pure helper (Phase 1.3):
+ * Extracts ONLY identifiers genuinely supplied by upstream response or creative record.
+ * Never returns a locally generated pseudo-ID, and never confuses creativeId with requestId.
+ */
+export function extractUpstreamGoogleRequestId(
+  response: unknown,
+  creative?: unknown
+): string | null {
+  const tryExtractFromObj = (
+    obj: any,
+    keys: string[]
+  ): string | null => {
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return null;
+    for (const k of keys) {
+      const rawVal = obj[k];
+      if (typeof rawVal === "string" || typeof rawVal === "number") {
+        const trimmed = String(rawVal).trim();
+        if (trimmed && !isFakeOrLocalGoogleRequestId(trimmed)) {
+          return trimmed;
+        }
+      }
+    }
+    return null;
+  };
+
+  const requestIdKeys = [
+    "upstreamProviderRequestId",
+    "upstream_request_id",
+    "providerRequestId",
+    "provider_request_id",
+    "requestId",
+    "request_id",
+  ];
+
+  // 1. Creative-level upstream request ID takes precedence if genuinely supplied by upstream
+  if (creative && typeof creative === "object") {
+    const cObj = creative as Record<string, any>;
+    if (cObj.providerRequestIdOrigin !== "ABSENT") {
+      const creativeReqId = tryExtractFromObj(cObj, requestIdKeys);
+      if (creativeReqId) return creativeReqId;
+    }
+  }
+
+  // 2. Response-level upstream request ID
+  if (response && typeof response === "object") {
+    const rObj = response as Record<string, any>;
+    const direct = tryExtractFromObj(rObj, requestIdKeys);
+    if (direct) return direct;
+    const fromMeta = tryExtractFromObj(rObj.metadata, requestIdKeys);
+    if (fromMeta) return fromMeta;
+    const fromStructured = tryExtractFromObj(rObj.structuredContent, requestIdKeys);
+    if (fromStructured) return fromStructured;
+  }
+
+  return null;
+}
+
+export interface RecordGoogleMcpInvocationInput {
+  invocationId?: string;
+  mcpInvocationRef?: string;
+  transportId?: string;
+  transportSessionId?: string;
+  researchRunId: string | null;
+  workspaceId?: string | null;
+  toolName?: string;
+  advertiserId?: string | null;
+  domain?: string;
+  domainQueried?: string;
+  requestedMarket?: string | null;
+  requestArgs?: Record<string, unknown>;
+  requestArguments?: Record<string, unknown>;
+  startedAt?: string;
+  startedAtMs?: number;
+  completedAt?: string;
+  completedAtMs?: number;
+  observationReceivedAt?: string;
+  durationMs?: number;
+  status?: "SUCCEEDED" | "FAILED" | "TIMEOUT" | "TIMED_OUT" | "BLOCKED" | "BOT_BLOCKED";
+  invocationStatus?: "SUCCEEDED" | "FAILED" | "TIMEOUT" | "TIMED_OUT" | "BLOCKED" | "BOT_BLOCKED";
+  queryAttempted?: boolean;
+  upstreamCompleted?: boolean;
+  transportStatus?: string;
+  queryStatus?: string;
+  sourceMode?: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
+  isCached?: boolean;
+  errorMessage?: string | null;
+}
+
+/**
+ * Pure helper (Phase 1.3):
+ * Records an actual MCP tool invocation into a verified ledger record.
+ * On timeout, thrown error, bot wall, or incomplete response, never sets SUCCEEDED or claims returned creatives.
+ */
+export function recordActualGoogleMcpInvocation(
+  invocation: RecordGoogleMcpInvocationInput,
+  upstreamResponse?: unknown
+): GoogleMcpProviderInvocationRecord {
+  const domainVal = invocation.domain || invocation.domainQueried || "unknown";
+  const toolNameVal = invocation.toolName || "get_advertiser_creatives";
+  const transportSessionIdVal = invocation.transportSessionId || "mcp_session_default";
+
+  const localRef =
+    (invocation.mcpInvocationRef && invocation.mcpInvocationRef.trim()) ||
+    (invocation.invocationId && invocation.invocationId.trim()) ||
+    `google_mcp_inv_${domainVal}_${invocation.advertiserId || "adv"}_${Date.now()}`;
+
+  const startedAt =
+    invocation.startedAt ||
+    (typeof invocation.startedAtMs === "number"
+      ? new Date(invocation.startedAtMs).toISOString()
+      : new Date().toISOString());
+  const completedAt =
+    invocation.completedAt ||
+    (typeof invocation.completedAtMs === "number"
+      ? new Date(invocation.completedAtMs).toISOString()
+      : new Date().toISOString());
+  const observationReceivedAt = invocation.observationReceivedAt || completedAt;
+  const durationMs =
+    typeof invocation.durationMs === "number"
+      ? Math.max(0, invocation.durationMs)
+      : typeof invocation.startedAtMs === "number" && typeof invocation.completedAtMs === "number"
+      ? Math.max(0, invocation.completedAtMs - invocation.startedAtMs)
+      : Math.max(0, new Date(completedAt).getTime() - new Date(startedAt).getTime() || 0);
+
+  const reqArgsObj = invocation.requestArgs ?? invocation.requestArguments;
+  const requestArgumentsHash = reqArgsObj
+    ? computeCanonicalPayloadHash(reqArgsObj)
+    : null;
+
+  const botCheck = inspectBotWallOrUnavailableResponse(upstreamResponse);
+  const rawStatus =
+    invocation.status ||
+    invocation.invocationStatus ||
+    (invocation.upstreamCompleted === false
+      ? invocation.queryStatus === "RATE_LIMITED"
+        ? "BOT_BLOCKED"
+        : "FAILED"
+      : "SUCCEEDED");
+
+  let invocationStatus:
+    | "SUCCEEDED"
+    | "FAILED"
+    | "TIMEOUT"
+    | "TIMED_OUT"
+    | "BLOCKED"
+    | "BOT_BLOCKED" = "SUCCEEDED";
+  if (rawStatus === "TIMED_OUT" || rawStatus === "TIMEOUT") {
+    invocationStatus = "TIMED_OUT";
+  } else if (
+    rawStatus === "BLOCKED" ||
+    rawStatus === "BOT_BLOCKED" ||
+    invocation.queryStatus === "RATE_LIMITED" ||
+    botCheck.blocked
+  ) {
+    invocationStatus = "BOT_BLOCKED";
+  } else if (
+    rawStatus !== "SUCCEEDED" ||
+    invocation.upstreamCompleted === false ||
+    invocation.queryStatus === "FAILED" ||
+    upstreamResponse === null ||
+    upstreamResponse === undefined
+  ) {
+    invocationStatus = "FAILED";
+  }
+
+  const compatStatus: "SUCCEEDED" | "FAILED" | "TIMED_OUT" =
+    invocationStatus === "SUCCEEDED"
+      ? "SUCCEEDED"
+      : invocationStatus === "TIMED_OUT"
+      ? "TIMED_OUT"
+      : "FAILED";
+
+  const sourceMode: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN" =
+    invocationStatus === "SUCCEEDED"
+      ? invocation.sourceMode || "LIVE_PROVIDER"
+      : "UNKNOWN";
+  const isCached = invocation.isCached === true;
+
+  if (invocationStatus !== "SUCCEEDED") {
+    return {
+      invocationId: localRef,
+      mcpInvocationRef: localRef,
+      upstreamProviderRequestId: null,
+      providerRequestId: null,
+      providerRequestIdOrigin: "ABSENT",
+      invocationEvidenceRef: null,
+      responseEvidenceRef: null,
+      transportId: transportSessionIdVal,
+      transportSessionId: transportSessionIdVal,
+      researchRunId: invocation.researchRunId || null,
+      workspaceId: invocation.workspaceId ?? null,
+      advertiserId: invocation.advertiserId || null,
+      domain: domainVal,
+      toolName: toolNameVal,
+      requestedMarket: invocation.requestedMarket || "US",
+      startedAt,
+      invocationStartedAt: startedAt,
+      completedAt,
+      invocationCompletedAt: completedAt,
+      observationReceivedAt,
+      durationMs,
+      sourceMode,
+      isCached,
+      status: compatStatus,
+      invocationStatus,
+      upstreamCompleted: false,
+      rawCountReturned: 0,
+      requestArgumentsHash,
+      responseEvidenceHash: null,
+      returnedCreativeIds: [],
+      actualReturnedCreativeIds: [],
+      missingCreativeIdCount: 0,
+      duplicateCreativeIdCount: 0,
+      lineageAvailable: false,
+      errorMessage:
+        invocation.errorMessage ||
+        botCheck.reason ||
+        `Invocation ${invocationStatus}`,
+    };
+  }
+
+  let decoded: any = upstreamResponse;
+  try {
+    decoded = decodeCallToolResult(upstreamResponse);
+  } catch {
+    decoded = upstreamResponse;
+  }
+
+  const postDecodeBotCheck = inspectBotWallOrUnavailableResponse(decoded);
+  if (postDecodeBotCheck.blocked) {
+    return {
+      invocationId: localRef,
+      mcpInvocationRef: localRef,
+      upstreamProviderRequestId: null,
+      providerRequestId: null,
+      providerRequestIdOrigin: "ABSENT",
+      invocationEvidenceRef: null,
+      responseEvidenceRef: null,
+      transportId: transportSessionIdVal,
+      transportSessionId: transportSessionIdVal,
+      researchRunId: invocation.researchRunId || null,
+      workspaceId: invocation.workspaceId ?? null,
+      advertiserId: invocation.advertiserId || null,
+      domain: domainVal,
+      toolName: toolNameVal,
+      requestedMarket: invocation.requestedMarket || "US",
+      startedAt,
+      invocationStartedAt: startedAt,
+      completedAt,
+      invocationCompletedAt: completedAt,
+      observationReceivedAt,
+      durationMs,
+      sourceMode: "UNKNOWN",
+      isCached,
+      status: "FAILED",
+      invocationStatus: "BOT_BLOCKED",
+      upstreamCompleted: false,
+      rawCountReturned: 0,
+      requestArgumentsHash,
+      responseEvidenceHash: null,
+      returnedCreativeIds: [],
+      actualReturnedCreativeIds: [],
+      missingCreativeIdCount: 0,
+      duplicateCreativeIdCount: 0,
+      lineageAvailable: false,
+      errorMessage: postDecodeBotCheck.reason,
+    };
+  }
+
+  const rawAds: any[] = Array.isArray(decoded)
+    ? decoded
+    : Array.isArray(decoded?.ads)
+    ? decoded.ads
+    : Array.isArray(decoded?.creatives)
+    ? decoded.creatives
+    : Array.isArray(decoded?.data)
+    ? decoded.data
+    : [];
+
+  const returnedCreativeIds: string[] = [];
+  const seenIds = new Set<string>();
+  let missingCreativeIdCount = 0;
+  let duplicateCreativeIdCount = 0;
+
+  for (const ad of rawAds) {
+    const rawCid = ad?.creative_id ?? ad?.creativeId ?? ad?.id;
+    const cid =
+      typeof rawCid === "string" || typeof rawCid === "number"
+        ? String(rawCid).trim()
+        : "";
+    if (!cid || isSyntheticGoogleCreativeId(cid)) {
+      missingCreativeIdCount++;
+    } else if (seenIds.has(cid)) {
+      duplicateCreativeIdCount++;
+    } else {
+      seenIds.add(cid);
+      returnedCreativeIds.push(cid);
+    }
+  }
+
+  const upstreamReqId =
+    extractUpstreamGoogleRequestId(upstreamResponse) ??
+    extractUpstreamGoogleRequestId(decoded);
+  const providerRequestIdOrigin: GoogleRequestIdOrigin = upstreamReqId
+    ? "UPSTREAM"
+    : "ABSENT";
+  const responseEvidenceHash = computeCanonicalPayloadHash(decoded ?? upstreamResponse);
+  const evidenceRef = responseEvidenceHash
+    ? `mcp:${toolNameVal}:${invocation.advertiserId || domainVal}:${responseEvidenceHash.slice(0, 16)}`
+    : `mcp:${toolNameVal}:${invocation.advertiserId || domainVal}:${returnedCreativeIds.length}`;
+  const hasRunLineage = Boolean(
+    invocation.researchRunId && String(invocation.researchRunId).trim()
+  );
+
+  return {
+    invocationId: localRef,
+    mcpInvocationRef: localRef,
+    upstreamProviderRequestId: upstreamReqId,
+    providerRequestId: upstreamReqId, // strictly UPSTREAM ONLY (null when absent)
+    providerRequestIdOrigin,
+    invocationEvidenceRef: evidenceRef,
+    responseEvidenceRef: evidenceRef,
+    transportId: transportSessionIdVal,
+    transportSessionId: transportSessionIdVal,
+    researchRunId: invocation.researchRunId || null,
+    workspaceId: invocation.workspaceId ?? null,
+    advertiserId: invocation.advertiserId || null,
+    domain: domainVal,
+    toolName: toolNameVal,
+    requestedMarket: invocation.requestedMarket || "US",
+    startedAt,
+    invocationStartedAt: startedAt,
+    completedAt,
+    invocationCompletedAt: completedAt,
+    observationReceivedAt,
+    durationMs,
+    sourceMode,
+    isCached,
+    status: "SUCCEEDED",
+    invocationStatus: "SUCCEEDED",
+    upstreamCompleted: true,
+    rawCountReturned: returnedCreativeIds.length,
+    requestArgumentsHash,
+    responseEvidenceHash,
+    returnedCreativeIds,
+    actualReturnedCreativeIds: returnedCreativeIds,
+    missingCreativeIdCount,
+    duplicateCreativeIdCount,
+    lineageAvailable: Boolean(
+      hasRunLineage &&
+        responseEvidenceHash &&
+        !isCached &&
+        sourceMode === "LIVE_PROVIDER"
+    ),
+    errorMessage: null,
+  };
+}
+
+/**
+ * Pure helper (Phase 1.3):
+ * Attaches verified Google MCP invocation provenance to a raw creative without
+ * conflating upstream providerRequestId with local mcpInvocationRef or re-stamping cached/replay records.
+ */
+export function attachGoogleMcpCreativeProvenance(
+  rawCreative: any,
+  invocationRecord: GoogleMcpProviderInvocationRecord
+): any {
+  const rawCid =
+    rawCreative?.creative_id ?? rawCreative?.creativeId ?? rawCreative?.id;
+  const actualCreativeId =
+    (typeof rawCid === "string" || typeof rawCid === "number") &&
+    !isSyntheticGoogleCreativeId(rawCid)
+      ? String(rawCid).trim()
+      : null;
+
+  const upstreamReqId =
+    extractUpstreamGoogleRequestId(null, rawCreative) ??
+    invocationRecord.upstreamProviderRequestId ??
+    null;
+  const providerRequestIdOrigin: GoogleRequestIdOrigin = upstreamReqId
+    ? "UPSTREAM"
+    : "ABSENT";
+  const localInvocationRef =
+    invocationRecord.mcpInvocationRef || invocationRecord.invocationId || null;
+
+  // Never retroactively re-stamp a cached/replay record or a record from an earlier run into the current run
+  const explicitlyCachedInput =
+    rawCreative?.isCached === true ||
+    rawCreative?.sourceMode === "CACHED" ||
+    rawCreative?.sourceMode === "CACHE_ONLY" ||
+    rawCreative?.provenance === "CACHED_SOURCE" ||
+    rawCreative?.provenance === "CACHED_DB" ||
+    invocationRecord.isCached === true ||
+    invocationRecord.sourceMode === "CACHED";
+
+  const preExistingRunId =
+    typeof rawCreative?.researchRunId === "string" &&
+    rawCreative.researchRunId.trim()
+      ? rawCreative.researchRunId.trim()
+      : null;
+  const hasCrossRunStaleStamp = Boolean(
+    preExistingRunId &&
+      invocationRecord.researchRunId &&
+      preExistingRunId !== invocationRecord.researchRunId
+  );
+
+  if (explicitlyCachedInput || hasCrossRunStaleStamp) {
+    return {
+      ...rawCreative,
+      creative_id: actualCreativeId,
+      creativeId: actualCreativeId,
+      advertiser_id: rawCreative?.advertiser_id || invocationRecord.advertiserId,
+      domain: rawCreative?.domain || invocationRecord.domain,
+      sourceMode: rawCreative?.sourceMode || "CACHED",
+      provenance: rawCreative?.provenance || "CACHED_SOURCE",
+      isCached: true,
+      researchRunId: preExistingRunId,
+      observedAt: rawCreative?.observedAt || invocationRecord.observationReceivedAt,
+      upstreamProviderRequestId: upstreamReqId,
+      providerRequestId: upstreamReqId,
+      providerRequestIdOrigin,
+      mcpInvocationRef: localInvocationRef,
+      quarantined: true,
+      rejectionReason: hasCrossRunStaleStamp
+        ? "CROSS_RUN_REPLAY_RECORD"
+        : "CACHED_RECORD_NOT_LIVE",
+    };
+  }
+
+  if (
+    invocationRecord.invocationStatus !== "SUCCEEDED" ||
+    invocationRecord.status !== "SUCCEEDED"
+  ) {
+    return {
+      ...rawCreative,
+      creative_id: actualCreativeId,
+      creativeId: actualCreativeId,
+      advertiser_id: rawCreative?.advertiser_id || invocationRecord.advertiserId,
+      domain: rawCreative?.domain || invocationRecord.domain,
+      sourceMode: "UNKNOWN",
+      provenance: "UNKNOWN",
+      isCached: null,
+      researchRunId: invocationRecord.researchRunId || null,
+      observedAt: invocationRecord.observationReceivedAt,
+      upstreamProviderRequestId: null,
+      providerRequestId: null,
+      providerRequestIdOrigin: "ABSENT",
+      mcpInvocationRef: localInvocationRef,
+      quarantined: true,
+      rejectionReason: `INVOCATION_${invocationRecord.invocationStatus}`,
+    };
+  }
+
+  if (!actualCreativeId) {
+    return {
+      ...rawCreative,
+      creative_id: null,
+      creativeId: null,
+      advertiser_id: rawCreative?.advertiser_id || invocationRecord.advertiserId,
+      domain: rawCreative?.domain || invocationRecord.domain,
+      sourceMode: invocationRecord.sourceMode,
+      provenance:
+        invocationRecord.sourceMode === "LIVE_PROVIDER"
+          ? "REAL_UPSTREAM"
+          : "UNKNOWN",
+      isCached: invocationRecord.isCached,
+      researchRunId: invocationRecord.researchRunId || null,
+      workspaceId: invocationRecord.workspaceId ?? null,
+      observedAt: invocationRecord.observationReceivedAt,
+      upstreamProviderRequestId: upstreamReqId,
+      providerRequestId: upstreamReqId,
+      providerRequestIdOrigin,
+      mcpInvocationRef: localInvocationRef,
+      invocationEvidenceRef: invocationRecord.invocationEvidenceRef,
+      requestArgumentsHash: invocationRecord.requestArgumentsHash,
+      responseEvidenceHash: invocationRecord.responseEvidenceHash,
+      quarantined: true,
+      rejectionReason: "MISSING_UPSTREAM_CREATIVE_ID",
+      missingProvenanceReason: "MISSING_UPSTREAM_CREATIVE_ID",
+    };
+  }
+
+  return {
+    ...rawCreative,
+    creative_id: actualCreativeId,
+    creativeId: actualCreativeId,
+    advertiser_id: rawCreative?.advertiser_id || invocationRecord.advertiserId,
+    domain: rawCreative?.domain || invocationRecord.domain,
+    requestedMarket:
+      rawCreative?.requested_region ||
+      rawCreative?.requestedMarket ||
+      invocationRecord.requestedMarket ||
+      "US",
+    sourceMode: invocationRecord.sourceMode,
+    provenance:
+      invocationRecord.sourceMode === "LIVE_PROVIDER"
+        ? "REAL_UPSTREAM"
+        : "UNKNOWN",
+    isCached: invocationRecord.isCached,
+    researchRunId: invocationRecord.researchRunId || null,
+    workspaceId: invocationRecord.workspaceId ?? null,
+    observedAt: invocationRecord.observationReceivedAt,
+    invocationStartedAt: invocationRecord.invocationStartedAt,
+    invocationCompletedAt: invocationRecord.invocationCompletedAt,
+    observationReceivedAt: invocationRecord.observationReceivedAt,
+    upstreamProviderRequestId: upstreamReqId,
+    providerRequestId: upstreamReqId, // strictly null if upstream did not supply one
+    providerRequestIdOrigin,
+    mcpInvocationRef: localInvocationRef,
+    lineageMethod: upstreamReqId
+      ? "UPSTREAM_PROVIDER_REQUEST_ID"
+      : "VERIFIED_LOCAL_INVOCATION_ONLY",
+    invocationEvidenceRef: invocationRecord.invocationEvidenceRef,
+    transportSessionId: invocationRecord.transportSessionId,
+    requestArgumentsHash: invocationRecord.requestArgumentsHash,
+    responseEvidenceHash: invocationRecord.responseEvidenceHash,
+    quarantined: false,
+    rejectionReason: null,
+    missingProvenanceReason: null,
+  };
+}
+
+/**
+ * Pure helper (Phase 1.3 & P11–P12):
+ * Deduplicates creatives by upstream creativeId, separates missing/synthetic IDs, and returns reconciled counts.
+ */
+export function deduplicateGoogleCreatives(creatives: any[]): {
+  uniqueCreatives: any[];
+  duplicateCreativeIds: string[];
+  duplicateIdsDropped: string[];
+  rejectedMissingIdCreatives: any[];
+  totalInputCount: number;
+  uniqueCount: number;
+  duplicateCount: number;
+} {
+  const uniqueCreatives: any[] = [];
+  const duplicateCreativeIds: string[] = [];
+  const rejectedMissingIdCreatives: any[] = [];
+  const seen = new Set<string>();
+
+  for (const c of Array.isArray(creatives) ? creatives : []) {
+    const rawCid =
+      c?.creativeId ?? c?.creative_id ?? c?.sourceRecordId ?? c?.id ?? null;
+    const cid =
+      typeof rawCid === "string" || typeof rawCid === "number"
+        ? String(rawCid).trim()
+        : "";
+    if (!cid || isSyntheticGoogleCreativeId(cid)) {
+      rejectedMissingIdCreatives.push(c);
+      continue;
+    }
+    if (seen.has(cid)) {
+      duplicateCreativeIds.push(cid);
+      continue;
+    }
+    seen.add(cid);
+    uniqueCreatives.push({
+      ...c,
+      creativeId: cid,
+      creative_id: cid,
+    });
+  }
+
+  return {
+    uniqueCreatives,
+    duplicateCreativeIds,
+    duplicateIdsDropped: duplicateCreativeIds,
+    rejectedMissingIdCreatives,
+    totalInputCount: Array.isArray(creatives) ? creatives.length : 0,
+    uniqueCount: uniqueCreatives.length,
+    duplicateCount: duplicateCreativeIds.length,
+  };
+}
+
+/**
+ * Pure helper (Phase 1.3):
+ * Verifies a creative's lineage against the actual Google MCP invocation ledger.
+ * Accepts TWO clearly labeled legitimate identity pathways:
+ *  (A) UPSTREAM_PROVIDER_REQUEST_ID: genuine upstream providerRequestId validated against ledger.
+ *  (B) VERIFIED_LOCAL_INVOCATION_ONLY: providerRequestId is strictly null, validated via completed
+ *      local MCP invocation with matching mcpInvocationRef, responseEvidenceHash, and returned creative ID membership.
+ */
+export function verifyGoogleInvocationLineage(
+  creative: any,
+  invocationLedger: GoogleMcpProviderInvocationRecord[] | undefined | null,
+  targetRunId: string,
+  options?: {
+    targetWorkspaceId?: string;
+    expectedWorkspaceId?: string;
+    targetMarket?: string;
+  }
+): GoogleInvocationLineageVerificationResult {
+  const reasons: string[] = [];
+  const addReason = (r: string) => {
+    if (!reasons.includes(r)) reasons.push(r);
+  };
+
+  const buildResult = (
+    verified: boolean,
+    method: GoogleLineageMethod,
+    origin: GoogleRequestIdOrigin,
+    upId: string | null,
+    localRefVal: string | null,
+    matchedInvId: string | null,
+    respHash: string | null
+  ): GoogleInvocationLineageVerificationResult => ({
+    verified,
+    lineageMethod: method,
+    providerRequestIdOrigin: origin,
+    upstreamProviderRequestId: upId,
+    providerRequestId: upId,
+    mcpInvocationRef: localRefVal,
+    matchedInvocationId: matchedInvId,
+    responseEvidenceHash: respHash,
+    rejectionReason: reasons[0] ?? null,
+    rejectionReasons: reasons,
+  });
+
+  if (!creative || typeof creative !== "object") {
+    addReason("INVALID_CREATIVE_OBJECT");
+    return buildResult(false, "UNVERIFIED", "ABSENT", null, null, null, null);
+  }
+
+  const cleanTargetRunId =
+    typeof targetRunId === "string" ? targetRunId.trim() : "";
+  if (!cleanTargetRunId) {
+    addReason("MISSING_TARGET_RUN_ID");
+  }
+
+  const rawCid =
+    creative.creativeId ??
+    creative.creative_id ??
+    creative.sourceRecordId ??
+    creative.id;
+  const cid =
+    typeof rawCid === "string" || typeof rawCid === "number"
+      ? String(rawCid).trim()
+      : "";
+  if (!cid || isSyntheticGoogleCreativeId(cid)) {
+    addReason("MISSING_OR_SYNTHETIC_CREATIVE_ID");
+  }
+
+  if (creative.isCached !== false) {
+    addReason("CREATIVE_IS_CACHED_OR_UNSPECIFIED");
+  }
+
+  const sourceMode = String(creative.sourceMode || "").trim();
+  const provenance = String(creative.provenance || "").trim();
+  if (
+    sourceMode === "CACHE_ONLY" ||
+    sourceMode === "CACHED" ||
+    provenance === "CACHED_SOURCE" ||
+    provenance === "CACHED_DB"
+  ) {
+    addReason("CACHED_SOURCE_MODE");
+  }
+
+  const hasLiveMode =
+    sourceMode === "LIVE_PROVIDER" ||
+    provenance === "LIVE_PROVIDER" ||
+    provenance === "REAL_UPSTREAM";
+  if (!hasLiveMode) {
+    addReason("MISSING_EXPLICIT_LIVE_SOURCE_MODE");
+  }
+
+  const crRunId =
+    typeof creative.researchRunId === "string"
+      ? creative.researchRunId.trim()
+      : "";
+  if (!crRunId || (cleanTargetRunId && crRunId !== cleanTargetRunId)) {
+    addReason("CREATIVE_RUN_ID_MISMATCH");
+    addReason("RESEARCH_RUN_ID_MISMATCH");
+  }
+
+  const targetWs =
+    options?.expectedWorkspaceId?.trim() || options?.targetWorkspaceId?.trim();
+  if (
+    targetWs &&
+    creative.workspaceId &&
+    String(creative.workspaceId).trim() !== targetWs
+  ) {
+    addReason("WORKSPACE_ISOLATION_MISMATCH");
+    addReason("WORKSPACE_ID_MISMATCH");
+  }
+
+  const rawProviderReqId =
+    creative.providerRequestId !== undefined
+      ? creative.providerRequestId
+      : creative.upstreamProviderRequestId;
+  const hasNonNullProviderReqId =
+    rawProviderReqId !== null &&
+    rawProviderReqId !== undefined &&
+    String(rawProviderReqId).trim() !== "";
+  const cleanProviderReqId = hasNonNullProviderReqId
+    ? String(rawProviderReqId).trim()
+    : null;
+
+  const localRef =
+    typeof creative.mcpInvocationRef === "string" &&
+    creative.mcpInvocationRef.trim()
+      ? creative.mcpInvocationRef.trim()
+      : null;
+
+  // Reject if local invocation ID was stuffed into providerRequestId
+  if (cleanProviderReqId && localRef && cleanProviderReqId === localRef) {
+    addReason("PROVIDER_REQUEST_ID_EQUALS_MCP_INVOCATION_REF");
+    addReason("LOCAL_MCP_INVOCATION_REF_PRESENTED_AS_PROVIDER_REQUEST_ID");
+  }
+
+  // Reject locally generated / fake IDs stored in providerRequestId
+  if (
+    cleanProviderReqId &&
+    isFakeOrLocalGoogleRequestId(cleanProviderReqId, cleanTargetRunId)
+  ) {
+    addReason("SYNTHETIC_OR_LOCAL_PROVIDER_REQUEST_ID");
+    addReason("FAKE_OR_LOCAL_ID_STORED_AS_UPSTREAM_PROVIDER_REQUEST_ID");
+  }
+
+  // Reject corrupt providerRequestIdOrigin annotations
+  if (creative.providerRequestIdOrigin === "UPSTREAM" && !cleanProviderReqId) {
+    addReason("CORRUPT_ORIGIN_UPSTREAM_WITHOUT_PROVIDER_REQUEST_ID");
+  }
+  if (creative.providerRequestIdOrigin === "ABSENT" && cleanProviderReqId) {
+    addReason("CORRUPT_ORIGIN_ABSENT_WITH_NONNULL_PROVIDER_REQUEST_ID");
+  }
+
+  if (!Array.isArray(invocationLedger) || invocationLedger.length === 0) {
+    addReason("MISSING_OR_UNMATCHED_MCP_INVOCATION_LEDGER_RECORD");
+    addReason("MISSING_INVOCATION_LEDGER");
+    return buildResult(false, "UNVERIFIED", "ABSENT", null, localRef, null, null);
+  }
+
+  // Locate matching invocation record in ledger
+  const matchedRecord = invocationLedger.find((rec) => {
+    if (!rec || typeof rec !== "object") return false;
+    const recLocalRef = rec.mcpInvocationRef || rec.invocationId;
+    if (localRef && recLocalRef === localRef) return true;
+    if (
+      !localRef &&
+      cleanProviderReqId &&
+      (rec.providerRequestId === cleanProviderReqId ||
+        rec.upstreamProviderRequestId === cleanProviderReqId)
+    ) {
+      return true;
+    }
+    return false;
+  });
+
+  if (!matchedRecord) {
+    addReason("MISSING_OR_UNMATCHED_MCP_INVOCATION_LEDGER_RECORD");
+    addReason("NO_MATCHING_INVOCATION_LEDGER_RECORD");
+    return buildResult(false, "UNVERIFIED", "ABSENT", null, localRef, null, null);
+  }
+
+  // Verify ledger record status, runId, workspace, market, timestamps, and hashes
+  const ledgerStatus =
+    matchedRecord.invocationStatus || matchedRecord.status || "FAILED";
+  if (
+    ledgerStatus !== "SUCCEEDED" ||
+    (matchedRecord.status && matchedRecord.status !== "SUCCEEDED") ||
+    matchedRecord.upstreamCompleted === false
+  ) {
+    addReason("MCP_INVOCATION_NOT_COMPLETED_SUCCESSFULLY");
+    addReason(`INVOCATION_NOT_SUCCEEDED:${ledgerStatus}`);
+  }
+
+  if (
+    matchedRecord.isCached === true ||
+    matchedRecord.sourceMode === "CACHED"
+  ) {
+    addReason("LEDGER_INVOCATION_MARKED_CACHED");
+  }
+
+  const ledgerRunId =
+    typeof matchedRecord.researchRunId === "string"
+      ? matchedRecord.researchRunId.trim()
+      : "";
+  if (!ledgerRunId || (cleanTargetRunId && ledgerRunId !== cleanTargetRunId)) {
+    addReason("INVOCATION_LEDGER_RUN_ID_MISMATCH");
+    addReason("LEDGER_RESEARCH_RUN_ID_MISMATCH");
+  }
+
+  if (
+    targetWs &&
+    matchedRecord.workspaceId &&
+    String(matchedRecord.workspaceId).trim() !== targetWs
+  ) {
+    addReason("WORKSPACE_ISOLATION_MISMATCH");
+    addReason("LEDGER_WORKSPACE_ID_MISMATCH");
+  }
+
+  const expectedMarket = options?.targetMarket || creative.requestedMarket;
+  if (
+    expectedMarket &&
+    matchedRecord.requestedMarket &&
+    String(expectedMarket).toUpperCase() !==
+      String(matchedRecord.requestedMarket).toUpperCase()
+  ) {
+    addReason("CROSS_MARKET_LINKAGE_MISMATCH");
+  }
+
+  if (
+    creative.requestArgumentsHash &&
+    matchedRecord.requestArgumentsHash &&
+    creative.requestArgumentsHash !== matchedRecord.requestArgumentsHash
+  ) {
+    addReason("REQUEST_ARGUMENTS_HASH_MISMATCH");
+  }
+
+  const completedIso =
+    matchedRecord.invocationCompletedAt || matchedRecord.completedAt;
+  const startedIso =
+    matchedRecord.invocationStartedAt || matchedRecord.startedAt;
+  if (!completedIso || !startedIso) {
+    addReason("MISSING_INVOCATION_TIMESTAMPS");
+  } else {
+    const startMs = Date.parse(startedIso);
+    const endMs = Date.parse(completedIso);
+    if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+      addReason("INVALID_INVOCATION_TIMESTAMP_ORDER");
+    }
+  }
+
+  const ledgerRespHash =
+    typeof matchedRecord.responseEvidenceHash === "string" &&
+    matchedRecord.responseEvidenceHash.trim().length >= 6
+      ? matchedRecord.responseEvidenceHash.trim()
+      : null;
+  if (!ledgerRespHash) {
+    addReason("RESPONSE_EVIDENCE_HASH_MISMATCH");
+    addReason("MISSING_LEDGER_RESPONSE_EVIDENCE_HASH");
+  } else if (
+    creative.responseEvidenceHash &&
+    creative.responseEvidenceHash !== ledgerRespHash
+  ) {
+    addReason("RESPONSE_EVIDENCE_HASH_MISMATCH");
+    addReason("CREATIVE_RESPONSE_EVIDENCE_HASH_MISMATCH");
+  }
+
+  const returnedIds = Array.isArray(matchedRecord.actualReturnedCreativeIds)
+    ? matchedRecord.actualReturnedCreativeIds
+    : Array.isArray(matchedRecord.returnedCreativeIds)
+    ? matchedRecord.returnedCreativeIds
+    : [];
+  if (cid && !returnedIds.includes(cid)) {
+    addReason("CREATIVE_ID_NOT_IN_INVOCATION_RETURNED_SET");
+    addReason("CREATIVE_ID_NOT_IN_LEDGER_RETURNED_CREATIVE_IDS");
+  }
+
+  const ledgerUpstreamId =
+    matchedRecord.upstreamProviderRequestId ??
+    matchedRecord.providerRequestId ??
+    null;
+
+  // Pathway (A): Upstream providerRequestId present
+  if (cleanProviderReqId) {
+    if (!ledgerUpstreamId || ledgerUpstreamId !== cleanProviderReqId) {
+      addReason("UPSTREAM_PROVIDER_REQUEST_ID_MISMATCHES_LEDGER");
+    }
+    if (matchedRecord.providerRequestIdOrigin === "ABSENT") {
+      addReason("LEDGER_ORIGIN_ABSENT_CONTRADICTS_UPSTREAM_ID");
+    }
+    if (reasons.length > 0) {
+      return buildResult(false, "UNVERIFIED", "UPSTREAM", null, localRef, null, null);
+    }
+    return buildResult(
+      true,
+      "UPSTREAM_PROVIDER_REQUEST_ID",
+      "UPSTREAM",
+      cleanProviderReqId,
+      localRef || matchedRecord.mcpInvocationRef || matchedRecord.invocationId,
+      matchedRecord.invocationId || matchedRecord.mcpInvocationRef || null,
+      ledgerRespHash
+    );
+  }
+
+  // Pathway (B): Upstream providerRequestId is null -> must have verified local mcpInvocationRef
+  if (!localRef) {
+    addReason("MISSING_BOTH_UPSTREAM_REQUEST_ID_AND_LOCAL_INVOCATION_REF");
+  } else {
+    const ledgerLocalRef =
+      matchedRecord.mcpInvocationRef || matchedRecord.invocationId;
+    if (localRef !== ledgerLocalRef) {
+      addReason("LOCAL_INVOCATION_REF_MISMATCHES_LEDGER");
+    }
+  }
+
+  if (reasons.length > 0) {
+    return buildResult(false, "UNVERIFIED", "ABSENT", null, localRef, null, null);
+  }
+
+  return buildResult(
+    true,
+    "VERIFIED_LOCAL_INVOCATION_ONLY",
+    "ABSENT",
+    null,
+    localRef,
+    matchedRecord.invocationId || matchedRecord.mcpInvocationRef || null,
+    ledgerRespHash
+  );
 }
 
 export interface GoogleEnrichmentExecution {
@@ -254,6 +1298,13 @@ export interface GoogleEnrichmentExecution {
   timeoutCount?: number;
   creativeAssociationLedger?: Array<{
     creativeId: string;
+    researchRunId?: string | null;
+    providerRequestId?: string | null;
+    upstreamProviderRequestId?: string | null;
+    providerRequestIdOrigin?: GoogleRequestIdOrigin;
+    mcpInvocationRef?: string | null;
+    lineageMethod?: string | null;
+    responseEvidenceHash?: string | null;
     advertiserDomain: string | null;
     sourceMarket: string;
     rawLandingUrl: string | null;
@@ -261,9 +1312,10 @@ export interface GoogleEnrichmentExecution {
     normalizedProductUrl: string | null;
     creativeTitle: string | null;
     candidateIdsEvaluated: string[];
+    matchedCandidateId?: string | null;
     exactMatchingClassification: string | null;
     associationClassification?: string;
-    sourceMode?: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
+    sourceMode?: string;
     matchingEvidence: string | null;
     rejectionReason: string | null;
     associationVerdict:
@@ -806,10 +1858,13 @@ export function normalizeGoogleAdsResponse(
 
   const normalizedAds: NormalizedGoogleAd[] = [];
   const observations: SourceObservation[] = [];
+  const seenCreativeIds = new Set<string>();
 
   for (const ad of adsArray) {
-    const creativeId = String(ad.creative_id || ad.id || "");
-    if (!creativeId) continue;
+    const creativeId = String(ad.creative_id || ad.creativeId || ad.id || "").trim();
+    if (!creativeId || isSyntheticGoogleCreativeId(creativeId)) continue;
+    if (seenCreativeIds.has(creativeId)) continue;
+    seenCreativeIds.add(creativeId);
 
     const format =
       ad.format === "video"
@@ -967,6 +2022,42 @@ export function normalizeGoogleAdsResponse(
       isLiveRecord: true,
       sourceObservationId: `sobs_google_${creativeId}`,
       evidenceReference: `GoogleAd:${creativeId}`,
+      providerRequestId: extractUpstreamGoogleRequestId(decoded, ad),
+      upstreamProviderRequestId: extractUpstreamGoogleRequestId(decoded, ad),
+      providerRequestIdOrigin: extractUpstreamGoogleRequestId(decoded, ad)
+        ? "UPSTREAM"
+        : "ABSENT",
+      mcpInvocationRef:
+        typeof ad.mcpInvocationRef === "string" && ad.mcpInvocationRef.trim()
+          ? ad.mcpInvocationRef.trim()
+          : typeof (metadata as any).mcpInvocationRef === "string" &&
+            (metadata as any).mcpInvocationRef.trim()
+          ? (metadata as any).mcpInvocationRef.trim()
+          : null,
+      invocationEvidenceRef:
+        typeof ad.invocationEvidenceRef === "string" && ad.invocationEvidenceRef.trim()
+          ? ad.invocationEvidenceRef.trim()
+          : null,
+      requestArgumentsHash:
+        typeof ad.requestArgumentsHash === "string" && ad.requestArgumentsHash.trim()
+          ? ad.requestArgumentsHash.trim()
+          : null,
+      responseEvidenceHash:
+        typeof ad.responseEvidenceHash === "string" && ad.responseEvidenceHash.trim()
+          ? ad.responseEvidenceHash.trim()
+          : typeof (metadata as any).responseEvidenceHash === "string" &&
+            (metadata as any).responseEvidenceHash.trim()
+          ? (metadata as any).responseEvidenceHash.trim()
+          : null,
+      lineageMethod:
+        ad.lineageMethod ??
+        (extractUpstreamGoogleRequestId(decoded, ad)
+          ? "UPSTREAM_PROVIDER_REQUEST_ID"
+          : (typeof ad.mcpInvocationRef === "string" && ad.mcpInvocationRef.trim()) ||
+            (typeof (metadata as any).mcpInvocationRef === "string" &&
+              (metadata as any).mcpInvocationRef.trim())
+          ? "VERIFIED_LOCAL_INVOCATION_ONLY"
+          : "UNVERIFIED"),
     });
   }
 
@@ -1706,6 +2797,7 @@ export async function collectGoogleAdvertiserSignals(
   let mcpCallsStarted = 0;
   let mcpCallsCompleted = 0;
   const allRawAds: any[] = [];
+  const seenRunCreativeIds = new Set<string>();
 
   recordStep("startup", "COMPLETED", Date.now(), `domainsPlanned=${targetDomains.length}`);
 
@@ -1973,6 +3065,11 @@ export async function collectGoogleAdvertiserSignals(
                 query.signal
               );
               mcpCallsCompleted++;
+              if (isBotWallOrUnavailableResponse(adsResult)) {
+                throw new Error(
+                  `Google Transparency returned bot-wall or unavailable response for advertiser ${advId}`
+                );
+              }
               recordStep("creativeRetrieval", "COMPLETED", crStartMs, `advertiserId=${advId}`);
 
               creativeQuerySucceeded = true;
@@ -1980,59 +3077,64 @@ export async function collectGoogleAdvertiserSignals(
                 ? adsResult
                 : Array.isArray(adsResult?.ads)
                   ? adsResult.ads
-                  : [];
-              const hasRunLineage = Boolean(query.researchRunId && String(query.researchRunId).trim());
+                  : Array.isArray(adsResult?.creatives)
+                    ? adsResult.creatives
+                    : [];
               const invocationId = `google_mcp_inv_${regDomain}_${advId}_${crStartMs}`;
-              const upstreamReqId =
-                (typeof adsResult?.requestId === "string" && adsResult.requestId.trim()) ||
-                (typeof adsResult?.providerRequestId === "string" && adsResult.providerRequestId.trim()) ||
-                (hasRunLineage ? `google_mcp_${query.researchRunId}_${regDomain}_${advId}_${crStartMs}` : null);
               const observedIso = new Date().toISOString();
-              const returnedCreativeIds: string[] = [];
-              let missingCreativeIdCount = 0;
+              const reqArgs = {
+                advertiser_id: advId,
+                region: query.market || "US",
+              };
 
-              const stampedRawAds = rawAds.map((rawAd: any) => {
-                const rawCid = rawAd?.creative_id ?? rawAd?.creativeId ?? rawAd?.id;
-                const actualCreativeId =
-                  typeof rawCid === "string" || typeof rawCid === "number"
-                    ? String(rawCid).trim() || null
-                    : null;
-                if (actualCreativeId) {
-                  returnedCreativeIds.push(actualCreativeId);
-                } else {
-                  missingCreativeIdCount++;
+              const invocationRecord = recordActualGoogleMcpInvocation(
+                {
+                  mcpInvocationRef: invocationId,
+                  transportId: transportSessionId,
+                  researchRunId: query.researchRunId || null,
+                  workspaceId: query.workspaceId || null,
+                  toolName: adsTool,
+                  advertiserId: advId,
+                  domain: regDomain,
+                  requestArguments: reqArgs,
+                  startedAt: new Date(crStartMs).toISOString(),
+                  completedAt: observedIso,
+                  durationMs: Math.max(0, Date.now() - crStartMs),
+                  sourceMode: "LIVE_PROVIDER",
+                  status: "SUCCEEDED",
+                },
+                adsResult
+              );
+
+              const stampedRawAds: any[] = [];
+              for (const rawAd of rawAds) {
+                const stamped = attachGoogleMcpCreativeProvenance(rawAd, invocationRecord);
+                const actualCreativeId = stamped.creativeId;
+                if (!actualCreativeId) {
                   adapterRejectedRecords.push({
                     creativeId: null,
                     advertiserId: advId,
                     domain: regDomain,
                     researchRunId: query.researchRunId || null,
-                    rejectionReason: "MISSING_UPSTREAM_CREATIVE_ID",
+                    rejectionReason:
+                      stamped.missingProvenanceReason || "MISSING_UPSTREAM_CREATIVE_ID",
                   });
+                  stampedRawAds.push(stamped);
+                  continue;
                 }
-                const adReqId =
-                  (typeof rawAd?.providerRequestId === "string" && rawAd.providerRequestId.trim()) ||
-                  upstreamReqId ||
-                  null;
-                return {
-                  ...rawAd,
-                  creative_id: actualCreativeId,
-                  creativeId: actualCreativeId,
-                  advertiser_id: rawAd?.advertiser_id || advId,
-                  domain: rawAd?.domain || regDomain,
-                  sourceMode: "LIVE_PROVIDER",
-                  provenance: "REAL_UPSTREAM",
-                  isCached: false,
-                  researchRunId: query.researchRunId || null,
-                  observedAt: observedIso,
-                  providerRequestId: adReqId,
-                  mcpInvocationRef: invocationId,
-                  missingProvenanceReason: !actualCreativeId
-                    ? "MISSING_UPSTREAM_CREATIVE_ID"
-                    : !adReqId
-                    ? "MISSING_PROVIDER_REQUEST_ID"
-                    : null,
-                };
-              });
+                if (seenRunCreativeIds.has(actualCreativeId)) {
+                  continue;
+                }
+                seenRunCreativeIds.add(actualCreativeId);
+                const lineageCheck = verifyGoogleInvocationLineage(
+                  stamped,
+                  [invocationRecord],
+                  query.researchRunId || ""
+                );
+                stamped.lineageMethod = lineageCheck.lineageMethod;
+                stampedRawAds.push(stamped);
+              }
+
               creativesReturnedCount += stampedRawAds.length;
               domainCreativesReturned += stampedRawAds.length;
               allRawAds.push(...stampedRawAds);
@@ -2040,7 +3142,7 @@ export async function collectGoogleAdvertiserSignals(
               mcpInvocations.push({
                 domain: regDomain,
                 toolName: adsTool,
-                arguments: { advertiser_id: advId, region: query.market || "US" },
+                arguments: reqArgs,
                 startedAt: new Date(crStartMs).toISOString(),
                 completedAt: observedIso,
                 durationMs: Math.max(0, Date.now() - crStartMs),
@@ -2049,27 +3151,14 @@ export async function collectGoogleAdvertiserSignals(
                 errorMessage: null,
               });
 
-              providerInvocationRecords.push({
-                invocationId,
-                providerRequestId: upstreamReqId,
-                transportId: transportSessionId,
-                researchRunId: query.researchRunId || null,
-                toolName: adsTool,
-                advertiserId: advId,
-                domain: regDomain,
-                startedAt: new Date(crStartMs).toISOString(),
-                completedAt: observedIso,
-                durationMs: Math.max(0, Date.now() - crStartMs),
-                sourceMode: "LIVE_PROVIDER",
-                status: "SUCCEEDED",
-                returnedCreativeIds,
-                missingCreativeIdCount,
-                responseEvidenceRef: `mcp:${adsTool}:${advId}:${returnedCreativeIds.length}`,
-                lineageAvailable: Boolean(upstreamReqId && hasRunLineage && missingCreativeIdCount === 0),
-              });
+              providerInvocationRecords.push(invocationRecord);
 
               const normStartMs = Date.now();
-              const normResult = normalizeGoogleAdsResponse(adsResult, {
+              const stampedPayload =
+                adsResult && typeof adsResult === "object" && !Array.isArray(adsResult)
+                  ? { ...adsResult, ads: stampedRawAds }
+                  : { ads: stampedRawAds };
+              const normResult = normalizeGoogleAdsResponse(stampedPayload, {
                 requestedDomain: regDomain,
                 topic: query.topic,
                 observedAt: observedIso,
@@ -2084,14 +3173,46 @@ export async function collectGoogleAdvertiserSignals(
                 `normalized=${normResult.observations.length}`
               );
 
+              const stampedByCid = new Map<string, any>();
+              for (const st of stampedRawAds) {
+                if (st.creativeId) stampedByCid.set(st.creativeId, st);
+              }
+
               for (const obs of normResult.observations) {
+                const st = stampedByCid.get(obs.sourceRecordId);
                 obs.researchRunId = query.researchRunId || null;
+                obs.workspaceId = query.workspaceId || null;
                 obs.sourceMode = "LIVE_PROVIDER";
                 obs.sourceType = "LIVE_PROVIDER";
                 obs.isCached = false;
                 obs.isLiveRecord = true;
-                obs.providerRequestId = upstreamReqId || undefined;
-                obs.sourceObservationId = obs.sourceObservationId || `sobs_google_${obs.sourceRecordId}`;
+                obs.providerRequestId =
+                  st?.providerRequestId ?? invocationRecord.providerRequestId ?? null;
+                obs.upstreamProviderRequestId =
+                  st?.upstreamProviderRequestId ??
+                  invocationRecord.upstreamProviderRequestId ??
+                  null;
+                obs.providerRequestIdOrigin =
+                  st?.providerRequestIdOrigin ??
+                  invocationRecord.providerRequestIdOrigin ??
+                  "ABSENT";
+                obs.mcpInvocationRef =
+                  st?.mcpInvocationRef ?? invocationRecord.mcpInvocationRef;
+                obs.invocationEvidenceRef =
+                  st?.invocationEvidenceRef ?? invocationRecord.responseEvidenceRef;
+                obs.requestArgumentsHash =
+                  st?.requestArgumentsHash ?? invocationRecord.requestArgumentsHash;
+                obs.responseEvidenceHash =
+                  st?.responseEvidenceHash ?? invocationRecord.responseEvidenceHash;
+                obs.lineageMethod =
+                  st?.lineageMethod ??
+                  verifyGoogleInvocationLineage(
+                    obs,
+                    providerInvocationRecords,
+                    query.researchRunId || ""
+                  ).lineageMethod;
+                obs.sourceObservationId =
+                  obs.sourceObservationId || `sobs_google_${obs.sourceRecordId}`;
                 observations.push(obs);
               }
             } catch (adsErr: any) {
@@ -2099,17 +3220,43 @@ export async function collectGoogleAdvertiserSignals(
               const msg = String(adsErr?.message || adsErr);
               domainErrorMsg = msg;
               const isTimeout = /timeout/i.test(msg);
+              const isBlocked = isRateLimitOrBlockError(msg);
+              const failIso = new Date().toISOString();
+              const failedInvocationId = `google_mcp_inv_${regDomain}_${advId}_${crStartMs}`;
               mcpInvocations.push({
                 domain: regDomain,
                 toolName: adsTool,
                 arguments: { advertiser_id: advId, region: query.market || "US" },
                 startedAt: new Date(crStartMs).toISOString(),
-                completedAt: new Date().toISOString(),
+                completedAt: failIso,
                 durationMs: Math.max(0, Date.now() - crStartMs),
                 status: isTimeout ? "TIMED_OUT" : "FAILED",
                 returnedCount: 0,
                 errorMessage: msg,
               });
+              providerInvocationRecords.push(
+                recordActualGoogleMcpInvocation(
+                  {
+                    mcpInvocationRef: failedInvocationId,
+                    transportId: transportSessionId,
+                    researchRunId: query.researchRunId || null,
+                    workspaceId: query.workspaceId || null,
+                    toolName: adsTool,
+                    advertiserId: advId,
+                    domain: regDomain,
+                    requestArguments: {
+                      advertiser_id: advId,
+                      region: query.market || "US",
+                    },
+                    startedAt: new Date(crStartMs).toISOString(),
+                    completedAt: failIso,
+                    durationMs: Math.max(0, Date.now() - crStartMs),
+                    sourceMode: "LIVE_PROVIDER",
+                    status: isTimeout ? "TIMEOUT" : isBlocked ? "BLOCKED" : "FAILED",
+                  },
+                  { error: msg }
+                )
+              );
               recordStep(
                 "creativeRetrieval",
                 isTimeout ? "TIMED_OUT" : "FAILED",
@@ -2117,7 +3264,7 @@ export async function collectGoogleAdvertiserSignals(
                 msg
               );
               errors.push(`Ads retrieval failed for advertiser ${advId}: ${msg}`);
-              if (isRateLimitOrBlockError(msg)) {
+              if (isBlocked) {
                 upstreamRateLimitedOrBlocked = true;
                 domainStatus = isRateLimitError(msg) ? "RATE_LIMITED" : "BLOCKED";
                 if (isRateLimitError(msg)) {
