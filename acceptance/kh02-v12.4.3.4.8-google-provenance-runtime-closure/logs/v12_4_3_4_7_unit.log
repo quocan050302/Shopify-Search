@@ -1,0 +1,27 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts (13 tests) 1470ms
+   ✓ V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth (13)
+     ✓ Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations (3)
+       ✓ passes all policy & leakage scenario tests in runBacktestV12_4_3_4_2 649ms
+       ✓ validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 805ms
+ ✓ tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts (22 tests) 504ms
+   ✓ KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure (22)
+     ✓ Google MCP Negative Suite (G06-NEG-01..20) & 40 Physical-File Negative Control Mutations (MUT_01..40) (2)
+       ✓ catches and rejects all 40 physical-file negative control mutations (MUT_01..MUT_40 covering N01..N15) 480ms
+ ✓ tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts (12 tests) 747ms
+   ✓ KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth (12)
+     ✓ Phase 5: G15 Exact Identity Query & 33 Physical-File Negative Control Mutations (2)
+       ✓ catches all 33 physical-file negative control mutations (MUT_01 through MUT_33) 683ms
+
+ Test Files  3 passed (3)
+      Tests  47 passed (47)
+   Start at  18:09:15
+   Duration  6.06s (tests 47%, import 43%, transform 5%, setup 4%)
+
+     Import  82 modules were evaluated 214 times · 2.47s total, 43% of tracked time
+             ~1.52s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure/json_reports/v12_4_3_4_7_unit.json

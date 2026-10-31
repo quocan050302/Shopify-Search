@@ -1,0 +1,21 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/integration/kh02V12_1_3_Acceptance.test.ts (4 tests) 1276ms
+   ✓ SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E (4)
+     ✓ executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback 823ms
+     ✓ reconciles research across database, HTTP readback, and snapshot layers 316ms
+ ✓ tests/integration/kh02V12_1_4_2_LongResearch.test.ts (3 tests) 345ms
+ ✓ tests/integration/kh02ResearchApi.test.ts (5 tests) 210ms
+ ✓ tests/integration/kh02V12_1_Persistence.test.ts (4 tests) 238ms
+ ✓ tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts (2 tests) 167ms
+
+ Test Files  5 passed (5)
+      Tests  18 passed (18)
+   Start at  18:09:16
+   Duration  4.47s (tests 57%, import 29%, setup 9%, transform 5%, worker 1%)
+
+    Isolate  5 workers spawned · ~103ms startup each (spawn + environment, per file)
+             at least ~410ms faster with isolate: false — reuses workers across files instead of one per file
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure/json_reports/kh02_integration.json

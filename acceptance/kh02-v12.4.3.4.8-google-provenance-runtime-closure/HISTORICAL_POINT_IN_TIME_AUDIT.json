@@ -1,0 +1,45 @@
+{
+  "evaluatedAt": "2026-10-31T11:09:12.050Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "devWindow": {
+    "start": "2026-06-01T00:00:00.000Z",
+    "end": "2026-10-24T00:00:00.000Z",
+    "asOf": "2026-10-24T00:00:00.000Z",
+    "observationCount": 60,
+    "candidateCount": 17,
+    "joinedMetadataLeakageAudit": {
+      "joinedLinksEvaluatedCount": 6,
+      "trustedPointInTimeJoinedCount": 6,
+      "rejectedPostCutoffJoinedCount": 0,
+      "unverifiedTimestampJoinedCount": 0,
+      "postCutoffFallbackAppliedCount": 0,
+      "adObservationOnlyCount": 54,
+      "excludedFixtureRecordCount": 0,
+      "leakagePrevented": true
+    }
+  },
+  "holdoutWindow": {
+    "start": "2026-10-24T00:00:00.000Z",
+    "end": "2026-10-30T12:00:00.000Z",
+    "asOf": "2026-10-30T12:00:00.000Z",
+    "observationCount": 377,
+    "candidateCount": 319,
+    "joinedMetadataLeakageAudit": {
+      "joinedLinksEvaluatedCount": 48,
+      "trustedPointInTimeJoinedCount": 28,
+      "rejectedPostCutoffJoinedCount": 20,
+      "unverifiedTimestampJoinedCount": 0,
+      "postCutoffFallbackAppliedCount": 20,
+      "adObservationOnlyCount": 349,
+      "excludedFixtureRecordCount": 0,
+      "leakagePrevented": true
+    }
+  },
+  "temporalSeparationStrict": true,
+  "futureDataLeakageDetected": false,
+  "joinedMetadataLeakagePrevented": true,
+  "backtestEngineExecuted": "PASS",
+  "businessHistoricalEvidenceSufficient": "INSUFFICIENT_EVIDENCE",
+  "pointInTimeIntegrityVerdict": "PASS"
+}
