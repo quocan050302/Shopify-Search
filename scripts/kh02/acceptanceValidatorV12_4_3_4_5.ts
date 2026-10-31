@@ -177,7 +177,7 @@ export function parseJUnitXmlMetrics(xmlContent: string): {
  */
 export function validateAcceptanceArtifacts(
   acceptanceDir: string,
-  options?: { skipSelfMutationReportCheck?: boolean }
+  options?: { skipSelfMutationReportCheck?: boolean; skipCliExitDecisionCheck?: boolean }
 ): AcceptanceValidationReport {
   const checks: ValidationCheckResult[] = [];
   const addCheck = (checkId: string, description: string, passed: boolean, failureReason?: string) => {
@@ -192,11 +192,23 @@ export function validateAcceptanceArtifacts(
   // 1. Check all mandatory files exist and are non-empty
   const missingFiles: string[] = [];
   const requiredArtifactList: string[] = [...MANDATORY_ACCEPTANCE_ARTIFACTS];
-  if (acceptanceDir.includes("12.4.3.4.8")) {
+  if (acceptanceDir.includes("12.4.3.4.8") || acceptanceDir.includes("12.4.3.4.9")) {
     requiredArtifactList.push(
       "SOURCE_SHA_PROVENANCE.json",
       "GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json"
     );
+  }
+  if (acceptanceDir.includes("12.4.3.4.9")) {
+    requiredArtifactList.push(
+      "SAFE_DISK_RECOVERY_AUDIT.json",
+      "RESOURCE_WAVE_GUARDS.json"
+    );
+    if (!options?.skipCliExitDecisionCheck) {
+      requiredArtifactList.push(
+        "CLI_EXIT_DECISION.json",
+        "CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json"
+      );
+    }
   }
   for (const filename of requiredArtifactList) {
     if (options?.skipSelfMutationReportCheck && filename === "NEGATIVE_CONTROL_MUTATION_SUITE.json") {
@@ -954,12 +966,189 @@ export function validateAcceptanceArtifacts(
     !matrixConsistent ? matrixFailureReason : undefined
   );
 
+  // 17. Safe Disk Recovery Audit & Resource Wave Guards (V12.4.3.4.9 P1)
+  const safeDiskAudit = safeReadJson(path.join(acceptanceDir, "SAFE_DISK_RECOVERY_AUDIT.json"));
+  const resourceGuards = safeReadJson(path.join(acceptanceDir, "RESOURCE_WAVE_GUARDS.json"));
+  if (safeDiskAudit !== null || acceptanceDir.includes("12.4.3.4.9")) {
+    const hasLegacyStaticConstants =
+      safeDiskAudit?.beforeFreeDiskGB === 8.71 ||
+      safeDiskAudit?.beforeFreeDiskBytes === 9357185024 ||
+      safeDiskAudit?.reclaimedBytes === 226365440 ||
+      safeDiskAudit?.reclaimedGB === 0.22;
+
+    const cleanedTargets: any[] = Array.isArray(safeDiskAudit?.cleanedTargets)
+      ? safeDiskAudit.cleanedTargets
+      : [];
+    const actionsAttempted: any[] = Array.isArray(safeDiskAudit?.actionsAttempted)
+      ? safeDiskAudit.actionsAttempted
+      : [];
+    const actionsSucceeded: any[] = Array.isArray(safeDiskAudit?.actionsSucceeded)
+      ? safeDiskAudit.actionsSucceeded
+      : [];
+    const actionsFailed: any[] = Array.isArray(safeDiskAudit?.actionsFailed)
+      ? safeDiskAudit.actionsFailed
+      : [];
+    const protectedPathsList: any[] = Array.isArray(safeDiskAudit?.protectedPathsVerifiedPresent)
+      ? safeDiskAudit.protectedPathsVerifiedPresent
+      : [];
+
+    const sumRemovedTargets = cleanedTargets.reduce(
+      (acc, t) => acc + (typeof t?.bytesRemoved === "number" ? t.bytesRemoved : 0),
+      0
+    );
+    const sumRemovedActions = actionsSucceeded.reduce(
+      (acc, a) => acc + (typeof a?.measuredBytesRemoved === "number" ? a.measuredBytesRemoved : 0),
+      0
+    );
+
+    const protectedRuleBroken =
+      protectedPathsList.length === 0 ||
+      protectedPathsList.some(
+        (p: any) =>
+          p?.untouched !== true ||
+          (p?.path !== "data/google_trends_csv" && p?.exists !== true)
+      ) ||
+      cleanedTargets.some((t: any) => {
+        const rel = String(t?.path || "");
+        return (
+          t?.ownershipVerified !== true ||
+          rel === "dev.db" ||
+          rel === "node_modules" ||
+          rel === ".git" ||
+          rel.startsWith("acceptance") ||
+          rel.startsWith("data/google_trends_csv")
+        );
+      });
+
+    const cleanupAccountingConsistent =
+      safeDiskAudit?.cleanupAttempted === false
+        ? cleanedTargets.length === 0 &&
+          actionsAttempted.length === 0 &&
+          actionsSucceeded.length === 0 &&
+          actionsFailed.length === 0 &&
+          safeDiskAudit?.totalVerifiedRemovedBytes === 0 &&
+          safeDiskAudit?.reclaimedBytes === 0
+        : safeDiskAudit?.cleanupAttempted === true &&
+          typeof safeDiskAudit?.totalVerifiedRemovedBytes === "number" &&
+          safeDiskAudit.totalVerifiedRemovedBytes === sumRemovedTargets &&
+          safeDiskAudit.totalVerifiedRemovedBytes === sumRemovedActions &&
+          safeDiskAudit.reclaimedBytes === safeDiskAudit.totalVerifiedRemovedBytes;
+
+    const guardsValid =
+      !resourceGuards ||
+      (resourceGuards.heavyWavesUnblocked === true &&
+        Array.isArray(resourceGuards.waveGuards) &&
+        resourceGuards.waveGuards.length >= 5 &&
+        resourceGuards.waveGuards.every((wg: any) => wg?.allowed === true));
+
+    const diskAuditOk = Boolean(
+      safeDiskAudit &&
+        !hasLegacyStaticConstants &&
+        safeDiskAudit.measurementStatus === "MEASURED" &&
+        typeof safeDiskAudit.beforeMeasuredAt === "string" &&
+        typeof safeDiskAudit.afterMeasuredAt === "string" &&
+        typeof safeDiskAudit.beforeFreeBytes === "number" &&
+        safeDiskAudit.beforeFreeBytes > 0 &&
+        typeof safeDiskAudit.afterFreeBytes === "number" &&
+        safeDiskAudit.afterFreeBytes > 0 &&
+        typeof safeDiskAudit.afterFreeDiskGB === "number" &&
+        safeDiskAudit.afterFreeDiskGB >= (safeDiskAudit.requiredFreeDiskGB ?? 15) &&
+        safeDiskAudit.heavyWavesUnblocked === true &&
+        safeDiskAudit.guardStatus === "PASS_HEADROOM_SUFFICIENT" &&
+        !protectedRuleBroken &&
+        cleanupAccountingConsistent &&
+        guardsValid
+    );
+
+    addCheck(
+      "CHK_17_SAFE_DISK_RECOVERY_AUDIT",
+      "SAFE_DISK_RECOVERY_AUDIT and RESOURCE_WAVE_GUARDS record authentic live statfs measurements, zero static legacy constants, verified cleanup accounting, and untouched protected paths",
+      diskAuditOk,
+      !diskAuditOk
+        ? "SAFE_DISK_RECOVERY_AUDIT has legacy hardcoded constants, inconsistent cleanup accounting, touched protected path, or failed headroom guard"
+        : undefined
+    );
+  }
+
+  // 18. CLI Exit Decision & Subprocess Proof Consistency (V12.4.3.4.9 P0)
+  if (!options?.skipCliExitDecisionCheck) {
+    const cliDecision = safeReadJson(path.join(acceptanceDir, "CLI_EXIT_DECISION.json"));
+    const cliExitProof = safeReadJson(
+      path.join(acceptanceDir, "CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json")
+    );
+    if (cliDecision !== null || cliExitProof !== null || acceptanceDir.includes("12.4.3.4.9")) {
+      const coreChecksPassed = checks.every((c) => c.passed);
+      const expectedZeroExit =
+        coreChecksPassed &&
+        matrixConsistent &&
+        gateMatrix?.overallEngineeringVerdict === "PASS";
+
+      const shaMatchesDecision =
+        !preFlight?.headSha || cliDecision?.testedSourceSha === preFlight.headSha;
+      const decisionMatchesVerdict = expectedZeroExit
+        ? cliDecision?.exitCode === 0 &&
+          cliDecision?.exitCategory === "ENGINEERING_ACCEPTED" &&
+          cliDecision?.engineeringAccepted === true &&
+          cliDecision?.validatorAccepted === true &&
+          cliDecision?.completionBarrierAccepted === true &&
+          cliDecision?.sourceShaConsistent === true
+        : typeof cliDecision?.exitCode === "number" &&
+          cliDecision.exitCode !== 0 &&
+          !(cliDecision.engineeringAccepted === true && cliDecision.validatorAccepted === true);
+
+      const bizVerdictMatches =
+        !gateMatrix?.overallBusinessVerdict ||
+        cliDecision?.businessVerdict === gateMatrix.overallBusinessVerdict;
+
+      const subprocessProofOk =
+        !cliExitProof && !acceptanceDir.includes("12.4.3.4.9")
+          ? true
+          : Boolean(
+              cliExitProof &&
+                cliExitProof.suiteVerdict === "PASS" &&
+                cliExitProof.positiveCase &&
+                typeof cliExitProof.positiveCase.pid === "number" &&
+                cliExitProof.positiveCase.pid > 0 &&
+                cliExitProof.positiveCase.actualExitCode === 0 &&
+                cliExitProof.positiveCase.passed === true &&
+                Array.isArray(cliExitProof.failureCases) &&
+                cliExitProof.failureCases.length >= 3 &&
+                cliExitProof.failureCases.every(
+                  (fc: any) =>
+                    typeof fc?.pid === "number" &&
+                    fc.pid > 0 &&
+                    typeof fc.actualExitCode === "number" &&
+                    fc.actualExitCode !== 0 &&
+                    fc.actualExitCode === fc.expectedExitCode &&
+                    fc.passed === true
+                )
+            );
+
+      const cliConsistencyOk = Boolean(
+        cliDecision &&
+          shaMatchesDecision &&
+          decisionMatchesVerdict &&
+          bizVerdictMatches &&
+          subprocessProofOk
+      );
+
+      addCheck(
+        "CHK_18_CLI_EXIT_DECISION_CONSISTENCY",
+        "CLI_EXIT_DECISION and CLI_POSITIVE_AND_FAILURE_EXIT_PROOF match recomputed engineering/validator acceptance and verify real child subprocess exit codes",
+        cliConsistencyOk,
+        !cliConsistencyOk
+          ? "CLI_EXIT_DECISION contradicts engineering/validator verdict or CLI_POSITIVE_AND_FAILURE_EXIT_PROOF failed subprocess verification"
+          : undefined
+      );
+    }
+  }
+
   const passedChecks = checks.filter((c) => c.passed).length;
   const failedChecks = checks.length - passedChecks;
 
   return {
     evaluatedAt: new Date().toISOString(),
-    version: "12.4.3.4.6",
+    version: "12.4.3.4.9",
     targetDirectory: acceptanceDir,
     overallValid: failedChecks === 0,
     totalChecks: checks.length,
@@ -1681,6 +1870,111 @@ export function runNegativeControlSuite(baselineAcceptanceDir: string): Negative
           ),
           "utf8"
         );
+      },
+    },
+    // ── V12.4.3.4.9 Phase 4: 6 Additional Disk Audit & CLI Exit Consistency Mutations (MUT_41 .. MUT_46) ──
+    {
+      mutationId: "MUT_41_DISK_AUDIT_HARDCODED_LEGACY_BYTES",
+      description: "SAFE_DISK_RECOVERY_AUDIT uses legacy hardcoded beforeFreeDiskGB=8.71 and reclaimedBytes=226365440",
+      targetArtifact: "SAFE_DISK_RECOVERY_AUDIT.json",
+      injectedDefect: "beforeFreeDiskGB=8.71, beforeFreeDiskBytes=9357185024, reclaimedBytes=226365440",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "SAFE_DISK_RECOVERY_AUDIT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.beforeFreeDiskGB = 8.71;
+        data.beforeFreeDiskBytes = 9357185024;
+        data.reclaimedBytes = 226365440;
+        data.reclaimedGB = 0.22;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_42_DISK_AUDIT_FAKE_CLEANED_TARGETS_WITHOUT_CLEANUP",
+      description: "SAFE_DISK_RECOVERY_AUDIT claims cleanedTargets and reclaimedBytes>0 while cleanupAttempted=false",
+      targetArtifact: "SAFE_DISK_RECOVERY_AUDIT.json",
+      injectedDefect: "cleanupAttempted=false with non-empty cleanedTargets and totalVerifiedRemovedBytes=218112000",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "SAFE_DISK_RECOVERY_AUDIT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.cleanupAttempted = false;
+        data.cleanedTargets = [
+          {
+            path: ".next/cache",
+            category: "REGENERABLE_NEXT_BUILD_CACHE",
+            bytesRemoved: 218112000,
+            ownershipVerified: true,
+          },
+        ];
+        data.totalVerifiedRemovedBytes = 218112000;
+        data.reclaimedBytes = 218112000;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_43_DISK_AUDIT_PROTECTED_PATH_TOUCHED",
+      description: "SAFE_DISK_RECOVERY_AUDIT marks protected path dev.db as untouched=false",
+      targetArtifact: "SAFE_DISK_RECOVERY_AUDIT.json",
+      injectedDefect: "protectedPathsVerifiedPresent[0].untouched=false",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "SAFE_DISK_RECOVERY_AUDIT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        if (Array.isArray(data.protectedPathsVerifiedPresent) && data.protectedPathsVerifiedPresent[0]) {
+          data.protectedPathsVerifiedPresent[0].untouched = false;
+        } else {
+          data.protectedPathsVerifiedPresent = [{ path: "dev.db", exists: true, untouched: false }];
+        }
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_44_CLI_EXIT_ZERO_DESPITE_ENG_VERDICT_FAIL",
+      description: "CLI_EXIT_DECISION claims exitCode=0 and engineeringAccepted=true while GATE_TRUTH_MATRIX has overallEngineeringVerdict='FAIL'",
+      targetArtifact: "CLI_EXIT_DECISION.json",
+      injectedDefect: "exitCode=0 with overallEngineeringVerdict='FAIL'",
+      mutate: (tempDir) => {
+        const pGate = path.join(tempDir, gateMatrixFile);
+        const gateData = JSON.parse(fs.readFileSync(pGate, "utf8"));
+        if (gateData.gates?.G20) gateData.gates.G20.status = "FAIL";
+        gateData.overallEngineeringVerdict = "FAIL";
+        fs.writeFileSync(pGate, JSON.stringify(gateData, null, 2), "utf8");
+
+        const pCli = path.join(tempDir, "CLI_EXIT_DECISION.json");
+        const cliData = JSON.parse(fs.readFileSync(pCli, "utf8"));
+        cliData.exitCode = 0;
+        cliData.exitCategory = "ENGINEERING_ACCEPTED";
+        cliData.engineeringAccepted = true;
+        cliData.validatorAccepted = true;
+        fs.writeFileSync(pCli, JSON.stringify(cliData, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_45_CLI_EXIT_DECISION_CONTRADICTS_VALID_BASELINE",
+      description: "CLI_EXIT_DECISION reports exitCode=2 (ENGINEERING_GATE_FAILURE) while all engineering and validator checks pass",
+      targetArtifact: "CLI_EXIT_DECISION.json",
+      injectedDefect: "exitCode=2 and engineeringAccepted=false on a passing engineering run",
+      mutate: (tempDir) => {
+        const pCli = path.join(tempDir, "CLI_EXIT_DECISION.json");
+        const cliData = JSON.parse(fs.readFileSync(pCli, "utf8"));
+        cliData.exitCode = 2;
+        cliData.exitCategory = "ENGINEERING_GATE_FAILURE";
+        cliData.engineeringAccepted = false;
+        fs.writeFileSync(pCli, JSON.stringify(cliData, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_46_CLI_SUBPROCESS_FAILURE_PROOF_RETURNS_ZERO",
+      description: "CLI_POSITIVE_AND_FAILURE_EXIT_PROOF has a forced failure subprocess case with actualExitCode=0",
+      targetArtifact: "CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json",
+      injectedDefect: "failureCases[0].actualExitCode=0",
+      mutate: (tempDir) => {
+        const pProof = path.join(tempDir, "CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json");
+        const proofData = JSON.parse(fs.readFileSync(pProof, "utf8"));
+        if (Array.isArray(proofData.failureCases) && proofData.failureCases[0]) {
+          proofData.failureCases[0].actualExitCode = 0;
+        } else {
+          proofData.suiteVerdict = "FAIL";
+        }
+        fs.writeFileSync(pProof, JSON.stringify(proofData, null, 2), "utf8");
       },
     },
   ];

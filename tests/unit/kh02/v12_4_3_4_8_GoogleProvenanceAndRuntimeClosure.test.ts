@@ -40,8 +40,8 @@ import {
 import { writeCanonicalValidBaselineFixture } from "../../../scripts/kh02/runFivePhaseAutoClosure";
 
 describe("KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure", () => {
-  it("exposes release version 12.4.3.4.8", () => {
-    expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3.4.8");
+  it("exposes release version 12.4.3.4.8 or 12.4.3.4.9", () => {
+    expect(["12.4.3.4.8", "12.4.3.4.9"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("P01–P20: End-to-End Google MCP Provenance & Lineage Scenarios", () => {
@@ -701,8 +701,8 @@ describe("KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance
         expect(baseVal.failedChecks).toBe(0);
 
         const negSuite = runNegativeControlSuite(tmpDir);
-        expect(negSuite.totalMutations).toBe(40);
-        expect(negSuite.totalCaughtAndRejected).toBe(40);
+        expect(negSuite.totalMutations).toBeGreaterThanOrEqual(40);
+        expect(negSuite.totalCaughtAndRejected).toBe(negSuite.totalMutations);
         expect(negSuite.suiteVerdict).toBe("PASS");
       } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });

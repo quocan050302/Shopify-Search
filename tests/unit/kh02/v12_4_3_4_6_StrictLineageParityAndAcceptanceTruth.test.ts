@@ -42,7 +42,7 @@ import { SWAI_KH02_RELEASE_VERSION } from "../../../src/services/kh02/version/ru
 
 describe("V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth", () => {
   it("exposes release version 12.4.3.4.6, 12.4.3.4.7, or 12.4.3.4.8", () => {
-    expect(["12.4.3.4.6", "12.4.3.4.7", "12.4.3.4.8"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    expect(["12.4.3.4.6", "12.4.3.4.7", "12.4.3.4.8", "12.4.3.4.9"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("Phase 1: Strict G16 Live Observation Lineage, Merchant Proof & Top-3 Distinctness", () => {

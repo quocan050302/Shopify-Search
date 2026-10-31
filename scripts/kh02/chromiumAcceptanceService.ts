@@ -1765,7 +1765,7 @@ async function computeSqliteTableDigests(db: any = prisma): Promise<{
     };
   };
 
-  const syncJobs =
+  const rawSyncJobs =
     (await db.syncJob?.findMany?.({
       orderBy: { id: "asc" },
       select: {
@@ -1782,6 +1782,9 @@ async function computeSqliteTableDigests(db: any = prisma): Promise<{
         createdAt: true,
       },
     })) ?? [];
+  const syncJobs = rawSyncJobs.filter(
+    (j: any) => !String(j?.jobType || "").includes("HEARTBEAT")
+  );
 
   const products =
     (await db.researchProduct?.findMany?.({

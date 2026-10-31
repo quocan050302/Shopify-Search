@@ -67,8 +67,8 @@ function createMockDb(options?: { mutateOnSecondCall?: boolean }) {
 }
 
 describe("KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth", () => {
-  it("reports runtime version 12.4.3.4.7 or 12.4.3.4.8", () => {
-    expect(["12.4.3.4.7", "12.4.3.4.8"]).toContain(SWAI_KH02_RELEASE_VERSION);
+  it("reports runtime version 12.4.3.4.7, 12.4.3.4.8, or 12.4.3.4.9", () => {
+    expect(["12.4.3.4.7", "12.4.3.4.8", "12.4.3.4.9"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("Phase 1: Real HTTP Read-Only Verification vs DB-Only Snapshot", () => {

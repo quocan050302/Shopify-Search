@@ -72,20 +72,20 @@ import {
 } from "./g16CandidateEvaluator";
 
 // ─── RUN CONSTANTS & DIRECTORIES ─────────────────────────────────────────────
-const VERSION = "12.4.3.4.8";
+const VERSION = "12.4.3.4.9";
 const MANDATORY_BRANCH = "feature/kh02-v12.1.3-runtime-truth-closure";
 const MIN_FREE_DISK_GB = 15;
 const RUN_ID = `autoclosure_${new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14)}`;
 const OUTPUT_DIR = path.resolve(
   process.cwd(),
-  "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure"
+  "acceptance/kh02-v12.4.3.4.9-premerge-closure"
 );
 const LOGS_DIR = path.join(OUTPUT_DIR, "logs");
 const SCREENSHOTS_DIR = path.join(OUTPUT_DIR, "screenshots");
 const JSON_REPORTS_DIR = path.join(OUTPUT_DIR, "json_reports");
 
 process.env.SWAI_ACCEPTANCE_OUTPUT_DIR =
-  "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure";
+  "acceptance/kh02-v12.4.3.4.9-premerge-closure";
 process.env.DEMAND_PROVIDER_MODE = "GOOGLE_FREE_ONLY";
 process.env.ZERO_SPEND_ENFORCED = "true";
 
@@ -127,6 +127,1004 @@ export function measureDiskFreeGB(): number {
   throw new Error(
     "DISK_MEASUREMENT_UNAVAILABLE: fs.statfsSync is not available"
   );
+}
+
+// ─── V12.4.3.4.9 P1: TRUTHFUL DISK MEASUREMENT & SAFE CLEANUP AUDIT ──────────
+export interface DiskSpaceSnapshot {
+  measuredAt: string;
+  targetPath: string;
+  measurementStatus: "MEASURED" | "BLOCKED_MEASUREMENT_FAILED";
+  freeBytes: number;
+  freeGB: number;
+  totalBytes: number;
+  totalGB: number;
+  bsize: number;
+  bavail: number;
+  blocks: number;
+  error?: string;
+}
+
+export function captureDiskSpaceSnapshot(
+  targetPath: string = process.cwd(),
+  statfsFn?: typeof fs.statfsSync | null
+): DiskSpaceSnapshot {
+  const measuredAt = new Date().toISOString();
+  const fn = statfsFn !== undefined ? statfsFn : fs.statfsSync;
+  if (typeof fn !== "function") {
+    return {
+      measuredAt,
+      targetPath,
+      measurementStatus: "BLOCKED_MEASUREMENT_FAILED",
+      freeBytes: 0,
+      freeGB: 0,
+      totalBytes: 0,
+      totalGB: 0,
+      bsize: 0,
+      bavail: 0,
+      blocks: 0,
+      error: "DISK_MEASUREMENT_UNAVAILABLE: statfsSync is not a function",
+    };
+  }
+  try {
+    const st = fn(targetPath);
+    const bsize = Number(st?.bsize);
+    const bavail = Number(st?.bavail);
+    const blocks = Number(st?.blocks);
+    if (
+      !Number.isFinite(bsize) ||
+      bsize <= 0 ||
+      !Number.isFinite(bavail) ||
+      bavail < 0 ||
+      !Number.isFinite(blocks) ||
+      blocks <= 0
+    ) {
+      throw new Error("Invalid non-positive statfs block metrics");
+    }
+    const freeBytes = Math.round(bavail * bsize);
+    const totalBytes = Math.round(blocks * bsize);
+    const freeGB = Math.round((freeBytes / 1024 ** 3) * 100) / 100;
+    const totalGB = Math.round((totalBytes / 1024 ** 3) * 100) / 100;
+    return {
+      measuredAt,
+      targetPath,
+      measurementStatus: "MEASURED",
+      freeBytes,
+      freeGB,
+      totalBytes,
+      totalGB,
+      bsize,
+      bavail,
+      blocks,
+    };
+  } catch (err: any) {
+    return {
+      measuredAt,
+      targetPath,
+      measurementStatus: "BLOCKED_MEASUREMENT_FAILED",
+      freeBytes: 0,
+      freeGB: 0,
+      totalBytes: 0,
+      totalGB: 0,
+      bsize: 0,
+      bavail: 0,
+      blocks: 0,
+      error: err?.message || "statfsSync failed",
+    };
+  }
+}
+
+export const PROTECTED_REPOSITORY_PATHS = [
+  "dev.db",
+  "node_modules",
+  ".git",
+  "acceptance",
+  "data/google_trends_csv",
+] as const;
+
+export function isProtectedRepositoryPath(
+  candidatePath: string,
+  repoRoot: string = process.cwd()
+): boolean {
+  const absRepo = path.resolve(repoRoot);
+  const absCandidate = path.resolve(absRepo, candidatePath);
+  for (const relProtected of [
+    ...PROTECTED_REPOSITORY_PATHS,
+    "src",
+    "tests",
+    "prisma",
+    "scripts",
+    "package.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "next.config.ts",
+  ]) {
+    const absProt = path.resolve(absRepo, relProtected);
+    if (
+      absCandidate === absProt ||
+      absCandidate.startsWith(absProt + path.sep) ||
+      absProt.startsWith(absCandidate + path.sep)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function measureDirectoryOrFileBytes(targetPath: string): number {
+  try {
+    if (!fs.existsSync(targetPath)) return 0;
+    const st = fs.lstatSync(targetPath);
+    if (st.isSymbolicLink()) return 0;
+    if (st.isFile()) return st.size;
+    if (st.isDirectory()) {
+      let sum = 0;
+      const entries = fs.readdirSync(targetPath, { withFileTypes: true });
+      for (const entry of entries) {
+        sum += measureDirectoryOrFileBytes(path.join(targetPath, entry.name));
+      }
+      return sum;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+export interface AuditedCleanupActionResult {
+  targetPath: string;
+  category: string;
+  ownershipVerified: boolean;
+  existedBefore: boolean;
+  measuredBytesBefore: number;
+  measuredBytesAfter: number;
+  measuredBytesRemoved: number;
+  status:
+    | "REMOVED"
+    | "SKIPPED_NOT_FOUND"
+    | "REJECTED_PROTECTED_OR_UNOWNED"
+    | "FAILED";
+  error?: string;
+}
+
+export function auditOwnedCleanupOperation(params: {
+  targetPath: string;
+  category: string;
+  repoRoot?: string;
+  tmpRoot?: string;
+}): AuditedCleanupActionResult {
+  const repoRoot = path.resolve(params.repoRoot || process.cwd());
+  const tmpRoot = path.resolve(params.tmpRoot || os.tmpdir());
+  const absTarget = path.resolve(repoRoot, params.targetPath);
+  const relToRepo = path.relative(repoRoot, absTarget).replace(/\\/g, "/");
+
+  if (isProtectedRepositoryPath(absTarget, repoRoot)) {
+    return {
+      targetPath: params.targetPath,
+      category: params.category,
+      ownershipVerified: false,
+      existedBefore: fs.existsSync(absTarget),
+      measuredBytesBefore: 0,
+      measuredBytesAfter: 0,
+      measuredBytesRemoved: 0,
+      status: "REJECTED_PROTECTED_OR_UNOWNED",
+      error: `Refused cleanup of protected repository path: ${params.targetPath}`,
+    };
+  }
+
+  const isRepoNextCache = absTarget === path.resolve(repoRoot, ".next/cache");
+  const isOwnedTmpDir =
+    absTarget.startsWith(tmpRoot + path.sep) &&
+    /^(swai-|kh02-)/.test(path.basename(absTarget));
+
+  if (!isRepoNextCache && !isOwnedTmpDir) {
+    return {
+      targetPath: params.targetPath,
+      category: params.category,
+      ownershipVerified: false,
+      existedBefore: fs.existsSync(absTarget),
+      measuredBytesBefore: 0,
+      measuredBytesAfter: 0,
+      measuredBytesRemoved: 0,
+      status: "REJECTED_PROTECTED_OR_UNOWNED",
+      error: `Target '${params.targetPath}' is neither repo '.next/cache' nor a task-owned '$TMPDIR/(swai-|kh02-)*' directory`,
+    };
+  }
+
+  if (!fs.existsSync(absTarget)) {
+    return {
+      targetPath: isRepoNextCache ? ".next/cache" : params.targetPath,
+      category: params.category,
+      ownershipVerified: true,
+      existedBefore: false,
+      measuredBytesBefore: 0,
+      measuredBytesAfter: 0,
+      measuredBytesRemoved: 0,
+      status: "SKIPPED_NOT_FOUND",
+    };
+  }
+
+  const measuredBytesBefore = measureDirectoryOrFileBytes(absTarget);
+  try {
+    fs.rmSync(absTarget, { recursive: true, force: true });
+    const measuredBytesAfter = measureDirectoryOrFileBytes(absTarget);
+    const measuredBytesRemoved = Math.max(
+      0,
+      measuredBytesBefore - measuredBytesAfter
+    );
+    return {
+      targetPath: isRepoNextCache ? relToRepo : params.targetPath,
+      category: params.category,
+      ownershipVerified: true,
+      existedBefore: true,
+      measuredBytesBefore,
+      measuredBytesAfter,
+      measuredBytesRemoved,
+      status: "REMOVED",
+    };
+  } catch (err: any) {
+    const measuredBytesAfter = measureDirectoryOrFileBytes(absTarget);
+    return {
+      targetPath: isRepoNextCache ? relToRepo : params.targetPath,
+      category: params.category,
+      ownershipVerified: true,
+      existedBefore: true,
+      measuredBytesBefore,
+      measuredBytesAfter,
+      measuredBytesRemoved: Math.max(0, measuredBytesBefore - measuredBytesAfter),
+      status: "FAILED",
+      error: err?.message || "rmSync failed",
+    };
+  }
+}
+
+export interface SafeDiskRecoveryAuditPayload {
+  evaluatedAt: string;
+  version: string;
+  testedSourceSha: string;
+  measurementStatus: "MEASURED" | "BLOCKED_MEASUREMENT_FAILED";
+  guardStatus:
+    | "PASS_HEADROOM_SUFFICIENT"
+    | "BLOCKED_INSUFFICIENT_DISK_HEADROOM"
+    | "BLOCKED_MEASUREMENT_FAILED";
+  beforeMeasuredAt: string;
+  afterMeasuredAt: string;
+  beforeFreeBytes: number;
+  beforeFreeDiskBytes: number;
+  beforeFreeDiskGB: number;
+  afterFreeBytes: number;
+  afterFreeDiskBytes: number;
+  afterFreeDiskGB: number;
+  requiredFreeDiskGB: number;
+  shortfallGB: number;
+  cleanupAttempted: boolean;
+  actionsAttempted: AuditedCleanupActionResult[];
+  actionsSucceeded: AuditedCleanupActionResult[];
+  actionsFailed: AuditedCleanupActionResult[];
+  cleanedTargets: Array<{
+    path: string;
+    category: string;
+    bytesRemoved: number;
+    ownershipVerified: boolean;
+  }>;
+  totalVerifiedRemovedBytes: number;
+  reclaimedBytes: number;
+  reclaimedGB: number;
+  netFreeSpaceDeltaBytes: number;
+  netFreeSpaceDeltaGB: number;
+  heavyWavesUnblocked: boolean;
+  protectedPathsUntouched: string[];
+  protectedPathsVerifiedPresent: Array<{
+    path: string;
+    exists: boolean;
+    untouched: boolean;
+  }>;
+  error?: string;
+}
+
+export function buildSafeDiskRecoveryAudit(params: {
+  testedSourceSha: string;
+  requiredFreeDiskGB?: number;
+  repoRoot?: string;
+  tmpRoot?: string;
+  statfsFn?: typeof fs.statfsSync | null;
+  candidateCleanupTargets?: Array<{ targetPath: string; category: string }>;
+  forceCleanupEvenWhenSufficient?: boolean;
+}): SafeDiskRecoveryAuditPayload {
+  const repoRoot = path.resolve(params.repoRoot || process.cwd());
+  const tmpRoot = path.resolve(params.tmpRoot || os.tmpdir());
+  const requiredFreeDiskGB = params.requiredFreeDiskGB ?? MIN_FREE_DISK_GB;
+
+  const beforeSnap = captureDiskSpaceSnapshot(repoRoot, params.statfsFn);
+
+  const checkProtectedPresence = () =>
+    PROTECTED_REPOSITORY_PATHS.map((relPath) => {
+      const abs = path.resolve(repoRoot, relPath);
+      const exists = fs.existsSync(abs);
+      return {
+        path: relPath,
+        exists,
+        untouched: true,
+      };
+    });
+
+  const beforeProtected = checkProtectedPresence();
+
+  if (beforeSnap.measurementStatus !== "MEASURED") {
+    return {
+      evaluatedAt: new Date().toISOString(),
+      version: VERSION,
+      testedSourceSha: params.testedSourceSha,
+      measurementStatus: "BLOCKED_MEASUREMENT_FAILED",
+      guardStatus: "BLOCKED_MEASUREMENT_FAILED",
+      beforeMeasuredAt: beforeSnap.measuredAt,
+      afterMeasuredAt: beforeSnap.measuredAt,
+      beforeFreeBytes: 0,
+      beforeFreeDiskBytes: 0,
+      beforeFreeDiskGB: 0,
+      afterFreeBytes: 0,
+      afterFreeDiskBytes: 0,
+      afterFreeDiskGB: 0,
+      requiredFreeDiskGB,
+      shortfallGB: requiredFreeDiskGB,
+      cleanupAttempted: false,
+      actionsAttempted: [],
+      actionsSucceeded: [],
+      actionsFailed: [],
+      cleanedTargets: [],
+      totalVerifiedRemovedBytes: 0,
+      reclaimedBytes: 0,
+      reclaimedGB: 0,
+      netFreeSpaceDeltaBytes: 0,
+      netFreeSpaceDeltaGB: 0,
+      heavyWavesUnblocked: false,
+      protectedPathsUntouched: [...PROTECTED_REPOSITORY_PATHS],
+      protectedPathsVerifiedPresent: beforeProtected,
+      error: beforeSnap.error || "Disk measurement failed",
+    };
+  }
+
+  const actionsAttempted: AuditedCleanupActionResult[] = [];
+  const actionsSucceeded: AuditedCleanupActionResult[] = [];
+  const actionsFailed: AuditedCleanupActionResult[] = [];
+  let cleanupAttempted = false;
+
+  const shouldAttemptCleanup =
+    beforeSnap.freeGB < requiredFreeDiskGB ||
+    params.forceCleanupEvenWhenSufficient === true;
+
+  if (shouldAttemptCleanup) {
+    cleanupAttempted = true;
+    const defaultTargets: Array<{ targetPath: string; category: string }> = [
+      {
+        targetPath: path.resolve(repoRoot, ".next/cache"),
+        category: "REGENERABLE_NEXT_BUILD_CACHE",
+      },
+      {
+        targetPath: path.join(tmpRoot, "swai-isolated-test-dbs"),
+        category: "TASK_OWNED_TMP_TEST_DBS",
+      },
+      {
+        targetPath: path.join(tmpRoot, "swai-vitest-isolated"),
+        category: "TASK_OWNED_TMP_VITEST_DIRS",
+      },
+    ];
+    const targets = params.candidateCleanupTargets ?? defaultTargets;
+    for (const t of targets) {
+      const res = auditOwnedCleanupOperation({
+        targetPath: t.targetPath,
+        category: t.category,
+        repoRoot,
+        tmpRoot,
+      });
+      actionsAttempted.push(res);
+      if (res.status === "REMOVED") {
+        actionsSucceeded.push(res);
+      } else if (
+        res.status === "FAILED" ||
+        res.status === "REJECTED_PROTECTED_OR_UNOWNED"
+      ) {
+        actionsFailed.push(res);
+      }
+    }
+  }
+
+  const afterSnap = captureDiskSpaceSnapshot(repoRoot, params.statfsFn);
+  const afterProtected = checkProtectedPresence().map((p, idx) => ({
+    path: p.path,
+    exists: p.exists,
+    untouched:
+      beforeProtected[idx].exists === p.exists &&
+      (p.path === "data/google_trends_csv" || p.exists === true),
+  }));
+
+  const cleanedTargets = actionsSucceeded.map((a) => ({
+    path: a.targetPath,
+    category: a.category,
+    bytesRemoved: a.measuredBytesRemoved,
+    ownershipVerified: a.ownershipVerified,
+  }));
+
+  const totalVerifiedRemovedBytes = cleanedTargets.reduce(
+    (sum, t) => sum + t.bytesRemoved,
+    0
+  );
+  const reclaimedBytes = totalVerifiedRemovedBytes;
+  const reclaimedGB =
+    Math.round((reclaimedBytes / 1024 ** 3) * 10000) / 10000;
+
+  const netFreeSpaceDeltaBytes = afterSnap.freeBytes - beforeSnap.freeBytes;
+  const netFreeSpaceDeltaGB =
+    Math.round((netFreeSpaceDeltaBytes / 1024 ** 3) * 10000) / 10000;
+
+  const measurementOk = afterSnap.measurementStatus === "MEASURED";
+  const heavyWavesUnblocked =
+    measurementOk && afterSnap.freeGB >= requiredFreeDiskGB;
+  const guardStatus = !measurementOk
+    ? "BLOCKED_MEASUREMENT_FAILED"
+    : heavyWavesUnblocked
+    ? "PASS_HEADROOM_SUFFICIENT"
+    : "BLOCKED_INSUFFICIENT_DISK_HEADROOM";
+
+  return {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: params.testedSourceSha,
+    measurementStatus: measurementOk ? "MEASURED" : "BLOCKED_MEASUREMENT_FAILED",
+    guardStatus,
+    beforeMeasuredAt: beforeSnap.measuredAt,
+    afterMeasuredAt: afterSnap.measuredAt,
+    beforeFreeBytes: beforeSnap.freeBytes,
+    beforeFreeDiskBytes: beforeSnap.freeBytes,
+    beforeFreeDiskGB: beforeSnap.freeGB,
+    afterFreeBytes: afterSnap.freeBytes,
+    afterFreeDiskBytes: afterSnap.freeBytes,
+    afterFreeDiskGB: afterSnap.freeGB,
+    requiredFreeDiskGB,
+    shortfallGB: Math.max(
+      0,
+      Math.round((requiredFreeDiskGB - afterSnap.freeGB) * 100) / 100
+    ),
+    cleanupAttempted,
+    actionsAttempted,
+    actionsSucceeded,
+    actionsFailed,
+    cleanedTargets,
+    totalVerifiedRemovedBytes,
+    reclaimedBytes,
+    reclaimedGB,
+    netFreeSpaceDeltaBytes,
+    netFreeSpaceDeltaGB,
+    heavyWavesUnblocked,
+    protectedPathsUntouched: [...PROTECTED_REPOSITORY_PATHS],
+    protectedPathsVerifiedPresent: afterProtected,
+  };
+}
+
+// ─── V12.4.3.4.9 P0: CLI EXIT DECISION & SUBPROCESS PROOF ────────────────────
+export type Kh02CliExitCategory =
+  | "ENGINEERING_ACCEPTED"
+  | "FATAL_OR_MISSING_INPUT"
+  | "ENGINEERING_GATE_FAILURE"
+  | "VALIDATOR_INVALID"
+  | "INCOMPLETE_OR_RESOURCE_BLOCKED";
+
+export interface Kh02AcceptanceExitDecision {
+  evaluatedAt: string;
+  version: string;
+  testedSourceSha: string | null;
+  exitCode: 0 | 1 | 2 | 3 | 4;
+  exitCategory: Kh02CliExitCategory;
+  engineeringAccepted: boolean;
+  validatorAccepted: boolean;
+  completionBarrierAccepted: boolean;
+  sourceShaConsistent: boolean;
+  diskHeadroomAccepted: boolean;
+  reason: string;
+  failedRequiredGates: string[];
+  failedValidatorChecks: string[];
+  businessVerdict: string;
+  mergeReadiness: "READY_FOR_OWNER_PR_REVIEW" | "BLOCKED_DO_NOT_MERGE";
+  amazonPilotReadiness: "READY_FOR_ISOLATED_PILOT" | "NOT_READY_FOR_PILOT";
+}
+
+export function computeKh02AcceptanceExitDecision(
+  input: any
+): Kh02AcceptanceExitDecision {
+  const evaluatedAt = new Date().toISOString();
+
+  if (!input || typeof input !== "object") {
+    return {
+      evaluatedAt,
+      version: VERSION,
+      testedSourceSha: null,
+      exitCode: 1,
+      exitCategory: "FATAL_OR_MISSING_INPUT",
+      engineeringAccepted: false,
+      validatorAccepted: false,
+      completionBarrierAccepted: false,
+      sourceShaConsistent: false,
+      diskHeadroomAccepted: false,
+      reason: "FATAL_OR_MISSING_INPUT: Acceptance result payload is null or invalid.",
+      failedRequiredGates: [],
+      failedValidatorChecks: [],
+      businessVerdict: "INSUFFICIENT_EVIDENCE",
+      mergeReadiness: "BLOCKED_DO_NOT_MERGE",
+      amazonPilotReadiness: "NOT_READY_FOR_PILOT",
+    };
+  }
+
+  const testedSourceSha =
+    typeof input.baselineHeadSha === "string" && input.baselineHeadSha.trim()
+      ? input.baselineHeadSha.trim()
+      : typeof input.testedSourceSha === "string" && input.testedSourceSha.trim()
+      ? input.testedSourceSha.trim()
+      : null;
+  const expectedSourceSha =
+    typeof input.expectedSourceSha === "string" && input.expectedSourceSha.trim()
+      ? input.expectedSourceSha.trim()
+      : testedSourceSha;
+
+  const sourceShaConsistent = Boolean(
+    testedSourceSha &&
+      testedSourceSha.length >= 7 &&
+      testedSourceSha === expectedSourceSha &&
+      input.sourceShaConsistent !== false
+  );
+
+  const businessVerdict =
+    typeof input.overallBusinessVerdict === "string"
+      ? input.overallBusinessVerdict
+      : "INSUFFICIENT_EVIDENCE";
+
+  if (!sourceShaConsistent) {
+    return {
+      evaluatedAt,
+      version: VERSION,
+      testedSourceSha,
+      exitCode: 1,
+      exitCategory: "FATAL_OR_MISSING_INPUT",
+      engineeringAccepted: false,
+      validatorAccepted: false,
+      completionBarrierAccepted: false,
+      sourceShaConsistent: false,
+      diskHeadroomAccepted: false,
+      reason: `FATAL_OR_MISSING_INPUT: Missing or mismatched source SHA (tested=${testedSourceSha ?? "null"}, expected=${expectedSourceSha ?? "null"}).`,
+      failedRequiredGates: [],
+      failedValidatorChecks: [],
+      businessVerdict,
+      mergeReadiness: "BLOCKED_DO_NOT_MERGE",
+      amazonPilotReadiness: "NOT_READY_FOR_PILOT",
+    };
+  }
+
+  const businessGateKeys = new Set([
+    "G07",
+    "G15",
+    "G16",
+    "G25",
+    "G26",
+    "GOOGLE_EXACT_PRODUCT_EVIDENCE",
+  ]);
+  const failedFromGatesObj =
+    input.gates && typeof input.gates === "object"
+      ? Object.entries(input.gates)
+          .filter(([k]) => !businessGateKeys.has(k))
+          .filter(([_, g]: [string, any]) => g?.status !== "PASS")
+          .map(([k]) => k)
+      : [];
+  const failedFromArray = Array.isArray(input.failedEngineeringGates)
+    ? input.failedEngineeringGates
+    : [];
+  const failedRequiredGates = Array.from(
+    new Set([...failedFromArray, ...failedFromGatesObj])
+  );
+
+  const valReport = input.validationReport;
+  const failedValidatorChecks: string[] = Array.isArray(valReport?.checks)
+    ? valReport.checks
+        .filter((c: any) => !c.passed)
+        .map((c: any) => String(c.checkId))
+    : [];
+  const validatorAccepted = Boolean(
+    valReport &&
+      valReport.overallValid === true &&
+      (valReport.failedChecks ?? 0) === 0 &&
+      failedValidatorChecks.length === 0
+  );
+
+  const diskHeadroomAccepted =
+    input.diskHeadroomOk !== false &&
+    input.engineeringReleaseDecision !== "NOT_READY_RESOURCE_BLOCKED" &&
+    input.guardStatus !== "BLOCKED_INSUFFICIENT_DISK_HEADROOM" &&
+    input.guardStatus !== "BLOCKED_MEASUREMENT_FAILED";
+
+  const barrierReport = input.barrierReport || input.completionBarrier || null;
+  const completionBarrierAccepted =
+    input.completionBarrierAccepted !== false &&
+    (!barrierReport ||
+      (barrierReport.barrierSatisfied === true &&
+        barrierReport.zeroRunningJobs === true &&
+        (barrierReport.jobsFailed ?? 0) === 0 &&
+        (barrierReport.jobsTimedOut ?? 0) === 0 &&
+        (barrierReport.jobsScheduled ?? 0) > 0 &&
+        barrierReport.jobsCompleted === barrierReport.jobsScheduled));
+
+  const hasResourceBlockedWave =
+    input.integrationStatus === "BLOCKED_RESOURCE" ||
+    input.integrationStatus === "NOT_EXECUTED" ||
+    input.buildStatus === "BLOCKED_RESOURCE" ||
+    input.chromiumStatus === "BLOCKED";
+
+  if (!diskHeadroomAccepted || !completionBarrierAccepted || hasResourceBlockedWave) {
+    return {
+      evaluatedAt,
+      version: VERSION,
+      testedSourceSha,
+      exitCode: 4,
+      exitCategory: "INCOMPLETE_OR_RESOURCE_BLOCKED",
+      engineeringAccepted: false,
+      validatorAccepted,
+      completionBarrierAccepted,
+      sourceShaConsistent: true,
+      diskHeadroomAccepted,
+      reason: `INCOMPLETE_OR_RESOURCE_BLOCKED: diskHeadroomAccepted=${diskHeadroomAccepted}, completionBarrierAccepted=${completionBarrierAccepted}, resourceBlockedWave=${hasResourceBlockedWave}.`,
+      failedRequiredGates,
+      failedValidatorChecks,
+      businessVerdict,
+      mergeReadiness: "BLOCKED_DO_NOT_MERGE",
+      amazonPilotReadiness: "NOT_READY_FOR_PILOT",
+    };
+  }
+
+  const subStageFailureReasons: string[] = [];
+  if (input.overallEngineeringVerdict !== "PASS") {
+    subStageFailureReasons.push(
+      `overallEngineeringVerdict=${input.overallEngineeringVerdict ?? "missing"}`
+    );
+  }
+  if (failedRequiredGates.length > 0) {
+    subStageFailureReasons.push(
+      `failedRequiredGates=[${failedRequiredGates.join(",")}]`
+    );
+  }
+  if (
+    input.negControlSuiteReport &&
+    input.negControlSuiteReport.suiteVerdict !== "PASS"
+  ) {
+    subStageFailureReasons.push(
+      `negControlSuiteVerdict=${input.negControlSuiteReport.suiteVerdict}`
+    );
+  }
+  if (typeof input.failedTestsCount === "number" && input.failedTestsCount > 0) {
+    subStageFailureReasons.push(`failedTestsCount=${input.failedTestsCount}`);
+  }
+  if (typeof input.skippedTestsCount === "number" && input.skippedTestsCount > 0) {
+    subStageFailureReasons.push(`skippedTestsCount=${input.skippedTestsCount}`);
+  }
+  if (
+    input.integrationStatus !== undefined &&
+    input.integrationStatus !== "EXECUTED" &&
+    input.integrationStatus !== "PASS"
+  ) {
+    subStageFailureReasons.push(`integrationStatus=${input.integrationStatus}`);
+  }
+  if (
+    input.buildStatus !== undefined &&
+    input.buildStatus !== "BUILD_PASS" &&
+    input.buildStatus !== "PASS"
+  ) {
+    subStageFailureReasons.push(`buildStatus=${input.buildStatus}`);
+  }
+  if (input.chromiumStatus !== undefined && input.chromiumStatus !== "PASS") {
+    subStageFailureReasons.push(`chromiumStatus=${input.chromiumStatus}`);
+  }
+  if (input.parityPassed === false) {
+    subStageFailureReasons.push("parityPassed=false");
+  }
+  if (input.readOnlyPassed === false) {
+    subStageFailureReasons.push("readOnlyPassed=false");
+  }
+  if (input.g06Verdict !== undefined && input.g06Verdict !== "PASS") {
+    subStageFailureReasons.push(`g06Verdict=${input.g06Verdict}`);
+  }
+
+  const engineeringAccepted = subStageFailureReasons.length === 0;
+
+  if (!engineeringAccepted) {
+    return {
+      evaluatedAt,
+      version: VERSION,
+      testedSourceSha,
+      exitCode: 2,
+      exitCategory: "ENGINEERING_GATE_FAILURE",
+      engineeringAccepted: false,
+      validatorAccepted,
+      completionBarrierAccepted: true,
+      sourceShaConsistent: true,
+      diskHeadroomAccepted: true,
+      reason: `ENGINEERING_GATE_FAILURE: ${subStageFailureReasons.join("; ")}`,
+      failedRequiredGates,
+      failedValidatorChecks,
+      businessVerdict,
+      mergeReadiness: "BLOCKED_DO_NOT_MERGE",
+      amazonPilotReadiness: "NOT_READY_FOR_PILOT",
+    };
+  }
+
+  if (!validatorAccepted) {
+    return {
+      evaluatedAt,
+      version: VERSION,
+      testedSourceSha,
+      exitCode: 3,
+      exitCategory: "VALIDATOR_INVALID",
+      engineeringAccepted: true,
+      validatorAccepted: false,
+      completionBarrierAccepted: true,
+      sourceShaConsistent: true,
+      diskHeadroomAccepted: true,
+      reason: `VALIDATOR_INVALID: Independent acceptance validator failed checks [${failedValidatorChecks.join(", ") || "missing_validation_report"}].`,
+      failedRequiredGates: [],
+      failedValidatorChecks,
+      businessVerdict,
+      mergeReadiness: "BLOCKED_DO_NOT_MERGE",
+      amazonPilotReadiness: "NOT_READY_FOR_PILOT",
+    };
+  }
+
+  return {
+    evaluatedAt,
+    version: VERSION,
+    testedSourceSha,
+    exitCode: 0,
+    exitCategory: "ENGINEERING_ACCEPTED",
+    engineeringAccepted: true,
+    validatorAccepted: true,
+    completionBarrierAccepted: true,
+    sourceShaConsistent: true,
+    diskHeadroomAccepted: true,
+    reason:
+      "ENGINEERING_ACCEPTED: All mandatory KH-02 engineering gates, completion barriers, disk headroom guards, and independent validator checks passed.",
+    failedRequiredGates: [],
+    failedValidatorChecks: [],
+    businessVerdict,
+    mergeReadiness: "READY_FOR_OWNER_PR_REVIEW",
+    amazonPilotReadiness: "READY_FOR_ISOLATED_PILOT",
+  };
+}
+
+export function runVerifyAcceptanceDirCli(
+  targetDir: string
+): Kh02AcceptanceExitDecision {
+  if (!targetDir || !fs.existsSync(targetDir)) {
+    return computeKh02AcceptanceExitDecision(null);
+  }
+  const readJson = (name: string) => {
+    try {
+      const p = path.join(targetDir, name);
+      if (!fs.existsSync(p)) return null;
+      return JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch {
+      return null;
+    }
+  };
+
+  const preFlight = readJson("PRE_FLIGHT_GIT_AND_ENV.json");
+  const shaProv = readJson("SOURCE_SHA_PROVENANCE.json");
+  const safeDisk = readJson("SAFE_DISK_RECOVERY_AUDIT.json");
+  const barrier = readJson("COMPLETION_BARRIER_REPORT.json");
+  const gateMatrix =
+    readJson("GATE_TRUTH_MATRIX_V12_4_3_4_6.json") ||
+    readJson("FINAL_GATE_MATRIX.json");
+  const negSuite = readJson("NEGATIVE_CONTROL_MUTATION_SUITE.json");
+  const intReport = readJson("INTEGRATION_SUITE_REPORT.json");
+  const chrom = readJson("CHROMIUM_EXECUTION_REPORT.json");
+  const g06 = readJson("G06_GATE_EVALUATION.json");
+
+  const valReport = validateAcceptanceArtifacts(targetDir, {
+    skipCliExitDecisionCheck: true,
+  });
+
+  return computeKh02AcceptanceExitDecision({
+    baselineHeadSha: preFlight?.headSha ?? null,
+    expectedSourceSha: shaProv ? shaProv.testedSourceSha : preFlight?.headSha ?? null,
+    diskHeadroomOk:
+      typeof preFlight?.freeDiskGB === "number" &&
+      preFlight.freeDiskGB >= MIN_FREE_DISK_GB &&
+      safeDisk?.heavyWavesUnblocked !== false,
+    guardStatus: safeDisk?.guardStatus,
+    barrierReport: barrier,
+    overallEngineeringVerdict: gateMatrix?.overallEngineeringVerdict,
+    overallBusinessVerdict: gateMatrix?.overallBusinessVerdict,
+    failedEngineeringGates: gateMatrix?.failedEngineeringGates,
+    gates: gateMatrix?.gates,
+    negControlSuiteReport: negSuite,
+    validationReport: valReport,
+    integrationStatus: intReport?.status,
+    chromiumStatus: chrom?.status,
+    g06Verdict: g06?.overallG06Verdict,
+  });
+}
+
+export interface CliSubprocessCaseProof {
+  caseId: string;
+  description: string;
+  command: string;
+  pid: number | null;
+  expectedExitCode: number;
+  actualExitCode: number | null;
+  expectedExitCategory: Kh02CliExitCategory;
+  actualExitCategory: string | null;
+  passed: boolean;
+}
+
+export interface CliPositiveAndFailureExitProofPayload {
+  evaluatedAt: string;
+  version: string;
+  testedSourceSha: string;
+  positiveCase: CliSubprocessCaseProof;
+  failureCases: CliSubprocessCaseProof[];
+  suiteVerdict: "PASS" | "FAIL";
+}
+
+export function executeCliSubprocessExitProofSuite(
+  headSha: string
+): CliPositiveAndFailureExitProofPayload {
+  const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+  const selfScript = path.resolve(
+    process.cwd(),
+    "scripts/kh02/runFivePhaseAutoClosure.ts"
+  );
+
+  const runSubprocessCase = (
+    caseId: string,
+    description: string,
+    expectedExitCode: number,
+    expectedExitCategory: Kh02CliExitCategory,
+    mutateDir?: (dir: string) => void
+  ): CliSubprocessCaseProof => {
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), `kh02-cli-subproc-${caseId}-`)
+    );
+    try {
+      writeCanonicalValidBaselineFixture(tmpDir, headSha);
+      if (mutateDir) {
+        mutateDir(tmpDir);
+      }
+      const proc = spawnSync(
+        process.execPath,
+        [tsxCli, selfScript, "--verify-dir", tmpDir],
+        {
+          cwd: process.cwd(),
+          encoding: "utf8",
+          timeout: 60000,
+        }
+      );
+      const pid = typeof proc.pid === "number" && proc.pid > 0 ? proc.pid : null;
+      const actualExitCode =
+        typeof proc.status === "number" ? proc.status : null;
+      let actualExitCategory: string | null = null;
+      try {
+        const decisionPath = path.join(tmpDir, "CLI_EXIT_DECISION.json");
+        if (fs.existsSync(decisionPath)) {
+          const parsed = JSON.parse(fs.readFileSync(decisionPath, "utf8"));
+          actualExitCategory = parsed?.exitCategory || null;
+        }
+      } catch {
+        actualExitCategory = null;
+      }
+      const passed =
+        pid !== null &&
+        actualExitCode === expectedExitCode &&
+        actualExitCategory === expectedExitCategory;
+      return {
+        caseId,
+        description,
+        command: `${path.basename(process.execPath)} tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>`,
+        pid,
+        expectedExitCode,
+        actualExitCode,
+        expectedExitCategory,
+        actualExitCategory,
+        passed,
+      };
+    } finally {
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch {
+        // ignore cleanup error
+      }
+    }
+  };
+
+  const positiveCase = runSubprocessCase(
+    "CLI_SUBPROC_POS_01_VALID_BASELINE",
+    "Canonical valid engineering baseline directory exits 0 (ENGINEERING_ACCEPTED)",
+    0,
+    "ENGINEERING_ACCEPTED"
+  );
+
+  const failureCases: CliSubprocessCaseProof[] = [
+    runSubprocessCase(
+      "CLI_SUBPROC_FAIL_01_ENG_GATE_FAILURE",
+      "Engineering gate failure (overallEngineeringVerdict='FAIL', G20='FAIL') exits 2 (ENGINEERING_GATE_FAILURE)",
+      2,
+      "ENGINEERING_GATE_FAILURE",
+      (dir) => {
+        const p = path.join(dir, "GATE_TRUTH_MATRIX_V12_4_3_4_6.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.overallEngineeringVerdict = "FAIL";
+        if (data.gates?.G20) data.gates.G20.status = "FAIL";
+        data.failedEngineeringGates = ["G20"];
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      }
+    ),
+    runSubprocessCase(
+      "CLI_SUBPROC_FAIL_02_VALIDATOR_INVALID",
+      "Validator invalid (<failure> tag in JUNIT_RESULTS.xml while overallEngineeringVerdict='PASS') exits 3 (VALIDATOR_INVALID)",
+      3,
+      "VALIDATOR_INVALID",
+      (dir) => {
+        const p = path.join(dir, "JUNIT_RESULTS.xml");
+        const xml = fs.readFileSync(p, "utf8");
+        fs.writeFileSync(
+          p,
+          xml.replace(
+            "</testcase>",
+            '<failure message="Injected failure">Stack</failure></testcase>'
+          ),
+          "utf8"
+        );
+      }
+    ),
+    runSubprocessCase(
+      "CLI_SUBPROC_FAIL_03_RESOURCE_OR_BARRIER_BLOCKED",
+      "Completion barrier failure (zeroRunningJobs=false) exits 4 (INCOMPLETE_OR_RESOURCE_BLOCKED)",
+      4,
+      "INCOMPLETE_OR_RESOURCE_BLOCKED",
+      (dir) => {
+        const p = path.join(dir, "COMPLETION_BARRIER_REPORT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.zeroRunningJobs = false;
+        data.barrierSatisfied = false;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      }
+    ),
+    runSubprocessCase(
+      "CLI_SUBPROC_FAIL_04_SHA_MISMATCH_FATAL",
+      "Source SHA mismatch in SOURCE_SHA_PROVENANCE.json exits 1 (FATAL_OR_MISSING_INPUT)",
+      1,
+      "FATAL_OR_MISSING_INPUT",
+      (dir) => {
+        const p = path.join(dir, "SOURCE_SHA_PROVENANCE.json");
+        fs.writeFileSync(
+          p,
+          JSON.stringify(
+            {
+              branch: MANDATORY_BRANCH,
+              testedSourceSha: "deadbeef00000000000000000000000000000000",
+            },
+            null,
+            2
+          ),
+          "utf8"
+        );
+      }
+    ),
+  ];
+
+  const allPassed =
+    positiveCase.passed && failureCases.every((fc) => fc.passed);
+
+  return {
+    evaluatedAt: new Date().toISOString(),
+    version: VERSION,
+    testedSourceSha: headSha,
+    positiveCase,
+    failureCases,
+    suiteVerdict: allPassed ? "PASS" : "FAIL",
+  };
 }
 
 async function checkSqliteIntegrity(): Promise<{
@@ -1475,8 +2473,131 @@ export function writeCanonicalValidBaselineFixture(
 
   write(
     "FINAL_RELEASE_DECISION_V12_4_3_4_6.md",
-    `# KH-02 V12.4.3.4.6 — Final Release Decision\n\n- **overallEngineeringVerdict**: \`PASS\`\n- **overallBusinessVerdict**: \`INSUFFICIENT_EVIDENCE\`\n\nAll mandatory engineering checks verified without placeholders.`
+    `# KH-02 V12.4.3.4.9 — Final Release Decision\n\n- **overallEngineeringVerdict**: \`PASS\`\n- **overallBusinessVerdict**: \`INSUFFICIENT_EVIDENCE\`\n\nAll mandatory engineering checks verified without placeholders.`
   );
+
+  const nowIso = new Date().toISOString();
+  write("SAFE_DISK_RECOVERY_AUDIT.json", {
+    evaluatedAt: nowIso,
+    version: VERSION,
+    testedSourceSha: headSha,
+    measurementStatus: "MEASURED",
+    guardStatus: "PASS_HEADROOM_SUFFICIENT",
+    beforeMeasuredAt: nowIso,
+    afterMeasuredAt: nowIso,
+    beforeFreeBytes: 53687091200,
+    beforeFreeDiskBytes: 53687091200,
+    beforeFreeDiskGB: 50.0,
+    afterFreeBytes: 53687091200,
+    afterFreeDiskBytes: 53687091200,
+    afterFreeDiskGB: 50.0,
+    requiredFreeDiskGB: MIN_FREE_DISK_GB,
+    shortfallGB: 0,
+    cleanupAttempted: false,
+    actionsAttempted: [],
+    actionsSucceeded: [],
+    actionsFailed: [],
+    cleanedTargets: [],
+    totalVerifiedRemovedBytes: 0,
+    reclaimedBytes: 0,
+    reclaimedGB: 0,
+    netFreeSpaceDeltaBytes: 0,
+    netFreeSpaceDeltaGB: 0,
+    heavyWavesUnblocked: true,
+    protectedPathsUntouched: [...PROTECTED_REPOSITORY_PATHS],
+    protectedPathsVerifiedPresent: PROTECTED_REPOSITORY_PATHS.map((p) => ({
+      path: p,
+      exists: true,
+      untouched: true,
+    })),
+  });
+
+  write("RESOURCE_WAVE_GUARDS.json", {
+    evaluatedAt: nowIso,
+    version: VERSION,
+    testedSourceSha: headSha,
+    requiredFreeDiskGB: MIN_FREE_DISK_GB,
+    heavyWavesUnblocked: true,
+    waveGuards: [
+      { waveId: "WAVE_A_RESOURCE_SAFE", allowed: true, measuredFreeDiskGB: 50.0 },
+      { waveId: "WAVE_B_FULL_UNIT_AND_INTEGRATION", allowed: true, measuredFreeDiskGB: 50.0 },
+      { waveId: "WAVE_C_PRODUCTION_BUILD", allowed: true, measuredFreeDiskGB: 50.0 },
+      { waveId: "WAVE_D_ISOLATED_SERVER_AND_CHROMIUM", allowed: true, measuredFreeDiskGB: 50.0 },
+      { waveId: "WAVE_E_FRESH_LIVE_RESEARCH", allowed: true, measuredFreeDiskGB: 50.0 },
+    ],
+  });
+
+  write("CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json", {
+    evaluatedAt: nowIso,
+    version: VERSION,
+    testedSourceSha: headSha,
+    suiteVerdict: "PASS",
+    positiveCase: {
+      caseId: "CLI_SUBPROC_POS_01_VALID_BASELINE",
+      description: "Canonical valid baseline exits 0",
+      command: "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <dir>",
+      pid: 9001,
+      expectedExitCode: 0,
+      actualExitCode: 0,
+      expectedExitCategory: "ENGINEERING_ACCEPTED",
+      actualExitCategory: "ENGINEERING_ACCEPTED",
+      passed: true,
+    },
+    failureCases: [
+      {
+        caseId: "CLI_SUBPROC_FAIL_01_ENG_GATE_FAILURE",
+        description: "Engineering gate failure exits 2",
+        command: "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <dir>",
+        pid: 9002,
+        expectedExitCode: 2,
+        actualExitCode: 2,
+        expectedExitCategory: "ENGINEERING_GATE_FAILURE",
+        actualExitCategory: "ENGINEERING_GATE_FAILURE",
+        passed: true,
+      },
+      {
+        caseId: "CLI_SUBPROC_FAIL_02_VALIDATOR_INVALID",
+        description: "Validator failure exits 3",
+        command: "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <dir>",
+        pid: 9003,
+        expectedExitCode: 3,
+        actualExitCode: 3,
+        expectedExitCategory: "VALIDATOR_INVALID",
+        actualExitCategory: "VALIDATOR_INVALID",
+        passed: true,
+      },
+      {
+        caseId: "CLI_SUBPROC_FAIL_03_RESOURCE_OR_BARRIER_BLOCKED",
+        description: "Resource/barrier failure exits 4",
+        command: "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <dir>",
+        pid: 9004,
+        expectedExitCode: 4,
+        actualExitCode: 4,
+        expectedExitCategory: "INCOMPLETE_OR_RESOURCE_BLOCKED",
+        actualExitCategory: "INCOMPLETE_OR_RESOURCE_BLOCKED",
+        passed: true,
+      },
+    ],
+  });
+
+  write("CLI_EXIT_DECISION.json", {
+    evaluatedAt: nowIso,
+    version: VERSION,
+    testedSourceSha: headSha,
+    exitCode: 0,
+    exitCategory: "ENGINEERING_ACCEPTED",
+    engineeringAccepted: true,
+    validatorAccepted: true,
+    completionBarrierAccepted: true,
+    sourceShaConsistent: true,
+    diskHeadroomAccepted: true,
+    reason: "ENGINEERING_ACCEPTED",
+    failedRequiredGates: [],
+    failedValidatorChecks: [],
+    businessVerdict: "INSUFFICIENT_EVIDENCE",
+    mergeReadiness: "READY_FOR_OWNER_PR_REVIEW",
+    amazonPilotReadiness: "READY_FOR_ISOLATED_PILOT",
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1502,8 +2623,12 @@ export async function runFivePhaseAutoClosure() {
   const baselineHeadSha = execSync("git rev-parse HEAD", {
     encoding: "utf8",
   }).trim();
-  const initialFreeDiskGB = measureDiskFreeGB();
-  const diskHeadroomOk = initialFreeDiskGB >= MIN_FREE_DISK_GB;
+  const safeDiskRecoveryAudit = buildSafeDiskRecoveryAudit({
+    testedSourceSha: baselineHeadSha,
+    requiredFreeDiskGB: MIN_FREE_DISK_GB,
+  });
+  const initialFreeDiskGB = safeDiskRecoveryAudit.afterFreeDiskGB;
+  const diskHeadroomOk = safeDiskRecoveryAudit.heavyWavesUnblocked;
   const sqliteCheck = await checkSqliteIntegrity();
 
   // 1. PRE_FLIGHT_GIT_AND_RESOURCE.json & SAFE_DISK_RECOVERY_AUDIT.json
@@ -1529,49 +2654,46 @@ export async function runFivePhaseAutoClosure() {
     branch: currentBranch,
     headSha: baselineHeadSha,
     testedSourceSha: baselineHeadSha,
-    acceptanceOutputDir:
-      "acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure",
+    acceptanceOutputDir: "acceptance/kh02-v12.4.3.4.9-premerge-closure",
   });
 
-  const safeDiskRecoveryAudit = {
+  writeArtifact("SAFE_DISK_RECOVERY_AUDIT.json", safeDiskRecoveryAudit);
+  writeArtifact("RESOURCE_WAVE_GUARDS.json", {
     evaluatedAt: new Date().toISOString(),
     version: VERSION,
     testedSourceSha: baselineHeadSha,
-    beforeFreeDiskGB: 8.71,
-    beforeFreeDiskBytes: 9357185024,
-    afterFreeDiskGB: initialFreeDiskGB,
-    afterFreeDiskBytes: Math.round(initialFreeDiskGB * 1024 ** 3),
-    reclaimedBytes: 226365440,
-    reclaimedGB: 0.22,
     requiredFreeDiskGB: MIN_FREE_DISK_GB,
-    shortfallGB: Math.max(0, Math.round((MIN_FREE_DISK_GB - initialFreeDiskGB) * 100) / 100),
+    measurementStatus: safeDiskRecoveryAudit.measurementStatus,
+    guardStatus: safeDiskRecoveryAudit.guardStatus,
     heavyWavesUnblocked: diskHeadroomOk,
-    cleanedTargets: [
+    waveGuards: [
       {
-        path: ".next/cache",
-        category: "REGENERABLE_NEXT_BUILD_CACHE",
-        bytesRemoved: 218112000,
+        waveId: "WAVE_A_RESOURCE_SAFE",
+        allowed: true,
+        measuredFreeDiskGB: initialFreeDiskGB,
       },
       {
-        path: "$TMPDIR/swai-isolated-test-dbs",
-        category: "TASK_OWNED_TMP_TEST_DBS",
-        bytesRemoved: 5111808,
+        waveId: "WAVE_B_FULL_UNIT_AND_INTEGRATION",
+        allowed: diskHeadroomOk,
+        measuredFreeDiskGB: initialFreeDiskGB,
       },
       {
-        path: "$TMPDIR/swai-vitest-isolated",
-        category: "TASK_OWNED_TMP_VITEST_DIRS",
-        bytesRemoved: 5873664,
+        waveId: "WAVE_C_PRODUCTION_BUILD",
+        allowed: diskHeadroomOk,
+        measuredFreeDiskGB: initialFreeDiskGB,
+      },
+      {
+        waveId: "WAVE_D_ISOLATED_SERVER_AND_CHROMIUM",
+        allowed: diskHeadroomOk,
+        measuredFreeDiskGB: initialFreeDiskGB,
+      },
+      {
+        waveId: "WAVE_E_FRESH_LIVE_RESEARCH",
+        allowed: diskHeadroomOk,
+        measuredFreeDiskGB: initialFreeDiskGB,
       },
     ],
-    protectedPathsUntouched: [
-      "dev.db",
-      "node_modules",
-      ".git",
-      "acceptance/*",
-      "data/google_trends_csv/*",
-    ],
-  };
-  writeArtifact("SAFE_DISK_RECOVERY_AUDIT.json", safeDiskRecoveryAudit);
+  });
 
   // 2. DEFECT_REPRODUCTION_AND_CLOSURE.json & FOUR_DEFECT_REPRODUCTION_AND_FIXES.md
   const g16Matrix = runG16NegativeTests();
@@ -1805,11 +2927,12 @@ export async function runFivePhaseAutoClosure() {
       execute: (signal: AbortSignal) =>
         spawnFreshChildSuite({
           suiteId: "v12_4_3_4_7_focused_unit",
-          name: "V12.4.3.4.8, V12.4.3.4.7 & V12.4.3.4.6 Focused Provenance & Execution Proof Unit Suite",
+          name: "V12.4.3.4.9, V12.4.3.4.8, V12.4.3.4.7 & V12.4.3.4.6 Focused Closure Unit Suite",
           command: process.execPath,
           args: [
             vitestBin,
             "run",
+            "tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts",
             "tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts",
             "tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts",
             "tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts",
@@ -1872,7 +2995,7 @@ export async function runFivePhaseAutoClosure() {
   const poolResult = await runBoundedAsyncJobPool<SpawnedSuiteSummary>(
     jobsToRun,
     {
-      maxConcurrency: 2,
+      maxConcurrency: 1,
       defaultTimeoutMs: 240000,
     }
   );
@@ -2441,6 +3564,17 @@ export async function runFivePhaseAutoClosure() {
   writeArtifact("SQLITE_HTTP_CHROMIUM_PARITY.json", parityResult);
   writeArtifact("READ_ONLY_DB_CONTENT_INTEGRITY.json", readOnlyResult);
 
+  // If post-build/post-Vitest free disk is within 1.5 GB of the 15 GB floor, run audited owned cleanup of .next/cache and $TMPDIR/swai-*
+  if (measureDiskFreeGB() < MIN_FREE_DISK_GB + 1.5) {
+    const postWaveAudit = buildSafeDiskRecoveryAudit({
+      testedSourceSha: baselineHeadSha,
+      requiredFreeDiskGB: MIN_FREE_DISK_GB,
+      forceCleanupEvenWhenSufficient: true,
+    });
+    Object.assign(safeDiskRecoveryAudit, postWaveAudit);
+    writeArtifact("SAFE_DISK_RECOVERY_AUDIT.json", safeDiskRecoveryAudit);
+  }
+
   const finalFreeDiskGB = measureDiskFreeGB();
   writeArtifact("DISK_RAM_SQLITE_SAFETY.json", {
     evaluatedAt: new Date().toISOString(),
@@ -2849,7 +3983,7 @@ export async function runFivePhaseAutoClosure() {
   writeArtifact("FINAL_GATE_MATRIX.json", gateMatrixPayload);
   writeArtifact("GATE_TRUTH_MATRIX_V12_4_3_4_6.json", gateMatrixPayload);
 
-  const finalReleaseDecisionMd = `# KH-02 V12.4.3.4.8 — Final Acceptance Report (Google MCP Provenance Truth & Runtime Closure)
+  const finalReleaseDecisionMd = `# KH-02 V12.4.3.4.9 — Final Acceptance Report (No-False-Pass CLI, Truthful Disk Audit & Pre-Merge Closure)
 
 - **Version**: \`${VERSION}\`
 - **Branch**: \`${MANDATORY_BRANCH}\`
@@ -2858,19 +3992,20 @@ export async function runFivePhaseAutoClosure() {
 - **KH02_BUSINESS_ACCEPTANCE (\`overallBusinessVerdict\`)**: \`${overallBusinessVerdict}\` (\`${businessReleaseDecision}\`)
 - **AMAZON_WALMART_PILOT_READINESS**: \`${amazonWalmartPilotReadiness}\`
 
-## 1. End-to-End Google MCP Provenance Contract Closure (Deliverable A)
-- **Strict Separation of \`providerRequestId\` vs \`mcpInvocationRef\`**:
-  - Removed synthetic/local fallback \`google_mcp_\${researchRunId}_\${regDomain}_\${advId}_\${crStartMs}\` from \`providerRequestId\` in \`src/services/kh02/providers/googleTransparencyResearchAdapter.ts\`.
-  - Exported pure helpers: \`extractUpstreamGoogleRequestId()\`, \`recordActualGoogleMcpInvocation()\`, \`attachGoogleMcpCreativeProvenance()\`, \`verifyGoogleInvocationLineage()\`, \`deduplicateGoogleCreatives()\`, and \`computeCanonicalPayloadHash()\`.
-  - When upstream Google MCP omits a request ID, \`providerRequestId\` remains strictly \`null\` (\`providerRequestIdOrigin: "ABSENT"\`) and lineage is verified via \`VERIFIED_LOCAL_INVOCATION_ONLY\` against a completed \`GoogleMcpProviderInvocationRecord\` (\`mcpInvocationRef\`, \`responseEvidenceHash\`, \`actualReturnedCreativeIds\`, and \`researchRunId\`).
-- **Google MCP Lineage Matrix (\`GOOGLE_REQUEST_ID_LINEAGE_MATRIX.json\`)**:
-  - \`upstreamRequestIdVerifiedCount\`: \`${g06Eval.upstreamRequestIdVerifiedCount}\`
-  - \`missingUpstreamRequestIdCount\`: \`${g06Eval.missingUpstreamRequestIdCount}\`
-  - \`verifiedLocalInvocationOnlyCount\`: \`${g06Eval.verifiedLocalInvocationOnlyCount}\`
-  - \`rejectedUnverifiedLineageCount\`: \`${g06Eval.rejectedUnverifiedLineageCount}\`
-  - \`overallG06Verdict\`: \`${g06Eval.overallG06Verdict}\`
+## 1. P0 Closure: Honest CLI Exit Decision & Subprocess Exit Proof
+- Replaced unconditional zero exit in \`scripts/kh02/runFivePhaseAutoClosure.ts\` with \`computeKh02AcceptanceExitDecision(result)\` and \`process.exitCode = decision.exitCode\`.
+- Supported exit codes:
+  - \`0\` (\`ENGINEERING_ACCEPTED\`): All engineering gates, completion barrier, disk headroom guard, source SHA consistency, and independent validator checks pass.
+  - \`1\` (\`FATAL_OR_MISSING_INPUT\`): Unhandled exception, null/invalid input, or source SHA mismatch.
+  - \`2\` (\`ENGINEERING_GATE_FAILURE\`): \`overallEngineeringVerdict !== "PASS"\` or any required engineering gate/sub-stage failed.
+  - \`3\` (\`VALIDATOR_INVALID\`): Independent acceptance validator \`overallValid !== true\` or \`failedChecks > 0\`.
+  - \`4\` (\`INCOMPLETE_OR_RESOURCE_BLOCKED\`): Disk headroom below 15 GB, running/failed/timed-out completion barrier jobs, or resource-blocked waves.
 
-## 2. Full Runtime Verification at Frozen Source SHA (Deliverable B)
+## 2. P1 Closure: Truthful Live Disk Measurement & Audited Safe Cleanup
+- Replaced legacy static pre-cleanup byte constants and pre-filled \`cleanedTargets\` in \`SAFE_DISK_RECOVERY_AUDIT.json\` with live \`fs.statfsSync\` measurements via \`captureDiskSpaceSnapshot()\`, \`auditOwnedCleanupOperation()\`, and \`buildSafeDiskRecoveryAudit()\`.
+- Measured \`beforeFreeDiskGB\`: \`${safeDiskRecoveryAudit.beforeFreeDiskGB} GB\`, \`afterFreeDiskGB\`: \`${safeDiskRecoveryAudit.afterFreeDiskGB} GB\`, \`cleanupAttempted\`: \`${safeDiskRecoveryAudit.cleanupAttempted}\`, \`totalVerifiedRemovedBytes\`: \`${safeDiskRecoveryAudit.totalVerifiedRemovedBytes}\`.
+
+## 3. Full Runtime Verification at Frozen Source SHA
 - **Disk & SQLite Safety**: Free disk \`${finalFreeDiskGB} GB\` (\`>= ${MIN_FREE_DISK_GB} GB\` mandatory threshold); SQLite \`PRAGMA integrity_check = ${sqliteCheck.result}\`.
 - **Regression & Integration Truth Table**:
   - Unique tests executed: \`${truthTable.uniqueTestsPassed}/${truthTable.uniqueTestsExecuted}\` passed (\`${truthTable.failedTests}\` failed, \`${truthTable.skippedTests}\` skipped).
@@ -2879,22 +4014,19 @@ export async function runFivePhaseAutoClosure() {
   - Chromium status: \`${chromResult.status}\` (\`mainDocumentHttpStatus=${chromResult.mainDocumentHttpStatus ?? "N/A"}\`, \`actualAssertionCount=${chromResult.actualAssertionCount}\`).
   - Three-way parity (\`SQLite <-> HTTP API <-> Chromium DOM\`): \`sameRunReconciliationPassed=${parityResult.sameRunReconciliationPassed}\` (\`dbVsHttp=${parityResult.dbVsHttpVerdict}\`, \`dbVsDom=${parityResult.dbVsDomVerdict}\`, \`httpVsDom=${parityResult.httpVsDomVerdict}\`).
   - Read-only HTTP GET non-mutation probe: \`readOnlyPassed=${readOnlyResult.readOnlyPassed}\`, \`httpRequestVerified=${readOnlyResult.httpRequestVerified}\`, \`verificationScope=${readOnlyResult.verificationScope}\`.
-- **Physical-File Negative Control Suite**: \`${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations}\` mutations (\`MUT_01\`..\`MUT_40\`) caught and rejected.
+- **Google MCP Provenance (\`G06\`)**: \`overallG06Verdict=${g06Eval.overallG06Verdict}\` (\`liveCreativesRetrievedCount=${g06Eval.liveCreativesRetrievedCount}\`, \`verifiedLocalInvocationOnlyCount=${g06Eval.verifiedLocalInvocationOnlyCount}\`, \`rejectedUnverifiedLineageCount=${g06Eval.rejectedUnverifiedLineageCount}\`).
+- **Physical-File Negative Control Suite**: \`${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations}\` mutations (\`MUT_01\`..\`MUT_46\`) caught and rejected.
 
-## 3. Three-Verdict Release & Pilot Readiness Decision
+## 4. Three-Verdict Release & Pilot Readiness Decision
 1. **\`ENGINEERING_ACCEPTANCE\`**: \`${overallEngineeringVerdict}\` — Failed engineering gates: \`${failedEngGates.length > 0 ? failedEngGates.join(", ") : "NONE"}\`.
 2. **\`KH02_BUSINESS_ACCEPTANCE\`**: \`${overallBusinessVerdict}\` — Business gates \`G07=${gates.G07.status}\`, \`G15=${gates.G15.status}\`, \`G16=${gates.G16.status}\`, \`G25=${gates.G25.status}\`, \`G26=${gates.G26.status}\` remain truthfully reported without inflation.
-3. **\`AMAZON_WALMART_PILOT_READINESS\`**: \`${amazonWalmartPilotReadiness}\` — ${
-    amazonWalmartPilotReadiness === "READY_FOR_ISOLATED_PILOT"
-      ? "All KH-02 engineering provenance, persistence, parity, read-only non-mutation, and validator gates pass on the frozen source SHA; safe to begin an isolated Amazon US Playwright MCP / Walmart US Jina Reader pilot in a separate module without weakening KH-02 business gates."
-      : "Blocked until all mandatory KH-02 engineering gates pass."
-  }
+3. **\`AMAZON_WALMART_PILOT_READINESS\`**: \`${amazonWalmartPilotReadiness}\`.
 `;
   writeArtifact("FINAL_ACCEPTANCE_REPORT.md", finalReleaseDecisionMd);
   writeArtifact("FINAL_RELEASE_DECISION.md", finalReleaseDecisionMd);
   writeArtifact("FINAL_RELEASE_DECISION_V12_4_3_4_6.md", finalReleaseDecisionMd);
 
-  const remainingBlockersMd = `# KH-02 V12.4.3.4.8 — Remaining External & Business Data Blockers
+  const remainingBlockersMd = `# KH-02 V12.4.3.4.9 — Remaining External & Business Data Blockers
 
 ## 1. Host Disk & Engineering Wave Status
 - **Measured Free Disk**: \`${finalFreeDiskGB} GB\` (\`minFreeDiskGB = ${MIN_FREE_DISK_GB} GB\`).
@@ -2907,7 +4039,44 @@ export async function runFivePhaseAutoClosure() {
 `;
   writeArtifact("REMAINING_BLOCKERS.md", remainingBlockersMd);
 
-  // Run validator on the actual OUTPUT_DIR and record ACCEPTANCE_VALIDATOR_RESULTS.json
+  // Execute real child subprocess exit code proof suite (positive exit=0 and failure exit=2,3,4,1)
+  console.log(
+    "[CLI-PROOF] Executing real child subprocess CLI exit verification suite..."
+  );
+  const cliSubprocessProof = executeCliSubprocessExitProofSuite(baselineHeadSha);
+  writeArtifact("CLI_POSITIVE_AND_FAILURE_EXIT_PROOF.json", cliSubprocessProof);
+
+  // Step 1: Validate core artifacts (CHK_01..CHK_17) prior to writing CLI_EXIT_DECISION.json
+  const coreValidationReport = validateAcceptanceArtifacts(OUTPUT_DIR, {
+    skipCliExitDecisionCheck: true,
+  });
+
+  // Step 2: Compute authoritative CLI exit decision from engineering gates + core validator result
+  const exitDecision = computeKh02AcceptanceExitDecision({
+    baselineHeadSha,
+    expectedSourceSha: baselineHeadSha,
+    diskHeadroomOk,
+    guardStatus: safeDiskRecoveryAudit.guardStatus,
+    barrierReport: barrierPayload,
+    overallEngineeringVerdict,
+    engineeringReleaseDecision,
+    overallBusinessVerdict,
+    failedEngineeringGates: failedEngGates,
+    gates,
+    negControlSuiteReport,
+    validationReport: coreValidationReport,
+    failedTestsCount: truthTable.failedTests,
+    skippedTestsCount: truthTable.skippedTests,
+    integrationStatus: integrationReport.status,
+    chromiumStatus: chromResult.status,
+    parityPassed: parityResult.sameRunReconciliationPassed,
+    readOnlyPassed:
+      readOnlyResult.readOnlyPassed && readOnlyResult.httpRequestVerified,
+    g06Verdict: g06Eval.overallG06Verdict,
+  });
+  writeArtifact("CLI_EXIT_DECISION.json", exitDecision);
+
+  // Step 3: Run full independent validator (including CHK_18_CLI_EXIT_DECISION_CONSISTENCY)
   const validationReport = validateAcceptanceArtifacts(OUTPUT_DIR);
   writeArtifact("ACCEPTANCE_VALIDATOR_RESULTS.json", validationReport);
 
@@ -2920,10 +4089,14 @@ export async function runFivePhaseAutoClosure() {
     freeDiskGB: finalFreeDiskGB,
     engineeringReleaseDecision,
     businessReleaseDecision,
+    cliExitCode: exitDecision.exitCode,
+    cliExitCategory: exitDecision.exitCategory,
+    mergeReadiness: exitDecision.mergeReadiness,
+    amazonPilotReadiness: exitDecision.amazonPilotReadiness,
   });
 
   console.log(
-    `[COMPLETE] Engineering=${overallEngineeringVerdict} (${engineeringReleaseDecision}) | Business=${overallBusinessVerdict} (${businessReleaseDecision}) | NegControls=${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations} | ValidatorChecks=${validationReport.passedChecks}/${validationReport.totalChecks}`
+    `[COMPLETE] Engineering=${overallEngineeringVerdict} (${engineeringReleaseDecision}) | Business=${overallBusinessVerdict} (${businessReleaseDecision}) | NegControls=${negControlSuiteReport.totalCaughtAndRejected}/${negControlSuiteReport.totalMutations} | ValidatorChecks=${validationReport.passedChecks}/${validationReport.totalChecks} | ExitCode=${exitDecision.exitCode} (${exitDecision.exitCategory})`
   );
 
   return {
@@ -2935,14 +4108,45 @@ export async function runFivePhaseAutoClosure() {
     businessReleaseDecision,
     negControlSuiteReport,
     validationReport,
+    exitDecision,
+    cliSubprocessProof,
+    safeDiskRecoveryAudit,
   };
 }
 
 if (require.main === module) {
-  runFivePhaseAutoClosure()
-    .then(() => process.exit(0))
-    .catch((err) => {
-      console.error("FATAL ERROR IN FIVE-PHASE CLOSURE:", err);
-      process.exit(1);
-    });
+  const verifyDirFlagIdx = process.argv.indexOf("--verify-dir");
+  if (verifyDirFlagIdx !== -1) {
+    const targetDirArg = process.argv[verifyDirFlagIdx + 1];
+    try {
+      const targetDir = targetDirArg ? path.resolve(targetDirArg) : "";
+      const decision = runVerifyAcceptanceDirCli(targetDir);
+      if (targetDir && fs.existsSync(targetDir)) {
+        fs.writeFileSync(
+          path.join(targetDir, "CLI_EXIT_DECISION.json"),
+          JSON.stringify(decision, null, 2),
+          "utf8"
+        );
+      }
+      process.exitCode = decision.exitCode;
+    } catch (err) {
+      console.error("FATAL ERROR IN --verify-dir CLI:", err);
+      process.exitCode = 1;
+    }
+  } else {
+    runFivePhaseAutoClosure()
+      .then((result) => {
+        const decision = computeKh02AcceptanceExitDecision({
+          ...result,
+          expectedSourceSha: result?.baselineHeadSha,
+        });
+        process.exitCode = decision.exitCode;
+        process.exit(decision.exitCode);
+      })
+      .catch((err) => {
+        console.error("FATAL ERROR IN FIVE-PHASE CLOSURE:", err);
+        process.exitCode = 1;
+        process.exit(1);
+      });
+  }
 }
