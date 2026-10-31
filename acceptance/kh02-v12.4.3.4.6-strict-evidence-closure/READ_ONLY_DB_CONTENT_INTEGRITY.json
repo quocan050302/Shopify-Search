@@ -1,0 +1,77 @@
+{
+  "readOnlyPassed": true,
+  "httpRequestVerified": true,
+  "httpStatusCode": 200,
+  "contentDigestsMatch": true,
+  "rowCountsMatch": true,
+  "mutatedTables": [],
+  "beforeSnapshot": {
+    "syncJobCount": 175,
+    "productCount": 68,
+    "competitorStoreCount": 28,
+    "adProductLinkCount": 52,
+    "evergreenScoreCount": 0,
+    "tableDigests": {
+      "syncJob": {
+        "tableName": "syncJob",
+        "rowCount": 175,
+        "sha256Digest": "f78bab2d82f7a550e0e4e250394ff207957e2f49e52ad6a02d5bf74469175eea"
+      },
+      "researchProduct": {
+        "tableName": "researchProduct",
+        "rowCount": 68,
+        "sha256Digest": "207a6320323052106540c43cde3abdb0a6df5f52ec08a9a2593c42f8f0af61bb"
+      },
+      "competitorStore": {
+        "tableName": "competitorStore",
+        "rowCount": 28,
+        "sha256Digest": "3da274dac2c60a8bbca99cdf230772f204a7c945c3b55351dc57d42419d1e5f3"
+      },
+      "adProductLink": {
+        "tableName": "adProductLink",
+        "rowCount": 52,
+        "sha256Digest": "7c599a9e494eec2f5ed85a2ed7dd2e531fa0d49bc5c48d8b2577ab556be6cbf8"
+      },
+      "evergreenProductScore": {
+        "tableName": "evergreenProductScore",
+        "rowCount": 0,
+        "sha256Digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "afterSnapshot": {
+    "syncJobCount": 175,
+    "productCount": 68,
+    "competitorStoreCount": 28,
+    "adProductLinkCount": 52,
+    "evergreenScoreCount": 0,
+    "tableDigests": {
+      "syncJob": {
+        "tableName": "syncJob",
+        "rowCount": 175,
+        "sha256Digest": "f78bab2d82f7a550e0e4e250394ff207957e2f49e52ad6a02d5bf74469175eea"
+      },
+      "researchProduct": {
+        "tableName": "researchProduct",
+        "rowCount": 68,
+        "sha256Digest": "207a6320323052106540c43cde3abdb0a6df5f52ec08a9a2593c42f8f0af61bb"
+      },
+      "competitorStore": {
+        "tableName": "competitorStore",
+        "rowCount": 28,
+        "sha256Digest": "3da274dac2c60a8bbca99cdf230772f204a7c945c3b55351dc57d42419d1e5f3"
+      },
+      "adProductLink": {
+        "tableName": "adProductLink",
+        "rowCount": 52,
+        "sha256Digest": "7c599a9e494eec2f5ed85a2ed7dd2e531fa0d49bc5c48d8b2577ab556be6cbf8"
+      },
+      "evergreenProductScore": {
+        "tableName": "evergreenProductScore",
+        "rowCount": 0,
+        "sha256Digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "mutationsDetected": false
+}

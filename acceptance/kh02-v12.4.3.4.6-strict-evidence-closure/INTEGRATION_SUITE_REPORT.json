@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:49.242Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "status": "BLOCKED_DISK_HEADROOM_BELOW_15GB",
+  "executedSuiteFiles": [],
+  "totalTests": 0,
+  "passedTests": 0,
+  "failedTests": 0,
+  "reason": "Skipped heavy integration wave per Section 0.5/5.9 disk headroom guard (freeDiskGB=8.02 < 15 GB)."
+}
