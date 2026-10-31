@@ -454,7 +454,7 @@ describe("M20: GET API side effects & Runtime Version (G20)", () => {
       "Materialize an authorized ResearchProduct record for this KH-02 candidate so Product Intelligence"
     );
     expect(routeCode).toContain("GET does not materialize ResearchProduct");
-    expect(routeCode).toMatch(/version:\s*"12\.4\.3\.(3\.(1|2)|4\.(1|2|3))"/);
+    expect(routeCode).toMatch(/version:\s*"12\.4\.3\.(3\.(1|2)|4\.(1|2|3|4|5|6|7|8|9)|5\.0)"/);
   });
 });
 
