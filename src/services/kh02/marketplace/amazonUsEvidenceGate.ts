@@ -212,6 +212,8 @@ export function evaluateAmazonUsEvidenceGate(
     invocationLedger.some(
       (op) =>
         op.status === "BLOCKED_PROVIDER" ||
+        op.status === "MCP_NOT_CONFIGURED" ||
+        op.status === "NOT_EXECUTED" ||
         op.status === "CAPTCHA_BLOCKED" ||
         op.status === "RATE_LIMITED"
     ) &&
@@ -219,7 +221,7 @@ export function evaluateAmazonUsEvidenceGate(
   ) {
     realProviderVerdict = "BLOCKED_PROVIDER";
     blockers.push(
-      `Upstream provider blocked or rate-limited live verification (${verifiedLiveUsProductIdentitiesCount}/${requiredLiveTargets} live US identities verified).`
+      `Upstream provider or MCP session blocked/unavailable (${verifiedLiveUsProductIdentitiesCount}/${requiredLiveTargets} live US identities verified).`
     );
   } else if (verifiedLiveUsProductIdentitiesCount >= requiredLiveTargets) {
     realProviderVerdict = "REAL_PROVIDER_VERIFIED";

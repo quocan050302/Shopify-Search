@@ -41,7 +41,7 @@ import { writeCanonicalValidBaselineFixture } from "../../../scripts/kh02/runFiv
 
 describe("KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure", () => {
   it("exposes release version 12.4.3.4.8 or 12.4.3.4.9", () => {
-    expect(["12.4.3.4.8", "12.4.3.4.9", "12.4.3.5.0"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    expect(["12.4.3.4.8", "12.4.3.4.9", "12.4.3.5.0", "12.4.3.5.0.1"]).toContain(SWAI_KH02_RELEASE_VERSION);
   });
 
   describe("P01–P20: End-to-End Google MCP Provenance & Lineage Scenarios", () => {

@@ -27,6 +27,8 @@ import {
   loadAmazonEvidenceForRun,
   summarizeAmazonEvidenceForProduct,
 } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
+import { validateAmazonUsProductUrl } from "@/services/kh02/marketplace/amazonUsIdentity";
+import { AMAZON_PILOT_MAX_CANDIDATES_PER_RUN } from "@/services/kh02/marketplace/amazonUsBudget";
 
 const ResearchRequestSchema = z.object({
   topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
@@ -266,6 +268,46 @@ export async function POST(request: NextRequest) {
       amazonPilotCandidateUrls,
     } = parseResult.data;
 
+    let validatedAmazonCandidateUrls: Record<string, string> | undefined = undefined;
+    if (amazonPilotCandidateUrls && typeof amazonPilotCandidateUrls === "object") {
+      const urlEntries = Object.entries(amazonPilotCandidateUrls).filter(
+        ([k, v]) => typeof k === "string" && k.trim().length > 0 && typeof v === "string"
+      );
+      if (urlEntries.length > AMAZON_PILOT_MAX_CANDIDATES_PER_RUN) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "CANDIDATE_URL_CAP_EXCEEDED",
+              message: `At most ${AMAZON_PILOT_MAX_CANDIDATES_PER_RUN} Amazon US product URLs may be supplied per research run.`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+      validatedAmazonCandidateUrls = {};
+      for (const [cid, rawUrl] of urlEntries) {
+        const hasQueryOrHash = rawUrl.includes("?") || rawUrl.includes("#");
+        const check = validateAmazonUsProductUrl(rawUrl);
+        if (hasQueryOrHash || !check.valid || !check.canonicalAmazonUrl) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "INVALID_AMAZON_PILOT_URL",
+                message: hasQueryOrHash
+                  ? `Amazon US product URL supplied for '${cid}' must not contain query or hash parameters.`
+                  : check.rejectionReason ||
+                    `Invalid Amazon US product URL supplied for '${cid}'.`,
+              },
+            },
+            { status: 400 }
+          );
+        }
+        validatedAmazonCandidateUrls[cid.trim()] = check.canonicalAmazonUrl;
+      }
+    }
+
     const isAsync =
       body.asyncMode === true ||
       body.mode === "async" ||
@@ -285,7 +327,7 @@ export async function POST(request: NextRequest) {
         sourceMode,
         metaExecutionPolicy,
         enableAmazonUsPilot,
-        amazonPilotCandidateUrls,
+        amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
       });
 
       // Enqueue job for background worker consumption (Single Executor Invariant)
@@ -302,6 +344,7 @@ export async function POST(request: NextRequest) {
             market,
             lookbackDays,
             sourceMode: sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+            enableAmazonUsPilot: Boolean(enableAmazonUsPilot),
           },
           meta: {
             runId,
@@ -325,7 +368,7 @@ export async function POST(request: NextRequest) {
       sourceMode,
       metaExecutionPolicy,
       enableAmazonUsPilot,
-      amazonPilotCandidateUrls,
+      amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
     });
 
     await updateKH02ResearchRunStatus({
@@ -346,7 +389,7 @@ export async function POST(request: NextRequest) {
         sourceMode,
         metaExecutionPolicy,
         enableAmazonUsPilot,
-        amazonPilotCandidateUrls,
+        amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
         workspaceId: context.workspaceId,
         runId,
         signal: request.signal,

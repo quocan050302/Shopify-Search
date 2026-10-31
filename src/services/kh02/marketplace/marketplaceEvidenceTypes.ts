@@ -21,6 +21,9 @@ export type MarketplaceEvidenceStatus =
   | "DISABLED"
   | "NOT_ATTEMPTED"
   | "NOT_AUTHORIZED"
+  | "NOT_IMPLEMENTED"
+  | "NOT_EXECUTED"
+  | "MCP_NOT_CONFIGURED"
   | "BLOCKED_POLICY"
   | "BLOCKED_PROVIDER"
   | "RATE_LIMITED"
@@ -71,7 +74,12 @@ export interface AmazonPolicyContext {
   creatorsApiConfigured: boolean;
   userAuthorizedUrlAttested: boolean;
   accessPolicyStatus: AmazonAccessPolicyStatus;
-  allowedAccessRoute: "CREATORS_API" | "USER_AUTHORIZED_URL" | "ISOLATED_FIXTURE_ONLY" | "NONE";
+  allowedAccessRoute:
+    | "CREATORS_API"
+    | "CREATORS_API_NOT_IMPLEMENTED"
+    | "USER_AUTHORIZED_URL"
+    | "ISOLATED_FIXTURE_ONLY"
+    | "NONE";
   policyReason: string;
 }
 
@@ -211,6 +219,20 @@ export interface AmazonMarketplaceTelemetry {
     researchRunId: string;
   }>;
   gateEvaluation?: AmazonEvidenceGateEvaluation;
+  persistenceStatus?: "PERSISTED" | "NOT_REQUIRED" | "FAILED";
+  persistenceError?: string | null;
+  mcpSessionLifecycle?: {
+    sessionCreated: boolean;
+    ownershipMode: "OWNED" | "BORROWED" | "NONE";
+    transportMode: string | null;
+    serverOrigin:
+      | "PINNED_PLAYWRIGHT_MCP"
+      | "LOCAL_MCP_TEST_DOUBLE"
+      | "TEST_FIXTURE"
+      | "NONE";
+    closedCleanly: boolean;
+    toolInvocationsCount: number;
+  };
 }
 
 export interface ProductAmazonEvidenceSummary {
@@ -282,7 +304,7 @@ export function computeDeterministicEvidenceHash(payload: unknown): string | nul
  * User-supplied request parameters can NEVER override server-side policy flags.
  */
 export function resolveAmazonUsPolicyContext(
-  env: NodeJS.ProcessEnv = process.env
+  env: Record<string, string | undefined> = process.env
 ): AmazonPolicyContext {
   const featureEnabled =
     String(env.KH02_AMAZON_US_ENABLED || "false").trim().toLowerCase() === "true";
@@ -324,29 +346,29 @@ export function resolveAmazonUsPolicyContext(
     };
   }
 
-  if (creatorsApiConfigured) {
-    return {
-      featureEnabled: true,
-      liveAllowed: true,
-      creatorsApiConfigured: true,
-      userAuthorizedUrlAttested,
-      accessPolicyStatus: "AUTHORIZED_CREATORS_API",
-      allowedAccessRoute: "CREATORS_API",
-      policyReason:
-        "Live Amazon US access authorized via configured official Amazon Creators API credentials.",
-    };
-  }
-
   if (userAuthorizedUrlAttested) {
     return {
       featureEnabled: true,
       liveAllowed: true,
-      creatorsApiConfigured: false,
+      creatorsApiConfigured,
       userAuthorizedUrlAttested: true,
       accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
       allowedAccessRoute: "USER_AUTHORIZED_URL",
       policyReason:
         "Live Amazon US limited product-URL verification attested via KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED=true within strict pilot budget caps.",
+    };
+  }
+
+  if (creatorsApiConfigured) {
+    return {
+      featureEnabled: true,
+      liveAllowed: false,
+      creatorsApiConfigured: true,
+      userAuthorizedUrlAttested: false,
+      accessPolicyStatus: "BLOCKED_POLICY",
+      allowedAccessRoute: "CREATORS_API_NOT_IMPLEMENTED",
+      policyReason:
+        "NOT_IMPLEMENTED: Official Amazon Creators API credentials were detected, but the Creators API HTTP client is not implemented in this repository; Playwright scraping is never substituted for Creators API.",
     };
   }
 
@@ -377,6 +399,12 @@ function formatAmazonStatusLabel(status: MarketplaceEvidenceStatus): string {
       return "Amazon US Blocked by Policy Guard";
     case "BLOCKED_PROVIDER":
       return "Amazon US Access Blocked by Provider";
+    case "MCP_NOT_CONFIGURED":
+      return "Amazon US MCP Session Not Configured";
+    case "NOT_IMPLEMENTED":
+      return "Amazon US Access Route Not Implemented";
+    case "NOT_EXECUTED":
+      return "Amazon US Navigation Not Executed";
     case "CAPTCHA_BLOCKED":
       return "Amazon US CAPTCHA Challenge";
     case "RATE_LIMITED":

@@ -32,6 +32,7 @@ import {
 } from "./amazonUsBudget";
 import {
   AmazonPlaywrightMcpSession,
+  ConnectAmazonPlaywrightMcpOptions,
   connectAmazonPlaywrightMcp,
 } from "./amazonUsMcpTransport";
 import { evaluateAmazonUsEvidenceGate } from "./amazonUsEvidenceGate";
@@ -41,6 +42,9 @@ export interface ClassifiedAmazonProviderOutcome {
   outcomeCategory:
     | "POLICY_BLOCKED"
     | "PROVIDER_ACCESS_DENIED"
+    | "MCP_NOT_CONFIGURED"
+    | "ROUTE_NOT_IMPLEMENTED"
+    | "NAVIGATION_NOT_EXECUTED"
     | "RATE_LIMITED"
     | "CAPTCHA_CHALLENGE"
     | "TIMED_OUT"
@@ -68,6 +72,36 @@ export function classifyAmazonProviderOutcome(
   if (error) {
     const msg = error instanceof Error ? error.message : String(error);
     const lower = msg.toLowerCase();
+
+    if (lower.includes("not_implemented") || lower.includes("creators_api_not_implemented")) {
+      return {
+        status: "NOT_IMPLEMENTED",
+        outcomeCategory: "ROUTE_NOT_IMPLEMENTED",
+        retryable: false,
+        isExternalBlock: true,
+        reason: msg,
+      };
+    }
+
+    if (lower.includes("not_executed") || lower.includes("zero_tool_invocations")) {
+      return {
+        status: "NOT_EXECUTED",
+        outcomeCategory: "NAVIGATION_NOT_EXECUTED",
+        retryable: false,
+        isExternalBlock: true,
+        reason: msg,
+      };
+    }
+
+    if (lower.includes("mcp_not_configured")) {
+      return {
+        status: "MCP_NOT_CONFIGURED",
+        outcomeCategory: "MCP_NOT_CONFIGURED",
+        retryable: false,
+        isExternalBlock: true,
+        reason: msg,
+      };
+    }
 
     if (lower.includes("blocked_policy") || lower.includes("live_not_allowed")) {
       return {
@@ -114,8 +148,7 @@ export function classifyAmazonProviderOutcome(
       lower.includes("503") ||
       lower.includes("bot_wall") ||
       lower.includes("login") ||
-      lower.includes("blocked_provider") ||
-      lower.includes("mcp_not_configured")
+      lower.includes("blocked_provider")
     ) {
       return {
         status: "BLOCKED_PROVIDER",
@@ -261,6 +294,7 @@ export interface FetchAuthorizedAmazonEvidenceInput {
   policyContext?: AmazonPolicyContext;
   budget?: AmazonProviderBudget;
   mcpSession?: AmazonPlaywrightMcpSession | null;
+  ownsMcpSession?: boolean;
   directSnapshotForImportOrFixture?: RawAmazonSnapshotInput | null;
   observedAt?: string;
   sourceTimestamp?: string | null;
@@ -373,11 +407,102 @@ export async function fetchAuthorizedAmazonProductEvidence(
     };
   }
 
-  // 3. Enforce Live Policy Gate (A02): If live URL_VERIFICATION or AUTHORIZED_SEARCH is requested without liveAllowed, block before browser navigation!
+  // 3. Enforce Live Policy Gate (A02) & Official Creators API Non-Substitution (N19):
   const isFixtureOrImport =
     requestMode === "TEST_FIXTURE" ||
     requestMode === "USER_IMPORTED" ||
     input.mcpSession?.transportMode === "TEST_FIXTURE";
+
+  if (
+    !isFixtureOrImport &&
+    (policy.allowedAccessRoute === "CREATORS_API" ||
+      policy.allowedAccessRoute === "CREATORS_API_NOT_IMPLEMENTED") &&
+    !policy.userAuthorizedUrlAttested
+  ) {
+    const completedAt = new Date().toISOString();
+    const idSeed = `${input.workspaceId}:${input.researchRunId}:${input.candidateId}:AMAZON_US:${urlValidation.extractedAsin || "NOT_IMPLEMENTED"}`;
+    const idHash =
+      computeDeterministicEvidenceHash(idSeed)?.slice(0, 20) || "not_implemented";
+    const reason =
+      "NOT_IMPLEMENTED: Official Amazon Creators API HTTP client is not implemented in this build; Playwright scraping is never substituted for Creators API.";
+
+    const blockedEvidence: AmazonProductEvidence = {
+      id: `amz_ev_${idHash}`,
+      workspaceId: input.workspaceId,
+      researchRunId: input.researchRunId,
+      candidateId: input.candidateId,
+      provider: "AMAZON_US",
+      requestMode,
+      requestedMarket: "US",
+      verifiedDeliveryMarket: null,
+      sourceUrl: input.sourceUrl,
+      finalUrl: null,
+      canonicalAmazonUrl: urlValidation.canonicalAmazonUrl,
+      asin: urlValidation.extractedAsin,
+      parentAsin: null,
+      variationAsin: null,
+      productTitle: null,
+      brand: null,
+      merchant: null,
+      seller: null,
+      currency: null,
+      price: null,
+      availability: null,
+      observedAt: startedAt,
+      sourceTimestamp: null,
+      rawEvidenceHash: null,
+      extractedFieldsHash: null,
+      providerInvocationRef,
+      providerRequestId: null,
+      responseEvidenceRef: null,
+      evidenceOrigin: "AMAZON_US_POLICY_GUARD",
+      observationClass: "UNVERIFIED",
+      verificationScope: null,
+      identityMatch: "NO_MATCH",
+      isCached: false,
+      matchedCanonicalKey: urlValidation.extractedAsin
+        ? `amz_us:${urlValidation.extractedAsin}`
+        : null,
+      matchingReasons: [],
+      missingFields: ["productTitle", "brand", "price", "availability"],
+      rejectionReasons: [`BLOCKED_POLICY: ${reason}`],
+      accessPolicyStatus: "BLOCKED_POLICY",
+      status: "NOT_IMPLEMENTED",
+    };
+
+    const opRecord: AmazonProviderOperationRecord = {
+      operationId,
+      providerInvocationRef,
+      providerRequestId: null,
+      providerRequestIdOrigin: "ABSENT",
+      workspaceId: input.workspaceId,
+      researchRunId: input.researchRunId,
+      candidateId: input.candidateId,
+      provider: "AMAZON_US",
+      requestMode,
+      sourceUrl: input.sourceUrl,
+      finalUrl: null,
+      attemptCount: 0,
+      maxAttemptsAllowed: 2,
+      startedAt,
+      completedAt,
+      durationMs: Math.max(0, Date.now() - startedAtMs),
+      requestHash,
+      responseHash: null,
+      status: "NOT_IMPLEMENTED",
+      outcomeCategory: "ROUTE_NOT_IMPLEMENTED",
+      observationClass: "UNVERIFIED",
+      transportSessionId: null,
+      aborted: false,
+      errorMessage: reason,
+    };
+
+    return {
+      status: "NOT_IMPLEMENTED",
+      evidence: blockedEvidence,
+      operationRecord: opRecord,
+    };
+  }
 
   if (!isFixtureOrImport && !policy.liveAllowed) {
     const completedAt = new Date().toISOString();
@@ -472,14 +597,18 @@ export async function fetchAuthorizedAmazonProductEvidence(
       isolatedCoordinator: true,
     });
 
-  if (input.mcpSession) {
+  // Only register session close cleanup when this call explicitly owns the MCP session (N20)
+  if (input.mcpSession && input.ownsMcpSession === true) {
     budget.registerCleanup(async () => {
       await input.mcpSession?.close();
     });
   }
 
   const observationClass: MarketplaceObservationClass =
-    requestMode === "TEST_FIXTURE" || input.mcpSession?.transportMode === "TEST_FIXTURE"
+    requestMode === "TEST_FIXTURE" ||
+    input.mcpSession?.transportMode === "TEST_FIXTURE" ||
+    input.mcpSession?.observationClass === "TEST_FIXTURE" ||
+    input.mcpSession?.serverOrigin === "LOCAL_MCP_TEST_DOUBLE"
       ? "TEST_FIXTURE"
       : requestMode === "USER_IMPORTED"
       ? "IMPORTED_BY_USER"
@@ -506,6 +635,15 @@ export async function fetchAuthorizedAmazonProductEvidence(
         urlValidation.canonicalAmazonUrl || input.sourceUrl,
         { signal: opSignal }
       );
+      if (
+        !Array.isArray(navOut.toolInvocations) ||
+        !navOut.toolInvocations.includes("browser_navigate") ||
+        !navOut.toolInvocations.includes("browser_snapshot")
+      ) {
+        throw new Error(
+          "NOT_EXECUTED: Handshake-only MCP session did not execute browser_navigate and browser_snapshot tool calls."
+        );
+      }
       capturedUpstreamRequestId = navOut.upstreamRequestId;
       capturedFinalUrl = navOut.snapshot.finalUrl || navOut.snapshot.sourceUrl;
       return navOut.snapshot;
@@ -719,8 +857,9 @@ export interface RunAmazonUsPilotEnrichmentParams {
   requestMode?: AmazonRequestMode;
   fixtureSnapshotsByUrl?: Record<string, RawAmazonSnapshotInput>;
   mcpSession?: AmazonPlaywrightMcpSession | null;
+  mcpConnectOptions?: ConnectAmazonPlaywrightMcpOptions;
   signal?: AbortSignal;
-  env?: NodeJS.ProcessEnv;
+  env?: Record<string, string | undefined>;
   reportProgress?: (message: string) => Promise<void>;
 }
 
@@ -772,6 +911,14 @@ export async function runAmazonUsPilotEnrichment(
         operationLedger: [],
         rejectionLedger: [],
         gateEvaluation,
+        mcpSessionLifecycle: {
+          sessionCreated: false,
+          ownershipMode: "NONE",
+          transportMode: null,
+          serverOrigin: "NONE",
+          closedCleanly: true,
+          toolInvocationsCount: 0,
+        },
       },
     };
   }
@@ -805,6 +952,14 @@ export async function runAmazonUsPilotEnrichment(
         operationLedger: [],
         rejectionLedger: [],
         gateEvaluation,
+        mcpSessionLifecycle: {
+          sessionCreated: false,
+          ownershipMode: "NONE",
+          transportMode: null,
+          serverOrigin: "NONE",
+          closedCleanly: true,
+          toolInvocationsCount: 0,
+        },
       },
     };
   }
@@ -816,19 +971,53 @@ export async function runAmazonUsPilotEnrichment(
     isolatedCoordinator: true,
   });
 
+  const candidateUrlsToProcess = params.candidates
+    .map(
+      (c) =>
+        params.candidateAmazonUrls?.[c.candidateId] ||
+        c.amazonProductUrl ||
+        null
+    )
+    .filter((u): u is string => Boolean(u && String(u).trim()));
+
   let ownedSession: AmazonPlaywrightMcpSession | null = params.mcpSession || null;
   let createdSessionInternally = false;
 
-  if (!ownedSession && params.fixtureSnapshotsByUrl) {
-    const conn = await connectAmazonPlaywrightMcp({
-      signal: params.signal,
-      fixtureTransport: {
-        enabled: true,
-        snapshotsByUrl: params.fixtureSnapshotsByUrl,
-      },
-    });
-    ownedSession = conn.session;
-    createdSessionInternally = true;
+  if (!ownedSession) {
+    if (params.fixtureSnapshotsByUrl) {
+      const conn = await connectAmazonPlaywrightMcp({
+        signal: params.signal,
+        fixtureTransport: {
+          enabled: true,
+          snapshotsByUrl: params.fixtureSnapshotsByUrl,
+        },
+      });
+      ownedSession = conn.session;
+      createdSessionInternally = Boolean(conn.session);
+      if (createdSessionInternally && ownedSession) {
+        budget.registerCleanup(async () => {
+          await ownedSession?.close();
+        });
+      }
+    } else if (
+      candidateUrlsToProcess.length > 0 &&
+      policy.featureEnabled &&
+      policy.liveAllowed &&
+      policy.allowedAccessRoute === "USER_AUTHORIZED_URL"
+    ) {
+      const conn = await connectAmazonPlaywrightMcp({
+        allowRealStdioMcp: true,
+        signal: params.signal,
+        ...(params.mcpConnectOptions || {}),
+      });
+      ownedSession = conn.session;
+      createdSessionInternally = Boolean(conn.session);
+      if (createdSessionInternally && ownedSession) {
+        budget.registerCleanup(async () => {
+          await ownedSession?.close();
+        });
+      }
+    }
   }
 
   const marketplaceEvidence: AmazonProductEvidence[] = [];
@@ -882,6 +1071,7 @@ export async function runAmazonUsPilotEnrichment(
         policyContext: policy,
         budget,
         mcpSession: ownedSession,
+        ownsMcpSession: false,
         directSnapshotForImportOrFixture: directSnap,
         signal: params.signal,
       });
@@ -928,6 +1118,9 @@ export async function runAmazonUsPilotEnrichment(
     (op) =>
       op.status === "BLOCKED_POLICY" ||
       op.status === "BLOCKED_PROVIDER" ||
+      op.status === "MCP_NOT_CONFIGURED" ||
+      op.status === "NOT_IMPLEMENTED" ||
+      op.status === "NOT_EXECUTED" ||
       op.status === "CAPTCHA_BLOCKED" ||
       op.status === "RATE_LIMITED"
   ).length;
@@ -945,6 +1138,8 @@ export async function runAmazonUsPilotEnrichment(
     runStatus = "OBSERVED_UNVERIFIED";
   } else if (operationLedger.every((op) => op.status === "BLOCKED_POLICY")) {
     runStatus = "BLOCKED_POLICY";
+  } else if (operationLedger.every((op) => op.status === "NOT_IMPLEMENTED")) {
+    runStatus = "NOT_IMPLEMENTED";
   } else if (operationsBlocked > 0) {
     runStatus = operationLedger[0].status;
   } else {
@@ -958,6 +1153,11 @@ export async function runAmazonUsPilotEnrichment(
     policy,
     { workspaceId: params.workspaceId }
   );
+
+  const toolInvocationsCount =
+    ownedSession?.getToolInvocationRecords?.().length ??
+    ownedSession?.handshakeProof?.toolInvocationRecords?.length ??
+    0;
 
   return {
     marketplaceEvidence,
@@ -980,6 +1180,22 @@ export async function runAmazonUsPilotEnrichment(
       operationLedger,
       rejectionLedger,
       gateEvaluation,
+      mcpSessionLifecycle: {
+        sessionCreated: Boolean(ownedSession),
+        ownershipMode: createdSessionInternally
+          ? "OWNED"
+          : params.mcpSession
+          ? "BORROWED"
+          : "NONE",
+        transportMode: ownedSession?.transportMode || null,
+        serverOrigin:
+          ownedSession?.serverOrigin ||
+          (ownedSession?.transportMode === "TEST_FIXTURE" ? "TEST_FIXTURE" : "NONE"),
+        closedCleanly: createdSessionInternally
+          ? Boolean(ownedSession?.handshakeProof?.closedCleanly)
+          : true,
+        toolInvocationsCount,
+      },
     },
   };
 }

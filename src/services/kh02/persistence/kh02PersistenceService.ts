@@ -631,12 +631,52 @@ export async function persistKH02RankingSnapshot(
       }
     }
     if ((result as any).marketplaceEvidence.length > 0) {
-      await persistAmazonEvidenceAtomically(
-        workspaceId,
-        runId,
-        (result as any).marketplaceEvidence,
-        { db: prisma, telemetry }
-      ).catch(() => null);
+      try {
+        const persistRes = await persistAmazonEvidenceAtomically(
+          workspaceId,
+          runId,
+          (result as any).marketplaceEvidence,
+          { db: prisma, telemetry }
+        );
+        if (persistRes.blockedByOwnershipOrAbort) {
+          throw new Error(
+            persistRes.blockReason || "STALE_WORKER_LEASE: Ownership lost during Amazon evidence persistence."
+          );
+        }
+        if (telemetry && typeof telemetry === "object") {
+          telemetry.persistenceStatus = "PERSISTED";
+          telemetry.persistenceError = null;
+        }
+      } catch (persistErr: any) {
+        const errMsg = String(persistErr?.message || persistErr).slice(0, 300);
+        (result as any).marketplaceEvidence = [];
+        if (telemetry && typeof telemetry === "object") {
+          telemetry.persistenceStatus = "FAILED";
+          telemetry.persistenceError = `AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`;
+          telemetry.runStatus = "FAILED";
+          telemetry.identityVerifiedCount = 0;
+        }
+        for (const list of allCandLists) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list as any[]) {
+            const cand = item?.candidate || item;
+            if (!cand) continue;
+            delete cand.amazonEvidence;
+            delete cand.amazonEvidenceSummary;
+            cand.amazonEvidenceStatus = "FAILED";
+          }
+        }
+        if (result.runStatus !== "FAILED" && result.runStatus !== "PARTIAL") {
+          result.runStatus = "PARTIAL";
+        }
+        if (!Array.isArray((result as any).warnings)) {
+          (result as any).warnings = [];
+        }
+        (result as any).warnings.push(`AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`);
+      }
+    } else if (telemetry && typeof telemetry === "object") {
+      telemetry.persistenceStatus = "NOT_REQUIRED";
+      telemetry.persistenceError = null;
     }
   }
 

@@ -23,6 +23,14 @@ import { RawAmazonSnapshotInput } from "./amazonUsIdentity";
 export const PLAYWRIGHT_MCP_PINNED_PACKAGE = "@playwright/mcp@0.0.83";
 export const PLAYWRIGHT_MCP_PINNED_VERSION = "0.0.83";
 
+export interface PlaywrightMcpToolInvocationRecord {
+  toolName: string;
+  url: string;
+  invokedAt: string;
+  requestHash: string | null;
+  responseHash: string | null;
+}
+
 export interface PlaywrightMcpHandshakeProof {
   executed: boolean;
   connected: boolean;
@@ -33,6 +41,7 @@ export interface PlaywrightMcpHandshakeProof {
     | "TEST_FIXTURE_SESSION"
     | "HANDSHAKE_TIMED_OUT";
   transportMode: "REAL_STDIO_MCP" | "TEST_FIXTURE";
+  serverOrigin?: "PINNED_PLAYWRIGHT_MCP" | "LOCAL_MCP_TEST_DOUBLE" | "TEST_FIXTURE";
   observationClass: MarketplaceObservationClass;
   sessionId: string;
   pinnedPackage: string;
@@ -45,6 +54,7 @@ export interface PlaywrightMcpHandshakeProof {
   discoveredTools: string[];
   requiredToolsPresent: boolean;
   missingRequiredTools: string[];
+  toolInvocationRecords?: PlaywrightMcpToolInvocationRecord[];
   startedAt: string;
   completedAt: string;
   durationMs: number;
@@ -55,9 +65,11 @@ export interface PlaywrightMcpHandshakeProof {
 export interface AmazonPlaywrightMcpSession {
   readonly sessionId: string;
   readonly transportMode: "REAL_STDIO_MCP" | "TEST_FIXTURE";
+  readonly serverOrigin?: "PINNED_PLAYWRIGHT_MCP" | "LOCAL_MCP_TEST_DOUBLE" | "TEST_FIXTURE";
   readonly observationClass: MarketplaceObservationClass;
   readonly handshakeProof: PlaywrightMcpHandshakeProof;
   isAlive(): boolean;
+  getToolInvocationRecords?(): PlaywrightMcpToolInvocationRecord[];
   navigateAndCaptureProductSnapshot(
     url: string,
     options?: { timeoutMs?: number; signal?: AbortSignal }
@@ -112,12 +124,14 @@ export async function connectAmazonPlaywrightMcp(
   // 1. Explicit TEST_FIXTURE transport for unit/integration tests (never labeled REAL_STDIO_MCP or AUTHORIZED_LIVE)
   if (options.fixtureTransport?.enabled) {
     let closed = false;
+    const toolInvocationRecords: PlaywrightMcpToolInvocationRecord[] = [];
     const completedAt = new Date().toISOString();
     const handshakeProof: PlaywrightMcpHandshakeProof = {
       executed: true,
       connected: true,
       status: "TEST_FIXTURE_SESSION",
       transportMode: "TEST_FIXTURE",
+      serverOrigin: "TEST_FIXTURE",
       observationClass: "TEST_FIXTURE",
       sessionId,
       pinnedPackage: PLAYWRIGHT_MCP_PINNED_PACKAGE,
@@ -130,6 +144,7 @@ export async function connectAmazonPlaywrightMcp(
       discoveredTools: [...REQUIRED_PLAYWRIGHT_MCP_TOOLS],
       requiredToolsPresent: true,
       missingRequiredTools: [],
+      toolInvocationRecords,
       startedAt,
       completedAt,
       durationMs: Math.max(0, Date.now() - startedAtMs),
@@ -156,9 +171,11 @@ export async function connectAmazonPlaywrightMcp(
     const session: AmazonPlaywrightMcpSession = {
       sessionId,
       transportMode: "TEST_FIXTURE",
+      serverOrigin: "TEST_FIXTURE",
       observationClass: "TEST_FIXTURE",
       handshakeProof,
       isAlive: () => !closed,
+      getToolInvocationRecords: () => [...toolInvocationRecords],
       async navigateAndCaptureProductSnapshot(url, navOpts) {
         if (closed || navOpts?.signal?.aborted || options.signal?.aborted) {
           closed = true;
@@ -170,6 +187,31 @@ export async function connectAmazonPlaywrightMcp(
           throw new Error(simErr);
         }
         const snap = options.fixtureTransport?.snapshotsByUrl?.[url];
+        const invokedAt = new Date().toISOString();
+        const reqHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify({ url }), "utf8")
+          .digest("hex");
+        const respHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify(snap || { status: 404 }), "utf8")
+          .digest("hex");
+        toolInvocationRecords.push(
+          {
+            toolName: "browser_navigate",
+            url,
+            invokedAt,
+            requestHash: reqHash,
+            responseHash: respHash,
+          },
+          {
+            toolName: "browser_snapshot",
+            url,
+            invokedAt,
+            requestHash: reqHash,
+            responseHash: respHash,
+          }
+        );
         if (!snap) {
           return {
             snapshot: {
@@ -417,13 +459,26 @@ export async function connectAmazonPlaywrightMcp(
       };
     }
 
+    const serverNameLower = String(serverInfo?.name || "").toLowerCase();
+    const isPinnedOfficialMcp =
+      args.includes(PLAYWRIGHT_MCP_PINNED_PACKAGE) &&
+      serverNameLower.includes("playwright") &&
+      !serverNameLower.includes("test-double") &&
+      !serverNameLower.includes("fixture");
+    const serverOrigin: "PINNED_PLAYWRIGHT_MCP" | "LOCAL_MCP_TEST_DOUBLE" =
+      isPinnedOfficialMcp ? "PINNED_PLAYWRIGHT_MCP" : "LOCAL_MCP_TEST_DOUBLE";
+    const sessionObservationClass: MarketplaceObservationClass =
+      isPinnedOfficialMcp ? "AUTHORIZED_LIVE" : "TEST_FIXTURE";
+    const toolInvocationRecords: PlaywrightMcpToolInvocationRecord[] = [];
+
     const completedAt = new Date().toISOString();
     const handshakeProof: PlaywrightMcpHandshakeProof = {
       executed: true,
       connected: true,
       status: "CONNECTED_AND_VERIFIED",
       transportMode: "REAL_STDIO_MCP",
-      observationClass: "AUTHORIZED_LIVE",
+      serverOrigin,
+      observationClass: sessionObservationClass,
       sessionId,
       pinnedPackage: PLAYWRIGHT_MCP_PINNED_PACKAGE,
       command,
@@ -435,6 +490,7 @@ export async function connectAmazonPlaywrightMcp(
       discoveredTools,
       requiredToolsPresent: true,
       missingRequiredTools: [],
+      toolInvocationRecords,
       startedAt,
       completedAt,
       durationMs: Math.max(0, Date.now() - startedAtMs),
@@ -445,9 +501,11 @@ export async function connectAmazonPlaywrightMcp(
     const session: AmazonPlaywrightMcpSession = {
       sessionId,
       transportMode: "REAL_STDIO_MCP",
-      observationClass: "AUTHORIZED_LIVE",
+      serverOrigin,
+      observationClass: sessionObservationClass,
       handshakeProof,
       isAlive: () => !closed,
+      getToolInvocationRecords: () => [...toolInvocationRecords],
       async navigateAndCaptureProductSnapshot(url, navOpts) {
         if (closed || navOpts?.signal?.aborted || options.signal?.aborted) {
           await safeCloseTransport();
@@ -455,13 +513,46 @@ export async function connectAmazonPlaywrightMcp(
           throw new Error("MCP_SESSION_ABORTED: Playwright MCP session aborted.");
         }
 
+        const navInvokedAt = new Date().toISOString();
+        const navReqHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify({ tool: "browser_navigate", url }), "utf8")
+          .digest("hex");
         const navResult = await client!.callTool({
           name: "browser_navigate",
           arguments: { url },
         });
+        const navRespHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify(navResult || null), "utf8")
+          .digest("hex");
+        toolInvocationRecords.push({
+          toolName: "browser_navigate",
+          url,
+          invokedAt: navInvokedAt,
+          requestHash: navReqHash,
+          responseHash: navRespHash,
+        });
+
+        const snapInvokedAt = new Date().toISOString();
+        const snapReqHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify({ tool: "browser_snapshot", url }), "utf8")
+          .digest("hex");
         const snapResult = await client!.callTool({
           name: "browser_snapshot",
           arguments: {},
+        });
+        const snapRespHash = crypto
+          .createHash("sha256")
+          .update(JSON.stringify(snapResult || null), "utf8")
+          .digest("hex");
+        toolInvocationRecords.push({
+          toolName: "browser_snapshot",
+          url,
+          invokedAt: snapInvokedAt,
+          requestHash: snapReqHash,
+          responseHash: snapRespHash,
         });
 
         const textItems = [
@@ -474,15 +565,31 @@ export async function connectAmazonPlaywrightMcp(
 
         const titleMatch = textItems.match(/Page Title:\s*(.+)/i);
         const urlMatch = textItems.match(/Page URL:\s*(\S+)/i);
+        const canonicalMatch = textItems.match(/Canonical URL:\s*(\S+)/i);
+        const statusMatch = textItems.match(/HTTP Status:\s*(\d{3})/i);
+        const parsedHttpStatus = statusMatch?.[1]
+          ? Number.parseInt(statusMatch[1], 10)
+          : 200;
+
+        let parsedStructuredData: RawAmazonSnapshotInput["structuredData"] = null;
+        const structuredLineMatch = textItems.match(/STRUCTURED_DATA_JSON:(\{.+\})/i);
+        if (structuredLineMatch?.[1]) {
+          try {
+            parsedStructuredData = JSON.parse(structuredLineMatch[1]);
+          } catch {
+            parsedStructuredData = null;
+          }
+        }
 
         return {
           snapshot: {
             sourceUrl: url,
             finalUrl: urlMatch?.[1] || url,
-            httpStatus: 200,
+            canonicalUrl: canonicalMatch?.[1] || urlMatch?.[1] || url,
+            httpStatus: Number.isFinite(parsedHttpStatus) ? parsedHttpStatus : 200,
             pageTitle: titleMatch?.[1]?.trim() || null,
-            html: textItems.slice(0, 8000),
-            structuredData: null,
+            html: textItems.slice(0, 12000),
+            structuredData: parsedStructuredData,
           },
           upstreamRequestId: null,
           toolInvocations: ["browser_navigate", "browser_snapshot"],
