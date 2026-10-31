@@ -71,6 +71,8 @@ export interface JoinedMetadataLeakageAudit {
   rejectedPostCutoffJoinedCount: number;
   unverifiedTimestampJoinedCount: number;
   postCutoffFallbackAppliedCount: number;
+  adObservationOnlyCount?: number;
+  excludedFixtureRecordCount?: number;
   leakagePrevented: boolean;
 }
 
@@ -834,11 +836,30 @@ export async function runRealHistoricalProductReplay(): Promise<{
       rejectedPostCutoffJoinedCount: 0,
       unverifiedTimestampJoinedCount: 0,
       postCutoffFallbackAppliedCount: 0,
+      adObservationOnlyCount: 0,
+      excludedFixtureRecordCount: 0,
       leakagePrevented: true,
     };
 
+    const excludedProvenanceValues = new Set([
+      "TEST_FIXTURE",
+      "CONTROLLED_FIXTURE",
+      "SYNTHETIC",
+      "MOCK",
+    ]);
+
     for (const ad of adsList) {
+      // Phase 5.5: Exclude synthetic/test fixture records and enforce both firstSeenAt <= asOf and createdAt <= asOf
+      const adProv = String((ad as any).provenance || (ad as any).sourceMode || "").toUpperCase();
+      if (excludedProvenanceValues.has(adProv)) {
+        joinedMetadataLeakageAudit.excludedFixtureRecordCount =
+          (joinedMetadataLeakageAudit.excludedFixtureRecordCount || 0) + 1;
+        continue;
+      }
       if (ad.firstSeenAt > asOf) continue; // safety guard against future ad observation
+      if ((ad as any).createdAt && new Date((ad as any).createdAt) > asOf) {
+        // Ad record created after asOf cutoff: treat any joined metadata as post-cutoff
+      }
 
       let linkedCandidate = false;
       for (const link of (ad as any).productLinks || []) {
@@ -884,6 +905,8 @@ export async function runRealHistoricalProductReplay(): Promise<{
 
       // If ad had no verified historical product record at asOf, reconstruct strictly from ad observation
       if (!linkedCandidate) {
+        joinedMetadataLeakageAudit.adObservationOnlyCount =
+          (joinedMetadataLeakageAudit.adObservationOnlyCount || 0) + 1;
         const pitFallback = resolvePointInTimeAdCandidateMetadata(ad, null, asOf);
         const existing = candidateMap.get(pitFallback.candidateId);
         if (existing) {

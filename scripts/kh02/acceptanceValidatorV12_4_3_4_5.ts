@@ -319,7 +319,7 @@ export function validateAcceptanceArtifacts(
     !truthTableOk ? "Test truth table failed Tests > 0, uniqueTestsExecuted < 400, or mismatch with RAW_TEST_SUMMARY" : undefined
   );
 
-  // 6. Integration Suite Report (Phase 4.3)
+  // 6. Integration Suite Report (Phase 2 & 4.3)
   const intReport = safeReadJson(path.join(acceptanceDir, "INTEGRATION_SUITE_REPORT.json"));
   const intFilesExistAndInJunit =
     intReport &&
@@ -330,8 +330,30 @@ export function validateAcceptanceArtifacts(
       const baseName = path.basename(relFile);
       return fs.existsSync(abs) && junitXml.includes(baseName);
     });
+  const intStatusValid =
+    !intReport?.status || intReport.status === "EXECUTED" || intReport.status === "PASS";
+  const intExecProofValid =
+    !intReport?.executionProof ||
+    (typeof intReport.executionProof.pid === "number" &&
+      intReport.executionProof.pid > 0 &&
+      intReport.executionProof.exitCode === 0 &&
+      intReport.executionProof.jsonReportExists !== false &&
+      (!preFlight?.headSha ||
+        !intReport.executionProof.sourceSha ||
+        intReport.executionProof.sourceSha === preFlight.headSha));
+  const intShaValid =
+    !intReport?.testedSourceSha ||
+    !preFlight?.headSha ||
+    intReport.testedSourceSha === preFlight.headSha;
+  const intSkippedValid =
+    intReport?.skippedTests === undefined || intReport.skippedTests === 0;
+
   const intReportOk = Boolean(
     intReport &&
+      intStatusValid &&
+      intExecProofValid &&
+      intShaValid &&
+      intSkippedValid &&
       intFilesExistAndInJunit &&
       typeof intReport.totalTests === "number" &&
       intReport.totalTests >= 10 &&
@@ -340,9 +362,9 @@ export function validateAcceptanceArtifacts(
   );
   addCheck(
     "CHK_06_INTEGRATION_SUITE_REPORT",
-    "INTEGRATION_SUITE_REPORT has >= 2 existing integration test files present in JUNIT_RESULTS.xml and >= 10 passing tests",
+    "INTEGRATION_SUITE_REPORT has verified child execution proof, >= 2 existing integration test files in JUNIT_RESULTS.xml, and >= 10 passing tests",
     intReportOk,
-    !intReportOk ? "Integration suite report missing files on disk/JUnit or has failing tests" : undefined
+    !intReportOk ? "Integration suite report missing execution proof, files on disk/JUnit, or has failing/skipped tests" : undefined
   );
 
   // 7. Deep JUnit XML validation
@@ -365,9 +387,19 @@ export function validateAcceptanceArtifacts(
       : undefined
   );
 
-  // 8. Next Build Log
+  // 8. Next Build Log & Execution Proof (Phase 4)
   const buildLog = safeReadText(path.join(acceptanceDir, "NEXT_BUILD_LOG.txt")) || "";
+  const buildProof = safeReadJson(path.join(acceptanceDir, "NEXT_BUILD_EXECUTION_PROOF.json"));
+  const buildProofOk =
+    !buildProof ||
+    (buildProof.status === "BUILD_PASS" &&
+      buildProof.exitCode === 0 &&
+      typeof buildProof.pid === "number" &&
+      buildProof.pid > 0 &&
+      buildProof.buildIdFreshlyUpdated === true &&
+      buildProof.allowServerAndChromiumLaunch === true);
   const buildLogOk =
+    buildProofOk &&
     buildLog.length > 100 &&
     (buildLog.includes("Compiled successfully") ||
       buildLog.includes("Route (app)") ||
@@ -376,9 +408,9 @@ export function validateAcceptanceArtifacts(
     !buildLog.includes("Failed to compile");
   addCheck(
     "CHK_08_NEXT_BUILD_LOG",
-    "NEXT_BUILD_LOG.txt proves a successful production build without compile errors",
+    "NEXT_BUILD_LOG.txt and NEXT_BUILD_EXECUTION_PROOF.json prove a fresh successful production build without compile errors",
     buildLogOk,
-    !buildLogOk ? "NEXT_BUILD_LOG.txt missing build success markers or contains build error" : undefined
+    !buildLogOk ? "NEXT_BUILD_LOG.txt or NEXT_BUILD_EXECUTION_PROOF.json missing build success/fresh BUILD_ID proof" : undefined
   );
 
   // 9. Chromium Execution & Failure Injection Reports
@@ -459,7 +491,7 @@ export function validateAcceptanceArtifacts(
     !parityOk ? "Parity check failed, missing persisted SQLite proof, comparedDomFieldCount < 4, or field comparison mismatch" : undefined
   );
 
-  // 10B. Read-Only DB Content Integrity (Phase 4.4)
+  // 10B. Read-Only DB Content Integrity & Real HTTP Transport Proof (Phase 1 & 4.4)
   const readOnly = safeReadJson(path.join(acceptanceDir, "READ_ONLY_DB_CONTENT_INTEGRITY.json"));
   const beforeDigests = readOnly?.beforeSnapshot?.tableDigests;
   const afterDigests = readOnly?.afterSnapshot?.tableDigests;
@@ -475,8 +507,19 @@ export function validateAcceptanceArtifacts(
         beforeDigests[t].rowCount === afterDigests[t].rowCount &&
         beforeDigests[t].sha256Digest === afterDigests[t].sha256Digest
     );
+  const readOnlyScopeValid =
+    readOnly?.verificationScope !== "DB_ONLY_READ_SNAPSHOT" &&
+    readOnly?.verificationScope !== "SYNTHETIC_CALLBACK_REJECTED" &&
+    readOnly?.verificationScope !== "HTTP_PROBE_FAILED" &&
+    readOnly?.status !== "HTTP_NOT_EXECUTED" &&
+    (readOnly?.actualHttpRequestCount === undefined || readOnly.actualHttpRequestCount >= 1) &&
+    (readOnly?.responseBodyDigest === undefined ||
+      (typeof readOnly.responseBodyDigest === "string" &&
+        readOnly.responseBodyDigest.length === 64));
+
   const readOnlyOk = Boolean(
     readOnly &&
+      readOnlyScopeValid &&
       readOnly.readOnlyPassed === true &&
       readOnly.httpRequestVerified === true &&
       readOnly.httpStatusCode === 200 &&
@@ -489,27 +532,45 @@ export function validateAcceptanceArtifacts(
   );
   addCheck(
     "CHK_10B_READ_ONLY_DB_CONTENT_INTEGRITY",
-    "READ_ONLY_DB_CONTENT_INTEGRITY verifies HTTP 200 GET and identical SHA-256 table content digests before and after",
+    "READ_ONLY_DB_CONTENT_INTEGRITY verifies real HTTP 200 GET transport proof and identical SHA-256 table content digests before and after",
     readOnlyOk,
-    !readOnlyOk ? "Read-only DB content digest mismatch, HTTP status != 200, or mutationsDetected" : undefined
+    !readOnlyOk ? "Read-only DB content digest mismatch, HTTP not executed/synthetic callback, HTTP status != 200, or mutationsDetected" : undefined
   );
 
   // 11. Google MCP Creative Pipeline Set Reconciliation & Explicit Live Provenance (Phase 3)
   const gRaw = safeReadJson(path.join(acceptanceDir, "GOOGLE_RAW_CREATIVE_MANIFEST.json"));
-  const gNorm = safeReadJson(path.join(acceptanceDir, "GOOGLE_NORMALIZATION_LEDGER.json"));
+  const gNorm =
+    safeReadJson(path.join(acceptanceDir, "GOOGLE_NORMALIZATION_LEDGER.json")) ||
+    safeReadJson(path.join(acceptanceDir, "GOOGLE_NORMALIZATION_AND_REJECTION_LEDGER.json"));
   const gAssoc = safeReadJson(path.join(acceptanceDir, "GOOGLE_CREATIVE_ASSOCIATION_LEDGER.json"));
   const gAssocProof = safeReadJson(path.join(acceptanceDir, "GOOGLE_PRODUCT_ASSOCIATION_PROOF.json"));
   const g06Eval = safeReadJson(path.join(acceptanceDir, "G06_GATE_EVALUATION.json"));
 
   const rawCreativesList: any[] = Array.isArray(gRaw?.creatives) ? gRaw.creatives : [];
-  const explicitLiveCreatives = rawCreativesList.filter(
-    (c: any) =>
-      c &&
-      c.isCached === false &&
-      (c.sourceMode === "LIVE_PROVIDER" || c.provenance === "LIVE_PROVIDER" || c.provenance === "REAL_UPSTREAM") &&
-      Boolean(c.researchRunId) &&
-      Boolean(c.providerRequestId || c.mcpInvocationRef)
-  );
+  const hasSyntheticGoogleIds = rawCreativesList.some((c: any) => {
+    const cid = String(c?.creativeId ?? c?.creative_id ?? c?.id ?? "").trim();
+    const reqId = String(c?.providerRequestId ?? c?.mcpInvocationRef ?? "").trim();
+    const runId = String(gRaw?.researchRunId ?? "").trim();
+    return (
+      /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid) ||
+      /^(?:mcp_|synthetic_|fake_)/i.test(reqId) ||
+      (runId && reqId === `mcp_${runId}`)
+    );
+  });
+
+  const explicitLiveCreatives = rawCreativesList.filter((c: any) => {
+    if (!c || c.isCached !== false) return false;
+    const cid = String(c.creativeId ?? c.creative_id ?? c.id ?? "").trim();
+    const reqId = String(c.providerRequestId ?? c.mcpInvocationRef ?? "").trim();
+    if (!cid || /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid)) return false;
+    if (!reqId || /^(?:mcp_|synthetic_|fake_)/i.test(reqId)) return false;
+    return (
+      (c.sourceMode === "LIVE_PROVIDER" ||
+        c.provenance === "LIVE_PROVIDER" ||
+        c.provenance === "REAL_UPSTREAM") &&
+      Boolean(c.researchRunId)
+    );
+  });
 
   const setRec = g06Eval?.setReconciliation;
   const setRecValid = Boolean(
@@ -534,12 +595,19 @@ export function validateAcceptanceArtifacts(
       (g06Eval.exactProductSkuMatchesCount === 0 &&
         g06Eval.subGates?.GOOGLE_EXACT_PRODUCT_EVIDENCE === "INSUFFICIENT_EVIDENCE"));
 
+  const normStageExecutedValid = gNorm?.normalizationStageExecuted !== false;
+  const replayModeHonest =
+    g06Eval?.replayModeDetected !== true || g06Eval?.overallG06Verdict !== "PASS";
+
   const googlePipelineOk = Boolean(
     gRaw &&
       gNorm &&
-      gAssoc &&
+      (gAssoc || gAssocProof) &&
       gAssocProof &&
       g06Eval &&
+      normStageExecutedValid &&
+      replayModeHonest &&
+      !hasSyntheticGoogleIds &&
       typeof gRaw.rawCount === "number" &&
       gRaw.rawCount === rawCreativesList.length &&
       gRaw.rawCount === (gNorm.normalizedDistinctCount || 0) + (gNorm.rejectedBeforeNormalizationCount || 0) &&
@@ -551,25 +619,42 @@ export function validateAcceptanceArtifacts(
   );
   addCheck(
     "CHK_11_GOOGLE_CREATIVE_PIPELINE",
-    "Google MCP raw, normalized, and association ledgers satisfy set-based ID reconciliation, explicit live provenance, and exact-match honesty",
+    "Google MCP raw, normalized, and association ledgers satisfy set-based ID reconciliation, explicit live provenance, non-synthetic IDs, and exact-match honesty",
     googlePipelineOk,
-    !googlePipelineOk ? "Google creative pipeline set reconciliation failed, cached/unproven creative counted live, or false exact SKU claim" : undefined
+    !googlePipelineOk ? "Google creative pipeline set reconciliation failed, synthetic/cached creative counted live, normalization skipped, or false exact SKU claim" : undefined
   );
 
-  // 12. G15 Product Demand Proof
+  // 12. G15 Product Demand Proof (Phase 5.4)
   const g15 = safeReadJson(path.join(acceptanceDir, "G15_PRODUCT_DEMAND_PROOF.json"));
+  const g15EntriesList: any[] = Array.isArray(g15?.entries) ? g15.entries : [];
+  const hasInvalidG15Entry = g15EntriesList.some(
+    (e: any) =>
+      e.queryStatus === "DB_QUERY_FAILED" ||
+      e.queryMode === "SUBSTRING_FALLBACK" ||
+      (e.g15Qualifying === true && e.hasLongitudinalDemand !== true)
+  );
+  const recomputedG15Qualifying = g15EntriesList.filter(
+    (e: any) =>
+      e.g15Qualifying === true &&
+      e.hasLongitudinalDemand === true &&
+      e.queryStatus !== "DB_QUERY_FAILED" &&
+      e.queryMode !== "SUBSTRING_FALLBACK" &&
+      (e.coveredDays ?? 0) >= 60
+  ).length;
   const g15Ok = Boolean(
     g15 &&
       Array.isArray(g15.entries) &&
+      !hasInvalidG15Entry &&
       typeof g15.g15QualifyingCount === "number" &&
+      (g15EntriesList.length === 0 || g15.g15QualifyingCount === recomputedG15Qualifying) &&
       ((g15.g15QualifyingCount >= 3 && g15.g15Verdict === "PASS") ||
         (g15.g15QualifyingCount < 3 && g15.g15Verdict === "INSUFFICIENT_EVIDENCE"))
   );
   addCheck(
     "CHK_12_G15_HONESTY",
-    "G15_PRODUCT_DEMAND_PROOF truthfully reports INSUFFICIENT_EVIDENCE when < 3 candidates have >= 60d demand",
+    "G15_PRODUCT_DEMAND_PROOF rejects DB_QUERY_FAILED/SUBSTRING_FALLBACK and truthfully reports INSUFFICIENT_EVIDENCE when < 3 candidates have >= 60d demand",
     g15Ok,
-    !g15Ok ? "G15 verdict inconsistent with g15QualifyingCount" : undefined
+    !g15Ok ? "G15 verdict inconsistent with g15QualifyingCount or contains DB_QUERY_FAILED/SUBSTRING_FALLBACK" : undefined
   );
 
   // 13. G16 Current Run Verified Proof (Phase 4.5)
@@ -710,6 +795,24 @@ export function validateAcceptanceArtifacts(
       const reportedStatus = gatesObj[gKey]?.status;
       if (reportedStatus !== expStatus) {
         mismatchedEvidenceGates.push(`${gKey}(reported=${reportedStatus}, expected=${expStatus})`);
+      }
+    }
+
+    // Phase 5: Reject any gate claiming PASS if executionProofMissing===true or testedSourceSha mismatches preFlight.headSha
+    for (const [gKey, gObj] of gateEntries) {
+      if (gObj?.status === "PASS") {
+        if (gObj.executionProofMissing === true || gObj.executionId === null) {
+          mismatchedEvidenceGates.push(`${gKey}(claimed PASS with missing execution proof)`);
+        }
+        if (
+          gObj.testedSourceSha &&
+          preFlight?.headSha &&
+          gObj.testedSourceSha !== preFlight.headSha
+        ) {
+          mismatchedEvidenceGates.push(
+            `${gKey}(testedSourceSha=${gObj.testedSourceSha} != headSha=${preFlight.headSha})`
+          );
+        }
       }
     }
 
@@ -1188,6 +1291,132 @@ export function runNegativeControlSuite(baselineAcceptanceDir: string): Negative
           data.gates.G20.status = "FAIL";
         }
         data.overallEngineeringVerdict = "PASS";
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    // ── V12.4.3.4.7 Phase 5.6: 7 New Physical-File Mutations (MUT_27 .. MUT_33) ──
+    {
+      mutationId: "MUT_27_DB_ONLY_READ_CLAIMS_HTTP_VERIFIED",
+      description: "READ_ONLY_DB_CONTENT_INTEGRITY has verificationScope='DB_ONLY_READ_SNAPSHOT' and actualHttpRequestCount=0 while claiming httpRequestVerified=true and readOnlyPassed=true",
+      targetArtifact: "READ_ONLY_DB_CONTENT_INTEGRITY.json",
+      injectedDefect: "verificationScope='DB_ONLY_READ_SNAPSHOT' & actualHttpRequestCount=0 with httpRequestVerified=true",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "READ_ONLY_DB_CONTENT_INTEGRITY.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.verificationScope = "DB_ONLY_READ_SNAPSHOT";
+        data.actualHttpRequestCount = 0;
+        data.httpRequestVerified = true;
+        data.readOnlyPassed = true;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_28_INTEGRATION_EXIT_CODE_NONZERO_CLAIMS_PASS",
+      description: "INTEGRATION_SUITE_REPORT has child executionProof.exitCode=1 while claiming totalTests=18 and passedTests=18",
+      targetArtifact: "INTEGRATION_SUITE_REPORT.json",
+      injectedDefect: "executionProof.exitCode=1 while passedTests=18 and failedTests=0",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "INTEGRATION_SUITE_REPORT.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.executionProof = {
+          pid: 12345,
+          exitCode: 1,
+          jsonReportExists: true,
+        };
+        data.totalTests = 18;
+        data.passedTests = 18;
+        data.failedTests = 0;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_29_GOOGLE_SYNTHETIC_CR0_AND_MCP_RUNID",
+      description: "GOOGLE_RAW_CREATIVE_MANIFEST uses synthetic creativeId='cr_0' and providerRequestId='mcp_run_1' while G06 claims PASS",
+      targetArtifact: "GOOGLE_RAW_CREATIVE_MANIFEST.json",
+      injectedDefect: "creativeId='cr_0' and providerRequestId='mcp_run_1'",
+      mutate: (tempDir) => {
+        const pRaw = path.join(tempDir, "GOOGLE_RAW_CREATIVE_MANIFEST.json");
+        const rawData = JSON.parse(fs.readFileSync(pRaw, "utf8"));
+        if (Array.isArray(rawData.creatives) && rawData.creatives[0]) {
+          rawData.creatives[0].creativeId = "cr_0";
+          rawData.creatives[0].providerRequestId = "mcp_run_1";
+        }
+        fs.writeFileSync(pRaw, JSON.stringify(rawData, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_30_GOOGLE_RAW_NORM_COUNT_EQUAL_BUT_STAGE_SKIPPED",
+      description: "GOOGLE_NORMALIZATION_LEDGER has normalizationStageExecuted=false while counts match and G06 claims PASS",
+      targetArtifact: "GOOGLE_NORMALIZATION_LEDGER.json",
+      injectedDefect: "normalizationStageExecuted=false",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "GOOGLE_NORMALIZATION_LEDGER.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.normalizationStageExecuted = false;
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_31_BUILD_STALE_BUILD_ID_CLAIMS_PASS",
+      description: "NEXT_BUILD_EXECUTION_PROOF has buildIdFreshlyUpdated=false and status='BUILD_FAILED' while NEXT_BUILD_LOG has old success text",
+      targetArtifact: "NEXT_BUILD_LOG.txt",
+      injectedDefect: "NEXT_BUILD_EXECUTION_PROOF.buildIdFreshlyUpdated=false",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "NEXT_BUILD_EXECUTION_PROOF.json");
+        fs.writeFileSync(
+          p,
+          JSON.stringify(
+            {
+              executed: true,
+              status: "BUILD_FAILED",
+              pid: 4321,
+              exitCode: 0,
+              buildIdFreshlyUpdated: false,
+              allowServerAndChromiumLaunch: false,
+            },
+            null,
+            2
+          ),
+          "utf8"
+        );
+      },
+    },
+    {
+      mutationId: "MUT_32_G15_DB_QUERY_FAILED_SWALLOWED_AS_PASS",
+      description: "G15_PRODUCT_DEMAND_PROOF has an entry with queryStatus='DB_QUERY_FAILED' and queryMode='SUBSTRING_FALLBACK' while claiming g15Verdict='PASS'",
+      targetArtifact: "G15_PRODUCT_DEMAND_PROOF.json",
+      injectedDefect: "entry with queryStatus='DB_QUERY_FAILED' and g15Verdict='PASS'",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, "G15_PRODUCT_DEMAND_PROOF.json");
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        data.g15QualifyingCount = 3;
+        data.g15Verdict = "PASS";
+        data.entries = [
+          {
+            candidateId: "c1",
+            queryStatus: "DB_QUERY_FAILED",
+            queryMode: "SUBSTRING_FALLBACK",
+            g15Qualifying: true,
+            hasLongitudinalDemand: true,
+            coveredDays: 90,
+          },
+        ];
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
+      },
+    },
+    {
+      mutationId: "MUT_33_GATE_PASS_WITHOUT_EXECUTION_PROOF",
+      description: "GATE_TRUTH_MATRIX claims G03='PASS' with executionProofMissing=true and executionId=null",
+      targetArtifact: gateMatrixFile,
+      injectedDefect: "gates.G03.executionProofMissing=true and executionId=null while status='PASS'",
+      mutate: (tempDir) => {
+        const p = path.join(tempDir, gateMatrixFile);
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        if (data.gates && data.gates.G03) {
+          data.gates.G03.status = "PASS";
+          data.gates.G03.executionProofMissing = true;
+          data.gates.G03.executionId = null;
+        }
         fs.writeFileSync(p, JSON.stringify(data, null, 2), "utf8");
       },
     },

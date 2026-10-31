@@ -1519,7 +1519,7 @@ export async function runEvergreenProductResearch(
         } else if (bestVerdict === "UNMATCHED") {
           bestRejectionReason =
             (match.matchReasons || []).join("; ") || "Low cross-platform text/URL similarity";
-          bestCandidateId = candidate.candidateId;
+          bestCandidateId = null;
         }
       }
 
@@ -1528,6 +1528,7 @@ export async function runEvergreenProductResearch(
         bestRejectionReason =
           bestRejectionReason ||
           "No candidate matched creative title or destination URL";
+        bestCandidateId = null;
       }
     }
 
@@ -1545,7 +1546,7 @@ export async function runEvergreenProductResearch(
 
     creativeAssociationLedger.push({
       creativeId: cId,
-      researchRunId: runId,
+      researchRunId: obs.researchRunId ?? null,
       advertiserDomain: obs.advertiserDomain || null,
       sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
       rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
@@ -1553,16 +1554,23 @@ export async function runEvergreenProductResearch(
       normalizedProductUrl: null,
       creativeTitle: obs.title || null,
       candidateIdsEvaluated: candidates.map((c) => c.candidateId),
-      matchedCandidateId: bestCandidateId,
+      matchedCandidateId:
+        bestVerdict === "EXACT_PRODUCT_MATCH" ||
+        bestVerdict === "PROBABLE_PRODUCT_MATCH" ||
+        bestVerdict === "BRAND_ONLY_MATCH"
+          ? bestCandidateId
+          : null,
       exactMatchingClassification: bestClassification,
       matchingEvidence: bestEvidence,
       rejectionReason: bestRejectionReason,
       associationVerdict: bestVerdict,
       associationClassification: bestVerdict,
       sourceMode:
-        obs.provenance === "LIVE_PROVIDER" || obs.provenance === "REAL_UPSTREAM"
+        obs.sourceMode === "LIVE_PROVIDER"
           ? "LIVE_PROVIDER"
-          : "CACHED",
+          : obs.sourceMode === "CACHE_ONLY" || obs.isCached === true
+          ? "CACHED"
+          : "UNKNOWN",
     });
 
     if (bestVerdict !== "EXACT_PRODUCT_MATCH") {

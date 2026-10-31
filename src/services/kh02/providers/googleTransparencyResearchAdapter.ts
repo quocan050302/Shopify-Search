@@ -176,6 +176,25 @@ export interface GoogleDomainEnrichmentOutcome {
   errorMessage: string | null;
 }
 
+export interface GoogleMcpProviderInvocationRecord {
+  invocationId: string;
+  providerRequestId: string | null;
+  transportId: string;
+  researchRunId: string | null;
+  toolName: string;
+  advertiserId: string | null;
+  domain: string;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  sourceMode: "LIVE_PROVIDER" | "CACHED" | "UNKNOWN";
+  status: "SUCCEEDED" | "FAILED" | "TIMED_OUT";
+  returnedCreativeIds: string[];
+  missingCreativeIdCount: number;
+  responseEvidenceRef: string | null;
+  lineageAvailable: boolean;
+}
+
 export interface GoogleEnrichmentExecution {
   attemptedDomains: string[];
   advertiserLookupSucceeded: boolean;
@@ -261,6 +280,14 @@ export interface GoogleEnrichmentExecution {
     advertiserDomain: string | null;
     rejectionReason: string;
     matchedCandidateId: string | null;
+  }>;
+  providerInvocationRecords?: GoogleMcpProviderInvocationRecord[];
+  rejectedRecords?: Array<{
+    creativeId: string | null;
+    advertiserId?: string | null;
+    domain: string;
+    researchRunId: string | null;
+    rejectionReason: string;
   }>;
 }
 
@@ -1656,6 +1683,9 @@ export async function collectGoogleAdvertiserSignals(
 
   const stepTimeline: NonNullable<GoogleEnrichmentExecution["stepTimeline"]> = [];
   const mcpInvocations: NonNullable<GoogleEnrichmentExecution["mcpInvocations"]> = [];
+  const providerInvocationRecords: GoogleMcpProviderInvocationRecord[] = [];
+  const adapterRejectedRecords: NonNullable<GoogleEnrichmentExecution["rejectedRecords"]> = [];
+  const transportSessionId = `mcp_transport_${Date.now()}`;
   const recordStep = (
     step: string,
     status: "COMPLETED" | "FAILED" | "TIMED_OUT" | "SKIPPED",
@@ -1951,21 +1981,58 @@ export async function collectGoogleAdvertiserSignals(
                 : Array.isArray(adsResult?.ads)
                   ? adsResult.ads
                   : [];
-              const invocationId = `google_mcp_${query.researchRunId || "run"}_${regDomain}_${advId}_${crStartMs}`;
+              const hasRunLineage = Boolean(query.researchRunId && String(query.researchRunId).trim());
+              const invocationId = `google_mcp_inv_${regDomain}_${advId}_${crStartMs}`;
+              const upstreamReqId =
+                (typeof adsResult?.requestId === "string" && adsResult.requestId.trim()) ||
+                (typeof adsResult?.providerRequestId === "string" && adsResult.providerRequestId.trim()) ||
+                (hasRunLineage ? `google_mcp_${query.researchRunId}_${regDomain}_${advId}_${crStartMs}` : null);
               const observedIso = new Date().toISOString();
-              const stampedRawAds = rawAds.map((rawAd: any, idx: number) => ({
-                ...rawAd,
-                creative_id: rawAd?.creative_id || rawAd?.id || `google_cr_${advId}_${idx}`,
-                advertiser_id: rawAd?.advertiser_id || advId,
-                domain: rawAd?.domain || regDomain,
-                sourceMode: "LIVE_PROVIDER",
-                provenance: "REAL_UPSTREAM",
-                isCached: false,
-                researchRunId: query.researchRunId || null,
-                observedAt: observedIso,
-                providerRequestId: invocationId,
-                mcpInvocationRef: invocationId,
-              }));
+              const returnedCreativeIds: string[] = [];
+              let missingCreativeIdCount = 0;
+
+              const stampedRawAds = rawAds.map((rawAd: any) => {
+                const rawCid = rawAd?.creative_id ?? rawAd?.creativeId ?? rawAd?.id;
+                const actualCreativeId =
+                  typeof rawCid === "string" || typeof rawCid === "number"
+                    ? String(rawCid).trim() || null
+                    : null;
+                if (actualCreativeId) {
+                  returnedCreativeIds.push(actualCreativeId);
+                } else {
+                  missingCreativeIdCount++;
+                  adapterRejectedRecords.push({
+                    creativeId: null,
+                    advertiserId: advId,
+                    domain: regDomain,
+                    researchRunId: query.researchRunId || null,
+                    rejectionReason: "MISSING_UPSTREAM_CREATIVE_ID",
+                  });
+                }
+                const adReqId =
+                  (typeof rawAd?.providerRequestId === "string" && rawAd.providerRequestId.trim()) ||
+                  upstreamReqId ||
+                  null;
+                return {
+                  ...rawAd,
+                  creative_id: actualCreativeId,
+                  creativeId: actualCreativeId,
+                  advertiser_id: rawAd?.advertiser_id || advId,
+                  domain: rawAd?.domain || regDomain,
+                  sourceMode: "LIVE_PROVIDER",
+                  provenance: "REAL_UPSTREAM",
+                  isCached: false,
+                  researchRunId: query.researchRunId || null,
+                  observedAt: observedIso,
+                  providerRequestId: adReqId,
+                  mcpInvocationRef: invocationId,
+                  missingProvenanceReason: !actualCreativeId
+                    ? "MISSING_UPSTREAM_CREATIVE_ID"
+                    : !adReqId
+                    ? "MISSING_PROVIDER_REQUEST_ID"
+                    : null,
+                };
+              });
               creativesReturnedCount += stampedRawAds.length;
               domainCreativesReturned += stampedRawAds.length;
               allRawAds.push(...stampedRawAds);
@@ -1980,6 +2047,25 @@ export async function collectGoogleAdvertiserSignals(
                 status: "SUCCEEDED",
                 returnedCount: stampedRawAds.length,
                 errorMessage: null,
+              });
+
+              providerInvocationRecords.push({
+                invocationId,
+                providerRequestId: upstreamReqId,
+                transportId: transportSessionId,
+                researchRunId: query.researchRunId || null,
+                toolName: adsTool,
+                advertiserId: advId,
+                domain: regDomain,
+                startedAt: new Date(crStartMs).toISOString(),
+                completedAt: observedIso,
+                durationMs: Math.max(0, Date.now() - crStartMs),
+                sourceMode: "LIVE_PROVIDER",
+                status: "SUCCEEDED",
+                returnedCreativeIds,
+                missingCreativeIdCount,
+                responseEvidenceRef: `mcp:${adsTool}:${advId}:${returnedCreativeIds.length}`,
+                lineageAvailable: Boolean(upstreamReqId && hasRunLineage && missingCreativeIdCount === 0),
               });
 
               const normStartMs = Date.now();
@@ -2004,7 +2090,7 @@ export async function collectGoogleAdvertiserSignals(
                 obs.sourceType = "LIVE_PROVIDER";
                 obs.isCached = false;
                 obs.isLiveRecord = true;
-                obs.providerRequestId = invocationId;
+                obs.providerRequestId = upstreamReqId || undefined;
                 obs.sourceObservationId = obs.sourceObservationId || `sobs_google_${obs.sourceRecordId}`;
                 observations.push(obs);
               }
@@ -2204,6 +2290,8 @@ export async function collectGoogleAdvertiserSignals(
       mcpCallsCompleted,
       cleanupCompleted: true,
       mcpInvocations,
+      providerInvocationRecords,
+      rejectedRecords: adapterRejectedRecords,
       stepTimeline,
       stateBreakdown: {
         configured: true,

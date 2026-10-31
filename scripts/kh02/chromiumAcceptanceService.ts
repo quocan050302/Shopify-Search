@@ -15,6 +15,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import http from "http";
+import net from "net";
 import { chromium, Browser, BrowserContext, Page } from "playwright-core";
 import { prisma } from "../../src/lib/db";
 
@@ -24,15 +25,77 @@ export interface ServerLaunchOptions {
   logFilePath?: string;
   signal?: AbortSignal;
   timeoutMs?: number;
+  allowDynamicPortFallback?: boolean;
 }
 
 export interface ServerLaunchResult {
   childProcess: ChildProcess;
+  pid: number | null;
   port: number;
   baseUrl: string;
   serverReady: boolean;
+  ownedProcessVerified: boolean;
+  portConflictDetected: boolean;
   startupDurationMs: number;
   stopServer: () => Promise<void>;
+}
+
+export interface ProductionBuildVerificationOptions {
+  sourceSha: string;
+  buildLogPath: string;
+  cwd?: string;
+  buildDir?: string;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  spawnImpl?: typeof spawn;
+}
+
+export interface ProductionBuildVerificationResult {
+  executed: boolean;
+  status: "BUILD_PASS" | "BUILD_FAILED" | "BUILD_TIMED_OUT" | "BUILD_SPAWN_ERROR";
+  allowServerAndChromiumLaunch: boolean;
+  sourceSha: string;
+  command: string;
+  pid: number | null;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  exitCode: number | null;
+  signal: string | null;
+  buildIdExists: boolean;
+  buildIdValue: string | null;
+  buildIdMtimeMs: number | null;
+  buildIdFreshlyUpdated: boolean;
+  compileSucceeded: boolean;
+  warningsCount: number;
+  warningsInventory: string[];
+  logFilePath: string;
+  reason: string;
+}
+
+export interface RealHttpReadOnlyProbeOptions {
+  baseUrl: string;
+  runId: string;
+  candidateId: string;
+  productId?: string;
+  signal?: AbortSignal;
+  fetchImpl?: typeof fetch;
+}
+
+export interface RealHttpReadOnlyProbeResult {
+  transportVerified: boolean;
+  actualHttpRequestCount: number;
+  requestUrl: string;
+  statusCode: number | null;
+  ok: boolean;
+  validJson: boolean;
+  identityMatched: boolean;
+  resolvedRunId: string | null;
+  resolvedCandidateId: string | null;
+  resolvedProductId: string | null;
+  responseBodyDigest: string | null;
+  body: any;
+  error?: string;
 }
 
 export interface PersistedSqliteCandidateRecord {
@@ -185,9 +248,19 @@ export interface TableContentDigest {
 }
 
 export interface ReadOnlyMutationCheckResult {
+  verificationScope?:
+    | "HTTP_GET_NONMUTATION"
+    | "DB_ONLY_READ_SNAPSHOT"
+    | "SYNTHETIC_CALLBACK_REJECTED"
+    | "HTTP_PROBE_FAILED";
+  status?: "PASS" | "FAIL" | "HTTP_NOT_EXECUTED";
   readOnlyPassed: boolean;
   httpRequestVerified: boolean;
   httpStatusCode: number | null;
+  actualHttpRequestCount?: number;
+  requestUrl?: string | null;
+  responseBodyDigest?: string | null;
+  contentDigestDbOnly?: any;
   contentDigestsMatch: boolean;
   rowCountsMatch: boolean;
   mutatedTables: string[];
@@ -374,22 +447,269 @@ export async function loadPersistedRunSnapshotFromSqlite(
   };
 }
 
+export async function checkPortInUse(port: number, host = "127.0.0.1"): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ port, host });
+    const timer = setTimeout(() => {
+      socket.destroy();
+      resolve(false);
+    }, 800);
+    socket.on("connect", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(true);
+    });
+    socket.on("error", () => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(false);
+    });
+  });
+}
+
+/**
+ * 0.5 Supervised Production Build Verifier (`executeAndVerifyFreshProductionBuild`, Phase 4)
+ * Runs `npx next build` as an async child process with timeout, checks PID, exitCode === 0,
+ * signal === null, absence of fatal compile errors, and freshness of `.next/BUILD_ID` (`mtimeMs >= buildStartMs - 1000`).
+ */
+export async function executeAndVerifyFreshProductionBuild(
+  options: ProductionBuildVerificationOptions
+): Promise<ProductionBuildVerificationResult> {
+  const {
+    sourceSha,
+    buildLogPath,
+    cwd = process.cwd(),
+    buildDir = path.resolve(cwd, ".next"),
+    signal,
+    timeoutMs = 240000,
+    spawnImpl = spawn,
+  } = options;
+
+  const buildStartMs = Date.now();
+  const startedAt = new Date(buildStartMs).toISOString();
+  const isWin = process.platform === "win32";
+  const cmd = isWin ? "npx.cmd" : "npx";
+  const args = ["next", "build"];
+
+  fs.mkdirSync(path.dirname(buildLogPath), { recursive: true });
+  const logStream = fs.createWriteStream(buildLogPath, { flags: "w" });
+
+  let combinedLog = "";
+  let timedOut = false;
+  let spawnErr: string | null = null;
+
+  return new Promise((resolve) => {
+    let child: ChildProcess;
+    try {
+      child = spawnImpl(cmd, args, {
+        cwd,
+        env: { ...process.env, NODE_ENV: "production" },
+        stdio: ["ignore", "pipe", "pipe"],
+        shell: isWin,
+      });
+    } catch (err: any) {
+      logStream.end();
+      const completedAt = new Date().toISOString();
+      return resolve({
+        executed: false,
+        status: "BUILD_SPAWN_ERROR",
+        allowServerAndChromiumLaunch: false,
+        sourceSha,
+        command: `${cmd} ${args.join(" ")}`,
+        pid: null,
+        startedAt,
+        completedAt,
+        durationMs: Date.now() - buildStartMs,
+        exitCode: null,
+        signal: null,
+        buildIdExists: false,
+        buildIdValue: null,
+        buildIdMtimeMs: null,
+        buildIdFreshlyUpdated: false,
+        compileSucceeded: false,
+        warningsCount: 0,
+        warningsInventory: [],
+        logFilePath: buildLogPath,
+        reason: `Failed to spawn production build: ${err?.message}`,
+      });
+    }
+
+    const pid = typeof child.pid === "number" ? child.pid : null;
+
+    const onData = (chunk: Buffer) => {
+      const str = chunk.toString("utf8");
+      combinedLog = (combinedLog + str).slice(-250_000);
+      logStream.write(chunk);
+    };
+
+    child.stdout?.on("data", onData);
+    child.stderr?.on("data", onData);
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        child.kill("SIGKILL");
+      } catch {}
+    }, timeoutMs);
+
+    const onAbort = () => {
+      timedOut = true;
+      try {
+        child.kill("SIGKILL");
+      } catch {}
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    child.on("error", (err) => {
+      spawnErr = err?.message || "spawn_error";
+    });
+
+    child.on("close", (code, sig) => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      logStream.end();
+
+      const completedAt = new Date().toISOString();
+      const durationMs = Date.now() - buildStartMs;
+      const buildIdPath = path.join(buildDir, "BUILD_ID");
+      const buildIdExists = fs.existsSync(buildIdPath);
+      let buildIdValue: string | null = null;
+      let buildIdMtimeMs: number | null = null;
+
+      if (buildIdExists) {
+        try {
+          buildIdValue = fs.readFileSync(buildIdPath, "utf8").trim() || null;
+          const st = fs.statSync(buildIdPath);
+          buildIdMtimeMs = st.mtimeMs;
+        } catch {
+          buildIdValue = null;
+          buildIdMtimeMs = null;
+        }
+      }
+
+      const buildIdFreshlyUpdated =
+        buildIdExists &&
+        typeof buildIdMtimeMs === "number" &&
+        buildIdMtimeMs >= buildStartMs - 1000 &&
+        Boolean(buildIdValue);
+
+      const hasFatalErrorText =
+        combinedLog.includes("Build error occurred") ||
+        combinedLog.includes("Failed to compile") ||
+        combinedLog.includes("Command failed");
+
+      const hasSuccessMarker =
+        combinedLog.includes("Compiled successfully") ||
+        combinedLog.includes("Route (app)") ||
+        combinedLog.includes("Generating static pages");
+
+      const compileSucceeded =
+        !spawnErr &&
+        !timedOut &&
+        code === 0 &&
+        !sig &&
+        !hasFatalErrorText &&
+        (hasSuccessMarker || buildIdFreshlyUpdated);
+
+      const warningsInventory = combinedLog
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) =>
+          /warn|warning|Critical dependency|bigqueryClientAdapter/i.test(l)
+        )
+        .slice(0, 50);
+
+      let status: ProductionBuildVerificationResult["status"] = "BUILD_FAILED";
+      if (spawnErr || !pid || pid <= 0) {
+        status = "BUILD_SPAWN_ERROR";
+      } else if (timedOut) {
+        status = "BUILD_TIMED_OUT";
+      } else if (compileSucceeded && buildIdFreshlyUpdated) {
+        status = "BUILD_PASS";
+      } else {
+        status = "BUILD_FAILED";
+      }
+
+      const allowServerAndChromiumLaunch = status === "BUILD_PASS";
+      let reason = `Production build ${status}: pid=${pid}, exitCode=${code}, signal=${sig || "none"}, buildIdFreshlyUpdated=${buildIdFreshlyUpdated}.`;
+      if (status !== "BUILD_PASS" && !buildIdFreshlyUpdated && code === 0) {
+        reason = `BUILD_FAILED: child exited 0 but .next/BUILD_ID was missing or stale (mtimeMs=${buildIdMtimeMs}, buildStartMs=${buildStartMs}).`;
+      }
+
+      resolve({
+        executed: Boolean(pid && pid > 0 && !spawnErr),
+        status,
+        allowServerAndChromiumLaunch,
+        sourceSha,
+        command: `${cmd} ${args.join(" ")}`,
+        pid,
+        startedAt,
+        completedAt,
+        durationMs,
+        exitCode: code,
+        signal: sig ? String(sig) : null,
+        buildIdExists,
+        buildIdValue,
+        buildIdMtimeMs,
+        buildIdFreshlyUpdated,
+        compileSucceeded,
+        warningsCount: warningsInventory.length,
+        warningsInventory,
+        logFilePath: buildLogPath,
+        reason,
+      });
+    });
+  });
+}
+
 /**
  * 1. Start isolated Next.js acceptance server on a dedicated port
+ * Verifies the port is not already occupied before spawning `next start` so an unowned process is never probed.
  */
 export async function startIsolatedAcceptanceServer(
   options: ServerLaunchOptions
 ): Promise<ServerLaunchResult> {
-  const { port, logFilePath, timeoutMs = 30000, signal } = options;
-  const baseUrl = `http://127.0.0.1:${port}`;
+  const {
+    port,
+    logFilePath,
+    timeoutMs = 30000,
+    signal,
+    buildPath,
+    allowDynamicPortFallback = false,
+  } = options;
   const startMs = Date.now();
 
-  const nextBuildDir = path.resolve(process.cwd(), ".next");
-  if (!fs.existsSync(nextBuildDir)) {
+  const nextBuildDir = buildPath || path.resolve(process.cwd(), ".next");
+  if (!fs.existsSync(nextBuildDir) || !fs.existsSync(path.join(nextBuildDir, "BUILD_ID"))) {
     throw new Error(
-      `NEXT_BUILD_MISSING: .next directory does not exist at ${nextBuildDir}. Run 'next build' before starting isolated server.`
+      `NEXT_BUILD_MISSING: .next/BUILD_ID does not exist at ${nextBuildDir}. Run 'executeAndVerifyFreshProductionBuild' before starting isolated server.`
     );
   }
+
+  let effectivePort = port;
+  const alreadyOccupied = await checkPortInUse(effectivePort);
+  if (alreadyOccupied) {
+    if (!allowDynamicPortFallback) {
+      throw new Error(
+        `PORT_CONFLICT: Port ${effectivePort} is already occupied on 127.0.0.1 before server launch; refusing to attach to unowned process.`
+      );
+    }
+    let foundFree = false;
+    for (let candidatePort = effectivePort + 1; candidatePort <= effectivePort + 20; candidatePort++) {
+      if (!(await checkPortInUse(candidatePort))) {
+        effectivePort = candidatePort;
+        foundFree = true;
+        break;
+      }
+    }
+    if (!foundFree) {
+      throw new Error(
+        `PORT_CONFLICT: Port ${port} and fallback range ${port + 1}..${port + 20} are all occupied.`
+      );
+    }
+  }
+
+  const baseUrl = `http://127.0.0.1:${effectivePort}`;
 
   const logStream = logFilePath
     ? fs.createWriteStream(logFilePath, { flags: "a" })
@@ -397,18 +717,24 @@ export async function startIsolatedAcceptanceServer(
 
   const isWin = process.platform === "win32";
   const cmd = isWin ? "npx.cmd" : "npx";
-  const args = ["next", "start", "-p", String(port)];
+  const args = ["next", "start", "-p", String(effectivePort)];
 
   const child = spawn(cmd, args, {
     cwd: process.cwd(),
     env: {
       ...process.env,
-      PORT: String(port),
+      PORT: String(effectivePort),
       NODE_ENV: "production",
     },
     stdio: ["ignore", "pipe", "pipe"],
     shell: isWin,
   });
+
+  const childPid = typeof child.pid === "number" ? child.pid : null;
+  if (!childPid || childPid <= 0) {
+    logStream?.end();
+    throw new Error("SERVER_SPAWN_FAILED: Next.js server child process did not receive a valid PID.");
+  }
 
   if (logStream) {
     child.stdout?.pipe(logStream);
@@ -474,7 +800,7 @@ export async function startIsolatedAcceptanceServer(
         });
       });
 
-      if (isUp) {
+      if (isUp && !childExited) {
         serverReady = true;
         break;
       }
@@ -494,9 +820,12 @@ export async function startIsolatedAcceptanceServer(
 
   return {
     childProcess: child,
-    port,
+    pid: childPid,
+    port: effectivePort,
     baseUrl,
     serverReady: true,
+    ownedProcessVerified: Boolean(childPid && childPid > 0 && !childExited),
+    portConflictDetected: alreadyOccupied,
     startupDurationMs: Date.now() - startMs,
     stopServer,
   };
@@ -1480,8 +1809,217 @@ async function computeSqliteTableDigests(db: any = prisma): Promise<{
 }
 
 /**
+ * 4A. DB-only SQLite Snapshot Integrity Verifier (`verifySqliteReadOnlySnapshotIntegrity`, Phase 1)
+ * Used when the isolated Next.js server cannot be launched (e.g., disk headroom < 15 GB).
+ * NEVER claims `httpRequestVerified: true` or `readOnlyPassed: true`.
+ */
+export async function verifySqliteReadOnlySnapshotIntegrity(
+  db: any = prisma
+): Promise<ReadOnlyMutationCheckResult> {
+  try {
+    const beforeSnap = await computeSqliteTableDigests(db);
+    const afterSnap = await computeSqliteTableDigests(db);
+    const mutatedTables: string[] = [];
+    let rowCountsMatch = true;
+    let contentDigestsMatch = true;
+
+    for (const tableName of Object.keys(beforeSnap.tableDigests)) {
+      const b = beforeSnap.tableDigests[tableName];
+      const a = afterSnap.tableDigests[tableName];
+      if (!b || !a) continue;
+      if (b.rowCount !== a.rowCount) {
+        rowCountsMatch = false;
+        mutatedTables.push(tableName);
+      } else if (b.sha256Digest !== a.sha256Digest) {
+        contentDigestsMatch = false;
+        mutatedTables.push(tableName);
+      }
+    }
+
+    const mutationsDetected = !rowCountsMatch || !contentDigestsMatch || mutatedTables.length > 0;
+    return {
+      verificationScope: "DB_ONLY_READ_SNAPSHOT",
+      status: "HTTP_NOT_EXECUTED",
+      readOnlyPassed: false,
+      httpRequestVerified: false,
+      httpStatusCode: null,
+      actualHttpRequestCount: 0,
+      requestUrl: null,
+      responseBodyDigest: null,
+      contentDigestDbOnly: beforeSnap,
+      contentDigestsMatch,
+      rowCountsMatch,
+      mutatedTables,
+      beforeSnapshot: beforeSnap,
+      afterSnapshot: afterSnap,
+      mutationsDetected,
+      error:
+        "HTTP_NOT_EXECUTED: Read-only HTTP endpoint could not be probed because isolated server was not running; only DB-only snapshot digest was verified.",
+    };
+  } catch (err: any) {
+    return {
+      verificationScope: "DB_ONLY_READ_SNAPSHOT",
+      status: "HTTP_NOT_EXECUTED",
+      readOnlyPassed: false,
+      httpRequestVerified: false,
+      httpStatusCode: null,
+      actualHttpRequestCount: 0,
+      requestUrl: null,
+      responseBodyDigest: null,
+      contentDigestsMatch: false,
+      rowCountsMatch: false,
+      mutatedTables: [],
+      beforeSnapshot: { syncJobCount: -1, productCount: -1 },
+      afterSnapshot: { syncJobCount: -1, productCount: -1 },
+      mutationsDetected: true,
+      error: `DB-only SQLite digest snapshot failed: ${err?.message}`,
+    };
+  }
+}
+
+/**
+ * 4B. Real HTTP Read-Only Overview API Probe (`probeRealReadOnlyOverviewApi`, Phase 1)
+ * Performs a real HTTP GET against `/api/v1/research/products/[id]/overview` and verifies:
+ * - HTTP status === 200
+ * - Valid JSON payload with SHA-256 `responseBodyDigest`
+ * - Resolved `researchRunId === runId`, `candidateId === candidateId`, and `productId` match
+ */
+export async function probeRealReadOnlyOverviewApi(
+  options: RealHttpReadOnlyProbeOptions
+): Promise<RealHttpReadOnlyProbeResult> {
+  const {
+    baseUrl,
+    runId,
+    candidateId,
+    productId,
+    signal,
+    fetchImpl = fetch,
+  } = options;
+
+  const cleanBase = String(baseUrl || "").trim().replace(/\/$/, "");
+  const effectiveProductId = String(productId || candidateId || "").trim();
+  const requestUrl = `${cleanBase}/api/v1/research/products/${encodeURIComponent(
+    effectiveProductId
+  )}/overview?runId=${encodeURIComponent(runId)}&candidateId=${encodeURIComponent(
+    candidateId
+  )}`;
+
+  if (!/^https?:\/\//i.test(cleanBase) || !runId || !candidateId) {
+    return {
+      transportVerified: false,
+      actualHttpRequestCount: 0,
+      requestUrl,
+      statusCode: null,
+      ok: false,
+      validJson: false,
+      identityMatched: false,
+      resolvedRunId: null,
+      resolvedCandidateId: null,
+      resolvedProductId: null,
+      responseBodyDigest: null,
+      body: null,
+      error: "Invalid baseUrl, runId, or candidateId for real HTTP overview probe",
+    };
+  }
+
+  try {
+    const res = await fetchImpl(requestUrl, {
+      method: "GET",
+      signal,
+    });
+    const statusCode = res.status;
+    const rawText = await res.text();
+    const responseBodyDigest = crypto
+      .createHash("sha256")
+      .update(rawText, "utf8")
+      .digest("hex");
+
+    let parsedJson: any = null;
+    let validJson = false;
+    try {
+      parsedJson = JSON.parse(rawText);
+      validJson = Boolean(parsedJson && typeof parsedJson === "object");
+    } catch {
+      validJson = false;
+    }
+
+    const normView = validJson ? extractNormalizedHttpCandidate({ body: parsedJson }) : null;
+    const dataObj = parsedJson?.data && typeof parsedJson.data === "object" ? parsedJson.data : null;
+    const resolvedRunId = normView?.researchRunId ?? null;
+    const resolvedCandidateId = normView?.candidateId ?? null;
+    const resolvedProductId =
+      dataObj?.kh02ResearchContext?.researchProductId ??
+      dataObj?.product?.id ??
+      resolvedCandidateId ??
+      null;
+
+    const runIdMatched = Boolean(resolvedRunId && resolvedRunId === runId);
+    const candidateIdMatched = Boolean(
+      resolvedCandidateId && resolvedCandidateId === candidateId
+    );
+    const productIdMatched =
+      !productId ||
+      !resolvedProductId ||
+      resolvedProductId === productId ||
+      resolvedProductId === candidateId;
+
+    const identityMatched = runIdMatched && candidateIdMatched && productIdMatched;
+    const transportVerified =
+      statusCode === 200 &&
+      res.ok === true &&
+      validJson &&
+      identityMatched &&
+      responseBodyDigest.length === 64;
+
+    let error: string | undefined = undefined;
+    if (statusCode !== 200) {
+      error = `HTTP GET returned status ${statusCode} (expected 200)`;
+    } else if (!validJson) {
+      error = "HTTP 200 response body is not a valid JSON object";
+    } else if (!identityMatched) {
+      error = `Identity mismatch in HTTP 200 response: expected(runId=${runId}, candidateId=${candidateId}, productId=${effectiveProductId}) vs resolved(runId=${resolvedRunId}, candidateId=${resolvedCandidateId}, productId=${resolvedProductId})`;
+    }
+
+    return {
+      transportVerified,
+      actualHttpRequestCount: 1,
+      requestUrl,
+      statusCode,
+      ok: res.ok && statusCode === 200,
+      validJson,
+      identityMatched,
+      resolvedRunId,
+      resolvedCandidateId,
+      resolvedProductId,
+      responseBodyDigest,
+      body: parsedJson,
+      error,
+    };
+  } catch (err: any) {
+    return {
+      transportVerified: false,
+      actualHttpRequestCount: 0,
+      requestUrl,
+      statusCode: null,
+      ok: false,
+      validJson: false,
+      identityMatched: false,
+      resolvedRunId: null,
+      resolvedCandidateId: null,
+      resolvedProductId: null,
+      responseBodyDigest: null,
+      body: null,
+      error: `HTTP GET network/transport error: ${err?.message}`,
+    };
+  }
+}
+
+/**
  * 4. Assess that GET requests do not mutate SQLite records (row counts AND SHA-256 content digests)
- *    and that the GET request itself succeeded with HTTP 200 and valid JSON.
+ *    and that the GET request itself succeeded with real HTTP transport proof (`transportVerified === true`),
+ *    HTTP 200, valid JSON, responseBodyDigest, and identity match.
+ *    Synthetic Prisma/in-memory callbacks returning `{ status: 200, body: { ok: true } }` without
+ *    real HTTP transport proof are rejected (`httpRequestVerified: false`, `readOnlyPassed: false`).
  */
 export async function assessReadOnlyMutation(
   fnToExecute: () => Promise<any>,
@@ -1492,9 +2030,14 @@ export async function assessReadOnlyMutation(
     beforeSnap = await computeSqliteTableDigests(db);
   } catch (err: any) {
     return {
+      verificationScope: "HTTP_PROBE_FAILED",
+      status: "FAIL",
       readOnlyPassed: false,
       httpRequestVerified: false,
       httpStatusCode: null,
+      actualHttpRequestCount: 0,
+      requestUrl: null,
+      responseBodyDigest: null,
       contentDigestsMatch: false,
       rowCountsMatch: false,
       mutatedTables: [],
@@ -1507,73 +2050,82 @@ export async function assessReadOnlyMutation(
 
   let httpRequestVerified = false;
   let httpStatusCode: number | null = null;
+  let actualHttpRequestCount = 0;
+  let requestUrl: string | null = null;
+  let responseBodyDigest: string | null = null;
+  let verificationScope: ReadOnlyMutationCheckResult["verificationScope"] =
+    "SYNTHETIC_CALLBACK_REJECTED";
+  let callbackError: string | undefined = undefined;
 
   try {
     const execResult = await fnToExecute();
     if (execResult === null || execResult === false) {
-      return {
-        readOnlyPassed: false,
-        httpRequestVerified: false,
-        httpStatusCode: null,
-        contentDigestsMatch: false,
-        rowCountsMatch: false,
-        mutatedTables: [],
-        beforeSnapshot: beforeSnap,
-        afterSnapshot: beforeSnap,
-        mutationsDetected: false,
-        error: "Read-only GET callback returned null/false (swallowed network failure is forbidden)",
-      };
-    }
-
-    if (execResult && typeof execResult === "object") {
+      callbackError =
+        "Read-only GET callback returned null/false (swallowed network failure is forbidden)";
+      verificationScope = "HTTP_PROBE_FAILED";
+    } else if (execResult && typeof execResult === "object") {
       const status =
-        typeof execResult.status === "number"
-          ? execResult.status
-          : typeof execResult.statusCode === "number"
+        typeof execResult.statusCode === "number"
           ? execResult.statusCode
+          : typeof execResult.status === "number"
+          ? execResult.status
           : null;
       httpStatusCode = status;
-      if (status !== null && status !== 200) {
-        return {
-          readOnlyPassed: false,
-          httpRequestVerified: false,
-          httpStatusCode: status,
-          contentDigestsMatch: true,
-          rowCountsMatch: true,
-          mutatedTables: [],
-          beforeSnapshot: beforeSnap,
-          afterSnapshot: beforeSnap,
-          mutationsDetected: false,
-          error: `Read-only GET request returned non-200 HTTP status ${status}`,
-        };
+      requestUrl =
+        typeof execResult.requestUrl === "string" ? execResult.requestUrl : null;
+      responseBodyDigest =
+        typeof execResult.responseBodyDigest === "string"
+          ? execResult.responseBodyDigest
+          : null;
+      actualHttpRequestCount =
+        typeof execResult.actualHttpRequestCount === "number"
+          ? execResult.actualHttpRequestCount
+          : 0;
+
+      const hasRealTransportProof =
+        execResult.transportVerified === true &&
+        actualHttpRequestCount >= 1 &&
+        Boolean(requestUrl && /^https?:\/\//i.test(requestUrl)) &&
+        status === 200 &&
+        execResult.validJson === true &&
+        execResult.identityMatched === true &&
+        Boolean(responseBodyDigest && responseBodyDigest.length === 64);
+
+      if (hasRealTransportProof) {
+        httpRequestVerified = true;
+        verificationScope = "HTTP_GET_NONMUTATION";
+      } else if (status !== null && status !== 200) {
+        httpRequestVerified = false;
+        verificationScope = "HTTP_PROBE_FAILED";
+        callbackError =
+          execResult.error ||
+          `Read-only GET request returned non-200 HTTP status ${status}`;
+      } else if (execResult.transportVerified === false) {
+        httpRequestVerified = false;
+        verificationScope = "HTTP_PROBE_FAILED";
+        callbackError =
+          execResult.error ||
+          "Real HTTP read-only probe failed transport/JSON/identity verification";
+      } else {
+        // Synthetic callback object such as `{ status: 200, body: { ok: true } }` without transport proof!
+        httpRequestVerified = false;
+        actualHttpRequestCount = 0;
+        verificationScope = "SYNTHETIC_CALLBACK_REJECTED";
+        callbackError =
+          "SYNTHETIC_CALLBACK_REJECTED: Callback returned an object without real HTTP transport proof (transportVerified=true, requestUrl, responseBodyDigest, identityMatched required).";
       }
-      if (typeof execResult.json === "function") {
-        const body = await execResult.json();
-        if (!body || typeof body !== "object") {
-          throw new Error("HTTP 200 response did not contain valid JSON object");
-        }
-      } else if ("body" in execResult && (!execResult.body || typeof execResult.body !== "object")) {
-        throw new Error("HTTP response object missing parsed JSON body");
-      }
-      httpRequestVerified = true;
     } else {
-      // Callback returned undefined (void) without throwing
-      httpRequestVerified = true;
-      httpStatusCode = 200;
+      // Callback returned undefined (void) or primitive without real HTTP transport proof
+      httpRequestVerified = false;
+      actualHttpRequestCount = 0;
+      verificationScope = "SYNTHETIC_CALLBACK_REJECTED";
+      callbackError =
+        "SYNTHETIC_CALLBACK_REJECTED: Callback returned void/primitive without real HTTP transport proof.";
     }
   } catch (err: any) {
-    return {
-      readOnlyPassed: false,
-      httpRequestVerified: false,
-      httpStatusCode,
-      contentDigestsMatch: false,
-      rowCountsMatch: false,
-      mutatedTables: [],
-      beforeSnapshot: beforeSnap,
-      afterSnapshot: { syncJobCount: -1, productCount: -1 },
-      mutationsDetected: true,
-      error: `Executed GET callback threw or failed verification: ${err?.message}`,
-    };
+    httpRequestVerified = false;
+    verificationScope = "HTTP_PROBE_FAILED";
+    callbackError = `Executed GET callback threw or failed verification: ${err?.message}`;
   }
 
   let afterSnap: Awaited<ReturnType<typeof computeSqliteTableDigests>>;
@@ -1581,9 +2133,14 @@ export async function assessReadOnlyMutation(
     afterSnap = await computeSqliteTableDigests(db);
   } catch (err: any) {
     return {
+      verificationScope,
+      status: "FAIL",
       readOnlyPassed: false,
-      httpRequestVerified,
+      httpRequestVerified: false,
       httpStatusCode,
+      actualHttpRequestCount,
+      requestUrl,
+      responseBodyDigest,
       contentDigestsMatch: false,
       rowCountsMatch: false,
       mutatedTables: [],
@@ -1612,21 +2169,28 @@ export async function assessReadOnlyMutation(
   }
 
   const mutationsDetected = !rowCountsMatch || !contentDigestsMatch || mutatedTables.length > 0;
-  const readOnlyPassed = httpRequestVerified && !mutationsDetected;
+  const readOnlyPassed = httpRequestVerified && !mutationsDetected && !callbackError;
+
+  const errorMsg = mutationsDetected
+    ? `Database mutation detected during read-only GET in table(s): ${mutatedTables.join(", ")}`
+    : callbackError;
 
   return {
+    verificationScope,
+    status: readOnlyPassed ? "PASS" : "FAIL",
     readOnlyPassed,
     httpRequestVerified,
     httpStatusCode,
+    actualHttpRequestCount,
+    requestUrl,
+    responseBodyDigest,
     contentDigestsMatch,
     rowCountsMatch,
     mutatedTables,
     beforeSnapshot: beforeSnap,
     afterSnapshot: afterSnap,
     mutationsDetected,
-    error: mutationsDetected
-      ? `Database mutation detected during read-only GET in table(s): ${mutatedTables.join(", ")}`
-      : undefined,
+    error: errorMsg,
   };
 }
 

@@ -14,6 +14,9 @@
 
 export interface GoogleMcpGateInput {
   researchRunId: string;
+  acceptanceRunId?: string;
+  originalResearchRunId?: string;
+  runExecutionMode?: "FRESH_LIVE_CURRENT_RUN" | "REPLAY_CACHED_OR_PREVIOUS_RUN";
   evaluatedCandidateIds?: string[];
   telemetry: any;
   rawManifest: {
@@ -22,6 +25,7 @@ export interface GoogleMcpGateInput {
     upstreamTransportStatus?: string;
   };
   normalizationLedger: {
+    normalizationStageExecuted?: boolean;
     normalizedDistinctCount?: number;
     rejectedBeforeNormalizationCount?: number;
     records?: any[];
@@ -61,6 +65,10 @@ export interface SetReconciliationAudit {
 export interface GoogleMcpGateEvaluationResult {
   evaluatedAt: string;
   researchRunId: string;
+  acceptanceRunId?: string;
+  originalResearchRunId?: string;
+  runExecutionMode?: "FRESH_LIVE_CURRENT_RUN" | "REPLAY_CACHED_OR_PREVIOUS_RUN";
+  replayModeDetected?: boolean;
   transportStatus: "CONNECTED" | "DISCONNECTED" | "ERROR";
   liveCreativesRetrievedCount: number;
   exactProductSkuMatchesCount: number;
@@ -78,6 +86,18 @@ export interface GoogleMcpGateEvaluationResult {
   };
   overallG06Verdict: "PASS" | "INSUFFICIENT_EVIDENCE" | "FAIL";
   overallG06Reason: string;
+}
+
+export function isSyntheticCreativeId(cid: string | null | undefined): boolean {
+  if (!cid) return true;
+  return /^(?:cr_\d+|google_cr_.*_\d+)$/i.test(cid.trim());
+}
+
+export function isSyntheticProviderRequestId(reqId: string | null | undefined, runId?: string): boolean {
+  if (!reqId) return true;
+  const trimmed = reqId.trim();
+  if (runId && trimmed === `mcp_${runId}`) return true;
+  return /^(?:mcp_(?:run|job_|autoclosure_)|synthetic_|fake_)/i.test(trimmed);
 }
 
 function cleanId(val: unknown): string | null {
@@ -113,7 +133,7 @@ export function isExplicitlyLiveGoogleCreative(
   if (!targetRunId) return false;
 
   const cid = extractCreativeId(creative);
-  if (!cid) return false;
+  if (!cid || isSyntheticCreativeId(cid)) return false;
 
   // Must explicitly have isCached === false (undefined is NOT sufficient!)
   if (creative.isCached !== false) {
@@ -140,7 +160,7 @@ export function isExplicitlyLiveGoogleCreative(
   }
 
   const reqRef = cleanId(creative.providerRequestId) || cleanId(creative.mcpInvocationRef);
-  if (!reqRef) {
+  if (!reqRef || isSyntheticProviderRequestId(reqRef, targetRunId)) {
     return false;
   }
 
@@ -211,14 +231,23 @@ export function evaluateGoogleMcpGates(
         hasSucceededMcpInvocation
     );
 
-  // 2. Explicit Live Creative Verification
+  // 2. Explicit Live Creative Verification & Replay Mode Detection
+  const replayModeDetected =
+    input.runExecutionMode === "REPLAY_CACHED_OR_PREVIOUS_RUN" ||
+    Boolean(
+      input.acceptanceRunId &&
+        input.originalResearchRunId &&
+        cleanId(input.acceptanceRunId) !== cleanId(input.originalResearchRunId)
+    );
+
   const rawCreatives = Array.isArray(rawManifest?.creatives) ? rawManifest.creatives : [];
-  const liveCreatives = rawCreatives.filter((c: any) =>
-    isExplicitlyLiveGoogleCreative(c, cleanRunId)
-  );
+  const liveCreatives = replayModeDetected
+    ? []
+    : rawCreatives.filter((c: any) => isExplicitlyLiveGoogleCreative(c, cleanRunId));
   const liveCount = liveCreatives.length;
 
   // 3. Set-Based Creative Pipeline Reconciliation
+  const normalizationStageExecuted = normalizationLedger?.normalizationStageExecuted !== false;
   const normRecords = Array.isArray(normalizationLedger?.records)
     ? normalizationLedger.records
     : Array.isArray(normalizationLedger?.normalizedRecords)
@@ -229,14 +258,27 @@ export function evaluateGoogleMcpGates(
     ? normalizationLedger.rejectedRecords
     : [];
 
-  const rawIdList = rawCreatives.map(extractCreativeId).filter(Boolean) as string[];
+  const rawIdList = rawCreatives
+    .map((c: any) => {
+      const id = extractCreativeId(c);
+      return id && !isSyntheticCreativeId(id) ? id : null;
+    })
+    .filter(Boolean) as string[];
   const rawIdSet = new Set<string>(rawIdList);
 
-  const normIdList = normRecords.map(extractCreativeId).filter(Boolean) as string[];
+  const normIdList = normRecords
+    .map((r: any) => {
+      const id = extractCreativeId(r);
+      return id && !isSyntheticCreativeId(id) ? id : null;
+    })
+    .filter(Boolean) as string[];
   const normIdSet = new Set<string>(normIdList);
 
   // Adapter-level rejected records (excluding Stage 7 post-normalization association classifications that are already in normIdSet)
   const allRejIdList = rejRecords.map(extractCreativeId).filter(Boolean) as string[];
+  const missingIdRejectionsCount = rejRecords.filter(
+    (r: any) => !extractCreativeId(r) && r?.rejectionReason === "MISSING_UPSTREAM_CREATIVE_ID"
+  ).length;
   const unknownRejectedCreativeIds = allRejIdList.filter((id) => !rawIdSet.has(id));
   const adapterRejIdList = allRejIdList.filter((id) => !normIdSet.has(id));
   const adapterRejIdSet = new Set<string>(adapterRejIdList);
@@ -245,6 +287,10 @@ export function evaluateGoogleMcpGates(
   const unaccountedRawCreativeIds = Array.from(rawIdSet).filter(
     (id) => !normIdSet.has(id) && !adapterRejIdSet.has(id)
   );
+  const rawMissingOrSyntheticCount = rawCreatives.length - rawIdList.length;
+  if (rawMissingOrSyntheticCount > missingIdRejectionsCount) {
+    unaccountedRawCreativeIds.push("missing_or_synthetic_creative_id");
+  }
   const overlapNormalizedAndRejectedIds: string[] = [];
 
   // Check runId consistency on normalized records and associations
@@ -252,7 +298,7 @@ export function evaluateGoogleMcpGates(
   for (const r of normRecords) {
     const rid = cleanId(r?.researchRunId);
     const cid = extractCreativeId(r) || "unknown";
-    if (rid && cleanRunId && rid !== cleanRunId) {
+    if (!rid || (cleanRunId && rid !== cleanRunId)) {
       runIdMismatchCreativeIds.push(cid);
     }
   }
@@ -267,23 +313,26 @@ export function evaluateGoogleMcpGates(
   const declaredRejCount =
     typeof normalizationLedger?.rejectedBeforeNormalizationCount === "number"
       ? normalizationLedger.rejectedBeforeNormalizationCount
-      : adapterRejIdSet.size;
+      : adapterRejIdSet.size + missingIdRejectionsCount;
 
   const countsMatchDeclared =
-    declaredRawCount === rawIdSet.size &&
+    declaredRawCount === rawCreatives.length &&
     declaredNormCount === normIdSet.size &&
-    (declaredRejCount === adapterRejIdSet.size ||
-      (normIdSet.size === rawIdSet.size && unknownRejectedCreativeIds.length === 0));
+    (declaredRejCount === adapterRejIdSet.size + missingIdRejectionsCount ||
+      (normIdSet.size === rawIdSet.size &&
+        rawMissingOrSyntheticCount === 0 &&
+        unknownRejectedCreativeIds.length === 0));
 
   const setInvariantPassed =
+    normalizationStageExecuted &&
     countsMatchDeclared &&
-    rawCreatives.length === rawIdSet.size &&
+    rawIdList.length === rawIdSet.size &&
     normRecords.length === normIdSet.size &&
     unknownNormalizedCreativeIds.length === 0 &&
     unknownRejectedCreativeIds.length === 0 &&
     unaccountedRawCreativeIds.length === 0 &&
     runIdMismatchCreativeIds.length === 0 &&
-    rawIdSet.size === normIdSet.size + adapterRejIdSet.size;
+    rawCreatives.length === normIdSet.size + adapterRejIdSet.size + missingIdRejectionsCount;
 
   // 4. Association Ledger Integrity & Exact vs Probable/Brand Classification
   const associations = Array.isArray(associationLedger?.associations)
@@ -311,11 +360,16 @@ export function evaluateGoogleMcpGates(
     }
 
     const assocRunId = cleanId(assoc?.researchRunId);
-    if (assocRunId && cleanRunId && assocRunId !== cleanRunId) {
+    if (!assocRunId || (cleanRunId && assocRunId !== cleanRunId)) {
       runIdMismatchCreativeIds.push(acid || "assoc_run_mismatch");
     }
 
-    // Validate candidate reference
+    const v = assoc?.associationVerdict || assoc?.associationClassification || assoc?.verdict;
+    const isMatchedVerdict =
+      v === "EXACT_PRODUCT_MATCH" || v === "PROBABLE_PRODUCT_MATCH" || v === "BRAND_ONLY_MATCH";
+
+    // Validate candidate reference: matched verdicts MUST have an explicit matchedCandidateId
+    // (cannot fall back to candidateIdsEvaluated[0]!)
     const matchedCand =
       cleanId(assoc?.matchedCandidateId) ||
       cleanId(assoc?.candidateId) ||
@@ -324,7 +378,13 @@ export function evaluateGoogleMcpGates(
       ? assoc.candidateIdsEvaluated.map(cleanId).filter(Boolean)
       : [];
 
-    if (!matchedCand && evalCands.length === 0) {
+    if (assoc?.inferredFromEvaluatedList === true) {
+      unknownAssociationCandidateIds.push("inferred_from_evaluated_list_forbidden");
+    } else if (isMatchedVerdict && !matchedCand) {
+      unknownAssociationCandidateIds.push("missing_matched_candidate_id");
+    } else if (!isMatchedVerdict && matchedCand && (v === "UNMATCHED" || v === "MISSING_DESTINATION")) {
+      unknownAssociationCandidateIds.push("inferred_candidate_on_unmatched");
+    } else if (!matchedCand && evalCands.length === 0) {
       unknownAssociationCandidateIds.push("missing_candidate_id");
     } else if (validCandidateSet) {
       if (matchedCand && !validCandidateSet.has(matchedCand)) {
@@ -336,8 +396,6 @@ export function evaluateGoogleMcpGates(
         }
       }
     }
-
-    const v = assoc?.associationVerdict || assoc?.associationClassification || assoc?.verdict;
     if (v === "EXACT_PRODUCT_MATCH") {
       if (hasVerifiedExactProductAssociationEvidence(assoc)) {
         verifiedExactCount++;
@@ -399,7 +457,9 @@ export function evaluateGoogleMcpGates(
     overallG06Reason = `Google creative association ledger failed integrity (unknownCreatives=${unknownAssociationCreativeIds.length}, unknownCandidates=${unknownAssociationCandidateIds.length}).`;
   } else if (liveCount === 0) {
     overallG06Verdict = "INSUFFICIENT_EVIDENCE";
-    overallG06Reason = "Zero explicitly live, non-cached Google Ads creatives verified for current researchRunId.";
+    overallG06Reason = replayModeDetected
+      ? `Prior persisted run '${input.originalResearchRunId || cleanRunId}' replayed in cached/replay mode for acceptanceRunId '${input.acceptanceRunId || "current"}'; cannot claim fresh current-run live Google retrieval.`
+      : "Zero explicitly live, non-cached Google Ads creatives verified for current researchRunId.";
   } else {
     overallG06Verdict = "PASS";
     overallG06Reason = `Retrieved and set-reconciled ${liveCount} live Google Ads creatives (${probableCount} probable product matches, ${brandCount} brand-only matches, ${exactCount} exact SKU matches).`;
@@ -408,6 +468,12 @@ export function evaluateGoogleMcpGates(
   return {
     evaluatedAt: new Date().toISOString(),
     researchRunId: cleanRunId,
+    acceptanceRunId: input.acceptanceRunId,
+    originalResearchRunId: input.originalResearchRunId || cleanRunId,
+    runExecutionMode:
+      input.runExecutionMode ||
+      (replayModeDetected ? "REPLAY_CACHED_OR_PREVIOUS_RUN" : "FRESH_LIVE_CURRENT_RUN"),
+    replayModeDetected,
     transportStatus: transportOk ? "CONNECTED" : "DISCONNECTED",
     liveCreativesRetrievedCount: liveCount,
     exactProductSkuMatchesCount: exactCount,
@@ -700,6 +766,86 @@ export function runGoogleGateNegativeTests(): {
           res.subGates.GOOGLE_PRODUCT_ASSOCIATION === "PASS" &&
           res.subGates.GOOGLE_EXACT_PRODUCT_EVIDENCE === "INSUFFICIENT_EVIDENCE" &&
           res.overallG06Verdict === "PASS"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-11",
+      description: "Synthetic creativeId ('cr_0') or synthetic providerRequestId ('mcp_' + runId) is rejected as non-live",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.rawManifest.creatives = base.rawManifest.creatives.map((c, idx) => ({
+          ...c,
+          creativeId: `cr_${idx}`,
+          providerRequestId: `mcp_${base.researchRunId}`,
+        }));
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.liveCreativesRetrievedCount === 0 &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-12",
+      description: "Missing normalization stage (normalizationStageExecuted=false when rawCreatives>0) fails G06_CREATIVE_PIPELINE",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.normalizationLedger.normalizationStageExecuted = false;
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.subGates.G06_CREATIVE_PIPELINE === "FAIL" &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-13",
+      description: "Matched association missing matchedCandidateId (only candidateIdsEvaluated present) fails GOOGLE_PRODUCT_ASSOCIATION",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.associationLedger.associations![0] = {
+          creativeId: "cr1",
+          matchedCandidateId: null,
+          candidateIdsEvaluated: ["c1", "c2"],
+          researchRunId: base.researchRunId,
+          associationVerdict: "PROBABLE_PRODUCT_MATCH",
+        };
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.subGates.GOOGLE_PRODUCT_ASSOCIATION === "FAIL" &&
+          res.overallG06Verdict === "FAIL"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-14",
+      description: "Prior persisted run replayed (runExecutionMode='REPLAY_CACHED_OR_PREVIOUS_RUN') is NOT counted as fresh current-run live",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.runExecutionMode = "REPLAY_CACHED_OR_PREVIOUS_RUN";
+        base.acceptanceRunId = "autoclosure_current_999";
+        base.originalResearchRunId = base.researchRunId;
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.replayModeDetected === true &&
+          res.liveCreativesRetrievedCount === 0 &&
+          res.subGates.G06_LIVE_RETRIEVAL === "INSUFFICIENT_EVIDENCE" &&
+          res.overallG06Verdict === "INSUFFICIENT_EVIDENCE"
+        );
+      },
+    },
+    {
+      testId: "G06-NEG-15",
+      description: "Duplicate creative IDs in rawManifest.creatives fails setInvariantPassed and G06_CREATIVE_PIPELINE",
+      exec: () => {
+        const base = makeValidGoogleGateInput();
+        base.rawManifest.creatives[1].creativeId = "cr1"; // duplicate of cr1!
+        const res = evaluateGoogleMcpGates(base);
+        return (
+          res.setReconciliation.setInvariantPassed === false &&
+          res.subGates.G06_CREATIVE_PIPELINE === "FAIL" &&
+          res.overallG06Verdict === "FAIL"
         );
       },
     },
