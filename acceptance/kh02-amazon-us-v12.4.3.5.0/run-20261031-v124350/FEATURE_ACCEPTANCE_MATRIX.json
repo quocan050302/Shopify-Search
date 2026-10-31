@@ -1,0 +1,187 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:56.157Z",
+  "requirements": [
+    {
+      "id": "A01",
+      "title": "Feature flag OFF preserves KH-02 behavior with zero Amazon network calls",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A01",
+      "passed": true
+    },
+    {
+      "id": "A02",
+      "title": "Unauthorized/policy-blocked path blocks browser navigation with BLOCKED_POLICY",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A02",
+      "passed": true
+    },
+    {
+      "id": "A03",
+      "title": "Official Playwright MCP handshake and unavailable client classification",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A03",
+      "passed": true
+    },
+    {
+      "id": "A04",
+      "title": "Approved Amazon.com product URLs parse true ASIN; unsafe/SSRF/wrong host rejected",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A04",
+      "passed": true
+    },
+    {
+      "id": "A05",
+      "title": "ASIN discrepancy among URL, canonical link, and structured metadata rejects identity",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A05",
+      "passed": true
+    },
+    {
+      "id": "A06",
+      "title": "Variation child ASIN vs parent ASIN preserved and canonical identity deduplicated",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A06",
+      "passed": true
+    },
+    {
+      "id": "A07",
+      "title": "Unrelated 10-char tokens, category/search URLs, sponsored items, affiliate junk rejected",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A07",
+      "passed": true
+    },
+    {
+      "id": "A08",
+      "title": "Bot wall, CAPTCHA, login, 403, 429, malformed response, timeout, empty data classified honestly",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A08",
+      "passed": true
+    },
+    {
+      "id": "A09",
+      "title": "Product-specific exact match requires corroboration beyond brand name",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A09",
+      "passed": true
+    },
+    {
+      "id": "A10",
+      "title": "Bounded 1-3 product-specific approved attempts (<=4 operations/run)",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A10",
+      "passed": true
+    },
+    {
+      "id": "A11",
+      "title": "Budget concurrency=1, no 5th operation, max 2 attempts/op, rolling rate gate",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A11",
+      "passed": true
+    },
+    {
+      "id": "A12",
+      "title": "Abort/cancel during navigation closes owned session/process and blocks stale worker writes",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A12",
+      "passed": true
+    },
+    {
+      "id": "A13",
+      "title": "SQLite unique composite key and idempotent retry prevent duplicate evidence rows",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A13",
+      "passed": true
+    },
+    {
+      "id": "A14",
+      "title": "Workspaces A and B fully isolated across DB, API, and UI",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A14",
+      "passed": true
+    },
+    {
+      "id": "A15",
+      "title": "Legacy run JSON without marketplaceEvidence remains readable and UI unchanged",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A15",
+      "passed": true
+    },
+    {
+      "id": "A16",
+      "title": "REAL_PROVIDER_VERIFIED requires live authorized response + invocation + hashes + same run; fixtures rejected",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A16",
+      "passed": true
+    },
+    {
+      "id": "A17",
+      "title": "Upstream providerRequestId remains null when absent; local providerInvocationRef separate",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A17",
+      "passed": true
+    },
+    {
+      "id": "A18",
+      "title": "Evidence hash matches canonical observed payload and rejects fabricated summary",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A18",
+      "passed": true
+    },
+    {
+      "id": "A19",
+      "title": "GET endpoints do not mutate DB rows or SHA-256 table digests (including 200/403/404)",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A19",
+      "passed": true
+    },
+    {
+      "id": "A20",
+      "title": "3-way parity (SQLite -> HTTP GET -> Chromium DOM) for persisted Amazon evidence",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A20",
+      "passed": true
+    },
+    {
+      "id": "A21",
+      "title": "Amazon listing observation has ZERO effect on G15 60d demand and G16 live ad/merchant gate",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A21",
+      "passed": true
+    },
+    {
+      "id": "A22",
+      "title": "Absent price != 0; review count/BSR != verified sales, conversion, or winning score",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A22",
+      "passed": true
+    },
+    {
+      "id": "A23",
+      "title": "Source selection and live/cache modes do not cross-contaminate; disabled provider not counted live",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A23",
+      "passed": true
+    },
+    {
+      "id": "A24",
+      "title": "Input sanitization strips untrusted HTML/JSON-LD prompt injection and script tags",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A24",
+      "passed": true
+    },
+    {
+      "id": "A25",
+      "title": "Rejected records preserved with rejection reason, timestamp, and run lineage but excluded from positive counts",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A25",
+      "passed": true
+    },
+    {
+      "id": "A26",
+      "title": "REAL_PROVIDER_VERIFIED pilot gate passes only if 3 live authorized US identities observed; otherwise BLOCKED_POLICY",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A26",
+      "passed": true
+    },
+    {
+      "id": "A27",
+      "title": "Historical DEV/HOLDOUT replay excludes post-cutoff Amazon observations with strict as-of integrity",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A27",
+      "passed": true
+    },
+    {
+      "id": "A28",
+      "title": "Existing Product Finder UI filters, tabs, drawer, and worker polling unregressed",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A28",
+      "passed": true
+    },
+    {
+      "id": "A29",
+      "title": "Full regression, integration, Next build, and Chromium run from exact frozen CODE_SHA",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A29",
+      "passed": true
+    },
+    {
+      "id": "A30",
+      "title": "Independent validator catches and rejects >=20 adversarial mutants",
+      "testId": "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts::A30",
+      "passed": true
+    }
+  ]
+}
