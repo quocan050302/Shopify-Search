@@ -1,0 +1,101 @@
+{
+  "split": "HOLDOUT",
+  "windowStart": "2026-10-24T00:00:00.000Z",
+  "windowEnd": "2026-10-30T12:00:00.000Z",
+  "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+  "historicalObservationCount": 377,
+  "reconstructedCandidateCount": 319,
+  "shortlistCount": 3,
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "title": "Car Fender Panel Dent Edge Repair Tools",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "repair_tools"
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "title": "Natural Relief in Weeks",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "shop.pipitea.com",
+      "familyKey": "relief_weeks"
+    },
+    {
+      "candidateId": "cand_hist_kickstarter.com_no_slimy_motor_in_your_cat_s_w",
+      "title": "No slimy motor in your cat’s water.\nJust cleaner hydration.",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "kickstarter.com",
+      "familyKey": "cleaner_hydration"
+    }
+  ],
+  "productEvidenceLedger": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "title": "Car Fender Panel Dent Edge Repair Tools",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "repair_tools",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "title": "Natural Relief in Weeks",
+      "storeDomain": "shop.pipitea.com",
+      "familyKey": "relief_weeks",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_kickstarter.com_no_slimy_motor_in_your_cat_s_w",
+      "title": "No slimy motor in your cat’s water.\nJust cleaner hydration.",
+      "storeDomain": "kickstarter.com",
+      "familyKey": "cleaner_hydration",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 61,
+    "trustedPointInTimeJoinedCount": 16,
+    "rejectedPostCutoffJoinedCount": 45,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 45,
+    "adObservationOnlyCount": 361,
+    "excludedFixtureRecordCount": 0,
+    "leakagePrevented": true
+  },
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed with 377 historical records; zero future leakage verified (rejectedPostCutoffJoined=45). Demand evaluation detail: Car Fender Panel Dent Edge Repair Tools: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Natural Relief in Weeks: 0 obs (INSUFFICIENT_HISTORY, eligible=false); No slimy motor in your cat’s water.\nJust cleaner hydration.: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

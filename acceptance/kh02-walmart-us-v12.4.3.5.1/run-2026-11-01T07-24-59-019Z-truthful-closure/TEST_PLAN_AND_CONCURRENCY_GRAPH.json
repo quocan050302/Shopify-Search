@@ -1,0 +1,118 @@
+{
+  "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+  "concurrencyPolicy": {
+    "maxConcurrentHeavyProcesses": 2,
+    "sqliteDbWriteStagesSerialized": true,
+    "playwrightChromiumExclusiveWithNextStart": true,
+    "liveJinaReaderConcurrency": 1
+  },
+  "stageGraph": [
+    {
+      "stage": 1,
+      "mode": "PARALLEL_MAX_2",
+      "tasks": [
+        "WAVE_A_UNIT_VITEST",
+        "WAVE_C_TSC_NO_EMIT"
+      ]
+    },
+    {
+      "stage": 2,
+      "mode": "SERIAL_DB_EXCLUSIVE",
+      "tasks": [
+        "WAVE_B_INTEGRATION_AND_REGRESSION_VITEST",
+        "PROVE_WALMART_NON_INFLATION_WITH_CANDIDATES"
+      ]
+    },
+    {
+      "stage": 3,
+      "mode": "PARALLEL_MAX_2",
+      "tasks": [
+        "WAVE_C_NEXT_PRODUCTION_BUILD",
+        "WAVE_E_CONTROLLED_LIVE_JINA_PROBE"
+      ]
+    },
+    {
+      "stage": 4,
+      "mode": "SERIAL_BROWSER_EXCLUSIVE",
+      "tasks": [
+        "WAVE_D_HEADLESS_CHROMIUM_UI_AND_RELOAD_PARITY"
+      ]
+    },
+    {
+      "stage": 5,
+      "mode": "SERIAL_DB_READ_ONLY",
+      "tasks": [
+        "WAVE_F_REAL_DEV_HOLDOUT_BACKTEST_V12_4_3_4_2"
+      ]
+    },
+    {
+      "stage": 6,
+      "mode": "SERIAL_TEMP_DIR_FS",
+      "tasks": [
+        "WAVE_G_48_PHYSICAL_FILE_NEGATIVE_MUTATIONS",
+        "INDEPENDENT_VALIDATOR_AUDIT"
+      ]
+    }
+  ],
+  "waveResults": {
+    "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+    "maxConcurrentHeavyTasks": 2,
+    "allRequiredWavesPassed": true,
+    "waves": [
+      {
+        "waveId": "WAVE_A_UNIT",
+        "stageGroup": "STAGE_1_PARALLEL_LIGHT",
+        "name": "Walmart US Jina Reader Unit Suite (W01-W32, W50)",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "durationMs": 1089
+      },
+      {
+        "waveId": "WAVE_B_INTEGRATION_AND_REGRESSION",
+        "stageGroup": "STAGE_2_SERIAL_DB",
+        "name": "Walmart US Integration, Non-Vacuous Non-Inflation (>=3 candidates), Worker, API & Amazon/Lineage Regression Suite",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "durationMs": 4591
+      },
+      {
+        "waveId": "WAVE_C_TYPECHECK_AND_BUILD",
+        "stageGroup": "STAGE_1_AND_3_BOUNDED",
+        "name": "TypeScript Typecheck & Next.js Production Build",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "durationMs": 13285
+      },
+      {
+        "waveId": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+        "stageGroup": "STAGE_4_EXCLUSIVE_BROWSER",
+        "name": "Playwright Headless Chromium UI & Post-Reload Parity",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "durationMs": 6574
+      },
+      {
+        "waveId": "WAVE_E_LIVE_JINA_PROBE",
+        "stageGroup": "STAGE_3_BOUNDED_WITH_BUILD",
+        "name": "Controlled Live No-Key Jina Reader REST Probe (Separated Execution vs Provider Status)",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "probeExecutionStatus": "DID_RUN",
+        "classificationIntegrityStatus": "PASS",
+        "liveProviderStatus": "BLOCKED_PROVIDER",
+        "liveBusinessAcceptanceStatus": "BLOCKED_EXTERNAL_PROVIDER",
+        "durationMs": 5776
+      },
+      {
+        "waveId": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+        "stageGroup": "STAGE_5_SERIAL_BACKTEST",
+        "name": "Real Historical DEV/HOLDOUT Backtest Replay (runBacktestV12_4_3_4_2) + Point-in-Time Anti-Leakage Audit",
+        "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+        "passed": true,
+        "backtestEngineExecuted": "PASS",
+        "businessHistoricalEvidenceSufficient": "INSUFFICIENT_EVIDENCE",
+        "durationMs": 2244
+      }
+    ]
+  }
+}

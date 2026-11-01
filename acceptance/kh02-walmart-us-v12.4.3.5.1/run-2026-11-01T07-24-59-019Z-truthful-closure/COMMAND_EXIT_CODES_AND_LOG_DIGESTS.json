@@ -1,0 +1,52 @@
+{
+  "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+  "generatedAt": "2026-11-01T07:25:27.779Z",
+  "totalCommandsRecorded": 4,
+  "allSucceeded": true,
+  "commands": [
+    {
+      "name": "WAVE_A_UNIT_TESTS",
+      "command": "npx vitest run src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts --maxWorkers=2",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 1089,
+      "stdoutDigestSha256": "afa87a0a2cdc5143725c7fd63e01bc7f0551254dabd8ef80ac69229c16848d01",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search\n\n ✓ src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts (16 tests) 47ms\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  14:25:00\n   Duration  309ms (setup 28%, import 27%, tests 21%, transform 21%, worker 2%)",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_C_TSC_NO_EMIT",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 3574,
+      "stdoutDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "command": "npx vitest run tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts --maxWorkers=2",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4591,
+      "stdoutDigestSha256": "d30a9b2374f4310953526622fa4f4c92a95eda11c5406c653d408d2ee286ab53",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "nonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 541ms\n ✓ tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts (52 tests) 661ms\n   ✓ KH-02 V12.4.3.5.0.3 — Amazon US Creators API Real Runtime Wiring & Official Contract Parity (R01–R52) (52)\n     ✓ R52: runAmazonCreatorsRuntimeNegativeMutationSuite executes all 48 physical-file negative control mutations (M01..M48) with 48/48 caught and 0 escapes 331ms\n\n Test Files  3 passed (3)\n      Tests  70 passed (70)\n   Start at  14:25:03\n   Duration  4.11s (tests 64%, import 27%, transform 5%, setup 3%)",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_C_NEXT_BUILD",
+      "command": "npm run build",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 9711,
+      "stdoutDigestSha256": "d0a19fc6b0b66fe4b3ba6c0ed1396d6ee3e07a376bbef9186c699780b61e5eb7",
+      "stderrDigestSha256": "d31ac54737fc0e0c9e26e424e5061fea3d976862e001dd7c79e58d08739a020c",
+      "stdoutTail": "\n├ ƒ /api/v1/search\n├ ƒ /api/v1/settings/budgets\n├ ƒ /api/v1/settings/credentials\n├ ƒ /api/v1/settings/credentials/test\n├ ƒ /api/v1/settings/integrations\n├ ƒ /api/v1/test/db-observation\n├ ƒ /api/v1/watchlists\n├ ○ /discovery\n├ ○ /explorer\n├ ○ /meta-discovery\n├ ○ /my-store\n├ ○ /products\n├   /products/[id]/intelligence\n│ └ ◐ /products/[id]/intelligence\n├ ○ /reports\n├ ○ /settings\n├ ○ /tracker\n└ ○ /watchlist\n\n\n○  (Static)             prerendered as static content\n◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content\nƒ  (Dynamic)            server-rendered on demand",
+      "stderrTail": " in development, or\n- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or\n- remove them.\n\nImport trace:\n  App Route:\n    ./src/services/kh02/demand/bigqueryClientAdapter.ts\n    ./src/services/kh02/demand/demandProviderRegistry.ts\n    ./src/services/kh02/providers/sourceRegistry.ts\n    ./src/app/api/v1/kh02/providers/test-connection/route.ts"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "split": "DEV",
+  "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+  "backtestRunner": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "evaluatedAt": "2026-11-01T07:25:27.569Z",
+  "windowStart": "2026-06-01T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfCutoffIso": "2026-10-24T00:00:00.000Z",
+  "backtestEngineExecuted": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "policyScenarioVerdict": "PASS",
+  "policyScenariosExecuted": 17,
+  "policyScenariosPassed": 17,
+  "devPolicyScenariosCount": 7,
+  "historicalObservationCount": 60,
+  "reconstructedCandidateCount": 17,
+  "shortlistCount": 3,
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 6,
+    "trustedPointInTimeJoinedCount": 6,
+    "rejectedPostCutoffJoinedCount": 0,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 0,
+    "adObservationOnlyCount": 54,
+    "excludedFixtureRecordCount": 0,
+    "leakagePrevented": true
+  },
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalDevBusinessVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "walmartScoreInflationDelta": 0,
+  "postCutoffWalmartLeaksInEligibleSet": 0,
+  "fixtureWalmartLeaksInEligibleSet": 0,
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_auto_detailing_putty_gel",
+      "title": "Auto Detailing Putty Gel",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "putty_gel"
+    },
+    {
+      "candidateId": "cand_hist_cc.uprootclean.com_uproot_clean_pet_hair_remover_",
+      "title": "Uproot Clean Pet Hair Remover - The Original",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller"
+    },
+    {
+      "candidateId": "cmvf78dp2000t4og9nor0ay67",
+      "title": "BlendJet 2 Portable Blender",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "blendjet.com",
+      "familyKey": "blender_blendjet"
+    }
+  ],
+  "notes": "Point-in-time replay executed with 60 historical records; zero future leakage verified (rejectedPostCutoffJoined=0). Demand evaluation detail: Auto Detailing Putty Gel: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Uproot Clean Pet Hair Remover - The Original: 0 obs (INSUFFICIENT_HISTORY, eligible=false); BlendJet 2 Portable Blender: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

@@ -1,0 +1,67 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "runtimeReleaseIdentity": "12.4.3.5.0.3",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "codeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+  "testedCodeSha": "7ae0491995a004e1e4c34d8e43de711813bf5232",
+  "engineeringVerdict": "PASS",
+  "liveWalmartProviderVerdict": "BLOCKED_PROVIDER",
+  "liveAmazonProviderVerdict": "CREDENTIALS_REQUIRED",
+  "kh02BusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "historicalEvidenceVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalG07Verdict": "BLOCKED",
+  "historicalG15Verdict": "INSUFFICIENT_EVIDENCE",
+  "historicalG16Verdict": "PARTIAL_2_OF_3",
+  "deliveryVerdict": "READY_FOR_REVIEW",
+  "overallVerdict": "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+  "nonInflationSummary": {
+    "comparedCandidatesCount": 3,
+    "candidateSetMatch": true,
+    "providerPathExercised": true,
+    "walmartEvidenceRowsExercised": 3,
+    "scoreDeltaAbsMax": 0,
+    "rankingChanged": false,
+    "gateChanges": 0,
+    "nonInflationVerified": true
+  },
+  "backtestSummary": {
+    "backtestEngineExecuted": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "policyScenarioVerdict": "PASS",
+    "policyScenariosPassed": "17/17",
+    "devObservationsCount": 60,
+    "holdoutObservationsCount": 377,
+    "businessHistoricalEvidenceSufficient": "INSUFFICIENT_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "remainingExternalBlockers": [
+    {
+      "blockerId": "EXT_WALMART_JINA_BOT_WALL",
+      "dimension": "liveWalmartProviderVerdict",
+      "status": "BLOCKED_PROVIDER",
+      "detail": "Unauthenticated live Jina Reader REST requests to www.walmart.com receive Walmart's 'Robot or human?' anti-bot challenge from this host IP. Truthfully classified as BLOCKED_PROVIDER with presence=UNKNOWN."
+    },
+    {
+      "blockerId": "EXT_AMAZON_CREATORS_CREDENTIALS",
+      "dimension": "liveAmazonProviderVerdict",
+      "status": "CREDENTIALS_REQUIRED",
+      "detail": "Amazon Creators API live calls require KH02_AMAZON_US_ENABLED=true and valid Creators API credentials."
+    },
+    {
+      "blockerId": "EXT_G15_60D_LONGITUDINAL_DEMAND",
+      "dimension": "historicalG15Verdict",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "detail": "Current SQLite dataset lacks >=60 continuous days of authoritative product-level demand observations required to promote candidates to VERIFIED_EVERGREEN."
+    },
+    {
+      "blockerId": "EXT_G07_TIKTOK_US_SOURCE",
+      "dimension": "historicalG07Verdict",
+      "status": "BLOCKED",
+      "detail": "TikTok Creative Center US live product-linked ad extraction remains blocked by upstream access constraints."
+    }
+  ],
+  "negativeMutationsCaught": "48/48",
+  "completedAt": "2026-11-01T07:25:27.780Z"
+}
