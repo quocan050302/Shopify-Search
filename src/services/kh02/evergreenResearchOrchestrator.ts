@@ -186,6 +186,7 @@ export interface RunEvergreenResearchInput {
   walmartPilotEnv?: Record<string, string | undefined>;
   walmartPilotCustomFetch?: typeof fetch;
   walmartPilotEvidenceOrigin?: EvidenceOrigin;
+  candidateMetadataFetcher?: (url: string) => Promise<any>;
   signal?: AbortSignal;
 }
 
@@ -831,6 +832,7 @@ export async function runEvergreenProductResearch(
         maxConcurrency: 12,
         signal: abortSignal,
         plannedArchetypes: discoveryPlan?.productArchetypes,
+        metadataFetcher: input.candidateMetadataFetcher,
       });
       enrichedBatch = enrichmentResult.candidates;
       if (enrichmentResult.errors.length > 0) {
@@ -1976,6 +1978,12 @@ export async function runEvergreenProductResearch(
     Boolean(input.enableWalmartUsPilot)
   ) {
     for (const c of candidates) {
+      const candRows = walmartEnrichment.evidenceRows.filter(
+        (r) => r.candidateId === c.candidateId
+      );
+      if (candRows.length > 0) {
+        (c as any).walmartEvidence = candRows;
+      }
       const summary = summarizeWalmartEvidenceForCandidate(
         c.candidateId,
         runId,
@@ -1987,6 +1995,12 @@ export async function runEvergreenProductResearch(
       }
     }
     for (const s of researchShortlist.shortlist) {
+      const candRows = walmartEnrichment.evidenceRows.filter(
+        (r) => r.candidateId === s.candidateId
+      );
+      if (candRows.length > 0) {
+        (s as any).walmartEvidence = candRows;
+      }
       const summary = summarizeWalmartEvidenceForCandidate(
         s.candidateId,
         runId,

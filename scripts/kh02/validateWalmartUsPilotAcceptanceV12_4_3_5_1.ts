@@ -471,19 +471,95 @@ export function validateWalmartAcceptanceArtifacts(
     );
   }
 
-  // 09: Score & Gate Non-Inflation Audit (M35)
+  // 09: Score & Gate Non-Inflation Audit (M35, M41, M42, M43, M44, M45)
   if (a09) {
+    const candidateDiffs: any[] = Array.isArray(a09.perCandidateDiffs)
+      ? a09.perCandidateDiffs
+      : Array.isArray(a09.diffs)
+      ? a09.diffs
+      : [];
+    const idsOff: string[] = Array.isArray(a09.candidateIdsOff)
+      ? a09.candidateIdsOff
+      : [];
+    const idsOn: string[] = Array.isArray(a09.candidateIdsOn)
+      ? a09.candidateIdsOn
+      : [];
+
+    check(
+      typeof a09.comparedCandidatesCount === "number" &&
+        a09.comparedCandidatesCount >= 3 &&
+        candidateDiffs.length >= 3 &&
+        a09.comparedCandidatesCount === candidateDiffs.length,
+      "VACUOUS_NON_INFLATION_AUDIT",
+      "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      `Non-inflation audit must compare >= 3 real/cached/controlled product candidates (got comparedCandidatesCount=${a09.comparedCandidatesCount}, diffs.length=${candidateDiffs.length}).`
+    );
+
+    const exactIdMatch =
+      a09.candidateSetMatch === true &&
+      idsOff.length >= 3 &&
+      idsOff.length === idsOn.length &&
+      idsOff.every((id, idx) => id === idsOn[idx]);
+    check(
+      exactIdMatch,
+      "CANDIDATE_SET_MISMATCH_ON_OFF",
+      "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      "Candidate IDs and ordering between Walmart OFF and Walmart ON runs must match 1-to-1."
+    );
+
+    check(
+      a09.providerPathExercised === true &&
+        typeof a09.walmartEvidenceRowsExercised === "number" &&
+        a09.walmartEvidenceRowsExercised >= 1 &&
+        Array.isArray(a09.evidenceOrigins) &&
+        a09.evidenceOrigins.length >= 1,
+      "WALMART_PROVIDER_PATH_NOT_EXERCISED",
+      "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      "Walmart ON run in non-inflation proof must actually exercise the Walmart provider path and produce >= 1 Walmart evidence row."
+    );
+
+    const anyPerCandidateScoreOrGateDrift = candidateDiffs.some(
+      (d: any) =>
+        Number(d.scoreDelta ?? 0) !== 0 ||
+        Number(d.confidenceDelta ?? 0) !== 0 ||
+        Number(d.rankDelta ?? 0) !== 0 ||
+        Number(d.orderIndexDelta ?? 0) !== 0 ||
+        d.tierOff !== d.tierOn ||
+        d.recommendationOff !== d.recommendationOn ||
+        d.demandStabilityStatusOff !== d.demandStabilityStatusOn ||
+        d.evergreenEligibleOff !== d.evergreenEligibleOn
+    );
+
     check(
       a09.nonInflationVerified === true &&
         a09.scoreDeltaBetweenWalmartOnAndOff === 0 &&
+        Number(a09.scoreDeltaAbsMax ?? 0) === 0 &&
+        a09.rankingChanged === false &&
+        Number(a09.gateChanges ?? 0) === 0 &&
         a09.verdictChangedCount === 0 &&
         a09.confidenceChangedCount === 0 &&
         a09.recommendable60dChangedCount === 0 &&
         a09.distinctSourcesIncrementedByWalmart === false &&
-        a09.distinctSourceFamiliesIncrementedByWalmart === false,
+        a09.distinctSourceFamiliesIncrementedByWalmart === false &&
+        !anyPerCandidateScoreOrGateDrift,
       "SCORE_OR_VERDICT_INFLATION_DETECTED",
       "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
-      "Walmart US evidence must have zero impact on totalScore, verdict, confidence, recommendable60d, distinctSources, or distinctSourceFamilies."
+      "Walmart US evidence must have zero impact on per-candidate or aggregate totalScore, verdict, confidence, ranking, recommendable60d, distinctSources, or distinctSourceFamilies."
+    );
+
+    const anyG15OrG16Promoted =
+      Number(a09.g15PromotedCount ?? 0) > 0 ||
+      Number(a09.g16PromotedCount ?? 0) > 0 ||
+      candidateDiffs.some(
+        (d: any) =>
+          (d.g15StatusOff && d.g15StatusOn && d.g15StatusOff !== d.g15StatusOn) ||
+          (d.g16StatusOff && d.g16StatusOn && d.g16StatusOff !== d.g16StatusOn)
+      );
+    check(
+      !anyG15OrG16Promoted,
+      "G15_OR_G16_PROMOTED_BY_WALMART",
+      "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      "Walmart US marketplace evidence must never promote G15 (>=60d evergreen demand) or G16 (live-verified merchant product proof)."
     );
   }
 
@@ -499,21 +575,65 @@ export function validateWalmartAcceptanceArtifacts(
       "UNAVAILABLE",
       "PARSE_ERROR",
     ];
+    const liveStatus = a10.liveProviderStatus || a10.liveProbeOverallStatus;
     check(
-      validLiveStatuses.includes(a10.liveProbeOverallStatus) &&
+      validLiveStatuses.includes(liveStatus) &&
+        a10.probeExecutionStatus === "DID_RUN" &&
+        a10.classificationIntegrityStatus === "PASS" &&
         a10.fixtureRowsLabeledAsRealJinaCount === 0 &&
         a10.fabricatedLiveSuccess === false,
       "FIXTURE_CLAIMED_AS_REAL_JINA_LIVE",
       "10_LIVE_WALMART_JINA_PILOT_EVIDENCE.json",
-      "Fixture rows must never be labeled REAL_JINA_READER and live probe status must be truthfully classified."
+      "Fixture rows must never be labeled REAL_JINA_READER and live probe status must be truthfully classified with probeExecutionStatus=DID_RUN and classificationIntegrityStatus=PASS."
     );
+    if (liveStatus !== "SUCCEEDED" && liveStatus !== "PARTIAL") {
+      check(
+        Number(a10.verifiedLiveProductCount ?? 0) === 0 &&
+          a10.liveBusinessAcceptanceStatus !== "PASS",
+        "LIVE_BLOCKED_CLAIMED_AS_LIVE_SUCCESS",
+        "10_LIVE_WALMART_JINA_PILOT_EVIDENCE.json",
+        "When live Walmart provider is BLOCKED_PROVIDER or non-succeeded, verifiedLiveProductCount must be 0 and liveBusinessAcceptanceStatus must not be PASS."
+      );
+    }
   }
 
-  // 11, 12, 13: DEV/HOLDOUT Backtest & Point-in-Time Leak Audit (M38)
+  // 11, 12, 13: Real DEV/HOLDOUT Backtest & Point-in-Time Leak Audit (M38, M46, M47)
   if (a11 && a12 && a13) {
     check(
-      a11.status === "PASS" &&
-        a12.status === "PASS" &&
+      a11.backtestEngineExecuted === "PASS" &&
+        a12.backtestEngineExecuted === "PASS" &&
+        a11.pointInTimeIntegrityVerdict === "PASS" &&
+        a12.pointInTimeIntegrityVerdict === "PASS" &&
+        typeof a11.historicalObservationCount === "number" &&
+        a11.historicalObservationCount > 0 &&
+        typeof a12.historicalObservationCount === "number" &&
+        a12.historicalObservationCount > 0 &&
+        typeof a11.reconstructedCandidateCount === "number" &&
+        a11.reconstructedCandidateCount > 0 &&
+        typeof a12.reconstructedCandidateCount === "number" &&
+        a12.reconstructedCandidateCount > 0 &&
+        typeof a11.policyScenariosExecuted === "number" &&
+        a11.policyScenariosExecuted >= 8 &&
+        typeof a12.policyScenariosExecuted === "number" &&
+        a12.policyScenariosExecuted >= 8,
+      "CONSTANT_OR_UNEXECUTED_BACKTEST_SUMMARY",
+      "11_DEV_BACKTEST_SUMMARY.json",
+      "DEV and HOLDOUT backtest summaries must come from real execution of runBacktestV12_4_3_4_2 with non-zero historical observations, reconstructed candidates, and policy scenarios."
+    );
+
+    check(
+      a13.syntheticAudit?.testClass === "SYNTHETIC_UNIT_ANTI_LEAKAGE_TEST" &&
+        a13.syntheticAudit?.claimedAsFullHistoricalReplay === false,
+      "SYNTHETIC_LEAK_TEST_MISLABELED_AS_FULL_BACKTEST",
+      "13_POINT_IN_TIME_LEAK_AUDIT.json",
+      "Synthetic 4-row point-in-time leak check must be explicitly labeled SYNTHETIC_UNIT_ANTI_LEAKAGE_TEST and never claimed as a full historical replay."
+    );
+
+    check(
+      a11.futureLeakageDetected === false &&
+        a12.futureLeakageDetected === false &&
+        a11.walmartPointInTimeAudit?.leakagePrevented === true &&
+        a12.walmartPointInTimeAudit?.leakagePrevented === true &&
         a13.zeroLeakCount === true &&
         a13.unfilteredFutureLeaksInEligibleSet === 0 &&
         a13.fixtureLeaksInEligibleSet === 0 &&
@@ -622,6 +742,35 @@ export function validateWalmartAcceptanceArtifacts(
         "ARTIFACT_SHA256_MISMATCH",
         "22_FILE_MANIFEST_SHA256.json",
         "One or more artifact files in 22_FILE_MANIFEST_SHA256.json failed SHA-256 integrity verification."
+      );
+    }
+  }
+
+  // 23: Final Release Multi-Verdict Separation (M48)
+  if (!options.skipStage18to23Existence && fs.existsSync(path.join(artifactDir, "23_FINAL_RELEASE_VERDICT.json"))) {
+    const a23 = readJsonSafe(artifactDir, "23_FINAL_RELEASE_VERDICT.json", failures);
+    if (a23) {
+      const hasExternalOrBusinessBlockers =
+        a23.liveWalmartProviderVerdict !== "LIVE_VERIFIED" ||
+        a23.liveAmazonProviderVerdict !== "LIVE_VERIFIED" ||
+        a23.kh02BusinessVerdict !== "PASS" ||
+        a23.historicalG15Verdict !== "PASS" ||
+        a23.historicalEvidenceVerdict !== "PASS";
+
+      check(
+        a23.engineeringVerdict === "PASS" &&
+          typeof a23.liveWalmartProviderVerdict === "string" &&
+          typeof a23.liveAmazonProviderVerdict === "string" &&
+          typeof a23.kh02BusinessVerdict === "string" &&
+          typeof a23.historicalEvidenceVerdict === "string" &&
+          typeof a23.deliveryVerdict === "string" &&
+          (!hasExternalOrBusinessBlockers ||
+            (a23.overallVerdict !== "PASS" &&
+              a23.overallVerdict !== "FULL_ACCEPTANCE" &&
+              a23.overallVerdict === "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS")),
+        "OVERALL_VERDICT_FALSE_PASS_WITH_EXTERNAL_BLOCKERS",
+        "23_FINAL_RELEASE_VERDICT.json",
+        "23_FINAL_RELEASE_VERDICT.json must separate engineeringVerdict, liveWalmartProviderVerdict, kh02BusinessVerdict, historicalEvidenceVerdict, and deliveryVerdict, and must never report overallVerdict='PASS' or 'FULL_ACCEPTANCE' when live Walmart is BLOCKED_PROVIDER or historical 60d G15 is INSUFFICIENT_EVIDENCE."
       );
     }
   }
@@ -1051,11 +1200,102 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
       }
     },
   },
+  {
+    mutationId: "M41",
+    targetFile: "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+    description: "Attempt vacuous non-inflation pass with comparedCandidatesCount = 0",
+    expectedFailureCode: "VACUOUS_NON_INFLATION_AUDIT",
+    mutate: (d) => {
+      d.comparedCandidatesCount = 0;
+      d.perCandidateDiffs = [];
+      d.diffs = [];
+      d.nonInflationVerified = true;
+    },
+  },
+  {
+    mutationId: "M42",
+    targetFile: "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+    description: "Compare mismatched candidate sets between Walmart OFF and Walmart ON",
+    expectedFailureCode: "CANDIDATE_SET_MISMATCH_ON_OFF",
+    mutate: (d) => {
+      d.candidateSetMatch = false;
+      if (Array.isArray(d.candidateIdsOn) && d.candidateIdsOn.length > 0) {
+        d.candidateIdsOn[0] = "cand_tampered_different_id";
+      }
+    },
+  },
+  {
+    mutationId: "M43",
+    targetFile: "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+    description: "Claim non-inflation pass when Walmart provider path was never exercised",
+    expectedFailureCode: "WALMART_PROVIDER_PATH_NOT_EXERCISED",
+    mutate: (d) => {
+      d.providerPathExercised = false;
+      d.walmartEvidenceRowsExercised = 0;
+    },
+  },
+  {
+    mutationId: "M44",
+    targetFile: "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+    description: "Hide per-candidate +5/-5 score drift behind net-zero aggregate scoreDelta",
+    expectedFailureCode: "SCORE_OR_VERDICT_INFLATION_DETECTED",
+    mutate: (d) => {
+      d.scoreDeltaBetweenWalmartOnAndOff = 0;
+      if (Array.isArray(d.perCandidateDiffs) && d.perCandidateDiffs.length >= 2) {
+        d.perCandidateDiffs[0].scoreDelta = 5;
+        d.perCandidateDiffs[1].scoreDelta = -5;
+      }
+    },
+  },
+  {
+    mutationId: "M45",
+    targetFile: "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+    description: "Promote G15 >=60d evergreen demand or G16 live merchant proof using Walmart listing",
+    expectedFailureCode: "G15_OR_G16_PROMOTED_BY_WALMART",
+    mutate: (d) => {
+      d.g15PromotedCount = 1;
+      if (Array.isArray(d.perCandidateDiffs) && d.perCandidateDiffs.length > 0) {
+        d.perCandidateDiffs[0].g15StatusOff = "INSUFFICIENT_EVIDENCE";
+        d.perCandidateDiffs[0].g15StatusOn = "PASS";
+      }
+    },
+  },
+  {
+    mutationId: "M46",
+    targetFile: "11_DEV_BACKTEST_SUMMARY.json",
+    description: "Replace real DEV backtest replay output with constant status:PASS stub",
+    expectedFailureCode: "CONSTANT_OR_UNEXECUTED_BACKTEST_SUMMARY",
+    mutate: (d) => {
+      d.backtestEngineExecuted = "FAIL";
+      d.historicalObservationCount = 0;
+      d.reconstructedCandidateCount = 0;
+    },
+  },
+  {
+    mutationId: "M47",
+    targetFile: "13_POINT_IN_TIME_LEAK_AUDIT.json",
+    description: "Mislabel synthetic 4-row unit anti-leakage check as full historical replay",
+    expectedFailureCode: "SYNTHETIC_LEAK_TEST_MISLABELED_AS_FULL_BACKTEST",
+    mutate: (d) => {
+      if (d.syntheticAudit) {
+        d.syntheticAudit.claimedAsFullHistoricalReplay = true;
+      }
+    },
+  },
+  {
+    mutationId: "M48",
+    targetFile: "23_FINAL_RELEASE_VERDICT.json",
+    description: "Claim overallVerdict='PASS' while live Walmart is BLOCKED_PROVIDER and G15 is INSUFFICIENT_EVIDENCE",
+    expectedFailureCode: "OVERALL_VERDICT_FALSE_PASS_WITH_EXTERNAL_BLOCKERS",
+    mutate: (d) => {
+      d.overallVerdict = "PASS";
+    },
+  },
 ];
 
 /**
- * Copies `baseArtifactDir` to an isolated temporary directory on disk, executes all 40 physical-file
- * mutations (`M01..M40`) by writing the mutated file to disk and running `validateWalmartAcceptanceArtifacts`,
+ * Copies `baseArtifactDir` to an isolated temporary directory on disk, executes all 48 physical-file
+ * mutations (`M01..M48`) by writing the mutated file to disk and running `validateWalmartAcceptanceArtifacts`,
  * verifies each mutation fails with `expectedFailureCode`, and cleans up the temporary directory.
  */
 export function runPhysicalNegativeMutationSuite40(
@@ -1099,7 +1339,22 @@ export function runPhysicalNegativeMutationSuite40(
       if (!fs.existsSync(path.join(tempRoot, "23_FINAL_RELEASE_VERDICT.json"))) {
         fs.writeFileSync(
           path.join(tempRoot, "23_FINAL_RELEASE_VERDICT.json"),
-          JSON.stringify({ verdict: "PASS" }, null, 2)
+          JSON.stringify(
+            {
+              engineeringVerdict: "PASS",
+              liveWalmartProviderVerdict: "BLOCKED_PROVIDER",
+              liveAmazonProviderVerdict: "CREDENTIALS_REQUIRED",
+              kh02BusinessVerdict: "INSUFFICIENT_EVIDENCE",
+              historicalEvidenceVerdict: "INSUFFICIENT_HISTORICAL_EVIDENCE",
+              historicalG07Verdict: "BLOCKED",
+              historicalG15Verdict: "INSUFFICIENT_EVIDENCE",
+              historicalG16Verdict: "PARTIAL_2_OF_3",
+              deliveryVerdict: "READY_FOR_REVIEW",
+              overallVerdict: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+            },
+            null,
+            2
+          )
         );
       }
     };

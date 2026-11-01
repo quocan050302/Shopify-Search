@@ -881,6 +881,50 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         detail: `availabilityStatus=${pitCheck.availabilityStatus}; rejectedPostCutoff=${pitCheck.rejectedPostCutoffCount}`,
       });
     }
+
+    // HOLDOUT 17 (V12.4.3.5.1 W54/W55): Post-cutoff Walmart US observation and test fixture rejected during historical replay
+    {
+      const cutoff = new Date("2026-10-24T00:00:00.000Z");
+      const wmtPit = filterWalmartEvidencePointInTime(
+        [
+          {
+            id: "wmt_future_leak",
+            itemId: "5184129384",
+            observedAt: "2026-11-01T12:00:00.000Z",
+            evidenceOrigin: "REAL_JINA_READER",
+          } as any,
+          {
+            id: "wmt_fixture_leak",
+            itemId: "9081726354",
+            observedAt: "2026-10-15T12:00:00.000Z",
+            evidenceOrigin: "TEST_FIXTURE",
+          } as any,
+        ],
+        cutoff
+      );
+      const passed =
+        wmtPit.eligibleRecords.length === 0 &&
+        wmtPit.excludedPostCutoffRecords.length === 1 &&
+        wmtPit.excludedFixtureRecords.length === 1 &&
+        wmtPit.zeroLeakCount === true;
+      scenarios.push({
+        caseId: "v124351_holdout_09_walmart_post_cutoff_and_fixture_rejected",
+        split: "HOLDOUT",
+        category: "POINT_IN_TIME_WALMART_LOOKAHEAD_GUARD",
+        description: "Rejects post-cutoff Walmart US observations and test fixtures during historical replay and marks NOT_AVAILABLE_AT_ASOF",
+        executed: true,
+        passed,
+        assertion: "eligibleRecords.length === 0 && excludedPostCutoffRecords.length === 1 && excludedFixtureRecords.length === 1 && zeroLeakCount === true",
+        observed: {
+          eligiblePointInTimeCount: wmtPit.eligibleRecords.length,
+          rejectedPostCutoffCount: wmtPit.excludedPostCutoffRecords.length,
+          excludedFixtureCount: wmtPit.excludedFixtureRecords.length,
+          availabilityStatus: wmtPit.eligibleRecords.length > 0 ? "AVAILABLE_AT_ASOF" : "NOT_AVAILABLE_AT_ASOF",
+          zeroLeakCount: wmtPit.zeroLeakCount,
+        },
+        detail: `availabilityStatus=NOT_AVAILABLE_AT_ASOF; rejectedPostCutoff=${wmtPit.excludedPostCutoffRecords.length}; excludedFixture=${wmtPit.excludedFixtureRecords.length}`,
+      });
+    }
   } finally {
     process.env = { ...originalEnv };
   }

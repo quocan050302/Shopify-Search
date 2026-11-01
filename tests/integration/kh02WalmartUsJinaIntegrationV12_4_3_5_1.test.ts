@@ -627,168 +627,138 @@ describe("KH-02 V12.4.3.5.1 — Walmart US Integration, Persistence, Fencing, Wo
     expect(bdRow?.presence).toBe("UNKNOWN");
   });
 
-  it("W38, W39, W40, W41, W51: Orchestrator score non-inflation, source independence, and point-in-time backtest anti-leakage", async () => {
-    const prevEnabled = process.env.KH02_WALMART_US_ENABLED;
-    const prevLive = process.env.KH02_WALMART_US_LIVE_ALLOWED;
-    process.env.KH02_WALMART_US_ENABLED = "true";
-    process.env.KH02_WALMART_US_LIVE_ALLOWED = "false";
+  it("W38, W39, W40, W41, W51: Orchestrator non-vacuous score non-inflation (>=3 candidates), source independence, and point-in-time backtest anti-leakage", async () => {
+    const { proveWalmartNonInflationWithCandidates } = await import(
+      "@/services/kh02/marketplace/walmartNonInflationProof"
+    );
 
-    try {
-      const wmtFixtureFetch: typeof fetch = async (input) => {
-        const url = String(input);
-        if (url.includes("/search?q=")) {
-          const parsedQ = new URL(url.replace("https://r.jina.ai/", "")).searchParams.get("q") || "Pet Gadgets";
-          return new Response(buildChomChomSearchJinaBody(parsedQ), {
-            status: 200,
-            headers: { "content-type": "application/json" },
-          });
-        }
-        return new Response(buildChomChomPdpJinaBody(), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        });
-      };
+    const proof = await proveWalmartNonInflationWithCandidates({
+      workspacePrefix: "ws_wmt_test_noninf",
+    });
 
-      const runWithoutWalmart = await runEvergreenProductResearch(
-        {
-          workspaceId: WS_A,
-          runId: "run_wmt_noninflation_off",
-          topic: "Pet Gadgets",
-          market: "US",
-          lookbackDays: 90,
-          sourceMode: "CACHE_ONLY",
-          enableWalmartUsPilot: false,
-          enableAmazonUsPilot: false,
-        },
-        {
-          workspaceId: WS_A,
-          runId: "run_wmt_noninflation_off",
-        }
-      );
+    expect(proof.comparedCandidatesCount).toBeGreaterThanOrEqual(3);
+    expect(proof.candidateSetMatch).toBe(true);
+    expect(proof.providerPathExercised).toBe(true);
+    expect(proof.walmartEvidenceRowsExercised).toBeGreaterThanOrEqual(2);
+    expect(proof.scoreDeltaAbsMax).toBe(0);
+    expect(proof.confidenceDeltaAbsMax).toBe(0);
+    expect(proof.rankingChanged).toBe(false);
+    expect(proof.gateChanges).toBe(0);
+    expect(proof.g15PromotedCount).toBe(0);
+    expect(proof.g16PromotedCount).toBe(0);
+    expect(proof.nonInflationVerified).toBe(true);
 
-      const runWithWalmart = await runEvergreenProductResearch(
-        {
-          workspaceId: WS_A,
-          runId: "run_wmt_noninflation_on",
-          topic: "Pet Gadgets",
-          market: "US",
-          lookbackDays: 90,
-          sourceMode: "CACHE_ONLY",
-          enableWalmartUsPilot: true,
-          enableAmazonUsPilot: false,
-          walmartPilotCustomFetch: wmtFixtureFetch,
-        },
-        {
-          workspaceId: WS_A,
-          runId: "run_wmt_noninflation_on",
-        }
-      );
-
-      // W38 & W40: Scores, verdicts, confidence, evidenceStrength, recommendable60d, demand60dStatus, gateDecisions, and topThree order are identical
-      expect(runWithWalmart.topThree.map((t) => t.candidate.candidateId)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.candidate.candidateId)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.opportunityScore)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.opportunityScore)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.tier)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.tier)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.evidenceConfidence)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.evidenceConfidence)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.scoreStatus)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.scoreStatus)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.recommendation)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.recommendation)
-      );
-      expect(runWithWalmart.topThree.map((t) => t.score.demandClass)).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.demandClass)
-      );
-      expect(
-        runWithWalmart.topThree.map((t) => t.score.pillars.multiPlatformValidation.score)
-      ).toEqual(
-        runWithoutWalmart.topThree.map((t) => t.score.pillars.multiPlatformValidation.score)
-      );
-
-      // W51: Point-in-time backtest anti-leakage filter rejects post-T0 and un-timestamped Walmart observations
-      const t0 = "2026-10-30T12:00:00.000Z";
-      const baseRow = runWithWalmart.walmartMarketplaceEvidence?.[0] || {
-        id: "wmt_pit_1",
-        workspaceId: WS_A,
-        researchRunId: "run_wmt_pit",
-        candidateId: "cand_1",
-        provider: "WALMART_US" as const,
-        itemId: "674275778",
-        canonicalProductUrl: "https://www.walmart.com/ip/674275778",
-        sourceUrl: "https://r.jina.ai/https://www.walmart.com/ip/674275778",
-        finalUrl: "https://www.walmart.com/ip/674275778",
-        title: "ChomChom Roller",
-        brand: "ChomChom Roller",
-        model: "CC-ROLLER-01",
-        upc: "856957004000",
-        price: 24.99,
-        currency: "USD",
-        seller: "Walmart.com",
-        locationPostalCode: "95829",
-        locationStoreIds: ["3081"],
-        availability: "IN_STOCK" as const,
-        queryStatus: "SUCCEEDED" as const,
-        presence: "FOUND" as const,
-        matchLevel: "EXACT" as const,
-        verifiedIdentity: true,
-        matchReasons: ["EXACT_GTIN_UPC_MATCH"],
-        rejectionReasons: [],
-        missingFields: [],
-        appearanceProvenance: ["ORGANIC" as const],
-        schemaCompatibility: "OBSERVED_BASELINE_SCHEMA" as const,
-        schemaFieldPaths: ["props.pageProps.initialData.data.product"],
-        evidenceOrigin: "TEST_FIXTURE" as const,
-        isCached: false,
-        isStale: false,
-        requestedNoCache: true,
-        observedCacheMetadata: null,
-        requestHash: "req_1",
-        responseHash: "res_1",
-        rawEvidenceHash: "raw_1",
-        extractedFieldsHash: "ext_1",
-        localRequestRef: "ref_1",
-        upstreamRequestId: null,
-        lastAttemptAt: "2026-10-30T11:00:00.000Z",
-        observedAt: "2026-10-30T11:00:00.000Z",
-        lastSuccessfulLiveQueryAt: null,
-        queryScope: {
-          query: "ChomChom Roller",
-          normalizedQuery: "ChomChom Roller",
-          market: "US",
-          checkedSearchCount: 1,
-          checkedPdpCount: 1,
-          rawSearchResultCount: 1,
-          dedupedSearchResultCount: 1,
-          completeSearchScope: true,
-        },
-        nonInflationNotice: "Notice",
-      };
-
-      const pitAudit = filterWalmartEvidencePointInTime(
-        [
-          { ...baseRow, id: "pre_t0", evidenceOrigin: "REAL_JINA_READER", observedAt: "2026-10-30T11:00:00.000Z", lastAttemptAt: "2026-10-30T11:00:00.000Z" },
-          { ...baseRow, id: "post_t0_leak", evidenceOrigin: "REAL_JINA_READER", observedAt: "2026-10-31T00:00:00.000Z", lastAttemptAt: "2026-10-31T00:00:00.000Z" },
-          { ...baseRow, id: "missing_ts_leak", evidenceOrigin: "REAL_JINA_READER", observedAt: null, lastAttemptAt: null },
-          { ...baseRow, id: "fixture_leak", evidenceOrigin: "TEST_FIXTURE", observedAt: "2026-10-30T10:00:00.000Z", lastAttemptAt: "2026-10-30T10:00:00.000Z" },
-        ],
-        t0
-      );
-      expect(pitAudit.retainedRows).toHaveLength(1);
-      expect(pitAudit.retainedRows[0].id).toBe("pre_t0");
-      expect(pitAudit.futureLeaksRejectedCount).toBe(1);
-      expect(pitAudit.missingTimestampRejectedCount).toBe(1);
-      expect(pitAudit.fixtureRecordsRejectedCount).toBe(1);
-      expect(pitAudit.zeroLeakCount).toBe(true);
-    } finally {
-      process.env.KH02_WALMART_US_ENABLED = prevEnabled;
-      process.env.KH02_WALMART_US_LIVE_ALLOWED = prevLive;
+    // Verify per-candidate diffs are matched by stable candidateId and have 0 score/confidence/rank delta
+    for (const d of proof.perCandidateDiffs) {
+      expect(d.scoreDelta).toBe(0);
+      expect(d.confidenceDelta).toBe(0);
+      expect(d.rankDelta).toBe(0);
+      expect(d.orderIndexDelta).toBe(0);
+      expect(d.tierOff).toBe(d.tierOn);
+      expect(d.recommendationOff).toBe(d.recommendationOn);
+      expect(d.demandStabilityStatusOff).toBe(d.demandStabilityStatusOn);
+      expect(d.evergreenEligibleOff).toBe(d.evergreenEligibleOn);
+      expect(d.g15StatusOff).toBe(d.g15StatusOn);
+      expect(d.g16StatusOff).toBe(d.g16StatusOn);
     }
+
+    // W51: Point-in-time backtest anti-leakage filter rejects post-T0, missing-timestamp, and fixture Walmart observations
+    const t0 = "2026-10-30T12:00:00.000Z";
+    const baseRow = {
+      id: "wmt_pit_1",
+      workspaceId: WS_A,
+      researchRunId: "run_wmt_pit",
+      candidateId: "cand_1",
+      provider: "WALMART_US" as const,
+      itemId: "674275778",
+      canonicalProductUrl: "https://www.walmart.com/ip/674275778",
+      sourceUrl: "https://r.jina.ai/https://www.walmart.com/ip/674275778",
+      finalUrl: "https://www.walmart.com/ip/674275778",
+      title: "ChomChom Roller",
+      brand: "ChomChom Roller",
+      model: "CC-ROLLER-01",
+      upc: "856957004000",
+      price: 24.99,
+      currency: "USD",
+      seller: "Walmart.com",
+      locationPostalCode: "95829",
+      locationStoreIds: ["3081"],
+      availability: "IN_STOCK" as const,
+      queryStatus: "SUCCEEDED" as const,
+      presence: "FOUND" as const,
+      matchLevel: "EXACT" as const,
+      verifiedIdentity: true,
+      matchReasons: ["EXACT_GTIN_UPC_MATCH"],
+      rejectionReasons: [],
+      missingFields: [],
+      appearanceProvenance: ["ORGANIC" as const],
+      schemaCompatibility: "OBSERVED_BASELINE_SCHEMA" as const,
+      schemaFieldPaths: ["props.pageProps.initialData.data.product"],
+      evidenceOrigin: "TEST_FIXTURE" as const,
+      isCached: false,
+      isStale: false,
+      requestedNoCache: true,
+      observedCacheMetadata: null,
+      requestHash: "req_1",
+      responseHash: "res_1",
+      rawEvidenceHash: "raw_1",
+      extractedFieldsHash: "ext_1",
+      localRequestRef: "ref_1",
+      upstreamRequestId: null,
+      lastAttemptAt: "2026-10-30T11:00:00.000Z",
+      observedAt: "2026-10-30T11:00:00.000Z",
+      lastSuccessfulLiveQueryAt: null,
+      queryScope: {
+        query: "ChomChom Roller",
+        normalizedQuery: "ChomChom Roller",
+        market: "US" as const,
+        checkedSearchCount: 1,
+        checkedPdpCount: 1,
+        rawSearchResultCount: 1,
+        dedupedSearchResultCount: 1,
+        completeSearchScope: true,
+      },
+      nonInflationNotice: "Notice",
+    };
+
+    const pitAudit = filterWalmartEvidencePointInTime(
+      [
+        {
+          ...baseRow,
+          id: "pre_t0",
+          evidenceOrigin: "REAL_JINA_READER",
+          observedAt: "2026-10-30T11:00:00.000Z",
+          lastAttemptAt: "2026-10-30T11:00:00.000Z",
+        },
+        {
+          ...baseRow,
+          id: "post_t0_leak",
+          evidenceOrigin: "REAL_JINA_READER",
+          observedAt: "2026-10-31T00:00:00.000Z",
+          lastAttemptAt: "2026-10-31T00:00:00.000Z",
+        },
+        {
+          ...baseRow,
+          id: "missing_ts_leak",
+          evidenceOrigin: "REAL_JINA_READER",
+          observedAt: null,
+          lastAttemptAt: null,
+        },
+        {
+          ...baseRow,
+          id: "fixture_leak",
+          evidenceOrigin: "TEST_FIXTURE",
+          observedAt: "2026-10-30T10:00:00.000Z",
+          lastAttemptAt: "2026-10-30T10:00:00.000Z",
+        },
+      ],
+      t0
+    );
+    expect(pitAudit.retainedRows).toHaveLength(1);
+    expect(pitAudit.retainedRows[0].id).toBe("pre_t0");
+    expect(pitAudit.futureLeaksRejectedCount).toBe(1);
+    expect(pitAudit.missingTimestampRejectedCount).toBe(1);
+    expect(pitAudit.fixtureRecordsRejectedCount).toBe(1);
+    expect(pitAudit.zeroLeakCount).toBe(true);
   });
 });

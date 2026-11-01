@@ -2215,10 +2215,18 @@ export default function ProductsPage() {
                                         {wmt.evidenceOrigin === "REAL_JINA_READER" &&
                                         wmt.queryStatus === "SUCCEEDED"
                                           ? "LIVE JINA READER"
+                                          : wmt.evidenceOrigin === "REAL_JINA_READER" &&
+                                            wmt.queryStatus === "BLOCKED_PROVIDER"
+                                          ? "LIVE BLOCKED (CAPTCHA/BOT WALL)"
+                                          : wmt.evidenceOrigin === "REAL_JINA_READER" &&
+                                            wmt.queryStatus === "RATE_LIMITED"
+                                          ? "LIVE RATE LIMITED"
                                           : wmt.evidenceOrigin === "TEST_FIXTURE"
                                           ? "TEST FIXTURE"
                                           : wmt.isStale
                                           ? "CACHED (STALE)"
+                                          : wmt.evidenceOrigin === "CACHED_PRIOR_RUN"
+                                          ? "CACHED PRIOR RUN"
                                           : wmt.evidenceOrigin || "UNVERIFIED"}
                                       </span>
                                       <span

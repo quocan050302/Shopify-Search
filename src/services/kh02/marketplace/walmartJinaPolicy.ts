@@ -276,7 +276,7 @@ function buildStatusReasonForSummary(
       }
     }
     if (row.queryStatus === "BLOCKED_PROVIDER") {
-      return "Walmart / Jina Reader returned anti-bot verification or HTTP 403 block; listing presence is UNKNOWN.";
+      return "Walmart live provider blocked / product presence unknown (anti-bot verification or HTTP 403 block; listing presence is UNKNOWN).";
     }
     if (row.queryStatus === "TIMED_OUT") {
       return "Walmart Jina Reader request timed out and was aborted; listing presence is UNKNOWN.";
