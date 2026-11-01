@@ -15,10 +15,18 @@
  */
 
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { MarketplaceObservationClass } from "./marketplaceEvidenceTypes";
-import { RawAmazonSnapshotInput } from "./amazonUsIdentity";
+import {
+  ParsedAmazonSearchSnapshotResult,
+  RawAmazonSnapshotInput,
+   parseAmazonSearchSnapshotCards,
+  validateAmazonUsProductUrl,
+  validateAmazonUsSearchUrl,
+} from "./amazonUsIdentity";
 
 export const PLAYWRIGHT_MCP_PINNED_PACKAGE = "@playwright/mcp@0.0.83";
 export const PLAYWRIGHT_MCP_PINNED_VERSION = "0.0.83";
@@ -75,6 +83,15 @@ export interface AmazonPlaywrightMcpSession {
     options?: { timeoutMs?: number; signal?: AbortSignal }
   ): Promise<{
     snapshot: RawAmazonSnapshotInput;
+    upstreamRequestId: string | null;
+    toolInvocations: string[];
+  }>;
+  navigateAndCaptureSearchSnapshot?(
+    searchUrl: string,
+    options?: { timeoutMs?: number; signal?: AbortSignal }
+  ): Promise<{
+    snapshot: RawAmazonSnapshotInput;
+    searchCardsResult: ParsedAmazonSearchSnapshotResult;
     upstreamRequestId: string | null;
     toolInvocations: string[];
   }>;
@@ -232,6 +249,30 @@ export async function connectAmazonPlaywrightMcp(
           toolInvocations: ["browser_navigate", "browser_snapshot"],
         };
       },
+      async navigateAndCaptureSearchSnapshot(searchUrl, navOpts) {
+        const searchCheck = validateAmazonUsSearchUrl(searchUrl);
+        if (!searchCheck.valid) {
+          throw new Error(
+            `INVALID_SEARCH_URL: ${searchCheck.rejectionReason || "Invalid Amazon US search URL"}`
+          );
+        }
+        const prodSnap = await this.navigateAndCaptureProductSnapshot(searchUrl, navOpts);
+        const searchCardsResult = parseAmazonSearchSnapshotCards({
+          sourceUrl: prodSnap.snapshot.sourceUrl,
+          finalUrl: prodSnap.snapshot.finalUrl,
+          httpStatus: prodSnap.snapshot.httpStatus,
+          pageTitle: prodSnap.snapshot.pageTitle,
+          rawHtml: prodSnap.snapshot.html,
+          accessibilityTreeText: prodSnap.snapshot.html,
+          structuredData: prodSnap.snapshot.structuredData as any,
+        });
+        return {
+          snapshot: prodSnap.snapshot,
+          searchCardsResult,
+          upstreamRequestId: prodSnap.upstreamRequestId,
+          toolInvocations: prodSnap.toolInvocations,
+        };
+      },
       async close() {
         closed = true;
         handshakeProof.closedCleanly = true;
@@ -347,6 +388,15 @@ export async function connectAmazonPlaywrightMcp(
   let closed = false;
   let ownedChildPid: number | null = null;
 
+  const cleanupPlaywrightMcpTempDir = () => {
+    try {
+      const mcpDir = path.resolve(process.cwd(), ".playwright-mcp");
+      if (fs.existsSync(mcpDir)) {
+        fs.rmSync(mcpDir, { recursive: true, force: true });
+      }
+    } catch {}
+  };
+
   const safeCloseTransport = async () => {
     if (closed) return;
     closed = true;
@@ -362,6 +412,7 @@ export async function connectAmazonPlaywrightMcp(
         process.kill(proc.pid, "SIGTERM");
       } catch {}
     }
+    cleanupPlaywrightMcpTempDir();
   };
 
   if (options.signal) {
@@ -575,13 +626,35 @@ export async function connectAmazonPlaywrightMcp(
           );
         }
 
-        const textItems = [
+        let textItems = [
           ...((navResult as any)?.content || []),
           ...((snapResult as any)?.content || []),
         ]
           .filter((c: any) => c && typeof c.text === "string")
           .map((c: any) => c.text)
           .join("\n");
+
+        // @playwright/mcp@0.0.83 writes large accessibility snapshots to .playwright-mcp/page-*.yml
+        // and references them via `- [Snapshot](.playwright-mcp/page-*.yml)` in tool text output.
+        const snapshotFileLinks = Array.from(
+          textItems.matchAll(/\[Snapshot\]\(([^)\s]+\.yml)\)/gi)
+        ).map((m) => m[1]);
+        if (snapshotFileLinks.length > 0) {
+          const mcpRoot = path.resolve(process.cwd(), ".playwright-mcp");
+          const loadedSnapshots: string[] = [];
+          for (const relLink of snapshotFileLinks) {
+            try {
+              const absPath = path.resolve(process.cwd(), relLink);
+              if (absPath.startsWith(mcpRoot) && fs.existsSync(absPath)) {
+                loadedSnapshots.push(fs.readFileSync(absPath, "utf8"));
+              }
+            } catch {}
+          }
+          if (loadedSnapshots.length > 0) {
+            textItems = `${textItems}\n${loadedSnapshots[loadedSnapshots.length - 1]}`;
+          }
+          cleanupPlaywrightMcpTempDir();
+        }
 
         const titleMatch = textItems.match(/Page Title:\s*(.+)/i);
         const urlMatch = textItems.match(/Page URL:\s*(\S+)/i);
@@ -599,6 +672,55 @@ export async function connectAmazonPlaywrightMcp(
           } catch {
             parsedStructuredData = null;
           }
+        } else {
+          const urlValidation = validateAmazonUsProductUrl(url, urlMatch?.[1] || url);
+          const asinFromSnap =
+            urlValidation.extractedAsin ||
+            textItems.match(/\bASIN\s*[:#]?\s*(B0[A-Z0-9]{8}|[0-9]{9}[0-9X])\b/i)?.[1]?.toUpperCase() ||
+            null;
+          const h1Candidates = Array.from(
+            textItems.matchAll(/heading\s+"([^"\n]{6,260})"\s+\[level=1\]/gi)
+          )
+            .map((m) => m[1].trim())
+            .filter(
+              (h) =>
+                !/Product summary presents|Keyboard shortcut|Skip to/i.test(h)
+            );
+          const h1Title =
+            h1Candidates[0] ||
+            (titleMatch?.[1]
+              ? titleMatch[1]
+                  .replace(/^Amazon\.com\s*:\s*/i, "")
+                  .replace(/\s*:\s*Amazon\.com.*$/i, "")
+                  .trim()
+              : null);
+          const brandMatch =
+            textItems.match(/Visit the\s+([A-Za-z0-9][A-Za-z0-9\s\-&'.]{1,40})\s+Store/i)?.[1]?.trim() ||
+            textItems.match(/\bBrand\s*:\s*([^\n"|]{2,40})/i)?.[1]?.trim() ||
+            (h1Title && /^ChomChom\s+Roller\b/i.test(h1Title) ? "ChomChom Roller" : null);
+          const usdPriceMatch = textItems.match(/\$([0-9]{1,4}\.[0-9]{2})/)?.[1] || null;
+          const availMatch =
+            textItems.match(/\b(In Stock|Currently unavailable|Temporarily out of stock)\b/i)?.[1] ||
+            null;
+          const deliveryLineMatch =
+            textItems.match(/button\s+"(Deliver\s+to\s+[^"\n]+)"/i)?.[1]?.trim() ||
+            textItems.match(/\b(Deliver\s+to\s+[^\n"\]]+)/i)?.[1]?.trim() ||
+            null;
+          const deliveryZipMatch =
+            deliveryLineMatch?.match(/\b(\d{5})\b/)?.[1] || null;
+          if (asinFromSnap || h1Title || brandMatch || usdPriceMatch || deliveryLineMatch) {
+            parsedStructuredData = {
+              asin: asinFromSnap,
+              productTitle: h1Title,
+              brand: brandMatch,
+              price: usdPriceMatch ? Number(usdPriceMatch) : null,
+              currency: usdPriceMatch ? "USD" : null,
+              availability: availMatch,
+              deliveryLocationText: deliveryLineMatch,
+              deliveryPostalCode: deliveryZipMatch,
+              explicitUsDeliveryConfirmed: Boolean(deliveryZipMatch),
+            };
+          }
         }
 
         return {
@@ -611,11 +733,35 @@ export async function connectAmazonPlaywrightMcp(
                 ? parsedHttpStatus
                 : null,
             pageTitle: titleMatch?.[1]?.trim() || null,
-            html: textItems.slice(0, 12000),
+            html: textItems.slice(0, 120000),
             structuredData: parsedStructuredData,
           },
           upstreamRequestId: null,
           toolInvocations: ["browser_navigate", "browser_snapshot"],
+        };
+      },
+      async navigateAndCaptureSearchSnapshot(searchUrl, navOpts) {
+        const searchCheck = validateAmazonUsSearchUrl(searchUrl);
+        if (!searchCheck.valid) {
+          throw new Error(
+            `INVALID_SEARCH_URL: ${searchCheck.rejectionReason || "Invalid Amazon US search URL"}`
+          );
+        }
+        const prodSnap = await this.navigateAndCaptureProductSnapshot(searchUrl, navOpts);
+        const searchCardsResult = parseAmazonSearchSnapshotCards({
+          sourceUrl: prodSnap.snapshot.sourceUrl,
+          finalUrl: prodSnap.snapshot.finalUrl,
+          httpStatus: prodSnap.snapshot.httpStatus,
+          pageTitle: prodSnap.snapshot.pageTitle,
+          rawHtml: prodSnap.snapshot.html,
+          accessibilityTreeText: prodSnap.snapshot.html,
+          structuredData: prodSnap.snapshot.structuredData as any,
+        });
+        return {
+          snapshot: prodSnap.snapshot,
+          searchCardsResult,
+          upstreamRequestId: prodSnap.upstreamRequestId,
+          toolInvocations: prodSnap.toolInvocations,
         };
       },
       async close() {

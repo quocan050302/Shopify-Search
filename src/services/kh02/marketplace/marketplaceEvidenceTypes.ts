@@ -28,6 +28,8 @@ export type MarketplaceEvidenceStatus =
   | "NOT_AUTHORIZED"
   | "NOT_IMPLEMENTED"
   | "NOT_EXECUTED"
+  | "PDP_NOT_EXECUTED"
+  | "SEARCH_BLOCKED_POLICY"
   | "MCP_NOT_CONFIGURED"
   | "BLOCKED_POLICY"
   | "BLOCKED_PROVIDER"
@@ -92,6 +94,15 @@ export interface AmazonPolicyContext {
   creatorsApiConfigured: boolean;
   creatorsApiEntitlementVerified?: boolean;
   userAuthorizedUrlAttested: boolean;
+  localMcpSearchAttested?: boolean;
+  pilotRouteId?:
+    | "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT"
+    | "AMAZON_CREATORS_API"
+    | "ISOLATED_FIXTURE_ONLY"
+    | "NONE";
+  localMcpPilotPermitted?: boolean;
+  localMcpSearchPermitted?: boolean;
+  creatorsApiIndependentOfLocalMcp?: boolean;
   accessPolicyStatus: AmazonAccessPolicyStatus;
   allowedAccessRoute:
     | "OFFICIAL_CREATORS_API"
@@ -112,6 +123,7 @@ export interface AmazonProductEvidence {
   requestMode: AmazonRequestMode;
   requestedMarket: "US";
   verifiedDeliveryMarket: "US" | null;
+  observedDeliveryPostalCode?: string | null;
   sourceUrl: string | null;
   finalUrl: string | null;
   canonicalAmazonUrl: string | null;
@@ -268,6 +280,31 @@ export interface AmazonMarketplaceTelemetry {
     brandOnlyMatchesCount: number;
     rejectedListingsCount: number;
   };
+  localMcpPilotDiagnostics?: {
+    routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT";
+    transportHandshakeStatus: "SUCCEEDED" | "FAILED" | "NOT_ATTEMPTED";
+    actualBrowserToolExecutionStatus:
+      | "SUCCEEDED"
+      | "FAILED"
+      | "BLOCKED_POLICY"
+      | "NOT_ATTEMPTED";
+    realAmazonPageObservationStatus:
+      | "PUBLIC_PAGE_OBSERVED"
+      | "BLOCKED_CAPTCHA_OR_BOT_WALL"
+      | "FAILED"
+      | "NOT_ATTEMPTED";
+    productIdentityVerificationStatus:
+      | "IDENTITY_VERIFIED"
+      | "OBSERVED_UNVERIFIED"
+      | "REJECTED_IDENTITY"
+      | "NOT_ATTEMPTED";
+    creatorsApiAvailabilityStatus:
+      | "ELIGIBLE_CONFIGURED"
+      | "CREDENTIALS_ABSENT"
+      | "NOT_REQUIRED_FOR_LOCAL_MCP_PILOT";
+    searchBlockedPolicyCount: number;
+    pdpNotExecutedCount: number;
+  };
 }
 
 export interface ProductAmazonEvidenceSummary {
@@ -286,6 +323,7 @@ export interface ProductAmazonEvidenceSummary {
   price: number | null;
   currency: string | null;
   availability: string | null;
+  observedDeliveryPostalCode?: string | null;
   identityMatch: IdentityMatch;
   identityMatchLabel: string;
   observationClass: MarketplaceObservationClass;
@@ -345,6 +383,7 @@ export function resolveAmazonUsPolicyContext(
   env: Record<string, string | undefined> = process.env,
   options?: {
     creatorsApiEntitlementVerified?: boolean;
+    allowLocalMcpSearch?: boolean;
   }
 ): AmazonPolicyContext {
   const featureEnabled =
@@ -370,10 +409,18 @@ export function resolveAmazonUsPolicyContext(
   const creatorsApiEntitlementVerified = Boolean(
     creatorsApiConfigured && options?.creatorsApiEntitlementVerified === true
   );
-  const userAuthorizedUrlAttested =
-    String(env.KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED || "false")
+  const localMcpSearchAttested =
+    String(env.KH02_AMAZON_US_LOCAL_MCP_SEARCH_ATTESTED || "false")
       .trim()
-      .toLowerCase() === "true";
+      .toLowerCase() === "true" || Boolean(options?.allowLocalMcpSearch);
+  const userAuthorizedUrlAttested =
+    String(
+      env.KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED ||
+        env.KH02_AMAZON_US_PUBLIC_URL_ATTESTED ||
+        "false"
+    )
+      .trim()
+      .toLowerCase() === "true" || localMcpSearchAttested;
 
   if (!featureEnabled) {
     return {
@@ -382,6 +429,11 @@ export function resolveAmazonUsPolicyContext(
       creatorsApiConfigured,
       creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested,
+      localMcpSearchAttested,
+      pilotRouteId: "NONE",
+      localMcpPilotPermitted: false,
+      localMcpSearchPermitted: false,
+      creatorsApiIndependentOfLocalMcp: true,
       accessPolicyStatus: "DISABLED_BY_DEFAULT",
       allowedAccessRoute: "NONE",
       policyReason:
@@ -396,6 +448,11 @@ export function resolveAmazonUsPolicyContext(
       creatorsApiConfigured,
       creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested,
+      localMcpSearchAttested,
+      pilotRouteId: "ISOLATED_FIXTURE_ONLY",
+      localMcpPilotPermitted: false,
+      localMcpSearchPermitted: false,
+      creatorsApiIndependentOfLocalMcp: true,
       accessPolicyStatus: "LIVE_NOT_ALLOWED",
       allowedAccessRoute: "ISOLATED_FIXTURE_ONLY",
       policyReason:
@@ -410,6 +467,11 @@ export function resolveAmazonUsPolicyContext(
       creatorsApiConfigured: true,
       creatorsApiEntitlementVerified: true,
       userAuthorizedUrlAttested,
+      localMcpSearchAttested,
+      pilotRouteId: "AMAZON_CREATORS_API",
+      localMcpPilotPermitted: userAuthorizedUrlAttested,
+      localMcpSearchPermitted: localMcpSearchAttested,
+      creatorsApiIndependentOfLocalMcp: true,
       accessPolicyStatus: "AUTHORIZED_CREATORS_API",
       allowedAccessRoute: "OFFICIAL_CREATORS_API",
       policyReason:
@@ -424,10 +486,15 @@ export function resolveAmazonUsPolicyContext(
       creatorsApiConfigured,
       creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested: true,
+      localMcpSearchAttested,
+      pilotRouteId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+      localMcpPilotPermitted: true,
+      localMcpSearchPermitted: localMcpSearchAttested,
+      creatorsApiIndependentOfLocalMcp: true,
       accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
       allowedAccessRoute: "USER_AUTHORIZED_URL",
       policyReason:
-        "Live Amazon US limited product-URL verification attested via KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED=true within strict pilot budget caps.",
+        "Live Amazon US limited product-URL verification attested via KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED=true within strict pilot budget caps (independent of Creators API credentials).",
     };
   }
 
@@ -438,6 +505,11 @@ export function resolveAmazonUsPolicyContext(
       creatorsApiConfigured: true,
       creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested: false,
+      localMcpSearchAttested: false,
+      pilotRouteId: "NONE",
+      localMcpPilotPermitted: false,
+      localMcpSearchPermitted: false,
+      creatorsApiIndependentOfLocalMcp: true,
       accessPolicyStatus: "BLOCKED_POLICY",
       allowedAccessRoute: "CREATORS_API_NOT_IMPLEMENTED",
       policyReason:
@@ -451,6 +523,11 @@ export function resolveAmazonUsPolicyContext(
     creatorsApiConfigured: false,
     creatorsApiEntitlementVerified: false,
     userAuthorizedUrlAttested: false,
+    localMcpSearchAttested: false,
+    pilotRouteId: "ISOLATED_FIXTURE_ONLY",
+    localMcpPilotPermitted: false,
+    localMcpSearchPermitted: false,
+    creatorsApiIndependentOfLocalMcp: true,
     accessPolicyStatus: "BLOCKED_POLICY",
     allowedAccessRoute: "ISOLATED_FIXTURE_ONLY",
     policyReason:
@@ -478,7 +555,10 @@ function formatAmazonStatusLabel(status: MarketplaceEvidenceStatus): string {
     case "NOT_IMPLEMENTED":
       return "Amazon US Access Route Not Implemented";
     case "NOT_EXECUTED":
+    case "PDP_NOT_EXECUTED":
       return "Amazon US Navigation Not Executed";
+    case "SEARCH_BLOCKED_POLICY":
+      return "Amazon US Search Blocked by Policy Guard";
     case "CAPTCHA_BLOCKED":
       return "Amazon US CAPTCHA Challenge";
     case "RATE_LIMITED":
@@ -566,6 +646,7 @@ export function summarizeAmazonEvidenceForProduct(
       price: bestRow.price,
       currency: bestRow.currency,
       availability: bestRow.availability,
+      observedDeliveryPostalCode: bestRow.observedDeliveryPostalCode ?? null,
       identityMatch: bestRow.identityMatch,
       identityMatchLabel: formatAmazonIdentityMatchLabel(bestRow.identityMatch),
       observationClass: bestRow.observationClass,

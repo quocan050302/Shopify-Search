@@ -22,7 +22,9 @@ import {
 import {
   RawAmazonSnapshotInput,
   parseAmazonProductEvidence,
+  parseAmazonSearchSnapshotCards,
   validateAmazonUsProductUrl,
+  validateAmazonUsSearchUrl,
   verifyAmazonProductIdentity,
 } from "./amazonUsIdentity";
 import {
@@ -33,6 +35,7 @@ import {
 import {
   AmazonPlaywrightMcpSession,
   ConnectAmazonPlaywrightMcpOptions,
+  PlaywrightMcpHandshakeProof,
   connectAmazonPlaywrightMcp,
 } from "./amazonUsMcpTransport";
 import { evaluateAmazonUsEvidenceGate } from "./amazonUsEvidenceGate";
@@ -43,8 +46,10 @@ import {
   resolveCreatorsApiEligibility,
 } from "./amazonCreatorsApiClient";
 import {
+  deriveAmazonSearchIntents,
   discoverAmazonProductsForCandidates,
   normalizeAmazonSearchItem,
+  selectAmazonCandidateMatches,
 } from "./amazonUsAuthorizedDiscoveryAdapter";
 
 export interface ClassifiedAmazonProviderOutcome {
@@ -1172,6 +1177,7 @@ export interface RunAmazonUsPilotEnrichmentParams {
   creatorsApiClient?: CreatorsApiClient | null;
   creatorsApiTransportFactory?: () => typeof fetch;
   allowIsolatedTestHost?: boolean;
+  allowLocalMcpSearch?: boolean;
   signal?: AbortSignal;
   env?: Record<string, string | undefined>;
   reportProgress?: (message: string) => Promise<void>;
@@ -1209,7 +1215,11 @@ export async function runAmazonUsPilotEnrichment(
 
   const policy = resolveAmazonUsPolicyContext(effectiveEnv, {
     creatorsApiEntitlementVerified: Boolean(effectiveCreatorsApiClient),
+    allowLocalMcpSearch: params.allowLocalMcpSearch,
   });
+  const localMcpSearchPermitted = Boolean(
+    policy.localMcpSearchPermitted || params.allowLocalMcpSearch
+  );
 
   // If server flag is OFF and not an explicit fixture/import test, return DISABLED with zero operations
   if (!policy.featureEnabled && !isExplicitTestFixture) {
@@ -1312,6 +1322,13 @@ export async function runAmazonUsPilotEnrichment(
 
   let ownedSession: AmazonPlaywrightMcpSession | null = params.mcpSession || null;
   let createdSessionInternally = false;
+  let connectionHandshakeProof: PlaywrightMcpHandshakeProof | null =
+    ownedSession?.handshakeProof || null;
+
+  const hasCandidatesWithoutUrl = params.candidates.some(
+    (c) =>
+      !params.candidateAmazonUrls?.[c.candidateId] && !c.amazonProductUrl
+  );
 
   if (!ownedSession) {
     if (params.fixtureSnapshotsByUrl) {
@@ -1323,6 +1340,7 @@ export async function runAmazonUsPilotEnrichment(
         },
       });
       ownedSession = conn.session;
+      connectionHandshakeProof = conn.handshakeProof;
       createdSessionInternally = Boolean(conn.session);
       if (createdSessionInternally && ownedSession) {
         budget.registerCleanup(async () => {
@@ -1330,7 +1348,8 @@ export async function runAmazonUsPilotEnrichment(
         });
       }
     } else if (
-      candidateUrlsToProcess.length > 0 &&
+      (candidateUrlsToProcess.length > 0 ||
+        (hasCandidatesWithoutUrl && localMcpSearchPermitted && !effectiveCreatorsApiClient)) &&
       policy.featureEnabled &&
       policy.liveAllowed &&
       policy.allowedAccessRoute === "USER_AUTHORIZED_URL"
@@ -1341,6 +1360,7 @@ export async function runAmazonUsPilotEnrichment(
         ...(params.mcpConnectOptions || {}),
       });
       ownedSession = conn.session;
+      connectionHandshakeProof = conn.handshakeProof;
       createdSessionInternally = Boolean(conn.session);
       if (createdSessionInternally && ownedSession) {
         budget.registerCleanup(async () => {
@@ -1356,6 +1376,8 @@ export async function runAmazonUsPilotEnrichment(
 
   let notAttemptedCount = 0;
   let selectedPilotCandidatesCount = 0;
+  let searchBlockedPolicyCount = 0;
+  let pdpNotExecutedCount = 0;
   const candidatesWithoutUrl: RunAmazonUsPilotEnrichmentParams["candidates"] = [];
   let discoverySummary: AmazonMarketplaceTelemetry["discoverySummary"] | undefined;
 
@@ -1431,7 +1453,7 @@ export async function runAmazonUsPilotEnrichment(
       }
     }
 
-    // Section 5C.11: Invoke discoverAmazonProductsForCandidates for remaining shortlisted candidates without an explicit Amazon URL
+    // Section 5C.11 & V12.4.3.5.1 Section 04: Bounded Discovery for remaining shortlisted candidates without an explicit Amazon URL
     const remainingPilotSlots = Math.max(
       0,
       AMAZON_PILOT_MAX_CANDIDATES_PER_RUN - selectedPilotCandidatesCount
@@ -1444,84 +1466,598 @@ export async function runAmazonUsPilotEnrichment(
         (c as any).amazonEvidenceStatus = "NOT_ATTEMPTED";
       }
 
-      const discoveryRes = await discoverAmazonProductsForCandidates({
-        workspaceId: params.workspaceId,
-        researchRunId: params.researchRunId,
-        niche: params.niche || "",
-        candidates: discoveryTargets,
-        policyContext: policy,
-        env: effectiveEnv,
-        budget,
-        creatorsApiClient: effectiveCreatorsApiClient,
-        transportFactory: params.creatorsApiTransportFactory,
-        allowIsolatedTestHost: params.allowIsolatedTestHost,
-        signal: params.signal,
-      });
-
-      discoverySummary = {
-        discoveryAttempted: true,
-        discoveryStatus: discoveryRes.runStatus,
-        searchQueriesPlanned: discoveryRes.searchQueryPlan.plannedSearchOperationsCount,
-        searchOperationsAttempted: discoveryRes.providerRequestLedger.filter((o) =>
-          o.operationId.includes("search")
-        ).length,
-        getItemsOperationsAttempted: discoveryRes.providerRequestLedger.filter((o) =>
-          o.operationId.includes("getitems")
-        ).length,
-        listingsReturnedCount: discoveryRes.rawAndNormalizedManifest.filter(
-          (m) => m.asin !== null
-        ).length,
-        exactMatchesSelectedCount: discoveryRes.marketplaceEvidence.filter(
-          (e) => e.identityMatch === "EXACT_PRODUCT"
-        ).length,
-        probableMatchesSelectedCount: discoveryRes.marketplaceEvidence.filter(
-          (e) => e.identityMatch === "PROBABLE_PRODUCT"
-        ).length,
-        brandOnlyMatchesCount: discoveryRes.marketplaceEvidence.filter(
-          (e) => e.identityMatch === "BRAND_ONLY"
-        ).length,
-        rejectedListingsCount: discoveryRes.rawAndNormalizedManifest.filter(
-          (m) => m.identityMatch === "REJECTED" || m.rejectionReasons.length > 0
-        ).length,
-      };
-
-      if (discoveryRes.providerRequestLedger.length > 0) {
-        selectedPilotCandidatesCount += discoveryTargets.length;
-        operationLedger.push(...discoveryRes.providerRequestLedger);
-        for (const ev of discoveryRes.marketplaceEvidence) {
-          marketplaceEvidence.push(ev);
-          const matchedCand = discoveryTargets.find(
-            (c) => c.candidateId === ev.candidateId
-          );
-          if (matchedCand) {
-            (matchedCand as any).amazonEvidence = ev;
-            (matchedCand as any).amazonEvidenceStatus = ev.status;
+      // Route A: Local Playwright MCP bounded product-specific search -> matched ASIN -> PDP (when permitted and Creators API is not used)
+      if (
+        !effectiveCreatorsApiClient &&
+        !policy.creatorsApiConfigured &&
+        (policy.allowedAccessRoute === "USER_AUTHORIZED_URL" || localMcpSearchPermitted)
+      ) {
+        if (!localMcpSearchPermitted) {
+          searchBlockedPolicyCount += discoveryTargets.length;
+          discoverySummary = {
+            discoveryAttempted: false,
+            discoveryStatus: "SEARCH_BLOCKED_POLICY",
+            searchQueriesPlanned: 0,
+            searchOperationsAttempted: 0,
+            getItemsOperationsAttempted: 0,
+            listingsReturnedCount: 0,
+            exactMatchesSelectedCount: 0,
+            probableMatchesSelectedCount: 0,
+            brandOnlyMatchesCount: 0,
+            rejectedListingsCount: 0,
+          };
+          for (const c of discoveryTargets) {
+            notAttemptedCount++;
+            (c as any).amazonEvidenceStatus = "SEARCH_BLOCKED_POLICY";
+            if (candidateUrlsToProcess.length === 0) {
+              const nowIso = new Date().toISOString();
+              operationLedger.push({
+                operationId: `amz_op_${params.researchRunId}_${c.candidateId}_search_blocked`,
+                providerInvocationRef: `amz_inv_${params.researchRunId}_${c.candidateId}_search_blocked`,
+                providerRequestId: null,
+                providerRequestIdOrigin: "ABSENT",
+                workspaceId: params.workspaceId,
+                researchRunId: params.researchRunId,
+                candidateId: c.candidateId,
+                provider: "AMAZON_US",
+                requestMode: "AUTHORIZED_SEARCH",
+                sourceUrl: null,
+                finalUrl: null,
+                attemptCount: 0,
+                maxAttemptsAllowed: 2,
+                startedAt: nowIso,
+                completedAt: nowIso,
+                durationMs: 0,
+                requestHash: null,
+                responseHash: null,
+                status: "SEARCH_BLOCKED_POLICY",
+                outcomeCategory: "POLICY_BLOCKED",
+                observationClass: "UNVERIFIED",
+                transportSessionId: null,
+                aborted: false,
+                errorMessage:
+                  "SEARCH_BLOCKED_POLICY: Local Playwright MCP search->PDP requires explicit KH02_AMAZON_US_LOCAL_MCP_SEARCH_ATTESTED=true or allowLocalMcpSearch=true.",
+              });
+            }
           }
-          if (ev.rejectionReasons.length > 0) {
-            rejectionLedger.push({
-              candidateId: ev.candidateId,
-              sourceUrl: ev.sourceUrl,
-              asin: ev.asin,
-              status: ev.status,
-              rejectionReasons: ev.rejectionReasons,
-              observedAt: ev.observedAt,
-              researchRunId: params.researchRunId,
+        } else {
+          // Local Playwright MCP search -> pick matched ASIN -> PDP navigation within <= 4 ops/run
+          let searchQueriesPlanned = 0;
+          let searchOperationsAttempted = 0;
+          let pdpOperationsAttempted = 0;
+          let listingsReturnedCount = 0;
+          let rejectedListingsCount = 0;
+          let abortRemainingOnBotWall = false;
+          const seenSearchQueries = new Set<string>();
+
+          for (const candidate of discoveryTargets) {
+            if (params.signal?.aborted) break;
+            selectedPilotCandidatesCount++;
+
+            const intents = deriveAmazonSearchIntents(candidate, params.niche || "");
+            if (intents.length === 0) {
+              notAttemptedCount++;
+              (candidate as any).amazonEvidenceStatus = "INSUFFICIENT_EVIDENCE";
+              continue;
+            }
+            const normalizedKeywords = intents[0].normalizedKeywords;
+            const queryKey = normalizedKeywords.toLowerCase();
+            if (seenSearchQueries.has(queryKey)) {
+              notAttemptedCount++;
+              (candidate as any).amazonEvidenceStatus = "NOT_ATTEMPTED";
+              continue;
+            }
+            seenSearchQueries.add(queryKey);
+            searchQueriesPlanned++;
+
+            const snapBeforeSearch = budget.getSnapshot();
+            if (
+              abortRemainingOnBotWall ||
+              snapBeforeSearch.maxOperationsPerRun - snapBeforeSearch.operationsUsedInRun <= 0
+            ) {
+              pdpNotExecutedCount++;
+              (candidate as any).amazonEvidenceStatus = "PDP_NOT_EXECUTED";
+              continue;
+            }
+
+            const searchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(normalizedKeywords)}`;
+            const searchValidation = validateAmazonUsSearchUrl(searchUrl);
+            if (!searchValidation.valid || !ownedSession) {
+              pdpNotExecutedCount++;
+              (candidate as any).amazonEvidenceStatus = ownedSession
+                ? "FAILED"
+                : "MCP_NOT_CONFIGURED";
+              continue;
+            }
+
+            const searchOpId = `amz_op_${params.researchRunId}_${candidate.candidateId}_mcp_search`;
+            const searchInvRef = `amz_inv_${params.researchRunId}_${candidate.candidateId}_mcp_search`;
+            const searchStartedAt = new Date().toISOString();
+            const searchStartMs = Date.now();
+            const searchReqHash = computeDeterministicEvidenceHash({
+              mode: "LOCAL_MCP_SEARCH",
+              candidateId: candidate.candidateId,
+              searchUrl,
             });
+
+            const searchBounded = await budget.executeBoundedOperation(
+              searchOpId,
+              async () => {
+                if (ownedSession!.navigateAndCaptureSearchSnapshot) {
+                  return await ownedSession!.navigateAndCaptureSearchSnapshot(searchUrl, {
+                    signal: params.signal,
+                  });
+                }
+                const prodSnap = await ownedSession!.navigateAndCaptureProductSnapshot(searchUrl, {
+                  signal: params.signal,
+                });
+                const searchCardsResult = parseAmazonSearchSnapshotCards({
+                  sourceUrl: prodSnap.snapshot.sourceUrl,
+                  finalUrl: prodSnap.snapshot.finalUrl,
+                  httpStatus: prodSnap.snapshot.httpStatus,
+                  pageTitle: prodSnap.snapshot.pageTitle,
+                  rawHtml: prodSnap.snapshot.html,
+                  accessibilityTreeText: prodSnap.snapshot.html,
+                  structuredData: prodSnap.snapshot.structuredData as any,
+                });
+                return {
+                  snapshot: prodSnap.snapshot,
+                  searchCardsResult,
+                  upstreamRequestId: prodSnap.upstreamRequestId,
+                  toolInvocations: prodSnap.toolInvocations,
+                };
+              }
+            );
+
+            searchOperationsAttempted++;
+            const searchCompletedAt = new Date().toISOString();
+            const searchDurationMs = Math.max(0, Date.now() - searchStartMs);
+            const sessionObsClass: MarketplaceObservationClass =
+              ownedSession.observationClass || "UNVERIFIED";
+            const sessionSourceOrigin =
+              ownedSession.serverOrigin === "PINNED_PLAYWRIGHT_MCP"
+                ? "PINNED_PLAYWRIGHT_MCP"
+                : ownedSession.serverOrigin === "LOCAL_MCP_TEST_DOUBLE"
+                ? "LOCAL_MCP_TEST_DOUBLE"
+                : "TEST_FIXTURE";
+
+            if (!searchBounded.executed || searchBounded.error || !searchBounded.result) {
+              const classified = classifyAmazonProviderOutcome(
+                searchBounded.error ||
+                  new Error(searchBounded.blockedDecision?.reason || "MCP search failed")
+              );
+              if (
+                classified.status === "CAPTCHA_BLOCKED" ||
+                classified.status === "BLOCKED_PROVIDER" ||
+                classified.status === "RATE_LIMITED"
+              ) {
+                abortRemainingOnBotWall = true;
+              }
+              pdpNotExecutedCount++;
+              operationLedger.push({
+                operationId: searchOpId,
+                providerInvocationRef: searchInvRef,
+                providerRequestId: null,
+                providerRequestIdOrigin: "ABSENT",
+                workspaceId: params.workspaceId,
+                researchRunId: params.researchRunId,
+                candidateId: candidate.candidateId,
+                provider: "AMAZON_US",
+                requestMode: "AUTHORIZED_SEARCH",
+                sourceUrl: searchUrl,
+                finalUrl: null,
+                attemptCount: searchBounded.attemptCount,
+                maxAttemptsAllowed: 2,
+                startedAt: searchStartedAt,
+                completedAt: searchCompletedAt,
+                durationMs: searchDurationMs,
+                requestHash: searchReqHash,
+                responseHash: null,
+                status: classified.status,
+                outcomeCategory: classified.outcomeCategory,
+                observationClass:
+                  sessionObsClass === "TEST_FIXTURE" ? "TEST_FIXTURE" : "UNVERIFIED",
+                transportSessionId: ownedSession.sessionId,
+                aborted: Boolean(params.signal?.aborted),
+                errorMessage: classified.reason,
+              });
+              continue;
+            }
+
+            const { snapshot: searchSnap, searchCardsResult } = searchBounded.result;
+            const searchRespHash = computeDeterministicEvidenceHash({
+              sourceUrl: searchSnap.sourceUrl,
+              finalUrl: searchSnap.finalUrl,
+              pageTitle: searchSnap.pageTitle,
+              htmlDigest: searchSnap.html
+                ? computeDeterministicEvidenceHash(searchSnap.html)
+                : null,
+            });
+
+            if (searchCardsResult.botWallDetected) {
+              abortRemainingOnBotWall = true;
+              pdpNotExecutedCount++;
+              const botStatus: MarketplaceEvidenceStatus =
+                searchCardsResult.botWallStatus || "CAPTCHA_BLOCKED";
+              const botReason =
+                searchCardsResult.botWallReason || "AMAZON_CAPTCHA_OR_BOT_WALL_DETECTED";
+              operationLedger.push({
+                operationId: searchOpId,
+                providerInvocationRef: searchInvRef,
+                providerRequestId: null,
+                providerRequestIdOrigin: "ABSENT",
+                workspaceId: params.workspaceId,
+                researchRunId: params.researchRunId,
+                candidateId: candidate.candidateId,
+                provider: "AMAZON_US",
+                requestMode: "AUTHORIZED_SEARCH",
+                sourceUrl: searchUrl,
+                finalUrl: searchSnap.finalUrl || searchUrl,
+                attemptCount: searchBounded.attemptCount,
+                maxAttemptsAllowed: 2,
+                startedAt: searchStartedAt,
+                completedAt: searchCompletedAt,
+                durationMs: searchDurationMs,
+                requestHash: searchReqHash,
+                responseHash: searchRespHash,
+                status: botStatus,
+                outcomeCategory:
+                  botStatus === "CAPTCHA_BLOCKED"
+                    ? "CAPTCHA_CHALLENGE"
+                    : "PROVIDER_ACCESS_DENIED",
+                observationClass:
+                  sessionObsClass === "TEST_FIXTURE" ? "TEST_FIXTURE" : "UNVERIFIED",
+                transportSessionId: ownedSession.sessionId,
+                aborted: false,
+                errorMessage: `${botReason}; PDP_NOT_EXECUTED`,
+              });
+
+              const blockedIdSeed = `${params.workspaceId}:${params.researchRunId}:${candidate.candidateId}:AMAZON_US:SEARCH_BOT_WALL`;
+              const blockedIdHash =
+                computeDeterministicEvidenceHash(blockedIdSeed)?.slice(0, 20) || "botwall";
+              const blockedEv: AmazonProductEvidence = {
+                id: `amz_ev_${blockedIdHash}`,
+                workspaceId: params.workspaceId,
+                researchRunId: params.researchRunId,
+                candidateId: candidate.candidateId,
+                provider: "AMAZON_US",
+                requestMode: "AUTHORIZED_SEARCH",
+                requestedMarket: "US",
+                verifiedDeliveryMarket: null,
+                observedDeliveryPostalCode: null,
+                sourceUrl: searchUrl,
+                finalUrl: searchSnap.finalUrl || searchUrl,
+                canonicalAmazonUrl: null,
+                asin: null,
+                parentAsin: null,
+                variationAsin: null,
+                productTitle: null,
+                brand: null,
+                merchant: null,
+                seller: null,
+                currency: null,
+                price: null,
+                availability: null,
+                observedAt: searchCompletedAt,
+                sourceTimestamp: null,
+                rawEvidenceHash: searchRespHash,
+                extractedFieldsHash: null,
+                providerInvocationRef: searchInvRef,
+                providerRequestId: null,
+                responseEvidenceRef: searchRespHash
+                  ? `amz_raw:${searchRespHash.slice(0, 16)}`
+                  : null,
+                evidenceOrigin:
+                  sessionObsClass === "AUTHORIZED_LIVE"
+                    ? "AMAZON_US_LIVE_MCP"
+                    : `AMAZON_US_${sessionObsClass}`,
+                providerSourceOrigin: sessionSourceOrigin,
+                httpStatus: searchSnap.httpStatus ?? null,
+                httpStatusOrigin:
+                  typeof searchSnap.httpStatus === "number" ? "OBSERVED" : "UNOBSERVED_NULL",
+                observationClass:
+                  sessionObsClass === "TEST_FIXTURE" ? "TEST_FIXTURE" : "UNVERIFIED",
+                verificationScope: null,
+                identityMatch: "NO_MATCH",
+                isCached: false,
+                matchedCanonicalKey: null,
+                matchingReasons: [],
+                missingFields: ["asin", "productTitle", "brand", "price", "availability"],
+                rejectionReasons: [botReason, "PDP_NOT_EXECUTED"],
+                accessPolicyStatus: policy.accessPolicyStatus,
+                status: botStatus,
+              };
+              marketplaceEvidence.push(blockedEv);
+              rejectionLedger.push({
+                candidateId: candidate.candidateId,
+                sourceUrl: searchUrl,
+                asin: null,
+                status: botStatus,
+                rejectionReasons: blockedEv.rejectionReasons,
+                observedAt: searchCompletedAt,
+                researchRunId: params.researchRunId,
+              });
+              (candidate as any).amazonEvidence = blockedEv;
+              (candidate as any).amazonEvidenceStatus = botStatus;
+              continue;
+            }
+
+            listingsReturnedCount += searchCardsResult.cards.length;
+            rejectedListingsCount += searchCardsResult.rejectedCards.length;
+            for (const rej of searchCardsResult.rejectedCards) {
+              rejectionLedger.push({
+                candidateId: candidate.candidateId,
+                sourceUrl: searchUrl,
+                asin: rej.asin,
+                status: "FAILED",
+                rejectionReasons: [rej.reason],
+                observedAt: searchCompletedAt,
+                researchRunId: params.researchRunId,
+              });
+            }
+
+            operationLedger.push({
+              operationId: searchOpId,
+              providerInvocationRef: searchInvRef,
+              providerRequestId: null,
+              providerRequestIdOrigin: "ABSENT",
+              workspaceId: params.workspaceId,
+              researchRunId: params.researchRunId,
+              candidateId: candidate.candidateId,
+              provider: "AMAZON_US",
+              requestMode: "AUTHORIZED_SEARCH",
+              sourceUrl: searchUrl,
+              finalUrl: searchSnap.finalUrl || searchUrl,
+              attemptCount: searchBounded.attemptCount,
+              maxAttemptsAllowed: 2,
+              startedAt: searchStartedAt,
+              completedAt: searchCompletedAt,
+              durationMs: searchDurationMs,
+              requestHash: searchReqHash,
+              responseHash: searchRespHash,
+              status:
+                searchCardsResult.cards.length > 0
+                  ? "OBSERVED_UNVERIFIED"
+                  : "QUERY_SUCCEEDED_EMPTY",
+              outcomeCategory:
+                searchCardsResult.cards.length > 0
+                  ? "OBSERVED_SUCCESS"
+                  : "EMPTY_OR_UNAVAILABLE",
+              observationClass: sessionObsClass,
+              transportSessionId: ownedSession.sessionId,
+              aborted: false,
+              errorMessage: null,
+            });
+
+            if (searchCardsResult.cards.length === 0) {
+              pdpNotExecutedCount++;
+              (candidate as any).amazonEvidenceStatus = "QUERY_SUCCEEDED_EMPTY";
+              continue;
+            }
+
+            // Evaluate candidate identity match across non-sponsored search cards
+            const cardEvidences: AmazonProductEvidence[] = searchCardsResult.cards.map(
+              (card) =>
+                parseAmazonProductEvidence(
+                  {
+                    sourceUrl: card.canonicalAmazonUrl,
+                    finalUrl: card.canonicalAmazonUrl,
+                    canonicalUrl: card.canonicalAmazonUrl,
+                    httpStatus: searchSnap.httpStatus ?? null,
+                    pageTitle: card.productTitle,
+                    structuredData: {
+                      asin: card.asin,
+                      productTitle: card.productTitle,
+                      brand: card.brand || candidate.brand || null,
+                      price: card.price,
+                      currency: card.currency,
+                      deliveryPostalCode: card.observedDeliveryPostalCode,
+                      explicitUsDeliveryConfirmed: Boolean(card.observedDeliveryPostalCode),
+                    },
+                  },
+                  {
+                    workspaceId: params.workspaceId,
+                    researchRunId: params.researchRunId,
+                    candidateId: candidate.candidateId,
+                    observedAt: searchCompletedAt,
+                    providerInvocationRef: searchInvRef,
+                    observationClass: sessionObsClass,
+                    requestMode: "AUTHORIZED_SEARCH",
+                    accessPolicyStatus: policy.accessPolicyStatus,
+                  }
+                )
+            );
+
+            const matchDecisions = selectAmazonCandidateMatches(candidate, cardEvidences);
+            const selectedBest = matchDecisions.find(
+              (d) =>
+                d.selectedAsBest &&
+                (d.identityMatch === "EXACT_PRODUCT" ||
+                  d.identityMatch === "PROBABLE_PRODUCT")
+            );
+
+            const snapAfterSearch = budget.getSnapshot();
+            if (
+              !selectedBest ||
+              snapAfterSearch.maxOperationsPerRun - snapAfterSearch.operationsUsedInRun <= 0
+            ) {
+              pdpNotExecutedCount++;
+              const fallbackDecision = matchDecisions[0];
+              if (fallbackDecision) {
+                marketplaceEvidence.push(fallbackDecision.updatedEvidence);
+                (candidate as any).amazonEvidence = fallbackDecision.updatedEvidence;
+                (candidate as any).amazonEvidenceStatus = fallbackDecision.updatedEvidence.status;
+                if (fallbackDecision.rejectionReasons.length > 0) {
+                  rejectionLedger.push({
+                    candidateId: candidate.candidateId,
+                    sourceUrl: fallbackDecision.updatedEvidence.canonicalAmazonUrl,
+                    asin: fallbackDecision.asin,
+                    status: fallbackDecision.updatedEvidence.status,
+                    rejectionReasons: fallbackDecision.rejectionReasons,
+                    observedAt: searchCompletedAt,
+                    researchRunId: params.researchRunId,
+                  });
+                }
+              }
+              continue;
+            }
+
+            // Navigate to canonical PDP https://www.amazon.com/dp/{ASIN} within shared 4-op budget
+            pdpOperationsAttempted++;
+            const pdpUrl = `https://www.amazon.com/dp/${selectedBest.asin}`;
+            const pdpRes = await fetchAuthorizedAmazonProductEvidence({
+              workspaceId: params.workspaceId,
+              researchRunId: params.researchRunId,
+              candidateId: candidate.candidateId,
+              sourceUrl: pdpUrl,
+              candidate,
+              requestMode: isExplicitTestFixture ? "TEST_FIXTURE" : "URL_VERIFICATION",
+              policyContext: policy,
+              budget,
+              mcpSession: ownedSession,
+              ownsMcpSession: false,
+              directSnapshotForImportOrFixture:
+                params.fixtureSnapshotsByUrl?.[pdpUrl] || null,
+              signal: params.signal,
+            });
+
+            if (pdpRes.operationRecord) {
+              operationLedger.push(pdpRes.operationRecord);
+              if (
+                pdpRes.operationRecord.status === "CAPTCHA_BLOCKED" ||
+                pdpRes.operationRecord.status === "BLOCKED_PROVIDER" ||
+                pdpRes.operationRecord.status === "RATE_LIMITED"
+              ) {
+                abortRemainingOnBotWall = true;
+              }
+            }
+            if (pdpRes.evidence) {
+              marketplaceEvidence.push(pdpRes.evidence);
+              (candidate as any).amazonEvidence = pdpRes.evidence;
+              (candidate as any).amazonEvidenceStatus = pdpRes.evidence.status;
+              if (pdpRes.evidence.rejectionReasons.length > 0) {
+                rejectionLedger.push({
+                  candidateId: candidate.candidateId,
+                  sourceUrl: pdpUrl,
+                  asin: pdpRes.evidence.asin,
+                  status: pdpRes.evidence.status,
+                  rejectionReasons: pdpRes.evidence.rejectionReasons,
+                  observedAt: pdpRes.evidence.observedAt,
+                  researchRunId: params.researchRunId,
+                });
+              }
+            } else {
+              (candidate as any).amazonEvidenceStatus = pdpRes.status;
+            }
           }
-        }
-        for (const c of discoveryTargets) {
-          if (!(c as any).amazonEvidenceStatus) {
-            (c as any).amazonEvidenceStatus = discoveryRes.runStatus;
-          }
+
+          discoverySummary = {
+            discoveryAttempted: true,
+            discoveryStatus:
+              marketplaceEvidence.some((e) => e.status === "IDENTITY_VERIFIED")
+                ? "IDENTITY_VERIFIED"
+                : operationLedger.some((o) => o.status === "CAPTCHA_BLOCKED")
+                ? "CAPTCHA_BLOCKED"
+                : operationLedger.some((o) => o.status === "BLOCKED_PROVIDER")
+                ? "BLOCKED_PROVIDER"
+                : "OBSERVED_UNVERIFIED",
+            searchQueriesPlanned,
+            searchOperationsAttempted,
+            getItemsOperationsAttempted: pdpOperationsAttempted,
+            listingsReturnedCount,
+            exactMatchesSelectedCount: marketplaceEvidence.filter(
+              (e) => e.identityMatch === "EXACT_PRODUCT"
+            ).length,
+            probableMatchesSelectedCount: marketplaceEvidence.filter(
+              (e) => e.identityMatch === "PROBABLE_PRODUCT"
+            ).length,
+            brandOnlyMatchesCount: marketplaceEvidence.filter(
+              (e) => e.identityMatch === "BRAND_ONLY"
+            ).length,
+            rejectedListingsCount,
+          };
         }
       } else {
-        for (const c of discoveryTargets) {
-          notAttemptedCount++;
-          (c as any).amazonEvidenceStatus =
-            discoveryRes.runStatus === "CREDENTIALS_REQUIRED" ||
-            discoveryRes.runStatus === "ACCESS_NOT_GRANTED"
-              ? discoveryRes.runStatus
-              : "NOT_ATTEMPTED";
+        // Route B: Creators API discovery (preserves D17–D18 & R29–R34)
+        const discoveryRes = await discoverAmazonProductsForCandidates({
+          workspaceId: params.workspaceId,
+          researchRunId: params.researchRunId,
+          niche: params.niche || "",
+          candidates: discoveryTargets,
+          policyContext: policy,
+          env: effectiveEnv,
+          budget,
+          creatorsApiClient: effectiveCreatorsApiClient,
+          transportFactory: params.creatorsApiTransportFactory,
+          allowIsolatedTestHost: params.allowIsolatedTestHost,
+          signal: params.signal,
+        });
+
+        discoverySummary = {
+          discoveryAttempted: true,
+          discoveryStatus: discoveryRes.runStatus,
+          searchQueriesPlanned: discoveryRes.searchQueryPlan.plannedSearchOperationsCount,
+          searchOperationsAttempted: discoveryRes.providerRequestLedger.filter((o) =>
+            o.operationId.includes("search")
+          ).length,
+          getItemsOperationsAttempted: discoveryRes.providerRequestLedger.filter((o) =>
+            o.operationId.includes("getitems")
+          ).length,
+          listingsReturnedCount: discoveryRes.rawAndNormalizedManifest.filter(
+            (m) => m.asin !== null
+          ).length,
+          exactMatchesSelectedCount: discoveryRes.marketplaceEvidence.filter(
+            (e) => e.identityMatch === "EXACT_PRODUCT"
+          ).length,
+          probableMatchesSelectedCount: discoveryRes.marketplaceEvidence.filter(
+            (e) => e.identityMatch === "PROBABLE_PRODUCT"
+          ).length,
+          brandOnlyMatchesCount: discoveryRes.marketplaceEvidence.filter(
+            (e) => e.identityMatch === "BRAND_ONLY"
+          ).length,
+          rejectedListingsCount: discoveryRes.rawAndNormalizedManifest.filter(
+            (m) => m.identityMatch === "REJECTED" || m.rejectionReasons.length > 0
+          ).length,
+        };
+
+        if (discoveryRes.providerRequestLedger.length > 0) {
+          selectedPilotCandidatesCount += discoveryTargets.length;
+          operationLedger.push(...discoveryRes.providerRequestLedger);
+          for (const ev of discoveryRes.marketplaceEvidence) {
+            marketplaceEvidence.push(ev);
+            const matchedCand = discoveryTargets.find(
+              (c) => c.candidateId === ev.candidateId
+            );
+            if (matchedCand) {
+              (matchedCand as any).amazonEvidence = ev;
+              (matchedCand as any).amazonEvidenceStatus = ev.status;
+            }
+            if (ev.rejectionReasons.length > 0) {
+              rejectionLedger.push({
+                candidateId: ev.candidateId,
+                sourceUrl: ev.sourceUrl,
+                asin: ev.asin,
+                status: ev.status,
+                rejectionReasons: ev.rejectionReasons,
+                observedAt: ev.observedAt,
+                researchRunId: params.researchRunId,
+              });
+            }
+          }
+          for (const c of discoveryTargets) {
+            if (!(c as any).amazonEvidenceStatus) {
+              (c as any).amazonEvidenceStatus = discoveryRes.runStatus;
+            }
+          }
+        } else {
+          for (const c of discoveryTargets) {
+            notAttemptedCount++;
+            (c as any).amazonEvidenceStatus =
+              discoveryRes.runStatus === "CREDENTIALS_REQUIRED" ||
+              discoveryRes.runStatus === "ACCESS_NOT_GRANTED"
+                ? discoveryRes.runStatus
+                : "NOT_ATTEMPTED";
+          }
         }
       }
     } else if (candidatesWithoutUrl.length > 0) {
@@ -1549,10 +2085,12 @@ export async function runAmazonUsPilotEnrichment(
   const operationsBlocked = operationLedger.filter(
     (op) =>
       op.status === "BLOCKED_POLICY" ||
+      op.status === "SEARCH_BLOCKED_POLICY" ||
       op.status === "BLOCKED_PROVIDER" ||
       op.status === "MCP_NOT_CONFIGURED" ||
       op.status === "NOT_IMPLEMENTED" ||
       op.status === "NOT_EXECUTED" ||
+      op.status === "PDP_NOT_EXECUTED" ||
       op.status === "CAPTCHA_BLOCKED" ||
       op.status === "RATE_LIMITED"
   ).length;
@@ -1568,6 +2106,8 @@ export async function runAmazonUsPilotEnrichment(
     runStatus = operationsBlocked > 0 ? "PARTIAL" : "IDENTITY_VERIFIED";
   } else if (operationsSucceeded > 0) {
     runStatus = "OBSERVED_UNVERIFIED";
+  } else if (operationLedger.every((op) => op.status === "SEARCH_BLOCKED_POLICY")) {
+    runStatus = "SEARCH_BLOCKED_POLICY";
   } else if (operationLedger.every((op) => op.status === "BLOCKED_POLICY")) {
     runStatus = "BLOCKED_POLICY";
   } else if (operationLedger.every((op) => op.status === "NOT_IMPLEMENTED")) {
@@ -1590,6 +2130,56 @@ export async function runAmazonUsPilotEnrichment(
     ownedSession?.getToolInvocationRecords?.().length ??
     ownedSession?.handshakeProof?.toolInvocationRecords?.length ??
     0;
+
+  const localMcpPilotDiagnostics: AmazonMarketplaceTelemetry["localMcpPilotDiagnostics"] = {
+    routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+    transportHandshakeStatus: connectionHandshakeProof?.connected
+      ? "SUCCEEDED"
+      : connectionHandshakeProof?.executed
+      ? "FAILED"
+      : "NOT_ATTEMPTED",
+    actualBrowserToolExecutionStatus:
+      toolInvocationsCount > 0 || operationsSucceeded > 0
+        ? "SUCCEEDED"
+        : operationLedger.some(
+            (op) =>
+              op.status === "BLOCKED_POLICY" || op.status === "SEARCH_BLOCKED_POLICY"
+          )
+        ? "BLOCKED_POLICY"
+        : operationLedger.length > 0
+        ? "FAILED"
+        : "NOT_ATTEMPTED",
+    realAmazonPageObservationStatus: marketplaceEvidence.some(
+      (e) =>
+        Boolean(e.asin) &&
+        (e.status === "IDENTITY_VERIFIED" ||
+          e.status === "OBSERVED_UNVERIFIED" ||
+          e.status === "PARTIAL")
+    )
+      ? "PUBLIC_PAGE_OBSERVED"
+      : operationLedger.some(
+          (op) => op.status === "CAPTCHA_BLOCKED" || op.status === "BLOCKED_PROVIDER"
+        )
+      ? "BLOCKED_CAPTCHA_OR_BOT_WALL"
+      : toolInvocationsCount > 0
+      ? "FAILED"
+      : "NOT_ATTEMPTED",
+    productIdentityVerificationStatus:
+      identityVerifiedCount > 0
+        ? "IDENTITY_VERIFIED"
+        : probableMatchCount > 0 || brandOnlyCount > 0
+        ? "OBSERVED_UNVERIFIED"
+        : rejectedCount > 0
+        ? "REJECTED_IDENTITY"
+        : "NOT_ATTEMPTED",
+    creatorsApiAvailabilityStatus: policy.creatorsApiConfigured
+      ? "ELIGIBLE_CONFIGURED"
+      : policy.allowedAccessRoute === "USER_AUTHORIZED_URL"
+      ? "NOT_REQUIRED_FOR_LOCAL_MCP_PILOT"
+      : "CREDENTIALS_ABSENT",
+    searchBlockedPolicyCount,
+    pdpNotExecutedCount,
+  };
 
   return {
     marketplaceEvidence,
@@ -1628,6 +2218,7 @@ export async function runAmazonUsPilotEnrichment(
           : true,
         toolInvocationsCount,
       },
+      localMcpPilotDiagnostics,
       ...(discoverySummary ? { discoverySummary } : {}),
     },
   };

@@ -2060,6 +2060,7 @@ export default function ProductsPage() {
                                 }
                                 data-amazon-currency={item.amazonEvidenceSummary.currency || ""}
                                 data-amazon-availability={item.amazonEvidenceSummary.availability || ""}
+                                data-amazon-delivery-postal-code={item.amazonEvidenceSummary.observedDeliveryPostalCode || ""}
                                 data-amazon-identity-match={item.amazonEvidenceSummary.identityMatch}
                                 data-amazon-status={item.amazonEvidenceSummary.status}
                                 data-amazon-verification-scope={item.amazonEvidenceSummary.verificationScope || ""}

@@ -350,6 +350,44 @@ export interface Kh02AcceptanceDiagnostics {
       attemptedLiveCallsCount: number;
       missingEnvKeys: string[];
       reason: string;
+      localMcpPilot?: {
+        routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT";
+        probeExecutionStatus: "DID_RUN" | "NOT_RUN";
+        transportHandshakeStatus: "SUCCEEDED" | "FAILED" | "NOT_ATTEMPTED";
+        actualBrowserToolExecutionStatus:
+          | "SUCCEEDED"
+          | "FAILED"
+          | "BLOCKED_POLICY"
+          | "NOT_ATTEMPTED";
+        realAmazonPageObservationStatus:
+          | "PUBLIC_PAGE_OBSERVED"
+          | "BLOCKED_CAPTCHA_OR_BOT_WALL"
+          | "FAILED"
+          | "NOT_ATTEMPTED";
+        productIdentityVerificationStatus:
+          | "IDENTITY_VERIFIED"
+          | "OBSERVED_UNVERIFIED"
+          | "REJECTED_IDENTITY"
+          | "NOT_ATTEMPTED";
+        liveVerdict:
+          | "LIVE_VERIFIED"
+          | "BLOCKED_CAPTCHA_OR_BOT_WALL"
+          | "OBSERVED_UNVERIFIED"
+          | "NOT_VERIFIED";
+        verifiedLiveProductCount: number;
+        attemptedLiveCallsCount: number;
+        reason: string;
+      };
+      creatorsApi?: {
+        routeId: "AMAZON_CREATORS_API";
+        independentOfLocalMcpPilot: true;
+        configured: boolean;
+        authenticated: boolean | null;
+        querySucceeded: boolean;
+        status: string;
+        missingEnvKeys: string[];
+        reason: string;
+      };
     };
     tiktokUsG07: {
       providerId: "TIKTOK_ADS";
@@ -1093,6 +1131,7 @@ export function buildG16DiagnosticReason(input: BuildG16DiagnosticReasonInput): 
 export async function collectKh02AcceptanceDiagnostics(params: {
   sourceSha: string;
   liveWalmartArtifact10: any;
+  liveAmazonProbeArtifact?: any;
   devBacktestShortlist?: Array<{
     candidateId: string;
     title: string;
@@ -1517,8 +1556,12 @@ export async function collectKh02AcceptanceDiagnostics(params: {
         authenticated: amazonLiveEligibility.authenticated,
         querySucceeded: amazonLiveEligibility.querySucceeded,
         liveVerdict: amzLiveVerdict,
-        verifiedLiveProductCount: 0,
-        attemptedLiveCallsCount: 0,
+        verifiedLiveProductCount: Number(
+          params.liveAmazonProbeArtifact?.verifiedLiveProductCount || 0
+        ),
+        attemptedLiveCallsCount: Number(
+          params.liveAmazonProbeArtifact?.attemptedLiveCallsCount || 0
+        ),
         missingEnvKeys: [
           ...(!amazonLiveEligibility.hasCredentialId
             ? ["KH02_AMAZON_CREATORS_CREDENTIAL_ID"]
@@ -1531,6 +1574,57 @@ export async function collectKh02AcceptanceDiagnostics(params: {
             : []),
         ],
         reason: amazonLiveEligibility.reason,
+        localMcpPilot: {
+          routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+          probeExecutionStatus:
+            params.liveAmazonProbeArtifact?.probeExecutionStatus === "DID_RUN"
+              ? "DID_RUN"
+              : "NOT_RUN",
+          transportHandshakeStatus:
+            params.liveAmazonProbeArtifact?.transportHandshakeStatus ||
+            "NOT_ATTEMPTED",
+          actualBrowserToolExecutionStatus:
+            params.liveAmazonProbeArtifact?.actualBrowserToolExecutionStatus ||
+            "NOT_ATTEMPTED",
+          realAmazonPageObservationStatus:
+            params.liveAmazonProbeArtifact?.realAmazonPageObservationStatus ||
+            "NOT_ATTEMPTED",
+          productIdentityVerificationStatus:
+            params.liveAmazonProbeArtifact?.productIdentityVerificationStatus ||
+            "NOT_ATTEMPTED",
+          liveVerdict:
+            params.liveAmazonProbeArtifact?.liveVerdict || "NOT_VERIFIED",
+          verifiedLiveProductCount: Number(
+            params.liveAmazonProbeArtifact?.verifiedLiveProductCount || 0
+          ),
+          attemptedLiveCallsCount: Number(
+            params.liveAmazonProbeArtifact?.attemptedLiveCallsCount || 0
+          ),
+          reason: String(
+            params.liveAmazonProbeArtifact?.statusReason ||
+              "Original Amazon US Microsoft Playwright MCP pilot route (independent of Creators API credentials)."
+          ),
+        },
+        creatorsApi: {
+          routeId: "AMAZON_CREATORS_API",
+          independentOfLocalMcpPilot: true,
+          configured: amazonLiveEligibility.configured,
+          authenticated: amazonLiveEligibility.authenticated,
+          querySucceeded: amazonLiveEligibility.querySucceeded,
+          status: amazonLiveEligibility.status,
+          missingEnvKeys: [
+            ...(!amazonLiveEligibility.hasCredentialId
+              ? ["KH02_AMAZON_CREATORS_CREDENTIAL_ID"]
+              : []),
+            ...(!amazonLiveEligibility.hasCredentialSecret
+              ? ["KH02_AMAZON_CREATORS_CREDENTIAL_SECRET"]
+              : []),
+            ...(!amazonLiveEligibility.hasPartnerTag
+              ? ["KH02_AMAZON_PARTNER_TAG"]
+              : []),
+          ],
+          reason: amazonLiveEligibility.reason,
+        },
       },
       tiktokUsG07: {
         providerId: "TIKTOK_ADS",

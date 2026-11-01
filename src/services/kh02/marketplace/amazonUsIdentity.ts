@@ -838,7 +838,20 @@ export interface RawAmazonSnapshotInput {
     reviewCount?: number | null;
     bestSellersRank?: number | null;
     explicitUsDeliveryConfirmed?: boolean;
+    deliveryLocationText?: string | null;
+    deliveryPostalCode?: string | null;
     isSponsored?: boolean;
+    searchCards?: Array<{
+      asin?: string | null;
+      title?: string | null;
+      productTitle?: string | null;
+      url?: string | null;
+      brand?: string | null;
+      price?: number | string | null;
+      currency?: string | null;
+      isSponsored?: boolean;
+      sponsoredLabel?: string | null;
+    }>;
   } | null;
 }
 
@@ -1001,7 +1014,12 @@ export function parseAmazonProductEvidence(
     return buildRejected("BLOCKED_PROVIDER", [`HTTP_${httpStatus}_OR_BOT_WALL_BLOCKED`]);
   }
 
-  if (/\/ap\/signin|ap_email|Sign-In|Sign in to continue/i.test(combinedHtml)) {
+  const isLoginWallPage =
+    /Amazon\s+Sign-In|ap_email|Sign in to continue/i.test(combinedHtml) ||
+    (/\/ap\/signin|Sign-In/i.test(combinedHtml) &&
+      !/nav_ya_signin|nav_custrec_signin|Hello,\s*sign\s*in/i.test(combinedHtml) &&
+      !snapshot.structuredData?.productTitle);
+  if (isLoginWallPage) {
     return buildRejected("BLOCKED_PROVIDER", ["LOGIN_WALL_DETECTED"]);
   }
 
@@ -1129,9 +1147,30 @@ export function parseAmazonProductEvidence(
   };
   const extractedFieldsHash = computeDeterministicEvidenceHash(extractedPayload);
 
-  // Only confirm verifiedDeliveryMarket="US" when explicit US delivery confirmation is observed
+  // Only confirm verifiedDeliveryMarket="US" and observedDeliveryPostalCode when explicit US delivery confirmation is observed
+  const rawDeliveryZip =
+    (snapshot.structuredData?.deliveryPostalCode &&
+      String(snapshot.structuredData.deliveryPostalCode).trim().match(/^\d{5}$/)?.[0]) ||
+    (snapshot.structuredData?.deliveryLocationText &&
+      String(snapshot.structuredData.deliveryLocationText).match(
+        /\b(?:deliver(?:\s+to)?|new\s+york|los\s+angeles|chicago|united\s+states|us|ny|ca|tx|fl)[^\n0-9]{0,30}\b(\d{5})\b/i
+      )?.[1]) ||
+    combinedHtml.match(
+      /\bDeliver\s+to\s+(?:[A-Za-z][A-Za-z\s.]{1,28}\s+)?(\d{5})\b/i
+    )?.[1] ||
+    null;
+  const observedDeliveryPostalCode: string | null = rawDeliveryZip || null;
   const verifiedDeliveryMarket: "US" | null =
-    snapshot.structuredData?.explicitUsDeliveryConfirmed === true ? "US" : null;
+    snapshot.structuredData?.explicitUsDeliveryConfirmed === true ||
+    observedDeliveryPostalCode !== null ||
+    Boolean(
+      snapshot.structuredData?.deliveryLocationText &&
+        /\b(?:deliver\s+to\s+united\s+states|deliver\s+to\s+us)\b/i.test(
+          snapshot.structuredData.deliveryLocationText
+        )
+    )
+      ? "US"
+      : null;
 
   const idSeed = `${responseMetadata.workspaceId}:${responseMetadata.researchRunId}:${responseMetadata.candidateId}:AMAZON_US:${canonicalIdentity.asin}`;
   const idHash = computeDeterministicEvidenceHash(idSeed)?.slice(0, 20) || canonicalIdentity.asin;
@@ -1145,6 +1184,7 @@ export function parseAmazonProductEvidence(
     requestMode,
     requestedMarket: "US",
     verifiedDeliveryMarket,
+    observedDeliveryPostalCode,
     sourceUrl: snapshot.sourceUrl,
     finalUrl: snapshot.finalUrl || canonicalIdentity.canonicalAmazonUrl,
     canonicalAmazonUrl: canonicalIdentity.canonicalAmazonUrl,
@@ -1516,5 +1556,459 @@ export function verifyAmazonProductIdentity(
       matchingReasons: [],
       rejectionReasons,
     },
+  };
+}
+
+export interface AmazonSearchUrlValidationResult {
+  valid: boolean;
+  normalizedSearchUrl: string | null;
+  query: string | null;
+  rejectionCode?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Validates an Amazon US search URL (`https://www.amazon.com/s?k=...`) for the
+ * explicitly authorized local Playwright MCP bounded search->PDP pilot flow.
+ * Never weakens `validateAmazonUsProductUrl` (which continues to reject `/s?k=...` for product URLs).
+ */
+export function validateAmazonUsSearchUrl(
+  rawUrl: string | null | undefined,
+  finalUrl?: string | null
+): AmazonSearchUrlValidationResult {
+  if (!rawUrl || typeof rawUrl !== "string") {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "EMPTY_SEARCH_URL",
+      rejectionReason: "Search URL is empty.",
+    };
+  }
+  const trimmed = rawUrl.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "MALFORMED_SEARCH_URL",
+      rejectionReason: "Search URL could not be parsed.",
+    };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "NON_HTTPS_SCHEME",
+      rejectionReason: "Amazon US search URL must use https:.",
+    };
+  }
+
+  if (parsed.username || parsed.password) {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "URL_CREDENTIALS_FORBIDDEN",
+      rejectionReason: "Credentials in URL are forbidden.",
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (host !== "www.amazon.com" && host !== "amazon.com") {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "DISALLOWED_HOST",
+      rejectionReason: `Host '${host}' is not an allowed US Amazon domain.`,
+    };
+  }
+
+  if (parsed.pathname !== "/s" && parsed.pathname !== "/s/") {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "NOT_SEARCH_PATH",
+      rejectionReason: `Path '${parsed.pathname}' is not /s.`,
+    };
+  }
+
+  const q = (parsed.searchParams.get("k") || "").trim();
+  if (!q || q.length < 2) {
+    return {
+      valid: false,
+      normalizedSearchUrl: null,
+      query: null,
+      rejectionCode: "EMPTY_SEARCH_QUERY",
+      rejectionReason: "Search query parameter k is missing or too short.",
+    };
+  }
+
+  if (finalUrl && typeof finalUrl === "string" && finalUrl.trim()) {
+    try {
+      const fParsed = new URL(finalUrl.trim());
+      const fHost = fParsed.hostname.toLowerCase();
+      if (fHost !== "www.amazon.com" && fHost !== "amazon.com") {
+        return {
+          valid: false,
+          normalizedSearchUrl: null,
+          query: null,
+          rejectionCode: "FINAL_URL_HOST_MISMATCH",
+          rejectionReason: `Final URL redirected to non-US host '${fHost}'.`,
+        };
+      }
+      if (/\/(?:ap\/signin|errors\/validateCaptcha)/i.test(fParsed.pathname)) {
+        return {
+          valid: false,
+          normalizedSearchUrl: null,
+          query: null,
+          rejectionCode: "FINAL_URL_AUTH_OR_BOT_REDIRECT",
+          rejectionReason: `Final URL redirected to auth/bot challenge '${fParsed.pathname}'.`,
+        };
+      }
+    } catch {
+      return {
+        valid: false,
+        normalizedSearchUrl: null,
+        query: null,
+        rejectionCode: "MALFORMED_FINAL_URL",
+        rejectionReason: "Final URL is malformed.",
+      };
+    }
+  }
+
+  return {
+    valid: true,
+    normalizedSearchUrl: `https://www.amazon.com/s?k=${encodeURIComponent(q)}`,
+    query: q,
+  };
+}
+
+export interface ParsedAmazonSearchCard {
+  asin: string;
+  canonicalAmazonUrl: string;
+  productTitle: string;
+  brand: string | null;
+  price: number | null;
+  currency: "USD" | null;
+  observedDeliveryPostalCode: string | null;
+  isSponsored: false;
+}
+
+export interface ParsedAmazonSearchSnapshotResult {
+  botWallDetected: boolean;
+  botWallStatus: "CAPTCHA_BLOCKED" | "BLOCKED_PROVIDER" | "RATE_LIMITED" | null;
+  botWallReason: string | null;
+  observedDeliveryPostalCode: string | null;
+  cards: ParsedAmazonSearchCard[];
+  rejectedCards: Array<{
+    asin: string | null;
+    title: string | null;
+    reason: string;
+  }>;
+}
+
+/**
+ * Parses an Amazon US search snapshot (`https://www.amazon.com/s?k=...`) captured via
+ * the local Playwright MCP session.
+ * - Detects CAPTCHA / Robot Check / automated access block first.
+ * - Extracts non-sponsored search result cards with strict 10-char ASIN, product title,
+ *   canonical `/dp/{ASIN}` URL, and optional observed USD price & US delivery ZIP.
+ * - Rejects sponsored cards (`Sponsored`, `/sspa/click`, `gp/slredirect`, `AdHolder`)
+ *   and non-ASIN 10-char tokens (`CATEGORIES`, `BESTSELLER`, etc.).
+ */
+export function parseAmazonSearchSnapshotCards(snapshot: {
+  sourceUrl: string;
+  finalUrl?: string | null;
+  httpStatus?: number | null;
+  pageTitle?: string | null;
+  rawHtml?: string | null;
+  accessibilityTreeText?: string | null;
+  structuredData?: {
+    deliveryLocationText?: string | null;
+    deliveryPostalCode?: string | null;
+    searchCards?: Array<{
+      asin?: string | null;
+      title?: string | null;
+      brand?: string | null;
+      price?: number | string | null;
+      currency?: string | null;
+      href?: string | null;
+      isSponsored?: boolean;
+    }>;
+  } | null;
+}): ParsedAmazonSearchSnapshotResult {
+  const combinedText = `${snapshot.pageTitle || ""}\n${snapshot.rawHtml || ""}\n${
+    snapshot.accessibilityTreeText || ""
+  }`;
+  const httpStatus =
+    typeof snapshot.httpStatus === "number" && Number.isFinite(snapshot.httpStatus)
+      ? snapshot.httpStatus
+      : null;
+
+  if (
+    httpStatus === 429 ||
+    /429\s+too\s+many\s+requests|rate\s+limit\s+exceeded/i.test(combinedText)
+  ) {
+    return {
+      botWallDetected: true,
+      botWallStatus: "RATE_LIMITED",
+      botWallReason: "HTTP_429_OR_RATE_LIMITED",
+      observedDeliveryPostalCode: null,
+      cards: [],
+      rejectedCards: [],
+    };
+  }
+
+  if (
+    /validateCaptcha|opfcaptcha|Enter the characters you see below|not a robot|api-services-support@amazon\.com|type the characters you see in this image|Robot Check/i.test(
+      combinedText
+    )
+  ) {
+    return {
+      botWallDetected: true,
+      botWallStatus: "CAPTCHA_BLOCKED",
+      botWallReason: "AMAZON_CAPTCHA_CHALLENGE_DETECTED",
+      observedDeliveryPostalCode: null,
+      cards: [],
+      rejectedCards: [],
+    };
+  }
+
+  if (
+    httpStatus === 403 ||
+    httpStatus === 503 ||
+    /To discuss automated access to Amazon data|Request blocked|Automated access|Sorry!\s+Something went wrong on our end/i.test(
+      combinedText
+    )
+  ) {
+    return {
+      botWallDetected: true,
+      botWallStatus: "BLOCKED_PROVIDER",
+      botWallReason: `HTTP_${httpStatus ?? "UNOBSERVED"}_OR_BOT_WALL_BLOCKED`,
+      observedDeliveryPostalCode: null,
+      cards: [],
+      rejectedCards: [],
+    };
+  }
+
+  const observedDeliveryPostalCode =
+    (snapshot.structuredData?.deliveryPostalCode &&
+      String(snapshot.structuredData.deliveryPostalCode).trim().match(/^\d{5}$/)?.[0]) ||
+    (snapshot.structuredData?.deliveryLocationText &&
+      String(snapshot.structuredData.deliveryLocationText).match(/\b(\d{5})\b/)?.[1]) ||
+    combinedText.match(
+      /\bDeliver\s+to\s+(?:[A-Za-z][A-Za-z\s.]{1,28}\s+)?(\d{5})\b/i
+    )?.[1] ||
+    null;
+
+  const cards: ParsedAmazonSearchCard[] = [];
+  const rejectedCards: Array<{ asin: string | null; title: string | null; reason: string }> = [];
+  const seenAsins = new Set<string>();
+
+  const pushCandidateCard = (rawCard: {
+    asin?: string | null;
+    title?: string | null;
+    brand?: string | null;
+    price?: number | string | null;
+    currency?: string | null;
+    href?: string | null;
+    isSponsored?: boolean;
+    rawSnippet?: string;
+  }) => {
+    const rawAsin = String(rawCard.asin || "").trim().toUpperCase();
+    const cleanTitle = sanitizeUntrustedAmazonText(rawCard.title).sanitized;
+    const snippet = `${rawCard.rawSnippet || ""} ${rawCard.href || ""}`;
+    const isSponsored =
+      Boolean(rawCard.isSponsored) ||
+      /\bSponsored\b|\/sspa\/click|\/gp\/slredirect|AdHolder|sp_atk/i.test(snippet);
+
+    if (isSponsored) {
+      rejectedCards.push({
+        asin: rawAsin || null,
+        title: cleanTitle,
+        reason: "SPONSORED_SEARCH_CARD_REJECTED",
+      });
+      return;
+    }
+
+    if (!rawAsin || !isValidStrictAmazonAsin(rawAsin)) {
+      rejectedCards.push({
+        asin: rawAsin || null,
+        title: cleanTitle,
+        reason: `INVALID_OR_NON_PRODUCT_ASIN:${rawAsin || "EMPTY"}`,
+      });
+      return;
+    }
+
+    if (!cleanTitle || cleanTitle.length < 4) {
+      rejectedCards.push({
+        asin: rawAsin,
+        title: cleanTitle,
+        reason: "MISSING_CARD_PRODUCT_TITLE",
+      });
+      return;
+    }
+
+    if (seenAsins.has(rawAsin)) {
+      return;
+    }
+    seenAsins.add(rawAsin);
+
+    let parsedPrice: number | null = null;
+    let parsedCurrency: "USD" | null = null;
+    if (rawCard.price !== null && rawCard.price !== undefined && String(rawCard.price).trim() !== "") {
+      const rawPriceStr = String(rawCard.price).trim();
+      const explicitCurrency = rawCard.currency
+        ? String(rawCard.currency).trim().toUpperCase()
+        : rawPriceStr.includes("$")
+        ? "USD"
+        : null;
+      if (explicitCurrency && explicitCurrency !== "USD") {
+        rejectedCards.push({
+          asin: rawAsin,
+          title: cleanTitle,
+          reason: `NON_USD_SEARCH_CARD_CURRENCY:${explicitCurrency}`,
+        });
+        return;
+      }
+      const num =
+        typeof rawCard.price === "number"
+          ? rawCard.price
+          : Number(rawPriceStr.replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(num) && num > 0) {
+        parsedPrice = Math.round(num * 100) / 100;
+        parsedCurrency = "USD";
+      }
+    }
+
+    const cleanBrand = sanitizeUntrustedAmazonText(rawCard.brand).sanitized;
+    cards.push({
+      asin: rawAsin,
+      canonicalAmazonUrl: `https://www.amazon.com/dp/${rawAsin}`,
+      productTitle: cleanTitle,
+      brand: cleanBrand,
+      price: parsedPrice,
+      currency: parsedCurrency,
+      observedDeliveryPostalCode,
+      isSponsored: false,
+    });
+  };
+
+  // 1. Structured searchCards if provided
+  if (Array.isArray(snapshot.structuredData?.searchCards)) {
+    for (const sc of snapshot.structuredData!.searchCards!) {
+      pushCandidateCard(sc);
+    }
+  }
+
+  // 2. HTML search cards (`data-asin="..."`)
+  if (snapshot.rawHtml) {
+    const cardRegex = /<div[^>]*\bdata-asin=["']([^"']+)["'][^>]*>([\s\S]*?)(?=<div[^>]*\bdata-asin=["']|$)/gi;
+    let match: RegExpExecArray | null;
+    while ((match = cardRegex.exec(snapshot.rawHtml)) !== null) {
+      const candidateAsin = match[1]?.trim() || "";
+      const blockHtml = match[2] || "";
+      if (!candidateAsin) continue;
+      const h2Match =
+        blockHtml.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1] ||
+        blockHtml.match(/class=["'][^"']*a-text-normal[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1] ||
+        null;
+      const priceMatch =
+        blockHtml.match(/class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*(\$[0-9]+(?:\.[0-9]{2})?)\s*<\/span>/i)?.[1] ||
+        blockHtml.match(/(\$[0-9]+(?:\.[0-9]{2})?)/)?.[1] ||
+        null;
+      const hrefMatch = blockHtml.match(/href=["']([^"']*\/dp\/[^"']+)["']/i)?.[1] || null;
+      pushCandidateCard({
+        asin: candidateAsin,
+        title: h2Match,
+        price: priceMatch,
+        href: hrefMatch,
+        rawSnippet: blockHtml,
+      });
+    }
+  }
+
+  // 3. Accessibility snapshot lines containing `/dp/ASIN` links and headings
+  if (snapshot.accessibilityTreeText) {
+    const dpRegex = /(?:heading|link)\s+["']([^"'\n]{6,240})["'][\s\S]{0,600}?\/dp\/([A-Z0-9]{10})\b/gi;
+    let m: RegExpExecArray | null;
+    while ((m = dpRegex.exec(snapshot.accessibilityTreeText)) !== null) {
+      let titleText = m[1] || "";
+      const asinCandidate = m[2] || "";
+      let brandCandidate: string | null = null;
+      const windowStart = Math.max(0, m.index - 160);
+      const windowEnd = Math.min(
+        snapshot.accessibilityTreeText.length,
+        m.index + m[0].length + 900
+      );
+      const windowText = snapshot.accessibilityTreeText.slice(windowStart, windowEnd);
+      const afterMatchText = snapshot.accessibilityTreeText.slice(
+        m.index + m[0].length,
+        Math.min(snapshot.accessibilityTreeText.length, m.index + m[0].length + 750)
+      );
+      const subHeadingMatch = afterMatchText.match(
+        /heading\s+["']([^"'\n]{12,260})["']\s+\[level=2\]/i
+      );
+      if (subHeadingMatch?.[1] && !titleText.includes(subHeadingMatch[1])) {
+        brandCandidate = titleText.length <= 40 ? titleText : null;
+        titleText = `${titleText} ${subHeadingMatch[1]}`.trim();
+      }
+      const priceMatch = windowText.match(/\$[0-9]+(?:\.[0-9]{2})?/)?.[0] || null;
+      pushCandidateCard({
+        asin: asinCandidate,
+        title: titleText,
+        brand: brandCandidate,
+        price: priceMatch,
+        rawSnippet: windowText,
+      });
+    }
+
+    // Fallback: direct `/dp/ASIN` URLs in accessibility tree with nearby link/heading title or URL slug
+    const urlDpRegex = /\/([A-Za-z0-9-]{6,160})\/dp\/([A-Z0-9]{10})\b/g;
+    let um: RegExpExecArray | null;
+    while ((um = urlDpRegex.exec(snapshot.accessibilityTreeText)) !== null) {
+      const slugText = (um[1] || "").replace(/-/g, " ").trim();
+      const asinCandidate = um[2] || "";
+      const windowStart = Math.max(0, um.index - 320);
+      const windowEnd = Math.min(
+        snapshot.accessibilityTreeText.length,
+        um.index + um[0].length + 900
+      );
+      const windowText = snapshot.accessibilityTreeText.slice(windowStart, windowEnd);
+      const headingsInWindow = Array.from(
+        windowText.matchAll(/heading\s+["']([^"'\n]{6,260})["'](?:\s+\[level=2\])?/gi)
+      ).map((hm) => hm[1].trim());
+      const nearbyTitle =
+        headingsInWindow.length >= 2
+          ? `${headingsInWindow[0]} ${headingsInWindow[1]}`.trim()
+          : headingsInWindow[0] ||
+            windowText.match(/link\s+["']([^"'\n]{8,240})["']/i)?.[1] ||
+            slugText;
+      const priceMatch = windowText.match(/\$[0-9]+(?:\.[0-9]{2})?/)?.[0] || null;
+      pushCandidateCard({
+        asin: asinCandidate,
+        title: nearbyTitle,
+        brand: headingsInWindow.length >= 2 && headingsInWindow[0].length <= 40 ? headingsInWindow[0] : null,
+        price: priceMatch,
+        rawSnippet: windowText,
+      });
+    }
+  }
+
+  return {
+    botWallDetected: false,
+    botWallStatus: null,
+    botWallReason: null,
+    observedDeliveryPostalCode,
+    cards,
+    rejectedCards,
   };
 }

@@ -451,6 +451,7 @@ export async function runWalmartUsPilotEnrichment(
   const fetchedPdpItemIds = new Set<string>();
   let searchOperationsCount = 0;
   let pdpOperationsCount = 0;
+  let providerBlockedInRun = false;
 
   const effectiveOrigin: EvidenceOrigin =
     hasCustomFixtureTransport || params.evidenceOrigin === "TEST_FIXTURE"
@@ -614,12 +615,19 @@ export async function runWalmartUsPilotEnrichment(
       continue;
     }
 
-    // Reserve SEARCH logical operation
-    const searchOpRes = reserveWalmartOperation(budget, {
-      operationKind: "SEARCH",
-      candidateId: candidate.candidateId,
-      targetKey: primaryIntent.normalizedQuery,
-    });
+    // Reserve SEARCH logical operation (or stop immediately if prior candidate hit PerimeterX/CAPTCHA bot wall)
+    const searchOpRes = providerBlockedInRun
+      ? {
+          permitted: false,
+          logicalOperationId: null,
+          status: "BLOCKED_PROVIDER" as const,
+          reason: "STOPPED_AFTER_PROVIDER_BOT_WALL; PDP_NOT_EXECUTED",
+        }
+      : reserveWalmartOperation(budget, {
+          operationKind: "SEARCH",
+          candidateId: candidate.candidateId,
+          targetKey: primaryIntent.normalizedQuery,
+        });
 
     if (!searchOpRes.permitted || !searchOpRes.logicalOperationId) {
       const deferredId = computeWalmartEvidenceCompositeId(
@@ -729,6 +737,9 @@ export async function runWalmartUsPilotEnrichment(
 
     if (!searchResp || !searchResp.ok || !searchResp.envelope?.html) {
       const failStatus = searchExec.finalStatus || "FAILED";
+      if (failStatus === "BLOCKED_PROVIDER") {
+        providerBlockedInRun = true;
+      }
       const failId = computeWalmartEvidenceCompositeId(
         params.workspaceId,
         params.researchRunId,
