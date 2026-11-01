@@ -131,7 +131,7 @@ export function evaluateAmazonUsEvidenceGate(
       brandOnlyMatchCount++;
     }
 
-    // Check if row is fixture, cached, or user-imported -> never count as AUTHORIZED_LIVE
+    // Check if row is fixture, cached, local test double, or user-imported -> never count as AUTHORIZED_LIVE
     if (
       row.isCached ||
       row.observationClass === "TEST_FIXTURE" ||
@@ -139,7 +139,10 @@ export function evaluateAmazonUsEvidenceGate(
       row.observationClass === "IMPORTED_BY_USER" ||
       row.observationClass === "UNVERIFIED" ||
       row.requestMode === "TEST_FIXTURE" ||
-      row.requestMode === "USER_IMPORTED"
+      row.requestMode === "USER_IMPORTED" ||
+      row.providerSourceOrigin === "LOCAL_MCP_TEST_DOUBLE" ||
+      row.providerSourceOrigin === "TEST_FIXTURE" ||
+      row.providerSourceOrigin === "USER_IMPORTED"
     ) {
       fixtureOrCachedRowsExcludedFromLive++;
       continue;
@@ -203,6 +206,8 @@ export function evaluateAmazonUsEvidenceGate(
   } else if (
     !policyContext.liveAllowed ||
     policyContext.accessPolicyStatus === "LIVE_NOT_ALLOWED" ||
+    policyContext.accessPolicyStatus === "CREDENTIALS_REQUIRED" ||
+    policyContext.accessPolicyStatus === "ACCESS_NOT_GRANTED" ||
     policyContext.accessPolicyStatus === "BLOCKED_POLICY" ||
     policyContext.accessPolicyStatus === "FIXTURE_OR_USER_IMPORT_ONLY"
   ) {
@@ -212,6 +217,10 @@ export function evaluateAmazonUsEvidenceGate(
     invocationLedger.some(
       (op) =>
         op.status === "BLOCKED_PROVIDER" ||
+        op.status === "AUTHENTICATION_FAILED" ||
+        op.status === "ACCESS_NOT_GRANTED" ||
+        op.status === "CREDENTIALS_REQUIRED" ||
+        op.status === "PROVIDER_ERROR" ||
         op.status === "MCP_NOT_CONFIGURED" ||
         op.status === "NOT_EXECUTED" ||
         op.status === "CAPTCHA_BLOCKED" ||

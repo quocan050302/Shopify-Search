@@ -534,6 +534,16 @@ export async function connectAmazonPlaywrightMcp(
           responseHash: navRespHash,
         });
 
+        if ((navResult as any)?.isError === true) {
+          const errText = ((navResult as any)?.content || [])
+            .filter((c: any) => c && typeof c.text === "string")
+            .map((c: any) => c.text)
+            .join(" ");
+          throw new Error(
+            `BLOCKED_PROVIDER: Playwright MCP browser_navigate returned isError=true (${errText || "navigation failed"}).`
+          );
+        }
+
         const snapInvokedAt = new Date().toISOString();
         const snapReqHash = crypto
           .createHash("sha256")
@@ -555,6 +565,16 @@ export async function connectAmazonPlaywrightMcp(
           responseHash: snapRespHash,
         });
 
+        if ((snapResult as any)?.isError === true) {
+          const errText = ((snapResult as any)?.content || [])
+            .filter((c: any) => c && typeof c.text === "string")
+            .map((c: any) => c.text)
+            .join(" ");
+          throw new Error(
+            `BLOCKED_PROVIDER: Playwright MCP browser_snapshot returned isError=true (${errText || "snapshot failed"}).`
+          );
+        }
+
         const textItems = [
           ...((navResult as any)?.content || []),
           ...((snapResult as any)?.content || []),
@@ -567,9 +587,9 @@ export async function connectAmazonPlaywrightMcp(
         const urlMatch = textItems.match(/Page URL:\s*(\S+)/i);
         const canonicalMatch = textItems.match(/Canonical URL:\s*(\S+)/i);
         const statusMatch = textItems.match(/HTTP Status:\s*(\d{3})/i);
-        const parsedHttpStatus = statusMatch?.[1]
+        const parsedHttpStatus: number | null = statusMatch?.[1]
           ? Number.parseInt(statusMatch[1], 10)
-          : 200;
+          : null;
 
         let parsedStructuredData: RawAmazonSnapshotInput["structuredData"] = null;
         const structuredLineMatch = textItems.match(/STRUCTURED_DATA_JSON:(\{.+\})/i);
@@ -586,7 +606,10 @@ export async function connectAmazonPlaywrightMcp(
             sourceUrl: url,
             finalUrl: urlMatch?.[1] || url,
             canonicalUrl: canonicalMatch?.[1] || urlMatch?.[1] || url,
-            httpStatus: Number.isFinite(parsedHttpStatus) ? parsedHttpStatus : 200,
+            httpStatus:
+              parsedHttpStatus !== null && Number.isFinite(parsedHttpStatus)
+                ? parsedHttpStatus
+                : null,
             pageTitle: titleMatch?.[1]?.trim() || null,
             html: textItems.slice(0, 12000),
             structuredData: parsedStructuredData,

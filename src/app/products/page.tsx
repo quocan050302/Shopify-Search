@@ -265,7 +265,7 @@ export default function ProductsPage() {
   const frontendReleaseVersion =
     process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
     runtimeIdentity?.releaseVersion ||
-    "12.4.3.5.0.1";
+    "12.4.3.5.0.2";
 
   const previewClientAmazonAsin = useCallback((rawUrl: string) => {
     const trimmed = (rawUrl || "").trim();
@@ -1911,14 +1911,37 @@ export default function ProductsPage() {
                                 data-amazon-parent-asin={item.amazonEvidenceSummary.parentAsin || ""}
                                 data-amazon-variation-asin={item.amazonEvidenceSummary.variationAsin || ""}
                                 data-amazon-canonical-url={item.amazonEvidenceSummary.canonicalAmazonUrl || ""}
+                                data-amazon-product-title={item.amazonEvidenceSummary.productTitle || ""}
+                                data-amazon-brand={item.amazonEvidenceSummary.brand || ""}
+                                data-amazon-price={
+                                  item.amazonEvidenceSummary.price !== null &&
+                                  item.amazonEvidenceSummary.price !== undefined
+                                    ? String(item.amazonEvidenceSummary.price)
+                                    : ""
+                                }
+                                data-amazon-currency={item.amazonEvidenceSummary.currency || ""}
+                                data-amazon-availability={item.amazonEvidenceSummary.availability || ""}
                                 data-amazon-identity-match={item.amazonEvidenceSummary.identityMatch}
                                 data-amazon-status={item.amazonEvidenceSummary.status}
+                                data-amazon-verification-scope={item.amazonEvidenceSummary.verificationScope || ""}
+                                data-amazon-source-origin={item.amazonEvidenceSummary.providerSourceOrigin || ""}
+                                data-amazon-http-status-origin={item.amazonEvidenceSummary.httpStatusOrigin || ""}
                                 data-amazon-observed-at={item.amazonEvidenceSummary.observedAt || ""}
                                 data-amazon-provenance={item.amazonEvidenceSummary.observationClass}
                                 data-amazon-hash={item.amazonEvidenceSummary.rawEvidenceHash || ""}
                                 data-amazon-extracted-hash={item.amazonEvidenceSummary.extractedFieldsHash || ""}
                                 data-amazon-invocation-ref={item.amazonEvidenceSummary.providerInvocationRef || ""}
                                 data-amazon-request-id={item.amazonEvidenceSummary.providerRequestId || ""}
+                                data-amazon-verify-job-id={
+                                  activeAmazonVerifyJob?.candidateIds?.includes(item.candidateId)
+                                    ? activeAmazonVerifyJob.verifyJobId
+                                    : ""
+                                }
+                                data-amazon-verify-job-status={
+                                  activeAmazonVerifyJob?.candidateIds?.includes(item.candidateId)
+                                    ? activeAmazonVerifyJob.status
+                                    : ""
+                                }
                                 className="mt-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5"
                               >
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1929,10 +1952,17 @@ export default function ProductsPage() {
                                     <span
                                       data-testid="pf-amazon-us-provenance-badge"
                                       data-provenance={item.amazonEvidenceSummary.observationClass}
+                                      data-source-origin={item.amazonEvidenceSummary.providerSourceOrigin || "NONE"}
                                       className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"
                                     >
-                                      {item.amazonEvidenceSummary.observationClass ===
-                                      "AUTHORIZED_LIVE"
+                                      {item.amazonEvidenceSummary.providerSourceOrigin ===
+                                      "AUTHORIZED_CREATORS_API"
+                                        ? "AUTHORIZED CREATORS API"
+                                        : item.amazonEvidenceSummary.providerSourceOrigin ===
+                                          "LOCAL_MCP_TEST_DOUBLE"
+                                        ? "LOCAL MCP TEST DOUBLE"
+                                        : item.amazonEvidenceSummary.observationClass ===
+                                          "AUTHORIZED_LIVE"
                                         ? "LIVE VERIFIED"
                                         : item.amazonEvidenceSummary.observationClass ===
                                           "IMPORTED_BY_USER"
@@ -1973,6 +2003,26 @@ export default function ProductsPage() {
                                       Amazon US Link
                                     </a>
                                   )}
+                                </div>
+                                <div
+                                  data-testid="pf-amazon-us-details-row"
+                                  className="flex items-center justify-between gap-2 text-[10px] text-slate-400 font-mono flex-wrap"
+                                >
+                                  <span data-testid="pf-amazon-us-brand">
+                                    Brand: {item.amazonEvidenceSummary.brand || "Not provided"}
+                                  </span>
+                                  <span data-testid="pf-amazon-us-price">
+                                    Price:{" "}
+                                    {item.amazonEvidenceSummary.price !== null &&
+                                    item.amazonEvidenceSummary.price !== undefined
+                                      ? `${item.amazonEvidenceSummary.currency || "USD"} ${Number(
+                                          item.amazonEvidenceSummary.price
+                                        ).toFixed(2)}`
+                                      : "Not provided"}
+                                  </span>
+                                  <span data-testid="pf-amazon-us-availability">
+                                    {item.amazonEvidenceSummary.availability || "Not provided"}
+                                  </span>
                                 </div>
                                 {item.amazonEvidenceSummary.rejectionReasons?.length > 0 && (
                                   <p

@@ -934,6 +934,14 @@ export function parseAmazonProductEvidence(
       providerRequestId,
       responseEvidenceRef: rawEvidenceHash ? `amz_raw:${rawEvidenceHash.slice(0, 16)}` : null,
       evidenceOrigin: observationClass === "AUTHORIZED_LIVE" ? "AMAZON_US_LIVE_MCP" : `AMAZON_US_${observationClass}`,
+      httpStatus:
+        typeof snapshot.httpStatus === "number" && Number.isFinite(snapshot.httpStatus)
+          ? snapshot.httpStatus
+          : null,
+      httpStatusOrigin:
+        typeof snapshot.httpStatus === "number" && Number.isFinite(snapshot.httpStatus)
+          ? "OBSERVED"
+          : "UNOBSERVED_NULL",
       observationClass,
       verificationScope: null,
       identityMatch: "NO_MATCH",
@@ -962,8 +970,14 @@ export function parseAmazonProductEvidence(
   }
 
   // 2. Inspect HTTP status & HTML/title for CAPTCHA, bot wall, rate limit, login wall
+  // BUG T4 fix: Do NOT default httpStatus to 200 when unobserved; preserve null ("UNOBSERVED_NULL")
   const combinedHtml = `${snapshot.pageTitle || ""} ${snapshot.html || ""}`;
-  const httpStatus = snapshot.httpStatus ?? 200;
+  const httpStatus: number | null =
+    typeof snapshot.httpStatus === "number" && Number.isFinite(snapshot.httpStatus)
+      ? snapshot.httpStatus
+      : null;
+  const httpStatusOrigin: "OBSERVED" | "UNOBSERVED_NULL" =
+    httpStatus !== null ? "OBSERVED" : "UNOBSERVED_NULL";
 
   if (httpStatus === 429 || /429\s+too\s+many\s+requests|rate\s+limit\s+exceeded/i.test(combinedHtml)) {
     return buildRejected("RATE_LIMITED", ["HTTP_429_OR_RATE_LIMITED"]);
@@ -1158,6 +1172,8 @@ export function parseAmazonProductEvidence(
       observationClass === "AUTHORIZED_LIVE"
         ? "AMAZON_US_LIVE_MCP"
         : `AMAZON_US_${observationClass}`,
+    httpStatus,
+    httpStatusOrigin,
     observationClass,
     verificationScope: "LISTING_OBSERVED",
     identityMatch: "AMBIGUOUS",

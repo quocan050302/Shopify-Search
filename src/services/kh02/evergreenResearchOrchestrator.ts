@@ -1891,6 +1891,7 @@ export async function runEvergreenProductResearch(
   const amazonEnrichment = await runAmazonUsPilotEnrichment({
     workspaceId: input.workspaceId,
     researchRunId: runId,
+    niche: input.topic,
     optInRequested: amazonOptIn,
     candidates: amazonPilotTargets,
     candidateAmazonUrls: input.amazonPilotCandidateUrls,

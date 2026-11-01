@@ -19,6 +19,11 @@ export type MarketplaceSource = "AMAZON_US";
 
 export type MarketplaceEvidenceStatus =
   | "DISABLED"
+  | "CREDENTIALS_REQUIRED"
+  | "ACCESS_NOT_GRANTED"
+  | "AUTHENTICATION_FAILED"
+  | "PROVIDER_ERROR"
+  | "INSUFFICIENT_EVIDENCE"
   | "NOT_ATTEMPTED"
   | "NOT_AUTHORIZED"
   | "NOT_IMPLEMENTED"
@@ -53,11 +58,24 @@ export type MarketplaceVerificationScope =
   | "LISTING_OBSERVED"
   | "IDENTITY_CORROBORATED";
 
+export type AmazonProviderSourceOrigin =
+  | "AUTHORIZED_CREATORS_API"
+  | "PINNED_PLAYWRIGHT_MCP"
+  | "LOCAL_MCP_TEST_DOUBLE"
+  | "USER_IMPORTED"
+  | "TEST_FIXTURE"
+  | "NONE";
+
+export type AmazonHttpStatusOrigin = "OBSERVED" | "UNOBSERVED_NULL";
+
 export type AmazonAccessPolicyStatus =
   | "DISABLED_BY_DEFAULT"
   | "LIVE_NOT_ALLOWED"
+  | "CREDENTIALS_REQUIRED"
+  | "ACCESS_NOT_GRANTED"
   | "BLOCKED_POLICY"
   | "AUTHORIZED_CREATORS_API"
+  | "AUTHORIZED_CREATORS_API_CONFIGURED"
   | "AUTHORIZED_USER_LIMITED_URL"
   | "FIXTURE_OR_USER_IMPORT_ONLY";
 
@@ -72,9 +90,11 @@ export interface AmazonPolicyContext {
   featureEnabled: boolean;
   liveAllowed: boolean;
   creatorsApiConfigured: boolean;
+  creatorsApiEntitlementVerified?: boolean;
   userAuthorizedUrlAttested: boolean;
   accessPolicyStatus: AmazonAccessPolicyStatus;
   allowedAccessRoute:
+    | "OFFICIAL_CREATORS_API"
     | "CREATORS_API"
     | "CREATORS_API_NOT_IMPLEMENTED"
     | "USER_AUTHORIZED_URL"
@@ -116,6 +136,9 @@ export interface AmazonProductEvidence {
   providerRequestId: string | null;
   responseEvidenceRef: string | null;
   evidenceOrigin: string;
+  providerSourceOrigin?: AmazonProviderSourceOrigin;
+  httpStatus?: number | null;
+  httpStatusOrigin?: AmazonHttpStatusOrigin;
   observationClass: MarketplaceObservationClass;
   verificationScope: MarketplaceVerificationScope | null;
   identityMatch: IdentityMatch;
@@ -233,6 +256,18 @@ export interface AmazonMarketplaceTelemetry {
     closedCleanly: boolean;
     toolInvocationsCount: number;
   };
+  discoverySummary?: {
+    discoveryAttempted: boolean;
+    discoveryStatus: MarketplaceEvidenceStatus;
+    searchQueriesPlanned: number;
+    searchOperationsAttempted: number;
+    getItemsOperationsAttempted: number;
+    listingsReturnedCount: number;
+    exactMatchesSelectedCount: number;
+    probableMatchesSelectedCount: number;
+    brandOnlyMatchesCount: number;
+    rejectedListingsCount: number;
+  };
 }
 
 export interface ProductAmazonEvidenceSummary {
@@ -255,6 +290,9 @@ export interface ProductAmazonEvidenceSummary {
   identityMatchLabel: string;
   observationClass: MarketplaceObservationClass;
   verificationScope: MarketplaceVerificationScope | null;
+  providerSourceOrigin?: AmazonProviderSourceOrigin;
+  httpStatus?: number | null;
+  httpStatusOrigin?: AmazonHttpStatusOrigin;
   observedAt: string | null;
   providerInvocationRef: string | null;
   providerRequestId: string | null;
@@ -304,16 +342,33 @@ export function computeDeterministicEvidenceHash(payload: unknown): string | nul
  * User-supplied request parameters can NEVER override server-side policy flags.
  */
 export function resolveAmazonUsPolicyContext(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
+  options?: {
+    creatorsApiEntitlementVerified?: boolean;
+  }
 ): AmazonPolicyContext {
   const featureEnabled =
     String(env.KH02_AMAZON_US_ENABLED || "false").trim().toLowerCase() === "true";
   const liveAllowed =
     String(env.KH02_AMAZON_US_LIVE_ALLOWED || "false").trim().toLowerCase() === "true";
-  const creatorsApiConfigured = Boolean(
-    env.AMAZON_CREATORS_API_CREDENTIAL_ID?.trim() &&
-      env.AMAZON_CREATORS_API_CREDENTIAL_SECRET?.trim() &&
-      env.AMAZON_CREATORS_API_PARTNER_TAG?.trim()
+  const credId = (
+    env.KH02_AMAZON_CREATORS_API_CREDENTIAL_ID ||
+    env.AMAZON_CREATORS_API_CREDENTIAL_ID ||
+    ""
+  ).trim();
+  const credSecret = (
+    env.KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+    env.AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+    ""
+  ).trim();
+  const partnerTag = (
+    env.KH02_AMAZON_ASSOCIATES_PARTNER_TAG ||
+    env.AMAZON_CREATORS_API_PARTNER_TAG ||
+    ""
+  ).trim();
+  const creatorsApiConfigured = Boolean(credId && credSecret && partnerTag);
+  const creatorsApiEntitlementVerified = Boolean(
+    creatorsApiConfigured && options?.creatorsApiEntitlementVerified === true
   );
   const userAuthorizedUrlAttested =
     String(env.KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED || "false")
@@ -325,6 +380,7 @@ export function resolveAmazonUsPolicyContext(
       featureEnabled: false,
       liveAllowed: false,
       creatorsApiConfigured,
+      creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested,
       accessPolicyStatus: "DISABLED_BY_DEFAULT",
       allowedAccessRoute: "NONE",
@@ -338,6 +394,7 @@ export function resolveAmazonUsPolicyContext(
       featureEnabled: true,
       liveAllowed: false,
       creatorsApiConfigured,
+      creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested,
       accessPolicyStatus: "LIVE_NOT_ALLOWED",
       allowedAccessRoute: "ISOLATED_FIXTURE_ONLY",
@@ -346,11 +403,26 @@ export function resolveAmazonUsPolicyContext(
     };
   }
 
+  if (creatorsApiConfigured && creatorsApiEntitlementVerified) {
+    return {
+      featureEnabled: true,
+      liveAllowed: true,
+      creatorsApiConfigured: true,
+      creatorsApiEntitlementVerified: true,
+      userAuthorizedUrlAttested,
+      accessPolicyStatus: "AUTHORIZED_CREATORS_API",
+      allowedAccessRoute: "OFFICIAL_CREATORS_API",
+      policyReason:
+        "Official Amazon Associates Creators API entitlement verified for US marketplace (www.amazon.com).",
+    };
+  }
+
   if (userAuthorizedUrlAttested) {
     return {
       featureEnabled: true,
       liveAllowed: true,
       creatorsApiConfigured,
+      creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested: true,
       accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
       allowedAccessRoute: "USER_AUTHORIZED_URL",
@@ -364,11 +436,12 @@ export function resolveAmazonUsPolicyContext(
       featureEnabled: true,
       liveAllowed: false,
       creatorsApiConfigured: true,
+      creatorsApiEntitlementVerified: false,
       userAuthorizedUrlAttested: false,
       accessPolicyStatus: "BLOCKED_POLICY",
       allowedAccessRoute: "CREATORS_API_NOT_IMPLEMENTED",
       policyReason:
-        "NOT_IMPLEMENTED: Official Amazon Creators API credentials were detected, but the Creators API HTTP client is not implemented in this repository; Playwright scraping is never substituted for Creators API.",
+        "NOT_IMPLEMENTED: Official Amazon Creators API credentials were detected in env, but live entitlement has not been verified by an upstream OAuth handshake/request; Playwright scraping is never substituted for Creators API.",
     };
   }
 
@@ -376,6 +449,7 @@ export function resolveAmazonUsPolicyContext(
     featureEnabled: true,
     liveAllowed: false,
     creatorsApiConfigured: false,
+    creatorsApiEntitlementVerified: false,
     userAuthorizedUrlAttested: false,
     accessPolicyStatus: "BLOCKED_POLICY",
     allowedAccessRoute: "ISOLATED_FIXTURE_ONLY",
@@ -415,6 +489,16 @@ function formatAmazonStatusLabel(status: MarketplaceEvidenceStatus): string {
       return "Amazon US No Product Found";
     case "NOT_AUTHORIZED":
       return "Amazon US Not Authorized";
+    case "CREDENTIALS_REQUIRED":
+      return "Amazon US Credentials Required";
+    case "ACCESS_NOT_GRANTED":
+      return "Amazon US Access Not Granted";
+    case "AUTHENTICATION_FAILED":
+      return "Amazon US Authentication Failed";
+    case "PROVIDER_ERROR":
+      return "Amazon US Provider Error";
+    case "INSUFFICIENT_EVIDENCE":
+      return "Amazon US Insufficient Evidence";
     case "NOT_ATTEMPTED":
       return "Amazon US Not Attempted";
     case "DISABLED":
@@ -486,6 +570,21 @@ export function summarizeAmazonEvidenceForProduct(
       identityMatchLabel: formatAmazonIdentityMatchLabel(bestRow.identityMatch),
       observationClass: bestRow.observationClass,
       verificationScope: bestRow.verificationScope,
+      providerSourceOrigin:
+        bestRow.providerSourceOrigin ||
+        (bestRow.evidenceOrigin === "AMAZON_US_CREATORS_API"
+          ? "AUTHORIZED_CREATORS_API"
+          : bestRow.observationClass === "IMPORTED_BY_USER"
+          ? "USER_IMPORTED"
+          : bestRow.observationClass === "TEST_FIXTURE"
+          ? "TEST_FIXTURE"
+          : bestRow.observationClass === "AUTHORIZED_LIVE"
+          ? "PINNED_PLAYWRIGHT_MCP"
+          : "NONE"),
+      httpStatus: bestRow.httpStatus ?? null,
+      httpStatusOrigin:
+        bestRow.httpStatusOrigin ||
+        (typeof bestRow.httpStatus === "number" ? "OBSERVED" : "UNOBSERVED_NULL"),
       observedAt: bestRow.observedAt,
       providerInvocationRef: bestRow.providerInvocationRef,
       providerRequestId: bestRow.providerRequestId,
@@ -527,6 +626,9 @@ export function summarizeAmazonEvidenceForProduct(
     identityMatchLabel: formatAmazonIdentityMatchLabel("NO_MATCH"),
     observationClass: "UNVERIFIED",
     verificationScope: null,
+    providerSourceOrigin: "NONE",
+    httpStatus: null,
+    httpStatusOrigin: "UNOBSERVED_NULL",
     observedAt: null,
     providerInvocationRef: null,
     providerRequestId: null,
