@@ -1,0 +1,104 @@
+{
+  "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "maxConcurrentHeavyTasks": 2,
+  "allRequiredWavesPassed": true,
+  "completion": {
+    "complete": true,
+    "passed": true,
+    "missing": [],
+    "invalid": [],
+    "evaluatedGateCount": 7
+  },
+  "waves": [
+    {
+      "waveId": "WAVE_A_UNIT",
+      "name": "WAVE_A_UNIT",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 1658,
+      "measurements": {
+        "totalTests": 30,
+        "passedTests": 30
+      }
+    },
+    {
+      "waveId": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "name": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 5131,
+      "measurements": {
+        "totalTests": 70,
+        "passedTests": 70,
+        "nonInflationCandidatesCompared": 3
+      }
+    },
+    {
+      "waveId": "WAVE_C_TYPECHECK_AND_BUILD",
+      "name": "WAVE_C_TYPECHECK_AND_BUILD",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 34279
+    },
+    {
+      "waveId": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+      "name": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 5236
+    },
+    {
+      "waveId": "WAVE_E_LIVE_JINA_PROBE",
+      "name": "WAVE_E_LIVE_JINA_PROBE",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 5785,
+      "measurements": {
+        "probeExecutionStatus": "DID_RUN",
+        "classificationIntegrityStatus": "PASS",
+        "liveProviderStatus": "BLOCKED_PROVIDER"
+      }
+    },
+    {
+      "waveId": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+      "name": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 239
+    },
+    {
+      "waveId": "WAVE_H_FULL_REPOSITORY_REGRESSION",
+      "name": "WAVE_H_FULL_REPOSITORY_REGRESSION",
+      "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+      "passed": true,
+      "executionStatus": "PASS",
+      "exitCode": 0,
+      "durationMs": 183049,
+      "measurements": {
+        "totalDiscoveredTestFiles": 153,
+        "executedTestFilesCount": 153,
+        "excludedOrDeferredFilesCount": 0,
+        "targetedOnly": false,
+        "inventoryComplete": true,
+        "totalExecutedTestCases": 1755,
+        "passedTestCases": 1755,
+        "failedTestCases": 0,
+        "requiredActiveSuiteFailedTestCases": 0,
+        "baselineKnownPolicySupersededTestCases": 0,
+        "newRegressionTestCases": 0
+      }
+    }
+  ]
+}

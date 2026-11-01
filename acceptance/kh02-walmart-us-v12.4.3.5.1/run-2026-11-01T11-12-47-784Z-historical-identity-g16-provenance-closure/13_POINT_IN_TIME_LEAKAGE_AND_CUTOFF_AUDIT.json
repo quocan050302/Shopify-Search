@@ -1,0 +1,36 @@
+{
+  "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "zeroLeakCount": true,
+  "unfilteredFutureLeaksInEligibleSet": 0,
+  "fixtureLeaksInEligibleSet": 0,
+  "realBacktestPointInTimeIntegrityVerdict": "PASS",
+  "realDevWalmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "realHoldoutWalmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "syntheticAudit": {
+    "testClass": "SYNTHETIC_UNIT_ANTI_LEAKAGE_TEST",
+    "claimedAsFullHistoricalReplay": false,
+    "cutoffIso": "2026-08-01T00:00:00.000Z",
+    "eligibleRetainedCount": 1,
+    "futureLeaksRejectedCount": 1,
+    "fixtureRecordsRejectedCount": 1,
+    "missingTimestampRejectedCount": 1
+  }
+}

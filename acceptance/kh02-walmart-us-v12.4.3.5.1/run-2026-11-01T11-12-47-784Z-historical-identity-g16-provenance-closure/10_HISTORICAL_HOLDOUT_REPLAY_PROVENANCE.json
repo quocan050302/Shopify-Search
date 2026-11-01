@@ -1,0 +1,168 @@
+{
+  "split": "HOLDOUT",
+  "niche": "Pet Gadgets",
+  "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "sourceSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "datasetFingerprintSha256": "3e677412e40dc8850911b597712c12c8209f58cec1f212bb8ea57a3f33be26b5",
+  "backtestRunner": "scripts/kh02/runBacktestV12_4_3_4_2.ts",
+  "evaluatedAt": "2026-11-01T11:16:15.779Z",
+  "windowStart": "2026-10-24T00:00:00.000Z",
+  "windowEnd": "2026-10-30T12:00:00.000Z",
+  "asOfCutoffIso": "2026-10-30T12:00:00.000Z",
+  "backtestEngineExecuted": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "policyScenarioVerdict": "PASS",
+  "policyScenariosExecuted": 21,
+  "policyScenariosPassed": 21,
+  "holdoutPolicyScenariosCount": 12,
+  "historicalObservationCount": 377,
+  "reconstructedCandidateCount": 318,
+  "nicheFunnel": {
+    "sourceAdsCount": 377,
+    "excludedFixtureOrQuarantineAdsCount": 1,
+    "pointInTimeAdsCount": 376,
+    "reconstructedCandidatesCount": 318,
+    "matchedCount": 4,
+    "mismatchCount": 153,
+    "uncertainCount": 161,
+    "identityVerifiedOrProbableCount": 208,
+    "identityVerifiedCount": 0,
+    "provisionalDiscoveryCount": 4,
+    "funnelProbableCount": 1,
+    "distinctMatchedFamiliesCount": 3,
+    "shortlistedCount": 3,
+    "shortlistShortfallCount": 0
+  },
+  "shortlistCount": 3,
+  "nicheMatchedCount": 3,
+  "shortlistShortfallCount": 0,
+  "nicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+  "verifiedIdentityCount": 0,
+  "funnelProbableCount": 1,
+  "identityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 52,
+    "trustedPointInTimeJoinedCount": 16,
+    "rejectedPostCutoffJoinedCount": 36,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 36,
+    "adObservationOnlyCount": 360,
+    "excludedFixtureRecordCount": 9,
+    "leakagePrevented": true
+  },
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutBusinessVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "walmartScoreInflationDelta": 0,
+  "postCutoffWalmartLeaksInEligibleSet": 0,
+  "fixtureWalmartLeaksInEligibleSet": 0,
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+      "title": "Automatic Dog Feeder for Easy Daily Meals",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kingspetboutique.info",
+      "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+      "familyKey": "automatic_pet_feeder",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+      "title": "The #1 Vet-Recommended Cat Fountain",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+      "familyKey": "pet_water_fountain",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_1300676686",
+      "title": "Grooming Gloves",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "FUNNEL_UNVERIFIED",
+      "isCheckoutChampFunnel": true,
+      "identityReasonCodes": [
+        "CHECKOUTCHAMP_OR_FUNNEL_UNVERIFIED_WITHOUT_ROOT_JSON_LD"
+      ],
+      "storeDomain": "order.uprootclean.com",
+      "canonicalProductUrl": "https://order.uprootclean.com/main/grooming-gloves-gg002-l1",
+      "familyKey": "pet_grooming_glove_brush",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_1300676686",
+        "domain:order.uprootclean.com",
+        "url:https://order.uprootclean.com/main/grooming-gloves-gg002-l1"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_1300676686",
+        "domain:order.uprootclean.com",
+        "url:https://order.uprootclean.com/main/grooming-gloves-gg002-l1"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    }
+  ],
+  "notes": "Point-in-time replay executed for niche 'Pet Gadgets' with 377 historical records (376 non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=36). Niche-matched discovery shortlist items: 3/3 (nicheCoverageStatus=SUFFICIENT_NICHE_COVERAGE, verifiedIdentityCount=0/3, identityCoverageStatus=INSUFFICIENT_VERIFIED_IDENTITY, funnelProbableCount=1, shortfall=0). Demand evaluation detail: Automatic Dog Feeder for Easy Daily Meals: 0 obs (INSUFFICIENT_HISTORY, eligible=false); The #1 Vet-Recommended Cat Fountain: 0 obs (INSUFFICIENT_HISTORY, eligible=false); Grooming Gloves: 0 obs (INSUFFICIENT_HISTORY, eligible=false). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

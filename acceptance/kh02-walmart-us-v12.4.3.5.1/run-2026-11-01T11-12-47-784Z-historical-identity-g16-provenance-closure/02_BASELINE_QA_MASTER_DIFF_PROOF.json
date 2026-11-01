@@ -1,0 +1,40 @@
+{
+  "sourceSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "evaluatedAt": "2026-11-01T11:14:11.941Z",
+  "qaBaselineSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterBaselineSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "qaTreeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+  "masterTreeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+  "qaAndMasterShareIdenticalTree": true,
+  "legacy8FilesEvaluated": [
+    "tests/unit/kh02FreeProviderContracts.test.ts",
+    "tests/unit/kh02SourceAdapters.test.ts",
+    "tests/unit/kh02TestConnectionsFlow.test.ts",
+    "tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts",
+    "tests/unit/kh02V12_2_1_ProviderActivation.test.ts",
+    "tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts",
+    "tests/unit/metaCollectorNormalization.test.ts",
+    "tests/unit/metaCollectorV11_2.test.ts"
+  ],
+  "qaBaselineExecution": {
+    "commitSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+    "treeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+    "totalSuites": 8,
+    "failedSuites": 8,
+    "totalAssertions": 77,
+    "passedAssertions": 60,
+    "failedAssertions": 17,
+    "durationMs": 8546
+  },
+  "currentHeadExecution": {
+    "commitSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+    "totalSuites": 8,
+    "failedSuites": 0,
+    "totalAssertions": 77,
+    "passedAssertions": 77,
+    "failedAssertions": 0
+  },
+  "introducedByWalmartBranchCount": 0,
+  "all17PreexistedOnQaAndMaster": true,
+  "all17RepairedOnCurrentHead": true
+}

@@ -1,0 +1,85 @@
+{
+  "sourceSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "evaluatedAt": "2026-11-01T11:16:15.866Z",
+  "dataAsOf": "2026-11-01T04:22:41.831Z",
+  "providers": {
+    "walmartUs": {
+      "providerId": "WALMART_US",
+      "transport": "JINA_READER_REST_NO_KEY",
+      "defaultFeatureEnabled": false,
+      "defaultLiveAllowed": false,
+      "probeExecutionStatus": "DID_RUN",
+      "classificationIntegrityStatus": "PASS",
+      "liveProviderStatus": "BLOCKED_PROVIDER",
+      "liveVerdict": "BLOCKED_PROVIDER",
+      "verifiedLiveProductCount": 0,
+      "attemptedLiveCallsCount": 2,
+      "reason": "WALMART_BOT_OR_CAPTCHA_WALL"
+    },
+    "amazonUs": {
+      "providerId": "AMAZON_US",
+      "transport": "CREATORS_API_AND_PLAYWRIGHT_MCP",
+      "defaultFeatureEnabled": false,
+      "defaultLiveAllowed": false,
+      "configured": false,
+      "authenticated": false,
+      "querySucceeded": false,
+      "liveVerdict": "CREDENTIALS_REQUIRED",
+      "verifiedLiveProductCount": 0,
+      "attemptedLiveCallsCount": 0,
+      "missingEnvKeys": [
+        "KH02_AMAZON_CREATORS_CREDENTIAL_ID",
+        "KH02_AMAZON_CREATORS_CREDENTIAL_SECRET",
+        "KH02_AMAZON_PARTNER_TAG"
+      ],
+      "reason": "CREDENTIALS_REQUIRED: Official Amazon Associates Creators API credentials (KH02_AMAZON_CREATORS_API_CREDENTIAL_ID, KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET, KH02_AMAZON_ASSOCIATES_PARTNER_TAG) are not configured in server environment."
+    },
+    "tiktokUsG07": {
+      "providerId": "TIKTOK_ADS",
+      "gateId": "G07",
+      "configured": false,
+      "transportStatus": "NOT_CONFIGURED",
+      "authStatus": "CREDENTIALS_REQUIRED",
+      "diagnosticStatus": "MANUAL_RESEARCH_ONLY",
+      "storedRecordsCount": 0,
+      "verdict": "BLOCKED",
+      "missingRequirements": [
+        "TIKTOK_CC_COOKIE_OR_APIFY_TOKEN",
+        "TIKTOK_CREATIVE_CENTER_API_OR_MANUAL_IMPORT"
+      ],
+      "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available."
+    },
+    "googleAds": {
+      "providerId": "GOOGLE_ADS",
+      "configured": true,
+      "transportStatus": "NOT_TESTED",
+      "diagnosticStatus": "CONFIGURED",
+      "reason": "Google Ads Transparency MCP endpoint configured (Connection not tested)."
+    },
+    "metaAds": {
+      "providerId": "META_ADS",
+      "configured": true,
+      "transportStatus": "CONNECTED",
+      "storedRecordsCount": 435,
+      "diagnosticStatus": "SOURCE_ACCESS_VERIFIED",
+      "reason": "Meta competitor ads indexed in database (435 records); live collector active (v1.7.0)."
+    },
+    "demandHistory": {
+      "providerId": "DEMAND_HISTORY",
+      "mode": "GOOGLE_FREE_ONLY",
+      "configured": true,
+      "diagnosticStatus": "ENGINE_READY",
+      "storedProductDemandObservationsCount": 0,
+      "missingRequirements": [],
+      "reason": "Demand stability policy engine active with Google Free Demand pipeline (BigQuery Sandbox + Official CSV exports). SerpApi is not required."
+    }
+  },
+  "gates": {
+    "g07": {
+      "gateId": "G07",
+      "verdict": "BLOCKED",
+      "evaluatedFromSource": "diagnoseKH02Source('TIKTOK_ADS')",
+      "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available."
+    }
+  }
+}

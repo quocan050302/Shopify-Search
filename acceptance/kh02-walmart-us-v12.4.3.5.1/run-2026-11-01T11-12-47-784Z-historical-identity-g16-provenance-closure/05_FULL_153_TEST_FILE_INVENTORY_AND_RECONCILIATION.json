@@ -1,0 +1,121 @@
+{
+  "sourceSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "evaluatedAt": "2026-11-01T11:16:09.891Z",
+  "zeroLegacyFailExemptionEnforced": true,
+  "totalDiscoveredTestFiles": 153,
+  "executedTestFilesCount": 153,
+  "excludedOrDeferredFilesCount": 0,
+  "targetedOnly": false,
+  "inventoryComplete": true,
+  "totalExecutedTestCases": 1755,
+  "passedTestCases": 1755,
+  "failedTestCases": 0,
+  "requiredActiveSuiteFailedTestCases": 0,
+  "baselineKnownPolicySupersededTestCases": 0,
+  "newRegressionTestCases": 0,
+  "shards": [
+    {
+      "shardId": "SHARD_UNIT_99_FILES",
+      "filesCount": 99,
+      "totalTests": 1464,
+      "passedTests": 1464,
+      "failedTests": 0,
+      "durationMs": 51221
+    },
+    {
+      "shardId": "SHARD_REPAIRED_LEGACY_UNIT_8_FILES",
+      "filesCount": 8,
+      "totalTests": 77,
+      "passedTests": 77,
+      "failedTests": 0,
+      "classification": "REPAIRED_ON_HEAD_ZERO_EXEMPTIONS",
+      "durationMs": 7106
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_1_17_FILES",
+      "filesCount": 17,
+      "totalTests": 104,
+      "passedTests": 104,
+      "failedTests": 0,
+      "durationMs": 24583
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_2_17_FILES",
+      "filesCount": 17,
+      "totalTests": 76,
+      "passedTests": 76,
+      "failedTests": 0,
+      "durationMs": 13448
+    },
+    {
+      "shardId": "SHARD_ALL_12_E2E_SPECS",
+      "filesCount": 12,
+      "totalTests": 34,
+      "passedTests": 34,
+      "failedTests": 0,
+      "durationMs": 86691
+    }
+  ],
+  "standaloneBrowserOrLiveDaemonFiles": [
+    {
+      "file": "tests/integration/kh01BrowserE2E.test.ts",
+      "reason": "Launches standalone KH-01 Next.js server + Chromium browser; covered by dedicated KH-01 browser runner.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/integration/kh01HttpServerE2E.test.ts",
+      "reason": "Launches standalone KH-01 HTTP server; covered by dedicated KH-01 HTTP runner.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/integration/kh01RealE2E.test.ts",
+      "reason": "Requires live MetaAdsCollector Python daemon and standalone server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/integration/kh02BrowserAcceptance.test.ts",
+      "reason": "Launches standalone KH-02 Next.js server + Chromium; covered in Wave D Headless Chromium UI & Reload Parity.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/integration/kh02HttpServerE2E.test.ts",
+      "reason": "Launches standalone KH-02 Next.js server; covered in Wave D HTTP + Chromium parity.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/integration/metaResearchAuthorizationHttp.test.ts",
+      "reason": "Requires pre-seeded live Meta run workspace fixtures in standalone HTTP mode.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/exactRunExplorerAcceptance.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/kh01RealBrowserReadback.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/metaDiscoveryFinalAcceptance.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/metaLiveExplorerPagination.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/metaResearchAuthorization.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    },
+    {
+      "file": "tests/e2e/metaRunExplorer.test.ts",
+      "reason": "Standalone Playwright E2E spec requiring external dev server.",
+      "executedInStage3B": true
+    }
+  ]
+}

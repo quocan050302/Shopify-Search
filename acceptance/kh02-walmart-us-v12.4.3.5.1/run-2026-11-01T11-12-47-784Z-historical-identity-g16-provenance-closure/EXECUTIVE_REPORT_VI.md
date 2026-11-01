@@ -1,0 +1,30 @@
+# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Historical Product Identity Truth + G16 Persisted Provenance Closure)
+
+- **Nhánh (Branch)**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Commit Mã Nguồn Đã Test (`TESTED_SOURCE_SHA`)**: `150d011b697311304cf0580a5a1f04f0b3de71c4` (Tree SHA: `e28c5396405f27c12a0e07396d34149ffc742d4b`)
+- **Quan Hệ Với `origin/QA` & `origin/master`**: `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`) và `origin/master` (`5dd5128b4ec9ce70e957a2f250b9012a25e9118c`) chia sẻ cùng git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`.
+- **Sửa Dứt Điểm P0-01 .. P1-06 (Historical Product Identity Truth & Authentic G16 Lineage)**:
+  - **P0-01 & P0-03 (`merchantIdentityPolicy.ts` + `runBacktestV12_4_3_4_2.ts`)**: Xóa bỏ hoàn toàn nhánh gán `identityStatus = hasProductPath ? "VERIFIED" : "PROBABLE"` chỉ dựa trên URL path (`/products/`, `/main/`). Áp dụng bộ phân loại `classifyHistoricalProductIdentity(input, asOf)` và `isFunnelOrCheckoutChamp` dùng chung: ứng viên chỉ có quan sát quảng cáo tại thời điểm `<= asOf` giữ nguyên `identityStatus = "PROBABLE"` (`AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF`), và `https://cc.uprootclean.com/main/phr` bị hạ xuống `PROBABLE` + `FUNNEL_UNVERIFIED` đồng nhất giữa G16 và HOLDOUT replay.
+  - **P0-02 & P1-05 (`acceptanceTruth.ts` + `g16CandidateEvaluator.ts`)**: Xóa bỏ hoàn toàn khối `hydratedForG16` tự sinh `obs_${runId}_${candId}`, `req_${runId}`, và `jsonld:<storeDomain>`. Thực thi `loadPersistedG16ProofForCandidate` và `buildG16EvidenceIndexFromPersistedRows` truy vấn trực tiếp từ SQLite (`DiscoveryRunAd`, `AdObservation`, `ResearchEvidence`, `LandingPageSnapshot`, `CompetitorOfferSnapshot`) trong đúng `workspaceId` và `researchRunId`. Đối với run `kh02_run_1793506961831_zvxlw`, ghi nhận trung thực `previousSnapshotClaimedVerifiedCount = 2`, `verifiedFromPersistedEvidenceCount = 0`, `reconstructionStatus = "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE"`, `historicalG16Verdict = "INSUFFICIENT_EVIDENCE"`.
+  - **P1-04 (`runBacktestV12_4_3_4_2.ts`)**: Tách bạch `discoveryRefs` (`discovery_ad:`, `ad_obs:`) khỏi `independentMerchantProofRefs` (`[]` khi chưa có bằng chứng merchant độc lập), và thay câu mô tả sai sự thật `"Verified '<niche>' product..."` bằng `"Niche-matched discovery candidate for '<niche>'; merchant identity requires independent verification"`.
+- **Thực Thi Toàn Bộ 153/153 File Test (Bao Gồm 12/12 Spec E2E)**:
+  - Unit Suite (`107/107` file = `99` + `8`): `1541/1541` PASS (100%).
+  - Integration Suite (`34/34` file): `180/180` PASS (100%).
+  - E2E Matrix (`12/12` spec = `6` Vitest Integration E2E + `6` Playwright Browser E2E): `34/34` test case PASS (100%, `0` skipped, `0` failed).
+  - Tổng cộng: `153/153` file test thực thi (`1755/1755` test case PASS, `0` fail, `0` miễn trừ).
+- **Replay Lịch Sử DEV / HOLDOUT (`Pet Gadgets`)**:
+  - **DEV (`<= 2026-10-24`)**: `60` quan sát lịch sử -> `5` ứng viên tái tạo -> `shortlistCount = 0`, `verifiedIdentityCount = 0`, `nicheCoverageStatus = INSUFFICIENT_NICHE_COVERAGE`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+  - **HOLDOUT (`2026-10-24 .. 2026-10-30`)**: `377` quan sát lịch sử -> `318` ứng viên tái tạo -> `shortlistCount = 3`, `nicheMatchedCount = 3` (`nicheCoverageStatus = SUFFICIENT_NICHE_COVERAGE`), `verifiedIdentityCount = 0`, `funnelProbableCount = 1`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+- **Ma Trận Verdict Tách Bạch & 80 Đột Biến Âm Tính (Negative Mutations)**:
+  - `ENGINEERING_TESTS`: `PASS`
+  - `BROAD_REGRESSION`: `PASS`
+  - `REQUIRED_E2E_COVERAGE`: `PASS`
+  - `HISTORICAL_REPLAY_INTEGRITY`: `PASS`
+  - `NICHE_RELEVANCE`: `PASS`
+  - `HISTORICAL_PRODUCT_IDENTITY_TRUTH`: `PASS`
+  - `HISTORICAL_VERIFIED_IDENTITY_COVERAGE`: `INSUFFICIENT_VERIFIED_IDENTITY`
+  - `LIVE_PROVIDERS`: `WALMART_US=BLOCKED_PROVIDER`, `AMAZON_US=CREDENTIALS_REQUIRED`, `TIKTOK_US_G07=BLOCKED`
+  - `HISTORICAL_DEMAND_G15`: `INSUFFICIENT_EVIDENCE`
+  - `MERCHANT_TOP3_G16`: `INSUFFICIENT_EVIDENCE` (`previousSnapshotClaimedVerifiedCount = 2`, `verifiedFromPersistedEvidenceCount = 0`, `reconstructionStatus = HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE`)
+  - `FINAL_RELEASE`: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`
+  - Bộ đột biến âm tính trên file vật lý: `80/80` bị bắt chính xác (`0` false pass).

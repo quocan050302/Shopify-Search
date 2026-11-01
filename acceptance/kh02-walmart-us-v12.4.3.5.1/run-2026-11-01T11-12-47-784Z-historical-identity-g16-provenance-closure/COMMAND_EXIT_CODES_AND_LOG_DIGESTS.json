@@ -1,0 +1,228 @@
+{
+  "codeSha": "150d011b697311304cf0580a5a1f04f0b3de71c4",
+  "generatedAt": "2026-11-01T11:16:16.205Z",
+  "totalCommandsRecorded": 20,
+  "allSucceeded": true,
+  "commands": [
+    {
+      "name": "WAVE_A_UNIT_TESTS",
+      "command": "npx vitest run src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts --maxWorkers=2 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/waveA.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 1658,
+      "stdoutDigestSha256": "fb5891d213ef7ae16c59c0019221b445282b2337404cd20b606d79e745727abe",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/waveA.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_C_TSC_NO_EMIT",
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4584,
+      "stdoutDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "command": "npx vitest run tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts --maxWorkers=2 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/waveB.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 5131,
+      "stdoutDigestSha256": "ff0970c81f23855b94a03b521825025d9ac7f755985611722b2e1673b0459cce",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/waveB.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_H_ACTIVE_UNIT_SUITE_99_FILES",
+      "command": "npx vitest run src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts tests/unit/adDetailContract.test.ts tests/unit/adService.test.ts tests/unit/adServiceCrossWorkspace.test.ts tests/unit/adminAuthTrustBoundary.test.ts tests/unit/allowedResearchLimits.test.ts tests/unit/authorizedSearchScope.test.ts tests/unit/buildExplorerUrlForRun.test.ts tests/unit/credentials.test.ts tests/unit/db.test.ts tests/unit/dbIsolation.test.ts tests/unit/decisionSafety.test.ts tests/unit/discoveryBudget.test.ts tests/unit/discoveryNormalization.test.ts tests/unit/discoveryProviders.test.ts tests/unit/discoveryTypes.test.ts tests/unit/evergreen.test.ts tests/unit/financial.test.ts tests/unit/geminiV72.test.ts tests/unit/inspectLiveMetaSource.test.ts tests/unit/kh01AcceptanceTruthfulness.test.ts tests/unit/kh01AcceptanceTruthfulnessV1153.test.ts tests/unit/kh01ActiveDatabaseProtection.test.ts tests/unit/kh01ArtifactIntegrity.test.ts tests/unit/kh01AssertionIdentity.test.ts tests/unit/kh01CliArgs.test.ts tests/unit/kh01EconomicsOpportunity.test.ts tests/unit/kh01FinalVerdict.test.ts tests/unit/kh01FullLiveArtifacts.test.ts tests/unit/kh01JobExecution.test.ts tests/unit/kh01LandingPage.test.ts tests/unit/kh01LiveSourceIntegrity.test.ts tests/unit/kh01ProductOffer.test.ts tests/unit/kh01RequiredArtifactInventory.test.ts tests/unit/kh01ScreenshotEvidence.test.ts tests/unit/kh01Security.test.ts tests/unit/kh01SuiteExecutionIdentity.test.ts tests/unit/kh02/ai/geminiEvidenceValidation.test.ts tests/unit/kh02/ai/geminiModelDiscovery.test.ts tests/unit/kh02/ai/geminiModelRouter.test.ts tests/unit/kh02/ai/geminiProductClassification.test.ts tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts tests/unit/kh02/v12_4_3_5_0_1_AmazonTrueE2EClosure.test.ts tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts tests/unit/kh02CandidateDiscovery.test.ts tests/unit/kh02EvergreenScoring.test.ts tests/unit/kh02GoogleProvenance.test.ts tests/unit/kh02MetaGlobalBudget.test.ts tests/unit/kh02ProductIdentity.test.ts tests/unit/kh02ProductMetadataSecurity.test.ts tests/unit/kh02ReleaseGatesAndReconciliation.test.ts tests/unit/kh02RuntimeTelemetryAndRelevance.test.ts tests/unit/kh02TemporalDemand.test.ts tests/unit/kh02V12_1_1_Runtime.test.ts tests/unit/kh02V12_1_3_Ownership.test.ts tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts tests/unit/kh02V12_1_4_1_Reconciliation.test.ts tests/unit/kh02V12_1_4_2_Reliability.test.ts tests/unit/kh02V12_1_4_AtomicCas.test.ts tests/unit/kh02V12_1_P0.test.ts tests/unit/kh02V12_2_3_ProviderDiscovery.test.ts tests/unit/kh02V12_2_ProductIdentity.test.ts tests/unit/kh02V12_3_1_ProductShortlistClosure.test.ts tests/unit/kh02V12_3_ProductIntelligence.test.ts tests/unit/kh02WorkspaceAuthorization.test.ts tests/unit/metaCollectorProvider.test.ts tests/unit/metaJobStatus.test.ts tests/unit/metaLiveExactReconciliation.test.ts tests/unit/metaReadiness.test.ts tests/unit/metaResearchForm.test.ts tests/unit/providerBudgets.test.ts tests/unit/researchActionPolicy.test.ts tests/unit/researchPersistence.test.ts tests/unit/runReconciliationInvariants.test.ts tests/unit/scoring.test.ts tests/unit/security.test.ts tests/unit/shopifyDecisionIntegrity.test.ts tests/unit/swaiRuntimeAuthorization.test.ts tests/unit/tiktokCreativeCenter.test.ts tests/unit/v71.test.ts tests/unit/v92DiscoveryRepair.test.ts tests/unit/verifiedTransport.test.ts --maxWorkers=2 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullActiveUnit.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 51221,
+      "stdoutDigestSha256": "3c16b6c8e361fc3a9424683cdaafb726d7e41b2f718ba276c2a0129fd4178983",
+      "stderrDigestSha256": "599be57f4eaba06a55efd251d4c98e256453cb6cb7196b4dfacd093d049271ee",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullActiveUnit.json",
+      "stderrTail": "Processing request of type ListToolsRequest\nProcessing request of type ListToolsRequest\nProcessing request of type ListToolsRequest"
+    },
+    {
+      "name": "WAVE_H_ACTIVE_INTEGRATION_SHARD_1",
+      "command": "npx vitest run tests/integration/adminAccessSecurity.test.ts tests/integration/api.test.ts tests/integration/discoveryApi.test.ts tests/integration/discoveryIngestion.test.ts tests/integration/exactRunCompleteness.test.ts tests/integration/globalSearchSecurity.test.ts tests/integration/kh01ActualWorkerExecution.test.ts tests/integration/kh01ActualWorkerProcess.test.ts tests/integration/kh01CrossBoundaryReconciliation.test.ts tests/integration/kh01CrossProcessDatabaseIdentity.test.ts tests/integration/kh01DatabaseIsolation.test.ts tests/integration/kh01FinalAcceptanceFailClosed.test.ts tests/integration/kh01LiveSourceAcceptance.test.ts tests/integration/kh01PersistenceReadback.test.ts tests/integration/kh01ProductIntelligenceWorkspace.test.ts tests/integration/kh01RealHttpReadback.test.ts tests/integration/kh01UnifiedJourney.test.ts --maxWorkers=1 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullIntShard1.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 24583,
+      "stdoutDigestSha256": "65236fa4869534cc5af803889661dd9744dafd6f2de977fb3796968d42d39d31",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullIntShard1.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_H_REPAIRED_LEGACY_UNIT_8_FILES",
+      "command": "npx vitest run tests/unit/kh02FreeProviderContracts.test.ts tests/unit/kh02SourceAdapters.test.ts tests/unit/kh02TestConnectionsFlow.test.ts tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts tests/unit/kh02V12_2_1_ProviderActivation.test.ts tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts tests/unit/metaCollectorNormalization.test.ts tests/unit/metaCollectorV11_2.test.ts --maxWorkers=1 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/legacyUnit.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 7106,
+      "stdoutDigestSha256": "55d0a737c56b8716ae3f37a46c3779258fd6ae11e5a2f37d2bff4a53e64a7e89",
+      "stderrDigestSha256": "599be57f4eaba06a55efd251d4c98e256453cb6cb7196b4dfacd093d049271ee",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/legacyUnit.json",
+      "stderrTail": "Processing request of type ListToolsRequest\nProcessing request of type ListToolsRequest\nProcessing request of type ListToolsRequest"
+    },
+    {
+      "name": "WAVE_H_ACTIVE_INTEGRATION_SHARD_2",
+      "command": "npx vitest run tests/integration/kh01WorkerConcurrency.test.ts tests/integration/kh01WorkerProviderProvenance.test.ts tests/integration/kh02/geminiWorkerPipeline.test.ts tests/integration/kh02ResearchApi.test.ts tests/integration/kh02V12_1_3_Acceptance.test.ts tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts tests/integration/kh02V12_1_4_2_LongResearch.test.ts tests/integration/kh02V12_1_Persistence.test.ts tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts tests/integration/legacyAdsWorkspaceIsolation.test.ts tests/integration/metaDiscoveryIngestion.test.ts tests/integration/metaDiscoverySecurity.test.ts tests/integration/metaLiveJourneyCleanup.test.ts tests/integration/metaLiveReconciliation.test.ts tests/integration/metaReadinessSubmission.test.ts tests/integration/metaResearchAuthorization.test.ts tests/integration/metaRunAdsIsolation.test.ts --maxWorkers=1 --reporter=json --outputFile=/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullIntShard2.json",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 13448,
+      "stdoutDigestSha256": "b0d872d68d3af59dbdceb5307f8c44ea47af2f22d3ed485367ae5c8c46c48c3d",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-wmt-vitest-json-udE5Fp/fullIntShard2.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "WAVE_C_NEXT_BUILD",
+      "command": "npm run build",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 29695,
+      "stdoutDigestSha256": "13d9b883872ed11c9b364266fb6d8434211aa7e493fca6db7c180d21d77b316b",
+      "stderrDigestSha256": "d31ac54737fc0e0c9e26e424e5061fea3d976862e001dd7c79e58d08739a020c",
+      "stdoutTail": "\n├ ƒ /api/v1/search\n├ ƒ /api/v1/settings/budgets\n├ ƒ /api/v1/settings/credentials\n├ ƒ /api/v1/settings/credentials/test\n├ ƒ /api/v1/settings/integrations\n├ ƒ /api/v1/test/db-observation\n├ ƒ /api/v1/watchlists\n├ ○ /discovery\n├ ○ /explorer\n├ ○ /meta-discovery\n├ ○ /my-store\n├ ○ /products\n├   /products/[id]/intelligence\n│ └ ◐ /products/[id]/intelligence\n├ ○ /reports\n├ ○ /settings\n├ ○ /tracker\n└ ○ /watchlist\n\n\n○  (Static)             prerendered as static content\n◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content\nƒ  (Dynamic)            server-rendered on demand",
+      "stderrTail": " in development, or\n- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or\n- remove them.\n\nImport trace:\n  App Route:\n    ./src/services/kh02/demand/bigqueryClientAdapter.ts\n    ./src/services/kh02/demand/demandProviderRegistry.ts\n    ./src/services/kh02/providers/sourceRegistry.ts\n    ./src/app/api/v1/kh02/providers/test-connection/route.ts"
+    },
+    {
+      "name": "E2E_SPEC_01_kh01BrowserE2E.test.ts",
+      "command": "npx vitest run tests/integration/kh01BrowserE2E.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_1.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 9782,
+      "stdoutDigestSha256": "432cf177d235e10a21f5e5fe6af553cc2f4708c7f391e657e44fc64b00a416f2",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_1.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_02_kh01HttpServerE2E.test.ts",
+      "command": "npx vitest run tests/integration/kh01HttpServerE2E.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_2.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 1647,
+      "stdoutDigestSha256": "80e1253ab87800fa7bc3eb0496aa1562d0565d9b2b03d34fbb1db36ee363d5d9",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_2.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_03_kh01RealE2E.test.ts",
+      "command": "npx vitest run tests/integration/kh01RealE2E.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_3.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 1142,
+      "stdoutDigestSha256": "a12835995e3331c683abce0ce6576eeb3fadfaba9e5f095a9d0103266e6a8441",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_3.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_04_kh02BrowserAcceptance.test.ts",
+      "command": "npx vitest run tests/integration/kh02BrowserAcceptance.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_4.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 39008,
+      "stdoutDigestSha256": "c5d7b0664526e96c1180bec022d1819ff00db09967963c623c63892f111bdba1",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_4.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_05_kh02HttpServerE2E.test.ts",
+      "command": "npx vitest run tests/integration/kh02HttpServerE2E.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_5.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 7309,
+      "stdoutDigestSha256": "07ca5da68051747382182d799671de80e0683e4b9cd0c64918c6ce65a5533adb",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_5.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_06_metaResearchAuthorizationHttp.test.ts",
+      "command": "npx vitest run tests/integration/metaResearchAuthorizationHttp.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_6.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 2633,
+      "stdoutDigestSha256": "1761cfab083402de003294d9345889cc0c08ce5b032029321ec21bfad554a537",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/vitest_e2e_6.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_07_exactRunExplorerAcceptance.test.ts",
+      "command": "npx vitest run tests/e2e/exactRunExplorerAcceptance.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_7.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4381,
+      "stdoutDigestSha256": "400f2fe6ce3690c29609e272a6d2b7313dcb4633a41574ff352de117269f91c7",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_7.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_08_kh01RealBrowserReadback.test.ts",
+      "command": "npx vitest run tests/e2e/kh01RealBrowserReadback.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_8.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4304,
+      "stdoutDigestSha256": "a314c1b72be0e7e938078ccc2378348a8354e15658f8e2eff9481fd65d7a9ab2",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_8.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_09_metaDiscoveryFinalAcceptance.test.ts",
+      "command": "npx vitest run tests/e2e/metaDiscoveryFinalAcceptance.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_9.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 3416,
+      "stdoutDigestSha256": "1415369f4eaba40482f8a68af21c3c9a9cc59567bb2afd04464ff1c4fe5d2702",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_9.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_10_metaLiveExplorerPagination.test.ts",
+      "command": "npx vitest run tests/e2e/metaLiveExplorerPagination.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_10.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4021,
+      "stdoutDigestSha256": "36fe2e5ea4958cbb1a7fd6ecbc86ff2edd9f6dc7d02ca29ea8941383336e627d",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_10.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_11_metaResearchAuthorization.test.ts",
+      "command": "npx vitest run tests/e2e/metaResearchAuthorization.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_11.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4757,
+      "stdoutDigestSha256": "7284c7ba9a88b7bb8f397cf00b1340ad6d5c65401a0cf8fc6123686a956cf17d",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_11.json",
+      "stderrTail": ""
+    },
+    {
+      "name": "E2E_SPEC_12_metaRunExplorer.test.ts",
+      "command": "npx vitest run tests/e2e/metaRunExplorer.test.ts --maxWorkers=1 --reporter=json --outputFile=\"/var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_12.json\"",
+      "exitCode": 0,
+      "ok": true,
+      "durationMs": 4275,
+      "stdoutDigestSha256": "f89545b920e88e6b0335f712ee7f9ea347da124b13a6835553577cbe3db728f1",
+      "stderrDigestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutTail": "JSON report written to /var/folders/n_/hz396std3x792_n2yrmrcw640000gn/T/kh02-e2e-receipts-SUQ1BQ/pw_e2e_12.json",
+      "stderrTail": ""
+    }
+  ]
+}
