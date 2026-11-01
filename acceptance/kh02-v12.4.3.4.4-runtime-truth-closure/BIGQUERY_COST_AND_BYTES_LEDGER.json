@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T04:38:05.552Z",
+  "version": "12.4.3.4.4",
+  "zeroSpendPolicyEnforced": true,
+  "maxQueryByteBudget": 104857600,
+  "cumulativeSessionBudget": 1073741824,
+  "cumulativeBytesProcessed": 0,
+  "totalBytesBilled": null,
+  "billingVerifiedZeroCost": false,
+  "ledgerEntries": []
+}

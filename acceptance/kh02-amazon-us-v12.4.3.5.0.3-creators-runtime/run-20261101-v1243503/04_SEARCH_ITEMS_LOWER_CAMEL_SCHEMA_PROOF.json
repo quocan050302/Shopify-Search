@@ -1,0 +1,37 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.203Z",
+  "lowerCamelEnvelopeParsed": true,
+  "requestedResources": [
+    "images.primary.medium",
+    "itemInfo.title",
+    "itemInfo.byLineInfo",
+    "itemInfo.classifications",
+    "itemInfo.externalIds",
+    "itemInfo.features",
+    "itemInfo.manufactureInfo",
+    "itemInfo.productInfo",
+    "offersV2.listings.availability",
+    "offersV2.listings.condition",
+    "offersV2.listings.isBuyBoxWinner",
+    "offersV2.listings.merchantInfo",
+    "offersV2.listings.price",
+    "parentASIN"
+  ],
+  "uppercaseLegacyPaApiRejectedByDefault": {
+    "valid": false,
+    "status": "PROVIDER_ERROR",
+    "errorCode": "SCHEMA_MISMATCH"
+  },
+  "emptyObject200Rejected": {
+    "valid": false,
+    "status": "PROVIDER_ERROR",
+    "errorCode": "SCHEMA_MISMATCH"
+  },
+  "explicitEmptyItems200": {
+    "valid": true,
+    "status": "QUERY_SUCCEEDED_EMPTY"
+  },
+  "missingOffersPreservesNullPriceCurrency": true
+}

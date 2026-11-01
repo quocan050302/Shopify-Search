@@ -1,0 +1,49 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "clientConfigured": true,
+  "billingVerification": {
+    "verified": false,
+    "billingEnabled": null,
+    "billingAccountName": null,
+    "sandboxEligible": false,
+    "reason": "Google Cloud credentials required to independently verify billing state for 'shopify-search-sandbox'."
+  },
+  "searchExecutionAttempt": {
+    "jobId": "none",
+    "projectId": "shopify-search-sandbox",
+    "datasetId": "google_trends",
+    "tableId": "top_terms",
+    "sqlQuery": "SELECT\n  term,\n  week,\n  score,\n  rank,\n  refresh_date\nFROM `bigquery-public-data.google_trends.top_terms`\nWHERE LOWER(term) = LOWER(@term)\nORDER BY week ASC\nLIMIT 100",
+    "sqlHash": "abf90973fa7f3c2520458b4212d3bf7e415cd8aeab68c2930ea3a033b515beac",
+    "parameters": {
+      "term": "pet gadgets",
+      "region": "US"
+    },
+    "dryRunCompleted": false,
+    "estimatedBytesProcessed": 0,
+    "totalBytesProcessed": 0,
+    "totalBytesBilled": 0,
+    "cacheHit": false,
+    "rows": [],
+    "rowCount": 0,
+    "executionTimeMs": 0,
+    "billingVerifiedZeroCost": false,
+    "status": "BLOCKED",
+    "errorMessage": "Google Cloud credentials required to independently verify billing state for 'shopify-search-sandbox'."
+  },
+  "auditLedger": [
+    {
+      "timestamp": "2026-10-30T10:35:19.225Z",
+      "jobId": "mock_bqjob_1793356519225",
+      "projectId": "valid-sandbox-proj",
+      "term": "nano ultrasonic pet water fountain",
+      "estimatedBytes": 1048576,
+      "actualBytesProcessed": 1048576,
+      "rowCount": 0,
+      "status": "INSUFFICIENT_COVERAGE"
+    }
+  ],
+  "maxBytesPerQuery": 104857600,
+  "zeroSpendPolicyActive": true
+}

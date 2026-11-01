@@ -1,0 +1,30 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "sources": [
+    {
+      "source": "Google Trends BigQuery Public Data",
+      "dataset": "bigquery-public-data.google_trends.top_terms",
+      "coverageType": "TOP_SEARCH_TERMS",
+      "nicheCoverage": "SPARSE",
+      "cost": "$0.00 (within 1TB free tier / sandbox)",
+      "handling": "INSUFFICIENT_COVERAGE when term not indexed"
+    },
+    {
+      "source": "Google Trends Explore CSV Export",
+      "coverageType": "EXACT_QUERY_EXPLORE",
+      "nicheCoverage": "COMPREHENSIVE",
+      "cost": "$0.00 (official user export)",
+      "diskStorage": "data/google_trends_imports/<sha256>.csv",
+      "verification": "SHA-256 cryptographic check on disk"
+    },
+    {
+      "source": "Google Trending Now RSS",
+      "coverageType": "REALTIME_DISCOVERY_ONLY",
+      "nicheCoverage": "BROAD_TRENDS",
+      "cost": "$0.00",
+      "pointsProvided": 0,
+      "evergreenEligible": false
+    }
+  ]
+}

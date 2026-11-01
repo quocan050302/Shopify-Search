@@ -1,0 +1,142 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:29:52.043Z",
+  "niche": "Pet Gadgets",
+  "unauthorizedBrowserSearchAttempted": false,
+  "maxCandidatesPerRun": 3,
+  "maxTotalOperationsPerRun": 4,
+  "remainingOperationsBudget": 4,
+  "maxConcurrency": 1,
+  "maxAttemptsPerOperation": 2,
+  "policyAllowed": false,
+  "policyStatus": "DISABLED_BY_DEFAULT",
+  "selectedCandidateIds": [
+    "cand_uahpet_1",
+    "cand_kittyspout_2",
+    "cand_uproot_3"
+  ],
+  "deferredCandidateIds": [
+    "cand_uahpet_dup_4"
+  ],
+  "plannedSearchOperationsCount": 3,
+  "reservedGetItemsBatchCount": 1,
+  "candidateQueryPlans": [
+    {
+      "candidateId": "cand_uahpet_1",
+      "primaryIntent": {
+        "intentId": "amz_intent_cand_uahpet_1_1_c9c5eccc20",
+        "candidateId": "cand_uahpet_1",
+        "normalizedKeywords": "UAHPET Wireless Cat Water Fountain Stainless Steel UAH-WF-01",
+        "verifiedBrand": "UAHPET",
+        "verifiedModel": "UAH-WF-01",
+        "intentRank": 1,
+        "sourceProvenance": "MERCHANT_VERIFIED_TITLE_AND_BRAND",
+        "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+        "suppressedTerms": [
+          "RAW_AD_COPY_IGNORED_FOR_TRUSTED_IDENTIFIERS",
+          "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+        ]
+      },
+      "backupIntents": [
+        {
+          "intentId": "amz_intent_cand_uahpet_1_2_74b82710b6",
+          "candidateId": "cand_uahpet_1",
+          "normalizedKeywords": "UAHPET Automatic Pet Water Fountain UAH-WF-01",
+          "verifiedBrand": "UAHPET",
+          "verifiedModel": "UAH-WF-01",
+          "intentRank": 2,
+          "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+          "reason": "Secondary corroboration query combining verified brand and specific product family.",
+          "suppressedTerms": [
+            "RAW_AD_COPY_IGNORED_FOR_TRUSTED_IDENTIFIERS",
+            "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+          ]
+        }
+      ],
+      "suppressionReason": null
+    },
+    {
+      "candidateId": "cand_kittyspout_2",
+      "primaryIntent": {
+        "intentId": "amz_intent_cand_kittyspout_2_1_1639e12ed3",
+        "candidateId": "cand_kittyspout_2",
+        "normalizedKeywords": "KittySpout Stainless Steel Cat Water Fountain 2L KS-320",
+        "verifiedBrand": "KittySpout",
+        "verifiedModel": "KS-320",
+        "intentRank": 1,
+        "sourceProvenance": "CANONICAL_PRODUCT_AND_MODEL",
+        "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+        "suppressedTerms": [
+          "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+        ]
+      },
+      "backupIntents": [
+        {
+          "intentId": "amz_intent_cand_kittyspout_2_2_9e22a269ba",
+          "candidateId": "cand_kittyspout_2",
+          "normalizedKeywords": "KittySpout Automatic Pet Water Fountain KS-320",
+          "verifiedBrand": "KittySpout",
+          "verifiedModel": "KS-320",
+          "intentRank": 2,
+          "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+          "reason": "Secondary corroboration query combining verified brand and specific product family.",
+          "suppressedTerms": [
+            "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+          ]
+        }
+      ],
+      "suppressionReason": null
+    },
+    {
+      "candidateId": "cand_uproot_3",
+      "primaryIntent": {
+        "intentId": "amz_intent_cand_uproot_3_1_c48f9e3a26",
+        "candidateId": "cand_uproot_3",
+        "normalizedKeywords": "Uproot Clean Pro Pet Hair Remover Carpet Scraper UC-PRO",
+        "verifiedBrand": "Uproot Clean",
+        "verifiedModel": "UC-PRO",
+        "intentRank": 1,
+        "sourceProvenance": "CANDIDATE_TITLE_SPECIFIC",
+        "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+        "suppressedTerms": [
+          "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+        ]
+      },
+      "backupIntents": [
+        {
+          "intentId": "amz_intent_cand_uproot_3_2_19c0f0fffa",
+          "candidateId": "cand_uproot_3",
+          "normalizedKeywords": "Uproot Clean Pet Hair Fur Remover Roller Scraper UC-PRO",
+          "verifiedBrand": "Uproot Clean",
+          "verifiedModel": "UC-PRO",
+          "intentRank": 2,
+          "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+          "reason": "Secondary corroboration query combining verified brand and specific product family.",
+          "suppressedTerms": [
+            "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+          ]
+        }
+      ],
+      "suppressionReason": null
+    },
+    {
+      "candidateId": "cand_uahpet_dup_4",
+      "primaryIntent": {
+        "intentId": "amz_intent_cand_uahpet_dup_4_1_e25bf2274c",
+        "candidateId": "cand_uahpet_dup_4",
+        "normalizedKeywords": "UAHPET Wireless Cat Water Fountain Stainless Steel UAH-WF-01",
+        "verifiedBrand": "UAHPET",
+        "verifiedModel": "UAH-WF-01",
+        "intentRank": 1,
+        "sourceProvenance": "MERCHANT_VERIFIED_TITLE_AND_BRAND",
+        "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+        "suppressedTerms": [
+          "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+        ]
+      },
+      "backupIntents": [],
+      "suppressionReason": "DUPLICATE_NORMALIZED_QUERY_SUPPRESSED"
+    }
+  ]
+}

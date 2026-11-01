@@ -1,0 +1,15 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.240Z",
+  "mode": "MODE_A_LOCAL_HTTP_CREATORS_API_EMULATOR",
+  "injectedCreatorsApiClientUsed": false,
+  "runtimeFactoryConstructedClient": true,
+  "observationClass": "TEST_FIXTURE",
+  "providerSourceOrigin": "TEST_FIXTURE",
+  "countedAsAuthorizedLive": false,
+  "oauthRequestsObservedAtEmulator": 1,
+  "searchItemsRequestsObservedAtEmulator": 3,
+  "getItemsRequestsObservedAtEmulator": 1,
+  "verifiedCandidatesCount": 3
+}

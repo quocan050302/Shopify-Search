@@ -1,0 +1,15 @@
+{
+  "codeSha": "75de4e26cbef061e2fe000a0ade0b711a9bd5e38",
+  "releaseVersion": "12.4.3.5.0.1",
+  "evaluatedAt": "2026-10-31T20:13:05.181Z",
+  "beforeDigest": "08ae9402d67f03aa8a4005cfd033427ceac3f26feccefa70d3c85378d4686842",
+  "afterDigest": "08ae9402d67f03aa8a4005cfd033427ceac3f26feccefa70d3c85378d4686842",
+  "sqliteByteDelta": 0,
+  "rowDelta": 0,
+  "totalReadOnlyRequests": 6,
+  "testedStatuses": [
+    200,
+    403,
+    404
+  ]
+}

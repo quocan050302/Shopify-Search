@@ -1,0 +1,63 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:48.885Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "positiveCase": {
+    "caseId": "CLI_SUBPROC_POS_01_VALID_BASELINE",
+    "description": "Canonical valid engineering baseline directory exits 0 (ENGINEERING_ACCEPTED)",
+    "command": "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>",
+    "pid": 90516,
+    "expectedExitCode": 0,
+    "actualExitCode": 0,
+    "expectedExitCategory": "ENGINEERING_ACCEPTED",
+    "actualExitCategory": "ENGINEERING_ACCEPTED",
+    "passed": true
+  },
+  "failureCases": [
+    {
+      "caseId": "CLI_SUBPROC_FAIL_01_ENG_GATE_FAILURE",
+      "description": "Engineering gate failure (overallEngineeringVerdict='FAIL', G20='FAIL') exits 2 (ENGINEERING_GATE_FAILURE)",
+      "command": "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>",
+      "pid": 90524,
+      "expectedExitCode": 2,
+      "actualExitCode": 2,
+      "expectedExitCategory": "ENGINEERING_GATE_FAILURE",
+      "actualExitCategory": "ENGINEERING_GATE_FAILURE",
+      "passed": true
+    },
+    {
+      "caseId": "CLI_SUBPROC_FAIL_02_VALIDATOR_INVALID",
+      "description": "Validator invalid (<failure> tag in JUNIT_RESULTS.xml while overallEngineeringVerdict='PASS') exits 3 (VALIDATOR_INVALID)",
+      "command": "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>",
+      "pid": 90528,
+      "expectedExitCode": 3,
+      "actualExitCode": 3,
+      "expectedExitCategory": "VALIDATOR_INVALID",
+      "actualExitCategory": "VALIDATOR_INVALID",
+      "passed": true
+    },
+    {
+      "caseId": "CLI_SUBPROC_FAIL_03_RESOURCE_OR_BARRIER_BLOCKED",
+      "description": "Completion barrier failure (zeroRunningJobs=false) exits 4 (INCOMPLETE_OR_RESOURCE_BLOCKED)",
+      "command": "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>",
+      "pid": 90530,
+      "expectedExitCode": 4,
+      "actualExitCode": 4,
+      "expectedExitCategory": "INCOMPLETE_OR_RESOURCE_BLOCKED",
+      "actualExitCategory": "INCOMPLETE_OR_RESOURCE_BLOCKED",
+      "passed": true
+    },
+    {
+      "caseId": "CLI_SUBPROC_FAIL_04_SHA_MISMATCH_FATAL",
+      "description": "Source SHA mismatch in SOURCE_SHA_PROVENANCE.json exits 1 (FATAL_OR_MISSING_INPUT)",
+      "command": "node tsx scripts/kh02/runFivePhaseAutoClosure.ts --verify-dir <isolated_dir>",
+      "pid": 90533,
+      "expectedExitCode": 1,
+      "actualExitCode": 1,
+      "expectedExitCategory": "FATAL_OR_MISSING_INPUT",
+      "actualExitCategory": "FATAL_OR_MISSING_INPUT",
+      "passed": true
+    }
+  ],
+  "suiteVerdict": "PASS"
+}

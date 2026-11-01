@@ -1,0 +1,332 @@
+{
+  "evaluatedAt": "2026-10-31T20:13:09.865Z",
+  "codeSha": "75de4e26cbef061e2fe000a0ade0b711a9bd5e38",
+  "totalMutations": 32,
+  "totalCaughtAndRejected": 32,
+  "falsePassEscapes": 0,
+  "suiteVerdict": "PASS",
+  "cases": [
+    {
+      "mutationId": "V1243501_MUT_01",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "Delete PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "expectedViolatedCheckId": "CHK_01_MANDATORY_ARTIFACTS_PRESENT",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_01_MANDATORY_ARTIFACTS_PRESENT",
+        "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE",
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_02",
+      "targetArtifact": "FINAL_OWNER_REPORT.md",
+      "description": "Truncate FINAL_OWNER_REPORT.md to 0 bytes",
+      "expectedViolatedCheckId": "CHK_01_MANDATORY_ARTIFACTS_PRESENT",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_01_MANDATORY_ARTIFACTS_PRESENT"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_03",
+      "targetArtifact": "EXECUTION_STATE.json",
+      "description": "Tamper branch to master",
+      "expectedViolatedCheckId": "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_04",
+      "targetArtifact": "EXECUTION_STATE.json",
+      "description": "Stale releaseVersion 12.4.3.5.0 instead of 12.4.3.5.0.1 (N40)",
+      "expectedViolatedCheckId": "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_05",
+      "targetArtifact": "AUTOMATED_TEST_REPORT.json",
+      "description": "Stale codeSha in AUTOMATED_TEST_REPORT.json",
+      "expectedViolatedCheckId": "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_02_BRANCH_VERSION_AND_CODE_SHA_PROVENANCE"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_06",
+      "targetArtifact": "CODE_REPAIR_DIFF_AUDIT.json",
+      "description": "Leave .catch(() => null) around persistAmazonEvidenceAtomically (N26)",
+      "expectedViolatedCheckId": "CHK_03_FOUR_P0_DEFECTS_CLOSED",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_FOUR_P0_DEFECTS_CLOSED"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_07",
+      "targetArtifact": "CODE_REPAIR_DIFF_AUDIT.json",
+      "description": "Borrowed MCP session closed by cleanup (N20)",
+      "expectedViolatedCheckId": "CHK_03_FOUR_P0_DEFECTS_CLOSED",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_FOUR_P0_DEFECTS_CLOSED"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_08",
+      "targetArtifact": "CODE_REPAIR_DIFF_AUDIT.json",
+      "description": "Creators API without client falls back to Playwright scraping instead of NOT_IMPLEMENTED (N19)",
+      "expectedViolatedCheckId": "CHK_03_FOUR_P0_DEFECTS_CLOSED",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_FOUR_P0_DEFECTS_CLOSED"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_09",
+      "targetArtifact": "CODE_REPAIR_DIFF_AUDIT.json",
+      "description": "handleRunEvergreenResearch omits enableAmazonUsPilot (P0-B)",
+      "expectedViolatedCheckId": "CHK_03_FOUR_P0_DEFECTS_CLOSED",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_FOUR_P0_DEFECTS_CLOSED"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_10",
+      "targetArtifact": "CODE_REPAIR_DIFF_AUDIT.json",
+      "description": "Child verify job DB failure marks job COMPLETED instead of FAILED (N25)",
+      "expectedViolatedCheckId": "CHK_03_FOUR_P0_DEFECTS_CLOSED",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_FOUR_P0_DEFECTS_CLOSED"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_11",
+      "targetArtifact": "AUTOMATED_TEST_REPORT.json",
+      "description": "Non-zero tscExitCode",
+      "expectedViolatedCheckId": "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_12",
+      "targetArtifact": "AUTOMATED_TEST_REPORT.json",
+      "description": "One failing unit test in N01..N40 matrix",
+      "expectedViolatedCheckId": "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_13",
+      "targetArtifact": "AUTOMATED_TEST_REPORT.json",
+      "description": "Integration tests passed 17/18 instead of 18/18",
+      "expectedViolatedCheckId": "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_04_AUTOMATED_TESTS_BUILD_AND_N01_N40"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_14",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "Handshake-only MCP session (0 tool calls) misclassified as IDENTITY_VERIFIED (N15, N40)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_15",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "Job-level MCP execution missing browser_navigate tool invocation (N16)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_16",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "verifyJobId equals parentResearchRunId instead of distinct child job (N14)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_17",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "Local MCP test double falsely counted as live provider verified (N16, N37)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_18",
+      "targetArtifact": "PLAYWRIGHT_MCP_JOB_FLOW_PROOF.json",
+      "description": "Residual MCP child processes > 0 (N11)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_JOB_FLOW_AND_HONEST_CLASSIFICATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_19",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY_REPORT.json",
+      "description": "Post-run browser verify form not submitted in headless Chromium",
+      "expectedViolatedCheckId": "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_20",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY_REPORT.json",
+      "description": "Introduce 1 SQLite/HTTP/DOM parity mismatch",
+      "expectedViolatedCheckId": "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_21",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY_REPORT.json",
+      "description": "Worker barrier leaves 1 RUNNING job",
+      "expectedViolatedCheckId": "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_06_SQLITE_HTTP_DOM_PARITY_AND_BROWSER_VERIFY_FLOW"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_22",
+      "targetArtifact": "READONLY_GET_NON_MUTATION_PROOF.json",
+      "description": "Read-only GET mutates SQLite digest (N31)",
+      "expectedViolatedCheckId": "CHK_07_READONLY_GET_NON_MUTATION_PROOF",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_07_READONLY_GET_NON_MUTATION_PROOF"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_23",
+      "targetArtifact": "HISTORICAL_BACKTEST_COMPARE_REPORT.json",
+      "description": "Post-run Amazon attachment inflates opportunityScore from 68 to 73 (N33)",
+      "expectedViolatedCheckId": "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_24",
+      "targetArtifact": "HISTORICAL_BACKTEST_COMPARE_REPORT.json",
+      "description": "Post-run Amazon attachment flips G15 from 0/3 to 1/3 (N33)",
+      "expectedViolatedCheckId": "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_25",
+      "targetArtifact": "HISTORICAL_BACKTEST_COMPARE_REPORT.json",
+      "description": "Point-in-time audit accepts 1 future-timestamped leak",
+      "expectedViolatedCheckId": "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_08_HISTORICAL_BACKTEST_AND_NON_INFLATION"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_26",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Claim REAL_PROVIDER_VERIFIED with 0 live US product identities",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_27",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Claim REAL_PROVIDER_VERIFIED from LOCAL_MCP_TEST_DOUBLE instead of OFFICIAL_PLAYWRIGHT_MCP (N16, N37)",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_28",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Synthetic invocation ID copied into providerRequestId (N36)",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_29",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Claim SALES_VERIFIED on Amazon verificationScope (N39)",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_30",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Weaker row overwrites stronger AUTHORIZED_LIVE IDENTITY_VERIFIED row (N29)",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_31",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Falsely convert evergreenBusinessVerdict from INSUFFICIENT_HISTORICAL_EVIDENCE to PASS",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "V1243501_MUT_32",
+      "targetArtifact": "FINAL_ACCEPTANCE_DECISION.json",
+      "description": "Falsely mark G07 status as PASS instead of BLOCKED_EXTERNAL_DEPENDENCY",
+      "expectedViolatedCheckId": "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_FINAL_DECISION_AND_PROVENANCE_HONESTY"
+      ]
+    }
+  ]
+}

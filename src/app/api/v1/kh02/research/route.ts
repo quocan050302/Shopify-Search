@@ -23,6 +23,12 @@ import {
   updateKH02ResearchRunStatus,
   WorkspacePersistenceError,
 } from "@/services/kh02/persistence/kh02PersistenceService";
+import {
+  loadAmazonEvidenceForRun,
+  summarizeAmazonEvidenceForProduct,
+} from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
+import { validateAmazonUsProductUrl } from "@/services/kh02/marketplace/amazonUsIdentity";
+import { AMAZON_PILOT_MAX_CANDIDATES_PER_RUN } from "@/services/kh02/marketplace/amazonUsBudget";
 
 const ResearchRequestSchema = z.object({
   topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
@@ -32,6 +38,8 @@ const ResearchRequestSchema = z.object({
   maxCandidates: z.number().int().min(3).max(50).default(15),
   sourceMode: z.enum(["LIVE_WITH_CACHE_FALLBACK", "CACHE_ONLY", "LIVE_ONLY"]).optional(),
   metaExecutionPolicy: z.enum(["LIVE_FIRST", "CACHE_SUPPLEMENTED", "CACHE_ONLY", "OFFLINE_FIXTURE"]).optional(),
+  enableAmazonUsPilot: z.boolean().optional(),
+  amazonPilotCandidateUrls: z.record(z.string(), z.string()).optional(),
   mode: z.enum(["async", "sync"]).optional(),
   async: z.boolean().optional(),
   asyncMode: z.boolean().optional(),
@@ -82,6 +90,46 @@ export async function GET(request: NextRequest) {
 
     let leaderboard = rawLeaderboard;
     if (leaderboard) {
+      const effectiveRunId = resolvedRunId || leaderboard.researchRunId;
+      let marketplaceEvidence = Array.isArray(leaderboard.marketplaceEvidence)
+        ? leaderboard.marketplaceEvidence
+        : [];
+      let marketplaceTelemetry = leaderboard.marketplaceTelemetry || null;
+
+      if (effectiveRunId) {
+        const loadedAmz = await loadAmazonEvidenceForRun(context.workspaceId, effectiveRunId);
+        if (loadedAmz.evidenceRows.length > 0) {
+          marketplaceEvidence = loadedAmz.evidenceRows;
+        }
+        if (!marketplaceTelemetry && loadedAmz.telemetry) {
+          marketplaceTelemetry = loadedAmz.telemetry;
+        }
+      }
+
+      if (marketplaceEvidence.length > 0 && effectiveRunId) {
+        const attachSummaryToList = (list: any[] | undefined) => {
+          if (!Array.isArray(list)) return;
+          for (const item of list) {
+            const cand = item?.candidate || item;
+            if (!cand || !cand.candidateId) continue;
+            const summary = summarizeAmazonEvidenceForProduct(
+              cand.candidateId,
+              effectiveRunId,
+              marketplaceEvidence,
+              { telemetry: marketplaceTelemetry }
+            );
+            if (summary.visible) {
+              cand.amazonEvidenceSummary = summary;
+            }
+          }
+        };
+        attachSummaryToList(leaderboard.topThree);
+        attachSummaryToList(leaderboard.researchShortlist?.shortlist);
+        attachSummaryToList(leaderboard.provisionalCandidates);
+        attachSummaryToList(leaderboard.remainingCandidates);
+        attachSummaryToList(leaderboard.insufficientEvidenceCandidates);
+      }
+
       const metaTel = leaderboard.providerTelemetry?.META_ADS;
       const googleTel = leaderboard.providerTelemetry?.GOOGLE_ADS;
       const lookbackCov = leaderboard.lookbackCoverage;
@@ -102,6 +150,8 @@ export async function GET(request: NextRequest) {
       leaderboard = {
         ...leaderboard,
         researchRunId: resolvedRunId || leaderboard.researchRunId,
+        marketplaceEvidence,
+        marketplaceTelemetry,
         sourceCoverage: leaderboard.sourceCoverage || {
           META_ADS: {
             freshLiveAdsCount: metaLiveCount,
@@ -207,7 +257,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { topic, market, lookbackDays, maxCandidates, sourceMode, metaExecutionPolicy } = parseResult.data;
+    const {
+      topic,
+      market,
+      lookbackDays,
+      maxCandidates,
+      sourceMode,
+      metaExecutionPolicy,
+      enableAmazonUsPilot,
+      amazonPilotCandidateUrls,
+    } = parseResult.data;
+
+    let validatedAmazonCandidateUrls: Record<string, string> | undefined = undefined;
+    if (amazonPilotCandidateUrls && typeof amazonPilotCandidateUrls === "object") {
+      const urlEntries = Object.entries(amazonPilotCandidateUrls).filter(
+        ([k, v]) => typeof k === "string" && k.trim().length > 0 && typeof v === "string"
+      );
+      if (urlEntries.length > AMAZON_PILOT_MAX_CANDIDATES_PER_RUN) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "CANDIDATE_URL_CAP_EXCEEDED",
+              message: `At most ${AMAZON_PILOT_MAX_CANDIDATES_PER_RUN} Amazon US product URLs may be supplied per research run.`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+      validatedAmazonCandidateUrls = {};
+      for (const [cid, rawUrl] of urlEntries) {
+        const hasQueryOrHash = rawUrl.includes("?") || rawUrl.includes("#");
+        const check = validateAmazonUsProductUrl(rawUrl);
+        if (hasQueryOrHash || !check.valid || !check.canonicalAmazonUrl) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "INVALID_AMAZON_PILOT_URL",
+                message: hasQueryOrHash
+                  ? `Amazon US product URL supplied for '${cid}' must not contain query or hash parameters.`
+                  : check.rejectionReason ||
+                    `Invalid Amazon US product URL supplied for '${cid}'.`,
+              },
+            },
+            { status: 400 }
+          );
+        }
+        validatedAmazonCandidateUrls[cid.trim()] = check.canonicalAmazonUrl;
+      }
+    }
 
     const isAsync =
       body.asyncMode === true ||
@@ -227,6 +326,8 @@ export async function POST(request: NextRequest) {
         maxCandidates,
         sourceMode,
         metaExecutionPolicy,
+        enableAmazonUsPilot,
+        amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
       });
 
       // Enqueue job for background worker consumption (Single Executor Invariant)
@@ -243,6 +344,7 @@ export async function POST(request: NextRequest) {
             market,
             lookbackDays,
             sourceMode: sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+            enableAmazonUsPilot: Boolean(enableAmazonUsPilot),
           },
           meta: {
             runId,
@@ -265,6 +367,8 @@ export async function POST(request: NextRequest) {
       maxCandidates,
       sourceMode,
       metaExecutionPolicy,
+      enableAmazonUsPilot,
+      amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
     });
 
     await updateKH02ResearchRunStatus({
@@ -284,6 +388,8 @@ export async function POST(request: NextRequest) {
         maxCandidates,
         sourceMode,
         metaExecutionPolicy,
+        enableAmazonUsPilot,
+        amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
         workspaceId: context.workspaceId,
         runId,
         signal: request.signal,

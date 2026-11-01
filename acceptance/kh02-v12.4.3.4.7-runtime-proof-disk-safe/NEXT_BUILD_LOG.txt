@@ -1,0 +1,1 @@
+BLOCKED_BY_DISK_HEADROOM_GUARD: Free disk is 7.23 GB (< 15 GB minimum threshold required by Section 0.5 & 5.9). Did not start 'next build' to protect existing database and acceptance runs.

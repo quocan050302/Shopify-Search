@@ -1,0 +1,16 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:48.739Z",
+  "typecheckExitCode": 0,
+  "typecheckDurationMs": 5024,
+  "nextBuildExitCode": 0,
+  "nextBuildDurationMs": 13791,
+  "unitTestsPassed": 553,
+  "unitTestsFailed": 0,
+  "integrationTestsPassed": 18,
+  "integrationTestsFailed": 0,
+  "totalSuitesFailed": 0,
+  "totalTestsFailed": 0,
+  "totalTestsPassed": 571
+}

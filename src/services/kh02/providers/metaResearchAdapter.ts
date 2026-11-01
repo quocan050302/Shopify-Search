@@ -1875,6 +1875,8 @@ export async function collectMetaProductSignals(
         persistedAdId: ad.id,
         sourceObservationId,
         sourceType: isFreshLive ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+        sourceMode: isFreshLive ? "LIVE_PROVIDER" : "CACHED_SOURCE",
+        isCached: !isFreshLive,
         isLiveRecord: isFreshLive,
         metrics: {
           daysRunning: ad.daysRunning,

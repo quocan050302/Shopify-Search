@@ -1,0 +1,15 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "library": "google-auth-library",
+  "libraryVersion": "^10.9.1",
+  "authMechanism": "GoogleAuth (Application Default Credentials / Service Account / Local Developer ADC)",
+  "scopes": [
+    "https://www.googleapis.com/auth/bigquery",
+    "https://www.googleapis.com/auth/cloud-platform"
+  ],
+  "bearerHeaderEnforced": true,
+  "testIsolationEnforced": true,
+  "productionBypassRemoved": true,
+  "auditOutcome": "OAUTH_AUTHENTICATION_VERIFIED"
+}

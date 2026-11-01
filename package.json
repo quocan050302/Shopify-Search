@@ -87,7 +87,12 @@
     "kh02:v12.4.3.2.1:backtest": "tsx scripts/kh02/runBacktestV12_4_3_2_1.ts",
     "kh02:v12.4.3.2.1:regression": "vitest run tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts",
     "acceptance:kh02:v12.4.3.3": "tsx scripts/kh02/runAcceptanceV12_4_3_3.ts",
-    "kh02:v12.4.3.3:regression": "vitest run tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts"
+    "kh02:v12.4.3.3:regression": "vitest run tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts",
+    "acceptance:kh02:v12.4.3.3.2": "tsx scripts/kh02/runAcceptanceV12_4_3_3_2.ts",
+    "kh02:v12.4.3.3.2:regression": "vitest run tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
+    "kh02:v12.4.3.5.0.3:regression": "vitest run tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts",
+    "kh02:amazon:creators-runtime:v12.4.3.5.0.3": "tsx scripts/kh02/runAmazonCreatorsRuntimeClosureV12_4_3_5_0_3.ts",
+    "kh02:amazon:creators-validate:v12.4.3.5.0.3": "tsx scripts/kh02/validateAmazonCreatorsRuntimeClosureV12_4_3_5_0_3.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
@@ -98,6 +103,7 @@
     "@prisma/client": "^7.10.1",
     "clsx": "^2.1.1",
     "dotenv": "^18.0.8",
+    "google-auth-library": "^10.9.1",
     "lucide-react": "^1.59.0",
     "next": "16.4.2",
     "react": "19.3.0",

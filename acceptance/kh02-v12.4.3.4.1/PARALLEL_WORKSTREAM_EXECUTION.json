@@ -1,0 +1,100 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "executionWaves": [
+    {
+      "wave": "Wave 0",
+      "mode": "SERIAL",
+      "description": "Git preflight, HEAD verification, diff audit, disk & SQLite pre-check"
+    },
+    {
+      "wave": "Wave 1",
+      "mode": "PARALLEL_READ_ONLY",
+      "maxConcurrency": 3,
+      "workstreams": [
+        "WS-A: Meta Live Discovery & 8-Step Lineage Audit",
+        "WS-B: Google Ads Domain Handoff & Stage 6 Timeout Audit",
+        "WS-C: Niche Relevance, Semantic Family Collapse & Identity Audit",
+        "WS-D: Commit 12ae31185320 Product Detail & Worker Materialization Audit"
+      ]
+    },
+    {
+      "wave": "Wave 2",
+      "mode": "DISJOINT_FILE_OWNERSHIP",
+      "description": "Scoped production & unit test repairs across non-overlapping KH-02 modules"
+    },
+    {
+      "wave": "Wave 3",
+      "mode": "BOUNDED_ASYNC_POOL",
+      "maxConcurrency": 2,
+      "suitesExecuted": [
+        {
+          "jobId": "tsc_typecheck",
+          "status": "COMPLETED",
+          "durationMs": 3841
+        },
+        {
+          "jobId": "eslint",
+          "status": "COMPLETED",
+          "durationMs": 8674
+        },
+        {
+          "jobId": "kh01_verify",
+          "status": "COMPLETED",
+          "durationMs": 5388
+        },
+        {
+          "jobId": "v12_4_3_3_1_family",
+          "status": "COMPLETED",
+          "durationMs": 1119
+        },
+        {
+          "jobId": "v12_4_3_3_1_integrity",
+          "status": "COMPLETED",
+          "durationMs": 1730
+        },
+        {
+          "jobId": "v12_4_3_3_provenance",
+          "status": "COMPLETED",
+          "durationMs": 2494
+        },
+        {
+          "jobId": "v12_4_3_3_2_demand_identity",
+          "status": "COMPLETED",
+          "durationMs": 1712
+        },
+        {
+          "jobId": "v12_4_3_4_1_zero_spend",
+          "status": "COMPLETED",
+          "durationMs": 2736
+        },
+        {
+          "jobId": "kh02_unit_all",
+          "status": "COMPLETED",
+          "durationMs": 16701
+        }
+      ]
+    },
+    {
+      "wave": "Wave 4 & 5",
+      "mode": "SERIAL_DB_AND_CHROMIUM",
+      "maxConcurrency": 1,
+      "suitesExecuted": [
+        {
+          "jobId": "kh02_integration",
+          "status": "COMPLETED",
+          "durationMs": 16876
+        },
+        {
+          "jobId": "production_build",
+          "status": "COMPLETED",
+          "durationMs": 11920
+        }
+      ]
+    }
+  ],
+  "completionBarrier": {
+    "passed": true,
+    "incompleteJobs": []
+  }
+}

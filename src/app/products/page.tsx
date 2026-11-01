@@ -210,7 +210,48 @@ export default function ProductsPage() {
   const [storedSearch, setStoredSearch] = useState("");
   const [storedCategory, setStoredCategory] = useState("ALL");
 
+  // Amazon US Pilot & Post-Run Per-Candidate Verification State (V12.4.3.5.0.1)
+  const [amazonPolicy, setAmazonPolicy] = useState<{
+    featureEnabled: boolean;
+    liveAllowed: boolean;
+    accessPolicyStatus: string;
+    allowedAccessRoute: string;
+    policyReason: string;
+  } | null>(null);
+  const [enableAmazonUsPilot, setEnableAmazonUsPilot] = useState<boolean>(false);
+  const [activeAmazonVerifyJob, setActiveAmazonVerifyJob] = useState<{
+    verifyJobId: string;
+    targetResearchRunId: string | null;
+    status: string;
+    verificationStatus: string | null;
+    progress: number;
+    candidateIds: string[];
+    candidateUrls: Record<string, string>;
+    errorMessage: string | null;
+  } | null>(null);
+  const [latestAmazonVerifyJob, setLatestAmazonVerifyJob] = useState<{
+    verifyJobId: string;
+    targetResearchRunId: string | null;
+    status: string;
+    verificationStatus: string | null;
+    progress: number;
+    candidateIds: string[];
+    candidateUrls: Record<string, string>;
+    errorMessage: string | null;
+  } | null>(null);
+  const [verifyExpandedCandidateId, setVerifyExpandedCandidateId] = useState<string | null>(null);
+  const [verifyUrlInputByCandidateId, setVerifyUrlInputByCandidateId] = useState<
+    Record<string, string>
+  >({});
+  const [verifyErrorByCandidateId, setVerifyErrorByCandidateId] = useState<
+    Record<string, string | null>
+  >({});
+  const [verifySubmittingCandidateId, setVerifySubmittingCandidateId] = useState<string | null>(
+    null
+  );
+
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const amazonVerifyPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const latestRequestSeqRef = useRef<number>(0);
   const authoritativeRunIdRef = useRef<string | null>(null);
   const activeRunIdRef = authoritativeRunIdRef;
@@ -224,7 +265,112 @@ export default function ProductsPage() {
   const frontendReleaseVersion =
     process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
     runtimeIdentity?.releaseVersion ||
-    "12.4.3.3";
+    "12.4.3.5.0.3";
+
+  const previewClientAmazonAsin = useCallback((rawUrl: string) => {
+    const trimmed = (rawUrl || "").trim();
+    if (!trimmed) {
+      return { valid: false, asin: null, canonicalUrl: null, reason: null };
+    }
+    try {
+      const parsed = new URL(trimmed);
+      const host = parsed.hostname.toLowerCase();
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "URL must use https://",
+        };
+      }
+      if (host === "a.co" || host === "amzn.to") {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "Shortener URLs (a.co / amzn.to) are rejected; use canonical amazon.com/dp/ASIN.",
+        };
+      }
+      if (host !== "amazon.com" && host !== "www.amazon.com") {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "Only US amazon.com product URLs are accepted.",
+        };
+      }
+      if (parsed.search || parsed.hash) {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "Remove query parameters and hash fragments from the Amazon product URL.",
+        };
+      }
+      if (/\/(?:s|gp\/cart|gp\/buy|gp\/aws\/cart|ap\/signin)(?:\/|$)/i.test(parsed.pathname)) {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "Search, cart, checkout, and sign-in URLs are rejected.",
+        };
+      }
+      const m = parsed.pathname.match(
+        /(?:\/dp\/|\/gp\/product\/|\/product\/)((?:B0[A-Z0-9]{8}|[0-9]{9}[0-9X]))(?:\/|$)/i
+      );
+      const asin = m?.[1]?.toUpperCase() || null;
+      if (!asin) {
+        return {
+          valid: false,
+          asin: null,
+          canonicalUrl: null,
+          reason: "Must contain a valid 10-character Amazon US ASIN (e.g. /dp/B08N5WRWNW).",
+        };
+      }
+      return {
+        valid: true,
+        asin,
+        canonicalUrl: `https://www.amazon.com/dp/${asin}`,
+        reason: null,
+      };
+    } catch {
+      return {
+        valid: false,
+        asin: null,
+        canonicalUrl: null,
+        reason: "Enter a valid https://www.amazon.com/dp/ASIN product URL.",
+      };
+    }
+  }, []);
+
+  const fetchAmazonRunState = useCallback(async (targetRunId?: string | null) => {
+    try {
+      const qs = targetRunId ? `?runId=${encodeURIComponent(targetRunId)}` : "";
+      const res = await fetch(`/api/v1/kh02/marketplace/amazon${qs}`);
+      const json = await res.json();
+      if (
+        targetRunId &&
+        authoritativeRunIdRef.current &&
+        targetRunId !== authoritativeRunIdRef.current
+      ) {
+        return null;
+      }
+      if (json.success && json.data) {
+        if (json.data.policyContext) {
+          setAmazonPolicy(json.data.policyContext);
+          if (!json.data.policyContext.featureEnabled) {
+            setEnableAmazonUsPilot(false);
+          }
+        }
+        setActiveAmazonVerifyJob(json.data.activeVerifyJob || null);
+        setLatestAmazonVerifyJob(json.data.latestVerifyJob || null);
+        return json.data;
+      }
+    } catch (err) {
+      console.error("[ProductsPage] Failed to fetch Amazon US state:", err);
+    }
+    return null;
+  }, []);
 
   const fetchRuntimeVersion = useCallback(async () => {
     try {
@@ -334,6 +480,9 @@ export default function ProductsPage() {
             if (opts?.syncTopicInput && json.data.topic) {
               setTopic(json.data.topic);
             }
+            if (!opts?.isPolling && resolvedId) {
+              fetchAmazonRunState(resolvedId);
+            }
           }
           if (json.data.activeJob) {
             const job = json.data.activeJob as ActiveJobProgress;
@@ -355,7 +504,7 @@ export default function ProductsPage() {
       }
       return null;
     },
-    []
+    [fetchAmazonRunState]
   );
 
   useEffect(() => {
@@ -387,6 +536,7 @@ export default function ProductsPage() {
       ) {
         setResearchLoading(false);
         fetchSourceStatuses();
+        fetchAmazonRunState(pollingRunId);
       }
     }, 600);
 
@@ -396,7 +546,132 @@ export default function ProductsPage() {
         pollIntervalRef.current = null;
       }
     };
-  }, [activeJob, loadPersistedRun, fetchSourceStatuses]);
+  }, [activeJob, loadPersistedRun, fetchSourceStatuses, fetchAmazonRunState]);
+
+  // Independent child-job polling for KH02_AMAZON_VERIFY (never sets parent researchLoading=true)
+  useEffect(() => {
+    if (
+      !activeAmazonVerifyJob ||
+      (activeAmazonVerifyJob.status !== "PENDING" &&
+        activeAmazonVerifyJob.status !== "RUNNING")
+    ) {
+      if (amazonVerifyPollRef.current) {
+        clearInterval(amazonVerifyPollRef.current);
+        amazonVerifyPollRef.current = null;
+      }
+      return;
+    }
+
+    const targetRunId = activeAmazonVerifyJob.targetResearchRunId || activeRunId;
+    amazonVerifyPollRef.current = setInterval(async () => {
+      if (
+        targetRunId &&
+        authoritativeRunIdRef.current &&
+        authoritativeRunIdRef.current !== targetRunId
+      ) {
+        return;
+      }
+      const amzData = await fetchAmazonRunState(targetRunId);
+      if (
+        amzData &&
+        (!amzData.activeVerifyJob ||
+          (amzData.activeVerifyJob.status !== "PENDING" &&
+            amzData.activeVerifyJob.status !== "RUNNING"))
+      ) {
+        if (targetRunId) {
+          await loadPersistedRun({ runId: targetRunId });
+        }
+      }
+    }, 600);
+
+    return () => {
+      if (amazonVerifyPollRef.current) {
+        clearInterval(amazonVerifyPollRef.current);
+        amazonVerifyPollRef.current = null;
+      }
+    };
+  }, [activeAmazonVerifyJob, activeRunId, fetchAmazonRunState, loadPersistedRun]);
+
+  const handleVerifyCandidateAmazonUrl = useCallback(
+    async (candidateId: string) => {
+      const targetRunId = leaderboard?.researchRunId || activeRunId;
+      if (!targetRunId) {
+        setVerifyErrorByCandidateId((prev) => ({
+          ...prev,
+          [candidateId]: "No completed research run is active.",
+        }));
+        return;
+      }
+      const rawUrl = verifyUrlInputByCandidateId[candidateId] || "";
+      const preview = previewClientAmazonAsin(rawUrl);
+      if (!preview.valid || !preview.canonicalUrl) {
+        setVerifyErrorByCandidateId((prev) => ({
+          ...prev,
+          [candidateId]:
+            preview.reason || "Enter a valid Amazon US product URL (amazon.com/dp/ASIN).",
+        }));
+        return;
+      }
+
+      setVerifySubmittingCandidateId(candidateId);
+      setVerifyErrorByCandidateId((prev) => ({ ...prev, [candidateId]: null }));
+
+      try {
+        const res = await fetch("/api/v1/kh02/marketplace/amazon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            researchRunId: targetRunId,
+            candidateUrls: {
+              [candidateId]: preview.canonicalUrl,
+            },
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          setVerifyErrorByCandidateId((prev) => ({
+            ...prev,
+            [candidateId]:
+              json.error?.message || "Failed to enqueue Amazon US verification job.",
+          }));
+        } else if (json.data) {
+          setActiveAmazonVerifyJob({
+            verifyJobId: json.data.verifyJobId,
+            targetResearchRunId: json.data.targetResearchRunId || targetRunId,
+            status: json.data.status || "PENDING",
+            verificationStatus: json.data.verificationStatus || "QUEUED",
+            progress: 5,
+            candidateIds: json.data.candidateIds || [candidateId],
+            candidateUrls: json.data.candidateUrls || { [candidateId]: preview.canonicalUrl },
+            errorMessage: null,
+          });
+          const amzState = await fetchAmazonRunState(targetRunId);
+          if (
+            !amzState?.activeVerifyJob ||
+            (amzState.activeVerifyJob.status !== "PENDING" &&
+              amzState.activeVerifyJob.status !== "RUNNING")
+          ) {
+            await loadPersistedRun({ runId: targetRunId });
+          }
+        }
+      } catch (err: any) {
+        setVerifyErrorByCandidateId((prev) => ({
+          ...prev,
+          [candidateId]: err?.message || "Network error submitting Amazon verification.",
+        }));
+      } finally {
+        setVerifySubmittingCandidateId(null);
+      }
+    },
+    [
+      leaderboard,
+      activeRunId,
+      verifyUrlInputByCandidateId,
+      previewClientAmazonAsin,
+      fetchAmazonRunState,
+      loadPersistedRun,
+    ]
+  );
 
   const handleRunEvergreenResearch = useCallback(
     async (
@@ -425,6 +700,9 @@ export default function ProductsPage() {
             country,
             lookbackDays: targetLookback,
             sourceMode: targetSourceMode,
+            enableAmazonUsPilot: Boolean(
+              amazonPolicy?.featureEnabled && enableAmazonUsPilot
+            ),
             asyncMode: true,
           }),
         });
@@ -464,7 +742,16 @@ export default function ProductsPage() {
         setResearchLoading(false);
       }
     },
-    [topic, country, lookbackDays, sourceMode, fetchSourceStatuses, loadPersistedRun]
+    [
+      topic,
+      country,
+      lookbackDays,
+      sourceMode,
+      amazonPolicy,
+      enableAmazonUsPilot,
+      fetchSourceStatuses,
+      loadPersistedRun,
+    ]
   );
 
   const fetchStoredProducts = useCallback(async () => {
@@ -518,6 +805,7 @@ export default function ProductsPage() {
         setActiveTab(urlTab);
       }
 
+      fetchAmazonRunState(urlRunId || null);
       loadPersistedRun({
         runId: urlRunId,
         topic: urlRunId ? undefined : urlTopic,
@@ -525,9 +813,10 @@ export default function ProductsPage() {
         syncTopicInput: true,
       });
     } else {
+      fetchAmazonRunState(null);
       loadPersistedRun({ syncTopicInput: true });
     }
-  }, [fetchRuntimeVersion, fetchSourceStatuses, loadPersistedRun]);
+  }, [fetchRuntimeVersion, fetchSourceStatuses, fetchAmazonRunState, loadPersistedRun]);
 
   useEffect(() => {
     if (viewMode === "STORED_PRODUCTS") {
@@ -697,6 +986,15 @@ export default function ProductsPage() {
       if (leaderboard?.topic || topic) params.set("topic", leaderboard?.topic || topic);
       params.set("lookbackDays", String(leaderboard?.lookbackDays || lookbackDays));
       params.set("sourceMode", leaderboard?.sourceMode || sourceMode);
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ws = urlParams.get("workspaceId") || (leaderboard as any)?.workspaceId;
+        if (ws) params.set("workspaceId", ws);
+        else {
+          const cookieMatch = document.cookie.match(/swai_workspace_id=([^;]+)/);
+          if (cookieMatch) params.set("workspaceId", cookieMatch[1]);
+        }
+      }
       return `/products/${encodeURIComponent(
         productIdOrCandidateId
       )}/intelligence?${params.toString()}`;
@@ -985,6 +1283,114 @@ export default function ProductsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Amazon US Product Evidence Pilot Control & Status Bar (V12.4.3.5.0.1) */}
+              <div
+                data-testid="pf-amazon-pilot-control"
+                data-feature-enabled={amazonPolicy?.featureEnabled ? "true" : "false"}
+                data-live-allowed={amazonPolicy?.liveAllowed ? "true" : "false"}
+                data-policy-status={amazonPolicy?.accessPolicyStatus || "DISABLED_BY_DEFAULT"}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-800/70 text-xs"
+              >
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <label
+                    htmlFor="pf-amazon-pilot-optin-checkbox"
+                    className={`inline-flex items-center gap-2 font-medium ${
+                      amazonPolicy?.featureEnabled
+                        ? "text-slate-200 cursor-pointer"
+                        : "text-slate-500 cursor-not-allowed"
+                    }`}
+                  >
+                    <input
+                      id="pf-amazon-pilot-optin-checkbox"
+                      data-testid="pf-amazon-pilot-optin-checkbox"
+                      type="checkbox"
+                      checked={Boolean(amazonPolicy?.featureEnabled && enableAmazonUsPilot)}
+                      disabled={!amazonPolicy?.featureEnabled || researchLoading}
+                      onChange={(e) => setEnableAmazonUsPilot(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                    <span>Amazon US Product Evidence Pilot</span>
+                  </label>
+
+                  {(() => {
+                    const isChildRunning =
+                      activeAmazonVerifyJob &&
+                      (activeAmazonVerifyJob.status === "PENDING" ||
+                        activeAmazonVerifyJob.status === "RUNNING");
+                    const telStatus = leaderboard?.marketplaceTelemetry?.runStatus;
+                    const statusText = isChildRunning
+                      ? "PROCESSING"
+                      : !amazonPolicy?.featureEnabled
+                      ? "OFF"
+                      : !amazonPolicy?.liveAllowed
+                      ? "POLICY BLOCKED"
+                      : telStatus === "IDENTITY_VERIFIED"
+                      ? "COMPLETE"
+                      : telStatus === "PARTIAL"
+                      ? "PARTIAL"
+                      : telStatus && telStatus !== "NOT_ATTEMPTED" && telStatus !== "DISABLED"
+                      ? "INSUFFICIENT EVIDENCE"
+                      : "READY FOR URL CHECK";
+                    return (
+                      <span
+                        data-testid="pf-amazon-pilot-global-status"
+                        data-status={statusText}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                          statusText === "COMPLETE"
+                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                            : statusText === "PROCESSING"
+                            ? "bg-indigo-950/60 text-indigo-300 border-indigo-700/50"
+                            : statusText === "PARTIAL" ||
+                              statusText === "POLICY BLOCKED" ||
+                              statusText === "INSUFFICIENT EVIDENCE"
+                            ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                            : "bg-slate-900 text-slate-400 border-slate-800"
+                        }`}
+                      >
+                        {statusText}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                <div className="text-[11px] text-slate-400">
+                  {!amazonPolicy?.featureEnabled ? (
+                    <span data-testid="pf-amazon-pilot-disabled-reason">
+                      Disabled by server policy (KH02_AMAZON_US_ENABLED=false)
+                    </span>
+                  ) : !amazonPolicy?.liveAllowed ? (
+                    <span data-testid="pf-amazon-pilot-policy-reason">
+                      Live navigation blocked by policy (KH02_AMAZON_US_LIVE_ALLOWED=false); post-run URL check records policy guard.
+                    </span>
+                  ) : (
+                    <span data-testid="pf-amazon-pilot-ready-hint">
+                      Authorized for up to 3 user-supplied Amazon US product URLs per run.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {activeAmazonVerifyJob &&
+                (activeAmazonVerifyJob.status === "PENDING" ||
+                  activeAmazonVerifyJob.status === "RUNNING") && (
+                  <div
+                    data-testid="pf-amazon-verify-job-banner"
+                    data-verify-job-id={activeAmazonVerifyJob.verifyJobId}
+                    data-target-run-id={activeAmazonVerifyJob.targetResearchRunId || ""}
+                    className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/50 text-xs text-indigo-200 flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400 shrink-0" />
+                      <span>
+                        Verifying Amazon US product listing ({activeAmazonVerifyJob.verifyJobId.slice(0, 18)})...
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] text-indigo-300">
+                      {activeAmazonVerifyJob.progress}%
+                    </span>
+                  </div>
+                )}
 
               {/* 6-Stage Real Worker Progress Indicator */}
               {activeJob &&
@@ -1495,6 +1901,298 @@ export default function ProductsPage() {
                                 </p>
                               </div>
                             )}
+
+                            {item.amazonEvidenceSummary?.visible && (
+                              <div
+                                data-testid="pf-amazon-us-evidence-section"
+                                data-candidate-id={item.candidateId}
+                                data-run-id={item.amazonEvidenceSummary.researchRunId}
+                                data-amazon-asin={item.amazonEvidenceSummary.asin || ""}
+                                data-amazon-parent-asin={item.amazonEvidenceSummary.parentAsin || ""}
+                                data-amazon-variation-asin={item.amazonEvidenceSummary.variationAsin || ""}
+                                data-amazon-canonical-url={item.amazonEvidenceSummary.canonicalAmazonUrl || ""}
+                                data-amazon-product-title={item.amazonEvidenceSummary.productTitle || ""}
+                                data-amazon-brand={item.amazonEvidenceSummary.brand || ""}
+                                data-amazon-price={
+                                  item.amazonEvidenceSummary.price !== null &&
+                                  item.amazonEvidenceSummary.price !== undefined
+                                    ? String(item.amazonEvidenceSummary.price)
+                                    : ""
+                                }
+                                data-amazon-currency={item.amazonEvidenceSummary.currency || ""}
+                                data-amazon-availability={item.amazonEvidenceSummary.availability || ""}
+                                data-amazon-identity-match={item.amazonEvidenceSummary.identityMatch}
+                                data-amazon-status={item.amazonEvidenceSummary.status}
+                                data-amazon-verification-scope={item.amazonEvidenceSummary.verificationScope || ""}
+                                data-amazon-source-origin={item.amazonEvidenceSummary.providerSourceOrigin || ""}
+                                data-amazon-http-status-origin={item.amazonEvidenceSummary.httpStatusOrigin || ""}
+                                data-amazon-observed-at={item.amazonEvidenceSummary.observedAt || ""}
+                                data-amazon-provenance={item.amazonEvidenceSummary.observationClass}
+                                data-amazon-hash={item.amazonEvidenceSummary.rawEvidenceHash || ""}
+                                data-amazon-extracted-hash={item.amazonEvidenceSummary.extractedFieldsHash || ""}
+                                data-amazon-invocation-ref={item.amazonEvidenceSummary.providerInvocationRef || ""}
+                                data-amazon-request-id={item.amazonEvidenceSummary.providerRequestId || ""}
+                                data-amazon-verify-job-id={
+                                  activeAmazonVerifyJob?.candidateIds?.includes(item.candidateId)
+                                    ? activeAmazonVerifyJob.verifyJobId
+                                    : ""
+                                }
+                                data-amazon-verify-job-status={
+                                  activeAmazonVerifyJob?.candidateIds?.includes(item.candidateId)
+                                    ? activeAmazonVerifyJob.status
+                                    : ""
+                                }
+                                className="mt-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5"
+                              >
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                  <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
+                                    Amazon US Pilot Evidence
+                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      data-testid="pf-amazon-us-provenance-badge"
+                                      data-provenance={item.amazonEvidenceSummary.observationClass}
+                                      data-source-origin={item.amazonEvidenceSummary.providerSourceOrigin || "NONE"}
+                                      className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"
+                                    >
+                                      {item.amazonEvidenceSummary.providerSourceOrigin ===
+                                      "AUTHORIZED_CREATORS_API"
+                                        ? "AUTHORIZED CREATORS API"
+                                        : item.amazonEvidenceSummary.providerSourceOrigin ===
+                                          "LOCAL_MCP_TEST_DOUBLE"
+                                        ? "LOCAL MCP TEST DOUBLE"
+                                        : item.amazonEvidenceSummary.observationClass ===
+                                          "AUTHORIZED_LIVE"
+                                        ? "LIVE VERIFIED"
+                                        : item.amazonEvidenceSummary.observationClass ===
+                                          "IMPORTED_BY_USER"
+                                        ? "USER IMPORTED"
+                                        : item.amazonEvidenceSummary.observationClass ===
+                                          "TEST_FIXTURE"
+                                        ? "TEST FIXTURE"
+                                        : "POLICY GUARD"}
+                                    </span>
+                                    <span
+                                      data-testid="pf-amazon-us-status-badge"
+                                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                                        item.amazonEvidenceSummary.status === "IDENTITY_VERIFIED"
+                                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                                          : item.amazonEvidenceSummary.status === "PARTIAL" ||
+                                            item.amazonEvidenceSummary.status ===
+                                              "OBSERVED_UNVERIFIED"
+                                          ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                                          : "bg-slate-800 text-slate-300 border-slate-700"
+                                      }`}
+                                    >
+                                      {item.amazonEvidenceSummary.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 text-[11px] text-slate-300 font-mono">
+                                  <span>
+                                    ASIN: {item.amazonEvidenceSummary.asin || "N/A"} ·{" "}
+                                    {item.amazonEvidenceSummary.identityMatch}
+                                  </span>
+                                  {item.amazonEvidenceSummary.canonicalAmazonUrl && (
+                                    <a
+                                      href={item.amazonEvidenceSummary.canonicalAmazonUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-indigo-400 hover:text-indigo-300 underline truncate max-w-[140px]"
+                                    >
+                                      Amazon US Link
+                                    </a>
+                                  )}
+                                </div>
+                                <div
+                                  data-testid="pf-amazon-us-details-row"
+                                  className="flex items-center justify-between gap-2 text-[10px] text-slate-400 font-mono flex-wrap"
+                                >
+                                  <span data-testid="pf-amazon-us-brand">
+                                    Brand: {item.amazonEvidenceSummary.brand || "Not provided"}
+                                  </span>
+                                  <span data-testid="pf-amazon-us-price">
+                                    Price:{" "}
+                                    {item.amazonEvidenceSummary.price !== null &&
+                                    item.amazonEvidenceSummary.price !== undefined
+                                      ? `${item.amazonEvidenceSummary.currency || "USD"} ${Number(
+                                          item.amazonEvidenceSummary.price
+                                        ).toFixed(2)}`
+                                      : "Not provided"}
+                                  </span>
+                                  <span data-testid="pf-amazon-us-availability">
+                                    {item.amazonEvidenceSummary.availability || "Not provided"}
+                                  </span>
+                                </div>
+                                {item.amazonEvidenceSummary.rejectionReasons?.length > 0 && (
+                                  <p
+                                    data-testid="pf-amazon-us-rejection-reason"
+                                    className="text-[10px] text-amber-300/90 leading-snug"
+                                  >
+                                    {item.amazonEvidenceSummary.rejectionReasons[0]}
+                                  </p>
+                                )}
+                                <p className="text-[10px] text-slate-400 leading-tight">
+                                  {item.amazonEvidenceSummary.nonInflationNotice}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Post-Run Per-Candidate "Verify Amazon US Listing" Flow (V12.4.3.5.0.1 P0-D) */}
+                            {(() => {
+                              const isExpanded = verifyExpandedCandidateId === item.candidateId;
+                              const typedUrl = verifyUrlInputByCandidateId[item.candidateId] || "";
+                              const urlPreview = previewClientAmazonAsin(typedUrl);
+                              const verifyErr = verifyErrorByCandidateId[item.candidateId] || null;
+                              const isChildRunningForCandidate = Boolean(
+                                activeAmazonVerifyJob &&
+                                  (activeAmazonVerifyJob.status === "PENDING" ||
+                                    activeAmazonVerifyJob.status === "RUNNING") &&
+                                  activeAmazonVerifyJob.candidateIds.includes(item.candidateId)
+                              );
+                              const isSubmitting =
+                                verifySubmittingCandidateId === item.candidateId ||
+                                isChildRunningForCandidate;
+                              return (
+                                <div
+                                  data-testid="pf-verify-amazon-container"
+                                  data-candidate-id={item.candidateId}
+                                  className="pt-1.5"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <button
+                                      type="button"
+                                      data-testid="pf-verify-amazon-trigger"
+                                      data-candidate-id={item.candidateId}
+                                      onClick={() =>
+                                        setVerifyExpandedCandidateId((prev) =>
+                                          prev === item.candidateId ? null : item.candidateId
+                                        )
+                                      }
+                                      className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                    >
+                                      <ShoppingBag className="h-3 w-3 text-indigo-400" />
+                                      <span>
+                                        {item.amazonEvidenceSummary?.visible
+                                          ? "Re-verify Amazon US Listing"
+                                          : "Verify Amazon US Listing"}
+                                      </span>
+                                    </button>
+                                    {isChildRunningForCandidate && (
+                                      <span
+                                        data-testid="pf-verify-amazon-running-pill"
+                                        className="text-[10px] font-mono text-indigo-300 flex items-center gap-1"
+                                      >
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        Verifying...
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {isExpanded && (
+                                    <form
+                                      data-testid="pf-verify-amazon-form"
+                                      data-candidate-id={item.candidateId}
+                                      onSubmit={(e) => {
+                                        e.preventDefault();
+                                        handleVerifyCandidateAmazonUrl(item.candidateId);
+                                      }}
+                                      className="mt-2 p-2.5 rounded-xl bg-[#0b0f17] border border-slate-800 space-y-2"
+                                    >
+                                      <label
+                                        htmlFor={`amz-url-input-${item.candidateId}`}
+                                        className="text-[10px] font-semibold text-slate-300 block"
+                                      >
+                                        Amazon US Product URL (https://www.amazon.com/dp/ASIN)
+                                      </label>
+                                      <input
+                                        id={`amz-url-input-${item.candidateId}`}
+                                        data-testid="pf-verify-amazon-url-input"
+                                        name="amazonProductUrl"
+                                        type="url"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck={false}
+                                        aria-describedby={`amz-url-help-${item.candidateId}`}
+                                        value={typedUrl}
+                                        disabled={!amazonPolicy?.featureEnabled || isSubmitting}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          setVerifyUrlInputByCandidateId((prev) => ({
+                                            ...prev,
+                                            [item.candidateId]: val,
+                                          }));
+                                          if (verifyErrorByCandidateId[item.candidateId]) {
+                                            setVerifyErrorByCandidateId((prev) => ({
+                                              ...prev,
+                                              [item.candidateId]: null,
+                                            }));
+                                          }
+                                        }}
+                                        placeholder="https://www.amazon.com/dp/B08N5WRWNW"
+                                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                                      />
+                                      <div
+                                        id={`amz-url-help-${item.candidateId}`}
+                                        data-testid="pf-verify-amazon-asin-preview"
+                                        className="text-[10px] font-mono"
+                                      >
+                                        {!amazonPolicy?.featureEnabled ? (
+                                          <span
+                                            data-testid="pf-verify-amazon-disabled-reason"
+                                            className="text-amber-300"
+                                          >
+                                            Amazon US verification is disabled by server policy (KH02_AMAZON_US_ENABLED=false).
+                                          </span>
+                                        ) : typedUrl.trim() ? (
+                                          urlPreview.valid ? (
+                                            <span className="text-emerald-300">
+                                              Detected ASIN: {urlPreview.asin} · Canonical:{" "}
+                                              {urlPreview.canonicalUrl}
+                                            </span>
+                                          ) : (
+                                            <span
+                                              data-testid="pf-verify-amazon-validation-error"
+                                              className="text-rose-300"
+                                            >
+                                              {urlPreview.reason}
+                                            </span>
+                                          )
+                                        ) : (
+                                          <span className="text-slate-400">
+                                            Paste a direct US Amazon product page URL (/dp/ASIN) to verify identity.
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {verifyErr && (
+                                        <p
+                                          data-testid="pf-verify-amazon-submit-error"
+                                          className="text-[10px] text-rose-300"
+                                        >
+                                          {verifyErr}
+                                        </p>
+                                      )}
+
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          type="submit"
+                                          data-testid="pf-verify-amazon-submit"
+                                          disabled={
+                                            !amazonPolicy?.featureEnabled ||
+                                            isSubmitting ||
+                                            !urlPreview.valid
+                                          }
+                                          className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                                        >
+                                          {isSubmitting ? "Verifying..." : "Submit Amazon URL"}
+                                        </button>
+                                      </div>
+                                    </form>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 
@@ -1893,7 +2591,7 @@ export default function ProductsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     {[
                       {
                         label: "Meta Ads Library",
@@ -1906,10 +2604,6 @@ export default function ProductsPage() {
                       {
                         label: "Demand History",
                         cov: leaderboard?.sourceCoverage?.GOOGLE_TRENDS,
-                      },
-                      {
-                        label: "TikTok Creative",
-                        cov: leaderboard?.sourceCoverage?.TIKTOK_CREATIVE,
                       },
                     ].map((src) => (
                       <div
@@ -2547,6 +3241,80 @@ export default function ProductsPage() {
                       </a>
                     </div>
                   )}
+
+                  {(() => {
+                    const amz =
+                      drawerCandidate.canonicalCard?.amazonEvidenceSummary ||
+                      drawerCandidate.candidate.amazonEvidenceSummary ||
+                      drawerOverviewData?.amazonEvidenceSummary ||
+                      null;
+                    if (!amz || !amz.visible) return null;
+                    return (
+                      <div
+                        data-testid="pf-drawer-amazon-us-panel"
+                        data-candidate-id={amz.candidateId}
+                        data-run-id={amz.researchRunId}
+                        data-amazon-asin={amz.asin || ""}
+                        data-amazon-canonical-url={amz.canonicalAmazonUrl || ""}
+                        data-amazon-identity-match={amz.identityMatch}
+                        data-amazon-status={amz.status}
+                        data-amazon-observed-at={amz.observedAt || ""}
+                        data-amazon-provenance={amz.observationClass}
+                        data-amazon-hash={amz.rawEvidenceHash || ""}
+                        className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-white text-xs sm:text-sm">
+                            Amazon US Product Evidence Pilot
+                          </h3>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">
+                            {amz.status} · {amz.identityMatch}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              ASIN / Parent ASIN
+                            </span>
+                            <span className="text-slate-200">
+                              {amz.asin || "N/A"}
+                              {amz.parentAsin ? ` (Parent: ${amz.parentAsin})` : ""}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Provenance / Scope
+                            </span>
+                            <span className="text-slate-200">
+                              {amz.observationClass} · {amz.verificationScope || "UNVERIFIED"}
+                            </span>
+                          </div>
+                        </div>
+                        {amz.canonicalAmazonUrl && (
+                          <div className="text-xs font-mono truncate">
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Canonical Amazon US URL
+                            </span>
+                            <a
+                              href={amz.canonicalAmazonUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-indigo-400 hover:text-indigo-300 underline"
+                            >
+                              {amz.canonicalAmazonUrl}
+                            </a>
+                          </div>
+                        )}
+                        <div className="text-[10px] font-mono text-slate-400 break-all">
+                          Observed: {amz.observedAt || "N/A"} · Hash:{" "}
+                          {amz.rawEvidenceHash ? amz.rawEvidenceHash.slice(0, 16) : "N/A"}
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+                          {amz.nonInflationNotice}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

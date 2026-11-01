@@ -1,0 +1,33 @@
+{
+  "researchRunId": "kh02_run_1793356734087_0ttzi",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "status": "COMPLETED",
+  "rawObservationsCount": 59,
+  "candidatesCount": 19,
+  "topThreeCount": 0,
+  "provisionalCount": 6,
+  "candidateIds": [
+    "cand_1212440541",
+    "cand_1613504636",
+    "cand_14769098",
+    "cand_1788406859",
+    "cand_1587534715",
+    "cand_1272640899"
+  ],
+  "databaseConsistent": true,
+  "httpReconciled": true,
+  "httpStatus": "PASS",
+  "browserReconciled": true,
+  "browserStatus": "PASS",
+  "productDiscoveryVerified": true,
+  "liveSourceVerified": true,
+  "persistedSnapshotMatchesHttp": true,
+  "reconciliationVerdict": "RECONCILED",
+  "reconciled": true,
+  "mismatches": [],
+  "notes": [
+    "DB snapshot verified: 19 candidates (0 ranked, 6 provisional).",
+    "HTTP readback content verified: exact match with DB snapshot.",
+    "Browser reconciliation verified: complete candidate set, rank order, and scores match DB."
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:29.964Z",
+  "version": "12.4.3.4.7",
+  "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720",
+  "defects": [
+    {
+      "defectId": "DEFECT_01_SYNTHETIC_HTTP_READ_ONLY_SUCCESS",
+      "targetFile": "scripts/kh02/chromiumAcceptanceService.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "Separated verifySqliteReadOnlySnapshotIntegrity (DB_ONLY_READ_SNAPSHOT, httpRequestVerified=false, status=HTTP_NOT_EXECUTED) from probeRealReadOnlyOverviewApi (HTTP_GET_NONMUTATION, transportVerified=true, responseBodyDigest, identityMatched). assessReadOnlyMutation rejects synthetic callbacks without real HTTP transport proof."
+    },
+    {
+      "defectId": "DEFECT_02_FIXED_INTEGRATION_COUNTS_AND_TRUTH_TABLE_MASKING",
+      "targetFile": "scripts/kh02/runFivePhaseAutoClosure.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "Removed diskHeadroomOk ? 18 : 0 and hardcoded JUnit time='10'/'0.01'. Added buildSuiteExecutionProof, buildIntegrationSuiteReport, buildTestExecutionTruthTable (propagating duplicate test failures and actual skippedTests), and renderAuthenticJUnitXml."
+    },
+    {
+      "defectId": "DEFECT_03_SYNTHETIC_GOOGLE_PROVENANCE_AND_CANDIDATE_FALLBACK",
+      "targetFile": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts, src/services/kh02/evergreenResearchOrchestrator.ts, scripts/kh02/googleMcpGateEvaluator.ts, scripts/kh02/runFivePhaseAutoClosure.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "15/15 Google MCP negative cases passed (including G06-NEG-11..15 rejecting cr_0, google_cr_*_0, mcp_runId, skipped normalization, candidateIdsEvaluated[0] fallback, and cached replay)."
+    },
+    {
+      "defectId": "DEFECT_04_UNCHECKED_PRODUCTION_BUILD_AND_PORT_CONFLICT",
+      "targetFile": "scripts/kh02/chromiumAcceptanceService.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "Replaced unchecked spawnSync('npx', ['next', 'build']) with supervised executeAndVerifyFreshProductionBuild checking PID, exitCode===0, signal===null, and .next/BUILD_ID mtime freshness before server/Chromium launch, plus checkPortInUse in startIsolatedAcceptanceServer."
+    },
+    {
+      "defectId": "DEFECT_05_G15_EXACT_IDENTITY_AND_33_NEGATIVE_MUTATIONS",
+      "targetFile": "scripts/kh02/runFivePhaseAutoClosure.ts, scripts/kh02/acceptanceValidatorV12_4_3_4_5.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "Replaced G15 15-char substring query and .catch(() => []) with queryAndEvaluateG15CandidateDemand; added MUT_27..MUT_33 (33 total physical-file mutations)."
+    }
+  ]
+}

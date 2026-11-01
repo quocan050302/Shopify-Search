@@ -1,0 +1,20 @@
+{
+  "phaseId": "PHASE_2",
+  "status": "COMPLETED",
+  "startedAt": "2026-10-31T02:38:51.682Z",
+  "completedAt": "2026-10-31T02:39:42.628Z",
+  "researchRunId": "kh02_run_1793414382448_njsir",
+  "transportStatus": "QUERY_COMPLETED",
+  "rawCreativesRetrieved": 0,
+  "normalizedDistinct": 0,
+  "classifiedDistinct": 0,
+  "associationLedgerSize": 9,
+  "artifactsGenerated": [
+    "GOOGLE_MCP_REQUEST_TIMELINE.json",
+    "GOOGLE_RAW_CREATIVE_MANIFEST.json",
+    "GOOGLE_CREATIVE_NORMALIZATION.json",
+    "GOOGLE_PRODUCT_ASSOCIATION_LEDGER.json",
+    "SAME_RUN_GOOGLE_RECONCILIATION.json",
+    "GOOGLE_MCP_ROOT_CAUSE_AND_FIX.md"
+  ]
+}

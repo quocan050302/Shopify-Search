@@ -1,0 +1,11 @@
+{
+  "commandExecuted": "next build",
+  "exitCode": 0,
+  "buildSucceeded": true,
+  "buildDurationMs": 9635,
+  "testedSourceSha": "c7a9b0acf6824d841d74d0c59274d39b6ea1bf7d",
+  "version": "12.4.3.4.5",
+  "evaluatedAt": "2026-10-31T05:23:02.515Z",
+  "outputArtifactsPresent": true,
+  "buildDir": ".next"
+}

@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T12:14:35.803Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "barrierSatisfied": true,
+  "zeroRunningJobs": true,
+  "jobsScheduled": 6,
+  "jobsCompleted": 6,
+  "jobsFailed": 0,
+  "jobsTimedOut": 0
+}

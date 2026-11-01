@@ -1,0 +1,251 @@
+{
+  "evaluatedAt": "2026-10-31T16:41:02.961Z",
+  "totalMutations": 24,
+  "totalCaughtAndRejected": 24,
+  "falsePassEscapes": 0,
+  "suiteVerdict": "PASS",
+  "cases": [
+    {
+      "mutationId": "AMZ_MUT_01_MISSING_MANDATORY_ARTIFACT",
+      "targetArtifact": "AMAZON_PROVIDER_GATE.json",
+      "description": "Deletes mandatory artifact AMAZON_PROVIDER_GATE.json from disk",
+      "expectedViolatedCheckId": "CHK_01_MANDATORY_ARTIFACTS_PRESENT",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_01_MANDATORY_ARTIFACTS_PRESENT",
+        "CHK_02_BRANCH_AND_CODE_SHA_PROVENANCE",
+        "CHK_13_AMAZON_PROVIDER_GATE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_02_STALE_CODE_SHA_IN_PARITY",
+      "targetArtifact": "API_UI_SQLITE_CHROMIUM_PARITY.json",
+      "description": "Mutates codeSha in API_UI_SQLITE_CHROMIUM_PARITY.json to a stale commit SHA",
+      "expectedViolatedCheckId": "CHK_02_BRANCH_AND_CODE_SHA_PROVENANCE",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_02_BRANCH_AND_CODE_SHA_PROVENANCE"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_03_WRONG_BRANCH_NAME",
+      "targetArtifact": "SOURCE_SHA_PROVENANCE.json",
+      "description": "Mutates branch in SOURCE_SHA_PROVENANCE.json to master",
+      "expectedViolatedCheckId": "CHK_02_BRANCH_AND_CODE_SHA_PROVENANCE",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_02_BRANCH_AND_CODE_SHA_PROVENANCE"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_04_FAILING_ACCEPTANCE_MATRIX_ITEM",
+      "targetArtifact": "FEATURE_ACCEPTANCE_MATRIX.json",
+      "description": "Marks requirement A16 as passed=false in FEATURE_ACCEPTANCE_MATRIX.json",
+      "expectedViolatedCheckId": "CHK_03_ACCEPTANCE_MATRIX_A01_A30",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_03_ACCEPTANCE_MATRIX_A01_A30"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_05_DEFAULT_FLAG_ENABLED_TRUE",
+      "targetArtifact": "PROVIDER_POLICY_AND_ACCESS_DECISION.json",
+      "description": "Mutates defaultFeatureEnabled to true (violating default-OFF contract)",
+      "expectedViolatedCheckId": "CHK_04_DEFAULT_FLAGS_AND_POLICY_GUARD",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_04_DEFAULT_FLAGS_AND_POLICY_GUARD"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_06_MCP_RESIDUAL_PROCESS_LEAK",
+      "targetArtifact": "PLAYWRIGHT_MCP_HANDSHAKE_AND_SESSION.json",
+      "description": "Mutates residualProcessesCount to 1 (unclosed MCP child process leak)",
+      "expectedViolatedCheckId": "CHK_05_PLAYWRIGHT_MCP_SESSION_TRUTH",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_05_PLAYWRIGHT_MCP_SESSION_TRUTH"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_07_CONCURRENCY_EXCEEDS_ONE",
+      "targetArtifact": "AMAZON_PROVIDER_OPERATION_LEDGER.json",
+      "description": "Mutates maxConcurrencyObserved to 2 (violating single-flight concurrency=1)",
+      "expectedViolatedCheckId": "CHK_06_OPERATION_LEDGER_BUDGET_AND_ID_SEPARATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_06_OPERATION_LEDGER_BUDGET_AND_ID_SEPARATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_08_FABRICATED_UPSTREAM_REQUEST_ID",
+      "targetArtifact": "AMAZON_PROVIDER_OPERATION_LEDGER.json",
+      "description": "Copies local providerInvocationRef into providerRequestId when upstream ID is absent",
+      "expectedViolatedCheckId": "CHK_06_OPERATION_LEDGER_BUDGET_AND_ID_SEPARATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_06_OPERATION_LEDGER_BUDGET_AND_ID_SEPARATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_09_TAMPERED_EXTRACTED_FIELDS_HASH",
+      "targetArtifact": "AMAZON_RAW_EVIDENCE_MANIFEST.json",
+      "description": "Tamper with extractedCanonicalPayload.price without updating extractedFieldsHash",
+      "expectedViolatedCheckId": "CHK_07_RAW_EVIDENCE_HASH_AND_SANITIZATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_07_RAW_EVIDENCE_HASH_AND_SANITIZATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_10_ABSENT_PRICE_COERCED_TO_ZERO",
+      "targetArtifact": "AMAZON_RAW_EVIDENCE_MANIFEST.json",
+      "description": "Sets absentPriceStoredAsNullNotZero to false",
+      "expectedViolatedCheckId": "CHK_07_RAW_EVIDENCE_HASH_AND_SANITIZATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_07_RAW_EVIDENCE_HASH_AND_SANITIZATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_11_BRAND_ONLY_COUNTED_AS_EXACT_MATCH",
+      "targetArtifact": "AMAZON_IDENTITY_AND_MATCH_LEDGER.json",
+      "description": "Marks a brandOnlyCorroboration=true record as EXACT_PRODUCT",
+      "expectedViolatedCheckId": "CHK_08_IDENTITY_AND_VARIATION_LEDGER",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_08_IDENTITY_AND_VARIATION_LEDGER"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_12_VARIATION_ASIN_COLLAPSED",
+      "targetArtifact": "AMAZON_IDENTITY_AND_MATCH_LEDGER.json",
+      "description": "Sets variationChildAndParentAsinPreserved to false",
+      "expectedViolatedCheckId": "CHK_08_IDENTITY_AND_VARIATION_LEDGER",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_08_IDENTITY_AND_VARIATION_LEDGER"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_13_REJECTED_URL_COUNTED_IN_POSITIVE_TOTALS",
+      "targetArtifact": "AMAZON_DEDUP_AND_REJECTION_LEDGER.json",
+      "description": "Mutates rejectedCountedAsVerified to 1",
+      "expectedViolatedCheckId": "CHK_09_DEDUP_AND_REJECTION_LEDGER",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_DEDUP_AND_REJECTION_LEDGER"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_14_SSRF_OR_ASIN_DISCREPANCY_UNCHECKED",
+      "targetArtifact": "AMAZON_DEDUP_AND_REJECTION_LEDGER.json",
+      "description": "Sets asinDiscrepancyRejected to false",
+      "expectedViolatedCheckId": "CHK_09_DEDUP_AND_REJECTION_LEDGER",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_09_DEDUP_AND_REJECTION_LEDGER"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_15_DUPLICATE_ROWS_ON_SQLITE_RETRY",
+      "targetArtifact": "PERSISTED_MARKETPLACE_EVIDENCE_PROOF.json",
+      "description": "Mutates duplicateRowsOnRetry to 2",
+      "expectedViolatedCheckId": "CHK_10_SQLITE_PERSISTENCE_IDEMPOTENCY_AND_ISOLATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_10_SQLITE_PERSISTENCE_IDEMPOTENCY_AND_ISOLATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_16_CROSS_WORKSPACE_LEAKAGE",
+      "targetArtifact": "PERSISTED_MARKETPLACE_EVIDENCE_PROOF.json",
+      "description": "Mutates crossWorkspaceLeakCount to 1 (Workspace B sees Workspace A evidence)",
+      "expectedViolatedCheckId": "CHK_10_SQLITE_PERSISTENCE_IDEMPOTENCY_AND_ISOLATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_10_SQLITE_PERSISTENCE_IDEMPOTENCY_AND_ISOLATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_17_CHROMIUM_DOM_ASIN_MISMATCH",
+      "targetArtifact": "API_UI_SQLITE_CHROMIUM_PARITY.json",
+      "description": "Mutates Chromium DOM ASIN so it diverges from SQLite and HTTP GET",
+      "expectedViolatedCheckId": "CHK_11_THREE_WAY_SQLITE_HTTP_CHROMIUM_PARITY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_11_THREE_WAY_SQLITE_HTTP_CHROMIUM_PARITY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_18_READ_ONLY_GET_MUTATES_DB_DIGEST",
+      "targetArtifact": "READ_ONLY_HTTP_NONMUTATION_PROOF.json",
+      "description": "Mutates postSnapshotDigest to differ from preSnapshotDigest after GET calls",
+      "expectedViolatedCheckId": "CHK_12_READ_ONLY_HTTP_NONMUTATION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_12_READ_ONLY_HTTP_NONMUTATION"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_19_FALSE_PASS_FEATURE_ACCEPTED_WHEN_POLICY_BLOCKED",
+      "targetArtifact": "AMAZON_PROVIDER_GATE.json",
+      "description": "Relabels overallPilotStatus as FEATURE_ACCEPTED while realProviderVerdict is BLOCKED_POLICY",
+      "expectedViolatedCheckId": "CHK_13_AMAZON_PROVIDER_GATE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_13_AMAZON_PROVIDER_GATE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_20_FIXTURE_PROMOTED_TO_REAL_PROVIDER_VERIFIED",
+      "targetArtifact": "AMAZON_PROVIDER_GATE.json",
+      "description": "Relabels realProviderVerdict as REAL_PROVIDER_VERIFIED with 0 authorizedLiveRows",
+      "expectedViolatedCheckId": "CHK_13_AMAZON_PROVIDER_GATE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_13_AMAZON_PROVIDER_GATE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_21_G15_OR_G16_INFLATED_BY_AMAZON_LISTING",
+      "targetArtifact": "AMAZON_PROVIDER_GATE.json",
+      "description": "Mutates g15DemandUnchanged to false (allowing Amazon listing to satisfy 60d demand)",
+      "expectedViolatedCheckId": "CHK_13_AMAZON_PROVIDER_GATE_HONESTY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_13_AMAZON_PROVIDER_GATE_HONESTY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_22_POST_CUTOFF_AMAZON_TIME_TRAVEL_LEAK",
+      "targetArtifact": "POINT_IN_TIME_AUDIT.json",
+      "description": "Mutates postCutoffAmazonLeakageRejected to false in POINT_IN_TIME_AUDIT.json",
+      "expectedViolatedCheckId": "CHK_14_POINT_IN_TIME_AND_BACKTEST_INTEGRITY",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_14_POINT_IN_TIME_AND_BACKTEST_INTEGRITY"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_23_STALE_WORKER_WRITE_ALLOWED",
+      "targetArtifact": "ASYNC_WORKER_BARRIER.json",
+      "description": "Mutates staleWorkerWriteBlocked to false in ASYNC_WORKER_BARRIER.json",
+      "expectedViolatedCheckId": "CHK_15_ASYNC_WORKER_BARRIER",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_15_ASYNC_WORKER_BARRIER"
+      ]
+    },
+    {
+      "mutationId": "AMZ_MUT_24_SKIPPED_OR_FAILED_TEST_IGNORED",
+      "targetArtifact": "TEST_EXECUTION_REPORT.json",
+      "description": "Injects skippedTestsCount=1 in TEST_EXECUTION_REPORT.json while claiming status=PASS",
+      "expectedViolatedCheckId": "CHK_16_TEST_BUILD_CHROMIUM_EXECUTION",
+      "caughtAndRejected": true,
+      "failedCheckIds": [
+        "CHK_16_TEST_BUILD_CHROMIUM_EXECUTION"
+      ]
+    }
+  ]
+}

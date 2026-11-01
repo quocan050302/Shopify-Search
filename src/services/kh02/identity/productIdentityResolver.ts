@@ -339,7 +339,10 @@ export function resolveProductIdentity(
 
   // Check if merchant metadata was verified as an ACTUAL_PRODUCT_PAGE
   const explicitVerifiedMerchantTitle =
-    input.verifiedMerchantTitle || (input as any).verifiedLandingPageTitle || null;
+    input.verifiedMerchantTitle ||
+    (input as any).verifiedMerchantProductName ||
+    (input as any).verifiedLandingPageTitle ||
+    null;
   const effectiveVerifiedPageType =
     input.verifiedPageType ||
     (explicitVerifiedMerchantTitle ? "ACTUAL_PRODUCT_PAGE" : undefined);

@@ -1,0 +1,117 @@
+{
+  "version": "12.4.3.4.5",
+  "evaluatedAt": "2026-10-31T05:23:09.301Z",
+  "totalFaultsInjected": 12,
+  "totalFaultsCaught": 12,
+  "negativeControlPassed": true,
+  "faults": [
+    {
+      "faultId": "NC-01",
+      "description": "Force browser test status failure",
+      "targetFile": "REAL_CHROMIUM_EXECUTION.json",
+      "injectedAnomaly": "status = 'FAIL'",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_05_CHROMIUM_EXECUTION",
+      "rejectionReason": "Caught by CHK_05_CHROMIUM_EXECUTION: Real Playwright Chromium execution with server readiness, page nav, DOM assertions, and read-only DB verification (actual: executed=true, status=FAIL, ready=true, nav=true, failures=0)"
+    },
+    {
+      "faultId": "NC-02",
+      "description": "Browser page navigation failed",
+      "targetFile": "REAL_CHROMIUM_EXECUTION.json",
+      "injectedAnomaly": "pageNavigationSucceeded = false",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_05_CHROMIUM_EXECUTION",
+      "rejectionReason": "Caught by CHK_05_CHROMIUM_EXECUTION: Real Playwright Chromium execution with server readiness, page nav, DOM assertions, and read-only DB verification (actual: executed=true, status=PASS, ready=true, nav=false, failures=0)"
+    },
+    {
+      "faultId": "NC-03",
+      "description": "Read-only DB mutation detected",
+      "targetFile": "REAL_CHROMIUM_EXECUTION.json",
+      "injectedAnomaly": "zeroDatabaseMutationsOnRead = false",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_05_CHROMIUM_EXECUTION",
+      "rejectionReason": "Caught by CHK_05_CHROMIUM_EXECUTION: Real Playwright Chromium execution with server readiness, page nav, DOM assertions, and read-only DB verification (actual: executed=true, status=PASS, ready=true, nav=true, failures=0)"
+    },
+    {
+      "faultId": "NC-04",
+      "description": "Candidate score mismatch across SQLite and Browser",
+      "targetFile": "SQLITE_HTTP_CHROMIUM_RECONCILIATION.json",
+      "injectedAnomaly": "fieldDiscrepancies = [{ field: 'score', expected: 90, actual: 75 }]",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_06_SQLITE_HTTP_BROWSER_PARITY",
+      "rejectionReason": "Caught by CHK_06_SQLITE_HTTP_BROWSER_PARITY: SQLite, HTTP API, and Chromium DOM candidate and score reconciliation with >0 fields compared and 0 discrepancies (actual: cands=1, fields=3, discrepancies=1)"
+    },
+    {
+      "faultId": "NC-05",
+      "description": "Inject stale/mismatched source SHA",
+      "targetFile": "SOURCE_SHA_PROVENANCE.json",
+      "injectedAnomaly": "testedSourceSha = 'deadbeef00000000000000000000000000000000'",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_02_SOURCE_SHA_INTEGRITY",
+      "rejectionReason": "Caught by CHK_02_SOURCE_SHA_INTEGRITY: Tested source SHA matches expected Git commit (actual: deadbeef0000)"
+    },
+    {
+      "faultId": "NC-06",
+      "description": "Truncate or invalidate JUnit XML testsuites",
+      "targetFile": "REGRESSION_RESULTS.junit.xml",
+      "injectedAnomaly": "Delete testcases to leave empty xml",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_03_JUNIT_CONSISTENCY",
+      "rejectionReason": "Caught by CHK_03_JUNIT_CONSISTENCY: Deep JUnit XML consistency with >= 400 testcases and 0 failures (actual: testcases=0, failures=-1)"
+    },
+    {
+      "faultId": "NC-07",
+      "description": "Fake BigQuery EXECUTED with null jobId",
+      "targetFile": "BIGQUERY_AUTH_AND_BILLING_AUDIT.json",
+      "injectedAnomaly": "queryExecutionStatus = 'EXECUTED', googleProviderJobId = null",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_08_BIGQUERY_STATUS_TRUTH",
+      "rejectionReason": "Caught by CHK_08_BIGQUERY_STATUS_TRUTH: BigQuery status is not falsely reported as EXECUTED without a valid provider jobId (actual: proofStatus=EXECUTED, auditStatus=EXECUTED)"
+    },
+    {
+      "faultId": "NC-08",
+      "description": "Creative pipeline invariant violation (raw != norm + rej)",
+      "targetFile": "GOOGLE_NORMALIZATION_LEDGER.json",
+      "injectedAnomaly": "normalizedDistinctCount = 10 when raw = 3",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_10_GOOGLE_CREATIVE_INVARIANTS",
+      "rejectionReason": "Caught by CHK_10_GOOGLE_CREATIVE_INVARIANTS: Google creative pipeline invariant satisfied: rawDistinct === normalizedDistinct + rejectedBeforeNormalization (actual: raw=9, norm=10, rejected=0)"
+    },
+    {
+      "faultId": "NC-09",
+      "description": "Inject future data leakage in historical replay audit",
+      "targetFile": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "injectedAnomaly": "futureDataLeakageDetected = true",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_14_POINT_IN_TIME_INTEGRITY",
+      "rejectionReason": "Caught by CHK_14_POINT_IN_TIME_INTEGRITY: Historical DEV and HOLDOUT replay windows strictly disjoint with zero future data leakage (actual: leakage=true, separation=true)"
+    },
+    {
+      "faultId": "NC-10",
+      "description": "Unrelated demand association candidateId mutation",
+      "targetFile": "G15_PRODUCT_DEMAND_PROOF.json",
+      "injectedAnomaly": "g15Verdict = 'PASS' without longitudinal coverage",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_12_G15_DYNAMIC_EVALUATION",
+      "rejectionReason": "Caught by CHK_12_G15_DYNAMIC_EVALUATION: G15 Evergreen evaluated candidate-by-candidate against SQLite demand tables, truthfully failing closed (actual: verdict=PASS, entries=3)"
+    },
+    {
+      "faultId": "NC-11",
+      "description": "False upgrade of CheckoutChamp sales funnel to VERIFIED",
+      "targetFile": "G16_CURRENT_RUN_VERIFIED_PROOF.json",
+      "injectedAnomaly": "uprootClean.identityStatus = 'VERIFIED' and verifiedLiveCount = 3",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_13_G16_STRICT_IDENTITY",
+      "rejectionReason": "Caught by CHK_13_G16_STRICT_IDENTITY: G16 strictly retains CheckoutChamp funnel as PROBABLE (2/3 verified live), no false upgrades (actual: verifiedCount=3/3, verdict=PASS)"
+    },
+    {
+      "faultId": "NC-12",
+      "description": "Production build failure injection",
+      "targetFile": "FRESH_PRODUCTION_BUILD_PROOF.json",
+      "injectedAnomaly": "buildSucceeded = false, exitCode = 1",
+      "caughtAndRejected": true,
+      "failedCheckId": "CHK_17_FRESH_BUILD_EXECUTION",
+      "rejectionReason": "Caught by CHK_17_FRESH_BUILD_EXECUTION: Fresh Next.js production build executed cleanly with command 'next build' and exit code 0 (actual: cmd=next build, exit=1, success=false)"
+    }
+  ]
+}

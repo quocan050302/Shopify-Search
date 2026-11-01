@@ -1,0 +1,95 @@
+{
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "evaluatedAt": "2026-10-31T05:22:24.655Z",
+  "rawCount": 9,
+  "creatives": [
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR18441208625369186305",
+      "format": "video",
+      "last_shown": "2026-10-31",
+      "content": {
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828044186135&uiFeatures=12&adGroupId=203565426400&assets=%3DH4sIAAAAAAAAAOPy5eLkuD5z3dlLnAJMXJwcK_90vXjFJKDJxcmx48WOhrPcAjwg0bPND_qYBTi4ODlWQdQycnFynIAwmbk4Oc5u_zz_L5cAGwDVTm8hTwAAAA&sig=ACiVB_wfvjtZb3XyGeZzq9uWk8wpaHZ8ng&htmlParentId=fletch-render-12576838662720925757&responseCallback=fletchCallback12576838662720925757",
+        "headline": "Pet Hair Air Cleaner",
+        "description": "Air Purifier For Cats, Pet Habitats, Pet Beds, Pet Hair, Litter Box, Odor Deodorizer",
+        "video_url": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b"
+      }
+    },
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR10608872651969527809",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/17571345017967561473"
+      }
+    },
+    {
+      "advertiser_id": "AR11363703404665765889",
+      "creative_id": "CR12722150295660920833",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=4342699054&creativeId=828459738362&uiFeatures=12&adGroupId=198435963542&itemIds=10548303235901808171&sig=ACiVB_zIzQf5eZySolqHoZL-Q5Tb_fpB_w&htmlParentId=fletch-render-4005106282571251657&responseCallback=fletchCallback4005106282571251657"
+      }
+    },
+    {
+      "advertiser_id": "AR10162009454036385793",
+      "creative_id": "CR02220363273008578561",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=5591168468&creativeId=801927216709&uiFeatures=12&adGroupId=191621562621&itemIds=3267509793588795426&sig=ACiVB_xnhu8-cJ8QWOy1fIe-HJ9j3cyDJA&htmlParentId=fletch-render-2546342862604601868&responseCallback=fletchCallback2546342862604601868"
+      }
+    },
+    {
+      "advertiser_id": "AR10162009454036385793",
+      "creative_id": "CR04177211327242043393",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/13992534230478887038"
+      }
+    },
+    {
+      "advertiser_id": "AR10162009454036385793",
+      "creative_id": "CR13615728145788305409",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/5433427268261952730"
+      }
+    },
+    {
+      "advertiser_id": "AR17310456840001159169",
+      "creative_id": "CR13418876926890606593",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2593925820&creativeId=627101025487&uiFeatures=12&adGroupId=143013346060&itemIds=579725918567401080&sig=ACiVB_wO8yk5vY72PVXoMd_wd4ND9rQ_YA&htmlParentId=fletch-render-4439083325325716992&responseCallback=fletchCallback4439083325325716992"
+      }
+    },
+    {
+      "advertiser_id": "AR17310456840001159169",
+      "creative_id": "CR15895057600329285633",
+      "format": "video",
+      "last_shown": "2026-10-31",
+      "content": {
+        "preview_url": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency&obfuscatedCustomerId=2593925820&creativeId=762790289649&uiFeatures=12&adGroupId=182506264295&versionId=4&itemIds=3490623976799896304,12762428560552852212,6819683144587755134,11827069173209970745,17147326922341993201,16402026109372819616&assets=%3DH4sIAAAAAAAAAAE5AMb_CjcKCQjpooX2pAEQKQoJCK7X-L7ECRAMCgkI0p-e9sUHEAgKCQj99Pr7zAEQBgoJCOG6hcXBBBAB1L6ZTDkAAAA&sig=ACiVB_y_qu6Q0v47rqw2b-gFdDwRXKBTkA&htmlParentId=fletch-render-17703775128014802668&responseCallback=fletchCallback17703775128014802668",
+        "headline": "Uproot Cleaners",
+        "description": "Discover the Uproot Clean Bundle – your all-in-one pet hair solution!",
+        "video_url": "setTimeout(function(){var n,aa=typeof Object.create==\"function\"?Object.create:function(a){var b=function(){};b.prototype=a;return new b},ba=typeof Object.defineProperties==\"function\"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b"
+      }
+    },
+    {
+      "advertiser_id": "AR17310456840001159169",
+      "creative_id": "CR12178948318398775297",
+      "format": "image",
+      "last_shown": "2026-10-31",
+      "content": {
+        "image_url": "https://tpc.googlesyndication.com/archive/simgad/7949270907321270859"
+      }
+    }
+  ],
+  "upstreamTransportStatus": "PASSED"
+}

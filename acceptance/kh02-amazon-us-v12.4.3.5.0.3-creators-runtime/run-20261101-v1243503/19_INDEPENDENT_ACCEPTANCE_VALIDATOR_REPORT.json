@@ -1,0 +1,121 @@
+{
+  "valid": true,
+  "releaseVersion": "12.4.3.5.0.3",
+  "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-amazon-us-v12.4.3.5.0.3-creators-runtime/run-20261101-v1243503",
+  "evaluatedAt": "2026-11-01T04:17:55.114Z",
+  "expectedCodeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "observedCodeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "engineeringVerdict": "ENGINEERING_READY",
+  "liveProviderVerdict": "CREDENTIALS_REQUIRED",
+  "overallClosureVerdict": "ENGINEERING_READY_WITH_LIVE_EXTERNAL_BLOCKER",
+  "passedChecksCount": 15,
+  "failedChecksCount": 0,
+  "checks": [
+    {
+      "checkId": "V01_REQUIRED_ARTIFACTS_PRESENT",
+      "title": "All required V12.4.3.5.0.3 JSON/Markdown artifacts exist on disk and parse cleanly",
+      "passed": true,
+      "reason": "All mandatory artifacts present and parsed cleanly.",
+      "violations": []
+    },
+    {
+      "checkId": "V02_SOURCE_SHA_CONSISTENCY",
+      "title": "All acceptance artifacts share identical 40-char codeSha, branch, and releaseVersion 12.4.3.5.0.3",
+      "passed": true,
+      "reason": "Verified identical codeSha (ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381) and releaseVersion 12.4.3.5.0.3 across all artifacts.",
+      "violations": []
+    },
+    {
+      "checkId": "V03_OAUTH_JSON_SCOPE_CONTRACT",
+      "title": "OAuth 2.0 client_credentials uses JSON body with scope=creatorsapi::default, deduplicates concurrent refreshes, and redacts secrets",
+      "passed": true,
+      "reason": "OAuth 2.0 JSON contract, scope=creatorsapi::default, refresh deduplication, and secret redaction verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH",
+      "title": "SearchItems parses lower-camel searchResult.items/offersV2 and fails closed with SCHEMA_MISMATCH on wrong HTTP 200 schema",
+      "passed": true,
+      "reason": "SearchItems lower-camel schema and SCHEMA_MISMATCH fail-closed guard verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS",
+      "title": "GetItems parses itemResults.items, matches strictly by normalized ASIN (never index 0), and preserves partial errors",
+      "passed": true,
+      "reason": "GetItems ASIN-keyed matching and partial error handling verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E",
+      "title": "Runtime factory is wired into orchestrator/enrichment and verified via MODE A local HTTP emulator with injectedCreatorsApiClientUsed=false and TEST_FIXTURE provenance",
+      "passed": true,
+      "reason": "Runtime factory wiring and MODE A E2E Product Finder run verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE",
+      "title": "Live provider proof strictly separates configured != authenticated != querySucceeded and forbids fake live claims",
+      "passed": true,
+      "reason": "Live provider truth and zero fake live claims verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING",
+      "title": "Query plan caps (<=3 candidates, <=4 ops, concurrency=1), accessory rejection, and SHA-256 hash recomputation hold",
+      "passed": true,
+      "reason": "Query plan budget caps, accessory rejection, and SHA-256 hash integrity verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY",
+      "title": "Amazon evidence causes zero opportunityScore/rank/G07/G15/G16 inflation and preserves historical gate truth",
+      "passed": true,
+      "reason": "Zero score/rank/gate inflation and historical G07/G15/G16 truth verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION",
+      "title": "SQLite persistence, post-reload HTTP GET parity (49/49 core + 16/16 Amazon fields), parent COMPLETED status, and 403 workspace isolation hold",
+      "passed": true,
+      "reason": "Persistence, reload parity, and workspace isolation verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V11_PLAYWRIGHT_UI_AND_MCP_PARITY",
+      "title": "Headless Chromium UI rendering, non-empty screenshots on disk, and Playwright MCP URL verification parity hold",
+      "passed": true,
+      "reason": "Playwright UI screenshots and MCP URL verification parity verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V12_TESTS_BUILD_AND_TYPESCRIPT",
+      "title": "All R01..R52 tests, full regression suite, npx tsc --noEmit, and npm run build pass with exit code 0",
+      "passed": true,
+      "reason": "Automated test suite, TypeScript check, and Next.js production build verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V13_NEGATIVE_MUTATION_SUITE_48_PLUS",
+      "title": "At least 48 physical-file negative control mutations executed with 100% caught and 0 escapes",
+      "passed": true,
+      "reason": "48/48 physical-file negative control mutations caught with 0 escapes.",
+      "violations": []
+    },
+    {
+      "checkId": "V14_DISK_AND_PROCESS_HYGIENE",
+      "title": "Disk headroom >= 8 GiB, 0 orphan processes remaining, and temporary directories cleaned",
+      "passed": true,
+      "reason": "Disk headroom and process hygiene verified.",
+      "violations": []
+    },
+    {
+      "checkId": "V15_FINAL_ACCEPTANCE_MATRIX_TRUTH",
+      "title": "Final acceptance matrix and executive completion report accurately reflect engineering readiness and live provider status",
+      "passed": true,
+      "reason": "Final acceptance matrix and report verified (ENGINEERING_READY_WITH_LIVE_EXTERNAL_BLOCKER).",
+      "violations": []
+    }
+  ],
+  "violations": []
+}

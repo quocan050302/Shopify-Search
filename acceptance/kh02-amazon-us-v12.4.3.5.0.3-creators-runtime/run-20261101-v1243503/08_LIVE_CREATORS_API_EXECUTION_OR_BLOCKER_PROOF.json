@@ -1,0 +1,12 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.241Z",
+  "configured": false,
+  "authenticated": false,
+  "querySucceeded": false,
+  "liveVerdict": "CREDENTIALS_REQUIRED",
+  "verifiedLiveUsProductIdentitiesCount": 0,
+  "liveCallsAttempted": 0,
+  "blockerReason": "CREDENTIALS_REQUIRED: Official Amazon Associates Creators API credentials (KH02_AMAZON_CREATORS_API_CREDENTIAL_ID, KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET, KH02_AMAZON_ASSOCIATES_PARTNER_TAG) are not configured in server environment."
+}

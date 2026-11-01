@@ -1,0 +1,211 @@
+{
+  "evaluatedAt": "2026-10-31T02:38:49.210Z",
+  "version": "12.4.3.4.3",
+  "totalTermsEvaluated": 18,
+  "controlTermsCount": 3,
+  "productTermsCount": 15,
+  "termsWithTopTermsPresence": 3,
+  "termsWithArbitrarySkuHistorySupport": 0,
+  "g15EligibleTermsCount": 0,
+  "structuralCoverageFinding": "Public BigQuery table 'bigquery-public-data.google_trends.top_terms' indexes only top macro search events and cannot provide longitudinal weekly demand time-series for arbitrary e-commerce product SKUs.",
+  "entries": [
+    {
+      "term": "google",
+      "category": "CONTROL",
+      "isControl": true,
+      "evidenceClass": "GOOGLE_TOP_TERMS_SIGNAL",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": true,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "Broad macro search term indexed in top terms; does not provide weekly SKU-specific interest series."
+    },
+    {
+      "term": "weather",
+      "category": "CONTROL",
+      "isControl": true,
+      "evidenceClass": "GOOGLE_TOP_TERMS_SIGNAL",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": true,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "Broad macro search term indexed in top terms; does not provide weekly SKU-specific interest series."
+    },
+    {
+      "term": "news",
+      "category": "CONTROL",
+      "isControl": true,
+      "evidenceClass": "GOOGLE_TOP_TERMS_SIGNAL",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": true,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "Broad macro search term indexed in top terms; does not provide weekly SKU-specific interest series."
+    },
+    {
+      "term": "pet water fountain",
+      "category": "Pet Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "cat hair remover roller",
+      "category": "Pet Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "automatic pet feeder",
+      "category": "Pet Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "uproot clean pet lint cleaner",
+      "category": "Pet Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "smart dog collar",
+      "category": "Pet Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "wall repair paste kit",
+      "category": "Home Cleaning Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "hot melt glue gun",
+      "category": "Home Cleaning Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "electric scrubber brush",
+      "category": "Home Cleaning Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "robot vacuum mop",
+      "category": "Home Cleaning Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "microfiber steam cleaner",
+      "category": "Home Cleaning Gadgets",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "car vacuum cleaner wireless",
+      "category": "Car Accessories",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "car phone mount wireless charger",
+      "category": "Car Accessories",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "dash cam front and rear",
+      "category": "Car Accessories",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "car dent repair kit",
+      "category": "Car Accessories",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    },
+    {
+      "term": "leather car seat cushion",
+      "category": "Car Accessories",
+      "isControl": false,
+      "evidenceClass": "INSUFFICIENT_COVERAGE",
+      "sourceDataset": "bigquery-public-data.google_trends.top_terms",
+      "presentInTopTerms": false,
+      "arbitrarySkuLongitudinalHistorySupported": false,
+      "g15Eligible": false,
+      "reason": "E-commerce product term absent from Top Terms table (table indexes top ~25 broad queries per DMA/day, not arbitrary commercial long-tail queries)."
+    }
+  ]
+}

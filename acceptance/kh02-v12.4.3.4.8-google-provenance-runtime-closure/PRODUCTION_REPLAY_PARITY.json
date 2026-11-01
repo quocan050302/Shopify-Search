@@ -1,0 +1,10 @@
+{
+  "evaluatedAt": "2026-10-31T11:09:12.050Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "asOfInputEvaluated": "2026-10-24T00:00:00.000Z",
+  "backtestEngineExecuted": "PASS",
+  "businessHistoricalEvidenceSufficient": "INSUFFICIENT_EVIDENCE",
+  "parityResult": "INSUFFICIENT_EVIDENCE",
+  "reason": "Point-in-time replay engine executed with joined metadata leakage guard; business longitudinal demand series remains INSUFFICIENT_EVIDENCE."
+}

@@ -1,0 +1,38 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02/ai/geminiModelRouter.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3473[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Gemini Model Router & Error Classification [2m(14)[22m
+     [33m[2m✓[22m[39m retries up to 3 times on 503 before succeeding on same model[33m 886[2mms[22m[39m
+     [33m[2m✓[22m[39m exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds[33m 1310[2mms[22m[39m
+     [33m[2m✓[22m[39m opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate[33m 385[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces global call budget across candidates via GeminiRunBudgetTracker[33m 558[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 1030[2mms[22m[39m
+   [32m✓[39m KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled [2m(18)[22m
+     [32m✓[39m Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode [2m(4)[22m
+       [33m[2m✓[22m[39m A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode[33m 998[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 420[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts [2m([22m[2m89 tests[22m[2m)[22m[33m 492[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 206[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 139[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 163[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiProductClassification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiEvidenceValidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m      Tests [22m [1m[32m356 passed[39m[22m[90m (356)[39m
+[2m   Start at [22m 11:39:36
+[2m   Duration [22m 16.43s[2m (tests 47%, import 36%, setup 13%, transform 3%, worker 1%)[22m
+
+[2m     Import [22m [33m87 modules were evaluated 396 times[39m[2m · 5.05s total, 36% of tracked time[22m
+[2m            [22m [2m~3.94s faster with [22m[33misolate: false[39m[2m — shared modules are evaluated once per worker instead of once per file[22m
+[2m            [22m [2mlearn more: https://vitest.dev/guide/improving-performance#test-isolation[22m
+
+JSON report written to D:/Project_github/Running-Ads/acceptance/kh02-v12.4.3.4.4-runtime-truth-closure/json_reports/kh02_unit_all.json

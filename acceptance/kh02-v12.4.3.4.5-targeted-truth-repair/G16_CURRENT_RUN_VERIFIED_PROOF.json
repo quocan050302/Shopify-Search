@@ -1,0 +1,63 @@
+{
+  "evaluatedAt": "2026-10-31T05:22:27.908Z",
+  "researchRunId": "kh02_run_1793424091548_669k8",
+  "totalCandidates": 3,
+  "verifiedLiveCount": 2,
+  "requiredCount": 3,
+  "distinctFamiliesCount": 2,
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "entries": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "familyKey": "automatic_pet_feeder",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 2,
+      "validLineageObservationsCount": 7,
+      "merchantVerified": true,
+      "isLiveVerified": true,
+      "rejectionReasons": [],
+      "verificationMethod": "STORE_METADATA_JSON_LD_WITH_SAME_RUN_LIVE_LINEAGE",
+      "notes": "Standard merchant store with verified product identity and valid same-run live lineage."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "familyKey": "pet_water_fountain",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 1,
+      "validLineageObservationsCount": 1,
+      "merchantVerified": true,
+      "isLiveVerified": true,
+      "rejectionReasons": [],
+      "verificationMethod": "STORE_METADATA_JSON_LD_WITH_SAME_RUN_LIVE_LINEAGE",
+      "notes": "Standard merchant store with verified product identity and valid same-run live lineage."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "familyKey": "pet_hair_remover_roller",
+      "identityStatus": "PROBABLE",
+      "isCheckoutChampFunnel": true,
+      "liveObservationsCount": 10,
+      "validLineageObservationsCount": 10,
+      "merchantVerified": true,
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "CheckoutChamp funnel cannot be VERIFIED without root JSON-LD merchant schema",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "verificationMethod": "FUNNEL_PROBABLE_NO_JSON_LD",
+      "notes": "CheckoutChamp multi-step sales funnel retained strictly as PROBABLE under anti-gaming identity rules."
+    }
+  ],
+  "notes": "Only 2/3 candidates verified live in current run. Fails closed as INSUFFICIENT_EVIDENCE."
+}

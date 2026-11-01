@@ -1,0 +1,119 @@
+{
+  "version": "12.4.3.4.2",
+  "auditBaselineHeadCommit": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "auditBaselineSourceCommit": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "generatedAt": "2026-10-30T09:37:00.000Z",
+  "rootCauses": [
+    {
+      "id": "RC-01",
+      "title": "BigQuery does not execute real queries",
+      "sourceFile": "src/services/kh02/demand/demandProviderRegistry.ts",
+      "sourceFunction": "GoogleTrendsBigQueryProvider.fetchSeries()",
+      "reproduction": "Provider checks env flags and returns CONFIGURED in diagnose(), but fetchSeries() immediately returns a static INSUFFICIENT_DATA string mentioning 'bigquery-public-data.google_trends.top_terms' without invoking BigQuery client/API, dry-run, or query job.",
+      "impact": "Queries claimed as evaluated against Google BigQuery were never executed upstream; bytes processed accounting and job IDs are non-existent.",
+      "correction": "Implement genuine BigQuery client execution path with read-only access, parameterized term and region filters, schema validation, real dry-run, estimated bytes accounting, query budget enforcement, job ID tracking, timeout and cancellation handling, and truthful no-results classification.",
+      "regressionAssertion": "fetchSeries executes real dry-run and query when authorized; correctly records job ID, bytes processed, and table provenance; fails closed on unauthorized billable projects or budget breach.",
+      "acceptanceGate": "G06, G13, G15, BIGQUERY_REAL_EXECUTION_AUDIT"
+    },
+    {
+      "id": "RC-02",
+      "title": "BigQuery zero-cost verification is self-declared",
+      "sourceFile": "src/services/kh02/demand/demandProviderRegistry.ts",
+      "sourceFunction": "GoogleTrendsBigQueryProvider.diagnose()",
+      "reproduction": "diagnose() trusts BIGQUERY_FREE_SANDBOX_VERIFIED=true and BIGQUERY_BILLING_ENABLED=false without independently querying Google Cloud project billing status.",
+      "impact": "Self-declared environment variables can conceal billable projects or false-claim sandbox eligibility without independent verification.",
+      "correction": "Implement independent Google Cloud Billing API check (GET https://cloudbilling.googleapis.com/v1/projects/{projectId}/billingInfo). If billing state cannot be independently confirmed with read-only access, fail closed with BLOCKED_FREE_SANDBOX_NOT_VERIFIED.",
+      "regressionAssertion": "Provider returns BLOCKED_FREE_SANDBOX_NOT_VERIFIED when billing cannot be independently verified; blocks billable projects unconditionally.",
+      "acceptanceGate": "G06, ZERO_SPEND_POLICY_VERDICT, ZERO_SPEND_LIVE_RUNTIME_VERDICT"
+    },
+    {
+      "id": "RC-03",
+      "title": "G21 accepts a misleading backtest with hard-coded verdicts",
+      "sourceFile": "scripts/kh02/runBacktestV12_4_3_4_1.ts; scripts/kh02/runAcceptanceAsyncV12_4_3_4_1.ts",
+      "sourceFunction": "runBacktestV12_4_3_4_1(); G21 evaluation in runAcceptanceAsyncV12_4_3_4_1()",
+      "reproduction": "runBacktestV12_4_3_4_1() assigns 'passed = true' for candidate recovery, public dataset coverage, Google brand-only association, and Evergreen honesty without calling any business logic. G21 bundled async barrier, disk safety, SQLite check, and backtest into one passing verdict.",
+      "impact": "14/14 PASS reported on fake backtest; false PASS on G21.",
+      "correction": "Separate Category A (policy/scenario unit tests) from Category B (genuine point-in-time historical product replay with DEV/HOLDOUT temporal splits). Remove all hard-coded 'passed = true'. Split G21 so barrier, disk safety, SQLite integrity, and backtest have independent assertions.",
+      "regressionAssertion": "All scenario checks execute actual business logic; historical backtest executes point-in-time product ranking against historical timestamps without synthetic pass branches.",
+      "acceptanceGate": "G21, POLICY_SCENARIO_VERDICT, HISTORICAL_BACKTEST_VERDICT"
+    },
+    {
+      "id": "RC-04",
+      "title": "Browser test silently skips when server offline and reports success",
+      "sourceFile": "tests/integration/kh02BrowserAcceptance.test.ts",
+      "sourceFunction": "it('launches Chromium, interacts with /products...')",
+      "reproduction": "When baseUrl (/api/v1/kh02/version) is unreachable, the test logs '[Notice] SWAI server at ... is offline; skipping standalone browser test' and returns early. Vitest treats early return with 0 assertions as PASS.",
+      "impact": "Unexecuted browser tests conceal missing UI verification as green test passes.",
+      "correction": "Browser test must enforce server readiness; if offline, report BLOCKED/fail test contract. Mandatory acceptance runner must never mark an unexecuted browser run as PASS.",
+      "regressionAssertion": "Standalone browser test fails or reports BLOCKED when server is offline; executes full Chromium navigation and element assertions when server is ready.",
+      "acceptanceGate": "G17, CHROMIUM_EXECUTION_AUDIT"
+    },
+    {
+      "id": "RC-05",
+      "title": "G15 lacks authoritative historical demand evidence",
+      "sourceFile": "src/services/kh02/demand/historicalDemandIngestion.ts; temporalDemandEngine.ts",
+      "sourceFunction": "evaluateDemandSourceAuthority(); ingestHistoricalDemand()",
+      "reproduction": "Audited DB rows had evidenceReference: null; BigQuery queries executed was 0; verifiedImportsCount did not prove official Google provenance; 0 products qualified as Verified Evergreen.",
+      "impact": "Evergreen qualification standard could not be satisfied legitimately.",
+      "correction": "Require verifiable cryptographic and source provenance for demand series; distinguish local file integrity from authentic external Google provenance; reconcile 60-day vs 180-365 day requirement and report honest INSUFFICIENT_EVIDENCE when external sources lack niche coverage.",
+      "regressionAssertion": "Synthetic fixture records cannot satisfy authoritative demand evaluation; lack of authoritative data yields honest INSUFFICIENT_EVIDENCE.",
+      "acceptanceGate": "G15, G15_EVERGREEN_PROOF"
+    },
+    {
+      "id": "RC-06",
+      "title": "G16 Live Verified Top 3 shortfall (2/3) in Pet Gadgets",
+      "sourceFile": "src/services/kh02/identity/productMetadataExtractor.ts; productCandidateDiscovery.ts",
+      "sourceFunction": "fetchVerifiedProductPageMetadata(); selectTopResearchShortlist()",
+      "reproduction": "Uproot Clean ad landed on CheckoutChamp funnel page (cc.uprootclean.com/main/phr) which lacked JSON-LD and OpenGraph product metadata, correctly leaving it PROBABLE. Shortlist liveVerified count was 2/3.",
+      "impact": "G16 remained 2/3 instead of 3/3.",
+      "correction": "Conduct forensic analysis on merchant landing page; execute bounded candidate recovery from current run's candidate pool for distinct VERIFIED products from different families with current-run live observations. If 3/3 cannot be legitimately achieved without weakening verification rules, truthfully report INSUFFICIENT_EVIDENCE with exact shortfall evidence.",
+      "regressionAssertion": "Candidates without verified merchant page metadata never receive VERIFIED status; candidate recovery only promotes genuine current-run live VERIFIED products from distinct families.",
+      "acceptanceGate": "G16, G16_LIVE_VERIFIED_PROOF"
+    },
+    {
+      "id": "RC-07",
+      "title": "Google Ads MCP retrieval times out on Windows due to encoding and unbounded latency",
+      "sourceFile": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts; scripts/googleTransparencyServer.py",
+      "sourceFunction": "collectGoogleAdvertiserSignals(); get_advertiser_ads()",
+      "reproduction": "On Windows, python child process stdout defaults to cp1252. When advertiser name contains non-ASCII characters (e.g. 深圳有哈科技有限公司 for UAHPET), Python crashes with UnicodeEncodeError, breaking JSON-RPC pipe and causing 15s timeout on every domain.",
+      "impact": "Stage 6 timed out on all attempted domains, returning 0 creatives and leaving the association ledger empty.",
+      "correction": "Set PYTHONUTF8: '1' and PYTHONIOENCODING: 'utf-8' in StdioClientTransport spawn env; configure sys.stdout.reconfigure(encoding='utf-8') in googleTransparencyServer.py; bound creative count per domain to respect per-domain deadlines.",
+      "regressionAssertion": "Google MCP client connects, searches advertiser domain, and retrieves creatives without encoding crash or timeout.",
+      "acceptanceGate": "G06, GOOGLE_LIVE_RETRIEVAL_VERDICT, GOOGLE_PRODUCT_ASSOCIATION_VERDICT"
+    },
+    {
+      "id": "RC-08",
+      "title": "CSV provenance and diagnostic capabilities overstated",
+      "sourceFile": "src/services/kh02/demand/googleTrendsCsvValidator.ts; demandProviderRegistry.ts",
+      "sourceFunction": "hasVerifiableCsvOrProviderLineage(); GoogleTrendsCsvImportProvider.diagnose()",
+      "reproduction": "File checksum was used as proof of Google provenance; GoogleTrendsCsvImportProvider.diagnose() reported transportConnected: true and authenticated: true despite being a local filesystem/database adapter.",
+      "impact": "Overstated diagnostic status and confusion between cryptographic file integrity and authoritative external source provenance.",
+      "correction": "Separate distinct flags: fileExists, checksumVerified, sourceOriginVerified, productAttributionVerified, historicalCoverageVerified, eligibleForEvergreen. Fix GoogleTrendsCsvImportProvider.diagnose() to report transportConnected: false and authenticated: false (local storage adapter).",
+      "regressionAssertion": "Checksum pass does not imply source authenticity; diagnostic status accurately reflects local adapter capabilities.",
+      "acceptanceGate": "G13, CSV_AUTHENTICITY_AND_INTEGRITY_AUDIT"
+    },
+    {
+      "id": "RC-09",
+      "title": "Acceptance artifacts oversized and contain malformed JSON control characters",
+      "sourceFile": "scripts/kh02/runAcceptanceAsyncV12_4_3_4_1.ts",
+      "sourceFunction": "saveArtifact(); JSON.stringify()",
+      "reproduction": "Acceptance generated redundant 90,000-line JSON artifacts with unescaped control characters in string fields, causing JSON.parse syntax errors.",
+      "impact": "Disk bloat, parse failures, redundant artifact storage.",
+      "correction": "Use compact indexed references, shared evidence keys, valid JSON string sanitization, and eliminate redundant huge payload duplicates while preserving complete forensic evidence.",
+      "regressionAssertion": "All acceptance artifacts parse cleanly as valid JSON; total artifact size is bounded and well within disk budget.",
+      "acceptanceGate": "G21, ASYNC_RESOURCE_SAFETY_VERDICT"
+    },
+    {
+      "id": "RC-10",
+      "title": "Nested test concurrency exceeds intended worker limit",
+      "sourceFile": "scripts/kh02/runAcceptanceAsyncV12_4_3_4_1.ts",
+      "sourceFunction": "runAcceptanceAsyncV12_4_3_4_1() child process spawning",
+      "reproduction": "Outer runner limited top-level concurrency to 2, but child Vitest processes spawned internal worker threads equal to CPU core count (8-16), leading to up to 32 concurrent worker threads.",
+      "impact": "CPU throttling, memory spikes, SQLite database lock contention, flaky timeouts.",
+      "correction": "Pass explicit worker concurrency limits to child Vitest invocations (--maxWorkers=1 or --fileParallelism=false) so that total effective concurrency across all running tasks never exceeds configured limit.",
+      "regressionAssertion": "Peak concurrent worker count is monitored and bounded; SQLite write operations remain contention-free.",
+      "acceptanceGate": "G21, ASYNC_WORKER_EXECUTION"
+    }
+  ]
+}
+

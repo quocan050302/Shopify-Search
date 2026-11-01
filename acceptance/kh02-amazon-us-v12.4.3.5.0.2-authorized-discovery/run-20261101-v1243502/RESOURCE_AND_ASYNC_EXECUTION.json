@@ -1,0 +1,16 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:58.331Z",
+  "maxOuterConcurrencyConfigured": 2,
+  "maxOuterConcurrencyObserved": 2,
+  "innerVitestMaxWorkers": 1,
+  "sqliteWriterConcurrency": 1,
+  "diskFreeBytesBefore": 15772995584,
+  "diskFreeBytesAfter": 15819227136,
+  "productionDbMutated": false,
+  "preRunDbDigest": "cd7a61140fa561aa9e2ed0512ebe3f31593c3e0eb6806c8a64d4dd1554b4276f",
+  "postRunDbDigest": "cd7a61140fa561aa9e2ed0512ebe3f31593c3e0eb6806c8a64d4dd1554b4276f",
+  "unownedProcessesKilled": 0,
+  "ownedTempDirsCleanedUp": true
+}

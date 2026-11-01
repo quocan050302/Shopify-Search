@@ -1,0 +1,20 @@
+{
+  "evaluatedAt": "2026-10-31T05:23:09.093Z",
+  "version": "12.4.3.4.5",
+  "testedSourceSha": "c7a9b0acf6824d841d74d0c59274d39b6ea1bf7d",
+  "browser": "Playwright Chromium (Headless)",
+  "executed": true,
+  "status": "PASS",
+  "serverReady": true,
+  "pageNavigationSucceeded": true,
+  "actualAssertionCount": 3,
+  "assertionFailures": [],
+  "routesVerified": [
+    "/products",
+    "/api/v1/research/products/[id]/overview"
+  ],
+  "zeroDatabaseMutationsOnRead": true,
+  "screenshots": [
+    "acceptance/kh02-v12.4.3.4.5-targeted-truth-repair/screenshots/01_pf_recommended.png"
+  ]
+}

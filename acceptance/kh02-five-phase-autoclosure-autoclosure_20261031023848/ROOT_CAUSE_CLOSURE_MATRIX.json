@@ -1,0 +1,66 @@
+{
+  "version": "12.4.3.4.3",
+  "evaluatedAt": "2026-10-31T02:40:13.539Z",
+  "rootCauses": [
+    {
+      "id": "RC-01",
+      "description": "BigQuery OAuth token acquisition",
+      "status": "CLOSED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-02",
+      "description": "BigQuery zero-spend billing validation",
+      "status": "CLOSED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-03",
+      "description": "BigQuery query budget enforcement",
+      "status": "CLOSED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-04",
+      "description": "Google MCP Windows stdio UTF-8 encoding",
+      "status": "CLOSED",
+      "fixLocation": "scripts/googleTransparencyServer.py"
+    },
+    {
+      "id": "RC-05",
+      "description": "Google creative association ledger classification",
+      "status": "CLOSED",
+      "fixLocation": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts"
+    },
+    {
+      "id": "RC-06",
+      "description": "Candidate-specific point-in-time demand evaluation",
+      "status": "CLOSED",
+      "fixLocation": "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+    },
+    {
+      "id": "RC-07",
+      "description": "Uniform runtime DEV/HOLDOUT dates across artifacts",
+      "status": "CLOSED",
+      "fixLocation": "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+    },
+    {
+      "id": "RC-08",
+      "description": "Negative controls against future data leakage",
+      "status": "CLOSED",
+      "fixLocation": "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+    },
+    {
+      "id": "RC-09",
+      "description": "CheckoutChamp funnel strict identity preservation",
+      "status": "CLOSED",
+      "fixLocation": "src/services/kh02/identity/productCandidateDiscovery.ts"
+    },
+    {
+      "id": "RC-10",
+      "description": "Bounded async worker pool with maxWorkers=1",
+      "status": "CLOSED",
+      "fixLocation": "scripts/kh02/runAcceptanceAsyncV12_4_3_4_2.ts"
+    }
+  ]
+}

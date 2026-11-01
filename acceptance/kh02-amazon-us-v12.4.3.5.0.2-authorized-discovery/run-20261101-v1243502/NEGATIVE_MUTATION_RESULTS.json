@@ -1,0 +1,551 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:58.567Z",
+  "totalMutationsExecuted": 45,
+  "caughtCount": 45,
+  "escapedCount": 0,
+  "allCaughtZeroEscapes": true,
+  "mutations": [
+    {
+      "mutationId": "N01",
+      "description": "Branch or CODE_SHA mismatch between baseline and test manifest",
+      "targetArtifact": "BASELINE_AND_BRANCH_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_02_BRANCH_AND_CODE_SHA_LOCK",
+      "failedReasons": [
+        "VAL_02_BRANCH_AND_CODE_SHA_LOCK: Branch or CODE_SHA mismatch across baseline/state/test artifacts (baseline=deadbeefdeadbeefdeadbeefdeadbeefdeadbeef, expected=1e0cde43a14d54444e64ea1a7e890488e491ee11)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N02",
+      "description": "Missing unit reporter in RAW_TEST_REPORT_MANIFEST.json",
+      "targetArtifact": "RAW_TEST_REPORT_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_03_PER_TEST_RAW_REPORTER_TRUTH",
+      "failedReasons": [
+        "VAL_03_PER_TEST_RAW_REPORTER_TRUTH: Raw reporter check failed: suitesValid=false, dup=false, skippedOrFailed=false, N01..N40=true, D01..D25=true",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N03",
+      "description": "Skipped N test in per-test reporter manifest",
+      "targetArtifact": "RAW_TEST_REPORT_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_03_PER_TEST_RAW_REPORTER_TRUTH",
+      "failedReasons": [
+        "VAL_03_PER_TEST_RAW_REPORTER_TRUTH: Raw reporter check failed: suitesValid=true, dup=false, skippedOrFailed=true, N01..N40=true, D01..D25=true",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N04",
+      "description": "Duplicate N test ID inflating per-test count",
+      "targetArtifact": "RAW_TEST_REPORT_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_03_PER_TEST_RAW_REPORTER_TRUTH",
+      "failedReasons": [
+        "VAL_03_PER_TEST_RAW_REPORTER_TRUTH: Raw reporter check failed: suitesValid=true, dup=true, skippedOrFailed=false, N01..N40=false, D01..D25=true",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N05",
+      "description": "One failed N test while global PASS is claimed",
+      "targetArtifact": "RAW_TEST_REPORT_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_03_PER_TEST_RAW_REPORTER_TRUTH",
+      "failedReasons": [
+        "VAL_03_PER_TEST_RAW_REPORTER_TRUTH: Raw reporter check failed: suitesValid=true, dup=false, skippedOrFailed=true, N01..N40=true, D01..D25=true",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N06",
+      "description": "TEST_FIXTURE record labeled as REAL_PROVIDER_VERIFIED",
+      "targetArtifact": "AMAZON_REAL_PROVIDER_REQUEST_LEDGER.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=true, liveGateHonest=false)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N07",
+      "description": "LOCAL_MCP_TEST_DOUBLE session labeled as live Amazon.com verification",
+      "targetArtifact": "MCP_RUNTIME_CLASSIFICATION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS",
+      "failedReasons": [
+        "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS: MCP runtime classification or HTTP status origin violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N08",
+      "description": "API configured with HTTP 401 AUTHENTICATION_FAILED but authenticated=true claimed",
+      "targetArtifact": "PROVIDER_ENTITLEMENT_AND_POLICY_AUDIT.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=false, liveGateHonest=true)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N09",
+      "description": "CAPTCHA / login / HTTP 403 categorized as QUERY_SUCCEEDED_EMPTY",
+      "targetArtifact": "AMAZON_REAL_PROVIDER_REQUEST_LEDGER.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=true, liveGateHonest=false)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N10",
+      "description": "Zero upstream provider queries but realProviderVerdict=REAL_PROVIDER_VERIFIED",
+      "targetArtifact": "AMAZON_REAL_PROVIDER_REQUEST_LEDGER.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=true, liveGateHonest=false)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N11",
+      "description": "Forged upstream providerRequestId copied from local providerInvocationRef",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N12",
+      "description": "Mismatched rawEvidenceHash vs expectedRawEvidenceHash",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N13",
+      "description": "Stale previous-run observation attached to current researchRunId",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N14",
+      "description": "Workspace A evidence record contaminated with Workspace B ID",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N15",
+      "description": "Parent and child verification job IDs conflated or runId mismatch",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N16",
+      "description": "Failed SQLite insert swallowed while job reports COMPLETED",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N17",
+      "description": "Mid-transaction write failure not rolled back",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N18",
+      "description": "Lost claimToken / fencingGeneration allowed to persist",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N19",
+      "description": "Lost lease during attachAmazonEvidenceToExistingResearchRun allowed to overwrite snapshot",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N20",
+      "description": "Child double-submit / duplicate ASIN conflict not rejected",
+      "targetArtifact": "JOB_OWNERSHIP_AND_PERSISTENCE_PROOF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "failedReasons": [
+        "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE: Job ownership, fencing, or persistence fault-injection check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N21",
+      "description": "Same ASIN assigned to two conflicting products as IDENTITY_VERIFIED",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N22",
+      "description": "Non-US Amazon host or SSRF URL accepted in canonicalAmazonUrl",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N23",
+      "description": "Malformed ASIN or variationAsin identical to parentAsin",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N24",
+      "description": "Replacement filter accessory treated as EXACT_PRODUCT match for main product",
+      "targetArtifact": "AMAZON_MATCH_AND_IDENTITY_LEDGER.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N25",
+      "description": "Missing upstream price converted to 0 instead of null",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N26",
+      "description": "Review count or BSR treated as SALES_VERIFIED",
+      "targetArtifact": "AMAZON_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "failedReasons": [
+        "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY: Provenance, hash, ASIN, price, or identity match violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N27",
+      "description": "Unobserved HTTP status defaulted to 200 in MCP transport",
+      "targetArtifact": "MCP_RUNTIME_CLASSIFICATION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS",
+      "failedReasons": [
+        "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS: MCP runtime classification or HTTP status origin violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N28",
+      "description": "MCP tool result isError=true treated as success",
+      "targetArtifact": "MCP_RUNTIME_CLASSIFICATION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS",
+      "failedReasons": [
+        "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS: MCP runtime classification or HTTP status origin violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N29",
+      "description": "browser_snapshot absent but session marked IDENTITY_VERIFIED",
+      "targetArtifact": "MCP_RUNTIME_CLASSIFICATION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS",
+      "failedReasons": [
+        "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS: MCP runtime classification or HTTP status origin violation detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N30",
+      "description": "Unauthorized browser search scraping attempted on Amazon.com",
+      "targetArtifact": "AMAZON_SEARCH_QUERY_PLAN.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET",
+      "failedReasons": [
+        "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET: Invalid search query plan or budget cap violation",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N31",
+      "description": "No credentials configured but entitlementVerified=true set",
+      "targetArtifact": "PROVIDER_ENTITLEMENT_AND_POLICY_AUDIT.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=false, liveGateHonest=true)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N32",
+      "description": "Unobserved brand/price borrowed from SQLite counted as 3-way DOM parity",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY",
+      "failedReasons": [
+        "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY: SQLite-HTTP-DOM parity violation or borrowed DOM value detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N33",
+      "description": "Before/after non-inflation scores hardcoded instead of dynamically computed",
+      "targetArtifact": "BEFORE_AFTER_NON_INFLATION_DIFF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "failedReasons": [
+        "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION: Point-in-time audit or dynamic before/after non-inflation check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N34",
+      "description": "G15 or G16 gate status mutated after adding Amazon listing evidence",
+      "targetArtifact": "BEFORE_AFTER_NON_INFLATION_DIFF.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "failedReasons": [
+        "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION: Point-in-time audit or dynamic before/after non-inflation check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N35",
+      "description": "Post-cutoff Amazon observation leaked into historical backtest",
+      "targetArtifact": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "failedReasons": [
+        "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION: Point-in-time audit or dynamic before/after non-inflation check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N36",
+      "description": "Historical source record mutated across as-of replay",
+      "targetArtifact": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "failedReasons": [
+        "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION: Point-in-time audit or dynamic before/after non-inflation check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N37",
+      "description": "Future/current Amazon observation injected into older DEV cutoff",
+      "targetArtifact": "HISTORICAL_POINT_IN_TIME_AUDIT.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "failedReasons": [
+        "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION: Point-in-time audit or dynamic before/after non-inflation check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N38",
+      "description": "Zero returned SearchItems results reported as BLOCKED_PROVIDER instead of QUERY_SUCCEEDED_EMPTY",
+      "targetArtifact": "AMAZON_REAL_PROVIDER_REQUEST_LEDGER.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "failedReasons": [
+        "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH: Entitlement or live gate dishonesty detected (entitlementOk=true, liveGateHonest=false)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N39",
+      "description": "Negative control deliberately not executed (physicallyExecuted=false) while report claims PASS",
+      "targetArtifact": "NEGATIVE_MUTATION_RESULTS.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_12_ACCEPTANCE_MATRIX_AND_NEGATIVE_CONTROLS",
+      "failedReasons": [
+        "VAL_12_ACCEPTANCE_MATRIX_AND_NEGATIVE_CONTROLS: Matrix or negative controls failed (hasA01ToA40=true, negControlsOk=false)",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N40",
+      "description": "FINAL_OWNER_REPORT.md claims ENGINEERING_READY despite failed engineering gate",
+      "targetArtifact": "FULL_REGRESSION_EXECUTION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_11_FULL_REGRESSION_BUILD_AND_RESOURCE_GUARD",
+      "failedReasons": [
+        "VAL_11_FULL_REGRESSION_BUILD_AND_RESOURCE_GUARD: Full regression, build, or resource guard check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N41",
+      "description": "Generic niche 'Pet Gadgets' used as primary Amazon search intent",
+      "targetArtifact": "AMAZON_SEARCH_QUERY_PLAN.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET",
+      "failedReasons": [
+        "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET: Invalid search query plan or budget cap violation",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N42",
+      "description": "Shared provider operation budget cap (>4 ops/run) exceeded",
+      "targetArtifact": "AMAZON_SEARCH_QUERY_PLAN.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET",
+      "failedReasons": [
+        "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET: Invalid search query plan or budget cap violation",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N43",
+      "description": "DOM value mismatches HTTP/SQLite value in 3-way parity table",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY",
+      "failedReasons": [
+        "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY: SQLite-HTTP-DOM parity violation or borrowed DOM value detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N44",
+      "description": "GET read-only endpoint mutated database digest",
+      "targetArtifact": "SQLITE_HTTP_DOM_PARITY.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY",
+      "failedReasons": [
+        "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY: SQLite-HTTP-DOM parity violation or borrowed DOM value detected",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    },
+    {
+      "mutationId": "N45",
+      "description": "Outer async test runner exceeded concurrency=2 or mutated production DB",
+      "targetArtifact": "RESOURCE_AND_ASYNC_EXECUTION.json",
+      "physicallyExecuted": true,
+      "validatorRejected": true,
+      "caughtByCheckId": "VAL_11_FULL_REGRESSION_BUILD_AND_RESOURCE_GUARD",
+      "failedReasons": [
+        "VAL_11_FULL_REGRESSION_BUILD_AND_RESOURCE_GUARD: Full regression, build, or resource guard check failed",
+        "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY: Owner report claims READY/LIVE_PASS despite failed check or blocked live provider"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "budgetLimitBytes": 104857600,
+  "totalQueriesAttempted": 1,
+  "totalDryRuns": 1,
+  "totalBytesEstimated": 1048576,
+  "totalBilledBytes": 0,
+  "budgetExceeded": false,
+  "ledger": [
+    {
+      "timestamp": "2026-10-30T10:35:19.225Z",
+      "jobId": "mock_bqjob_1793356519225",
+      "projectId": "valid-sandbox-proj",
+      "term": "nano ultrasonic pet water fountain",
+      "estimatedBytes": 1048576,
+      "actualBytesProcessed": 1048576,
+      "rowCount": 0,
+      "status": "INSUFFICIENT_COVERAGE"
+    }
+  ]
+}

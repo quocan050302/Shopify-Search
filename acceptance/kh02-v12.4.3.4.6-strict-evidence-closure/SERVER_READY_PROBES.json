@@ -1,0 +1,8 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:49.559Z",
+  "port": 3001,
+  "serverReady": false,
+  "status": "BLOCKED_DISK_HEADROOM_BELOW_15GB",
+  "freeDiskGB": 8.02,
+  "minFreeDiskGB": 15
+}

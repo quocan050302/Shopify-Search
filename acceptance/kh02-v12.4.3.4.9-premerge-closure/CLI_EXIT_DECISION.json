@@ -1,0 +1,18 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:48.897Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "exitCode": 0,
+  "exitCategory": "ENGINEERING_ACCEPTED",
+  "engineeringAccepted": true,
+  "validatorAccepted": true,
+  "completionBarrierAccepted": true,
+  "sourceShaConsistent": true,
+  "diskHeadroomAccepted": true,
+  "reason": "ENGINEERING_ACCEPTED: All mandatory KH-02 engineering gates, completion barriers, disk headroom guards, and independent validator checks passed.",
+  "failedRequiredGates": [],
+  "failedValidatorChecks": [],
+  "businessVerdict": "INSUFFICIENT_EVIDENCE",
+  "mergeReadiness": "READY_FOR_OWNER_PR_REVIEW",
+  "amazonPilotReadiness": "READY_FOR_ISOLATED_PILOT"
+}

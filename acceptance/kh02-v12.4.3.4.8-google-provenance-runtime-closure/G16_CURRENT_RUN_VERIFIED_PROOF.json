@@ -1,0 +1,138 @@
+{
+  "evaluatedAt": "2026-10-31T11:10:18.220Z",
+  "researchRunId": "kh02_run_1793444975958_n0hgb",
+  "totalCandidates": 3,
+  "verifiedLiveCount": 2,
+  "requiredCount": 3,
+  "distinctFamiliesCount": 2,
+  "distinctCanonicalProductsCount": 2,
+  "requireDistinctFamilies": true,
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "top3RejectionReasons": [
+    "Only 2/3 candidates qualified as live-verified in run 'kh02_run_1793444975958_n0hgb'.",
+    "Only 2/3 distinct canonical products among live-verified candidates.",
+    "Only 2/3 distinct product families among live-verified candidates."
+  ],
+  "entries": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "canonicalProductKey": "uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "familyKey": "automatic_pet_feeder",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 2,
+      "validLineageObservationsCount": 2,
+      "liveObservationIds": [
+        "cmvwauajy002l71g9bot3iqab",
+        "cmvwauak4002p71g9ge8ym2ye"
+      ],
+      "merchantVerified": true,
+      "merchantProofRefs": [
+        "merchantVerifiedProductName:UAHPET Fresh Food Automatic Pet Feeder",
+        "productIdentifier:10532085367078",
+        "verificationReason:Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (10532085367078), ecommerc",
+        "evidenceRef:Merchant Title: UAHPET Fresh Food Automatic Pet Feeder",
+        "evidenceRef:Canonical URL: https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "evidenceRef:Merchant Product ID: 10532085367078",
+        "evidenceRef:Merchant SKU: XLWSQ",
+        "evidenceRef:Brand: uahpet-official",
+        "evidenceRef:Corroborating Ad Copy: Feed Fresh Wet Food Anywhere, Anytime ⏰"
+      ],
+      "predicateResults": {
+        "authenticallyLive": true,
+        "sameRunLineage": true,
+        "candidateProductMatch": true,
+        "verifiedMerchantIdentity": true,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": true,
+      "rejectionReasons": [],
+      "verificationMethod": "STORE_METADATA_JSON_LD_WITH_SAME_RUN_LIVE_LINEAGE",
+      "notes": "Standard merchant store with verified product identity (9 proof refs) and 2 deduplicated same-run live observation(s)."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "canonicalProductKey": "kittyspout.com/products/kittyspout-wireless-fountain",
+      "familyKey": "pet_water_fountain",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 1,
+      "validLineageObservationsCount": 1,
+      "liveObservationIds": [
+        "cmvwauai8001h71g9ygl7mk6p"
+      ],
+      "merchantVerified": true,
+      "merchantProofRefs": [
+        "merchantVerifiedProductName:The KittySpout™ - Wireless Fountain",
+        "productIdentifier:8369671045340",
+        "verificationReason:Verified product page via JSON-LD Product schema, OpenGraph product tags, merchant product ID (8369671045340), ecommerce",
+        "evidenceRef:Merchant Title: The KittySpout™ - Wireless Fountain",
+        "evidenceRef:Canonical URL: https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "evidenceRef:Merchant Product ID: 8369671045340",
+        "evidenceRef:Merchant SKU: WF-F6-V1-B1",
+        "evidenceRef:Brand: KittySpout",
+        "evidenceRef:Corroborating Ad Copy: Vet-Recommended Cat Fountain"
+      ],
+      "predicateResults": {
+        "authenticallyLive": true,
+        "sameRunLineage": true,
+        "candidateProductMatch": true,
+        "verifiedMerchantIdentity": true,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": true,
+      "rejectionReasons": [],
+      "verificationMethod": "STORE_METADATA_JSON_LD_WITH_SAME_RUN_LIVE_LINEAGE",
+      "notes": "Standard merchant store with verified product identity (9 proof refs) and 1 deduplicated same-run live observation(s)."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "canonicalProductKey": "cc.uprootclean.com/main/phr",
+      "familyKey": "pet_hair_remover_roller",
+      "identityStatus": "PROBABLE",
+      "isCheckoutChampFunnel": true,
+      "liveObservationsCount": 8,
+      "validLineageObservationsCount": 8,
+      "liveObservationIds": [
+        "cmvwauaav000171g9jhlvc6zb",
+        "cmvwauadl000571g9dpoff4om",
+        "cmvwauae4000971g9gadh6fun",
+        "cmvwauaey000d71g9wrx0fh4k",
+        "cmvwauafc000h71g9qoadqks7",
+        "cmvwauag1000t71g94hh9mtvm",
+        "cmvwauage000x71g9b8ei1p0s",
+        "cmvwauagp001171g9dd41lkpp"
+      ],
+      "merchantVerified": false,
+      "merchantProofRefs": [
+        "verificationReason:Derived probable product name 'Pet Hair/Lint/Dust Cleaner' from ad creative headline; lacks verified merchant product pa",
+        "evidenceRef:Ad Headline: The #1 Pet Hair/Lint/Dust Cleaner"
+      ],
+      "predicateResults": {
+        "authenticallyLive": true,
+        "sameRunLineage": true,
+        "candidateProductMatch": true,
+        "verifiedMerchantIdentity": false,
+        "nonFunnelStore": false
+      },
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "CheckoutChamp/sales funnel cannot be VERIFIED without root JSON-LD merchant schema",
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "verificationMethod": "FUNNEL_PROBABLE_NO_JSON_LD",
+      "notes": "CheckoutChamp multi-step sales funnel retained strictly as PROBABLE under anti-gaming identity rules."
+    }
+  ],
+  "notes": "Only 2/3 candidates qualified as live-verified in run 'kh02_run_1793444975958_n0hgb'. Only 2/3 distinct canonical products among live-verified candidates. Only 2/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE."
+}

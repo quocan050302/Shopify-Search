@@ -35,7 +35,7 @@ import {
   extractRegistrableDomain,
 } from "./providers/googleTransparencyResearchAdapter";
 import { diagnoseKH02Source } from "./providers/sourceRegistry";
-import { isSourceTemporarilyDisabled } from "./providers/sourcePolicy";
+import { isSourceTemporarilyDisabled, isSourceHiddenOrDisabled } from "./providers/sourcePolicy";
 import {
   discoverProductCandidatesFromAds,
   resolveCandidateResearchProduct,
@@ -74,6 +74,13 @@ import {
   selectQueriesForSearchRound,
   ShortlistCoverageState,
 } from "./discovery/discoveryQueryPlanner";
+import {
+  AmazonMarketplaceTelemetry,
+  AmazonProductEvidence,
+  AmazonRequestMode,
+} from "./marketplace/marketplaceEvidenceTypes";
+import { runAmazonUsPilotEnrichment } from "./marketplace/amazonUsEvidenceAdapter";
+import { summarizeAmazonEvidenceForProduct } from "./marketplace/marketplaceEvidencePersistence";
 
 export interface RankedLeaderboardItem {
   rank: number | null;
@@ -124,6 +131,17 @@ export interface EvergreenLeaderboardResult {
       queryStatus: SourceRunStatus;
     }
   >;
+  googleAds?: {
+    totalCreativesFound: number;
+    exactProductMatches: number;
+    probableProductMatches: number;
+    brandOnlyMatches: number;
+    rejectedCreatives: number;
+    unmatchedCreatives: number;
+    creativeAssociationLedger: Array<any>;
+  };
+  marketplaceEvidence?: AmazonProductEvidence[];
+  marketplaceTelemetry?: AmazonMarketplaceTelemetry;
 }
 
 export interface ResearchProgressPayload {
@@ -149,6 +167,12 @@ export interface RunEvergreenResearchInput {
   selectedSources?: IntelligenceSource[];
   sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
   metaExecutionPolicy?: string;
+  enableAmazonUsPilot?: boolean;
+  amazonPilotCandidateUrls?: Record<string, string>;
+  amazonPilotRequestMode?: AmazonRequestMode;
+  amazonPilotFixtureSnapshots?: Record<string, any>;
+  amazonPilotEnv?: Record<string, string | undefined>;
+  amazonPilotTransportFactory?: () => typeof fetch;
   signal?: AbortSignal;
 }
 
@@ -1118,74 +1142,22 @@ export async function runEvergreenProductResearch(
     });
   }
 
-  // ── Stage 5: TikTok Organic Video Enrichment ──────────────────────────────
+  // ── Stage 5: TikTok Organic Video Enrichment (Permanently Disabled in KH-02) ────────
   const secondaryObservations: SourceObservation[] = [];
-  if (!isSelected("TIKTOK_ORGANIC")) {
-    const isExcluded = isExcludedBySelection("TIKTOK_ORGANIC");
-    sourceStatuses.TIKTOK_ORGANIC = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
-    providerTelemetry.TIKTOK_ORGANIC.queryStatus = isExcluded ? "SKIPPED" : "TEMPORARILY_DISABLED";
-    providerTelemetry.TIKTOK_ORGANIC.queryExecuted = false;
-  } else {
-    const ttDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: input.workspaceId });
-    if (!ttDiag.configured) {
-      sourceStatuses.TIKTOK_ORGANIC = ttDiag.status as SourceRunStatus;
-      providerTelemetry.TIKTOK_ORGANIC.queryStatus = ttDiag.status as SourceRunStatus;
-      warnings.push(`TikTok Organic skipped promptly: ${ttDiag.reason}`);
-    } else {
-      try {
-        const ttOrganicResult = await executeStageWithSignal(
-          "TikTok Organic",
-          STAGE_TIMEOUT_MS,
-          (q) => collectTikTokOrganicSignals(q)
-        );
-        sourceStatuses.TIKTOK_ORGANIC = ttOrganicResult.status;
-        secondaryObservations.push(...ttOrganicResult.observations);
-        if (ttOrganicResult.warnings.length > 0) warnings.push(...ttOrganicResult.warnings);
-
-        const ttOrgNow = new Date().toISOString();
-        const isExecuted =
-          ttOrganicResult.status === "PASSED" ||
-          ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY" ||
-          ttOrganicResult.status === "QUERY_FAILED";
-        const isSuccess = ttOrganicResult.status === "PASSED" || ttOrganicResult.status === "QUERY_SUCCEEDED_EMPTY";
-        const ttLiveObs = ttOrganicResult.observations.filter((o) => o.provenance === "LIVE_PROVIDER");
-        const isTrulyLive = isSuccess && ttLiveObs.length > 0;
-        const liveProvenance: ObservationProvenance = isTrulyLive
-          ? "LIVE_PROVIDER"
-          : (ttOrganicResult.observations.length > 0 ? "CACHED_SOURCE" : "NONE");
-
-        providerTelemetry.TIKTOK_ORGANIC = {
-          source: "TIKTOK_ORGANIC",
-          queryExecuted: isExecuted,
-          queryStatus: ttOrganicResult.status,
-          queryTimestamp: isExecuted ? ttOrgNow : null,
-          retrievedCount: isSuccess ? ttOrganicResult.retrievedCount : null,
-          acceptedCount: isSuccess ? ttOrganicResult.acceptedCount : null,
-          queryProvenance: liveProvenance,
-          isLive: isTrulyLive,
-          queryError: ttOrganicResult.errors.length > 0 ? ttOrganicResult.errors.join("; ") : null,
-          lastSuccessfulRecordCount: isSuccess ? ttOrganicResult.retrievedCount : null,
-          lastSuccessfulQueryAt: isSuccess ? ttOrgNow : null,
-        };
-      } catch (err: any) {
-        sourceStatuses.TIKTOK_ORGANIC = "FAILED";
-        errors.push(`TikTok Organic collection failed: ${err.message}`);
-        providerTelemetry.TIKTOK_ORGANIC = {
-          source: "TIKTOK_ORGANIC",
-          queryExecuted: true,
-          queryStatus: "FAILED",
-          queryTimestamp: new Date().toISOString(),
-          retrievedCount: 0,
-          acceptedCount: 0,
-          queryProvenance: "NONE",
-          isLive: false,
-          queryError: err.message,
-          lastSuccessfulRecordCount: null,
-          lastSuccessfulQueryAt: null,
-        };
-      }
-    }
-  }
+  sourceStatuses.TIKTOK_ORGANIC = "DISABLED";
+  providerTelemetry.TIKTOK_ORGANIC = {
+    source: "TIKTOK_ORGANIC",
+    queryExecuted: false,
+    queryStatus: "DISABLED",
+    queryTimestamp: null,
+    retrievedCount: 0,
+    acceptedCount: 0,
+    queryProvenance: "NONE",
+    isLive: false,
+    queryError: null,
+    lastSuccessfulRecordCount: null,
+    lastSuccessfulQueryAt: null,
+  };
 
   // ── Stage 6: Google Ads Transparency Enrichment ───────────────────────────
   if (!isSelected("GOOGLE_ADS")) {
@@ -1452,16 +1424,213 @@ export async function runEvergreenProductResearch(
     }
   }
 
+  // Build forensic per-creative ledger for unique Google Ads observations (Section 7.2 & RC-06)
+  const googleAdsObservations = secondaryObservations.filter((o) => o.source === "GOOGLE_ADS");
+  const uniqueGoogleCreativesMap = new Map<string, (typeof googleAdsObservations)[0]>();
+  for (const obs of googleAdsObservations) {
+    const cId = obs.sourceExternalAdId || obs.sourceRecordId || obs.sourceUrl;
+    if (cId && !uniqueGoogleCreativesMap.has(cId)) {
+      uniqueGoogleCreativesMap.set(cId, obs);
+    }
+  }
+
+  const creativeAssociationLedger: Array<{
+    creativeId: string;
+    researchRunId?: string | null;
+    providerRequestId?: string | null;
+    upstreamProviderRequestId?: string | null;
+    providerRequestIdOrigin?: "UPSTREAM" | "ABSENT";
+    mcpInvocationRef?: string | null;
+    lineageMethod?: string | null;
+    responseEvidenceHash?: string | null;
+    advertiserDomain: string | null;
+    sourceMarket: string;
+    rawLandingUrl: string | null;
+    finalDestination: string | null;
+    normalizedProductUrl: string | null;
+    creativeTitle: string | null;
+    candidateIdsEvaluated: string[];
+    matchedCandidateId?: string | null;
+    exactMatchingClassification: string | null;
+    matchingEvidence: string | null;
+    rejectionReason: string | null;
+    associationVerdict:
+      | "EXACT_PRODUCT_MATCH"
+      | "PROBABLE_PRODUCT_MATCH"
+      | "BRAND_ONLY_MATCH"
+      | "REJECTED_UNRELATED_CREATIVE"
+      | "UNMATCHED"
+      | "MISSING_DESTINATION"
+      | "UPSTREAM_TIMEOUT";
+    associationClassification?: string;
+    sourceMode?: string;
+  }> = [];
+
+  const googleCreativeRejections: Array<{
+    creativeId: string;
+    advertiserDomain: string | null;
+    rejectionReason: string;
+    matchedCandidateId: string | null;
+  }> = [];
+
+  let uniqueProductAssociatedCount = 0;
+  let uniqueProbableProductCount = 0;
+  let uniqueBrandOnlyCount = 0;
+  let uniqueRejectedCount = 0;
+  let uniqueUnmatchedCount = 0;
+
+  for (const [cId, obs] of uniqueGoogleCreativesMap.entries()) {
+    let bestVerdict:
+      | "EXACT_PRODUCT_MATCH"
+      | "PROBABLE_PRODUCT_MATCH"
+      | "BRAND_ONLY_MATCH"
+      | "REJECTED_UNRELATED_CREATIVE"
+      | "UNMATCHED"
+      | "MISSING_DESTINATION" = "UNMATCHED";
+    let bestClassification: string | null = null;
+    let bestEvidence: string | null = null;
+    let bestRejectionReason: string | null = null;
+    let bestCandidateId: string | null = null;
+
+    if (!obs.landingPageUrl && !obs.sourceUrl) {
+      bestVerdict = "MISSING_DESTINATION";
+      bestRejectionReason = "Missing landing page destination URL";
+    } else {
+      for (const candidate of candidates) {
+        const match = matchCrossPlatformProductEvidence(candidate, {
+          title: obs.title,
+          url: obs.landingPageUrl || obs.sourceUrl,
+          domain: obs.advertiserDomain,
+          platform: obs.source,
+        });
+
+        if (
+          match.isProductSpecificEvidence !== false &&
+          (match.confidence === "EXACT" || match.confidence === "HIGH_CONFIDENCE")
+        ) {
+          bestVerdict = "EXACT_PRODUCT_MATCH";
+          bestClassification = match.confidence;
+          bestEvidence =
+            (match.matchReasons || []).join("; ") ||
+            `Exact cross-platform product title/URL match with candidate ${candidate.candidateId}`;
+          bestCandidateId = candidate.candidateId;
+          bestRejectionReason = null;
+          break; // Highest tier reached
+        } else if (
+          match.confidence === "PROBABLE" &&
+          bestVerdict !== "PROBABLE_PRODUCT_MATCH"
+        ) {
+          bestVerdict = "PROBABLE_PRODUCT_MATCH";
+          bestClassification = "PROBABLE";
+          bestEvidence =
+            (match.matchReasons || []).join("; ") ||
+            `Probable product match with candidate ${candidate.candidateId}`;
+          bestCandidateId = candidate.candidateId;
+        } else if (
+          obs.advertiserDomain &&
+          candidate.storeDomain &&
+          extractRegistrableDomain(obs.advertiserDomain) ===
+            extractRegistrableDomain(candidate.storeDomain) &&
+          bestVerdict === "UNMATCHED"
+        ) {
+          bestVerdict = "BRAND_ONLY_MATCH";
+          bestClassification = "BRAND_DOMAIN_MATCH";
+          bestEvidence = `Domain match (${obs.advertiserDomain}) without product-specific headline/URL alignment`;
+          bestCandidateId = candidate.candidateId;
+        } else if (bestVerdict === "UNMATCHED") {
+          bestRejectionReason =
+            (match.matchReasons || []).join("; ") || "Low cross-platform text/URL similarity";
+          bestCandidateId = null;
+        }
+      }
+
+      if (bestVerdict === "UNMATCHED") {
+        bestVerdict = "REJECTED_UNRELATED_CREATIVE";
+        bestRejectionReason =
+          bestRejectionReason ||
+          "No candidate matched creative title or destination URL";
+        bestCandidateId = null;
+      }
+    }
+
+    if (bestVerdict === "EXACT_PRODUCT_MATCH") {
+      uniqueProductAssociatedCount++;
+    } else if (bestVerdict === "PROBABLE_PRODUCT_MATCH") {
+      uniqueProbableProductCount++;
+    } else if (bestVerdict === "BRAND_ONLY_MATCH") {
+      uniqueBrandOnlyCount++;
+    } else if (bestVerdict === "REJECTED_UNRELATED_CREATIVE") {
+      uniqueRejectedCount++;
+    } else {
+      uniqueUnmatchedCount++;
+    }
+
+    creativeAssociationLedger.push({
+      creativeId: cId,
+      researchRunId: obs.researchRunId ?? null,
+      providerRequestId: obs.providerRequestId ?? null,
+      upstreamProviderRequestId: obs.upstreamProviderRequestId ?? null,
+      providerRequestIdOrigin:
+        obs.providerRequestIdOrigin ?? (obs.providerRequestId ? "UPSTREAM" : "ABSENT"),
+      mcpInvocationRef: obs.mcpInvocationRef ?? null,
+      lineageMethod: obs.lineageMethod ?? null,
+      responseEvidenceHash: obs.responseEvidenceHash ?? null,
+      advertiserDomain: obs.advertiserDomain || null,
+      sourceMarket: (obs as any).region || (obs as any).targetCountry || "US",
+      rawLandingUrl: obs.landingPageUrl || obs.sourceUrl || null,
+      finalDestination: obs.landingPageUrl || null,
+      normalizedProductUrl: null,
+      creativeTitle: obs.title || null,
+      candidateIdsEvaluated: candidates.map((c) => c.candidateId),
+      matchedCandidateId:
+        bestVerdict === "EXACT_PRODUCT_MATCH" ||
+        bestVerdict === "PROBABLE_PRODUCT_MATCH" ||
+        bestVerdict === "BRAND_ONLY_MATCH"
+          ? bestCandidateId
+          : null,
+      exactMatchingClassification: bestClassification,
+      matchingEvidence: bestEvidence,
+      rejectionReason: bestRejectionReason,
+      associationVerdict: bestVerdict,
+      associationClassification: bestVerdict,
+      sourceMode:
+        obs.sourceMode === "LIVE_PROVIDER"
+          ? "LIVE_PROVIDER"
+          : obs.sourceMode === "CACHE_ONLY" || obs.isCached === true
+          ? "CACHED"
+          : "UNKNOWN",
+    });
+
+    if (bestVerdict !== "EXACT_PRODUCT_MATCH") {
+      googleCreativeRejections.push({
+        creativeId: cId,
+        advertiserDomain: obs.advertiserDomain || null,
+        rejectionReason: bestRejectionReason || `Classified as ${bestVerdict}`,
+        matchedCandidateId: bestCandidateId,
+      });
+    }
+  }
+
   if (providerTelemetry.GOOGLE_ADS) {
-    providerTelemetry.GOOGLE_ADS.productAssociatedCount = googleProductMatches;
-    providerTelemetry.GOOGLE_ADS.brandAssociatedCount = googleBrandMatches;
+    providerTelemetry.GOOGLE_ADS.productAssociatedCount = uniqueProductAssociatedCount;
+    providerTelemetry.GOOGLE_ADS.brandAssociatedCount = uniqueBrandOnlyCount;
     if (providerTelemetry.GOOGLE_ADS.enrichmentExecution) {
-      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = googleProductMatches;
-      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = googleBrandMatches;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productLevelMatches = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.exactProductMatches = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.probableProductMatches = uniqueProbableProductCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandLevelMatches = uniqueBrandOnlyCount;
       providerTelemetry.GOOGLE_ADS.enrichmentExecution.productEvidenceIds = googleProductEvidenceIds;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCreativeCount = uniqueRejectedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeRejections = googleCreativeRejections;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.productAssociatedCount = uniqueProductAssociatedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.brandOnlyCount = uniqueBrandOnlyCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.rejectedCount = uniqueRejectedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.unmatchedCount = uniqueUnmatchedCount;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.classifiedDistinct = creativeAssociationLedger.length;
+      providerTelemetry.GOOGLE_ADS.enrichmentExecution.creativeAssociationLedger = creativeAssociationLedger;
       if (providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown) {
         providerTelemetry.GOOGLE_ADS.enrichmentExecution.stateBreakdown.productAssociatedEvidence =
-          googleProductMatches > 0;
+          uniqueProductAssociatedCount > 0;
       }
     }
   }
@@ -1710,6 +1879,55 @@ export async function runEvergreenProductResearch(
   const shortlistedIdSet = new Set(
     researchShortlist.shortlist.map((s) => s.candidateId)
   );
+
+  // V12.4.3.5.0: Optional Guarded Amazon US Product Evidence Pilot (post-scoring, zero G15/G16 or score weight mutation)
+  const amazonPilotTargets =
+    researchShortlist.shortlist.length > 0
+      ? researchShortlist.shortlist
+      : candidates.slice(0, 3);
+  const amazonOptIn = Boolean(
+    input.enableAmazonUsPilot ||
+      (input.amazonPilotCandidateUrls &&
+        Object.keys(input.amazonPilotCandidateUrls).length > 0)
+  );
+  const amazonEnrichment = await runAmazonUsPilotEnrichment({
+    workspaceId: input.workspaceId,
+    researchRunId: runId,
+    niche: input.topic,
+    optInRequested: amazonOptIn,
+    candidates: amazonPilotTargets,
+    candidateAmazonUrls: input.amazonPilotCandidateUrls,
+    requestMode: input.amazonPilotRequestMode,
+    fixtureSnapshotsByUrl: input.amazonPilotFixtureSnapshots,
+    env: input.amazonPilotEnv,
+    creatorsApiTransportFactory: input.amazonPilotTransportFactory,
+    signal: abortSignal,
+  });
+
+  if (amazonEnrichment.marketplaceEvidence.length > 0) {
+    for (const c of candidates) {
+      const summary = summarizeAmazonEvidenceForProduct(
+        c.candidateId,
+        runId,
+        amazonEnrichment.marketplaceEvidence,
+        { telemetry: amazonEnrichment.marketplaceTelemetry }
+      );
+      if (summary.visible) {
+        (c as any).amazonEvidenceSummary = summary;
+      }
+    }
+    for (const s of researchShortlist.shortlist) {
+      const summary = summarizeAmazonEvidenceForProduct(
+        s.candidateId,
+        runId,
+        amazonEnrichment.marketplaceEvidence,
+        { telemetry: amazonEnrichment.marketplaceTelemetry }
+      );
+      if (summary.visible) {
+        (s as any).amazonEvidenceSummary = summary;
+      }
+    }
+  }
 
   // Build QueryYield metrics for each executed or planned query
   const candidateMatchesQuery = (
@@ -2029,6 +2247,26 @@ export async function runEvergreenProductResearch(
         queryStatus: sourceStatuses.GOOGLE_ADS,
       },
     },
+    googleAds: {
+      totalCreativesFound:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.totalCreativesFound ??
+        (providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger?.length || 0),
+      exactProductMatches:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.productAssociatedCount ?? 0,
+      probableProductMatches: (
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger || []
+      ).filter((l: any) => l.associationType === "PROBABLE_PRODUCT_MATCH").length,
+      brandOnlyMatches:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.brandOnlyCount ?? 0,
+      rejectedCreatives:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.rejectedCount ?? 0,
+      unmatchedCreatives:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.unmatchedCount ?? 0,
+      creativeAssociationLedger:
+        providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger ?? [],
+    },
+    marketplaceEvidence: amazonEnrichment.marketplaceEvidence,
+    marketplaceTelemetry: amazonEnrichment.marketplaceTelemetry,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

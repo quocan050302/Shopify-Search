@@ -1,0 +1,41 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:29:52.054Z",
+  "decisions": [
+    {
+      "candidateId": "cand_uahpet_1",
+      "asin": "B08N5WRWNW",
+      "parentAsin": "B08N5WRW00",
+      "variationAsin": "B08N5WRWNW",
+      "identityMatch": "EXACT_PRODUCT",
+      "status": "IDENTITY_VERIFIED",
+      "selectedAsBest": true,
+      "matchingReasons": [
+        "Corroborated brand 'UAHPET'",
+        "Exact model match (UAH-WF-01)",
+        "Product token corroboration (wireless, cat, water, fountain, stainless, steel; ratio=1.00)"
+      ],
+      "rejectionReasons": [],
+      "isAccessoryMismatch": false,
+      "isBrandOnly": false
+    },
+    {
+      "candidateId": "cand_uahpet_1",
+      "asin": "B08N5WRACC",
+      "parentAsin": null,
+      "variationAsin": null,
+      "identityMatch": "BRAND_ONLY",
+      "status": "OBSERVED_UNVERIFIED",
+      "selectedAsBest": false,
+      "matchingReasons": [
+        "Brand 'UAHPET' matched, but product SKU/tokens differ (overlap=3/6)"
+      ],
+      "rejectionReasons": [
+        "ACCESSORY_VS_MAIN_PRODUCT_MISMATCH: Replacement/accessory SKU does not match primary product"
+      ],
+      "isAccessoryMismatch": true,
+      "isBrandOnly": true
+    }
+  ]
+}

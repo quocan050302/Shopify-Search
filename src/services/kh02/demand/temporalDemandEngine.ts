@@ -206,6 +206,8 @@ export function isPromotionalAdCopyDemandKeyword(keyword: string | null | undefi
   );
 }
 
+import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
+
 export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | null | undefined): {
   rawCsvFileExists: boolean;
   hasValidFileChecksum: boolean;
@@ -222,9 +224,19 @@ export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | nu
   }
   const ref = String(evidenceReference).trim();
   const isMerchantDomainPseudoRef = /^verified-merchant-demand:/i.test(ref);
-  const hasValidFileChecksum = /\bsha256:[a-f0-9]{16,64}\b/i.test(ref);
-  const rawCsvFileExists = /\b(csv-import|benchmark-csv):/i.test(ref) && hasValidFileChecksum;
-  const hasProviderRequestLineage = /\b(provider-request|serpapi-request|trends-api-request):/i.test(ref);
+  const hashMatch = ref.match(/\bsha256:([a-f0-9]{16,64})\b/i);
+  let rawCsvFileExists = false;
+  let hasValidFileChecksum = false;
+
+  if (hashMatch && /\b(csv-import|benchmark-csv):/i.test(ref)) {
+    const verified = verifyStoredCsvFile(hashMatch[1]);
+    rawCsvFileExists = verified.exists && verified.validHash;
+    hasValidFileChecksum = verified.validHash;
+  } else if (hashMatch) {
+    hasValidFileChecksum = true;
+  }
+
+  const hasProviderRequestLineage = /\b(provider-request|serpapi-request|trends-api-request|bigquery-job):/i.test(ref);
   return {
     rawCsvFileExists,
     hasValidFileChecksum,
@@ -322,6 +334,11 @@ export function evaluateDemandSourceAuthority(
   if (sources.some((s) => /estimated|proxy|snapshot/i.test(s))) {
     reasons.push("Demand observation source is ESTIMATED_OR_PROXY.");
     return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: true };
+  }
+
+  if (sources.some((s) => /trending_now|top_terms/i.test(s))) {
+    reasons.push("Demand observation is from Google Trending Now RSS or Google Top Terms discovery signal and cannot verify longitudinal Evergreen demand.");
+    return { authority: "ESTIMATED_OR_PROXY", reasons, productAttributionValid: false };
   }
 
   // Check if DB records lack evidenceReference or use pseudo-reference 'verified-merchant-demand:<domain>' without CSV checksum

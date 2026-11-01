@@ -1,0 +1,250 @@
+{
+  "version": "12.4.3.4.3",
+  "evaluatedAt": "2026-10-31T09:29:30.564Z",
+  "verdict": "PASS",
+  "totalScenarios": 15,
+  "devScenariosCount": 7,
+  "holdoutScenariosCount": 8,
+  "passedCount": 15,
+  "failedCount": 0,
+  "scenarios": [
+    {
+      "caseId": "v124342_dev_01_bq_billing_prohibited",
+      "split": "DEV",
+      "category": "BIGQUERY_ZERO_SPEND_POLICY",
+      "description": "Prohibits execution and blocks billable BigQuery projects when ZERO_SPEND_ENFORCED=true",
+      "executed": true,
+      "passed": true,
+      "assertion": "diag.status === 'BLOCKED' && diag.reason.includes('BLOCKED_BILLING_PROHIBITED')",
+      "observed": {
+        "status": "BLOCKED",
+        "reason": "BLOCKED_BILLING_PROHIBITED: BigQuery billing account detected or reported enabled. Zero-spend policy strictly prohibits queries against billable Google Cloud projects."
+      },
+      "detail": "Diagnose status=BLOCKED; reason=BLOCKED_BILLING_PROHIBITED: BigQuery billing account detected or reported enabled. Zero-spend policy strictly prohibits queries against billable Google Cloud projects."
+    },
+    {
+      "caseId": "v124342_dev_02_bq_unverified_sandbox_fails_closed",
+      "split": "DEV",
+      "category": "BIGQUERY_ZERO_SPEND_POLICY",
+      "description": "Fails closed with BLOCKED_FREE_SANDBOX_NOT_VERIFIED when sandbox billing state unverified",
+      "executed": true,
+      "passed": true,
+      "assertion": "diag.status === 'BLOCKED_FREE_SANDBOX_NOT_VERIFIED'",
+      "observed": {
+        "status": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
+        "missingRequirements": [
+          "BIGQUERY_FREE_SANDBOX_VERIFIED"
+        ]
+      },
+      "detail": "Diagnose status=BLOCKED_FREE_SANDBOX_NOT_VERIFIED; missing=BIGQUERY_FREE_SANDBOX_VERIFIED"
+    },
+    {
+      "caseId": "v124342_dev_03_csv_valid_disk_file_authoritative",
+      "split": "DEV",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "description": "Verifies authentic CSV file on disk produces rawCsvFileExists and hasValidFileChecksum",
+      "executed": true,
+      "passed": true,
+      "assertion": "lineage.rawCsvFileExists === true && lineage.hasValidFileChecksum === true",
+      "observed": {
+        "rawCsvFileExists": true,
+        "hasValidFileChecksum": true,
+        "hasProviderRequestLineage": false,
+        "isMerchantDomainPseudoRef": false
+      },
+      "detail": "rawCsvFileExists=true, hasValidFileChecksum=true"
+    },
+    {
+      "caseId": "v124342_dev_04_csv_fabricated_sha256_rejected",
+      "split": "DEV",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "description": "Rejects fabricated sha256 reference when underlying file is missing from disk",
+      "executed": true,
+      "passed": true,
+      "assertion": "lineage.rawCsvFileExists === false",
+      "observed": {
+        "rawCsvFileExists": false,
+        "hasValidFileChecksum": false,
+        "hasProviderRequestLineage": false,
+        "isMerchantDomainPseudoRef": false
+      },
+      "detail": "Fabricated sha256 rejected: rawCsvFileExists=false"
+    },
+    {
+      "caseId": "v124342_dev_05_trending_now_never_generates_value_100",
+      "split": "DEV",
+      "category": "TRENDING_NOW_DISCOVERY_ONLY",
+      "description": "Google Trending Now RSS match is discovery-only and never synthesizes numeric points: [{ demandValue: 100 }]",
+      "executed": true,
+      "passed": true,
+      "assertion": "res.points.length === 0 && res.discoveryOnly === true",
+      "observed": {
+        "pointsCount": 0,
+        "discoveryOnly": true,
+        "status": "INSUFFICIENT_DATA"
+      },
+      "detail": "Points count=0, discoveryOnly=true"
+    },
+    {
+      "caseId": "v124342_dev_06_tiktok_organic_unconditionally_disabled",
+      "split": "DEV",
+      "category": "TIKTOK_ORGANIC_DISABLED",
+      "description": "TikTok Organic remains disabled across environment overrides and API calls",
+      "executed": true,
+      "passed": true,
+      "assertion": "isSourceHiddenOrDisabled('TIKTOK_ORGANIC') === true",
+      "observed": {
+        "disabled": true
+      },
+      "detail": "isSourceHiddenOrDisabled('TIKTOK_ORGANIC')=true"
+    },
+    {
+      "caseId": "v124342_dev_07_candidate_recovery_promotes_verified",
+      "split": "DEV",
+      "category": "CANDIDATE_RECOVERY_TOP3",
+      "description": "Promotes distinct verified candidate when a shortlist candidate has PROBABLE identity",
+      "executed": true,
+      "passed": true,
+      "assertion": "liveVerifiedShortlist contains distinct VERIFIED candidates and excludes PROBABLE candidate",
+      "observed": {
+        "shortlistIds": [
+          "cand_dev_07_feeder",
+          "cand_dev_07_backup",
+          "cand_dev_07_prob"
+        ],
+        "liveVerifiedIds": [
+          "cand_dev_07_feeder",
+          "cand_dev_07_backup"
+        ],
+        "liveVerifiedProductCount": 2
+      },
+      "detail": "Candidate recovery promoted verified backup: liveVerifiedIds=[cand_dev_07_feeder, cand_dev_07_backup]"
+    },
+    {
+      "caseId": "v124342_holdout_01_bq_niche_term_coverage_honesty",
+      "split": "HOLDOUT",
+      "category": "BIGQUERY_ZERO_SPEND_POLICY",
+      "description": "Returns honest INSUFFICIENT_COVERAGE when a niche product term is absent from public top terms table",
+      "executed": true,
+      "passed": true,
+      "assertion": "res.status === 'INSUFFICIENT_DATA' && res.error.includes('INSUFFICIENT_COVERAGE')",
+      "observed": {
+        "status": "INSUFFICIENT_DATA",
+        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793438970556, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
+      },
+      "detail": "Status=INSUFFICIENT_DATA; error=INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in..."
+    },
+    {
+      "caseId": "v124342_holdout_02_csv_tampered_bytes_rejected",
+      "split": "HOLDOUT",
+      "category": "CSV_CRYPTOGRAPHIC_INTEGRITY",
+      "description": "Detects byte alteration in stored CSV and rejects modified payload",
+      "executed": true,
+      "passed": true,
+      "assertion": "lineage.rawCsvFileExists === false",
+      "observed": {
+        "rawCsvFileExists": false,
+        "hasValidFileChecksum": false,
+        "hasProviderRequestLineage": false,
+        "isMerchantDomainPseudoRef": false
+      },
+      "detail": "Tampered hash rejected: rawCsvFileExists=false"
+    },
+    {
+      "caseId": "v124342_holdout_03_trending_now_cannot_satisfy_g15",
+      "split": "HOLDOUT",
+      "category": "TRENDING_NOW_DISCOVERY_ONLY",
+      "description": "Trending Now RSS match cannot satisfy G15 Evergreen 60+ days demand gate",
+      "executed": true,
+      "passed": true,
+      "assertion": "auth.authority !== 'HISTORICAL_SOURCE_VERIFIED'",
+      "observed": {
+        "authority": "ESTIMATED_OR_PROXY",
+        "reasons": [
+          "Demand observation is from Google Trending Now RSS or Google Top Terms discovery signal and cannot verify longitudinal Evergreen demand."
+        ]
+      },
+      "detail": "Authority=ESTIMATED_OR_PROXY; reasons=Demand observation is from Google Trending Now RSS or Google Top Terms discovery signal and cannot verify longitudinal Evergreen demand."
+    },
+    {
+      "caseId": "v124342_holdout_04_tiktok_organic_api_probe_disabled",
+      "split": "HOLDOUT",
+      "category": "TIKTOK_ORGANIC_DISABLED",
+      "description": "Direct connection test to TIKTOK_ORGANIC returns DISABLED immediately without network probe",
+      "executed": true,
+      "passed": true,
+      "assertion": "isSourceHiddenOrDisabled('TIKTOK_ORGANIC') === true",
+      "observed": {
+        "disabled": true
+      },
+      "detail": "isSourceHiddenOrDisabled('TIKTOK_ORGANIC')=true"
+    },
+    {
+      "caseId": "v124342_holdout_05_google_brand_only_rejection_ledger",
+      "split": "HOLDOUT",
+      "category": "GOOGLE_ADS_FORENSIC_ASSOCIATION",
+      "description": "Brand-only domain match on Google Ads creative is classified as BRAND_ONLY_MATCH, not EXACT_PRODUCT_MATCH",
+      "executed": true,
+      "passed": true,
+      "assertion": "matchRes.associationClassification === 'BRAND_ONLY_MATCH' && matchRes.isProductSpecificEvidence === false",
+      "observed": {
+        "classification": "BRAND_ONLY_MATCH",
+        "isProductSpecific": false,
+        "reasons": [
+          "Same verified store domain (chewy.com) with brand-level or general catalog creative (no product-specific match)."
+        ]
+      },
+      "detail": "Classification=BRAND_ONLY_MATCH; isProductSpecific=false"
+    },
+    {
+      "caseId": "v124342_holdout_06_unverified_shortlist_fails_closed_g16",
+      "split": "HOLDOUT",
+      "category": "CANDIDATE_RECOVERY_TOP3",
+      "description": "When only 2 verified products exist and no backup is available, G16 fails closed (liveVerifiedTop3=false)",
+      "executed": true,
+      "passed": true,
+      "assertion": "shortlistRes.liveVerifiedTop3 === false && shortlistRes.liveVerifiedProductCount === 2",
+      "observed": {
+        "liveVerifiedTop3": false,
+        "liveVerifiedProductCount": 2
+      },
+      "detail": "liveVerifiedTop3=false, count=2"
+    },
+    {
+      "caseId": "v124342_holdout_07_evergreen_honesty_insufficient_history",
+      "split": "HOLDOUT",
+      "category": "EVERGREEN_DEMAND_HONESTY",
+      "description": "Products with < 60 days historical demand receive honest INSUFFICIENT_EVIDENCE rather than false pass",
+      "executed": true,
+      "passed": true,
+      "assertion": "demandAssessment.status === 'INSUFFICIENT_HISTORY' && demandAssessment.eligibleForEvergreen === false",
+      "observed": {
+        "status": "INSUFFICIENT_HISTORY",
+        "coveredDays": 14,
+        "eligibleForEvergreen": false,
+        "temporalCoverageValid": false
+      },
+      "detail": "Status=INSUFFICIENT_HISTORY; coveredDays=14; eligibleForEvergreen=false"
+    },
+    {
+      "caseId": "v124346_holdout_08_joined_metadata_post_cutoff_rejected",
+      "split": "HOLDOUT",
+      "category": "JOINED_METADATA_LEAKAGE_GUARD",
+      "description": "Joined ResearchProduct metadata updated after asOf is rejected and falls back strictly to point-in-time ad observation fields",
+      "executed": true,
+      "passed": true,
+      "assertion": "resolved.trustedPointInTimeMetadata === false && resolved.metadataProvenance === 'REJECTED_POST_CUTOFF_JOINED_METADATA'",
+      "observed": {
+        "trustedPointInTimeMetadata": false,
+        "metadataProvenance": "REJECTED_POST_CUTOFF_JOINED_METADATA",
+        "candidateId": "cand_hist_historical-pet.com_original_historical_ad_headlin",
+        "researchProductId": null,
+        "title": "Original Historical Ad Headline",
+        "storeDomain": "historical-pet.com",
+        "canonicalProductUrl": "https://historical-pet.com/products/feeder",
+        "identityStatus": "PROBABLE"
+      },
+      "detail": "provenance=REJECTED_POST_CUTOFF_JOINED_METADATA; title=Original Historical Ad Headline"
+    }
+  ]
+}

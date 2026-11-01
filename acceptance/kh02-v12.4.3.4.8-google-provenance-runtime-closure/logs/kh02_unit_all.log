@@ -1,0 +1,52 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/ai/geminiModelRouter.test.ts (14 tests) 4276ms
+   ✓ SWAI KH-02 V12.4 — Gemini Model Router & Error Classification (14)
+     ✓ retries up to 3 times on 503 before succeeding on same model 741ms
+     ✓ exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds 777ms
+     ✓ opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate 1367ms
+     ✓ enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly 502ms
+     ✓ enforces global call budget across candidates via GeminiRunBudgetTracker 868ms
+ ✓ tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts (13 tests) 1109ms
+   ✓ V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth (13)
+     ✓ Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations (3)
+       ✓ passes all policy & leakage scenario tests in runBacktestV12_4_3_4_2 600ms
+       ✓ validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 497ms
+ ✓ tests/unit/kh02/v12_4_3_4_GoogleFreeDemandAndTikTokDisabled.test.ts (18 tests) 599ms
+   ✓ KH-02 V12.4.3.4 — Google Free Demand Only & TikTok Organic Disabled (18)
+     ✓ Section A: Remove compulsory SerpApi & GOOGLE_FREE_ONLY Mode (4)
+       ✓ A03: Zero SerpApi network requests are made in GOOGLE_FREE_ONLY mode 581ms
+ ✓ tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts (22 tests) 487ms
+   ✓ KH-02 V12.4.3.4.8 — Google MCP Provenance Truth & Runtime Acceptance Closure (22)
+     ✓ Google MCP Negative Suite (G06-NEG-01..20) & 40 Physical-File Negative Control Mutations (MUT_01..40) (2)
+       ✓ catches and rejects all 40 physical-file negative control mutations (MUT_01..MUT_40 covering N01..N15) 476ms
+ ✓ tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts (12 tests) 545ms
+   ✓ KH-02 V12.4.3.4.7 — Real Execution Proof, Disk-Safe Closure & Acceptance Truth (12)
+     ✓ Phase 5: G15 Exact Identity Query & 33 Physical-File Negative Control Mutations (2)
+       ✓ catches all 33 physical-file negative control mutations (MUT_01 through MUT_33) 487ms
+ ✓ tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts (89 tests) 240ms
+ ✓ tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts (25 tests) 214ms
+ ✓ tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts (10 tests) 118ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts (19 tests) 92ms
+ ✓ tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts (50 tests) 81ms
+ ✓ tests/unit/kh02/v12_4_3_4_2_ClosureAdversarialAndTruth.test.ts (34 tests) 95ms
+ ✓ tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts (15 tests) 64ms
+ ✓ tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts (16 tests) 45ms
+ ✓ tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts (19 tests) 23ms
+ ✓ tests/unit/kh02/v12_4_3_4_1_ZeroSpendGoogleFreeAutomation.test.ts (8 tests) 36ms
+ ✓ tests/unit/kh02/ai/geminiProductClassification.test.ts (6 tests) 33ms
+ ✓ tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts (19 tests) 26ms
+ ✓ tests/unit/kh02/ai/geminiEvidenceValidation.test.ts (7 tests) 14ms
+ ✓ tests/unit/kh02/ai/geminiModelDiscovery.test.ts (7 tests) 3ms
+
+ Test Files  19 passed (19)
+      Tests  403 passed (403)
+   Start at  18:09:21
+   Duration  14.26s (tests 63%, import 28%, setup 6%, transform 3%, worker 1%)
+
+     Import  105 modules were evaluated 598 times · 3.56s total, 28% of tracked time
+             ~2.93s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.8-google-provenance-runtime-closure/json_reports/kh02_unit_all.json

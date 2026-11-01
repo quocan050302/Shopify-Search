@@ -1,0 +1,13 @@
+{
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "18ec8a6738d0462ec126f86e1e060744d369fb89",
+  "zeroSpendEnforced": true,
+  "billingVerificationMode": "AUTHORITATIVE_API_OR_BLOCKED",
+  "billingEnabled": null,
+  "freeSandboxVerified": false,
+  "status": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
+  "reason": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED: Independent Cloud Billing verification requires authorized credentials (Missing Google Cloud credentials: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.).",
+  "spentUSD": 0,
+  "billedBytes": 0,
+  "failClosedVerified": true
+}

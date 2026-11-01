@@ -1,0 +1,47 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:48.740Z",
+  "windowLabel": "2026-10-24T00:00:00.000Z..2026-10-30T12:00:00.000Z",
+  "cutoffIso": "2026-10-30T12:00:00.000Z",
+  "adsEvaluatedCount": 377,
+  "candidatesCount": 3,
+  "g15PassingCandidatesCount": 0,
+  "amazonHistoricalObservationsAtCutoff": "NOT_AVAILABLE_AT_ASOF",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "productEvidenceLedger": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "title": "Car Fender Panel Dent Edge Repair Tools",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "repair_tools",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "title": "Natural Relief in Weeks",
+      "storeDomain": "shop.pipitea.com",
+      "familyKey": "relief_weeks",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_1971924954",
+      "title": "Petnimo 1 Stainless Steel Cat Fountain No Motor In Water",
+      "storeDomain": "kickstarter.com",
+      "familyKey": "pet_water_fountain",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ]
+}

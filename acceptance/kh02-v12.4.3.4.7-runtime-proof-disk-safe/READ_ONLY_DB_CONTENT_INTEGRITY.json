@@ -1,0 +1,117 @@
+{
+  "verificationScope": "DB_ONLY_READ_SNAPSHOT",
+  "status": "HTTP_NOT_EXECUTED",
+  "readOnlyPassed": false,
+  "httpRequestVerified": false,
+  "httpStatusCode": null,
+  "actualHttpRequestCount": 0,
+  "requestUrl": null,
+  "responseBodyDigest": null,
+  "contentDigestDbOnly": {
+    "syncJobCount": 177,
+    "productCount": 70,
+    "competitorStoreCount": 30,
+    "adProductLinkCount": 58,
+    "evergreenScoreCount": 0,
+    "tableDigests": {
+      "syncJob": {
+        "tableName": "syncJob",
+        "rowCount": 177,
+        "sha256Digest": "508568ccefccb2d31a28f2a8b6d3fd020eefee666def73818f45cfc1bebcf618"
+      },
+      "researchProduct": {
+        "tableName": "researchProduct",
+        "rowCount": 70,
+        "sha256Digest": "23d717c31b0911abdfadea4a901ec571afdd745da0ced2b90ce7347a494013ba"
+      },
+      "competitorStore": {
+        "tableName": "competitorStore",
+        "rowCount": 30,
+        "sha256Digest": "5b3d3b96b009674e5ffeb36b1c3d417c02dfdf8f98f272a59f6f9df475da36b8"
+      },
+      "adProductLink": {
+        "tableName": "adProductLink",
+        "rowCount": 58,
+        "sha256Digest": "814f270426567a99f807848c65bf243d7abbb3cdbd15ab73a23ea8b91e1fb691"
+      },
+      "evergreenProductScore": {
+        "tableName": "evergreenProductScore",
+        "rowCount": 0,
+        "sha256Digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "contentDigestsMatch": true,
+  "rowCountsMatch": true,
+  "mutatedTables": [],
+  "beforeSnapshot": {
+    "syncJobCount": 177,
+    "productCount": 70,
+    "competitorStoreCount": 30,
+    "adProductLinkCount": 58,
+    "evergreenScoreCount": 0,
+    "tableDigests": {
+      "syncJob": {
+        "tableName": "syncJob",
+        "rowCount": 177,
+        "sha256Digest": "508568ccefccb2d31a28f2a8b6d3fd020eefee666def73818f45cfc1bebcf618"
+      },
+      "researchProduct": {
+        "tableName": "researchProduct",
+        "rowCount": 70,
+        "sha256Digest": "23d717c31b0911abdfadea4a901ec571afdd745da0ced2b90ce7347a494013ba"
+      },
+      "competitorStore": {
+        "tableName": "competitorStore",
+        "rowCount": 30,
+        "sha256Digest": "5b3d3b96b009674e5ffeb36b1c3d417c02dfdf8f98f272a59f6f9df475da36b8"
+      },
+      "adProductLink": {
+        "tableName": "adProductLink",
+        "rowCount": 58,
+        "sha256Digest": "814f270426567a99f807848c65bf243d7abbb3cdbd15ab73a23ea8b91e1fb691"
+      },
+      "evergreenProductScore": {
+        "tableName": "evergreenProductScore",
+        "rowCount": 0,
+        "sha256Digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "afterSnapshot": {
+    "syncJobCount": 177,
+    "productCount": 70,
+    "competitorStoreCount": 30,
+    "adProductLinkCount": 58,
+    "evergreenScoreCount": 0,
+    "tableDigests": {
+      "syncJob": {
+        "tableName": "syncJob",
+        "rowCount": 177,
+        "sha256Digest": "508568ccefccb2d31a28f2a8b6d3fd020eefee666def73818f45cfc1bebcf618"
+      },
+      "researchProduct": {
+        "tableName": "researchProduct",
+        "rowCount": 70,
+        "sha256Digest": "23d717c31b0911abdfadea4a901ec571afdd745da0ced2b90ce7347a494013ba"
+      },
+      "competitorStore": {
+        "tableName": "competitorStore",
+        "rowCount": 30,
+        "sha256Digest": "5b3d3b96b009674e5ffeb36b1c3d417c02dfdf8f98f272a59f6f9df475da36b8"
+      },
+      "adProductLink": {
+        "tableName": "adProductLink",
+        "rowCount": 58,
+        "sha256Digest": "814f270426567a99f807848c65bf243d7abbb3cdbd15ab73a23ea8b91e1fb691"
+      },
+      "evergreenProductScore": {
+        "tableName": "evergreenProductScore",
+        "rowCount": 0,
+        "sha256Digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "mutationsDetected": false,
+  "error": "HTTP_NOT_EXECUTED: Read-only HTTP endpoint could not be probed because isolated server was not running; only DB-only snapshot digest was verified."
+}

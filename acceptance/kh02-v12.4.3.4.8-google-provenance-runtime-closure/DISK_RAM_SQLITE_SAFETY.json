@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T11:10:40.286Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "initialFreeDiskGB": 16.48,
+  "finalFreeDiskGB": 16.49,
+  "minFreeDiskGB": 15,
+  "diskHeadroomSufficient": true,
+  "sqliteIntegrityCheck": "ok",
+  "memoryUsageMB": 503
+}

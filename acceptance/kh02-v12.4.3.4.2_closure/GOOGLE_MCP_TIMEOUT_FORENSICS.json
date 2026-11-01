@@ -1,0 +1,17 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "rootCauseIdentified": "Windows PowerShell / Node stdio cp1252 UnicodeEncodeError on advertiser Chinese name (AR11363703404665765889 / 深圳有哈科技有限公司)",
+  "remediationApplied": [
+    "sys.stdout.reconfigure(encoding='utf-8') in scripts/googleTransparencyServer.py",
+    "PYTHONUTF8=1 and PYTHONIOENCODING=utf-8 in StdioClientTransport env",
+    "min(count, 3) bound to avoid child process runaway"
+  ],
+  "verificationStatus": "VERIFIED_LIVE",
+  "advertiserLookupSuccess": true,
+  "advertiserIdRetrieved": "AR11363703404665765889",
+  "advertiserName": "深圳有哈科技有限公司",
+  "creativesRetrievedCount": 1,
+  "exitCode": 0,
+  "timeoutAvoided": true
+}

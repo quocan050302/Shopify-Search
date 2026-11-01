@@ -1,0 +1,18 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "startedAt": "2026-11-01T02:29:46.452Z",
+  "completedAt": "2026-11-01T02:30:58.567Z",
+  "status": "COMPLETED",
+  "waves": {
+    "waveA_PreflightAndPolicy": "COMPLETED",
+    "waveB_SourceUnitTests": "COMPLETED",
+    "waveC_IntegrationAndFencing": "COMPLETED",
+    "waveD_ChromiumTrueE2EParity": "COMPLETED",
+    "waveE_ProviderEntitlementCheck": "COMPLETED_EXTERNAL_BLOCKED_NO_CREDENTIALS",
+    "waveF_HistoricalBacktestsAndDynamicDelta": "COMPLETED",
+    "waveG_FullRegressionAndBuild": "COMPLETED",
+    "waveH_NegativeMutationsAndIndependentValidation": "COMPLETED"
+  },
+  "externalBlockerReason": "Amazon US pilot is disabled by default (KH02_AMAZON_US_ENABLED=false)."
+}

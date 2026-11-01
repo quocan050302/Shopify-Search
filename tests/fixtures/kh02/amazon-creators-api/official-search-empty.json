@@ -1,0 +1,14 @@
+{
+  "_fixtureMeta": {
+    "origin": "OFFICIAL_DOCUMENTATION_EXAMPLE",
+    "provenance": "TEST_FIXTURE",
+    "endpoint": "https://creatorsapi.amazon/catalog/v1/searchItems",
+    "marketplace": "www.amazon.com",
+    "description": "Official Amazon Associates Creators API v1 SearchItems empty result contract example"
+  },
+  "searchResult": {
+    "totalResultCount": 0,
+    "items": []
+  }
+}
+

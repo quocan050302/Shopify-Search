@@ -1,0 +1,72 @@
+{
+  "codeSha": "75de4e26cbef061e2fe000a0ade0b711a9bd5e38",
+  "releaseVersion": "12.4.3.5.0.1",
+  "evaluatedAt": "2026-10-31T20:12:39.559Z",
+  "officialPlaywrightMcpHandshake": {
+    "packageSpec": "@playwright/mcp@0.0.83",
+    "connected": true,
+    "status": "CONNECTED_READY",
+    "discoveredTools": [
+      "browser_close",
+      "browser_resize",
+      "browser_console_messages",
+      "browser_handle_dialog",
+      "browser_emulate_media",
+      "browser_evaluate",
+      "browser_file_upload",
+      "browser_drop",
+      "browser_find",
+      "browser_fill_form",
+      "browser_press_key",
+      "browser_type",
+      "browser_navigate",
+      "browser_navigate_back",
+      "browser_network_requests",
+      "browser_network_request",
+      "browser_run_code_unsafe",
+      "browser_take_screenshot",
+      "browser_snapshot",
+      "browser_click",
+      "browser_drag",
+      "browser_hover",
+      "browser_select_option",
+      "browser_tabs",
+      "browser_wait_for"
+    ],
+    "closedCleanly": true,
+    "residualProcessesCount": 0
+  },
+  "handshakeOnlyWithoutNavigationGuard": {
+    "toolInvocationsCount": 0,
+    "classifiedStatus": "NOT_EXECUTED",
+    "neverCountedAsIdentityVerified": true,
+    "neverCountedAsRealProviderVerified": true
+  },
+  "jobLevelStdioMcpExecution": {
+    "parentResearchRunId": "run_wave_c_parent_1793477558858",
+    "verifyJobId": "kh02_amz_verify_wave_c_1793477558858",
+    "jobType": "KH02_AMAZON_VERIFY",
+    "workerClaimedAndCompleted": true,
+    "mcpSessionCreatedAutomatically": true,
+    "mcpSessionClosedCleanly": true,
+    "toolInvocations": [
+      {
+        "toolName": "browser_navigate",
+        "url": "https://www.amazon.com/dp/B08N5WRWNW"
+      },
+      {
+        "toolName": "browser_snapshot"
+      },
+      {
+        "toolName": "browser_close"
+      }
+    ],
+    "persistedEvidenceCount": 1,
+    "persistedStatus": "IDENTITY_VERIFIED",
+    "persistedAsin": "B08N5WRWNW",
+    "serverOrigin": "LOCAL_MCP_TEST_DOUBLE",
+    "observationClass": "TEST_FIXTURE",
+    "countedAsLiveProviderVerified": false
+  },
+  "residualMcpChildProcesses": 0
+}

@@ -1,0 +1,84 @@
+{
+  "totalInjections": 11,
+  "totalCaught": 11,
+  "passed": true,
+  "results": [
+    {
+      "scenarioId": "CR-FAIL-01",
+      "description": "HTTP response missing candidateId (undefined/null) fails dbVsHttpVerdict and httpApiParityPassed",
+      "injectedDefect": "HTTP response missing candidateId (undefined/null) fails dbVsHttpVerdict and httpApiParityPassed",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-02",
+      "description": "HTTP response missing storeDomain fails dbVsHttpVerdict",
+      "injectedDefect": "HTTP response missing storeDomain fails dbVsHttpVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-03",
+      "description": "HTTP response missing identityStatus fails dbVsHttpVerdict",
+      "injectedDefect": "HTTP response missing identityStatus fails dbVsHttpVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-04",
+      "description": "DOM title absent produces comparedDomFieldCount=0 and chromiumParityPassed=false",
+      "injectedDefect": "DOM title absent produces comparedDomFieldCount=0 and chromiumParityPassed=false",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-05",
+      "description": "DOM title changed to another product whose first 15 chars overlap fails dbVsDomVerdict and httpVsDomVerdict",
+      "injectedDefect": "DOM title changed to another product whose first 15 chars overlap fails dbVsDomVerdict and httpVsDomVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-06",
+      "description": "DOM rank order swapped vs SQLite persisted order fails dbVsDomVerdict",
+      "injectedDefect": "DOM rank order swapped vs SQLite persisted order fails dbVsDomVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-07",
+      "description": "DOM score mutated vs SQLite/HTTP fails dbVsDomVerdict and httpVsDomVerdict",
+      "injectedDefect": "DOM score mutated vs SQLite/HTTP fails dbVsDomVerdict and httpVsDomVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-08",
+      "description": "DOM runId differs from persisted researchRunId fails dbVsDomVerdict",
+      "injectedDefect": "DOM runId differs from persisted researchRunId fails dbVsDomVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-09",
+      "description": "In-memory shortlist passed without persisted SQLite snapshot fails dbVsHttpVerdict",
+      "injectedDefect": "In-memory shortlist passed without persisted SQLite snapshot fails dbVsHttpVerdict",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-10",
+      "description": "Read-only GET handler updates an existing row (content digest changes while row counts stay equal) fails readOnlyPassed",
+      "injectedDefect": "Read-only GET handler updates an existing row (content digest changes while row counts stay equal) fails readOnlyPassed",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-11",
+      "description": "Read-only GET request returns HTTP 500 or network error fails readOnlyPassed and computeChromiumGate",
+      "injectedDefect": "Read-only GET request returns HTTP 500 or network error fails readOnlyPassed and computeChromiumGate",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="KH02_Regression_Suite" tests="622" failures="0" time="120">
+  <testsuite name="TypeScript Typecheck (tsc --noEmit)" tests="0" failures="0" time="3.81" />
+  <testsuite name="ESLint (src)" tests="0" failures="0" time="2.90" />
+  <testsuite name="KH-01 Regression Suite" tests="69" failures="0" time="4.36" />
+  <testsuite name="V12.4.3.3.1 Semantic Family Classification Suite" tests="19" failures="0" time="0.95" />
+  <testsuite name="V12.4.3.3.1 Meta/Google Live Integrity Suite" tests="19" failures="0" time="1.44" />
+  <testsuite name="V12.4.3.3 Meta/Google Provenance Suite" tests="89" failures="0" time="2.13" />
+  <testsuite name="V12.4.3.3.2 Demand Cache & Product Identity Suite" tests="10" failures="0" time="1.73" />
+  <testsuite name="V12.4.3.4.1 Zero-Spend Google Free Automation Suite" tests="26" failures="0" time="2.95" />
+  <testsuite name="V12.4.3.4.2 Closure Adversarial & Runtime Truth Suite" tests="34" failures="0" time="1.43" />
+  <testsuite name="KH-02 Full Unit Regression Suite" tests="356" failures="0" time="16.53" />
+</testsuites>

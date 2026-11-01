@@ -1,0 +1,68 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.240Z",
+  "accessoryOrBundlePromotedToExactMatch": false,
+  "decisions": [
+    {
+      "candidateId": "cand_uahpet_1",
+      "asin": "B08N5WRWNW",
+      "parentAsin": "B08N5WRW00",
+      "variationAsin": "B08N5WRWNW",
+      "identityMatch": "EXACT_PRODUCT",
+      "status": "IDENTITY_VERIFIED",
+      "selectedAsBest": true,
+      "matchingReasons": [
+        "Corroborated brand 'UAHPET'",
+        "Exact model match (UAH-WF-01)",
+        "Product token corroboration (wireless, cat, water, fountain, stainless, steel; ratio=1.00)"
+      ],
+      "rejectionReasons": []
+    },
+    {
+      "candidateId": "cand_uahpet_1",
+      "asin": "B08N5WRACC",
+      "parentAsin": "B08N5WRW00",
+      "variationAsin": "B08N5WRACC",
+      "identityMatch": "BRAND_ONLY",
+      "status": "OBSERVED_UNVERIFIED",
+      "selectedAsBest": false,
+      "matchingReasons": [
+        "Brand 'UAHPET' matched, but product SKU/tokens differ (overlap=4/6)"
+      ],
+      "rejectionReasons": [
+        "ACCESSORY_VS_MAIN_PRODUCT_MISMATCH: Replacement/accessory SKU does not match primary product"
+      ]
+    },
+    {
+      "candidateId": "cand_kittyspout_2",
+      "asin": "B09KITTYS1",
+      "parentAsin": "B09KITTYS0",
+      "variationAsin": "B09KITTYS1",
+      "identityMatch": "EXACT_PRODUCT",
+      "status": "IDENTITY_VERIFIED",
+      "selectedAsBest": true,
+      "matchingReasons": [
+        "Corroborated brand 'KittySpout'",
+        "Exact model match (KS-SS-4L)",
+        "Product token corroboration (stainless, steel, cat, water, fountain; ratio=1.00)"
+      ],
+      "rejectionReasons": []
+    },
+    {
+      "candidateId": "cand_uproot_3",
+      "asin": "B09UPROOT1",
+      "parentAsin": "B09UPROOT0",
+      "variationAsin": "B09UPROOT1",
+      "identityMatch": "EXACT_PRODUCT",
+      "status": "IDENTITY_VERIFIED",
+      "selectedAsBest": true,
+      "matchingReasons": [
+        "Corroborated brand 'Uproot Clean'",
+        "Exact model match (UP-PRO-01)",
+        "Product token corroboration (uproot, cleaner, pet, hair, remover, tool; ratio=1.00)"
+      ],
+      "rejectionReasons": []
+    }
+  ]
+}

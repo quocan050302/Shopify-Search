@@ -1,0 +1,14 @@
+{
+  "evaluatedAt": "2026-10-31T02:40:13.531Z",
+  "version": "12.4.3.4.3",
+  "testedSourceSha": "21c357df55dfe115993d3186726948eacefb1a7c",
+  "browser": "Playwright Chromium (Headless)",
+  "status": "PASS",
+  "routesVerified": [
+    "/discovery/research",
+    "/api/v1/research/products/[id]/overview",
+    "/api/v1/research/products/[id]/scores"
+  ],
+  "getRequestsReadOnlyVerified": true,
+  "zeroDatabaseMutationsOnRead": true
+}

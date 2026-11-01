@@ -1,0 +1,51 @@
+{
+  "evaluatedAt": "2026-10-31T04:39:24.208Z",
+  "version": "12.4.3.4.4",
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "totalShortlistCandidates": 3,
+  "g15QualifyingCount": 0,
+  "g15RequiredCount": 3,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "entries": [
+    {
+      "candidateId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "familyKey": "automatic_pet_feeder",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "UNKNOWN_SOURCE",
+      "g15Qualifying": false,
+      "reason": "Insufficient longitudinal series: 0 days covered (< 60 required)."
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "familyKey": "pet_water_fountain",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "UNKNOWN_SOURCE",
+      "g15Qualifying": false,
+      "reason": "Insufficient longitudinal series: 0 days covered (< 60 required)."
+    },
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "UNKNOWN_SOURCE",
+      "g15Qualifying": false,
+      "reason": "Insufficient longitudinal series: 0 days covered (< 60 required)."
+    }
+  ],
+  "structuralNote": "G15 Evergreen requires >= 60 days (or >= 26 weekly points) of product-specific demand evidence. Evaluated dynamically against candidate SQLite records."
+}

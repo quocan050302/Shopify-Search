@@ -1,0 +1,12 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:31.121Z",
+  "version": "12.4.3.4.9",
+  "testedSourceSha": "6e09d88dcb67a92e5a79d209310043f662ea6c97",
+  "pid": 90428,
+  "port": 3001,
+  "baseUrl": "http://127.0.0.1:3001",
+  "serverReady": true,
+  "ownedProcessVerified": true,
+  "portConflictDetected": false,
+  "startupDurationMs": 1237
+}

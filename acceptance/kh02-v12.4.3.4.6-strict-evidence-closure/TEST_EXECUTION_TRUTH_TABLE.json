@@ -1,0 +1,12 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:49.241Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "heavyWaveBlockedByDiskGuard": true,
+  "totalRawTestExecutions": 13,
+  "uniqueTestsExecuted": 13,
+  "duplicateTestExecutionsCount": 0,
+  "uniqueTestsPassed": 13,
+  "failedTests": 0,
+  "skippedTests": 0
+}

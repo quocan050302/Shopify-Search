@@ -1,0 +1,130 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "verifiedCandidates": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1212440541",
+      "researchProductId": "cand_1212440541",
+      "title": "UAHPET Fresh Food Automatic Pet Feeder",
+      "storeDomain": "uahpet.com",
+      "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "identityStatus": "VERIFIED",
+      "familyKey": "automatic_pet_feeder",
+      "supportingAdIds": [
+        "cmvrzyn23004m6coriy1lwr49",
+        "cmvrzyn2j004s6corb96ke61v",
+        "cmvrzyn3h00546corujh7567u",
+        "cmvrzyn5c005t6cor0yylqvk2",
+        "cmvrzyn30004y6corojbfmznc",
+        "cmvrzyn4w005n6corlzcsccsh",
+        "cmvrzyn3x005a6corm3d0e51v"
+      ],
+      "supportingExternalAdIds": [
+        "2046326005986245",
+        "2128156051108858",
+        "1399013621792652",
+        "1595856712093558",
+        "1802296680785588",
+        "1393597299374101",
+        "905190415961783"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_3_d6de1688"
+      ],
+      "liveObservationsCount": 2,
+      "cachedObservationsCount": 5,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 2,
+        "uniqueLiveExternalAdIds": [
+          "2046326005986245",
+          "2128156051108858"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_3_d6de1688",
+            "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+            "upstreamAdId": "2046326005986245",
+            "persistedAdId": "cmvrzyn23004m6coriy1lwr49",
+            "sourceObservationId": "cmvuqqvfs005d0worfp0vsw0h",
+            "candidateId": "cand_1212440541",
+            "researchProductId": "cand_1212440541"
+          },
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_3_d6de1688",
+            "providerRequestId": "c50244b73ab749319270522fcecd73c1",
+            "upstreamAdId": "2128156051108858",
+            "persistedAdId": "cmvrzyn2j004s6corb96ke61v",
+            "sourceObservationId": "cmvuqqvg6005h0worhmdkf5sc",
+            "candidateId": "cand_1212440541",
+            "researchProductId": "cand_1212440541"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1587534715",
+      "researchProductId": "cand_1587534715",
+      "title": "The KittySpout™ - Wireless Fountain",
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      "identityStatus": "VERIFIED",
+      "familyKey": "pet_water_fountain",
+      "supportingAdIds": [
+        "cmvrzyixu002s6corgmhfjtem"
+      ],
+      "supportingExternalAdIds": [
+        "1067995712370292"
+      ],
+      "matchedQueryIds": [
+        "kh02_q_r1_2_882223e8"
+      ],
+      "liveObservationsCount": 1,
+      "cachedObservationsCount": 0,
+      "isLiveVerified": true,
+      "lineageVerification": {
+        "valid": true,
+        "authenticatedLiveObservationCount": 1,
+        "uniqueLiveExternalAdIds": [
+          "1067995712370292"
+        ],
+        "duplicateExternalAdIdsDetected": [],
+        "rejectionCodes": [],
+        "rejectionReasons": [],
+        "verifiedLinks": [
+          {
+            "researchRunId": "kh02_run_1793350997659_kk3j0",
+            "executedQueryId": "kh02_q_r1_2_882223e8",
+            "providerRequestId": "4f7b99eb07fb40389fc616dcd7c71bc9",
+            "upstreamAdId": "1067995712370292",
+            "persistedAdId": "cmvrzyixu002s6corgmhfjtem",
+            "sourceObservationId": "cmvuqqvca00490worp620gq5x",
+            "candidateId": "cand_1587534715",
+            "researchProductId": "cand_1587534715"
+          }
+        ]
+      },
+      "demandCoverageDays": 0
+    }
+  ],
+  "rejectionLedger": [
+    {
+      "candidateId": "cand_1613504636",
+      "title": "Pet Hair/Lint/Dust Cleaner",
+      "identityStatus": "PROBABLE",
+      "liveObservationsCount": 10,
+      "failureReason": "Identity status is PROBABLE (not VERIFIED); merchant product landing page metadata unverified."
+    }
+  ],
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "reason": "2/3 VERIFIED+live candidates (INSUFFICIENT_EVIDENCE: PROBABLE or cache-only candidates excluded)"
+}

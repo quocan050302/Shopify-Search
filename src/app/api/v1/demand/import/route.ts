@@ -7,6 +7,10 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  validateAndParseGoogleTrendsCsv,
+  verifyStoredCsvFile,
+} from "@/services/kh02/demand/googleTrendsCsvValidator";
 
 export interface DemandImportRow {
   keyword: string;
@@ -20,7 +24,9 @@ export interface DemandImportRow {
 
 export interface DemandImportPayload {
   productId: string;
-  rows: DemandImportRow[];
+  rows?: DemandImportRow[];
+  rawCsv?: string;
+  canonicalProductName?: string;
   methodologyVersion?: string;
 }
 
@@ -38,9 +44,95 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify product exists
+    const product = await prisma.researchProduct.findUnique({ where: { id: body.productId } });
+    if (!product) {
+      return NextResponse.json(
+        { success: false, error: { code: "PRODUCT_NOT_FOUND", message: `Product ${body.productId} not found.` } },
+        { status: 404 }
+      );
+    }
+
+    // Direct Google Trends CSV import path
+    if (typeof body.rawCsv === "string" && body.rawCsv.trim().length > 0) {
+      const canonicalName = body.canonicalProductName || product.title;
+      const validation = validateAndParseGoogleTrendsCsv(body.rawCsv, {
+        expectedKeyword: canonicalName,
+      });
+
+      if (!validation.valid) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "INVALID_GOOGLE_TRENDS_CSV",
+              message: "Google Trends Explore CSV validation failed.",
+              details: validation.errors,
+            },
+          },
+          { status: 422 }
+        );
+      }
+
+      let insertedCount = 0;
+      let skippedCount = 0;
+      for (const pt of validation.dataPoints) {
+        const existing = await prisma.productDemandObservation.findFirst({
+          where: {
+            productId: body.productId,
+            keyword: pt.keyword,
+            region: pt.region,
+            periodStart: new Date(pt.periodStart),
+          },
+        });
+
+        if (existing) {
+          skippedCount++;
+          continue;
+        }
+
+        await prisma.productDemandObservation.create({
+          data: {
+            productId: body.productId,
+            source: "GOOGLE_TRENDS_CSV",
+            region: pt.region,
+            keyword: pt.keyword,
+            periodStart: new Date(pt.periodStart),
+            periodEnd: new Date(pt.periodEnd),
+            demandValue: pt.demandValue,
+            valueType: "RELATIVE_INTEREST",
+            evidenceReference: validation.evidenceReference,
+            methodologyVersion: "google_trends_explore_csv_v1",
+          },
+        });
+        insertedCount++;
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          productId: body.productId,
+          source: "GOOGLE_TRENDS_CSV",
+          sha256Checksum: validation.sha256Checksum,
+          evidenceReference: validation.evidenceReference,
+          keyword: validation.keyword,
+          region: validation.region,
+          startDate: validation.startDate,
+          endDate: validation.endDate,
+          totalRows: validation.dataPointsCount,
+          insertedCount,
+          skippedCount,
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          note: "Official Google Trends CSV imported, cryptographically verified, and persisted.",
+        },
+      });
+    }
+
     if (!Array.isArray(body.rows) || body.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: { code: "EMPTY_ROWS", message: "rows array must not be empty." } },
+        { success: false, error: { code: "EMPTY_ROWS", message: "rows array or rawCsv string must be provided." } },
         { status: 400 }
       );
     }
@@ -55,15 +147,6 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 400 }
-      );
-    }
-
-    // Verify product exists
-    const product = await prisma.researchProduct.findUnique({ where: { id: body.productId } });
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: { code: "PRODUCT_NOT_FOUND", message: `Product ${body.productId} not found.` } },
-        { status: 404 }
       );
     }
 
@@ -115,6 +198,18 @@ export async function POST(request: NextRequest) {
       if (!validSources.includes(row.source)) {
         errors.push(`Row ${rowIndex}: Invalid source "${row.source}".`);
         continue;
+      }
+
+      // Cryptographic disk verification for claimed CSV provenance (RC-04 & Negative Controls)
+      if (row.source === "GOOGLE_TRENDS_CSV" && row.evidenceReference) {
+        const hashMatch = row.evidenceReference.match(/\bsha256:([a-f0-9]{16,64})\b/i);
+        if (hashMatch) {
+          const verification = verifyStoredCsvFile(hashMatch[1]);
+          if (!verification.exists || !verification.validHash) {
+            errors.push(`Row ${rowIndex}: Stated sha256 checksum in evidenceReference does not match any verified stored CSV file on disk.`);
+            continue;
+          }
+        }
       }
 
       validRows.push(row);

@@ -1,0 +1,111 @@
+{
+  "evaluatedAt": "2026-10-31T12:15:48.903Z",
+  "version": "12.4.3.4.9",
+  "targetDirectory": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.9-premerge-closure",
+  "overallValid": true,
+  "totalChecks": 20,
+  "passedChecks": 20,
+  "failedChecks": 0,
+  "checks": [
+    {
+      "checkId": "CHK_01_MANDATORY_FILES_PRESENT",
+      "description": "All mandatory acceptance artifacts exist and are non-empty",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_02_PREFLIGHT_VALID",
+      "description": "PRE_FLIGHT_GIT_AND_ENV and SOURCE_SHA_PROVENANCE have matching branch, testedSourceSha === headSha, and freeDiskGB >= 15",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_02B_DEFECT_REPRODUCTION_AND_CLOSURE",
+      "description": "DEFECT_REPRODUCTION_AND_CLOSURE proves all 5 audit defects were reproduced and closed",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_03_COMPLETION_BARRIER",
+      "description": "COMPLETION_BARRIER_REPORT proves all scheduled async waves completed with 0 running/failed/timedOut",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_04_DISK_RAM_SQLITE_SAFETY",
+      "description": "DISK_RAM_SQLITE_SAFETY verifies disk free space >= minFreeDiskGB and sqliteIntegrityCheck === 'ok'",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_05_TEST_TRUTH_TABLE",
+      "description": "TEST_EXECUTION_TRUTH_TABLE reconciles unique vs raw executions with RAW_TEST_SUMMARY and 0 failures",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_06_INTEGRATION_SUITE_REPORT",
+      "description": "INTEGRATION_SUITE_REPORT has verified child execution proof, >= 2 existing integration test files in JUNIT_RESULTS.xml, and >= 10 passing tests",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_07_JUNIT_XML_DEEP_VALID",
+      "description": "JUNIT_RESULTS.xml has >= 400 testcases, matches truthTable.totalRawTestExecutions, and has 0 failure/error tags",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_08_NEXT_BUILD_LOG",
+      "description": "NEXT_BUILD_LOG.txt and NEXT_BUILD_EXECUTION_PROOF.json prove a fresh successful production build without compile errors",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_09_CHROMIUM_EXECUTION_AND_INJECTION",
+      "description": "CHROMIUM_EXECUTION_REPORT and CHROMIUM_FAILURE_INJECTION_TESTS (11 scenarios) both pass",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_10_SQLITE_HTTP_CHROMIUM_PARITY",
+      "description": "SQLITE_HTTP_CHROMIUM_PARITY proves persisted SQLite, HTTP API, and Chromium DOM three-way field parity",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_10B_READ_ONLY_DB_CONTENT_INTEGRITY",
+      "description": "READ_ONLY_DB_CONTENT_INTEGRITY verifies real HTTP 200 GET transport proof and identical SHA-256 table content digests before and after",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_11_GOOGLE_CREATIVE_PIPELINE",
+      "description": "Google MCP raw, normalized, and association ledgers satisfy set-based ID reconciliation, explicit live provenance, non-synthetic IDs, and exact-match honesty",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_12_G15_HONESTY",
+      "description": "G15_PRODUCT_DEMAND_PROOF rejects DB_QUERY_FAILED/SUBSTRING_FALLBACK and truthfully reports INSUFFICIENT_EVIDENCE when < 3 candidates have >= 60d demand",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_13_G16_HONESTY",
+      "description": "G16_CURRENT_RUN_VERIFIED_PROOF enforces liveObservationIds, same-run lineage, merchantProofRefs, and Top-3 family/product distinctness",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_14_HISTORICAL_BACKTEST_INTEGRITY",
+      "description": "Historical DEV and HOLDOUT backtest artifacts verify strict temporal separation and zero future/joined metadata leakage",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_15_FINAL_DECISION_MARKDOWN",
+      "description": "FINAL_RELEASE_DECISION_V12_4_3_4_6.md is complete and contains zero placeholder tokens",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_16_GATE_MATRIX_DYNAMICS",
+      "description": "GATE_TRUTH_MATRIX_V12_4_3_4_6 matches recomputed engineering and business verdicts from raw artifacts without masking any gate failure",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_17_SAFE_DISK_RECOVERY_AUDIT",
+      "description": "SAFE_DISK_RECOVERY_AUDIT and RESOURCE_WAVE_GUARDS record authentic live statfs measurements, zero static legacy constants, verified cleanup accounting, and untouched protected paths",
+      "passed": true
+    },
+    {
+      "checkId": "CHK_18_CLI_EXIT_DECISION_CONSISTENCY",
+      "description": "CLI_EXIT_DECISION and CLI_POSITIVE_AND_FAILURE_EXIT_PROOF match recomputed engineering/validator acceptance and verify real child subprocess exit codes",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:32.608Z",
+  "version": "12.4.3.4.7",
+  "testedSourceSha": "58cfd820f84189a1c644394744425ee10ede4720",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "queryMode": "EXACT_PRODUCT_IDENTITY",
+  "anyDbQueryFailed": false,
+  "totalShortlistCandidates": 3,
+  "g15QualifyingCount": 0,
+  "g15RequiredCount": 3,
+  "g15Verdict": "INSUFFICIENT_EVIDENCE",
+  "entries": [
+    {
+      "candidateId": "cand_861882032",
+      "researchProductId": null,
+      "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+      "storeDomain": "dogfriendlyco.com",
+      "familyKey": "pet_car_seat_harness",
+      "queryMode": "EXACT_PRODUCT_IDENTITY",
+      "queryStatus": "ZERO_REAL_OBSERVATIONS",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "NONE",
+      "g15Qualifying": false
+    },
+    {
+      "candidateId": "cand_756670427",
+      "researchProductId": null,
+      "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+      "storeDomain": "tailorsgift.com",
+      "familyKey": "wide_blades",
+      "queryMode": "EXACT_PRODUCT_IDENTITY",
+      "queryStatus": "ZERO_REAL_OBSERVATIONS",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "NONE",
+      "g15Qualifying": false
+    },
+    {
+      "candidateId": "cand_1350980176",
+      "researchProductId": null,
+      "title": "Team K9® Tactical No-Pull Dog Harness (4 Metal Buckles)",
+      "storeDomain": "teamk9.com",
+      "familyKey": "pet_car_seat_harness",
+      "queryMode": "EXACT_PRODUCT_IDENTITY",
+      "queryStatus": "ZERO_REAL_OBSERVATIONS",
+      "observationsFoundCount": 0,
+      "hasLongitudinalDemand": false,
+      "coveredDays": 0,
+      "pointsCount": 0,
+      "demandAuthority": "NONE",
+      "g15Qualifying": false
+    }
+  ]
+}

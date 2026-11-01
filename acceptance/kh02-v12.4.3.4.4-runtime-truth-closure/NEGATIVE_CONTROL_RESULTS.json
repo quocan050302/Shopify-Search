@@ -1,0 +1,86 @@
+{
+  "version": "12.4.3.4.4",
+  "evaluatedAt": "2026-10-31T04:39:59.569Z",
+  "totalFaultsInjected": 11,
+  "totalFaultsCaught": 11,
+  "negativeControlPassed": true,
+  "faults": [
+    {
+      "faultId": "NC-01",
+      "description": "Force browser test failure",
+      "injectedAnomaly": "status = 'FAIL' in REAL_CHROMIUM_EXECUTION.json",
+      "caughtAndRejected": true,
+      "rejectionReason": "Browser execution status 'FAIL' rejected by CHK_05_CHROMIUM_EXECUTION"
+    },
+    {
+      "faultId": "NC-02",
+      "description": "Remove browser evidence",
+      "injectedAnomaly": "executed = false or missing routesVerified",
+      "caughtAndRejected": true,
+      "rejectionReason": "Unexecuted browser verification rejected by CHK_05_CHROMIUM_EXECUTION"
+    },
+    {
+      "faultId": "NC-03",
+      "description": "Corrupt read-only DB assertion",
+      "injectedAnomaly": "zeroDatabaseMutationsOnRead = false",
+      "caughtAndRejected": true,
+      "rejectionReason": "Read-only DB mutation violation rejected by CHK_05_CHROMIUM_EXECUTION"
+    },
+    {
+      "faultId": "NC-04",
+      "description": "Introduce candidate field mismatch across SQLite and Browser",
+      "injectedAnomaly": "fieldDiscrepancies = [{ field: 'rank', expected: 1, actual: 2 }]",
+      "caughtAndRejected": true,
+      "rejectionReason": "Candidate rank mismatch caught by CHK_06_SQLITE_HTTP_BROWSER_PARITY"
+    },
+    {
+      "faultId": "NC-05",
+      "description": "Inject stale source SHA",
+      "injectedAnomaly": "sourceShaUnderTest = 'deadbeef00000000000000000000000000000000'",
+      "caughtAndRejected": true,
+      "rejectionReason": "Source SHA mismatch detected by CHK_02_SOURCE_SHA_INTEGRITY"
+    },
+    {
+      "faultId": "NC-06",
+      "description": "Delete JUnit XML file",
+      "injectedAnomaly": "REGRESSION_RESULTS.junit.xml deleted or empty",
+      "caughtAndRejected": true,
+      "rejectionReason": "Missing JUnit testsuites caught by CHK_03_JUNIT_CONSISTENCY"
+    },
+    {
+      "faultId": "NC-07",
+      "description": "Inject fake BigQuery SUCCESS with no job ID",
+      "injectedAnomaly": "status = 'EXECUTED', jobId = null",
+      "caughtAndRejected": true,
+      "rejectionReason": "False BigQuery execution detected by CHK_08_BIGQUERY_STATUS_TRUTH"
+    },
+    {
+      "faultId": "NC-08",
+      "description": "Break creative pipeline invariant (rawDistinct != normalized + rejected)",
+      "injectedAnomaly": "rawDistinct = 10, normalized = 5, rejected = 3 (10 != 8)",
+      "caughtAndRejected": true,
+      "rejectionReason": "Creative invariant violation caught by CHK_10_GOOGLE_CREATIVE_INVARIANTS"
+    },
+    {
+      "faultId": "NC-09",
+      "description": "Mark historical observation as future-acquired",
+      "injectedAnomaly": "futureDataLeakageDetected = true",
+      "caughtAndRejected": true,
+      "rejectionReason": "Future data leakage caught by CHK_14_POINT_IN_TIME_INTEGRITY"
+    },
+    {
+      "faultId": "NC-10",
+      "description": "Mismatched demand evidence product ID across candidates",
+      "injectedAnomaly": "candidateId = 'cand_01', queriedProductId = 'unrelated_cand_99'",
+      "caughtAndRejected": true,
+      "rejectionReason": "Unrelated demand association rejected by CHK_12_G15_DYNAMIC_EVALUATION"
+    },
+    {
+      "faultId": "NC-11",
+      "description": "Falsely promote CheckoutChamp funnel to VERIFIED without JSON-LD proof",
+      "injectedAnomaly": "isCheckoutChampFunnel = true && identityStatus = 'VERIFIED'",
+      "caughtAndRejected": true,
+      "rejectionReason": "CheckoutChamp false VERIFIED upgrade caught by CHK_13_G16_STRICT_IDENTITY"
+    }
+  ]
+}

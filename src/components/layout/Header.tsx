@@ -131,7 +131,7 @@ export function Header({
     if (segments[0] === "watchlist") return "Watchlist";
     if (segments[0] === "reports") return "Reports & Exports";
     if (segments[0] === "settings") return "Settings";
-    if (segments[0] === "discovery") return "TikTok Research";
+    if (segments[0] === "discovery") return "Discovery";
     return segments[0] || "SWAI";
   };
 

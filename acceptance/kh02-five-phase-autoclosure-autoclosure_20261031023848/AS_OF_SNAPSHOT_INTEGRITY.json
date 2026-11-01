@@ -1,0 +1,11 @@
+{
+  "evaluatedAt": "2026-10-31T02:39:46.542Z",
+  "version": "12.4.3.4.3",
+  "devCutoff": "2026-10-24T00:00:00.000Z",
+  "holdoutCutoff": "2026-10-30T12:00:00.000Z",
+  "devCandidatesEvaluated": 10,
+  "holdoutCandidatesEvaluated": 274,
+  "zeroFutureLeakageInDev": true,
+  "zeroFutureLeakageInHoldout": true,
+  "pointInTimeIntegrityVerdict": "PASS"
+}

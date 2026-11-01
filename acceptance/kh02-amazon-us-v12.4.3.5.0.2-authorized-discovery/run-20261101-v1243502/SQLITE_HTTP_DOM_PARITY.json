@@ -1,0 +1,237 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:58.087Z",
+  "researchRunId": "kh02_v1243502_parity_1793500248745",
+  "candidateId": "cand_amz_v1243502_1",
+  "verifyJobId": "kh02_amz_verify_mvx7qt9g_56197216",
+  "borrowedDomFromSqliteCount": 0,
+  "fallbackConstantDomCount": 0,
+  "readOnlyGetDigestUnchanged": true,
+  "readOnlyTestedStatuses": [
+    200,
+    403,
+    404,
+    200
+  ],
+  "threeWayComparisonsCount": 20,
+  "threeWayPassedCount": 20,
+  "threeWayComparisons": [
+    {
+      "field": "candidateId",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "cand_amz_v1243502_1",
+      "httpValue": "cand_amz_v1243502_1",
+      "domValue": "cand_amz_v1243502_1",
+      "parityPassed": true
+    },
+    {
+      "field": "researchRunId",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "kh02_v1243502_parity_1793500248745",
+      "httpValue": "kh02_v1243502_parity_1793500248745",
+      "domValue": "kh02_v1243502_parity_1793500248745",
+      "parityPassed": true
+    },
+    {
+      "field": "asin",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "B08N5WRWNW",
+      "httpValue": "B08N5WRWNW",
+      "domValue": "B08N5WRWNW",
+      "parityPassed": true
+    },
+    {
+      "field": "parentAsin",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "B08N5WR000",
+      "httpValue": "B08N5WR000",
+      "domValue": "B08N5WR000",
+      "parityPassed": true
+    },
+    {
+      "field": "variationAsin",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "B08N5WRWNW",
+      "httpValue": "B08N5WRWNW",
+      "domValue": "B08N5WRWNW",
+      "parityPassed": true
+    },
+    {
+      "field": "canonicalAmazonUrl",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "httpValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "domValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "parityPassed": true
+    },
+    {
+      "field": "productTitle",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "UAHPET Wireless Cat Water Fountain",
+      "httpValue": "UAHPET Wireless Cat Water Fountain",
+      "domValue": "UAHPET Wireless Cat Water Fountain",
+      "parityPassed": true
+    },
+    {
+      "field": "brand",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "UAHPET",
+      "httpValue": "UAHPET",
+      "domValue": "UAHPET",
+      "parityPassed": true
+    },
+    {
+      "field": "price",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "49.99",
+      "httpValue": "49.99",
+      "domValue": "49.99",
+      "parityPassed": true
+    },
+    {
+      "field": "currency",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "USD",
+      "httpValue": "USD",
+      "domValue": "USD",
+      "parityPassed": true
+    },
+    {
+      "field": "availability",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "In Stock",
+      "httpValue": "In Stock",
+      "domValue": "In Stock",
+      "parityPassed": true
+    },
+    {
+      "field": "identityMatch",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "EXACT_PRODUCT",
+      "httpValue": "EXACT_PRODUCT",
+      "domValue": "EXACT_PRODUCT",
+      "parityPassed": true
+    },
+    {
+      "field": "status",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "IDENTITY_VERIFIED",
+      "httpValue": "IDENTITY_VERIFIED",
+      "domValue": "IDENTITY_VERIFIED",
+      "parityPassed": true
+    },
+    {
+      "field": "verificationScope",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "IDENTITY_CORROBORATED",
+      "httpValue": "IDENTITY_CORROBORATED",
+      "domValue": "IDENTITY_CORROBORATED",
+      "parityPassed": true
+    },
+    {
+      "field": "observationClass",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "TEST_FIXTURE",
+      "httpValue": "TEST_FIXTURE",
+      "domValue": "TEST_FIXTURE",
+      "parityPassed": true
+    },
+    {
+      "field": "providerSourceOrigin",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "LOCAL_MCP_TEST_DOUBLE",
+      "httpValue": "LOCAL_MCP_TEST_DOUBLE",
+      "domValue": "LOCAL_MCP_TEST_DOUBLE",
+      "parityPassed": true
+    },
+    {
+      "field": "observedAt",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "2026-11-01T02:30:54.964Z",
+      "httpValue": "2026-11-01T02:30:54.964Z",
+      "domValue": "2026-11-01T02:30:54.964Z",
+      "parityPassed": true
+    },
+    {
+      "field": "rawEvidenceHash",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "httpValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "domValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "parityPassed": true
+    },
+    {
+      "field": "extractedFieldsHash",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "httpValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "domValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "parityPassed": true
+    },
+    {
+      "field": "opportunityScore",
+      "comparisonScope": "SQLITE_HTTP_DOM_3WAY",
+      "domReadSource": "CHROMIUM_DOM_ATTRIBUTE_OR_TEXT",
+      "borrowedFromSqlite": false,
+      "sqliteValue": "68",
+      "httpValue": "68",
+      "domValue": "68",
+      "parityPassed": true
+    }
+  ],
+  "dbHttpOnlyComparisons": [
+    {
+      "field": "workspaceId",
+      "comparisonScope": "DB_HTTP_ONLY",
+      "sqliteValue": "acceptance_v12_2_4_ws",
+      "httpValue": "acceptance_v12_2_4_ws",
+      "parityPassed": true
+    },
+    {
+      "field": "verifyJobId",
+      "comparisonScope": "DB_HTTP_ONLY",
+      "sqliteValue": "kh02_amz_verify_mvx7qt9g_56197216",
+      "httpValue": "kh02_amz_verify_mvx7qt9g_56197216",
+      "parityPassed": true
+    }
+  ]
+}

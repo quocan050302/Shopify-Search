@@ -1,0 +1,71 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:27.463Z",
+  "rejectedCountedAsVerified": 0,
+  "ssrfAndNonAmazonHostsRejected": true,
+  "asinDiscrepancyRejected": true,
+  "categorySearchAndSponsoredRejected": true,
+  "rejectedRecords": [
+    {
+      "sourceUrl": "http://127.0.0.1/dp/B08N5WRWNW",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "UNSAFE_PROTOCOL: Disallowed URL protocol 'http:'. Only https://www.amazon.com product URLs are permitted."
+      ],
+      "observedAt": "2026-10-31T16:40:27.462Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    },
+    {
+      "sourceUrl": "https://www.amazon.co.uk/dp/B08N5WRWNW",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "NON_US_AMAZON_MARKETPLACE: Non-US Amazon marketplace host 'www.amazon.co.uk' is rejected. Pilot is strictly restricted to Amazon US (www.amazon.com)."
+      ],
+      "observedAt": "2026-10-31T16:40:27.463Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    },
+    {
+      "sourceUrl": "https://www.amazon.com/s?k=pet+water+fountain",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "SEARCH_OR_CATEGORY_URL_NOT_PRODUCT: Search or category browse URL '/s' is not a specific product page."
+      ],
+      "observedAt": "2026-10-31T16:40:27.463Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    },
+    {
+      "sourceUrl": "https://www.amazon.com/sspa/click?ie=UTF8&spc=MTo1",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "SPONSORED_REDIRECT_URL: Sponsored ad redirect path '/sspa/click' is not an canonical product detail URL."
+      ],
+      "observedAt": "2026-10-31T16:40:27.463Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    },
+    {
+      "sourceUrl": "https://www.amazon.com/dp/B08N5WRWNW",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "ASIN_DISCREPANCY_ACROSS_SOURCES: Conflicting ASINs observed across URL (B08N5WRWNW), canonical tag (B099999999), and structured metadata (B08N5WRWNW)."
+      ],
+      "observedAt": "2026-10-31T16:40:27.463Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    },
+    {
+      "sourceUrl": "https://amzn.to/3xyz123",
+      "status": "FAILED",
+      "rejectionReasons": [
+        "URL_SHORTENER_FORBIDDEN: URL shortener host 'amzn.to' is rejected; canonical www.amazon.com product URL required."
+      ],
+      "observedAt": "2026-10-31T16:40:27.463Z",
+      "researchRunId": "run_reject_audit",
+      "countedInPositiveTotals": false
+    }
+  ]
+}

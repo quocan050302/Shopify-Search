@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 
 describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
-  it("launches Chromium, interacts with /products, and captures visual artifacts", async () => {
+  it("launches Chromium, interacts with /products, and captures visual artifacts", async (ctx) => {
     const envBase = process.env.SWAI_BASE_URL || process.env.BASE_URL;
     const baseUrl = envBase && envBase.startsWith("http") ? envBase : "http://127.0.0.1:3000";
     const isServerReachable = await fetch(`${baseUrl}/api/v1/kh02/version`)
@@ -20,7 +20,9 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
       .catch(() => false);
 
     if (!isServerReachable) {
-      console.log(`[Notice] SWAI server at ${baseUrl} is offline; skipping standalone browser test.`);
+      ctx.skip(
+        `BLOCKED_INFRASTRUCTURE: SWAI server at ${baseUrl} is offline. Browser test explicitly SKIPPED, not PASS.`
+      );
       return;
     }
 

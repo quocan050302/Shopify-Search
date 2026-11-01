@@ -1,0 +1,42 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:44.462Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "defects": [
+    {
+      "defectId": "DEFECT_01_G16_LINEAGE_AND_MERCHANT_PROOF",
+      "targetFile": "scripts/kh02/g16CandidateEvaluator.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "13/13 G16 matrix cases passed"
+    },
+    {
+      "defectId": "DEFECT_02_THREE_WAY_PARITY_AND_SQLITE_ORACLE",
+      "targetFile": "scripts/kh02/chromiumAcceptanceService.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "11/11 Chromium parity/read-only failure injections caught"
+    },
+    {
+      "defectId": "DEFECT_03_READ_ONLY_CONTENT_DIGEST_INTEGRITY",
+      "targetFile": "scripts/kh02/chromiumAcceptanceService.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "SHA-256 table content digest & HTTP 200 JSON verification enforced in assessReadOnlyMutation"
+    },
+    {
+      "defectId": "DEFECT_04_GOOGLE_MCP_EXPLICIT_LIVE_AND_SET_RECONCILIATION",
+      "targetFile": "scripts/kh02/googleMcpGateEvaluator.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "10/10 Google MCP negative cases passed"
+    },
+    {
+      "defectId": "DEFECT_05_VALIDATOR_RECOMPUTED_GATE_CONSISTENCY",
+      "targetFile": "scripts/kh02/acceptanceValidatorV12_4_3_4_5.ts",
+      "reproducedBeforeFix": true,
+      "closedAfterFix": true,
+      "verificationSummary": "CHK_16 recomputes engineering and business verdicts from raw artifacts and runs 26 physical-file mutations"
+    }
+  ]
+}

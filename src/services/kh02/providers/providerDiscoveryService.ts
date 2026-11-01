@@ -23,6 +23,7 @@ import {
 import { fetchHasDataCreditStatus } from "./hasDataCreditService";
 import { buildAuthorizedAdWhere, buildAuthorizedProductWhere } from "@/services/research/authorizedScopeHelpers";
 import { isSourceTemporarilyDisabled } from "./sourcePolicy";
+import { resolveDemandProviderMode } from "../demand/demandProviderRegistry";
 
 /**
  * Discovers and inspects all available KH-02 intelligence providers without incurring costs.
@@ -33,7 +34,6 @@ export async function discoverAvailableKH02Providers(
   const providerIds: IntelligenceSource[] = [
     "META_ADS",
     "TIKTOK_ADS",
-    "TIKTOK_ORGANIC",
     "GOOGLE_ADS",
     "DEMAND_HISTORY",
   ];
@@ -115,9 +115,16 @@ export async function discoverAvailableKH02Providers(
           }
           break;
         case "DEMAND_HISTORY":
-          displayName = "Historical Demand & Trend Stability (Google Trends)";
-          if (readiness.realRecordsObserved === 0) {
-            recommendedAction = "Get a SerpApi Free plan key at https://serpapi.com/manage-api-key, set SERPAPI_API_KEY, or import Google Trends CSV. The local engine does not fetch history.";
+          if (resolveDemandProviderMode() === "GOOGLE_FREE_ONLY") {
+            displayName = "Historical Demand & Trend Stability (Google Free Demand: BigQuery + Trends CSV)";
+            if (readiness.realRecordsObserved === 0) {
+              recommendedAction = "Import official Google Trends Explore CSV or configure BigQuery free tier sandbox. SerpApi is not required.";
+            }
+          } else {
+            displayName = "Historical Demand & Trend Stability (Google Trends)";
+            if (readiness.realRecordsObserved === 0) {
+              recommendedAction = "Get a SerpApi Free plan key at https://serpapi.com/manage-api-key, set SERPAPI_API_KEY, or import Google Trends CSV. The local engine does not fetch history.";
+            }
           }
           break;
       }
@@ -325,23 +332,31 @@ export async function probeKH02ProviderCapabilities(
     }
 
     case "DEMAND_HISTORY": {
+      const isGoogleFree = resolveDemandProviderMode() === "GOOGLE_FREE_ONLY";
       return {
         providerId: "DEMAND_HISTORY",
-        accessClass: process.env.SERPAPI_API_KEY?.trim() ? "FREE_API_KEY_REQUIRED" : "MANUAL_IMPORT_ONLY",
+        accessClass: isGoogleFree
+          ? "ZERO_KEY_AUTHORIZED"
+          : (process.env.SERPAPI_API_KEY?.trim() ? "FREE_API_KEY_REQUIRED" : "MANUAL_IMPORT_ONLY"),
         installed: true,
-        configured: Boolean(process.env.SERPAPI_API_KEY?.trim()),
-        transportConnected: false, // Account and data endpoints have not been probed
+        configured: isGoogleFree ? true : Boolean(process.env.SERPAPI_API_KEY?.trim()),
+        transportConnected: isGoogleFree ? true : false,
         supportedTools: [
           "temporal_demand_analysis",
           "stability_scoring",
           "trend_persistence_evaluation",
+          ...(isGoogleFree ? ["google_trends_bigquery_sandbox", "google_trends_csv_import"] : []),
         ],
         supportsUS: true,
         supportsKeywordSearch: true,
         supportsDateFiltering: true,
-        estimatedCostPerQueryCredits: process.env.SERPAPI_API_KEY?.trim() ? 1 : 0,
-        pricingSource: "Local engine only; SerpApi upstream uses search quota",
-        blockerReason: process.env.SERPAPI_API_KEY?.trim() ? null : "No live demand provider configured. Set SERPAPI_API_KEY or import Trends CSV.",
+        estimatedCostPerQueryCredits: isGoogleFree ? 0 : (process.env.SERPAPI_API_KEY?.trim() ? 1 : 0),
+        pricingSource: isGoogleFree
+          ? "Google Free Demand Engine (BigQuery Free Sandbox + Trends CSV)"
+          : "Local engine only; SerpApi upstream uses search quota",
+        blockerReason: isGoogleFree
+          ? null
+          : (process.env.SERPAPI_API_KEY?.trim() ? null : "No live demand provider configured. Set SERPAPI_API_KEY or import Trends CSV."),
       };
     }
 

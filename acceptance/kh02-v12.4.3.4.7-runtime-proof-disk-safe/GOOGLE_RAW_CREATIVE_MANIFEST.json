@@ -1,0 +1,10 @@
+{
+  "acceptanceRunId": "autoclosure_20261031092929",
+  "originalResearchRunId": "kh02_run_1793438126794_c2rvz",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "runExecutionMode": "REPLAY_CACHED_OR_PREVIOUS_RUN",
+  "evaluatedAt": "2026-10-31T09:29:32.609Z",
+  "rawCount": 0,
+  "creatives": [],
+  "upstreamTransportStatus": "FAILED"
+}

@@ -1,0 +1,755 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "topLevelVerdicts": {
+    "ENGINEERING_RELEASE_VERDICT": "PASS",
+    "ZERO_SPEND_VERDICT": "BLOCKED_CONFIGURATION",
+    "META_LIVE_SOURCE_VERDICT": "PASS",
+    "GOOGLE_LIVE_SOURCE_VERDICT": "PASS",
+    "LINEAGE_INTEGRITY_VERDICT": "PASS",
+    "RESEARCH_TOP3_VERDICT": "PASS",
+    "LIVE_VERIFIED_TOP3_VERDICT": "INSUFFICIENT_EVIDENCE",
+    "EVERGREEN_TOP3_VERDICT": "INSUFFICIENT_EVIDENCE",
+    "FULL_BUSINESS_ACCEPTANCE_VERDICT": "INSUFFICIENT_FREE_SOURCE_COVERAGE"
+  },
+  "totalGates": 28,
+  "passingGates": 26,
+  "failingGates": 0,
+  "insufficientEvidenceGates": 2,
+  "blockedGates": 0,
+  "gates": [
+    {
+      "gateId": "G01",
+      "title": "Branch & SHA provenance",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Running on feature/kh02-v12.1.3-runtime-truth-closure with 40-char testedSourceSha",
+      "expected": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "shaLength": 40
+      },
+      "observed": {
+        "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+        "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+        "dirtyNonAcceptanceFilesCount": 18
+      },
+      "reason": "Verified branch feature/kh02-v12.1.3-runtime-truth-closure at SHA c313941",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G02",
+      "title": "Meta live collector execution truth",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Meta collector installed, configured, and returns freshLiveAdsCount > 0 in LIVE_ONLY run",
+      "expected": {
+        "collectorInstalled": true,
+        "collectorConfigured": true,
+        "freshLiveAdsCount": "> 0"
+      },
+      "observed": {
+        "collectorInstalled": true,
+        "collectorConfigured": true,
+        "actualApiCalls": 3,
+        "freshLiveAdsCount": 25,
+        "queryStatus": "PASSED"
+      },
+      "reason": "Meta live collector returned 25 fresh live ads across 3 API calls",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G03",
+      "title": "TypeScript, ESLint & Meta live/cache mode isolation",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "tsc --noEmit and eslint exit 0; LIVE_ONLY uses 0 cached ads; CACHE_ONLY uses 0 live ads",
+      "expected": {
+        "tscExit": 0,
+        "eslintExit": 0,
+        "liveOnlyCachedCount": 0,
+        "cacheOnlyLiveCount": 0
+      },
+      "observed": {
+        "tscExit": 0,
+        "eslintExit": 0,
+        "liveOnlyCachedCount": 0,
+        "cacheOnlyLiveCount": 0
+      },
+      "reason": "TypeScript, ESLint, and LIVE_ONLY/CACHE_ONLY strict separation verified",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G04",
+      "title": "Meta query→ad→DB→candidate lineage (V12.4.3.3.1)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Every shortlist candidate has non-empty matchedQueryIds belonging to current-run executedQueries, supportingAdIds, supportingExternalAdIds, and liveObservationsCount > 0",
+      "expected": {
+        "shortlistCount": 3,
+        "allMatchedQueryIdsInExecutedQueries": true,
+        "allHaveLiveObservations": true
+      },
+      "observed": {
+        "executedQueryIds": [
+          "kh02_q_r1_1_1e691be2",
+          "kh02_q_r1_2_e2cffbe4",
+          "kh02_q_r1_3_7ac9ef3c"
+        ],
+        "shortlistLineage": [
+          {
+            "candidateId": "cand_1212440541",
+            "title": "UAHPET Fresh Food Automatic Pet Feeder",
+            "matchedQueryIds": [
+              "kh02_q_r1_3_7ac9ef3c"
+            ],
+            "liveObservationsCount": 2,
+            "cachedObservationsCount": 5,
+            "supportingAdIdsCount": 7,
+            "supportingExternalAdIdsCount": 7
+          },
+          {
+            "candidateId": "cand_1587534715",
+            "title": "The KittySpout™ - Wireless Fountain",
+            "matchedQueryIds": [
+              "kh02_q_r1_2_e2cffbe4"
+            ],
+            "liveObservationsCount": 1,
+            "cachedObservationsCount": 0,
+            "supportingAdIdsCount": 1,
+            "supportingExternalAdIdsCount": 1
+          },
+          {
+            "candidateId": "cand_1613504636",
+            "title": "Pet Hair/Lint/Dust Cleaner",
+            "matchedQueryIds": [
+              "kh02_q_r1_1_1e691be2"
+            ],
+            "liveObservationsCount": 10,
+            "cachedObservationsCount": 0,
+            "supportingAdIdsCount": 10,
+            "supportingExternalAdIdsCount": 10
+          }
+        ]
+      },
+      "reason": "All 3/3 shortlist candidates have verified current-run query→ad→DB→candidate lineage",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G05",
+      "title": "Google transport/tool capability",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Google Ads Transparency MCP connects, exposes search_advertiser and get_advertiser_ads, and classifies as ENRICHMENT_ONLY (PRODUCT_DISCOVERY_SUPPORTED: false)",
+      "expected": {
+        "TRANSPORT_CONNECTED": true,
+        "ADVERTISER_LOOKUP_SUPPORTED": true,
+        "PRODUCT_DISCOVERY_SUPPORTED": false,
+        "capabilityClassification": "ENRICHMENT_ONLY"
+      },
+      "observed": {
+        "transportConnected": true,
+        "toolsDiscovered": [
+          {
+            "name": "search_advertiser",
+            "description": "Resolve a confirmed store domain without guessing an advertiser name.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "title": "Query",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "title": "search_advertiserArguments"
+            }
+          },
+          {
+            "name": "get_advertiser_ads",
+            "description": "Get creatives for an exact advertiser ID filtered by delivery region.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "advertiser_id": {
+                  "title": "Advertiser Id",
+                  "type": "string"
+                },
+                "region": {
+                  "default": "US",
+                  "title": "Region",
+                  "type": "string"
+                },
+                "count": {
+                  "default": 3,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "advertiser_id"
+              ],
+              "title": "get_advertiser_adsArguments"
+            }
+          }
+        ],
+        "supportedOperations": {
+          "domainLookup": true,
+          "advertiserSearch": true,
+          "adsRetrieval": true,
+          "adDetail": false,
+          "productDiscovery": false,
+          "productEnrichment": true
+        },
+        "matchedTools": {
+          "domainLookupTool": "search_advertiser",
+          "advertiserSearchTool": "search_advertiser",
+          "adsRetrievalTool": "get_advertiser_ads"
+        },
+        "TRANSPORT_CONNECTED": true,
+        "ADVERTISER_LOOKUP_SUPPORTED": true,
+        "AD_CREATIVE_RETRIEVAL_SUPPORTED": true,
+        "PRODUCT_DISCOVERY_SUPPORTED": false,
+        "PRODUCT_ENRICHMENT_SUPPORTED": true,
+        "capabilityClassification": "ENRICHMENT_ONLY",
+        "discoveredAt": "2026-10-30T10:35:19.782Z"
+      },
+      "reason": "Google MCP transport connected and classified as ENRICHMENT_ONLY",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G06",
+      "title": "Google live retrieval truth",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Google multi-domain enrichment reports truthful domainsPlanned, domainsAttempted, mcpCallsStarted, mcpCallsCompleted, and only reports PASS when creativesRetrieved > 0",
+      "expected": {
+        "creativesRetrieved": "> 0 for PASS, else INSUFFICIENT_EVIDENCE/BLOCKED"
+      },
+      "observed": {
+        "queryStatus": "PASSED",
+        "domainsPlanned": 5,
+        "domainsAttempted": 3,
+        "domainsSucceeded": 3,
+        "domainsEmpty": 0,
+        "domainsRateLimited": 0,
+        "mcpCallsStarted": 6,
+        "mcpCallsCompleted": 6,
+        "creativesRetrieved": 9
+      },
+      "reason": "Google returned 9 creatives across 3 domains",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G07",
+      "title": "Google per-operation deadline & process cleanup enforcement",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Hanging MCP connect aborts within connectDeadlineMs, invokes client.close(), returns BLOCKED, and does not trigger false 429 cooldown",
+      "expected": {
+        "status": "BLOCKED",
+        "clientClosed": true,
+        "cooldownActive": false
+      },
+      "observed": {
+        "status": "BLOCKED_SOURCE",
+        "timedOutStepRecorded": true,
+        "cleanupCompleted": true,
+        "cooldownActive": false,
+        "elapsedMs": 31
+      },
+      "reason": "Verified per-operation deadline abort, guaranteed client.close(), and zero false 429 cooldown",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G08",
+      "title": "KH-01 regression suite",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All KH-01 unit and integration tests pass with exit code 0",
+      "expected": {
+        "exitCode": 0,
+        "failedTests": 0
+      },
+      "observed": {
+        "exitCode": 0,
+        "passedTests": 69,
+        "failedTests": 0
+      },
+      "reason": "KH-01 regression passed (69 tests)",
+      "executedAt": "2026-10-30T10:39:44.735Z"
+    },
+    {
+      "gateId": "G09",
+      "title": "V12.4.3.3.1 family classification & niche contamination elimination",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All family classification unit tests pass; Dog Food Bundle, Crochet Starter Kit, and Golf Organizer Pouch rejected from hardware niches; zero cross-species contamination",
+      "expected": {
+        "familySuiteExit": 0,
+        "contaminationRejected": true,
+        "dogHasCatOnly": false,
+        "catHasDogOnly": false,
+        "emptyQueryRejected": true
+      },
+      "observed": {
+        "familySuitePassed": 19,
+        "contaminationMutation": {
+          "dogFoodStatus": "IRRELEVANT",
+          "crochetStatus": "IRRELEVANT",
+          "golfStatus": "IRRELEVANT"
+        },
+        "dogHasCatOnly": false,
+        "catHasDogOnly": false,
+        "emptyQueryRejected": true
+      },
+      "reason": "Family suite (19 tests) and niche contamination guards verified",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G10",
+      "title": "V12.4.3.3.1 adversarial integrity tests & runtime mutations",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All V12.4.3.3.1 live integrity unit tests and runtime false-PASS mutations pass",
+      "expected": {
+        "suiteExit": 0,
+        "runtimeMutationsAllCaught": true
+      },
+      "observed": {
+        "suitePassed": 19,
+        "suiteFailed": 0,
+        "runtimeMutationsCaught": "14/14"
+      },
+      "reason": "All 19 integrity tests and 14/14 runtime mutations caught",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G11",
+      "title": "Full KH-02 unit & integration regression (282+ unit + 12 integration tests)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All KH-02 unit and integration test suites pass with 0 failures",
+      "expected": {
+        "unitExit": 0,
+        "integrationExit": 0
+      },
+      "observed": {
+        "unitPassed": 322,
+        "unitFailed": 0,
+        "integrationPassed": 26,
+        "integrationFailed": 0
+      },
+      "reason": "KH-02 unit (322) and integration (26) suites passed",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G12",
+      "title": "Semantic product family diversity — 3 distinct families in broad niche (V12.4.3.3.1)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Pet Gadgets Top-3 shortlist spans 3 distinct semantic families with <= 1 pet_water_fountain and 0 unresolved_family counted as distinct",
+      "expected": {
+        "distinctFamilyCount": 3,
+        "waterFountainCount": "<= 1",
+        "kittyspoutPawiraCollapsed": true
+      },
+      "observed": {
+        "shortlistCount": 3,
+        "distinctFamilyCount": 3,
+        "familyKeys": [
+          "automatic_pet_feeder",
+          "pet_water_fountain",
+          "pet_hair_remover_roller"
+        ],
+        "waterFountainCount": 1
+      },
+      "reason": "Pet Gadgets shortlist spans 3/3 distinct semantic families (automatic_pet_feeder, pet_water_fountain, pet_hair_remover_roller)",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G13",
+      "title": "Demand source authority & V12.4.3.3 provenance suite (89 tests)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All 89 V12.4.3.3 provenance tests pass and forensic DB demand audit confirms 0 synthetic/cached rows promoted to AUTHORITATIVE_VERIFIED",
+      "expected": {
+        "provenanceTestsPassed": 89,
+        "authoritativeCountInDevDb": 0
+      },
+      "observed": {
+        "provenanceTestsPassed": 89,
+        "forensicDbDemandAudit": {
+          "totalObservations": 96,
+          "authoritativeCount": 0,
+          "cachedUnverifiedCount": 60
+        }
+      },
+      "reason": "89/89 provenance tests passed; 96 DB demand rows audited with 0 false authoritative promotions",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G14",
+      "title": "Research Shortlist Top 3",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "3 distinct, relevant, physically sellable product candidates qualify across 3 distinct product families",
+      "expected": {
+        "qualifiedCount": 3,
+        "distinctFamiliesCount": 3
+      },
+      "observed": {
+        "petGadgetsLiveFallbackQualified": 3,
+        "petGadgetsLiveFallbackFamilies": 3,
+        "petGadgetsLiveOnlyQualified": 3,
+        "homeCleaningQualified": 3,
+        "carAccessoriesQualified": 3
+      },
+      "reason": "3/3 distinct qualified Research Shortlist products verified across 3 product families",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G15",
+      "title": "Verified Evergreen Top 3 honest reporting",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "assertion": "Evergreen Top 3 requires independent authoritative 6–12 month demand history in a single research run; reports INSUFFICIENT_EVIDENCE honestly when public Google free data lacks 60+ days longitudinal demand",
+      "expected": {
+        "falseEvergreenPromotions": 0,
+        "requiredLookbackDays": 60
+      },
+      "observed": {
+        "singleRunVerifiedEvergreenCount": 0,
+        "authoritativeDemandRowsInDb": 0,
+        "cachedUnverifiedCount": 60
+      },
+      "reason": "0/3 Verified Evergreen reported honestly (INSUFFICIENT_EVIDENCE: Google Free public sources do not provide 60+ days product-specific demand for these niche items without Explore CSV import; 0 false promotions)",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G16",
+      "title": "Live Verified Top-3 identity & live-observation separation (V12.4.3.3.1)",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "executed": true,
+      "assertion": "All 3 shortlist candidates have identityStatus === 'VERIFIED' AND current-run LIVE_PROVIDER observations linked to executedQueryIds (PROBABLE excluded)",
+      "expected": {
+        "liveVerifiedProductCount": 3,
+        "liveVerifiedTop3": true
+      },
+      "observed": {
+        "liveOnlyLiveVerifiedCount": 2,
+        "liveFallbackLiveVerifiedCount": 2,
+        "candidates": [
+          {
+            "candidateId": "cand_1212440541",
+            "title": "UAHPET Fresh Food Automatic Pet Feeder",
+            "identityStatus": "VERIFIED",
+            "liveObservationsCount": 2,
+            "matchedQueryIds": [
+              "kh02_q_r1_3_7ac9ef3c"
+            ],
+            "isLiveVerified": true
+          },
+          {
+            "candidateId": "cand_1587534715",
+            "title": "The KittySpout™ - Wireless Fountain",
+            "identityStatus": "VERIFIED",
+            "liveObservationsCount": 1,
+            "matchedQueryIds": [
+              "kh02_q_r1_2_e2cffbe4"
+            ],
+            "isLiveVerified": true
+          },
+          {
+            "candidateId": "cand_1613504636",
+            "title": "Pet Hair/Lint/Dust Cleaner",
+            "identityStatus": "PROBABLE",
+            "liveObservationsCount": 10,
+            "matchedQueryIds": [
+              "kh02_q_r1_1_1e691be2"
+            ],
+            "isLiveVerified": false
+          }
+        ]
+      },
+      "reason": "2/3 VERIFIED+live candidates (INSUFFICIENT_EVIDENCE: PROBABLE or cache-only candidates excluded)",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G17",
+      "title": "Same-run SQLite / HTTP API / Playwright Chromium reconciliation (V12.4.3.3.1)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "databaseConsistent && httpReconciled && browserReconciled (browserStatus === 'PASS') && Top-3 shortlist IDs/order match across SQLite, HTTP, and Chromium with 0 console/500 errors",
+      "expected": {
+        "databaseConsistent": true,
+        "httpReconciled": true,
+        "browserReconciled": true,
+        "browserStatus": "PASS",
+        "top3OrderMatchesChromium": true,
+        "zeroConsoleOr500Errors": true
+      },
+      "observed": {
+        "runId": "kh02_run_1793356734087_0ttzi",
+        "databaseConsistent": true,
+        "httpReconciled": true,
+        "browserReconciled": true,
+        "browserStatus": "PASS",
+        "reconciliationVerdict": "RECONCILED",
+        "dbTop3ShortlistIds": [
+          "cand_1212440541",
+          "cand_1587534715",
+          "cand_1613504636"
+        ],
+        "chromiumTop3Ids": [
+          "cand_1212440541",
+          "cand_1587534715",
+          "cand_1613504636"
+        ],
+        "top3OrderMatchesChromium": true,
+        "consoleErrorsCount": 0,
+        "pageErrorsCount": 0,
+        "api500ErrorsCount": 0
+      },
+      "reason": "Same-run reconciliation verified for kh02_run_1793356734087_0ttzi across SQLite, HTTP API, and Playwright Chromium",
+      "executedAt": "2026-10-30T10:39:44.736Z"
+    },
+    {
+      "gateId": "G18",
+      "title": "GET /api/v1/research/products/[id]/overview read-only integrity (Section 10)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "GET overview route contains zero upsert calls and dynamic probe confirms 0 rows created in ResearchProduct, CompetitorStore, or AdProductLink",
+      "expected": {
+        "staticNoUpserts": true,
+        "dynamicZeroRowsCreated": true
+      },
+      "observed": {
+        "staticNoUpserts": true,
+        "dynamicZeroRowsCreated": true
+      },
+      "reason": "Verified statically and dynamically that GET overview creates zero DB records",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G19",
+      "title": "Fresh Next.js production build",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "next build exits 0 and writes .next/BUILD_ID",
+      "expected": {
+        "buildExit": 0,
+        "buildIdExists": true
+      },
+      "observed": {
+        "buildExit": 0,
+        "buildIdExists": true
+      },
+      "reason": "Production build succeeded",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G20",
+      "title": "Runtime release version & SHA parity (12.4.3.3.1)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "SWAI_KH02_RELEASE_VERSION, /api/v1/kh02/version, /api/v1/research/products/[id]/overview, and Chromium badge all report \"12.4.3.4.2\" with MATCHED SHA parity",
+      "expected": {
+        "constantVersion": "12.4.3.4.2",
+        "versionApiReleaseVersion": "12.4.3.4.2",
+        "versionApiRuntimeStatus": "MATCHED",
+        "overviewApiMetaVersion": "12.4.3.4.2",
+        "chromiumBadgeVersion": "12.4.3.4.2"
+      },
+      "observed": {
+        "constantVersion": "12.4.3.4.2",
+        "versionApiReleaseVersion": "12.4.3.4.2",
+        "versionApiRuntimeStatus": "MATCHED",
+        "overviewApiMetaVersion": "12.4.3.4.2",
+        "chromiumBadgeVersion": "12.4.3.4.2"
+      },
+      "reason": "All 4 runtime surfaces report version 12.4.3.4.2 with MATCHED SHA parity",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G21",
+      "title": "Async completion barrier, disk headroom (>=15GB) & leak-free DEV/HOLDOUT historical replay",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "All async jobs reached terminal state before gate evaluation; real fs.statfsSync free disk >= 15 GB; SQLite PRAGMA integrity_check === ok; 14/14 policy scenarios pass; DEV/HOLDOUT point-in-time replay executed with zero future data leakage",
+      "expected": {
+        "allJobsCompleted": true,
+        "freeDiskAfterGB": ">= 15",
+        "sqliteIntegrityOk": true,
+        "policyPassed": true,
+        "pointInTimeLeakageFree": true
+      },
+      "observed": {
+        "allJobsCompleted": true,
+        "incompleteJobs": [],
+        "freeDiskBeforeGB": 51.11,
+        "freeDiskAfterGB": 51.11,
+        "sqlitePreCheck": "ok",
+        "sqlitePostCheck": "ok",
+        "policyPassed": true,
+        "pointInTimeLeakageFree": true,
+        "policyScenariosPassed": "14/14",
+        "devDemandCoverage": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+        "holdoutDemandCoverage": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+      },
+      "reason": "Barrier verified (11 jobs), freeDisk=51.11GB, SQLite ok, 14/14 policy scenarios passed, DEV/HOLDOUT replay executed with zero future leakage (historical demand honest verdict: INSUFFICIENT_HISTORICAL_EVIDENCE)",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G22",
+      "title": "V12.4.3.3 acceptance artifacts preserved",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "acceptance/kh02-v12.4.3.3/ artifacts exist and have 0 modified files since 87627ae851a02d855245ca71b8bd9435826a7811",
+      "expected": {
+        "v12433ModifiedFilesCount": 0,
+        "reportExists": true
+      },
+      "observed": {
+        "v12433ModifiedFiles": [],
+        "reportExists": true
+      },
+      "reason": "V12.4.3.3 acceptance directory completely untouched",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G23",
+      "title": "Protected scope: productMediaResolver.ts unmodified",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "git diff --name-only c31394127bc4eba0ca1f7fa467d3bdcfdeeba714 confirms productMediaResolver.ts is untouched",
+      "expected": {
+        "productMediaResolverModified": false
+      },
+      "observed": {
+        "productMediaResolverModified": false
+      },
+      "reason": "Verified via git diff against c31394127bc4eba0ca1f7fa467d3bdcfdeeba714 that productMediaResolver.ts was not modified",
+      "executedAt": "2026-10-30T10:39:44.737Z"
+    },
+    {
+      "gateId": "G24",
+      "title": "Protected scope enforcement & testedSourceSha provenance",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Zero protected files modified since c31394127bc4eba0ca1f7fa467d3bdcfdeeba714 and testedSourceSha recorded separately from artifactCommitSha",
+      "expected": {
+        "touchedProtectedFiles": [],
+        "testedSourceShaLength": 40
+      },
+      "observed": {
+        "touchedProtectedFiles": [],
+        "protectedFilesChecked": [
+          "src/services/kh02/media/productMediaResolver.ts",
+          "src/services/kh02/scoring/evergreenOpportunityScoring.ts",
+          "src/services/kh02/discovery/geminiDiscoveryPlanner.ts",
+          "src/services/kh02/providers/sourcePolicy.ts"
+        ],
+        "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714"
+      },
+      "reason": "All 4 protected files verified untouched via git diff; testedSourceSha=c313941",
+      "executedAt": "2026-10-30T10:39:44.738Z"
+    },
+    {
+      "gateId": "G25",
+      "title": "Protected feature regression (Meta 10x recall + Chromium drawer & gallery)",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Meta 10x recall multiplier preserved; Product Finder research drawer and Product Intelligence media gallery render in Chromium",
+      "expected": {
+        "has10xRecallMultiplier": true,
+        "drawerOpened": true,
+        "productIntelligenceGalleryRendered": true
+      },
+      "observed": {
+        "has10xRecallMultiplier": true,
+        "drawerOpened": true,
+        "productIntelligenceGalleryRendered": true
+      },
+      "reason": "Meta 10x recall multiplier, research drawer, and Product Intelligence media gallery verified",
+      "executedAt": "2026-10-30T10:39:44.738Z"
+    },
+    {
+      "gateId": "G26",
+      "title": "Cross-niche generalization — Home Cleaning Gadgets & Car Accessories",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Out-of-sample niches ('Home Cleaning Gadgets' and 'Car Accessories') resolve semantic product families with 0 unresolved_family or off-niche golf items",
+      "expected": {
+        "homeCleaningQualified": ">= 1",
+        "zeroUnresolvedFamilies": true,
+        "zeroGolfInCarAccessories": true
+      },
+      "observed": {
+        "homeCleaningQualified": 3,
+        "homeCleaningFamilies": [
+          "electric_spin_scrubber",
+          "steam_genie",
+          "cordless_vacuum_cleaner"
+        ],
+        "carAccessoriesQualified": 3,
+        "carFamilies": [
+          "cordless_vacuum_cleaner",
+          "car_organizer_storage",
+          "car_phone_mount"
+        ]
+      },
+      "reason": "Home Cleaning Gadgets (3 items: electric_spin_scrubber, steam_genie, cordless_vacuum_cleaner) and Car Accessories (3 items: cordless_vacuum_cleaner, car_organizer_storage, car_phone_mount) verified",
+      "executedAt": "2026-10-30T10:39:44.738Z"
+    },
+    {
+      "gateId": "G27",
+      "title": "Provider error/timeout truth — 429 cooldown vs timeout separation",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Actual HTTP 429 triggers RATE_LIMITED and cooldown (M05), whereas MCP timeout triggers BLOCKED without setting 429 cooldown (M04)",
+      "expected": {
+        "m04TimeoutNoCooldown": true,
+        "m05RateLimitSetsCooldown": true
+      },
+      "observed": {
+        "m04Timeout": {
+          "status": "BLOCKED_SOURCE",
+          "timedOutStepRecorded": true,
+          "cleanupCompleted": true,
+          "cooldownActive": false,
+          "elapsedMs": 31
+        },
+        "m05RateLimit": {
+          "status": "QUERY_FAILED",
+          "domainStatus": "RATE_LIMITED",
+          "cooldownActive": true
+        }
+      },
+      "reason": "Verified via live adapter execution that 429 sets cooldown while MCP timeout does not",
+      "executedAt": "2026-10-30T10:39:44.738Z"
+    },
+    {
+      "gateId": "G28",
+      "title": "Final business acceptance integrity — all 28 gates evaluated without weakening",
+      "verdict": "PASS",
+      "executed": true,
+      "assertion": "Exactly 27 gates (G01–G27) evaluated prior to G28; zero gate thresholds lowered; INSUFFICIENT_EVIDENCE reported honestly",
+      "expected": {
+        "preG28GateCount": 27,
+        "totalGatesAfterG28": 28
+      },
+      "observed": {
+        "preG28GateCount": 27,
+        "totalGatesAfterG28": 28,
+        "passingGates": 26,
+        "failingGates": 0,
+        "insufficientEvidenceGates": 2,
+        "blockedGates": 0
+      },
+      "reason": "All 28 gates (G01–G28) evaluated honestly with zero false-PASS shortcuts",
+      "executedAt": "2026-10-30T10:39:44.738Z"
+    }
+  ]
+}

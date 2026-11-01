@@ -1,0 +1,26 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "controls": [
+    {
+      "control": "Tampered CSV hash rejection",
+      "expected": "Lineage verification rejects unverified hash",
+      "status": "PASS"
+    },
+    {
+      "control": "Missing BigQuery credentials fail closed",
+      "expected": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
+      "status": "PASS"
+    },
+    {
+      "control": "Trending Now RSS cannot satisfy G15 Evergreen",
+      "expected": "INSUFFICIENT_EVIDENCE without longitudinal points",
+      "status": "PASS"
+    },
+    {
+      "control": "Non-existent candidate in runId",
+      "expected": "PRODUCT_NOT_FOUND (404)",
+      "status": "PASS"
+    }
+  ]
+}

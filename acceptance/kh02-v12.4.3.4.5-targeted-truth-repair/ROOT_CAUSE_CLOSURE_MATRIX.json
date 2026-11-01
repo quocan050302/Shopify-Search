@@ -1,0 +1,90 @@
+{
+  "version": "12.4.3.4.5",
+  "evaluatedAt": "2026-10-31T05:23:09.099Z",
+  "rootCauses": [
+    {
+      "id": "RC-01",
+      "description": "Hard-coded Chromium PASS audit",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-02",
+      "description": "Hard-coded API and database reconciliation",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-03",
+      "description": "Duplicate regression test counting",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-04",
+      "description": "Missing final integration and build execution",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-05",
+      "description": "Fabricated Google MCP timeline fixed durations",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "src/services/kh02/providers/googleTransparencyResearchAdapter.ts"
+    },
+    {
+      "id": "RC-06",
+      "description": "Google same-run creative mismatch",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "src/services/kh02/evergreenResearchOrchestrator.ts"
+    },
+    {
+      "id": "RC-07",
+      "description": "BigQuery false EXECUTED condition",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-08",
+      "description": "Incorrect SQL hash provenance",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-09",
+      "description": "Unknown billed bytes incorrectly converted to zero",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "src/services/kh02/demand/bigqueryClientAdapter.ts"
+    },
+    {
+      "id": "RC-10",
+      "description": "Hard-coded G15 demand results",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-11",
+      "description": "G16 live verification incomplete",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-12",
+      "description": "Historical backtest and provenance limitations",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+    },
+    {
+      "id": "RC-13",
+      "description": "Static release gate construction",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    },
+    {
+      "id": "RC-14",
+      "description": "Incorrect release readiness",
+      "status": "FIXED_AND_TESTED",
+      "fixLocation": "scripts/kh02/runFivePhaseAutoClosure.ts"
+    }
+  ]
+}

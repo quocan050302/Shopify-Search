@@ -1,0 +1,93 @@
+{
+  "valid": true,
+  "evaluatedAt": "2026-11-01T02:30:58.574Z",
+  "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-amazon-us-v12.4.3.5.0.2-authorized-discovery/run-20261101-v1243502",
+  "expectedCodeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "engineeringVerdict": "ENGINEERING_READY",
+  "realProviderVerdict": "BLOCKED_POLICY",
+  "overallClosureVerdict": "ENGINEERING_READY_WITH_LIVE_EXTERNAL_BLOCKER",
+  "checksCount": 13,
+  "passedChecksCount": 13,
+  "failedChecksCount": 0,
+  "checks": [
+    {
+      "checkId": "VAL_01_MANDATORY_ARTIFACTS_PRESENT",
+      "description": "All required V12.4.3.5.0.2 deliverable artifacts exist and are non-empty",
+      "passed": true,
+      "details": "Verified 22 artifacts present"
+    },
+    {
+      "checkId": "VAL_02_BRANCH_AND_CODE_SHA_LOCK",
+      "description": "Branch is feature/kh02-amazon-us-pilot-v12.4.3.5.0 and 40-hex CODE_SHA matches across all artifacts",
+      "passed": true,
+      "details": "Verified branch=feature/kh02-amazon-us-pilot-v12.4.3.5.0 codeSha=1e0cde43a14d54444e64ea1a7e890488e491ee11"
+    },
+    {
+      "checkId": "VAL_03_PER_TEST_RAW_REPORTER_TRUTH",
+      "description": "Per-test results N01..N40 and D01..D25 are parsed from raw Vitest reporters with zero skipped/failed/duplicate cases",
+      "passed": true,
+      "details": "Verified 571 unique non-skipped passed test cases across 2 suites"
+    },
+    {
+      "checkId": "VAL_04_ENTITLEMENT_AND_LIVE_GATE_TRUTH",
+      "description": "Provider entitlement, request ledger, and live gate verdict strictly separate configured vs authenticated vs live verified",
+      "passed": true,
+      "details": "Verified entitlement status=DISABLED, liveCalls=0, realProviderVerdict=BLOCKED_POLICY"
+    },
+    {
+      "checkId": "VAL_05_SEARCH_QUERY_PLAN_AND_BUDGET",
+      "description": "Candidate-specific search query planner enforces max 3 candidates, max 4 shared ops, concurrency=1, and zero generic/browser scraping",
+      "passed": true,
+      "details": "Verified 4 candidate query plans within 3-candidate / 4-op cap"
+    },
+    {
+      "checkId": "VAL_06_PROVENANCE_IDENTITY_AND_HASH_INTEGRITY",
+      "description": "Evidence manifest and identity ledger enforce strict ASIN/URL/hash/workspace/run lineage, nullable price, and accessory/brand-only rejection",
+      "passed": true,
+      "details": "Verified 1 evidence records and 2 match decisions"
+    },
+    {
+      "checkId": "VAL_07_MCP_RUNTIME_AND_NULL_HTTP_STATUS",
+      "description": "MCP transport preserves httpStatus=null when unobserved (never 200), fails closed on isError/missing snapshot, and isolates LOCAL_MCP_TEST_DOUBLE",
+      "passed": true,
+      "details": "Verified unobserved HTTP status -> null (UNOBSERVED_NULL), isError rejected, and local MCP test double isolated"
+    },
+    {
+      "checkId": "VAL_08_GENUINE_SQLITE_HTTP_DOM_PARITY",
+      "description": "All 3-way parity fields are independently read from Chromium DOM with zero SQLite borrowing or fallback constants",
+      "passed": true,
+      "details": "Verified 20 genuine 3-way SQLite-HTTP-DOM comparisons and read-only GET invariance"
+    },
+    {
+      "checkId": "VAL_09_JOB_OWNERSHIP_FENCING_AND_PERSISTENCE",
+      "description": "Worker lease fencing, transaction rollback, error surfacing, and parent/child job isolation verified",
+      "passed": true,
+      "details": "Verified parent/child job isolation, fencing, transaction rollback, and zero swallowed DB errors"
+    },
+    {
+      "checkId": "VAL_10_POINT_IN_TIME_AND_DYNAMIC_NON_INFLATION",
+      "description": "DEV (60 ads) and HOLDOUT (377 ads) point-in-time replays and dynamic before/after non-inflation delta verified",
+      "passed": true,
+      "details": "Verified DEV=60, HOLDOUT=377, postCutoffLeaks=0, dynamic delta maxAbsoluteScoreDelta=0 across 3 candidates"
+    },
+    {
+      "checkId": "VAL_11_FULL_REGRESSION_BUILD_AND_RESOURCE_GUARD",
+      "description": "TypeScript, Next.js build, full regression, bounded concurrency <=2, and disk/DB resource guards passed",
+      "passed": true,
+      "details": "Verified passedTests=571, buildExit=0, maxConcurrency=2"
+    },
+    {
+      "checkId": "VAL_12_ACCEPTANCE_MATRIX_AND_NEGATIVE_CONTROLS",
+      "description": "Acceptance matrix A01..A40 and physical negative mutations N01..N45 verified with 0 escapes",
+      "passed": true,
+      "details": "Verified A01..A40 engineering gates and 45/45 negative mutations caught"
+    },
+    {
+      "checkId": "VAL_13_VERDICT_ORDER_AND_OWNER_REPORT_CONSISTENCY",
+      "description": "Final owner report and closure verdicts match independent validator and real provider status without false live claims",
+      "passed": true,
+      "details": "Verified final owner report matches independent validation and provider state"
+    }
+  ],
+  "failedReasons": []
+}

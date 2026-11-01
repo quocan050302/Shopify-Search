@@ -1,0 +1,106 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/unit/kh02V12_1_4_2_Reliability.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 11028[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Research Reliability, Worker Health & Source Auto-Setup [2m(13)[22m
+     [33m[2m✓[22m[39m persists worker heartbeat to SQLite and detects ALIVE status within freshness window[33m 1098[2mms[22m[39m
+     [33m[2m✓[22m[39m classifies worker as STALE when heartbeat is between 30 and 60 seconds old[33m 711[2mms[22m[39m
+     [33m[2m✓[22m[39m classifies worker as OFFLINE when stopped or heartbeat exceeds 60 seconds[33m 818[2mms[22m[39m
+     [33m[2m✓[22m[39m retrieves the active research run to resume tracking upon page mount/reload[33m 717[2mms[22m[39m
+     [33m[2m✓[22m[39m does not return completed or failed runs as active[33m 703[2mms[22m[39m
+     [33m[2m✓[22m[39m truthfully diagnoses Meta Ads as SOURCE_ACCESS_VERIFIED[33m 735[2mms[22m[39m
+     [33m[2m✓[22m[39m truthfully diagnoses TikTok Ads as MANUAL_RESEARCH_ONLY without fabricating live US scraper[33m 703[2mms[22m[39m
+     [33m[2m✓[22m[39m truthfully diagnoses TikTok Organic as CREDENTIALS_REQUIRED when API key is missing[33m 1132[2mms[22m[39m
+     [33m[2m✓[22m[39m truthfully diagnoses Google Ads as MCP_NOT_CONFIGURED when MCP server is missing[33m 656[2mms[22m[39m
+     [33m[2m✓[22m[39m diagnoses Demand History as ENGINE_READY policy engine[33m 690[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects invalid or unauthorized source names in testKH02SourceConnection[33m 662[2mms[22m[39m
+     [33m[2m✓[22m[39m executes safe connection test for allowed sources without charging credits[33m 1734[2mms[22m[39m
+     [33m[2m✓[22m[39m bounds candidate discoveries to maxCandidates limit[33m 667[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_AtomicCas.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 7539[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4 — Atomic Lease CAS & Database Concurrency [2m(7)[22m
+     [33m[2m✓[22m[39m updateJobIfClaimOwned enforces exact conditional match on all identity columns[33m 1873[2mms[22m[39m
+     [33m[2m✓[22m[39m renewResearchJobLease advances recordVersion monotonically and never advances fencingGeneration[33m 683[2mms[22m[39m
+     [33m[2m✓[22m[39m safely handles heartbeat vs progress write races with same-owner CAS retry[33m 677[2mms[22m[39m
+     [33m[2m✓[22m[39m prevents recovery from snatching a lease when heartbeat extends it before recovery write[33m 663[2mms[22m[39m
+     [33m[2m✓[22m[39m resolves concurrent recovery contention so exactly one recovery worker reclaims[33m 688[2mms[22m[39m
+     [33m[2m✓[22m[39m completely rejects progress, completion, and failure writes from stale workers after recovery[33m 669[2mms[22m[39m
+     [33m[2m✓[22m[39m ensureSyncJobSchemaUpgraded verifies all columns and operates idempotently[33m 2283[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_1_HeartbeatRetry.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 6629[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.1 — Heartbeat CAS Retry Integrity [2m(7)[22m
+     [33m[2m✓[22m[39m buildHeartbeatRetryPayload preserves topic, sourceStatuses, and lastProgress[33m 734[2mms[22m[39m
+     [33m[2m✓[22m[39m heartbeat retry against version conflict preserves progress written by concurrent update[33m 662[2mms[22m[39m
+     [33m[2m✓[22m[39m heartbeat retry rejects claimToken mismatch[33m 634[2mms[22m[39m
+     [33m[2m✓[22m[39m heartbeat retry rejects fencingToken mismatch[33m 648[2mms[22m[39m
+     [33m[2m✓[22m[39m heartbeat retry rejects replaced owner after lease reclaim[33m 2580[2mms[22m[39m
+     [33m[2m✓[22m[39m heartbeat retry rejects mutating COMPLETED or FAILED jobs[33m 661[2mms[22m[39m
+     [33m[2m✓[22m[39m handles concurrent progress writes and heartbeats across independent Prisma clients[33m 708[2mms[22m[39m
+Processing request of type ListToolsRequest
+ [32m✓[39m tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 1898[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance [2m(16)[22m
+     [32m✓[39m 1. Missing Key vs Invalid Key (Section C.1, C.2, L) [2m(2)[22m
+       [33m[2m✓[22m[39m verifies HasData credit status fails gracefully with error message on dummy key[33m 817[2mms[22m[39m
+     [32m✓[39m 9. Non-Interfering Provider Connection Testing (Section C.10, L) [2m(1)[22m
+       [33m[2m✓[22m[39m tests each connection independently with timeout without throwing if one fails[33m 880[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelRouter.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3691[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Gemini Model Router & Error Classification [2m(14)[22m
+     [33m[2m✓[22m[39m retries up to 3 times on 503 before succeeding on same model[33m 848[2mms[22m[39m
+     [33m[2m✓[22m[39m exhausts 1 initial + 3 retries (4 total) on primary model, then downgrades to fallback model and succeeds[33m 1052[2mms[22m[39m
+     [33m[2m✓[22m[39m opens shared circuit breaker for primary model after 4x 503 and skips it on subsequent candidate[33m 839[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces perAttemptTimeoutMs when provider call hangs and falls back cleanly[33m 502[2mms[22m[39m
+     [33m[2m✓[22m[39m enforces global call budget across candidates via GeminiRunBudgetTracker[33m 423[2mms[22m[39m
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ [32m✓[39m tests/unit/kh02V12_2_3_ProviderDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 2004[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.2.3 — Zero-Key Provider Discovery Engine [2m(7)[22m
+     [33m[2m✓[22m[39m discovers all five supported intelligence sources without incurring costs[33m 678[2mms[22m[39m
+     [33m[2m✓[22m[39m promotes Google Ads access class when MCP URL is configured[33m 565[2mms[22m[39m
+     [33m[2m✓[22m[39m strictly enforces zero unapproved credit spend on all discovered providers[33m 751[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02RuntimeTelemetryAndRelevance.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 1133[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_1_Runtime.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 555[2mms[22m[39m
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+ [32m✓[39m tests/unit/kh02TestConnectionsFlow.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 660[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 — Test Connections Flow & Truthful Diagnostics [2m(8)[22m
+     [32m✓[39m 4. Probe Results Caching & Timeout Handling [2m(3)[22m
+       [33m[2m✓[22m[39m live probes Google Ads via local python FastMCP server and connects successfully[33m 641[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_MetaGoogleRelevanceProvenance.test.ts [2m([22m[2m89 tests[22m[2m)[22m[33m 544[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_1_EvidenceProvenanceAndAsyncTruth.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 415[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_3_Ownership.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 345[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02WorkspaceAuthorization.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 158[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 207[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 158[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_IdentityDistinctnessRecovery.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_1_ProviderActivation.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 167[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_2_DiscoveryRecall.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_MetaGoogleLiveIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_2_1_ProductMediaAndFlowIntegrity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_3_1_ProductShortlistClosure.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_3_ProductIntelligence.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02CandidateDiscovery.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiProductClassification.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductMetadataSecurity.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ProductIdentity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_P0.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02FreeProviderContracts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/v12_4_3_3_1_FamilyClassification.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiEvidenceValidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_2_ProductIdentity.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02V12_1_4_1_Reconciliation.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02ReleaseGatesAndReconciliation.test.ts [2m([22m[2m37 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02EvergreenScoring.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02GoogleProvenance.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02SourceAdapters.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02/ai/geminiModelDiscovery.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02MetaGlobalBudget.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/kh02TemporalDemand.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m40 passed[39m[22m[90m (40)[39m
+[2m      Tests [22m [1m[32m623 passed[39m[22m[90m (623)[39m
+[2m   Start at [22m 12:47:30
+[2m   Duration [22m 63.16s[2m (tests 67%, import 23%, setup 7%, transform 2%, worker 1%)[22m
+
+[2m    Isolate [22m [33m40 workers spawned[39m[2m · ~142ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~5.52s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

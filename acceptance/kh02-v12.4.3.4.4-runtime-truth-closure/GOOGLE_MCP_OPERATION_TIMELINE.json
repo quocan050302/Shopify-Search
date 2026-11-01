@@ -1,0 +1,193 @@
+{
+  "researchRunId": "kh02_run_1793421485596_lc2by",
+  "evaluatedAt": "2026-10-31T04:39:17.538Z",
+  "version": "12.4.3.4.4",
+  "stages": [
+    {
+      "stageNumber": 1,
+      "stageName": "DOMAIN_EXTRACTION",
+      "status": "COMPLETED",
+      "domainsTargeted": [
+        "uahpet.com",
+        "kittyspout.com",
+        "uprootclean.com"
+      ],
+      "latencyMs": 0
+    },
+    {
+      "stageNumber": 2,
+      "stageName": "ADVERTISER_LOOKUP",
+      "status": "COMPLETED",
+      "advertisersFound": 2,
+      "latencyMs": 120
+    },
+    {
+      "stageNumber": 3,
+      "stageName": "CREATIVE_RETRIEVAL",
+      "status": "COMPLETED",
+      "retrievedCount": 3,
+      "latencyMs": 13405
+    },
+    {
+      "stageNumber": 4,
+      "stageName": "CREATIVE_NORMALIZATION",
+      "status": "COMPLETED",
+      "normalizedCount": 3,
+      "rejectedBeforeNormalizationCount": 0,
+      "latencyMs": 1
+    },
+    {
+      "stageNumber": 5,
+      "stageName": "CANDIDATE_ASSOCIATION",
+      "status": "COMPLETED",
+      "classifiedDistinct": 3,
+      "exactProductMatches": 3,
+      "probableProductMatches": 0,
+      "brandOnlyMatches": 0,
+      "latencyMs": 71262
+    }
+  ],
+  "mcpInvocations": [
+    {
+      "domain": "uahpet.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uahpet.com"
+      },
+      "startedAt": "2026-10-31T04:38:27.433Z",
+      "completedAt": "2026-10-31T04:38:29.764Z",
+      "durationMs": 2331,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "uahpet.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR11363703404665765889",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T04:38:29.764Z",
+      "completedAt": "2026-10-31T04:38:43.169Z",
+      "durationMs": 13405,
+      "status": "SUCCEEDED",
+      "returnedCount": 3,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "kittyspout.com"
+      },
+      "startedAt": "2026-10-31T04:38:43.170Z",
+      "completedAt": "2026-10-31T04:38:45.300Z",
+      "durationMs": 2130,
+      "status": "SUCCEEDED",
+      "returnedCount": 1,
+      "errorMessage": null
+    },
+    {
+      "domain": "kittyspout.com",
+      "toolName": "get_advertiser_ads",
+      "arguments": {
+        "advertiser_id": "AR10162009454036385793",
+        "region": "US"
+      },
+      "startedAt": "2026-10-31T04:38:45.300Z",
+      "completedAt": "2026-10-31T04:39:00.303Z",
+      "durationMs": 15003,
+      "status": "TIMED_OUT",
+      "returnedCount": 0,
+      "errorMessage": "Creative retrieval timeout for advertiser AR10162009454036385793 after 15000ms"
+    },
+    {
+      "domain": "uprootclean.com",
+      "toolName": "search_advertiser",
+      "arguments": {
+        "query": "uprootclean.com"
+      },
+      "startedAt": "2026-10-31T04:39:15.316Z",
+      "completedAt": "2026-10-31T04:39:15.316Z",
+      "durationMs": 0,
+      "status": "TIMED_OUT",
+      "returnedCount": 0,
+      "errorMessage": "Advertiser lookup timeout for uprootclean.com after 15000ms"
+    }
+  ],
+  "stepTimeline": [
+    {
+      "step": "startup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:26.674Z",
+      "completedAt": "2026-10-31T04:38:26.674Z",
+      "durationMs": 0,
+      "detail": "domainsPlanned=5"
+    },
+    {
+      "step": "connect",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:26.674Z",
+      "completedAt": "2026-10-31T04:38:27.430Z",
+      "durationMs": 756
+    },
+    {
+      "step": "toolDiscovery",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:27.430Z",
+      "completedAt": "2026-10-31T04:38:27.433Z",
+      "durationMs": 3,
+      "detail": "toolsDiscovered=2"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:27.433Z",
+      "completedAt": "2026-10-31T04:38:29.764Z",
+      "durationMs": 2331,
+      "detail": "domain=uahpet.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:29.764Z",
+      "completedAt": "2026-10-31T04:38:43.169Z",
+      "durationMs": 13405,
+      "detail": "advertiserId=AR11363703404665765889"
+    },
+    {
+      "step": "normalize",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:43.169Z",
+      "completedAt": "2026-10-31T04:38:43.170Z",
+      "durationMs": 1,
+      "detail": "normalized=3"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T04:38:43.170Z",
+      "completedAt": "2026-10-31T04:38:45.300Z",
+      "durationMs": 2130,
+      "detail": "domain=kittyspout.com"
+    },
+    {
+      "step": "creativeRetrieval",
+      "status": "TIMED_OUT",
+      "startedAt": "2026-10-31T04:38:45.300Z",
+      "completedAt": "2026-10-31T04:39:00.303Z",
+      "durationMs": 15003,
+      "detail": "Creative retrieval timeout for advertiser AR10162009454036385793 after 15000ms"
+    },
+    {
+      "step": "advertiserLookup",
+      "status": "TIMED_OUT",
+      "startedAt": "2026-10-31T04:39:15.316Z",
+      "completedAt": "2026-10-31T04:39:15.316Z",
+      "durationMs": 0,
+      "detail": "domain=uprootclean.com: Advertiser lookup timeout for uprootclean.com after 15000ms"
+    }
+  ],
+  "totalDurationMs": 71762
+}

@@ -10,6 +10,10 @@ import {
   resolveProductMediaGallery,
   validateAndNormalizeMediaUrl,
 } from "@/services/kh02/media/productMediaResolver";
+import {
+  loadAmazonEvidenceForRun,
+  summarizeAmazonEvidenceForProduct,
+} from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 
 export interface ResearchContextResolutionInfo {
   status:
@@ -95,11 +99,16 @@ export async function GET(
         explicitRunJob.workspaceId &&
         explicitRunJob.workspaceId !== context.workspaceId
       ) {
-        throw new ResearchAuthError(
-          `Access denied: Research run '${requestedRunId}' belongs to another workspace.`,
-          "FORBIDDEN_WORKSPACE_RUN",
-          403
-        );
+        // If caller has access to the run's workspace (e.g. OWNER_ADMIN / LOCAL_DEV), align context workspaceId to run's workspace
+        if (context.principal?.allowedWorkspaceIds?.includes(explicitRunJob.workspaceId)) {
+          context.workspaceId = explicitRunJob.workspaceId;
+        } else {
+          throw new ResearchAuthError(
+            `Access denied: Research run '${requestedRunId}' belongs to another workspace.`,
+            "FORBIDDEN_WORKSPACE_RUN",
+            403
+          );
+        }
       }
     }
 
@@ -747,6 +756,30 @@ export async function GET(
       linkedCompetitorAds,
     });
 
+    // V12.4.3.5.0: Attach read-only persisted Amazon US evidence summary when run context exists
+    let amazonEvidenceSummary: any = matchedCandidateObj?.amazonEvidenceSummary || null;
+    if (kh02ResearchContext?.runId && matchedCandidateObj?.candidateId) {
+      const loadedAmz = await loadAmazonEvidenceForRun(
+        context.workspaceId,
+        kh02ResearchContext.runId,
+        prisma
+      );
+      if (loadedAmz.evidenceRows.length > 0) {
+        const computedSummary = summarizeAmazonEvidenceForProduct(
+          matchedCandidateObj.candidateId,
+          kh02ResearchContext.runId,
+          loadedAmz.evidenceRows,
+          { telemetry: loadedAmz.telemetry }
+        );
+        if (computedSummary.visible) {
+          amazonEvidenceSummary = computedSummary;
+        }
+      }
+      if (amazonEvidenceSummary) {
+        kh02ResearchContext.amazonEvidenceSummary = amazonEvidenceSummary;
+      }
+    }
+
     // Populate product.imageUrl on response if null in DB and verified primary media exists
     const enrichedProduct = {
       ...product,
@@ -805,11 +838,12 @@ export async function GET(
         evidenceRecords,
         decisions,
         kh02ResearchContext,
+        amazonEvidenceSummary,
         commercialReadinessSummary,
       },
       meta: {
         timestamp: new Date().toISOString(),
-        version: "12.4.3.3.1",
+        version: "12.4.3.5.0",
       },
     });
   } catch (err: any) {

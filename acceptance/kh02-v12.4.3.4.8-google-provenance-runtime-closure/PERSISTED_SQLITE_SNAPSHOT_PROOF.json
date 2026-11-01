@@ -1,0 +1,61 @@
+{
+  "evaluatedAt": "2026-10-31T11:10:18.216Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "acceptanceRunId": "autoclosure_20261031110908",
+  "originalResearchRunId": "kh02_run_1793444975958_n0hgb",
+  "evaluatedResearchRunId": "kh02_run_1793444975958_n0hgb",
+  "workspaceId": "acceptance_v12_2_4_ws",
+  "runExecutionMode": "FRESH_LIVE_CURRENT_RUN",
+  "persistedSnapshotFound": true,
+  "persistedCandidateCount": 3,
+  "snapshot": {
+    "persistedFromSqlite": true,
+    "syncJobId": "kh02_run_1793444975958_n0hgb",
+    "researchRunId": "kh02_run_1793444975958_n0hgb",
+    "workspaceId": "acceptance_v12_2_4_ws",
+    "status": "COMPLETED",
+    "persistedAt": "2026-10-31T11:10:18.204Z",
+    "candidates": [
+      {
+        "candidateId": "cand_1212440541",
+        "researchProductId": "cand_453563126",
+        "title": "UAHPET Fresh Food Automatic Pet Feeder",
+        "storeDomain": "uahpet.com",
+        "canonicalProductUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        "rank": 1,
+        "score": 58,
+        "identityStatus": "VERIFIED",
+        "familyKey": "automatic_pet_feeder",
+        "persistedObservationCount": 4,
+        "persistedResearchProductExists": true
+      },
+      {
+        "candidateId": "cand_1587534715",
+        "researchProductId": "cand_1587534715",
+        "title": "The KittySpout™ - Wireless Fountain",
+        "storeDomain": "kittyspout.com",
+        "canonicalProductUrl": "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        "rank": 2,
+        "score": 55,
+        "identityStatus": "VERIFIED",
+        "familyKey": "pet_water_fountain",
+        "persistedObservationCount": 1,
+        "persistedResearchProductExists": true
+      },
+      {
+        "candidateId": "cand_1613504636",
+        "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+        "title": "Pet Hair/Lint/Dust Cleaner",
+        "storeDomain": "cc.uprootclean.com",
+        "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+        "rank": 3,
+        "score": 60,
+        "identityStatus": "PROBABLE",
+        "familyKey": "pet_hair_remover_roller",
+        "persistedObservationCount": 8,
+        "persistedResearchProductExists": true
+      }
+    ]
+  }
+}

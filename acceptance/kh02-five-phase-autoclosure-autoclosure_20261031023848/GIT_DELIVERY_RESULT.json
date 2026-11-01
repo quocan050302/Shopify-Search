@@ -1,0 +1,12 @@
+{
+  "evaluatedAt": "2026-10-31T02:40:40.000Z",
+  "version": "12.4.3.4.3",
+  "branch": "feature/kh02-v12.1.3-runtime-truth-closure",
+  "remoteUrl": "https://github.com/quocan050302/Shopify-Search.git",
+  "sourceCommitSha": "21c357df55dfe115993d3186726948eacefb1a7c",
+  "sourceCommitSubject": "fix(kh02): add candidate-level historical replay and five-phase auto-closure orchestrator",
+  "artifactCommitPhase": "PENDING_COMMIT_B",
+  "engineeringReleaseVerdict": "PASS",
+  "fullBusinessAcceptanceVerdict": "INSUFFICIENT_EVIDENCE",
+  "terminalDecision": "READY_FOR_NEXT_INDEPENDENT_FEATURE_ONLY"
+}

@@ -1,0 +1,493 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "evaluatedAt": "2026-11-01T04:17:55.113Z",
+  "totalMutationsExecuted": 48,
+  "caughtCount": 48,
+  "escapedCount": 0,
+  "allCaughtZeroEscapes": true,
+  "mutations": [
+    {
+      "mutationId": "M01_OAUTH_FORM_URLENCODED",
+      "description": "OAuth request uses application/x-www-form-urlencoded instead of application/json",
+      "targetArtifact": "03_OAUTH_CLIENT_CREDENTIALS_CONTRACT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V03_OAUTH_JSON_SCOPE_CONTRACT"
+      ],
+      "firstViolation": "[V03_OAUTH_JSON_SCOPE_CONTRACT] OAuth requestContentType must be 'application/json', got 'application/x-www-form-urlencoded'"
+    },
+    {
+      "mutationId": "M02_OAUTH_MISSING_SCOPE",
+      "description": "OAuth request omits scope=creatorsapi::default",
+      "targetArtifact": "03_OAUTH_CLIENT_CREDENTIALS_CONTRACT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V03_OAUTH_JSON_SCOPE_CONTRACT"
+      ],
+      "firstViolation": "[V03_OAUTH_JSON_SCOPE_CONTRACT] OAuth scope must be 'creatorsapi::default', got 'undefined'"
+    },
+    {
+      "mutationId": "M03_UPPERCASE_SEARCH_RESULT_TREATED_AS_EMPTY",
+      "description": "HTTP 200 uppercase SearchResult.Items treated as QUERY_SUCCEEDED_EMPTY instead of SCHEMA_MISMATCH",
+      "targetArtifact": "04_SEARCH_ITEMS_LOWER_CAMEL_SCHEMA_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH"
+      ],
+      "firstViolation": "[V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH] Uppercase PA-API SearchResult.Items on HTTP 200 must fail closed with status=PROVIDER_ERROR and errorCode=SCHEMA_MISMATCH, got status='QUERY_SUCCEEDED_EMPTY', errorCode='null'"
+    },
+    {
+      "mutationId": "M04_GET_ITEMS_ARRAY_INDEX_0_LOOKUP",
+      "description": "GetItems matches returned item by array index 0 instead of normalized ASIN",
+      "targetArtifact": "05_GET_ITEMS_ASIN_MATCHING_AND_PARTIAL_ERRORS_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS"
+      ],
+      "firstViolation": "[V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS] matchedByAsinNotArrayIndex must be true"
+    },
+    {
+      "mutationId": "M05_MISSING_OFFERS_CONVERTED_TO_ZERO_PRICE",
+      "description": "Missing offersV2 price converted to 0 instead of null",
+      "targetArtifact": "04_SEARCH_ITEMS_LOWER_CAMEL_SCHEMA_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH"
+      ],
+      "firstViolation": "[V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH] missingOffersPreservesNullPriceCurrency must be true"
+    },
+    {
+      "mutationId": "M06_HTTP_STATUS_FABRICATED_ON_UNOBSERVED",
+      "description": "httpStatus=200 fabricated when httpStatusOrigin=UNOBSERVED_NULL",
+      "targetArtifact": "11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] Record 'B08N5WRWNW' has httpStatusOrigin=UNOBSERVED_NULL but non-null httpStatus=200"
+    },
+    {
+      "mutationId": "M07_PROVIDER_REQUEST_ID_COPIED_FROM_INVOCATION_REF",
+      "description": "providerRequestId copied from local providerInvocationRef",
+      "targetArtifact": "11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] Conflated or synthetic providerRequestId 'amz_inv_run1_cand1_search_1234567890' for invocation 'amz_inv_run1_cand1_search_1234567890'"
+    },
+    {
+      "mutationId": "M08_MODE_A_LOCAL_SERVER_TAGGED_AUTHORIZED_LIVE",
+      "description": "MODE A local HTTP test server tagged as AUTHORIZED_LIVE instead of TEST_FIXTURE",
+      "targetArtifact": "07_END_TO_END_PRODUCT_FINDER_RUNTIME_EMULATED_RUN.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E"
+      ],
+      "firstViolation": "[V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E] MODE A local HTTP emulator run must be classified as observationClass='TEST_FIXTURE', got 'AUTHORIZED_LIVE'"
+    },
+    {
+      "mutationId": "M09_BOOLEAN_CLIENT_TREATED_AS_AUTHENTICATED",
+      "description": "Boolean(client) or env var presence treated as authenticated=true when configured=false",
+      "targetArtifact": "08_LIVE_CREATORS_API_EXECUTION_OR_BLOCKER_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE"
+      ],
+      "firstViolation": "[V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE] configured=false cannot have authenticated=true (false authentication claim)"
+    },
+    {
+      "mutationId": "M10_ACCESSORY_PROMOTED_TO_EXACT_PRODUCT",
+      "description": "Accessory/filter pack promoted to EXACT_PRODUCT",
+      "targetArtifact": "10_IDENTITY_MATCH_AND_ACCESSORY_REJECTION_LEDGER.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] accessoryOrBundlePromotedToExactMatch must be false"
+    },
+    {
+      "mutationId": "M11_AMAZON_EVIDENCE_INFLATES_OPPORTUNITY_SCORE",
+      "description": "Amazon evidence inflates opportunityScore by +1.5 points",
+      "targetArtifact": "12_NON_INFLATION_SCORING_AND_G15_G16_PARITY.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY"
+      ],
+      "firstViolation": "[V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY] maxAbsoluteScoreDelta must be 0, got '1.5'"
+    },
+    {
+      "mutationId": "M12_AMAZON_EVIDENCE_FLIPS_G15_PASS",
+      "description": "Amazon listing existence flips G15 from 0/3 to 3/3",
+      "targetArtifact": "12_NON_INFLATION_SCORING_AND_G15_G16_PARITY.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY"
+      ],
+      "firstViolation": "[V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY] g15Changed must be false"
+    },
+    {
+      "mutationId": "M13_CROSS_WORKSPACE_LEAK_HTTP_200",
+      "description": "Cross-workspace read leaks Amazon evidence instead of returning HTTP 403",
+      "targetArtifact": "13_PERSISTENCE_AND_RELOAD_RECONCILIATION.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION"
+      ],
+      "firstViolation": "[V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION] crossWorkspaceIsolationHttp403Verified must be true"
+    },
+    {
+      "mutationId": "M14_CLIENT_SECRET_LEAKED_IN_ARTIFACT",
+      "description": "Raw client_secret leaked into artifact JSON",
+      "targetArtifact": "03_OAUTH_CLIENT_CREDENTIALS_CONTRACT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V03_OAUTH_JSON_SCOPE_CONTRACT"
+      ],
+      "firstViolation": "[V03_OAUTH_JSON_SCOPE_CONTRACT] Detected unredacted raw secret or Bearer REDACTED in artifacts"
+    },
+    {
+      "mutationId": "M15_STALE_SOURCE_SHA_IN_EVIDENCE_MANIFEST",
+      "description": "Stale codeSha in 11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "targetArtifact": "11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V02_SOURCE_SHA_CONSISTENCY"
+      ],
+      "firstViolation": "[V02_SOURCE_SHA_CONSISTENCY] Artifact 11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json has codeSha '0000000000000000000000000000000000000000' != baseline 'ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381'"
+    },
+    {
+      "mutationId": "M16_MISSING_SCREENSHOT_FILE_ON_DISK",
+      "description": "Referenced UI screenshot PNG deleted from disk",
+      "targetArtifact": "14_PLAYWRIGHT_UI_RENDERING_AND_SCREENSHOTS.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V11_PLAYWRIGHT_UI_AND_MCP_PARITY"
+      ],
+      "firstViolation": "[V11_PLAYWRIGHT_UI_AND_MCP_PARITY] Missing screenshot file on disk: screenshots/product-finder-amazon-evidence.png"
+    },
+    {
+      "mutationId": "M17_TAMPERED_EXTRACTED_FIELDS_HASH",
+      "description": "extractedFieldsHash tampered so SHA-256 recomputation fails",
+      "targetArtifact": "11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] Recomputed extractedFieldsHash 'a73961a05677b7b1ef510dfbe96c021c8b3508420e7c775cbbc4f08ee1794fce' != recorded 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' for ASIN 'B08N5WRWNW'"
+    },
+    {
+      "mutationId": "M18_RUN_OPERATION_BUDGET_CAP_EXCEEDED",
+      "description": "maxTotalOperationsPerRun exceeds cap of 4",
+      "targetArtifact": "09_CANDIDATE_SEARCH_QUERY_PLAN_AND_BUDGET.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] maxTotalOperationsPerRun (5) exceeds cap of 4"
+    },
+    {
+      "mutationId": "M19_MISSING_BASELINE_ARTIFACT",
+      "description": "00_BASELINE_BRANCH_AND_SOURCE_SHA.json deleted from disk",
+      "targetArtifact": "00_BASELINE_BRANCH_AND_SOURCE_SHA.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V01_REQUIRED_ARTIFACTS_PRESENT",
+        "V02_SOURCE_SHA_CONSISTENCY"
+      ],
+      "firstViolation": "[V01_REQUIRED_ARTIFACTS_PRESENT] Missing required artifact: 00_BASELINE_BRANCH_AND_SOURCE_SHA.json"
+    },
+    {
+      "mutationId": "M20_WRONG_GIT_BRANCH",
+      "description": "Baseline branch is master instead of feature/kh02-amazon-us-pilot-v12.4.3.5.0",
+      "targetArtifact": "00_BASELINE_BRANCH_AND_SOURCE_SHA.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V02_SOURCE_SHA_CONSISTENCY"
+      ],
+      "firstViolation": "[V02_SOURCE_SHA_CONSISTENCY] Invalid branch 'master'; expected 'feature/kh02-amazon-us-pilot-v12.4.3.5.0'"
+    },
+    {
+      "mutationId": "M21_STALE_RELEASE_VERSION",
+      "description": "Release version is 12.4.3.5.0.2 instead of 12.4.3.5.0.3",
+      "targetArtifact": "00_BASELINE_BRANCH_AND_SOURCE_SHA.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V02_SOURCE_SHA_CONSISTENCY"
+      ],
+      "firstViolation": "[V02_SOURCE_SHA_CONSISTENCY] Invalid releaseVersion '12.4.3.5.0.2'; expected '12.4.3.5.0.3'"
+    },
+    {
+      "mutationId": "M22_OAUTH_CONCURRENT_REFRESH_NOT_DEDUPLICATED",
+      "description": "Concurrent SearchItems calls trigger 2 OAuth token HTTP calls instead of 1",
+      "targetArtifact": "03_OAUTH_CLIENT_CREDENTIALS_CONTRACT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V03_OAUTH_JSON_SCOPE_CONTRACT"
+      ],
+      "firstViolation": "[V03_OAUTH_JSON_SCOPE_CONTRACT] Concurrent refresh deduplication must execute exactly 1 token HTTP call, got '2'"
+    },
+    {
+      "mutationId": "M23_OAUTH_MALFORMED_200_ACCEPTED",
+      "description": "Malformed OAuth 200 response missing expires_in accepted",
+      "targetArtifact": "03_OAUTH_CLIENT_CREDENTIALS_CONTRACT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V03_OAUTH_JSON_SCOPE_CONTRACT"
+      ],
+      "firstViolation": "[V03_OAUTH_JSON_SCOPE_CONTRACT] malformedToken200Rejected must be true"
+    },
+    {
+      "mutationId": "M24_EMPTY_OBJECT_200_TREATED_AS_EMPTY_SEARCH",
+      "description": "HTTP 200 with {} treated as QUERY_SUCCEEDED_EMPTY instead of SCHEMA_MISMATCH",
+      "targetArtifact": "04_SEARCH_ITEMS_LOWER_CAMEL_SCHEMA_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH"
+      ],
+      "firstViolation": "[V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH] HTTP 200 with {} must fail closed with status=PROVIDER_ERROR and errorCode=SCHEMA_MISMATCH, never QUERY_SUCCEEDED_EMPTY"
+    },
+    {
+      "mutationId": "M25_UPPERCASE_RESOURCES_IN_SEARCH_PAYLOAD",
+      "description": "SearchItems resources use uppercase PA-API ItemInfo.Title instead of itemInfo.title",
+      "targetArtifact": "04_SEARCH_ITEMS_LOWER_CAMEL_SCHEMA_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH"
+      ],
+      "firstViolation": "[V04_SEARCH_ITEMS_LOWER_CAMEL_AND_SCHEMA_MISMATCH] requestedResources must use official lower-camel resource names (itemInfo.title, offersV2.listings.price)"
+    },
+    {
+      "mutationId": "M26_GET_ITEMS_PARTIAL_ERRORS_DROP_VALID_ITEMS",
+      "description": "GetItems partial errors cause valid returned items to be dropped",
+      "targetArtifact": "05_GET_ITEMS_ASIN_MATCHING_AND_PARTIAL_ERRORS_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS"
+      ],
+      "firstViolation": "[V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS] partialErrorsPreservedWithoutDroppingValidItems must be true"
+    },
+    {
+      "mutationId": "M27_UPPERCASE_ITEMS_RESULT_ACCEPTED_BY_DEFAULT",
+      "description": "GetItems accepts uppercase ItemsResult.Items without legacy flag",
+      "targetArtifact": "05_GET_ITEMS_ASIN_MATCHING_AND_PARTIAL_ERRORS_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS"
+      ],
+      "firstViolation": "[V05_GET_ITEMS_ASIN_KEYED_AND_PARTIAL_ERRORS] Uppercase ItemsResult.Items on HTTP 200 must fail closed with errorCode=SCHEMA_MISMATCH"
+    },
+    {
+      "mutationId": "M28_RUNTIME_FACTORY_NOT_WIRED_IN_ENRICHMENT",
+      "description": "runAmazonUsPilotEnrichment does not call resolveAmazonCreatorsApiRuntimeClient",
+      "targetArtifact": "06_RUNTIME_FACTORY_WIRING_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E"
+      ],
+      "firstViolation": "[V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E] wiredInRunAmazonUsPilotEnrichment must be true"
+    },
+    {
+      "mutationId": "M29_MODE_A_USED_INJECTED_CLIENT_INSTEAD_OF_FACTORY",
+      "description": "MODE A E2E run injected a mock creatorsApiClient instead of using runtime factory",
+      "targetArtifact": "07_END_TO_END_PRODUCT_FINDER_RUNTIME_EMULATED_RUN.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E"
+      ],
+      "firstViolation": "[V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E] MODE A E2E run must execute via runtime factory with injectedCreatorsApiClientUsed=false"
+    },
+    {
+      "mutationId": "M30_MODE_A_COUNTED_AS_AUTHORIZED_LIVE",
+      "description": "MODE A local HTTP emulator run counted toward AUTHORIZED_LIVE",
+      "targetArtifact": "07_END_TO_END_PRODUCT_FINDER_RUNTIME_EMULATED_RUN.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E"
+      ],
+      "firstViolation": "[V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E] MODE A countedAsAuthorizedLive must be false"
+    },
+    {
+      "mutationId": "M31_MODE_A_ZERO_OAUTH_CALLS_OBSERVED",
+      "description": "MODE A emulator observed 0 OAuth token calls",
+      "targetArtifact": "07_END_TO_END_PRODUCT_FINDER_RUNTIME_EMULATED_RUN.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E"
+      ],
+      "firstViolation": "[V06_RUNTIME_FACTORY_WIRING_AND_MODE_A_E2E] MODE A must observe >=1 OAuth request at local HTTP emulator"
+    },
+    {
+      "mutationId": "M32_FAKE_REAL_PROVIDER_VERIFIED_WITHOUT_CREDS",
+      "description": "Live verdict claims REAL_PROVIDER_VERIFIED when configured=false",
+      "targetArtifact": "08_LIVE_CREATORS_API_EXECUTION_OR_BLOCKER_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE",
+        "V15_FINAL_ACCEPTANCE_MATRIX_TRUTH"
+      ],
+      "firstViolation": "[V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE] REAL_PROVIDER_VERIFIED requires configured=true, authenticated=true, querySucceeded=true, and verifiedLiveUsProductIdentitiesCount >= 1"
+    },
+    {
+      "mutationId": "M33_NONZERO_LIVE_COUNT_WHEN_CREDENTIALS_REQUIRED",
+      "description": "verifiedLiveUsProductIdentitiesCount=3 when liveVerdict=CREDENTIALS_REQUIRED",
+      "targetArtifact": "08_LIVE_CREATORS_API_EXECUTION_OR_BLOCKER_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE"
+      ],
+      "firstViolation": "[V07_LIVE_PROVIDER_TRUTH_AND_ZERO_FAKE_LIVE] When liveVerdict='CREDENTIALS_REQUIRED', verifiedLiveUsProductIdentitiesCount must be 0, got '3'"
+    },
+    {
+      "mutationId": "M34_CANDIDATE_CAP_EXCEEDED",
+      "description": "maxCandidatesPerRun=5 exceeds cap of 3",
+      "targetArtifact": "09_CANDIDATE_SEARCH_QUERY_PLAN_AND_BUDGET.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] maxCandidatesPerRun (5) exceeds cap of 3"
+    },
+    {
+      "mutationId": "M35_CONCURRENCY_CAP_EXCEEDED",
+      "description": "maxConcurrency=3 exceeds serial concurrency cap of 1",
+      "targetArtifact": "09_CANDIDATE_SEARCH_QUERY_PLAN_AND_BUDGET.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] maxConcurrency (3) must equal 1"
+    },
+    {
+      "mutationId": "M36_TOKEN_COUNTED_AGAINST_PRODUCT_BUDGET",
+      "description": "OAuth token acquisition counted against 4-op product budget",
+      "targetArtifact": "09_CANDIDATE_SEARCH_QUERY_PLAN_AND_BUDGET.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] tokenAcquisitionCountedAgainstProductBudget must be false"
+    },
+    {
+      "mutationId": "M37_INVALID_ASIN_IN_MANIFEST",
+      "description": "Manifest contains non-ASIN word CATEGORIES",
+      "targetArtifact": "11_RAW_AND_NORMALIZED_EVIDENCE_MANIFEST.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING"
+      ],
+      "firstViolation": "[V08_QUERY_PLAN_BUDGET_AND_IDENTITY_MATCHING] Invalid ASIN 'CATEGORIES' in evidence manifest"
+    },
+    {
+      "mutationId": "M38_RANK_ORDER_CHANGED_BY_AMAZON_PILOT",
+      "description": "Candidate rank order mutated after Amazon enrichment",
+      "targetArtifact": "12_NON_INFLATION_SCORING_AND_G15_G16_PARITY.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY"
+      ],
+      "firstViolation": "[V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY] rankOrderChanged must be false"
+    },
+    {
+      "mutationId": "M39_HISTORICAL_G07_CLAIMED_PASS",
+      "description": "Historical G07 blocker falsely relabeled as PASS",
+      "targetArtifact": "12_NON_INFLATION_SCORING_AND_G15_G16_PARITY.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY"
+      ],
+      "firstViolation": "[V09_NON_INFLATION_SCORING_AND_G07_G15_G16_PARITY] Historical G07 must remain 'BLOCKED', got 'PASS'"
+    },
+    {
+      "mutationId": "M40_RELOAD_PARITY_FIELD_MISMATCH",
+      "description": "Post-reload GET has 1 Amazon field mismatch vs SQLite",
+      "targetArtifact": "13_PERSISTENCE_AND_RELOAD_RECONCILIATION.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION"
+      ],
+      "firstViolation": "[V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION] Expected 16/16 Amazon field comparisons with 0 mismatches, got total=16, mismatches=1"
+    },
+    {
+      "mutationId": "M41_PARENT_COMPLETED_RUN_OVERWRITTEN_BY_RUNNING",
+      "description": "Attaching Amazon evidence overwrites parent COMPLETED run to RUNNING",
+      "targetArtifact": "13_PERSISTENCE_AND_RELOAD_RECONCILIATION.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION"
+      ],
+      "firstViolation": "[V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION] parentRunCompletedStatusPreserved must be true"
+    },
+    {
+      "mutationId": "M42_PRODUCTION_DB_MUTATED",
+      "description": "Acceptance runner left uncleaned test rows in dev.db (productionDbMutated=true)",
+      "targetArtifact": "13_PERSISTENCE_AND_RELOAD_RECONCILIATION.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION"
+      ],
+      "firstViolation": "[V10_PERSISTENCE_RELOAD_AND_WORKSPACE_ISOLATION] productionDbMutated must be false"
+    },
+    {
+      "mutationId": "M43_NON_INFLATION_NOTICE_HIDDEN_IN_UI",
+      "description": "Non-inflation notice missing from rendered Product Finder DOM",
+      "targetArtifact": "14_PLAYWRIGHT_UI_RENDERING_AND_SCREENSHOTS.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V11_PLAYWRIGHT_UI_AND_MCP_PARITY"
+      ],
+      "firstViolation": "[V11_PLAYWRIGHT_UI_AND_MCP_PARITY] nonInflationNoticeVisibleInDom must be true"
+    },
+    {
+      "mutationId": "M44_PLAYWRIGHT_MCP_URL_VERIFICATION_BROKEN",
+      "description": "Existing Playwright MCP manual URL verification broken by Creators API patch",
+      "targetArtifact": "15_PLAYWRIGHT_MCP_URL_VERIFICATION_PARITY.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V11_PLAYWRIGHT_UI_AND_MCP_PARITY"
+      ],
+      "firstViolation": "[V11_PLAYWRIGHT_UI_AND_MCP_PARITY] manualUrlVerificationIntact must be true"
+    },
+    {
+      "mutationId": "M45_UNIT_TEST_FAILURE_PRESENT",
+      "description": "Automated test suite has 1 failed test",
+      "targetArtifact": "16_AUTOMATED_TEST_SUITE_RESULTS.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V12_TESTS_BUILD_AND_TYPESCRIPT"
+      ],
+      "firstViolation": "[V12_TESTS_BUILD_AND_TYPESCRIPT] failedTests must be 0, got '1'"
+    },
+    {
+      "mutationId": "M46_TYPESCRIPT_NONZERO_EXIT",
+      "description": "npx tsc --noEmit exited with code 2",
+      "targetArtifact": "17_PRODUCTION_BUILD_AND_TYPESCRIPT_PROOF.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V12_TESTS_BUILD_AND_TYPESCRIPT"
+      ],
+      "firstViolation": "[V12_TESTS_BUILD_AND_TYPESCRIPT] tscExitCode must be 0, got '2'"
+    },
+    {
+      "mutationId": "M47_DISK_FREE_SPACE_BELOW_8GIB",
+      "description": "Free disk space dropped below 8 GiB threshold",
+      "targetArtifact": "20_DISK_AND_PROCESS_HYGIENE_AUDIT.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V14_DISK_AND_PROCESS_HYGIENE"
+      ],
+      "firstViolation": "[V14_DISK_AND_PROCESS_HYGIENE] freeBytesAfter (4294967296) is below 8 GiB threshold (8589934592)"
+    },
+    {
+      "mutationId": "M48_FINAL_MATRIX_OVERCLAIMS_FULL_CLOSURE_WITHOUT_LIVE_CREDS",
+      "description": "Final matrix claims FULL_CLOSURE_READY while liveVerdict is CREDENTIALS_REQUIRED",
+      "targetArtifact": "21_FINAL_ACCEPTANCE_MATRIX.json",
+      "caught": true,
+      "failedCheckIds": [
+        "V15_FINAL_ACCEPTANCE_MATRIX_TRUTH"
+      ],
+      "firstViolation": "[V15_FINAL_ACCEPTANCE_MATRIX_TRUTH] matrix.overallClosureVerdict 'FULL_CLOSURE_READY' != expected 'ENGINEERING_READY_WITH_LIVE_EXTERNAL_BLOCKER'"
+    }
+  ],
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381"
+}

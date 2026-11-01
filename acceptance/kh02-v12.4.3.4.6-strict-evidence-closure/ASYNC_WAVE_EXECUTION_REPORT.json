@@ -1,0 +1,69 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:49.241Z",
+  "version": "12.4.3.4.6",
+  "testedSourceSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+  "maxConcurrency": 2,
+  "vitestMaxWorkers": 1,
+  "diskHeadroomGuardTriggered": true,
+  "initialFreeDiskGB": 8.02,
+  "minFreeDiskGB": 15,
+  "poolRecords": [
+    {
+      "jobId": "tsc_typecheck",
+      "group": "FAST_PARALLEL",
+      "status": "COMPLETED",
+      "queuedAt": "2026-10-31T06:29:46.636Z",
+      "startedAt": "2026-10-31T06:29:46.636Z",
+      "completedAt": "2026-10-31T06:29:49.240Z",
+      "durationMs": 2604,
+      "retryCount": 0,
+      "error": null,
+      "result": {
+        "suiteId": "tsc_typecheck",
+        "name": "TypeScript Typecheck (tsc --noEmit)",
+        "command": "node tsc --noEmit",
+        "headSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+        "startedAt": "2026-10-31T06:29:46.636Z",
+        "completedAt": "2026-10-31T06:29:49.240Z",
+        "durationMs": 2604,
+        "exitCode": 0,
+        "passedTests": 0,
+        "failedTests": 0,
+        "totalTests": 0,
+        "reusedPreviousLog": false,
+        "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/logs/tsc.log",
+        "timedOut": false,
+        "logTruncated": false
+      }
+    },
+    {
+      "jobId": "v12_4_3_4_6_strict_closure_unit",
+      "group": "FAST_PARALLEL",
+      "status": "COMPLETED",
+      "queuedAt": "2026-10-31T06:29:46.636Z",
+      "startedAt": "2026-10-31T06:29:46.638Z",
+      "completedAt": "2026-10-31T06:29:48.409Z",
+      "durationMs": 1771,
+      "retryCount": 0,
+      "error": null,
+      "result": {
+        "suiteId": "v12_4_3_4_6_strict_closure_unit",
+        "name": "V12.4.3.4.6 Focused Strict Lineage & Parity Unit Suite",
+        "command": "node vitest.mjs run v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts",
+        "headSha": "4fd8d7b208f50974a40f6dea5a7914a9bf307943",
+        "startedAt": "2026-10-31T06:29:46.638Z",
+        "completedAt": "2026-10-31T06:29:48.408Z",
+        "durationMs": 1770,
+        "exitCode": 0,
+        "passedTests": 13,
+        "failedTests": 0,
+        "totalTests": 13,
+        "reusedPreviousLog": false,
+        "logFilePath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/logs/v12_4_3_4_6_unit.log",
+        "timedOut": false,
+        "logTruncated": false,
+        "jsonReportPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/json_reports/v12_4_3_4_6_unit.json"
+      }
+    }
+  ]
+}

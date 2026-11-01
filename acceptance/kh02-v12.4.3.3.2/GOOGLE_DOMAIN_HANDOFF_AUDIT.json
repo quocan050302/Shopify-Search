@@ -1,0 +1,15 @@
+{
+  "version": "12.4.3.3.2",
+  "testedSourceSha": "bbe3dbc5625465150dc1dbafb3608dcf23af44c6",
+  "rootCauseOfEarlierZeroDomainsPlanned": "In earlier run kh02_run_1793327245885_raa19, Stage 6 passed 5 domains to collectGoogleAdvertiserSignals (~35.8s), which exceeded STAGE_TIMEOUT_MS (30,000ms), causing executeStageWithSignal to reject at 30.0s and discard enrichmentExecution.",
+  "fixApplied": "Prioritized confirmed merchant domains from currentShortlistEval.shortlist via extractRegistrableDomain, capped live enrichment at maxLiveDomains=3, set googleStageTimeoutMs=65000, passed AbortSignal to collectGoogleAdvertiserSignals, and preserved enrichmentExecution in all return paths.",
+  "domainsPlanned": 5,
+  "domainsAttempted": 3,
+  "plannedDomains": [],
+  "attemptedDomains": [
+    "uahpet.com",
+    "kittyspout.com",
+    "uprootclean.com"
+  ],
+  "skippedDomains": []
+}

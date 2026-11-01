@@ -1,0 +1,38 @@
+{
+  "evaluatedAt": "2026-10-31T11:09:08.870Z",
+  "version": "12.4.3.4.8",
+  "testedSourceSha": "3d306a678aa59756ed5cfbeba1a89ed721e4530e",
+  "beforeFreeDiskGB": 8.71,
+  "beforeFreeDiskBytes": 9357185024,
+  "afterFreeDiskGB": 16.48,
+  "afterFreeDiskBytes": 17695265260,
+  "reclaimedBytes": 226365440,
+  "reclaimedGB": 0.22,
+  "requiredFreeDiskGB": 15,
+  "shortfallGB": 0,
+  "heavyWavesUnblocked": true,
+  "cleanedTargets": [
+    {
+      "path": ".next/cache",
+      "category": "REGENERABLE_NEXT_BUILD_CACHE",
+      "bytesRemoved": 218112000
+    },
+    {
+      "path": "$TMPDIR/swai-isolated-test-dbs",
+      "category": "TASK_OWNED_TMP_TEST_DBS",
+      "bytesRemoved": 5111808
+    },
+    {
+      "path": "$TMPDIR/swai-vitest-isolated",
+      "category": "TASK_OWNED_TMP_VITEST_DIRS",
+      "bytesRemoved": 5873664
+    }
+  ],
+  "protectedPathsUntouched": [
+    "dev.db",
+    "node_modules",
+    ".git",
+    "acceptance/*",
+    "data/google_trends_csv/*"
+  ]
+}

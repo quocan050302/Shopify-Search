@@ -1,0 +1,124 @@
+{
+  "evaluatedAt": "2026-10-31T09:29:32.608Z",
+  "researchRunId": "kh02_run_1793438126794_c2rvz",
+  "totalCandidates": 3,
+  "verifiedLiveCount": 0,
+  "requiredCount": 3,
+  "distinctFamiliesCount": 0,
+  "distinctCanonicalProductsCount": 0,
+  "requireDistinctFamilies": true,
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "top3RejectionReasons": [
+    "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793438126794_c2rvz'.",
+    "Only 0/3 distinct canonical products among live-verified candidates.",
+    "Only 0/3 distinct product families among live-verified candidates."
+  ],
+  "entries": [
+    {
+      "candidateId": "cand_861882032",
+      "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+      "storeDomain": "dogfriendlyco.com",
+      "canonicalProductUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+      "canonicalProductKey": "dogfriendlyco.com/pages/easy-on-v1",
+      "familyKey": "pet_car_seat_harness",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 0,
+      "validLineageObservationsCount": 0,
+      "liveObservationIds": [],
+      "merchantVerified": true,
+      "merchantProofRefs": [
+        "merchantVerifiedProductName:No-Pull Dog Harness: No More Wrestling Matches at the Door",
+        "evidenceRef:Merchant Title: No-Pull Dog Harness: No More Wrestling Matches at the Door",
+        "evidenceRef:Canonical URL: https://dogfriendlyco.com/pages/easy-on-v1",
+        "evidenceRef:Brand: Dog Friendly Co.",
+        "evidenceRef:Corroborating Ad Copy: Rated #1 By Dog Owners"
+      ],
+      "predicateResults": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": true,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+      ],
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "notes": "Candidate failed qualification: Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+    },
+    {
+      "candidateId": "cand_756670427",
+      "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+      "storeDomain": "tailorsgift.com",
+      "canonicalProductUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+      "canonicalProductKey": "tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+      "familyKey": "wide_blades",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 0,
+      "validLineageObservationsCount": 0,
+      "liveObservationIds": [],
+      "merchantVerified": true,
+      "merchantProofRefs": [
+        "merchantVerifiedProductName:Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+        "evidenceRef:Merchant Title: Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+        "evidenceRef:Canonical URL: https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+        "evidenceRef:Brand: TailorsgiftShop",
+        "evidenceRef:Corroborating Ad Copy: The Mutt-- Dog Grooming Brush Holder, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2 Clippers  |"
+      ],
+      "predicateResults": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": true,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+      ],
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "notes": "Candidate failed qualification: Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+    },
+    {
+      "candidateId": "cand_1350980176",
+      "title": "Team K9® Tactical No-Pull Dog Harness (4 Metal Buckles)",
+      "storeDomain": "teamk9.com",
+      "canonicalProductUrl": "https://teamk9.com/products/all-metal-tactical-harness",
+      "canonicalProductKey": "teamk9.com/products/all-metal-tactical-harness",
+      "familyKey": "pet_car_seat_harness",
+      "identityStatus": "VERIFIED",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 0,
+      "validLineageObservationsCount": 0,
+      "liveObservationIds": [],
+      "merchantVerified": true,
+      "merchantProofRefs": [
+        "merchantVerifiedProductName:Team K9® Tactical No-Pull Dog Harness (4 Metal Buckles)",
+        "productIdentifier:7090638356579",
+        "verificationReason:Verified product page via OpenGraph product tags, merchant product ID (7090638356579), ecommerce product DOM.",
+        "evidenceRef:Merchant Title: Team K9® Tactical No-Pull Dog Harness (4 Metal Buckles)",
+        "evidenceRef:Canonical URL: https://teamk9.com/products/all-metal-tactical-harness",
+        "evidenceRef:Merchant Product ID: 7090638356579",
+        "evidenceRef:Brand: Team K9",
+        "evidenceRef:Corroborating Ad Copy: Offer Ends Soon"
+      ],
+      "predicateResults": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": true,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+      ],
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "notes": "Candidate failed qualification: Zero observations match current researchRunId 'kh02_run_1793438126794_c2rvz'"
+    }
+  ],
+  "notes": "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793438126794_c2rvz'. Only 0/3 distinct canonical products among live-verified candidates. Only 0/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE."
+}

@@ -1,0 +1,38 @@
+{
+  "split": "DEV",
+  "windowStart": "2026-07-19T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+  "historicalObservationCount": 19,
+  "reconstructedCandidateCount": 10,
+  "shortlistCount": 3,
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_hist_ergoflow.com_smart_posture_corrector___back",
+      "title": "Smart Posture Corrector & Back Relief Support",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "ergoflow.com",
+      "familyKey": "posture_corrector"
+    },
+    {
+      "candidateId": "cmvf2gr0h000tp4orwpoxvgq5",
+      "title": "BlendJet 2 Portable Blender",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "blendjet.com",
+      "familyKey": "blender_blendjet"
+    },
+    {
+      "candidateId": "cmvf2gqx4000jp4ori8hr823c",
+      "title": "The Ridge Minimalist Slim Wallet",
+      "identityStatus": "PROBABLE",
+      "storeDomain": "ridge.com",
+      "familyKey": "gunmetal_wallet"
+    }
+  ],
+  "distinctFamiliesCount": 3,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed with 19 historical records; zero future leakage verified. Demand evaluation detail: Evaluated 50 historical observations: coveredDays=127, status=UNVERIFIED. Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

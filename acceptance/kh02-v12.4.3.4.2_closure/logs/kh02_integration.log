@@ -1,0 +1,34 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90mD:/Project_github/Running-Ads[39m
+
+ [32m✓[39m tests/integration/kh02V12_1_3_Acceptance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1910[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.3 — Final Integration Acceptance & Deterministic E2E [2m(4)[22m
+     [33m[2m✓[22m[39m executes Track A deterministic pipeline: HTTP 202 -> Worker Claim & Execution -> Readback[33m 1044[2mms[22m[39m
+     [33m[2m✓[22m[39m reconciles research across database, HTTP readback, and snapshot layers[33m 552[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02HttpServerE2E.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3312[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1 — HTTP Route Handlers Acceptance [2m(6)[22m
+     [33m[2m✓[22m[39m POST /api/v1/kh02/research creates a persistent run, executes research, and records snapshot[33m 1802[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/leaderboard restores the latest completed snapshot on reload[33m 470[2mms[22m[39m
+     [33m[2m✓[22m[39m GET /api/v1/kh02/research/runs returns historical runs with workspace scoping[33m 477[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_2_LongResearch.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2195[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.1.4.2 — Integration: Long-Running Research & Worker Lifecycle [2m(3)[22m
+     [33m[2m✓[22m[39m executes complete async research lifecycle from enqueue to worker claim and terminal snapshot[33m 891[2mms[22m[39m
+     [33m[2m✓[22m[39m detects worker offline when job is PENDING and no active heartbeat exists[33m 629[2mms[22m[39m
+     [33m[2m✓[22m[39m recovers stale job after worker crash and allows subsequent worker to finish research[33m 674[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02/geminiWorkerPipeline.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1263[2mms[22m[39m
+   [32m✓[39m SWAI KH-02 V12.4 — Production Worker Pipeline with Gemini AI Integration [2m(2)[22m
+     [33m[2m✓[22m[39m executes complete research orchestrator pipeline and applies AI Product Reality Gate[33m 853[2mms[22m[39m
+     [33m[2m✓[22m[39m gracefully completes with UNAVAILABLE telemetry when AI fails or key is missing[33m 408[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_Persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 452[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02V12_1_4_1_LegacyMigration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 293[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02ResearchApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 300[2mms[22m[39m
+ [32m✓[39m tests/integration/kh02BrowserAcceptance.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m26 passed[39m[22m[2m | [22m[33m1 skipped[39m[90m (27)[39m
+[2m   Start at [22m 17:34:54
+[2m   Duration [22m 15.30s[2m (tests 69%, import 23%, setup 6%, transform 2%, worker 1%)[22m
+
+[2m    Isolate [22m [33m8 workers spawned[39m[2m · ~140ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~983ms faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

@@ -1,0 +1,12 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:27.455Z",
+  "defaultFeatureEnabled": false,
+  "defaultLiveAllowed": false,
+  "defaultAccessPolicyStatus": "DISABLED_BY_DEFAULT",
+  "unauthorizedLiveAttemptStatus": "BLOCKED_POLICY",
+  "zeroNetworkCallsWhenFlagOff": true,
+  "userRequestCannotOverrideServerFlag": true,
+  "policyReason": "Amazon US pilot is disabled by default (KH02_AMAZON_US_ENABLED=false)."
+}

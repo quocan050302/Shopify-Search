@@ -1,0 +1,11 @@
+{
+  "researchRunId": "kh02_run_1793414382448_njsir",
+  "topic": "Pet Gadgets",
+  "evaluatedAt": "2026-10-31T02:39:42.625Z",
+  "candidateCount": 3,
+  "rawCreativesCount": 0,
+  "normalizedCreativesCount": 0,
+  "classifiedDistinctCount": 0,
+  "pipelineInvariantsSatisfied": true,
+  "reconciliationVerdict": "EMPTY_RETRIEVAL_TRUTHFUL"
+}

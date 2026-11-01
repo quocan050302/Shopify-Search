@@ -1,0 +1,25 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:58.238Z",
+  "passed": true,
+  "mutationDetected": false,
+  "preSnapshotDigest": "fdb7419f91c997e50292410df7aef03c112bce2f7ac50d601311f40493f86c47",
+  "postSnapshotDigest": "fdb7419f91c997e50292410df7aef03c112bce2f7ac50d601311f40493f86c47",
+  "preTableRowCounts": {
+    "syncJob": 195,
+    "researchEvidence": 9,
+    "researchProduct": 99
+  },
+  "postTableRowCounts": {
+    "syncJob": 195,
+    "researchEvidence": 9,
+    "researchProduct": 99
+  },
+  "requestsTestedCount": 6,
+  "testedStatusesIncluded": [
+    200,
+    403,
+    404
+  ]
+}

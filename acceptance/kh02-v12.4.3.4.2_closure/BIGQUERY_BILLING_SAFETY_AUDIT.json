@@ -1,0 +1,13 @@
+{
+  "version": "12.4.3.4.2",
+  "testedSourceSha": "c31394127bc4eba0ca1f7fa467d3bdcfdeeba714",
+  "zeroSpendEnforced": true,
+  "billingVerificationMode": "AUTHORITATIVE_API_OR_BLOCKED",
+  "billingEnabled": null,
+  "freeSandboxVerified": false,
+  "status": "BLOCKED_FREE_SANDBOX_NOT_VERIFIED",
+  "reason": "Google Cloud credentials required to independently verify billing state for 'shopify-search-sandbox'.",
+  "spentUSD": 0,
+  "billedBytes": 0,
+  "failClosedVerified": true
+}

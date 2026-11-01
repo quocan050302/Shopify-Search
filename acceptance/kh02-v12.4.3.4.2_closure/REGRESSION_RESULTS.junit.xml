@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="KH02_Regression_Suites" tests="583" failures="0" time="59.27">
+  <testsuite name="TypeScript Typecheck (tsc --noEmit)" tests="1" failures="0" time="3.47">
+    <testcase name="tsc_typecheck" classname="kh02.regression.tsc_typecheck" time="3.47">
+    </testcase>
+  </testsuite>
+  <testsuite name="ESLint (src)" tests="1" failures="0" time="2.87">
+    <testcase name="eslint" classname="kh02.regression.eslint" time="2.87">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-01 Regression Suite" tests="69" failures="0" time="4.31">
+    <testcase name="kh01_verify" classname="kh02.regression.kh01_verify" time="4.31">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.1 Semantic Family Classification Suite" tests="19" failures="0" time="0.89">
+    <testcase name="v12_4_3_3_1_family" classname="kh02.regression.v12_4_3_3_1_family" time="0.89">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.1 Meta/Google Live Integrity & Adversarial Suite" tests="19" failures="0" time="1.32">
+    <testcase name="v12_4_3_3_1_integrity" classname="kh02.regression.v12_4_3_3_1_integrity" time="1.32">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3 Meta/Google Provenance Suite (89 tests)" tests="89" failures="0" time="2.21">
+    <testcase name="v12_4_3_3_provenance" classname="kh02.regression.v12_4_3_3_provenance" time="2.21">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.3.2 Demand Cache & Product Identity Suite" tests="10" failures="0" time="1.79">
+    <testcase name="v12_4_3_3_2_demand_identity" classname="kh02.regression.v12_4_3_3_2_demand_identity" time="1.79">
+    </testcase>
+  </testsuite>
+  <testsuite name="V12.4.3.4.1 Zero-Spend Google Free Automation Suite" tests="26" failures="0" time="2.73">
+    <testcase name="v12_4_3_4_1_zero_spend" classname="kh02.regression.v12_4_3_4_1_zero_spend" time="2.73">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-02 Full Unit Regression Suite" tests="322" failures="0" time="15.39">
+    <testcase name="kh02_unit_all" classname="kh02.regression.kh02_unit_all" time="15.39">
+    </testcase>
+  </testsuite>
+  <testsuite name="KH-02 Integration Suite" tests="26" failures="0" time="15.75">
+    <testcase name="kh02_integration" classname="kh02.regression.kh02_integration" time="15.75">
+    </testcase>
+  </testsuite>
+  <testsuite name="Next.js Production Build" tests="1" failures="0" time="8.55">
+    <testcase name="production_build" classname="kh02.regression.production_build" time="8.55">
+    </testcase>
+  </testsuite>
+</testsuites>

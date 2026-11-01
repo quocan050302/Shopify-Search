@@ -1,0 +1,82 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:48.741Z",
+  "dynamicallyComputed": true,
+  "hardcodedScoreArrayUsed": false,
+  "comparisonStatus": "COMPARED_ZERO_INFLATION",
+  "notComparableReason": null,
+  "beforeRunId": "holdout_before_amazon_v1243502",
+  "afterRunId": "holdout_after_amazon_v1243502",
+  "candidateCountBefore": 3,
+  "candidateCountAfter": 3,
+  "top3CandidateIdsBefore": [
+    "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+    "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+    "cand_1971924954"
+  ],
+  "top3CandidateIdsAfter": [
+    "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+    "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+    "cand_1971924954"
+  ],
+  "top3ScoresBefore": [
+    65,
+    63,
+    61
+  ],
+  "top3ScoresAfter": [
+    65,
+    63,
+    61
+  ],
+  "maxAbsoluteScoreDelta": 0,
+  "rankOrderChanged": false,
+  "g07Changed": false,
+  "g15Changed": false,
+  "g16Changed": false,
+  "perCandidateComparisons": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_car_fender_panel_dent_edge_rep",
+      "rankBefore": 1,
+      "rankAfter": 1,
+      "scoreBefore": 65,
+      "scoreAfter": 65,
+      "scoreDelta": 0,
+      "g07Before": false,
+      "g07After": false,
+      "g15Before": false,
+      "g15After": false,
+      "g16Before": false,
+      "g16After": false
+    },
+    {
+      "candidateId": "cand_hist_shop.pipitea.com_natural_relief_in_weeks",
+      "rankBefore": 2,
+      "rankAfter": 2,
+      "scoreBefore": 63,
+      "scoreAfter": 63,
+      "scoreDelta": 0,
+      "g07Before": false,
+      "g07After": false,
+      "g15Before": false,
+      "g15After": false,
+      "g16Before": false,
+      "g16After": false
+    },
+    {
+      "candidateId": "cand_1971924954",
+      "rankBefore": 3,
+      "rankAfter": 3,
+      "scoreBefore": 61,
+      "scoreAfter": 61,
+      "scoreDelta": 0,
+      "g07Before": false,
+      "g07After": false,
+      "g15Before": false,
+      "g15After": false,
+      "g16Before": false,
+      "g16After": false
+    }
+  ]
+}

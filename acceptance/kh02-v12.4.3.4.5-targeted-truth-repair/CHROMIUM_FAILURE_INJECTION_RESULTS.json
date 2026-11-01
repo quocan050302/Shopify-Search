@@ -1,0 +1,63 @@
+{
+  "totalInjections": 8,
+  "totalCaught": 8,
+  "passed": true,
+  "results": [
+    {
+      "scenarioId": "CR-FAIL-01",
+      "description": "Server unavailable / down",
+      "injectedDefect": "Server unavailable / down",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-02",
+      "description": "Browser launch fails",
+      "injectedDefect": "Browser launch fails",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-03",
+      "description": "Page navigation failed / 500 error",
+      "injectedDefect": "Page navigation failed / 500 error",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-04",
+      "description": "Page required element missing / assertion failure",
+      "injectedDefect": "Page required element missing / assertion failure",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-05",
+      "description": "HTTP 500 on overview route",
+      "injectedDefect": "HTTP 500 on overview route",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-06",
+      "description": "Zero candidates compared in parity check",
+      "injectedDefect": "Zero candidates compared in parity check",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-07",
+      "description": "Field discrepancy between SQLite and HTTP API",
+      "injectedDefect": "Field discrepancy between SQLite and HTTP API",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    },
+    {
+      "scenarioId": "CR-FAIL-08",
+      "description": "Database row mutated during read-only check",
+      "injectedDefect": "Database row mutated during read-only check",
+      "caughtAndRejected": true,
+      "resultingVerdict": "FAIL"
+    }
+  ]
+}

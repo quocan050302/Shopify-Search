@@ -1,0 +1,12 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "ledger": [],
+  "metrics": {
+    "totalCreatives": 0,
+    "exactProductMatch": 0,
+    "probableProductMatch": 0,
+    "brandOnlyMatch": 0,
+    "rejectedUnrelated": 0
+  }
+}

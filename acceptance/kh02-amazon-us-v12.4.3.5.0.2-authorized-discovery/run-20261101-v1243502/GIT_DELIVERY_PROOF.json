@@ -1,0 +1,13 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "branch": "feature/kh02-amazon-us-pilot-v12.4.3.5.0",
+  "baseMasterSha": "c1833362cf6634917f2ff94df19d97c393247d94",
+  "initialHeadSha": "5f32a0cf242f2d2de92489c4ee27a96b5d62ae7f",
+  "testedCodeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "engineeringVerdict": "ENGINEERING_READY",
+  "realProviderVerdict": "BLOCKED_POLICY",
+  "overallClosureVerdict": "ENGINEERING_READY_WITH_LIVE_EXTERNAL_BLOCKER",
+  "mergedToMaster": false,
+  "deployedToProduction": false,
+  "evaluatedAt": "2026-11-01T02:30:58.576Z"
+}

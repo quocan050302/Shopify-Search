@@ -1,0 +1,14 @@
+
+ RUN  v5.0.5 /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+
+ ✓ tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts (13 tests) 583ms
+   ✓ V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth (13)
+     ✓ Phase 4 & 5: Point-in-Time Joined Metadata Leakage Guard & 26 Physical-File Mutations (3)
+       ✓ validates canonical 32-artifact fixture and catches all 26 physical-file mutations (MUT_01..MUT_26) 310ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  13:29:46
+   Duration  1.42s (tests 44%, import 40%, transform 12%, setup 4%)
+
+JSON report written to /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/json_reports/v12_4_3_4_6_unit.json

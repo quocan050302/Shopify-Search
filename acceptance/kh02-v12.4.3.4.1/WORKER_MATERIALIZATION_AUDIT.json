@@ -1,0 +1,27 @@
+{
+  "version": "12.4.3.4.1",
+  "testedSourceSha": "689356b00d2cefebdb12356fd1a946c15ae3fcd6",
+  "reviewedHeadCommitVerified": "e19fc569883a58fbd9bafd8f468653d26f80c6fc",
+  "materializedCountPass1": 6,
+  "skippedRejectedCountPass1": 7,
+  "skippedRejectedIds": [
+    "cand_rejected_burnett_wallpaper",
+    "cand_592688578",
+    "cand_1652203417",
+    "cand_1466437143",
+    "cand_1832163014",
+    "cand_834466230",
+    "cand_658748938"
+  ],
+  "materializedProductIds": [
+    "cand_1212440541",
+    "cand_1587534715",
+    "cand_1613504636",
+    "cand_14769098",
+    "cand_1788406859",
+    "cand_1272640899"
+  ],
+  "idempotentSecondPassZeroNewRows": true,
+  "rejectedCandidatesExcludedFromDb": true,
+  "errors": []
+}

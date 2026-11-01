@@ -1,0 +1,52 @@
+{
+  "evaluatedAt": "2026-10-31T06:29:46.634Z",
+  "researchRunId": "kh02_run_1793288037069_asnxv",
+  "totalCandidates": 1,
+  "verifiedLiveCount": 0,
+  "requiredCount": 3,
+  "distinctFamiliesCount": 0,
+  "distinctCanonicalProductsCount": 0,
+  "requireDistinctFamilies": true,
+  "g16Verdict": "INSUFFICIENT_EVIDENCE",
+  "top3RejectionReasons": [
+    "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793288037069_asnxv'.",
+    "Only 0/3 distinct canonical products among live-verified candidates.",
+    "Only 0/3 distinct product families among live-verified candidates."
+  ],
+  "entries": [
+    {
+      "candidateId": "cand_1151716850",
+      "title": "News Cordless Electric Garden Pruning Shears M",
+      "storeDomain": "pagemindvibe.com",
+      "canonicalProductUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+      "canonicalProductKey": "pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+      "familyKey": "pruning_shears_secateurs",
+      "identityStatus": "PROBABLE",
+      "isCheckoutChampFunnel": false,
+      "liveObservationsCount": 0,
+      "validLineageObservationsCount": 0,
+      "liveObservationIds": [],
+      "merchantVerified": false,
+      "merchantProofRefs": [
+        "verificationReason:Derived probable product 'News Cordless Electric Garden Pruning Shears M' from URL path segment 'news-cordless-electric-",
+        "evidenceRef:URL Path: news-cordless-electric-garden-pruning-shears-m"
+      ],
+      "predicateResults": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": false,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "rejectionReasons": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Zero observations match current researchRunId 'kh02_run_1793288037069_asnxv'",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "notes": "Candidate failed qualification: Missing independent merchant verification proof (URL strings alone are insufficient); Zero observations match current researchRunId 'kh02_run_1793288037069_asnxv'; Identity status is 'PROBABLE', expected 'VERIFIED'"
+    }
+  ],
+  "notes": "Only 0/3 candidates qualified as live-verified in run 'kh02_run_1793288037069_asnxv'. Only 0/3 distinct canonical products among live-verified candidates. Only 0/3 distinct product families among live-verified candidates. Fails closed as INSUFFICIENT_EVIDENCE."
+}
