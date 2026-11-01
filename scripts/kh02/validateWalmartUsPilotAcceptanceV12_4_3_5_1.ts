@@ -1067,6 +1067,148 @@ export function validateWalmartAcceptanceArtifacts(
           "Cross-workspace LandingPageSnapshot or ResearchEvidence rows must never be accepted as persisted G16 merchant proof."
         );
       }
+
+      if (
+        g16Sec8.unverifiedLiveOriginObservationsCount !== undefined &&
+        Array.isArray(g16Sec8.candidates)
+      ) {
+        const candUnverifiedSum = g16Sec8.candidates.reduce(
+          (acc: number, c: any) =>
+            acc + Number(c?.unverifiedPersistedOriginCount ?? 0),
+          0
+        );
+        const candLiveObsSum = g16Sec8.candidates.reduce(
+          (acc: number, c: any) => acc + Number(c?.liveObservationsCount ?? 0),
+          0
+        );
+        check(
+          Number(g16Sec8.unverifiedLiveOriginObservationsCount ?? 0) ===
+            candUnverifiedSum &&
+            (candLiveObsSum > 0 ||
+              Number(g16Sec8.verifiedFromPersistedEvidenceCount ?? 0) === 0),
+          "G16_PERSISTED_ORIGIN_CONTRADICTION",
+          "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+          "When candidates have 0 verified live observations and non-zero unverifiedPersistedOriginCount, verifiedFromPersistedEvidenceCount must be 0 and unverifiedLiveOriginObservationsCount must match."
+        );
+      }
+    }
+  }
+
+  // Section 9 Schema & Origin Live Proof Hardening Checks (M81..M88)
+  const prismaContractPath = path.join(
+    artifactDir,
+    "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json"
+  );
+  if (fs.existsSync(prismaContractPath)) {
+    const prismaContract = readJsonSafe(
+      artifactDir,
+      "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json",
+      failures
+    );
+    if (prismaContract) {
+      check(
+        prismaContract.imaginaryColumnsRemoved === true &&
+          Number(prismaContract.imaginaryColumnsUsedCount ?? 0) === 0 &&
+          Array.isArray(prismaContract.removedImaginaryFieldAccesses) &&
+          prismaContract.removedImaginaryFieldAccesses.length >= 10,
+        "IMAGINARY_PRISMA_COLUMNS_USED",
+        "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json",
+        "All imaginary Prisma column accesses (ev.evidenceType, lp.productTitle, lp.canonicalUrl, lp.capturedAt, os.offerUrl, prod.workspaceId, prod.storeDomain, etc.) must be removed with imaginaryColumnsUsedCount=0."
+      );
+    }
+  }
+
+  const landingSchemaAuditPath = path.join(
+    artifactDir,
+    "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json"
+  );
+  if (fs.existsSync(landingSchemaAuditPath)) {
+    const landingSchemaAudit = readJsonSafe(
+      artifactDir,
+      "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+      failures
+    );
+    if (landingSchemaAudit) {
+      check(
+        Number(landingSchemaAudit.hashOrTitleOnlyPromotedCount ?? 1) === 0,
+        "HASH_OR_TITLE_ONLY_SNAPSHOT_PROMOTED_TO_JSONLD",
+        "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+        "LandingPageSnapshot rows with only pageTitle/url/contentHash and no parseable @type:Product JSON-LD in rawExcerpt must never be promoted to schemaVerified=true / VERIFIED."
+      );
+      check(
+        landingSchemaAudit.bareBooleanBypassRejected === true,
+        "BARE_BOOLEAN_SCHEMA_BYPASS_ALLOWED",
+        "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+        "Bare caller-supplied boolean flags (schemaVerified:true, hasJsonLdProduct:true) without raw source payload and matching SHA-256 must be rejected."
+      );
+    }
+  }
+
+  const g16OriginAuditPath = path.join(
+    artifactDir,
+    "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json"
+  );
+  if (fs.existsSync(g16OriginAuditPath)) {
+    const g16OriginAudit = readJsonSafe(
+      artifactDir,
+      "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+      failures
+    );
+    if (g16OriginAudit) {
+      check(
+        Number(g16OriginAudit.unverifiedObservationsRebrandedAsLiveCount ?? 1) ===
+          0,
+        "UNVERIFIED_DB_OBSERVATION_REBRANDED_AS_LIVE_PROVIDER",
+        "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+        "Persisted AdObservation + DiscoveryRunAd rows without verified upstream live provider origin must never be rebranded as LIVE_PROVIDER."
+      );
+      check(
+        Number(
+          g16OriginAudit.existingIngestOutcomeAcceptedAsLiveCount ?? 1
+        ) === 0 &&
+          Number(
+            g16OriginAudit.updatedIngestOutcomeWithoutFreshEnvelopeAcceptedCount ??
+              1
+          ) === 0 &&
+          Number(
+            g16OriginAudit.manualOrUserObservedAcceptedAsLiveCount ?? 1
+          ) === 0 &&
+          Number(
+            g16OriginAudit.deterministicFallbackAcceptedAsLiveCount ?? 1
+          ) === 0,
+        "NON_LIVE_INGEST_OR_FALLBACK_ACCEPTED_IN_G16",
+        "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+        "DiscoveryRunAd.ingestOutcome=EXISTING/UPDATED (without fresh capture envelope), MANUAL_ENTRY/USER_OBSERVED, or DETERMINISTIC_FALLBACK must never be accepted as live G16 observations."
+      );
+    }
+  }
+
+  const g16MatrixReceiptsPath = path.join(
+    artifactDir,
+    "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json"
+  );
+  if (fs.existsSync(g16MatrixReceiptsPath)) {
+    const g16MatrixReceipts = readJsonSafe(
+      artifactDir,
+      "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json",
+      failures
+    );
+    if (g16MatrixReceipts) {
+      check(
+        g16MatrixReceipts.passed === true &&
+          Number(g16MatrixReceipts.totalMatrixCases ?? 0) === 39 &&
+          Number(g16MatrixReceipts.passedMatrixCases ?? 0) === 39 &&
+          Number(g16MatrixReceipts.failedMatrixCases ?? 1) === 0 &&
+          Number(g16MatrixReceipts.merchantSchemaNegativeCount ?? 0) === 17 &&
+          Number(g16MatrixReceipts.liveOriginNegativeCount ?? 0) === 16 &&
+          Number(g16MatrixReceipts.positiveContractCount ?? 0) === 6 &&
+          Array.isArray(g16MatrixReceipts.cases) &&
+          g16MatrixReceipts.cases.length === 39 &&
+          g16MatrixReceipts.cases.every((c: any) => c.passed === true),
+        "G16_SCHEMA_ORIGIN_MATRIX_INCOMPLETE_OR_FAILED",
+        "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json",
+        "All 39 G16 schema and origin matrix cases (M01..M17, L01..L16, P01..P06) must be present and pass."
+      );
     }
   }
 
@@ -1135,6 +1277,19 @@ export function validateWalmartAcceptanceArtifacts(
           "HISTORICAL_IDENTITY_TRUTH_VERDICT_FALSE_PASS",
           "19_FINAL_MULTI_VERDICT_SUMMARY.json",
           "19_FINAL_MULTI_VERDICT_SUMMARY.json must enforce HISTORICAL_PRODUCT_IDENTITY_TRUTH='PASS' and HISTORICAL_VERIFIED_IDENTITY_COVERAGE='INSUFFICIENT_VERIFIED_IDENTITY' when < 3 HOLDOUT candidates have independent merchant proof."
+        );
+      }
+
+      if (
+        mv.verdictMatrix?.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT !== undefined ||
+        mv.verdictMatrix?.LIVE_OBSERVATION_ORIGIN_ENFORCEMENT !== undefined
+      ) {
+        check(
+          mv.verdictMatrix?.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT === "PASS" &&
+            mv.verdictMatrix?.LIVE_OBSERVATION_ORIGIN_ENFORCEMENT === "PASS",
+          "SCHEMA_OR_ORIGIN_ENFORCEMENT_VERDICT_FAILED",
+          "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+          "19_FINAL_MULTI_VERDICT_SUMMARY.json must have PERSISTED_SCHEMA_TRUTH_ENFORCEMENT='PASS' and LIVE_OBSERVATION_ORIGIN_ENFORCEMENT='PASS'."
         );
       }
     }
@@ -2209,6 +2364,91 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
         "SUFFICIENT_VERIFIED_IDENTITY";
     },
   },
+  {
+    mutationId: "M81",
+    targetFile: "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json",
+    description: "Reintroduce imaginary Prisma column accesses (lp.productTitle, lp.canonicalUrl, lp.capturedAt, prod.workspaceId)",
+    expectedFailureCode: "IMAGINARY_PRISMA_COLUMNS_USED",
+    mutate: (d) => {
+      d.imaginaryColumnsRemoved = false;
+      d.imaginaryColumnsUsedCount = 4;
+    },
+  },
+  {
+    mutationId: "M82",
+    targetFile: "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+    description: "Promote LandingPageSnapshot with pageTitle/url/contentHash only (no parseable Product JSON-LD in rawExcerpt) to VERIFIED",
+    expectedFailureCode: "HASH_OR_TITLE_ONLY_SNAPSHOT_PROMOTED_TO_JSONLD",
+    mutate: (d) => {
+      d.hashOrTitleOnlyPromotedCount = 1;
+    },
+  },
+  {
+    mutationId: "M83",
+    targetFile: "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+    description: "Allow bare caller-supplied boolean flags (schemaVerified:true, hasJsonLdProduct:true) without raw source + SHA-256",
+    expectedFailureCode: "BARE_BOOLEAN_SCHEMA_BYPASS_ALLOWED",
+    mutate: (d) => {
+      d.bareBooleanBypassRejected = false;
+    },
+  },
+  {
+    mutationId: "M84",
+    targetFile: "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+    description: "Rebrand unverified persisted AdObservation + DiscoveryRunAd rows as provenance='LIVE_PROVIDER'",
+    expectedFailureCode: "UNVERIFIED_DB_OBSERVATION_REBRANDED_AS_LIVE_PROVIDER",
+    mutate: (d) => {
+      d.unverifiedObservationsRebrandedAsLiveCount = 2;
+    },
+  },
+  {
+    mutationId: "M85",
+    targetFile: "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+    description: "Accept DiscoveryRunAd.ingestOutcome=EXISTING or DETERMINISTIC_FALLBACK as live G16 observation",
+    expectedFailureCode: "NON_LIVE_INGEST_OR_FALLBACK_ACCEPTED_IN_G16",
+    mutate: (d) => {
+      d.existingIngestOutcomeAcceptedAsLiveCount = 1;
+      d.deterministicFallbackAcceptedAsLiveCount = 1;
+    },
+  },
+  {
+    mutationId: "M86",
+    targetFile: "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json",
+    description: "Drop a case from the 39-case G16 schema and origin matrix (M01..M17, L01..L16, P01..P06)",
+    expectedFailureCode: "G16_SCHEMA_ORIGIN_MATRIX_INCOMPLETE_OR_FAILED",
+    mutate: (d) => {
+      d.passedMatrixCases = 38;
+      d.failedMatrixCases = 1;
+      d.passed = false;
+    },
+  },
+  {
+    mutationId: "M87",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Claim verifiedFromPersistedEvidenceCount=2 when candidates have 0 live observations and non-zero unverifiedPersistedOriginCount",
+    expectedFailureCode: "G16_PERSISTED_ORIGIN_CONTRADICTION",
+    mutate: (d) => {
+      d.verifiedFromPersistedEvidenceCount = 2;
+      d.unverifiedLiveOriginObservationsCount = 0;
+      d.candidates = [
+        {
+          candidateId: "cand_1",
+          liveObservationsCount: 0,
+          unverifiedPersistedOriginCount: 1,
+        },
+      ];
+    },
+  },
+  {
+    mutationId: "M88",
+    targetFile: "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+    description: "Mark PERSISTED_SCHEMA_TRUTH_ENFORCEMENT or LIVE_OBSERVATION_ORIGIN_ENFORCEMENT as FAIL in verdictMatrix",
+    expectedFailureCode: "SCHEMA_OR_ORIGIN_ENFORCEMENT_VERDICT_FAILED",
+    mutate: (d) => {
+      if (!d.verdictMatrix) d.verdictMatrix = {};
+      d.verdictMatrix.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT = "FAIL";
+    },
+  },
 ];
 
 /**
@@ -2441,8 +2681,96 @@ export function runPhysicalNegativeMutationSuite40(
                 },
                 HISTORICAL_DEMAND_G15: "INSUFFICIENT_EVIDENCE",
                 MERCHANT_TOP3_G16: "INSUFFICIENT_EVIDENCE",
+                PERSISTED_PRODUCT_SCHEMA_PROOF: "INSUFFICIENT_EVIDENCE",
+                PERSISTED_LIVE_ORIGIN_PROOF: "INSUFFICIENT_EVIDENCE",
+                PERSISTED_SCHEMA_TRUTH_ENFORCEMENT: "PASS",
+                LIVE_OBSERVATION_ORIGIN_ENFORCEMENT: "PASS",
                 FINAL_RELEASE: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
               },
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              imaginaryColumnsRemoved: true,
+              imaginaryColumnsUsedCount: 0,
+              removedImaginaryFieldAccesses: [
+                "ev.evidenceType",
+                "lp.productTitle",
+                "lp.canonicalUrl",
+                "lp.capturedAt",
+                "os.offerUrl",
+                "os.priceText",
+                "os.priceAmount",
+                "os.capturedAt",
+                "prod.workspaceId",
+                "prod.storeDomain",
+              ],
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              hashOrTitleOnlyPromotedCount: 0,
+              bareBooleanBypassRejected: true,
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              unverifiedObservationsRebrandedAsLiveCount: 0,
+              existingIngestOutcomeAcceptedAsLiveCount: 0,
+              updatedIngestOutcomeWithoutFreshEnvelopeAcceptedCount: 0,
+              manualOrUserObservedAcceptedAsLiveCount: 0,
+              deterministicFallbackAcceptedAsLiveCount: 0,
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              passed: true,
+              totalMatrixCases: 39,
+              passedMatrixCases: 39,
+              failedMatrixCases: 0,
+              merchantSchemaNegativeCount: 17,
+              liveOriginNegativeCount: 16,
+              positiveContractCount: 6,
+              cases: Array.from({ length: 39 }, (_, i) => ({
+                caseId: `C${i + 1}`,
+                passed: true,
+              })),
             },
             null,
             2

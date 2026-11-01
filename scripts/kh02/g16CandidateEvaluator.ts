@@ -13,12 +13,26 @@ import {
   isFunnelOrCheckoutChamp,
   isSyntheticMerchantProofRef,
   isFabricatedHydrationObservation,
+  classifyPersistedLiveObservation,
+  validatePersistedMerchantProofRecord,
+  extractPersistedMerchantProofsFromDbRows,
+  classifyHistoricalProductIdentity,
+  computeSha256Hex,
+  type MerchantProofValidationStatus,
+  type MerchantProofMethod,
+  type OriginEvidenceClassification,
+  type PersistedMerchantProofRecord,
+  type PersistedAdObservationRow,
+  type PersistedDiscoveryRunAdRow,
 } from "../../src/services/kh02/identity/merchantIdentityPolicy";
 
 export {
   isFunnelOrCheckoutChamp,
   isSyntheticMerchantProofRef,
   isFabricatedHydrationObservation,
+  classifyPersistedLiveObservation,
+  validatePersistedMerchantProofRecord,
+  extractPersistedMerchantProofsFromDbRows,
 };
 
 export interface NormalizedObservationIdentity {
@@ -55,8 +69,13 @@ export interface G16MerchantEvidenceIndex {
     verified: boolean;
     proofRefs?: string[];
     schemaVerified?: boolean;
+    hasJsonLdProduct?: boolean;
+    proofMethod?: MerchantProofMethod;
+    validationStatus?: MerchantProofValidationStatus;
     fetchOutcome?: string;
     merchantVerifiedProductName?: string;
+    hasRootDomainJsonLdSchema?: boolean;
+    persistedProofs?: PersistedMerchantProofRecord[];
   };
 }
 
@@ -65,6 +84,8 @@ export interface G16EvidenceIndex {
   identityIndex?: G16IdentityIndex;
   merchantEvidenceIndex?: G16MerchantEvidenceIndex;
   strictPersistedProofRequired?: boolean;
+  workspaceId?: string;
+  asOf?: Date | string;
 }
 
 export interface CandidatePredicateResults {
@@ -288,6 +309,108 @@ export function isAuthenticallyLiveObservation(
     return false;
   }
 
+  // Enforce immutable persisted origin checks (`L01..L16`) when persisted DB fields or envelopes are present
+  if (observation?.persistedLiveOriginVerified === false) {
+    return false;
+  }
+  if (
+    observation?.originEvidenceClassification &&
+    observation.originEvidenceClassification !== "AUTHENTIC_LIVE_INGEST"
+  ) {
+    return false;
+  }
+  if (
+    observation?.ingestOutcome !== undefined &&
+    observation?.ingestOutcome !== null &&
+    String(observation.ingestOutcome).trim().toUpperCase() !== "NEW"
+  ) {
+    return false;
+  }
+  if (
+    observation?.evidenceType !== undefined &&
+    observation?.evidenceType !== null &&
+    ["MANUAL_ENTRY", "USER_OBSERVED", "SYNTHETIC", "TEST_FIXTURE"].includes(
+      String(observation.evidenceType).trim().toUpperCase()
+    )
+  ) {
+    return false;
+  }
+
+  // If immutable persisted rows are attached, re-verify via `classifyPersistedLiveObservation`
+  // so in-memory `provenance = "LIVE_PROVIDER"` mutation (`L15`) cannot bypass origin truth
+  if (observation?.persistedAdObservation && observation?.persistedDiscoveryRunAd) {
+    const originCheck = classifyPersistedLiveObservation({
+      adObservation: observation.persistedAdObservation as PersistedAdObservationRow,
+      discoveryRunAd: observation.persistedDiscoveryRunAd as PersistedDiscoveryRunAdRow,
+      expectedWorkspaceId:
+        cleanNonBlankString(
+          evidenceIndex?.workspaceId ||
+            observation.workspaceId ||
+            observation.persistedDiscoveryRunAd?.workspaceId
+        ) || "",
+      expectedRunId: norm.researchRunId || norm.executionRunId,
+      expectedCandidateId: norm.candidateId,
+      expectedStoreDomain: norm.storeDomain,
+      asOf: evidenceIndex?.asOf,
+    });
+    if (!originCheck.isAuthenticLiveProviderObservation) {
+      return false;
+    }
+  } else if ("rawPayload" in (observation || {})) {
+    // Observation directly carries a persisted `rawPayload` field (`L03`, `L05`, `L06`, `L08`, `L15`, `L16`)
+    const syntheticRunAd: PersistedDiscoveryRunAdRow = {
+      runId: norm.researchRunId || norm.executionRunId || "",
+      adId: cleanNonBlankString(observation.adId || observation.persistedAdId || norm.sourceRecordId) || "",
+      workspaceId: cleanNonBlankString(observation.workspaceId || evidenceIndex?.workspaceId) || "ws_default",
+      providerId: cleanNonBlankString(observation.provider || observation.providerId) || "META_AD_LIBRARY",
+      ingestOutcome: cleanNonBlankString(observation.ingestOutcome) || "NEW",
+      sourceUrl: cleanNonBlankString(observation.sourceUrl || observation.evidenceReference || norm.landingPageUrl) || "https://www.facebook.com/ads/library/",
+      observedAt: observation.observedAt ?? new Date().toISOString(),
+    };
+    const syntheticAdObs: PersistedAdObservationRow = {
+      id: norm.observationId,
+      adId: syntheticRunAd.adId,
+      observedAt: observation.observedAt ?? new Date().toISOString(),
+      sourceTimestamp: observation.sourceTimestamp ?? observation.observedAt ?? new Date().toISOString(),
+      evidenceType: cleanNonBlankString(observation.evidenceType) || "SCRAPED_POST",
+      verificationMethod: cleanNonBlankString(observation.verificationMethod) || "AUTOMATED_SCRAPE",
+      evidenceReference:
+        cleanNonBlankString(observation.evidenceReference || observation.sourceUrl) ||
+        "https://www.facebook.com/ads/library/",
+      rawPayload: observation.rawPayload,
+    };
+    const originCheck = classifyPersistedLiveObservation({
+      adObservation: syntheticAdObs,
+      discoveryRunAd: syntheticRunAd,
+      expectedWorkspaceId: syntheticRunAd.workspaceId,
+      expectedRunId: syntheticRunAd.runId,
+      expectedCandidateId: norm.candidateId,
+      expectedStoreDomain: norm.storeDomain,
+      asOf: evidenceIndex?.asOf,
+    });
+    if (!originCheck.isAuthenticLiveProviderObservation) {
+      return false;
+    }
+  }
+
+  // Enforce temporal validity when `observedAt` / `sourceTimestamp` or `evidenceIndex.asOf` is present (`L12`, `L13`)
+  if (observation?.observedAt !== undefined && observation?.observedAt !== null) {
+    const d = new Date(observation.observedAt);
+    if (Number.isNaN(d.getTime())) return false;
+    if (evidenceIndex?.asOf) {
+      const asOfD = new Date(evidenceIndex.asOf);
+      if (Number.isNaN(asOfD.getTime()) || d.getTime() > asOfD.getTime()) return false;
+    }
+  }
+  if (observation?.sourceTimestamp !== undefined && observation?.sourceTimestamp !== null) {
+    const d = new Date(observation.sourceTimestamp);
+    if (Number.isNaN(d.getTime())) return false;
+    if (evidenceIndex?.asOf) {
+      const asOfD = new Date(evidenceIndex.asOf);
+      if (Number.isNaN(asOfD.getTime()) || d.getTime() > asOfD.getTime()) return false;
+    }
+  }
+
   const hasLiveProvenance =
     norm.provenance === "LIVE_PROVIDER" || norm.provenance === "REAL_UPSTREAM";
   if (!hasLiveProvenance) {
@@ -490,6 +613,29 @@ export function extractMerchantProofRefs(
 
   if (strictPersistedProofRequired || (indexHasCandidate && indexEntry?.verified === false)) {
     if (indexEntry?.verified === true) {
+      if (
+        indexEntry.validationStatus &&
+        indexEntry.validationStatus !== "CONTENT_VALIDATED_WITH_SOURCE"
+      ) {
+        return [];
+      }
+      if (Array.isArray(indexEntry.persistedProofs)) {
+        const validPersisted = indexEntry.persistedProofs.filter(
+          (p) =>
+            validatePersistedMerchantProofRecord(p, {
+              candidateWorkspaceId: candidate.workspaceId,
+              candidateDomain: candidate.storeDomain,
+              candidateCanonicalUrl: candidate.canonicalProductUrl,
+              candidateTitle: candidate.title,
+              expectedSku: candidate.sku,
+              expectedMerchantProductId: candidate.merchantProductId,
+              asOf: new Date(),
+            }).valid
+        );
+        if (validPersisted.length === 0) {
+          return [];
+        }
+      }
       if (Array.isArray(indexEntry.proofRefs) && indexEntry.proofRefs.length > 0) {
         for (const r of indexEntry.proofRefs) {
           const cr = cleanNonBlankString(r);
@@ -498,9 +644,11 @@ export function extractMerchantProofRefs(
           }
         }
       } else if (
-        indexEntry.schemaVerified ||
-        indexEntry.fetchOutcome === "FETCH_SUCCEEDED" ||
-        indexEntry.merchantVerifiedProductName
+        (indexEntry.schemaVerified ||
+          indexEntry.fetchOutcome === "FETCH_SUCCEEDED" ||
+          indexEntry.merchantVerifiedProductName) &&
+        (!indexEntry.validationStatus ||
+          indexEntry.validationStatus === "CONTENT_VALIDATED_WITH_SOURCE")
       ) {
         refs.push(`indexVerified:${candId}`);
       }
@@ -1312,6 +1460,7 @@ export function runG16NegativeTests(): {
         return res.merchantVerified === false && res.isLiveVerified === false;
       },
     },
+    ...buildSchemaAndOriginMatrixCaseDefinitions(),
   ];
 
   const results = cases.map((c) => {
@@ -1331,5 +1480,1798 @@ export function runG16NegativeTests(): {
     totalPassed,
     passed: totalPassed === cases.length,
     cases: results,
+  };
+}
+
+export interface SchemaAndOriginMatrixTestReceipt {
+  testId: string;
+  category: "MERCHANT_SCHEMA_NEGATIVE" | "LIVE_ORIGIN_NEGATIVE" | "POSITIVE_CONTRACT";
+  description: string;
+  passed: boolean;
+  expectedOutcome: string;
+  observedOutcome: string;
+}
+
+function buildValidProductJsonLdString(overrides: Record<string, any> = {}): string {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "KittySpout Stainless Steel Cat Water Fountain",
+    sku: "KS-FOUNTAIN-01",
+    gtin13: "0789123456789",
+    productID: "8369671045340",
+    url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+    offers: {
+      "@type": "Offer",
+      price: "49.99",
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+    },
+    ...overrides,
+  });
+}
+
+function buildValidLiveRawPayloadString(overrides: Record<string, any> = {}): string {
+  return JSON.stringify({
+    origin: "LIVE_PROVIDER_EXECUTION",
+    sourceMode: "LIVE_PROVIDER",
+    providerId: "META_AD_LIBRARY",
+    providerRequestId: "mcp_req_live_9001",
+    mcpInvocationRef: "mcp://meta-ad-library/searchAds/9001",
+    workspaceId: "ws_pet_1",
+    runId: "run_live_1",
+    externalAdId: "lib_ad_101",
+    storeDomain: "kittyspout.com",
+    landingPageUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+    capturedAt: "2026-10-25T10:00:00.000Z",
+    ...overrides,
+  });
+}
+
+export function buildSchemaAndOriginMatrixCaseDefinitions(): Array<{
+  testId: string;
+  category: "MERCHANT_SCHEMA_NEGATIVE" | "LIVE_ORIGIN_NEGATIVE" | "POSITIVE_CONTRACT";
+  description: string;
+  expectedOutcome: string;
+  exec: () => boolean;
+  inspect?: () => string;
+}> {
+  const asOf = new Date("2026-10-30T12:00:00.000Z");
+
+  return [
+    // ========================================================================
+    // M01..M17: Merchant Schema Proof Negative Matrix
+    // ========================================================================
+    {
+      testId: "M01",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "LandingPageSnapshot with pageTitle + finalUrl + contentHash only (no observationsJson Product JSON-LD) is NOT VERIFIED",
+      expectedOutcome: "identityStatus=PROBABLE, validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE",
+      exec: () => {
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m01",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneLandingSnapshots: [
+            {
+              id: "lp_m01",
+              workspaceId: "ws_pet_1",
+              productId: "prod_1",
+              originalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              httpStatus: 200,
+              accessStatus: "OK",
+              pageTitle: "KittySpout Fountain",
+              contentHash: computeSha256Hex("visible-text-summary-only"),
+              observationsJson: null,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        const cls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_m01",
+            workspaceId: "ws_pet_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: extracted.validProofs,
+          },
+          asOf
+        );
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "RAW_SOURCE_NOT_RECONSTRUCTABLE" &&
+          cls.identityStatus === "PROBABLE"
+        );
+      },
+    },
+    {
+      testId: "M02",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "LandingPageSnapshot with CRO observationsJson lacking Product JSON-LD is NOT VERIFIED",
+      expectedOutcome: "identityStatus=PROBABLE, validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD",
+      exec: () => {
+        const croJson = JSON.stringify({
+          headlineCount: 3,
+          ctaCount: 2,
+          ctaTexts: ["Add to Cart", "Buy Now"],
+          hasStickyATC: true,
+          benefitBullets: ["Fresh filtered water"],
+        });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m02",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneLandingSnapshots: [
+            {
+              id: "lp_m02",
+              workspaceId: "ws_pet_1",
+              productId: "prod_1",
+              finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              httpStatus: 200,
+              accessStatus: "OK",
+              pageTitle: "KittySpout Fountain",
+              contentHash: computeSha256Hex(croJson),
+              observationsJson: croJson,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "NO_PRODUCT_JSON_LD_IN_PAYLOAD"
+        );
+      },
+    },
+    {
+      testId: "M03",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "ResearchProduct row with /products/... URL alone is discovery-only and NOT VERIFIED",
+      expectedOutcome: "identityStatus=PROBABLE, validationStatus=PRODUCT_ROW_DISCOVERY_ONLY",
+      exec: () => {
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m03",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          researchProducts: [
+            {
+              id: "prod_m03",
+              title: "KittySpout Stainless Steel Cat Water Fountain",
+              productUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              store: { id: "st_1", domain: "kittyspout.com", workspaceId: "ws_pet_1" },
+              createdAt: "2026-10-20T00:00:00.000Z",
+              updatedAt: "2026-10-20T00:00:00.000Z",
+              evidence: [],
+              landingPageSnapshots: [],
+              offerSnapshots: [],
+            },
+          ],
+        });
+        const cls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_m03",
+            researchProductId: "prod_m03",
+            workspaceId: "ws_pet_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-20T00:00:00.000Z",
+            persistedMerchantProofs: extracted.validProofs,
+          },
+          asOf
+        );
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "PRODUCT_ROW_DISCOVERY_ONLY" &&
+          cls.identityStatus === "PROBABLE"
+        );
+      },
+    },
+    {
+      testId: "M04",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "CompetitorOfferSnapshot price/offer-only row is NOT VERIFIED identity proof",
+      expectedOutcome: "identityStatus=PROBABLE, validationStatus=OFFER_SNAPSHOT_NOT_IDENTITY_PROOF",
+      exec: () => {
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m04",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneOfferSnapshots: [
+            {
+              id: "os_m04",
+              workspaceId: "ws_pet_1",
+              productId: "prod_1",
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              currency: "USD",
+              sellingPrice: 49.99,
+              availability: "IN_STOCK",
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "OFFER_SNAPSHOT_NOT_IDENTITY_PROOF"
+        );
+      },
+    },
+    {
+      testId: "M05",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "CheckoutChamp / funnel domain (cc.uprootclean.com, /main/phr) without root JSON-LD product schema stays PROBABLE / FUNNEL_UNVERIFIED",
+      expectedOutcome: "identityStatus=PROBABLE, verificationEvidenceStatus=FUNNEL_UNVERIFIED",
+      exec: () => {
+        const cls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_m05",
+            workspaceId: "ws_pet_1",
+            title: "Uproot Cleaner Pro Pet Hair Remover",
+            storeDomain: "cc.uprootclean.com",
+            canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: [],
+          },
+          asOf
+        );
+        return (
+          cls.identityStatus === "PROBABLE" &&
+          cls.verificationEvidenceStatus === "FUNNEL_UNVERIFIED" &&
+          cls.isCheckoutChampFunnel === true
+        );
+      },
+    },
+    {
+      testId: "M06",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "ResearchEvidence with JSON-LD @type Organization / WebSite / BreadcrumbList / ItemList / Article (not Product) is NOT VERIFIED",
+      expectedOutcome: "validationStatus=NON_PRODUCT_JSON_LD_TYPE",
+      exec: () => {
+        const orgJsonLd = JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            { "@type": "Organization", name: "KittySpout", url: "https://kittyspout.com" },
+            { "@type": "WebSite", name: "KittySpout Official", url: "https://kittyspout.com" },
+            { "@type": "BreadcrumbList", itemListElement: [] },
+            { "@type": "ItemList", itemListElement: [] },
+            { "@type": "Article", headline: "Why Cats Love Running Water" },
+          ],
+        });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m06",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m06",
+              workspaceId: "ws_pet_1",
+              observedValue: orgJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(orgJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "NON_PRODUCT_JSON_LD_TYPE"
+        );
+      },
+    },
+    {
+      testId: "M07",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "ResearchEvidence with observedValue='{\"schemaVerified\":true}' or '{\"hasJsonLdProduct\":true}' without actual Product JSON-LD is NOT VERIFIED",
+      expectedOutcome: "validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD",
+      exec: () => {
+        const fakeJson = JSON.stringify({ schemaVerified: true, hasJsonLdProduct: true });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m07",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m07",
+              workspaceId: "ws_pet_1",
+              observedValue: fakeJson,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(fakeJson)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "NO_PRODUCT_JSON_LD_IN_PAYLOAD"
+        );
+      },
+    },
+    {
+      testId: "M08",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "LandingPageSnapshot with httpStatus 403/500 or accessStatus=BLOCKED is NOT VERIFIED",
+      expectedOutcome: "validationStatus=HTTP_OR_ACCESS_BLOCKED",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m08",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneLandingSnapshots: [
+            {
+              id: "lp_m08",
+              workspaceId: "ws_pet_1",
+              finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              httpStatus: 403,
+              accessStatus: "BLOCKED",
+              contentHash: computeSha256Hex(validJsonLd),
+              observationsJson: validJsonLd,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "HTTP_OR_ACCESS_BLOCKED"
+        );
+      },
+    },
+    {
+      testId: "M09",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "ResearchEvidence with observationMethod=MANUAL_ENTRY or classification=INFERRED is NOT VERIFIED",
+      expectedOutcome: "validationStatus=UNSAFE_OBSERVATION_METHOD_OR_CLASSIFICATION",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m09",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m09_manual",
+              workspaceId: "ws_pet_1",
+              observedValue: validJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "MANUAL_ENTRY",
+              classification: "INFERRED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus ===
+            "UNSAFE_OBSERVATION_METHOD_OR_CLASSIFICATION"
+        );
+      },
+    },
+    {
+      testId: "M10",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Valid Product JSON-LD for a different product/SKU on the same merchant domain is NOT VERIFIED for target candidate",
+      expectedOutcome: "validationStatus=PRODUCT_OR_SKU_MISMATCH_REJECTED",
+      exec: () => {
+        const otherProductJsonLd = buildValidProductJsonLdString({
+          name: "Replacement Carbon Filter Pack",
+          sku: "KS-FILTER-99",
+          url: "https://kittyspout.com/products/replacement-filters-pack",
+        });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m10",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          expectedSku: "KS-FOUNTAIN-01",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m10",
+              workspaceId: "ws_pet_1",
+              observedValue: otherProductJsonLd,
+              sourceUrl: "https://kittyspout.com/products/replacement-filters-pack",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(otherProductJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus ===
+            "PRODUCT_OR_SKU_MISMATCH_REJECTED"
+        );
+      },
+    },
+    {
+      testId: "M11",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Valid Product JSON-LD for the same slug on an unrelated merchant domain is NOT VERIFIED",
+      expectedOutcome: "validationStatus=DOMAIN_MISMATCH_REJECTED",
+      exec: () => {
+        const otherDomainJsonLd = buildValidProductJsonLdString({
+          url: "https://unrelated-pet-shop.com/products/kittyspout-wireless-fountain",
+        });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m11",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m11",
+              workspaceId: "ws_pet_1",
+              observedValue: otherDomainJsonLd,
+              sourceUrl: "https://unrelated-pet-shop.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(otherDomainJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "DOMAIN_MISMATCH_REJECTED"
+        );
+      },
+    },
+    {
+      testId: "M12",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Valid Product JSON-LD with observedAt > asOf is rejected as POST_CUTOFF",
+      expectedOutcome: "validationStatus=POST_CUTOFF_OR_INVALID_DATE",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m12",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m12",
+              workspaceId: "ws_pet_1",
+              observedValue: validJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "2026-11-01T04:22:00.000Z", // > asOf
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "POST_CUTOFF_OR_INVALID_DATE"
+        );
+      },
+    },
+    {
+      testId: "M13",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Valid Product JSON-LD in another workspaceId is rejected as CROSS_WORKSPACE_REJECTED",
+      expectedOutcome: "validationStatus=CROSS_WORKSPACE_REJECTED",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m13",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m13",
+              workspaceId: "ws_other_tenant",
+              observedValue: validJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "CROSS_WORKSPACE_REJECTED"
+        );
+      },
+    },
+    {
+      testId: "M14",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Synthetic / fixture proof (uahpet_lp_hash_v12_4_3_3, TEST_FIXTURE, jsonld:<domain>) is rejected",
+      expectedOutcome: "validationStatus=SYNTHETIC_OR_FIXTURE_REJECTED",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m14",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneLandingSnapshots: [
+            {
+              id: "lp_m14",
+              workspaceId: "ws_pet_1",
+              finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              httpStatus: 200,
+              accessStatus: "OK",
+              contentHash: "uahpet_lp_hash_v12_4_3_3",
+              observationsJson: validJsonLd,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "SYNTHETIC_OR_FIXTURE_REJECTED" &&
+          isSyntheticMerchantProofRef("jsonld:kittyspout.com") === true
+        );
+      },
+    },
+    {
+      testId: "M15",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Missing or invalid date (null, empty, 'not-a-date', new Date('invalid')) fails closed",
+      expectedOutcome: "validationStatus=POST_CUTOFF_OR_INVALID_DATE",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m15",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m15_invalid_date",
+              workspaceId: "ws_pet_1",
+              observedValue: validJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "not-a-valid-date",
+            },
+          ],
+        });
+        const invalidAsOfCls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_m15",
+            workspaceId: "ws_pet_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: new Date("invalid"),
+          },
+          asOf
+        );
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "POST_CUTOFF_OR_INVALID_DATE" &&
+          invalidAsOfCls.identityStatus === "UNVERIFIED"
+        );
+      },
+    },
+    {
+      testId: "M16",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Hash-only proof where raw source content is absent returns RAW_SOURCE_NOT_RECONSTRUCTABLE and is NOT VERIFIED",
+      expectedOutcome: "validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE, identityStatus=PROBABLE",
+      exec: () => {
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m16",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m16_hash_only",
+              workspaceId: "ws_pet_1",
+              observedValue: null,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex("missing-raw-content")}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus ===
+            "RAW_SOURCE_NOT_RECONSTRUCTABLE"
+        );
+      },
+    },
+    {
+      testId: "M17",
+      category: "MERCHANT_SCHEMA_NEGATIVE",
+      description: "Tampered content hash (raw Product JSON-LD payload does not match stored SHA-256 hash) is rejected",
+      expectedOutcome: "validationStatus=RAW_SOURCE_HASH_TAMPERED",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const tamperedJsonLd = buildValidProductJsonLdString({ name: "Tampered Title" });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_m17",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_m17_tampered",
+              workspaceId: "ws_pet_1",
+              observedValue: tamperedJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        return (
+          extracted.validProofs.length === 0 &&
+          extracted.allAuditedRecords[0]?.validationStatus === "RAW_SOURCE_HASH_TAMPERED"
+        );
+      },
+    },
+
+    // ========================================================================
+    // L01..L16: Persisted Live Observation Origin Negative Matrix
+    // ========================================================================
+    {
+      testId: "L01",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "DiscoveryRunAd.ingestOutcome = EXISTING is rejected as reused historical DB ad",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=REUSED_EXISTING_AD",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l01",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "EXISTING",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "REUSED_EXISTING_AD" &&
+          res.derivedProvenance !== "LIVE_PROVIDER"
+        );
+      },
+    },
+    {
+      testId: "L02",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "DiscoveryRunAd.ingestOutcome = UPDATED without live origin is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l02",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: null,
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "UPDATED",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "PERSISTED_LIVE_ORIGIN_UNVERIFIED"
+        );
+      },
+    },
+    {
+      testId: "L03",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "DiscoveryRunAd.ingestOutcome = NEW with empty AdObservation.rawPayload is rejected (PERSISTED_LIVE_ORIGIN_UNVERIFIED)",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, derivedProvenance=PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l03",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: null,
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "PERSISTED_LIVE_ORIGIN_UNVERIFIED" &&
+          res.derivedProvenance === "PERSISTED_LIVE_ORIGIN_UNVERIFIED"
+        );
+      },
+    },
+    {
+      testId: "L04",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "AdObservation.evidenceType = MANUAL_ENTRY or USER_OBSERVED is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l04",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "MANUAL_ENTRY",
+            verificationMethod: "USER_OBSERVED",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return res.isAuthenticLiveProviderObservation === false;
+      },
+    },
+    {
+      testId: "L05",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "AdObservation.rawPayload containing origin = DETERMINISTIC_FALLBACK is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l05",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({ origin: "DETERMINISTIC_FALLBACK" }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "FALLBACK_OR_SYNTHETIC"
+        );
+      },
+    },
+    {
+      testId: "L06",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "AdObservation.rawPayload containing TEST_FIXTURE / CONTROLLED_FIXTURE / SYNTHETIC / MOCK is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l06",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({ provenance: "TEST_FIXTURE" }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "FALLBACK_OR_SYNTHETIC"
+        );
+      },
+    },
+    {
+      testId: "L07",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "Fabricated IDs obs_<runId>_<candidateId> or req_<runId> are rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_run_live_1_cand_1",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({ providerRequestId: "req_run_live_1" }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          expectedCandidateId: "cand_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "FALLBACK_OR_SYNTHETIC"
+        );
+      },
+    },
+    {
+      testId: "L08",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "Missing providerRequestId and missing mcpInvocationRef in rawPayload is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l08",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({
+              providerRequestId: null,
+              mcpInvocationRef: null,
+            }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return res.isAuthenticLiveProviderObservation === false;
+      },
+    },
+    {
+      testId: "L09",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "Missing evidenceReference or sourceUrl is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l09",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: null,
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: null,
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return res.isAuthenticLiveProviderObservation === false;
+      },
+    },
+    {
+      testId: "L10",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "DiscoveryRunAd.workspaceId != candidate workspaceId is rejected as CROSS_WORKSPACE_OR_RUN",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l10",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({ workspaceId: "ws_other" }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_other",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "CROSS_WORKSPACE_OR_RUN"
+        );
+      },
+    },
+    {
+      testId: "L11",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "DiscoveryRunAd.runId != expected run lineage is rejected as CROSS_WORKSPACE_OR_RUN",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l11",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({ runId: "run_prior_99" }),
+          },
+          discoveryRunAd: {
+            runId: "run_prior_99",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "CROSS_WORKSPACE_OR_RUN"
+        );
+      },
+    },
+    {
+      testId: "L12",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "AdObservation.observedAt > asOf or sourceTimestamp > asOf is rejected as POST_CUTOFF_OR_INVALID_DATE",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l12",
+            adId: "ad_1",
+            observedAt: "2026-11-01T10:00:00.000Z",
+            sourceTimestamp: "2026-11-01T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-11-01T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "POST_CUTOFF_OR_INVALID_DATE"
+        );
+      },
+    },
+    {
+      testId: "L13",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "Invalid or missing observedAt or sourceTimestamp is rejected as POST_CUTOFF_OR_INVALID_DATE",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l13",
+            adId: "ad_1",
+            observedAt: "invalid-date-string",
+            sourceTimestamp: null,
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "POST_CUTOFF_OR_INVALID_DATE"
+        );
+      },
+    },
+    {
+      testId: "L14",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "AdObservation linked to another candidate's adId or another merchant domain is rejected as CROSS_CANDIDATE_OR_DOMAIN",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_CANDIDATE_OR_DOMAIN",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l14",
+            adId: "ad_unrelated_999",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=999",
+            rawPayload: buildValidLiveRawPayloadString({
+              storeDomain: "unrelated-merchant.com",
+            }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_unrelated_999",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=999",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          expectedAdIds: ["ad_1"],
+          expectedStoreDomain: "kittyspout.com",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === false &&
+          res.originEvidenceClassification === "CROSS_CANDIDATE_OR_DOMAIN"
+        );
+      },
+    },
+    {
+      testId: "L15",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "Caller mutating provenance=LIVE_PROVIDER in memory on an observation lacking DB rawPayload/ledger backing is rejected",
+      expectedOutcome: "isAuthenticallyLiveObservation=false, evaluateG16Candidate.isLiveVerified=false",
+      exec: () => {
+        const mutatedObs = makeValidLiveObs({
+          provenance: "LIVE_PROVIDER",
+          sourceMode: "LIVE_PROVIDER",
+          sourceType: "LIVE_PROVIDER",
+          isCached: false,
+          isLiveRecord: true,
+          rawPayload: null, // persisted AdObservation has null rawPayload
+        });
+        const cand = makeValidMerchantCandidate({
+          sourceObservations: [mutatedObs],
+        });
+        const evalRes = evaluateG16Candidate(cand, "run_123");
+        return (
+          isAuthenticallyLiveObservation(mutatedObs) === false &&
+          evalRes.isLiveVerified === false &&
+          evalRes.validLineageObservationsCount === 0
+        );
+      },
+    },
+    {
+      testId: "L16",
+      category: "LIVE_ORIGIN_NEGATIVE",
+      description: "rawPayload with malformed JSON or contradicting DiscoveryRunAd.providerId is rejected",
+      expectedOutcome: "isAuthenticLiveProviderObservation=false, originEvidenceClassification=MALFORMED_OR_CONTRADICTORY_PAYLOAD",
+      exec: () => {
+        const malformedRes = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l16_malformed",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: "{not-valid-json",
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        const contradictRes = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_l16_contradict",
+            adId: "ad_1",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString({
+              providerId: "TIKTOK_COMMERCIAL_CONTENT",
+            }),
+          },
+          discoveryRunAd: {
+            runId: "run_live_1",
+            adId: "ad_1",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          asOf,
+        });
+        return (
+          malformedRes.isAuthenticLiveProviderObservation === false &&
+          malformedRes.originEvidenceClassification ===
+            "MALFORMED_OR_CONTRADICTORY_PAYLOAD" &&
+          contradictRes.isAuthenticLiveProviderObservation === false &&
+          contradictRes.originEvidenceClassification ===
+            "MALFORMED_OR_CONTRADICTORY_PAYLOAD"
+        );
+      },
+    },
+
+    // ========================================================================
+    // P01..P06: Realistic Positive Contracts
+    // ========================================================================
+    {
+      testId: "P01",
+      category: "POSITIVE_CONTRACT",
+      description: "Real persisted ResearchEvidence / LandingPageSnapshot with valid schema.org @type=Product JSON-LD, matching domain/product/workspace, observedAt <= asOf, and valid SHA-256 hash produces VERIFIED",
+      expectedOutcome: "identityStatus=VERIFIED, proofMethod=JSON_LD_PRODUCT_SCHEMA, validationStatus=CONTENT_VALIDATED_WITH_SOURCE",
+      exec: () => {
+        const validJsonLd = buildValidProductJsonLdString();
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_p01",
+          researchProductId: "prod_p01",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_p01",
+              workspaceId: "ws_pet_1",
+              productId: "prod_p01",
+              observedValue: validJsonLd,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(validJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        const cls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_p01",
+            researchProductId: "prod_p01",
+            workspaceId: "ws_pet_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: extracted.validProofs,
+          },
+          asOf
+        );
+        return (
+          extracted.validProofs.length === 1 &&
+          extracted.validProofs[0].proofMethod === "JSON_LD_PRODUCT_SCHEMA" &&
+          extracted.validProofs[0].hasJsonLdProduct === true &&
+          extracted.validProofs[0].validationStatus === "CONTENT_VALIDATED_WITH_SOURCE" &&
+          cls.identityStatus === "VERIFIED" &&
+          cls.verificationEvidenceStatus === "INDEPENDENT_VERIFIED"
+        );
+      },
+    },
+    {
+      testId: "P02",
+      category: "POSITIVE_CONTRACT",
+      description: "Real persisted SHOPIFY_PRODUCT_JSON payload with provenance produces VERIFIED with proofMethod=SHOPIFY_PRODUCT_JSON and hasJsonLdProduct=false",
+      expectedOutcome: "identityStatus=VERIFIED, proofMethod=SHOPIFY_PRODUCT_JSON, hasJsonLdProduct=false",
+      exec: () => {
+        const shopifyPayload = JSON.stringify({
+          proofMethod: "SHOPIFY_PRODUCT_JSON",
+          product: {
+            id: 8369671045340,
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            handle: "kittyspout-wireless-fountain",
+            url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            currency: "USD",
+            variants: [
+              {
+                id: 44912345678,
+                title: "Default Title",
+                sku: "KS-FOUNTAIN-01",
+                price: "49.99",
+                available: true,
+              },
+            ],
+          },
+        });
+        const extracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_p02",
+          researchProductId: "prod_p02",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          candidateTitle: "KittySpout Stainless Steel Cat Water Fountain",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_p02_shopify",
+              workspaceId: "ws_pet_1",
+              productId: "prod_p02",
+              observedValue: shopifyPayload,
+              sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain.json",
+              observationMethod: "SHOPIFY_PRODUCT_JSON",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(shopifyPayload)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        const cls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_p02",
+            researchProductId: "prod_p02",
+            workspaceId: "ws_pet_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: extracted.validProofs,
+          },
+          asOf
+        );
+        return (
+          extracted.validProofs.length === 1 &&
+          extracted.validProofs[0].proofMethod === "SHOPIFY_PRODUCT_JSON" &&
+          extracted.validProofs[0].hasJsonLdProduct === false &&
+          extracted.validProofs[0].schemaVerified === true &&
+          cls.identityStatus === "VERIFIED"
+        );
+      },
+    },
+    {
+      testId: "P03",
+      category: "POSITIVE_CONTRACT",
+      description: "Real persisted AdObservation + DiscoveryRunAd with ingestOutcome=NEW, SCRAPED_POST, AUTOMATED_SCRAPE, rawPayload live execution envelope, providerRequestId, evidenceReference, same workspace/run/product, <= asOf is accepted as AUTHENTIC_LIVE_INGEST",
+      expectedOutcome: "isAuthenticLiveProviderObservation=true, originEvidenceClassification=AUTHENTIC_LIVE_INGEST, derivedProvenance=LIVE_PROVIDER",
+      exec: () => {
+        const res = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "obs_p03_live",
+            adId: "ad_101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T09:59:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=101",
+            rawPayload: buildValidLiveRawPayloadString(),
+          },
+          discoveryRunAd: {
+            id: "dra_p03",
+            runId: "run_live_1",
+            adId: "ad_101",
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            libraryId: "lib_ad_101",
+            ingestOutcome: "NEW",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=101",
+            observedAt: "2026-10-25T10:00:00.000Z",
+          },
+          expectedWorkspaceId: "ws_pet_1",
+          expectedRunId: "run_live_1",
+          expectedCandidateId: "cand_p03",
+          expectedAdIds: ["ad_101"],
+          expectedStoreDomain: "kittyspout.com",
+          asOf,
+        });
+        return (
+          res.isAuthenticLiveProviderObservation === true &&
+          res.originEvidenceClassification === "AUTHENTIC_LIVE_INGEST" &&
+          res.derivedProvenance === "LIVE_PROVIDER" &&
+          res.isCached === false &&
+          res.isLiveRecord === true
+        );
+      },
+    },
+    {
+      testId: "P04",
+      category: "POSITIVE_CONTRACT",
+      description: "Current stored DB snapshot (DiscoveryRunAd EXISTING + AdObservation rawPayload=null + zero workspace merchant schema rows) reconstructs to 0/3 live-verified under G16 (INSUFFICIENT_EVIDENCE)",
+      expectedOutcome: "verifiedLiveCount=0, g16Verdict=INSUFFICIENT_EVIDENCE",
+      exec: () => {
+        const obsCls = classifyPersistedLiveObservation({
+          adObservation: {
+            id: "89477c50-c32c-41a6-a6bc-d10164a35314",
+            adId: "b5c6fa6d-ff0b-4b4e-8339-99b6a8d2c6ef",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T10:00:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: "https://www.facebook.com/ads/library/?id=2719363741763869",
+            rawPayload: null,
+          },
+          discoveryRunAd: {
+            runId: "kh02_run_1793506187495_df6cc250",
+            adId: "b5c6fa6d-ff0b-4b4e-8339-99b6a8d2c6ef",
+            workspaceId: "default-workspace",
+            providerId: "META_AD_LIBRARY",
+            ingestOutcome: "EXISTING",
+            sourceUrl: "https://www.facebook.com/ads/library/?id=2719363741763869",
+            observedAt: "2026-10-31T03:00:00.000Z",
+          },
+          expectedWorkspaceId: "default-workspace",
+          expectedRunId: "kh02_run_1793506187495_df6cc250",
+          asOf: new Date("2026-10-31T04:00:00.000Z"),
+        });
+        const top3Res = evaluateG16Top3([], "kh02_run_1793506187495_df6cc250", {
+          requiredCount: 3,
+          requireDistinctFamilies: true,
+          evidenceIndex: { strictPersistedProofRequired: true },
+        });
+        return (
+          obsCls.isAuthenticLiveProviderObservation === false &&
+          obsCls.originEvidenceClassification === "REUSED_EXISTING_AD" &&
+          top3Res.verifiedLiveCount === 0 &&
+          top3Res.g16Verdict === "INSUFFICIENT_EVIDENCE"
+        );
+      },
+    },
+    {
+      testId: "P05",
+      category: "POSITIVE_CONTRACT",
+      description: "CheckoutChamp funnel without root schema stays PROBABLE, while a verified root merchant domain with real Product schema is VERIFIED",
+      expectedOutcome: "funnel=PROBABLE/FUNNEL_UNVERIFIED, rootDomainWithSchema=VERIFIED/INDEPENDENT_VERIFIED",
+      exec: () => {
+        const funnelCls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_p05_funnel",
+            workspaceId: "ws_pet_1",
+            title: "Uproot Cleaner Pro Pet Hair Remover",
+            storeDomain: "cc.uprootclean.com",
+            canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: [],
+          },
+          asOf
+        );
+        const rootJsonLd = buildValidProductJsonLdString({
+          name: "Uproot Cleaner Pro Pet Hair Remover",
+          sku: "UPROOT-PRO-01",
+          url: "https://uprootclean.com/products/uproot-cleaner-pro",
+        });
+        const rootExtracted = extractPersistedMerchantProofsFromDbRows({
+          workspaceId: "ws_pet_1",
+          candidateId: "cand_p05_root",
+          storeDomain: "uprootclean.com",
+          canonicalProductUrl: "https://uprootclean.com/products/uproot-cleaner-pro",
+          candidateTitle: "Uproot Cleaner Pro Pet Hair Remover",
+          asOf,
+          standaloneEvidence: [
+            {
+              id: "ev_p05_root",
+              workspaceId: "ws_pet_1",
+              observedValue: rootJsonLd,
+              sourceUrl: "https://uprootclean.com/products/uproot-cleaner-pro",
+              observationMethod: "AUTOMATED_SCRAPE",
+              classification: "VERIFIED",
+              sourceContentRef: `sha256:${computeSha256Hex(rootJsonLd)}`,
+              observedAt: "2026-10-25T10:00:00.000Z",
+            },
+          ],
+        });
+        const rootCls = classifyHistoricalProductIdentity(
+          {
+            candidateId: "cand_p05_root",
+            workspaceId: "ws_pet_1",
+            title: "Uproot Cleaner Pro Pet Hair Remover",
+            storeDomain: "uprootclean.com",
+            canonicalProductUrl: "https://uprootclean.com/products/uproot-cleaner-pro",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: rootExtracted.validProofs,
+          },
+          asOf
+        );
+        return (
+          funnelCls.identityStatus === "PROBABLE" &&
+          funnelCls.verificationEvidenceStatus === "FUNNEL_UNVERIFIED" &&
+          rootCls.identityStatus === "VERIFIED" &&
+          rootCls.verificationEvidenceStatus === "INDEPENDENT_VERIFIED"
+        );
+      },
+    },
+    {
+      testId: "P06",
+      category: "POSITIVE_CONTRACT",
+      description: "Three genuinely distinct Pet Gadgets products with persisted valid Product JSON-LD proofs and persisted origin-authentic live observations across three families PASS G16",
+      expectedOutcome: "verifiedLiveCount=3, distinctFamiliesCount=3, distinctCanonicalProductsCount=3, g16Verdict=PASS",
+      exec: () => {
+        const items = [
+          {
+            candId: "cand_p06_1",
+            prodId: "prod_p06_1",
+            adId: "ad_p06_1",
+            obsId: "obs_p06_1",
+            evId: "ev_p06_1",
+            title: "KittySpout Stainless Steel Cat Water Fountain",
+            domain: "kittyspout.com",
+            url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            sku: "KS-FOUNTAIN-01",
+            familyKey: "pet_water_fountain",
+          },
+          {
+            candId: "cand_p06_2",
+            prodId: "prod_p06_2",
+            adId: "ad_p06_2",
+            obsId: "obs_p06_2",
+            evId: "ev_p06_2",
+            title: "PetLibro Granary Automatic Pet Feeder",
+            domain: "petlibro.com",
+            url: "https://petlibro.com/products/granary-automatic-pet-feeder",
+            sku: "PL-FEEDER-02",
+            familyKey: "automatic_pet_feeder",
+          },
+          {
+            candId: "cand_p06_3",
+            prodId: "prod_p06_3",
+            adId: "ad_p06_3",
+            obsId: "obs_p06_3",
+            evId: "ev_p06_3",
+            title: "Uproot Cleaner Pro Pet Hair Remover",
+            domain: "uprootclean.com",
+            url: "https://uprootclean.com/products/uproot-cleaner-pro",
+            sku: "UP-HAIR-03",
+            familyKey: "pet_hair_remover_roller",
+          },
+        ];
+
+        const merchantEvidenceIndex: G16MerchantEvidenceIndex = {};
+        const candidateObservationMap: Record<string, string[]> = {};
+        const allowedObservationIds = new Set<string>();
+
+        const candidates = items.map((it) => {
+          const jsonLd = buildValidProductJsonLdString({
+            name: it.title,
+            sku: it.sku,
+            url: it.url,
+          });
+          const extracted = extractPersistedMerchantProofsFromDbRows({
+            workspaceId: "ws_pet_1",
+            candidateId: it.candId,
+            researchProductId: it.prodId,
+            storeDomain: it.domain,
+            canonicalProductUrl: it.url,
+            candidateTitle: it.title,
+            expectedSku: it.sku,
+            asOf,
+            standaloneEvidence: [
+              {
+                id: it.evId,
+                workspaceId: "ws_pet_1",
+                productId: it.prodId,
+                observedValue: jsonLd,
+                sourceUrl: it.url,
+                observationMethod: "AUTOMATED_SCRAPE",
+                classification: "VERIFIED",
+                sourceContentRef: `sha256:${computeSha256Hex(jsonLd)}`,
+                observedAt: "2026-10-25T10:00:00.000Z",
+              },
+            ],
+          });
+
+          const adObs: PersistedAdObservationRow = {
+            id: it.obsId,
+            adId: it.adId,
+            observedAt: "2026-10-25T10:00:00.000Z",
+            sourceTimestamp: "2026-10-25T09:58:00.000Z",
+            evidenceType: "SCRAPED_POST",
+            verificationMethod: "AUTOMATED_SCRAPE",
+            evidenceReference: `https://www.facebook.com/ads/library/?id=${it.adId}`,
+            rawPayload: buildValidLiveRawPayloadString({
+              providerRequestId: `mcp_req_${it.obsId}`,
+              externalAdId: `ext_${it.adId}`,
+              storeDomain: it.domain,
+              landingPageUrl: it.url,
+            }),
+          };
+          const runAd: PersistedDiscoveryRunAdRow = {
+            runId: "run_live_1",
+            adId: it.adId,
+            workspaceId: "ws_pet_1",
+            providerId: "META_AD_LIBRARY",
+            libraryId: `ext_${it.adId}`,
+            ingestOutcome: "NEW",
+            sourceUrl: `https://www.facebook.com/ads/library/?id=${it.adId}`,
+            observedAt: "2026-10-25T10:00:00.000Z",
+          };
+          const obsCls = classifyPersistedLiveObservation({
+            adObservation: adObs,
+            discoveryRunAd: runAd,
+            expectedWorkspaceId: "ws_pet_1",
+            expectedRunId: "run_live_1",
+            expectedCandidateId: it.candId,
+            expectedAdIds: [it.adId],
+            expectedStoreDomain: it.domain,
+            asOf,
+          });
+
+          merchantEvidenceIndex[it.candId] = {
+            verified: extracted.validProofs.length > 0,
+            proofRefs: [`ResearchEvidence:${it.evId}`],
+            schemaVerified: true,
+            hasJsonLdProduct: true,
+            proofMethod: "JSON_LD_PRODUCT_SCHEMA",
+            validationStatus: "CONTENT_VALIDATED_WITH_SOURCE",
+            fetchOutcome: "FETCH_SUCCEEDED",
+            merchantVerifiedProductName: it.title,
+            persistedProofs: extracted.validProofs,
+          };
+          candidateObservationMap[it.candId] = [it.obsId];
+          allowedObservationIds.add(it.obsId);
+
+          return {
+            candidateId: it.candId,
+            researchProductId: it.prodId,
+            workspaceId: "ws_pet_1",
+            title: it.title,
+            storeDomain: it.domain,
+            canonicalProductUrl: it.url,
+            sku: it.sku,
+            familyKey: it.familyKey,
+            identityStatus: "VERIFIED",
+            fetchOutcome: "FETCH_SUCCEEDED",
+            resolutionSource: "JSON_LD_PRODUCT_SCHEMA",
+            merchantVerifiedProductName: it.title,
+            supportingAdIds: [it.adId],
+            sourceObservations: [
+              {
+                observationId: it.obsId,
+                sourceObservationId: it.obsId,
+                sourceRecordId: it.adId,
+                researchRunId: "run_live_1",
+                workspaceId: "ws_pet_1",
+                providerRequestId: obsCls.providerRequestId,
+                evidenceReference: obsCls.evidenceReference,
+                storeDomainEvidence: it.domain,
+                landingPageUrl: it.url,
+                provenance: obsCls.derivedProvenance,
+                sourceMode: obsCls.derivedSourceMode,
+                sourceType: obsCls.derivedSourceMode,
+                isCached: obsCls.isCached,
+                isLiveRecord: obsCls.isLiveRecord,
+                persistedLiveOriginVerified: obsCls.isAuthenticLiveProviderObservation,
+                originEvidenceClassification: obsCls.originEvidenceClassification,
+                persistedAdObservation: adObs,
+                persistedDiscoveryRunAd: runAd,
+              },
+            ],
+          };
+        });
+
+        const top3Res = evaluateG16Top3(candidates, "run_live_1", {
+          requiredCount: 3,
+          requireDistinctFamilies: true,
+          evidenceIndex: {
+            strictPersistedProofRequired: true,
+            workspaceId: "ws_pet_1",
+            asOf,
+            lineageIndex: {
+              parentRunId: "run_live_1",
+              allowedObservationIds,
+            },
+            identityIndex: {
+              candidateObservationMap,
+            },
+            merchantEvidenceIndex,
+          },
+        });
+
+        return (
+          top3Res.verifiedLiveCount === 3 &&
+          top3Res.distinctFamiliesCount === 3 &&
+          top3Res.distinctCanonicalProductsCount === 3 &&
+          top3Res.g16Verdict === "PASS"
+        );
+      },
+    },
+  ];
+}
+
+export function runG16SchemaAndOriginMatrixTests(): {
+  totalTests: number;
+  totalPassed: number;
+  passed: boolean;
+  merchantSchemaNegativeCount: number;
+  merchantSchemaNegativePassed: number;
+  liveOriginNegativeCount: number;
+  liveOriginNegativePassed: number;
+  positiveContractCount: number;
+  positiveContractPassed: number;
+  receipts: SchemaAndOriginMatrixTestReceipt[];
+} {
+  const defs = buildSchemaAndOriginMatrixCaseDefinitions();
+  const receipts: SchemaAndOriginMatrixTestReceipt[] = defs.map((d) => {
+    let passed = false;
+    try {
+      passed = d.exec();
+    } catch {
+      passed = false;
+    }
+    return {
+      testId: d.testId,
+      category: d.category,
+      description: d.description,
+      passed,
+      expectedOutcome: d.expectedOutcome,
+      observedOutcome: passed ? d.expectedOutcome : "FAILED_ASSERTION",
+    };
+  });
+
+  const mCases = receipts.filter((r) => r.category === "MERCHANT_SCHEMA_NEGATIVE");
+  const lCases = receipts.filter((r) => r.category === "LIVE_ORIGIN_NEGATIVE");
+  const pCases = receipts.filter((r) => r.category === "POSITIVE_CONTRACT");
+  const totalPassed = receipts.filter((r) => r.passed).length;
+
+  return {
+    totalTests: receipts.length,
+    totalPassed,
+    passed: totalPassed === receipts.length,
+    merchantSchemaNegativeCount: mCases.length,
+    merchantSchemaNegativePassed: mCases.filter((r) => r.passed).length,
+    liveOriginNegativeCount: lCases.length,
+    liveOriginNegativePassed: lCases.filter((r) => r.passed).length,
+    positiveContractCount: pCases.length,
+    positiveContractPassed: pCases.filter((r) => r.passed).length,
+    receipts,
   };
 }

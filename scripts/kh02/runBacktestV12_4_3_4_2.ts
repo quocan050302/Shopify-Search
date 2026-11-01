@@ -40,6 +40,8 @@ import {
 } from "@/services/kh02/marketplace/walmartEvidencePersistence";
 import {
   classifyHistoricalProductIdentity,
+  extractPersistedMerchantProofsFromDbRows,
+  computeSha256Hex,
   isFunnelOrCheckoutChamp,
   type PersistedMerchantProofRecord,
   type HistoricalProductIdentityClassification,
@@ -48,6 +50,7 @@ import {
 
 export {
   classifyHistoricalProductIdentity,
+  extractPersistedMerchantProofsFromDbRows,
   isFunnelOrCheckoutChamp,
   type PersistedMerchantProofRecord,
   type HistoricalProductIdentityClassification,
@@ -442,7 +445,7 @@ export function resolvePointInTimeAdCandidateMetadata(
     };
   }
 
-  let prodDomain = p.storeDomain || null;
+  let prodDomain = p.store?.domain || null;
   if (!prodDomain && p.productUrl) {
     try {
       prodDomain = new URL(p.productUrl).hostname.toLowerCase().replace(/^www\./, "");
@@ -455,7 +458,7 @@ export function resolvePointInTimeAdCandidateMetadata(
     {
       candidateId: String(p.id),
       researchProductId: String(p.id),
-      workspaceId: p.workspaceId || ad?.workspaceId || null,
+      workspaceId: p.store?.workspaceId || ad?.workspaceId || null,
       title: String(p.title || adTitle),
       storeDomain: prodDomain || adDomain,
       canonicalProductUrl: p.productUrl || adTargetUrl,
@@ -2100,26 +2103,86 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         },
         cutoff
       );
-      const validPitProofRes = classifyHistoricalProductIdentity(
+      const rawJsonLdPayload = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: "The #1 Vet-Recommended Cat Fountain",
+        sku: "KS-FOUNTAIN-01",
+        productID: "8369671045340",
+        url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        offers: {
+          "@type": "Offer",
+          price: "49.99",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+        },
+      });
+      const rawJsonLdSha256 = `sha256:${computeSha256Hex(rawJsonLdPayload)}`;
+
+      // Bare boolean claim without raw source payload + SHA-256 is rejected (`M07` / `M16`)
+      const bareFlagsProofRes = classifyHistoricalProductIdentity(
         {
-          candidateId: "cand_valid_pit_proof",
+          candidateId: "cand_bare_flags_only",
           researchProductId: "prod_kittyspout",
+          workspaceId: "ws_pit_test",
           title: "The #1 Vet-Recommended Cat Fountain",
           storeDomain: "kittyspout.com",
           canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
           observedAt: "2026-10-25T10:00:00.000Z",
           persistedMerchantProofs: [
             {
-              id: "ev_pit_jsonld_1",
+              id: "ev_bare_flags",
               sourceTable: "ResearchEvidence",
+              workspaceId: "ws_pit_test",
               storeDomain: "kittyspout.com",
               canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
-              observedAt: "2026-10-26T08:00:00.000Z", // <= cutoff
+              observedAt: "2026-10-26T08:00:00.000Z",
               schemaVerified: true,
               hasJsonLdProduct: true,
               merchantProductId: "8369671045340",
             },
           ],
+        },
+        cutoff
+      );
+
+      const extractedValidProofs = extractPersistedMerchantProofsFromDbRows({
+        workspaceId: "ws_pit_test",
+        candidateId: "cand_valid_pit_proof",
+        researchProductId: "prod_kittyspout",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        candidateTitle: "The #1 Vet-Recommended Cat Fountain",
+        asOf: cutoff,
+        standaloneEvidence: [
+          {
+            id: "ev_pit_jsonld_1",
+            workspaceId: "ws_pit_test",
+            productId: "prod_kittyspout",
+            subjectType: "PRODUCT",
+            subjectId: "prod_kittyspout",
+            pillar: "MERCHANT_IDENTITY",
+            claim: "JSON_LD_PRODUCT_SCHEMA",
+            observedValue: rawJsonLdPayload,
+            sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observationMethod: "AUTOMATED_SCRAPE",
+            classification: "VERIFIED",
+            sourceContentRef: rawJsonLdSha256,
+            observedAt: "2026-10-26T08:00:00.000Z",
+          },
+        ],
+      });
+
+      const validPitProofRes = classifyHistoricalProductIdentity(
+        {
+          candidateId: "cand_valid_pit_proof",
+          researchProductId: "prod_kittyspout",
+          workspaceId: "ws_pit_test",
+          title: "The #1 Vet-Recommended Cat Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          observedAt: "2026-10-25T10:00:00.000Z",
+          persistedMerchantProofs: extractedValidProofs.validProofs,
         },
         cutoff
       );
@@ -2133,6 +2196,8 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         funnelRes.isCheckoutChampFunnel === true &&
         postCutoffProofRes.identityStatus === "PROBABLE" &&
         postCutoffProofRes.verificationEvidenceStatus === "POST_CUTOFF" &&
+        bareFlagsProofRes.identityStatus === "PROBABLE" &&
+        bareFlagsProofRes.independentMerchantProofRefs.length === 0 &&
         validPitProofRes.identityStatus === "VERIFIED" &&
         validPitProofRes.verificationEvidenceStatus === "INDEPENDENT_VERIFIED" &&
         validPitProofRes.independentMerchantProofRefs.length > 0;
@@ -2141,44 +2206,75 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         caseId: "v124351_dev_09_historical_identity_rejects_url_path_only_and_funnel",
         split: "DEV",
         category: "HISTORICAL_IDENTITY_PROVENANCE_POLICY",
-        description: "Historical identity classifier never promotes /products/ URL path or CheckoutChamp funnel without point-in-time <= asOf root merchant schema proof",
+        description: "Historical identity classifier never promotes /products/ URL path, bare boolean flags, or CheckoutChamp funnel without point-in-time <= asOf raw Product JSON-LD + SHA-256 proof",
         executed: true,
         passed,
-        assertion: "urlOnly=PROBABLE/DISCOVERY_ONLY && funnel=PROBABLE/FUNNEL_UNVERIFIED && postCutoff=PROBABLE/POST_CUTOFF && validPit=VERIFIED/INDEPENDENT_VERIFIED",
+        assertion: "urlOnly=PROBABLE/DISCOVERY_ONLY && funnel=PROBABLE/FUNNEL_UNVERIFIED && postCutoff=PROBABLE/POST_CUTOFF && bareFlags=PROBABLE && validPit=VERIFIED/INDEPENDENT_VERIFIED",
         observed: {
           urlOnly: { status: urlOnlyRes.identityStatus, evidence: urlOnlyRes.verificationEvidenceStatus },
           funnel: { status: funnelRes.identityStatus, evidence: funnelRes.verificationEvidenceStatus, funnel: funnelRes.isCheckoutChampFunnel },
           postCutoff: { status: postCutoffProofRes.identityStatus, evidence: postCutoffProofRes.verificationEvidenceStatus },
+          bareFlags: { status: bareFlagsProofRes.identityStatus, reasons: bareFlagsProofRes.reasonCodes },
           validPit: { status: validPitProofRes.identityStatus, evidence: validPitProofRes.verificationEvidenceStatus, refs: validPitProofRes.independentMerchantProofRefs },
         },
-        detail: `urlOnly=${urlOnlyRes.identityStatus}/${urlOnlyRes.verificationEvidenceStatus}; funnel=${funnelRes.identityStatus}/${funnelRes.verificationEvidenceStatus}; postCutoff=${postCutoffProofRes.verificationEvidenceStatus}; validPit=${validPitProofRes.identityStatus}`,
+        detail: `urlOnly=${urlOnlyRes.identityStatus}/${urlOnlyRes.verificationEvidenceStatus}; funnel=${funnelRes.identityStatus}/${funnelRes.verificationEvidenceStatus}; bareFlags=${bareFlagsProofRes.identityStatus}; validPit=${validPitProofRes.identityStatus}`,
       });
     }
 
     // HOLDOUT 19 (V12.4.3.5.1 P0-01/P0-03/P1-04): Replay separates niche-matching discovery candidates from verified merchant identities
     {
       const cutoff = new Date("2026-10-30T12:00:00.000Z");
+      const rawJsonLd = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: "The #1 Vet-Recommended Cat Fountain",
+        sku: "KS-FOUNTAIN-01",
+        productID: "8369671045340",
+        url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        offers: {
+          "@type": "Offer",
+          price: "49.99",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+        },
+      });
+      const extractedHoldoutProofs = extractPersistedMerchantProofsFromDbRows({
+        workspaceId: "ws_holdout_test",
+        candidateId: "cand_verified_fountain",
+        researchProductId: "prod_fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        candidateTitle: "The #1 Vet-Recommended Cat Fountain",
+        asOf: cutoff,
+        standaloneEvidence: [
+          {
+            id: "ev_valid_1",
+            workspaceId: "ws_holdout_test",
+            productId: "prod_fountain",
+            subjectType: "PRODUCT",
+            subjectId: "prod_fountain",
+            pillar: "MERCHANT_IDENTITY",
+            claim: "JSON_LD_PRODUCT_SCHEMA",
+            observedValue: rawJsonLd,
+            sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observationMethod: "AUTOMATED_SCRAPE",
+            classification: "VERIFIED",
+            sourceContentRef: `sha256:${computeSha256Hex(rawJsonLd)}`,
+            observedAt: "2026-10-26T00:00:00.000Z",
+          },
+        ],
+      });
       const replayIdentitySep = replayCandidateListForNiche(
         [
           {
             candidateId: "cand_verified_fountain",
             researchProductId: "prod_fountain",
+            workspaceId: "ws_holdout_test",
             title: "The #1 Vet-Recommended Cat Fountain",
             storeDomain: "kittyspout.com",
             canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
             observedAt: "2026-10-25T10:00:00.000Z",
-            persistedMerchantProofs: [
-              {
-                id: "ev_valid_1",
-                sourceTable: "ResearchEvidence",
-                storeDomain: "kittyspout.com",
-                canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
-                observedAt: "2026-10-26T00:00:00.000Z",
-                schemaVerified: true,
-                hasJsonLdProduct: true,
-                merchantProductId: "8369671045340",
-              },
-            ],
+            persistedMerchantProofs: extractedHoldoutProofs.validProofs,
           },
           {
             candidateId: "cand_url_only_feeder",
@@ -2283,6 +2379,7 @@ export async function runRealHistoricalProductReplay(
         include: {
           product: {
             include: {
+              store: true,
               evidence: true,
               landingPageSnapshots: true,
               offerSnapshots: true,
@@ -2306,6 +2403,7 @@ export async function runRealHistoricalProductReplay(
         include: {
           product: {
             include: {
+              store: true,
               evidence: true,
               landingPageSnapshots: true,
               offerSnapshots: true,
@@ -2319,76 +2417,29 @@ export async function runRealHistoricalProductReplay(
   // Verify zero future data leakage in HOLDOUT
   const holdoutFutureLeakage = holdoutAds.filter((a) => a.firstSeenAt > HOLDOUT_CUTOFF);
 
-  const extractProductMerchantProofs = (prod: any): PersistedMerchantProofRecord[] => {
+  const extractProductMerchantProofs = (
+    prod: any,
+    adWorkspaceId: string | null,
+    asOfCutoff: Date
+  ): PersistedMerchantProofRecord[] => {
     if (!prod || typeof prod !== "object") return [];
-    const proofs: PersistedMerchantProofRecord[] = [];
-    for (const ev of prod.evidence || []) {
-      let parsed: any = {};
-      try {
-        parsed = JSON.parse(ev.observedValue || "{}");
-      } catch {}
-      const isSchemaVerified =
-        parsed.schemaVerified === true ||
-        parsed.hasJsonLdProduct === true ||
-        ev.evidenceType === "JSON_LD_PRODUCT_SCHEMA" ||
-        ev.evidenceType === "MERCHANT_PRODUCT_SCHEMA";
-      proofs.push({
-        id: String(ev.id),
-        sourceTable: "ResearchEvidence",
-        workspaceId: prod.workspaceId || null,
-        researchProductId: String(prod.id),
-        storeDomain: parsed.storeDomain || prod.storeDomain || null,
-        canonicalUrl: parsed.canonicalUrl || ev.sourceUrl || prod.productUrl || null,
-        observedAt: ev.observedAt || parsed.observedAt || null,
-        schemaVerified: isSchemaVerified,
-        hasJsonLdProduct: isSchemaVerified,
-        fetchOutcome: parsed.fetchOutcome || null,
-        merchantProductId: parsed.merchantProductId || null,
-        sku: parsed.sku || null,
-        gtin: parsed.gtin || null,
-        verifiedProductTitle: parsed.verifiedProductTitle || parsed.title || null,
-        evidenceOrigin: parsed.evidenceOrigin || parsed.observationClass || null,
-      });
-    }
-    for (const lp of prod.landingPageSnapshots || []) {
-      const hasSchema = Boolean(
-        lp.productTitle &&
-          lp.canonicalUrl &&
-          lp.contentHash &&
-          !/uahpet_lp_hash_v12_4_3_3|synthetic|fixture/i.test(String(lp.contentHash))
-      );
-      proofs.push({
-        id: String(lp.id),
-        sourceTable: "LandingPageSnapshot",
-        workspaceId: lp.workspaceId || prod.workspaceId || null,
-        researchProductId: String(prod.id),
-        storeDomain: prod.storeDomain || null,
-        canonicalUrl: lp.canonicalUrl || lp.url || prod.productUrl || null,
-        observedAt: lp.capturedAt || null,
-        schemaVerified: hasSchema,
-        hasJsonLdProduct: hasSchema,
-        fetchOutcome: hasSchema ? "FETCH_SUCCEEDED" : null,
-        verifiedProductTitle: lp.productTitle || null,
-        contentHash: lp.contentHash || null,
-      });
-    }
-    for (const os of prod.offerSnapshots || []) {
-      const hasOfferProof = Boolean(os.offerUrl && (os.priceText || os.priceAmount));
-      proofs.push({
-        id: String(os.id),
-        sourceTable: "CompetitorOfferSnapshot",
-        workspaceId: prod.workspaceId || null,
-        researchProductId: String(prod.id),
-        storeDomain: prod.storeDomain || null,
-        canonicalUrl: os.offerUrl || prod.productUrl || null,
-        observedAt: os.capturedAt || null,
-        schemaVerified: false,
-        hasJsonLdProduct: false,
-        fetchOutcome: hasOfferProof ? "ACTUAL_PRODUCT_PAGE" : null,
-        verifiedProductTitle: prod.title || null,
-      });
-    }
-    return proofs;
+    const effectiveWorkspaceId =
+      prod.store?.workspaceId ||
+      prod.evidence?.[0]?.workspaceId ||
+      prod.landingPageSnapshots?.[0]?.workspaceId ||
+      adWorkspaceId ||
+      "default-workspace";
+    const extracted = extractPersistedMerchantProofsFromDbRows({
+      workspaceId: String(effectiveWorkspaceId),
+      candidateId: `prod_${prod.id}`,
+      researchProductId: String(prod.id),
+      storeDomain: prod.store?.domain || null,
+      canonicalProductUrl: prod.productUrl || null,
+      candidateTitle: prod.title || null,
+      asOf: asOfCutoff,
+      researchProducts: [prod],
+    });
+    return extracted.validProofs;
   };
 
   // Helper to reconstruct candidate list and run point-in-time niche evaluation + ranking without future leakage
@@ -2451,7 +2502,11 @@ export async function runRealHistoricalProductReplay(
         }
         joinedMetadataLeakageAudit.joinedLinksEvaluatedCount++;
 
-        const productProofs = extractProductMerchantProofs(link.product);
+        const productProofs = extractProductMerchantProofs(
+          link.product,
+          (ad as any).workspaceId || null,
+          asOf
+        );
         const pitMeta = resolvePointInTimeAdCandidateMetadata(ad, link, asOf, productProofs);
         if (!pitMeta.trustedPointInTimeMetadata) {
           if (pitMeta.metadataProvenance === "REJECTED_POST_CUTOFF_JOINED_METADATA") {
@@ -2476,7 +2531,7 @@ export async function runRealHistoricalProductReplay(
           rawCandidateInputsMap.set(pitMeta.candidateId, {
             candidateId: pitMeta.candidateId,
             researchProductId: pitMeta.researchProductId,
-            workspaceId: link.product.workspaceId || (ad as any).workspaceId || null,
+            workspaceId: link.product.store?.workspaceId || (ad as any).workspaceId || null,
             title: pitMeta.title,
             bodyText: adBodyText,
             storeDomain: pitMeta.storeDomain,

@@ -33,10 +33,14 @@ import {
 } from "./g16CandidateEvaluator";
 import {
   classifyHistoricalProductIdentity,
+  extractPersistedMerchantProofsFromDbRows,
+  classifyPersistedLiveObservation,
   isFunnelOrCheckoutChamp,
   isFabricatedHydrationObservation,
   isSyntheticMerchantProofRef,
   type PersistedMerchantProofRecord,
+  type PersistedMerchantProofAuditEntry,
+  type PersistedLiveObservationClassification,
   type VerificationEvidenceStatus,
 } from "../../src/services/kh02/identity/merchantIdentityPolicy";
 
@@ -236,9 +240,14 @@ export interface PersistedCandidateG16ProofAudit {
   persistedAdObservationIds: string[];
   persistedLiveSameRunObservationIds: string[];
   persistedLiveSameRunObservations: any[];
+  persistedObservationClassifications: PersistedLiveObservationClassification[];
   persistedResearchEvidenceIds: string[];
   persistedLandingPageSnapshotIds: string[];
   persistedOfferSnapshotIds: string[];
+  persistedMerchantProofAudits: PersistedMerchantProofAuditEntry[];
+  validPersistedMerchantProofs: PersistedMerchantProofRecord[];
+  persistedProductSchemaProofStatus: "VERIFIED" | "INSUFFICIENT_EVIDENCE";
+  persistedLiveOriginProofStatus: "VERIFIED" | "INSUFFICIENT_EVIDENCE";
   rejectedCrossWorkspaceProofIds: string[];
   rejectedSyntheticOrFallbackReasons: string[];
   persistedMerchantVerified: boolean;
@@ -436,10 +445,19 @@ export function evaluatePetGadgetsNicheFit(title: string, storeDomain?: string |
 }
 
 /**
- * Loads and validates immutable persisted database evidence for a single G16 shortlist candidate (`P0-02`).
- * Never synthesizes `obs_<runId>_<candidateId>`, `req_<runId>`, or `jsonld:<storeDomain>`.
- * Enforces workspace isolation (`workspaceId`), same-run fresh live ingestion (`DiscoveryRunAd.ingestOutcome`
- * in `["NEW", "UPDATED"]`, non-fallback origin), and point-in-time cutoff (`<= asOf` when provided).
+ * Loads and validates immutable persisted database evidence for a single G16 shortlist candidate
+ * (`P0-A`, `P0-B`, `P0-C`).
+ *
+ * Non-negotiable guarantees:
+ * - Never synthesizes `obs_<runId>_<candidateId>`, `req_<runId>`, or `jsonld:<storeDomain>`.
+ * - Never rebrands a persisted `AdObservation` as `provenance: "LIVE_PROVIDER"` unless
+ *   `classifyPersistedLiveObservation(...)` proves `ingestOutcome === "NEW"` AND a valid
+ *   immutable `rawPayload` live provider execution envelope + `evidenceReference` + `providerRequestId`
+ *   in the same workspace, run, candidate/ad, and `<= asOf`.
+ * - Never infers `schemaVerified=true` or `hasJsonLdProduct=true` from `LandingPageSnapshot` hash/title/URL
+ *   or imaginary Prisma columns (`ev.evidenceType`, `lp.productTitle`, `lp.canonicalUrl`, `lp.capturedAt`,
+ *   `os.offerUrl`, `os.priceText`, `os.priceAmount`, `os.capturedAt`, `prod.workspaceId`, `prod.storeDomain`).
+ * - Delegates all merchant proof extraction to `extractPersistedMerchantProofsFromDbRows(...)`.
  */
 export async function loadPersistedG16ProofForCandidate(
   prismaClient: any,
@@ -481,8 +499,8 @@ export async function loadPersistedG16ProofForCandidate(
     .map((o: any) => String(o?.sourceObservationId || o?.observationId || o?.id || ""))
     .filter(Boolean);
 
-  // 1. Query persisted DiscoveryRunAd rows for this exact run
-  const dbRunAds =
+  // 1. Query persisted DiscoveryRunAd rows for this run (and fallback lookup by adId to detect cross-run/workspace)
+  let dbRunAds =
     supportingAdIds.length > 0 && prismaClient?.discoveryRunAd?.findMany
       ? await prismaClient.discoveryRunAd.findMany({
           where: {
@@ -492,15 +510,34 @@ export async function loadPersistedG16ProofForCandidate(
         })
       : [];
 
-  const persistedRunAdIds: string[] = dbRunAds.map((r: any) => String(r.adId));
+  if (
+    dbRunAds.length === 0 &&
+    supportingAdIds.length > 0 &&
+    prismaClient?.discoveryRunAd?.findMany
+  ) {
+    dbRunAds = await prismaClient.discoveryRunAd.findMany({
+      where: {
+        adId: { in: supportingAdIds },
+      },
+      orderBy: { observedAt: "desc" },
+      take: 25,
+    });
+  }
+
+  const persistedRunAdIds: string[] = Array.from(
+    new Set(dbRunAds.map((r: any) => String(r.adId)))
+  );
   const persistedRunAdIngestOutcomes: string[] = dbRunAds.map((r: any) =>
     String(r.ingestOutcome || "UNKNOWN")
   );
-  const freshRunAdIds = new Set<string>(
-    dbRunAds
-      .filter((r: any) => r.ingestOutcome === "NEW" || r.ingestOutcome === "UPDATED")
-      .map((r: any) => String(r.adId))
-  );
+  const dbRunAdsByAdId = new Map<string, any[]>();
+  for (const r of dbRunAds) {
+    const key = String(r.adId || "");
+    if (!key) continue;
+    const list = dbRunAdsByAdId.get(key) || [];
+    list.push(r);
+    dbRunAdsByAdId.set(key, list);
+  }
 
   // 2. Query persisted AdObservation rows
   const obsWhereOr: any[] = [];
@@ -518,20 +555,42 @@ export async function loadPersistedG16ProofForCandidate(
   const dbAdObsById = new Map<string, any>(dbAdObs.map((o: any) => [String(o.id), o]));
 
   const rejectedSyntheticOrFallbackReasons: string[] = [];
+  const rejectedCrossWorkspaceProofIds: string[] = [];
   const persistedLiveSameRunObservations: any[] = [];
   const persistedLiveSameRunObservationIds: string[] = [];
+  const persistedObservationClassifications: PersistedLiveObservationClassification[] = [];
 
   if (
     dbRunAds.length > 0 &&
     dbRunAds.every((r: any) => r.ingestOutcome === "EXISTING")
   ) {
     rejectedSyntheticOrFallbackReasons.push(
-      `All ${dbRunAds.length} DiscoveryRunAd rows in run '${researchRunId}' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).`
+      `All ${dbRunAds.length} DiscoveryRunAd rows for candidate '${candId}' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).`
     );
   }
 
+  // Evaluate both snapshot observations and any persisted dbAdObs not listed in rawSnapshotObs
+  const evaluatedObsIds = new Set<string>();
+  const obsCandidatesToInspect: Array<{ snapObs: any; dbObs: any | null }> = [];
+
   for (const snapObs of rawSnapshotObs) {
-    if (isFabricatedHydrationObservation(snapObs, researchRunId)) {
+    const snapObsId = String(
+      snapObs?.sourceObservationId || snapObs?.observationId || snapObs?.id || ""
+    );
+    const dbObs = snapObsId ? dbAdObsById.get(snapObsId) || null : null;
+    if (snapObsId) evaluatedObsIds.add(snapObsId);
+    obsCandidatesToInspect.push({ snapObs, dbObs });
+  }
+  for (const dbObs of dbAdObs) {
+    const idStr = String(dbObs.id || "");
+    if (idStr && !evaluatedObsIds.has(idStr)) {
+      evaluatedObsIds.add(idStr);
+      obsCandidatesToInspect.push({ snapObs: null, dbObs });
+    }
+  }
+
+  for (const { snapObs, dbObs } of obsCandidatesToInspect) {
+    if (snapObs && isFabricatedHydrationObservation(snapObs, researchRunId)) {
       rejectedSyntheticOrFallbackReasons.push(
         `Rejected fabricated hydration observation ID '${snapObs?.observationId || snapObs?.sourceObservationId}'.`
       );
@@ -547,51 +606,94 @@ export async function loadPersistedG16ProofForCandidate(
       continue;
     }
 
-    const snapObsId = String(
-      snapObs?.sourceObservationId || snapObs?.observationId || snapObs?.id || ""
-    );
-    const dbObs = snapObsId ? dbAdObsById.get(snapObsId) : null;
     if (!dbObs) {
+      const snapObsId = String(
+        snapObs?.sourceObservationId || snapObs?.observationId || snapObs?.id || "missing_id"
+      );
       rejectedSyntheticOrFallbackReasons.push(
-        `Observation '${snapObsId || "missing_id"}' not found in persisted AdObservation table.`
+        `Observation '${snapObsId}' not found in persisted AdObservation table.`
       );
       continue;
     }
 
-    const dbObsDate = dbObs.observedAt ? new Date(dbObs.observedAt) : null;
-    if (
-      asOf &&
-      dbObsDate &&
-      !Number.isNaN(dbObsDate.getTime()) &&
-      dbObsDate.getTime() > asOfDate.getTime()
-    ) {
+    const adIdStr = String(
+      dbObs.adId || snapObs?.persistedAdId || snapObs?.sourceRecordId || ""
+    );
+    const matchingRunAds = dbRunAdsByAdId.get(adIdStr) || [];
+    // Prefer the DiscoveryRunAd matching `researchRunId` if present, otherwise inspect the first available row
+    const runAdRow =
+      matchingRunAds.find((r: any) => String(r.runId) === researchRunId) ||
+      matchingRunAds[0] ||
+      null;
+
+    if (!runAdRow) {
       rejectedSyntheticOrFallbackReasons.push(
-        `Persisted AdObservation '${dbObs.id}' timestamp ${dbObsDate.toISOString()} exceeds asOf cutoff.`
+        `AdObservation '${dbObs.id}' (adId='${adIdStr}') has no linked DiscoveryRunAd row in run '${researchRunId}'.`
       );
       continue;
     }
 
-    const adIdStr = String(dbObs.adId || snapObs?.persistedAdId || snapObs?.sourceRecordId || "");
-    if (!freshRunAdIds.has(adIdStr)) {
+    const obsClassification = classifyPersistedLiveObservation({
+      adObservation: dbObs,
+      discoveryRunAd: runAdRow,
+      expectedWorkspaceId: workspaceId,
+      expectedRunId: researchRunId,
+      expectedCandidateId: candId,
+      expectedAdIds: supportingAdIds,
+      expectedStoreDomain: storeDomain,
+      asOf: asOfDate,
+    });
+    persistedObservationClassifications.push(obsClassification);
+
+    if (obsClassification.originEvidenceClassification === "CROSS_WORKSPACE_OR_RUN") {
+      if (runAdRow.workspaceId && String(runAdRow.workspaceId) !== workspaceId) {
+        rejectedCrossWorkspaceProofIds.push(
+          `DiscoveryRunAd:${runAdRow.id || runAdRow.adId}(workspaceId=${runAdRow.workspaceId})`
+        );
+      }
+    }
+
+    if (!obsClassification.isAuthenticLiveProviderObservation) {
+      for (const reason of obsClassification.rejectionReasons) {
+        rejectedSyntheticOrFallbackReasons.push(
+          `AdObservation '${dbObs.id}': ${reason}`
+        );
+      }
       continue;
     }
 
+    // Authentic live observation proven by immutable DB fields (`P03`)
     persistedLiveSameRunObservationIds.push(String(dbObs.id));
     persistedLiveSameRunObservations.push({
-      ...snapObs,
+      ...(snapObs || {}),
       observationId: String(dbObs.id),
       sourceObservationId: String(dbObs.id),
       sourceRecordId: adIdStr,
-      researchRunId,
-      provenance: "LIVE_PROVIDER",
-      sourceMode: "LIVE_PROVIDER",
-      sourceType: "LIVE_PROVIDER",
-      isCached: false,
-      isLiveRecord: true,
+      researchRunId: String(runAdRow.runId),
+      workspaceId: String(runAdRow.workspaceId),
+      providerId: String(runAdRow.providerId),
+      ingestOutcome: String(runAdRow.ingestOutcome),
+      evidenceType: String(dbObs.evidenceType),
+      verificationMethod: String(dbObs.verificationMethod),
+      evidenceReference: obsClassification.evidenceReference,
+      providerRequestId: obsClassification.providerRequestId,
+      mcpInvocationRef: obsClassification.mcpInvocationRef,
+      rawPayload: dbObs.rawPayload,
+      observedAt: obsClassification.observedAt,
+      sourceTimestamp: obsClassification.sourceTimestamp,
+      persistedAdObservation: dbObs,
+      persistedDiscoveryRunAd: runAdRow,
+      persistedLiveOriginVerified: true,
+      originEvidenceClassification: obsClassification.originEvidenceClassification,
+      provenance: obsClassification.derivedProvenance,
+      sourceMode: obsClassification.derivedSourceMode,
+      sourceType: obsClassification.derivedSourceMode,
+      isCached: obsClassification.isCached,
+      isLiveRecord: obsClassification.isLiveRecord,
     });
   }
 
-  // 3. Query persisted ResearchProduct + ResearchEvidence + LandingPageSnapshot + CompetitorOfferSnapshot
+  // 3. Query persisted ResearchProduct (with `store: true`), ResearchEvidence, LandingPageSnapshot, CompetitorOfferSnapshot
   const productLookupIds = Array.from(
     new Set([researchProductId, candId].filter(Boolean) as string[])
   );
@@ -600,6 +702,7 @@ export async function loadPersistedG16ProofForCandidate(
     dbProducts = await prismaClient.researchProduct.findMany({
       where: { id: { in: productLookupIds } },
       include: {
+        store: true,
         evidence: true,
         landingPageSnapshots: true,
         offerSnapshots: true,
@@ -607,129 +710,77 @@ export async function loadPersistedG16ProofForCandidate(
     });
   }
 
-  const persistedResearchEvidenceIds: string[] = [];
-  const persistedLandingPageSnapshotIds: string[] = [];
-  const persistedOfferSnapshotIds: string[] = [];
-  const rejectedCrossWorkspaceProofIds: string[] = [];
-  const persistedProofRecords: PersistedMerchantProofRecord[] = [];
+  // Also query standalone evidence/snapshots by subjectId / productId so nothing persisted is missed
+  const standaloneEvidence =
+    productLookupIds.length > 0 && prismaClient?.researchEvidence?.findMany
+      ? await prismaClient.researchEvidence.findMany({
+          where: {
+            OR: [
+              { productId: { in: productLookupIds } },
+              { subjectId: { in: productLookupIds } },
+            ],
+          },
+        })
+      : [];
+  const standaloneLandingSnapshots =
+    productLookupIds.length > 0 && prismaClient?.landingPageSnapshot?.findMany
+      ? await prismaClient.landingPageSnapshot.findMany({
+          where: { productId: { in: productLookupIds } },
+        })
+      : [];
+  const standaloneOfferSnapshots =
+    productLookupIds.length > 0 && prismaClient?.competitorOfferSnapshot?.findMany
+      ? await prismaClient.competitorOfferSnapshot.findMany({
+          where: { productId: { in: productLookupIds } },
+        })
+      : [];
 
-  for (const prod of dbProducts) {
-    if (prod.workspaceId && prod.workspaceId !== workspaceId) {
+  const extractedProofs = extractPersistedMerchantProofsFromDbRows({
+    workspaceId,
+    candidateId: candId,
+    researchProductId,
+    storeDomain,
+    canonicalProductUrl: canonicalUrl,
+    candidateTitle: title,
+    expectedSku: candidate?.sku ? String(candidate.sku) : null,
+    expectedMerchantProductId: candidate?.merchantProductId
+      ? String(candidate.merchantProductId)
+      : null,
+    asOf: asOfDate,
+    researchProducts: dbProducts,
+    standaloneEvidence,
+    standaloneLandingSnapshots,
+    standaloneOfferSnapshots,
+  });
+
+  const persistedResearchEvidenceIds = extractedProofs.allAuditedRecords
+    .filter((r) => r.sourceTable === "ResearchEvidence")
+    .map((r) => r.recordId);
+  const persistedLandingPageSnapshotIds = extractedProofs.allAuditedRecords
+    .filter((r) => r.sourceTable === "LandingPageSnapshot")
+    .map((r) => r.recordId);
+  const persistedOfferSnapshotIds = extractedProofs.allAuditedRecords
+    .filter((r) => r.sourceTable === "CompetitorOfferSnapshot")
+    .map((r) => r.recordId);
+
+  for (const auditRec of extractedProofs.allAuditedRecords) {
+    if (auditRec.validationStatus === "CROSS_WORKSPACE_REJECTED") {
       rejectedCrossWorkspaceProofIds.push(
-        `ResearchProduct:${prod.id}(workspaceId=${prod.workspaceId})`
+        `${auditRec.sourceTable}:${auditRec.recordId}(workspaceId=${auditRec.workspaceId || "missing"})`
       );
     }
-    if (/^Synthetic Fixture:|\[SYNTHETIC_DEMO\]/i.test(String(prod.title || ""))) {
-      rejectedSyntheticOrFallbackReasons.push(
-        `Linked ResearchProduct '${prod.id}' is a synthetic test fixture ('${prod.title}').`
-      );
-      continue;
-    }
-
-    for (const ev of prod.evidence || []) {
-      persistedResearchEvidenceIds.push(String(ev.id));
-      if (prod.workspaceId && prod.workspaceId !== workspaceId) {
-        rejectedCrossWorkspaceProofIds.push(
-          `ResearchEvidence:${ev.id}(workspaceId=${prod.workspaceId})`
-        );
-        continue;
-      }
-      let parsed: any = {};
-      try {
-        parsed = JSON.parse(ev.observedValue || "{}");
-      } catch {}
-      const isSchemaVerified =
-        parsed.schemaVerified === true ||
-        parsed.hasJsonLdProduct === true ||
-        ev.evidenceType === "JSON_LD_PRODUCT_SCHEMA" ||
-        ev.evidenceType === "MERCHANT_PRODUCT_SCHEMA";
-      persistedProofRecords.push({
-        id: String(ev.id),
-        sourceTable: "ResearchEvidence",
-        workspaceId: prod.workspaceId || workspaceId,
-        researchRunId,
-        candidateId: candId,
-        researchProductId: String(prod.id),
-        storeDomain: parsed.storeDomain || prod.storeDomain || storeDomain,
-        canonicalUrl: parsed.canonicalUrl || ev.sourceUrl || prod.productUrl || canonicalUrl,
-        observedAt: ev.observedAt || parsed.observedAt || null,
-        schemaVerified: isSchemaVerified,
-        hasJsonLdProduct: isSchemaVerified,
-        fetchOutcome: parsed.fetchOutcome || null,
-        merchantProductId: parsed.merchantProductId || null,
-        sku: parsed.sku || null,
-        gtin: parsed.gtin || null,
-        verifiedProductTitle: parsed.verifiedProductTitle || parsed.title || null,
-        evidenceOrigin: parsed.evidenceOrigin || parsed.observationClass || null,
-      });
-    }
-
-    for (const lp of prod.landingPageSnapshots || []) {
-      persistedLandingPageSnapshotIds.push(String(lp.id));
-      const lpWs = lp.workspaceId || prod.workspaceId || null;
-      if (lpWs && lpWs !== workspaceId) {
-        rejectedCrossWorkspaceProofIds.push(
-          `LandingPageSnapshot:${lp.id}(workspaceId=${lpWs})`
-        );
-        continue;
-      }
-      if (/uahpet_lp_hash_v12_4_3_3|synthetic|fixture/i.test(String(lp.contentHash || ""))) {
+    if (auditRec.validationStatus !== "CONTENT_VALIDATED_WITH_SOURCE") {
+      for (const r of auditRec.rejectionReasons) {
         rejectedSyntheticOrFallbackReasons.push(
-          `LandingPageSnapshot '${lp.id}' has synthetic contentHash '${lp.contentHash}'.`
+          `${auditRec.sourceTable}:${auditRec.recordId}: ${r}`
         );
-        continue;
       }
-      const hasVerifiedSchema = Boolean(
-        lp.productTitle && lp.canonicalUrl && lp.contentHash
-      );
-      persistedProofRecords.push({
-        id: String(lp.id),
-        sourceTable: "LandingPageSnapshot",
-        workspaceId: lpWs || workspaceId,
-        researchRunId,
-        candidateId: candId,
-        researchProductId: String(prod.id),
-        storeDomain: prod.storeDomain || storeDomain,
-        canonicalUrl: lp.canonicalUrl || lp.url || prod.productUrl || canonicalUrl,
-        observedAt: lp.capturedAt || null,
-        schemaVerified: hasVerifiedSchema,
-        hasJsonLdProduct: hasVerifiedSchema,
-        fetchOutcome: hasVerifiedSchema ? "FETCH_SUCCEEDED" : null,
-        verifiedProductTitle: lp.productTitle || null,
-        contentHash: lp.contentHash || null,
-      });
-    }
-
-    for (const os of prod.offerSnapshots || []) {
-      persistedOfferSnapshotIds.push(String(os.id));
-      if (prod.workspaceId && prod.workspaceId !== workspaceId) {
-        rejectedCrossWorkspaceProofIds.push(
-          `CompetitorOfferSnapshot:${os.id}(workspaceId=${prod.workspaceId})`
-        );
-        continue;
-      }
-      const hasOfferProof = Boolean(os.offerUrl && (os.priceText || os.priceAmount));
-      persistedProofRecords.push({
-        id: String(os.id),
-        sourceTable: "CompetitorOfferSnapshot",
-        workspaceId: prod.workspaceId || workspaceId,
-        researchRunId,
-        candidateId: candId,
-        researchProductId: String(prod.id),
-        storeDomain: prod.storeDomain || storeDomain,
-        canonicalUrl: os.offerUrl || prod.productUrl || canonicalUrl,
-        observedAt: os.capturedAt || null,
-        schemaVerified: false,
-        hasJsonLdProduct: false,
-        fetchOutcome: hasOfferProof ? "ACTUAL_PRODUCT_PAGE" : null,
-        verifiedProductTitle: prod.title || null,
-      });
     }
   }
 
-  if (persistedProofRecords.length === 0) {
+  if (extractedProofs.allAuditedRecords.length === 0) {
     rejectedSyntheticOrFallbackReasons.push(
-      `Zero persisted merchant verification rows (ResearchEvidence / LandingPageSnapshot / CompetitorOfferSnapshot) exist in workspace '${workspaceId}' for candidate '${candId}'.`
+      `Zero persisted merchant verification rows (ResearchEvidence / LandingPageSnapshot / CompetitorOfferSnapshot / ResearchProduct) exist in workspace '${workspaceId}' for candidate '${candId}'.`
     );
   }
 
@@ -741,9 +792,13 @@ export async function loadPersistedG16ProofForCandidate(
       title,
       storeDomain,
       canonicalProductUrl: canonicalUrl,
+      expectedSku: candidate?.sku ? String(candidate.sku) : null,
+      expectedMerchantProductId: candidate?.merchantProductId
+        ? String(candidate.merchantProductId)
+        : null,
       observedAt: asOfDate,
-      isAdOnlyFallback: persistedProofRecords.length === 0,
-      persistedMerchantProofs: persistedProofRecords,
+      isAdOnlyFallback: extractedProofs.validProofs.length === 0,
+      persistedMerchantProofs: extractedProofs.validProofs,
     },
     asOfDate
   );
@@ -751,31 +806,43 @@ export async function loadPersistedG16ProofForCandidate(
   const persistedMerchantVerified =
     identityCls.identityStatus === "VERIFIED" &&
     identityCls.verificationEvidenceStatus === "INDEPENDENT_VERIFIED" &&
+    extractedProofs.validProofs.length > 0 &&
     !identityCls.isCheckoutChampFunnel;
   const persistedMerchantProofRefs = identityCls.independentMerchantProofRefs.filter(
     (r) => !isSyntheticMerchantProofRef(r)
   );
 
+  const primaryValidProof = extractedProofs.validProofs[0] || null;
+  const persistedProductSchemaProofStatus: "VERIFIED" | "INSUFFICIENT_EVIDENCE" =
+    persistedMerchantVerified && primaryValidProof?.validationStatus === "CONTENT_VALIDATED_WITH_SOURCE"
+      ? "VERIFIED"
+      : "INSUFFICIENT_EVIDENCE";
+  const persistedLiveOriginProofStatus: "VERIFIED" | "INSUFFICIENT_EVIDENCE" =
+    persistedLiveSameRunObservations.length > 0 ? "VERIFIED" : "INSUFFICIENT_EVIDENCE";
+
   // Strip unbacked inline snapshot fields unless persistedMerchantVerified === true
   const reconstructedCandidateForG16 = {
     ...candidate,
+    workspaceId,
     identityStatus: identityCls.identityStatus,
     merchantPageVerified: persistedMerchantVerified,
     existingProductVerified: persistedMerchantVerified,
     merchantVerificationProofRefs: persistedMerchantProofRefs,
     identityEvidenceReferences: persistedMerchantVerified ? persistedMerchantProofRefs : [],
     merchantVerifiedProductName: persistedMerchantVerified
-      ? candidate?.merchantVerifiedProductName || title
+      ? primaryValidProof?.verifiedProductTitle || candidate?.merchantVerifiedProductName || title
       : null,
     fetchOutcome: persistedMerchantVerified ? "FETCH_SUCCEEDED" : "UNVERIFIED_PERSISTED_DB",
     resolutionSource: persistedMerchantVerified
-      ? "MERCHANT_PRODUCT_METADATA"
+      ? primaryValidProof?.proofMethod || "JSON_LD_PRODUCT_SCHEMA"
       : "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
-    merchantProductId: persistedMerchantVerified ? candidate?.merchantProductId : null,
-    sku: persistedMerchantVerified ? candidate?.sku : null,
-    gtin: persistedMerchantVerified ? candidate?.gtin : null,
+    merchantProductId: persistedMerchantVerified
+      ? primaryValidProof?.merchantProductId || candidate?.merchantProductId
+      : null,
+    sku: persistedMerchantVerified ? primaryValidProof?.sku || candidate?.sku : null,
+    gtin: persistedMerchantVerified ? primaryValidProof?.gtin || candidate?.gtin : null,
     verificationReason: persistedMerchantVerified
-      ? "Reconstructed from persisted database merchant evidence"
+      ? `Verified from persisted ${primaryValidProof?.sourceTable}:${primaryValidProof?.id} (${primaryValidProof?.proofMethod}, SHA-256 validated)`
       : null,
     sourceObservations: persistedLiveSameRunObservations,
   };
@@ -796,9 +863,14 @@ export async function loadPersistedG16ProofForCandidate(
     persistedAdObservationIds,
     persistedLiveSameRunObservationIds,
     persistedLiveSameRunObservations,
+    persistedObservationClassifications,
     persistedResearchEvidenceIds,
     persistedLandingPageSnapshotIds,
     persistedOfferSnapshotIds,
+    persistedMerchantProofAudits: extractedProofs.allAuditedRecords,
+    validPersistedMerchantProofs: extractedProofs.validProofs,
+    persistedProductSchemaProofStatus,
+    persistedLiveOriginProofStatus,
     rejectedCrossWorkspaceProofIds: Array.from(new Set(rejectedCrossWorkspaceProofIds)),
     rejectedSyntheticOrFallbackReasons: Array.from(new Set(rejectedSyntheticOrFallbackReasons)),
     persistedMerchantVerified,
@@ -812,7 +884,7 @@ export async function loadPersistedG16ProofForCandidate(
 
 /**
  * Builds a complete `G16EvidenceIndex` and reconstructed candidate list strictly from
- * immutable persisted database rows (`P0-02`).
+ * immutable persisted database rows (`P0-A`, `P0-B`, `P0-C`).
  */
 export async function buildG16EvidenceIndexFromPersistedRows(
   prismaClient: any,
@@ -848,12 +920,18 @@ export async function buildG16EvidenceIndexFromPersistedRows(
     for (const obsId of a.persistedLiveSameRunObservationIds) {
       allowedObservationIds.add(obsId);
     }
+    const primaryProof = a.validPersistedMerchantProofs[0] || null;
     merchantEvidenceIndex[a.candidateId] = {
       verified: a.persistedMerchantVerified,
       proofRefs: a.persistedMerchantProofRefs,
       schemaVerified: a.persistedMerchantVerified,
+      hasJsonLdProduct: Boolean(primaryProof?.hasJsonLdProduct),
+      proofMethod: primaryProof?.proofMethod || "NONE",
+      validationStatus:
+        primaryProof?.validationStatus || "RAW_SOURCE_NOT_RECONSTRUCTABLE",
       fetchOutcome: a.persistedMerchantVerified ? "FETCH_SUCCEEDED" : "UNVERIFIED_PERSISTED_DB",
       merchantVerifiedProductName: a.persistedMerchantVerified ? a.title : undefined,
+      persistedProofs: a.validPersistedMerchantProofs,
     };
   }
 
@@ -864,6 +942,8 @@ export async function buildG16EvidenceIndexFromPersistedRows(
   return {
     evidenceIndex: {
       strictPersistedProofRequired: true,
+      workspaceId,
+      asOf,
       lineageIndex: {
         parentRunId: researchRunId,
         allowedObservationIds,
@@ -1693,6 +1773,18 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     DEMAND_HISTORY: input.diagnostics.providers.demandHistory?.diagnosticStatus || "BLOCKED",
   };
 
+  const g16Audits = input.diagnostics.gates.g16.persistedProofAudit || [];
+  const persistedSchemaVerifiedCount = g16Audits.filter(
+    (a) => a.persistedProductSchemaProofStatus === "VERIFIED"
+  ).length;
+  const persistedLiveOriginVerifiedCount = g16Audits.filter(
+    (a) => a.persistedLiveOriginProofStatus === "VERIFIED"
+  ).length;
+  const persistedProductSchemaProofVerdict: "PASS" | "INSUFFICIENT_EVIDENCE" =
+    persistedSchemaVerifiedCount >= 3 ? "PASS" : "INSUFFICIENT_EVIDENCE";
+  const persistedLiveOriginProofVerdict: "PASS" | "INSUFFICIENT_EVIDENCE" =
+    persistedLiveOriginVerifiedCount >= 3 ? "PASS" : "INSUFFICIENT_EVIDENCE";
+
   const verdictMatrix = {
     ENGINEERING_TESTS: engineeringVerdict,
     BROAD_REGRESSION: broadRegressionVerdict,
@@ -1702,6 +1794,10 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     HISTORICAL_PRODUCT_IDENTITY_TRUTH: historicalProductIdentityTruthVerdict,
     HISTORICAL_VERIFIED_IDENTITY_COVERAGE:
       hi?.holdoutIdentityCoverageStatus || "INSUFFICIENT_VERIFIED_IDENTITY",
+    PERSISTED_PRODUCT_SCHEMA_PROOF: persistedProductSchemaProofVerdict,
+    PERSISTED_LIVE_ORIGIN_PROOF: persistedLiveOriginProofVerdict,
+    PERSISTED_SCHEMA_TRUTH_ENFORCEMENT: historicalProductIdentityTruthVerdict,
+    LIVE_OBSERVATION_ORIGIN_ENFORCEMENT: historicalProductIdentityTruthVerdict,
     LIVE_PROVIDERS: liveProvidersEntry,
     CURRENT_LIVE_PROVIDERS: liveProvidersEntry,
     HISTORICAL_DEMAND_G15: historicalG15Verdict,
@@ -1715,6 +1811,8 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
         input.diagnostics.gates.g16.previousSnapshotClaimedVerifiedCount,
       verifiedFromPersistedEvidenceCount:
         input.diagnostics.gates.g16.verifiedFromPersistedEvidenceCount,
+      persistedSchemaVerifiedCount,
+      persistedLiveOriginVerifiedCount,
       newLiveVerifiedDuringThisRun:
         input.diagnostics.gates.g16.newLiveVerifiedDuringThisRun,
       storedG16Verdict: historicalG16Verdict,
