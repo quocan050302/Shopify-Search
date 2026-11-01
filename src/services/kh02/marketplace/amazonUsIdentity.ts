@@ -63,6 +63,7 @@ export interface AsinExtractionProvenanceResult {
 export interface CanonicalAmazonIdentityRecord {
   canonicalIdentityKey: string;
   parentFamilyKey: string;
+  productFamilyKey: string;
   asin: string;
   parentAsin: string | null;
   variationAsin: string | null;
@@ -676,6 +677,180 @@ export function extractAmazonAsinFromProductEvidence(
 }
 
 /**
+ * Computes a normalized canonical product family key for an Amazon product observation.
+ * Ensures variants/pack-sizes/editions/secondary ASINs of the same product (e.g., ChomChom Roller
+ * B00BAGTNAQ and B07F178K9N, or child variations under the same parent/product archetype) share
+ * one canonical product family key while genuinely unrelated products stay distinct.
+ */
+export function computeAmazonCanonicalProductFamilyKey(record: {
+  asin?: string | null;
+  parentAsin?: string | null;
+  productTitle?: string | null;
+  brand?: string | null;
+  modelNumber?: string | null;
+  sku?: string | null;
+  gtin?: string | null;
+}): string {
+  const cleanAsin = record.asin ? String(record.asin).trim().toUpperCase() : "";
+  const cleanParent = record.parentAsin ? String(record.parentAsin).trim().toUpperCase() : "";
+  const rawTitle = String(record.productTitle || "").trim();
+  const rawBrand = String(record.brand || "").trim();
+  const combined = `${rawBrand} ${rawTitle}`.toLowerCase();
+
+  // 1. Normalize brand slug
+  let brandSlug = rawBrand
+    .toLowerCase()
+    .replace(/^(?:visit the|brand:|by)\s+/i, "")
+    .replace(/\s+(?:store|roller|clean|official|pet|pets|usa|inc|llc|co)\b.*$/i, "")
+    .replace(/[^a-z0-9]/g, "");
+
+  if (
+    /\bchom\s*chom\b/i.test(combined) ||
+    cleanAsin === "B00BAGTNAQ" ||
+    cleanAsin === "B07F178K9N" ||
+    cleanParent === "B00BAGTNAQ"
+  ) {
+    brandSlug = "chomchom";
+  } else if (/\buproot(?:\s+clean)?\b/i.test(combined)) {
+    brandSlug = "uproot";
+  } else if (/\buah\s*pet\b/i.test(combined)) {
+    brandSlug = "uahpet";
+  } else if (/\bkitty\s*spout\b/i.test(combined)) {
+    brandSlug = "kittyspout";
+  } else if (/\bfurbo\b/i.test(combined)) {
+    brandSlug = "furbo";
+  } else if (/\bpet\s*libro\b/i.test(combined)) {
+    brandSlug = "petlibro";
+  } else if (/\bpet\s*safe\b/i.test(combined)) {
+    brandSlug = "petsafe";
+  } else if (/\bblack\s*[+&]\s*decker\b/i.test(combined)) {
+    brandSlug = "blackdecker";
+  } else if (!brandSlug && rawTitle) {
+    const firstWord = rawTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .trim()
+      .split(/\s+/)[0];
+    if (firstWord && firstWord.length >= 2) {
+      brandSlug = firstWord;
+    }
+  }
+
+  // 2. Detect normalized product archetype
+  let archetype = "";
+  if (
+    brandSlug === "chomchom" ||
+    /\b(?:pet\s+hair\s+remover|reusable\s+lint\s+roller|lint\s+roller.*pet|fur\s+remover\s+roller|dog\s+and\s+cat\s+hair\s+remover)\b/i.test(
+      combined
+    )
+  ) {
+    archetype = "pet_hair_remover_roller";
+  } else if (
+    /\b(?:cat\s+water\s+fountain|pet\s+water\s+fountain|dog\s+water\s+fountain|wireless.*fountain|drinking\s+fountain|fountain.*(?:cat|dog|pet))\b/i.test(
+      combined
+    )
+  ) {
+    archetype = "pet_water_fountain";
+  } else if (/\b(?:dog\s+camera|pet\s+camera|treat\s+tosser|furbo\s+360)\b/i.test(combined)) {
+    archetype = "pet_camera_treat_tosser";
+  } else if (
+    /\b(?:automatic\s+(?:cat|dog|pet|wet\s+food)?\s*feeder|timed\s+(?:cat|dog|pet)\s+feeder|wet\s+cat\s+food\s+feeder)\b/i.test(
+      combined
+    )
+  ) {
+    archetype = "automatic_pet_feeder";
+  } else if (
+    /\b(?:grooming\s+clipper|dog\s+clipper|pet\s+hair\s+clipper|low\s+noise.*clipper)\b/i.test(
+      combined
+    )
+  ) {
+    archetype = "pet_grooming_clipper";
+  } else if (
+    /\b(?:grooming\s+vacuum|grooming\s+kit.*vacuum|deshedding\s+vacuum)\b/i.test(combined)
+  ) {
+    archetype = "pet_grooming_vacuum";
+  } else if (
+    /\b(?:self[\s-]*cleaning.*litter\s+box|automatic.*litter\s+box|smart.*litter\s+box|scoopfree)\b/i.test(
+      combined
+    )
+  ) {
+    archetype = "smart_litter_box";
+  } else if (/\b(?:bark\s+collar|dog\s+training\s+collar|shock\s+collar)\b/i.test(combined)) {
+    archetype = "pet_training_collar";
+  } else if (
+    /\b(?:grooming\s+glove|deshedding\s+brush|slicker\s+brush|steam\s+brush)\b/i.test(combined)
+  ) {
+    archetype = "pet_grooming_brush";
+  } else if (cleanParent) {
+    archetype = `parent_${cleanParent.toLowerCase()}`;
+  } else {
+    const variantNoise = new Set([
+      "the",
+      "and",
+      "for",
+      "with",
+      "from",
+      "new",
+      "best",
+      "world",
+      "worlds",
+      "official",
+      "store",
+      "pack",
+      "count",
+      "ct",
+      "pk",
+      "pcs",
+      "set",
+      "bundle",
+      "limited",
+      "edition",
+      "white",
+      "black",
+      "silver",
+      "gray",
+      "grey",
+      "blue",
+      "red",
+      "green",
+      "pink",
+      "purple",
+      "gold",
+      "rose",
+      "yellow",
+      "orange",
+      "brown",
+      "beige",
+      "navy",
+      "teal",
+      "2l",
+      "3l",
+      "67oz",
+      "84oz",
+      "stainless",
+      "steel",
+      "plastic",
+    ]);
+    const tokens = rawTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(
+        (t) =>
+          t.length >= 3 &&
+          !variantNoise.has(t) &&
+          t !== brandSlug &&
+          !/^\d+(?:pack|pk|ct|oz|ml|lb|lbs|kg|l)?$/.test(t)
+      );
+    archetype =
+      tokens.slice(0, 4).join("_") ||
+      (cleanAsin ? `asin_${cleanAsin.toLowerCase()}` : "unknown_product");
+  }
+
+  return `amz_family:${brandSlug || "generic"}:${archetype}`;
+}
+
+/**
  * Canonicalizes an Amazon product identity while preserving variation child vs parent ASINs.
  * Never merges distinct child ASINs by fuzzy title alone (A06).
  */
@@ -718,9 +893,19 @@ export function canonicalizeAmazonProductIdentity(record: {
     .replace(/\s+/g, " ")
     .trim();
 
+  const productFamilyKey = computeAmazonCanonicalProductFamilyKey({
+    asin: effectiveAsin,
+    parentAsin: cleanParent,
+    productTitle: normalizedTitle,
+    brand: normalizedBrand,
+    modelNumber: record.modelNumber,
+    sku: record.sku,
+  });
+
   return {
     canonicalIdentityKey: `amz_us:${effectiveAsin}`,
     parentFamilyKey: `amz_us_parent:${cleanParent || effectiveAsin}`,
+    productFamilyKey,
     asin: effectiveAsin,
     parentAsin: cleanParent,
     variationAsin: cleanVariation,
@@ -840,7 +1025,12 @@ export interface RawAmazonSnapshotInput {
     explicitUsDeliveryConfirmed?: boolean;
     deliveryLocationText?: string | null;
     deliveryPostalCode?: string | null;
+    requestedPostalCode?: string | null;
     isSponsored?: boolean;
+    isSuggestedOrCarouselPrice?: boolean;
+    priceSource?: string | null;
+    priceSourceAsin?: string | null;
+    priceAsin?: string | null;
     searchCards?: Array<{
       asin?: string | null;
       title?: string | null;
@@ -1098,9 +1288,20 @@ export function parseAmazonProductEvidence(
     );
   }
 
-  // 6. Price parsing: absent price MUST be null, NEVER 0 (A22)
+  // 6. Price parsing: absent price MUST be null, NEVER 0 (A22); carousel/suggested price or mismatched ASIN price rejected (N24)
   let parsedPrice: number | null = null;
-  const rawPrice = snapshot.structuredData?.price;
+  const declaredPriceAsin =
+    snapshot.structuredData?.priceSourceAsin || snapshot.structuredData?.priceAsin || null;
+  const isCarouselOrMismatchedPriceSource =
+    snapshot.structuredData?.isSuggestedOrCarouselPrice === true ||
+    /carousel|suggested|sponsored|related|also_bought|other_seller/i.test(
+      String(snapshot.structuredData?.priceSource || "")
+    ) ||
+    Boolean(
+      declaredPriceAsin &&
+        String(declaredPriceAsin).trim().toUpperCase() !== asinCheck.asin
+    );
+  const rawPrice = isCarouselOrMismatchedPriceSource ? null : snapshot.structuredData?.price;
   if (rawPrice !== null && rawPrice !== undefined && String(rawPrice).trim() !== "") {
     const numericPrice =
       typeof rawPrice === "number"
@@ -1110,6 +1311,15 @@ export function parseAmazonProductEvidence(
       parsedPrice = Math.round(numericPrice * 100) / 100;
     }
   }
+
+  // N21: Do NOT infer USD from '$' alone when currency is unobserved; require explicit currency evidence
+  const explicitCurrency: string | null = isCarouselOrMismatchedPriceSource
+    ? null
+    : rawCurrency === "USD"
+    ? "USD"
+    : /\bpriceCurrency["'\s:]+"?USD"?\b/i.test(snapshot.html || "")
+    ? "USD"
+    : null;
 
   const canonicalIdentity = canonicalizeAmazonProductIdentity({
     asin: asinCheck.asin,
@@ -1138,7 +1348,7 @@ export function parseAmazonProductEvidence(
     brand: canonicalIdentity.normalizedBrand,
     merchant: merchantSanitized.sanitized,
     seller: sellerSanitized.sanitized,
-    currency: parsedPrice !== null ? rawCurrency || "USD" : rawCurrency,
+    currency: explicitCurrency,
     price: parsedPrice,
     availability: availSanitized.sanitized,
     modelNumber: canonicalIdentity.modelNumber,
@@ -1195,7 +1405,7 @@ export function parseAmazonProductEvidence(
     brand: canonicalIdentity.normalizedBrand,
     merchant: merchantSanitized.sanitized,
     seller: sellerSanitized.sanitized,
-    currency: parsedPrice !== null ? rawCurrency || "USD" : rawCurrency,
+    currency: explicitCurrency,
     price: parsedPrice,
     availability: availSanitized.sanitized,
     modelNumber: canonicalIdentity.modelNumber,
@@ -1219,6 +1429,7 @@ export function parseAmazonProductEvidence(
     identityMatch: "AMBIGUOUS",
     isCached: Boolean(responseMetadata.isCached || observationClass === "CACHED"),
     matchedCanonicalKey: canonicalIdentity.canonicalIdentityKey,
+    productFamilyKey: canonicalIdentity.productFamilyKey,
     matchingReasons: [`Observed canonical ASIN ${canonicalIdentity.asin}`],
     missingFields,
     rejectionReasons: [],

@@ -41,6 +41,15 @@ import {
   loadAmazonEvidenceForRun,
 } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 import {
+  evaluateAmazonUsEvidenceGate,
+} from "@/services/kh02/marketplace/amazonUsEvidenceGate";
+import {
+  computeReleaseVerdicts,
+  collectKh02AcceptanceDiagnostics,
+  computeEngineeringVerdict,
+  computeOverallBusinessVerdict,
+} from "../../../scripts/kh02/acceptanceTruth";
+import {
   filterAmazonEvidencePointInTime,
 } from "../../../scripts/kh02/runBacktestV12_4_3_4_2";
 import {
@@ -1173,5 +1182,732 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
     expect(validProofCheck.valid).toBe(true);
     expect(validProofCheck.validationStatus).toBe("CONTENT_VALIDATED_WITH_SOURCE");
     expect(validProofCheck.hasJsonLdProduct).toBe(true);
+  });
+
+  // =========================================================================
+  // NEGATIVE MATRIX & FAIL-CLOSED CLOSURE (N01..N48)
+  // =========================================================================
+
+  it("N01..N05 & N47: Missing Amazon MCP diagnostics, empty ledger, handshake-only, missing response hash, or unclosed session never default to SUCCEEDED or REAL_PROVIDER_VERIFIED", () => {
+    const livePolicy = resolveAmazonUsPolicyContext({
+      KH02_AMAZON_US_ENABLED: "true",
+      KH02_AMAZON_US_LIVE_ALLOWED: "true",
+      KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED: "true",
+    });
+
+    const buildRow = (idx: number, asin: string, title: string, brand: string, invRef: string): any => ({
+      id: `amz_n04_${idx}`,
+      workspaceId: "ws_n01",
+      researchRunId: "run_n01",
+      candidateId: `cand_${idx}`,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      requestedMarket: "US",
+      verifiedDeliveryMarket: "US",
+      observedDeliveryPostalCode: "10001",
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      canonicalAmazonUrl: `https://www.amazon.com/dp/${asin}`,
+      asin,
+      parentAsin: null,
+      variationAsin: null,
+      productTitle: title,
+      brand,
+      merchant: brand,
+      seller: brand,
+      currency: "USD",
+      price: 29.99,
+      availability: "In Stock",
+      observedAt: "2026-11-01T12:00:00.000Z",
+      sourceTimestamp: "2026-11-01T12:00:00.000Z",
+      rawEvidenceHash: computeSha256Hex(`raw_${asin}`),
+      extractedFieldsHash: computeSha256Hex(`ext_${asin}`),
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      responseEvidenceRef: null,
+      evidenceOrigin: "AMAZON_US_MCP_PLAYWRIGHT",
+      observationClass: "AUTHORIZED_LIVE",
+      verificationScope: "LISTING_AND_IDENTITY_OBSERVED",
+      identityMatch: "EXACT_PRODUCT",
+      isCached: false,
+      matchedCanonicalKey: `amz_us:${asin}`,
+      matchingReasons: ["EXACT_PRODUCT"],
+      missingFields: [],
+      rejectionReasons: [],
+      accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
+      status: "IDENTITY_VERIFIED",
+    });
+
+    const rows = [
+      buildRow(1, "B00BAGTNAQ", "ChomChom Roller Pet Hair Remover", "ChomChom Roller", "inv_1"),
+      buildRow(2, "B08N5WRWNW", "UAHPET Wireless Cat Water Fountain", "UAHPET", "inv_2"),
+      buildRow(3, "B09V3KXJPB", "Furbo 360 Dog Camera Treat Tosser", "Furbo", "inv_3"),
+    ];
+
+    const buildOp = (idx: number, asin: string, invRef: string, responseHash: string): any => ({
+      operationId: `op_${idx}`,
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      providerRequestIdOrigin: "UNAVAILABLE_UPSTREAM",
+      workspaceId: "ws_n01",
+      researchRunId: "run_n01",
+      candidateId: `cand_${idx}`,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      attemptCount: 1,
+      maxAttemptsAllowed: 2,
+      startedAt: "2026-11-01T12:00:00.000Z",
+      completedAt: "2026-11-01T12:00:01.000Z",
+      durationMs: 1000,
+      requestHash: computeSha256Hex(`req_${asin}`),
+      responseHash,
+      status: "IDENTITY_VERIFIED",
+      outcomeCategory: "OBSERVED_SUCCESS",
+      observationClass: "AUTHORIZED_LIVE",
+      transportSessionId: "sess_n01",
+      aborted: false,
+      errorMessage: null,
+    });
+
+    // N04: Missing response hash in operation ledger must reject live verification
+    const gateMissingHash = evaluateAmazonUsEvidenceGate(
+      "run_n01",
+      rows,
+      [
+        buildOp(1, "B00BAGTNAQ", "inv_1", ""),
+        buildOp(2, "B08N5WRWNW", "inv_2", computeSha256Hex("resp_2")),
+        buildOp(3, "B09V3KXJPB", "inv_3", computeSha256Hex("resp_3")),
+      ],
+      livePolicy,
+      { workspaceId: "ws_n01", requiredLiveTargets: 3 }
+    );
+    expect(gateMissingHash.realProviderVerdict).not.toBe("REAL_PROVIDER_VERIFIED");
+
+    // N05 & N47: Unclosed MCP session (closedCleanly: false) must prevent clean REAL_PROVIDER_VERIFIED
+    const gateUnclosed = evaluateAmazonUsEvidenceGate(
+      "run_n01",
+      rows,
+      [
+        buildOp(1, "B00BAGTNAQ", "inv_1", computeSha256Hex("resp_1")),
+        buildOp(2, "B08N5WRWNW", "inv_2", computeSha256Hex("resp_2")),
+        buildOp(3, "B09V3KXJPB", "inv_3", computeSha256Hex("resp_3")),
+      ],
+      livePolicy,
+      {
+        workspaceId: "ws_n01",
+        requiredLiveTargets: 3,
+        mcpSessionLifecycle: {
+          sessionId: "sess_n01",
+          transportKind: "REAL_STDIO_MCP",
+          closedCleanly: false,
+          ownedChildPidTerminated: false,
+        } as any,
+      } as any
+    );
+    expect(gateUnclosed.realProviderVerdict).not.toBe("REAL_PROVIDER_VERIFIED");
+  });
+
+  it("N06..N14: Duplicate product families (ChomChom variants B00BAGTNAQ + B07F178K9N + 3rd variant, or parent+children) count as 1 product family and FAIL the 3-product gate", () => {
+    const livePolicy = resolveAmazonUsPolicyContext({
+      KH02_AMAZON_US_ENABLED: "true",
+      KH02_AMAZON_US_LIVE_ALLOWED: "true",
+      KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED: "true",
+    });
+
+    const mkLiveRow = (
+      id: string,
+      candId: string,
+      asin: string,
+      parentAsin: string | null,
+      title: string,
+      brand: string,
+      invRef: string
+    ): any => ({
+      id,
+      workspaceId: "ws_fam",
+      researchRunId: "run_fam",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      requestedMarket: "US",
+      verifiedDeliveryMarket: null,
+      observedDeliveryPostalCode: null,
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      canonicalAmazonUrl: `https://www.amazon.com/dp/${asin}`,
+      asin,
+      parentAsin,
+      variationAsin: asin,
+      productTitle: title,
+      brand,
+      merchant: brand,
+      seller: brand,
+      currency: null,
+      price: null,
+      availability: "In Stock",
+      observedAt: "2026-11-01T12:00:00.000Z",
+      sourceTimestamp: "2026-11-01T12:00:00.000Z",
+      rawEvidenceHash: computeSha256Hex(`resp_${invRef}`),
+      extractedFieldsHash: computeSha256Hex(`ext_${id}`),
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      responseEvidenceRef: null,
+      evidenceOrigin: "AMAZON_US_MCP_PLAYWRIGHT",
+      observationClass: "AUTHORIZED_LIVE",
+      verificationScope: "LISTING_AND_IDENTITY_OBSERVED",
+      identityMatch: "EXACT_PRODUCT",
+      isCached: false,
+      matchedCanonicalKey: `amz_us:${asin}`,
+      matchingReasons: ["EXACT_PRODUCT"],
+      missingFields: [],
+      rejectionReasons: [],
+      accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
+      status: "IDENTITY_VERIFIED",
+    });
+
+    const mkOp = (candId: string, asin: string, invRef: string): any => ({
+      operationId: `op_${invRef}`,
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      providerRequestIdOrigin: "UNAVAILABLE_UPSTREAM",
+      workspaceId: "ws_fam",
+      researchRunId: "run_fam",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      attemptCount: 1,
+      maxAttemptsAllowed: 2,
+      startedAt: "2026-11-01T12:00:00.000Z",
+      completedAt: "2026-11-01T12:00:01.000Z",
+      durationMs: 900,
+      requestHash: computeSha256Hex(`req_${invRef}`),
+      responseHash: computeSha256Hex(`resp_${invRef}`),
+      status: "IDENTITY_VERIFIED",
+      outcomeCategory: "OBSERVED_SUCCESS",
+      observationClass: "AUTHORIZED_LIVE",
+      transportSessionId: "sess_fam",
+      aborted: false,
+      errorMessage: null,
+    });
+
+    // N08 & N09 & N10: 3 distinct ASINs and 3 distinct candidateIds, all ChomChom Roller variants!
+    const chomRows = [
+      mkLiveRow(
+        "r1",
+        "cand_chom_1",
+        "B00BAGTNAQ",
+        null,
+        "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+        "ChomChom Roller",
+        "inv_c1"
+      ),
+      mkLiveRow(
+        "r2",
+        "cand_chom_2",
+        "B07F178K9N",
+        null,
+        "ChomChom Roller Pet Hair Remover - World's Best Dog and Cat Hair Remover",
+        "ChomChom Roller",
+        "inv_c2"
+      ),
+      mkLiveRow(
+        "r3",
+        "cand_chom_3",
+        "B08CHOM003",
+        "B00BAGTNAQ",
+        "ChomChom Roller Pet Hair Remover - 2 Pack Limited Edition",
+        "ChomChom Roller",
+        "inv_c3"
+      ),
+    ];
+    const chomOps = [
+      mkOp("cand_chom_1", "B00BAGTNAQ", "inv_c1"),
+      mkOp("cand_chom_2", "B07F178K9N", "inv_c2"),
+      mkOp("cand_chom_3", "B08CHOM003", "inv_c3"),
+    ];
+
+    const chomGate: any = evaluateAmazonUsEvidenceGate(
+      "run_fam",
+      chomRows,
+      chomOps,
+      livePolicy,
+      { workspaceId: "ws_fam", requiredLiveTargets: 3 }
+    );
+
+    // Must expose raw ASIN count = 3, but distinctVerifiedProductFamilies = 1, and gate MUST BE INSUFFICIENT_EVIDENCE
+    expect(chomGate.verifiedLiveAsins.length).toBe(3);
+    expect(chomGate.distinctVerifiedProductFamilies).toBe(1);
+    expect(chomGate.requiredLiveTargetsMet).toBe(false);
+    expect(chomGate.realProviderVerdict).toBe("INSUFFICIENT_EVIDENCE");
+
+    // N11: 3 genuinely distinct Pet Gadgets product families -> PASS
+    const distinctRows = [
+      chomRows[0],
+      mkLiveRow(
+        "r_uah",
+        "cand_uahpet_2",
+        "B08N5WRWNW",
+        null,
+        "UAHPET Wireless Cat Water Fountain Stainless Steel",
+        "UAHPET",
+        "inv_u2"
+      ),
+      mkLiveRow(
+        "r_furbo",
+        "cand_furbo_3",
+        "B09V3KXJPB",
+        null,
+        "Furbo 360 Dog Camera Treat Tosser with Barking Alert",
+        "Furbo",
+        "inv_f3"
+      ),
+    ];
+    const distinctOps = [
+      chomOps[0],
+      mkOp("cand_uahpet_2", "B08N5WRWNW", "inv_u2"),
+      mkOp("cand_furbo_3", "B09V3KXJPB", "inv_f3"),
+    ];
+    const distinctGate: any = evaluateAmazonUsEvidenceGate(
+      "run_fam",
+      distinctRows,
+      distinctOps,
+      livePolicy,
+      { workspaceId: "ws_fam", requiredLiveTargets: 3 }
+    );
+    expect(distinctGate.distinctVerifiedProductFamilies).toBe(3);
+    expect(distinctGate.distinctCandidateIds).toBe(3);
+    expect(distinctGate.requiredLiveTargetsMet).toBe(true);
+    expect(distinctGate.realProviderVerdict).toBe("REAL_PROVIDER_VERIFIED");
+  });
+
+  it("N21..N25: USD is never inferred from '$' alone without explicit currency evidence; unobserved ZIP and price remain null", () => {
+    // N21: Price "$24.95" with no explicit currency and no confirmed US delivery ZIP -> currency must be null
+    const bareDollarEv = parseAmazonProductEvidence(
+      {
+        sourceUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        finalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        canonicalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        structuredData: {
+          asin: "B00BAGTNAQ",
+          productTitle: "ChomChom Roller Pet Hair Remover",
+          brand: "ChomChom Roller",
+          price: "$24.95",
+          currency: null,
+          explicitUsDeliveryConfirmed: false,
+          deliveryPostalCode: null,
+        },
+      },
+      {
+        workspaceId: "ws_n21",
+        researchRunId: "run_n21",
+        candidateId: "cand_chom_1",
+      }
+    );
+    expect(bareDollarEv.currency).toBeNull();
+    expect(bareDollarEv.observedDeliveryPostalCode).toBeNull();
+    expect(bareDollarEv.verifiedDeliveryMarket).toBeNull();
+
+    // N23: Explicit USD and confirmed US delivery ZIP 10001 -> recorded truthfully
+    const verifiedZipEv = parseAmazonProductEvidence(
+      {
+        sourceUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        finalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        canonicalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        structuredData: {
+          asin: "B00BAGTNAQ",
+          productTitle: "ChomChom Roller Pet Hair Remover",
+          brand: "ChomChom Roller",
+          price: "$24.95",
+          currency: "USD",
+          explicitUsDeliveryConfirmed: true,
+          deliveryPostalCode: "10001",
+        },
+      },
+      {
+        workspaceId: "ws_n23",
+        researchRunId: "run_n23",
+        candidateId: "cand_chom_1",
+      }
+    );
+    expect(verifiedZipEv.currency).toBe("USD");
+    expect(verifiedZipEv.price).toBe(24.95);
+    expect(verifiedZipEv.observedDeliveryPostalCode).toBe("10001");
+    expect(verifiedZipEv.verifiedDeliveryMarket).toBe("US");
+
+    // N24: Suggested/carousel item price or mismatched priceAsin must not be assigned to inspected ASIN
+    const carouselPriceEv = parseAmazonProductEvidence(
+      {
+        sourceUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        finalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        canonicalUrl: "https://www.amazon.com/dp/B00BAGTNAQ",
+        structuredData: {
+          asin: "B00BAGTNAQ",
+          productTitle: "ChomChom Roller Pet Hair Remover",
+          brand: "ChomChom Roller",
+          price: "$14.99",
+          currency: "USD",
+          priceSource: "customers_also_bought_carousel",
+        },
+      },
+      {
+        workspaceId: "ws_n24",
+        researchRunId: "run_n24",
+        candidateId: "cand_chom_1",
+      }
+    );
+    expect(carouselPriceEv.price).toBeNull();
+    expect(carouselPriceEv.currency).toBeNull();
+  });
+
+  it("N12..N16, N19, N20, N26..N39, N42..N44, N46, N48: Complete negative matrix guards across cross-workspace, fixture/cache, search-card-only, Walmart DISABLED vs BLOCKED_PROVIDER, E2E incomplete, and disk/SHA failure", async () => {
+    const livePolicy = resolveAmazonUsPolicyContext({
+      KH02_AMAZON_US_ENABLED: "true",
+      KH02_AMAZON_US_LIVE_ALLOWED: "true",
+      KH02_AMAZON_US_USER_AUTHORIZED_URLS_ATTESTED: "true",
+    });
+
+    const mkProd = (
+      id: string,
+      candId: string,
+      asin: string,
+      title: string,
+      brand: string,
+      invRef: string,
+      overrides: Record<string, any> = {}
+    ): any => ({
+      id,
+      workspaceId: "ws_neg",
+      researchRunId: "run_neg",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      requestedMarket: "US",
+      verifiedDeliveryMarket: null,
+      observedDeliveryPostalCode: null,
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      canonicalAmazonUrl: `https://www.amazon.com/dp/${asin}`,
+      asin,
+      parentAsin: null,
+      variationAsin: asin,
+      productTitle: title,
+      brand,
+      merchant: brand,
+      seller: brand,
+      currency: null,
+      price: null,
+      availability: "In Stock",
+      observedAt: "2026-11-01T12:00:00.000Z",
+      sourceTimestamp: "2026-11-01T12:00:00.000Z",
+      rawEvidenceHash: computeSha256Hex(`resp_${invRef}`),
+      extractedFieldsHash: computeSha256Hex(`ext_${id}`),
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      responseEvidenceRef: null,
+      evidenceOrigin: "AMAZON_US_MCP_PLAYWRIGHT",
+      observationClass: "AUTHORIZED_LIVE",
+      verificationScope: "LISTING_AND_IDENTITY_OBSERVED",
+      identityMatch: "EXACT_PRODUCT",
+      isCached: false,
+      matchedCanonicalKey: `amz_us:${asin}`,
+      matchingReasons: ["EXACT_PRODUCT"],
+      missingFields: [],
+      rejectionReasons: [],
+      accessPolicyStatus: "AUTHORIZED_USER_LIMITED_URL",
+      status: "IDENTITY_VERIFIED",
+      ...overrides,
+    });
+
+    const mkOp = (candId: string, asin: string, invRef: string): any => ({
+      operationId: `op_${invRef}`,
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      providerRequestIdOrigin: "UNAVAILABLE_UPSTREAM",
+      workspaceId: "ws_neg",
+      researchRunId: "run_neg",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      attemptCount: 1,
+      maxAttemptsAllowed: 2,
+      startedAt: "2026-11-01T12:00:00.000Z",
+      completedAt: "2026-11-01T12:00:01.000Z",
+      durationMs: 900,
+      requestHash: computeSha256Hex(`req_${invRef}`),
+      responseHash: computeSha256Hex(`resp_${invRef}`),
+      status: "IDENTITY_VERIFIED",
+      outcomeCategory: "OBSERVED_SUCCESS",
+      observationClass: "AUTHORIZED_LIVE",
+      transportSessionId: "sess_neg",
+      aborted: false,
+      errorMessage: null,
+    });
+
+    // N12: 3 genuine products, 1 from another workspace -> at most 2 count
+    const n12Gate = evaluateAmazonUsEvidenceGate(
+      "run_neg",
+      [
+        mkProd("r1", "c1", "B00BAGTNAQ", "ChomChom Roller Pet Hair Remover", "ChomChom Roller", "i1"),
+        mkProd("r2", "c2", "B08N5WRWNW", "UAHPET Wireless Cat Water Fountain", "UAHPET", "i2"),
+        mkProd("r3", "c3", "B09V3KXJPB", "Furbo 360 Dog Camera Treat Tosser", "Furbo", "i3", {
+          workspaceId: "ws_other_tenant",
+        }),
+      ],
+      [mkOp("c1", "B00BAGTNAQ", "i1"), mkOp("c2", "B08N5WRWNW", "i2"), mkOp("c3", "B09V3KXJPB", "i3")],
+      livePolicy,
+      { workspaceId: "ws_neg", requiredLiveTargets: 3 }
+    );
+    expect(n12Gate.distinctVerifiedProductFamilies).toBe(2);
+    expect(n12Gate.realProviderVerdict).toBe("INSUFFICIENT_EVIDENCE");
+
+    // N13 & N15: 3 genuine products, 1 is TEST_FIXTURE / CACHED / USER_IMPORTED -> at most 2 count
+    const n13Gate = evaluateAmazonUsEvidenceGate(
+      "run_neg",
+      [
+        mkProd("r1", "c1", "B00BAGTNAQ", "ChomChom Roller Pet Hair Remover", "ChomChom Roller", "i1"),
+        mkProd("r2", "c2", "B08N5WRWNW", "UAHPET Wireless Cat Water Fountain", "UAHPET", "i2"),
+        mkProd("r3", "c3", "B09V3KXJPB", "Furbo 360 Dog Camera Treat Tosser", "Furbo", "i3", {
+          requestMode: "USER_IMPORTED",
+          observationClass: "IMPORTED_BY_USER",
+        }),
+      ],
+      [mkOp("c1", "B00BAGTNAQ", "i1"), mkOp("c2", "B08N5WRWNW", "i2"), mkOp("c3", "B09V3KXJPB", "i3")],
+      livePolicy,
+      { workspaceId: "ws_neg", requiredLiveTargets: 3 }
+    );
+    expect(n13Gate.distinctVerifiedProductFamilies).toBe(2);
+    expect(n13Gate.realProviderVerdict).toBe("INSUFFICIENT_EVIDENCE");
+
+    // N29: Walmart no request because policy OFF => DISABLED (not BLOCKED_PROVIDER)
+    const wmtDisabledRes = await runWalmartUsPilotEnrichment({
+      workspaceId: "ws_n29",
+      researchRunId: "run_n29",
+      niche: "Pet Gadgets",
+      enableWalmartUsPilot: false,
+      env: {
+        KH02_WALMART_US_ENABLED: "false",
+        KH02_WALMART_US_LIVE_ALLOWED: "false",
+      },
+      shortlistedCandidates: [
+        { candidateId: "cand_1", title: "ChomChom Roller Pet Hair Remover" },
+      ],
+    });
+    expect(wmtDisabledRes.telemetry.overallStatus).toBe("DISABLED");
+    expect(wmtDisabledRes.telemetry.overallStatus).not.toBe("BLOCKED_PROVIDER");
+
+    // N38, N39, N40, N46: Missing source SHA, skipped E2E spec, failed subwave, or disk guard < 15 GiB fails/blocks engineering verdict
+    const diskBlockedVerdict: any = computeReleaseVerdicts({
+      releaseVersion: "12.4.3.5.1",
+      runtimeReleaseIdentity: "12.4.3.5.0.3",
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      baseSha: "f".repeat(40),
+      masterHeadSha: "5".repeat(40),
+      codeSha: "a".repeat(40),
+      testedTreeSha: "1".repeat(40),
+      engineeringInput: {
+        requiredIds: ["W1"],
+        results: [
+          {
+            id: "W1",
+            required: true,
+            executionStatus: "PASS",
+            observedAt: "2026-11-01T16:00:00.000Z",
+            sourceSha: "a".repeat(40),
+            exitCode: 0,
+          },
+        ],
+        expectedSha: "a".repeat(40),
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: false,
+        minFreeDiskGiB: 12.0,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: {
+          totalDiscoveredTestFiles: 154,
+          executedTestFilesCount: 154,
+          excludedOrDeferredFilesCount: 0,
+          targetedOnly: false,
+          inventoryComplete: true,
+          totalExecutedTestCases: 1800,
+          passedTestCases: 1800,
+          failedTestCases: 0,
+          requiredActiveSuiteFailedTestCases: 0,
+          baselineKnownPolicySupersededTestCases: 0,
+          newRegressionTestCases: 0,
+        },
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      },
+      diagnostics: {} as any,
+      backtestOutput: {
+        backtestEngineExecuted: "PASS",
+        pointInTimeIntegrityVerdict: "PASS",
+        policyScenarioVerdict: "PASS",
+      } as any,
+      e2eSpecsSummary: {
+        totalSpecs: 12,
+        passedSpecsCount: 11,
+        failedSpecsCount: 0,
+        skippedWithoutAttemptCount: 1,
+      },
+      negativeMutationsCaught: "48/48",
+      ancestryVerified: true,
+    } as any);
+    expect(diskBlockedVerdict.ENGINEERING_ACCEPTANCE).toBe("RESOURCE_BLOCKED");
+    expect(diskBlockedVerdict.requiredE2eCoverageVerdict).toBe("INCOMPLETE");
+  });
+
+  it("N17, N18, N41, N45: computeReleaseVerdicts separates AMAZON_LOCAL_MCP_LIVE_OBSERVATION, AMAZON_PRODUCT_IDENTITY_PILOT, AMAZON_US_DELIVERY_PROOF, AMAZON_USD_PRICE_PROOF, and AMAZON_CREATORS_API without false PASS on 2/3 ChomChom", () => {
+    const mockDiagnostics: any = {
+      evaluatedAt: "2026-11-01T16:00:00.000Z",
+      sourceSha: "a".repeat(40),
+      gates: {
+        g07: {
+          verdict: "BLOCKED_BY_PROVIDER",
+          tiktokRealObservationsCount: 0,
+          tiktokSyntheticObservationsCount: 0,
+          reason: "TikTok connector blocked",
+        },
+        g15: {
+          verdict: "INSUFFICIENT_EVIDENCE",
+          totalDemandObservations: 0,
+          distinctFamiliesCovered: 0,
+          maxCoveredDaysSingleFamily: 0,
+          qualifying60dFamiliesCount: 0,
+          requiredFamiliesCount: 3,
+          reason: "0/3 families",
+        },
+        g16: {
+          verdict: "INSUFFICIENT_EVIDENCE",
+          evaluatedRunId: "run_1",
+          evaluatedRunCreatedAt: "2026-11-01T15:00:00.000Z",
+          verifiedLiveMerchantsCount: 0,
+          requiredLiveMerchantsCount: 3,
+          distinctFamiliesCount: 0,
+          distinctCanonicalProductsCount: 0,
+          candidates: [],
+          reason: "0/3 live merchants",
+        },
+        amazonLive: {
+          verdict: "CREDENTIALS_REQUIRED",
+          route: "OFFICIAL_CREATORS_API",
+          verifiedLiveRowsCount: 0,
+          fixtureRowsCount: 1,
+          reason: "Missing Creators API credentials",
+        },
+        amazonLocalMcpLive: {
+          handshakeStatus: "PASS",
+          liveObservationStatus: "OBSERVED",
+          productIdentityPilotVerdict: "INSUFFICIENT_EVIDENCE",
+          usDeliveryProofVerdict: "UNKNOWN",
+          usdPriceProofVerdict: "UNKNOWN",
+          rawLiveAsinsCount: 2,
+          distinctVerifiedProductFamiliesCount: 1,
+          requiredLiveTargets: 3,
+          usDeliveryConfirmedCount: 0,
+          observedUsdPriceCount: 0,
+          reason: "Observed 2 ChomChom ASINs belonging to 1 product family (3 distinct product families required); US ZIP and USD price unobserved.",
+        },
+        walmartLive: {
+          verdict: "BLOCKED_PROVIDER",
+          route: "JINA_READER_REST_NO_KEY",
+          verifiedLiveRowsCount: 0,
+          fixtureRowsCount: 1,
+          blockedProviderCount: 1,
+          rateLimitedCount: 0,
+          reason: "Blocked by Walmart PerimeterX CAPTCHA",
+        },
+      },
+      shortlistQuality: {
+        targetNiche: "Pet Gadgets",
+        storedRunShortlistNicheMatchedCount: 3,
+        storedRunShortlistTotalCount: 3,
+        holdoutBacktestShortlistNicheMatchedCount: 3,
+        holdoutBacktestShortlistTotalCount: 3,
+        holdoutNicheMismatches: [],
+        allThreeNicheMatchedAndVerified: false,
+      },
+    };
+
+    const verdicts: any = computeReleaseVerdicts({
+      releaseVersion: "12.4.3.5.1",
+      runtimeReleaseIdentity: "12.4.3.5.0.3",
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      baseSha: "f".repeat(40),
+      masterHeadSha: "5".repeat(40),
+      codeSha: "a".repeat(40),
+      testedTreeSha: "1".repeat(40),
+      engineeringInput: {
+        requiredIds: ["W1"],
+        results: [
+          {
+            id: "W1",
+            name: "Targeted unit",
+            command: "npx vitest run",
+            executed: true,
+            exitCode: 0,
+            passed: true,
+            durationMs: 100,
+            sourceSha: "a".repeat(40),
+          },
+        ],
+        expectedSha: "a".repeat(40),
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 25,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: {
+          executedFilesCount: 154,
+          passedFilesCount: 154,
+          failedFilesCount: 0,
+          skippedFilesCount: 0,
+          totalTestsCount: 1800,
+          passedTestsCount: 1800,
+          failedTestsCount: 0,
+          skippedTestsCount: 0,
+          todoTestsCount: 0,
+          unaccountedFilesCount: 0,
+          allShardsExecuted: true,
+        },
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      },
+      diagnostics: mockDiagnostics,
+      backtestOutput: {
+        backtestEngineExecuted: "PASS",
+        pointInTimeIntegrityVerdict: "PASS",
+        policyScenarioVerdict: "PASS",
+        policyScenariosPassed: "16/16",
+        devShortlistCount: 0,
+        holdoutShortlistCount: 3,
+        holdoutNicheMatchedCount: 3,
+        holdoutVerifiedIdentityCount: 0,
+        holdoutFunnelProbableCount: 1,
+        businessHistoricalEvidenceSufficient: "INSUFFICIENT_EVIDENCE",
+      },
+    } as any);
+
+    expect(verdicts.ENGINEERING_ACCEPTANCE).toBe("PASS");
+    expect(verdicts.AMAZON_LOCAL_MCP_HANDSHAKE).toBe("PASS");
+    expect(verdicts.AMAZON_LOCAL_MCP_LIVE_OBSERVATION).toBe("OBSERVED");
+    expect(verdicts.AMAZON_PRODUCT_IDENTITY_PILOT).toBe("INSUFFICIENT_EVIDENCE");
+    expect(verdicts.AMAZON_US_DELIVERY_PROOF).toBe("UNKNOWN");
+    expect(verdicts.AMAZON_USD_PRICE_PROOF).toBe("UNKNOWN");
+    expect(verdicts.AMAZON_CREATORS_API).toBe("CREDENTIALS_REQUIRED");
+    expect(verdicts.WALMART_LIVE_JINA_PILOT).toBe("BLOCKED_PROVIDER");
+    expect(verdicts.FULL_BUSINESS_ACCEPTANCE).toBe("INSUFFICIENT_EVIDENCE");
+    expect(verdicts.OVERALL_RELEASE).toBe("ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS");
+    expect(verdicts.AMAZON_LIVE_PILOT_VERDICT).not.toBe("PASS");
   });
 });

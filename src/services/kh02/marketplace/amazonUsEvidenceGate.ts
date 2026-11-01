@@ -18,11 +18,20 @@ import {
   AmazonProviderOperationRecord,
   resolveAmazonUsPolicyContext,
 } from "./marketplaceEvidenceTypes";
-import { isValidStrictAmazonAsin } from "./amazonUsIdentity";
+import {
+  computeAmazonCanonicalProductFamilyKey,
+  isValidStrictAmazonAsin,
+} from "./amazonUsIdentity";
 
 export interface EvaluateAmazonEvidenceGateOptions {
   workspaceId?: string;
   requiredLiveTargets?: number;
+  mcpSessionLifecycle?: {
+    sessionId?: string | null;
+    transportKind?: string | null;
+    closedCleanly?: boolean | null;
+    ownedChildPidTerminated?: boolean | null;
+  } | null;
 }
 
 export function isFakeOrLocalAmazonRequestId(
@@ -83,6 +92,23 @@ export function evaluateAmazonUsEvidenceGate(
   let brandOnlyMatchCount = 0;
   let rejectedCount = 0;
   const verifiedLiveAsins = new Set<string>();
+  const verifiedLiveCandidateIds = new Set<string>();
+  const eligibleVerifiedLiveRows: AmazonProductEvidence[] = [];
+  let usDeliveryConfirmedCount = 0;
+  let observedUsdPriceCount = 0;
+
+  const mcpSessionClosedCleanly: boolean | null =
+    options.mcpSessionLifecycle === undefined || options.mcpSessionLifecycle === null
+      ? null
+      : options.mcpSessionLifecycle.closedCleanly === true &&
+        options.mcpSessionLifecycle.ownedChildPidTerminated !== false;
+
+  if (mcpSessionClosedCleanly === false) {
+    engineeringIntegrityOk = false;
+    blockers.push(
+      "MCP_SESSION_NOT_CLOSED_CLEANLY: Owned Playwright MCP session or child PID was not cleanly terminated."
+    );
+  }
 
   for (const row of evidenceRows || []) {
     if (!row) continue;
@@ -153,6 +179,15 @@ export function evaluateAmazonUsEvidenceGate(
       ? invocationByRef.get(row.providerInvocationRef)
       : undefined;
 
+    const hasNonEmptyHashes = Boolean(
+      row.rawEvidenceHash &&
+        String(row.rawEvidenceHash).trim().length >= 8 &&
+        row.extractedFieldsHash &&
+        String(row.extractedFieldsHash).trim().length >= 8 &&
+        linkedInvocation?.responseHash &&
+        String(linkedInvocation.responseHash).trim().length >= 8
+    );
+
     const hasValidLiveLineage = Boolean(
       policyContext.featureEnabled &&
         policyContext.liveAllowed &&
@@ -164,8 +199,7 @@ export function evaluateAmazonUsEvidenceGate(
         linkedInvocation.workspaceId === expectedWorkspaceId &&
         linkedInvocation.observationClass === "AUTHORIZED_LIVE" &&
         !linkedInvocation.aborted &&
-        row.rawEvidenceHash &&
-        row.extractedFieldsHash &&
+        hasNonEmptyHashes &&
         linkedInvocation.responseHash === row.rawEvidenceHash &&
         row.asin &&
         isValidStrictAmazonAsin(row.asin)
@@ -189,10 +223,82 @@ export function evaluateAmazonUsEvidenceGate(
       row.asin
     ) {
       verifiedLiveAsins.add(row.asin);
+      if (row.candidateId) {
+        verifiedLiveCandidateIds.add(row.candidateId);
+      }
+      eligibleVerifiedLiveRows.push(row);
+      if (
+        row.verifiedDeliveryMarket === "US" &&
+        row.observedDeliveryPostalCode &&
+        /^\d{5}$/.test(String(row.observedDeliveryPostalCode).trim())
+      ) {
+        usDeliveryConfirmedCount++;
+      } else if (row.verifiedDeliveryMarket === "US") {
+        usDeliveryConfirmedCount++;
+      }
+      if (
+        typeof row.price === "number" &&
+        Number.isFinite(row.price) &&
+        row.price > 0 &&
+        row.currency === "USD"
+      ) {
+        observedUsdPriceCount++;
+      }
     }
   }
 
+  // Compute canonical product families across eligibleVerifiedLiveRows, merging any parent/child ASIN overlaps
+  const familyKeyByAsin = new Map<string, string>();
+  for (const row of eligibleVerifiedLiveRows) {
+    const asin = row.asin!;
+    const computedKey =
+      row.productFamilyKey ||
+      computeAmazonCanonicalProductFamilyKey({
+        asin: row.asin,
+        parentAsin: row.parentAsin,
+        productTitle: row.productTitle,
+        brand: row.brand,
+        modelNumber: row.modelNumber,
+        sku: row.sku,
+        gtin: row.gtin,
+      });
+    familyKeyByAsin.set(asin, computedKey);
+  }
+  // Union any rows where row.parentAsin matches another row's asin or parentAsin (N09)
+  for (const row of eligibleVerifiedLiveRows) {
+    const asin = row.asin!;
+    const pAsin = row.parentAsin ? String(row.parentAsin).trim().toUpperCase() : null;
+    if (pAsin) {
+      const parentMappedKey = familyKeyByAsin.get(pAsin);
+      if (parentMappedKey) {
+        familyKeyByAsin.set(asin, parentMappedKey);
+      } else {
+        for (const other of eligibleVerifiedLiveRows) {
+          if (other.asin && other.parentAsin === pAsin) {
+            const existingKey = familyKeyByAsin.get(other.asin);
+            if (existingKey) {
+              familyKeyByAsin.set(asin, existingKey);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const distinctProductFamiliesSet = new Set<string>(familyKeyByAsin.values());
+  const distinctVerifiedProductFamilies = distinctProductFamiliesSet.size;
+  const distinctCandidateIds = verifiedLiveCandidateIds.size;
+  const verifiedLiveAsinsList = Array.from(verifiedLiveAsins);
   const verifiedLiveUsProductIdentitiesCount = verifiedLiveAsins.size;
+
+  const requiredLiveTargetsMet = Boolean(
+    verifiedLiveUsProductIdentitiesCount >= requiredLiveTargets &&
+      distinctVerifiedProductFamilies >= requiredLiveTargets &&
+      distinctCandidateIds >= requiredLiveTargets &&
+      mcpSessionClosedCleanly !== false
+  );
+
   const engineeringVerdict = engineeringIntegrityOk
     ? "ENGINEERING_READY"
     : "ENGINEERING_FAILED";
@@ -226,25 +332,34 @@ export function evaluateAmazonUsEvidenceGate(
         op.status === "CAPTCHA_BLOCKED" ||
         op.status === "RATE_LIMITED"
     ) &&
-    verifiedLiveUsProductIdentitiesCount < requiredLiveTargets
+    !requiredLiveTargetsMet
   ) {
     realProviderVerdict = "BLOCKED_PROVIDER";
     blockers.push(
-      `Upstream provider or MCP session blocked/unavailable (${verifiedLiveUsProductIdentitiesCount}/${requiredLiveTargets} live US identities verified).`
+      `Upstream provider or MCP session blocked/unavailable (${distinctVerifiedProductFamilies}/${requiredLiveTargets} distinct product families verified; ${verifiedLiveUsProductIdentitiesCount} raw ASINs).`
     );
-  } else if (verifiedLiveUsProductIdentitiesCount >= requiredLiveTargets) {
+  } else if (requiredLiveTargetsMet) {
     realProviderVerdict = "REAL_PROVIDER_VERIFIED";
     reasons.push(
-      `Verified ${verifiedLiveUsProductIdentitiesCount}/${requiredLiveTargets} distinct authorized live US Amazon product identities.`
+      `Verified ${distinctVerifiedProductFamilies}/${requiredLiveTargets} distinct authorized live US Amazon product families (${verifiedLiveUsProductIdentitiesCount} ASINs across ${distinctCandidateIds} candidates).`
     );
   } else if (invocationLedger.length === 0 && evidenceRows.length === 0) {
     realProviderVerdict = "NOT_ATTEMPTED";
     blockers.push("No live Amazon US provider operations were attempted in this run.");
   } else {
     realProviderVerdict = "INSUFFICIENT_EVIDENCE";
-    blockers.push(
-      `Observed ${verifiedLiveUsProductIdentitiesCount}/${requiredLiveTargets} verified live US Amazon product identities (fixtures/cached excluded: ${fixtureOrCachedRowsExcludedFromLive}).`
-    );
+    if (
+      verifiedLiveUsProductIdentitiesCount >= requiredLiveTargets &&
+      distinctVerifiedProductFamilies < requiredLiveTargets
+    ) {
+      blockers.push(
+        `DUPLICATE_PRODUCT_FAMILY_INSUFFICIENT: Observed ${verifiedLiveUsProductIdentitiesCount} live ASINs (${verifiedLiveAsinsList.join(", ")}) but only ${distinctVerifiedProductFamilies}/${requiredLiveTargets} distinct product families (${Array.from(distinctProductFamiliesSet).join(", ")}). Variants of the same product family cannot satisfy the ${requiredLiveTargets}-product requirement.`
+      );
+    } else {
+      blockers.push(
+        `Observed ${distinctVerifiedProductFamilies}/${requiredLiveTargets} distinct verified live US Amazon product families (${verifiedLiveUsProductIdentitiesCount} raw ASINs; fixtures/cached excluded: ${fixtureOrCachedRowsExcludedFromLive}).`
+      );
+    }
   }
 
   let overallPilotStatus: AmazonEvidenceGateEvaluation["overallPilotStatus"] =
@@ -270,6 +385,15 @@ export function evaluateAmazonUsEvidenceGate(
     realProviderVerdict,
     overallPilotStatus,
     policyStatus: policyContext.accessPolicyStatus,
+    verifiedLiveAsins: verifiedLiveAsinsList,
+    distinctVerifiedProductFamilies,
+    distinctVerifiedProductFamilyKeys: Array.from(distinctProductFamiliesSet),
+    distinctCandidateIds,
+    usDeliveryConfirmedCount,
+    USDeliveryConfirmedCount: usDeliveryConfirmedCount,
+    observedUsdPriceCount,
+    requiredLiveTargetsMet,
+    mcpSessionClosedCleanly,
     counts: {
       totalEvidenceRows: (evidenceRows || []).length,
       sameRunWorkspaceVerifiedRows,
@@ -281,6 +405,10 @@ export function evaluateAmazonUsEvidenceGate(
       rejectedCount,
       verifiedLiveUsProductIdentitiesCount,
       requiredLiveUsProductIdentitiesTarget: requiredLiveTargets,
+      distinctVerifiedProductFamiliesCount: distinctVerifiedProductFamilies,
+      distinctCandidateIdsCount: distinctCandidateIds,
+      usDeliveryConfirmedCount,
+      observedUsdPriceCount,
     },
     g15DemandUnchanged: true,
     g16MerchantGateUnchanged: true,

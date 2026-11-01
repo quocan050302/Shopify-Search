@@ -156,6 +156,7 @@ export interface AmazonProductEvidence {
   identityMatch: IdentityMatch;
   isCached: boolean;
   matchedCanonicalKey: string | null;
+  productFamilyKey?: string | null;
   matchingReasons: string[];
   missingFields: string[];
   rejectionReasons: string[];
@@ -209,6 +210,15 @@ export interface AmazonEvidenceGateEvaluation {
     | "ENGINEERING_COMPLETE_EXTERNAL_BLOCKED"
     | "ENGINEERING_FAILED";
   policyStatus: AmazonAccessPolicyStatus;
+  verifiedLiveAsins?: string[];
+  distinctVerifiedProductFamilies?: number;
+  distinctVerifiedProductFamilyKeys?: string[];
+  distinctCandidateIds?: number;
+  usDeliveryConfirmedCount?: number;
+  USDeliveryConfirmedCount?: number;
+  observedUsdPriceCount?: number;
+  requiredLiveTargetsMet?: boolean;
+  mcpSessionClosedCleanly?: boolean | null;
   counts: {
     totalEvidenceRows: number;
     sameRunWorkspaceVerifiedRows: number;
@@ -220,6 +230,10 @@ export interface AmazonEvidenceGateEvaluation {
     rejectedCount: number;
     verifiedLiveUsProductIdentitiesCount: number;
     requiredLiveUsProductIdentitiesTarget: number;
+    distinctVerifiedProductFamiliesCount?: number;
+    distinctCandidateIdsCount?: number;
+    usDeliveryConfirmedCount?: number;
+    observedUsdPriceCount?: number;
   };
   g15DemandUnchanged: true;
   g16MerchantGateUnchanged: true;

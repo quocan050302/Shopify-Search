@@ -40,6 +40,36 @@ export const REQUIRED_ORIGINAL_PILOT_ARTIFACTS_00_TO_28 = [
   "28_FINAL_OWNER_REPORT_VI.md",
 ] as const;
 
+export const REQUIRED_SECTION_8_ARTIFACTS_00_TO_26 = [
+  "00_BRANCH_AND_TESTED_SHA.json",
+  "01_ROOT_CAUSE_AND_FUNCTION_CHANGE_MAP.md",
+  "02_ORIGINAL_BASELINE_RECONCILIATION.json",
+  "03_AMAZON_REAL_MCP_HANDSHAKE_AND_TOOL_INVOCATIONS.json",
+  "04_AMAZON_REAL_PUBLIC_SEARCH_AND_PDP_OPERATION_LEDGER.json",
+  "05_AMAZON_DISTINCT_FAMILY_IDENTITY_AND_VARIANTS_AUDIT.json",
+  "06_AMAZON_US_DELIVERY_ZIP_USD_PRICE_OBSERVATION_LEDGER.json",
+  "07_AMAZON_ROUTE_SPECIFIC_MULTI_VERDICT.json",
+  "08_WALMART_JINA_REAL_REQUEST_RESPONSE_AND_BOTWALL.json",
+  "09_WALMART_LOCATION_UPC_AND_PDP_EVIDENCE_TRUTH.json",
+  "10_PROVIDER_ORIGIN_AND_POLICY_NONBYPASS_AUDIT.json",
+  "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+  "12_GET_NONMUTATION_AND_WORKSPACE_SECURITY.json",
+  "13_FULL_DISCOVERED_TEST_INVENTORY_AND_SHARD_RESULTS.json",
+  "14_ALL_E2E_SPEC_EXECUTION_RECEIPTS.json",
+  "15_FRESH_TSC_BUILD_AND_CHROMIUM_PROOF.json",
+  "16_DEV_HOLDOUT_DATASET_FINGERPRINTS_AND_REPLAY.json",
+  "17_POINT_IN_TIME_CUTOFF_AND_NO_LOOKAHEAD.json",
+  "18_NONINFLATION_AND_G07_G15_G16_GATE_MATRIX.json",
+  "19_NEGATIVE_CONTROL_EXECUTION_RESULTS.json",
+  "20_INDEPENDENT_VALIDATOR_CASES_AND_VERDICT.json",
+  "21_ASYNC_TASK_EXECUTION_BARRIER_AND_PID_LEDGER.json",
+  "22_DISK_RAM_FREE_SPACE_AND_OUTPUT_QUOTA_LOG.json",
+  "23_CODE_SHA_TESTED_TREE_AND_ARTIFACT_DIGEST_MANIFEST.json",
+  "24_FINAL_MULTI_VERDICT_AND_BLOCKERS.json",
+  "25_FINAL_OWNER_REPORT_VI.md",
+  "26_SOURCE_COMMIT_EVIDENCE_COMMIT_REMOTE_PUSH_PROOF.json",
+] as const;
+
 export interface OriginalPilotValidationFailure {
   code: string;
   file: string;
@@ -264,6 +294,9 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
         a05.brandOnlyNeverPromotedToExact === true &&
         a05.accessoryOrRefillNeverPromotedToExact === true &&
         a05.variationChildrenKeptDistinct === true &&
+        a05.chomChomVariantsCountAsSingleFamily !== false &&
+        a05.bareDollarWithoutExplicitCurrencyRemainsNull !== false &&
+        a05.carouselPriceNeverAssignedToMainAsin !== false &&
         a05.missingPriceRemainsNull === true &&
         a05.unobservedDeliveryZipRemainsNull === true &&
         a05.unobservedHttpStatusOrigin === "UNOBSERVED_NULL" &&
@@ -272,7 +305,7 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
         a05.fixtureOrTestDoubleNeverProducesAuthorizedLive === true,
       "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
       "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
-      "Amazon identity, sponsored filter, null-price, unobserved ZIP, or anti-fake provenance check failed."
+      "Amazon identity, sponsored filter, null-price, unobserved ZIP, distinct family, or anti-fake provenance check failed."
     );
   }
 
@@ -304,6 +337,59 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
       "BLOCKED_CAPTCHA_OR_BOT_WALL",
       "FAILED",
     ];
+    const ledgerOps: any[] = Array.isArray(a07.telemetry?.operationLedger)
+      ? a07.telemetry.operationLedger
+      : [];
+    const ledgerByInvRef = new Map<string, any>();
+    for (const op of ledgerOps) {
+      if (op && typeof op.providerInvocationRef === "string") {
+        ledgerByInvRef.set(op.providerInvocationRef, op);
+      }
+    }
+    const evRows: any[] = Array.isArray(a07.evidenceRows) ? a07.evidenceRows : [];
+    let liveRowLineageValid = true;
+    const computedFamilyKeys = new Set<string>();
+    for (const r of evRows) {
+      if (r?.observationClass === "AUTHORIZED_LIVE") {
+        const linkedOp = r.providerInvocationRef
+          ? ledgerByInvRef.get(r.providerInvocationRef)
+          : null;
+        if (
+          !linkedOp ||
+          !r.rawEvidenceHash ||
+          String(r.rawEvidenceHash).length < 8 ||
+          linkedOp.responseHash !== r.rawEvidenceHash ||
+          linkedOp.researchRunId !== r.researchRunId ||
+          linkedOp.workspaceId !== r.workspaceId
+        ) {
+          liveRowLineageValid = false;
+        }
+        if (
+          r.status === "IDENTITY_VERIFIED" &&
+          r.identityMatch === "EXACT_PRODUCT"
+        ) {
+          const famKey =
+            r.productFamilyKey ||
+            (String(r.brand || r.productTitle || "")
+              .toLowerCase()
+              .includes("chomchom")
+              ? "amz_family:chomchom:pet_hair_remover_roller"
+              : `amz_family:${r.asin}`);
+          computedFamilyKeys.add(famKey);
+        }
+      }
+    }
+
+    const reportedDistinctFamilies =
+      typeof a07.distinctVerifiedProductFamilies === "number"
+        ? a07.distinctVerifiedProductFamilies
+        : computedFamilyKeys.size;
+    const distinctFamilyConsistency =
+      reportedDistinctFamilies <= computedFamilyKeys.size &&
+      (reportedDistinctFamilies >= 3 || a07.requiredLiveTargetsMet !== true) &&
+      (reportedDistinctFamilies >= 3 ||
+        a07.realProviderVerdict !== "REAL_PROVIDER_VERIFIED");
+
     check(
       a07.codeSha === canonicalCodeSha &&
         a07.probeExecuted === true &&
@@ -316,12 +402,16 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
         a07.operationsAttempted >= 1 &&
         a07.operationsAttempted <= 4 &&
         a07.mcpSessionClosedCleanly === true &&
+        a07.ownedChildPidTerminated !== false &&
+        a07.historicalBaselineReusedAsCurrentEvidence !== true &&
         a07.fabricatedLiveSuccess === false &&
+        liveRowLineageValid &&
+        distinctFamilyConsistency &&
         (a07.realAmazonPageObservationStatus === "PUBLIC_PAGE_OBSERVED" ||
           a07.verifiedLiveProductCount === 0),
       "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
       "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
-      "Amazon live pilot execution truth failed validation or fabricated live product verification."
+      "Amazon live pilot execution truth failed validation, had mismatched invocation hash, unclosed session PID, or fabricated live product family verification."
     );
   }
 
@@ -567,12 +657,83 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
     );
   }
 
+  // Validate 24 and 26 whenever present (including during negative mutation runs)
+  const a24Path = path.join(artifactDir, "24_OWNED_PROCESS_RAM_DISK_LEDGER.json");
+  if (!options.skipPostValidationFiles || fs.existsSync(a24Path)) {
+    const a24 = readJsonSafe(artifactDir, "24_OWNED_PROCESS_RAM_DISK_LEDGER.json", failures);
+    if (a24) {
+      check(
+        a24.codeSha === canonicalCodeSha &&
+          typeof a24.minFreeDiskGiB === "number" &&
+          a24.minFreeDiskGiB >= 15 &&
+          typeof a24.peakConcurrentHeavyProcesses === "number" &&
+          a24.peakConcurrentHeavyProcesses <= 2 &&
+          a24.ownedOrphanCount === 0,
+        "PROCESS_RAM_DISK_GUARD_VIOLATION",
+        "24_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+        "Process/RAM/Disk ledger must confirm freeDisk >= 15 GiB, peakConcurrentHeavyProcesses <= 2, and ownedOrphanCount === 0."
+      );
+    }
+  }
+
+  const a26Path = path.join(artifactDir, "26_FINAL_RELEASE_VERDICT.json");
+  if (!options.skipPostValidationFiles || fs.existsSync(a26Path)) {
+    const a26 = readJsonSafe(artifactDir, "26_FINAL_RELEASE_VERDICT.json", failures);
+    if (a26) {
+      const amzDistinctFamilies =
+        typeof a07?.distinctVerifiedProductFamilies === "number"
+          ? a07.distinctVerifiedProductFamilies
+          : 0;
+      const amzTargetsMet = Boolean(
+        a07?.requiredLiveTargetsMet === true && amzDistinctFamilies >= 3
+      );
+      const amzUsZipCount = Number(a07?.usDeliveryConfirmedCount ?? 0);
+      const amzUsdPriceCount = Number(a07?.observedUsdPriceCount ?? 0);
+      const wmtLiveSucceeded = Boolean(
+        a11?.liveProviderStatus === "SUCCEEDED" &&
+          Number(a11?.verifiedLiveProductCount ?? 0) >= 3
+      );
+      const engSubwavesAllPass = Boolean(
+        a15?.allPassed === true &&
+          a15?.failedTests === 0 &&
+          a16?.failedTestCases === 0 &&
+          a18?.failedSpecsCount === 0
+      );
+
+      check(
+        a26.codeSha === canonicalCodeSha &&
+          a26.ENGINEERING_VERDICT === "PASS" &&
+          engSubwavesAllPass &&
+          a26.AMAZON_MCP_INTEGRATION_ENGINEERING_VERDICT === "PASS" &&
+          a26.WALMART_JINA_INTEGRATION_ENGINEERING_VERDICT === "PASS" &&
+          a26.OVERALL_RELEASE_VERDICT !== "PASS" &&
+          (amzTargetsMet ||
+            (a26.AMAZON_PRODUCT_IDENTITY_PILOT !== "PASS" &&
+              a26.AMAZON_LIVE_PILOT_VERDICT !== "PASS")) &&
+          (amzUsZipCount > 0 ||
+            (a26.AMAZON_US_DELIVERY_PROOF === "UNKNOWN" &&
+              a26.AMAZON_LIVE_PILOT_VERDICT !== "PASS")) &&
+          (amzUsdPriceCount > 0 ||
+            (a26.AMAZON_USD_PRICE_PROOF === "UNKNOWN" &&
+              a26.AMAZON_LIVE_PILOT_VERDICT !== "PASS")) &&
+          a26.AMAZON_LOCAL_MCP_LIVE_OBSERVATION !== "CREDENTIALS_REQUIRED" &&
+          (a07?.realAmazonPageObservationStatus !== "PUBLIC_PAGE_OBSERVED" ||
+            a26.AMAZON_LOCAL_MCP_LIVE_OBSERVATION === "OBSERVED") &&
+          (wmtLiveSucceeded ||
+            (a26.WALMART_LIVE_JINA_PILOT !== "LIVE_VERIFIED" &&
+              a26.WALMART_LIVE_JINA_PILOT !== "PASS" &&
+              a26.WALMART_LIVE_PILOT_VERDICT !== "PASS")),
+        "FINAL_RELEASE_VERDICT_INVALID",
+        "26_FINAL_RELEASE_VERDICT.json",
+        "26_FINAL_RELEASE_VERDICT.json must match codeSha, cross-check against test/provider evidence, never claim PASS on <3 distinct Amazon families or blocked Walmart, and never claim VERIFIED US ZIP/USD when unobserved."
+      );
+    }
+  }
+
   if (!options.skipPostValidationFiles) {
     const a22 = readJsonSafe(artifactDir, "22_NEGATIVE_MUTATION_SUITE_30PLUS_CASES.json", failures);
     const a23 = readJsonSafe(artifactDir, "23_INDEPENDENT_VALIDATOR_REPORT.json", failures);
-    const a24 = readJsonSafe(artifactDir, "24_OWNED_PROCESS_RAM_DISK_LEDGER.json", failures);
     const a25 = readJsonSafe(artifactDir, "25_FILE_MANIFEST_SHA256.json", failures);
-    const a26 = readJsonSafe(artifactDir, "26_FINAL_RELEASE_VERDICT.json", failures);
     const a27 = readJsonSafe(artifactDir, "27_COMMIT_PUSH_REMOTE_SHA_VERIFICATION.json", failures);
 
     if (a22) {
@@ -594,31 +755,6 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
         "VALIDATOR_REPORT_NOT_PASS",
         "23_INDEPENDENT_VALIDATOR_REPORT.json",
         "23_INDEPENDENT_VALIDATOR_REPORT.json must report PASS with 0 failed checks."
-      );
-    }
-
-    if (a24) {
-      check(
-        a24.codeSha === canonicalCodeSha &&
-          typeof a24.minFreeDiskGiB === "number" &&
-          a24.minFreeDiskGiB >= 15 &&
-          typeof a24.peakConcurrentHeavyProcesses === "number" &&
-          a24.peakConcurrentHeavyProcesses <= 2 &&
-          a24.ownedOrphanCount === 0,
-        "PROCESS_RAM_DISK_GUARD_VIOLATION",
-        "24_OWNED_PROCESS_RAM_DISK_LEDGER.json",
-        "Process/RAM/Disk ledger must confirm freeDisk >= 15 GiB, peakConcurrentHeavyProcesses <= 2, and ownedOrphanCount === 0."
-      );
-    }
-
-    if (a26) {
-      check(
-        a26.codeSha === canonicalCodeSha &&
-          a26.ENGINEERING_VERDICT === "PASS" &&
-          a26.OVERALL_RELEASE_VERDICT !== "PASS",
-        "FINAL_RELEASE_VERDICT_INVALID",
-        "26_FINAL_RELEASE_VERDICT.json",
-        "26_FINAL_RELEASE_VERDICT.json must match codeSha, have ENGINEERING_VERDICT=PASS, and truthfully separate live provider/business blockers."
       );
     }
 
@@ -648,8 +784,11 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
       for (const item of entries) {
         if (
           item.file === "25_FILE_MANIFEST_SHA256.json" ||
+          item.file === "23_CODE_SHA_TESTED_TREE_AND_ARTIFACT_DIGEST_MANIFEST.json" ||
           item.file === "27_COMMIT_PUSH_REMOTE_SHA_VERIFICATION.json" ||
-          item.file === "28_FINAL_OWNER_REPORT_VI.md"
+          item.file === "26_SOURCE_COMMIT_EVIDENCE_COMMIT_REMOTE_PUSH_PROOF.json" ||
+          item.file === "28_FINAL_OWNER_REPORT_VI.md" ||
+          item.file === "25_FINAL_OWNER_REPORT_VI.md"
         ) {
           continue;
         }
@@ -1051,6 +1190,130 @@ export function runOriginalPilotPhysicalNegativeMutationSuite36(
         expectedCode: "POINT_IN_TIME_LOOKAHEAD_LEAK",
         mutate: (d) => {
           d.semanticHashAcceptedAsRawProductSchemaProofCount = 1;
+        },
+      },
+      {
+        id: "ORIG_MUT_37",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N01 & N02: Empty operation ledger (operationsAttempted=0) claiming transportHandshakeStatus=SUCCEEDED",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          d.operationsAttempted = 0;
+          d.transportHandshakeStatus = "SUCCEEDED";
+        },
+      },
+      {
+        id: "ORIG_MUT_38",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N03: Handshake-only with actualBrowserToolExecutionStatus=NOT_ATTEMPTED claiming PUBLIC_PAGE_OBSERVED",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          d.actualBrowserToolExecutionStatus = "NOT_ATTEMPTED";
+          d.realAmazonPageObservationStatus = "PUBLIC_PAGE_OBSERVED";
+        },
+      },
+      {
+        id: "ORIG_MUT_39",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N04 & N14 & N42: Tamper rawEvidenceHash on live Amazon row so it diverges from operationLedger responseHash",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          if (Array.isArray(d.evidenceRows) && d.evidenceRows.length > 0) {
+            d.evidenceRows[0].rawEvidenceHash = "f".repeat(64);
+          } else {
+            d.evidenceRows = [
+              {
+                id: "fake_row",
+                observationClass: "AUTHORIZED_LIVE",
+                providerInvocationRef: "nonexistent_inv",
+                rawEvidenceHash: "f".repeat(64),
+              },
+            ];
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_40",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N05 & N47: Claim mcpSessionClosedCleanly=true while ownedChildPidTerminated=false",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          d.mcpSessionClosedCleanly = true;
+          d.ownedChildPidTerminated = false;
+        },
+      },
+      {
+        id: "ORIG_MUT_41",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N06..N10 & N45: Count 2 ChomChom ASINs (distinctVerifiedProductFamilies=1) as REAL_PROVIDER_VERIFIED / requiredLiveTargetsMet=true",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          d.distinctVerifiedProductFamilies = 1;
+          d.requiredLiveTargetsMet = true;
+          d.realProviderVerdict = "REAL_PROVIDER_VERIFIED";
+        },
+      },
+      {
+        id: "ORIG_MUT_42",
+        file: "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+        description: "N21: Infer currency=USD from bare '$' symbol without explicit currency evidence",
+        expectedCode: "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+        mutate: (d) => {
+          d.bareDollarWithoutExplicitCurrencyRemainsNull = false;
+        },
+      },
+      {
+        id: "ORIG_MUT_43",
+        file: "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+        description: "N24: Assign carousel/suggested item price to inspected main ASIN",
+        expectedCode: "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+        mutate: (d) => {
+          d.carouselPriceNeverAssignedToMainAsin = false;
+        },
+      },
+      {
+        id: "ORIG_MUT_44",
+        file: "26_FINAL_RELEASE_VERDICT.json",
+        description: "N17 & N41: Overwrite AMAZON_LOCAL_MCP_LIVE_OBSERVATION with CREDENTIALS_REQUIRED when local MCP observed pages",
+        expectedCode: "FINAL_RELEASE_VERDICT_INVALID",
+        mutate: (d) => {
+          d.AMAZON_LOCAL_MCP_LIVE_OBSERVATION = "CREDENTIALS_REQUIRED";
+        },
+      },
+      {
+        id: "ORIG_MUT_45",
+        file: "26_FINAL_RELEASE_VERDICT.json",
+        description: "N44: Relabel blocked Walmart Jina probe as WALMART_LIVE_JINA_PILOT=LIVE_VERIFIED",
+        expectedCode: "FINAL_RELEASE_VERDICT_INVALID",
+        mutate: (d) => {
+          d.WALMART_LIVE_JINA_PILOT = "LIVE_VERIFIED";
+        },
+      },
+      {
+        id: "ORIG_MUT_46",
+        file: "15_TARGETED_AMAZON_WALMART_TEST_MATRIX.json",
+        description: "N40: Force failedTests=1 in targeted test matrix while keeping ENGINEERING_VERDICT=PASS",
+        expectedCode: "TARGETED_MATRIX_INCOMPLETE_OR_FAILED",
+        mutate: (d) => {
+          d.failedTests = 1;
+        },
+      },
+      {
+        id: "ORIG_MUT_47",
+        file: "24_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+        description: "N46: Breach minimum 15 GiB free disk guard (minFreeDiskGiB=10.5)",
+        expectedCode: "PROCESS_RAM_DISK_GUARD_VIOLATION",
+        mutate: (d) => {
+          d.minFreeDiskGiB = 10.5;
+        },
+      },
+      {
+        id: "ORIG_MUT_48",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "N48: Reuse historical 52/52 standalone baseline as current live pass evidence",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          d.historicalBaselineReusedAsCurrentEvidence = true;
         },
       },
     ];

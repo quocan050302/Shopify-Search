@@ -697,24 +697,58 @@ export async function connectAmazonPlaywrightMcp(
           const brandMatch =
             textItems.match(/Visit the\s+([A-Za-z0-9][A-Za-z0-9\s\-&'.]{1,40})\s+Store/i)?.[1]?.trim() ||
             textItems.match(/\bBrand\s*:\s*([^\n"|]{2,40})/i)?.[1]?.trim() ||
-            (h1Title && /^ChomChom\s+Roller\b/i.test(h1Title) ? "ChomChom Roller" : null);
-          const usdPriceMatch = textItems.match(/\$([0-9]{1,4}\.[0-9]{2})/)?.[1] || null;
-          const availMatch =
-            textItems.match(/\b(In Stock|Currently unavailable|Temporarily out of stock)\b/i)?.[1] ||
-            null;
+            (h1Title && /^ChomChom\s+Roller\b/i.test(h1Title)
+              ? "ChomChom Roller"
+              : h1Title && /^UAHPET\b/i.test(h1Title)
+              ? "UAHPET"
+              : h1Title && /^Furbo\b/i.test(h1Title)
+              ? "Furbo"
+              : h1Title && /^PETLIBRO\b/i.test(h1Title)
+              ? "PETLIBRO"
+              : h1Title && /^PetSafe\b/i.test(h1Title)
+              ? "PetSafe"
+              : h1Title && /^KittySpout\b/i.test(h1Title)
+              ? "KittySpout"
+              : h1Title && /^Uproot\s+Clean\b/i.test(h1Title)
+              ? "Uproot Clean"
+              : null);
+          // Only inspect primary product area before any carousel/related-items section to prevent assigning carousel prices (N24)
+          const carouselSplitIdx = textItems.search(
+            /\b(?:Products related to this item|Customers who viewed this item also viewed|Compare with similar items|Sponsored products related to this item)\b/i
+          );
+          const primaryProductRegion =
+            carouselSplitIdx > 0 ? textItems.slice(0, carouselSplitIdx) : textItems;
           const deliveryLineMatch =
-            textItems.match(/button\s+"(Deliver\s+to\s+[^"\n]+)"/i)?.[1]?.trim() ||
-            textItems.match(/\b(Deliver\s+to\s+[^\n"\]]+)/i)?.[1]?.trim() ||
+            primaryProductRegion.match(/button\s+"(Deliver\s+to\s+[^"\n]+)"/i)?.[1]?.trim() ||
+            primaryProductRegion.match(/\b(Deliver\s+to\s+[^\n"\]]+)/i)?.[1]?.trim() ||
             null;
           const deliveryZipMatch =
             deliveryLineMatch?.match(/\b(\d{5})\b/)?.[1] || null;
-          if (asinFromSnap || h1Title || brandMatch || usdPriceMatch || deliveryLineMatch) {
+          // Only extract buybox price when anchored to explicit buybox/price label and never infer USD from '$' alone without explicit USD/US-ZIP evidence
+          const anchoredBuyboxPriceMatch =
+            primaryProductRegion.match(
+              /\b(?:Price|Buy\s+New|One-time\s+purchase)\s*:?\s*(?:US)?\$([0-9]{1,4}\.[0-9]{2})\b/i
+            )?.[1] || null;
+          const explicitUsdEvidence =
+            /\b(?:USD|US\$)\b/.test(primaryProductRegion) || Boolean(deliveryZipMatch);
+          const availMatch =
+            primaryProductRegion.match(
+              /\b(In Stock|Currently unavailable|Temporarily out of stock)\b/i
+            )?.[1] || null;
+          if (
+            asinFromSnap ||
+            h1Title ||
+            brandMatch ||
+            anchoredBuyboxPriceMatch ||
+            deliveryLineMatch
+          ) {
             parsedStructuredData = {
               asin: asinFromSnap,
               productTitle: h1Title,
               brand: brandMatch,
-              price: usdPriceMatch ? Number(usdPriceMatch) : null,
-              currency: usdPriceMatch ? "USD" : null,
+              price: anchoredBuyboxPriceMatch ? Number(anchoredBuyboxPriceMatch) : null,
+              currency:
+                anchoredBuyboxPriceMatch && explicitUsdEvidence ? "USD" : null,
               availability: availMatch,
               deliveryLocationText: deliveryLineMatch,
               deliveryPostalCode: deliveryZipMatch,
@@ -771,7 +805,16 @@ export async function connectAmazonPlaywrightMcp(
           }
         } finally {
           await safeCloseTransport();
-          handshakeProof.closedCleanly = true;
+          let pidTerminated = true;
+          if (ownedChildPid && ownedChildPid > 0) {
+            try {
+              process.kill(ownedChildPid, 0);
+              pidTerminated = false;
+            } catch {
+              pidTerminated = true;
+            }
+          }
+          handshakeProof.closedCleanly = pidTerminated;
         }
       },
     };

@@ -111,7 +111,9 @@ export function computeRequiredWaveCompletion(
       found.exitCode === undefined ||
       found.exitCode === null ||
       found.exitCode === 0;
-    if (!shaMatches || found.executionStatus !== "PASS" || !exitOk) {
+    const statusPassed =
+      found.executionStatus === "PASS" || (found as any).passed === true;
+    if (!shaMatches || !statusPassed || !exitOk) {
       invalid.push(reqId);
     }
   }
@@ -172,11 +174,28 @@ export function computeEngineeringVerdict(
     input.expectedSha
   );
 
+  const regInv: any = input.regressionInventory || {};
+  const isInvComplete = Boolean(
+    regInv.inventoryComplete ?? regInv.allShardsExecuted ?? false
+  );
+  const isTargetedOnly = Boolean(regInv.targetedOnly ?? false);
+  const totalExecCases = Number(
+    regInv.totalExecutedTestCases ?? regInv.totalTestsCount ?? 0
+  );
+  const failedCases = Number(
+    regInv.failedTestCases ?? regInv.failedTestsCount ?? 0
+  );
+  const activeFailed = Number(regInv.requiredActiveSuiteFailedTestCases ?? 0);
+  const supersededFailed = Number(
+    regInv.baselineKnownPolicySupersededTestCases ?? 0
+  );
+  const newRegFailed = Number(regInv.newRegressionTestCases ?? 0);
+
   if (
     !waveComp.complete ||
-    !input.regressionInventory.inventoryComplete ||
-    input.regressionInventory.targetedOnly ||
-    input.regressionInventory.totalExecutedTestCases <= 0 ||
+    !isInvComplete ||
+    isTargetedOnly ||
+    totalExecCases <= 0 ||
     input.nonInflationCandidatesCount < 3
   ) {
     return "INCOMPLETE";
@@ -188,10 +207,10 @@ export function computeEngineeringVerdict(
     input.validatorChecksFailed > 0 ||
     !input.shaParityVerified ||
     !input.nonInflationVerified ||
-    input.regressionInventory.failedTestCases > 0 ||
-    input.regressionInventory.requiredActiveSuiteFailedTestCases > 0 ||
-    input.regressionInventory.baselineKnownPolicySupersededTestCases > 0 ||
-    input.regressionInventory.newRegressionTestCases > 0 ||
+    failedCases > 0 ||
+    activeFailed > 0 ||
+    supersededFailed > 0 ||
+    newRegFailed > 0 ||
     input.ownedOrphanCount !== 0
   ) {
     return "FAIL";
@@ -375,6 +394,12 @@ export interface Kh02AcceptanceDiagnostics {
           | "OBSERVED_UNVERIFIED"
           | "NOT_VERIFIED";
         verifiedLiveProductCount: number;
+        distinctVerifiedProductFamilies?: number;
+        distinctCandidateIds?: number;
+        usDeliveryConfirmedCount?: number;
+        observedUsdPriceCount?: number;
+        requiredLiveTargetsMet?: boolean;
+        mcpSessionClosedCleanly?: boolean | "UNKNOWN";
         attemptedLiveCallsCount: number;
         reason: string;
       };
@@ -1574,37 +1599,123 @@ export async function collectKh02AcceptanceDiagnostics(params: {
             : []),
         ],
         reason: amazonLiveEligibility.reason,
-        localMcpPilot: {
-          routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
-          probeExecutionStatus:
-            params.liveAmazonProbeArtifact?.probeExecutionStatus === "DID_RUN"
-              ? "DID_RUN"
-              : "NOT_RUN",
-          transportHandshakeStatus:
-            params.liveAmazonProbeArtifact?.transportHandshakeStatus ||
-            "NOT_ATTEMPTED",
-          actualBrowserToolExecutionStatus:
-            params.liveAmazonProbeArtifact?.actualBrowserToolExecutionStatus ||
-            "NOT_ATTEMPTED",
-          realAmazonPageObservationStatus:
+        localMcpPilot: (() => {
+          const probeRan =
+            params.liveAmazonProbeArtifact?.probeExecutionStatus === "DID_RUN" ||
+            params.liveAmazonProbeArtifact?.probeExecuted === true;
+          const rawAsinsCount = Number(
+            params.liveAmazonProbeArtifact?.rawLiveAsinsCount ??
+              params.liveAmazonProbeArtifact?.verifiedLiveProductCount ??
+              0
+          );
+          const distinctFamiliesCount = Number(
+            params.liveAmazonProbeArtifact?.distinctVerifiedProductFamiliesCount ??
+              params.liveAmazonProbeArtifact?.distinctVerifiedProductFamilies ??
+              0
+          );
+          const distinctCandidatesCount = Number(
+            params.liveAmazonProbeArtifact?.distinctCandidateIdsCount ??
+              params.liveAmazonProbeArtifact?.distinctCandidateIds ??
+              0
+          );
+          const reqTargets = Number(
+            params.liveAmazonProbeArtifact?.requiredLiveTargets ?? 3
+          );
+          const usDeliveryCount = Number(
+            params.liveAmazonProbeArtifact?.usDeliveryConfirmedCount ?? 0
+          );
+          const usdPriceCount = Number(
+            params.liveAmazonProbeArtifact?.observedUsdPriceCount ?? 0
+          );
+          const sessionClosed =
+            params.liveAmazonProbeArtifact?.mcpSessionClosedCleanly ?? null;
+          const pageObsStatus =
             params.liveAmazonProbeArtifact?.realAmazonPageObservationStatus ||
-            "NOT_ATTEMPTED",
-          productIdentityVerificationStatus:
-            params.liveAmazonProbeArtifact?.productIdentityVerificationStatus ||
-            "NOT_ATTEMPTED",
-          liveVerdict:
-            params.liveAmazonProbeArtifact?.liveVerdict || "NOT_VERIFIED",
-          verifiedLiveProductCount: Number(
-            params.liveAmazonProbeArtifact?.verifiedLiveProductCount || 0
-          ),
-          attemptedLiveCallsCount: Number(
-            params.liveAmazonProbeArtifact?.attemptedLiveCallsCount || 0
-          ),
-          reason: String(
-            params.liveAmazonProbeArtifact?.statusReason ||
-              "Original Amazon US Microsoft Playwright MCP pilot route (independent of Creators API credentials)."
-          ),
-        },
+            "NOT_ATTEMPTED";
+          const identityPilotVerdict:
+            | "PASS"
+            | "INSUFFICIENT_EVIDENCE"
+            | "BLOCKED"
+            | "NOT_EXECUTED" = !probeRan
+            ? "NOT_EXECUTED"
+            : distinctFamiliesCount >= reqTargets &&
+              rawAsinsCount >= reqTargets &&
+              distinctCandidatesCount >= reqTargets &&
+              sessionClosed !== false
+            ? "PASS"
+            : pageObsStatus === "BLOCKED_CAPTCHA_OR_BOT_WALL"
+            ? "BLOCKED"
+            : "INSUFFICIENT_EVIDENCE";
+          const usDeliveryProofVerdict: "VERIFIED" | "PARTIAL" | "UNKNOWN" =
+            usDeliveryCount >= reqTargets && reqTargets > 0
+              ? "VERIFIED"
+              : usDeliveryCount > 0
+              ? "PARTIAL"
+              : "UNKNOWN";
+          const usdPriceProofVerdict: "VERIFIED" | "PARTIAL" | "UNKNOWN" =
+            usdPriceCount >= reqTargets && reqTargets > 0
+              ? "VERIFIED"
+              : usdPriceCount > 0
+              ? "PARTIAL"
+              : "UNKNOWN";
+          const computedLiveVerdict =
+            identityPilotVerdict === "PASS"
+              ? "LIVE_VERIFIED"
+              : pageObsStatus === "BLOCKED_CAPTCHA_OR_BOT_WALL"
+              ? "BLOCKED_CAPTCHA_OR_BOT_WALL"
+              : rawAsinsCount > 0 || pageObsStatus === "PUBLIC_PAGE_OBSERVED"
+              ? "OBSERVED_PARTIAL"
+              : "NOT_VERIFIED";
+          return {
+            routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT" as const,
+            probeExecutionStatus: (probeRan ? "DID_RUN" : "NOT_RUN") as
+              | "DID_RUN"
+              | "NOT_RUN",
+            transportHandshakeStatus: (params.liveAmazonProbeArtifact
+              ?.transportHandshakeStatus || "NOT_ATTEMPTED") as
+              | "SUCCEEDED"
+              | "FAILED"
+              | "NOT_ATTEMPTED",
+            actualBrowserToolExecutionStatus: (params.liveAmazonProbeArtifact
+              ?.actualBrowserToolExecutionStatus || "NOT_ATTEMPTED") as
+              | "SUCCEEDED"
+              | "FAILED"
+              | "BLOCKED_POLICY"
+              | "NOT_ATTEMPTED",
+            realAmazonPageObservationStatus: pageObsStatus as
+              | "PUBLIC_PAGE_OBSERVED"
+              | "BLOCKED_CAPTCHA_OR_BOT_WALL"
+              | "FAILED"
+              | "NOT_ATTEMPTED",
+            productIdentityVerificationStatus: (params.liveAmazonProbeArtifact
+              ?.productIdentityVerificationStatus || "NOT_ATTEMPTED") as
+              | "IDENTITY_VERIFIED"
+              | "OBSERVED_UNVERIFIED"
+              | "REJECTED_IDENTITY"
+              | "NOT_ATTEMPTED",
+            productIdentityPilotVerdict: identityPilotVerdict,
+            usDeliveryProofVerdict,
+            usdPriceProofVerdict,
+            rawLiveAsinsCount: rawAsinsCount,
+            distinctVerifiedProductFamiliesCount: distinctFamiliesCount,
+            distinctCandidateIdsCount: distinctCandidatesCount,
+            requiredLiveTargets: reqTargets,
+            usDeliveryConfirmedCount: usDeliveryCount,
+            observedUsdPriceCount: usdPriceCount,
+            mcpSessionClosedCleanly: sessionClosed,
+            liveVerdict: computedLiveVerdict as any,
+            verifiedLiveProductCount: rawAsinsCount,
+            attemptedLiveCallsCount: Number(
+              params.liveAmazonProbeArtifact?.attemptedLiveCallsCount ??
+                params.liveAmazonProbeArtifact?.operationsAttempted ??
+                0
+            ),
+            reason: String(
+              params.liveAmazonProbeArtifact?.statusReason ||
+                `Local MCP pilot observed ${rawAsinsCount} raw ASIN(s) across ${distinctFamiliesCount}/${reqTargets} distinct product families (US delivery confirmed=${usDeliveryCount}, USD price observed=${usdPriceCount}).`
+            ),
+          };
+        })(),
         creatorsApi: {
           routeId: "AMAZON_CREATORS_API",
           independentOfLocalMcpPilot: true,
@@ -1847,30 +1958,190 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   const engineeringVerdict = computeEngineeringVerdict(input.engineeringInput);
   const kh02BusinessVerdict = computeOverallBusinessVerdict(input.diagnostics);
 
+  const wmtProv: any =
+    input.diagnostics?.providers?.walmartUs ||
+    (input.diagnostics?.gates as any)?.walmartLive ||
+    {};
+  const amzProv: any =
+    input.diagnostics?.providers?.amazonUs ||
+    (input.diagnostics?.gates as any)?.amazonLive ||
+    {};
+  const amzMcpGate: any =
+    input.diagnostics?.providers?.amazonUs?.localMcpPilot ||
+    (input.diagnostics?.gates as any)?.amazonLocalMcpLive ||
+    null;
+
   const liveWalmartProviderVerdict =
-    input.diagnostics.providers.walmartUs.liveVerdict === "LIVE_VERIFIED"
+    wmtProv.liveVerdict === "LIVE_VERIFIED" || wmtProv.verdict === "LIVE_VERIFIED"
       ? "LIVE_VERIFIED"
-      : input.diagnostics.providers.walmartUs.liveProviderStatus;
+      : wmtProv.liveProviderStatus || wmtProv.verdict || wmtProv.liveVerdict || "NOT_ATTEMPTED";
 
   const liveAmazonProviderVerdict =
-    input.diagnostics.providers.amazonUs.liveVerdict;
+    amzProv.liveVerdict || amzProv.verdict || "CREDENTIALS_REQUIRED";
+
+  const amazonCreatorsApiVerdict:
+    | "CREDENTIALS_REQUIRED"
+    | "VERIFIED"
+    | "NOT_CONFIGURED"
+    | "NOT_ATTEMPTED"
+    | "BLOCKED" =
+    amzProv.creatorsApi?.status === "LIVE_VERIFIED" ||
+    amzProv.liveVerdict === "LIVE_VERIFIED" ||
+    amzProv.verdict === "LIVE_VERIFIED"
+      ? "VERIFIED"
+      : amzProv.creatorsApi?.configured === false ||
+        amzProv.liveVerdict === "CREDENTIALS_REQUIRED" ||
+        amzProv.verdict === "CREDENTIALS_REQUIRED"
+      ? "CREDENTIALS_REQUIRED"
+      : amzProv.liveVerdict === "BLOCKED" || amzProv.verdict === "BLOCKED"
+      ? "BLOCKED"
+      : "NOT_ATTEMPTED";
+
+  const amazonLocalMcpHandshakeVerdict: "PASS" | "FAIL" | "NOT_EXECUTED" =
+    amzMcpGate?.handshakeStatus === "PASS" ||
+    amzMcpGate?.transportHandshakeStatus === "SUCCEEDED"
+      ? "PASS"
+      : amzMcpGate?.handshakeStatus === "FAIL" ||
+        amzMcpGate?.transportHandshakeStatus === "FAILED"
+      ? "FAIL"
+      : "NOT_EXECUTED";
+
+  const amazonLocalMcpLiveObservationVerdict:
+    | "OBSERVED"
+    | "BLOCKED_PROVIDER"
+    | "NOT_EXECUTED"
+    | "INSUFFICIENT_EVIDENCE" =
+    amzMcpGate?.liveObservationStatus === "OBSERVED" ||
+    amzMcpGate?.realAmazonPageObservationStatus === "PUBLIC_PAGE_OBSERVED"
+      ? "OBSERVED"
+      : amzMcpGate?.liveObservationStatus === "BLOCKED_PROVIDER" ||
+        amzMcpGate?.realAmazonPageObservationStatus === "BLOCKED_CAPTCHA_OR_BOT_WALL"
+      ? "BLOCKED_PROVIDER"
+      : amzMcpGate?.probeExecutionStatus === "DID_RUN" ||
+        (amzMcpGate?.attemptedLiveCallsCount ?? 0) > 0
+      ? "INSUFFICIENT_EVIDENCE"
+      : "NOT_EXECUTED";
+
+  const mcpRawAsins = Number(
+    amzMcpGate?.rawLiveAsinsCount ?? amzMcpGate?.verifiedLiveProductCount ?? 0
+  );
+  const mcpDistinctFamilies = Number(
+    amzMcpGate?.distinctVerifiedProductFamiliesCount ?? 0
+  );
+  const mcpRequiredTargets = Number(amzMcpGate?.requiredLiveTargets ?? 3);
+  const mcpUsDeliveryCount = Number(amzMcpGate?.usDeliveryConfirmedCount ?? 0);
+  const mcpUsdPriceCount = Number(amzMcpGate?.observedUsdPriceCount ?? 0);
+  const mcpSessionClosed = amzMcpGate?.mcpSessionClosedCleanly ?? null;
+
+  const amazonProductIdentityPilotVerdict:
+    | "PASS"
+    | "INSUFFICIENT_EVIDENCE"
+    | "BLOCKED"
+    | "NOT_EXECUTED" =
+    amzMcpGate?.productIdentityPilotVerdict === "PASS" &&
+    mcpDistinctFamilies >= mcpRequiredTargets &&
+    mcpRawAsins >= mcpRequiredTargets &&
+    mcpSessionClosed !== false
+      ? "PASS"
+      : amzMcpGate?.productIdentityPilotVerdict === "BLOCKED" ||
+        amazonLocalMcpLiveObservationVerdict === "BLOCKED_PROVIDER"
+      ? "BLOCKED"
+      : amazonLocalMcpLiveObservationVerdict === "NOT_EXECUTED" &&
+        amazonLocalMcpHandshakeVerdict === "NOT_EXECUTED"
+      ? "NOT_EXECUTED"
+      : "INSUFFICIENT_EVIDENCE";
+
+  const amazonUsDeliveryProofVerdict: "VERIFIED" | "PARTIAL" | "UNKNOWN" =
+    amzMcpGate?.usDeliveryProofVerdict ||
+    (mcpUsDeliveryCount >= mcpRequiredTargets && mcpRequiredTargets > 0
+      ? "VERIFIED"
+      : mcpUsDeliveryCount > 0
+      ? "PARTIAL"
+      : "UNKNOWN");
+
+  const amazonUsdPriceProofVerdict: "VERIFIED" | "PARTIAL" | "UNKNOWN" =
+    amzMcpGate?.usdPriceProofVerdict ||
+    (mcpUsdPriceCount >= mcpRequiredTargets && mcpRequiredTargets > 0
+      ? "VERIFIED"
+      : mcpUsdPriceCount > 0
+      ? "PARTIAL"
+      : "UNKNOWN");
+
+  const amazonLivePilotVerdict:
+    | "PASS"
+    | "OBSERVED_PARTIAL"
+    | "INSUFFICIENT_EVIDENCE"
+    | "BLOCKED_PROVIDER"
+    | "NOT_EXECUTED" =
+    amazonProductIdentityPilotVerdict === "PASS" &&
+    amazonUsDeliveryProofVerdict === "VERIFIED" &&
+    amazonUsdPriceProofVerdict === "VERIFIED"
+      ? "PASS"
+      : amazonProductIdentityPilotVerdict === "PASS" ||
+        amazonLocalMcpLiveObservationVerdict === "OBSERVED"
+      ? "OBSERVED_PARTIAL"
+      : amazonProductIdentityPilotVerdict === "BLOCKED"
+      ? "BLOCKED_PROVIDER"
+      : amazonProductIdentityPilotVerdict === "NOT_EXECUTED"
+      ? "NOT_EXECUTED"
+      : "INSUFFICIENT_EVIDENCE";
+
+  const walmartLiveJinaPilotVerdict:
+    | "LIVE_VERIFIED"
+    | "BLOCKED_PROVIDER"
+    | "RATE_LIMITED"
+    | "NOT_ATTEMPTED"
+    | "INSUFFICIENT_EVIDENCE"
+    | "DISABLED" =
+    liveWalmartProviderVerdict === "LIVE_VERIFIED"
+      ? "LIVE_VERIFIED"
+      : liveWalmartProviderVerdict === "BLOCKED_PROVIDER" ||
+        liveWalmartProviderVerdict === "BLOCKED_EXTERNAL_PROVIDER"
+      ? "BLOCKED_PROVIDER"
+      : liveWalmartProviderVerdict === "RATE_LIMITED"
+      ? "RATE_LIMITED"
+      : liveWalmartProviderVerdict === "DISABLED"
+      ? "DISABLED"
+      : liveWalmartProviderVerdict === "NOT_ATTEMPTED" ||
+        liveWalmartProviderVerdict === "NOT_VERIFIED"
+      ? "NOT_ATTEMPTED"
+      : "INSUFFICIENT_EVIDENCE";
 
   const historicalEvidenceVerdict =
-    input.backtestOutput.overallHistoricalBacktestVerdict;
+    input.backtestOutput?.overallHistoricalBacktestVerdict ||
+    (input.backtestOutput?.businessHistoricalEvidenceSufficient === "PASS"
+      ? "PASS"
+      : "INSUFFICIENT_HISTORICAL_EVIDENCE");
 
-  const historicalG07Verdict = input.diagnostics.gates.g07.verdict;
-  const historicalG15Verdict = input.diagnostics.gates.g15.verdict;
-  const historicalG16Verdict = input.diagnostics.gates.g16.verdict;
+  const historicalG07Verdict =
+    input.diagnostics?.gates?.g07?.verdict || "INSUFFICIENT_EVIDENCE";
+  const historicalG15Verdict =
+    input.diagnostics?.gates?.g15?.verdict || "INSUFFICIENT_EVIDENCE";
+  const historicalG16Verdict =
+    input.diagnostics?.gates?.g16?.verdict || "INSUFFICIENT_EVIDENCE";
+
+  const regInv: any = input.engineeringInput.regressionInventory || {};
+  const isInvComplete = Boolean(
+    regInv.inventoryComplete ?? regInv.allShardsExecuted ?? false
+  );
+  const isTargetedOnly = Boolean(regInv.targetedOnly ?? false);
+  const totalExecCases = Number(
+    regInv.totalExecutedTestCases ?? regInv.totalTestsCount ?? 0
+  );
+  const failedCases = Number(regInv.failedTestCases ?? regInv.failedTestsCount ?? 0);
+  const activeFailed = Number(regInv.requiredActiveSuiteFailedTestCases ?? 0);
+  const supersededFailed = Number(
+    regInv.baselineKnownPolicySupersededTestCases ?? 0
+  );
+  const newRegFailed = Number(regInv.newRegressionTestCases ?? 0);
 
   const broadRegressionVerdict: "PASS" | "FAIL" | "INCOMPLETE" =
-    !input.engineeringInput.regressionInventory.inventoryComplete ||
-    input.engineeringInput.regressionInventory.targetedOnly ||
-    input.engineeringInput.regressionInventory.totalExecutedTestCases <= 0
+    !isInvComplete || isTargetedOnly || totalExecCases <= 0
       ? "INCOMPLETE"
-      : input.engineeringInput.regressionInventory.failedTestCases === 0 &&
-        input.engineeringInput.regressionInventory.requiredActiveSuiteFailedTestCases === 0 &&
-        input.engineeringInput.regressionInventory.baselineKnownPolicySupersededTestCases === 0 &&
-        input.engineeringInput.regressionInventory.newRegressionTestCases === 0
+      : failedCases === 0 &&
+        activeFailed === 0 &&
+        supersededFailed === 0 &&
+        newRegFailed === 0
       ? "PASS"
       : "FAIL";
 
@@ -1903,14 +2174,14 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     : "INCOMPLETE";
 
   const historicalReplayIntegrityVerdict: "PASS" | "FAIL" =
-    input.backtestOutput.backtestEngineExecuted === "PASS" &&
-    input.backtestOutput.pointInTimeIntegrityVerdict === "PASS" &&
-    input.backtestOutput.policyScenarioVerdict === "PASS"
+    input.backtestOutput?.backtestEngineExecuted === "PASS" &&
+    input.backtestOutput?.pointInTimeIntegrityVerdict === "PASS" &&
+    input.backtestOutput?.policyScenarioVerdict === "PASS"
       ? "PASS"
       : "FAIL";
 
   const holdoutMismatchesCount =
-    input.diagnostics.shortlistQuality?.holdoutNicheMismatches?.length ?? 0;
+    input.diagnostics?.shortlistQuality?.holdoutNicheMismatches?.length ?? 0;
   const nr = input.nicheRelevanceSummary;
   const devCrossFp =
     nr?.crossNicheFalsePositivesInDevTop3 ?? nr?.devCrossNicheFalsePositives ?? 0;
@@ -1964,7 +2235,9 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       blockerId: "EXT_WALMART_JINA_BOT_WALL",
       dimension: "liveWalmartProviderVerdict",
       status: liveWalmartProviderVerdict,
-      detail: input.diagnostics.providers.walmartUs.reason,
+      detail:
+        input.diagnostics?.providers?.walmartUs?.reason ||
+        "Walmart US Jina reader not live verified",
     });
   }
 
@@ -1973,7 +2246,9 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       blockerId: "EXT_AMAZON_CREATORS_CREDENTIALS",
       dimension: "liveAmazonProviderVerdict",
       status: liveAmazonProviderVerdict,
-      detail: input.diagnostics.providers.amazonUs.reason,
+      detail:
+        input.diagnostics?.providers?.amazonUs?.reason ||
+        "Amazon Creators API not live verified",
     });
   }
 
@@ -1982,7 +2257,9 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       blockerId: "EXT_G15_60D_LONGITUDINAL_DEMAND",
       dimension: "historicalG15Verdict",
       status: historicalG15Verdict,
-      detail: input.diagnostics.gates.g15.reason,
+      detail:
+        input.diagnostics?.gates?.g15?.reason ||
+        "G15 longitudinal demand insufficient",
     });
   }
 
@@ -1991,7 +2268,8 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       blockerId: "EXT_G07_TIKTOK_US_SOURCE",
       dimension: "historicalG07Verdict",
       status: historicalG07Verdict,
-      detail: input.diagnostics.gates.g07.reason,
+      detail:
+        input.diagnostics?.gates?.g07?.reason || "G07 TikTok US source blocked",
     });
   }
 
@@ -2000,7 +2278,9 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       blockerId: "EXT_G16_TOP3_LIVE_MERCHANT_PROOF",
       dimension: "historicalG16Verdict",
       status: historicalG16Verdict,
-      detail: input.diagnostics.gates.g16.reason,
+      detail:
+        input.diagnostics?.gates?.g16?.reason ||
+        "G16 top-3 live merchant proof insufficient",
     });
   }
 
@@ -2048,14 +2328,26 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   const liveProvidersEntry = {
     WALMART_US: liveWalmartProviderVerdict,
     AMAZON_US: liveAmazonProviderVerdict,
-    TIKTOK_US_G07: input.diagnostics.providers.tiktokUsG07?.verdict || historicalG07Verdict,
-    TIKTOK_ADS: input.diagnostics.providers.tiktokUsG07?.verdict || historicalG07Verdict,
-    GOOGLE_ADS: input.diagnostics.providers.googleAds?.diagnosticStatus || "CONFIGURED",
-    META_ADS: input.diagnostics.providers.metaAds?.diagnosticStatus || "CONFIGURED",
-    DEMAND_HISTORY: input.diagnostics.providers.demandHistory?.diagnosticStatus || "BLOCKED",
+    AMAZON_CREATORS_API: amazonCreatorsApiVerdict,
+    AMAZON_LOCAL_MCP_HANDSHAKE: amazonLocalMcpHandshakeVerdict,
+    AMAZON_LOCAL_MCP_LIVE_OBSERVATION: amazonLocalMcpLiveObservationVerdict,
+    AMAZON_PRODUCT_IDENTITY_PILOT: amazonProductIdentityPilotVerdict,
+    AMAZON_US_DELIVERY_PROOF: amazonUsDeliveryProofVerdict,
+    AMAZON_USD_PRICE_PROOF: amazonUsdPriceProofVerdict,
+    WALMART_LIVE_JINA_PILOT: walmartLiveJinaPilotVerdict,
+    TIKTOK_US_G07:
+      input.diagnostics?.providers?.tiktokUsG07?.verdict || historicalG07Verdict,
+    TIKTOK_ADS:
+      input.diagnostics?.providers?.tiktokUsG07?.verdict || historicalG07Verdict,
+    GOOGLE_ADS:
+      input.diagnostics?.providers?.googleAds?.diagnosticStatus || "CONFIGURED",
+    META_ADS:
+      input.diagnostics?.providers?.metaAds?.diagnosticStatus || "CONFIGURED",
+    DEMAND_HISTORY:
+      input.diagnostics?.providers?.demandHistory?.diagnosticStatus || "BLOCKED",
   };
 
-  const g16Audits = input.diagnostics.gates.g16.persistedProofAudit || [];
+  const g16Audits = input.diagnostics?.gates?.g16?.persistedProofAudit || [];
   const persistedSchemaVerifiedCount = g16Audits.filter(
     (a) => a.persistedProductSchemaProofStatus === "VERIFIED"
   ).length;
@@ -2067,8 +2359,28 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   const persistedLiveOriginProofVerdict: "PASS" | "INSUFFICIENT_EVIDENCE" =
     persistedLiveOriginVerifiedCount >= 3 ? "PASS" : "INSUFFICIENT_EVIDENCE";
 
+  const engineeringAcceptanceMapped =
+    engineeringVerdict === "BLOCKED" ? "RESOURCE_BLOCKED" : engineeringVerdict;
+  const amazonMcpEngineeringVerdict =
+    engineeringVerdict === "PASS"
+      ? "PASS"
+      : engineeringVerdict === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : "FAIL";
+  const walmartJinaEngineeringVerdict =
+    engineeringVerdict === "PASS"
+      ? "PASS"
+      : engineeringVerdict === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : "FAIL";
+  const kh02G07Mapped =
+    String(historicalG07Verdict) === "BLOCKED_BY_PROVIDER"
+      ? "BLOCKED"
+      : historicalG07Verdict;
+
   const verdictMatrix = {
     ENGINEERING_TESTS: engineeringVerdict,
+    ENGINEERING_ACCEPTANCE: engineeringAcceptanceMapped,
     BROAD_REGRESSION: broadRegressionVerdict,
     REQUIRED_E2E_COVERAGE: requiredE2eCoverageVerdict,
     HISTORICAL_REPLAY_INTEGRITY: historicalReplayIntegrityVerdict,
@@ -2080,30 +2392,58 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     PERSISTED_LIVE_ORIGIN_PROOF: persistedLiveOriginProofVerdict,
     PERSISTED_SCHEMA_TRUTH_ENFORCEMENT: historicalProductIdentityTruthVerdict,
     LIVE_OBSERVATION_ORIGIN_ENFORCEMENT: historicalProductIdentityTruthVerdict,
+    AMAZON_MCP_ENGINEERING: amazonMcpEngineeringVerdict,
+    AMAZON_LOCAL_MCP_HANDSHAKE: amazonLocalMcpHandshakeVerdict,
+    AMAZON_MCP_PUBLIC_PAGE_OBSERVED:
+      amazonLocalMcpLiveObservationVerdict === "OBSERVED",
+    AMAZON_LOCAL_MCP_LIVE_OBSERVATION: amazonLocalMcpLiveObservationVerdict,
+    AMAZON_MCP_PRODUCT_IDENTITY: amazonProductIdentityPilotVerdict,
+    AMAZON_PRODUCT_IDENTITY_PILOT: amazonProductIdentityPilotVerdict,
+    AMAZON_MCP_PILOT_REQUIRED_TARGETS: amazonProductIdentityPilotVerdict,
+    AMAZON_MCP_US_DELIVERY_PROOF: amazonUsDeliveryProofVerdict,
+    AMAZON_US_DELIVERY_PROOF: amazonUsDeliveryProofVerdict,
+    AMAZON_USD_PRICE_PROOF: amazonUsdPriceProofVerdict,
+    AMAZON_CREATORS_API: amazonCreatorsApiVerdict,
+    AMAZON_LIVE_PILOT_VERDICT: amazonLivePilotVerdict,
+    WALMART_JINA_ENGINEERING: walmartJinaEngineeringVerdict,
+    WALMART_JINA_LIVE: walmartLiveJinaPilotVerdict,
+    WALMART_LIVE_JINA_PILOT: walmartLiveJinaPilotVerdict,
+    KH02_G07: kh02G07Mapped,
+    KH02_G15: historicalG15Verdict,
+    KH02_G16: historicalG16Verdict,
+    KH02_BUSINESS: kh02BusinessVerdict,
+    FULL_BUSINESS_ACCEPTANCE: kh02BusinessVerdict,
+    OVERALL_RELEASE: overallVerdict,
     LIVE_PROVIDERS: liveProvidersEntry,
     CURRENT_LIVE_PROVIDERS: liveProvidersEntry,
     HISTORICAL_DEMAND_G15: historicalG15Verdict,
     MERCHANT_TOP3_G16: historicalG16Verdict,
     HISTORICAL_STORED_PROOF: {
-      snapshotRunId: input.diagnostics.gates.g16.evaluatedRunId,
-      snapshotCreatedAt: input.diagnostics.gates.g16.evaluatedRunCreatedAt,
-      snapshotFreshness: input.diagnostics.gates.g16.snapshotFreshness,
-      reconstructionStatus: input.diagnostics.gates.g16.reconstructionStatus,
+      snapshotRunId: input.diagnostics?.gates?.g16?.evaluatedRunId ?? null,
+      snapshotCreatedAt:
+        input.diagnostics?.gates?.g16?.evaluatedRunCreatedAt ?? null,
+      snapshotFreshness:
+        input.diagnostics?.gates?.g16?.snapshotFreshness ?? "MISSING",
+      reconstructionStatus:
+        input.diagnostics?.gates?.g16?.reconstructionStatus ?? "NO_STORED_RUN",
       previousSnapshotClaimedVerifiedCount:
-        input.diagnostics.gates.g16.previousSnapshotClaimedVerifiedCount,
+        input.diagnostics?.gates?.g16?.previousSnapshotClaimedVerifiedCount ?? 0,
       verifiedFromPersistedEvidenceCount:
-        input.diagnostics.gates.g16.verifiedFromPersistedEvidenceCount,
+        input.diagnostics?.gates?.g16?.verifiedFromPersistedEvidenceCount ?? 0,
       persistedSchemaVerifiedCount,
       persistedLiveOriginVerifiedCount,
       newLiveVerifiedDuringThisRun:
-        input.diagnostics.gates.g16.newLiveVerifiedDuringThisRun,
+        input.diagnostics?.gates?.g16?.newLiveVerifiedDuringThisRun ?? 0,
       storedG16Verdict: historicalG16Verdict,
-      verifiedLiveMerchantsCount: input.diagnostics.gates.g16.verifiedLiveMerchantsCount,
-      requiredLiveMerchantsCount: input.diagnostics.gates.g16.requiredLiveMerchantsCount,
+      verifiedLiveMerchantsCount:
+        input.diagnostics?.gates?.g16?.verifiedLiveMerchantsCount ?? 0,
+      requiredLiveMerchantsCount:
+        input.diagnostics?.gates?.g16?.requiredLiveMerchantsCount ?? 3,
       storedShortlistNicheMatchedCount:
-        input.diagnostics.shortlistQuality.storedRunShortlistNicheMatchedCount,
+        input.diagnostics?.shortlistQuality
+          ?.storedRunShortlistNicheMatchedCount ?? 0,
       storedShortlistTotalCount:
-        input.diagnostics.shortlistQuality.storedRunShortlistTotalCount,
+        input.diagnostics?.shortlistQuality?.storedRunShortlistTotalCount ?? 0,
     },
     BUSINESS_EVERGREEN_COVERAGE: kh02BusinessVerdict,
     FINAL_RELEASE: overallVerdict,
@@ -2126,6 +2466,37 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     historicalProductIdentityTruthVerdict,
     liveWalmartProviderVerdict,
     liveAmazonProviderVerdict,
+    amazonCreatorsApiVerdict,
+    amazonLocalMcpHandshakeVerdict,
+    amazonLocalMcpLiveObservationVerdict,
+    amazonProductIdentityPilotVerdict,
+    amazonUsDeliveryProofVerdict,
+    amazonUsdPriceProofVerdict,
+    amazonLivePilotVerdict,
+    walmartLiveJinaPilotVerdict,
+    ENGINEERING_ACCEPTANCE: engineeringAcceptanceMapped,
+    AMAZON_MCP_ENGINEERING: amazonMcpEngineeringVerdict,
+    AMAZON_LOCAL_MCP_HANDSHAKE: amazonLocalMcpHandshakeVerdict,
+    AMAZON_MCP_PUBLIC_PAGE_OBSERVED:
+      amazonLocalMcpLiveObservationVerdict === "OBSERVED",
+    AMAZON_LOCAL_MCP_LIVE_OBSERVATION: amazonLocalMcpLiveObservationVerdict,
+    AMAZON_MCP_PRODUCT_IDENTITY: amazonProductIdentityPilotVerdict,
+    AMAZON_PRODUCT_IDENTITY_PILOT: amazonProductIdentityPilotVerdict,
+    AMAZON_MCP_PILOT_REQUIRED_TARGETS: amazonProductIdentityPilotVerdict,
+    AMAZON_MCP_US_DELIVERY_PROOF: amazonUsDeliveryProofVerdict,
+    AMAZON_US_DELIVERY_PROOF: amazonUsDeliveryProofVerdict,
+    AMAZON_USD_PRICE_PROOF: amazonUsdPriceProofVerdict,
+    AMAZON_CREATORS_API: amazonCreatorsApiVerdict,
+    AMAZON_LIVE_PILOT_VERDICT: amazonLivePilotVerdict,
+    WALMART_JINA_ENGINEERING: walmartJinaEngineeringVerdict,
+    WALMART_JINA_LIVE: walmartLiveJinaPilotVerdict,
+    WALMART_LIVE_JINA_PILOT: walmartLiveJinaPilotVerdict,
+    KH02_G07: kh02G07Mapped,
+    KH02_G15: historicalG15Verdict,
+    KH02_G16: historicalG16Verdict,
+    KH02_BUSINESS: kh02BusinessVerdict,
+    FULL_BUSINESS_ACCEPTANCE: kh02BusinessVerdict,
+    OVERALL_RELEASE: overallVerdict,
     kh02BusinessVerdict,
     historicalEvidenceVerdict,
     historicalG07Verdict,
