@@ -1953,4 +1953,442 @@ describe("V12.4.3.5.1 Workstream C (Section 4.5) — Point-in-Time Niche-Accurat
     expect(auditVerified.persistedProductSchemaProofStatus).toBe("VERIFIED");
     expect(auditVerified.persistedLiveOriginProofStatus).toBe("VERIFIED");
   });
+
+  it("13 (D1). separates LandingPageSnapshot commercial semantic hash from raw product-schema SHA-256 proof and preserves compareLandingPageSnapshots unchanged", async () => {
+    const {
+      LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN,
+      computeCommercialSemanticDigest,
+      computeCommercialSemanticHash,
+      computeRawSchemaPayloadSha256,
+      resolveSourceBoundSchemaProof,
+    } = await import("../identity/merchantIdentityPolicy");
+    const { compareLandingPageSnapshots } = await import(
+      "../../research/landingPageSnapshotService"
+    );
+
+    expect(LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN).toBe("COMMERCIAL_SEMANTIC_DIGEST_SHA256");
+
+    const snapshotInput = {
+      pageTitle: "KittySpout Stainless Steel Cat Water Fountain",
+      observedPrice: 49.99,
+      currency: "USD",
+      bundleQuantity: 1,
+      freeShippingThreshold: 50,
+      structure: {
+        heroHeadline: "The #1 Vet-Recommended Cat Fountain",
+        primaryCtaText: "Add to Cart",
+        hasVisiblePriceNearCta: true,
+        hasShippingPolicySummary: true,
+        hasReturnPolicySummary: true,
+      } as any,
+    };
+
+    const semanticDigest = computeCommercialSemanticDigest(snapshotInput);
+    expect(semanticDigest).toContain("KittySpout Stainless Steel Cat Water Fountain");
+    expect(semanticDigest).toContain("price:49.99");
+    const semanticHash = computeCommercialSemanticHash(snapshotInput);
+    expect(semanticHash).toMatch(/^[a-f0-9]{64}$/);
+
+    const observationsJson = JSON.stringify(snapshotInput.structure);
+    const croSignalsJson = JSON.stringify({ overallFunnelScore: 80 });
+    const rawObsSha256 = computeRawSchemaPayloadSha256(observationsJson);
+    // Semantic hash is computed from commercial digest, NOT sha256(observationsJson)
+    expect(semanticHash).not.toBe(rawObsSha256);
+
+    // compareLandingPageSnapshots works unchanged
+    const diffSame = compareLandingPageSnapshots(
+      {
+        observedAt: new Date("2026-10-25T10:00:00.000Z"),
+        pageTitle: snapshotInput.pageTitle,
+        observationsJson,
+        croSignalsJson,
+      },
+      {
+        observedAt: new Date("2026-10-26T10:00:00.000Z"),
+        pageTitle: snapshotInput.pageTitle,
+        observationsJson,
+        croSignalsJson,
+      }
+    );
+    expect(diffSame.hasChanges).toBe(false);
+
+    const diffHeadlineChanged = compareLandingPageSnapshots(
+      {
+        observedAt: new Date("2026-10-25T10:00:00.000Z"),
+        pageTitle: snapshotInput.pageTitle,
+        observationsJson,
+        croSignalsJson,
+      },
+      {
+        observedAt: new Date("2026-10-26T10:00:00.000Z"),
+        pageTitle: snapshotInput.pageTitle,
+        observationsJson: JSON.stringify({
+          ...snapshotInput.structure,
+          heroHeadline: "Limited-Time Offer: Wireless Cat Fountain",
+        }),
+        croSignalsJson,
+      }
+    );
+    expect(diffHeadlineChanged.hasChanges).toBe(true);
+    expect(
+      diffHeadlineChanged.detectedChanges.some((c) => c.field === "Hero Headline")
+    ).toBe(true);
+
+    // Passing this real LandingPageSnapshot into extractPersistedMerchantProofsFromDbRows and resolveSourceBoundSchemaProof
+    // MUST classify it as SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF, NEVER RAW_SOURCE_HASH_TAMPERED!
+    const persistedSnapshotRow = {
+      id: "cmvma7q8z00078jg9u66frkz7",
+      workspaceId: "ws_pet_1",
+      productId: "prod_1",
+      originalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      finalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      httpStatus: 200,
+      accessStatus: "SUCCESS",
+      pageTitle: snapshotInput.pageTitle,
+      contentHash: semanticHash,
+      observationsJson,
+      observedAt: "2026-10-25T10:00:00.000Z",
+    };
+
+    const extracted = extractPersistedMerchantProofsFromDbRows({
+      workspaceId: "ws_pet_1",
+      candidateId: "cand_kittyspout",
+      researchProductId: "prod_1",
+      storeDomain: "kittyspout.com",
+      canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      candidateTitle: snapshotInput.pageTitle,
+      asOf: AS_OF,
+      standaloneLandingSnapshots: [persistedSnapshotRow],
+    });
+
+    expect(extracted.validProofs).toHaveLength(0);
+    expect(extracted.allAuditedRecords).toHaveLength(1);
+    expect(extracted.allAuditedRecords[0].validationStatus).toBe(
+      "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF"
+    );
+    expect(extracted.allAuditedRecords[0].validationStatus).not.toBe(
+      "RAW_SOURCE_HASH_TAMPERED"
+    );
+    expect(extracted.allAuditedRecords[0].hashDomain).toBe(
+      "COMMERCIAL_SEMANTIC_DIGEST_SHA256"
+    );
+    expect(extracted.allAuditedRecords[0].rawSourceReconstructable).toBe(false);
+    expect(extracted.allAuditedRecords[0].hashVerified).toBe(false);
+
+    const resolved = resolveSourceBoundSchemaProof(
+      {
+        candidateId: "cand_kittyspout",
+        productId: "prod_1",
+        workspaceId: "ws_pet_1",
+        storeDomain: "kittyspout.com",
+        canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        title: snapshotInput.pageTitle,
+      },
+      {
+        standaloneLandingSnapshots: [persistedSnapshotRow],
+      },
+      AS_OF
+    );
+    expect(resolved.verified).toBe(false);
+    expect(resolved.semanticSnapshotCount).toBe(1);
+    expect(resolved.rawTamperedCount).toBe(0);
+  });
+
+  it("14 (D2). enforces raw product schema proof negative guardrails including 32KB oversize rejection without mid-JSON truncation", async () => {
+    const {
+      MAX_RAW_SCHEMA_PROOF_BYTES,
+      extractRawProductJsonLdBlocksFromHtml,
+      createProductSchemaEvidenceFromActualCapture,
+      parseAndValidateProductSchemaPayload,
+      computeRawSchemaPayloadSha256,
+    } = await import("../identity/merchantIdentityPolicy");
+
+    expect(MAX_RAW_SCHEMA_PROOF_BYTES).toBe(32768);
+
+    // 1. Oversize single Product JSON-LD (> 32 KB) is rejected cleanly without mid-JSON truncation
+    const hugeDescription = "A".repeat(35000);
+    const oversizeJsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "Oversize Pet Fountain",
+      sku: "OVERSIZE-01",
+      description: hugeDescription,
+      offers: { "@type": "Offer", price: "49.99", priceCurrency: "USD" },
+    });
+    const oversizeHtml = `<html><head><script type="application/ld+json">${oversizeJsonLd}</script></head><body></body></html>`;
+
+    const extractedOversize = extractRawProductJsonLdBlocksFromHtml(oversizeHtml);
+    expect(extractedOversize.oversizeRejected).toBe(true);
+    expect(extractedOversize.validProductBlocks).toHaveLength(0);
+
+    const createdOversize = createProductSchemaEvidenceFromActualCapture({
+      productId: "prod_oversize",
+      sourceUrl: "https://kittyspout.com/products/oversize-fountain",
+      htmlContent: oversizeHtml,
+    });
+    expect(createdOversize).toBeNull();
+
+    const directOversizeCheck = parseAndValidateProductSchemaPayload(oversizeJsonLd, {
+      expectedHash: `sha256:${computeRawSchemaPayloadSha256(oversizeJsonLd)}`,
+    });
+    expect(directOversizeCheck.valid).toBe(false);
+    expect(directOversizeCheck.rejectionReasons).toContain(
+      "RAW_SCHEMA_PAYLOAD_EXCEEDS_MAX_BYTES_32KB"
+    );
+
+    // 2. HTML with only Organization / WebSite JSON-LD returns null from createProductSchemaEvidenceFromActualCapture
+    const nonProductHtml = `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"KittySpout"}</script></head><body></body></html>`;
+    expect(
+      createProductSchemaEvidenceFromActualCapture({
+        productId: "prod_org_only",
+        sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        htmlContent: nonProductHtml,
+      })
+    ).toBeNull();
+
+    // 3. Valid Product JSON-LD within 32KB produces RAW_SCHEMA_PAYLOAD_SHA256 evidence
+    const validProductJsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "KittySpout Stainless Steel Cat Water Fountain",
+      sku: "KS-FOUNTAIN-01",
+      productID: "8369671045340",
+      url: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      offers: {
+        "@type": "Offer",
+        price: "49.99",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+      },
+    });
+    const validHtml = `<html><head><script type="application/ld+json">${validProductJsonLd}</script></head><body></body></html>`;
+    const createdValid = createProductSchemaEvidenceFromActualCapture({
+      productId: "prod_valid_1",
+      sourceUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      htmlContent: validHtml,
+    });
+    expect(createdValid).not.toBeNull();
+    expect(createdValid?.hashDomain).toBe("RAW_SCHEMA_PAYLOAD_SHA256");
+    expect(createdValid?.observationMethod).toBe("MERCHANT_PDP_JSON_LD");
+    expect(createdValid?.classification).toBe("SOURCE_OBSERVED");
+    expect(createdValid?.sourceContentRef).toBe(
+      `sha256:${computeRawSchemaPayloadSha256(validProductJsonLd)}`
+    );
+    expect(createdValid?.observedValue).toBe(validProductJsonLd);
+  });
+
+  it("15 (D5). builds dynamic G16 diagnostic reasons across 0/3, 1/3, 2/3, 3/3, non-CheckoutChamp #3, and 0-candidate permutations without hardcoded prose", async () => {
+    const { buildG16DiagnosticReason } = await import(
+      "../../../../scripts/kh02/acceptanceTruth"
+    );
+
+    const makeCand = (overrides: any) => ({
+      candidateId: "cand_1",
+      title: "Test Candidate",
+      storeDomain: "kittyspout.com",
+      canonicalProductUrl: "https://kittyspout.com/products/fountain",
+      familyKey: "pet_water_fountain",
+      identityStatus: "PROBABLE" as const,
+      productSchemaProofStatus: "INSUFFICIENT_EVIDENCE" as const,
+      originProofStatus: "INSUFFICIENT_EVIDENCE" as const,
+      persistedProofRowIds: [] as string[],
+      authenticLiveObservationIds: [] as string[],
+      isCheckoutChampFunnel: false,
+      nicheRelevantToPetGadgets: true,
+      nicheRelevanceReason: "Matched",
+      authenticallyLive: false,
+      sameRunLineage: false,
+      candidateProductMatch: false,
+      verifiedMerchantIdentity: false,
+      nonFunnelStore: true,
+      isLiveVerified: false,
+      verificationMethod: "UNVERIFIED",
+      rejectionReasons: [],
+      ...overrides,
+    });
+
+    // 1. 0/3 with candidate #3 as CheckoutChamp funnel on cc.uprootclean.com
+    const reason0of3 = buildG16DiagnosticReason({
+      evaluatedRunId: "kh02_run_0",
+      evaluatedWorkspaceId: "ws_0",
+      verifiedLiveCount: 0,
+      distinctFamiliesCount: 0,
+      distinctCanonicalProductsCount: 0,
+      previousSnapshotClaimedVerifiedCount: 2,
+      candidates: [
+        makeCand({ candidateId: "c1", storeDomain: "kittyspout.com" }),
+        makeCand({ candidateId: "c2", storeDomain: "uahpet.com" }),
+        makeCand({
+          candidateId: "c3",
+          storeDomain: "cc.uprootclean.com",
+          isCheckoutChampFunnel: true,
+          nonFunnelStore: false,
+        }),
+      ],
+    });
+    expect(reason0of3).toContain("0/3 live-verified merchant candidates");
+    expect(reason0of3).toContain("stored snapshot claimed 2/3");
+    expect(reason0of3).toContain("0 fresh live-ingested observation(s)");
+    expect(reason0of3).toContain("0 persisted product-schema proof(s)");
+    expect(reason0of3).toContain(
+      "candidate #3 on 'cc.uprootclean.com' is a CheckoutChamp/sales funnel retained as PROBABLE"
+    );
+
+    // 2. 1/3 verified with candidate #2 as CheckoutChamp funnel on funnel.petclean.io (no cc.uprootclean.com!)
+    const reason1of3 = buildG16DiagnosticReason({
+      evaluatedRunId: "kh02_run_1",
+      evaluatedWorkspaceId: "ws_1",
+      verifiedLiveCount: 1,
+      distinctFamiliesCount: 1,
+      distinctCanonicalProductsCount: 1,
+      previousSnapshotClaimedVerifiedCount: 2,
+      candidates: [
+        makeCand({
+          candidateId: "c1",
+          storeDomain: "kittyspout.com",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_1"],
+          authenticLiveObservationIds: ["obs_1", "obs_2"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+        makeCand({
+          candidateId: "c2",
+          storeDomain: "funnel.petclean.io",
+          isCheckoutChampFunnel: true,
+          nonFunnelStore: false,
+        }),
+        makeCand({ candidateId: "c3", storeDomain: "uahpet.com" }),
+      ],
+    });
+    expect(reason1of3).toContain("1/3 live-verified merchant candidates");
+    expect(reason1of3).toContain("2 fresh live-ingested observation(s)");
+    expect(reason1of3).toContain("1 persisted product-schema proof(s)");
+    expect(reason1of3).toContain(
+      "candidate #2 on 'funnel.petclean.io' is a CheckoutChamp/sales funnel retained as PROBABLE"
+    );
+    expect(reason1of3).not.toContain("cc.uprootclean.com");
+    expect(reason1of3).not.toContain("candidate #3");
+
+    // 3. 2/3 verified with NO CheckoutChamp funnels (candidate #3 is standard store pawfeeder.com)
+    const reason2of3NoFunnel = buildG16DiagnosticReason({
+      evaluatedRunId: "kh02_run_2",
+      evaluatedWorkspaceId: "ws_2",
+      verifiedLiveCount: 2,
+      distinctFamiliesCount: 2,
+      distinctCanonicalProductsCount: 2,
+      previousSnapshotClaimedVerifiedCount: 3,
+      candidates: [
+        makeCand({
+          candidateId: "c1",
+          storeDomain: "kittyspout.com",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_1"],
+          authenticLiveObservationIds: ["obs_1"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+        makeCand({
+          candidateId: "c2",
+          storeDomain: "uahpet.com",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_2"],
+          authenticLiveObservationIds: ["obs_2"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+        makeCand({
+          candidateId: "c3",
+          storeDomain: "pawfeeder.com",
+          isCheckoutChampFunnel: false,
+        }),
+      ],
+    });
+    expect(reason2of3NoFunnel).toContain("2/3 live-verified merchant candidates");
+    expect(reason2of3NoFunnel).toContain("2 fresh live-ingested observation(s)");
+    expect(reason2of3NoFunnel).toContain("2 persisted product-schema proof(s)");
+    expect(reason2of3NoFunnel).not.toContain("CheckoutChamp");
+    expect(reason2of3NoFunnel).not.toContain("cc.uprootclean.com");
+
+    // 4. 3/3 verified across 3 distinct product families -> PASS reason
+    const reason3of3 = buildG16DiagnosticReason({
+      evaluatedRunId: "kh02_run_3",
+      evaluatedWorkspaceId: "ws_3",
+      verifiedLiveCount: 3,
+      distinctFamiliesCount: 3,
+      distinctCanonicalProductsCount: 3,
+      previousSnapshotClaimedVerifiedCount: 3,
+      candidates: [
+        makeCand({
+          candidateId: "c1",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_1"],
+          authenticLiveObservationIds: ["obs_1"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+        makeCand({
+          candidateId: "c2",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_2"],
+          authenticLiveObservationIds: ["obs_2"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+        makeCand({
+          candidateId: "c3",
+          identityStatus: "VERIFIED",
+          productSchemaProofStatus: "VERIFIED",
+          originProofStatus: "VERIFIED",
+          persistedProofRowIds: ["ResearchEvidence:ev_3"],
+          authenticLiveObservationIds: ["obs_3"],
+          authenticallyLive: true,
+          verifiedMerchantIdentity: true,
+          isLiveVerified: true,
+        }),
+      ],
+    });
+    expect(reason3of3).toContain("3/3 shortlisted candidates in run 'kh02_run_3'");
+    expect(reason3of3).toContain("3 persisted proof row(s)");
+    expect(reason3of3).toContain("3 authentic live observation(s)");
+    expect(reason3of3).toContain("3 distinct product families");
+
+    // 5. 0 candidates and no run available
+    const reasonEmpty = buildG16DiagnosticReason({
+      evaluatedRunId: "kh02_run_empty",
+      evaluatedWorkspaceId: "ws_empty",
+      verifiedLiveCount: 0,
+      distinctFamiliesCount: 0,
+      distinctCanonicalProductsCount: 0,
+      previousSnapshotClaimedVerifiedCount: 0,
+      candidates: [],
+    });
+    expect(reasonEmpty).toContain("has 0 shortlisted candidates");
+
+    const reasonNoRun = buildG16DiagnosticReason({
+      evaluatedRunId: null,
+      evaluatedWorkspaceId: null,
+      verifiedLiveCount: 0,
+      distinctFamiliesCount: 0,
+      distinctCanonicalProductsCount: 0,
+      previousSnapshotClaimedVerifiedCount: 0,
+      candidates: [],
+    });
+    expect(reasonNoRun).toContain("No completed KH-02 research run is available");
+  });
 });

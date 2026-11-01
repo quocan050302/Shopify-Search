@@ -1141,6 +1141,127 @@ export function validateWalmartAcceptanceArtifacts(
         "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
         "Bare caller-supplied boolean flags (schemaVerified:true, hasJsonLdProduct:true) without raw source payload and matching SHA-256 must be rejected."
       );
+      if (landingSchemaAudit.rawSourceHashTamperedNonFixtureCount !== undefined) {
+        check(
+          Number(landingSchemaAudit.rawSourceHashTamperedNonFixtureCount ?? 1) ===
+            0 &&
+            Number(
+              landingSchemaAudit.semanticContentHashNotRawProofCount ?? 0
+            ) >= 1,
+          "LANDING_SNAPSHOT_SEMANTIC_HASH_MISCLASSIFIED_AS_RAW_TAMPERED",
+          "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+          "Non-fixture LandingPageSnapshot rows with commercial semantic contentHash and CRO observationsJson must be classified as SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF, never RAW_SOURCE_HASH_TAMPERED."
+        );
+      }
+      if (landingSchemaAudit.semanticDigestAcceptedAsRawProofCount !== undefined) {
+        check(
+          Number(landingSchemaAudit.semanticDigestAcceptedAsRawProofCount ?? 1) ===
+            0,
+          "SEMANTIC_DIGEST_ACCEPTED_AS_RAW_SCHEMA_PROOF",
+          "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+          "Commercial semantic digest (COMMERCIAL_SEMANTIC_DIGEST_SHA256) must never be accepted as a raw product schema proof."
+        );
+      }
+    }
+  }
+
+  const rawSchemaReadbackProofPath = path.join(
+    artifactDir,
+    "04_raw_product_schema_capture_to_readback_proof.json"
+  );
+  if (fs.existsSync(rawSchemaReadbackProofPath)) {
+    const rawSchemaReadbackProof = readJsonSafe(
+      artifactDir,
+      "04_raw_product_schema_capture_to_readback_proof.json",
+      failures
+    );
+    if (rawSchemaReadbackProof) {
+      check(
+        rawSchemaReadbackProof.captureToReadbackVerified === true &&
+          rawSchemaReadbackProof.hashDomainSeparated === true &&
+          rawSchemaReadbackProof.persistedProofValidationStatus ===
+            "CONTENT_VALIDATED_WITH_SOURCE" &&
+          rawSchemaReadbackProof.landingSnapshotSemanticStatus ===
+            "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF",
+        "RAW_PRODUCT_SCHEMA_CAPTURE_READBACK_FAILED",
+        "04_raw_product_schema_capture_to_readback_proof.json",
+        "Raw Product JSON-LD capture-to-readback proof must succeed with CONTENT_VALIDATED_WITH_SOURCE while LandingPageSnapshot semantic hash remains SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF."
+      );
+      check(
+        rawSchemaReadbackProof.oversizePayloadRejected === true &&
+          rawSchemaReadbackProof.midJsonTruncatedPayloadRejected === true &&
+          Number(rawSchemaReadbackProof.oversizeOrTruncatedAcceptedCount ?? 1) ===
+            0,
+        "OVERSIZE_OR_TRUNCATED_SCHEMA_PAYLOAD_ACCEPTED",
+        "04_raw_product_schema_capture_to_readback_proof.json",
+        "Oversize (>32KB) or mid-JSON truncated schema payloads must be rejected cleanly with oversizeOrTruncatedAcceptedCount=0."
+      );
+    }
+  }
+
+  const g16DynamicMatrixPath = path.join(
+    artifactDir,
+    "07_g16_dynamic_diagnostic_reason_matrix.json"
+  );
+  if (fs.existsSync(g16DynamicMatrixPath)) {
+    const g16DynamicMatrix = readJsonSafe(
+      artifactDir,
+      "07_g16_dynamic_diagnostic_reason_matrix.json",
+      failures
+    );
+    if (g16DynamicMatrix) {
+      check(
+        g16DynamicMatrix.allPermutationsPassed === true &&
+          g16DynamicMatrix.liveG16ReasonMatchesBuilder === true &&
+          Number(
+            g16DynamicMatrix.hardcodedReasonContradictionCount ?? 1
+          ) === 0,
+        "G16_DIAGNOSTIC_REASON_CONTRADICTS_CANDIDATE_COUNTS",
+        "07_g16_dynamic_diagnostic_reason_matrix.json",
+        "G16 diagnostic reason must be dynamically generated from actual candidate statuses with hardcodedReasonContradictionCount=0."
+      );
+      check(
+        g16DynamicMatrix.nonFunnelPermutationFreeOfFalseFunnelClaim === true &&
+          Number(g16DynamicMatrix.falseFunnelClaimCount ?? 1) === 0,
+        "G16_DIAGNOSTIC_REASON_FALSE_FUNNEL_CLAIM",
+        "07_g16_dynamic_diagnostic_reason_matrix.json",
+        "G16 diagnostic reason must never claim a CheckoutChamp funnel when isCheckoutChampFunnel=false across all candidates."
+      );
+    }
+  }
+
+  if (fs.existsSync(g16Sec8Path)) {
+    const g16Sec10 = readJsonSafe(
+      artifactDir,
+      "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+      failures
+    );
+    if (g16Sec10 && Array.isArray(g16Sec10.candidates)) {
+      const invalidSchemaStatusCandidate = g16Sec10.candidates.find(
+        (c: any) =>
+          c?.productSchemaProofStatus === "VERIFIED" &&
+          (!Array.isArray(c?.persistedProofRowIds) ||
+            c.persistedProofRowIds.length === 0)
+      );
+      check(
+        !invalidSchemaStatusCandidate,
+        "G16_CANDIDATE_SCHEMA_STATUS_WITHOUT_PROOF_ROW",
+        "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "No G16 candidate may have productSchemaProofStatus='VERIFIED' with empty persistedProofRowIds."
+      );
+
+      const invalidOriginStatusCandidate = g16Sec10.candidates.find(
+        (c: any) =>
+          c?.originProofStatus === "VERIFIED" &&
+          (!Array.isArray(c?.authenticLiveObservationIds) ||
+            c.authenticLiveObservationIds.length === 0)
+      );
+      check(
+        !invalidOriginStatusCandidate,
+        "G16_CANDIDATE_ORIGIN_STATUS_WITHOUT_LIVE_OBSERVATION",
+        "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "No G16 candidate may have originProofStatus='VERIFIED' with empty authenticLiveObservationIds."
+      );
     }
   }
 
@@ -2449,6 +2570,103 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
       d.verdictMatrix.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT = "FAIL";
     },
   },
+  {
+    mutationId: "M89",
+    targetFile: "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+    description: "Misclassify non-fixture LandingPageSnapshot row with commercial semantic contentHash as RAW_SOURCE_HASH_TAMPERED",
+    expectedFailureCode: "LANDING_SNAPSHOT_SEMANTIC_HASH_MISCLASSIFIED_AS_RAW_TAMPERED",
+    mutate: (d) => {
+      d.rawSourceHashTamperedNonFixtureCount = 3;
+      d.semanticContentHashNotRawProofCount = 0;
+    },
+  },
+  {
+    mutationId: "M90",
+    targetFile: "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+    description: "Accept commercial semantic digest (COMMERCIAL_SEMANTIC_DIGEST_SHA256) as raw product schema proof",
+    expectedFailureCode: "SEMANTIC_DIGEST_ACCEPTED_AS_RAW_SCHEMA_PROOF",
+    mutate: (d) => {
+      d.semanticDigestAcceptedAsRawProofCount = 1;
+    },
+  },
+  {
+    mutationId: "M91",
+    targetFile: "04_raw_product_schema_capture_to_readback_proof.json",
+    description: "Break raw Product JSON-LD capture-to-readback E2E proof or hash domain separation",
+    expectedFailureCode: "RAW_PRODUCT_SCHEMA_CAPTURE_READBACK_FAILED",
+    mutate: (d) => {
+      d.captureToReadbackVerified = false;
+      d.hashDomainSeparated = false;
+    },
+  },
+  {
+    mutationId: "M92",
+    targetFile: "04_raw_product_schema_capture_to_readback_proof.json",
+    description: "Accept oversize (>32KB) or mid-JSON truncated schema payload as valid product proof",
+    expectedFailureCode: "OVERSIZE_OR_TRUNCATED_SCHEMA_PAYLOAD_ACCEPTED",
+    mutate: (d) => {
+      d.oversizePayloadRejected = false;
+      d.oversizeOrTruncatedAcceptedCount = 1;
+    },
+  },
+  {
+    mutationId: "M93",
+    targetFile: "07_g16_dynamic_diagnostic_reason_matrix.json",
+    description: "Hardcoded G16 diagnostic reason contradicts actual candidate counts or builder output",
+    expectedFailureCode: "G16_DIAGNOSTIC_REASON_CONTRADICTS_CANDIDATE_COUNTS",
+    mutate: (d) => {
+      d.liveG16ReasonMatchesBuilder = false;
+      d.hardcodedReasonContradictionCount = 1;
+    },
+  },
+  {
+    mutationId: "M94",
+    targetFile: "07_g16_dynamic_diagnostic_reason_matrix.json",
+    description: "G16 diagnostic reason falsely claims CheckoutChamp funnel when isCheckoutChampFunnel=false across all candidates",
+    expectedFailureCode: "G16_DIAGNOSTIC_REASON_FALSE_FUNNEL_CLAIM",
+    mutate: (d) => {
+      d.nonFunnelPermutationFreeOfFalseFunnelClaim = false;
+      d.falseFunnelClaimCount = 1;
+    },
+  },
+  {
+    mutationId: "M95",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Set candidate productSchemaProofStatus='VERIFIED' without persistedProofRowIds",
+    expectedFailureCode: "G16_CANDIDATE_SCHEMA_STATUS_WITHOUT_PROOF_ROW",
+    mutate: (d) => {
+      d.candidates = [
+        {
+          candidateId: "cand_schema_fake",
+          productSchemaProofStatus: "VERIFIED",
+          persistedProofRowIds: [],
+          originProofStatus: "UNVERIFIED",
+          authenticLiveObservationIds: [],
+          liveObservationsCount: 0,
+          unverifiedPersistedOriginCount: 0,
+        },
+      ];
+    },
+  },
+  {
+    mutationId: "M96",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Set candidate originProofStatus='VERIFIED' without authenticLiveObservationIds",
+    expectedFailureCode: "G16_CANDIDATE_ORIGIN_STATUS_WITHOUT_LIVE_OBSERVATION",
+    mutate: (d) => {
+      d.candidates = [
+        {
+          candidateId: "cand_origin_fake",
+          productSchemaProofStatus: "UNVERIFIED",
+          persistedProofRowIds: [],
+          originProofStatus: "VERIFIED",
+          authenticLiveObservationIds: [],
+          liveObservationsCount: 0,
+          unverifiedPersistedOriginCount: 0,
+        },
+      ];
+    },
+  },
 ];
 
 /**
@@ -2729,6 +2947,47 @@ export function runPhysicalNegativeMutationSuite40(
               sourceSha: codeShaFallback,
               hashOrTitleOnlyPromotedCount: 0,
               bareBooleanBypassRejected: true,
+              rawSourceHashTamperedNonFixtureCount: 0,
+              semanticContentHashNotRawProofCount: 3,
+              semanticDigestAcceptedAsRawProofCount: 0,
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "04_raw_product_schema_capture_to_readback_proof.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "04_raw_product_schema_capture_to_readback_proof.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              captureToReadbackVerified: true,
+              hashDomainSeparated: true,
+              persistedProofValidationStatus: "CONTENT_VALIDATED_WITH_SOURCE",
+              landingSnapshotSemanticStatus: "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF",
+              oversizePayloadRejected: true,
+              midJsonTruncatedPayloadRejected: true,
+              oversizeOrTruncatedAcceptedCount: 0,
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "07_g16_dynamic_diagnostic_reason_matrix.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "07_g16_dynamic_diagnostic_reason_matrix.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              allPermutationsPassed: true,
+              liveG16ReasonMatchesBuilder: true,
+              hardcodedReasonContradictionCount: 0,
+              nonFunnelPermutationFreeOfFalseFunnelClaim: true,
+              falseFunnelClaimCount: 0,
             },
             null,
             2

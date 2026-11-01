@@ -53,20 +53,35 @@ export interface LandingPageChangeReport {
   summary: string;
 }
 
-/**
- * Persists a versioned snapshot of an inspected competitor landing page.
- * Requires explicit workspaceId (no default-workspace fallback).
- * Incorporates commercial pricing and bundle terms into contentHash.
- */
-export async function saveLandingPageSnapshot(input: SaveLandingPageSnapshotInput) {
-  if (!input.workspaceId) {
-    throw new Error(
-      "Cannot save landing page snapshot without an explicit, authorized workspaceId."
-    );
-  }
+export const LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN =
+  "COMMERCIAL_SEMANTIC_DIGEST_SHA256" as const;
 
-  // Compute deterministic content hash based on visible semantic & commercial content
-  const semanticDigest = [
+export interface CommercialSemanticDigestInput {
+  pageTitle?: string | null;
+  observedPrice?: number | null;
+  currency?: string | null;
+  bundleQuantity?: number | null;
+  freeShippingThreshold?: number | null;
+  structure: Pick<
+    LandingPageStructure,
+    | "heroHeadline"
+    | "primaryCtaText"
+    | "hasVisiblePriceNearCta"
+    | "hasShippingPolicySummary"
+    | "hasReturnPolicySummary"
+  >;
+}
+
+/**
+ * Builds the canonical pipe-delimited commercial semantic digest used by
+ * `LandingPageSnapshot.contentHash` for commercial change detection.
+ *
+ * Hash domain: `COMMERCIAL_SEMANTIC_DIGEST_SHA256` (distinct from raw schema payload SHA-256).
+ */
+export function computeCommercialSemanticDigest(
+  input: CommercialSemanticDigestInput
+): string {
+  return [
     input.pageTitle || "",
     input.structure.heroHeadline || "",
     input.structure.primaryCtaText || "",
@@ -83,8 +98,34 @@ export async function saveLandingPageSnapshot(input: SaveLandingPageSnapshotInpu
     input.structure.hasShippingPolicySummary ? "shipping:yes" : "shipping:no",
     input.structure.hasReturnPolicySummary ? "return:yes" : "return:no",
   ].join("|");
+}
 
-  const contentHash = createHash("sha256").update(semanticDigest).digest("hex");
+/**
+ * Computes the 64-character lowercase SHA-256 hex digest over `computeCommercialSemanticDigest(input)`.
+ * Stored in `LandingPageSnapshot.contentHash` and used by `compareLandingPageSnapshots`.
+ */
+export function computeCommercialSemanticHash(
+  input: CommercialSemanticDigestInput
+): string {
+  return createHash("sha256")
+    .update(computeCommercialSemanticDigest(input))
+    .digest("hex");
+}
+
+/**
+ * Persists a versioned snapshot of an inspected competitor landing page.
+ * Requires explicit workspaceId (no default-workspace fallback).
+ * Incorporates commercial pricing and bundle terms into contentHash.
+ */
+export async function saveLandingPageSnapshot(input: SaveLandingPageSnapshotInput) {
+  if (!input.workspaceId) {
+    throw new Error(
+      "Cannot save landing page snapshot without an explicit, authorized workspaceId."
+    );
+  }
+
+  // Compute deterministic content hash based on visible semantic & commercial content
+  const contentHash = computeCommercialSemanticHash(input);
   const db = input.tx || prisma;
 
   return await db.landingPageSnapshot.create({

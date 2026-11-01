@@ -28,6 +28,9 @@ import {
   createResearchEvidence,
 } from "./evidenceService";
 import { ResearchAccessContext } from "./researchAuthService";
+import {
+  createProductSchemaEvidenceFromActualCapture,
+} from "@/services/kh02/identity/merchantIdentityPolicy";
 
 export interface ParsedResearchPayload {
   workspaceId: string;
@@ -40,6 +43,7 @@ export interface ParsedResearchPayload {
   pageTitle?: string | null;
   metaDescription?: string | null;
   htmlContent?: string | null;
+  rawJsonLdBlocks?: string[] | null;
   normalizedOffer: NormalizedCompetitorOffer | null;
   funnelAssessment: CompetitorFunnelAssessment | null;
   warnings: string[];
@@ -295,6 +299,33 @@ export async function persistCompletedResearchResult(
           tx
         );
         evidenceIds.push(ctaEvidence.id);
+      }
+
+      const rawSchemaEvidenceInput = createProductSchemaEvidenceFromActualCapture({
+        productId: result.productId,
+        subjectId: result.productId,
+        sourceUrl: result.finalUrl || result.originalUrl,
+        htmlContent: result.htmlContent,
+        rawJsonLdBlocks: result.rawJsonLdBlocks,
+      });
+      if (rawSchemaEvidenceInput) {
+        const productSchemaEvidence = await createResearchEvidence(
+          {
+            productId: rawSchemaEvidenceInput.productId,
+            subjectType: rawSchemaEvidenceInput.subjectType,
+            subjectId: rawSchemaEvidenceInput.subjectId,
+            pillar: rawSchemaEvidenceInput.pillar,
+            claim: rawSchemaEvidenceInput.claim,
+            observedValue: rawSchemaEvidenceInput.observedValue,
+            sourceUrl: rawSchemaEvidenceInput.sourceUrl,
+            observationMethod: rawSchemaEvidenceInput.observationMethod,
+            classification: rawSchemaEvidenceInput.classification,
+            sourceContentRef: rawSchemaEvidenceInput.sourceContentRef,
+          },
+          context,
+          tx
+        );
+        evidenceIds.push(productSchemaEvidence.id);
       }
     }
 

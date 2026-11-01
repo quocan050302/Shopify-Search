@@ -263,11 +263,20 @@ export interface CandidateG16ProofEntry {
   title: string;
   storeDomain: string | null;
   canonicalProductUrl: string | null;
+  canonicalProductKey?: string;
   familyKey: string;
   snapshotClaimedIdentityStatus?: "VERIFIED" | "PROBABLE" | "UNVERIFIED";
   snapshotClaimedLiveVerified?: boolean;
   identityStatus: "VERIFIED" | "PROBABLE" | "UNVERIFIED";
   verificationEvidenceStatus?: VerificationEvidenceStatus;
+  productSchemaProofStatus?: "VERIFIED" | "INSUFFICIENT_EVIDENCE";
+  proofMethod?: string;
+  persistedProofRowIds?: string[];
+  proofSourceObservedAt?: string | null;
+  originProofStatus?: "VERIFIED" | "INSUFFICIENT_EVIDENCE";
+  authenticLiveObservationIds?: string[];
+  matchingRunId?: string | null;
+  matchingWorkspaceId?: string | null;
   isCheckoutChampFunnel: boolean;
   nicheRelevantToPetGadgets: boolean;
   nicheRelevanceReason: string;
@@ -276,6 +285,13 @@ export interface CandidateG16ProofEntry {
   candidateProductMatch: boolean;
   verifiedMerchantIdentity: boolean;
   nonFunnelStore: boolean;
+  g16PredicateStatuses?: {
+    authenticallyLive: boolean;
+    sameRunLineage: boolean;
+    candidateProductMatch: boolean;
+    verifiedMerchantIdentity: boolean;
+    nonFunnelStore: boolean;
+  };
   isLiveVerified: boolean;
   verificationMethod: string;
   persistedRunAdIds?: string[];
@@ -285,7 +301,17 @@ export interface CandidateG16ProofEntry {
   persistedMerchantProofRefs?: string[];
   rejectedCrossWorkspaceProofIds?: string[];
   rejectedSyntheticOrFallbackReasons?: string[];
+  rejectionReasonCodes?: string[];
   rejectionReasons: string[];
+  storedSnapshotClaimDiff?: {
+    snapshotClaimedIdentityStatus: string | null;
+    reconstructedIdentityStatus: string;
+    snapshotClaimedLiveVerified: boolean;
+    reconstructedLiveVerified: boolean;
+    snapshotClaimedLiveObservationsCount: number;
+    reconstructedLiveObservationsCount: number;
+    claimDowngraded: boolean;
+  };
 }
 
 export interface Kh02AcceptanceDiagnostics {
@@ -959,6 +985,111 @@ export async function buildG16EvidenceIndexFromPersistedRows(
   };
 }
 
+export interface BuildG16DiagnosticReasonInput {
+  evaluatedRunId: string | null;
+  evaluatedWorkspaceId: string | null;
+  requiredCount?: number;
+  verifiedLiveCount: number;
+  distinctFamiliesCount: number;
+  distinctCanonicalProductsCount: number;
+  previousSnapshotClaimedVerifiedCount: number;
+  candidates: CandidateG16ProofEntry[];
+  persistedProofAudit?: PersistedCandidateG16ProofAudit[];
+}
+
+/**
+ * Pure dynamic G16 diagnostic reason builder (Workstream C).
+ * Derives every count, position, domain, and status strictly from actual evaluated candidates and persisted proof audits.
+ */
+export function buildG16DiagnosticReason(input: BuildG16DiagnosticReasonInput): string {
+  const requiredCount = input.requiredCount ?? 3;
+  const runId = input.evaluatedRunId;
+  const workspaceId = input.evaluatedWorkspaceId || "unknown";
+  const candidates = Array.isArray(input.candidates) ? input.candidates : [];
+  const audits = Array.isArray(input.persistedProofAudit) ? input.persistedProofAudit : [];
+
+  if (!runId || runId === "none" || runId === "no_run_available") {
+    return `No completed KH-02 research run is available for G16 evaluation (0/${requiredCount} live-verified merchant candidates).`;
+  }
+
+  if (candidates.length === 0) {
+    return `Evaluated run '${runId}' in workspace '${workspaceId}' has 0 shortlisted candidates (0/${requiredCount} live-verified merchant candidates).`;
+  }
+
+  const totalFreshLiveObs = candidates.reduce((sum, c) => {
+    const ids = c.authenticLiveObservationIds ?? c.persistedLiveSameRunObservationIds ?? [];
+    return sum + ids.length;
+  }, 0);
+
+  const totalPersistedSchemaProofs = candidates.reduce((sum, c) => {
+    const refs = c.persistedProofRowIds ?? c.persistedMerchantProofRefs ?? [];
+    return sum + refs.length;
+  }, 0);
+
+  const candidatesWithSchemaProof = candidates.filter(
+    (c) => c.productSchemaProofStatus === "VERIFIED" || c.verifiedMerchantIdentity
+  ).length;
+  const candidatesWithLiveOrigin = candidates.filter(
+    (c) => c.originProofStatus === "VERIFIED" || c.authenticallyLive
+  ).length;
+
+  const isPass =
+    input.verifiedLiveCount >= requiredCount &&
+    input.distinctCanonicalProductsCount >= requiredCount &&
+    input.distinctFamiliesCount >= requiredCount;
+
+  if (isPass) {
+    return `${input.verifiedLiveCount}/${requiredCount} shortlisted candidates in run '${runId}' (workspace '${workspaceId}') have verified merchant product schema proofs (${totalPersistedSchemaProofs} persisted proof row(s) across ${candidatesWithSchemaProof}/${candidates.length} candidates) and same-run live lineage (${totalFreshLiveObs} authentic live observation(s) across ${candidatesWithLiveOrigin}/${candidates.length} candidates) spanning ${input.distinctFamiliesCount} distinct product families.`;
+  }
+
+  const funnelClauses = candidates
+    .map((c, idx) => ({ candidate: c, position: idx + 1 }))
+    .filter(({ candidate }) => candidate.isCheckoutChampFunnel)
+    .map(
+      ({ candidate, position }) =>
+        `candidate #${position} on '${
+          candidate.storeDomain || candidate.canonicalProductUrl || candidate.candidateId
+        }' is a CheckoutChamp/sales funnel retained as ${candidate.identityStatus}`
+    );
+
+  const semanticSnapshotCount = audits.reduce(
+    (sum, a) =>
+      sum +
+      (a.persistedMerchantProofAudits || []).filter(
+        (rec) => rec.validationStatus === "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF"
+      ).length,
+    0
+  );
+
+  const detailParts: string[] = [
+    `stored snapshot claimed ${input.previousSnapshotClaimedVerifiedCount}/${requiredCount}`,
+    `immutable DB rows in workspace '${workspaceId}' have ${totalFreshLiveObs} fresh live-ingested observation(s) (${candidatesWithLiveOrigin}/${candidates.length} candidates with live origin) and ${totalPersistedSchemaProofs} persisted product-schema proof(s) (${candidatesWithSchemaProof}/${candidates.length} candidates with schema proof)`,
+  ];
+
+  if (semanticSnapshotCount > 0) {
+    detailParts.push(
+      `${semanticSnapshotCount} LandingPageSnapshot row(s) store CRO commercial semantic digests rather than raw Product JSON-LD`
+    );
+  }
+
+  if (funnelClauses.length > 0) {
+    detailParts.push(funnelClauses.join("; "));
+  }
+
+  if (
+    input.verifiedLiveCount >= requiredCount &&
+    input.distinctFamiliesCount < requiredCount
+  ) {
+    detailParts.push(
+      `only ${input.distinctFamiliesCount}/${requiredCount} distinct product families among live-verified candidates`
+    );
+  }
+
+  return `Evaluated run '${runId}' has ${input.verifiedLiveCount}/${requiredCount} live-verified merchant candidates reconstructable from persisted DB rows (${detailParts.join(
+    "; "
+  )}).`;
+}
+
 export async function collectKh02AcceptanceDiagnostics(params: {
   sourceSha: string;
   liveWalmartArtifact10: any;
@@ -1114,16 +1245,50 @@ export async function collectKh02AcceptanceDiagnostics(params: {
         entry.storeDomain
       );
       const audit = auditByCandId.get(entry.candidateId);
+      const primaryValidProof = audit?.validPersistedMerchantProofs?.[0] || null;
+      const proofObservedAt = primaryValidProof?.observedAt
+        ? typeof primaryValidProof.observedAt === "string"
+          ? primaryValidProof.observedAt
+          : new Date(primaryValidProof.observedAt).toISOString()
+        : null;
+      const persistedProofRowIds = audit?.persistedMerchantProofRefs || [];
+      const authenticLiveObservationIds =
+        audit?.persistedLiveSameRunObservationIds || [];
+      const snapIdentity = audit?.snapshotClaimedIdentityStatus || null;
+      const snapLiveVerified = Boolean(audit?.snapshotClaimedLiveVerified);
+      const snapLiveObsCount = Number(
+        audit?.snapshotClaimedLiveObservationsCount || 0
+      );
       return {
         candidateId: entry.candidateId,
         title: entry.title,
         storeDomain: entry.storeDomain,
         canonicalProductUrl: entry.canonicalProductUrl,
+        canonicalProductKey: entry.canonicalProductKey,
         familyKey: entry.familyKey,
         snapshotClaimedIdentityStatus: audit?.snapshotClaimedIdentityStatus,
         snapshotClaimedLiveVerified: audit?.snapshotClaimedLiveVerified,
         identityStatus: entry.identityStatus,
         verificationEvidenceStatus: audit?.reconstructedVerificationEvidenceStatus,
+        productSchemaProofStatus:
+          audit?.persistedProductSchemaProofStatus ||
+          (entry.predicateResults.verifiedMerchantIdentity
+            ? "VERIFIED"
+            : "INSUFFICIENT_EVIDENCE"),
+        proofMethod: primaryValidProof?.proofMethod || "NONE",
+        persistedProofRowIds,
+        proofSourceObservedAt: proofObservedAt,
+        originProofStatus:
+          audit?.persistedLiveOriginProofStatus ||
+          (entry.predicateResults.authenticallyLive
+            ? "VERIFIED"
+            : "INSUFFICIENT_EVIDENCE"),
+        authenticLiveObservationIds,
+        matchingRunId:
+          authenticLiveObservationIds.length > 0
+            ? audit?.researchRunId || selectedJob?.id || null
+            : null,
+        matchingWorkspaceId: audit?.workspaceId || selectedJob?.workspaceId || null,
         isCheckoutChampFunnel: entry.isCheckoutChampFunnel,
         nicheRelevantToPetGadgets: nicheCheck.matches,
         nicheRelevanceReason: nicheCheck.reason,
@@ -1132,19 +1297,38 @@ export async function collectKh02AcceptanceDiagnostics(params: {
         candidateProductMatch: entry.predicateResults.candidateProductMatch,
         verifiedMerchantIdentity: entry.predicateResults.verifiedMerchantIdentity,
         nonFunnelStore: entry.predicateResults.nonFunnelStore,
+        g16PredicateStatuses: {
+          authenticallyLive: entry.predicateResults.authenticallyLive,
+          sameRunLineage: entry.predicateResults.sameRunLineage,
+          candidateProductMatch: entry.predicateResults.candidateProductMatch,
+          verifiedMerchantIdentity: entry.predicateResults.verifiedMerchantIdentity,
+          nonFunnelStore: entry.predicateResults.nonFunnelStore,
+        },
         isLiveVerified: entry.isLiveVerified,
         verificationMethod: entry.verificationMethod,
         persistedRunAdIds: audit?.persistedRunAdIds || [],
         persistedRunAdIngestOutcomes: audit?.persistedRunAdIngestOutcomes || [],
         persistedAdObservationIds: audit?.persistedAdObservationIds || [],
-        persistedLiveSameRunObservationIds:
-          audit?.persistedLiveSameRunObservationIds || [],
-        persistedMerchantProofRefs: audit?.persistedMerchantProofRefs || [],
+        persistedLiveSameRunObservationIds: authenticLiveObservationIds,
+        persistedMerchantProofRefs: persistedProofRowIds,
         rejectedCrossWorkspaceProofIds:
           audit?.rejectedCrossWorkspaceProofIds || [],
         rejectedSyntheticOrFallbackReasons:
           audit?.rejectedSyntheticOrFallbackReasons || [],
+        rejectionReasonCodes: entry.rejectionReasons,
         rejectionReasons: entry.rejectionReasons,
+        storedSnapshotClaimDiff: {
+          snapshotClaimedIdentityStatus: snapIdentity,
+          reconstructedIdentityStatus: entry.identityStatus,
+          snapshotClaimedLiveVerified: snapLiveVerified,
+          reconstructedLiveVerified: entry.isLiveVerified,
+          snapshotClaimedLiveObservationsCount: snapLiveObsCount,
+          reconstructedLiveObservationsCount: authenticLiveObservationIds.length,
+          claimDowngraded:
+            (snapIdentity === "VERIFIED" && entry.identityStatus !== "VERIFIED") ||
+            (snapLiveVerified && !entry.isLiveVerified) ||
+            snapLiveObsCount > authenticLiveObservationIds.length,
+        },
       };
     }
   );
@@ -1429,14 +1613,18 @@ export async function collectKh02AcceptanceDiagnostics(params: {
         distinctCanonicalProductsCount: g16Eval.distinctCanonicalProductsCount,
         candidates: g16Candidates,
         persistedProofAudit: persistedG16Bundle.audits,
-        reason:
-          g16Verdict === "PASS"
-            ? "3/3 shortlisted candidates have verified merchant pages and same-run live lineage reconstructed from persisted DB tables."
-            : `Evaluated run '${
-                selectedJob?.id || "none"
-              }' has ${g16Eval.verifiedLiveCount}/3 live-verified merchant candidates reconstructable from persisted DB rows (stored snapshot claimed ${persistedG16Bundle.previousSnapshotClaimedVerifiedCount}/3, but immutable ResearchEvidence/LandingPageSnapshot/DiscoveryRunAd rows in workspace '${
-                selectedJob?.workspaceId || "unknown"
-              }' have 0 fresh live-ingested observations and 0 persisted JSON-LD merchant proofs; candidate #3 on 'cc.uprootclean.com' is also a CheckoutChamp sales funnel retained as PROBABLE).`,
+        reason: buildG16DiagnosticReason({
+          evaluatedRunId: selectedJob?.id || null,
+          evaluatedWorkspaceId: selectedJob?.workspaceId || null,
+          requiredCount: 3,
+          verifiedLiveCount: g16Eval.verifiedLiveCount,
+          distinctFamiliesCount: g16Eval.distinctFamiliesCount,
+          distinctCanonicalProductsCount: g16Eval.distinctCanonicalProductsCount,
+          previousSnapshotClaimedVerifiedCount:
+            persistedG16Bundle.previousSnapshotClaimedVerifiedCount,
+          candidates: g16Candidates,
+          persistedProofAudit: persistedG16Bundle.audits,
+        }),
       },
     },
     shortlistQuality: {

@@ -88,6 +88,7 @@ export function parsePublicLandingPage(
   let pageTitle: string | null = null;
   let metaDescription: string | null = null;
   const jsonLdObjects: any[] = [];
+  const rawJsonLdBlocks: string[] = [];
   const visiblePrices: ParsedPublicLandingPage["visiblePrices"] = [];
   const visibleHeadings: string[] = [];
   const ctaButtons: string[] = [];
@@ -114,6 +115,7 @@ export function parsePublicLandingPage(
   while ((scriptMatch = scriptRegex.exec(html)) !== null) {
     const rawJson = scriptMatch[1].trim();
     if (rawJson) {
+      rawJsonLdBlocks.push(rawJson);
       try {
         const parsed = JSON.parse(rawJson);
         if (Array.isArray(parsed)) {
@@ -218,6 +220,7 @@ export function parsePublicLandingPage(
     metaDescription,
     html,
     jsonLdObjects,
+    rawJsonLdBlocks,
     visiblePrices,
     visibleHeadings,
     ctaButtons,
@@ -481,6 +484,7 @@ export async function executeLandingPageResearchJob(
     pageTitle: parsedPage.pageTitle,
     metaDescription: parsedPage.metaDescription,
     htmlContent: fetchResult.content,
+    rawJsonLdBlocks: parsedPage.rawJsonLdBlocks,
     normalizedOffer,
     funnelAssessment,
     warnings: normalizedOffer.warnings,

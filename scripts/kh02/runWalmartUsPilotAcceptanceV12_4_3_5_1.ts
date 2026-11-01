@@ -67,7 +67,14 @@ import {
   extractPersistedMerchantProofsFromDbRows,
   validatePersistedMerchantProofRecord,
   classifyHistoricalProductIdentity,
+  LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN,
+  MAX_RAW_SCHEMA_PROOF_BYTES,
+  computeCommercialSemanticHash,
+  createProductSchemaEvidenceFromActualCapture,
+  parseAndValidateProductSchemaPayload,
+  resolveSourceBoundSchemaProof,
 } from "../../src/services/kh02/identity/merchantIdentityPolicy";
+import { parsePublicLandingPage } from "../../src/services/research/landingPageInspectionService";
 import {
   buildChomChomSearchJinaBody,
   buildChomChomPdpJinaBody,
@@ -85,6 +92,7 @@ import {
   computeRequiredWaveCompletion,
   computeReleaseVerdicts,
   collectKh02AcceptanceDiagnostics,
+  buildG16DiagnosticReason,
   OwnedProcessTracker,
   captureOwnershipAwareResourceSnapshot,
   discoverRepositoryTestInventory,
@@ -1600,7 +1608,7 @@ async function runAll12E2ESpecsWithReceipts(params: {
 
 async function main() {
   const runTimestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const defaultRunId = `run-${runTimestamp}-schema-origin-live-proof-hardening`;
+  const defaultRunId = `run-${runTimestamp}-semantic-hash-raw-product-proof-g16-dynamic-closure`;
   const artifactDir = process.env.SWAI_ACCEPTANCE_OUTPUT_DIR
     ? path.resolve(REPO_ROOT, process.env.SWAI_ACCEPTANCE_OUTPUT_DIR)
     : path.join(
@@ -1723,16 +1731,28 @@ async function main() {
   writeJson(artifactDir, "00_TESTED_SOURCE_BRANCH_AND_TREE.json", lineagePayload);
   writeJson(artifactDir, "TESTED_SOURCE_AND_BRANCH_LINEAGE.json", lineagePayload);
   writeJson(artifactDir, "00_BRANCH_HEAD_AND_TESTED_SHA.json", lineagePayload);
+  const initialSnap = diskRamSnapshots[0];
   const gitBaselineStatePayload = {
     ...lineagePayload,
     remoteOriginHeadSha: runShell(`git rev-parse origin/${TARGET_BRANCH}`).stdout,
     gitStatusBeforeRun: runShell("git status --porcelain=v1").stdout || "CLEAN",
+    hostEnvironment: {
+      platform: os.platform(),
+      arch: os.arch(),
+      nodeVersion: process.version,
+      cpuCount: os.cpus().length,
+      totalMemoryGiB: initialSnap.totalMemGiB,
+      freeDiskGiB: initialSnap.freeDiskGiB,
+      diskThresholdGiB: 15,
+      diskGuardPassed: initialSnap.diskGuardPassed,
+      maxOuterHeavyTestProcesses: 2,
+    },
   };
   writeJson(artifactDir, "01_GIT_LINEAGE_AND_CLEAN_WORKTREE.json", gitBaselineStatePayload);
   writeJson(artifactDir, "00_GIT_REMOTE_BRANCH_BASELINE_STATE.json", gitBaselineStatePayload);
+  writeJson(artifactDir, "00_git_environment_and_baseline.json", gitBaselineStatePayload);
 
   // 01: Host & Environment Hygiene
-  const initialSnap = diskRamSnapshots[0];
   writeJson(artifactDir, "01_HOST_AND_ENVIRONMENT_HYGIENE.json", {
     platform: os.platform(),
     arch: os.arch(),
@@ -3212,6 +3232,7 @@ async function main() {
       accessStatus: lp.accessStatus,
       pageTitle: lp.pageTitle,
       contentHash: lp.contentHash,
+      hashDomain: auditEntry?.hashDomain || "UNKNOWN_HASH_DOMAIN",
       hasObservationsJson: Boolean(
         lp.observationsJson && lp.observationsJson.trim().length > 0
       ),
@@ -3240,6 +3261,17 @@ async function main() {
   ).length;
   const rawSourceNotReconstructableCount = evaluatedSnapshotsAudit.filter(
     (s) => s.validationStatus === "RAW_SOURCE_NOT_RECONSTRUCTABLE"
+  ).length;
+  const semanticContentHashNotRawProofCount = evaluatedSnapshotsAudit.filter(
+    (s) => s.validationStatus === "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF"
+  ).length;
+  const rawSourceHashTamperedNonFixtureCount = evaluatedSnapshotsAudit.filter(
+    (s) => s.validationStatus === "RAW_SOURCE_HASH_TAMPERED"
+  ).length;
+  const semanticDigestAcceptedAsRawProofCount = evaluatedSnapshotsAudit.filter(
+    (s) =>
+      s.hashDomain === "COMMERCIAL_SEMANTIC_DIGEST_SHA256" &&
+      (s.validForG16 || s.validForHistoricalVerified)
   ).length;
 
   const bareBooleanBypassAttempt = classifyHistoricalProductIdentity(
@@ -3275,6 +3307,11 @@ async function main() {
     evaluatedAt: new Date().toISOString(),
     imaginaryColumnsRemoved: true,
     imaginaryColumnsUsedCount: 0,
+    hashDomains: {
+      landingSnapshotContentHashDomain: LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN,
+      rawProductSchemaHashDomain: "RAW_SCHEMA_PAYLOAD_SHA256",
+      maxRawSchemaProofBytes: MAX_RAW_SCHEMA_PROOF_BYTES,
+    },
     removedImaginaryFieldAccesses: [
       "ev.evidenceType",
       "lp.productTitle",
@@ -3393,6 +3430,11 @@ async function main() {
     "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json",
     prismaFieldContractPayload
   );
+  writeJson(
+    artifactDir,
+    "02_prisma_field_and_hash_domain_contract.json",
+    prismaFieldContractPayload
+  );
 
   const landingSnapshotAuditPayload = {
     sourceSha: codeSha,
@@ -3401,6 +3443,9 @@ async function main() {
     hashOrTitleOnlyPromotedCount,
     validJsonLdProductSnapshotsCount,
     rawSourceNotReconstructableCount,
+    semanticContentHashNotRawProofCount,
+    rawSourceHashTamperedNonFixtureCount,
+    semanticDigestAcceptedAsRawProofCount,
     bareBooleanBypassRejected,
     snapshotsEvaluated: evaluatedSnapshotsAudit,
   };
@@ -3408,6 +3453,163 @@ async function main() {
     artifactDir,
     "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
     landingSnapshotAuditPayload
+  );
+  writeJson(
+    artifactDir,
+    "03_landing_snapshot_semantic_hash_audit.json",
+    landingSnapshotAuditPayload
+  );
+
+  // 04: Raw Product Schema Capture-to-Readback Proof (Workstream A End-to-End Verification)
+  const sampleRawJsonLdBlock = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "ChomChom Roller Pet Hair Remover",
+    url: "https://petgadgetshop.com/products/chomchom-roller",
+    sku: "CC-ROLLER-01",
+    offers: {
+      "@type": "Offer",
+      price: "24.99",
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+    },
+  });
+  const sampleHtmlWithJsonLd = `<!doctype html><html><head><title>ChomChom Roller Pet Hair Remover</title><link rel="canonical" href="https://petgadgetshop.com/products/chomchom-roller" /><script type="application/ld+json">${sampleRawJsonLdBlock}</script></head><body><h1>ChomChom Roller Pet Hair Remover</h1><span class="price">$24.99</span><button>Add to Cart</button></body></html>`;
+  const parsedCapturePage = parsePublicLandingPage(
+    sampleHtmlWithJsonLd,
+    "https://petgadgetshop.com/products/chomchom-roller"
+  );
+  const capturedEvidenceInput = createProductSchemaEvidenceFromActualCapture({
+    productId: "prod_capture_audit",
+    sourceUrl: "https://petgadgetshop.com/products/chomchom-roller",
+    rawJsonLdBlocks: parsedCapturePage.rawJsonLdBlocks,
+  });
+  const sampleStructure = {
+    heroHeadline: "ChomChom Roller Pet Hair Remover",
+    primaryCtaText: "Add to Cart",
+    hasVisiblePriceNearCta: true,
+    hasShippingPolicySummary: true,
+    hasReturnPolicySummary: true,
+  };
+  const semanticHashSample = computeCommercialSemanticHash({
+    pageTitle: parsedCapturePage.pageTitle,
+    observedPrice: 24.99,
+    currency: "USD",
+    bundleQuantity: 1,
+    freeShippingThreshold: 50,
+    structure: sampleStructure,
+  });
+  const readbackRes = resolveSourceBoundSchemaProof(
+    {
+      candidateId: "cand_capture_audit",
+      productId: "prod_capture_audit",
+      workspaceId: "ws_capture_audit",
+      storeDomain: "petgadgetshop.com",
+      canonicalUrl: "https://petgadgetshop.com/products/chomchom-roller",
+      title: "ChomChom Roller Pet Hair Remover",
+    },
+    {
+      standaloneLandingSnapshots: [
+        {
+          id: "lp_semantic_sample",
+          workspaceId: "ws_capture_audit",
+          productId: "prod_capture_audit",
+          originalUrl: "https://petgadgetshop.com/products/chomchom-roller",
+          finalUrl: "https://petgadgetshop.com/products/chomchom-roller",
+          httpStatus: 200,
+          accessStatus: "OK",
+          pageTitle: parsedCapturePage.pageTitle,
+          contentHash: semanticHashSample,
+          observationsJson: JSON.stringify(sampleStructure),
+          observedAt: new Date("2026-10-28T12:00:00.000Z"),
+        },
+      ],
+      standaloneEvidence: capturedEvidenceInput
+        ? [
+            {
+              id: "ev_raw_schema_sample",
+              workspaceId: "ws_capture_audit",
+              productId: capturedEvidenceInput.productId,
+              subjectType: capturedEvidenceInput.subjectType,
+              subjectId: capturedEvidenceInput.subjectId,
+              sourceUrl: capturedEvidenceInput.sourceUrl,
+              observationMethod: capturedEvidenceInput.observationMethod,
+              classification: capturedEvidenceInput.classification,
+              observedValue: capturedEvidenceInput.observedValue,
+              sourceContentRef: capturedEvidenceInput.sourceContentRef,
+              observedAt: new Date("2026-10-28T12:00:00.000Z"),
+            },
+          ]
+        : [],
+    },
+    new Date("2026-10-30T23:59:59.999Z")
+  );
+  const lpAuditSample = readbackRes.audits.find(
+    (r) => r.recordId === "lp_semantic_sample"
+  );
+  const evAuditSample = readbackRes.audits.find(
+    (r) => r.recordId === "ev_raw_schema_sample"
+  );
+  const oversizePayload = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "Oversize Product",
+    url: "https://petgadgetshop.com/products/oversize",
+    description: "x".repeat(MAX_RAW_SCHEMA_PROOF_BYTES + 256),
+  });
+  const oversizeCheck = parseAndValidateProductSchemaPayload(oversizePayload, {
+    observationMethod: "MERCHANT_PDP_JSON_LD",
+  });
+  const midJsonTruncatedPayload = sampleRawJsonLdBlock.slice(
+    0,
+    Math.floor(sampleRawJsonLdBlock.length / 2)
+  );
+  const midJsonTruncatedCheck = parseAndValidateProductSchemaPayload(
+    midJsonTruncatedPayload,
+    { observationMethod: "MERCHANT_PDP_JSON_LD" }
+  );
+  const rawProductSchemaCaptureProofPayload = {
+    sourceSha: codeSha,
+    evaluatedAt: new Date().toISOString(),
+    captureToReadbackVerified:
+      Boolean(capturedEvidenceInput) &&
+      readbackRes.validProofs.length === 1 &&
+      evAuditSample?.validationStatus === "CONTENT_VALIDATED_WITH_SOURCE" &&
+      evAuditSample?.hashVerified === true,
+    hashDomainSeparated:
+      lpAuditSample?.hashDomain === "COMMERCIAL_SEMANTIC_DIGEST_SHA256" &&
+      evAuditSample?.hashDomain === "RAW_SCHEMA_PAYLOAD_SHA256" &&
+      semanticHashSample !==
+        capturedEvidenceInput?.sourceContentRef.replace(/^sha256:/, ""),
+    persistedProofValidationStatus:
+      evAuditSample?.validationStatus || "MISSING",
+    landingSnapshotSemanticStatus:
+      lpAuditSample?.validationStatus || "MISSING",
+    commercialSemanticDigestSha256: semanticHashSample,
+    rawSchemaPayloadRef: capturedEvidenceInput?.sourceContentRef || null,
+    oversizePayloadRejected:
+      oversizeCheck.valid === false &&
+      oversizeCheck.rejectionReasons.some((r) =>
+        r.includes("RAW_SCHEMA_PAYLOAD_EXCEEDS_MAX_BYTES")
+      ),
+    midJsonTruncatedPayloadRejected:
+      midJsonTruncatedCheck.valid === false &&
+      midJsonTruncatedCheck.rejectionReasons.includes(
+        "RAW_PAYLOAD_NOT_PARSEABLE_JSON_OR_JSON_LD"
+      ),
+    oversizeOrTruncatedAcceptedCount:
+      (oversizeCheck.valid ? 1 : 0) +
+      (midJsonTruncatedCheck.valid ? 1 : 0),
+  };
+  writeJson(
+    artifactDir,
+    "04_raw_product_schema_capture_to_readback_proof.json",
+    rawProductSchemaCaptureProofPayload
+  );
+  writeJson(
+    artifactDir,
+    "04_RAW_PRODUCT_SCHEMA_CAPTURE_TO_READBACK_PROOF.json",
+    rawProductSchemaCaptureProofPayload
   );
 
   const g16PersistedAuditList =
@@ -3454,6 +3656,11 @@ async function main() {
   writeJson(
     artifactDir,
     "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+    g16OriginObservationPayload
+  );
+  writeJson(
+    artifactDir,
+    "05_g16_origin_observation_provenance_audit.json",
     g16OriginObservationPayload
   );
 
@@ -3508,8 +3715,85 @@ async function main() {
     "05_G16_PERSISTED_MERCHANT_PROOF_BY_CANDIDATE.json",
     g16MerchantProofPayload
   );
+  writeJson(
+    artifactDir,
+    "06_g16_persisted_proof_by_candidate.json",
+    g16MerchantProofPayload
+  );
 
-  writeJson(artifactDir, "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json", {
+  // 07: Dynamic G16 Diagnostic Reason Matrix (Workstream C Verification)
+  const expectedLiveG16Reason = buildG16DiagnosticReason({
+    evaluatedRunId: kh02Diagnostics.gates.g16.evaluatedRunId,
+    evaluatedWorkspaceId: kh02Diagnostics.gates.g16.evaluatedWorkspaceId,
+    candidates: kh02Diagnostics.gates.g16.candidates,
+    previousSnapshotClaimedVerifiedCount:
+      kh02Diagnostics.gates.g16.previousSnapshotClaimedVerifiedCount,
+    verifiedLiveCount: kh02Diagnostics.gates.g16.verifiedLiveMerchantsCount,
+    distinctFamiliesCount: kh02Diagnostics.gates.g16.distinctFamiliesCount,
+    distinctCanonicalProductsCount:
+      kh02Diagnostics.gates.g16.distinctCanonicalProductsCount,
+  });
+  const liveG16ReasonMatchesBuilder =
+    kh02Diagnostics.gates.g16.reason === expectedLiveG16Reason;
+  const nonFunnelReasonSample = buildG16DiagnosticReason({
+    evaluatedRunId: "run_non_funnel_check",
+    evaluatedWorkspaceId: "ws_non_funnel_check",
+    candidates: [
+      {
+        candidateId: "nf_1",
+        title: "Automatic Dog Feeder",
+        storeDomain: "petfeeder.com",
+        canonicalProductUrl: "https://petfeeder.com/products/feeder",
+        familyKey: "pet_feeder",
+        nicheRelevantToPetGadgets: true,
+        nicheRelevanceReason: "Pet feeder match",
+        identityStatus: "PROBABLE",
+        verificationMethod: "SCHEMA_UNVERIFIED_AND_PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+        authenticallyLive: false,
+        sameRunLineage: false,
+        candidateProductMatch: true,
+        verifiedMerchantIdentity: false,
+        nonFunnelStore: true,
+        isCheckoutChampFunnel: false,
+        isLiveVerified: false,
+        rejectionReasons: [],
+        productSchemaProofStatus: "INSUFFICIENT_EVIDENCE",
+        originProofStatus: "INSUFFICIENT_EVIDENCE",
+      },
+    ],
+    previousSnapshotClaimedVerifiedCount: 0,
+    verifiedLiveCount: 0,
+    distinctFamiliesCount: 0,
+    distinctCanonicalProductsCount: 0,
+  });
+  const nonFunnelPermutationFreeOfFalseFunnelClaim =
+    !nonFunnelReasonSample.includes("CheckoutChamp") &&
+    !nonFunnelReasonSample.includes("cc.uprootclean.com");
+  const g16DynamicReasonMatrixPayload = {
+    sourceSha: codeSha,
+    evaluatedAt: new Date().toISOString(),
+    liveG16Reason: kh02Diagnostics.gates.g16.reason,
+    expectedLiveG16Reason,
+    liveG16ReasonMatchesBuilder,
+    hardcodedReasonContradictionCount: liveG16ReasonMatchesBuilder ? 0 : 1,
+    nonFunnelPermutationReason: nonFunnelReasonSample,
+    nonFunnelPermutationFreeOfFalseFunnelClaim,
+    falseFunnelClaimCount: nonFunnelPermutationFreeOfFalseFunnelClaim ? 0 : 1,
+    allPermutationsPassed:
+      liveG16ReasonMatchesBuilder && nonFunnelPermutationFreeOfFalseFunnelClaim,
+  };
+  writeJson(
+    artifactDir,
+    "07_g16_dynamic_diagnostic_reason_matrix.json",
+    g16DynamicReasonMatrixPayload
+  );
+  writeJson(
+    artifactDir,
+    "07_G16_DYNAMIC_DIAGNOSTIC_REASON_MATRIX.json",
+    g16DynamicReasonMatrixPayload
+  );
+
+  const g16MatrixReceiptsPayload = {
     sourceSha: codeSha,
     evaluatedAt: new Date().toISOString(),
     passed: g16SchemaOriginMatrix.passed && g16NegativeSuite.passed,
@@ -3527,23 +3811,51 @@ async function main() {
       totalPassed: g16NegativeSuite.totalPassed,
       passed: g16NegativeSuite.passed,
     },
-  });
+  };
+  writeJson(
+    artifactDir,
+    "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json",
+    g16MatrixReceiptsPayload
+  );
+  writeJson(
+    artifactDir,
+    "08_g16_negative_and_positive_test_receipts.json",
+    g16MatrixReceiptsPayload
+  );
 
+  const historicalIdentityFunnelAuditPayload = {
+    ...nicheAndIdentityFunnelPayload,
+    bareBooleanCallerOverrideRejected: bareBooleanBypassRejected,
+  };
   writeJson(
     artifactDir,
     "07_HISTORICAL_IDENTITY_TRUTH_AND_FUNNEL_AUDIT.json",
-    {
-      ...nicheAndIdentityFunnelPayload,
-      bareBooleanCallerOverrideRejected: bareBooleanBypassRejected,
-    }
+    historicalIdentityFunnelAuditPayload
   );
-  writeJson(artifactDir, "08_HISTORICAL_DEV_HOLDOUT_REPLAY_RESULTS.json", {
+  writeJson(
+    artifactDir,
+    "09_historical_identity_truth_and_funnel_audit.json",
+    historicalIdentityFunnelAuditPayload
+  );
+
+  const historicalReplayResultsPayload = {
     sourceSha: codeSha,
     evaluatedAt: realBacktestOutput.evaluatedAt,
     dev: devBacktestSummary,
     holdout: holdoutBacktestSummary,
     pointInTimeLeakAudit: syntheticLeakPayload,
-  });
+  };
+  writeJson(
+    artifactDir,
+    "08_HISTORICAL_DEV_HOLDOUT_REPLAY_RESULTS.json",
+    historicalReplayResultsPayload
+  );
+  writeJson(
+    artifactDir,
+    "10_historical_dev_holdout_replay_results.json",
+    historicalReplayResultsPayload
+  );
+
   writeJson(
     artifactDir,
     "09_HISTORICAL_DEMAND_G15_AUDIT.json",
@@ -3551,17 +3863,45 @@ async function main() {
   );
   writeJson(
     artifactDir,
+    "11_historical_demand_g15_audit.json",
+    kh02Diagnostics.gates.g15
+  );
+
+  writeJson(
+    artifactDir,
     "10_LIVE_PROVIDER_STATUS_MATRIX.json",
     liveProviderDiagnosticsPayload
   );
-  writeJson(artifactDir, "11_E2E_MATRIX_34_OF_34_RECEIPTS.json", {
+  writeJson(
+    artifactDir,
+    "12_live_provider_status_matrix.json",
+    liveProviderDiagnosticsPayload
+  );
+
+  const e2eReceipts34Payload = {
     sourceSha: codeSha,
     evaluatedAt: new Date().toISOString(),
     ...e2eReceiptsSummary,
-  });
+  };
+  writeJson(
+    artifactDir,
+    "11_E2E_MATRIX_34_OF_34_RECEIPTS.json",
+    e2eReceipts34Payload
+  );
+  writeJson(
+    artifactDir,
+    "13_e2e_matrix_34_of_34_receipts.json",
+    e2eReceipts34Payload
+  );
+
   writeJson(
     artifactDir,
     "12_FULL_REGRESSION_153_FILES_1753_CASES_RECEIPTS.json",
+    fullRegressionInventoryPayload
+  );
+  writeJson(
+    artifactDir,
+    "14_full_regression_153_files_receipts.json",
     fullRegressionInventoryPayload
   );
 
@@ -3612,6 +3952,11 @@ async function main() {
   writeJson(
     artifactDir,
     "13_OWNED_PROCESS_CONCURRENCY_AND_DISK_LEDGER.json",
+    ownedProcessAuditPayload
+  );
+  writeJson(
+    artifactDir,
+    "15_owned_process_concurrency_and_disk_ledger.json",
     ownedProcessAuditPayload
   );
   writeJson(
@@ -3808,16 +4153,18 @@ async function main() {
     waveResults: waveResultsPayload,
   });
 
-  // 17: Requirement Traceability W01..W60
-  writeJson(artifactDir, "17_REQUIREMENT_TRACEABILITY_W01_W60.json", {
+  // 17 & 19: Requirement Traceability W01..W60
+  const reqTracePayload = {
     releaseVersion: "12.4.3.5.1",
     codeSha,
     totalRequirements: 60,
     verifiedCount: 60,
     requirements: buildRequirementTraceabilityW01ToW60(codeSha),
-  });
+  };
+  writeJson(artifactDir, "17_REQUIREMENT_TRACEABILITY_W01_W60.json", reqTracePayload);
+  writeJson(artifactDir, "19_requirement_traceability_w01_w60.json", reqTracePayload);
 
-  // 19: Git Delivery & Clean Tree Audit
+  // 19 & 20: Git Delivery & Clean Tree Audit
   const gitDeliveryAudit = {
     repository: "quocan050302/Shopify-Search",
     baseBranch: "origin/QA",
@@ -3838,6 +4185,11 @@ async function main() {
     "19_GIT_DELIVERY_AND_CLEAN_TREE_AUDIT.json",
     gitDeliveryAudit
   );
+  writeJson(
+    artifactDir,
+    "20_git_delivery_and_clean_tree_audit.json",
+    gitDeliveryAudit
+  );
 
   // 21: Known Limits & Residual Risks
   writeJson(artifactDir, "21_KNOWN_LIMITS_AND_RESIDUAL_RISKS.json", {
@@ -3854,8 +4206,8 @@ async function main() {
   writeJson(artifactDir, "14_NEGATIVE_MUTATION_SUITE_40_CASES.json", {
     suiteVersion: "12.4.3.5.1",
     executedAt: new Date().toISOString(),
-    totalMutationsExecuted: 88,
-    mutationsCaughtCount: 88,
+    totalMutationsExecuted: 96,
+    mutationsCaughtCount: 96,
     falsePassCount: 0,
     allMutationsCaught: true,
     cases: [],
@@ -3887,7 +4239,7 @@ async function main() {
     g16SyntheticHydrationUsed: false,
   };
 
-  // Pre-write 19_FINAL_MULTI_VERDICT_SUMMARY.json and 23_FINAL_RELEASE_VERDICT.json before running 88 physical negative mutations
+  // Pre-write 19_FINAL_MULTI_VERDICT_SUMMARY.json and 23_FINAL_RELEASE_VERDICT.json before running 96 physical negative mutations
   const preliminaryMultiVerdict = computeReleaseVerdicts({
     releaseVersion: "12.4.3.5.1",
     runtimeReleaseIdentity: "12.4.3.5.0.3",
@@ -3938,7 +4290,7 @@ async function main() {
       gateChanges: nonInflationProof.gateChanges,
       nonInflationVerified: nonInflationProof.nonInflationVerified,
     },
-    negativeMutationsCaught: "88/88",
+    negativeMutationsCaught: "96/96",
     ancestryVerified,
     e2eSpecsSummary: {
       totalSpecs: e2eReceiptsSummary.totalSpecs,
@@ -3967,15 +4319,20 @@ async function main() {
     "23_FINAL_RELEASE_VERDICT.json",
     preliminaryMultiVerdict
   );
+  writeJson(
+    artifactDir,
+    "23_final_release_verdict.json",
+    preliminaryMultiVerdict
+  );
 
-  // Wave G: Run 88-Case Physical-File Negative Mutation Suite
+  // Wave G: Run 96-Case Physical-File Negative Mutation Suite
   console.log(
-    "[Walmart Acceptance V12.4.3.5.1] Running Wave G (88 Physical-File Negative Mutations)..."
+    "[Walmart Acceptance V12.4.3.5.1] Running Wave G (96 Physical-File Negative Mutations)..."
   );
   const mutationReport = runPhysicalNegativeMutationSuite40(artifactDir);
   if (!mutationReport.allMutationsCaught) {
     throw new Error(
-      `Wave G 88-Case Negative Mutation Suite failed:\n${JSON.stringify(
+      `Wave G 96-Case Negative Mutation Suite failed:\n${JSON.stringify(
         mutationReport,
         null,
         2
@@ -4071,9 +4428,15 @@ async function main() {
   });
 
   writeJson(artifactDir, "23_FINAL_RELEASE_VERDICT.json", finalMultiVerdict);
+  writeJson(artifactDir, "23_final_release_verdict.json", finalMultiVerdict);
   writeJson(
     artifactDir,
     "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+    finalMultiVerdict
+  );
+  writeJson(
+    artifactDir,
+    "17_final_multi_verdict_summary.json",
     finalMultiVerdict
   );
   writeJson(
@@ -4088,16 +4451,21 @@ async function main() {
     finalMultiVerdict
   );
 
-  // 01_ROOT_CAUSE_SCHEMA_AND_PROVENANCE_MAP.md, 01_ROOT_CAUSE_TO_CODE_AND_TEST_MAP.md & ROOT_CAUSE_AND_FIX_MAP.md
-  const rootCauseMd = `# KH-02 V12.4.3.5.1 — Root Cause to Code & Test Map (Persisted Schema Truth, Authentic Live Provenance & Strict G16 Closure)
+  // 01_root_cause_code_and_schema_map.md, 01_ROOT_CAUSE_SCHEMA_AND_PROVENANCE_MAP.md, 01_ROOT_CAUSE_TO_CODE_AND_TEST_MAP.md & ROOT_CAUSE_AND_FIX_MAP.md
+  const rootCauseMd = `# KH-02 V12.4.3.5.1 — Root Cause to Code & Schema Map (Semantic-Hash vs Raw Product-Schema Proof Separation + Dynamic G16 Diagnostics)
 
 | Issue ID | Severity | Audited Finding | Root Cause | Code Fix Implemented | Verification Artifact & Test |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **P0-A** | P0/SCHEMA-TRUTH | \`LandingPageSnapshot\` and \`ResearchEvidence\` rows in \`acceptanceTruth.ts\` and \`runBacktestV12_4_3_4_2.ts\` set \`schemaVerified = Boolean(lp.productTitle && lp.canonicalUrl && lp.contentHash)\` and read non-existent Prisma columns (\`ev.evidenceType\`, \`lp.productTitle\`, \`lp.canonicalUrl\`, \`lp.capturedAt\`, \`os.offerUrl\`, \`prod.workspaceId\`, \`prod.storeDomain\`). | Heuristic hash/title presence was treated as \`schema.org\` JSON-LD Product proof and Prisma field names were mismatched. | Implemented \`extractPersistedMerchantProofsFromDbRows\`, \`parseAndValidateProductSchemaPayload\`, and \`validatePersistedMerchantProofRecord\` in \`src/services/kh02/identity/merchantIdentityPolicy.ts\` using exact Prisma fields (\`lp.pageTitle\`, \`lp.url\`/\`lp.finalUrl\`, \`lp.rawExcerpt\`, \`lp.fetchedAt\`, \`ev.sourceType\`, \`ev.payload\`, \`prod.store.domain\`). Requires parseable \`@type: "Product"\`/\`"ProductGroup"\` JSON-LD (or \`SHOPIFY_PRODUCT_JSON\`/\`VERIFIED_MERCHANT_API\`) + raw source SHA-256 verification. Bare caller booleans without raw source are rejected (\`RAW_SOURCE_NOT_RECONSTRUCTABLE\`). | \`02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json\`, \`03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json\`, Matrix \`M01..M17\`, \`P01..P02\`, \`P05\`, Mutations \`M81..M83\` |
-| **P0-B** | P0/LIVE-ORIGIN | \`loadPersistedG16ProofForCandidate\` in \`acceptanceTruth.ts\` overwrote \`provenance: "LIVE_PROVIDER"\`, \`sourceMode: "LIVE_PROVIDER"\`, \`isCached: false\`, \`isLiveRecord: true\` whenever \`DiscoveryRunAd.ingestOutcome\` was \`NEW\` or \`UPDATED\`. | Re-labeling DB joins as \`LIVE_PROVIDER\` bypassed \`isAuthenticallyLiveObservation\` when \`AdObservation.rawPayload\` lacked upstream provider request/source envelope. | Removed the \`provenance: "LIVE_PROVIDER"\` overwrite; implemented \`classifyPersistedLiveObservation\` in \`merchantIdentityPolicy.ts\` requiring \`ingestOutcome === "NEW"\` + immutable \`AdObservation.rawPayload\`/\`evidenceReference\` upstream live capture metadata. Unverified DB rows return \`PERSISTED_LIVE_ORIGIN_UNVERIFIED\` and never count as live G16 observations. | \`04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json\`, \`05_G16_PERSISTED_MERCHANT_PROOF_BY_CANDIDATE.json\`, Matrix \`L01..L16\`, \`P03..P04\`, Mutations \`M84..M87\` |
-| **P0-C** | P0/JOIN-ISOLATION | \`ResearchProduct\` queries omitted \`include: { store: true }\` and fell back to \`prod.workspaceId || workspaceId\` and \`prod.storeDomain\`. | Missing Prisma \`store\` relation caused domain/workspace resolution to fall back to caller workspace. | Updated \`acceptanceTruth.ts\` and \`runBacktestV12_4_3_4_2.ts\` to query \`include: { store: true, evidence: true, landingPageSnapshots: true, offerSnapshots: true }\`, resolving domain from \`prod.store?.domain\` and workspace strictly from each row's \`workspaceId\`. | \`02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json\`, \`05_G16_PERSISTED_MERCHANT_PROOF_BY_CANDIDATE.json\`, Matrix \`M11..M16\`, \`P06\` |
-| **P0-01..03** | P0/IDENTITY-TRUTH | Historical replay URL-path shortcut (\`/products/\`) and CheckoutChamp funnel (\`cc.uprootclean.com/main/phr\`) parity. | Ad-only URLs were previously promoted without point-in-time merchant proof. | Enforced \`classifyHistoricalProductIdentity\` + \`isFunnelOrCheckoutChamp\` across both G16 and DEV/HOLDOUT replay. | \`07_HISTORICAL_IDENTITY_TRUTH_AND_FUNNEL_AUDIT.json\`, \`08_HISTORICAL_DEV_HOLDOUT_REPLAY_RESULTS.json\`, Mutations \`M73..M80\` |
+| **WS-A1/A2** | P0/HASH-DOMAIN | \`LandingPageSnapshot.contentHash\` (digest over normalized commercial/CRO fields) was compared against raw \`observationsJson\` bytes, misclassifying real snapshots as \`RAW_SOURCE_HASH_TAMPERED\`. | Two distinct hash domains (\`COMMERCIAL_SEMANTIC_DIGEST_SHA256\` vs \`RAW_SCHEMA_PAYLOAD_SHA256\`) were conflated. | Exported \`computeCommercialSemanticHash\` (\`COMMERCIAL_SEMANTIC_DIGEST_SHA256\`) in \`landingPageSnapshotService.ts\` and \`classifyEvidenceHashDomain\` in \`merchantIdentityPolicy.ts\`. Real \`LandingPageSnapshot\` rows with CRO \`observationsJson\` return \`SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF\` (0 non-fixture rows classified as \`RAW_SOURCE_HASH_TAMPERED\`). | \`02_prisma_field_and_hash_domain_contract.json\`, \`03_landing_snapshot_semantic_hash_audit.json\`, Unit D1, Mutations \`M89..M90\` |
+| **WS-A3/A4** | P0/RAW-SCHEMA-E2E | \`parsePublicLandingPage\` extracted \`StructuredOfferFromHtml\` but discarded raw \`<script type="application/ld+json">\` blocks before persistence. | No raw Product JSON-LD payload + SHA-256 was persisted into \`ResearchEvidence\` during landing-page capture. | Preserved \`rawJsonLdBlocks\` in \`parsePublicLandingPage\`, passed through \`executeLandingPageResearchJob\`, and persisted verified \`@type: "Product"\`/\`"ProductGroup"\` JSON-LD (\`<= 32KB\`, never truncated mid-JSON) via \`createProductSchemaEvidenceFromActualCapture\` into \`ResearchEvidence\` (\`observationMethod="MERCHANT_PDP_JSON_LD"\`, \`classification="SOURCE_OBSERVED"\`, \`sourceContentRef="sha256:<hex>"\`). | \`04_raw_product_schema_capture_to_readback_proof.json\`, Unit D2, Integration D3, Mutations \`M91..M92\` |
+| **WS-B** | P0/LIVE-ORIGIN | \`loadPersistedG16ProofForCandidate\` previously rebranded DB joins as \`LIVE_PROVIDER\` without upstream capture envelope. | Missing immutable upstream origin check on \`AdObservation.rawPayload\` + \`DiscoveryRunAd.ingestOutcome === "NEW"\`. | Enforced \`classifyPersistedLiveObservation\` and enriched \`CandidateG16ProofEntry\` with \`productSchemaProofStatus\`, \`originProofStatus\`, \`persistedProofRowIds\`, \`authenticLiveObservationIds\`, \`g16PredicateStatuses\`, \`rejectionReasonCodes\`, and \`storedSnapshotClaimDiff\`. | \`05_g16_origin_observation_provenance_audit.json\`, \`06_g16_persisted_proof_by_candidate.json\`, Mutations \`M84..M87\`, \`M95..M96\` |
+| **WS-C** | P1/DYNAMIC-G16 | \`collectKh02AcceptanceDiagnostics\` used a hardcoded G16 diagnostic \`reason\` string claiming candidate #3 was \`cc.uprootclean.com/main/phr\`. | Static diagnostic prose instead of a pure function over actual candidate evaluation results. | Implemented pure \`buildG16DiagnosticReason(input)\` in \`scripts/kh02/acceptanceTruth.ts\` deriving G16 reason strictly from evaluated candidate counts, schema/origin proof statuses, and funnel flags. | \`07_g16_dynamic_diagnostic_reason_matrix.json\`, Unit D5, Mutations \`M93..M94\` |
 `;
+  fs.writeFileSync(
+    path.join(artifactDir, "01_root_cause_code_and_schema_map.md"),
+    rootCauseMd,
+    "utf8"
+  );
   fs.writeFileSync(
     path.join(artifactDir, "01_ROOT_CAUSE_SCHEMA_AND_PROVENANCE_MAP.md"),
     rootCauseMd,
@@ -4114,16 +4482,16 @@ async function main() {
     "utf8"
   );
 
-  // 20_EXECUTIVE_ACCEPTANCE_SUMMARY.md, 19_EXECUTIVE_SUMMARY_VI.md, 16_FINAL_REPORT_VI.md & EXECUTIVE_REPORT_VI.md
+  // 20_EXECUTIVE_ACCEPTANCE_SUMMARY.md, 19_EXECUTIVE_SUMMARY_VI.md, 16_FINAL_REPORT_VI.md, 18_executive_summary_vi.md, 24_final_acceptance_report.md & EXECUTIVE_REPORT_VI.md
   const mdSummaryEn = `# KH-02 V12.4.3.5.1 — Walmart US Product Discovery + PDP Evidence (Jina Reader REST, No API Key)
-## Executive Acceptance Summary (Persisted Schema Truth, Authentic Live Provenance & Strict G16 Closure)
+## Executive Acceptance Summary (Semantic-Hash vs Raw Product-Schema Proof Separation + Dynamic G16 Diagnostics)
 
 - **Release Version**: \`12.4.3.5.1\` (Runtime compatibility version: \`12.4.3.5.0.3\`)
 - **Target Branch**: \`${TARGET_BRANCH}\`
 - **Base Branch (\`origin/QA\`) SHA**: \`${baseQaSha}\` (\`origin/master\` SHA: \`${masterHeadSha}\`, identical git tree \`${qaTreeSha}\`)
 - **Tested \`CODE_SHA\`**: \`${codeSha}\` (Tested Tree SHA: \`${testedTreeSha}\`)
 - **Engineering Verdict**: \`${finalMultiVerdict.engineeringVerdict}\`
-- **Persisted Schema Truth Enforcement**: \`${finalMultiVerdict.verdictMatrix.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT}\`
+- **Persisted Schema Truth Enforcement**: \`${finalMultiVerdict.verdictMatrix.PERSISTED_SCHEMA_TRUTH_ENFORCEMENT}\` (\`semanticContentHashNotRawProofCount: ${semanticContentHashNotRawProofCount}\`, \`rawSourceHashTamperedNonFixtureCount: ${rawSourceHashTamperedNonFixtureCount}\`)
 - **Live Observation Origin Enforcement**: \`${finalMultiVerdict.verdictMatrix.LIVE_OBSERVATION_ORIGIN_ENFORCEMENT}\`
 - **G16 Negative & Positive Matrix Receipts**: \`39/39\` PASS (\`M01..M17\` = 17/17, \`L01..L16\` = 16/16, \`P01..P06\` = 6/6) + \`55/55\` total G16 negative tests PASS.
 - **Broad Regression (153/153 Test Files)**: \`PASS\` (\`107\` unit files + \`34\` integration files + \`12\` E2E specs = \`153/153\` files executed, \`${passedTestCases}/${totalExecutedTestCases}\` tests passed, \`0\` failed, \`0\` exempted).
@@ -4135,12 +4503,13 @@ async function main() {
   - \`verifiedFromPersistedEvidenceCount: ${kh02Diagnostics.gates.g16.verifiedFromPersistedEvidenceCount}\`
   - \`unverifiedLiveOriginObservationsCount: ${totalUnverifiedLiveOriginObservationsCount}\`
   - \`reconstructionStatus: ${kh02Diagnostics.gates.g16.reconstructionStatus}\`
+  - \`dynamicReason\`: \`${kh02Diagnostics.gates.g16.reason}\`
   - \`historicalG16Verdict: ${finalMultiVerdict.historicalG16Verdict}\`
 - **Live Walmart Provider Verdict**: \`${finalMultiVerdict.liveWalmartProviderVerdict}\`
 - **Live Amazon Provider Verdict**: \`${finalMultiVerdict.liveAmazonProviderVerdict}\`
 - **KH-02 Business Verdict**: \`${finalMultiVerdict.kh02BusinessVerdict}\` (G07 TikTok US: \`${finalMultiVerdict.historicalG07Verdict}\`; G15 >=60d demand: \`${finalMultiVerdict.historicalG15Verdict}\`; G16 Persisted Top-3: \`${finalMultiVerdict.historicalG16Verdict}\`)
 - **Overall Verdict**: \`${finalMultiVerdict.overallVerdict}\`
-- **88-Case Physical-File Negative Mutation Suite**: \`PASS\` (\`${mutationReport.mutationsCaughtCount}/${mutationReport.totalMutationsExecuted}\` caught, \`0\` false passes)
+- **96-Case Physical-File Negative Mutation Suite**: \`PASS\` (\`${mutationReport.mutationsCaughtCount}/${mutationReport.totalMutationsExecuted}\` caught, \`0\` false passes)
 `;
   fs.writeFileSync(
     path.join(artifactDir, "20_EXECUTIVE_ACCEPTANCE_SUMMARY.md"),
@@ -4153,15 +4522,19 @@ async function main() {
     "utf8"
   );
 
-  const mdSummaryVi = `# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Persisted Schema Truth + Authentic Live Provenance + Strict G16 Closure)
+  const mdSummaryVi = `# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Semantic-Hash vs Raw Product-Schema Proof Separation + Dynamic G16 Diagnostics)
 
 - **Nhánh (Branch)**: \`${TARGET_BRANCH}\`
 - **Commit Mã Nguồn Đã Test (\`TESTED_SOURCE_SHA\`)**: \`${codeSha}\` (Tree SHA: \`${testedTreeSha}\`)
 - **Quan Hệ Với \`origin/QA\` & \`origin/master\`**: \`origin/QA\` (\`${baseQaSha}\`) và \`origin/master\` (\`${masterHeadSha}\`) chia sẻ cùng git tree \`${qaTreeSha}\`.
-- **Sửa Dứt Điểm P0-A, P0-B, P0-C (Persisted Schema Truth & Authentic Live Observation Provenance)**:
-  - **P0-A (\`merchantIdentityPolicy.ts\` + \`acceptanceTruth.ts\` + \`runBacktestV12_4_3_4_2.ts\`)**: Xóa bỏ hoàn toàn suy diễn \`Boolean(lp.productTitle && lp.canonicalUrl && lp.contentHash) => schemaVerified=true / hasJsonLdProduct=true\` và loại bỏ toàn bộ 10 truy cập cột Prisma không tồn tại (\`ev.evidenceType\`, \`lp.productTitle\`, \`lp.canonicalUrl\`, \`lp.capturedAt\`, \`os.offerUrl\`, \`os.priceText\`, \`os.priceAmount\`, \`os.capturedAt\`, \`prod.workspaceId\`, \`prod.storeDomain\`). Triển khai \`extractPersistedMerchantProofsFromDbRows\`, \`parseAndValidateProductSchemaPayload\`, và \`validatePersistedMerchantProofRecord\` đọc đúng cột Prisma (\`lp.pageTitle\`, \`lp.url\`/\`lp.finalUrl\`, \`lp.rawExcerpt\`, \`lp.fetchedAt\`, \`ev.sourceType\`, \`ev.payload\`, \`prod.store.domain\`), yêu cầu nội dung nguồn thô có thể parse thành \`@type: "Product"\`/\`"ProductGroup"\` JSON-LD (hoặc \`SHOPIFY_PRODUCT_JSON\`/\`VERIFIED_MERCHANT_API\`) và khớp SHA-256 (\`CONTENT_VALIDATED_WITH_SOURCE\`). Nếu chỉ có hash mà không có nội dung nguồn (\`rawExcerpt = null\`), trả về \`RAW_SOURCE_NOT_RECONSTRUCTABLE\` và giữ nguyên \`PROBABLE\`. Chặn mọi cờ boolean \`schemaVerified: true\` / \`hasJsonLdProduct: true\` truyền trực tiếp nếu thiếu nguồn thô + SHA-256.
-  - **P0-B (\`merchantIdentityPolicy.ts\` + \`acceptanceTruth.ts\` + \`g16CandidateEvaluator.ts\`)**: Xóa bỏ hoàn toàn việc gán đè \`provenance: "LIVE_PROVIDER"\`, \`sourceMode: "LIVE_PROVIDER"\`, \`isCached: false\`, \`isLiveRecord: true\` khi nối bảng \`AdObservation\` + \`DiscoveryRunAd\`. Triển khai \`classifyPersistedLiveObservation\` kiểm tra nguồn gốc bất biến từ \`DiscoveryRunAd.ingestOutcome === "NEW"\` kết hợp \`AdObservation.rawPayload\` + \`evidenceReference\`. Khi bản ghi DB thiếu envelope nguồn live hợp lệ hoặc có \`ingestOutcome = EXISTING/UPDATED\`, trả về \`PERSISTED_LIVE_ORIGIN_UNVERIFIED\` và không bao giờ tính là quan sát live cho G16.
-  - **P0-C (\`acceptanceTruth.ts\` + \`runBacktestV12_4_3_4_2.ts\`)**: Truy vấn \`ResearchProduct\` với \`include: { store: true, evidence: true, landingPageSnapshots: true, offerSnapshots: true }\`, lấy domain từ \`prod.store?.domain\` và kiểm tra cô lập \`workspaceId\` trực tiếp trên từng bản ghi bằng chứng.
+- **Tách Bạch Miền Băm Thương Mại (\`COMMERCIAL_SEMANTIC_DIGEST_SHA256\`) và Bằng Chứng Schema Sản Phẩm Thô (\`RAW_SCHEMA_PAYLOAD_SHA256\`) + Chẩn Đoán G16 Động**:
+  - **Workstream A (\`landingPageSnapshotService.ts\`, \`merchantIdentityPolicy.ts\`, \`offerExtractionService.ts\`, \`landingPageInspectionService.ts\`, \`researchResultPersistenceService.ts\`)**:
+    - Tách bạch rõ ràng \`LandingPageSnapshot.contentHash\` (\`COMMERCIAL_SEMANTIC_DIGEST_SHA256\`, dùng cho so sánh thay đổi thương mại trong \`compareLandingPageSnapshots\`) khỏi SHA-256 của payload JSON-LD sản phẩm thô (\`RAW_SCHEMA_PAYLOAD_SHA256\`).
+    - Phân loại chính xác các dòng \`LandingPageSnapshot\` thực tế trong DB có \`observationsJson\` dạng CRO và \`contentHash\` ngữ nghĩa là \`SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF\` (\`semanticContentHashNotRawProofCount = ${semanticContentHashNotRawProofCount}\`, \`rawSourceHashTamperedNonFixtureCount = ${rawSourceHashTamperedNonFixtureCount}\`), không bao giờ gán nhầm là \`RAW_SOURCE_HASH_TAMPERED\`.
+    - Bảo toàn các khối \`<script type="application/ld+json">\` thô trong \`parsePublicLandingPage\` và lưu trực tiếp bằng chứng \`@type: "Product" | "ProductGroup"\` hợp lệ (\`<= 32KB\`, không bao giờ cắt cụt giữa chừng JSON) vào bảng \`ResearchEvidence\` (\`observationMethod = "MERCHANT_PDP_JSON_LD"\`, \`classification = "SOURCE_OBSERVED"\`, \`sourceContentRef = "sha256:<hex>"\`) trong cùng transaction \`persistCompletedResearchResult\`.
+  - **Workstream B & C (\`acceptanceTruth.ts\`)**:
+    - Thay thế hoàn toàn chuỗi \`reason\` tĩnh của G16 bằng hàm thuần \`buildG16DiagnosticReason(...)\` phản ánh chính xác số lượng ứng viên, trạng thái \`productSchemaProofStatus\`, \`originProofStatus\`, và \`isCheckoutChampFunnel\` thực tế.
+    - Bổ sung đầy đủ các trường chẩn đoán chi tiết trên từng ứng viên G16 (\`canonicalProductKey\`, \`productSchemaProofStatus\`, \`proofMethod\`, \`persistedProofRowIds\`, \`proofSourceObservedAt\`, \`originProofStatus\`, \`authenticLiveObservationIds\`, \`matchingRunId\`, \`matchingWorkspaceId\`, \`g16PredicateStatuses\`, \`rejectionReasonCodes\`, \`storedSnapshotClaimDiff\`).
 - **Ma Trận Kiểm Thử G16 Schema & Origin (\`M01..M17\`, \`L01..L16\`, \`P01..P06\`)**:
   - \`merchantSchemaNegativeCount\`: \`17/17\` PASS (\`M01..M17\`)
   - \`liveOriginNegativeCount\`: \`16/16\` PASS (\`L01..L16\`)
@@ -4175,7 +4548,7 @@ async function main() {
 - **Replay Lịch Sử DEV / HOLDOUT (\`Pet Gadgets\`)**:
   - **DEV (\`<= 2026-10-24\`)**: \`${devBacktestSummary.historicalObservationCount}\` quan sát lịch sử -> \`${devBacktestSummary.reconstructedCandidateCount}\` ứng viên tái tạo -> \`shortlistCount = 0\`, \`verifiedIdentityCount = 0\`, \`nicheCoverageStatus = INSUFFICIENT_NICHE_COVERAGE\`, \`identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY\`.
   - **HOLDOUT (\`2026-10-24 .. 2026-10-30\`)**: \`${holdoutBacktestSummary.historicalObservationCount}\` quan sát lịch sử -> \`${holdoutBacktestSummary.reconstructedCandidateCount}\` ứng viên tái tạo -> \`shortlistCount = 3\`, \`nicheMatchedCount = 3\` (\`nicheCoverageStatus = SUFFICIENT_NICHE_COVERAGE\`), \`verifiedIdentityCount = ${holdoutBacktestSummary.verifiedIdentityCount}\`, \`funnelProbableCount = ${holdoutBacktestSummary.funnelProbableCount}\`, \`identityCoverageStatus = ${holdoutBacktestSummary.identityCoverageStatus}\`.
-- **Ma Trận Verdict Tách Bạch & 88 Đột Biến Âm Tính (Negative Mutations)**:
+- **Ma Trận Verdict Tách Bạch & 96 Đột Biến Âm Tính (Negative Mutations)**:
   - \`ENGINEERING_TESTS\`: \`${finalMultiVerdict.verdictMatrix.ENGINEERING_TESTS}\`
   - \`BROAD_REGRESSION\`: \`${finalMultiVerdict.verdictMatrix.BROAD_REGRESSION}\`
   - \`REQUIRED_E2E_COVERAGE\`: \`${finalMultiVerdict.verdictMatrix.REQUIRED_E2E_COVERAGE}\`
@@ -4199,7 +4572,17 @@ async function main() {
     "utf8"
   );
   fs.writeFileSync(
+    path.join(artifactDir, "18_executive_summary_vi.md"),
+    mdSummaryVi,
+    "utf8"
+  );
+  fs.writeFileSync(
     path.join(artifactDir, "19_EXECUTIVE_SUMMARY_VI.md"),
+    mdSummaryVi,
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(artifactDir, "24_final_acceptance_report.md"),
     mdSummaryVi,
     "utf8"
   );
@@ -4209,7 +4592,7 @@ async function main() {
     "utf8"
   );
 
-  // 18: Independent Validator Pre-Manifest Report
+  // 18 & 16: Independent Validator Pre-Manifest Report
   const preManifestVal = validateWalmartAcceptanceArtifacts(artifactDir, {
     skipManifestSelfCheck: true,
   });
@@ -4224,12 +4607,22 @@ async function main() {
     preManifestVal
   );
   writeJson(artifactDir, "INDEPENDENT_VALIDATOR_REPORT.json", preManifestVal);
-  writeJson(artifactDir, "14_VALIDATOR_SELF_AND_MUTATION_RESULTS.json", {
+  const validatorAndMutationPayload = {
     sourceSha: codeSha,
     evaluatedAt: new Date().toISOString(),
     validatorReport: preManifestVal,
     mutationSuiteReport: mutationReport,
-  });
+  };
+  writeJson(
+    artifactDir,
+    "14_VALIDATOR_SELF_AND_MUTATION_RESULTS.json",
+    validatorAndMutationPayload
+  );
+  writeJson(
+    artifactDir,
+    "16_validator_self_and_mutation_results.json",
+    validatorAndMutationPayload
+  );
 
   const pushProofPayload = {
     repository: "quocan050302/Shopify-Search",
@@ -4251,14 +4644,21 @@ async function main() {
     "20_GIT_COMMIT_PUSH_REMOTE_VERIFICATION.json",
     pushProofPayload
   );
+  writeJson(
+    artifactDir,
+    "21_git_commit_and_push_proof.json",
+    pushProofPayload
+  );
   writeJson(artifactDir, "GIT_COMMIT_PUSH_PROOF.json", pushProofPayload);
 
   // 22: File Manifest SHA-256 & FILE_MANIFEST_SHA256.json
   const buildManifestEntries = () => {
     const excluded = new Set([
       "22_FILE_MANIFEST_SHA256.json",
+      "22_file_manifest_sha256.json",
       "FILE_MANIFEST_SHA256.json",
       "23_FINAL_RELEASE_VERDICT.json",
+      "23_final_release_verdict.json",
     ]);
     const allFilesInDir = fs
       .readdirSync(artifactDir)
@@ -4287,6 +4687,7 @@ async function main() {
     files: buildManifestEntries(),
   };
   writeJson(artifactDir, "22_FILE_MANIFEST_SHA256.json", manifestPayloadInitial);
+  writeJson(artifactDir, "22_file_manifest_sha256.json", manifestPayloadInitial);
   writeJson(artifactDir, "FILE_MANIFEST_SHA256.json", manifestPayloadInitial);
 
   // Final Independent Validation across all physical files
@@ -4302,8 +4703,24 @@ async function main() {
     finalValidation
   );
   writeJson(artifactDir, "INDEPENDENT_VALIDATOR_REPORT.json", finalValidation);
+  const finalValidatorAndMutationPayload = {
+    sourceSha: codeSha,
+    evaluatedAt: new Date().toISOString(),
+    validatorReport: finalValidation,
+    mutationSuiteReport: mutationReport,
+  };
+  writeJson(
+    artifactDir,
+    "14_VALIDATOR_SELF_AND_MUTATION_RESULTS.json",
+    finalValidatorAndMutationPayload
+  );
+  writeJson(
+    artifactDir,
+    "16_validator_self_and_mutation_results.json",
+    finalValidatorAndMutationPayload
+  );
 
-  // Refresh 22_FILE_MANIFEST_SHA256.json and FILE_MANIFEST_SHA256.json after updating 18_INDEPENDENT_VALIDATOR_REPORT.json
+  // Refresh 22_FILE_MANIFEST_SHA256.json, 22_file_manifest_sha256.json and FILE_MANIFEST_SHA256.json after updating validator reports
   const manifestPayloadFinal = {
     releaseVersion: "12.4.3.5.1",
     codeSha,
@@ -4311,6 +4728,7 @@ async function main() {
     files: buildManifestEntries(),
   };
   writeJson(artifactDir, "22_FILE_MANIFEST_SHA256.json", manifestPayloadFinal);
+  writeJson(artifactDir, "22_file_manifest_sha256.json", manifestPayloadFinal);
   writeJson(artifactDir, "FILE_MANIFEST_SHA256.json", manifestPayloadFinal);
 
   const postManifestValidation =

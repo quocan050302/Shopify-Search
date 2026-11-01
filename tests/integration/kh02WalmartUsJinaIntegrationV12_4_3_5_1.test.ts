@@ -761,4 +761,417 @@ describe("KH-02 V12.4.3.5.1 — Walmart US Integration, Persistence, Fencing, Wo
     expect(pitAudit.fixtureRecordsRejectedCount).toBe(1);
     expect(pitAudit.zeroLeakCount).toBe(true);
   });
+
+  it("D3: End-to-End Local HTTP Capture -> KH-01 Persistence -> Raw Schema ResearchEvidence + Semantic LandingPageSnapshot -> Readback & G16 Proof Verification", async () => {
+    const http = await import("http");
+    const { parsePublicLandingPage } = await import(
+      "@/services/research/landingPageInspectionService"
+    );
+    const {
+      extractStructuredProductOffer,
+      extractPromotionalOffer,
+      normalizeCompetitorOffer,
+    } = await import("@/services/research/offerExtractionService");
+    const { analyzeCompetitorFunnel } = await import(
+      "@/services/research/funnelAnalysisService"
+    );
+    const { persistCompletedResearchResult } = await import(
+      "@/services/research/researchResultPersistenceService"
+    );
+    const { compareLandingPageSnapshots } = await import(
+      "@/services/research/landingPageSnapshotService"
+    );
+    const {
+      computeCommercialSemanticHash,
+      computeRawSchemaPayloadSha256,
+      extractPersistedMerchantProofsFromDbRows,
+      resolveSourceBoundSchemaProof,
+    } = await import("@/services/kh02/identity/merchantIdentityPolicy");
+    const { loadPersistedG16ProofForCandidate } = await import(
+      "../../scripts/kh02/acceptanceTruth"
+    );
+    const { evaluateG16Candidate } = await import(
+      "../../scripts/kh02/g16CandidateEvaluator"
+    );
+
+    const rawProductJsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "KittySpout Stainless Steel Cat Water Fountain",
+      sku: "KS-FOUNTAIN-01",
+      productID: "8369671045340",
+      url: "https://d3-kittyspout-test.com/products/kittyspout-wireless-fountain",
+      offers: {
+        "@type": "Offer",
+        price: "49.99",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+      },
+    });
+
+    const pdpHtmlWithProductSchema = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>KittySpout Stainless Steel Cat Water Fountain</title>
+    <meta name="description" content="The #1 Vet-Recommended Stainless Steel Cat Water Fountain" />
+    <script type="application/ld+json">${rawProductJsonLd}</script>
+  </head>
+  <body>
+    <h1>KittySpout Stainless Steel Cat Water Fountain</h1>
+    <div class="price">$49.99</div>
+    <button class="btn add-to-cart">Add to Cart</button>
+    <p>Free shipping on orders over $50. 30-day money-back guarantee.</p>
+  </body>
+</html>`;
+
+    const pdpHtmlWithoutProductSchema = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Generic Pet Landing Page</title>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Generic Pet Store"}</script>
+  </head>
+  <body>
+    <h1>Generic Pet Landing Page</h1>
+    <div class="price">$29.99</div>
+    <button class="btn add-to-cart">Buy Now</button>
+  </body>
+</html>`;
+
+    const server = http.createServer((req, res) => {
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      if (req.url?.includes("no-product-schema")) {
+        res.end(pdpHtmlWithoutProductSchema);
+      } else {
+        res.end(pdpHtmlWithProductSchema);
+      }
+    });
+
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
+    const address = server.address() as { port: number };
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const wsD3 = "ws_d3_capture_proof";
+    const storeIdD3 = "store_d3_kittyspout";
+    const prodIdPos = "prod_d3_kittyspout_pos";
+    const prodIdNeg = "prod_d3_kittyspout_neg";
+    const jobIdPos = "job_d3_kh01_pos";
+    const jobIdNeg = "job_d3_kh01_neg";
+
+    try {
+      // Clean any prior test artifacts
+      await prisma.researchEvidence.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.landingPageSnapshot.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.competitorOfferSnapshot.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.researchProduct.deleteMany({
+        where: { id: { in: [prodIdPos, prodIdNeg] } },
+      });
+      await prisma.competitorStore.deleteMany({
+        where: { OR: [{ id: storeIdD3 }, { domain: "d3-kittyspout-test.com" }] },
+      });
+      await prisma.syncJob.deleteMany({ where: { id: { in: [jobIdPos, jobIdNeg] } } });
+
+      await prisma.workspace.upsert({
+        where: { id: wsD3 },
+        update: {},
+        create: {
+          id: wsD3,
+          name: "D3 Test Workspace",
+        },
+      });
+
+      await prisma.competitorStore.create({
+        data: {
+          id: storeIdD3,
+          storeName: "KittySpout",
+          domain: "d3-kittyspout-test.com",
+        },
+      });
+      await prisma.researchProduct.create({
+        data: {
+          id: prodIdPos,
+          storeId: storeIdD3,
+          title: "KittySpout Stainless Steel Cat Water Fountain",
+          productUrl: "https://d3-kittyspout-test.com/products/kittyspout-wireless-fountain",
+          currentPrice: 49.99,
+          currency: "USD",
+        },
+      });
+      await prisma.researchProduct.create({
+        data: {
+          id: prodIdNeg,
+          storeId: storeIdD3,
+          title: "Generic Pet Landing Page",
+          productUrl: "https://d3-kittyspout-test.com/products/generic-pet-page",
+          currentPrice: 29.99,
+          currency: "USD",
+        },
+      });
+
+      // 1. Positive E2E capture from local HTTP server -> parsePublicLandingPage -> persistCompletedResearchResult
+      const capturedRes = await fetch(`${baseUrl}/products/kittyspout-wireless-fountain`);
+      const capturedHtml = await capturedRes.text();
+      const canonicalFinalUrl = "https://d3-kittyspout-test.com/products/kittyspout-wireless-fountain";
+
+      const parsedPage = parsePublicLandingPage(capturedHtml, canonicalFinalUrl);
+      expect(parsedPage.rawJsonLdBlocks).toEqual([rawProductJsonLd]);
+
+      const structuredOffers = extractStructuredProductOffer(parsedPage);
+      const promotions = extractPromotionalOffer(parsedPage);
+      const normalizedOffer = normalizeCompetitorOffer(structuredOffers, promotions, {
+        productId: prodIdPos,
+        sourceUrl: canonicalFinalUrl,
+        finalUrl: canonicalFinalUrl,
+      });
+      const funnelAssessment = analyzeCompetitorFunnel({
+        page: parsedPage,
+        offer: normalizedOffer,
+      });
+
+      const leaseExpPos = new Date(Date.now() + 60_000).toISOString();
+      await prisma.syncJob.create({
+        data: {
+          id: jobIdPos,
+          workspaceId: wsD3,
+          jobType: "KH01_LANDING_PAGE_RESEARCH",
+          status: "RUNNING",
+          progress: 20,
+          totalItems: 1,
+          resultJson: JSON.stringify({
+            workerId: "worker_d3_pos",
+            claimToken: "claim_d3_pos",
+            fencingVersion: 1,
+            leaseExpiresAt: leaseExpPos,
+            attemptNumber: 1,
+            productId: prodIdPos,
+            targetUrl: canonicalFinalUrl,
+          }),
+          startedAt: new Date(),
+        },
+      });
+
+      const claimedPos = {
+        id: jobIdPos,
+        workspaceId: wsD3,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        workerId: "worker_d3_pos",
+        claimToken: "claim_d3_pos",
+        fencingVersion: 1,
+        attemptNumber: 1,
+        leaseExpiresAt: leaseExpPos,
+      };
+
+      const persistedPos = await persistCompletedResearchResult(claimedPos, {
+        workspaceId: wsD3,
+        productId: prodIdPos,
+        originalUrl: canonicalFinalUrl,
+        finalUrl: canonicalFinalUrl,
+        httpStatus: 200,
+        accessStatus: "SUCCESS",
+        pageTitle: parsedPage.pageTitle,
+        metaDescription: parsedPage.metaDescription,
+        htmlContent: capturedHtml,
+        rawJsonLdBlocks: parsedPage.rawJsonLdBlocks,
+        normalizedOffer,
+        funnelAssessment,
+        warnings: normalizedOffer.warnings,
+      });
+
+      expect(persistedPos.status).toBe("COMPLETED");
+      expect(persistedPos.snapshotId).toBeTruthy();
+      expect(persistedPos.evidenceIds.length).toBeGreaterThanOrEqual(2);
+
+      // Read back persisted rows from SQLite
+      const dbSnapshot = await prisma.landingPageSnapshot.findUnique({
+        where: { id: persistedPos.snapshotId! },
+      });
+      expect(dbSnapshot).not.toBeNull();
+      const expectedSemanticHash = computeCommercialSemanticHash({
+        pageTitle: parsedPage.pageTitle,
+        observedPrice: normalizedOffer.sellingPrice,
+        currency: normalizedOffer.currency,
+        bundleQuantity: normalizedOffer.bundleQuantity,
+        freeShippingThreshold: normalizedOffer.freeShippingThreshold,
+        structure: funnelAssessment.structure,
+      });
+      expect(dbSnapshot?.contentHash).toBe(expectedSemanticHash);
+
+      // Verify compareLandingPageSnapshots works on persisted row
+      const diffCheck = compareLandingPageSnapshots(dbSnapshot!, dbSnapshot!);
+      expect(diffCheck.hasChanges).toBe(false);
+
+      const dbEvidenceRows = await prisma.researchEvidence.findMany({
+        where: { productId: prodIdPos },
+      });
+      const schemaEvidenceRow = dbEvidenceRows.find(
+        (r) => r.observationMethod === "MERCHANT_PDP_JSON_LD"
+      );
+      expect(schemaEvidenceRow).toBeDefined();
+      expect(schemaEvidenceRow?.observedValue).toBe(rawProductJsonLd);
+      expect(schemaEvidenceRow?.sourceContentRef).toBe(
+        `sha256:${computeRawSchemaPayloadSha256(rawProductJsonLd)}`
+      );
+      expect(schemaEvidenceRow?.classification).toBe("SOURCE_OBSERVED");
+
+      // Verify extractPersistedMerchantProofsFromDbRows & resolveSourceBoundSchemaProof on the SQLite rows
+      const asOfFuture = new Date(Date.now() + 60_000);
+      const resolvedPos = resolveSourceBoundSchemaProof(
+        {
+          candidateId: "cand_d3_pos",
+          productId: prodIdPos,
+          workspaceId: wsD3,
+          storeDomain: "d3-kittyspout-test.com",
+          canonicalUrl: canonicalFinalUrl,
+          title: "KittySpout Stainless Steel Cat Water Fountain",
+          expectedSku: "KS-FOUNTAIN-01",
+        },
+        {
+          standaloneLandingSnapshots: [dbSnapshot as any],
+          standaloneEvidence: dbEvidenceRows as any[],
+        },
+        asOfFuture
+      );
+
+      expect(resolvedPos.verified).toBe(true);
+      expect(resolvedPos.semanticSnapshotCount).toBe(1);
+      expect(resolvedPos.rawTamperedCount).toBe(0);
+      expect(resolvedPos.selectedProof?.sourceTable).toBe("ResearchEvidence");
+      expect(resolvedPos.selectedProof?.proofMethod).toBe("JSON_LD_PRODUCT_SCHEMA");
+      expect(resolvedPos.selectedProof?.hasJsonLdProduct).toBe(true);
+      expect(resolvedPos.selectedProof?.validationStatus).toBe(
+        "CONTENT_VALIDATED_WITH_SOURCE"
+      );
+
+      // Verify loadPersistedG16ProofForCandidate + evaluateG16Candidate with real Prisma client
+      const g16AuditPos = await loadPersistedG16ProofForCandidate(
+        prisma,
+        wsD3,
+        "run_d3_pos",
+        {
+          candidateId: "cand_d3_pos",
+          researchProductId: prodIdPos,
+          title: "KittySpout Stainless Steel Cat Water Fountain",
+          storeDomain: "d3-kittyspout-test.com",
+          canonicalProductUrl: canonicalFinalUrl,
+          sku: "KS-FOUNTAIN-01",
+          familyKey: "pet_water_fountain",
+          identityStatus: "VERIFIED",
+          supportingAdIds: [],
+          sourceObservations: [],
+        },
+        asOfFuture
+      );
+      expect(g16AuditPos.persistedMerchantVerified).toBe(true);
+      expect(g16AuditPos.persistedProductSchemaProofStatus).toBe("VERIFIED");
+      expect(g16AuditPos.reconstructedIdentityStatus).toBe("VERIFIED");
+      const g16EvalPos = evaluateG16Candidate(
+        g16AuditPos.reconstructedCandidateForG16,
+        "run_d3_pos"
+      );
+      expect(g16EvalPos.merchantVerified).toBe(true);
+
+      // 2. Negative E2E capture (page with NO Product JSON-LD) -> never fabricates schema row, 0 RAW_SOURCE_HASH_TAMPERED
+      const capturedNegRes = await fetch(`${baseUrl}/no-product-schema`);
+      const capturedNegHtml = await capturedNegRes.text();
+      const negUrl = "https://d3-kittyspout-test.com/products/generic-pet-page";
+      const parsedNeg = parsePublicLandingPage(capturedNegHtml, negUrl);
+      const offerNeg = normalizeCompetitorOffer(
+        extractStructuredProductOffer(parsedNeg),
+        extractPromotionalOffer(parsedNeg),
+        { productId: prodIdNeg, sourceUrl: negUrl, finalUrl: negUrl }
+      );
+      const funnelNeg = analyzeCompetitorFunnel({
+        page: parsedNeg,
+        offer: offerNeg,
+      });
+
+      const leaseExpNeg = new Date(Date.now() + 60_000).toISOString();
+      await prisma.syncJob.create({
+        data: {
+          id: jobIdNeg,
+          workspaceId: wsD3,
+          jobType: "KH01_LANDING_PAGE_RESEARCH",
+          status: "RUNNING",
+          progress: 20,
+          totalItems: 1,
+          resultJson: JSON.stringify({
+            workerId: "worker_d3_neg",
+            claimToken: "claim_d3_neg",
+            fencingVersion: 1,
+            leaseExpiresAt: leaseExpNeg,
+            attemptNumber: 1,
+            productId: prodIdNeg,
+            targetUrl: negUrl,
+          }),
+          startedAt: new Date(),
+        },
+      });
+      const claimedNeg = {
+        id: jobIdNeg,
+        workspaceId: wsD3,
+        jobType: "KH01_LANDING_PAGE_RESEARCH",
+        status: "RUNNING",
+        workerId: "worker_d3_neg",
+        claimToken: "claim_d3_neg",
+        fencingVersion: 1,
+        attemptNumber: 1,
+        leaseExpiresAt: leaseExpNeg,
+      };
+      const persistedNeg = await persistCompletedResearchResult(claimedNeg, {
+        workspaceId: wsD3,
+        productId: prodIdNeg,
+        originalUrl: negUrl,
+        finalUrl: negUrl,
+        httpStatus: 200,
+        accessStatus: "SUCCESS",
+        pageTitle: parsedNeg.pageTitle,
+        metaDescription: parsedNeg.metaDescription,
+        htmlContent: capturedNegHtml,
+        rawJsonLdBlocks: parsedNeg.rawJsonLdBlocks,
+        normalizedOffer: offerNeg,
+        funnelAssessment: funnelNeg,
+        warnings: offerNeg.warnings,
+      });
+
+      const negEvidenceRows = await prisma.researchEvidence.findMany({
+        where: { productId: prodIdNeg },
+      });
+      expect(
+        negEvidenceRows.find((r) => r.observationMethod === "MERCHANT_PDP_JSON_LD")
+      ).toBeUndefined();
+
+      const negSnapshot = await prisma.landingPageSnapshot.findUnique({
+        where: { id: persistedNeg.snapshotId! },
+      });
+      const resolvedNeg = resolveSourceBoundSchemaProof(
+        {
+          candidateId: "cand_d3_neg",
+          productId: prodIdNeg,
+          workspaceId: wsD3,
+          storeDomain: "d3-kittyspout-test.com",
+          canonicalUrl: negUrl,
+          title: "Generic Pet Landing Page",
+        },
+        {
+          standaloneLandingSnapshots: [negSnapshot as any],
+          standaloneEvidence: negEvidenceRows as any[],
+        },
+        new Date(Date.now() + 60_000)
+      );
+      expect(resolvedNeg.verified).toBe(false);
+      expect(resolvedNeg.semanticSnapshotCount).toBe(1);
+      expect(resolvedNeg.rawTamperedCount).toBe(0);
+    } finally {
+      server.close();
+      await prisma.researchEvidence.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.landingPageSnapshot.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.competitorOfferSnapshot.deleteMany({ where: { workspaceId: wsD3 } });
+      await prisma.researchProduct.deleteMany({
+        where: { id: { in: [prodIdPos, prodIdNeg] } },
+      });
+      await prisma.competitorStore.deleteMany({ where: { id: storeIdD3 } });
+      await prisma.syncJob.deleteMany({ where: { id: { in: [jobIdPos, jobIdNeg] } } });
+      await prisma.workspace.deleteMany({ where: { id: wsD3 } });
+    }
+  });
 });

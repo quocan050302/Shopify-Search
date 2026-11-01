@@ -30,6 +30,7 @@ export interface ParsedPublicLandingPage {
   metaDescription: string | null;
   html: string;
   jsonLdObjects: any[];
+  rawJsonLdBlocks?: string[];
   visiblePrices: {
     amount: number;
     currency: string | null;

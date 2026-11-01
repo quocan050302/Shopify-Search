@@ -23,6 +23,25 @@
  */
 
 import { createHash } from "crypto";
+import {
+  LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN,
+  computeCommercialSemanticDigest,
+  computeCommercialSemanticHash,
+  type CommercialSemanticDigestInput,
+} from "../../research/landingPageSnapshotService";
+
+export {
+  LANDING_SNAPSHOT_CONTENT_HASH_DOMAIN,
+  computeCommercialSemanticDigest,
+  computeCommercialSemanticHash,
+  type CommercialSemanticDigestInput,
+};
+
+export type EvidenceHashDomain =
+  | "COMMERCIAL_SEMANTIC_DIGEST_SHA256"
+  | "RAW_SCHEMA_PAYLOAD_SHA256"
+  | "LEGACY_NON_SHA_REF"
+  | "NONE";
 
 export type IdentityStatusClassification = "VERIFIED" | "PROBABLE" | "UNVERIFIED";
 
@@ -36,6 +55,8 @@ export type VerificationEvidenceStatus =
 
 export type MerchantProofValidationStatus =
   | "CONTENT_VALIDATED_WITH_SOURCE"
+  | "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF"
+  | "HASH_DOMAIN_MISMATCH"
   | "RAW_SOURCE_NOT_RECONSTRUCTABLE"
   | "RAW_SOURCE_HASH_TAMPERED"
   | "NO_PRODUCT_JSON_LD_IN_PAYLOAD"
@@ -234,6 +255,7 @@ export interface PersistedMerchantProofRecord {
   offerCurrency?: string | null;
   offerAvailability?: string | null;
   contentHash?: string | null;
+  hashDomain?: EvidenceHashDomain;
   evidenceOrigin?: string | null;
   observationMethod?: string | null;
   classification?: string | null;
@@ -255,6 +277,7 @@ export interface PersistedMerchantProofAuditEntry {
   observedAt: string | null;
   validationStatus: MerchantProofValidationStatus;
   proofMethod: MerchantProofMethod;
+  hashDomain?: EvidenceHashDomain;
   schemaVerified: boolean;
   hasJsonLdProduct: boolean;
   rawSourceReconstructable: boolean;
@@ -452,8 +475,279 @@ function cleanNonBlank(val: unknown): string | null {
   return trimmed;
 }
 
+export const MAX_RAW_SCHEMA_PROOF_BYTES = 32768;
+
 export function computeSha256Hex(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
+}
+
+export function computeRawSchemaPayloadSha256(rawPayloadBytes: string | Buffer): string {
+  return typeof rawPayloadBytes === "string"
+    ? createHash("sha256").update(rawPayloadBytes, "utf8").digest("hex")
+    : createHash("sha256").update(rawPayloadBytes).digest("hex");
+}
+
+export function formatRawSchemaSourceContentRef(rawPayloadBytes: string | Buffer): string {
+  return `sha256:${computeRawSchemaPayloadSha256(rawPayloadBytes)}`;
+}
+
+export function classifyEvidenceHashDomain(
+  ref: string | null | undefined,
+  sourceTable?:
+    | "ResearchEvidence"
+    | "LandingPageSnapshot"
+    | "CompetitorOfferSnapshot"
+    | "ResearchProduct"
+): EvidenceHashDomain {
+  const clean = cleanNonBlank(ref);
+  if (!clean) return "NONE";
+  if (/^sha256:[a-f0-9]{64}$/i.test(clean)) {
+    return "RAW_SCHEMA_PAYLOAD_SHA256";
+  }
+  const hex = extractSha256HexFromRef(clean);
+  if (hex) {
+    if (sourceTable === "LandingPageSnapshot") {
+      return "COMMERCIAL_SEMANTIC_DIGEST_SHA256";
+    }
+    return "RAW_SCHEMA_PAYLOAD_SHA256";
+  }
+  return "LEGACY_NON_SHA_REF";
+}
+
+export interface ExtractedRawProductJsonLdBlocks {
+  rawBlocks: string[];
+  validProductBlocks: Array<{
+    rawJson: string;
+    sha256: string;
+    sourceContentRef: string;
+    proofMethod: MerchantProofMethod;
+    productName: string | null;
+    sku: string | null;
+    gtin: string | null;
+    merchantProductId: string | null;
+    canonicalUrl: string | null;
+    offerPrice: string | number | null;
+    offerCurrency: string | null;
+    offerAvailability: string | null;
+  }>;
+  oversizeRejected: boolean;
+}
+
+/**
+ * Extracts raw `<script type="application/ld+json">` blocks from captured HTML and validates which ones
+ * contain genuine `@type: "Product" | "ProductGroup"` schema within the safe 32 KB limit without ever
+ * truncating mid-JSON.
+ */
+export function extractRawProductJsonLdBlocksFromHtml(
+  html: string | null | undefined,
+  maxBytes: number = MAX_RAW_SCHEMA_PROOF_BYTES
+): ExtractedRawProductJsonLdBlocks {
+  const rawBlocks: string[] = [];
+  const validProductBlocks: ExtractedRawProductJsonLdBlocks["validProductBlocks"] = [];
+  let oversizeRejected = false;
+
+  if (!html || typeof html !== "string") {
+    return { rawBlocks, validProductBlocks, oversizeRejected };
+  }
+
+  const scriptRegex =
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    const rawBlock = (match[1] || "").trim();
+    if (!rawBlock) continue;
+    rawBlocks.push(rawBlock);
+
+    const byteLen = Buffer.byteLength(rawBlock, "utf8");
+    let candidateRaw = rawBlock;
+    if (byteLen > maxBytes) {
+      // Never truncate mid-JSON. Attempt to extract a standalone Product/ProductGroup node if inside @graph/array.
+      let extractedStandalone: string | null = null;
+      try {
+        const parsed = JSON.parse(rawBlock);
+        const nodes = collectJsonLdNodes(parsed);
+        for (const node of nodes) {
+          if (!node || typeof node !== "object") continue;
+          const types = normalizeSchemaTypes(node["@type"]);
+          if (types.includes("product") || types.includes("productgroup")) {
+            const standaloneObj = node["@context"]
+              ? node
+              : { "@context": "https://schema.org", ...node };
+            const serialized = JSON.stringify(standaloneObj);
+            if (Buffer.byteLength(serialized, "utf8") <= maxBytes) {
+              extractedStandalone = serialized;
+              break;
+            }
+          }
+        }
+      } catch {
+        // Malformed oversize JSON-LD
+      }
+      if (!extractedStandalone) {
+        oversizeRejected = true;
+        continue;
+      }
+      candidateRaw = extractedStandalone;
+    }
+
+    const sha256 = computeRawSchemaPayloadSha256(candidateRaw);
+    const check = parseAndValidateProductSchemaPayload(candidateRaw, {
+      expectedHash: `sha256:${sha256}`,
+      allowShopifyProductJson: false,
+    });
+    if (check.valid && check.hasJsonLdProduct) {
+      validProductBlocks.push({
+        rawJson: candidateRaw,
+        sha256,
+        sourceContentRef: `sha256:${sha256}`,
+        proofMethod: check.proofMethod,
+        productName: check.productName,
+        sku: check.sku,
+        gtin: check.gtin,
+        merchantProductId: check.merchantProductId,
+        canonicalUrl: check.canonicalUrl,
+        offerPrice: check.offerPrice,
+        offerCurrency: check.offerCurrency,
+        offerAvailability: check.offerAvailability,
+      });
+    }
+  }
+
+  return { rawBlocks, validProductBlocks, oversizeRejected };
+}
+
+export interface CreateProductSchemaEvidenceArgs {
+  productId: string;
+  subjectId?: string | null;
+  sourceUrl?: string | null;
+  htmlContent?: string | null;
+  rawJsonLdBlocks?: string[] | null;
+  rawShopifyProductJson?: string | null;
+  maxBytes?: number;
+}
+
+export interface CreatedProductSchemaEvidencePayload {
+  productId: string;
+  subjectType: "PRODUCT";
+  subjectId: string;
+  pillar: "PRODUCT";
+  claim: string;
+  observedValue: string;
+  sourceUrl: string | null;
+  observationMethod: "MERCHANT_PDP_JSON_LD" | "SHOPIFY_PRODUCT_JSON";
+  classification: "SOURCE_OBSERVED";
+  sourceContentRef: string;
+  hashDomain: "RAW_SCHEMA_PAYLOAD_SHA256";
+  rawSha256: string;
+  proofMethod: MerchantProofMethod;
+  productName: string | null;
+  sku: string | null;
+  merchantProductId: string | null;
+}
+
+/**
+ * Builds a raw product schema `ResearchEvidence` payload strictly from actual captured PDP HTML / JSON-LD blocks.
+ * Never fabricates schema if the captured page lacks valid `@type: "Product" | "ProductGroup"` JSON-LD (or Shopify product JSON).
+ */
+export function createProductSchemaEvidenceFromActualCapture(
+  args: CreateProductSchemaEvidenceArgs
+): CreatedProductSchemaEvidencePayload | null {
+  const productId = cleanNonBlank(args?.productId);
+  if (!productId) return null;
+
+  const maxBytes = args.maxBytes ?? MAX_RAW_SCHEMA_PROOF_BYTES;
+  const sourceUrl = cleanNonBlank(args.sourceUrl);
+  if (sourceUrl && SYNTHETIC_HASH_OR_ID_PATTERNS.test(sourceUrl)) {
+    return null;
+  }
+
+  const candidateBlocks: Array<{ raw: string; allowShopify: boolean }> = [];
+
+  if (Array.isArray(args.rawJsonLdBlocks)) {
+    for (const blk of args.rawJsonLdBlocks) {
+      if (typeof blk === "string" && blk.trim()) {
+        candidateBlocks.push({ raw: blk.trim(), allowShopify: false });
+      }
+    }
+  }
+
+  if (typeof args.htmlContent === "string" && args.htmlContent.trim()) {
+    const extracted = extractRawProductJsonLdBlocksFromHtml(args.htmlContent, maxBytes);
+    for (const blk of extracted.rawBlocks) {
+      candidateBlocks.push({ raw: blk, allowShopify: false });
+    }
+  }
+
+  if (typeof args.rawShopifyProductJson === "string" && args.rawShopifyProductJson.trim()) {
+    candidateBlocks.push({ raw: args.rawShopifyProductJson.trim(), allowShopify: true });
+  }
+
+  for (const item of candidateBlocks) {
+    let candidateRaw = item.raw;
+    if (Buffer.byteLength(candidateRaw, "utf8") > maxBytes) {
+      // Attempt safe standalone node extraction without mid-JSON truncation
+      try {
+        const parsed = JSON.parse(candidateRaw);
+        const nodes = collectJsonLdNodes(parsed);
+        let standalone: string | null = null;
+        for (const node of nodes) {
+          if (!node || typeof node !== "object") continue;
+          const types = normalizeSchemaTypes(node["@type"]);
+          if (types.includes("product") || types.includes("productgroup")) {
+            const obj = node["@context"]
+              ? node
+              : { "@context": "https://schema.org", ...node };
+            const s = JSON.stringify(obj);
+            if (Buffer.byteLength(s, "utf8") <= maxBytes) {
+              standalone = s;
+              break;
+            }
+          }
+        }
+        if (!standalone) continue;
+        candidateRaw = standalone;
+      } catch {
+        continue;
+      }
+    }
+
+    const rawSha256 = computeRawSchemaPayloadSha256(candidateRaw);
+    const sourceContentRef = `sha256:${rawSha256}`;
+    const check = parseAndValidateProductSchemaPayload(candidateRaw, {
+      expectedHash: sourceContentRef,
+      allowShopifyProductJson: item.allowShopify,
+      observationMethod: item.allowShopify ? "SHOPIFY_PRODUCT_JSON" : "MERCHANT_PDP_JSON_LD",
+    });
+
+    if (check.valid && check.schemaVerified) {
+      const observationMethod =
+        check.proofMethod === "SHOPIFY_PRODUCT_JSON"
+          ? "SHOPIFY_PRODUCT_JSON"
+          : "MERCHANT_PDP_JSON_LD";
+      return {
+        productId,
+        subjectType: "PRODUCT",
+        subjectId: cleanNonBlank(args.subjectId) || productId,
+        pillar: "PRODUCT",
+        claim: `Observed verified merchant ${
+          observationMethod === "SHOPIFY_PRODUCT_JSON" ? "Shopify product JSON" : "Product JSON-LD schema"
+        } for ${check.productName || "product"}`,
+        observedValue: candidateRaw,
+        sourceUrl: sourceUrl || check.canonicalUrl,
+        observationMethod,
+        classification: "SOURCE_OBSERVED",
+        sourceContentRef,
+        hashDomain: "RAW_SCHEMA_PAYLOAD_SHA256",
+        rawSha256,
+        proofMethod: check.proofMethod,
+        productName: check.productName,
+        sku: check.sku,
+        merchantProductId: check.merchantProductId,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function extractSha256HexFromRef(ref: string | null | undefined): string | null {
@@ -783,6 +1077,29 @@ export function parseAndValidateProductSchemaPayload(
       offerCurrency: null,
       offerAvailability: null,
       rejectionReasons: ["SYNTHETIC_OR_FIXTURE_PATTERN_IN_RAW_PAYLOAD"],
+    };
+  }
+
+  if (Buffer.byteLength(cleanRaw, "utf8") > MAX_RAW_SCHEMA_PROOF_BYTES) {
+    return {
+      valid: false,
+      validationStatus: "NO_PRODUCT_JSON_LD_IN_PAYLOAD",
+      proofMethod: "NONE",
+      schemaVerified: false,
+      hasJsonLdProduct: false,
+      rawSourceReconstructable: false,
+      hashVerified: false,
+      computedSha256: computeSha256Hex(cleanRaw),
+      expectedSha256: extractSha256HexFromRef(options?.expectedHash),
+      productName: null,
+      sku: null,
+      gtin: null,
+      merchantProductId: null,
+      canonicalUrl: null,
+      offerPrice: null,
+      offerCurrency: null,
+      offerAvailability: null,
+      rejectionReasons: ["RAW_SCHEMA_PAYLOAD_EXCEEDS_MAX_BYTES_32KB"],
     };
   }
 
@@ -1273,18 +1590,25 @@ export function extractPersistedMerchantProofsFromDbRows(
   const byValidationStatus: Record<string, number> = {};
 
   const recordAudit = (entry: PersistedMerchantProofAuditEntry) => {
-    allAuditedRecords.push(entry);
-    const tbl = byTable[entry.sourceTable];
+    const resolvedDomain =
+      entry.hashDomain ||
+      classifyEvidenceHashDomain(entry.expectedHashRef, entry.sourceTable);
+    const enrichedEntry: PersistedMerchantProofAuditEntry = {
+      ...entry,
+      hashDomain: resolvedDomain,
+    };
+    allAuditedRecords.push(enrichedEntry);
+    const tbl = byTable[enrichedEntry.sourceTable];
     if (tbl) {
       tbl.inspected += 1;
-      if (entry.validationStatus === "CONTENT_VALIDATED_WITH_SOURCE") {
+      if (enrichedEntry.validationStatus === "CONTENT_VALIDATED_WITH_SOURCE") {
         tbl.valid += 1;
       } else {
         tbl.rejected += 1;
       }
     }
-    byValidationStatus[entry.validationStatus] =
-      (byValidationStatus[entry.validationStatus] || 0) + 1;
+    byValidationStatus[enrichedEntry.validationStatus] =
+      (byValidationStatus[enrichedEntry.validationStatus] || 0) + 1;
   };
 
   // Deduplicate rows by table + id
@@ -1924,11 +2248,75 @@ export function extractPersistedMerchantProofsFromDbRows(
       continue;
     }
 
-    // Parse & validate `observationsJson` against `contentHash` (M01, M02, M06, M07, M16, M17)
+    // Hash-Domain Separation (Workstream A):
+    // `LandingPageSnapshot.contentHash` is a commercial semantic digest (`COMMERCIAL_SEMANTIC_DIGEST_SHA256`)
+    // computed from pageTitle, observedPrice, CTA texts, headings, etc. (`computeCommercialSemanticHash`),
+    // while `LandingPageSnapshot.observationsJson` stores CRO `LandingPageStructure` JSON (`JSON.stringify(input.structure)`).
+    // Never misclassify a commercial semantic digest as `RAW_SOURCE_HASH_TAMPERED` when `observationsJson` is
+    // CRO structure or when `contentHash` is in the `COMMERCIAL_SEMANTIC_DIGEST_SHA256` domain.
+    const cleanObsJson = cleanNonBlank(lp.observationsJson);
+    const obsRawSha256 = cleanObsJson ? computeRawSchemaPayloadSha256(cleanObsJson) : null;
+    const explicitRawShaRef =
+      cleanNonBlank((lp as any).rawSchemaSha256) ||
+      (String(lp.contentHash || "")
+        .trim()
+        .toLowerCase()
+        .startsWith("sha256:")
+        ? cleanNonBlank(lp.contentHash)
+        : null);
+    const lpContentHashHex = extractSha256HexFromRef(lp.contentHash);
+    const lpHashMatchesRawPayload = Boolean(
+      lpContentHashHex && obsRawSha256 && lpContentHashHex === obsRawSha256
+    );
+    const contentOnlySchemaCheck = cleanObsJson
+      ? parseAndValidateProductSchemaPayload(cleanObsJson, {
+          expectedHash: `sha256:${obsRawSha256}`,
+          allowShopifyProductJson: false,
+        })
+      : null;
+
+    if (
+      cleanObsJson &&
+      !lpHashMatchesRawPayload &&
+      !explicitRawShaRef &&
+      (!contentOnlySchemaCheck?.valid ||
+        (lp as any).hashDomain === "COMMERCIAL_SEMANTIC_DIGEST_SHA256")
+    ) {
+      recordAudit({
+        recordId: lp.id,
+        sourceTable: "LandingPageSnapshot",
+        workspaceId: rowWorkspaceId,
+        productId: cleanNonBlank(lp.productId || productId),
+        storeDomain: lpDomain,
+        sourceUrl: lpUrl,
+        observedAt: obsDate.toISOString(),
+        validationStatus: "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF",
+        hashDomain: "COMMERCIAL_SEMANTIC_DIGEST_SHA256",
+        proofMethod: "NONE",
+        schemaVerified: false,
+        hasJsonLdProduct: false,
+        rawSourceReconstructable: false,
+        hashVerified: false,
+        sourceFieldUsed: "observationsJson",
+        expectedHashRef: cleanNonBlank(lp.contentHash),
+        computedSha256: obsRawSha256,
+        extractedProductName: null,
+        extractedSku: null,
+        extractedMerchantProductId: null,
+        realColumnsInspected,
+        rejectionReasons: [
+          "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF",
+          "LANDING_PAGE_SNAPSHOT_CONTENT_HASH_IS_COMMERCIAL_SEMANTIC_DIGEST_NOT_RAW_SCHEMA_SHA256",
+        ],
+      });
+      continue;
+    }
+
+    // Parse & validate `observationsJson` against `contentHash` / `explicitRawShaRef` (M01, M02, M06, M07, M16, M17)
     // Note: `pageTitle + finalUrl + contentHash` alone WITHOUT parseable Product JSON-LD in `observationsJson`
     // is NEVER accepted as `schemaVerified` or `hasJsonLdProduct`!
     const schemaCheck = parseAndValidateProductSchemaPayload(lp.observationsJson, {
-      expectedHash: lp.contentHash,
+      expectedHash: explicitRawShaRef || lp.contentHash,
       allowShopifyProductJson: false,
     });
 
@@ -1942,13 +2330,17 @@ export function extractPersistedMerchantProofsFromDbRows(
         sourceUrl: lpUrl,
         observedAt: obsDate.toISOString(),
         validationStatus: schemaCheck.validationStatus,
+        hashDomain:
+          explicitRawShaRef || contentOnlySchemaCheck?.valid
+            ? "RAW_SCHEMA_PAYLOAD_SHA256"
+            : "COMMERCIAL_SEMANTIC_DIGEST_SHA256",
         proofMethod: schemaCheck.proofMethod,
         schemaVerified: false,
         hasJsonLdProduct: false,
         rawSourceReconstructable: schemaCheck.rawSourceReconstructable,
         hashVerified: schemaCheck.hashVerified,
         sourceFieldUsed: "observationsJson",
-        expectedHashRef: cleanNonBlank(lp.contentHash),
+        expectedHashRef: cleanNonBlank(explicitRawShaRef || lp.contentHash),
         computedSha256: schemaCheck.computedSha256,
         extractedProductName: schemaCheck.productName,
         extractedSku: schemaCheck.sku,
@@ -2159,6 +2551,90 @@ export function extractPersistedMerchantProofsFromDbRows(
       byTable,
       byValidationStatus,
     },
+  };
+}
+
+export interface ResolvedSourceBoundSchemaProof {
+  verified: boolean;
+  selectedProof: PersistedMerchantProofRecord | null;
+  validProofs: PersistedMerchantProofRecord[];
+  audits: PersistedMerchantProofAuditEntry[];
+  semanticSnapshotCount: number;
+  rawTamperedCount: number;
+  reasonCodes: string[];
+}
+
+/**
+ * Resolves source-bound product schema proof for a candidate from persisted evidence rows,
+ * keeping `LandingPageSnapshot` commercial semantic digests separate from raw product-schema SHA-256 proofs.
+ */
+export function resolveSourceBoundSchemaProof(
+  candidate: {
+    candidateId?: string | null;
+    productId?: string | null;
+    researchProductId?: string | null;
+    workspaceId?: string | null;
+    storeDomain?: string | null;
+    canonicalUrl?: string | null;
+    canonicalProductUrl?: string | null;
+    title?: string | null;
+    expectedSku?: string | null;
+    expectedMerchantProductId?: string | null;
+    maxStaleDays?: number;
+  },
+  persistedEvidence: {
+    researchProducts?: PersistedResearchProductRow[] | null;
+    standaloneEvidence?: PersistedResearchEvidenceRow[] | null;
+    standaloneLandingSnapshots?: PersistedLandingPageSnapshotRow[] | null;
+    standaloneOfferSnapshots?: PersistedCompetitorOfferSnapshotRow[] | null;
+  },
+  asOf?: Date | string | null
+): ResolvedSourceBoundSchemaProof {
+  const extracted = extractPersistedMerchantProofsFromDbRows({
+    workspaceId: candidate?.workspaceId || "default-workspace",
+    candidateId: candidate?.candidateId,
+    researchProductId: candidate?.researchProductId || candidate?.productId,
+    storeDomain: candidate?.storeDomain,
+    canonicalProductUrl: candidate?.canonicalProductUrl || candidate?.canonicalUrl,
+    candidateTitle: candidate?.title,
+    expectedSku: candidate?.expectedSku,
+    expectedMerchantProductId: candidate?.expectedMerchantProductId,
+    asOf,
+    maxStaleDays: candidate?.maxStaleDays,
+    researchProducts: persistedEvidence?.researchProducts,
+    standaloneEvidence: persistedEvidence?.standaloneEvidence,
+    standaloneLandingSnapshots: persistedEvidence?.standaloneLandingSnapshots,
+    standaloneOfferSnapshots: persistedEvidence?.standaloneOfferSnapshots,
+  });
+
+  const semanticSnapshotCount = extracted.allAuditedRecords.filter(
+    (a) => a.validationStatus === "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF"
+  ).length;
+  const rawTamperedCount = extracted.allAuditedRecords.filter(
+    (a) => a.validationStatus === "RAW_SOURCE_HASH_TAMPERED"
+  ).length;
+
+  const selectedProof = extracted.validProofs[0] || null;
+  const reasonCodes =
+    extracted.validProofs.length > 0
+      ? ["RAW_SCHEMA_PROOF_VERIFIED_WITH_SHA256"]
+      : Array.from(
+          new Set(
+            extracted.allAuditedRecords.flatMap((a) => [
+              a.validationStatus,
+              ...(a.rejectionReasons || []),
+            ])
+          )
+        );
+
+  return {
+    verified: extracted.validProofs.length > 0,
+    selectedProof,
+    validProofs: extracted.validProofs,
+    audits: extracted.allAuditedRecords,
+    semanticSnapshotCount,
+    rawTamperedCount,
+    reasonCodes: reasonCodes.length > 0 ? reasonCodes : ["NO_PERSISTED_MERCHANT_PROOF_ROWS"],
   };
 }
 
