@@ -1,0 +1,85 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.240Z",
+  "records": [
+    {
+      "candidateId": "cand_uahpet_1",
+      "asin": "B08N5WRWNW",
+      "providerInvocationRef": "amz_inv_run_mode_a_v1243503_cand_uahpet_1_search_5cd8767525",
+      "providerRequestId": "emu-search-req-1",
+      "rawEvidenceHash": "6c8ed80ad13b9fb2411bbf808343cfeb1bc7d73efb24a97db2eb4708e4bd1fab",
+      "extractedFieldsHash": "a73961a05677b7b1ef510dfbe96c021c8b3508420e7c775cbbc4f08ee1794fce",
+      "extractedFieldsPayload": {
+        "asin": "B08N5WRWNW",
+        "parentAsin": "B08N5WRW00",
+        "variationAsin": "B08N5WRWNW",
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B08N5WRWNW",
+        "productTitle": "UAHPET Wireless Cat Water Fountain Stainless Steel 67oz Battery Operated",
+        "brand": "UAHPET",
+        "merchant": "UAHPET Official Store",
+        "currency": "USD",
+        "price": 49.99,
+        "availability": "In Stock",
+        "modelNumber": "UAH-WF-01",
+        "gtin": "012345678905"
+      },
+      "httpStatus": 200,
+      "httpStatusOrigin": "OBSERVED",
+      "observationClass": "TEST_FIXTURE",
+      "providerSourceOrigin": "TEST_FIXTURE"
+    },
+    {
+      "candidateId": "cand_kittyspout_2",
+      "asin": "B09KITTYS1",
+      "providerInvocationRef": "amz_inv_run_mode_a_v1243503_cand_kittyspout_2_search_a24d97977a",
+      "providerRequestId": "emu-search-req-2",
+      "rawEvidenceHash": "4200ea564c0f1ed45d4fc8669e39c03feaea03dc8d95c3180ad9907f08ac11be",
+      "extractedFieldsHash": "c317f27b63c02f5c349f4c71fd5f41869ba100a8fc44a5ba4724231cd228fda6",
+      "extractedFieldsPayload": {
+        "asin": "B09KITTYS1",
+        "parentAsin": "B09KITTYS0",
+        "variationAsin": "B09KITTYS1",
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B09KITTYS1",
+        "productTitle": "KittySpout Stainless Steel Cat Water Fountain 4L Faucet Design",
+        "brand": "KittySpout",
+        "merchant": "KittySpout US",
+        "currency": "USD",
+        "price": 54.95,
+        "availability": "In Stock",
+        "modelNumber": "KS-SS-4L",
+        "gtin": null
+      },
+      "httpStatus": 200,
+      "httpStatusOrigin": "OBSERVED",
+      "observationClass": "TEST_FIXTURE",
+      "providerSourceOrigin": "TEST_FIXTURE"
+    },
+    {
+      "candidateId": "cand_uproot_3",
+      "asin": "B09UPROOT1",
+      "providerInvocationRef": "amz_inv_run_mode_a_v1243503_cand_uproot_3_search_c54083ef87",
+      "providerRequestId": "emu-search-req-3",
+      "rawEvidenceHash": "0d8fdd8d67d2a7bf055bdd5d694f1fb01731604bdb4c2877fdfb272be92983fb",
+      "extractedFieldsHash": "380f308302fafa314798f010ba15573a7282e198fff25e26ea4dd82678264ae5",
+      "extractedFieldsPayload": {
+        "asin": "B09UPROOT1",
+        "parentAsin": "B09UPROOT0",
+        "variationAsin": "B09UPROOT1",
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B09UPROOT1",
+        "productTitle": "Uproot Cleaner Pro Pet Hair Remover Carpet & Couch Scraper Tool",
+        "brand": "Uproot Clean",
+        "merchant": "Uproot Clean LLC",
+        "currency": "USD",
+        "price": 19.99,
+        "availability": "In Stock",
+        "modelNumber": "UP-PRO-01",
+        "gtin": null
+      },
+      "httpStatus": 200,
+      "httpStatusOrigin": "OBSERVED",
+      "observationClass": "TEST_FIXTURE",
+      "providerSourceOrigin": "TEST_FIXTURE"
+    }
+  ]
+}

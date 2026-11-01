@@ -1,0 +1,17 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.202Z",
+  "officialDocsVerified": [
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/get-started/using-curl",
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/operations/search-items",
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/operations/get-items"
+  ],
+  "endpointsByVersion": {
+    "3.1": "https://api.amazon.com/auth/o2/token",
+    "3.2": "https://api.amazon.co.uk/auth/o2/token",
+    "3.3": "https://api.amazon.co.jp/auth/o2/token"
+  },
+  "searchItemsEndpoint": "https://creatorsapi.amazon/catalog/v1/searchItems",
+  "getItemsEndpoint": "https://creatorsapi.amazon/catalog/v1/getItems"
+}
