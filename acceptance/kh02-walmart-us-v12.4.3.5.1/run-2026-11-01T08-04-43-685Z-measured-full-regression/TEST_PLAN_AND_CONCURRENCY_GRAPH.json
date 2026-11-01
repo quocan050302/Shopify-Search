@@ -1,0 +1,114 @@
+{
+  "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "concurrencyPolicy": {
+    "maxConcurrentHeavyProcesses": 2,
+    "observedPeakConcurrentHeavyProcesses": 2,
+    "sqliteDbWriteStagesSerialized": true,
+    "playwrightChromiumExclusiveWithNextStart": true,
+    "liveJinaReaderConcurrency": 1
+  },
+  "waveResults": {
+    "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+    "maxConcurrentHeavyTasks": 2,
+    "allRequiredWavesPassed": true,
+    "completion": {
+      "complete": true,
+      "passed": true,
+      "missing": [],
+      "invalid": [],
+      "evaluatedGateCount": 7
+    },
+    "waves": [
+      {
+        "waveId": "WAVE_A_UNIT",
+        "name": "WAVE_A_UNIT",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 1449,
+        "measurements": {
+          "totalTests": 20,
+          "passedTests": 20
+        }
+      },
+      {
+        "waveId": "WAVE_B_INTEGRATION_AND_REGRESSION",
+        "name": "WAVE_B_INTEGRATION_AND_REGRESSION",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 4360,
+        "measurements": {
+          "totalTests": 70,
+          "passedTests": 70,
+          "nonInflationCandidatesCompared": 3
+        }
+      },
+      {
+        "waveId": "WAVE_C_TYPECHECK_AND_BUILD",
+        "name": "WAVE_C_TYPECHECK_AND_BUILD",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 11932
+      },
+      {
+        "waveId": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+        "name": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 5927
+      },
+      {
+        "waveId": "WAVE_E_LIVE_JINA_PROBE",
+        "name": "WAVE_E_LIVE_JINA_PROBE",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 5307,
+        "measurements": {
+          "probeExecutionStatus": "DID_RUN",
+          "classificationIntegrityStatus": "PASS",
+          "liveProviderStatus": "BLOCKED_PROVIDER"
+        }
+      },
+      {
+        "waveId": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+        "name": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 2507
+      },
+      {
+        "waveId": "WAVE_H_FULL_REPOSITORY_REGRESSION",
+        "name": "WAVE_H_FULL_REPOSITORY_REGRESSION",
+        "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+        "passed": true,
+        "executionStatus": "PASS",
+        "exitCode": 0,
+        "durationMs": 80349,
+        "measurements": {
+          "totalDiscoveredTestFiles": 153,
+          "executedTestFilesCount": 141,
+          "excludedOrDeferredFilesCount": 12,
+          "targetedOnly": false,
+          "inventoryComplete": true,
+          "totalExecutedTestCases": 1711,
+          "passedTestCases": 1694,
+          "failedTestCases": 17,
+          "requiredActiveSuiteFailedTestCases": 0,
+          "baselineKnownPolicySupersededTestCases": 17,
+          "newRegressionTestCases": 0
+        }
+      }
+    ]
+  }
+}

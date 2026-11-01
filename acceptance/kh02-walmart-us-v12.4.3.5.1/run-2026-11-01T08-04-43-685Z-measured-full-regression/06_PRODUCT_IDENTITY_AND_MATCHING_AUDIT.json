@@ -1,0 +1,26 @@
+{
+  "titleOnlyMatchAudit": {
+    "matchLevel": "SIMILAR",
+    "grantedExact": false,
+    "verifiedIdentity": false
+  },
+  "accessoryGuardAudit": {
+    "accessoryItemId": "999111222",
+    "accessoryPresence": "NO_MATCH_IN_SCOPE",
+    "accessoryMatchLevel": "UNCERTAIN",
+    "matchedAsMainProduct": false
+  },
+  "variantAndConditionGuardAudit": {
+    "wrongModelGrantedExact": false,
+    "wrongPackGrantedExact": false,
+    "refurbishedGrantedExactForNew": false
+  },
+  "searchIntentAudit": {
+    "derivedQueries": [
+      "ChomChom Roller Pet Hair Remover TIKTOK CC-ROLLER-01",
+      "ChomChom Roller 856957004000"
+    ],
+    "genericNicheAloneEmitted": false,
+    "adHypeStripped": true
+  }
+}

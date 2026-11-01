@@ -1,0 +1,21 @@
+# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Walmart US Jina Reader REST Pilot)
+
+- **Nhánh (Branch)**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Commit Mã Nguồn Đã Test (`TESTED_SOURCE_SHA`)**: `d23aeecfd13c5cd8983acd5727500c9a2b24384f` (Tree SHA: `6f4463469bf430fbe7b95b9fc4586b85d9932e09`)
+- **Quan Hệ Với `origin/QA` & `origin/master`**: `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`) và `origin/master` (`5dd5128b4ec9ce70e957a2f250b9012a25e9118c`) chia sẻ cùng git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`.
+- **Tổng Kết Full Regression Toàn Repo (`153` file test)**:
+  - Active Unit Suite (`99` file): `1454/1454` PASS (100%).
+  - Active Integration Suite (`34` file): `180/180` PASS (100%).
+  - Legacy Pre-V12.4 Policy-Superseded Unit Audit (`8` file): `17` assertion cũ trước V12.4 (đã ghi rõ trong `04_FULL_REGRESSION_FAILING_CASES.json`, `0` lỗi mới).
+- **Non-Vacuous Walmart ON vs OFF Scoring Diff**: So sánh `3` ứng viên sản phẩm vật lý thực tế (`scoreDeltaAbsMax = 0`, `rankingChanged = false`, `gateChanges = 0`).
+- **Backtest Lịch Sử DEV / HOLDOUT Thực Tế**:
+  - DEV (`<= 2026-10-24`): `60` quan sát lịch sử, `17` ứng viên tái tạo, `0` rò rỉ tương lai.
+  - HOLDOUT (`2026-10-24 .. 2026-10-30`): `377` quan sát lịch sử, `319` ứng viên tái tạo, `1/3` ứng viên khớp ngách Pet Gadgets, `0` rò rỉ tương lai.
+- **Chẩn Đoán Động Provider & Cổng Nghiệp Vụ (G07 / G15 / G16)**:
+  - `engineeringVerdict`: `PASS`
+  - `liveWalmartProviderVerdict`: `BLOCKED_PROVIDER` (Walmart trả về trang xác thực anti-bot `Robot or human?` qua Jina Reader không key; hệ thống fail-closed chuẩn xác).
+  - `liveAmazonProviderVerdict`: `CREDENTIALS_REQUIRED` (Thiếu thông tin xác thực Amazon Creators API).
+  - `historicalG07Verdict`: `BLOCKED`
+  - `historicalG15Verdict`: `INSUFFICIENT_EVIDENCE` (`0/3` sản phẩm đủ >=60 ngày dữ liệu nhu cầu lịch sử trong SQLite).
+  - `historicalG16Verdict`: `PARTIAL_2_OF_3` (`2/3` sản phẩm xác thực merchant trực tiếp; ứng viên #3 trên `cc.uprootclean.com` là CheckoutChamp funnel nên giữ trạng thái `PROBABLE`).
+  - `overallVerdict`: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`

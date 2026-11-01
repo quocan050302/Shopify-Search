@@ -1,0 +1,40 @@
+{
+  "historicalReportPath": "C:\\Users\\ADMIN\\Documents\\Codex\\2026-10-27\\new-chat-3\\outputs\\amazon-hour-walmart-2026-10-30\\REPORT.md",
+  "availabilityOnCurrentHost": "NOT_AVAILABLE",
+  "referenceOnly": true,
+  "transplantedAsCurrentLiveVerification": false,
+  "userVerifiedHistoricalSummary": {
+    "date": "2026-10-30",
+    "completedRequests": "21/21 (7 search + 14 PDP)",
+    "duration": "30 min 24.30 s",
+    "retries": 0,
+    "medianLatencySeconds": 2.84,
+    "latencyRangeSeconds": [
+      2,
+      4.67
+    ],
+    "observedLocation": {
+      "postalCode": "95829",
+      "city": "Sacramento",
+      "storeId": "3081",
+      "isNationwideRepresentative": false
+    }
+  },
+  "identityAnchors": [
+    {
+      "itemId": "674275778",
+      "brand": "ChomChom",
+      "upc": "856957004000"
+    },
+    {
+      "itemId": "339091722",
+      "brand": "BLACK+DECKER",
+      "upc": "885911830997"
+    },
+    {
+      "itemId": "16504921979",
+      "brand": "Sony",
+      "upc": "027242930698"
+    }
+  ]
+}

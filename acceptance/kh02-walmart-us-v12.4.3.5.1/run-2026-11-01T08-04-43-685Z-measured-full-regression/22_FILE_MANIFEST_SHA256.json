@@ -1,0 +1,117 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "generatedAt": "2026-11-01T08:06:30.846Z",
+  "files": [
+    {
+      "file": "00_BRANCH_AND_BASELINE.json",
+      "sha256": "ab7e6953f9e1c3f43bc7587d72b79a1e291a4eac5b81de9dcded1c2688dd6c71",
+      "bytes": 1453
+    },
+    {
+      "file": "01_HOST_AND_ENVIRONMENT_HYGIENE.json",
+      "sha256": "27178e75570b4f2ec3bd00285cc7d242d3996eef8c2780c176a0dfbffe1e0e7b",
+      "bytes": 270
+    },
+    {
+      "file": "02_PRIOR_WALMART_TEST_BASELINE.json",
+      "sha256": "94bede5b6324b6651db9c7c3475d4fbebce39aeff6bd8c3825be51422d798a5e",
+      "bytes": 1005
+    },
+    {
+      "file": "03_WALMART_ARCHITECTURE_AND_CONTRACTS.json",
+      "sha256": "4985b7d829e2dd679d6baa32f4297c400e20d032cef580b6bdafe71270ed5ca9",
+      "bytes": 1434
+    },
+    {
+      "file": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+      "sha256": "75ff50b767658d7825a9d95e759fc97f1d903454952ddf967178c9b2a6f1004a",
+      "bytes": 1567
+    },
+    {
+      "file": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+      "sha256": "678286ced817ddd4aa9b99ad8f2b5f5e7f3b01235bae257ea4ccb604c72586e0",
+      "bytes": 1227
+    },
+    {
+      "file": "06_PRODUCT_IDENTITY_AND_MATCHING_AUDIT.json",
+      "sha256": "956d2cd9482c0782e71d9c569fac9759a91b9d63d445a6f1d850efbe65308c6d",
+      "bytes": 692
+    },
+    {
+      "file": "07_ORCHESTRATOR_WORKER_API_DB_PARITY.json",
+      "sha256": "b3a3bdb01731dfd82b39db1163490d3ebedf59e9105ea7ad3aa02a2241b24b88",
+      "bytes": 959
+    },
+    {
+      "file": "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+      "sha256": "42fdc50c357bb41e3c52244b41f881cba2082bee8386247268b85766d1b3f17e",
+      "bytes": 1947
+    },
+    {
+      "file": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      "sha256": "6e947d3125a042b73068ea066442f76163692a4914ab9ba26d2b0d2c5708e23d",
+      "bytes": 8729
+    },
+    {
+      "file": "10_LIVE_WALMART_JINA_PILOT_EVIDENCE.json",
+      "sha256": "f5c42fc27f84d46d7cb6c72ac6ca519c076a151814448fa8e6de796aa9bbc529",
+      "bytes": 11204
+    },
+    {
+      "file": "11_DEV_BACKTEST_SUMMARY.json",
+      "sha256": "57a66aa943b85373fc1a1461e0670f88c5cd24195d5a496914aa955084423de4",
+      "bytes": 3551
+    },
+    {
+      "file": "12_HOLDOUT_BACKTEST_SUMMARY.json",
+      "sha256": "b2cc663cf612dac90cd1a7ba3311aca66cea12d5cba2ddc8e0e4ef01456b9c81",
+      "bytes": 3653
+    },
+    {
+      "file": "13_POINT_IN_TIME_LEAK_AUDIT.json",
+      "sha256": "dc648811c6adf011f038676e45307c27159351ac4723af5f886b0eafa50e8bf7",
+      "bytes": 1239
+    },
+    {
+      "file": "14_NEGATIVE_MUTATION_SUITE_40_CASES.json",
+      "sha256": "4c00bd2bb398d69a09e466f41e2d96eb8bda43a8c7dcd81e82ff2436b81550cb",
+      "bytes": 26534
+    },
+    {
+      "file": "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
+      "sha256": "46ad7d24a5248ea67dc4eb6ea66db8a8378db73785a80ead712027f4218b50fc",
+      "bytes": 4754
+    },
+    {
+      "file": "16_TEST_WAVE_RESULTS.json",
+      "sha256": "76d3dba25a1846f59b37055a47e3dc2cc294523f487c3865955edb3b947a7df8",
+      "bytes": 3023
+    },
+    {
+      "file": "17_REQUIREMENT_TRACEABILITY_W01_W60.json",
+      "sha256": "440497c8f7d276dcae496806b7a18cc8e685e6312e6b9c5c1ca268d07e344bd6",
+      "bytes": 29814
+    },
+    {
+      "file": "18_INDEPENDENT_VALIDATOR_REPORT.json",
+      "sha256": "5e08e2d6fb1268347778cc353ff1e8a827ac29b524d4eeb1c01c9a1fba069091",
+      "bytes": 365
+    },
+    {
+      "file": "19_GIT_DELIVERY_AND_CLEAN_TREE_AUDIT.json",
+      "sha256": "cc4c8de9fbfc252fd4485c99aeb5c1ccd68d7a10b1c5820e97a2eda1e248b2b6",
+      "bytes": 675
+    },
+    {
+      "file": "20_EXECUTIVE_ACCEPTANCE_SUMMARY.md",
+      "sha256": "bbce6340e393d8d2aab5984639a8cdd007600b0e7e2a1130d5387b53919add2e",
+      "bytes": 1723
+    },
+    {
+      "file": "21_KNOWN_LIMITS_AND_RESIDUAL_RISKS.json",
+      "sha256": "08c0472b32c755327e5398c41fa2c6a6bb01ff560f8ceecd189c379756d48cea",
+      "bytes": 732
+    }
+  ]
+}

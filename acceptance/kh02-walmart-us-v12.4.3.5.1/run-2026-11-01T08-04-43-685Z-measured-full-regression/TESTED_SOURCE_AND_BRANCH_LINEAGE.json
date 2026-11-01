@@ -1,0 +1,31 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "runtimeReleaseIdentity": "12.4.3.5.0.3",
+  "repository": "quocan050302/Shopify-Search",
+  "baseBranch": "origin/QA",
+  "baseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "qaBaseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "mergeBaseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "mergeBaseWithQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "mergeBaseWithMasterSha": "a135423477962d5ef842d4d6c1b85295fd05131e",
+  "qaAndMasterShareIdenticalGitTree": true,
+  "qaTreeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+  "masterTreeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+  "diffOriginQaToOriginMaster": "0 files changed (identical tree)",
+  "aheadBehindVsQa": {
+    "behind": 0,
+    "ahead": 7
+  },
+  "aheadBehindVsMaster": {
+    "behind": 1,
+    "ahead": 9,
+    "explanation": "origin/QA (fbe51a0, Merge PR #8) and origin/master (5dd5128, Merge PR #7) are sibling merge commits of the exact same Amazon pilot commit (a135423) with identical git tree hash 96bdcb6f658ec7b696c156df3c2a03aa51f6031e."
+  },
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "codeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "testedCodeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "testedTreeSha": "6f4463469bf430fbe7b95b9fc4586b85d9932e09",
+  "ancestryVerified": true,
+  "checkedAt": "2026-11-01T08:04:43.912Z"
+}

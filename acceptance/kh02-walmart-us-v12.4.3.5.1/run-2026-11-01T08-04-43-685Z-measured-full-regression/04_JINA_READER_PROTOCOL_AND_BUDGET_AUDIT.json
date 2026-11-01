@@ -1,0 +1,46 @@
+{
+  "clientOverrideBlockedWhenServerDisabled": true,
+  "urlValidation": {
+    "searchUrlPrefix": "https://r.jina.ai/https://www.walmart.com/search?q=",
+    "sampleSearchUrl": "https://r.jina.ai/https://www.walmart.com/search?q=ChomChom%20Roller",
+    "pdpUrlPrefix": "https://r.jina.ai/https://www.walmart.com/ip/",
+    "samplePdpUrl": "https://r.jina.ai/https://www.walmart.com/ip/674275778",
+    "rejectsSJinaAi": true,
+    "rejectsNonWalmartHost": true,
+    "rejectsNonNumericItemId": true
+  },
+  "headersAudit": {
+    "exactHeaders": {
+      "Accept": "application/json",
+      "X-Cache-Tolerance": "0",
+      "X-Respond-With": "html",
+      "X-Timeout": "25"
+    },
+    "valid": true,
+    "forbiddenHeadersAbsent": true,
+    "apiKeySent": false,
+    "cookieSent": false,
+    "proxyHeaderSent": false
+  },
+  "budgetCaps": {
+    "maxConcurrentOperationsPerProviderGroup": 1,
+    "peakConcurrentObserved": 1,
+    "maxLogicalOperationsPerRun": 4,
+    "fifthOperationRejectedWith": "BUDGET_EXHAUSTED",
+    "maxAttemptsPerOperation": 2,
+    "thirdAttemptRejectedWith": "BUDGET_EXHAUSTED",
+    "maxRequestsPerMinuteAcrossWorkers": 6,
+    "seventhRequestWithinMinuteDeferred": true
+  },
+  "attemptGenerationFence": {
+    "attempt1Generation": 1,
+    "attempt2Generation": 2,
+    "staleAttempt1RejectedAfterAttempt2": true,
+    "rejectionReason": "STALE_ATTEMPT_GENERATION:attemptGen=1,currentGen=2,committedGen=2"
+  },
+  "freePilotHaltOn401Or402": {
+    "haltsImmediately": true,
+    "statusClassifiedAs": "KEY_OR_PAYMENT_REQUIRED",
+    "asksUserForPaidKey": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "repository": "quocan050302/Shopify-Search",
+  "remoteUrl": "https://github.com/quocan050302/Shopify-Search.git",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "codeCommitSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "testedCodeSha": "d23aeecfd13c5cd8983acd5727500c9a2b24384f",
+  "testedTreeSha": "6f4463469bf430fbe7b95b9fc4586b85d9932e09",
+  "qaBaseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "qaAndMasterTreeSha": "96bdcb6f658ec7b696c156df3c2a03aa51f6031e",
+  "qaAndMasterShareIdenticalGitTree": true,
+  "priorAcceptanceRunsPreserved": [
+    "acceptance/kh02-walmart-us-v12.4.3.5.1/run-2026-11-01T06-03-12-034Z",
+    "acceptance/kh02-walmart-us-v12.4.3.5.1/run-2026-11-01T07-24-59-019Z-truthful-closure"
+  ],
+  "currentAcceptanceRunDir": "acceptance/kh02-walmart-us-v12.4.3.5.1/run-2026-11-01T08-04-43-685Z-measured-full-regression",
+  "independentValidatorVerdict": "PASS",
+  "independentValidatorChecksPassed": "89/89",
+  "negativeMutationsCaught": "60/60",
+  "forcePushUsed": false,
+  "mergedToMasterOrQa": false,
+  "status": "COMMITTED_AND_PUSHED_TO_ORIGIN",
+  "generatedAt": "2026-11-01T08:07:35.000Z"
+}
