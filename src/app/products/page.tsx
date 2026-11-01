@@ -250,6 +250,21 @@ export default function ProductsPage() {
     null
   );
 
+  // Walmart US Product Evidence Pilot State (V12.4.3.5.1 — Jina Reader REST, No API Key)
+  const [walmartPolicy, setWalmartPolicy] = useState<{
+    enabled: boolean;
+    liveAllowed: boolean;
+    disabledReason: string | null;
+    maxOperationsPerRun: number;
+    maxAttemptsPerOperation: number;
+    maxRequestsPerMinute: number;
+  } | null>(null);
+  const [enableWalmartUsPilot, setEnableWalmartUsPilot] = useState<boolean>(false);
+  const [walmartTelemetry, setWalmartTelemetry] = useState<any | null>(null);
+  const [walmartSummariesByCandidateId, setWalmartSummariesByCandidateId] = useState<
+    Record<string, any>
+  >({});
+
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const amazonVerifyPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const latestRequestSeqRef = useRef<number>(0);
@@ -372,6 +387,43 @@ export default function ProductsPage() {
     return null;
   }, []);
 
+  const fetchWalmartRunState = useCallback(async (targetRunId?: string | null) => {
+    try {
+      const qs = targetRunId ? `?runId=${encodeURIComponent(targetRunId)}` : "";
+      const res = await fetch(`/api/v1/kh02/marketplace/walmart${qs}`);
+      const json = await res.json();
+      if (
+        targetRunId &&
+        authoritativeRunIdRef.current &&
+        targetRunId !== authoritativeRunIdRef.current
+      ) {
+        return null;
+      }
+      if (json.success && json.data) {
+        if (json.data.policy) {
+          setWalmartPolicy(json.data.policy);
+          if (!json.data.policy.enabled) {
+            setEnableWalmartUsPilot(false);
+          }
+        }
+        setWalmartTelemetry(json.data.telemetry || null);
+        const byCand: Record<string, any> = {};
+        if (Array.isArray(json.data.candidateSummaries)) {
+          for (const s of json.data.candidateSummaries) {
+            if (s?.candidateId) {
+              byCand[s.candidateId] = s;
+            }
+          }
+        }
+        setWalmartSummariesByCandidateId(byCand);
+        return json.data;
+      }
+    } catch (err) {
+      console.error("[ProductsPage] Failed to fetch Walmart US state:", err);
+    }
+    return null;
+  }, []);
+
   const fetchRuntimeVersion = useCallback(async () => {
     try {
       const res = await fetch(
@@ -482,6 +534,7 @@ export default function ProductsPage() {
             }
             if (!opts?.isPolling && resolvedId) {
               fetchAmazonRunState(resolvedId);
+              fetchWalmartRunState(resolvedId);
             }
           }
           if (json.data.activeJob) {
@@ -504,7 +557,7 @@ export default function ProductsPage() {
       }
       return null;
     },
-    [fetchAmazonRunState]
+    [fetchAmazonRunState, fetchWalmartRunState]
   );
 
   useEffect(() => {
@@ -537,6 +590,7 @@ export default function ProductsPage() {
         setResearchLoading(false);
         fetchSourceStatuses();
         fetchAmazonRunState(pollingRunId);
+        fetchWalmartRunState(pollingRunId);
       }
     }, 600);
 
@@ -546,7 +600,7 @@ export default function ProductsPage() {
         pollIntervalRef.current = null;
       }
     };
-  }, [activeJob, loadPersistedRun, fetchSourceStatuses, fetchAmazonRunState]);
+  }, [activeJob, loadPersistedRun, fetchSourceStatuses, fetchAmazonRunState, fetchWalmartRunState]);
 
   // Independent child-job polling for KH02_AMAZON_VERIFY (never sets parent researchLoading=true)
   useEffect(() => {
@@ -703,6 +757,9 @@ export default function ProductsPage() {
             enableAmazonUsPilot: Boolean(
               amazonPolicy?.featureEnabled && enableAmazonUsPilot
             ),
+            enableWalmartUsPilot: Boolean(
+              walmartPolicy?.enabled && enableWalmartUsPilot
+            ),
             asyncMode: true,
           }),
         });
@@ -749,6 +806,8 @@ export default function ProductsPage() {
       sourceMode,
       amazonPolicy,
       enableAmazonUsPilot,
+      walmartPolicy,
+      enableWalmartUsPilot,
       fetchSourceStatuses,
       loadPersistedRun,
     ]
@@ -806,6 +865,7 @@ export default function ProductsPage() {
       }
 
       fetchAmazonRunState(urlRunId || null);
+      fetchWalmartRunState(urlRunId || null);
       loadPersistedRun({
         runId: urlRunId,
         topic: urlRunId ? undefined : urlTopic,
@@ -814,9 +874,10 @@ export default function ProductsPage() {
       });
     } else {
       fetchAmazonRunState(null);
+      fetchWalmartRunState(null);
       loadPersistedRun({ syncTopicInput: true });
     }
-  }, [fetchRuntimeVersion, fetchSourceStatuses, fetchAmazonRunState, loadPersistedRun]);
+  }, [fetchRuntimeVersion, fetchSourceStatuses, fetchAmazonRunState, fetchWalmartRunState, loadPersistedRun]);
 
   useEffect(() => {
     if (viewMode === "STORED_PRODUCTS") {
@@ -1366,6 +1427,84 @@ export default function ProductsPage() {
                   ) : (
                     <span data-testid="pf-amazon-pilot-ready-hint">
                       Authorized for up to 3 user-supplied Amazon US product URLs per run.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Walmart US Product Discovery + PDP Evidence Pilot Bar (V12.4.3.5.1 — Jina Reader REST, No API Key) */}
+              <div
+                data-testid="pf-walmart-us-pilot-bar"
+                data-feature-enabled={walmartPolicy?.enabled ? "true" : "false"}
+                data-live-allowed={walmartPolicy?.liveAllowed ? "true" : "false"}
+                data-walmart-status={
+                  leaderboard?.walmartMarketplaceTelemetry?.overallStatus ||
+                  walmartTelemetry?.overallStatus ||
+                  (walmartPolicy?.enabled ? "READY" : "DISABLED")
+                }
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-800/70 text-xs"
+              >
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <label
+                    htmlFor="pf-walmart-us-pilot-toggle"
+                    className={`inline-flex items-center gap-2 font-medium ${
+                      walmartPolicy?.enabled
+                        ? "text-slate-200 cursor-pointer"
+                        : "text-slate-500 cursor-not-allowed"
+                    }`}
+                  >
+                    <input
+                      id="pf-walmart-us-pilot-toggle"
+                      data-testid="pf-walmart-us-pilot-toggle"
+                      type="checkbox"
+                      checked={Boolean(walmartPolicy?.enabled && enableWalmartUsPilot)}
+                      disabled={!walmartPolicy?.enabled || researchLoading}
+                      onChange={(e) => setEnableWalmartUsPilot(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                    <span>Walmart US Product Evidence Pilot (Jina Reader REST · No API Key)</span>
+                  </label>
+
+                  {(() => {
+                    const wTel = leaderboard?.walmartMarketplaceTelemetry || walmartTelemetry;
+                    const wStatus = !walmartPolicy?.enabled
+                      ? "DISABLED"
+                      : wTel?.overallStatus || (walmartPolicy?.liveAllowed ? "READY" : "POLICY_GUARD");
+                    return (
+                      <span
+                        data-testid="pf-walmart-us-global-status"
+                        data-status={wStatus}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                          wStatus === "SUCCEEDED" || wStatus === "COMPLETED"
+                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                            : wStatus === "PARTIAL" ||
+                              wStatus === "RATE_LIMITED" ||
+                              wStatus === "BLOCKED_PROVIDER" ||
+                              wStatus === "BUDGET_EXHAUSTED"
+                            ? "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                            : "bg-slate-900 text-slate-400 border-slate-800"
+                        }`}
+                      >
+                        {wStatus}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                <div className="text-[11px] text-slate-400">
+                  {!walmartPolicy?.enabled ? (
+                    <span data-testid="pf-walmart-us-disabled-reason">
+                      {walmartPolicy?.disabledReason || "Server pilot disabled"}
+                    </span>
+                  ) : !walmartPolicy?.liveAllowed ? (
+                    <span data-testid="pf-walmart-us-policy-reason">
+                      {walmartPolicy?.disabledReason ||
+                        "Live Walmart US Jina Reader queries disabled (KH02_WALMART_US_LIVE_ALLOWED=false)"}
+                    </span>
+                  ) : (
+                    <span data-testid="pf-walmart-us-ready-hint">
+                      No-key Jina Reader REST · Cap {walmartPolicy.maxOperationsPerRun} ops/run ·{" "}
+                      {walmartPolicy.maxRequestsPerMinute} req/60s
                     </span>
                   )}
                 </div>
@@ -2037,6 +2176,117 @@ export default function ProductsPage() {
                                 </p>
                               </div>
                             )}
+
+                            {(() => {
+                              const wmt =
+                                item.walmartEvidenceSummary ||
+                                walmartSummariesByCandidateId[item.candidateId] ||
+                                null;
+                              if (!wmt || !wmt.visible) return null;
+                              return (
+                                <div
+                                  data-testid="pf-candidate-walmart-us-evidence"
+                                  data-candidate-id={item.candidateId}
+                                  data-run-id={wmt.researchRunId || leaderboard?.researchRunId || activeRunId || ""}
+                                  data-walmart-status={wmt.queryStatus || ""}
+                                  data-walmart-presence={wmt.presence || ""}
+                                  data-walmart-match-level={wmt.matchLevel || ""}
+                                  data-walmart-item-id={wmt.itemId || ""}
+                                  data-walmart-canonical-url={wmt.canonicalWalmartUrl || ""}
+                                  data-walmart-upc={wmt.upc || ""}
+                                  data-walmart-price-display={wmt.priceDisplay || "Not provided"}
+                                  data-walmart-seller={wmt.seller || ""}
+                                  data-walmart-location-postal-code={wmt.locationPostalCode || ""}
+                                  data-walmart-availability={wmt.availability || ""}
+                                  data-walmart-observed-at={wmt.observedAt || ""}
+                                  data-walmart-evidence-origin={wmt.evidenceOrigin || ""}
+                                  className="mt-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5"
+                                >
+                                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-300">
+                                      Walmart US Pilot Evidence
+                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                      <span
+                                        data-testid="pf-walmart-us-origin-badge"
+                                        data-evidence-origin={wmt.evidenceOrigin || "NONE"}
+                                        className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"
+                                      >
+                                        {wmt.evidenceOrigin === "REAL_JINA_READER" &&
+                                        wmt.queryStatus === "SUCCEEDED"
+                                          ? "LIVE JINA READER"
+                                          : wmt.evidenceOrigin === "TEST_FIXTURE"
+                                          ? "TEST FIXTURE"
+                                          : wmt.isStale
+                                          ? "CACHED (STALE)"
+                                          : wmt.evidenceOrigin || "UNVERIFIED"}
+                                      </span>
+                                      <span
+                                        data-testid="pf-walmart-us-status-badge"
+                                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                                          wmt.queryStatus === "SUCCEEDED" && wmt.presence === "FOUND"
+                                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-700/50"
+                                            : wmt.queryStatus === "SUCCEEDED" &&
+                                              wmt.presence === "NO_MATCH_IN_SCOPE"
+                                            ? "bg-slate-800 text-slate-300 border-slate-700"
+                                            : "bg-amber-950/60 text-amber-300 border-amber-700/50"
+                                        }`}
+                                      >
+                                        {wmt.queryStatus} · {wmt.presence}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 text-[11px] text-slate-300 font-mono">
+                                    <span>
+                                      ItemID: {wmt.itemId || "N/A"} · {wmt.matchLevel}
+                                    </span>
+                                    {wmt.canonicalWalmartUrl && (
+                                      <a
+                                        href={wmt.canonicalWalmartUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-sky-400 hover:text-sky-300 underline truncate max-w-[140px]"
+                                      >
+                                        Walmart US Link
+                                      </a>
+                                    )}
+                                  </div>
+                                  <div
+                                    data-testid="pf-walmart-us-details-row"
+                                    className="flex items-center justify-between gap-2 text-[10px] text-slate-400 font-mono flex-wrap"
+                                  >
+                                    <span data-testid="pf-walmart-us-upc">
+                                      UPC: {wmt.upc || "Not provided"}
+                                    </span>
+                                    <span data-testid="pf-walmart-us-price">
+                                      Price: {wmt.priceDisplay || "Not provided"}
+                                    </span>
+                                    <span data-testid="pf-walmart-us-availability">
+                                      {wmt.availability || "UNKNOWN"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400 font-mono flex-wrap">
+                                    <span data-testid="pf-walmart-us-seller">
+                                      Seller: {wmt.seller || "Not provided"}
+                                    </span>
+                                    <span data-testid="pf-walmart-us-location">
+                                      {wmt.locationDisplay || "Location not reported"}
+                                    </span>
+                                  </div>
+                                  {wmt.statusReason && (
+                                    <p
+                                      data-testid="pf-walmart-us-status-reason"
+                                      className="text-[10px] text-amber-300/90 leading-snug"
+                                    >
+                                      {wmt.statusReason}
+                                    </p>
+                                  )}
+                                  <p className="text-[10px] text-slate-400 leading-tight">
+                                    {wmt.nonInflationNotice}
+                                  </p>
+                                </div>
+                              );
+                            })()}
 
                             {/* Post-Run Per-Candidate "Verify Amazon US Listing" Flow (V12.4.3.5.0.1 P0-D) */}
                             {(() => {
@@ -3311,6 +3561,101 @@ export default function ProductsPage() {
                         </div>
                         <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
                           {amz.nonInflationNotice}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {(() => {
+                    const wmt =
+                      drawerCandidate.canonicalCard?.walmartEvidenceSummary ||
+                      drawerCandidate.candidate.walmartEvidenceSummary ||
+                      drawerOverviewData?.walmartEvidenceSummary ||
+                      walmartSummariesByCandidateId[drawerCandidate.candidate.candidateId] ||
+                      null;
+                    if (!wmt || !wmt.visible) return null;
+                    return (
+                      <div
+                        data-testid="pf-drawer-walmart-us-panel"
+                        data-candidate-id={wmt.candidateId}
+                        data-run-id={wmt.researchRunId}
+                        data-walmart-status={wmt.queryStatus || ""}
+                        data-walmart-presence={wmt.presence || ""}
+                        data-walmart-match-level={wmt.matchLevel || ""}
+                        data-walmart-item-id={wmt.itemId || ""}
+                        data-walmart-canonical-url={wmt.canonicalWalmartUrl || ""}
+                        data-walmart-upc={wmt.upc || ""}
+                        data-walmart-price-display={wmt.priceDisplay || "Not provided"}
+                        data-walmart-seller={wmt.seller || ""}
+                        data-walmart-location-postal-code={wmt.locationPostalCode || ""}
+                        data-walmart-availability={wmt.availability || ""}
+                        data-walmart-observed-at={wmt.observedAt || ""}
+                        data-walmart-evidence-origin={wmt.evidenceOrigin || ""}
+                        className="p-4 rounded-xl bg-[#111827] border border-slate-800 space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-white text-xs sm:text-sm">
+                            Walmart US Product Evidence Pilot (Jina Reader REST)
+                          </h3>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-sky-300 border border-slate-700">
+                            {wmt.queryStatus} · {wmt.presence} · {wmt.matchLevel}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Walmart ItemID / UPC
+                            </span>
+                            <span className="text-slate-200">
+                              {wmt.itemId || "N/A"} · UPC: {wmt.upc || "Not provided"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Observed Price / Availability
+                            </span>
+                            <span className="text-slate-200">
+                              {wmt.priceDisplay || "Not provided"} · {wmt.availability || "UNKNOWN"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Seller
+                            </span>
+                            <span className="text-slate-200">
+                              {wmt.seller || "Not provided"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Observed Location (ZIP / Store)
+                            </span>
+                            <span className="text-slate-200">
+                              {wmt.locationDisplay || "Location not reported"}
+                            </span>
+                          </div>
+                        </div>
+                        {wmt.canonicalWalmartUrl && (
+                          <div className="text-xs font-mono truncate">
+                            <span className="text-[10px] text-slate-400 block font-sans">
+                              Canonical Walmart US URL
+                            </span>
+                            <a
+                              href={wmt.canonicalWalmartUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sky-400 hover:text-sky-300 underline"
+                            >
+                              {wmt.canonicalWalmartUrl}
+                            </a>
+                          </div>
+                        )}
+                        <div className="text-[10px] font-mono text-slate-400 break-all">
+                          Origin: {wmt.evidenceOrigin} · Observed: {wmt.observedAt || "N/A"} · Hash:{" "}
+                          {wmt.rawEvidenceHash ? wmt.rawEvidenceHash.slice(0, 16) : "N/A"}
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+                          {wmt.nonInflationNotice}
                         </div>
                       </div>
                     );

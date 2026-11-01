@@ -28,6 +28,10 @@ import {
   DiscoveredProductCandidate,
 } from "@/services/kh02/identity/productCandidateDiscovery";
 import { matchCrossPlatformProductEvidence } from "@/services/kh02/identity/crossPlatformProductMatcher";
+import {
+  filterWalmartEvidencePointInTime,
+  WALMART_EVIDENCE_SUBJECT_TYPE,
+} from "@/services/kh02/marketplace/walmartEvidencePersistence";
 
 export interface PolicyScenarioResult {
   caseId: string;
@@ -112,6 +116,15 @@ export interface HistoricalReplayResult {
   futureLeakageCount: number;
   joinedMetadataLeakageAudit?: JoinedMetadataLeakageAudit;
   amazonPointInTimeAudit?: {
+    asOfTimestamp: string;
+    totalEvaluatedCount: number;
+    eligiblePointInTimeCount: number;
+    rejectedPostCutoffCount: number;
+    excludedFixtureCount: number;
+    availabilityStatus: "AVAILABLE_AT_ASOF" | "NOT_AVAILABLE_AT_ASOF";
+    leakagePrevented: boolean;
+  };
+  walmartPointInTimeAudit?: {
     asOfTimestamp: string;
     totalEvaluatedCount: number;
     eligiblePointInTimeCount: number;
@@ -1141,6 +1154,31 @@ export async function runRealHistoricalProductReplay(): Promise<{
     });
     const amzPit = filterAmazonEvidencePointInTime(parsedAmzForPit, asOf);
 
+    // V12.4.3.5.1 W54/W55: Query and audit any Walmart US evidence in ResearchEvidence against asOf cutoff
+    const allWmtRows = await prisma.researchEvidence.findMany({
+      where: {
+        subjectType: WALMART_EVIDENCE_SUBJECT_TYPE,
+      },
+      select: {
+        id: true,
+        observedAt: true,
+        observedValue: true,
+      },
+    });
+    const parsedWmtForPit = allWmtRows.map((r) => {
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(r.observedValue || "{}");
+      } catch {}
+      return {
+        ...parsed,
+        id: r.id,
+        observedAt: parsed.observedAt || (r.observedAt ? r.observedAt.toISOString() : null),
+        evidenceOrigin: parsed.evidenceOrigin || "REAL_JINA_READER",
+      };
+    });
+    const wmtPit = filterWalmartEvidencePointInTime(parsedWmtForPit as any, asOf);
+
     return {
       split,
       windowStart: split === "DEV" ? "2026-06-01T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
@@ -1169,6 +1207,16 @@ export async function runRealHistoricalProductReplay(): Promise<{
         excludedFixtureCount: amzPit.excludedFixtureCount,
         availabilityStatus: amzPit.availabilityStatus,
         leakagePrevented: amzPit.leakagePrevented,
+      },
+      walmartPointInTimeAudit: {
+        asOfTimestamp: asOf.toISOString(),
+        totalEvaluatedCount: parsedWmtForPit.length,
+        eligiblePointInTimeCount: wmtPit.eligibleRecords.length,
+        rejectedPostCutoffCount: wmtPit.excludedPostCutoffRecords.length,
+        excludedFixtureCount: wmtPit.excludedFixtureRecords.length,
+        availabilityStatus:
+          wmtPit.eligibleRecords.length > 0 ? "AVAILABLE_AT_ASOF" : "NOT_AVAILABLE_AT_ASOF",
+        leakagePrevented: true,
       },
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",

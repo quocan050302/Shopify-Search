@@ -81,6 +81,13 @@ import {
 } from "./marketplace/marketplaceEvidenceTypes";
 import { runAmazonUsPilotEnrichment } from "./marketplace/amazonUsEvidenceAdapter";
 import { summarizeAmazonEvidenceForProduct } from "./marketplace/marketplaceEvidencePersistence";
+import {
+  EvidenceOrigin,
+  WalmartProductEvidence,
+  WalmartProviderTelemetry,
+} from "./marketplace/walmartJinaTypes";
+import { runWalmartUsPilotEnrichment } from "./marketplace/walmartUsResearchAdapter";
+import { summarizeWalmartEvidenceForCandidate } from "./marketplace/walmartEvidencePersistence";
 
 export interface RankedLeaderboardItem {
   rank: number | null;
@@ -142,6 +149,8 @@ export interface EvergreenLeaderboardResult {
   };
   marketplaceEvidence?: AmazonProductEvidence[];
   marketplaceTelemetry?: AmazonMarketplaceTelemetry;
+  walmartMarketplaceEvidence?: WalmartProductEvidence[];
+  walmartMarketplaceTelemetry?: WalmartProviderTelemetry;
 }
 
 export interface ResearchProgressPayload {
@@ -173,6 +182,10 @@ export interface RunEvergreenResearchInput {
   amazonPilotFixtureSnapshots?: Record<string, any>;
   amazonPilotEnv?: Record<string, string | undefined>;
   amazonPilotTransportFactory?: () => typeof fetch;
+  enableWalmartUsPilot?: boolean;
+  walmartPilotEnv?: Record<string, string | undefined>;
+  walmartPilotCustomFetch?: typeof fetch;
+  walmartPilotEvidenceOrigin?: EvidenceOrigin;
   signal?: AbortSignal;
 }
 
@@ -1929,6 +1942,63 @@ export async function runEvergreenProductResearch(
     }
   }
 
+  // V12.4.3.5.1: Optional Guarded Walmart US Product Discovery + PDP Evidence Pilot via Jina Reader REST (no API key)
+  // Runs strictly post-scoring with its own independent server policy and budget; never mutates scores, G07/G15/G16, or Amazon results.
+  const walmartPilotTargets =
+    researchShortlist.shortlist.length > 0
+      ? researchShortlist.shortlist
+      : candidates.slice(0, 3);
+  const walmartEnrichment = await runWalmartUsPilotEnrichment({
+    workspaceId: input.workspaceId,
+    researchRunId: runId,
+    niche: input.topic,
+    enableWalmartUsPilot: Boolean(input.enableWalmartUsPilot),
+    shortlistedCandidates: walmartPilotTargets,
+    env: (input.walmartPilotEnv as NodeJS.ProcessEnv) || process.env,
+    customFetch: input.walmartPilotCustomFetch,
+    evidenceOrigin: input.walmartPilotEvidenceOrigin,
+    signal: abortSignal,
+    onProgress: async (wProg) => {
+      if (context?.reportProgress) {
+        await context
+          .reportProgress({
+            stage: "ENRICHMENT",
+            percent: 90,
+            message: wProg.message,
+          })
+          .catch(() => undefined);
+      }
+    },
+  });
+
+  if (
+    walmartEnrichment.evidenceRows.length > 0 ||
+    Boolean(input.enableWalmartUsPilot)
+  ) {
+    for (const c of candidates) {
+      const summary = summarizeWalmartEvidenceForCandidate(
+        c.candidateId,
+        runId,
+        walmartEnrichment.evidenceRows,
+        { telemetry: walmartEnrichment.telemetry }
+      );
+      if (summary.visible) {
+        (c as any).walmartEvidenceSummary = summary;
+      }
+    }
+    for (const s of researchShortlist.shortlist) {
+      const summary = summarizeWalmartEvidenceForCandidate(
+        s.candidateId,
+        runId,
+        walmartEnrichment.evidenceRows,
+        { telemetry: walmartEnrichment.telemetry }
+      );
+      if (summary.visible) {
+        (s as any).walmartEvidenceSummary = summary;
+      }
+    }
+  }
+
   // Build QueryYield metrics for each executed or planned query
   const candidateMatchesQuery = (
     c: { matchedQueryIds?: string[]; sourceObservations?: Array<{ queryId?: string | null; matchedQueryIds?: string[] }> },
@@ -2267,6 +2337,8 @@ export async function runEvergreenProductResearch(
     },
     marketplaceEvidence: amazonEnrichment.marketplaceEvidence,
     marketplaceTelemetry: amazonEnrichment.marketplaceTelemetry,
+    walmartMarketplaceEvidence: walmartEnrichment.evidenceRows,
+    walmartMarketplaceTelemetry: walmartEnrichment.telemetry,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob

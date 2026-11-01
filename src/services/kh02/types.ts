@@ -603,7 +603,30 @@ export type {
   AmazonEvidenceGateEvaluation,
   AmazonMarketplaceTelemetry,
   ProductAmazonEvidenceSummary,
+  // V12.4.3.5.1 Walmart US Jina Reader Pilot Contracts
+  WalmartQueryExecutionStatus,
+  MarketplacePresence,
+  MatchLevel,
+  StockState,
+  EvidenceOrigin,
+  WalmartSchemaCompatibility,
+  WalmartAppearanceProvenance,
+  WalmartSearchIntent,
+  WalmartPilotPolicyLimits,
+  WalmartPilotPolicy,
+  WalmartJinaRequestOptions,
+  WalmartJinaEnvelopeData,
+  WalmartJinaResponse,
+  WalmartSearchListing,
+  WalmartPdpProduct,
+  WalmartIdentityDecision,
+  WalmartQueryScopeMetadata,
+  WalmartProductEvidence,
+  WalmartProviderRequestRecord,
+  WalmartProviderTelemetry,
+  WalmartEvidenceSummary,
 } from "./marketplace/marketplaceEvidenceTypes";
+
 
 
 

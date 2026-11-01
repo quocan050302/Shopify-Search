@@ -92,7 +92,10 @@
     "kh02:v12.4.3.3.2:regression": "vitest run tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts",
     "kh02:v12.4.3.5.0.3:regression": "vitest run tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts",
     "kh02:amazon:creators-runtime:v12.4.3.5.0.3": "tsx scripts/kh02/runAmazonCreatorsRuntimeClosureV12_4_3_5_0_3.ts",
-    "kh02:amazon:creators-validate:v12.4.3.5.0.3": "tsx scripts/kh02/validateAmazonCreatorsRuntimeClosureV12_4_3_5_0_3.ts"
+    "kh02:amazon:creators-validate:v12.4.3.5.0.3": "tsx scripts/kh02/validateAmazonCreatorsRuntimeClosureV12_4_3_5_0_3.ts",
+    "kh02:walmart:test:v12.4.3.5.1": "vitest run src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts",
+    "kh02:walmart:accept:v12.4.3.5.1": "tsx scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts",
+    "kh02:walmart:validate:v12.4.3.5.1": "tsx scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

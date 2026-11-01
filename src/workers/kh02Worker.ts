@@ -23,6 +23,11 @@ import {
 } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 import { runAmazonUsPilotEnrichment } from "@/services/kh02/marketplace/amazonUsEvidenceAdapter";
 import {
+  attachWalmartEvidenceToResearchRun,
+  persistWalmartEvidenceAtomically,
+} from "@/services/kh02/marketplace/walmartEvidencePersistence";
+import { runWalmartUsPilotEnrichment } from "@/services/kh02/marketplace/walmartUsResearchAdapter";
+import {
   SWAI_KH02_RELEASE_VERSION,
   getRuntimeBuildSha,
   getDatabaseFingerprint,
@@ -42,6 +47,8 @@ export interface ResearchInput {
   metaExecutionPolicy?: string;
   enableAmazonUsPilot?: boolean;
   amazonPilotCandidateUrls?: Record<string, string>;
+  enableWalmartUsPilot?: boolean;
+  walmartPilotItemIds?: Record<string, string>;
   targetResearchRunId?: string;
   candidateIds?: string[];
   candidateUrls?: Record<string, string>;
@@ -190,7 +197,8 @@ export function computeResearchIdempotencyKey(
 ): string {
   const normTopic = input.topic.trim().toLowerCase();
   const amzSuffix = input.enableAmazonUsPilot ? ":amz1" : "";
-  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}${amzSuffix}`;
+  const wmtSuffix = input.enableWalmartUsPilot ? ":wmt1" : "";
+  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}${amzSuffix}${wmtSuffix}`;
   return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
 }
 
@@ -233,7 +241,11 @@ export async function claimNextResearchJob(
   options?: { jobId?: string; jobTypes?: string[] }
 ): Promise<ClaimedResearchJob | null> {
   const now = new Date();
-  const allowedJobTypes = options?.jobTypes || ["KH02_RESEARCH", "KH02_AMAZON_VERIFY"];
+  const allowedJobTypes = options?.jobTypes || [
+    "KH02_RESEARCH",
+    "KH02_AMAZON_VERIFY",
+    "KH02_WALMART_VERIFY",
+  ];
 
   const whereClause: any = {
     jobType: allowedJobTypes.length === 1 ? allowedJobTypes[0] : { in: allowedJobTypes },
@@ -329,7 +341,13 @@ export async function claimNextResearchJob(
       leaseExpiresAt: leaseExpiresAtStr,
     },
     payload: {
-      topic: payload.topic || (pendingJob.jobType === "KH02_AMAZON_VERIFY" ? "Amazon US Verification" : "General Research"),
+      topic:
+        payload.topic ||
+        (pendingJob.jobType === "KH02_AMAZON_VERIFY"
+          ? "Amazon US Verification"
+          : pendingJob.jobType === "KH02_WALMART_VERIFY"
+          ? "Walmart US Verification"
+          : "General Research"),
       market: payload.market || "US",
       lookbackDays: payload.lookbackDays || 90,
       maxCandidates: payload.maxCandidates || 15,
@@ -337,6 +355,8 @@ export async function claimNextResearchJob(
       metaExecutionPolicy: payload.metaExecutionPolicy,
       enableAmazonUsPilot: payload.enableAmazonUsPilot,
       amazonPilotCandidateUrls: payload.amazonPilotCandidateUrls,
+      enableWalmartUsPilot: payload.enableWalmartUsPilot,
+      walmartPilotItemIds: payload.walmartPilotItemIds,
       targetResearchRunId: payload.targetResearchRunId,
       candidateIds: payload.candidateIds,
       candidateUrls: payload.candidateUrls,
@@ -1027,6 +1047,75 @@ export async function completeResearchJob(
       result.marketplaceTelemetry.persistenceError = null;
     }
 
+    // V12.4.3.5.1: Persist Walmart US Jina Reader evidence atomically with ownership fencing
+    if (
+      Array.isArray(result.walmartMarketplaceEvidence) &&
+      result.walmartMarketplaceEvidence.length > 0 &&
+      result.walmartMarketplaceTelemetry
+    ) {
+      const wmtPersistRes = await persistWalmartEvidenceAtomically({
+        workspaceId: job.workspaceId,
+        researchRunId: job.id,
+        evidenceRows: result.walmartMarketplaceEvidence,
+        telemetry: result.walmartMarketplaceTelemetry,
+        expectedWorkerId: ownership.workerId,
+        expectedClaimToken: ownership.claimToken,
+        expectedFencingToken: ownership.fencingToken,
+        expectedFencingGeneration: ownership.fencingGeneration,
+        requireActiveJobOwnership: true,
+        updateSyncJobSnapshot: false,
+        injectTransactionFailureForTest: Boolean(
+          (result as any)._simulateWalmartPersistenceFailureForTest ||
+            meta.simulateWalmartPersistenceFailureForTest
+        ),
+        db,
+      });
+
+      if (wmtPersistRes.fencingRejected || wmtPersistRes.workspaceRejected) {
+        return {
+          success: false,
+          rowsAffected: 0,
+          reason: "OWNERSHIP_LOST",
+        };
+      }
+
+      if (!wmtPersistRes.persisted) {
+        const wmtErr = (wmtPersistRes.errorMessage || "Walmart persistence failed").slice(
+          0,
+          300
+        );
+        result.walmartMarketplaceEvidence = [];
+        result.walmartMarketplaceTelemetry.persistenceStatus = "PERSISTENCE_FAILED";
+        result.walmartMarketplaceTelemetry.persistenceError = `WALMART_EVIDENCE_PERSISTENCE_FAILED: ${wmtErr}`;
+        result.walmartMarketplaceTelemetry.overallStatus = "FAILED";
+        for (const list of [
+          (result as any).candidates,
+          result.topThree,
+          result.researchShortlist?.shortlist,
+          result.provisionalCandidates,
+          result.remainingCandidates,
+          result.insufficientEvidenceCandidates,
+        ]) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list as any[]) {
+            const cand = item?.candidate || item;
+            if (!cand) continue;
+            delete cand.walmartEvidenceSummary;
+          }
+        }
+        if (result.runStatus !== "FAILED" && result.runStatus !== "PARTIAL") {
+          result.runStatus = "PARTIAL";
+        }
+        if (!Array.isArray(result.warnings)) {
+          result.warnings = [];
+        }
+        result.warnings.push(`WALMART_EVIDENCE_PERSISTENCE_FAILED: ${wmtErr}`);
+      } else {
+        result.walmartMarketplaceTelemetry.persistenceStatus = "PERSISTED";
+        result.walmartMarketplaceTelemetry.persistenceError = null;
+      }
+    }
+
     const finalTerminalStatus =
       result.runStatus === "FAILED"
         ? "FAILED"
@@ -1042,6 +1131,7 @@ export async function completeResearchJob(
         market: meta.market || result.market,
         lookbackDays: meta.lookbackDays || result.lookbackDays,
         enableAmazonUsPilot: Boolean(meta.enableAmazonUsPilot),
+        enableWalmartUsPilot: Boolean(meta.enableWalmartUsPilot),
       },
       _runtime: {
         ...runtime,
@@ -1107,7 +1197,7 @@ export async function recoverStaleResearchJobs(
 
   const runningJobs = await db.syncJob.findMany({
     where: {
-      jobType: { in: ["KH02_RESEARCH", "KH02_AMAZON_VERIFY"] },
+      jobType: { in: ["KH02_RESEARCH", "KH02_AMAZON_VERIFY", "KH02_WALMART_VERIFY"] },
       status: "RUNNING",
     },
   });
@@ -1453,6 +1543,253 @@ export async function processAmazonVerificationJob(
 }
 
 /**
+ * Processes a child `KH02_WALMART_VERIFY` job claimed by the worker.
+ * Enriches up to 3 selected candidates from an existing completed/partially-completed
+ * parent KH-02 research run without re-running Meta/Google discovery or modifying G15/G16.
+ */
+export async function processWalmartVerificationJob(
+  job: ClaimedResearchJob,
+  db: any = prisma
+): Promise<{
+  success: boolean;
+  verificationStatus?: string;
+  persistedCount?: number;
+  error?: string;
+}> {
+  activeJobId = job.id;
+  const ownership: JobOwnership = {
+    workerId: job.workerId,
+    claimToken: job.claimToken,
+    fencingToken: job.fencingToken,
+    fencingGeneration: job.fencingGeneration,
+    recordVersion: job.recordVersion,
+    fencingVersion: job.fencingGeneration,
+    leaseExpiresAt: job.leaseExpiresAt,
+  };
+
+  const abortController = new AbortController();
+  let lostOwnership = false;
+  let jobTimedOut = false;
+  const overallDeadlineTimer = setTimeout(() => {
+    jobTimedOut = true;
+    abortController.abort(
+      new Error("JOB_DEADLINE_EXCEEDED: Overall Walmart verification job deadline exceeded.")
+    );
+  }, KH02_MAX_JOB_DURATION_MS);
+
+  const heartbeat = startResearchHeartbeat(job.id, ownership, {
+    intervalMs: 15000,
+    db,
+    onLostOwnership: () => {
+      lostOwnership = true;
+      abortController.abort(new Error("OWNERSHIP_LOST: Worker lease lost."));
+    },
+  });
+
+  try {
+    const targetResearchRunId = String(job.payload.targetResearchRunId || "").trim();
+    const requestedCandidateIds = Array.isArray(job.payload.candidateIds)
+      ? job.payload.candidateIds
+      : Object.keys(job.payload.walmartPilotItemIds || {});
+
+    if (!targetResearchRunId) {
+      throw new Error("INVALID_VERIFY_JOB: Missing targetResearchRunId.");
+    }
+    if (requestedCandidateIds.length === 0 || requestedCandidateIds.length > 3) {
+      throw new Error(
+        `INVALID_CANDIDATE_COUNT: Expected 1..3 candidateIds, received ${requestedCandidateIds.length}.`
+      );
+    }
+
+    await updateResearchProgress(
+      job.id,
+      ownership,
+      { stage: "WALMART_VERIFICATION", percent: 25 },
+      db
+    );
+
+    const parentJob = await db.syncJob.findFirst({
+      where: { id: targetResearchRunId, workspaceId: job.workspaceId },
+      select: { id: true, workspaceId: true, status: true, resultJson: true },
+    });
+    if (!parentJob) {
+      throw new Error(`RUN_NOT_FOUND: Parent research run '${targetResearchRunId}' not found.`);
+    }
+    if (
+      parentJob.status !== "COMPLETED" &&
+      parentJob.status !== "PARTIALLY_COMPLETED"
+    ) {
+      throw new Error(
+        `INVALID_PARENT_RUN_STATE: Parent run '${targetResearchRunId}' status is '${parentJob.status}'.`
+      );
+    }
+
+    let parentResult: any = {};
+    try {
+      parentResult = JSON.parse(parentJob.resultJson || "{}");
+    } catch {
+      throw new Error("CORRUPT_PARENT_RESULT_JSON: Unable to parse parent run resultJson.");
+    }
+
+    const allParentItems: any[] = [
+      ...(Array.isArray(parentResult.candidates) ? parentResult.candidates : []),
+      ...(Array.isArray(parentResult.topThree) ? parentResult.topThree : []),
+      ...(Array.isArray(parentResult.researchShortlist?.shortlist)
+        ? parentResult.researchShortlist.shortlist
+        : []),
+      ...(Array.isArray(parentResult.provisionalCandidates)
+        ? parentResult.provisionalCandidates
+        : []),
+      ...(Array.isArray(parentResult.remainingCandidates)
+        ? parentResult.remainingCandidates
+        : []),
+      ...(Array.isArray(parentResult.insufficientEvidenceCandidates)
+        ? parentResult.insufficientEvidenceCandidates
+        : []),
+    ];
+    const candidateById = new Map<string, any>();
+    for (const item of allParentItems) {
+      const c = item?.candidate || item;
+      if (c?.candidateId && !candidateById.has(c.candidateId)) {
+        candidateById.set(c.candidateId, { ...c });
+      }
+    }
+
+    const selectedCandidates: any[] = [];
+    for (const cid of requestedCandidateIds) {
+      const found = candidateById.get(cid);
+      if (!found) {
+        throw new Error(
+          `UNKNOWN_CANDIDATE_FOR_RUN: Candidate '${cid}' does not belong to run '${targetResearchRunId}'.`
+        );
+      }
+      selectedCandidates.push({
+        ...found,
+      });
+    }
+
+    const enrichment = await runWalmartUsPilotEnrichment({
+      workspaceId: job.workspaceId,
+      researchRunId: targetResearchRunId,
+      niche: parentResult.topic || job.payload.topic || "General Research",
+      enableWalmartUsPilot: true,
+      shortlistedCandidates: selectedCandidates,
+      signal: abortController.signal,
+      db,
+    });
+
+    if (lostOwnership) {
+      throw new Error("OWNERSHIP_LOST: Worker lost lease ownership during Walmart enrichment.");
+    }
+    if (jobTimedOut) {
+      throw new Error("JOB_DEADLINE_EXCEEDED: Overall Walmart verification job deadline exceeded.");
+    }
+
+    const attachRes = await attachWalmartEvidenceToResearchRun({
+      workspaceId: job.workspaceId,
+      researchRunId: targetResearchRunId,
+      verifyJobId: job.id,
+      evidenceRows: enrichment.evidenceRows,
+      telemetry: enrichment.telemetry,
+      expectedWorkerId: ownership.workerId,
+      expectedClaimToken: ownership.claimToken,
+      expectedFencingToken: ownership.fencingToken,
+      expectedFencingGeneration: ownership.fencingGeneration,
+      requireActiveJobOwnership: true,
+      injectTransactionFailureForTest: Boolean(job.payload.simulatePersistenceFailureForTest),
+      db,
+    });
+
+    if (!attachRes.persisted) {
+      if (attachRes.fencingRejected) {
+        lostOwnership = true;
+        return {
+          success: false,
+          error: attachRes.errorMessage || "OWNERSHIP_LOST",
+        };
+      }
+      throw new Error(
+        `WALMART_EVIDENCE_PERSISTENCE_FAILED: ${
+          attachRes.errorMessage || attachRes.errorCode || "Failed to persist Walmart evidence."
+        }`
+      );
+    }
+
+    const verificationStatus = enrichment.telemetry.overallStatus;
+    const childTerminalStatus =
+      verificationStatus === "SUCCEEDED" || verificationStatus === "DISABLED"
+        ? "COMPLETED"
+        : "PARTIALLY_COMPLETED";
+
+    const currentChildJob = await db.syncJob.findUnique({ where: { id: job.id } });
+    let childMeta: any = {};
+    try {
+      childMeta = JSON.parse(currentChildJob?.resultJson || "{}");
+    } catch {}
+
+    const childResultPayload = {
+      ...childMeta,
+      verifyJobId: job.id,
+      targetResearchRunId,
+      candidateIds: requestedCandidateIds,
+      status: childTerminalStatus,
+      verificationStatus,
+      persistedCount: attachRes.persistedCount,
+      walmartMarketplaceEvidence: enrichment.evidenceRows,
+      walmartMarketplaceTelemetry: {
+        ...enrichment.telemetry,
+        persistenceStatus: "PERSISTED",
+        persistenceError: null,
+      },
+      _runtime: {
+        ...(childMeta._runtime || {}),
+        completedAt: new Date().toISOString(),
+      },
+    };
+
+    const completeRes = await withJobLock(job.id, async () =>
+      updateJobIfClaimOwned(
+        job.id,
+        ownership,
+        {
+          status: childTerminalStatus,
+          progress: 100,
+          completedAt: new Date(),
+          resultJson: JSON.stringify(childResultPayload),
+        },
+        db
+      )
+    );
+
+    if (!completeRes.success) {
+      throw new Error("OWNERSHIP_LOST: Failed to commit child Walmart verification job completion.");
+    }
+
+    processedJobs++;
+    activeJobId = null;
+    return {
+      success: true,
+      verificationStatus,
+      persistedCount: attachRes.persistedCount,
+    };
+  } catch (err: any) {
+    failedJobs++;
+    activeJobId = null;
+    const msg = err?.message || String(err);
+    if (!lostOwnership && !msg.startsWith("OWNERSHIP_LOST")) {
+      const wrappedErr = msg.includes("WALMART_EVIDENCE_PERSISTENCE_FAILED")
+        ? err
+        : new Error(`WALMART_EVIDENCE_PERSISTENCE_FAILED: ${msg}`);
+      await failResearchJob(job.id, ownership, wrappedErr, db);
+    }
+    return { success: false, error: msg };
+  } finally {
+    clearTimeout(overallDeadlineTimer);
+    heartbeat.stop();
+  }
+}
+
+/**
  * Executes a claimed research job across all sources with active heartbeat protection.
  */
 export async function executeResearchJob(
@@ -1461,6 +1798,13 @@ export async function executeResearchJob(
 ): Promise<{ success: boolean; result?: EvergreenLeaderboardResult; error?: string }> {
   if (job.jobType === "KH02_AMAZON_VERIFY") {
     const verifyRes = await processAmazonVerificationJob(job, db);
+    return {
+      success: verifyRes.success,
+      error: verifyRes.error,
+    };
+  }
+  if (job.jobType === "KH02_WALMART_VERIFY") {
+    const verifyRes = await processWalmartVerificationJob(job, db);
     return {
       success: verifyRes.success,
       error: verifyRes.error,
@@ -1533,6 +1877,7 @@ export async function executeResearchJob(
         metaExecutionPolicy: job.payload.metaExecutionPolicy,
         enableAmazonUsPilot: job.payload.enableAmazonUsPilot,
         amazonPilotCandidateUrls: job.payload.amazonPilotCandidateUrls,
+        enableWalmartUsPilot: job.payload.enableWalmartUsPilot,
         workspaceId: job.workspaceId,
         runId: job.id,
         signal: abortController.signal,

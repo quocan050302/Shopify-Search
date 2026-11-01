@@ -3,9 +3,11 @@ import type {
   EvergreenLeaderboardResponse,
   RankedProductCandidate,
   ProductAmazonEvidenceSummary,
+  WalmartEvidenceSummary,
 } from "../types";
 import { validateAndNormalizeMediaUrl } from "../media/productMediaResolver";
 import { summarizeAmazonEvidenceForProduct } from "../marketplace/marketplaceEvidenceTypes";
+import { summarizeWalmartEvidenceForCandidate } from "../marketplace/walmartEvidencePersistence";
 
 export type CanonicalQualificationTier =
   | "VERIFIED_EVERGREEN"
@@ -61,6 +63,7 @@ export interface CanonicalRecommendedProduct {
   researchProductId: string | null;
   distinctnessNote: string | null;
   amazonEvidenceSummary?: ProductAmazonEvidenceSummary | null;
+  walmartEvidenceSummary?: WalmartEvidenceSummary | null;
   rawCandidate: DiscoveredProductCandidate;
   rawRankedItem: RankedProductCandidate | null;
 }
@@ -91,6 +94,7 @@ export interface ExplorerCandidateRow {
   researchProductId: string | null;
   inRankedSnapshot?: boolean;
   amazonEvidenceSummary?: ProductAmazonEvidenceSummary | null;
+  walmartEvidenceSummary?: WalmartEvidenceSummary | null;
   rawCandidate: DiscoveredProductCandidate;
   rawRankedItem: RankedProductCandidate | null;
 }
@@ -596,6 +600,18 @@ export function buildCanonicalRecommendedProducts(
       );
     const amazonEvidenceSummary = computedAmzSummary?.visible ? computedAmzSummary : null;
 
+    const computedWalmartSummary =
+      candidate.walmartEvidenceSummary ||
+      (Array.isArray(leaderboard.walmartMarketplaceEvidence) || leaderboard.walmartMarketplaceTelemetry
+        ? summarizeWalmartEvidenceForCandidate(
+            candidate.candidateId,
+            leaderboard.researchRunId || "",
+            leaderboard.walmartMarketplaceEvidence || [],
+            { telemetry: leaderboard.walmartMarketplaceTelemetry || null }
+          )
+        : null);
+    const walmartEvidenceSummary = computedWalmartSummary?.visible ? computedWalmartSummary : null;
+
     results.push({
       rank: results.length + 1,
       candidateId: candidate.candidateId,
@@ -643,6 +659,7 @@ export function buildCanonicalRecommendedProducts(
           ? "Alternative model/merchant in same product family"
           : null,
       amazonEvidenceSummary,
+      walmartEvidenceSummary,
       rawCandidate: candidate,
       rawRankedItem: rankedItem,
     });
@@ -794,6 +811,18 @@ export function buildAllCandidatesExplorerList(
       );
     const rowAmazonSummary = computedAmzRowSummary?.visible ? computedAmzRowSummary : null;
 
+    const computedWalmartRowSummary =
+      candidate.walmartEvidenceSummary ||
+      (Array.isArray(leaderboard.walmartMarketplaceEvidence) || leaderboard.walmartMarketplaceTelemetry
+        ? summarizeWalmartEvidenceForCandidate(
+            candidate.candidateId,
+            leaderboard.researchRunId || "",
+            leaderboard.walmartMarketplaceEvidence || [],
+            { telemetry: leaderboard.walmartMarketplaceTelemetry || null }
+          )
+        : null);
+    const rowWalmartSummary = computedWalmartRowSummary?.visible ? computedWalmartRowSummary : null;
+
     rows.push({
       candidateId: candidate.candidateId,
       productKey: candidate.productKey || candidate.candidateId,
@@ -840,6 +869,7 @@ export function buildAllCandidatesExplorerList(
       researchProductId: candidate.researchProductId || null,
       inRankedSnapshot: rankedSnapshotIds.has(candidate.candidateId),
       amazonEvidenceSummary: rowAmazonSummary,
+      walmartEvidenceSummary: rowWalmartSummary,
       rawCandidate: candidate,
       rawRankedItem: rankedItem,
     });

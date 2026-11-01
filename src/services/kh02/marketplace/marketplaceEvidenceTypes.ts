@@ -641,3 +641,33 @@ export function summarizeAmazonEvidenceForProduct(
   };
 }
 
+// Re-export V12.4.3.5.1 Walmart US Jina Reader REST contracts (kept strictly distinct from Amazon types)
+export type {
+  WalmartQueryExecutionStatus,
+  MarketplacePresence,
+  MatchLevel,
+  StockState,
+  EvidenceOrigin,
+  WalmartSchemaCompatibility,
+  WalmartAppearanceProvenance,
+  WalmartSearchIntent,
+  WalmartPilotPolicyLimits,
+  WalmartPilotPolicy,
+  WalmartJinaRequestOptions,
+  WalmartJinaEnvelopeData,
+  WalmartJinaResponse,
+  WalmartSearchListing,
+  WalmartPdpProduct,
+  WalmartIdentityDecision,
+  WalmartQueryScopeMetadata,
+  WalmartProductEvidence,
+  WalmartProviderRequestRecord,
+  WalmartProviderTelemetry,
+  WalmartEvidenceSummary,
+} from "./walmartJinaTypes";
+export {
+  WALMART_NON_INFLATION_NOTICE,
+  computeWalmartDeterministicHash,
+} from "./walmartJinaTypes";
+
+

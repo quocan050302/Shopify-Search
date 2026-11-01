@@ -29,6 +29,10 @@ import {
 } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
 import { validateAmazonUsProductUrl } from "@/services/kh02/marketplace/amazonUsIdentity";
 import { AMAZON_PILOT_MAX_CANDIDATES_PER_RUN } from "@/services/kh02/marketplace/amazonUsBudget";
+import {
+  loadWalmartEvidenceForRun,
+  summarizeWalmartEvidenceForCandidate,
+} from "@/services/kh02/marketplace/walmartEvidencePersistence";
 
 const ResearchRequestSchema = z.object({
   topic: z.string().trim().min(2, "Topic must be at least 2 characters").max(80),
@@ -40,6 +44,7 @@ const ResearchRequestSchema = z.object({
   metaExecutionPolicy: z.enum(["LIVE_FIRST", "CACHE_SUPPLEMENTED", "CACHE_ONLY", "OFFLINE_FIXTURE"]).optional(),
   enableAmazonUsPilot: z.boolean().optional(),
   amazonPilotCandidateUrls: z.record(z.string(), z.string()).optional(),
+  enableWalmartUsPilot: z.boolean().optional(),
   mode: z.enum(["async", "sync"]).optional(),
   async: z.boolean().optional(),
   asyncMode: z.boolean().optional(),
@@ -95,6 +100,10 @@ export async function GET(request: NextRequest) {
         ? leaderboard.marketplaceEvidence
         : [];
       let marketplaceTelemetry = leaderboard.marketplaceTelemetry || null;
+      let walmartMarketplaceEvidence = Array.isArray(leaderboard.walmartMarketplaceEvidence)
+        ? leaderboard.walmartMarketplaceEvidence
+        : [];
+      let walmartMarketplaceTelemetry = leaderboard.walmartMarketplaceTelemetry || null;
 
       if (effectiveRunId) {
         const loadedAmz = await loadAmazonEvidenceForRun(context.workspaceId, effectiveRunId);
@@ -103,6 +112,14 @@ export async function GET(request: NextRequest) {
         }
         if (!marketplaceTelemetry && loadedAmz.telemetry) {
           marketplaceTelemetry = loadedAmz.telemetry;
+        }
+
+        const loadedWmt = await loadWalmartEvidenceForRun(context.workspaceId, effectiveRunId);
+        if (loadedWmt.evidenceRows.length > 0) {
+          walmartMarketplaceEvidence = loadedWmt.evidenceRows;
+        }
+        if (!walmartMarketplaceTelemetry && loadedWmt.telemetry) {
+          walmartMarketplaceTelemetry = loadedWmt.telemetry;
         }
       }
 
@@ -130,6 +147,30 @@ export async function GET(request: NextRequest) {
         attachSummaryToList(leaderboard.insufficientEvidenceCandidates);
       }
 
+      if ((walmartMarketplaceEvidence.length > 0 || walmartMarketplaceTelemetry) && effectiveRunId) {
+        const attachWalmartSummaryToList = (list: any[] | undefined) => {
+          if (!Array.isArray(list)) return;
+          for (const item of list) {
+            const cand = item?.candidate || item;
+            if (!cand || !cand.candidateId) continue;
+            const wSummary = summarizeWalmartEvidenceForCandidate(
+              cand.candidateId,
+              effectiveRunId,
+              walmartMarketplaceEvidence,
+              { telemetry: walmartMarketplaceTelemetry }
+            );
+            if (wSummary.visible) {
+              cand.walmartEvidenceSummary = wSummary;
+            }
+          }
+        };
+        attachWalmartSummaryToList(leaderboard.topThree);
+        attachWalmartSummaryToList(leaderboard.researchShortlist?.shortlist);
+        attachWalmartSummaryToList(leaderboard.provisionalCandidates);
+        attachWalmartSummaryToList(leaderboard.remainingCandidates);
+        attachWalmartSummaryToList(leaderboard.insufficientEvidenceCandidates);
+      }
+
       const metaTel = leaderboard.providerTelemetry?.META_ADS;
       const googleTel = leaderboard.providerTelemetry?.GOOGLE_ADS;
       const lookbackCov = leaderboard.lookbackCoverage;
@@ -152,6 +193,8 @@ export async function GET(request: NextRequest) {
         researchRunId: resolvedRunId || leaderboard.researchRunId,
         marketplaceEvidence,
         marketplaceTelemetry,
+        walmartMarketplaceEvidence,
+        walmartMarketplaceTelemetry,
         sourceCoverage: leaderboard.sourceCoverage || {
           META_ADS: {
             freshLiveAdsCount: metaLiveCount,
@@ -242,6 +285,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      body &&
+      typeof body === "object" &&
+      (body.walmartJinaEndpoint !== undefined ||
+        body.walmartTargetHost !== undefined ||
+        body.walmartApiKey !== undefined ||
+        body.jinaApiKey !== undefined ||
+        body.walmartBudgetOverride !== undefined)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "FORBIDDEN_WALMART_POLICY_OVERRIDE",
+            message:
+              "Client requests cannot override server-side Walmart Jina Reader endpoint, allowlist, budget, or no-key policy.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const parseResult = ResearchRequestSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
@@ -266,6 +331,7 @@ export async function POST(request: NextRequest) {
       metaExecutionPolicy,
       enableAmazonUsPilot,
       amazonPilotCandidateUrls,
+      enableWalmartUsPilot,
     } = parseResult.data;
 
     let validatedAmazonCandidateUrls: Record<string, string> | undefined = undefined;
@@ -328,6 +394,7 @@ export async function POST(request: NextRequest) {
         metaExecutionPolicy,
         enableAmazonUsPilot,
         amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
+        enableWalmartUsPilot,
       });
 
       // Enqueue job for background worker consumption (Single Executor Invariant)
@@ -345,6 +412,7 @@ export async function POST(request: NextRequest) {
             lookbackDays,
             sourceMode: sourceMode || "LIVE_WITH_CACHE_FALLBACK",
             enableAmazonUsPilot: Boolean(enableAmazonUsPilot),
+            enableWalmartUsPilot: Boolean(enableWalmartUsPilot),
           },
           meta: {
             runId,
@@ -369,6 +437,7 @@ export async function POST(request: NextRequest) {
       metaExecutionPolicy,
       enableAmazonUsPilot,
       amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
+      enableWalmartUsPilot,
     });
 
     await updateKH02ResearchRunStatus({
@@ -390,6 +459,7 @@ export async function POST(request: NextRequest) {
         metaExecutionPolicy,
         enableAmazonUsPilot,
         amazonPilotCandidateUrls: validatedAmazonCandidateUrls,
+        enableWalmartUsPilot,
         workspaceId: context.workspaceId,
         runId,
         signal: request.signal,

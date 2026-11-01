@@ -20,6 +20,11 @@ import {
   persistAmazonEvidenceAtomically,
   summarizeAmazonEvidenceForProduct,
 } from "../marketplace/marketplaceEvidencePersistence";
+import {
+  computeWalmartEvidenceCompositeId,
+  persistWalmartEvidenceAtomically,
+  summarizeWalmartEvidenceForCandidate,
+} from "../marketplace/walmartEvidencePersistence";
 
 export interface KH02RunSummary {
   runId: string;
@@ -217,6 +222,7 @@ export async function createKH02ResearchRun(
     metaExecutionPolicy?: string;
     enableAmazonUsPilot?: boolean;
     amazonPilotCandidateUrls?: Record<string, string>;
+    enableWalmartUsPilot?: boolean;
   },
   db: any = prisma
 ): Promise<string> {
@@ -262,6 +268,7 @@ export async function createKH02ResearchRun(
         metaExecutionPolicy: params.metaExecutionPolicy,
         enableAmazonUsPilot: params.enableAmazonUsPilot,
         amazonPilotCandidateUrls: params.amazonPilotCandidateUrls,
+        enableWalmartUsPilot: params.enableWalmartUsPilot,
       }),
       createdAt: new Date(),
     },
@@ -677,6 +684,88 @@ export async function persistKH02RankingSnapshot(
     } else if (telemetry && typeof telemetry === "object") {
       telemetry.persistenceStatus = "NOT_REQUIRED";
       telemetry.persistenceError = null;
+    }
+  }
+
+  // V12.4.3.5.1: Synchronize researchRunId & composite IDs on walmartMarketplaceEvidence and persist atomically
+  if (Array.isArray((result as any).walmartMarketplaceEvidence)) {
+    const wmtRows = (result as any).walmartMarketplaceEvidence;
+    const wmtTelemetry = (result as any).walmartMarketplaceTelemetry;
+    for (const ev of wmtRows) {
+      if (ev && typeof ev === "object") {
+        ev.workspaceId = workspaceId;
+        ev.researchRunId = runId;
+        ev.id = computeWalmartEvidenceCompositeId(
+          workspaceId,
+          runId,
+          ev.candidateId,
+          ev.itemId,
+          String(ev.rawEvidenceHash || "v1").slice(0, 12)
+        );
+      }
+    }
+    if (wmtTelemetry && typeof wmtTelemetry === "object") {
+      wmtTelemetry.workspaceId = workspaceId;
+      wmtTelemetry.researchRunId = runId;
+      if (Array.isArray(wmtTelemetry.requestLedger)) {
+        for (const req of wmtTelemetry.requestLedger) {
+          if (req && typeof req === "object") {
+            req.workspaceId = workspaceId;
+            req.researchRunId = runId;
+          }
+        }
+      }
+    }
+    for (const list of allCandLists) {
+      if (!Array.isArray(list)) continue;
+      for (const item of list as any[]) {
+        const cand = item?.candidate || item;
+        if (!cand || !cand.candidateId) continue;
+        const summary = summarizeWalmartEvidenceForCandidate(
+          cand.candidateId,
+          runId,
+          wmtRows,
+          { telemetry: wmtTelemetry }
+        );
+        if (summary.visible) {
+          cand.walmartEvidenceSummary = summary;
+        }
+      }
+    }
+    if (wmtRows.length > 0 && wmtTelemetry) {
+      const wmtPersist = await persistWalmartEvidenceAtomically({
+        workspaceId,
+        researchRunId: runId,
+        evidenceRows: wmtRows,
+        telemetry: wmtTelemetry,
+        requireActiveJobOwnership: false,
+        updateSyncJobSnapshot: false,
+        db: prisma,
+      });
+      if (!wmtPersist.persisted) {
+        const errMsg = (wmtPersist.errorMessage || "Walmart persistence failed").slice(0, 300);
+        (result as any).walmartMarketplaceEvidence = [];
+        wmtTelemetry.persistenceStatus = "PERSISTENCE_FAILED";
+        wmtTelemetry.persistenceError = `WALMART_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`;
+        wmtTelemetry.overallStatus = "FAILED";
+        for (const list of allCandLists) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list as any[]) {
+            const cand = item?.candidate || item;
+            if (cand) delete cand.walmartEvidenceSummary;
+          }
+        }
+        if (result.runStatus !== "FAILED" && result.runStatus !== "PARTIAL") {
+          result.runStatus = "PARTIAL";
+        }
+        if (!Array.isArray((result as any).warnings)) {
+          (result as any).warnings = [];
+        }
+        (result as any).warnings.push(`WALMART_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`);
+      } else {
+        wmtTelemetry.persistenceStatus = "PERSISTED";
+        wmtTelemetry.persistenceError = null;
+      }
     }
   }
 

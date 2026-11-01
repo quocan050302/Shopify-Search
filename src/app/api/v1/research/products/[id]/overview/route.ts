@@ -14,6 +14,10 @@ import {
   loadAmazonEvidenceForRun,
   summarizeAmazonEvidenceForProduct,
 } from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
+import {
+  loadWalmartEvidenceForRun,
+  summarizeWalmartEvidenceForCandidate,
+} from "@/services/kh02/marketplace/walmartEvidencePersistence";
 
 export interface ResearchContextResolutionInfo {
   status:
@@ -780,6 +784,30 @@ export async function GET(
       }
     }
 
+    // V12.4.3.5.1: Attach read-only persisted Walmart US evidence summary when run context exists
+    let walmartEvidenceSummary: any = matchedCandidateObj?.walmartEvidenceSummary || null;
+    if (kh02ResearchContext?.runId && matchedCandidateObj?.candidateId) {
+      const loadedWmt = await loadWalmartEvidenceForRun(
+        context.workspaceId,
+        kh02ResearchContext.runId,
+        prisma
+      );
+      if (loadedWmt.evidenceRows.length > 0 || loadedWmt.telemetry) {
+        const computedWmtSummary = summarizeWalmartEvidenceForCandidate(
+          matchedCandidateObj.candidateId,
+          kh02ResearchContext.runId,
+          loadedWmt.evidenceRows,
+          { telemetry: loadedWmt.telemetry }
+        );
+        if (computedWmtSummary.visible) {
+          walmartEvidenceSummary = computedWmtSummary;
+        }
+      }
+      if (walmartEvidenceSummary) {
+        kh02ResearchContext.walmartEvidenceSummary = walmartEvidenceSummary;
+      }
+    }
+
     // Populate product.imageUrl on response if null in DB and verified primary media exists
     const enrichedProduct = {
       ...product,
@@ -839,6 +867,7 @@ export async function GET(
         decisions,
         kh02ResearchContext,
         amazonEvidenceSummary,
+        walmartEvidenceSummary,
         commercialReadinessSummary,
       },
       meta: {
