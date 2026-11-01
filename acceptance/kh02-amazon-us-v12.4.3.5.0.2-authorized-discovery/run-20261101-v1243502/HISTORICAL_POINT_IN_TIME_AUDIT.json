@@ -1,0 +1,11 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:48.741Z",
+  "devCutoffIso": "2026-10-24T00:00:00.000Z",
+  "holdoutCutoffIso": "2026-10-30T12:00:00.000Z",
+  "postCutoffAmazonLeakCount": 0,
+  "rejectedFutureObservationCount": 1,
+  "futureObservationInjectedIntoCutoffCount": 0,
+  "sourceRecordMutatedAcrossReplay": false
+}

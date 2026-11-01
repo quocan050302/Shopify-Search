@@ -1,0 +1,36 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:29:52.037Z",
+  "status": "DISABLED",
+  "accessPolicyStatus": "DISABLED_BY_DEFAULT",
+  "permittedAccessRoute": "NONE",
+  "featureEnabled": false,
+  "liveAllowed": false,
+  "credentialsConfigured": false,
+  "hasCredentialId": false,
+  "hasCredentialSecret": false,
+  "hasPartnerTag": false,
+  "partnerTagMasked": null,
+  "registeredMarketplace": "www.amazon.com",
+  "transportVerified": false,
+  "authenticated": false,
+  "entitlementVerified": false,
+  "querySucceeded": false,
+  "lastAuthStatus": "DISABLED",
+  "officialDocsChecked": [
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction",
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/operations/search-items",
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference",
+    "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/get-started/using-sdk",
+    "https://affiliate-program.amazon.com/help/operating/policies"
+  ],
+  "setupChecklist": [
+    "1. Enroll an eligible US Amazon Associates account at affiliate-program.amazon.com.",
+    "2. Generate official Creators API OAuth 2.0 Credential ID and Credential Secret.",
+    "3. Set KH02_AMAZON_US_ENABLED=true and KH02_AMAZON_US_LIVE_ALLOWED=true on the server.",
+    "4. Configure KH02_AMAZON_CREATORS_API_CREDENTIAL_ID, KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET, and KH02_AMAZON_ASSOCIATES_PARTNER_TAG in server-only environment."
+  ],
+  "reason": "Amazon US pilot is disabled by default (KH02_AMAZON_US_ENABLED=false).",
+  "secretsExposedInArtifact": false
+}

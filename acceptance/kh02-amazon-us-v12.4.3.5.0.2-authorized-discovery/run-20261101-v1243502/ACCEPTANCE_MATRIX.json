@@ -1,0 +1,247 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:58.567Z",
+  "gates": [
+    {
+      "gateId": "A01",
+      "description": "Existing branch only, exact current HEAD baseline, no worktree overwrites",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A02",
+      "description": "Default flags OFF -> zero Amazon network calls and unchanged KH-02 behavior/UI",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A03",
+      "description": "Actual provider policy/entitlement detection; no automatic authorization via env flags alone",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A04",
+      "description": "Creators API official client implemented with documented OAuth 2.0 auth, SearchItems+GetItems",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A05",
+      "description": "Real upstream SearchItems call when eligible; honest BLOCKED_POLICY/CREDENTIALS_REQUIRED when unentitled",
+      "engineeringPassed": true,
+      "liveProviderStatus": "DISABLED"
+    },
+    {
+      "gateId": "A06",
+      "description": "Candidate-specific search intents from verified title/brand/model, suppressing generic niche",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A07",
+      "description": "1..3 candidates, <=4 operations shared across search/detail, <=2 attempts each, concurrency=1",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A08",
+      "description": "Unavailable creds => explicit CREDENTIALS_REQUIRED or BLOCKED_POLICY; does not claim product absence",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A09",
+      "description": "Genuine SearchItems zero => QUERY_SUCCEEDED_EMPTY; actual response proof",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A10",
+      "description": "API errors/rate limit/timeout handled fail-closed; secrets redacted",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A11",
+      "description": "ASIN detail and parent/child variations with corroboration; reject brand-only exact",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A12",
+      "description": "Price/currency/availability are source-observed or null, never invented",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A13",
+      "description": "No unauthorized Playwright Amazon scraping, CAPTCHA bypass, proxy rotation or paid fallback",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A14",
+      "description": "Owned Playwright session lifecycle and local test-double separation; no leaked processes",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A15",
+      "description": "navigateAndCaptureProductSnapshot unknown HTTP => UNKNOWN/null, not 200 (BUG T4 fixed)",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A16",
+      "description": "Research POST -> worker -> discovery -> normalized evidence -> SQLite -> GET -> UI works",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A17",
+      "description": "Post-run verification UI -> POST -> child job -> worker -> parent attach -> GET -> DOM -> reload works",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A18",
+      "description": "Stronger AUTHORIZED_LIVE not overwritten by weak import/cache/fixture",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A19",
+      "description": "Workspace isolation on GET and POST, auth, candidate membership, SSRF validation",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A20",
+      "description": "Fencing/claim/lease/cancel/timeout tested with actual injected failures",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A21",
+      "description": "DB write failure visible; parent PARTIALLY_COMPLETED / child FAILED, no ghost COMPLETE",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A22",
+      "description": "No changes to Meta Ads/Google Ads score/ranking/G15/G16 attributable only to Amazon",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A23",
+      "description": "Historical replay actual DEV/HOLDOUT, point-in-time as-of, zero future leaks",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A24",
+      "description": "Before/after rank/score/demand comparison dynamically computed from real snapshots (BUG T2 fixed)",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A25",
+      "description": "Vitest raw per-test N01..N40 and D01..D25 parsed individually, no synthesized PASS (BUG T1 fixed)",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A26",
+      "description": "Full KH-02 regression + integration, KH-01 security and DB isolation executed on frozen CODE_SHA",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A27",
+      "description": "npm run build actual exit 0 on same CODE_SHA, TypeScript actual exit 0",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A28",
+      "description": "Real Next local HTTP GET and POST, actual Chromium interaction and matching run IDs",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A29",
+      "description": "SQLite-HTTP-DOM parity only for fields actually read from DOM, independent from DB/API values (BUG T3 fixed)",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A30",
+      "description": "GET 200/403/404 read-only, before/after digest unchanged, no observedAt fabrication",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A31",
+      "description": "All 45 negative mutations physically injected and rejected, 0 escapes",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A32",
+      "description": "No fake status or counts in engineering/provider/business verdict; trustworthy source SHA",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A33",
+      "description": "Disk guard, bounded async workers <=2, owned-child cleanup, production DB protected",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A34",
+      "description": "No Walmart/Jina or unrelated rewrite introduced, backwards compatibility maintained",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A35",
+      "description": "Feature docs and setup checklist clearly explain credentials setup, eligibility, and permitted use",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A36",
+      "description": "Exact branch commit(s) and push verified; no merge/deploy",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A37",
+      "description": "Business status retains G07/G15/G16 honest blocked/insufficient classifications",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A38",
+      "description": "REAL_PROVIDER_VERIFIED exclusively for actual authorized Amazon-origin product responses, never test-double",
+      "engineeringPassed": true,
+      "liveProviderStatus": "DISABLED"
+    },
+    {
+      "gateId": "A39",
+      "description": "User-visible disabled reason / enter URL / automatic discovery state and reload all correct",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    },
+    {
+      "gateId": "A40",
+      "description": "Any engineering gate fail => exit non-zero, verdict computed after validator (BUG T5 fixed)",
+      "engineeringPassed": true,
+      "liveProviderStatus": "NOT_APPLICABLE_ENGINEERING_GATE"
+    }
+  ]
+}
