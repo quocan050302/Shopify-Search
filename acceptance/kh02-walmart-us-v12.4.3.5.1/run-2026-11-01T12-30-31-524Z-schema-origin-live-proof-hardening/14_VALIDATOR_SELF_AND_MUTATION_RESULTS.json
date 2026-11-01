@@ -1,0 +1,1097 @@
+{
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:59.929Z",
+  "validatorReport": {
+    "overallVerdict": "FAIL",
+    "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-walmart-us-v12.4.3.5.1/run-2026-11-01T12-30-31-524Z-schema-origin-live-proof-hardening",
+    "validatedAt": "2026-11-01T12:34:59.924Z",
+    "checksExecuted": 116,
+    "checksPassed": 114,
+    "checksFailed": 2,
+    "failureCodes": [
+      "MISSING_REQUIRED_ARTIFACT"
+    ],
+    "failureDetails": [
+      {
+        "code": "MISSING_REQUIRED_ARTIFACT",
+        "file": "18_INDEPENDENT_VALIDATOR_REPORT.json",
+        "message": "Required artifact file '18_INDEPENDENT_VALIDATOR_REPORT.json' is missing or empty."
+      },
+      {
+        "code": "MISSING_REQUIRED_ARTIFACT",
+        "file": "22_FILE_MANIFEST_SHA256.json",
+        "message": "Required artifact file '22_FILE_MANIFEST_SHA256.json' is missing or empty."
+      }
+    ]
+  },
+  "mutationSuiteReport": {
+    "suiteVersion": "12.4.3.5.1",
+    "executedAt": "2026-11-01T12:34:59.910Z",
+    "totalMutationsExecuted": 88,
+    "mutationsCaughtCount": 88,
+    "falsePassCount": 0,
+    "allMutationsCaught": true,
+    "cases": [
+      {
+        "mutationId": "M01",
+        "targetFile": "00_BRANCH_AND_BASELINE.json",
+        "description": "Mutate branch name to feature/kh02-amazon-us-pilot-v12.4.3.5.0",
+        "expectedFailureCode": "BRANCH_MISMATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "BRANCH_MISMATCH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 5
+      },
+      {
+        "mutationId": "M02",
+        "targetFile": "00_BRANCH_AND_BASELINE.json",
+        "description": "Mutate codeSha so it mismatches wave results",
+        "expectedFailureCode": "CODE_SHA_MISMATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CODE_SHA_MISMATCH",
+          "GATE_LEDGER_SOURCE_SHA_MISMATCH",
+          "TESTED_SHA_DRIFT_IN_E2E_RECEIPTS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M03",
+        "targetFile": "03_WALMART_ARCHITECTURE_AND_CONTRACTS.json",
+        "description": "Mutate default KH02_WALMART_US_ENABLED flag to true",
+        "expectedFailureCode": "DEFAULT_FLAG_NOT_DISABLED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DEFAULT_FLAG_NOT_DISABLED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M04",
+        "targetFile": "03_WALMART_ARCHITECTURE_AND_CONTRACTS.json",
+        "description": "Mutate default KH02_WALMART_US_LIVE_ALLOWED flag to true",
+        "expectedFailureCode": "DEFAULT_LIVE_FLAG_NOT_DISABLED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DEFAULT_LIVE_FLAG_NOT_DISABLED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M05",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Allow client enableWalmartUsPilot=true to override disabled server policy",
+        "expectedFailureCode": "CLIENT_OVERRIDE_PERMITTED_WHEN_DISABLED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CLIENT_OVERRIDE_PERMITTED_WHEN_DISABLED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M06",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Accept s.jina.ai search endpoint instead of r.jina.ai Reader REST",
+        "expectedFailureCode": "INVALID_JINA_SEARCH_URL_ACCEPTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "INVALID_JINA_SEARCH_URL_ACCEPTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M07",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Accept non-numeric Walmart itemId (123abc)",
+        "expectedFailureCode": "INVALID_WALMART_ITEM_ID_ACCEPTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "INVALID_WALMART_ITEM_ID_ACCEPTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M08",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Omit mandatory X-Respond-With: html header",
+        "expectedFailureCode": "MANDATORY_JINA_HEADER_MISSING",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "MANDATORY_JINA_HEADER_MISSING"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M09",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Inject forbidden Authorization / API key header into Jina request",
+        "expectedFailureCode": "FORBIDDEN_AUTH_OR_PROXY_HEADER_PRESENT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "FORBIDDEN_AUTH_OR_PROXY_HEADER_PRESENT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M10",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Exceed per-run logical operation ceiling (allow 5 > 4 operations)",
+        "expectedFailureCode": "LOGICAL_OPERATION_CAP_EXCEEDED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "LOGICAL_OPERATION_CAP_EXCEEDED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M11",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Exceed per-operation attempt ceiling (allow 3 > 2 attempts)",
+        "expectedFailureCode": "OPERATION_ATTEMPT_CAP_EXCEEDED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "OPERATION_ATTEMPT_CAP_EXCEEDED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M12",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Exceed rolling 60s rate limit across workers (allow 10 > 6 req/min)",
+        "expectedFailureCode": "ROLLING_MINUTE_RATE_CAP_EXCEEDED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "ROLLING_MINUTE_RATE_CAP_EXCEEDED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M13",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Exceed provider worker group concurrency ceiling (peakConcurrentObserved = 2)",
+        "expectedFailureCode": "CONCURRENCY_CAP_EXCEEDED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CONCURRENCY_CAP_EXCEEDED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M14",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Allow stale timed-out attempt #1 to overwrite attempt #2",
+        "expectedFailureCode": "STALE_ATTEMPT_GENERATION_OVERWRITE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "STALE_ATTEMPT_GENERATION_OVERWRITE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M15",
+        "targetFile": "04_JINA_READER_PROTOCOL_AND_BUDGET_AUDIT.json",
+        "description": "Fail to halt free pilot on HTTP 401/402 or ask user for paid API key",
+        "expectedFailureCode": "FREE_PILOT_NOT_STOPPED_ON_401_402",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "FREE_PILOT_NOT_STOPPED_ON_401_402"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M16",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Classify outer HTTP 200 containing 'Robot or human?' bot wall as SUCCEEDED",
+        "expectedFailureCode": "BOT_WALL_OR_INNER_ERROR_FALSE_SUCCESS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "BOT_WALL_OR_INNER_ERROR_FALSE_SUCCESS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M17",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Classify missing <script id=\"__NEXT_DATA__\"> as NO_MATCH_IN_SCOPE instead of PARSE_ERROR",
+        "expectedFailureCode": "MALFORMED_NEXT_DATA_FALSE_NO_MATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "MALFORMED_NEXT_DATA_FALSE_NO_MATCH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M18",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Misclassify valid empty Walmart search result as PARSE_ERROR",
+        "expectedFailureCode": "VALID_EMPTY_SEARCH_MISCLASSIFIED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "VALID_EMPTY_SEARCH_MISCLASSIFIED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M19",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Fail to deduplicate Sponsored + Organic duplicate usItemId in search itemStacks",
+        "expectedFailureCode": "DUPLICATE_ITEM_STACK_NOT_DEDUPED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DUPLICATE_ITEM_STACK_NOT_DEDUPED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M20",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Strip leading zero from Sony UPC '027242930698' -> '27242930698'",
+        "expectedFailureCode": "UPC_LEADING_ZERO_CORRUPTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UPC_LEADING_ZERO_CORRUPTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M21",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Coerce missing Walmart price to 0 ($0.00) instead of null",
+        "expectedFailureCode": "NULL_PRICE_COERCED_TO_ZERO",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "NULL_PRICE_COERCED_TO_ZERO"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M22",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Misclassify out-of-stock Walmart PDP as NO_MATCH_IN_SCOPE instead of FOUND",
+        "expectedFailureCode": "OUT_OF_STOCK_PRESENCE_CORRUPTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "OUT_OF_STOCK_PRESENCE_CORRUPTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M23",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Claim observed ZIP 95829 / store 3081 price is nationwide US price/inventory",
+        "expectedFailureCode": "LOCATION_CLAIMED_AS_NATIONWIDE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "LOCATION_CLAIMED_AS_NATIONWIDE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M24",
+        "targetFile": "05_NEXT_DATA_PARSER_AND_SCHEMA_COMPAT_AUDIT.json",
+        "description": "Accept PDP payload whose usItemId contradicts requested itemId",
+        "expectedFailureCode": "PDP_ITEM_ID_MISMATCH_ACCEPTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "PDP_ITEM_ID_MISMATCH_ACCEPTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M25",
+        "targetFile": "06_PRODUCT_IDENTITY_AND_MATCHING_AUDIT.json",
+        "description": "Grant EXACT match from title similarity alone without GTIN/UPC or model",
+        "expectedFailureCode": "TITLE_ONLY_FALSE_EXACT_MATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "TITLE_ONLY_FALSE_EXACT_MATCH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M26",
+        "targetFile": "06_PRODUCT_IDENTITY_AND_MATCHING_AUDIT.json",
+        "description": "Match replacement refill/accessory listing as main candidate product",
+        "expectedFailureCode": "ACCESSORY_MATCHED_AS_MAIN_PRODUCT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "ACCESSORY_MATCHED_AS_MAIN_PRODUCT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M27",
+        "targetFile": "06_PRODUCT_IDENTITY_AND_MATCHING_AUDIT.json",
+        "description": "Grant EXACT match to wrong model / pack size / refurbished listing",
+        "expectedFailureCode": "VARIANT_OR_CONDITION_FALSE_EXACT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "VARIANT_OR_CONDITION_FALSE_EXACT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M28",
+        "targetFile": "06_PRODUCT_IDENTITY_AND_MATCHING_AUDIT.json",
+        "description": "Emit standalone generic niche ('Pet Gadgets') as candidate search intent",
+        "expectedFailureCode": "GENERIC_NICHE_SEARCH_INTENT_EMITTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "GENERIC_NICHE_SEARCH_INTENT_EMITTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M29",
+        "targetFile": "07_ORCHESTRATOR_WORKER_API_DB_PARITY.json",
+        "description": "Permit cross-workspace Walmart evidence write or read",
+        "expectedFailureCode": "WORKSPACE_ISOLATION_BREACH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "WORKSPACE_ISOLATION_BREACH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M30",
+        "targetFile": "07_ORCHESTRATOR_WORKER_API_DB_PARITY.json",
+        "description": "Permit stale worker claimToken / fencingGeneration to commit Walmart evidence",
+        "expectedFailureCode": "STALE_WORKER_FENCE_WRITE_ALLOWED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "STALE_WORKER_FENCE_WRITE_ALLOWED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M31",
+        "targetFile": "07_ORCHESTRATOR_WORKER_API_DB_PARITY.json",
+        "description": "Swallow SQLite transaction write failure and report silent SUCCEEDED",
+        "expectedFailureCode": "SILENT_PERSISTENCE_FAILURE_SWALLOWED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SILENT_PERSISTENCE_FAILURE_SWALLOWED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M32",
+        "targetFile": "07_ORCHESTRATOR_WORKER_API_DB_PARITY.json",
+        "description": "Allow GET /api/v1/kh02/marketplace/walmart to perform DB write or network call",
+        "expectedFailureCode": "GET_ROUTE_NOT_READ_ONLY",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "GET_ROUTE_NOT_READ_ONLY"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 5
+      },
+      {
+        "mutationId": "M33",
+        "targetFile": "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+        "description": "Introduce post-reload DOM drift on Walmart itemId / UPC / price in Chromium",
+        "expectedFailureCode": "UI_RELOAD_PARITY_DRIFT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UI_RELOAD_PARITY_DRIFT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M34",
+        "targetFile": "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+        "description": "Render 'Key Required' instead of 'Server pilot disabled' when Walmart flag is OFF",
+        "expectedFailureCode": "DISABLED_STATE_CLAIMS_KEY_REQUIRED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DISABLED_STATE_CLAIMS_KEY_REQUIRED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M35",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Inflate candidate totalScore or distinctSources when Walmart evidence is FOUND",
+        "expectedFailureCode": "SCORE_OR_VERDICT_INFLATION_DETECTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SCORE_OR_VERDICT_INFLATION_DETECTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M36",
+        "targetFile": "10_LIVE_WALMART_JINA_PILOT_EVIDENCE.json",
+        "description": "Label TEST_FIXTURE Walmart evidence as REAL_JINA_READER live verification",
+        "expectedFailureCode": "FIXTURE_CLAIMED_AS_REAL_JINA_LIVE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "FIXTURE_CLAIMED_AS_REAL_JINA_LIVE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M37",
+        "targetFile": "02_PRIOR_WALMART_TEST_BASELINE.json",
+        "description": "Transplant historical 2026-10-30 baseline report as today's live verification",
+        "expectedFailureCode": "HISTORICAL_BASELINE_TRANSPLANTED_AS_CURRENT_LIVE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_BASELINE_TRANSPLANTED_AS_CURRENT_LIVE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M38",
+        "targetFile": "13_POINT_IN_TIME_LEAK_AUDIT.json",
+        "description": "Allow post-T0 future Walmart observation into historical backtest eligible set",
+        "expectedFailureCode": "POINT_IN_TIME_FUTURE_LEAK_DETECTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "POINT_IN_TIME_FUTURE_LEAK_DETECTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M39",
+        "targetFile": "17_REQUIREMENT_TRACEABILITY_W01_W60.json",
+        "description": "Drop requirement W60 from traceability matrix",
+        "expectedFailureCode": "TRACEABILITY_INCOMPLETE_OR_FAILED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "TRACEABILITY_INCOMPLETE_OR_FAILED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M40",
+        "targetFile": "22_FILE_MANIFEST_SHA256.json",
+        "description": "Tamper with SHA-256 digest of 00_BRANCH_AND_BASELINE.json in manifest",
+        "expectedFailureCode": "ARTIFACT_SHA256_MISMATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "ARTIFACT_SHA256_MISMATCH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M41",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Attempt vacuous non-inflation pass with comparedCandidatesCount = 0",
+        "expectedFailureCode": "VACUOUS_NON_INFLATION_AUDIT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "VACUOUS_NON_INFLATION_AUDIT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M42",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Compare mismatched candidate sets between Walmart OFF and Walmart ON",
+        "expectedFailureCode": "CANDIDATE_SET_MISMATCH_ON_OFF",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CANDIDATE_SET_MISMATCH_ON_OFF"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M43",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Claim non-inflation pass when Walmart provider path was never exercised",
+        "expectedFailureCode": "WALMART_PROVIDER_PATH_NOT_EXERCISED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "WALMART_PROVIDER_PATH_NOT_EXERCISED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M44",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Hide per-candidate +5/-5 score drift behind net-zero aggregate scoreDelta",
+        "expectedFailureCode": "SCORE_OR_VERDICT_INFLATION_DETECTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SCORE_OR_VERDICT_INFLATION_DETECTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M45",
+        "targetFile": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+        "description": "Promote G15 >=60d evergreen demand or G16 live merchant proof using Walmart listing",
+        "expectedFailureCode": "G15_OR_G16_PROMOTED_BY_WALMART",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "G15_OR_G16_PROMOTED_BY_WALMART"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M46",
+        "targetFile": "11_DEV_BACKTEST_SUMMARY.json",
+        "description": "Replace real DEV backtest replay output with constant status:PASS stub",
+        "expectedFailureCode": "CONSTANT_OR_UNEXECUTED_BACKTEST_SUMMARY",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CONSTANT_OR_UNEXECUTED_BACKTEST_SUMMARY"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M47",
+        "targetFile": "13_POINT_IN_TIME_LEAK_AUDIT.json",
+        "description": "Mislabel synthetic 4-row unit anti-leakage check as full historical replay",
+        "expectedFailureCode": "SYNTHETIC_LEAK_TEST_MISLABELED_AS_FULL_BACKTEST",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SYNTHETIC_LEAK_TEST_MISLABELED_AS_FULL_BACKTEST"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M48",
+        "targetFile": "23_FINAL_RELEASE_VERDICT.json",
+        "description": "Claim overallVerdict='PASS' while live Walmart is BLOCKED_PROVIDER and G15 is INSUFFICIENT_EVIDENCE",
+        "expectedFailureCode": "OVERALL_VERDICT_FALSE_PASS_WITH_EXTERNAL_BLOCKERS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "OVERALL_VERDICT_FALSE_PASS_WITH_EXTERNAL_BLOCKERS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M49",
+        "targetFile": "02_GATE_EXECUTION_LEDGER.json",
+        "description": "Drop a required gate from 02_GATE_EXECUTION_LEDGER.json while claiming complete=true",
+        "expectedFailureCode": "REQUIRED_WAVE_MISSING_OR_INCOMPLETE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "REQUIRED_WAVE_MISSING_OR_INCOMPLETE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M50",
+        "targetFile": "02_GATE_EXECUTION_LEDGER.json",
+        "description": "Mark a required wave executionStatus='FAIL' (exitCode=1) while keeping allRequiredWavesPassed=true",
+        "expectedFailureCode": "WAVE_FAILURE_CONTRADICTS_SUMMARY",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "WAVE_FAILURE_CONTRADICTS_SUMMARY"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M51",
+        "targetFile": "02_GATE_EXECUTION_LEDGER.json",
+        "description": "Tamper with gate sourceSha so it mismatches 00_BRANCH_AND_BASELINE.json codeSha",
+        "expectedFailureCode": "GATE_LEDGER_SOURCE_SHA_MISMATCH",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "GATE_LEDGER_SOURCE_SHA_MISMATCH"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M52",
+        "targetFile": "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "description": "Claim targeted-only 4-file suite as full repository regression",
+        "expectedFailureCode": "TARGETED_REGRESSION_CLAIMED_AS_FULL",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "TARGETED_REGRESSION_CLAIMED_AS_FULL"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M53",
+        "targetFile": "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "description": "Introduce unresolved active regression failure while claiming PASS",
+        "expectedFailureCode": "ACTIVE_REGRESSION_FAILURE_UNRESOLVED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "ACTIVE_REGRESSION_FAILURE_UNRESOLVED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M54",
+        "targetFile": "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json",
+        "description": "Report non-zero runner-owned orphaned process count after barrier",
+        "expectedFailureCode": "OWNED_ORPHAN_PROCESSES_DETECTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "OWNED_ORPHAN_PROCESSES_DETECTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M55",
+        "targetFile": "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
+        "description": "Exceed raw 6 req/min rolling window rate cap (rawRequestsPerMinuteObserved = 9)",
+        "expectedFailureCode": "RAW_RATE_CAP_OVERRUN_DETECTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "RAW_RATE_CAP_OVERRUN_DETECTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M56",
+        "targetFile": "08_G15_60D_DEMAND_COVERAGE_BY_PRODUCT.json",
+        "description": "Claim G15 verdict='PASS' when qualifiedProductsCount < 3 (0/60 days covered)",
+        "expectedFailureCode": "G15_FALSE_PASS_WITHOUT_60D_HISTORY",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "G15_FALSE_PASS_WITHOUT_60D_HISTORY"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M57",
+        "targetFile": "09_G16_MERCHANT_LIVE_PROOF_BY_CANDIDATE.json",
+        "description": "Claim G16 verdict='PASS' when only 2/3 shortlisted candidates have live-verified merchants",
+        "expectedFailureCode": "G16_FALSE_PASS_WITHOUT_3_OF_3_LIVE_MERCHANTS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "G16_FALSE_PASS_WITHOUT_3_OF_3_LIVE_MERCHANTS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M58",
+        "targetFile": "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+        "description": "Claim Amazon Creators API liveVerdict='LIVE_VERIFIED' when configured=false",
+        "expectedFailureCode": "AMAZON_STATE_MISMATCH_FALSE_LIVE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "AMAZON_STATE_MISMATCH_FALSE_LIVE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M59",
+        "targetFile": "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+        "description": "Claim G07 TikTok US verdict='PASS' when TikTok provider is unconfigured",
+        "expectedFailureCode": "G07_STATE_MISMATCH_FALSE_PASS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "G07_STATE_MISMATCH_FALSE_PASS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M60",
+        "targetFile": "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+        "description": "Mislabel Wave D Chromium UI parity TEST_FIXTURE as live Walmart product confirmation",
+        "expectedFailureCode": "UI_FIXTURE_CLAIMED_AS_LIVE_WALMART",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UI_FIXTURE_CLAIMED_AS_LIVE_WALMART"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 1
+      },
+      {
+        "mutationId": "M61",
+        "targetFile": "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "description": "Re-enable legacy fail-exemption on the 8 pre-V12.4 unit test files (baselineKnownPolicySupersededTestCases = 17)",
+        "expectedFailureCode": "LEGACY_FAIL_EXEMPTION_REENABLED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "LEGACY_FAIL_EXEMPTION_REENABLED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M62",
+        "targetFile": "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+        "description": "Omit or skip one of the 12 required E2E specs without execution receipt",
+        "expectedFailureCode": "E2E_SPEC_SKIPPED_OR_UNCOUNTED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "E2E_SPEC_SKIPPED_OR_UNCOUNTED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 4
+      },
+      {
+        "mutationId": "M63",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Inject cross-niche product ('Car Fender Panel Dent Edge Repair Tools') into Pet Gadgets HOLDOUT Top-3 shortlist",
+        "expectedFailureCode": "CROSS_NICHE_FALSE_POSITIVE_IN_TOP3",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CROSS_NICHE_FALSE_POSITIVE_IN_TOP3"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M64",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Pad < 3 niche-matched DEV shortlist with MISMATCH or UNCERTAIN candidates ('Auto Detailing Putty Gel')",
+        "expectedFailureCode": "SHORTLIST_PADDED_WITH_MISMATCH_OR_UNCERTAIN",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SHORTLIST_PADDED_WITH_MISMATCH_OR_UNCERTAIN"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M65",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Hardcode 'Pet Gadgets' so cross-niche input ('Kitchen Gadgets') is ignored",
+        "expectedFailureCode": "NICHE_PARAMETER_IGNORED_HARDCODED_PET_GADGETS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "NICHE_PARAMETER_IGNORED_HARDCODED_PET_GADGETS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M66",
+        "targetFile": "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+        "description": "Claim FINAL_RELEASE='FULL_ACCEPTANCE' in 9-verdict matrix while Walmart is BLOCKED_PROVIDER and G15 is INSUFFICIENT_EVIDENCE",
+        "expectedFailureCode": "FINAL_RELEASE_FALSE_FULL_ACCEPTANCE",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "FINAL_RELEASE_FALSE_FULL_ACCEPTANCE"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 2
+      },
+      {
+        "mutationId": "M67",
+        "targetFile": "11_DEV_BACKTEST_SUMMARY.json",
+        "description": "Allow post-cutoff joined ResearchProduct metadata to leak into point-in-time DEV replay",
+        "expectedFailureCode": "POST_CUTOFF_JOINED_METADATA_OR_NICHE_LEAK",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "POST_CUTOFF_JOINED_METADATA_OR_NICHE_LEAK"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 5
+      },
+      {
+        "mutationId": "M68",
+        "targetFile": "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+        "description": "Alter sourceSha in an E2E execution receipt so it drifts from TESTED_SOURCE_SHA",
+        "expectedFailureCode": "TESTED_SHA_DRIFT_IN_E2E_RECEIPTS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "TESTED_SHA_DRIFT_IN_E2E_RECEIPTS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 4
+      },
+      {
+        "mutationId": "M69",
+        "targetFile": "17_DISK_RAM_OWNED_PROCESS_LEDGER.json",
+        "description": "Report orphanedOwnedProcessesAfterRun > 0 in bounded async DAG ledger",
+        "expectedFailureCode": "ORPHANED_PROCESSES_IN_BOUNDED_DAG",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "ORPHANED_PROCESSES_IN_BOUNDED_DAG"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 4
+      },
+      {
+        "mutationId": "M70",
+        "targetFile": "03_LEGACY_17_ASSERTION_COMPARISON.json",
+        "description": "Omit baseline failing assertions from 17-assertion differential proof",
+        "expectedFailureCode": "BASELINE_DIFF_PROOF_MISSING_17_ASSERTIONS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "BASELINE_DIFF_PROOF_MISSING_17_ASSERTIONS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 11
+      },
+      {
+        "mutationId": "M71",
+        "targetFile": "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "description": "Conflate historical stored snapshot G16 evaluation (2/3) with current live run verification",
+        "expectedFailureCode": "HISTORICAL_SNAPSHOT_CONFLATED_WITH_CURRENT_LIVE_G16",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_SNAPSHOT_CONFLATED_WITH_CURRENT_LIVE_G16"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M72",
+        "targetFile": "11_DEV_BACKTEST_SUMMARY.json",
+        "description": "Mislabel DEV window with 0 niche-matched products as SUFFICIENT_NICHE_COVERAGE",
+        "expectedFailureCode": "DEV_INSUFFICIENT_NICHE_COVERAGE_MISLABELED_SUFFICIENT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DEV_INSUFFICIENT_NICHE_COVERAGE_MISLABELED_SUFFICIENT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 8
+      },
+      {
+        "mutationId": "M73",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Promote URL-path-only (/products/<slug>) ad-only candidate to identityStatus='VERIFIED' without independent merchant proof",
+        "expectedFailureCode": "HISTORICAL_IDENTITY_URL_PATH_ONLY_PROMOTED_TO_VERIFIED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_IDENTITY_URL_PATH_ONLY_PROMOTED_TO_VERIFIED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M74",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Promote CheckoutChamp funnel cc.uprootclean.com/main/phr to identityStatus='VERIFIED'",
+        "expectedFailureCode": "CHECKOUT_CHAMP_FUNNEL_PROMOTED_TO_VERIFIED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_IDENTITY_URL_PATH_ONLY_PROMOTED_TO_VERIFIED",
+          "CHECKOUT_CHAMP_FUNNEL_PROMOTED_TO_VERIFIED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 7
+      },
+      {
+        "mutationId": "M75",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Mislabel HOLDOUT shortlist with 0 verified identities as SUFFICIENT_VERIFIED_IDENTITY",
+        "expectedFailureCode": "HISTORICAL_IDENTITY_COVERAGE_MISLABELED_SUFFICIENT",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_IDENTITY_COVERAGE_MISLABELED_SUFFICIENT"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 4
+      },
+      {
+        "mutationId": "M76",
+        "targetFile": "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "description": "Label discovery-only candidate reason as 'Verified Pet Gadgets product' or copy discovery_ad: ref into independentMerchantProofRefs",
+        "expectedFailureCode": "DISCOVERY_CANDIDATE_MISLABELED_AS_VERIFIED_IN_REASON_OR_REFS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "DISCOVERY_CANDIDATE_MISLABELED_AS_VERIFIED_IN_REASON_OR_REFS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M77",
+        "targetFile": "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "description": "Re-enable synthetic runtime G16 hydration (obs_<runId>_<candId>, req_<runId>, or jsonld:<domain>)",
+        "expectedFailureCode": "SYNTHETIC_G16_HYDRATION_OR_FABRICATED_OBSERVATION_USED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SYNTHETIC_G16_HYDRATION_OR_FABRICATED_OBSERVATION_USED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M78",
+        "targetFile": "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "description": "Claim verifiedLiveMerchantsCount=2 (PARTIAL_2_OF_3) when verifiedFromPersistedEvidenceCount=0",
+        "expectedFailureCode": "UNRECONSTRUCTABLE_SNAPSHOT_G16_CLAIMED_AS_PERSISTED_VERIFIED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UNRECONSTRUCTABLE_SNAPSHOT_G16_CLAIMED_AS_PERSISTED_VERIFIED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M79",
+        "targetFile": "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "description": "Accept cross-workspace LandingPageSnapshot as persisted G16 merchant proof",
+        "expectedFailureCode": "CROSS_WORKSPACE_MERCHANT_PROOF_ACCEPTED_IN_G16",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "CROSS_WORKSPACE_MERCHANT_PROOF_ACCEPTED_IN_G16"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 5
+      },
+      {
+        "mutationId": "M80",
+        "targetFile": "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+        "description": "Claim HISTORICAL_VERIFIED_IDENTITY_COVERAGE='SUFFICIENT_VERIFIED_IDENTITY' when holdoutVerifiedIdentityCount=0",
+        "expectedFailureCode": "HISTORICAL_IDENTITY_TRUTH_VERDICT_FALSE_PASS",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HISTORICAL_IDENTITY_TRUTH_VERDICT_FALSE_PASS"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M81",
+        "targetFile": "02_PRISMA_FIELD_CONTRACT_AND_REAL_SOURCE_MAP.json",
+        "description": "Reintroduce imaginary Prisma column accesses (lp.productTitle, lp.canonicalUrl, lp.capturedAt, prod.workspaceId)",
+        "expectedFailureCode": "IMAGINARY_PRISMA_COLUMNS_USED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "IMAGINARY_PRISMA_COLUMNS_USED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 6
+      },
+      {
+        "mutationId": "M82",
+        "targetFile": "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+        "description": "Promote LandingPageSnapshot with pageTitle/url/contentHash only (no parseable Product JSON-LD in rawExcerpt) to VERIFIED",
+        "expectedFailureCode": "HASH_OR_TITLE_ONLY_SNAPSHOT_PROMOTED_TO_JSONLD",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "HASH_OR_TITLE_ONLY_SNAPSHOT_PROMOTED_TO_JSONLD"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 5
+      },
+      {
+        "mutationId": "M83",
+        "targetFile": "03_LANDING_SNAPSHOT_REAL_PRODUCT_SCHEMA_PROOF_AUDIT.json",
+        "description": "Allow bare caller-supplied boolean flags (schemaVerified:true, hasJsonLdProduct:true) without raw source + SHA-256",
+        "expectedFailureCode": "BARE_BOOLEAN_SCHEMA_BYPASS_ALLOWED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "BARE_BOOLEAN_SCHEMA_BYPASS_ALLOWED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M84",
+        "targetFile": "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+        "description": "Rebrand unverified persisted AdObservation + DiscoveryRunAd rows as provenance='LIVE_PROVIDER'",
+        "expectedFailureCode": "UNVERIFIED_DB_OBSERVATION_REBRANDED_AS_LIVE_PROVIDER",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UNVERIFIED_DB_OBSERVATION_REBRANDED_AS_LIVE_PROVIDER"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 4
+      },
+      {
+        "mutationId": "M85",
+        "targetFile": "04_G16_IMMUTABLE_ORIGIN_OBSERVATION_PROVENANCE.json",
+        "description": "Accept DiscoveryRunAd.ingestOutcome=EXISTING or DETERMINISTIC_FALLBACK as live G16 observation",
+        "expectedFailureCode": "NON_LIVE_INGEST_OR_FALLBACK_ACCEPTED_IN_G16",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "NON_LIVE_INGEST_OR_FALLBACK_ACCEPTED_IN_G16"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 7
+      },
+      {
+        "mutationId": "M86",
+        "targetFile": "06_G16_NEGATIVE_AND_POSITIVE_TEST_RECEIPTS.json",
+        "description": "Drop a case from the 39-case G16 schema and origin matrix (M01..M17, L01..L16, P01..P06)",
+        "expectedFailureCode": "G16_SCHEMA_ORIGIN_MATRIX_INCOMPLETE_OR_FAILED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "G16_SCHEMA_ORIGIN_MATRIX_INCOMPLETE_OR_FAILED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M87",
+        "targetFile": "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "description": "Claim verifiedFromPersistedEvidenceCount=2 when candidates have 0 live observations and non-zero unverifiedPersistedOriginCount",
+        "expectedFailureCode": "G16_PERSISTED_ORIGIN_CONTRADICTION",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "UNRECONSTRUCTABLE_SNAPSHOT_G16_CLAIMED_AS_PERSISTED_VERIFIED",
+          "G16_PERSISTED_ORIGIN_CONTRADICTION"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      },
+      {
+        "mutationId": "M88",
+        "targetFile": "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+        "description": "Mark PERSISTED_SCHEMA_TRUTH_ENFORCEMENT or LIVE_OBSERVATION_ORIGIN_ENFORCEMENT as FAIL in verdictMatrix",
+        "expectedFailureCode": "SCHEMA_OR_ORIGIN_ENFORCEMENT_VERDICT_FAILED",
+        "observedVerdict": "FAIL",
+        "observedFailureCodes": [
+          "SCHEMA_OR_ORIGIN_ENFORCEMENT_VERDICT_FAILED"
+        ],
+        "caughtExpectedCode": true,
+        "durationMs": 3
+      }
+    ]
+  }
+}

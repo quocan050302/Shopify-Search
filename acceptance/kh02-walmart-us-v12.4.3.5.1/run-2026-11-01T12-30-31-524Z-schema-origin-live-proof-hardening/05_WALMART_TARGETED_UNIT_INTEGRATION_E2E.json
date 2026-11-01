@@ -1,0 +1,75 @@
+{
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:58.608Z",
+  "waveAUnit": {
+    "passed": true,
+    "totalTests": 32,
+    "passedTests": 32,
+    "failedTests": 0,
+    "durationMs": 4688
+  },
+  "waveBIntegration": {
+    "passed": true,
+    "totalTests": 70,
+    "passedTests": 70,
+    "failedTests": 0,
+    "durationMs": 13556
+  },
+  "waveDChromiumUiAndReloadParity": {
+    "wave": "WAVE_D_HEADLESS_CHROMIUM_UI_AND_RELOAD_PARITY",
+    "codeSha": "2b80880974505988ef915496eeb414488b3475e2",
+    "realChromiumVerified": true,
+    "browserEngine": "Playwright Headless Chromium",
+    "evidenceOrigin": "TEST_FIXTURE",
+    "claimedAsLiveWalmartProductConfirmation": false,
+    "workspaceId": "acceptance_v12_2_4_ws",
+    "researchRunId": "kh02_wmt_ui_parity_1793536490672",
+    "candidateId": "cand_ui_chomchom_674275778",
+    "disabledStateAudit": {
+      "serverFlagEnabled": false,
+      "renderedDisabledReason": "Server pilot disabled",
+      "renderedKeyRequired": false
+    },
+    "domBeforeReload": {
+      "candidateId": "cand_ui_chomchom_674275778",
+      "runId": "kh02_wmt_ui_parity_1793536490672",
+      "queryStatus": "SUCCEEDED",
+      "presence": "FOUND",
+      "matchLevel": "EXACT",
+      "itemId": "674275778",
+      "canonicalWalmartUrl": "https://www.walmart.com/ip/674275778",
+      "upc": "856957004000",
+      "priceDisplay": "$24.99 USD",
+      "seller": "Walmart.com",
+      "locationPostalCode": "95829",
+      "availability": "IN_STOCK",
+      "observedAt": "2026-11-01T12:34:50.698Z",
+      "evidenceOrigin": "TEST_FIXTURE"
+    },
+    "domAfterReload": {
+      "candidateId": "cand_ui_chomchom_674275778",
+      "runId": "kh02_wmt_ui_parity_1793536490672",
+      "queryStatus": "SUCCEEDED",
+      "presence": "FOUND",
+      "matchLevel": "EXACT",
+      "itemId": "674275778",
+      "canonicalWalmartUrl": "https://www.walmart.com/ip/674275778",
+      "upc": "856957004000",
+      "priceDisplay": "$24.99 USD",
+      "seller": "Walmart.com",
+      "locationPostalCode": "95829",
+      "availability": "IN_STOCK",
+      "observedAt": "2026-11-01T12:34:50.698Z",
+      "evidenceOrigin": "TEST_FIXTURE"
+    },
+    "reloadParity": {
+      "parityPassed": true,
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "researchRunId": "kh02_wmt_ui_parity_1793536490672",
+      "checkedCandidatesCount": 1,
+      "mismatches": []
+    },
+    "nonInflationDisclaimerPresentInPage": false,
+    "durationMs": 7583
+  }
+}

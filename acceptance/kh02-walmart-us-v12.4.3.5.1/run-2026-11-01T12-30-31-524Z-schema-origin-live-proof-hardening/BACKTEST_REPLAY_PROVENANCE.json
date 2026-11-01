@@ -1,0 +1,34 @@
+{
+  "version": "12.4.3.5.1",
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:59.300Z",
+  "niche": "Pet Gadgets",
+  "policyScenarioVerdict": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "temporalPartitions": {
+    "devWindow": {
+      "start": "2026-06-01T00:00:00.000Z",
+      "end": "2026-10-24T00:00:00.000Z"
+    },
+    "holdoutWindow": {
+      "start": "2026-10-24T00:00:00.000Z",
+      "end": "2026-10-30T12:00:00.000Z"
+    },
+    "zeroOverlapVerified": true,
+    "devRecordsEvaluated": 60,
+    "holdoutRecordsEvaluated": 377,
+    "devDatasetFingerprintSha256": "f9e80915cea9901a325fec6da7c8654cf37ffcec1a0aea29be60b120f067a72c",
+    "holdoutDatasetFingerprintSha256": "3e677412e40dc8850911b597712c12c8209f58cec1f212bb8ea57a3f33be26b5",
+    "devShortlistCount": 0,
+    "devShortlistNicheMatchedCount": 0,
+    "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "holdoutShortlistCount": 3,
+    "holdoutShortlistNicheMatchedCount": 3,
+    "holdoutNicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+    "walmartPointInTimeVacuousAsHistoricalParityProof": true,
+    "zeroFutureLeakageVerified": true
+  }
+}

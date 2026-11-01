@@ -1,0 +1,9 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "codeSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "knownLimits": [
+    "Unauthenticated Jina Reader REST (r.jina.ai) is subject to upstream IP rate limiting and Walmart anti-bot challenges ('Robot or human?'); pilot caps requests at <= 6/60s and <= 4 logical operations/run and fails closed with RATE_LIMITED or BLOCKED_PROVIDER.",
+    "Observed Walmart PDP prices and inventory reflect the edge/store location observed by Jina Reader (e.g. ZIP 95829 / Store 3081) and are never treated as nationwide US price or inventory.",
+    "Walmart US evidence is a marketplace context dimension only and never inflates KH-02 winning scores, 60-day demand status, or source-diversity gates."
+  ]
+}

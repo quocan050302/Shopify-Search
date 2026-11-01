@@ -1,0 +1,126 @@
+{
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:59.478Z",
+  "totalLandingPageSnapshotsInDb": 5,
+  "hashOrTitleOnlyPromotedCount": 0,
+  "validJsonLdProductSnapshotsCount": 0,
+  "rawSourceNotReconstructableCount": 0,
+  "bareBooleanBypassRejected": true,
+  "snapshotsEvaluated": [
+    {
+      "id": "cmvma7q8z00078jg9u66frkz7",
+      "workspaceId": "ws_kh01_e2e_acceptance",
+      "productId": "cmvf78dof00094og95upm1v9z",
+      "originalUrl": "https://bleame.com/products/crystal-hair-eraser",
+      "finalUrl": "https://bleame.com/products/crystal-hair-eraser",
+      "httpStatus": 200,
+      "accessStatus": "SUCCESS",
+      "pageTitle": "Bleame Crystal Hair Eraser",
+      "contentHash": "4537bfcccb0478296a96aa18d2a9e63ce7fefdae76ef64386f1b231d4e922abe",
+      "hasObservationsJson": true,
+      "observedAt": "2026-10-24T10:54:35.170Z",
+      "extractedHasJsonLdProduct": false,
+      "extractedSchemaVerified": false,
+      "validationStatus": "RAW_SOURCE_HASH_TAMPERED",
+      "validForG16": false,
+      "validForHistoricalVerified": false,
+      "rejectionReasons": [
+        "RAW_SOURCE_SHA256_MISMATCH: expected=4537bfcccb0478296a96aa18d2a9e63ce7fefdae76ef64386f1b231d4e922abe, computed=bf68313234bcb0be2cb042207a844d1e2673f62d7fa08095a0b9b99ac888d5f8"
+      ],
+      "classifiedIdentityStatus": "PROBABLE",
+      "classifiedEvidenceStatus": "DISCOVERY_ONLY"
+    },
+    {
+      "id": "cmvmbttgm0009m1g93yd7ck0t",
+      "workspaceId": "ws_perf_check",
+      "productId": "cmvmbtssi0003m1g9kow02t13",
+      "originalUrl": "https://cc.uprootclean.com/main/phr",
+      "finalUrl": "https://cc.uprootclean.com/main/phr",
+      "httpStatus": 200,
+      "accessStatus": "SUCCESS",
+      "pageTitle": "Uproot",
+      "contentHash": "4e75d465539e5890d665251d7872c488b1de49f5c656b4281f426453ff43f4f9",
+      "hasObservationsJson": true,
+      "observedAt": "2026-10-24T11:39:45.381Z",
+      "extractedHasJsonLdProduct": false,
+      "extractedSchemaVerified": false,
+      "validationStatus": "RAW_SOURCE_HASH_TAMPERED",
+      "validForG16": false,
+      "validForHistoricalVerified": false,
+      "rejectionReasons": [
+        "RAW_SOURCE_SHA256_MISMATCH: expected=4e75d465539e5890d665251d7872c488b1de49f5c656b4281f426453ff43f4f9, computed=77b29a28d2d1870280c6ca259b80c5860af69f145128fc5b35d4b102c2688ef1"
+      ],
+      "classifiedIdentityStatus": "PROBABLE",
+      "classifiedEvidenceStatus": "FUNNEL_UNVERIFIED"
+    },
+    {
+      "id": "cmvtofwcj004t3ng9gbhdc8p1",
+      "workspaceId": "default-workspace",
+      "productId": "cand_453563126",
+      "originalUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "finalUrl": "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+      "httpStatus": 200,
+      "accessStatus": "SUCCESS",
+      "pageTitle": "UAHPET Fresh Food Automatic Pet Feeder",
+      "contentHash": "uahpet_lp_hash_v12_4_3_3",
+      "hasObservationsJson": true,
+      "observedAt": "2026-10-29T15:07:14.179Z",
+      "extractedHasJsonLdProduct": false,
+      "extractedSchemaVerified": false,
+      "validationStatus": "SYNTHETIC_OR_FIXTURE_REJECTED",
+      "validForG16": false,
+      "validForHistoricalVerified": false,
+      "rejectionReasons": [
+        "SYNTHETIC_OR_TEST_FIXTURE_LANDING_SNAPSHOT_ROW"
+      ],
+      "classifiedIdentityStatus": "PROBABLE",
+      "classifiedEvidenceStatus": "DISCOVERY_ONLY"
+    },
+    {
+      "id": "cmvtpcx7t00015qg9ac0cdd0m",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "productId": "cand_361664484",
+      "originalUrl": "https://wishinglams.us/products/snowball-fun-maker-set",
+      "finalUrl": "https://wishinglams.us/products/snowball-fun-maker-set",
+      "httpStatus": 200,
+      "accessStatus": "SUCCESS",
+      "pageTitle": "Cithway® Snowball Fun Maker Set &ndash;  Wishinglams",
+      "contentHash": "848a8917cfb717d16eb7741b8058692534c1e255283e854d95dad24ade42d6b4",
+      "hasObservationsJson": true,
+      "observedAt": "2026-10-29T15:32:54.952Z",
+      "extractedHasJsonLdProduct": false,
+      "extractedSchemaVerified": false,
+      "validationStatus": "RAW_SOURCE_HASH_TAMPERED",
+      "validForG16": false,
+      "validForHistoricalVerified": false,
+      "rejectionReasons": [
+        "RAW_SOURCE_SHA256_MISMATCH: expected=848a8917cfb717d16eb7741b8058692534c1e255283e854d95dad24ade42d6b4, computed=cab7f674e8c0eb3706b91592d8f29ae6ac35c591b3c1b9d48e28bcd50a45ccd0"
+      ],
+      "classifiedIdentityStatus": "PROBABLE",
+      "classifiedEvidenceStatus": "DISCOVERY_ONLY"
+    },
+    {
+      "id": "cmvtpd9h600045qg9ozjibsaz",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "productId": "cand_361664484",
+      "originalUrl": "https://wishinglams.us/products/snowball-fun-maker-set",
+      "finalUrl": "https://wishinglams.us/products/snowball-fun-maker-set",
+      "httpStatus": 200,
+      "accessStatus": "SUCCESS",
+      "pageTitle": "Cithway® Snowball Fun Maker Set &ndash;  Wishinglams",
+      "contentHash": "848a8917cfb717d16eb7741b8058692534c1e255283e854d95dad24ade42d6b4",
+      "hasObservationsJson": true,
+      "observedAt": "2026-10-29T15:33:10.842Z",
+      "extractedHasJsonLdProduct": false,
+      "extractedSchemaVerified": false,
+      "validationStatus": "RAW_SOURCE_HASH_TAMPERED",
+      "validForG16": false,
+      "validForHistoricalVerified": false,
+      "rejectionReasons": [
+        "RAW_SOURCE_SHA256_MISMATCH: expected=848a8917cfb717d16eb7741b8058692534c1e255283e854d95dad24ade42d6b4, computed=cab7f674e8c0eb3706b91592d8f29ae6ac35c591b3c1b9d48e28bcd50a45ccd0"
+      ],
+      "classifiedIdentityStatus": "PROBABLE",
+      "classifiedEvidenceStatus": "DISCOVERY_ONLY"
+    }
+  ]
+}

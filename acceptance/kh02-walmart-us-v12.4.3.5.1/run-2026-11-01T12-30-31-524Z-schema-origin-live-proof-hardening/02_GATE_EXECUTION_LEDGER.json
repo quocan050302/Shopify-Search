@@ -1,0 +1,119 @@
+{
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:59.563Z",
+  "requiredGateIds": [
+    "WAVE_A_UNIT",
+    "WAVE_B_INTEGRATION_AND_REGRESSION",
+    "WAVE_C_TYPECHECK_AND_BUILD",
+    "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+    "WAVE_E_LIVE_JINA_PROBE",
+    "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+    "WAVE_H_FULL_REPOSITORY_REGRESSION"
+  ],
+  "completion": {
+    "complete": true,
+    "passed": true,
+    "missing": [],
+    "invalid": [],
+    "evaluatedGateCount": 7
+  },
+  "allRequiredWavesPassed": true,
+  "gates": [
+    {
+      "id": "WAVE_A_UNIT",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:30:36.874Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "05_WALMART_TARGETED_UNIT_INTEGRATION_E2E.json",
+      "exitCode": 0,
+      "durationMs": 4688,
+      "measurements": {
+        "totalTests": 32,
+        "passedTests": 32
+      }
+    },
+    {
+      "id": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:30:56.675Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "09_SCORE_AND_GATE_NON_INFLATION_AUDIT.json",
+      "exitCode": 0,
+      "durationMs": 13556,
+      "measurements": {
+        "totalTests": 70,
+        "passedTests": 70,
+        "nonInflationCandidatesCompared": 3
+      }
+    },
+    {
+      "id": "WAVE_C_TYPECHECK_AND_BUILD",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:33:20.777Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "exitCode": 0,
+      "durationMs": 40794
+    },
+    {
+      "id": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:34:59.563Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+      "exitCode": 0,
+      "durationMs": 7583
+    },
+    {
+      "id": "WAVE_E_LIVE_JINA_PROBE",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:32:56.996Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "10_LIVE_WALMART_JINA_PILOT_EVIDENCE.json",
+      "exitCode": 0,
+      "durationMs": 6205,
+      "measurements": {
+        "probeExecutionStatus": "DID_RUN",
+        "classificationIntegrityStatus": "PASS",
+        "liveProviderStatus": "BLOCKED_PROVIDER"
+      }
+    },
+    {
+      "id": "WAVE_F_REAL_BACKTEST_AND_POINT_IN_TIME_AUDIT",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:34:59.300Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "11_DEV_BACKTEST_SUMMARY.json",
+      "exitCode": 0,
+      "durationMs": 608
+    },
+    {
+      "id": "WAVE_H_FULL_REPOSITORY_REGRESSION",
+      "required": true,
+      "executionStatus": "PASS",
+      "observedAt": "2026-11-01T12:34:59.563Z",
+      "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+      "sourceArtifact": "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+      "exitCode": 0,
+      "durationMs": 250375,
+      "measurements": {
+        "totalDiscoveredTestFiles": 153,
+        "executedTestFilesCount": 153,
+        "excludedOrDeferredFilesCount": 0,
+        "targetedOnly": false,
+        "inventoryComplete": true,
+        "totalExecutedTestCases": 1757,
+        "passedTestCases": 1757,
+        "failedTestCases": 0,
+        "requiredActiveSuiteFailedTestCases": 0,
+        "baselineKnownPolicySupersededTestCases": 0,
+        "newRegressionTestCases": 0
+      }
+    }
+  ]
+}

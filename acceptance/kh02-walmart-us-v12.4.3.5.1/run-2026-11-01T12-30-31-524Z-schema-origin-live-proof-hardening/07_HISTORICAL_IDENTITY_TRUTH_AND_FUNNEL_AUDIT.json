@@ -1,0 +1,164 @@
+{
+  "sourceSha": "2b80880974505988ef915496eeb414488b3475e2",
+  "evaluatedAt": "2026-11-01T12:34:59.300Z",
+  "niche": "Pet Gadgets",
+  "devWindow": {
+    "windowStart": "2026-06-01T00:00:00.000Z",
+    "windowEnd": "2026-10-24T00:00:00.000Z",
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "nicheFunnel": {
+      "sourceAdsCount": 60,
+      "excludedFixtureOrQuarantineAdsCount": 40,
+      "pointInTimeAdsCount": 20,
+      "reconstructedCandidatesCount": 5,
+      "matchedCount": 0,
+      "mismatchCount": 4,
+      "uncertainCount": 1,
+      "identityVerifiedOrProbableCount": 2,
+      "identityVerifiedCount": 0,
+      "provisionalDiscoveryCount": 0,
+      "funnelProbableCount": 0,
+      "distinctMatchedFamiliesCount": 0,
+      "shortlistedCount": 0,
+      "shortlistShortfallCount": 3
+    }
+  },
+  "holdoutWindow": {
+    "windowStart": "2026-10-24T00:00:00.000Z",
+    "windowEnd": "2026-10-30T12:00:00.000Z",
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "nicheFunnel": {
+      "sourceAdsCount": 377,
+      "excludedFixtureOrQuarantineAdsCount": 1,
+      "pointInTimeAdsCount": 376,
+      "reconstructedCandidatesCount": 318,
+      "matchedCount": 3,
+      "mismatchCount": 153,
+      "uncertainCount": 162,
+      "identityVerifiedOrProbableCount": 208,
+      "identityVerifiedCount": 0,
+      "provisionalDiscoveryCount": 3,
+      "funnelProbableCount": 1,
+      "distinctMatchedFamiliesCount": 3,
+      "shortlistedCount": 3,
+      "shortlistShortfallCount": 0
+    }
+  },
+  "devShortlistCount": 0,
+  "devNicheMatchedCount": 0,
+  "devShortlistShortfallCount": 3,
+  "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+  "devVerifiedIdentityCount": 0,
+  "devIdentityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+  "holdoutShortlistCount": 3,
+  "holdoutNicheMatchedCount": 3,
+  "holdoutShortlistShortfallCount": 0,
+  "holdoutNicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+  "holdoutVerifiedIdentityCount": 0,
+  "holdoutFunnelProbableCount": 1,
+  "holdoutIdentityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+  "urlPathOnlyPromotedToVerifiedCount": 0,
+  "funnelPromotedToVerifiedCount": 0,
+  "discoveryRefsCopiedToIndependentProofCount": 0,
+  "paddedWithMismatchOrUncertainCount": 0,
+  "crossNicheFalsePositivesInDevTop3": 0,
+  "crossNicheFalsePositivesInHoldoutTop3": 0,
+  "devTop3": [],
+  "holdoutTop3": [
+    {
+      "candidateId": "cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+      "title": "Automatic Dog Feeder for Easy Daily Meals",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kingspetboutique.info",
+      "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+      "familyKey": "automatic_pet_feeder",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+      "title": "The #1 Vet-Recommended Cat Fountain",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+      "familyKey": "pet_water_fountain",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+      "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "FUNNEL_UNVERIFIED",
+      "isCheckoutChampFunnel": true,
+      "identityReasonCodes": [
+        "CHECKOUTCHAMP_OR_FUNNEL_UNVERIFIED_WITHOUT_ROOT_JSON_LD"
+      ],
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "familyKey": "pet_hair_remover_roller",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+        "domain:cc.uprootclean.com",
+        "url:https://cc.uprootclean.com/main/phr"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+        "domain:cc.uprootclean.com",
+        "url:https://cc.uprootclean.com/main/phr"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    }
+  ],
+  "crossNicheInputVerification": {
+    "testedNiche": "Kitchen Gadgets",
+    "drivenByInputNiche": true,
+    "kitchenGadgetsMatchedCount": 2,
+    "kitchenGadgetsRejectedPetCount": 2,
+    "selectedKitchenTitles": [
+      "Pro Mandoline Vegetable Slicer Chopper",
+      "Digital Instant Read Meat Thermometer"
+    ]
+  },
+  "bareBooleanCallerOverrideRejected": true
+}

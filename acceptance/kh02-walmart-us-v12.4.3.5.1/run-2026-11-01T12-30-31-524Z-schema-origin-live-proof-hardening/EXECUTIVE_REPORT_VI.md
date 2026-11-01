@@ -1,0 +1,39 @@
+# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Persisted Schema Truth + Authentic Live Provenance + Strict G16 Closure)
+
+- **Nhánh (Branch)**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Commit Mã Nguồn Đã Test (`TESTED_SOURCE_SHA`)**: `2b80880974505988ef915496eeb414488b3475e2` (Tree SHA: `68a9854eaf9fc6e5badea420a86ddf81949aa339`)
+- **Quan Hệ Với `origin/QA` & `origin/master`**: `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`) và `origin/master` (`5dd5128b4ec9ce70e957a2f250b9012a25e9118c`) chia sẻ cùng git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`.
+- **Sửa Dứt Điểm P0-A, P0-B, P0-C (Persisted Schema Truth & Authentic Live Observation Provenance)**:
+  - **P0-A (`merchantIdentityPolicy.ts` + `acceptanceTruth.ts` + `runBacktestV12_4_3_4_2.ts`)**: Xóa bỏ hoàn toàn suy diễn `Boolean(lp.productTitle && lp.canonicalUrl && lp.contentHash) => schemaVerified=true / hasJsonLdProduct=true` và loại bỏ toàn bộ 10 truy cập cột Prisma không tồn tại (`ev.evidenceType`, `lp.productTitle`, `lp.canonicalUrl`, `lp.capturedAt`, `os.offerUrl`, `os.priceText`, `os.priceAmount`, `os.capturedAt`, `prod.workspaceId`, `prod.storeDomain`). Triển khai `extractPersistedMerchantProofsFromDbRows`, `parseAndValidateProductSchemaPayload`, và `validatePersistedMerchantProofRecord` đọc đúng cột Prisma (`lp.pageTitle`, `lp.url`/`lp.finalUrl`, `lp.rawExcerpt`, `lp.fetchedAt`, `ev.sourceType`, `ev.payload`, `prod.store.domain`), yêu cầu nội dung nguồn thô có thể parse thành `@type: "Product"`/`"ProductGroup"` JSON-LD (hoặc `SHOPIFY_PRODUCT_JSON`/`VERIFIED_MERCHANT_API`) và khớp SHA-256 (`CONTENT_VALIDATED_WITH_SOURCE`). Nếu chỉ có hash mà không có nội dung nguồn (`rawExcerpt = null`), trả về `RAW_SOURCE_NOT_RECONSTRUCTABLE` và giữ nguyên `PROBABLE`. Chặn mọi cờ boolean `schemaVerified: true` / `hasJsonLdProduct: true` truyền trực tiếp nếu thiếu nguồn thô + SHA-256.
+  - **P0-B (`merchantIdentityPolicy.ts` + `acceptanceTruth.ts` + `g16CandidateEvaluator.ts`)**: Xóa bỏ hoàn toàn việc gán đè `provenance: "LIVE_PROVIDER"`, `sourceMode: "LIVE_PROVIDER"`, `isCached: false`, `isLiveRecord: true` khi nối bảng `AdObservation` + `DiscoveryRunAd`. Triển khai `classifyPersistedLiveObservation` kiểm tra nguồn gốc bất biến từ `DiscoveryRunAd.ingestOutcome === "NEW"` kết hợp `AdObservation.rawPayload` + `evidenceReference`. Khi bản ghi DB thiếu envelope nguồn live hợp lệ hoặc có `ingestOutcome = EXISTING/UPDATED`, trả về `PERSISTED_LIVE_ORIGIN_UNVERIFIED` và không bao giờ tính là quan sát live cho G16.
+  - **P0-C (`acceptanceTruth.ts` + `runBacktestV12_4_3_4_2.ts`)**: Truy vấn `ResearchProduct` với `include: { store: true, evidence: true, landingPageSnapshots: true, offerSnapshots: true }`, lấy domain từ `prod.store?.domain` và kiểm tra cô lập `workspaceId` trực tiếp trên từng bản ghi bằng chứng.
+- **Ma Trận Kiểm Thử G16 Schema & Origin (`M01..M17`, `L01..L16`, `P01..P06`)**:
+  - `merchantSchemaNegativeCount`: `17/17` PASS (`M01..M17`)
+  - `liveOriginNegativeCount`: `16/16` PASS (`L01..L16`)
+  - `positiveContractCount`: `6/6` PASS (`P01..P06`)
+  - Tổng hợp `runG16NegativeTests()`: `55/55` PASS (100%).
+- **Thực Thi Toàn Bộ 153/153 File Test (Bao Gồm 12/12 Spec E2E)**:
+  - Unit Suite (`107/107` file = `99` + `8`): `1543/1543` PASS (100%).
+  - Integration Suite (`34/34` file): `180/180` PASS (100%).
+  - E2E Matrix (`12/12` spec = `6` Vitest Integration E2E + `6` Playwright Browser E2E): `34/34` test case PASS (100%, `0` skipped, `0` failed).
+  - Tổng cộng: `153/153` file test thực thi (`1757/1757` test case PASS, `0` fail, `0` miễn trừ).
+- **Replay Lịch Sử DEV / HOLDOUT (`Pet Gadgets`)**:
+  - **DEV (`<= 2026-10-24`)**: `60` quan sát lịch sử -> `5` ứng viên tái tạo -> `shortlistCount = 0`, `verifiedIdentityCount = 0`, `nicheCoverageStatus = INSUFFICIENT_NICHE_COVERAGE`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+  - **HOLDOUT (`2026-10-24 .. 2026-10-30`)**: `377` quan sát lịch sử -> `318` ứng viên tái tạo -> `shortlistCount = 3`, `nicheMatchedCount = 3` (`nicheCoverageStatus = SUFFICIENT_NICHE_COVERAGE`), `verifiedIdentityCount = 0`, `funnelProbableCount = 1`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+- **Ma Trận Verdict Tách Bạch & 88 Đột Biến Âm Tính (Negative Mutations)**:
+  - `ENGINEERING_TESTS`: `PASS`
+  - `BROAD_REGRESSION`: `PASS`
+  - `REQUIRED_E2E_COVERAGE`: `PASS`
+  - `HISTORICAL_REPLAY_INTEGRITY`: `PASS`
+  - `NICHE_RELEVANCE`: `PASS`
+  - `HISTORICAL_PRODUCT_IDENTITY_TRUTH`: `PASS`
+  - `HISTORICAL_VERIFIED_IDENTITY_COVERAGE`: `INSUFFICIENT_VERIFIED_IDENTITY`
+  - `PERSISTED_PRODUCT_SCHEMA_PROOF`: `INSUFFICIENT_EVIDENCE`
+  - `PERSISTED_LIVE_ORIGIN_PROOF`: `INSUFFICIENT_EVIDENCE`
+  - `PERSISTED_SCHEMA_TRUTH_ENFORCEMENT`: `PASS`
+  - `LIVE_OBSERVATION_ORIGIN_ENFORCEMENT`: `PASS`
+  - `LIVE_PROVIDERS`: `WALMART_US=BLOCKED_PROVIDER`, `AMAZON_US=CREDENTIALS_REQUIRED`, `TIKTOK_US_G07=BLOCKED`
+  - `HISTORICAL_DEMAND_G15`: `INSUFFICIENT_EVIDENCE`
+  - `MERCHANT_TOP3_G16`: `INSUFFICIENT_EVIDENCE` (`previousSnapshotClaimedVerifiedCount = 2`, `verifiedFromPersistedEvidenceCount = 0`, `reconstructionStatus = HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE`)
+  - `FINAL_RELEASE`: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`
+  - Bộ đột biến âm tính trên file vật lý: `88/88` bị bắt chính xác (`0` false pass).

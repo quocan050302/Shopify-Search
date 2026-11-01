@@ -1,0 +1,12 @@
+{
+  "platform": "darwin",
+  "arch": "arm64",
+  "nodeVersion": "v22.22.3",
+  "cpuCount": 8,
+  "totalMemoryGiB": 16,
+  "freeDiskGiB": 21.11,
+  "diskThresholdGiB": 15,
+  "diskGuardPassed": true,
+  "maxOuterHeavyTestProcesses": 2,
+  "checkedAt": "2026-11-01T12:30:32.177Z"
+}
