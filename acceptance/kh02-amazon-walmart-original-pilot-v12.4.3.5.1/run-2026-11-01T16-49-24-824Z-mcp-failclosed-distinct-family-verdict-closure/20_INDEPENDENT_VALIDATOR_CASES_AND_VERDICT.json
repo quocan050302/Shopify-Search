@@ -1,0 +1,11 @@
+{
+  "overallVerdict": "PASS",
+  "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-amazon-walmart-original-pilot-v12.4.3.5.1/run-2026-11-01T16-49-24-824Z-mcp-failclosed-distinct-family-verdict-closure",
+  "validatedAt": "2026-11-01T16:51:55.916Z",
+  "expectedCodeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "checksExecuted": 108,
+  "checksPassed": 108,
+  "checksFailed": 0,
+  "failureCodes": [],
+  "failureDetails": []
+}

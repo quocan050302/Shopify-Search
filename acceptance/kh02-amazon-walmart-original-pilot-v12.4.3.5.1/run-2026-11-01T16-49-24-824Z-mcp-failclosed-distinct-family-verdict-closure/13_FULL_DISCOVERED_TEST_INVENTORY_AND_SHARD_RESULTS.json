@@ -1,0 +1,58 @@
+{
+  "sourceSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "evaluatedAt": "2026-11-01T16:51:49.753Z",
+  "zeroLegacyFailExemptionEnforced": true,
+  "totalDiscoveredTestFiles": 154,
+  "executedTestFilesCount": 154,
+  "excludedOrDeferredFilesCount": 0,
+  "targetedOnly": false,
+  "inventoryComplete": true,
+  "totalExecutedTestCases": 1800,
+  "passedTestCases": 1800,
+  "failedTestCases": 0,
+  "requiredActiveSuiteFailedTestCases": 0,
+  "baselineKnownPolicySupersededTestCases": 0,
+  "newRegressionTestCases": 0,
+  "shards": [
+    {
+      "shardId": "SHARD_UNIT_100_FILES",
+      "filesCount": 100,
+      "totalTests": 1508,
+      "passedTests": 1508,
+      "failedTests": 0,
+      "durationMs": 45504
+    },
+    {
+      "shardId": "SHARD_REPAIRED_LEGACY_UNIT_8_FILES",
+      "filesCount": 8,
+      "totalTests": 77,
+      "passedTests": 77,
+      "failedTests": 0,
+      "durationMs": 10007
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_1_17_FILES",
+      "filesCount": 17,
+      "totalTests": 104,
+      "passedTests": 104,
+      "failedTests": 0,
+      "durationMs": 21094
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_2_17_FILES",
+      "filesCount": 17,
+      "totalTests": 77,
+      "passedTests": 77,
+      "failedTests": 0,
+      "durationMs": 12768
+    },
+    {
+      "shardId": "SHARD_ALL_12_E2E_SPECS",
+      "filesCount": 12,
+      "totalTests": 34,
+      "passedTests": 34,
+      "failedTests": 0,
+      "durationMs": 41165
+    }
+  ]
+}

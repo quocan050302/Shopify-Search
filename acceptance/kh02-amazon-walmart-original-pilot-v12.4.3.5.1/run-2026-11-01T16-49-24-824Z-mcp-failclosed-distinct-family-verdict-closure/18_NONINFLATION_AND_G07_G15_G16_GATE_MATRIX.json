@@ -1,0 +1,1408 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "nonInflation": {
+    "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+    "nonInflationVerified": true,
+    "comparedCandidatesCount": 3,
+    "candidateSetMatch": true,
+    "providerPathExercised": true,
+    "walmartEvidenceRowsExercised": 3,
+    "scoreDeltaAbsMax": 0,
+    "confidenceDeltaAbsMax": 0,
+    "rankingChanged": false,
+    "gateChanges": 0,
+    "g15PromotedCount": 0,
+    "g16PromotedCount": 0,
+    "amazonNonInflation": {
+      "comparisonStatus": "COMPARED_ZERO_INFLATION",
+      "scoreDeltaAbsMax": 0,
+      "rankChanged": false,
+      "g07Changed": false,
+      "g15Changed": false,
+      "g16Changed": false
+    },
+    "walmartCandidateIdsOn": [
+      "cand_2112683702",
+      "cand_207368966",
+      "cand_1333881927"
+    ]
+  },
+  "gates": {
+    "g07": {
+      "gateId": "G07",
+      "verdict": "BLOCKED",
+      "evaluatedFromSource": "diagnoseKH02Source('TIKTOK_ADS')",
+      "reason": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available."
+    },
+    "g15": {
+      "gateId": "G15",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "requiredCoveredDays": 60,
+      "qualifiedProductsCount": 0,
+      "requiredQualifiedProductsCount": 3,
+      "totalDemandObservationsInDb": 0,
+      "evaluatedProducts": [
+        {
+          "candidateId": "cand_1151716850",
+          "title": "News Cordless Electric Garden Pruning Shears M",
+          "storeDomain": "pagemindvibe.com",
+          "familyKey": "pruning_shears_secateurs",
+          "sourceSplit": "STORED_RUN",
+          "authoritativeObservationsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "requiredDays": 60,
+          "missingDaysTo60": 60,
+          "earliestObservedAt": null,
+          "latestObservedAt": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "eligibleForEvergreen": false,
+          "g15Status": "INSUFFICIENT_EVIDENCE",
+          "reason": "Product 'News Cordless Electric Garden Pruning Shears M' has 0 authoritative demand observations covering 0/60 required days (60 days missing). Marketplace listing discovery does not substitute for 60d demand."
+        },
+        {
+          "candidateId": "cand_1181501375",
+          "title": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+          "storeDomain": "thecatladies.com",
+          "familyKey": "digestive_aid",
+          "sourceSplit": "STORED_RUN",
+          "authoritativeObservationsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "requiredDays": 60,
+          "missingDaysTo60": 60,
+          "earliestObservedAt": null,
+          "latestObservedAt": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "eligibleForEvergreen": false,
+          "g15Status": "INSUFFICIENT_EVIDENCE",
+          "reason": "Product 'Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter' has 0 authoritative demand observations covering 0/60 required days (60 days missing). Marketplace listing discovery does not substitute for 60d demand."
+        },
+        {
+          "candidateId": "cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+          "title": "Automatic Dog Feeder for Easy Daily Meals",
+          "storeDomain": "kingspetboutique.info",
+          "familyKey": "automatic_pet_feeder",
+          "sourceSplit": "HOLDOUT_BACKTEST",
+          "authoritativeObservationsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "requiredDays": 60,
+          "missingDaysTo60": 60,
+          "earliestObservedAt": null,
+          "latestObservedAt": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "eligibleForEvergreen": false,
+          "g15Status": "INSUFFICIENT_EVIDENCE",
+          "reason": "Product 'Automatic Dog Feeder for Easy Daily Meals' has 0 authoritative demand observations covering 0/60 required days (60 days missing). Marketplace listing discovery does not substitute for 60d demand."
+        },
+        {
+          "candidateId": "cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+          "title": "The #1 Vet-Recommended Cat Fountain",
+          "storeDomain": "kittyspout.com",
+          "familyKey": "pet_water_fountain",
+          "sourceSplit": "HOLDOUT_BACKTEST",
+          "authoritativeObservationsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "requiredDays": 60,
+          "missingDaysTo60": 60,
+          "earliestObservedAt": null,
+          "latestObservedAt": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "eligibleForEvergreen": false,
+          "g15Status": "INSUFFICIENT_EVIDENCE",
+          "reason": "Product 'The #1 Vet-Recommended Cat Fountain' has 0 authoritative demand observations covering 0/60 required days (60 days missing). Marketplace listing discovery does not substitute for 60d demand."
+        },
+        {
+          "candidateId": "cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+          "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+          "storeDomain": "cc.uprootclean.com",
+          "familyKey": "pet_hair_remover_roller",
+          "sourceSplit": "HOLDOUT_BACKTEST",
+          "authoritativeObservationsCount": 0,
+          "distinctObservationDatesCount": 0,
+          "coveredDays": 0,
+          "requiredDays": 60,
+          "missingDaysTo60": 60,
+          "earliestObservedAt": null,
+          "latestObservedAt": null,
+          "demandClass": "INSUFFICIENT_HISTORY",
+          "sourceAuthority": "UNKNOWN_SOURCE",
+          "eligibleForEvergreen": false,
+          "g15Status": "INSUFFICIENT_EVIDENCE",
+          "reason": "Product 'The #1 Pet Hair/Lint/Dust Cleaner' has 0 authoritative demand observations covering 0/60 required days (60 days missing). Marketplace listing discovery does not substitute for 60d demand."
+        }
+      ],
+      "reason": "ProductDemandObservation table has 0 rows (0/3 shortlisted candidates meet >=60d authoritative product-level longitudinal demand).",
+      "remediationGuidance": "Configure BIGQUERY_PROJECT_ID + GOOGLE_APPLICATION_CREDENTIALS (free sandbox) or import verified Google Trends Explore CSVs covering >=60 days per candidate product."
+    },
+    "g16": {
+      "gateId": "G16",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "snapshotFreshness": "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+      "reconstructionStatus": "RECONSTRUCTED_FROM_PERSISTED_DB",
+      "evaluatedRunId": "kh02_run_1793548810712_6px3e",
+      "evaluatedWorkspaceId": "acceptance_v12_2_4_ws",
+      "evaluatedRunCreatedAt": "2026-11-01T16:00:10.712Z",
+      "previousSnapshotClaimedVerifiedCount": 0,
+      "verifiedFromPersistedEvidenceCount": 0,
+      "newLiveVerifiedDuringThisRun": 0,
+      "verifiedLiveMerchantsCount": 0,
+      "requiredLiveMerchantsCount": 3,
+      "distinctFamiliesCount": 0,
+      "distinctCanonicalProductsCount": 0,
+      "candidates": [
+        {
+          "candidateId": "cand_1151716850",
+          "title": "News Cordless Electric Garden Pruning Shears M",
+          "storeDomain": "pagemindvibe.com",
+          "canonicalProductUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+          "canonicalProductKey": "pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+          "familyKey": "pruning_shears_secateurs",
+          "snapshotClaimedIdentityStatus": "PROBABLE",
+          "snapshotClaimedLiveVerified": false,
+          "identityStatus": "PROBABLE",
+          "verificationEvidenceStatus": "DISCOVERY_ONLY",
+          "productSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+          "proofMethod": "NONE",
+          "persistedProofRowIds": [],
+          "proofSourceObservedAt": null,
+          "originProofStatus": "INSUFFICIENT_EVIDENCE",
+          "authenticLiveObservationIds": [],
+          "matchingRunId": null,
+          "matchingWorkspaceId": "acceptance_v12_2_4_ws",
+          "isCheckoutChampFunnel": false,
+          "nicheRelevantToPetGadgets": false,
+          "nicheRelevanceReason": "Title 'News Cordless Electric Garden Pruning Shears M' on 'pagemindvibe.com' does not match target niche 'Pet Gadgets'.",
+          "authenticallyLive": false,
+          "sameRunLineage": false,
+          "candidateProductMatch": false,
+          "verifiedMerchantIdentity": false,
+          "nonFunnelStore": true,
+          "g16PredicateStatuses": {
+            "authenticallyLive": false,
+            "sameRunLineage": false,
+            "candidateProductMatch": false,
+            "verifiedMerchantIdentity": false,
+            "nonFunnelStore": true
+          },
+          "isLiveVerified": false,
+          "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+          "persistedRunAdIds": [
+            "cmvsav8wd006k0dg9f4kuh6vb"
+          ],
+          "persistedRunAdIngestOutcomes": [
+            "EXISTING"
+          ],
+          "persistedAdObservationIds": [
+            "cmvtpehh0002lxng9rc6s74f7",
+            "cmvy0nt9f000ngtg9w980d85k",
+            "cmvsav8we006n0dg9okpg6j86",
+            "cmvsc2iik003xdhg9mf0n889j",
+            "cmvscfi8o003xn7g9f20lmajs",
+            "cmvscp18s003xt8g957q6yyr7",
+            "cmvscwmk9003xshg9cwzm0uzb",
+            "cmvtpehh5002pxng9lw537m3m"
+          ],
+          "persistedLiveSameRunObservationIds": [],
+          "persistedMerchantProofRefs": [],
+          "rejectedCrossWorkspaceProofIds": [],
+          "rejectedSyntheticOrFallbackReasons": [
+            "All 1 DiscoveryRunAd rows for candidate 'cand_1151716850' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+            "Observation 'cmvy0nt9f000ngtg9w980d85k' carries origin='DETERMINISTIC_FALLBACK'.",
+            "AdObservation 'cmvtpehh0002lxng9rc6s74f7' (adId='cmvtpehgz002ixng941l8d09q') has no linked DiscoveryRunAd row in run 'kh02_run_1793548810712_6px3e'.",
+            "AdObservation 'cmvsav8we006n0dg9okpg6j86': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 22:59:29 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvsc2iik003xdhg9mf0n889j': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:33:08 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscfi8o003xn7g9f20lmajs': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:43:14 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscp18s003xt8g957q6yyr7': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:50:38 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscwmk9003xshg9cwzm0uzb': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:56:33 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvtpehh5002pxng9lw537m3m': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Thu Oct 29 2026 22:34:07 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "ResearchProduct:cand_1151716850: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "rejectionReasonCodes": [
+            "Missing independent merchant verification proof (URL strings alone are insufficient)",
+            "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+            "Identity status is 'PROBABLE', expected 'VERIFIED'"
+          ],
+          "rejectionReasons": [
+            "Missing independent merchant verification proof (URL strings alone are insufficient)",
+            "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+            "Identity status is 'PROBABLE', expected 'VERIFIED'"
+          ],
+          "storedSnapshotClaimDiff": {
+            "snapshotClaimedIdentityStatus": "PROBABLE",
+            "reconstructedIdentityStatus": "PROBABLE",
+            "snapshotClaimedLiveVerified": false,
+            "reconstructedLiveVerified": false,
+            "snapshotClaimedLiveObservationsCount": 1,
+            "reconstructedLiveObservationsCount": 0,
+            "claimDowngraded": true
+          }
+        },
+        {
+          "candidateId": "cand_1181501375",
+          "title": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+          "storeDomain": "thecatladies.com",
+          "canonicalProductUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+          "canonicalProductKey": "thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+          "familyKey": "digestive_aid",
+          "snapshotClaimedIdentityStatus": "VERIFIED",
+          "snapshotClaimedLiveVerified": false,
+          "identityStatus": "PROBABLE",
+          "verificationEvidenceStatus": "DISCOVERY_ONLY",
+          "productSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+          "proofMethod": "NONE",
+          "persistedProofRowIds": [],
+          "proofSourceObservedAt": null,
+          "originProofStatus": "INSUFFICIENT_EVIDENCE",
+          "authenticLiveObservationIds": [],
+          "matchingRunId": null,
+          "matchingWorkspaceId": "acceptance_v12_2_4_ws",
+          "isCheckoutChampFunnel": false,
+          "nicheRelevantToPetGadgets": true,
+          "nicheRelevanceReason": "Title/domain contains verified pet/grooming/feeder/fountain/fur-removal signal.",
+          "authenticallyLive": false,
+          "sameRunLineage": false,
+          "candidateProductMatch": false,
+          "verifiedMerchantIdentity": false,
+          "nonFunnelStore": true,
+          "g16PredicateStatuses": {
+            "authenticallyLive": false,
+            "sameRunLineage": false,
+            "candidateProductMatch": false,
+            "verifiedMerchantIdentity": false,
+            "nonFunnelStore": true
+          },
+          "isLiveVerified": false,
+          "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+          "persistedRunAdIds": [
+            "cmvw7lc3500awxng9udowuipm"
+          ],
+          "persistedRunAdIngestOutcomes": [
+            "EXISTING",
+            "NEW"
+          ],
+          "persistedAdObservationIds": [
+            "cmvw7m3x500cbxng9eyhmiedr",
+            "cmvw7lc3a00azxng9zud2og4f"
+          ],
+          "persistedLiveSameRunObservationIds": [],
+          "persistedMerchantProofRefs": [],
+          "rejectedCrossWorkspaceProofIds": [],
+          "rejectedSyntheticOrFallbackReasons": [
+            "AdObservation 'cmvw7m3x500cbxng9eyhmiedr': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e",
+            "AdObservation 'cmvw7lc3a00azxng9zud2og4f': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e",
+            "ResearchProduct:cand_1181501375: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "rejectionReasonCodes": [
+            "Missing independent merchant verification proof (URL strings alone are insufficient)",
+            "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+            "Identity status is 'PROBABLE', expected 'VERIFIED'"
+          ],
+          "rejectionReasons": [
+            "Missing independent merchant verification proof (URL strings alone are insufficient)",
+            "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+            "Identity status is 'PROBABLE', expected 'VERIFIED'"
+          ],
+          "storedSnapshotClaimDiff": {
+            "snapshotClaimedIdentityStatus": "VERIFIED",
+            "reconstructedIdentityStatus": "PROBABLE",
+            "snapshotClaimedLiveVerified": false,
+            "reconstructedLiveVerified": false,
+            "snapshotClaimedLiveObservationsCount": 0,
+            "reconstructedLiveObservationsCount": 0,
+            "claimDowngraded": true
+          }
+        }
+      ],
+      "persistedProofAudit": [
+        {
+          "candidateId": "cand_1151716850",
+          "researchProductId": "cand_1151716850",
+          "title": "News Cordless Electric Garden Pruning Shears M",
+          "storeDomain": "pagemindvibe.com",
+          "canonicalProductUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "researchRunId": "kh02_run_1793548810712_6px3e",
+          "snapshotClaimedIdentityStatus": "PROBABLE",
+          "snapshotClaimedLiveObservationsCount": 1,
+          "snapshotClaimedLiveVerified": false,
+          "persistedRunAdIds": [
+            "cmvsav8wd006k0dg9f4kuh6vb"
+          ],
+          "persistedRunAdIngestOutcomes": [
+            "EXISTING"
+          ],
+          "persistedAdObservationIds": [
+            "cmvtpehh0002lxng9rc6s74f7",
+            "cmvy0nt9f000ngtg9w980d85k",
+            "cmvsav8we006n0dg9okpg6j86",
+            "cmvsc2iik003xdhg9mf0n889j",
+            "cmvscfi8o003xn7g9f20lmajs",
+            "cmvscp18s003xt8g957q6yyr7",
+            "cmvscwmk9003xshg9cwzm0uzb",
+            "cmvtpehh5002pxng9lw537m3m"
+          ],
+          "persistedLiveSameRunObservationIds": [],
+          "persistedLiveSameRunObservations": [],
+          "persistedObservationClassifications": [
+            {
+              "observationId": "cmvsav8we006n0dg9okpg6j86",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-28T15:59:29.484Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 22:59:29 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvsc2iik003xdhg9mf0n889j",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-28T16:33:08.155Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:33:08 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvscfi8o003xn7g9f20lmajs",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-28T16:43:14.327Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:43:14 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvscp18s003xt8g957q6yyr7",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-28T16:50:38.859Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:50:38 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvscwmk9003xshg9cwzm0uzb",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-28T16:56:33.080Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:56:33 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvtpehh5002pxng9lw537m3m",
+              "adId": "cmvsav8wd006k0dg9f4kuh6vb",
+              "runId": "kh02_run_1793548810712_6px3e",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=1879013223548322",
+              "observedAt": "2026-10-29T15:34:07.864Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Thu Oct 29 2026 22:34:07 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            }
+          ],
+          "persistedResearchEvidenceIds": [],
+          "persistedLandingPageSnapshotIds": [],
+          "persistedOfferSnapshotIds": [],
+          "persistedMerchantProofAudits": [
+            {
+              "recordId": "cand_1151716850",
+              "sourceTable": "ResearchProduct",
+              "workspaceId": null,
+              "productId": "cand_1151716850",
+              "storeDomain": "pagemindvibe.com",
+              "sourceUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+              "observedAt": "2026-10-29T15:34:33.556Z",
+              "validationStatus": "PRODUCT_ROW_DISCOVERY_ONLY",
+              "proofMethod": "NONE",
+              "schemaVerified": false,
+              "hasJsonLdProduct": false,
+              "rawSourceReconstructable": false,
+              "hashVerified": false,
+              "sourceFieldUsed": "productUrl",
+              "expectedHashRef": null,
+              "computedSha256": null,
+              "extractedProductName": "News Cordless Electric Garden Pruning Shears M",
+              "extractedSku": null,
+              "extractedMerchantProductId": null,
+              "realColumnsInspected": [
+                "id",
+                "storeId",
+                "title",
+                "productUrl",
+                "currentPrice",
+                "currency",
+                "createdAt",
+                "updatedAt",
+                "store.domain"
+              ],
+              "rejectionReasons": [
+                "RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+              ],
+              "hashDomain": "NONE"
+            }
+          ],
+          "validPersistedMerchantProofs": [],
+          "persistedProductSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+          "persistedLiveOriginProofStatus": "INSUFFICIENT_EVIDENCE",
+          "rejectedCrossWorkspaceProofIds": [],
+          "rejectedSyntheticOrFallbackReasons": [
+            "All 1 DiscoveryRunAd rows for candidate 'cand_1151716850' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+            "Observation 'cmvy0nt9f000ngtg9w980d85k' carries origin='DETERMINISTIC_FALLBACK'.",
+            "AdObservation 'cmvtpehh0002lxng9rc6s74f7' (adId='cmvtpehgz002ixng941l8d09q') has no linked DiscoveryRunAd row in run 'kh02_run_1793548810712_6px3e'.",
+            "AdObservation 'cmvsav8we006n0dg9okpg6j86': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 22:59:29 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvsc2iik003xdhg9mf0n889j': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:33:08 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscfi8o003xn7g9f20lmajs': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:43:14 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscp18s003xt8g957q6yyr7': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:50:38 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvscwmk9003xshg9cwzm0uzb': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Wed Oct 28 2026 23:56:33 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "AdObservation 'cmvtpehh5002pxng9lw537m3m': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Thu Oct 29 2026 22:34:07 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 23:00:23 GMT+0700 (Indochina Time)",
+            "ResearchProduct:cand_1151716850: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "persistedMerchantVerified": false,
+          "persistedMerchantProofRefs": [],
+          "reconstructedIdentityStatus": "PROBABLE",
+          "reconstructedVerificationEvidenceStatus": "DISCOVERY_ONLY",
+          "reconstructedIsCheckoutChampFunnel": false,
+          "reconstructedCandidateForG16": {
+            "candidateId": "cand_1151716850",
+            "title": "News Cordless Electric Garden Pruning Shears M",
+            "canonicalProductName": "News Cordless Electric Garden Pruning Shears M",
+            "displayName": "News Cordless Electric Garden Pruning Shears M",
+            "originalAdHeadline": "Cordless Electric Garden Pruning Shears News",
+            "originalCreativeCode": "news-cordless-electric-garden-pruning-shears-m",
+            "adClaimedProductName": "Cordless Electric Garden Pruning Shears News",
+            "merchantVerifiedProductName": null,
+            "brand": "Achievementk.EV03",
+            "model": null,
+            "sku": null,
+            "gtin": null,
+            "merchantProductId": null,
+            "variantId": null,
+            "category": "Gardening",
+            "problemStatement": "Cordless Electric Garden Pruning Shears News 🌿 Hand pruning leaving your wrists sore",
+            "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+            "thumbnailUrl": "https://scontent.fsgn5-11.fna.fbcdn.net/v/t39.35426-6/864354272_3120777338124934_2131482016739534476_n.jpg?_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=3ALLvtpIQnwQ7kNvwEAl0ER&_nc_oc=AdoiXtgNsc9Cif7zQ3IOAyIhtoSCtlaxpcOyov8kIp89zT1wemEBql2LoWBPZuy81jOuND6-TeUBIQlQq7iM8Ex6&_nc_zt=14&_nc_ht=scontent.fsgn5-11.fna&_nc_gid=4wgA7UKVGDLkFyA6soifdw&_nc_ss=7b289&oh=00_AQSaXTLDMODxHix87bf17cNf7bSFeMf9NFCrD60PLLF_2Q&oe=6AE92DAC",
+            "videoUrl": null,
+            "mediaSourceAdId": "cmvsav8wd006k0dg9f4kuh6vb",
+            "requestedUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "resolvedFinalUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "declaredCanonicalUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "normalizedProductUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "canonicalProductUrl": "https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "storeDomain": "pagemindvibe.com",
+            "imageReferences": [],
+            "advertiserNames": [
+              "Achievementk.EV03",
+              "Achievementk.KH09"
+            ],
+            "supportingAdIds": [
+              "cmvsav8wd006k0dg9f4kuh6vb",
+              "cmvtpehgz002ixng941l8d09q"
+            ],
+            "supportingExternalAdIds": [
+              "1879013223548322",
+              "1421345936809317"
+            ],
+            "supportingSourceTypes": [
+              "META_ADS"
+            ],
+            "totalObservationCount": 8,
+            "liveObservationsCount": 1,
+            "cachedObservationsCount": 1,
+            "distinctAdvertisersCount": 2,
+            "earliestObservationDate": "2026-10-29T15:34:07.858Z",
+            "latestObservationDate": "2026-11-01T16:00:23.667Z",
+            "identityConfidence": "HIGH_CONFIDENCE",
+            "sourceObservations": [],
+            "identityStatus": "PROBABLE",
+            "resolutionSource": "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
+            "requiresManualReview": true,
+            "identityEvidenceReferences": [],
+            "fetchOutcome": "UNVERIFIED_PERSISTED_DB",
+            "evidenceTimestamp": "2026-11-01T16:00:23.754Z",
+            "verificationReason": null,
+            "verificationLimitations": [
+              "Missing structured product metadata (JSON-LD/OpenGraph/DOM) on landing page.",
+              "Derived from URL path without verified merchant schema."
+            ],
+            "contradictions": [],
+            "hasUnresolvedContradiction": false,
+            "isEligibleAsEvergreenWinner": false,
+            "relevanceStatus": "RELEVANT",
+            "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+            "matchedArchetypeId": null,
+            "matchedQueryIds": [
+              "kh02_q_r1_2_87991077"
+            ],
+            "relevanceScore": 0.92,
+            "relevanceReasons": [
+              "Strong niche match on terms: garden, pruning shears."
+            ],
+            "audienceRelevance": {
+              "requestedAudience": "UNSPECIFIED",
+              "supportedAudiences": [
+                "UNSPECIFIED"
+              ],
+              "audienceMatch": "COMPATIBLE",
+              "audienceEvidenceReferences": [],
+              "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+              "eligibleForPrimaryShortlist": true
+            },
+            "psychologyProfile": {
+              "candidateId": "cand_1151716850",
+              "canonicalProductName": "News Cordless Electric Garden Pruning Shears M",
+              "productDomain": "GENERAL",
+              "targetCustomer": {
+                "claimText": "Consumers actively seeking solutions related to gardening",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.65,
+                "status": "INFERRED",
+                "uncertaintyNote": "Specific demographic not explicitly narrowed in ad creative."
+              },
+              "situationOrUseCase": {
+                "claimText": "Regular routine use in the home when utilizing news cordless electric garden pruning shears m",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "INFERRED"
+              },
+              "functionalProblem": {
+                "claimText": "Everyday inconvenience and friction addressed by News Cordless Electric Garden Pruning Shears M",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "HEADLINE",
+                "confidence": 0.65,
+                "status": "INFERRED",
+                "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+              },
+              "emotionalPain": {
+                "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "desiredOutcome": {
+                "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "purchaseTrigger": {
+                "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "INFERRED"
+              },
+              "mainObjections": {
+                "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "HYPOTHESIS",
+                "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+              },
+              "trustRequirements": {
+                "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.85,
+                "status": "HYPOTHESIS"
+              },
+              "demonstrationPotential": {
+                "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "existingAlternatives": {
+                "claimText": "Conventional manual household tools or unspecialized generic accessories",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.85,
+                "status": "INFERRED"
+              },
+              "differentiationHypothesis": {
+                "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "HEADLINE",
+                "confidence": 0.78,
+                "status": "HYPOTHESIS"
+              },
+              "suggestedMessagingAngle": {
+                "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+                "evidenceReference": "Ad #cmvsav8wd006k0dg9f4kuh6vb",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "HYPOTHESIS",
+                "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+              },
+              "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+            },
+            "sourcePageClassification": "UNKNOWN_PAGE",
+            "listingKey": "url::https://pagemindvibe.com/funnel/news-cordless-electric-garden-pruning-shears-m",
+            "productKey": "merchant_tokens::pagemindvibe.com::pruning_shears_secateurs::news_pruning_shears",
+            "variantKey": null,
+            "familyKey": "pruning_shears_secateurs",
+            "familyLabel": "Garden Pruning Shears & Secateurs",
+            "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+            "productRealityReason": null,
+            "rejectionDetail": null,
+            "researchProductId": "cand_1151716850",
+            "existingProductVerified": false,
+            "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+            "distinctnessReason": "Primary product representative for family 'Garden Pruning Shears & Secateurs' (productKey=merchant_tokens::pagemindvibe.com::pruning_shears_secateurs::news_pruning_shears).",
+            "crossMerchantUncertainty": null,
+            "demandResolution": {
+              "productId": "cand_1151716850",
+              "canonicalName": "News Cordless Electric Garden Pruning Shears M",
+              "rawTerm": "News Cordless Electric Garden Pruning Shears M",
+              "normalizedTerm": "News Cordless Electric Garden Pruning Shears M",
+              "searchTermUsed": "News Cordless Electric Garden Pruning Shears M",
+              "mappingReason": "Used clean product name 'News Cordless Electric Garden Pruning Shears M' directly",
+              "requestedLookbackDays": 180,
+              "actualCoveredDays": 0,
+              "observationPointsCount": 0,
+              "coverageGaps": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+                "INSUFFICIENT_COVERAGE: Keyword 'News Cordless Electric Garden Pruning Shears M' not found in Google Free demand sources (BigQuery / CSV import)."
+              ],
+              "assessment": {
+                "status": "INSUFFICIENT_HISTORY",
+                "eligibleForEvergreen": false,
+                "dataPointsCount": 0,
+                "distinctObservationDatesCount": 0,
+                "coveredDays": 0,
+                "meanInterest": null,
+                "stdDev": null,
+                "coefficientOfVariation": null,
+                "demandClass": "INSUFFICIENT_HISTORY",
+                "sourceAuthority": "UNKNOWN_SOURCE",
+                "temporalCoverageValid": false,
+                "productAttributionValid": false,
+                "demandObservationIds": [],
+                "calculationVersion": "12.4.3.1",
+                "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+                "missingEvidence": [
+                  "No demand observations provided.",
+                  "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+                ],
+                "evaluatedAt": "2026-11-01T16:00:46.731Z"
+              },
+              "dataPoints": [],
+              "sourceStatus": "ENGINE_READY",
+              "cacheClassification": "NO_VALID_DEMAND_EVIDENCE",
+              "providerAttempted": true,
+              "providerStatus": "INSUFFICIENT_DATA",
+              "providerError": "INSUFFICIENT_COVERAGE: Keyword 'News Cordless Electric Garden Pruning Shears M' not found in Google Free demand sources (BigQuery / CSV import)."
+            },
+            "workspaceId": "acceptance_v12_2_4_ws",
+            "merchantPageVerified": false,
+            "merchantVerificationProofRefs": []
+          }
+        },
+        {
+          "candidateId": "cand_1181501375",
+          "researchProductId": "cand_1181501375",
+          "title": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+          "storeDomain": "thecatladies.com",
+          "canonicalProductUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "researchRunId": "kh02_run_1793548810712_6px3e",
+          "snapshotClaimedIdentityStatus": "VERIFIED",
+          "snapshotClaimedLiveObservationsCount": 0,
+          "snapshotClaimedLiveVerified": false,
+          "persistedRunAdIds": [
+            "cmvw7lc3500awxng9udowuipm"
+          ],
+          "persistedRunAdIngestOutcomes": [
+            "EXISTING",
+            "NEW"
+          ],
+          "persistedAdObservationIds": [
+            "cmvw7m3x500cbxng9eyhmiedr",
+            "cmvw7lc3a00azxng9zud2og4f"
+          ],
+          "persistedLiveSameRunObservationIds": [],
+          "persistedLiveSameRunObservations": [],
+          "persistedObservationClassifications": [
+            {
+              "observationId": "cmvw7m3x500cbxng9eyhmiedr",
+              "adId": "cmvw7lc3500awxng9udowuipm",
+              "runId": "kh02_run_1793439523173_nawcf",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=2332921180893068",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=2332921180893068",
+              "observedAt": "2026-10-31T09:39:28.984Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "CROSS_WORKSPACE_OR_RUN",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            },
+            {
+              "observationId": "cmvw7lc3a00azxng9zud2og4f",
+              "adId": "cmvw7lc3500awxng9udowuipm",
+              "runId": "kh02_run_1793439523173_nawcf",
+              "workspaceId": "acceptance_v12_2_4_ws",
+              "providerId": "meta-ads-collector",
+              "ingestOutcome": "EXISTING",
+              "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+              "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+              "evidenceReference": "https://www.facebook.com/ads/library/?id=2332921180893068",
+              "sourceUrl": "https://www.facebook.com/ads/library/?id=2332921180893068",
+              "observedAt": "2026-10-31T09:38:52.912Z",
+              "sourceTimestamp": null,
+              "rawPayloadPresent": true,
+              "rawPayloadParseable": false,
+              "providerRequestId": null,
+              "mcpInvocationRef": null,
+              "isAuthenticLiveProviderObservation": false,
+              "originEvidenceClassification": "CROSS_WORKSPACE_OR_RUN",
+              "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+              "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+              "isCached": true,
+              "isLiveRecord": false,
+              "rejectionReasons": [
+                "CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e"
+              ],
+              "realColumnsInspected": {
+                "AdObservation": [
+                  "id",
+                  "adId",
+                  "observedAt",
+                  "observationStatus",
+                  "isActive",
+                  "evidenceType",
+                  "verificationMethod",
+                  "evidenceReference",
+                  "sourceTimestamp",
+                  "confidence",
+                  "rawPayload"
+                ],
+                "DiscoveryRunAd": [
+                  "id",
+                  "runId",
+                  "adId",
+                  "workspaceId",
+                  "providerId",
+                  "libraryId",
+                  "ingestOutcome",
+                  "sourceUrl",
+                  "observedAt"
+                ]
+              }
+            }
+          ],
+          "persistedResearchEvidenceIds": [],
+          "persistedLandingPageSnapshotIds": [],
+          "persistedOfferSnapshotIds": [],
+          "persistedMerchantProofAudits": [
+            {
+              "recordId": "cand_1181501375",
+              "sourceTable": "ResearchProduct",
+              "workspaceId": null,
+              "productId": "cand_1181501375",
+              "storeDomain": "thecatladies.com",
+              "sourceUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+              "observedAt": "2026-10-31T15:18:15.359Z",
+              "validationStatus": "PRODUCT_ROW_DISCOVERY_ONLY",
+              "proofMethod": "NONE",
+              "schemaVerified": false,
+              "hasJsonLdProduct": false,
+              "rawSourceReconstructable": false,
+              "hashVerified": false,
+              "sourceFieldUsed": "productUrl",
+              "expectedHashRef": null,
+              "computedSha256": null,
+              "extractedProductName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+              "extractedSku": null,
+              "extractedMerchantProductId": null,
+              "realColumnsInspected": [
+                "id",
+                "storeId",
+                "title",
+                "productUrl",
+                "currentPrice",
+                "currency",
+                "createdAt",
+                "updatedAt",
+                "store.domain"
+              ],
+              "rejectionReasons": [
+                "RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+              ],
+              "hashDomain": "NONE"
+            }
+          ],
+          "validPersistedMerchantProofs": [],
+          "persistedProductSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+          "persistedLiveOriginProofStatus": "INSUFFICIENT_EVIDENCE",
+          "rejectedCrossWorkspaceProofIds": [],
+          "rejectedSyntheticOrFallbackReasons": [
+            "AdObservation 'cmvw7m3x500cbxng9eyhmiedr': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e",
+            "AdObservation 'cmvw7lc3a00azxng9zud2og4f': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793439523173_nawcf, expected=kh02_run_1793548810712_6px3e",
+            "ResearchProduct:cand_1181501375: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "persistedMerchantVerified": false,
+          "persistedMerchantProofRefs": [],
+          "reconstructedIdentityStatus": "PROBABLE",
+          "reconstructedVerificationEvidenceStatus": "DISCOVERY_ONLY",
+          "reconstructedIsCheckoutChampFunnel": false,
+          "reconstructedCandidateForG16": {
+            "candidateId": "cand_1181501375",
+            "title": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+            "canonicalProductName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+            "displayName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+            "originalAdHeadline": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+            "originalCreativeCode": "organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "adClaimedProductName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+            "merchantVerifiedProductName": null,
+            "brand": "The Cat Ladies",
+            "model": null,
+            "sku": null,
+            "gtin": null,
+            "merchantProductId": null,
+            "variantId": "40195773268016",
+            "category": "Gardening",
+            "problemStatement": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter Fur-ightfully good deals are here 🦇🐾",
+            "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+            "thumbnailUrl": "https://thecatladies.com/cdn/shop/products/BlackMug_Hero.jpg?v=1655456339&width=1920",
+            "videoUrl": null,
+            "mediaSourceAdId": "cmvw7lc3500awxng9udowuipm",
+            "requestedUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "resolvedFinalUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "declaredCanonicalUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "normalizedProductUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "canonicalProductUrl": "https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "storeDomain": "thecatladies.com",
+            "imageReferences": [
+              "https://thecatladies.com/cdn/shop/products/BlackMug_Hero.jpg?v=1655456339&width=1920",
+              "https://thecatladies.com/cdn/shop/products/BlackMug_Hero.jpg?crop=center&height=630&v=1655456339&width=1200"
+            ],
+            "advertiserNames": [
+              "The Cat Ladies"
+            ],
+            "supportingAdIds": [
+              "cmvw7lc3500awxng9udowuipm"
+            ],
+            "supportingExternalAdIds": [
+              "2332921180893068"
+            ],
+            "supportingSourceTypes": [
+              "META_ADS"
+            ],
+            "totalObservationCount": 2,
+            "liveObservationsCount": 0,
+            "cachedObservationsCount": 1,
+            "distinctAdvertisersCount": 1,
+            "earliestObservationDate": "2026-10-31T09:39:28.984Z",
+            "latestObservationDate": "2026-10-31T09:39:28.984Z",
+            "identityConfidence": "EXACT",
+            "sourceObservations": [],
+            "identityStatus": "PROBABLE",
+            "resolutionSource": "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
+            "requiresManualReview": false,
+            "identityEvidenceReferences": [],
+            "fetchOutcome": "UNVERIFIED_PERSISTED_DB",
+            "evidenceTimestamp": "2026-11-01T16:00:23.751Z",
+            "verificationReason": null,
+            "verificationLimitations": [],
+            "contradictions": [],
+            "hasUnresolvedContradiction": false,
+            "isEligibleAsEvergreenWinner": true,
+            "relevanceStatus": "RELEVANT",
+            "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+            "matchedArchetypeId": null,
+            "matchedQueryIds": [],
+            "relevanceScore": 0.92,
+            "relevanceReasons": [
+              "Strong niche match on terms: planter."
+            ],
+            "audienceRelevance": {
+              "requestedAudience": "UNSPECIFIED",
+              "supportedAudiences": [
+                "CAT"
+              ],
+              "audienceMatch": "COMPATIBLE",
+              "audienceEvidenceReferences": [
+                "cat_term:\"cat\""
+              ],
+              "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+              "eligibleForPrimaryShortlist": true
+            },
+            "psychologyProfile": {
+              "candidateId": "cand_1181501375",
+              "canonicalProductName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+              "productDomain": "PET",
+              "targetCustomer": {
+                "claimText": "Cat owners seeking indoor enrichment, low-stress grooming, or hygienic care",
+                "evidenceReference": "Observed mention: \"Cat\" in Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "AD_COPY",
+                "confidence": 0.75,
+                "status": "INFERRED",
+                "uncertaintyNote": "Explicit customer demographic not in copy; inferred from cat mention."
+              },
+              "situationOrUseCase": {
+                "claimText": "Regular routine use in the home when utilizing cat grass growing kit with organic seed - black cat mug planter",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "INFERRED"
+              },
+              "functionalProblem": {
+                "claimText": "Everyday inconvenience and friction addressed by Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "HEADLINE",
+                "confidence": 0.65,
+                "status": "INFERRED",
+                "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+              },
+              "emotionalPain": {
+                "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "desiredOutcome": {
+                "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "purchaseTrigger": {
+                "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "INFERRED"
+              },
+              "mainObjections": {
+                "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "HYPOTHESIS",
+                "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+              },
+              "trustRequirements": {
+                "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.85,
+                "status": "HYPOTHESIS"
+              },
+              "demonstrationPotential": {
+                "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.75,
+                "status": "INFERRED"
+              },
+              "existingAlternatives": {
+                "claimText": "Conventional manual household tools or unspecialized generic accessories",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.85,
+                "status": "INFERRED"
+              },
+              "differentiationHypothesis": {
+                "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "HEADLINE",
+                "confidence": 0.78,
+                "status": "HYPOTHESIS"
+              },
+              "suggestedMessagingAngle": {
+                "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+                "evidenceReference": "Ad #cmvw7lc3500awxng9udowuipm",
+                "evidenceType": "MARKET_KNOWLEDGE",
+                "confidence": 0.8,
+                "status": "HYPOTHESIS",
+                "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+              },
+              "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+            },
+            "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+            "listingKey": "url::https://thecatladies.com/products/organic-cat-grass-growing-kit-with-organic-seed-mix-organic-soil-and-cat-planter-great-gift-for-mom-makes-a-great-mothers-day-gift-natural-hairball-control-remedy-for-cats-natural-digestive-aid",
+            "productKey": "gtin::053722010291",
+            "variantKey": "gtin::053722010291::variant::40195773268016",
+            "familyKey": "digestive_aid",
+            "familyLabel": "Digestive Aid",
+            "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+            "productRealityReason": null,
+            "rejectionDetail": null,
+            "researchProductId": "cand_1181501375",
+            "existingProductVerified": false,
+            "adThumbnailUrl": "https://scontent.fhan4-2.fna.fbcdn.net/v/t39.35426-6/867575298_1541165947770320_181824025272464627_n.jpg?stp=dst-jpg_s600x600_tt6&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=YhweYbSG6pIQ7kNvwGWrZmg&_nc_oc=AdrTzo2uGjm6aYd5jTdkXGeYajGTttM68lrPfyyks-AnEL7AD8i-RwV7EOgDU2TJG3Q&_nc_zt=14&_nc_ht=scontent.fhan4-2.fna&_nc_gid=eoYvwoir_hyglOdn34RhnA&_nc_ss=7b289&oh=00_AQSBaAq2tSwdSlAaL9bMZr6S2pFHstKHoIXhm1KR7wWGuQ&oe=6AEB70CF",
+            "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+            "distinctnessReason": "Primary product representative for family 'Digestive Aid' (productKey=gtin::053722010291).",
+            "crossMerchantUncertainty": null,
+            "demandResolution": {
+              "productId": "cand_1181501375",
+              "canonicalName": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+              "rawTerm": "Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter",
+              "normalizedTerm": "Cat Grass Growing Kit with Organic Seed -",
+              "searchTermUsed": "Cat Grass Growing Kit with Organic Seed -",
+              "mappingReason": "Normalized 'Cat Grass Growing Kit with Organic Seed - Black Cat Mug Planter' -> 'Cat Grass Growing Kit with Organic Seed -' (stripped promotional suffixes/capacities for clean product demand query)",
+              "requestedLookbackDays": 180,
+              "actualCoveredDays": 0,
+              "observationPointsCount": 0,
+              "coverageGaps": [
+                "No demand observations provided.",
+                "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+                "INSUFFICIENT_COVERAGE: Keyword 'Cat Grass Growing Kit with Organic Seed -' not found in Google Free demand sources (BigQuery / CSV import)."
+              ],
+              "assessment": {
+                "status": "INSUFFICIENT_HISTORY",
+                "eligibleForEvergreen": false,
+                "dataPointsCount": 0,
+                "distinctObservationDatesCount": 0,
+                "coveredDays": 0,
+                "meanInterest": null,
+                "stdDev": null,
+                "coefficientOfVariation": null,
+                "demandClass": "INSUFFICIENT_HISTORY",
+                "sourceAuthority": "UNKNOWN_SOURCE",
+                "temporalCoverageValid": false,
+                "productAttributionValid": false,
+                "demandObservationIds": [],
+                "calculationVersion": "12.4.3.1",
+                "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+                "missingEvidence": [
+                  "No demand observations provided.",
+                  "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+                ],
+                "evaluatedAt": "2026-11-01T16:00:46.730Z"
+              },
+              "dataPoints": [],
+              "sourceStatus": "ENGINE_READY",
+              "cacheClassification": "NO_VALID_DEMAND_EVIDENCE",
+              "providerAttempted": true,
+              "providerStatus": "INSUFFICIENT_DATA",
+              "providerError": "INSUFFICIENT_COVERAGE: Keyword 'Cat Grass Growing Kit with Organic Seed -' not found in Google Free demand sources (BigQuery / CSV import)."
+            },
+            "workspaceId": "acceptance_v12_2_4_ws",
+            "merchantPageVerified": false,
+            "merchantVerificationProofRefs": []
+          }
+        }
+      ],
+      "reason": "Evaluated run 'kh02_run_1793548810712_6px3e' has 0/3 live-verified merchant candidates reconstructable from persisted DB rows (stored snapshot claimed 0/3; immutable DB rows in workspace 'acceptance_v12_2_4_ws' have 0 fresh live-ingested observation(s) (0/2 candidates with live origin) and 0 persisted product-schema proof(s) (0/2 candidates with schema proof))."
+    }
+  }
+}

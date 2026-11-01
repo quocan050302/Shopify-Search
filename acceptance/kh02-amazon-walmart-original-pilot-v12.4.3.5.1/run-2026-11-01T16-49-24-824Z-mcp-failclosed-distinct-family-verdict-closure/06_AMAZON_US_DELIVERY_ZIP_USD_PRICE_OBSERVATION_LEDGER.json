@@ -1,0 +1,41 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "usDeliveryConfirmedCount": 0,
+  "observedUsdPriceCount": 0,
+  "amazonUsDeliveryProofVerdict": "UNKNOWN",
+  "amazonUsdPriceProofVerdict": "UNKNOWN",
+  "usDeliveryAndPriceSubVerdict": "INCOMPLETE_UNOBSERVED",
+  "anonymousGeolocationObservationNote": "Public anonymous Playwright MCP browser session from Vietnam IP receives 'Deliver to Vietnam' and VND currency prices on amazon.com; verifiedDeliveryMarket, observedDeliveryPostalCode, price, and currency are preserved as null rather than inferred from domain or requestedMarket='US'.",
+  "perRowObservations": [
+    {
+      "candidateId": "live_amz_chomchom_b00bagtnaq",
+      "asin": "B00BAGTNAQ",
+      "productFamilyKey": "amz_family:chomchom:pet_hair_remover_roller",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "price": null,
+      "currency": null
+    },
+    {
+      "candidateId": "live_amz_furbo_b01fxc7jwq",
+      "asin": "B01FXC7JWQ",
+      "productFamilyKey": "amz_family:furbo:pet_camera_treat_tosser",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "price": null,
+      "currency": null
+    },
+    {
+      "candidateId": "live_amz_petlibro_b0fdkqgrck",
+      "asin": "B0FDKQGRCK",
+      "productFamilyKey": "amz_family:petlibro:pet_water_fountain",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "price": null,
+      "currency": null
+    }
+  ]
+}

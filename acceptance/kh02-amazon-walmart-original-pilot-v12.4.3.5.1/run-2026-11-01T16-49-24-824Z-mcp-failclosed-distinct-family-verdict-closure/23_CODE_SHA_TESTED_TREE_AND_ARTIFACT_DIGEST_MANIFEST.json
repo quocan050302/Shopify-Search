@@ -1,0 +1,298 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "testedTreeSha": "7096ddc630b9d78e7a9aa33141937ff6d6b9253c",
+  "generatedAt": "2026-11-01T16:54:22.780Z",
+  "totalFiles": 58,
+  "files": [
+    {
+      "file": "00_BRANCH_AND_TESTED_SHA.json",
+      "sha256": "cb3a0a188a0e03d7b8fe9fbaff2b135c7e76fe1760ace2804b4ec3cd27ad5c51",
+      "bytes": 757
+    },
+    {
+      "file": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "sha256": "83808239a5c8a0359fd88425b08ff202b1f031a86318ac7b2ca5cd651a3899ac",
+      "bytes": 754
+    },
+    {
+      "file": "01_ORIGINAL_PILOT_CONTRACT_AND_SCOPE.json",
+      "sha256": "3cd359be9308d90e00c070bf6bad7c08729bfb1ce7d1f896b16088dba6504f5e",
+      "bytes": 894
+    },
+    {
+      "file": "01_ROOT_CAUSE_AND_FUNCTION_CHANGE_MAP.md",
+      "sha256": "72569d3cb89761de88e4c5dde3a1d07b5968d6da7fdc9aa419bf61e6b38721c8",
+      "bytes": 3574
+    },
+    {
+      "file": "02_AMAZON_PLAYWRIGHT_MCP_PACKAGE_AND_CLI_AUDIT.json",
+      "sha256": "a5d800bf8d3ebdc9d0cc9d199252a0ba491d00f04904b7cc9ba8132be9912d99",
+      "bytes": 369
+    },
+    {
+      "file": "02_ORIGINAL_BASELINE_RECONCILIATION.json",
+      "sha256": "7657248dab787cb033ea96b54bf463ee2a6b09928e335c9c2a10e1fe4ee8cc1a",
+      "bytes": 599
+    },
+    {
+      "file": "03_AMAZON_PLAYWRIGHT_MCP_HANDSHAKE_AND_TOOLS.json",
+      "sha256": "77d2fdb4093e506c226cd4193fc28ea987c99232ccf507f7f6a0f230a8385eeb",
+      "bytes": 1031
+    },
+    {
+      "file": "03_AMAZON_REAL_MCP_HANDSHAKE_AND_TOOL_INVOCATIONS.json",
+      "sha256": "77d2fdb4093e506c226cd4193fc28ea987c99232ccf507f7f6a0f230a8385eeb",
+      "bytes": 1031
+    },
+    {
+      "file": "04_AMAZON_POLICY_BUDGET_AND_URL_GUARDS.json",
+      "sha256": "7fb340040883423a16a406515d9d86f7d41eabf76da798a9e225fca27284e485",
+      "bytes": 695
+    },
+    {
+      "file": "04_AMAZON_REAL_PUBLIC_SEARCH_AND_PDP_OPERATION_LEDGER.json",
+      "sha256": "9c27be645ebce4ec7dbf3efa8cf5b0ec58276436a1c0d7652001ebe693bfa118",
+      "bytes": 10993
+    },
+    {
+      "file": "05_AMAZON_DISTINCT_FAMILY_IDENTITY_AND_VARIANTS_AUDIT.json",
+      "sha256": "822ef9cae8536597acf4bce44ece7f0e386bd876b42648b4e484a76f92fda43c",
+      "bytes": 536
+    },
+    {
+      "file": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "sha256": "31eb0b28ecec358d71c868367e1c84e242818f5abd29ff7420d9e2a2216fb693",
+      "bytes": 708
+    },
+    {
+      "file": "06_AMAZON_US_DELIVERY_ZIP_USD_PRICE_OBSERVATION_LEDGER.json",
+      "sha256": "0784daccbdf8ca677aa865de0518bf807d9bf6d9a3129b836e0d2f7ab5783312",
+      "bytes": 1583
+    },
+    {
+      "file": "06_AMAZON_WORKER_DB_API_DOM_3WAY_PARITY.json",
+      "sha256": "6bd2f094c142287221cd3abfe2200cd5508fa582d16ec372248f6d5a59e9b14e",
+      "bytes": 5557
+    },
+    {
+      "file": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "sha256": "84e0e58af0addc2851946f3ecaad84e0c7f04153cf2f3031ea61b46830da86ab",
+      "bytes": 15672
+    },
+    {
+      "file": "07_AMAZON_ROUTE_SPECIFIC_MULTI_VERDICT.json",
+      "sha256": "d5792a741cc63fa212ab5462610e9da8ca327a0adf3d74a17f7ccccdf764171d",
+      "bytes": 452
+    },
+    {
+      "file": "08_WALMART_JINA_PROTOCOL_HEADERS_AND_BUDGET_AUDIT.json",
+      "sha256": "7b24b4e662d4a3267ee1a3f4f8294c21155fda4af765f8cef38dcec180876cf5",
+      "bytes": 1336
+    },
+    {
+      "file": "08_WALMART_JINA_REAL_REQUEST_RESPONSE_AND_BOTWALL.json",
+      "sha256": "0e4763dce5bb337041d09d21320375f77c1f50780a94fc2145e0effcd0449d66",
+      "bytes": 9288
+    },
+    {
+      "file": "09_WALMART_LOCATION_UPC_AND_PDP_EVIDENCE_TRUTH.json",
+      "sha256": "b120fd1d990f0d2e324bf0e2f7c8bed97dc19236752f3913db2f63823cc0fb3c",
+      "bytes": 6095
+    },
+    {
+      "file": "09_WALMART_NEXT_DATA_PARSER_AND_IDENTITY_AUDIT.json",
+      "sha256": "c4499502f8a5119da0f9fa55b8e32af4009ba4edf85b4e631054edb31256035d",
+      "bytes": 601
+    },
+    {
+      "file": "10_PROVIDER_ORIGIN_AND_POLICY_NONBYPASS_AUDIT.json",
+      "sha256": "533a8b04f5f99c35034f9ac0cddbf1a488f5e849ca11ef6df44736bf7567c732",
+      "bytes": 2409
+    },
+    {
+      "file": "10_WALMART_WORKER_DB_API_DOM_3WAY_PARITY.json",
+      "sha256": "605d6c79d5aa6b57a3dcf7be13399ff6d7de9da851b1ec04aa942ad2c66a4844",
+      "bytes": 1623
+    },
+    {
+      "file": "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+      "sha256": "230d825521a435bcb16cc721881d7fec1d683dee66971f46f6a97435e620852c",
+      "bytes": 7783
+    },
+    {
+      "file": "11_WALMART_LIVE_JINA_PILOT_EXECUTION_TRUTH.json",
+      "sha256": "0e4763dce5bb337041d09d21320375f77c1f50780a94fc2145e0effcd0449d66",
+      "bytes": 9288
+    },
+    {
+      "file": "12_GET_NONMUTATION_AND_WORKSPACE_SECURITY.json",
+      "sha256": "91db50ce8d3b2a931fba5c58a78a38e61db5740881b364d5f8b25c88389703da",
+      "bytes": 755
+    },
+    {
+      "file": "12_NON_INFLATION_AMAZON_WALMART_ON_VS_OFF.json",
+      "sha256": "bb2a6be35de61ea80a352a5e31eb4720672b2d95e03af091497ade8a1b668ea2",
+      "bytes": 684
+    },
+    {
+      "file": "13_FULL_DISCOVERED_TEST_INVENTORY_AND_SHARD_RESULTS.json",
+      "sha256": "510cd5cd5ff343a80b170bdcc8165d77539cd670cca976540e10366c7232715a",
+      "bytes": 1455
+    },
+    {
+      "file": "13_READ_ONLY_GET_DB_DIGEST_PROOF.json",
+      "sha256": "91db50ce8d3b2a931fba5c58a78a38e61db5740881b364d5f8b25c88389703da",
+      "bytes": 755
+    },
+    {
+      "file": "14_ALL_E2E_SPEC_EXECUTION_RECEIPTS.json",
+      "sha256": "2ee901ef788619a82eecbedf4f675dd99926f68aa2908b1e95246d4283413c7a",
+      "bytes": 9561
+    },
+    {
+      "file": "14_UI_PRODUCT_FINDER_HEADLESS_CHROMIUM_AUDIT.json",
+      "sha256": "3630ddff3fe26a6a4d46a4abee925609330728e407fdf3804d60d5a89ee644a7",
+      "bytes": 655
+    },
+    {
+      "file": "15_FRESH_TSC_BUILD_AND_CHROMIUM_PROOF.json",
+      "sha256": "7bdf43fbf62b678896b76df6540f567ca562d9626d632403ac7cd3cc988f3b8f",
+      "bytes": 940
+    },
+    {
+      "file": "15_TARGETED_AMAZON_WALMART_TEST_MATRIX.json",
+      "sha256": "f09efab6e4b42f1403bb1dbb737a6b091cc8c9267220ff47cd6cd3ad86ffaa91",
+      "bytes": 939
+    },
+    {
+      "file": "16_DEV_HOLDOUT_DATASET_FINGERPRINTS_AND_REPLAY.json",
+      "sha256": "7042a7ba6524bef6e5e415c3177e4c253348aa34c3aa37ea2b3995f6bf5533e3",
+      "bytes": 6764
+    },
+    {
+      "file": "16_FULL_REPOSITORY_REGRESSION_INVENTORY.json",
+      "sha256": "510cd5cd5ff343a80b170bdcc8165d77539cd670cca976540e10366c7232715a",
+      "bytes": 1455
+    },
+    {
+      "file": "17_POINT_IN_TIME_CUTOFF_AND_NO_LOOKAHEAD.json",
+      "sha256": "cb67213842e5193b9dc9a17cc51b708f98e4db63afe79816f61ddb7c514eac22",
+      "bytes": 435
+    },
+    {
+      "file": "17_UNIT_AND_INTEGRATION_SHARD_RESULTS.json",
+      "sha256": "510cd5cd5ff343a80b170bdcc8165d77539cd670cca976540e10366c7232715a",
+      "bytes": 1455
+    },
+    {
+      "file": "18_ALL_E2E_EXECUTION_RECEIPTS.json",
+      "sha256": "adb5271e19e7f3aeb22f1ab7db579a1d46f3f84f9e43ff048fb9858b4de84930",
+      "bytes": 9561
+    },
+    {
+      "file": "18_NONINFLATION_AND_G07_G15_G16_GATE_MATRIX.json",
+      "sha256": "ee710689f8da3df62de3e141fe5bd70f2cb48572f9763ac5672b6000b11555e9",
+      "bytes": 74629
+    },
+    {
+      "file": "19_NEGATIVE_CONTROL_EXECUTION_RESULTS.json",
+      "sha256": "89f4ab7a8fda5a03d48ec659aa9c4fd79490bb05d4e800e53bfe5f720cf3b0dc",
+      "bytes": 21814
+    },
+    {
+      "file": "19_REAL_DEV_BACKTEST_SUMMARY.json",
+      "sha256": "7e25ea3b01ad8925796359014b452acc161afdc9444b54b3f41004a41a5a0c1e",
+      "bytes": 1425
+    },
+    {
+      "file": "20_INDEPENDENT_VALIDATOR_CASES_AND_VERDICT.json",
+      "sha256": "204c93e82f6510752e501083ada6c7c6f4680acccad91b66fa4586105481d5c5",
+      "bytes": 473
+    },
+    {
+      "file": "20_REAL_HOLDOUT_BACKTEST_SUMMARY.json",
+      "sha256": "aa5d25f135764d8bb95d06136b9c99e039a5bbe799cbd14e46df65f09dee4895",
+      "bytes": 4916
+    },
+    {
+      "file": "21_ASYNC_TASK_EXECUTION_BARRIER_AND_PID_LEDGER.json",
+      "sha256": "083b899da468dc4a5fe0d4e2e9588aefd4ec890ff686093ff5e7bf72bfdc5cf1",
+      "bytes": 23668
+    },
+    {
+      "file": "21_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "sha256": "cb67213842e5193b9dc9a17cc51b708f98e4db63afe79816f61ddb7c514eac22",
+      "bytes": 435
+    },
+    {
+      "file": "22_DISK_RAM_FREE_SPACE_AND_OUTPUT_QUOTA_LOG.json",
+      "sha256": "ed9395a637d45f0431b7d039ed53de48a39e07a78660776b4819a5e3448d747a",
+      "bytes": 2309
+    },
+    {
+      "file": "22_NEGATIVE_MUTATION_SUITE_30PLUS_CASES.json",
+      "sha256": "54f3c830b565ed1d7f1fd4963a1506fa42cf2835c2a21d5445e51b7e7cf5967b",
+      "bytes": 20540
+    },
+    {
+      "file": "23_INDEPENDENT_VALIDATOR_REPORT.json",
+      "sha256": "204c93e82f6510752e501083ada6c7c6f4680acccad91b66fa4586105481d5c5",
+      "bytes": 473
+    },
+    {
+      "file": "24_FINAL_MULTI_VERDICT_AND_BLOCKERS.json",
+      "sha256": "732ffd08d53e4b23333ba603f52355cbfc04f76982470b2d63a516abd34467fc",
+      "bytes": 9301
+    },
+    {
+      "file": "24_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+      "sha256": "083b899da468dc4a5fe0d4e2e9588aefd4ec890ff686093ff5e7bf72bfdc5cf1",
+      "bytes": 23668
+    },
+    {
+      "file": "25_FINAL_OWNER_REPORT_VI.md",
+      "sha256": "ef3966512a52c63e6ca8626025e4ce16fcae88d31ca0ba664382df75b1d763f5",
+      "bytes": 14680
+    },
+    {
+      "file": "26_FINAL_RELEASE_VERDICT.json",
+      "sha256": "732ffd08d53e4b23333ba603f52355cbfc04f76982470b2d63a516abd34467fc",
+      "bytes": 9301
+    },
+    {
+      "file": "26_SOURCE_COMMIT_EVIDENCE_COMMIT_REMOTE_PUSH_PROOF.json",
+      "sha256": "9301da9137c29d837b104c5e17a83bb6a09fd24fc369ed68de9b3dcb6611108e",
+      "bytes": 803
+    },
+    {
+      "file": "27_COMMIT_PUSH_REMOTE_SHA_VERIFICATION.json",
+      "sha256": "9301da9137c29d837b104c5e17a83bb6a09fd24fc369ed68de9b3dcb6611108e",
+      "bytes": 803
+    },
+    {
+      "file": "28_FINAL_OWNER_REPORT_VI.md",
+      "sha256": "ef3966512a52c63e6ca8626025e4ce16fcae88d31ca0ba664382df75b1d763f5",
+      "bytes": 14680
+    },
+    {
+      "file": "BACKTEST_REPLAY_PROVENANCE.json",
+      "sha256": "fad13c8ff02dbc2044127d19767546e9bea76fa21795ebca711f74229c0e2afb",
+      "bytes": 1350
+    },
+    {
+      "file": "POLICY_SCENARIO_RESULTS.json",
+      "sha256": "57a83c8993e0e3d56a464e4be458c07846ac30d34767ae7d1de41984f4b979ed",
+      "bytes": 18174
+    },
+    {
+      "file": "REAL_HISTORICAL_DEV_BACKTEST.json",
+      "sha256": "4a863846af2440ac8c0b546e213aa788ef1f8b12d4d878fef34d7c69ffcf50b0",
+      "bytes": 9950
+    },
+    {
+      "file": "REAL_HISTORICAL_HOLDOUT_BACKTEST.json",
+      "sha256": "9e3394e2806b7838aba4eac12ed4000bfd49b655eb66ff4db98a1d695494eda3",
+      "bytes": 440052
+    }
+  ]
+}

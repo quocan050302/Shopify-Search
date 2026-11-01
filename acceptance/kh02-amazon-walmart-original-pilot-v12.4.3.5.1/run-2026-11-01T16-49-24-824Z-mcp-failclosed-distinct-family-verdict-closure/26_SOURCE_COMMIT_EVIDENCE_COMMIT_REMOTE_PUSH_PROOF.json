@@ -1,0 +1,14 @@
+{
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baseRemoteHead": "87179935d1169e22379e2d92ef246777cfc529e8",
+  "previousTestedCodeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "testedTreeSha": "7096ddc630b9d78e7a9aa33141937ff6d6b9253c",
+  "baseQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "codeCommitMessage": "fix(kh02): make Amazon MCP live pilot gates and Walmart reporting fail closed",
+  "evidenceCommitMessage": "test(kh02): record truthful Amazon MCP and Walmart Jina live pilot acceptance",
+  "recordedAt": "2026-11-01T16:54:22.769Z",
+  "status": "CODE_COMMITTED_EVIDENCE_PACKAGED_FOR_PUSH"
+}

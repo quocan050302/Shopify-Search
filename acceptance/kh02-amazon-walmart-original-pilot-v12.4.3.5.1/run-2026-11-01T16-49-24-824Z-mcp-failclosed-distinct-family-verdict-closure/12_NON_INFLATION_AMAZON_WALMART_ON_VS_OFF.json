@@ -1,0 +1,27 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "nonInflationVerified": true,
+  "comparedCandidatesCount": 3,
+  "candidateSetMatch": true,
+  "providerPathExercised": true,
+  "walmartEvidenceRowsExercised": 3,
+  "scoreDeltaAbsMax": 0,
+  "confidenceDeltaAbsMax": 0,
+  "rankingChanged": false,
+  "gateChanges": 0,
+  "g15PromotedCount": 0,
+  "g16PromotedCount": 0,
+  "amazonNonInflation": {
+    "comparisonStatus": "COMPARED_ZERO_INFLATION",
+    "scoreDeltaAbsMax": 0,
+    "rankChanged": false,
+    "g07Changed": false,
+    "g15Changed": false,
+    "g16Changed": false
+  },
+  "walmartCandidateIdsOn": [
+    "cand_2112683702",
+    "cand_207368966",
+    "cand_1333881927"
+  ]
+}

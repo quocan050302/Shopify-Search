@@ -1,0 +1,125 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "split": "HOLDOUT",
+  "niche": "Pet Gadgets",
+  "datasetFingerprintSha256": "3e677412e40dc8850911b597712c12c8209f58cec1f212bb8ea57a3f33be26b5",
+  "windowStart": "2026-10-24T00:00:00.000Z",
+  "windowEnd": "2026-10-30T12:00:00.000Z",
+  "asOfCutoffIso": "2026-10-30T12:00:00.000Z",
+  "backtestEngineExecuted": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "policyScenarioVerdict": "PASS",
+  "historicalObservationCount": 377,
+  "reconstructedCandidateCount": 318,
+  "shortlistCount": 3,
+  "nicheMatchedCount": 3,
+  "verifiedIdentityCount": 0,
+  "postCutoffRowsIncludedCount": 0,
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "historicalHoldoutBusinessVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "shortlistProducts": [
+    {
+      "candidateId": "cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+      "title": "Automatic Dog Feeder for Easy Daily Meals",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kingspetboutique.info",
+      "canonicalProductUrl": "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+      "familyKey": "automatic_pet_feeder",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kingspetboutique.info_automatic_dog_feeder_for_easy_",
+        "domain:kingspetboutique.info",
+        "url:https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+      "title": "The #1 Vet-Recommended Cat Fountain",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+      ],
+      "storeDomain": "kittyspout.com",
+      "canonicalProductUrl": "https://www.kittyspout.com/products/kittyspout-wireless-fountain",
+      "familyKey": "pet_water_fountain",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_kittyspout.com_the__1_vet_recommended_cat_fou",
+        "domain:kittyspout.com",
+        "url:https://www.kittyspout.com/products/kittyspout-wireless-fountain"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+      "title": "The #1 Pet Hair/Lint/Dust Cleaner",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "FUNNEL_UNVERIFIED",
+      "isCheckoutChampFunnel": true,
+      "identityReasonCodes": [
+        "CHECKOUTCHAMP_OR_FUNNEL_UNVERIFIED_WITHOUT_ROOT_JSON_LD"
+      ],
+      "storeDomain": "cc.uprootclean.com",
+      "canonicalProductUrl": "https://cc.uprootclean.com/main/phr",
+      "familyKey": "pet_hair_remover_roller",
+      "nicheMatched": true,
+      "matchStatus": "MATCH",
+      "proofRefs": [
+        "candidate:cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+        "domain:cc.uprootclean.com",
+        "url:https://cc.uprootclean.com/main/phr"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_cc.uprootclean.com_the__1_pet_hair_lint_dust_clea",
+        "domain:cc.uprootclean.com",
+        "url:https://cc.uprootclean.com/main/phr"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    }
+  ]
+}

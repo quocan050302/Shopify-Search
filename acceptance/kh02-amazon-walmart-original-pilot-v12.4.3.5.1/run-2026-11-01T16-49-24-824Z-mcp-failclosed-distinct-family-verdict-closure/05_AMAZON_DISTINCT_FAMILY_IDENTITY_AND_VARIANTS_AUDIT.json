@@ -1,0 +1,19 @@
+{
+  "codeSha": "c0993929500b3c37504a5aae8f7f559f18cedd84",
+  "rawLiveAsinsCount": 3,
+  "verifiedLiveAsins": [
+    "B00BAGTNAQ",
+    "B01FXC7JWQ",
+    "B0FDKQGRCK"
+  ],
+  "distinctVerifiedProductFamilies": 3,
+  "distinctVerifiedProductFamilyKeys": [
+    "amz_family:chomchom:pet_hair_remover_roller",
+    "amz_family:furbo:pet_camera_treat_tosser",
+    "amz_family:petlibro:pet_water_fountain"
+  ],
+  "distinctCandidateIds": 3,
+  "requiredLiveTargets": 3,
+  "requiredLiveTargetsMet": true,
+  "chomChomVariantsCountAsSingleFamily": true
+}
