@@ -1375,22 +1375,12 @@ async function runAll12E2ESpecsWithReceipts(params: {
   failedE2ETestCases: number;
   receipts: any[];
 }> {
-  const vitestIntegrationE2ESpecs = [
-    "tests/integration/kh02BrowserAcceptance.test.ts",
-    "tests/integration/kh02V12_4_1_RealCollectorParityE2E.test.ts",
-    "tests/integration/kh02V12_4_2_RealProviderCollectorE2E.test.ts",
-    "tests/integration/kh02V12_4_3_1_MediaProvenanceE2E.test.ts",
-    "tests/integration/kh02V12_4_3_2_ProductIdentityRelevanceE2E.test.ts",
-    "tests/integration/kh02V12_4_3_3_MerchantVerificationShortlistE2E.test.ts",
-  ];
-  const playwrightE2ESpecs = [
-    "tests/e2e/kh02-v12-4-3-4-evergreen-60d-demand-gate.spec.ts",
-    "tests/e2e/kh02-v12-4-3-4-1-authoritative-60d-demand-closure.spec.ts",
-    "tests/e2e/kh02-v12-4-3-4-2-point-in-time-backtest-merchant-closure.spec.ts",
-    "tests/e2e/kh02-v12-4-3-5-0-2-amazon-creators-api.spec.ts",
-    "tests/e2e/kh02-v12-4-3-5-0-3-amazon-creators-closure.spec.ts",
-    "tests/e2e/kh02_v12_4_3_4_3_tiktok_demand_g16_closure.spec.ts",
-  ];
+  const vitestIntegrationE2ESpecs = Object.keys(
+    STANDALONE_SERVER_OR_BROWSER_E2E_FILES
+  ).filter((f) => f.startsWith("tests/integration/"));
+  const playwrightE2ESpecs = Object.keys(
+    STANDALONE_SERVER_OR_BROWSER_E2E_FILES
+  ).filter((f) => f.startsWith("tests/e2e/"));
 
   const tmpE2EDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "kh02-e2e-receipts-")
