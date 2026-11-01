@@ -480,6 +480,9 @@ export function evaluatePointInTimeNicheCandidate(
     if (/\b(garlic\s*chopper|vegetable\s*chopper|food\s*chopper|mandoline|slicer)\b/i.test(combined)) {
       return "kitchen_food_chopper";
     }
+    if (/\b(meat\s*thermometer|instant\s*read\s*thermometer|food\s*thermometer|cooking\s*thermometer)\b/i.test(combined)) {
+      return "kitchen_meat_thermometer";
+    }
     return detectSpecificProductFamily(text) || "replayed_family";
   };
 
@@ -816,7 +819,7 @@ export function evaluatePointInTimeNicheCandidate(
   // Kitchen Gadgets niche handling (proves evaluator is driven by input `niche`, not hardcoded to Pet Gadgets)
   if (isKitchenNiche) {
     const hasKitchenMechanism =
-      /\b(portable\s*blender|blendjet|blender|garlic\s*chopper|vegetable\s*chopper|food\s*chopper|mandoline|peeler|oil\s*sprayer|air\s*fryer|milk\s*frother|can\s*opener|kitchen\s*scale|knife\s*sharpener|espresso\s*maker)\b/i.test(
+      /\b(portable\s*blender|blendjet|blender|garlic\s*chopper|vegetable\s*chopper|food\s*chopper|mandoline|peeler|oil\s*sprayer|air\s*fryer|milk\s*frother|can\s*opener|kitchen\s*scale|knife\s*sharpener|espresso\s*maker|meat\s*thermometer|instant\s*read\s*thermometer|food\s*thermometer|cooking\s*thermometer)\b/i.test(
         combinedEvidence
       );
     const hasNonKitchenSignal =

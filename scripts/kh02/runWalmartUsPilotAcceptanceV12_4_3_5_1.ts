@@ -1188,6 +1188,23 @@ function measureLiveRollingMinuteRate(artifact10: any): {
   };
 }
 
+function cleanupCompletedIsolatedVitestDbs(): void {
+  try {
+    const baseIsolatedDir = path.join(os.tmpdir(), "swai-vitest-isolated");
+    if (fs.existsSync(baseIsolatedDir)) {
+      for (const entry of fs.readdirSync(baseIsolatedDir)) {
+        if (entry === "cached_schema_template.db") continue;
+        try {
+          fs.rmSync(path.join(baseIsolatedDir, entry), {
+            recursive: true,
+            force: true,
+          });
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
 function runLegacyQaBaselineWorktreeAudit(params: {
   baseQaSha: string;
   masterHeadSha: string;
@@ -1214,6 +1231,44 @@ function runLegacyQaBaselineWorktreeAudit(params: {
         "dir"
       );
     } catch {}
+    try {
+      fs.symlinkSync(
+        path.join(REPO_ROOT, "src", "generated"),
+        path.join(wtPath, "src", "generated"),
+        "dir"
+      );
+    } catch {}
+    try {
+      if (fs.existsSync(path.join(REPO_ROOT, "prisma", "test_template.db"))) {
+        fs.symlinkSync(
+          path.join(REPO_ROOT, "prisma", "test_template.db"),
+          path.join(wtPath, "prisma", "test_template.db"),
+          "file"
+        );
+      }
+    } catch {}
+    try {
+      if (fs.existsSync(path.join(REPO_ROOT, ".env.local"))) {
+        fs.symlinkSync(
+          path.join(REPO_ROOT, ".env.local"),
+          path.join(wtPath, ".env.local"),
+          "file"
+        );
+      }
+    } catch {}
+    try {
+      if (fs.existsSync(path.join(REPO_ROOT, "services"))) {
+        fs.rmSync(path.join(wtPath, "services"), {
+          recursive: true,
+          force: true,
+        });
+        fs.symlinkSync(
+          path.join(REPO_ROOT, "services"),
+          path.join(wtPath, "services"),
+          "dir"
+        );
+      }
+    } catch {}
 
     const start = Date.now();
     try {
@@ -1233,7 +1288,11 @@ function runLegacyQaBaselineWorktreeAudit(params: {
       // Expected to exit non-zero on origin/QA due to 17 legacy failing assertions
     }
     const qaDurationMs = Date.now() - start;
-    const qaReport = parseVitestJsonReport(qaJsonPath, wtPath);
+    let realWtPath = wtPath;
+    try {
+      realWtPath = fs.realpathSync(wtPath);
+    } catch {}
+    const qaReport = parseVitestJsonReport(qaJsonPath, realWtPath);
 
     const headAssertionsByKey = new Map<
       string,
@@ -1473,6 +1532,7 @@ async function runAll12E2ESpecsWithReceipts(params: {
       });
     }
   } finally {
+    cleanupCompletedIsolatedVitestDbs();
     try {
       fs.rmSync(tmpE2EDir, { recursive: true, force: true });
     } catch {}
@@ -2084,56 +2144,61 @@ async function main() {
     (f) => !EIGHT_REPAIRED_LEGACY_UNIT_FILES[f]
   );
 
-  // Shard 1: 99 Unit Test Files + 8 Repaired Legacy Unit Files (run sequentially so .env.local tests never contend)
+  // Bounded Parallel Stage 2B (maxConcurrency=2):
+  // Pair 1: 99 Active Unit Files + Integration Shard 1 (17 files)
+  // Pair 2: 8 Repaired Legacy Unit Files + Integration Shard 2 (17 files)
+  const intMid = Math.ceil(testInventory.activeRequiredIntegrationFiles.length / 2);
+  const intShard1Files = testInventory.activeRequiredIntegrationFiles.slice(0, intMid);
+  const intShard2Files = testInventory.activeRequiredIntegrationFiles.slice(intMid);
+
   const activeUnitCmd = `npx vitest run ${unitShard99Files.join(
     " "
   )} --maxWorkers=2 --reporter=json --outputFile=${fullUnitJsonPath}`;
   const legacyUnitCmd = `npx vitest run ${repairedLegacy8UnitFiles.join(
     " "
   )} --maxWorkers=1 --reporter=json --outputFile=${legacyUnitJsonPath}`;
+  const intShard1Cmd = `npx vitest run ${intShard1Files.join(
+    " "
+  )} --maxWorkers=1 --reporter=json --outputFile=${fullIntShard1JsonPath}`;
+  const intShard2Cmd = `npx vitest run ${intShard2Files.join(
+    " "
+  )} --maxWorkers=1 --reporter=json --outputFile=${fullIntShard2JsonPath}`;
 
-  const activeUnitRun = await processTracker.runTrackedCommand({
-    label: "WAVE_H_ACTIVE_UNIT_SUITE_99_FILES",
-    command: activeUnitCmd,
-    isHeavy: true,
-  });
+  const [activeUnitRun, intShard1Run] = await Promise.all([
+    processTracker.runTrackedCommand({
+      label: "WAVE_H_ACTIVE_UNIT_SUITE_99_FILES",
+      command: activeUnitCmd,
+      isHeavy: true,
+    }),
+    processTracker.runTrackedCommand({
+      label: "WAVE_H_ACTIVE_INTEGRATION_SHARD_1",
+      command: intShard1Cmd,
+      isHeavy: true,
+    }),
+  ]);
   recordCommand("WAVE_H_ACTIVE_UNIT_SUITE_99_FILES", activeUnitCmd, activeUnitRun);
+  recordCommand("WAVE_H_ACTIVE_INTEGRATION_SHARD_1", intShard1Cmd, intShard1Run);
+  cleanupCompletedIsolatedVitestDbs();
 
-  const legacyUnitRun = await processTracker.runTrackedCommand({
-    label: "WAVE_H_REPAIRED_LEGACY_UNIT_8_FILES",
-    command: legacyUnitCmd,
-    isHeavy: true,
-  });
+  const [legacyUnitRun, intShard2Run] = await Promise.all([
+    processTracker.runTrackedCommand({
+      label: "WAVE_H_REPAIRED_LEGACY_UNIT_8_FILES",
+      command: legacyUnitCmd,
+      isHeavy: true,
+    }),
+    processTracker.runTrackedCommand({
+      label: "WAVE_H_ACTIVE_INTEGRATION_SHARD_2",
+      command: intShard2Cmd,
+      isHeavy: true,
+    }),
+  ]);
   recordCommand(
     "WAVE_H_REPAIRED_LEGACY_UNIT_8_FILES",
     legacyUnitCmd,
     legacyUnitRun
   );
-
-  // Shard 2 & 3: All 34 Active Required Integration Test Files (serialized DB shards, --maxWorkers=1)
-  const intMid = Math.ceil(testInventory.activeRequiredIntegrationFiles.length / 2);
-  const intShard1Files = testInventory.activeRequiredIntegrationFiles.slice(0, intMid);
-  const intShard2Files = testInventory.activeRequiredIntegrationFiles.slice(intMid);
-
-  const intShard1Cmd = `npx vitest run ${intShard1Files.join(
-    " "
-  )} --maxWorkers=1 --reporter=json --outputFile=${fullIntShard1JsonPath}`;
-  const intShard1Run = await processTracker.runTrackedCommand({
-    label: "WAVE_H_ACTIVE_INTEGRATION_SHARD_1",
-    command: intShard1Cmd,
-    isHeavy: true,
-  });
-  recordCommand("WAVE_H_ACTIVE_INTEGRATION_SHARD_1", intShard1Cmd, intShard1Run);
-
-  const intShard2Cmd = `npx vitest run ${intShard2Files.join(
-    " "
-  )} --maxWorkers=1 --reporter=json --outputFile=${fullIntShard2JsonPath}`;
-  const intShard2Run = await processTracker.runTrackedCommand({
-    label: "WAVE_H_ACTIVE_INTEGRATION_SHARD_2",
-    command: intShard2Cmd,
-    isHeavy: true,
-  });
   recordCommand("WAVE_H_ACTIVE_INTEGRATION_SHARD_2", intShard2Cmd, intShard2Run);
+  cleanupCompletedIsolatedVitestDbs();
 
   const activeUnitReport = parseVitestJsonReport(fullUnitJsonPath);
   const legacyUnitReport = parseVitestJsonReport(legacyUnitJsonPath);
@@ -2155,6 +2220,7 @@ async function main() {
     codeSha,
     headLegacyReport: legacyUnitReport,
   });
+  cleanupCompletedIsolatedVitestDbs();
   writeJson(
     artifactDir,
     "02_BASELINE_QA_MASTER_DIFF_PROOF.json",
@@ -2274,6 +2340,12 @@ async function main() {
       `Wave C next build failed:\n${waveBuild.stdout}\n${waveBuild.stderr}`
     );
   }
+  try {
+    fs.rmSync(path.join(REPO_ROOT, ".next", "cache"), {
+      recursive: true,
+      force: true,
+    });
+  } catch {}
   writeJson(artifactDir, "08_BUILD_AND_RUNTIME_VERIFICATION.json", {
     sourceSha: codeSha,
     evaluatedAt: new Date().toISOString(),
