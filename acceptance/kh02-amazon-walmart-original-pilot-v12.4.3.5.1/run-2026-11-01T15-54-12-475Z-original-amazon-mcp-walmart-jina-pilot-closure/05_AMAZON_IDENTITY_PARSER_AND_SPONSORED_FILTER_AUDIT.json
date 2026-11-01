@@ -1,0 +1,14 @@
+{
+  "codeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "sponsoredSearchCardRejected": true,
+  "nonAsinTenCharTokensRejected": true,
+  "brandOnlyNeverPromotedToExact": true,
+  "accessoryOrRefillNeverPromotedToExact": true,
+  "variationChildrenKeptDistinct": true,
+  "missingPriceRemainsNull": true,
+  "unobservedDeliveryZipRemainsNull": true,
+  "unobservedHttpStatusOrigin": "UNOBSERVED_NULL",
+  "conflictingAsinRejectedFailClosed": true,
+  "handshakeOnlyZeroToolCallsMarkedNotExecuted": true,
+  "fixtureOrTestDoubleNeverProducesAuthorizedLive": true
+}

@@ -1,0 +1,24 @@
+{
+  "codeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "botWallAndInnerErrorAudit": {
+    "outer200WithBotWallStatus": "BLOCKED_PROVIDER",
+    "stopsImmediatelyOnFirstBotWall": true,
+    "falseSuccessCount": 0
+  },
+  "upcStringPreservation": {
+    "sonyItemId": "16504921979",
+    "sonyUpc": "027242930698",
+    "leadingZeroPreserved": true
+  },
+  "nullablePriceAudit": {
+    "missingPriceValue": null,
+    "coercedToZero": false
+  },
+  "accessoryGuardAudit": {
+    "accessoryItemId": "999111222",
+    "matchedAsMainProduct": false
+  },
+  "titleOnlyMatchAudit": {
+    "grantedExact": false
+  }
+}

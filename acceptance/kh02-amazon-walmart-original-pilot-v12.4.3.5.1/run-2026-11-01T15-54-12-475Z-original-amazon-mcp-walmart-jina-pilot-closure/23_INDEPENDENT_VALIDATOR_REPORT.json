@@ -1,0 +1,11 @@
+{
+  "overallVerdict": "PASS",
+  "artifactDir": "acceptance/kh02-amazon-walmart-original-pilot-v12.4.3.5.1/run-2026-11-01T15-54-12-475Z-original-amazon-mcp-walmart-jina-pilot-closure",
+  "validatedAt": "2026-11-01T15:58:15.194Z",
+  "expectedCodeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "checksExecuted": 56,
+  "checksPassed": 56,
+  "checksFailed": 0,
+  "failureCodes": [],
+  "failureDetails": []
+}

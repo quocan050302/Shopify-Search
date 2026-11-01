@@ -1,0 +1,20 @@
+{
+  "codeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "readOnlyVerified": true,
+  "amazonGetRoute": {
+    "route": "/api/v1/kh02/marketplace/amazon",
+    "httpStatus": 401,
+    "dbMutationsCount": 0,
+    "digestBefore": "659dc2b1e7a6a4cd1bb28d844243c67894527a25c3aa14ba4f37d97922d5bd98",
+    "digestAfter": "659dc2b1e7a6a4cd1bb28d844243c67894527a25c3aa14ba4f37d97922d5bd98",
+    "returnedCandidatesCount": 0
+  },
+  "walmartGetRoute": {
+    "route": "/api/v1/kh02/marketplace/walmart",
+    "httpStatus": 401,
+    "dbMutationsCount": 0,
+    "digestBefore": "659dc2b1e7a6a4cd1bb28d844243c67894527a25c3aa14ba4f37d97922d5bd98",
+    "digestAfter": "659dc2b1e7a6a4cd1bb28d844243c67894527a25c3aa14ba4f37d97922d5bd98",
+    "returnedCandidatesCount": 0
+  }
+}

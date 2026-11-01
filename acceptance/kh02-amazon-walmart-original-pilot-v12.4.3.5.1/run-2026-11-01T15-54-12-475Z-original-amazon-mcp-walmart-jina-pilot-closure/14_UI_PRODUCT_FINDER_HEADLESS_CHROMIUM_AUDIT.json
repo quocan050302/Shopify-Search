@@ -1,0 +1,15 @@
+{
+  "codeSha": "a8b402985e7bda4dc06222c121ec83e5d9aad9e1",
+  "realChromiumVerified": true,
+  "browserEngine": "Playwright Headless Chromium",
+  "workspaceId": "acceptance_v12_2_4_ws",
+  "researchRunId": "kh02_orig_pilot_ui_1793548624318",
+  "candidateId": "cand_orig_chomchom_b08n5wrwnw_674275778",
+  "walmartDisabledReasonRendered": "Server pilot disabled",
+  "walmartDisabledReasonRenderedKeyRequired": false,
+  "amazonCardRenderedBeforeAndAfterReload": true,
+  "walmartCardRenderedBeforeAndAfterReload": true,
+  "amazonDeliveryPostalCodeRendered": "10001",
+  "walmartLocationPostalCodeRendered": "95829",
+  "nonInflationDisclaimerPresentInPage": true
+}
