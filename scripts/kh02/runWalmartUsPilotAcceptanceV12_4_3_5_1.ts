@@ -1434,9 +1434,9 @@ async function runAll12E2ESpecsWithReceipts(params: {
     for (const spec of playwrightE2ESpecs) {
       specIndex += 1;
       const jsonOut = path.join(tmpE2EDir, `pw_e2e_${specIndex}.json`);
-      const cmd = `PLAYWRIGHT_JSON_OUTPUT_NAME="${jsonOut}" npx playwright test ${spec} --workers=1 --reporter=json`;
+      const cmd = `npx vitest run ${spec} --maxWorkers=1 --reporter=json --outputFile="${jsonOut}"`;
       const runRes = await params.processTracker.runTrackedCommand({
-        label: `E2E_SPEC_${String(specIndex).padStart(2, "0")}_PLAYWRIGHT`,
+        label: `E2E_SPEC_${String(specIndex).padStart(2, "0")}_BROWSER_E2E`,
         command: cmd,
         isHeavy: true,
         timeoutMs: 240_000,
@@ -1446,27 +1446,27 @@ async function runAll12E2ESpecsWithReceipts(params: {
         cmd,
         runRes
       );
-      const pwRep = parsePlaywrightJsonReport(jsonOut, runRes.stdout);
+      const rep = parseVitestJsonReport(jsonOut);
       receipts.push({
         specIndex,
         specFile: spec,
         category: "PLAYWRIGHT_BROWSER_E2E",
-        runner: "playwright",
+        runner: "vitest+playwright-chromium",
         command: cmd,
         sourceSha: params.codeSha,
         startedAt: runRes.startedAt,
         endedAt: runRes.endedAt,
         durationMs: runRes.durationMs,
         exitCode: runRes.exitCode,
-        totalTests: pwRep.totalTests,
-        passedTests: pwRep.passedTests,
-        failedTests: pwRep.failedTests,
+        totalTests: rep.numTotalTests,
+        passedTests: rep.numPassedTests,
+        failedTests: rep.numFailedTests,
         classification:
-          runRes.ok && pwRep.failedTests === 0 && pwRep.totalTests > 0
+          runRes.ok && rep.numFailedTests === 0 && rep.numTotalTests > 0
             ? "PASS"
             : "FAIL",
         failureReason:
-          !runRes.ok || pwRep.failedTests > 0
+          !runRes.ok || rep.numFailedTests > 0
             ? (runRes.stderr || runRes.stdout).slice(-400)
             : null,
         ownedPidsReconciled: true,
