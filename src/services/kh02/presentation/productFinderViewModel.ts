@@ -6,8 +6,10 @@ import type {
   WalmartEvidenceSummary,
 } from "../types";
 import { validateAndNormalizeMediaUrl } from "../media/productMediaResolver";
-import { summarizeAmazonEvidenceForProduct } from "../marketplace/marketplaceEvidenceTypes";
-import { summarizeWalmartEvidenceForCandidate } from "../marketplace/walmartEvidencePersistence";
+import {
+  summarizeAmazonEvidenceForProduct,
+  summarizeWalmartEvidenceForCandidate,
+} from "../marketplace/marketplaceEvidenceTypes";
 
 export type CanonicalQualificationTier =
   | "VERIFIED_EVERGREEN"

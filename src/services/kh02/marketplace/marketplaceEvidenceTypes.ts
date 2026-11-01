@@ -669,5 +669,10 @@ export {
   WALMART_NON_INFLATION_NOTICE,
   computeWalmartDeterministicHash,
 } from "./walmartJinaTypes";
+export {
+  summarizeWalmartEvidenceForCandidate,
+  formatWalmartPriceDisplay,
+  formatWalmartLocationDisplay,
+} from "./walmartJinaPolicy";
 
 

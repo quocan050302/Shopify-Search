@@ -16,8 +16,12 @@
  */
 
 import {
+  WALMART_NON_INFLATION_NOTICE,
+  WalmartEvidenceSummary,
   WalmartPilotPolicy,
   WalmartPilotPolicyLimits,
+  WalmartProductEvidence,
+  WalmartProviderTelemetry,
   WalmartQueryExecutionStatus,
 } from "./walmartJinaTypes";
 
@@ -212,5 +216,214 @@ export function resolveEffectiveWalmartRunAuthorization(
     fixtureTransportPermitted: hasControlledTestFixtureTransport,
     initialQueryStatus: "PENDING",
     reason: policy.reason,
+  };
+}
+
+export function formatWalmartPriceDisplay(
+  price: number | null | undefined,
+  currency: string | null | undefined
+): string {
+  if (
+    typeof price === "number" &&
+    Number.isFinite(price) &&
+    price > 0 &&
+    typeof currency === "string" &&
+    /^[A-Z]{3}$/.test(currency.trim())
+  ) {
+    const code = currency.trim().toUpperCase();
+    if (code === "USD") {
+      return `$${price.toFixed(2)} USD`;
+    }
+    return `${price.toFixed(2)} ${code}`;
+  }
+  return "Not verified";
+}
+
+export function formatWalmartLocationDisplay(
+  postalCode: string | null | undefined,
+  storeIds: string[] | null | undefined
+): string | null {
+  const parts: string[] = [];
+  if (postalCode && postalCode.trim()) {
+    parts.push(`ZIP ${postalCode.trim()}`);
+  }
+  if (Array.isArray(storeIds) && storeIds.length > 0) {
+    parts.push(`Store #${storeIds.join(", #")}`);
+  }
+  if (parts.length === 0) return null;
+  return `${parts.join(" · ")} (Observed store scope)`;
+}
+
+function buildStatusReasonForSummary(
+  row: WalmartProductEvidence | null,
+  telemetry?: WalmartProviderTelemetry | null,
+  policy?: WalmartPilotPolicy
+): string {
+  if (row) {
+    if (row.isStale && row.isCached) {
+      return `Current check ${row.queryStatus}; showing cached Walmart observation from ${
+        row.observedAt || "prior run"
+      }.`;
+    }
+    if (row.queryStatus === "SUCCEEDED") {
+      if (row.presence === "NO_MATCH_IN_SCOPE") {
+        return `Scoped Walmart US search completed for '${
+          row.queryScope.query || "candidate"
+        }'; no matching listing in checked search scope (not a global absence claim).`;
+      }
+      if (row.presence === "FOUND") {
+        return `Walmart US listing observed (${row.matchLevel} match, stock: ${row.availability}).`;
+      }
+    }
+    if (row.queryStatus === "BLOCKED_PROVIDER") {
+      return "Walmart / Jina Reader returned anti-bot verification or HTTP 403 block; listing presence is UNKNOWN.";
+    }
+    if (row.queryStatus === "TIMED_OUT") {
+      return "Walmart Jina Reader request timed out and was aborted; listing presence is UNKNOWN.";
+    }
+    if (row.queryStatus === "RATE_LIMITED") {
+      return "Walmart Jina Reader rate limit (HTTP 429) or cooldown active; listing presence is UNKNOWN.";
+    }
+    if (row.queryStatus === "PARSE_ERROR") {
+      return "Walmart response failed JSON/__NEXT_DATA__ schema validation; listing presence is UNKNOWN.";
+    }
+    if (row.queryStatus === "BUDGET_EXHAUSTED" || row.queryStatus === "DEFERRED") {
+      return `Walmart pilot cap reached (${row.queryStatus}); candidate check deferred.`;
+    }
+    if (row.queryStatus === "KEY_OR_PAYMENT_REQUIRED") {
+      return "Jina Reader free mode restricted (401/402); stopped free pilot without requesting API keys.";
+    }
+    if (row.rejectionReasons.length > 0) {
+      return row.rejectionReasons.join("; ");
+    }
+  }
+  if (telemetry) {
+    return telemetry.statusReason;
+  }
+  const resolvedPolicy = policy || resolveWalmartUsPilotPolicy();
+  return resolvedPolicy.reason;
+}
+
+export function summarizeWalmartEvidenceForCandidate(
+  candidateId: string,
+  researchRunId: string,
+  evidenceRows: WalmartProductEvidence[],
+  options: {
+    telemetry?: WalmartProviderTelemetry | null;
+    policy?: WalmartPilotPolicy;
+  } = {}
+): WalmartEvidenceSummary {
+  const candidateRows = (evidenceRows || []).filter(
+    (r) => r && r.candidateId === candidateId && r.researchRunId === researchRunId
+  );
+
+  const rankRow = (r: WalmartProductEvidence): number => {
+    let score = 0;
+    if (r.presence === "FOUND") score += 100;
+    if (r.matchLevel === "EXACT") score += 50;
+    else if (r.matchLevel === "SIMILAR") score += 25;
+    if (r.queryStatus === "SUCCEEDED") score += 20;
+    if (!r.isStale) score += 10;
+    return score;
+  };
+
+  candidateRows.sort((a, b) => rankRow(b) - rankRow(a));
+  const primary = candidateRows[0] || null;
+  const telemetry = options.telemetry || null;
+  const policy = options.policy || resolveWalmartUsPilotPolicy();
+
+  if (!primary) {
+    const fallbackStatus: WalmartQueryExecutionStatus = telemetry
+      ? telemetry.overallStatus
+      : policy.status;
+    return {
+      visible: Boolean(telemetry || policy.featureEnabled),
+      provider: "WALMART_US",
+      candidateId,
+      researchRunId,
+      queryStatus: fallbackStatus,
+      presence: "UNKNOWN",
+      matchLevel: "UNCERTAIN",
+      verifiedIdentity: false,
+      itemId: null,
+      canonicalWalmartUrl: null,
+      title: null,
+      brand: null,
+      model: null,
+      upc: null,
+      price: null,
+      currency: null,
+      priceDisplay: "Not verified",
+      seller: null,
+      locationPostalCode: null,
+      locationStoreIds: [],
+      locationDisplay: null,
+      availability: "UNKNOWN",
+      evidenceOrigin: "REAL_JINA_READER",
+      isCached: false,
+      isStale: false,
+      observedAt: null,
+      lastAttemptAt: telemetry?.lastAttemptAt || null,
+      lastSuccessfulLiveQueryAt: telemetry?.lastSuccessfulLiveQueryAt || null,
+      rawEvidenceHash: null,
+      statusReason: buildStatusReasonForSummary(null, telemetry, policy),
+      matchReasons: [],
+      rejectionReasons: [],
+      missingFields: [],
+      appearanceProvenance: [],
+      queryScope: {
+        query: null,
+        normalizedQuery: null,
+        market: "US",
+        checkedSearchCount: 0,
+        checkedPdpCount: 0,
+        rawSearchResultCount: null,
+        dedupedSearchResultCount: null,
+        completeSearchScope: false,
+      },
+      nonInflationNotice: WALMART_NON_INFLATION_NOTICE,
+    };
+  }
+
+  return {
+    visible: true,
+    provider: "WALMART_US",
+    candidateId,
+    researchRunId,
+    queryStatus: primary.queryStatus,
+    presence: primary.presence,
+    matchLevel: primary.matchLevel,
+    verifiedIdentity: primary.verifiedIdentity,
+    itemId: primary.itemId,
+    canonicalWalmartUrl: primary.canonicalProductUrl,
+    title: primary.title,
+    brand: primary.brand,
+    model: primary.model,
+    upc: primary.upc,
+    price: primary.price,
+    currency: primary.currency,
+    priceDisplay: formatWalmartPriceDisplay(primary.price, primary.currency),
+    seller: primary.seller,
+    locationPostalCode: primary.locationPostalCode,
+    locationStoreIds: primary.locationStoreIds || [],
+    locationDisplay: formatWalmartLocationDisplay(
+      primary.locationPostalCode,
+      primary.locationStoreIds
+    ),
+    availability: primary.availability,
+    evidenceOrigin: primary.evidenceOrigin,
+    isCached: primary.isCached,
+    isStale: primary.isStale,
+    observedAt: primary.observedAt,
+    lastAttemptAt: primary.lastAttemptAt,
+    lastSuccessfulLiveQueryAt: primary.lastSuccessfulLiveQueryAt,
+    rawEvidenceHash: primary.rawEvidenceHash,
+    statusReason: buildStatusReasonForSummary(primary, telemetry, policy),
+    matchReasons: primary.matchReasons || [],
+    rejectionReasons: primary.rejectionReasons || [],
+    missingFields: primary.missingFields || [],
+    appearanceProvenance: primary.appearanceProvenance || [],
+    queryScope: primary.queryScope,
+    nonInflationNotice: primary.nonInflationNotice || WALMART_NON_INFLATION_NOTICE,
   };
 }
