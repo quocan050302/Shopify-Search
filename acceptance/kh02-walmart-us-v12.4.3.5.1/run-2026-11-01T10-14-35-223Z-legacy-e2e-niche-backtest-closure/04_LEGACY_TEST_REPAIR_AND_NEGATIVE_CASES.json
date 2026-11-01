@@ -1,0 +1,59 @@
+{
+  "sourceSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+  "evaluatedAt": "2026-11-01T10:16:05.190Z",
+  "totalLegacyFilesRepaired": 8,
+  "totalAssertionsIn8Files": 77,
+  "passedAssertionsIn8Files": 77,
+  "failedAssertionsIn8Files": 0,
+  "zeroExemptionsInAcceptanceTruth": true,
+  "files": [
+    {
+      "file": "tests/unit/kh02FreeProviderContracts.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally tested pre-V12.4.3.4 SERPAPI_LEGACY defaultDemandProvider; updated to assert GOOGLE_FREE_ONLY zero-spend default.",
+      "assertionsPassedCount": 13,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/kh02SourceAdapters.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally tested 5 active sources including TIKTOK_ORGANIC (HasData); updated to assert 4 active sources + TIKTOK_ORGANIC permanently disabled.",
+      "assertionsPassedCount": 4,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/kh02TestConnectionsFlow.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally tested TIKTOK_ORGANIC with HASDATA_API_KEY as CONFIGURED; updated to assert DISABLED under zero-spend policy.",
+      "assertionsPassedCount": 8,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally checked legacy V12.1.2 DEMAND_HISTORY copy; updated to assert V12.4 Google Trends BigQuery/CSV diagnostics.",
+      "assertionsPassedCount": 9,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/kh02V12_2_1_ProviderActivation.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally expected TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED; updated to assert DISABLED.",
+      "assertionsPassedCount": 13,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally expected TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED/SKIPPED; updated to assert DISABLED.",
+      "assertionsPassedCount": 16,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/metaCollectorNormalization.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally expected media_type='image'/'video' without URL to classify as IMAGE/VIDEO; updated to assert V12.4.3.2.1 strict media URL proof.",
+      "assertionsPassedCount": 8,
+      "assertionsFailedCount": 0
+    },
+    {
+      "file": "tests/unit/metaCollectorV11_2.test.ts",
+      "repairSummary": "Repaired in V12.4.3.5.1 Workstream A: originally expected has_image=true without URL to return IMAGE; updated to assert UNKNOWN without URL and IMAGE with URL.",
+      "assertionsPassedCount": 6,
+      "assertionsFailedCount": 0
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Walmart US Jina Reader REST Pilot)
+
+- **Nhánh (Branch)**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Commit Mã Nguồn Đã Test (`TESTED_SOURCE_SHA`)**: `bddacab7540dcba95e096ec3d802cf2aacc2a509` (Tree SHA: `2e7c544f0ac28dee3a164b7399ada7c4b5738330`)
+- **Quan Hệ Với `origin/QA` & `origin/master`**: `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`) và `origin/master` (`5dd5128b4ec9ce70e957a2f250b9012a25e9118c`) chia sẻ cùng git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`.
+- **Workstream A — Đối Chứng `origin/QA` & Sửa Dứt Điểm 8 File Unit Legacy (17 Assertion)**:
+  - Trên `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`): `8` file unit legacy fail `17` assertion (`60/77` pass).
+  - Trên `HEAD` (`bddacab7540dcba95e096ec3d802cf2aacc2a509`): Đã sửa toàn bộ `17/17` assertion theo đúng hợp đồng runtime V12.4+ đồng thời giữ nguyên các kiểm tra phủ định (`77/77` pass, `0` fail, `0` fail-exemption).
+- **Workstream B — Thực Thi Toàn Bộ 153/153 File Test (Bao Gồm 12/12 Spec E2E)**:
+  - Unit Suite (`107/107` file = `99` + `8`): `1539/1539` PASS (100%).
+  - Integration Suite (`34/34` file): `180/180` PASS (100%).
+  - E2E Matrix (`12/12` spec = `6` Vitest Integration E2E + `6` Playwright Browser E2E): `34/34` test case PASS (100%, `0` skipped, `0` failed).
+  - Tổng cộng: `153/153` file test thực thi (`1753/1753` test case PASS, `0` fail, `0` miễn trừ).
+- **Workstream C — Replay Lịch Sử DEV / HOLDOUT Đúng Ngữ Nghĩa Ngách (`Pet Gadgets`)**:
+  - **DEV (`<= 2026-10-24`)**: `60` quan sát lịch sử -> `5` ứng viên tái tạo -> `0` ứng viên khớp ngách `Pet Gadgets` (`4 MISMATCH`, `4 UNCERTAIN`). Trả về trung thực `shortlistCount = 0`, `shortlistShortfallCount = 3`, `nicheCoverageStatus = INSUFFICIENT_NICHE_COVERAGE`, tuyệt đối không chèn sản phẩm sai ngách (`Auto Detailing Putty Gel`, `Car Fender Panel Dent Edge Repair Tools`).
+  - **HOLDOUT (`2026-10-24 .. 2026-10-30`)**: `377` quan sát lịch sử -> `318` ứng viên tái tạo -> `3/3` (100%) ứng viên Top-3 khớp ngách `Pet Gadgets` thuộc `3` họ sản phẩm khác nhau (`The #1 Pet Hair/Lint/Dust Cleaner`, `Automatic Dog Feeder for Easy Daily Meals`, `The #1 Vet-Recommended Cat Fountain`), `0` rò rỉ hậu cutoff.
+- **Workstream D & E — Ma Trận 9 Verdict Tách Bạch & 72 Đột Biến Âm Tính (Negative Mutations)**:
+  - `ENGINEERING_TESTS`: `PASS`
+  - `BROAD_REGRESSION`: `PASS`
+  - `REQUIRED_E2E_COVERAGE`: `PASS`
+  - `HISTORICAL_REPLAY_INTEGRITY`: `PASS`
+  - `NICHE_RELEVANCE`: `PASS`
+  - `LIVE_PROVIDERS`: `WALMART_US=BLOCKED_PROVIDER`, `AMAZON_US=CREDENTIALS_REQUIRED`, `TIKTOK_US_G07=BLOCKED`
+  - `HISTORICAL_DEMAND_G15`: `INSUFFICIENT_EVIDENCE`
+  - `MERCHANT_TOP3_G16`: `PARTIAL_2_OF_3` (trên snapshot lịch sử đã lưu, không ngụy tạo là xác thực live hiện tại)
+  - `FINAL_RELEASE`: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`
+  - Bộ đột biến âm tính trên file vật lý: `72/72` bị bắt chính xác (`0` false pass).

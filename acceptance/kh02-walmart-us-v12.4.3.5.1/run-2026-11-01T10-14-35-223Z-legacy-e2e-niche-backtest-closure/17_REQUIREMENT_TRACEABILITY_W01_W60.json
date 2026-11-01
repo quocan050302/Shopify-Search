@@ -1,0 +1,801 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+  "totalRequirements": 60,
+  "verifiedCount": 60,
+  "requirements": [
+    {
+      "id": "W01",
+      "title": "Checkout feature/kh02-walmart-us-jina-reader-v12.4.3.5.1 from latest origin/QA baseline",
+      "category": "BRANCH_AND_BASELINE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaTypes.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W02",
+      "title": "Keep existing Amazon US, Meta, Google, TikTok, Trends, scoring & payment logic free of regression",
+      "category": "BRANCH_AND_BASELINE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "testFiles": [
+        "tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts"
+      ]
+    },
+    {
+      "id": "W03",
+      "title": "Server-only KH02_WALMART_US_ENABLED defaults to false",
+      "category": "FEATURE_FLAGS_AND_POLICY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaPolicy.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W04",
+      "title": "Server-only KH02_WALMART_US_LIVE_ALLOWED defaults to false",
+      "category": "FEATURE_FLAGS_AND_POLICY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaPolicy.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W05",
+      "title": "Client requests cannot enable Walmart or override live policy when server flags are OFF",
+      "category": "FEATURE_FLAGS_AND_POLICY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaPolicy.ts",
+        "src/app/api/v1/kh02/marketplace/walmart/route.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts",
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W06",
+      "title": "Disabled state renders 'Server pilot disabled', never 'Key Required', with zero network/DB side effects",
+      "category": "FEATURE_FLAGS_AND_POLICY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaPolicy.ts",
+        "src/app/products/page.tsx"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W07",
+      "title": "Exact Jina Reader Search URL https://r.jina.ai/https://www.walmart.com/search?q={encodedQuery}",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W08",
+      "title": "Exact Jina Reader PDP URL https://r.jina.ai/https://www.walmart.com/ip/{itemId} with digit-only itemId validation",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W09",
+      "title": "Exact headers Accept: application/json, X-Cache-Tolerance: 0, X-Respond-With: html, X-Timeout: 25 and zero auth/cookie/proxy headers",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W10",
+      "title": "Outer HTTP 200 never blindly trusted; inner code/status, bot-wall, and HTML presence validated",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W11",
+      "title": "Request/response SHA-256 hashes, localRequestRef, upstreamRequestId, and requestedNoCache recorded",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W12",
+      "title": "HTTP 401/402 immediately stops free pilot with KEY_OR_PAYMENT_REQUIRED without asking user for paid key",
+      "category": "JINA_READER_PROTOCOL",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts",
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W13",
+      "title": "Deterministic linear extraction of <script id=\"__NEXT_DATA__\" type=\"application/json\"> without eval or greedy regex",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W14",
+      "title": "Schema compatibility inspector classifies SUPPORTED_CURRENT, SUPPORTED_VARIANT, or UNSUPPORTED_SCHEMA",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W15",
+      "title": "Missing/malformed __NEXT_DATA__ or unsupported schema classified as PARSE_ERROR + UNKNOWN, never NO_MATCH_IN_SCOPE",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W16",
+      "title": "Valid empty Walmart search classified as SUCCEEDED + NO_MATCH_IN_SCOPE",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W17",
+      "title": "Search itemStacks deduplicated by usItemId while preserving ORGANIC and SPONSORED provenance",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W18",
+      "title": "PDP extraction preserves UPC as exact string including leading zeros ('027242930698')",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W19",
+      "title": "PDP extraction preserves nullable price/currency without coercing missing price to 0 / $0.00",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W20",
+      "title": "Out-of-stock Walmart PDP retains presence=FOUND with availability=OUT_OF_STOCK",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W21",
+      "title": "Observed Walmart location context (postalCode, storeIds) extracted truthfully and never claimed as nationwide US stock/price",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W22",
+      "title": "Page identity assertions reject mismatched PDP usItemId and redirected non-product pages",
+      "category": "NEXT_DATA_PARSER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartNextDataParser.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W23",
+      "title": "Candidate search intent derivation strips ad hype and rejects standalone generic niche queries",
+      "category": "IDENTITY_AND_MATCHING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartProductIdentity.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W24",
+      "title": "Product matching enforces GTIN/UPC > verified brand+model priority; title similarity alone never grants EXACT",
+      "category": "IDENTITY_AND_MATCHING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartProductIdentity.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W25",
+      "title": "Accessory/refill/replacement part listings rejected as main product matches",
+      "category": "IDENTITY_AND_MATCHING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartProductIdentity.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W26",
+      "title": "Wrong model under same brand, different pack size/bundle, and refurbished/used vs new rejected or downgraded from EXACT",
+      "category": "IDENTITY_AND_MATCHING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartProductIdentity.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W27",
+      "title": "Bounded PDP target selection chooses at most 1-2 high-signal non-accessory listings within remaining run budget",
+      "category": "IDENTITY_AND_MATCHING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartProductIdentity.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W28",
+      "title": "Provider budget enforces <= 4 logical operations per run, <= 2 attempts per operation, and 1 concurrent operation per group",
+      "category": "BUDGET_AND_CONCURRENCY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W29",
+      "title": "Shared rolling 60s rate limit enforces <= 6 requests/minute across workers sharing host/IP/DB",
+      "category": "BUDGET_AND_CONCURRENCY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts",
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W30",
+      "title": "HTTP 429 Retry-After (seconds and HTTP-date) applies shared provider cooldown across workers",
+      "category": "BUDGET_AND_CONCURRENCY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W31",
+      "title": "Monotonic attemptGeneration fence prevents late timed-out attempt #1 from overwriting attempt #2",
+      "category": "BUDGET_AND_CONCURRENCY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W32",
+      "title": "Parent run cancellation aborts in-flight Walmart fetch and pending rate-slot waits cleanly",
+      "category": "BUDGET_AND_CONCURRENCY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W33",
+      "title": "Atomic SQLite persistence writes ResearchEvidence (KH02_WALMART_PRODUCT_EVIDENCE), RankingSnapshot, and SyncJob.resultJson in one transaction",
+      "category": "PERSISTENCE_AND_FENCING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W34",
+      "title": "Deterministic composite evidence ID prevents duplicate rows across retries",
+      "category": "PERSISTENCE_AND_FENCING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W35",
+      "title": "Strict workspace isolation rejects cross-workspace writes and reads with 403",
+      "category": "PERSISTENCE_AND_FENCING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+        "src/app/api/v1/kh02/marketplace/walmart/route.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W36",
+      "title": "Worker ownership fencing (claimToken, fencingToken, fencingGeneration, leaseExpiresAt) enforced inside transaction",
+      "category": "PERSISTENCE_AND_FENCING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+        "src/workers/kh02Worker.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W37",
+      "title": "Persistence transaction failures surface WALMART_EVIDENCE_PERSISTENCE_FAILED and never report silent success",
+      "category": "PERSISTENCE_AND_FENCING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+        "src/workers/kh02Worker.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W38",
+      "title": "Zero score/verdict/confidence/evidenceStrength/recommendable60d/demand60dStatus inflation from Walmart evidence",
+      "category": "ORCHESTRATOR_AND_NON_INFLATION",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W39",
+      "title": "Walmart enrichment runs post-scoring on shortlisted candidates without altering topThree or researchShortlist order",
+      "category": "ORCHESTRATOR_AND_NON_INFLATION",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W40",
+      "title": "Walmart evidence does not increment distinctSources or distinctSourceFamilies or satisfy G07/G15/G16 gates",
+      "category": "ORCHESTRATOR_AND_NON_INFLATION",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/evergreenResearchOrchestrator.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W41",
+      "title": "Walmart pilot operates independently of Amazon Playwright MCP, Google Ads, TikTok, and Meta credentials",
+      "category": "ORCHESTRATOR_AND_NON_INFLATION",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartUsResearchAdapter.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W42",
+      "title": "GET /api/v1/kh02/marketplace/walmart is strictly read-only (0 DB writes, 0 network calls, 0 rescoring)",
+      "category": "API_AND_WORKER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/app/api/v1/kh02/marketplace/walmart/route.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W43",
+      "title": "POST /api/v1/kh02/marketplace/walmart validates server flags, workspace ownership, and itemIds and enqueues KH02_WALMART_VERIFY",
+      "category": "API_AND_WORKER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/app/api/v1/kh02/marketplace/walmart/route.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W44",
+      "title": "kh02Worker claims and executes KH02_WALMART_VERIFY child jobs with lease renewal and atomic persistence",
+      "category": "API_AND_WORKER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/workers/kh02Worker.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W45",
+      "title": "GET /api/v1/kh02/research and GET /api/v1/research/products/[id]/overview hydrate persisted walmartEvidenceSummary",
+      "category": "API_AND_WORKER",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/app/api/v1/kh02/research/route.ts",
+        "src/app/api/v1/research/products/[id]/overview/route.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W46",
+      "title": "Product Finder UI renders Walmart US Pilot toggle, status bar, card evidence block, and drawer panel with required data-testid attributes",
+      "category": "UI_AND_RELOAD_PARITY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/app/products/page.tsx",
+        "src/services/kh02/presentation/productFinderViewModel.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W47",
+      "title": "Headless Chromium reload parity proves zero drift across SQLite DB, GET API, and DOM before and after page.reload()",
+      "category": "UI_AND_RELOAD_PARITY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+        "src/app/products/page.tsx"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W48",
+      "title": "UI displays observed Walmart ZIP/store location and non-inflation disclaimer without claiming nationwide price/stock",
+      "category": "UI_AND_RELOAD_PARITY",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/app/products/page.tsx",
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W49",
+      "title": "Stale cache preservation retains prior verified observation marked isStale=true when a later check fails with TIMED_OUT or RATE_LIMITED",
+      "category": "CACHE_AND_PROVENANCE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W50",
+      "title": "Strict provenance separation between REAL_JINA_READER, CACHED_PRIOR_RUN, and TEST_FIXTURE",
+      "category": "CACHE_AND_PROVENANCE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartUsResearchAdapter.ts"
+      ],
+      "testFiles": [
+        "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W51",
+      "title": "Point-in-time backtest filter rejects post-T0 future observations, missing timestamps, and TEST_FIXTURE rows",
+      "category": "BACKTEST_AND_ANTI_LEAKAGE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+        "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W52",
+      "title": "Controlled live no-key Jina Reader REST probe executes under protective budget and classifies outcome truthfully",
+      "category": "LIVE_PILOT_AND_BACKTEST",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaReaderClient.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W53",
+      "title": "Historical 2026-10-30 Walmart report recorded as reference-only baseline and never transplanted as current live verification",
+      "category": "LIVE_PILOT_AND_BACKTEST",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W54",
+      "title": "DEV backtest summary verifies zero regression and zero post-cutoff Walmart leakage",
+      "category": "BACKTEST_AND_ANTI_LEAKAGE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W55",
+      "title": "HOLDOUT backtest summary verifies zero regression and zero post-cutoff Walmart leakage",
+      "category": "BACKTEST_AND_ANTI_LEAKAGE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/runBacktestV12_4_3_4_2.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W56",
+      "title": "Multi-worker rate budget coordination via SQLite ProviderRequestLedger prevents > 6 requests/60s across worker instances",
+      "category": "RESILIENCE_AND_MUTATION_TESTING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartJinaBudget.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W57",
+      "title": "Partial-run resilience preserves succeeded candidate PDP evidence when another candidate times out or fails",
+      "category": "RESILIENCE_AND_MUTATION_TESTING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "src/services/kh02/marketplace/walmartUsResearchAdapter.ts"
+      ],
+      "testFiles": [
+        "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts"
+      ]
+    },
+    {
+      "id": "W58",
+      "title": "60 physical-file negative mutations (M01..M60) written to disk and caught by the independent validator with 0 false passes",
+      "category": "RESILIENCE_AND_MUTATION_TESTING",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W59",
+      "title": "Independent validator verifies all artifacts and SHA-256 manifest integrity",
+      "category": "DELIVERY_AND_GOVERNANCE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    },
+    {
+      "id": "W60",
+      "title": "Clean git worktree, committed CODE_SHA and artifacts on feature/kh02-walmart-us-jina-reader-v12.4.3.5.1, pushed to origin",
+      "category": "DELIVERY_AND_GOVERNANCE",
+      "status": "VERIFIED",
+      "codeSha": "bddacab7540dcba95e096ec3d802cf2aacc2a509",
+      "codeFiles": [
+        "scripts/kh02/runWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ],
+      "testFiles": [
+        "scripts/kh02/validateWalmartUsPilotAcceptanceV12_4_3_5_1.ts"
+      ]
+    }
+  ]
+}

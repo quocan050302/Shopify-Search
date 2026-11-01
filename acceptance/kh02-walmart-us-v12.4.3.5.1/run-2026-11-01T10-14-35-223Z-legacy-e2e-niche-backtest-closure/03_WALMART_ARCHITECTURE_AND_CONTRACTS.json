@@ -1,0 +1,39 @@
+{
+  "provider": "WALMART_US",
+  "method": "JINA_READER_REST_NO_KEY",
+  "defaultPolicy": {
+    "KH02_WALMART_US_ENABLED": false,
+    "KH02_WALMART_US_LIVE_ALLOWED": false,
+    "featureEnabled": false,
+    "liveAllowed": false,
+    "freeReaderMode": true,
+    "requiresApiKey": false,
+    "status": "DISABLED",
+    "reason": "Server pilot disabled",
+    "limits": {
+      "maxConcurrentOperationsPerProviderGroup": 1,
+      "maxLogicalOperationsPerRun": 4,
+      "maxAttemptsPerOperation": 2,
+      "maxNetworkAttemptsPerRun": 8,
+      "maxRequestsPerMinuteAcrossWorkers": 6,
+      "rollingWindowMs": 60000,
+      "httpTimeoutMs": 40000,
+      "minRetryBackoffMs": 3000,
+      "maxOperationDeadlineMs": 120000,
+      "maxResponseBytes": 8388608,
+      "maxNextDataBytes": 4194304
+    }
+  },
+  "modulesImplemented": [
+    "src/services/kh02/marketplace/walmartJinaTypes.ts",
+    "src/services/kh02/marketplace/walmartJinaPolicy.ts",
+    "src/services/kh02/marketplace/walmartJinaReaderClient.ts",
+    "src/services/kh02/marketplace/walmartNextDataParser.ts",
+    "src/services/kh02/marketplace/walmartProductIdentity.ts",
+    "src/services/kh02/marketplace/walmartJinaBudget.ts",
+    "src/services/kh02/marketplace/walmartEvidencePersistence.ts",
+    "src/services/kh02/marketplace/walmartUsResearchAdapter.ts",
+    "src/services/kh02/marketplace/walmartNonInflationProof.ts",
+    "src/app/api/v1/kh02/marketplace/walmart/route.ts"
+  ]
+}
