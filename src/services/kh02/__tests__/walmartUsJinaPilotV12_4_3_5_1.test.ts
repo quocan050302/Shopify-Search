@@ -697,13 +697,21 @@ import {
   computeReleaseVerdicts,
   evaluatePetGadgetsNicheFit,
   computePeakConcurrentIntervals,
+  loadPersistedG16ProofForCandidate,
+  buildG16EvidenceIndexFromPersistedRows,
   type GateResult,
   type FullRegressionInventorySummary,
 } from "../../../../scripts/kh02/acceptanceTruth";
 import {
   evaluatePointInTimeNicheCandidate,
   replayCandidateListForNiche,
+  classifyHistoricalProductIdentity,
+  isFunnelOrCheckoutChamp,
 } from "../../../../scripts/kh02/runBacktestV12_4_3_4_2";
+import {
+  evaluateG16Top3,
+  runG16NegativeTests,
+} from "../../../../scripts/kh02/g16CandidateEvaluator";
 
 function chomFromEnv(): string {
   return normalizeWalmartJinaEnvelope(buildChomChomPdpJinaBody()).envelope!.html!;
@@ -1396,5 +1404,276 @@ describe("V12.4.3.5.1 Workstream C (Section 4.5) — Point-in-Time Niche-Accurat
     for (const r of parallelRuns) {
       expect(JSON.stringify(r)).toBe(baselineJson);
     }
+  });
+
+  it("9. enforces P0-01/P0-03/P1-04 historical identity provenance: never promotes URL-path-only or CheckoutChamp funnel to VERIFIED without point-in-time merchant proof", () => {
+    // 1. URL-path-only /products/... without persisted merchant proof -> PROBABLE + DISCOVERY_ONLY
+    const urlOnly = classifyHistoricalProductIdentity(
+      {
+        candidateId: "cand_kittyspout_url_only",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        observedAt: "2026-10-25T10:00:00.000Z",
+        isAdOnlyFallback: true,
+        persistedMerchantProofs: [],
+      },
+      AS_OF
+    );
+    expect(urlOnly.identityStatus).toBe("PROBABLE");
+    expect(urlOnly.verificationEvidenceStatus).toBe("DISCOVERY_ONLY");
+    expect(urlOnly.independentMerchantProofRefs).toHaveLength(0);
+    expect(urlOnly.discoveryRefs).toContain("domain:kittyspout.com");
+    expect(urlOnly.reasonCodes).toContain("AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF");
+
+    // 2. CheckoutChamp funnel cc.uprootclean.com/main/phr -> PROBABLE + FUNNEL_UNVERIFIED
+    const uprootFunnel = classifyHistoricalProductIdentity(
+      {
+        candidateId: "cand_uproot_funnel",
+        title: "The #1 Pet Hair/Lint/Dust Cleaner",
+        storeDomain: "cc.uprootclean.com",
+        canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+        observedAt: "2026-10-25T10:00:00.000Z",
+        isAdOnlyFallback: true,
+      },
+      AS_OF
+    );
+    expect(uprootFunnel.identityStatus).toBe("PROBABLE");
+    expect(uprootFunnel.verificationEvidenceStatus).toBe("FUNNEL_UNVERIFIED");
+    expect(uprootFunnel.isCheckoutChampFunnel).toBe(true);
+    expect(isFunnelOrCheckoutChamp("cc.uprootclean.com", "https://cc.uprootclean.com/main/phr")).toBe(true);
+    expect(isFunnelOrCheckoutChamp("order.uprootclean.com", "https://order.uprootclean.com/main/wmtabs/wmt004-1")).toBe(true);
+
+    // 3. Post-cutoff merchant proof (> AS_OF) -> PROBABLE + POST_CUTOFF
+    const postCutoffProof = classifyHistoricalProductIdentity(
+      {
+        candidateId: "cand_post_cutoff_proof",
+        researchProductId: "prod_1",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        observedAt: "2026-10-25T10:00:00.000Z",
+        persistedMerchantProofs: [
+          {
+            id: "ev_future_1",
+            sourceTable: "ResearchEvidence",
+            storeDomain: "kittyspout.com",
+            canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-11-01T04:22:00.000Z", // > AS_OF
+            schemaVerified: true,
+            hasJsonLdProduct: true,
+            merchantProductId: "8369671045340",
+          },
+        ],
+      },
+      AS_OF
+    );
+    expect(postCutoffProof.identityStatus).toBe("PROBABLE");
+    expect(postCutoffProof.verificationEvidenceStatus).toBe("POST_CUTOFF");
+    expect(postCutoffProof.independentMerchantProofRefs).toHaveLength(0);
+
+    // 4. Stale merchant proof (> maxStaleDays before AS_OF) -> PROBABLE + STALE
+    const staleProof = classifyHistoricalProductIdentity(
+      {
+        candidateId: "cand_stale_proof",
+        researchProductId: "prod_1",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        observedAt: "2026-10-25T10:00:00.000Z",
+        maxStaleDays: 30,
+        persistedMerchantProofs: [
+          {
+            id: "ev_old_1",
+            sourceTable: "ResearchEvidence",
+            storeDomain: "kittyspout.com",
+            canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-08-01T00:00:00.000Z", // > 30 days before AS_OF
+            schemaVerified: true,
+            hasJsonLdProduct: true,
+          },
+        ],
+      },
+      AS_OF
+    );
+    expect(staleProof.identityStatus).toBe("PROBABLE");
+    expect(staleProof.verificationEvidenceStatus).toBe("STALE");
+
+    // 5. Valid point-in-time <= AS_OF merchant proof -> VERIFIED + INDEPENDENT_VERIFIED
+    const validProof = classifyHistoricalProductIdentity(
+      {
+        candidateId: "cand_valid_proof",
+        researchProductId: "prod_1",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        observedAt: "2026-10-25T10:00:00.000Z",
+        persistedMerchantProofs: [
+          {
+            id: "ev_pit_1",
+            sourceTable: "ResearchEvidence",
+            storeDomain: "kittyspout.com",
+            canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-26T00:00:00.000Z",
+            schemaVerified: true,
+            hasJsonLdProduct: true,
+            merchantProductId: "8369671045340",
+          },
+        ],
+      },
+      AS_OF
+    );
+    expect(validProof.identityStatus).toBe("VERIFIED");
+    expect(validProof.verificationEvidenceStatus).toBe("INDEPENDENT_VERIFIED");
+    expect(validProof.independentMerchantProofRefs).toContain("ResearchEvidence:ev_pit_1");
+
+    // 6. Honest wording in evaluatePointInTimeNicheCandidate for discovery-only candidate
+    const nicheEv = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_discovery_only",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        isAdOnlyFallback: true,
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(nicheEv.matchStatus).toBe("MATCH");
+    expect(nicheEv.identityStatus).toBe("PROBABLE");
+    expect(nicheEv.reasons[0]).toContain(
+      "Niche-matched discovery candidate for 'Pet Gadgets'; merchant identity requires independent verification"
+    );
+    expect(nicheEv.independentMerchantProofRefs).toHaveLength(0);
+    expect(nicheEv.discoveryRefs).toContain("url:https://kittyspout.com/products/kittyspout-wireless-fountain");
+  });
+
+  it("10. enforces P0-02 authentic G16 persisted lineage reconstruction without synthetic hydration and passes 2-pass determinism", async () => {
+    const negMatrix = runG16NegativeTests();
+    expect(negMatrix.passed).toBe(true);
+    expect(negMatrix.totalPassed).toBe(negMatrix.totalTests);
+
+    // Mock prisma with EXISTING DiscoveryRunAds and cross-workspace synthetic LandingPageSnapshot
+    const mockPrisma = {
+      discoveryRunAd: {
+        findMany: async () => [
+          { runId: "kh02_run_test", adId: "ad_1", ingestOutcome: "EXISTING" },
+        ],
+      },
+      adObservation: {
+        findMany: async () => [
+          {
+            id: "obs_real_1",
+            adId: "ad_1",
+            observedAt: new Date("2026-10-28T16:57:05.449Z"),
+          },
+        ],
+      },
+      researchProduct: {
+        findMany: async () => [
+          {
+            id: "cand_453563126",
+            workspaceId: "default-workspace", // Cross-workspace!
+            title: "UAHPET Fresh Food Automatic Pet Feeder",
+            storeDomain: "uahpet.com",
+            productUrl: "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+            evidence: [],
+            landingPageSnapshots: [
+              {
+                id: "lp_syn_1",
+                workspaceId: "default-workspace",
+                canonicalUrl: "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+                productTitle: "UAHPET Feeder",
+                contentHash: "uahpet_lp_hash_v12_4_3_3",
+                capturedAt: new Date("2026-10-30T11:36:40.289Z"),
+              },
+            ],
+            offerSnapshots: [],
+          },
+        ],
+      },
+    };
+
+    const storedSnapshotCandidates = [
+      {
+        candidateId: "cand_1212440541",
+        researchProductId: "cand_453563126",
+        title: "UAHPET Fresh Food Automatic Pet Feeder",
+        storeDomain: "uahpet.com",
+        canonicalProductUrl: "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+        familyKey: "automatic_pet_feeder",
+        identityStatus: "VERIFIED",
+        fetchOutcome: "FETCH_SUCCEEDED",
+        resolutionSource: "MERCHANT_PRODUCT_METADATA",
+        merchantProductId: "10532085367078",
+        sku: "XLWSQ",
+        supportingAdIds: ["ad_1"],
+        liveObservationsCount: 7,
+        sourceObservations: [
+          {
+            sourceObservationId: "obs_real_1",
+            sourceRecordId: "ad_1",
+            researchRunId: "kh02_run_test",
+            providerRequestId: "0897e6ee958248258cacc7ec6fb790b6",
+            provenance: "LIVE_PROVIDER",
+            sourceMode: "LIVE_PROVIDER",
+            sourceType: "LIVE_PROVIDER",
+            isCached: false,
+            isLiveRecord: true,
+            storeDomainEvidence: "uahpet.com",
+            landingPageUrl: "https://uahpet.com/products/uahpet-fresh-food-automatic-pet-feeder",
+            metrics: { origin: "DETERMINISTIC_FALLBACK", isFreshLive: true },
+          },
+        ],
+      },
+      {
+        candidateId: "cand_1613504636",
+        researchProductId: "prod_uproot",
+        title: "Pet Hair/Lint/Dust Cleaner",
+        storeDomain: "cc.uprootclean.com",
+        canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+        familyKey: "pet_hair_remover_roller",
+        identityStatus: "PROBABLE",
+        supportingAdIds: ["ad_1"],
+      },
+    ];
+
+    const bundle1 = await buildG16EvidenceIndexFromPersistedRows(
+      mockPrisma,
+      "acceptance_v12_2_4_ws",
+      "kh02_run_test",
+      storedSnapshotCandidates,
+      new Date("2026-11-01T04:22:41.831Z")
+    );
+    const bundle2 = await buildG16EvidenceIndexFromPersistedRows(
+      mockPrisma,
+      "acceptance_v12_2_4_ws",
+      "kh02_run_test",
+      storedSnapshotCandidates,
+      new Date("2026-11-01T04:22:41.831Z")
+    );
+
+    expect(bundle1.previousSnapshotClaimedVerifiedCount).toBe(1);
+    expect(bundle1.audits[0].persistedMerchantVerified).toBe(false);
+    expect(bundle1.audits[0].persistedLiveSameRunObservationIds).toHaveLength(0);
+    expect(bundle1.audits[0].rejectedCrossWorkspaceProofIds.length).toBeGreaterThan(0);
+
+    const eval1 = evaluateG16Top3(bundle1.reconstructedCandidates, "kh02_run_test", {
+      requiredCount: 3,
+      requireDistinctFamilies: true,
+      evidenceIndex: bundle1.evidenceIndex,
+    });
+    const eval2 = evaluateG16Top3(bundle2.reconstructedCandidates, "kh02_run_test", {
+      requiredCount: 3,
+      requireDistinctFamilies: true,
+      evidenceIndex: bundle2.evidenceIndex,
+    });
+
+    expect(eval1.verifiedLiveCount).toBe(0);
+    expect(eval1.g16Verdict).toBe("INSUFFICIENT_EVIDENCE");
+    expect(eval2.verifiedLiveCount).toBe(0);
+    expect(JSON.stringify({ ...eval1, evaluatedAt: "fixed" })).toBe(
+      JSON.stringify({ ...eval2, evaluatedAt: "fixed" })
+    );
   });
 });

@@ -240,9 +240,9 @@ describe("V12.4.3.4.6 — Strict Lineage, Real Parity & Acceptance Truth", () =>
       expect(passRes.g16Verdict).toBe("PASS");
     });
 
-    it("passes all 13 deterministic G16 matrix scenarios (G16-MAT-A through G16-MAT-M)", () => {
+    it("passes all deterministic G16 matrix scenarios (G16-MAT-A through G16-MAT-P)", () => {
       const suite = runG16NegativeTests();
-      expect(suite.cases).toHaveLength(13);
+      expect(suite.cases.length).toBeGreaterThanOrEqual(16);
       expect(suite.passed).toBe(true);
     });
   });

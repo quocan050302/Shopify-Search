@@ -9,6 +9,18 @@
  * 5. Top-3 distinctness across both canonical products (>=3) and product families (>=3 for broad niches).
  */
 
+import {
+  isFunnelOrCheckoutChamp,
+  isSyntheticMerchantProofRef,
+  isFabricatedHydrationObservation,
+} from "../../src/services/kh02/identity/merchantIdentityPolicy";
+
+export {
+  isFunnelOrCheckoutChamp,
+  isSyntheticMerchantProofRef,
+  isFabricatedHydrationObservation,
+};
+
 export interface NormalizedObservationIdentity {
   observationId: string | null;
   sourceRecordId: string | null;
@@ -52,6 +64,7 @@ export interface G16EvidenceIndex {
   lineageIndex?: G16LineageIndex;
   identityIndex?: G16IdentityIndex;
   merchantEvidenceIndex?: G16MerchantEvidenceIndex;
+  strictPersistedProofRequired?: boolean;
 }
 
 export interface CandidatePredicateResults {
@@ -163,18 +176,6 @@ function extractProductPathKey(rawUrl: string | null | undefined): string | null
   }
 }
 
-function isFunnelOrCheckoutChamp(storeDomain: string | null, canonicalUrl: string | null): boolean {
-  const dom = (storeDomain || "").toLowerCase();
-  const url = (canonicalUrl || "").toLowerCase();
-  return (
-    url.includes("cc.uprootclean.com") ||
-    dom === "cc.uprootclean.com" ||
-    dom.includes("checkoutchamp") ||
-    url.includes("checkoutchamp") ||
-    /^(?:cc|lp|offer|funnel|quiz|get|try)\.[a-z0-9-]+\.[a-z]{2,}$/i.test(dom) && !url.includes("/products/")
-  );
-}
-
 /**
  * Normalizes an observation into a deterministic identity structure.
  * Unknown or missing observation IDs return observationId: null so they cannot inflate counts.
@@ -281,6 +282,9 @@ export function isAuthenticallyLiveObservation(
     return false;
   }
   if (norm.isCached) {
+    return false;
+  }
+  if (isFabricatedHydrationObservation(observation, norm.researchRunId)) {
     return false;
   }
 
@@ -467,22 +471,54 @@ export function belongsToCandidateProduct(
 
 /**
  * Extracts independent merchant verification proof references for a candidate.
- * Never counts raw storeDomain or canonicalProductUrl strings alone as proof.
+ * Never counts raw storeDomain or canonicalProductUrl strings alone as proof,
+ * and rejects synthetic proof strings (`jsonld:<domain>`).
+ * When `strictPersistedProofRequired` is true or `merchantEvidenceIndex[candId].verified === false`,
+ * only persisted evidence index entries are accepted (inline snapshot strings are ignored).
  */
 export function extractMerchantProofRefs(
   candidate: any,
-  merchantEvidenceIndex?: G16MerchantEvidenceIndex
+  merchantEvidenceIndex?: G16MerchantEvidenceIndex,
+  strictPersistedProofRequired?: boolean
 ): string[] {
   if (!candidate || typeof candidate !== "object") return [];
   const refs: string[] = [];
 
+  const candId = cleanNonBlankString(candidate.candidateId);
+  const indexHasCandidate = Boolean(candId && merchantEvidenceIndex && candId in merchantEvidenceIndex);
+  const indexEntry = candId && merchantEvidenceIndex ? merchantEvidenceIndex[candId] : undefined;
+
+  if (strictPersistedProofRequired || (indexHasCandidate && indexEntry?.verified === false)) {
+    if (indexEntry?.verified === true) {
+      if (Array.isArray(indexEntry.proofRefs) && indexEntry.proofRefs.length > 0) {
+        for (const r of indexEntry.proofRefs) {
+          const cr = cleanNonBlankString(r);
+          if (cr && !isSyntheticMerchantProofRef(cr)) {
+            refs.push(`indexProof:${cr}`);
+          }
+        }
+      } else if (
+        indexEntry.schemaVerified ||
+        indexEntry.fetchOutcome === "FETCH_SUCCEEDED" ||
+        indexEntry.merchantVerifiedProductName
+      ) {
+        refs.push(`indexVerified:${candId}`);
+      }
+    }
+    return Array.from(new Set(refs));
+  }
+
   const verifiedName = cleanNonBlankString(candidate.merchantVerifiedProductName);
-  if (verifiedName) {
+  if (verifiedName && !isSyntheticMerchantProofRef(verifiedName)) {
     refs.push(`merchantVerifiedProductName:${verifiedName}`);
   }
 
   const fetchOutcome = cleanNonBlankString(candidate.fetchOutcome);
-  if (fetchOutcome === "FETCH_SUCCEEDED" || fetchOutcome === "ACTUAL_PRODUCT_PAGE" || fetchOutcome === "EXISTING_DB_PRODUCT") {
+  if (
+    fetchOutcome === "FETCH_SUCCEEDED" ||
+    fetchOutcome === "ACTUAL_PRODUCT_PAGE" ||
+    fetchOutcome === "EXISTING_DB_PRODUCT"
+  ) {
     refs.push(`fetchOutcome:${fetchOutcome}`);
   }
 
@@ -500,22 +536,44 @@ export function extractMerchantProofRefs(
     cleanNonBlankString(candidate.merchantProductId) ||
     cleanNonBlankString(candidate.sku) ||
     cleanNonBlankString(candidate.gtin);
-  if (skuOrId) {
+  if (skuOrId && !isSyntheticMerchantProofRef(skuOrId)) {
     refs.push(`productIdentifier:${skuOrId}`);
   }
 
   if (candidate.merchantPageVerified === true || candidate.existingProductVerified === true) {
-    refs.push("merchantPageVerified:true");
+    // Only accept merchantPageVerified:true if not paired solely with a synthetic jsonld:<domain> ref
+    const hasOnlySyntheticProofRefs =
+      Array.isArray(candidate.merchantVerificationProofRefs) &&
+      candidate.merchantVerificationProofRefs.length > 0 &&
+      candidate.merchantVerificationProofRefs.every((r: any) => isSyntheticMerchantProofRef(String(r || "")));
+    if (!hasOnlySyntheticProofRefs) {
+      refs.push("merchantPageVerified:true");
+    }
   }
 
   const verificationReason = cleanNonBlankString(candidate.verificationReason);
   if (
     verificationReason &&
+    !isSyntheticMerchantProofRef(verificationReason) &&
     /(?:json-ld|schema|storefront|shopify|fetched|merchant product|product page verified)/i.test(
       verificationReason
     )
   ) {
     refs.push(`verificationReason:${verificationReason.slice(0, 120)}`);
+  }
+
+  if (Array.isArray(candidate.merchantVerificationProofRefs)) {
+    for (const ref of candidate.merchantVerificationProofRefs) {
+      const cleanRef = cleanNonBlankString(ref);
+      if (
+        cleanRef &&
+        cleanRef !== candidate.canonicalProductUrl &&
+        cleanRef !== candidate.storeDomain &&
+        !isSyntheticMerchantProofRef(cleanRef)
+      ) {
+        refs.push(`proofRef:${cleanRef}`);
+      }
+    }
   }
 
   if (Array.isArray(candidate.identityEvidenceReferences)) {
@@ -524,22 +582,27 @@ export function extractMerchantProofRefs(
       if (
         cleanRef &&
         cleanRef !== candidate.canonicalProductUrl &&
-        cleanRef !== candidate.storeDomain
+        cleanRef !== candidate.storeDomain &&
+        !isSyntheticMerchantProofRef(cleanRef)
       ) {
         refs.push(`evidenceRef:${cleanRef}`);
       }
     }
   }
 
-  const candId = cleanNonBlankString(candidate.candidateId);
-  if (candId && merchantEvidenceIndex?.[candId]?.verified === true) {
-    const idxEntry = merchantEvidenceIndex[candId];
-    if (Array.isArray(idxEntry.proofRefs) && idxEntry.proofRefs.length > 0) {
-      for (const r of idxEntry.proofRefs) {
+  if (candId && indexEntry?.verified === true) {
+    if (Array.isArray(indexEntry.proofRefs) && indexEntry.proofRefs.length > 0) {
+      for (const r of indexEntry.proofRefs) {
         const cr = cleanNonBlankString(r);
-        if (cr) refs.push(`indexProof:${cr}`);
+        if (cr && !isSyntheticMerchantProofRef(cr)) {
+          refs.push(`indexProof:${cr}`);
+        }
       }
-    } else if (idxEntry.schemaVerified || idxEntry.fetchOutcome === "FETCH_SUCCEEDED" || idxEntry.merchantVerifiedProductName) {
+    } else if (
+      indexEntry.schemaVerified ||
+      indexEntry.fetchOutcome === "FETCH_SUCCEEDED" ||
+      indexEntry.merchantVerifiedProductName
+    ) {
       refs.push(`indexVerified:${candId}`);
     }
   }
@@ -553,7 +616,8 @@ export function extractMerchantProofRefs(
  */
 export function hasVerifiedMerchantIdentity(
   candidate: any,
-  merchantEvidenceIndex?: G16MerchantEvidenceIndex
+  merchantEvidenceIndex?: G16MerchantEvidenceIndex,
+  strictPersistedProofRequired?: boolean
 ): boolean {
   if (!candidate || typeof candidate !== "object") return false;
 
@@ -602,7 +666,11 @@ export function hasVerifiedMerchantIdentity(
     return false;
   }
 
-  const proofRefs = extractMerchantProofRefs(candidate, merchantEvidenceIndex);
+  const proofRefs = extractMerchantProofRefs(
+    candidate,
+    merchantEvidenceIndex,
+    strictPersistedProofRequired
+  );
   return proofRefs.length > 0;
 }
 
@@ -652,8 +720,16 @@ export function evaluateG16Candidate(
   }
 
   // 2. Independent merchant page & identity proof verification
-  const merchantProofRefs = extractMerchantProofRefs(candidate, evidenceIndex?.merchantEvidenceIndex);
-  const merchantVerified = hasVerifiedMerchantIdentity(candidate, evidenceIndex?.merchantEvidenceIndex);
+  const merchantProofRefs = extractMerchantProofRefs(
+    candidate,
+    evidenceIndex?.merchantEvidenceIndex,
+    evidenceIndex?.strictPersistedProofRequired
+  );
+  const merchantVerified = hasVerifiedMerchantIdentity(
+    candidate,
+    evidenceIndex?.merchantEvidenceIndex,
+    evidenceIndex?.strictPersistedProofRequired
+  );
   if (!storeDomain || !canonicalUrl) {
     rejectionReasons.push("Missing verified merchant store domain or canonical URL");
   } else if (!merchantVerified) {
@@ -1173,6 +1249,67 @@ export function runG16NegativeTests(): {
         });
         const res = evaluateG16Candidate(cand, "run_123");
         return res.isLiveVerified === false && res.validLineageObservationsCount === 0;
+      },
+    },
+    {
+      testId: "G16-MAT-N",
+      description: "Fabricated hydration observation IDs (obs_<runId>_<candId> and req_<runId>) are rejected by isAuthenticallyLiveObservation",
+      exec: () => {
+        const cand = makeValidMerchantCandidate({
+          candidateId: "cand_123",
+          sourceObservations: [
+            makeValidLiveObs({
+              observationId: "obs_run_123_cand_123",
+              sourceObservationId: "obs_run_123_cand_123",
+              providerRequestId: "req_run_123",
+              researchRunId: "run_123",
+              candidateId: "cand_123",
+            }),
+          ],
+        });
+        const res = evaluateG16Candidate(cand, "run_123");
+        return res.isLiveVerified === false && res.validLineageObservationsCount === 0;
+      },
+    },
+    {
+      testId: "G16-MAT-O",
+      description: "Synthetic jsonld:<storeDomain> proof reference is rejected by extractMerchantProofRefs and hasVerifiedMerchantIdentity",
+      exec: () => {
+        const cand = {
+          candidateId: "cand_syn_jsonld",
+          title: "KittySpout Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          familyKey: "pet_water_fountain",
+          identityStatus: "VERIFIED",
+          merchantPageVerified: true,
+          merchantVerificationProofRefs: ["jsonld:kittyspout.com"],
+          supportingAdIds: ["ad_1"],
+          sourceObservations: [
+            makeValidLiveObs({
+              storeDomainEvidence: "kittyspout.com",
+              landingPageUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            }),
+          ],
+        };
+        const res = evaluateG16Candidate(cand, "run_123");
+        return res.merchantVerified === false && res.merchantProofRefs.length === 0 && res.isLiveVerified === false;
+      },
+    },
+    {
+      testId: "G16-MAT-P",
+      description: "When strictPersistedProofRequired is true and persisted merchantEvidenceIndex is unverified, inline snapshot fields cannot force merchantVerified=true",
+      exec: () => {
+        const cand = makeValidMerchantCandidate({
+          candidateId: "c1",
+        });
+        const res = evaluateG16Candidate(cand, "run_123", {
+          strictPersistedProofRequired: true,
+          merchantEvidenceIndex: {
+            c1: { verified: false, proofRefs: [] },
+          },
+        });
+        return res.merchantVerified === false && res.isLiveVerified === false;
       },
     },
   ];

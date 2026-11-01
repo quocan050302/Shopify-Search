@@ -946,6 +946,68 @@ export function validateWalmartAcceptanceArtifacts(
         "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
         "Niche replay evaluator must dynamically respect input niche (e.g. 'Kitchen Gadgets') rather than hardcoding 'Pet Gadgets'."
       );
+
+      const allShortlisted = [...devTop3, ...holdoutTop3];
+      const anyAdOnlyPromotedToVerified =
+        Number(nicheFunnel.urlPathOnlyPromotedToVerifiedCount ?? 0) > 0 ||
+        allShortlisted.some(
+          (p) =>
+            p.identityStatus === "VERIFIED" &&
+            (p.verificationEvidenceStatus === "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF" ||
+              !Array.isArray(p.independentMerchantProofRefs) ||
+              p.independentMerchantProofRefs.length === 0)
+        );
+      check(
+        !anyAdOnlyPromotedToVerified,
+        "HISTORICAL_IDENTITY_URL_PATH_ONLY_PROMOTED_TO_VERIFIED",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "Historical replay must never promote a URL-path-only (/products/<slug>) ad-observed candidate to identityStatus='VERIFIED' without independent point-in-time merchant proof."
+      );
+
+      const anyFunnelPromotedToVerified =
+        Number(nicheFunnel.funnelPromotedToVerifiedCount ?? 0) > 0 ||
+        allShortlisted.some(
+          (p) =>
+            (p.isCheckoutChampFunnel === true ||
+              String(p.storeDomain || "").toLowerCase() === "cc.uprootclean.com" ||
+              String(p.canonicalProductUrl || "").toLowerCase().includes("/main/phr")) &&
+            (p.identityStatus === "VERIFIED" ||
+              p.verificationEvidenceStatus === "VERIFIED_MERCHANT_JSONLD")
+        );
+      check(
+        !anyFunnelPromotedToVerified,
+        "CHECKOUT_CHAMP_FUNNEL_PROMOTED_TO_VERIFIED",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "CheckoutChamp / funnel URLs (e.g. cc.uprootclean.com/main/phr) must be classified as PROBABLE + FUNNEL_UNVERIFIED and never promoted to VERIFIED."
+      );
+
+      if (nicheFunnel.holdoutIdentityCoverageStatus !== undefined) {
+        check(
+          Number(nicheFunnel.holdoutVerifiedIdentityCount ?? 0) >= 3 ||
+            nicheFunnel.holdoutIdentityCoverageStatus === "INSUFFICIENT_VERIFIED_IDENTITY",
+          "HISTORICAL_IDENTITY_COVERAGE_MISLABELED_SUFFICIENT",
+          "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+          "When HOLDOUT shortlist has < 3 independently verified product identities, holdoutIdentityCoverageStatus must be INSUFFICIENT_VERIFIED_IDENTITY."
+        );
+      }
+
+      const anyDiscoveryMislabeledAsVerified =
+        Number(nicheFunnel.discoveryRefsCopiedToIndependentProofCount ?? 0) > 0 ||
+        allShortlisted.some(
+          (p) =>
+            p.identityStatus !== "VERIFIED" &&
+            (String(p.reason || "").startsWith("Verified '") ||
+              (Array.isArray(p.independentMerchantProofRefs) &&
+                p.independentMerchantProofRefs.some((r: any) =>
+                  /^(discovery_ad|ad_obs):/i.test(String(r))
+                )))
+        );
+      check(
+        !anyDiscoveryMislabeledAsVerified,
+        "DISCOVERY_CANDIDATE_MISLABELED_AS_VERIFIED_IN_REASON_OR_REFS",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "Discovery-only candidates (identityStatus !== 'VERIFIED') must not use 'Verified <niche> product' reason strings or copy discovery_ad:/ad_obs: pointers into independentMerchantProofRefs."
+      );
     }
   }
 
@@ -969,6 +1031,42 @@ export function validateWalmartAcceptanceArtifacts(
         "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
         "Historical stored run G16 proof must be labeled HISTORICAL_SNAPSHOT_RE_EVALUATED and never claimed as current live run verification."
       );
+
+      if (g16Sec8.g16SyntheticHydrationUsed !== undefined) {
+        check(
+          g16Sec8.g16SyntheticHydrationUsed === false &&
+            Number(g16Sec8.fabricatedHydrationObservationsUsedCount ?? 0) === 0 &&
+            Number(g16Sec8.syntheticJsonldProofRefsUsedCount ?? 0) === 0,
+          "SYNTHETIC_G16_HYDRATION_OR_FABRICATED_OBSERVATION_USED",
+          "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+          "G16 evaluation must never use synthetic runtime hydration (obs_<runId>_<candId>, req_<runId>, or jsonld:<domain>)."
+        );
+      }
+
+      if (g16Sec8.verifiedFromPersistedEvidenceCount !== undefined) {
+        const persistedCount = Number(g16Sec8.verifiedFromPersistedEvidenceCount ?? 0);
+        const prevClaimed = Number(g16Sec8.previousSnapshotClaimedVerifiedCount ?? 0);
+        check(
+          Number(g16Sec8.verifiedLiveMerchantsCount ?? 0) === persistedCount &&
+            (persistedCount > 0 ||
+              prevClaimed === 0 ||
+              (g16Sec8.reconstructionStatus ===
+                "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE" &&
+                g16Sec8.verdict === "INSUFFICIENT_EVIDENCE")),
+          "UNRECONSTRUCTABLE_SNAPSHOT_G16_CLAIMED_AS_PERSISTED_VERIFIED",
+          "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+          "When persisted DB evidence has 0 verified live merchants for a stored snapshot that claimed 2/3, G16 must report verifiedLiveMerchantsCount=0, reconstructionStatus=HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE, and verdict=INSUFFICIENT_EVIDENCE."
+        );
+      }
+
+      if (g16Sec8.crossWorkspaceProofsAcceptedCount !== undefined) {
+        check(
+          Number(g16Sec8.crossWorkspaceProofsAcceptedCount ?? 0) === 0,
+          "CROSS_WORKSPACE_MERCHANT_PROOF_ACCEPTED_IN_G16",
+          "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+          "Cross-workspace LandingPageSnapshot or ResearchEvidence rows must never be accepted as persisted G16 merchant proof."
+        );
+      }
     }
   }
 
@@ -1026,6 +1124,19 @@ export function validateWalmartAcceptanceArtifacts(
         "19_FINAL_MULTI_VERDICT_SUMMARY.json",
         "19_FINAL_MULTI_VERDICT_SUMMARY.json must report FINAL_RELEASE='ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS' (never FULL_ACCEPTANCE) when external provider or 60d G15 blockers exist."
       );
+
+      if (mv.verdictMatrix?.HISTORICAL_PRODUCT_IDENTITY_TRUTH !== undefined) {
+        check(
+          mv.verdictMatrix.HISTORICAL_PRODUCT_IDENTITY_TRUTH === "PASS" &&
+            mv.historicalProductIdentityTruthVerdict === "PASS" &&
+            (Number(mv.historicalIdentitySummary?.holdoutVerifiedIdentityCount ?? 0) >= 3 ||
+              mv.verdictMatrix.HISTORICAL_VERIFIED_IDENTITY_COVERAGE ===
+                "INSUFFICIENT_VERIFIED_IDENTITY"),
+          "HISTORICAL_IDENTITY_TRUTH_VERDICT_FALSE_PASS",
+          "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+          "19_FINAL_MULTI_VERDICT_SUMMARY.json must enforce HISTORICAL_PRODUCT_IDENTITY_TRUTH='PASS' and HISTORICAL_VERIFIED_IDENTITY_COVERAGE='INSUFFICIENT_VERIFIED_IDENTITY' when < 3 HOLDOUT candidates have independent merchant proof."
+        );
+      }
     }
   }
 
@@ -1994,6 +2105,110 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
       d.nicheCoverageStatus = "SUFFICIENT_NICHE_COVERAGE";
     },
   },
+  {
+    mutationId: "M73",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Promote URL-path-only (/products/<slug>) ad-only candidate to identityStatus='VERIFIED' without independent merchant proof",
+    expectedFailureCode: "HISTORICAL_IDENTITY_URL_PATH_ONLY_PROMOTED_TO_VERIFIED",
+    mutate: (d) => {
+      d.urlPathOnlyPromotedToVerifiedCount = 1;
+      if (Array.isArray(d.holdoutTop3) && d.holdoutTop3.length > 0) {
+        d.holdoutTop3[0].identityStatus = "VERIFIED";
+        d.holdoutTop3[0].verificationEvidenceStatus =
+          "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF";
+        d.holdoutTop3[0].independentMerchantProofRefs = [];
+      }
+    },
+  },
+  {
+    mutationId: "M74",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Promote CheckoutChamp funnel cc.uprootclean.com/main/phr to identityStatus='VERIFIED'",
+    expectedFailureCode: "CHECKOUT_CHAMP_FUNNEL_PROMOTED_TO_VERIFIED",
+    mutate: (d) => {
+      d.funnelPromotedToVerifiedCount = 1;
+      if (Array.isArray(d.holdoutTop3) && d.holdoutTop3.length > 0) {
+        d.holdoutTop3[0].storeDomain = "cc.uprootclean.com";
+        d.holdoutTop3[0].canonicalProductUrl =
+          "https://cc.uprootclean.com/main/phr";
+        d.holdoutTop3[0].isCheckoutChampFunnel = true;
+        d.holdoutTop3[0].identityStatus = "VERIFIED";
+      }
+    },
+  },
+  {
+    mutationId: "M75",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Mislabel HOLDOUT shortlist with 0 verified identities as SUFFICIENT_VERIFIED_IDENTITY",
+    expectedFailureCode: "HISTORICAL_IDENTITY_COVERAGE_MISLABELED_SUFFICIENT",
+    mutate: (d) => {
+      d.holdoutVerifiedIdentityCount = 0;
+      d.holdoutIdentityCoverageStatus = "SUFFICIENT_VERIFIED_IDENTITY";
+    },
+  },
+  {
+    mutationId: "M76",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Label discovery-only candidate reason as 'Verified Pet Gadgets product' or copy discovery_ad: ref into independentMerchantProofRefs",
+    expectedFailureCode: "DISCOVERY_CANDIDATE_MISLABELED_AS_VERIFIED_IN_REASON_OR_REFS",
+    mutate: (d) => {
+      d.discoveryRefsCopiedToIndependentProofCount = 1;
+      if (Array.isArray(d.holdoutTop3) && d.holdoutTop3.length > 0) {
+        d.holdoutTop3[0].identityStatus = "PROBABLE";
+        d.holdoutTop3[0].reason =
+          "Verified 'Pet Gadgets' product with 12 historical ad observations";
+        d.holdoutTop3[0].independentMerchantProofRefs = [
+          "discovery_ad:ad_1021",
+        ];
+      }
+    },
+  },
+  {
+    mutationId: "M77",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Re-enable synthetic runtime G16 hydration (obs_<runId>_<candId>, req_<runId>, or jsonld:<domain>)",
+    expectedFailureCode: "SYNTHETIC_G16_HYDRATION_OR_FABRICATED_OBSERVATION_USED",
+    mutate: (d) => {
+      d.g16SyntheticHydrationUsed = true;
+      d.fabricatedHydrationObservationsUsedCount = 2;
+      d.syntheticJsonldProofRefsUsedCount = 2;
+    },
+  },
+  {
+    mutationId: "M78",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Claim verifiedLiveMerchantsCount=2 (PARTIAL_2_OF_3) when verifiedFromPersistedEvidenceCount=0",
+    expectedFailureCode: "UNRECONSTRUCTABLE_SNAPSHOT_G16_CLAIMED_AS_PERSISTED_VERIFIED",
+    mutate: (d) => {
+      d.previousSnapshotClaimedVerifiedCount = 2;
+      d.verifiedFromPersistedEvidenceCount = 0;
+      d.verifiedLiveMerchantsCount = 2;
+      d.verdict = "PARTIAL_2_OF_3";
+    },
+  },
+  {
+    mutationId: "M79",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Accept cross-workspace LandingPageSnapshot as persisted G16 merchant proof",
+    expectedFailureCode: "CROSS_WORKSPACE_MERCHANT_PROOF_ACCEPTED_IN_G16",
+    mutate: (d) => {
+      d.crossWorkspaceProofsAcceptedCount = 1;
+    },
+  },
+  {
+    mutationId: "M80",
+    targetFile: "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+    description: "Claim HISTORICAL_VERIFIED_IDENTITY_COVERAGE='SUFFICIENT_VERIFIED_IDENTITY' when holdoutVerifiedIdentityCount=0",
+    expectedFailureCode: "HISTORICAL_IDENTITY_TRUTH_VERDICT_FALSE_PASS",
+    mutate: (d) => {
+      if (!d.historicalIdentitySummary) d.historicalIdentitySummary = {};
+      d.historicalIdentitySummary.holdoutVerifiedIdentityCount = 0;
+      if (!d.verdictMatrix) d.verdictMatrix = {};
+      d.verdictMatrix.HISTORICAL_PRODUCT_IDENTITY_TRUTH = "PASS";
+      d.verdictMatrix.HISTORICAL_VERIFIED_IDENTITY_COVERAGE =
+        "SUFFICIENT_VERIFIED_IDENTITY";
+    },
+  },
 ];
 
 /**
@@ -2122,16 +2337,24 @@ export function runPhysicalNegativeMutationSuite40(
               niche: "Pet Gadgets",
               devShortlistCount: 0,
               devNicheMatchedCount: 0,
+              devVerifiedIdentityCount: 0,
+              devIdentityCoverageStatus: "INSUFFICIENT_VERIFIED_IDENTITY",
               holdoutShortlistCount: 3,
               holdoutNicheMatchedCount: 3,
+              holdoutVerifiedIdentityCount: 0,
+              holdoutFunnelProbableCount: 1,
+              holdoutIdentityCoverageStatus: "INSUFFICIENT_VERIFIED_IDENTITY",
+              urlPathOnlyPromotedToVerifiedCount: 0,
+              funnelPromotedToVerifiedCount: 0,
+              discoveryRefsCopiedToIndependentProofCount: 0,
               paddedWithMismatchOrUncertainCount: 0,
               crossNicheFalsePositivesInDevTop3: 0,
               crossNicheFalsePositivesInHoldoutTop3: 0,
               devTop3: [],
               holdoutTop3: [
-                { candidateId: "c1", title: "The #1 Pet Hair/Lint/Dust Cleaner", nicheMatched: true, matchStatus: "MATCH" },
-                { candidateId: "c2", title: "Automatic Dog Feeder for Easy Daily Meals", nicheMatched: true, matchStatus: "MATCH" },
-                { candidateId: "c3", title: "The #1 Vet-Recommended Cat Fountain", nicheMatched: true, matchStatus: "MATCH" },
+                { candidateId: "c1", title: "The #1 Pet Hair/Lint/Dust Cleaner", nicheMatched: true, matchStatus: "MATCH", identityStatus: "PROBABLE", verificationEvidenceStatus: "FUNNEL_UNVERIFIED", isCheckoutChampFunnel: true, independentMerchantProofRefs: [] },
+                { candidateId: "c2", title: "Automatic Dog Feeder for Easy Daily Meals", nicheMatched: true, matchStatus: "MATCH", identityStatus: "PROBABLE", verificationEvidenceStatus: "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF", isCheckoutChampFunnel: false, independentMerchantProofRefs: [] },
+                { candidateId: "c3", title: "The #1 Vet-Recommended Cat Fountain", nicheMatched: true, matchStatus: "MATCH", identityStatus: "PROBABLE", verificationEvidenceStatus: "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF", isCheckoutChampFunnel: false, independentMerchantProofRefs: [] },
               ],
               crossNicheInputVerification: {
                 drivenByInputNiche: true,
@@ -2152,9 +2375,17 @@ export function runPhysicalNegativeMutationSuite40(
             {
               sourceSha: codeShaFallback,
               snapshotFreshness: "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+              reconstructionStatus: "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE",
               claimedAsCurrentLiveRunVerification: false,
-              verifiedLiveMerchantsCount: 2,
-              verdict: "PARTIAL_2_OF_3",
+              g16SyntheticHydrationUsed: false,
+              fabricatedHydrationObservationsUsedCount: 0,
+              syntheticJsonldProofRefsUsedCount: 0,
+              crossWorkspaceProofsAcceptedCount: 0,
+              previousSnapshotClaimedVerifiedCount: 2,
+              verifiedFromPersistedEvidenceCount: 0,
+              newLiveVerifiedDuringThisRun: 0,
+              verifiedLiveMerchantsCount: 0,
+              verdict: "INSUFFICIENT_EVIDENCE",
             },
             null,
             2
@@ -2185,24 +2416,31 @@ export function runPhysicalNegativeMutationSuite40(
             {
               codeSha: codeShaFallback,
               engineeringVerdict: "PASS",
+              historicalProductIdentityTruthVerdict: "PASS",
               liveWalmartProviderVerdict: "BLOCKED_PROVIDER",
               liveAmazonProviderVerdict: "CREDENTIALS_REQUIRED",
               kh02BusinessVerdict: "INSUFFICIENT_EVIDENCE",
               historicalG15Verdict: "INSUFFICIENT_EVIDENCE",
               overallVerdict: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+              historicalIdentitySummary: {
+                holdoutVerifiedIdentityCount: 0,
+                holdoutIdentityCoverageStatus: "INSUFFICIENT_VERIFIED_IDENTITY",
+              },
               verdictMatrix: {
                 ENGINEERING_TESTS: "PASS",
                 BROAD_REGRESSION: "PASS",
                 REQUIRED_E2E_COVERAGE: "PASS",
                 HISTORICAL_REPLAY_INTEGRITY: "PASS",
                 NICHE_RELEVANCE: "PASS",
+                HISTORICAL_PRODUCT_IDENTITY_TRUTH: "PASS",
+                HISTORICAL_VERIFIED_IDENTITY_COVERAGE: "INSUFFICIENT_VERIFIED_IDENTITY",
                 LIVE_PROVIDERS: {
                   WALMART_US: "BLOCKED_PROVIDER",
                   AMAZON_US: "CREDENTIALS_REQUIRED",
                   TIKTOK_US_G07: "BLOCKED",
                 },
                 HISTORICAL_DEMAND_G15: "INSUFFICIENT_EVIDENCE",
-                MERCHANT_TOP3_G16: "PARTIAL_2_OF_3",
+                MERCHANT_TOP3_G16: "INSUFFICIENT_EVIDENCE",
                 FINAL_RELEASE: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
               },
             },

@@ -38,6 +38,21 @@ import {
   filterWalmartEvidencePointInTime,
   WALMART_EVIDENCE_SUBJECT_TYPE,
 } from "@/services/kh02/marketplace/walmartEvidencePersistence";
+import {
+  classifyHistoricalProductIdentity,
+  isFunnelOrCheckoutChamp,
+  type PersistedMerchantProofRecord,
+  type HistoricalProductIdentityClassification,
+  type VerificationEvidenceStatus,
+} from "@/services/kh02/identity/merchantIdentityPolicy";
+
+export {
+  classifyHistoricalProductIdentity,
+  isFunnelOrCheckoutChamp,
+  type PersistedMerchantProofRecord,
+  type HistoricalProductIdentityClassification,
+  type VerificationEvidenceStatus,
+};
 
 export interface PolicyScenarioResult {
   caseId: string;
@@ -98,7 +113,14 @@ export interface PointInTimeAdCandidateMetadataResult {
   title: string;
   storeDomain: string | null;
   canonicalProductUrl: string | null;
-  identityStatus: "VERIFIED" | "PROBABLE";
+  identityStatus: "VERIFIED" | "PROBABLE" | "UNVERIFIED";
+  verificationEvidenceStatus: VerificationEvidenceStatus;
+  isCheckoutChampFunnel: boolean;
+  evidenceRefIds: string[];
+  independentMerchantProofRefs: string[];
+  discoveryRefs: string[];
+  evidenceObservedAt: string | null;
+  identityReasonCodes: string[];
 }
 
 export type PointInTimeNicheRejectionCode =
@@ -121,17 +143,20 @@ export interface PointInTimeNicheCandidateInput {
   adBody?: string | null;
   storeDomain?: string | null;
   canonicalProductUrl?: string | null;
-  identityStatus?: "VERIFIED" | "PROBABLE" | "UNRESOLVED" | string | null;
+  identityStatus?: "VERIFIED" | "PROBABLE" | "UNVERIFIED" | "UNRESOLVED" | string | null;
   observedAt?: Date | string | null;
   metadataUpdatedAt?: Date | string | null;
   trustedPointInTimeMetadata?: boolean;
+  isAdOnlyFallback?: boolean;
   isSyntheticQuarantine?: boolean;
+  persistedMerchantProofs?: PersistedMerchantProofRecord[];
   observationCount?: number;
   observationsCount?: number;
   totalObservationCount?: number;
   totalScore?: number;
   supportingAdIds?: string[];
   researchProductId?: string | null;
+  workspaceId?: string | null;
 }
 
 export interface PointInTimeNicheEvaluationResult {
@@ -140,6 +165,14 @@ export interface PointInTimeNicheEvaluationResult {
   rejectionReasonCode: PointInTimeNicheRejectionCode | null;
   reasons: string[];
   proofRefs: string[];
+  discoveryRefs: string[];
+  independentMerchantProofRefs: string[];
+  evidenceRefIds: string[];
+  evidenceObservedAt: string | null;
+  identityStatus: "VERIFIED" | "PROBABLE" | "UNVERIFIED";
+  verificationEvidenceStatus: VerificationEvidenceStatus;
+  isCheckoutChampFunnel: boolean;
+  identityReasonCodes: string[];
   relevanceStatus:
     | "RELEVANT"
     | "REJECTED_AMBIGUOUS"
@@ -159,7 +192,10 @@ export interface HistoricalCandidateEvaluationAuditItem {
   title: string;
   storeDomain?: string | null;
   canonicalProductUrl?: string | null;
-  identityStatus?: string | null;
+  identityStatus?: "VERIFIED" | "PROBABLE" | "UNVERIFIED" | string | null;
+  verificationEvidenceStatus?: VerificationEvidenceStatus;
+  isCheckoutChampFunnel?: boolean;
+  identityReasonCodes?: string[];
   familyKey: string;
   observationCount: number;
   observationsCount?: number;
@@ -168,6 +204,10 @@ export interface HistoricalCandidateEvaluationAuditItem {
   rejectionReasonCode: PointInTimeNicheRejectionCode | null;
   reasons: string[];
   proofRefs: string[];
+  discoveryRefs?: string[];
+  independentMerchantProofRefs?: string[];
+  evidenceRefIds?: string[];
+  evidenceObservedAt?: string | null;
 }
 
 export interface ReplayCandidateFunnel {
@@ -176,10 +216,16 @@ export interface ReplayCandidateFunnel {
   reconstructedCandidates: number;
   identityResolved: number;
   nicheEligible: number;
+  nicheMatchingCandidates: number;
+  identityVerifiedCandidates: number;
+  liveVerifiedCandidates: number;
+  provisionalCandidates: number;
   nicheRejectedMismatch: number;
   nicheRejectedUncertain: number;
   familyDeduped: number;
   shortlistSelected: number;
+  verifiedIdentityCount: number;
+  funnelProbableCount: number;
 }
 
 export interface HistoricalReplayResult {
@@ -201,6 +247,9 @@ export interface HistoricalReplayResult {
     mismatchCount: number;
     uncertainCount: number;
     identityVerifiedOrProbableCount: number;
+    identityVerifiedCount: number;
+    provisionalDiscoveryCount: number;
+    funnelProbableCount: number;
     distinctMatchedFamiliesCount: number;
     shortlistedCount: number;
     shortlistShortfallCount: number;
@@ -209,18 +258,28 @@ export interface HistoricalReplayResult {
   rejectionReasonHistogram?: Record<string, number>;
   shortlistCount: number;
   nicheMatchedCount: number;
+  verifiedIdentityCount: number;
+  funnelProbableCount: number;
   shortlistShortfallCount: number;
   nicheCoverageStatus: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+  identityCoverageStatus: "SUFFICIENT_VERIFIED_IDENTITY" | "INSUFFICIENT_VERIFIED_IDENTITY";
   shortlistProducts: Array<{
     candidateId: string;
     title: string;
     identityStatus: string;
+    verificationEvidenceStatus: VerificationEvidenceStatus;
+    isCheckoutChampFunnel: boolean;
+    identityReasonCodes: string[];
     storeDomain: string | null;
     canonicalProductUrl: string | null;
     familyKey: string;
     nicheMatched: boolean;
     matchStatus: "MATCH" | "MISMATCH" | "UNCERTAIN";
     proofRefs: string[];
+    discoveryRefs: string[];
+    independentMerchantProofRefs: string[];
+    evidenceRefIds: string[];
+    evidenceObservedAt: string | null;
   }>;
   candidateEvaluations: HistoricalCandidateEvaluationAuditItem[];
   productEvidenceLedger: ProductHistoricalEvidenceRecord[];
@@ -278,7 +337,8 @@ export interface FullBacktestOutput {
 export function resolvePointInTimeAdCandidateMetadata(
   ad: any,
   link: any,
-  asOf: Date
+  asOf: Date,
+  persistedMerchantProofs?: PersistedMerchantProofRecord[]
 ): PointInTimeAdCandidateMetadataResult {
   const adTargetUrl = ad?.targetUrl || ad?.landingPageUrl || null;
   let adDomain = ad?.advertiserDomain || "competitor-store.com";
@@ -302,6 +362,19 @@ export function resolvePointInTimeAdCandidateMetadata(
 
   const p = link?.product;
   if (!p) {
+    const cls = classifyHistoricalProductIdentity(
+      {
+        candidateId: fallbackCandKey,
+        researchProductId: null,
+        title: adTitle,
+        storeDomain: adDomain,
+        canonicalProductUrl: adTargetUrl,
+        observedAt: ad?.firstSeenAt || null,
+        isAdOnlyFallback: true,
+        persistedMerchantProofs: [],
+      },
+      asOf
+    );
     return {
       trustedPointInTimeMetadata: false,
       metadataProvenance: "AD_OBSERVATION_ONLY",
@@ -310,7 +383,14 @@ export function resolvePointInTimeAdCandidateMetadata(
       title: adTitle,
       storeDomain: adDomain,
       canonicalProductUrl: adTargetUrl,
-      identityStatus: "PROBABLE",
+      identityStatus: cls.identityStatus,
+      verificationEvidenceStatus: cls.verificationEvidenceStatus,
+      isCheckoutChampFunnel: cls.isCheckoutChampFunnel,
+      evidenceRefIds: cls.evidenceRefIds,
+      independentMerchantProofRefs: cls.independentMerchantProofRefs,
+      discoveryRefs: cls.discoveryRefs,
+      evidenceObservedAt: cls.evidenceObservedAt,
+      identityReasonCodes: cls.reasonCodes,
     };
   }
 
@@ -326,6 +406,19 @@ export function resolvePointInTimeAdCandidateMetadata(
   );
 
   if (!hasValidTimestamps || isPostCutoff) {
+    const cls = classifyHistoricalProductIdentity(
+      {
+        candidateId: fallbackCandKey,
+        researchProductId: null,
+        title: adTitle,
+        storeDomain: adDomain,
+        canonicalProductUrl: adTargetUrl,
+        observedAt: ad?.firstSeenAt || null,
+        isAdOnlyFallback: true,
+        persistedMerchantProofs: [],
+      },
+      asOf
+    );
     return {
       trustedPointInTimeMetadata: false,
       metadataProvenance: isPostCutoff
@@ -336,7 +429,16 @@ export function resolvePointInTimeAdCandidateMetadata(
       title: adTitle,
       storeDomain: adDomain,
       canonicalProductUrl: adTargetUrl,
-      identityStatus: "PROBABLE",
+      identityStatus: cls.identityStatus,
+      verificationEvidenceStatus: isPostCutoff ? "POST_CUTOFF" : cls.verificationEvidenceStatus,
+      isCheckoutChampFunnel: cls.isCheckoutChampFunnel,
+      evidenceRefIds: [],
+      independentMerchantProofRefs: [],
+      discoveryRefs: cls.discoveryRefs,
+      evidenceObservedAt: null,
+      identityReasonCodes: isPostCutoff
+        ? ["REJECTED_POST_CUTOFF_JOINED_METADATA", ...cls.reasonCodes]
+        : cls.reasonCodes,
     };
   }
 
@@ -349,6 +451,22 @@ export function resolvePointInTimeAdCandidateMetadata(
     }
   }
 
+  const cls = classifyHistoricalProductIdentity(
+    {
+      candidateId: String(p.id),
+      researchProductId: String(p.id),
+      workspaceId: p.workspaceId || ad?.workspaceId || null,
+      title: String(p.title || adTitle),
+      storeDomain: prodDomain || adDomain,
+      canonicalProductUrl: p.productUrl || adTargetUrl,
+      observedAt: ad?.firstSeenAt || pCreatedAt,
+      metadataUpdatedAt: pUpdatedAt,
+      isAdOnlyFallback: false,
+      persistedMerchantProofs: persistedMerchantProofs || [],
+    },
+    asOf
+  );
+
   return {
     trustedPointInTimeMetadata: true,
     metadataProvenance: "VERIFIED_POINT_IN_TIME_PRODUCT_METADATA",
@@ -357,7 +475,14 @@ export function resolvePointInTimeAdCandidateMetadata(
     title: String(p.title || adTitle),
     storeDomain: prodDomain || adDomain,
     canonicalProductUrl: p.productUrl || adTargetUrl,
-    identityStatus: p.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE",
+    identityStatus: cls.identityStatus,
+    verificationEvidenceStatus: cls.verificationEvidenceStatus,
+    isCheckoutChampFunnel: cls.isCheckoutChampFunnel,
+    evidenceRefIds: cls.evidenceRefIds,
+    independentMerchantProofRefs: cls.independentMerchantProofRefs,
+    discoveryRefs: cls.discoveryRefs,
+    evidenceObservedAt: cls.evidenceObservedAt,
+    identityReasonCodes: cls.reasonCodes,
   };
 }
 
@@ -443,10 +568,48 @@ export function evaluatePointInTimeNicheCandidate(
     .toLowerCase()
     .replace(/^www\./, "");
   const canonicalUrl = input.canonicalProductUrl ? String(input.canonicalProductUrl).trim() : null;
-  const proofRefs: string[] = [];
-  if (input.candidateId) proofRefs.push(`candidate:${input.candidateId}`);
-  if (storeDomain) proofRefs.push(`domain:${storeDomain}`);
-  if (canonicalUrl) proofRefs.push(`url:${canonicalUrl}`);
+
+  const identityCls = classifyHistoricalProductIdentity(
+    {
+      candidateId: input.candidateId,
+      researchProductId: input.researchProductId || null,
+      workspaceId: input.workspaceId || null,
+      title,
+      storeDomain,
+      canonicalProductUrl: canonicalUrl,
+      observedAt: input.observedAt || null,
+      metadataUpdatedAt: input.metadataUpdatedAt || null,
+      isAdOnlyFallback: input.isAdOnlyFallback ?? !input.researchProductId,
+      isSyntheticQuarantine: input.isSyntheticQuarantine,
+      persistedMerchantProofs: input.persistedMerchantProofs || [],
+    },
+    asOf
+  );
+
+  const proofRefs = identityCls.discoveryRefs;
+  const attachIdentityFields = (
+    res: Omit<
+      PointInTimeNicheEvaluationResult,
+      | "discoveryRefs"
+      | "independentMerchantProofRefs"
+      | "evidenceRefIds"
+      | "evidenceObservedAt"
+      | "identityStatus"
+      | "verificationEvidenceStatus"
+      | "isCheckoutChampFunnel"
+      | "identityReasonCodes"
+    >
+  ): PointInTimeNicheEvaluationResult => ({
+    ...res,
+    discoveryRefs: identityCls.discoveryRefs,
+    independentMerchantProofRefs: identityCls.independentMerchantProofRefs,
+    evidenceRefIds: identityCls.evidenceRefIds,
+    evidenceObservedAt: identityCls.evidenceObservedAt,
+    identityStatus: identityCls.identityStatus,
+    verificationEvidenceStatus: identityCls.verificationEvidenceStatus,
+    isCheckoutChampFunnel: identityCls.isCheckoutChampFunnel,
+    identityReasonCodes: identityCls.reasonCodes,
+  });
 
   const detectNicheFamilyKey = (text: string, urlStr: string | null): string => {
     const combined = `${text} ${urlStr || ""}`.toLowerCase();
@@ -495,7 +658,7 @@ export function evaluatePointInTimeNicheCandidate(
     (obsDate && !Number.isNaN(obsDate.getTime()) && obsDate.getTime() > asOf.getTime()) ||
     (metaUpdDate && !Number.isNaN(metaUpdDate.getTime()) && metaUpdDate.getTime() > asOf.getTime())
   ) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "POST_CUTOFF_NICHE_EVIDENCE_REJECTED",
@@ -506,7 +669,7 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "MISMATCH",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   // Rule 1: Synthetic / Quarantine / Test Fixture guard
@@ -516,7 +679,7 @@ export function evaluatePointInTimeNicheCandidate(
     /\[SYNTHETIC_DEMO\]|^Synthetic Fixture:/i.test(title) ||
     /\[SYNTHETIC_DEMO\]|^Synthetic Fixture:/i.test(bodyText)
   ) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "SYNTHETIC_OR_QUARANTINE_EXCLUDED",
@@ -527,7 +690,7 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "MISMATCH",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   // Parse URL path to check for real product page vs domain-only / synthetic domain
@@ -577,7 +740,7 @@ export function evaluatePointInTimeNicheCandidate(
     );
 
   if (isAdIdPlaceholderTitle) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF",
@@ -588,11 +751,11 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "AMBIGUOUS",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   if (isBrandOnlyTitle && !bodyText) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF",
@@ -603,11 +766,11 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "AMBIGUOUS",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   if (isGenericPromoSlogan) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "GENERIC_PROMO_OR_SLOGAN_WITHOUT_NICHE_PROOF",
@@ -618,7 +781,7 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "AMBIGUOUS",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   const combinedEvidence = `${title} ${bodyText} ${urlPath.replace(/[-_/]/g, " ")}`.toLowerCase();
@@ -639,7 +802,7 @@ export function evaluatePointInTimeNicheCandidate(
         combinedEvidence
       );
     if (isHumanHairOrBeauty && !/\b(pet|dog|cat|puppy|kitten|fur)\b/i.test(title.toLowerCase())) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "AMBIGUOUS_SINGLE_TOKEN_OVERLAP",
@@ -650,7 +813,7 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
     // Check non-pet water items matching 'water' or 'fountain'
@@ -659,7 +822,7 @@ export function evaluatePointInTimeNicheCandidate(
         combinedEvidence
       );
     if (isNonPetWaterProduct && !/\b(pet|dog|cat|puppy|kitten|kittyspout|petnimo|uahpet)\b/i.test(title.toLowerCase())) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "AMBIGUOUS_SINGLE_TOKEN_OVERLAP",
@@ -670,7 +833,7 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
     // Check human face/skin rollers or brushes matching 'roller' / 'brush'
@@ -679,7 +842,7 @@ export function evaluatePointInTimeNicheCandidate(
         combinedEvidence
       );
     if (isHumanRollerOrBrush && !hasExplicitPetTarget) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "AMBIGUOUS_SINGLE_TOKEN_OVERLAP",
@@ -690,17 +853,16 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
     // Rule 4: Cross-niche rejection for Pet Gadgets
-    // Reject human apparel/merch even if it prints a dog/cat image (e.g., "Custom Dog & Cat Sweatpants")
     const isHumanApparelOrMerch =
       /\b(sweatpants|hoodie|t-shirt|tee\s*shirt|leggings|pajamas|socks|necklace|bracelet|earrings|coffee\s*mug|canvas\s*print|custom\s*portrait)\b/i.test(
         combinedEvidence
       );
     if (isHumanApparelOrMerch) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "CROSS_NICHE_MISMATCH",
@@ -711,16 +873,15 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
-    // Check explicit non-pet cross-niche categories (auto, kitchen, garden, human health/relief, kids toys)
     const isCrossNicheNonPet =
       /\b(auto\s*detailing|putty\s*gel|car\s*fender|dent\s*edge|dent\s*repair|portable\s*blender|blendjet|garlic\s*chopper|vegetable\s*chopper|pruning\s*shears|garden\s*pruning|snowball\s*fun|snowball\s*maker|natural\s*relief|joint\s*relief|kid\s*rides|diy\s*kit)\b/i.test(
         combinedEvidence
       );
     if (isCrossNicheNonPet || !hasExplicitPetTarget) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "CROSS_NICHE_MISMATCH",
@@ -731,11 +892,9 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
-    // Must have concrete pet product/gadget mechanism proof AND a clean product head noun in the title itself
-    // (rejects ad-copy hooks/slogans like "Perfect for multi-pet households", "Fresh Meals. Smarter Feeding.", "No slimy motor...")
     const hasPetProductMechanism =
       /\b(fountain|hydration|drinking\s*fountain|water\s*dispenser|feeder|feeding|hair\s*remover|lint\s*remover|hair\s*cleaner|lint\s*cleaner|hair\/lint|fur\s*remover|grooming\s*glove|grooming\s*brush|deshedding|nail\s*grinder|bark\s*collar|training\s*collar|gps\s*tracker|litter\s*box|interactive\s*(pet|cat|dog)?\s*toy|ball\s*launcher|steam\s*brush|pet\s*dryer)\b/i.test(
         combinedEvidence
@@ -748,7 +907,7 @@ export function evaluatePointInTimeNicheCandidate(
       ) && !/^amazon\s+sold\s+me\b/i.test(title.trim());
 
     if (!hasPetProductMechanism || !hasExplicitProductHeadNounInTitle) {
-      return {
+      return attachIdentityFields({
         matchStatus: "UNCERTAIN",
         nicheMatched: false,
         rejectionReasonCode: "GENERIC_PROMO_OR_SLOGAN_WITHOUT_NICHE_PROOF",
@@ -763,16 +922,15 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "AMBIGUOUS",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
-    // Check accessory-only / replacement filter pack
     const isAccessoryOnly =
       /\b(replacement\s*filter|filter\s*refill|filter\s*pack|extra\s*filters\s*only|replacement\s*blade|warranty\s*extension|shipping\s*protection)\b/i.test(
         title.toLowerCase()
       );
     if (isAccessoryOnly) {
-      return {
+      return attachIdentityFields({
         matchStatus: "UNCERTAIN",
         nicheMatched: false,
         rejectionReasonCode: "ACCESSORY_OR_SUBPRODUCT_NOT_CORE",
@@ -783,12 +941,11 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "DIRECT_MATCH",
         isAccessoryOrSubProduct: true,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
-    // Must have a verifiable merchant/product URL (not unattributed competitor-store.com or .example.com)
     if (!hasConcreteProductUrlPath) {
-      return {
+      return attachIdentityFields({
         matchStatus: "UNCERTAIN",
         nicheMatched: false,
         rejectionReasonCode: "UNVERIFIED_IDENTITY",
@@ -799,21 +956,26 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "DIRECT_MATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
 
-    return {
+    const matchReason =
+      identityCls.identityStatus === "VERIFIED"
+        ? `Verified '${normalizedNiche}' product with independent point-in-time merchant proof`
+        : `Niche-matched discovery candidate for '${normalizedNiche}'; merchant identity requires independent verification`;
+
+    return attachIdentityFields({
       matchStatus: "MATCH",
       nicheMatched: true,
       rejectionReasonCode: "NONE",
-      reasons: [`Verified '${normalizedNiche}' product with target pet context, gadget mechanism, and concrete product URL`],
+      reasons: [matchReason],
       proofRefs,
       relevanceStatus: "RELEVANT",
       sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
       audienceCategoryFit: "DIRECT_MATCH",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   // Kitchen Gadgets niche handling (proves evaluator is driven by input `niche`, not hardcoded to Pet Gadgets)
@@ -827,7 +989,7 @@ export function evaluatePointInTimeNicheCandidate(
         combinedEvidence
       );
     if (hasNonKitchenSignal || !hasKitchenMechanism) {
-      return {
+      return attachIdentityFields({
         matchStatus: "MISMATCH",
         nicheMatched: false,
         rejectionReasonCode: "CROSS_NICHE_MISMATCH",
@@ -838,10 +1000,10 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "MISMATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
     if (!hasConcreteProductUrlPath) {
-      return {
+      return attachIdentityFields({
         matchStatus: "UNCERTAIN",
         nicheMatched: false,
         rejectionReasonCode: "UNVERIFIED_IDENTITY",
@@ -852,20 +1014,24 @@ export function evaluatePointInTimeNicheCandidate(
         audienceCategoryFit: "DIRECT_MATCH",
         isAccessoryOrSubProduct: false,
         familyKey: baseFamilyKey,
-      };
+      });
     }
-    return {
+    const kitchenReason =
+      identityCls.identityStatus === "VERIFIED"
+        ? `Verified '${normalizedNiche}' product with independent point-in-time merchant proof`
+        : `Niche-matched discovery candidate for '${normalizedNiche}'; merchant identity requires independent verification`;
+    return attachIdentityFields({
       matchStatus: "MATCH",
       nicheMatched: true,
       rejectionReasonCode: "NONE",
-      reasons: [`Verified '${normalizedNiche}' product with concrete kitchen gadget mechanism and product URL`],
+      reasons: [kitchenReason],
       proofRefs,
       relevanceStatus: "RELEVANT",
       sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
       audienceCategoryFit: "DIRECT_MATCH",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   // Generic niche fallback using production relevance & audience relevance evaluators
@@ -889,7 +1055,7 @@ export function evaluatePointInTimeNicheCandidate(
     aud.audienceMatch === "CONTRADICTORY" ||
     !aud.eligibleForPrimaryShortlist
   ) {
-    return {
+    return attachIdentityFields({
       matchStatus: "MISMATCH",
       nicheMatched: false,
       rejectionReasonCode: "CROSS_NICHE_MISMATCH",
@@ -906,11 +1072,11 @@ export function evaluatePointInTimeNicheCandidate(
       audienceCategoryFit: "MISMATCH",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
   if (!hasConcreteProductUrlPath) {
-    return {
+    return attachIdentityFields({
       matchStatus: "UNCERTAIN",
       nicheMatched: false,
       rejectionReasonCode: "UNVERIFIED_IDENTITY",
@@ -926,26 +1092,32 @@ export function evaluatePointInTimeNicheCandidate(
           : "AMBIGUOUS",
       isAccessoryOrSubProduct: false,
       familyKey: baseFamilyKey,
-    };
+    });
   }
 
-  return {
+  const genericReason =
+    identityCls.identityStatus === "VERIFIED"
+      ? `Verified '${normalizedNiche}' product with independent point-in-time merchant proof`
+      : `Niche-matched discovery candidate for '${normalizedNiche}'; merchant identity requires independent verification`;
+
+  return attachIdentityFields({
     matchStatus: "MATCH",
     nicheMatched: true,
     rejectionReasonCode: "NONE",
-    reasons: [`Matched niche '${normalizedNiche}' via product relevance and audience fit`],
+    reasons: [genericReason],
     proofRefs,
     relevanceStatus: "RELEVANT",
     sourcePageClassification: "ACTUAL_PRODUCT_PAGE",
     audienceCategoryFit: "DIRECT_MATCH",
     isAccessoryOrSubProduct: false,
     familyKey: baseFamilyKey,
-  };
+  });
 }
 
 /**
  * Pure helper to evaluate, filter, cluster, and select a Top-N shortlist for a given `niche` and `asOf`
- * without ever padding `< N` results with `MISMATCH` or `UNCERTAIN` candidates.
+ * without ever padding `< N` results with `MISMATCH` or `UNCERTAIN` candidates, while strictly
+ * separating niche-matching discovery candidates from independently verified merchant identities.
  */
 export function replayCandidateListForNiche(
   candidates: PointInTimeNicheCandidateInput[],
@@ -960,10 +1132,18 @@ export function replayCandidateListForNiche(
   distinctFamiliesCount: number;
   shortlistCount: number;
   nicheMatchedCount: number;
+  nicheMatchingCandidates: number;
+  identityVerifiedCandidates: number;
+  liveVerifiedCandidates: number;
+  provisionalCandidates: number;
+  shortlistSelected: number;
+  verifiedIdentityCount: number;
+  funnelProbableCount: number;
   mismatchCount: number;
   uncertainCount: number;
   shortlistShortfallCount: number;
   nicheCoverageStatus: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+  identityCoverageStatus: "SUFFICIENT_VERIFIED_IDENTITY" | "INSUFFICIENT_VERIFIED_IDENTITY";
   rejectionReasonHistogram: Record<string, number>;
 } {
   const asOfDate = typeof asOf === "string" ? new Date(asOf) : asOf;
@@ -985,7 +1165,10 @@ export function replayCandidateListForNiche(
       title: cand.title,
       storeDomain: cand.storeDomain,
       canonicalProductUrl: cand.canonicalProductUrl,
-      identityStatus: cand.identityStatus,
+      identityStatus: ev.identityStatus,
+      verificationEvidenceStatus: ev.verificationEvidenceStatus,
+      isCheckoutChampFunnel: ev.isCheckoutChampFunnel,
+      identityReasonCodes: ev.identityReasonCodes,
       familyKey: ev.familyKey,
       observationCount: obsCount,
       observationsCount: obsCount,
@@ -994,6 +1177,10 @@ export function replayCandidateListForNiche(
       rejectionReasonCode: ev.rejectionReasonCode,
       reasons: ev.reasons,
       proofRefs: ev.proofRefs,
+      discoveryRefs: ev.discoveryRefs,
+      independentMerchantProofRefs: ev.independentMerchantProofRefs,
+      evidenceRefIds: ev.evidenceRefIds,
+      evidenceObservedAt: ev.evidenceObservedAt,
     });
 
     if (ev.matchStatus !== "MATCH") {
@@ -1013,7 +1200,11 @@ export function replayCandidateListForNiche(
       canonicalProductName: cand.title,
       storeDomain: cand.storeDomain,
       canonicalProductUrl: cand.canonicalProductUrl,
-      identityStatus: cand.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE",
+      identityStatus: ev.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE",
+      verificationEvidenceStatus: ev.verificationEvidenceStatus,
+      isCheckoutChampFunnel: ev.isCheckoutChampFunnel,
+      identityReasonCodes: ev.identityReasonCodes,
+      relevanceScore: ev.isCheckoutChampFunnel ? 75 : 90,
       familyKey: ev.familyKey,
       familyLabel: ev.familyKey,
       matchedArchetypeId: ev.familyKey,
@@ -1049,6 +1240,28 @@ export function replayCandidateListForNiche(
       ? "SUFFICIENT_NICHE_COVERAGE"
       : "INSUFFICIENT_NICHE_COVERAGE";
 
+  const evalByCandidateId = new Map(evaluations.map((e) => [e.candidateId, e]));
+  const identityVerifiedCandidates = matchedCandidates.filter(
+    (c) => c.identityStatus === "VERIFIED"
+  ).length;
+  const liveVerifiedCandidates = matchedCandidates.filter(
+    (c) =>
+      c.identityStatus === "VERIFIED" &&
+      (evalByCandidateId.get(c.candidateId)?.verificationEvidenceStatus === "INDEPENDENT_VERIFIED" ||
+        (c as any).verificationEvidenceStatus === "INDEPENDENT_VERIFIED")
+  ).length;
+  const provisionalCandidates = Math.max(0, matchedCandidates.length - identityVerifiedCandidates);
+
+  const verifiedIdentityCount = shortlist.filter((c) => c.identityStatus === "VERIFIED").length;
+  const funnelProbableCount = shortlist.filter((c) => {
+    const ev = evalByCandidateId.get(c.candidateId);
+    return ev?.isCheckoutChampFunnel ?? isFunnelOrCheckoutChamp(c.storeDomain, c.canonicalProductUrl);
+  }).length;
+  const identityCoverageStatus =
+    verifiedIdentityCount >= limit
+      ? "SUFFICIENT_VERIFIED_IDENTITY"
+      : "INSUFFICIENT_VERIFIED_IDENTITY";
+
   return {
     niche,
     evaluations,
@@ -1057,10 +1270,18 @@ export function replayCandidateListForNiche(
     distinctFamiliesCount: shortlistRes.distinctFamiliesCount ?? 0,
     shortlistCount,
     nicheMatchedCount,
+    nicheMatchingCandidates: matchedCandidates.length,
+    identityVerifiedCandidates,
+    liveVerifiedCandidates,
+    provisionalCandidates,
+    shortlistSelected: shortlistCount,
+    verifiedIdentityCount,
+    funnelProbableCount,
     mismatchCount,
     uncertainCount,
     shortlistShortfallCount,
     nicheCoverageStatus,
+    identityCoverageStatus,
     rejectionReasonHistogram,
   };
 }
@@ -1816,6 +2037,201 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         detail: `shortlistCount=${replayRes.shortlistCount}, shortfall=${replayRes.shortlistShortfallCount}, status=${replayRes.nicheCoverageStatus}`,
       });
     }
+
+    // DEV 09 (V12.4.3.5.1 P0-01/P0-03): Historical identity classifier rejects URL-path-only promotion, CheckoutChamp funnel promotion, and post-cutoff merchant proof
+    {
+      const cutoff = new Date("2026-10-30T12:00:00.000Z");
+      const urlOnlyRes = classifyHistoricalProductIdentity(
+        {
+          candidateId: "cand_url_only",
+          title: "The #1 Vet-Recommended Cat Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          observedAt: "2026-10-25T10:00:00.000Z",
+          isAdOnlyFallback: true,
+          persistedMerchantProofs: [],
+        },
+        cutoff
+      );
+      const funnelRes = classifyHistoricalProductIdentity(
+        {
+          candidateId: "cand_funnel_uproot",
+          title: "The #1 Pet Hair/Lint/Dust Cleaner",
+          storeDomain: "cc.uprootclean.com",
+          canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+          observedAt: "2026-10-25T10:00:00.000Z",
+          isAdOnlyFallback: false,
+          researchProductId: "prod_uproot",
+          persistedMerchantProofs: [
+            {
+              id: "ev_uproot_non_schema",
+              sourceTable: "ResearchEvidence",
+              storeDomain: "cc.uprootclean.com",
+              canonicalUrl: "https://cc.uprootclean.com/main/phr",
+              observedAt: "2026-10-25T10:00:00.000Z",
+              schemaVerified: false,
+              fetchOutcome: "FETCH_SUCCEEDED",
+              verifiedProductTitle: "Uproot Cleaner",
+            },
+          ],
+        },
+        cutoff
+      );
+      const postCutoffProofRes = classifyHistoricalProductIdentity(
+        {
+          candidateId: "cand_post_cutoff_proof",
+          researchProductId: "prod_kittyspout",
+          title: "The #1 Vet-Recommended Cat Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          observedAt: "2026-10-25T10:00:00.000Z",
+          persistedMerchantProofs: [
+            {
+              id: "ev_future_jsonld",
+              sourceTable: "ResearchEvidence",
+              storeDomain: "kittyspout.com",
+              canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observedAt: "2026-11-01T04:22:00.000Z", // > cutoff
+              schemaVerified: true,
+              hasJsonLdProduct: true,
+              merchantProductId: "8369671045340",
+            },
+          ],
+        },
+        cutoff
+      );
+      const validPitProofRes = classifyHistoricalProductIdentity(
+        {
+          candidateId: "cand_valid_pit_proof",
+          researchProductId: "prod_kittyspout",
+          title: "The #1 Vet-Recommended Cat Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          observedAt: "2026-10-25T10:00:00.000Z",
+          persistedMerchantProofs: [
+            {
+              id: "ev_pit_jsonld_1",
+              sourceTable: "ResearchEvidence",
+              storeDomain: "kittyspout.com",
+              canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+              observedAt: "2026-10-26T08:00:00.000Z", // <= cutoff
+              schemaVerified: true,
+              hasJsonLdProduct: true,
+              merchantProductId: "8369671045340",
+            },
+          ],
+        },
+        cutoff
+      );
+
+      const passed =
+        urlOnlyRes.identityStatus === "PROBABLE" &&
+        urlOnlyRes.verificationEvidenceStatus === "DISCOVERY_ONLY" &&
+        urlOnlyRes.independentMerchantProofRefs.length === 0 &&
+        funnelRes.identityStatus === "PROBABLE" &&
+        funnelRes.verificationEvidenceStatus === "FUNNEL_UNVERIFIED" &&
+        funnelRes.isCheckoutChampFunnel === true &&
+        postCutoffProofRes.identityStatus === "PROBABLE" &&
+        postCutoffProofRes.verificationEvidenceStatus === "POST_CUTOFF" &&
+        validPitProofRes.identityStatus === "VERIFIED" &&
+        validPitProofRes.verificationEvidenceStatus === "INDEPENDENT_VERIFIED" &&
+        validPitProofRes.independentMerchantProofRefs.length > 0;
+
+      scenarios.push({
+        caseId: "v124351_dev_09_historical_identity_rejects_url_path_only_and_funnel",
+        split: "DEV",
+        category: "HISTORICAL_IDENTITY_PROVENANCE_POLICY",
+        description: "Historical identity classifier never promotes /products/ URL path or CheckoutChamp funnel without point-in-time <= asOf root merchant schema proof",
+        executed: true,
+        passed,
+        assertion: "urlOnly=PROBABLE/DISCOVERY_ONLY && funnel=PROBABLE/FUNNEL_UNVERIFIED && postCutoff=PROBABLE/POST_CUTOFF && validPit=VERIFIED/INDEPENDENT_VERIFIED",
+        observed: {
+          urlOnly: { status: urlOnlyRes.identityStatus, evidence: urlOnlyRes.verificationEvidenceStatus },
+          funnel: { status: funnelRes.identityStatus, evidence: funnelRes.verificationEvidenceStatus, funnel: funnelRes.isCheckoutChampFunnel },
+          postCutoff: { status: postCutoffProofRes.identityStatus, evidence: postCutoffProofRes.verificationEvidenceStatus },
+          validPit: { status: validPitProofRes.identityStatus, evidence: validPitProofRes.verificationEvidenceStatus, refs: validPitProofRes.independentMerchantProofRefs },
+        },
+        detail: `urlOnly=${urlOnlyRes.identityStatus}/${urlOnlyRes.verificationEvidenceStatus}; funnel=${funnelRes.identityStatus}/${funnelRes.verificationEvidenceStatus}; postCutoff=${postCutoffProofRes.verificationEvidenceStatus}; validPit=${validPitProofRes.identityStatus}`,
+      });
+    }
+
+    // HOLDOUT 19 (V12.4.3.5.1 P0-01/P0-03/P1-04): Replay separates niche-matching discovery candidates from verified merchant identities
+    {
+      const cutoff = new Date("2026-10-30T12:00:00.000Z");
+      const replayIdentitySep = replayCandidateListForNiche(
+        [
+          {
+            candidateId: "cand_verified_fountain",
+            researchProductId: "prod_fountain",
+            title: "The #1 Vet-Recommended Cat Fountain",
+            storeDomain: "kittyspout.com",
+            canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+            observedAt: "2026-10-25T10:00:00.000Z",
+            persistedMerchantProofs: [
+              {
+                id: "ev_valid_1",
+                sourceTable: "ResearchEvidence",
+                storeDomain: "kittyspout.com",
+                canonicalUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+                observedAt: "2026-10-26T00:00:00.000Z",
+                schemaVerified: true,
+                hasJsonLdProduct: true,
+                merchantProductId: "8369671045340",
+              },
+            ],
+          },
+          {
+            candidateId: "cand_url_only_feeder",
+            title: "Automatic Dog Feeder for Easy Daily Meals",
+            storeDomain: "kingspetboutique.info",
+            canonicalProductUrl: "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+            observedAt: "2026-10-25T12:00:00.000Z",
+            isAdOnlyFallback: true,
+          },
+          {
+            candidateId: "cand_funnel_cleaner",
+            title: "The #1 Pet Hair/Lint/Dust Cleaner",
+            storeDomain: "cc.uprootclean.com",
+            canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+            observedAt: "2026-10-25T14:00:00.000Z",
+            isAdOnlyFallback: true,
+          },
+        ],
+        "Pet Gadgets",
+        cutoff,
+        3
+      );
+
+      const passed =
+        replayIdentitySep.nicheMatchingCandidates === 3 &&
+        replayIdentitySep.shortlistSelected === 3 &&
+        replayIdentitySep.identityVerifiedCandidates === 1 &&
+        replayIdentitySep.provisionalCandidates === 2 &&
+        replayIdentitySep.verifiedIdentityCount === 1 &&
+        replayIdentitySep.funnelProbableCount === 1 &&
+        replayIdentitySep.nicheCoverageStatus === "SUFFICIENT_NICHE_COVERAGE" &&
+        replayIdentitySep.identityCoverageStatus === "INSUFFICIENT_VERIFIED_IDENTITY";
+
+      scenarios.push({
+        caseId: "v124351_holdout_11_replay_separates_niche_matches_from_verified_identity",
+        split: "HOLDOUT",
+        category: "HISTORICAL_IDENTITY_PROVENANCE_POLICY",
+        description: "Replay reports nicheMatchingCandidates=3 and shortlistSelected=3 while honestly reporting verifiedIdentityCount=1, funnelProbableCount=1, and INSUFFICIENT_VERIFIED_IDENTITY",
+        executed: true,
+        passed,
+        assertion: "nicheMatchingCandidates === 3 && verifiedIdentityCount === 1 && funnelProbableCount === 1 && identityCoverageStatus === 'INSUFFICIENT_VERIFIED_IDENTITY'",
+        observed: {
+          nicheMatchingCandidates: replayIdentitySep.nicheMatchingCandidates,
+          shortlistSelected: replayIdentitySep.shortlistSelected,
+          verifiedIdentityCount: replayIdentitySep.verifiedIdentityCount,
+          provisionalCandidates: replayIdentitySep.provisionalCandidates,
+          funnelProbableCount: replayIdentitySep.funnelProbableCount,
+          nicheCoverageStatus: replayIdentitySep.nicheCoverageStatus,
+          identityCoverageStatus: replayIdentitySep.identityCoverageStatus,
+        },
+        detail: `nicheMatched=${replayIdentitySep.nicheMatchingCandidates}, verifiedIdentity=${replayIdentitySep.verifiedIdentityCount}, funnelProbable=${replayIdentitySep.funnelProbableCount}, identityCoverage=${replayIdentitySep.identityCoverageStatus}`,
+      });
+    }
   } finally {
     process.env = { ...originalEnv };
   }
@@ -1865,7 +2281,13 @@ export async function runRealHistoricalProductReplay(
     include: {
       productLinks: {
         include: {
-          product: true,
+          product: {
+            include: {
+              evidence: true,
+              landingPageSnapshots: true,
+              offerSnapshots: true,
+            },
+          },
         },
       },
     },
@@ -1882,7 +2304,13 @@ export async function runRealHistoricalProductReplay(
     include: {
       productLinks: {
         include: {
-          product: true,
+          product: {
+            include: {
+              evidence: true,
+              landingPageSnapshots: true,
+              offerSnapshots: true,
+            },
+          },
         },
       },
     },
@@ -1890,6 +2318,78 @@ export async function runRealHistoricalProductReplay(
 
   // Verify zero future data leakage in HOLDOUT
   const holdoutFutureLeakage = holdoutAds.filter((a) => a.firstSeenAt > HOLDOUT_CUTOFF);
+
+  const extractProductMerchantProofs = (prod: any): PersistedMerchantProofRecord[] => {
+    if (!prod || typeof prod !== "object") return [];
+    const proofs: PersistedMerchantProofRecord[] = [];
+    for (const ev of prod.evidence || []) {
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(ev.observedValue || "{}");
+      } catch {}
+      const isSchemaVerified =
+        parsed.schemaVerified === true ||
+        parsed.hasJsonLdProduct === true ||
+        ev.evidenceType === "JSON_LD_PRODUCT_SCHEMA" ||
+        ev.evidenceType === "MERCHANT_PRODUCT_SCHEMA";
+      proofs.push({
+        id: String(ev.id),
+        sourceTable: "ResearchEvidence",
+        workspaceId: prod.workspaceId || null,
+        researchProductId: String(prod.id),
+        storeDomain: parsed.storeDomain || prod.storeDomain || null,
+        canonicalUrl: parsed.canonicalUrl || ev.sourceUrl || prod.productUrl || null,
+        observedAt: ev.observedAt || parsed.observedAt || null,
+        schemaVerified: isSchemaVerified,
+        hasJsonLdProduct: isSchemaVerified,
+        fetchOutcome: parsed.fetchOutcome || null,
+        merchantProductId: parsed.merchantProductId || null,
+        sku: parsed.sku || null,
+        gtin: parsed.gtin || null,
+        verifiedProductTitle: parsed.verifiedProductTitle || parsed.title || null,
+        evidenceOrigin: parsed.evidenceOrigin || parsed.observationClass || null,
+      });
+    }
+    for (const lp of prod.landingPageSnapshots || []) {
+      const hasSchema = Boolean(
+        lp.productTitle &&
+          lp.canonicalUrl &&
+          lp.contentHash &&
+          !/uahpet_lp_hash_v12_4_3_3|synthetic|fixture/i.test(String(lp.contentHash))
+      );
+      proofs.push({
+        id: String(lp.id),
+        sourceTable: "LandingPageSnapshot",
+        workspaceId: lp.workspaceId || prod.workspaceId || null,
+        researchProductId: String(prod.id),
+        storeDomain: prod.storeDomain || null,
+        canonicalUrl: lp.canonicalUrl || lp.url || prod.productUrl || null,
+        observedAt: lp.capturedAt || null,
+        schemaVerified: hasSchema,
+        hasJsonLdProduct: hasSchema,
+        fetchOutcome: hasSchema ? "FETCH_SUCCEEDED" : null,
+        verifiedProductTitle: lp.productTitle || null,
+        contentHash: lp.contentHash || null,
+      });
+    }
+    for (const os of prod.offerSnapshots || []) {
+      const hasOfferProof = Boolean(os.offerUrl && (os.priceText || os.priceAmount));
+      proofs.push({
+        id: String(os.id),
+        sourceTable: "CompetitorOfferSnapshot",
+        workspaceId: prod.workspaceId || null,
+        researchProductId: String(prod.id),
+        storeDomain: prod.storeDomain || null,
+        canonicalUrl: os.offerUrl || prod.productUrl || null,
+        observedAt: os.capturedAt || null,
+        schemaVerified: false,
+        hasJsonLdProduct: false,
+        fetchOutcome: hasOfferProof ? "ACTUAL_PRODUCT_PAGE" : null,
+        verifiedProductTitle: prod.title || null,
+      });
+    }
+    return proofs;
+  };
 
   // Helper to reconstruct candidate list and run point-in-time niche evaluation + ranking without future leakage
   const replayPointInTime = async (
@@ -1951,7 +2451,8 @@ export async function runRealHistoricalProductReplay(
         }
         joinedMetadataLeakageAudit.joinedLinksEvaluatedCount++;
 
-        const pitMeta = resolvePointInTimeAdCandidateMetadata(ad, link, asOf);
+        const productProofs = extractProductMerchantProofs(link.product);
+        const pitMeta = resolvePointInTimeAdCandidateMetadata(ad, link, asOf, productProofs);
         if (!pitMeta.trustedPointInTimeMetadata) {
           if (pitMeta.metadataProvenance === "REJECTED_POST_CUTOFF_JOINED_METADATA") {
             joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount++;
@@ -1975,6 +2476,7 @@ export async function runRealHistoricalProductReplay(
           rawCandidateInputsMap.set(pitMeta.candidateId, {
             candidateId: pitMeta.candidateId,
             researchProductId: pitMeta.researchProductId,
+            workspaceId: link.product.workspaceId || (ad as any).workspaceId || null,
             title: pitMeta.title,
             bodyText: adBodyText,
             storeDomain: pitMeta.storeDomain,
@@ -1982,17 +2484,20 @@ export async function runRealHistoricalProductReplay(
             identityStatus: pitMeta.identityStatus,
             observedAt: ad.firstSeenAt,
             metadataUpdatedAt: link.product.updatedAt || null,
+            isAdOnlyFallback: false,
+            persistedMerchantProofs: productProofs,
             observationCount: 1,
             supportingAdIds: [ad.id],
           });
         }
       }
 
-      // If ad had no verified historical product record at asOf, reconstruct strictly from ad observation
+      // If ad had no verified historical product record at asOf, reconstruct strictly from ad observation.
+      // P0-01: Never promote ad-only fallback to VERIFIED based on URL path (/products/... or /main/phr)!
       if (!linkedCandidate) {
         joinedMetadataLeakageAudit.adObservationOnlyCount =
           (joinedMetadataLeakageAudit.adObservationOnlyCount || 0) + 1;
-        const pitFallback = resolvePointInTimeAdCandidateMetadata(ad, null, asOf);
+        const pitFallback = resolvePointInTimeAdCandidateMetadata(ad, null, asOf, []);
         const existing = rawCandidateInputsMap.get(pitFallback.candidateId);
         if (existing) {
           existing.observationCount = (existing.observationCount || 1) + 1;
@@ -2001,20 +2506,19 @@ export async function runRealHistoricalProductReplay(
             existing.supportingAdIds = [...(existing.supportingAdIds || []), ad.id];
           }
         } else {
-          const fallbackUrl = pitFallback.canonicalProductUrl || "";
-          const hasProductPath = /\/(products|projects)\/[a-z0-9_-]{4,}|\/main\/(phr|grooming-gloves)/i.test(
-            fallbackUrl
-          );
           rawCandidateInputsMap.set(pitFallback.candidateId, {
             candidateId: pitFallback.candidateId,
             researchProductId: null,
+            workspaceId: (ad as any).workspaceId || null,
             title: pitFallback.title,
             bodyText: adBodyText,
             storeDomain: pitFallback.storeDomain,
             canonicalProductUrl: pitFallback.canonicalProductUrl,
-            identityStatus: hasProductPath ? "VERIFIED" : "PROBABLE",
+            identityStatus: pitFallback.identityStatus,
             observedAt: ad.firstSeenAt,
             metadataUpdatedAt: null,
+            isAdOnlyFallback: true,
+            persistedMerchantProofs: [],
             observationCount: 1,
             supportingAdIds: [ad.id],
           });
@@ -2163,16 +2667,32 @@ export async function runRealHistoricalProductReplay(
     const evalByCandidateId = new Map(nicheReplay.evaluations.map((e) => [e.candidateId, e]));
     const shortlistProductsWithNiche = nicheReplay.shortlist.map((c) => {
       const ev = evalByCandidateId.get(c.candidateId);
+      const isFunnel =
+        ev?.isCheckoutChampFunnel ??
+        isFunnelOrCheckoutChamp(c.storeDomain || null, c.canonicalProductUrl || null);
+      const idStatus =
+        ev?.identityStatus ||
+        (c.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE");
+      const verStatus: VerificationEvidenceStatus =
+        ev?.verificationEvidenceStatus ||
+        (isFunnel ? "FUNNEL_UNVERIFIED" : idStatus === "VERIFIED" ? "INDEPENDENT_VERIFIED" : "DISCOVERY_ONLY");
       return {
         candidateId: c.candidateId,
         title: c.title,
-        identityStatus: c.identityStatus || "UNRESOLVED",
+        identityStatus: idStatus,
+        verificationEvidenceStatus: verStatus,
+        isCheckoutChampFunnel: isFunnel,
+        identityReasonCodes: ev?.identityReasonCodes || [],
         storeDomain: c.storeDomain || null,
         canonicalProductUrl: c.canonicalProductUrl || null,
         familyKey: c.familyKey || "replayed_family",
         nicheMatched: ev ? ev.matchStatus === "MATCH" : true,
         matchStatus: ev ? ev.matchStatus : ("MATCH" as const),
         proofRefs: ev?.proofRefs || [],
+        discoveryRefs: ev?.discoveryRefs || ev?.proofRefs || [],
+        independentMerchantProofRefs: ev?.independentMerchantProofRefs || [],
+        evidenceRefIds: ev?.evidenceRefIds || [],
+        evidenceObservedAt: ev?.evidenceObservedAt || null,
       };
     });
     const nicheMatchedCount = shortlistProductsWithNiche.filter((p) => p.nicheMatched).length;
@@ -2185,10 +2705,16 @@ export async function runRealHistoricalProductReplay(
         (c) => Boolean(c.canonicalProductUrl) && c.storeDomain !== "competitor-store.com"
       ).length,
       nicheEligible: nicheReplay.matchedCandidates.length,
+      nicheMatchingCandidates: nicheReplay.nicheMatchingCandidates,
+      identityVerifiedCandidates: nicheReplay.identityVerifiedCandidates,
+      liveVerifiedCandidates: nicheReplay.liveVerifiedCandidates,
+      provisionalCandidates: nicheReplay.provisionalCandidates,
       nicheRejectedMismatch: nicheReplay.evaluations.filter((e) => e.matchStatus === "MISMATCH").length,
       nicheRejectedUncertain: nicheReplay.evaluations.filter((e) => e.matchStatus === "UNCERTAIN").length,
       familyDeduped: nicheReplay.distinctFamiliesCount,
       shortlistSelected: shortlistProductsWithNiche.length,
+      verifiedIdentityCount: nicheReplay.verifiedIdentityCount,
+      funnelProbableCount: nicheReplay.funnelProbableCount,
     };
 
     const nicheFunnel = {
@@ -2200,6 +2726,9 @@ export async function runRealHistoricalProductReplay(
       mismatchCount: nicheReplay.mismatchCount,
       uncertainCount: nicheReplay.uncertainCount,
       identityVerifiedOrProbableCount: candidateFunnel.identityResolved,
+      identityVerifiedCount: nicheReplay.identityVerifiedCandidates,
+      provisionalDiscoveryCount: nicheReplay.provisionalCandidates,
+      funnelProbableCount: nicheReplay.funnelProbableCount,
       distinctMatchedFamiliesCount: nicheReplay.distinctFamiliesCount,
       shortlistedCount: shortlistProductsWithNiche.length,
       shortlistShortfallCount: nicheReplay.shortlistShortfallCount,
@@ -2218,8 +2747,11 @@ export async function runRealHistoricalProductReplay(
       nicheFunnel,
       shortlistCount: shortlistProductsWithNiche.length,
       nicheMatchedCount,
+      verifiedIdentityCount: nicheReplay.verifiedIdentityCount,
+      funnelProbableCount: nicheReplay.funnelProbableCount,
       shortlistShortfallCount: nicheReplay.shortlistShortfallCount,
       nicheCoverageStatus: nicheReplay.nicheCoverageStatus,
+      identityCoverageStatus: nicheReplay.identityCoverageStatus,
       candidateFunnel,
       rejectionReasonHistogram: nicheReplay.rejectionReasonHistogram,
       candidateEvaluations: nicheReplay.evaluations,
@@ -2252,7 +2784,7 @@ export async function runRealHistoricalProductReplay(
       },
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",
-      notes: `Point-in-time replay executed for niche '${niche}' with ${adsList.length} historical records (${nonSyntheticSourceAds} non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Niche-matched shortlist items: ${nicheMatchedCount}/${shortlistProductsWithNiche.length} (nicheCoverageStatus=${nicheReplay.nicheCoverageStatus}, shortfall=${nicheReplay.shortlistShortfallCount}). Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
+      notes: `Point-in-time replay executed for niche '${niche}' with ${adsList.length} historical records (${nonSyntheticSourceAds} non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Niche-matched discovery shortlist items: ${nicheMatchedCount}/${shortlistProductsWithNiche.length} (nicheCoverageStatus=${nicheReplay.nicheCoverageStatus}, verifiedIdentityCount=${nicheReplay.verifiedIdentityCount}/${shortlistProductsWithNiche.length}, identityCoverageStatus=${nicheReplay.identityCoverageStatus}, funnelProbableCount=${nicheReplay.funnelProbableCount}, shortfall=${nicheReplay.shortlistShortfallCount}). Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
     };
   };
 
