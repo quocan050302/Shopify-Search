@@ -7,6 +7,8 @@
  * 3. Point-in-Time Replay Integrity Verification
  */
 
+import { execSync } from "child_process";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/db";
@@ -97,18 +99,22 @@ export interface PointInTimeAdCandidateMetadataResult {
 
 export interface HistoricalReplayResult {
   split: "DEV" | "HOLDOUT";
+  sourceSha?: string;
+  datasetFingerprintSha256?: string;
   windowStart: string;
   windowEnd: string;
   asOfTimestamp: string;
   historicalObservationCount: number;
   reconstructedCandidateCount: number;
   shortlistCount: number;
+  nicheMatchedCount?: number;
   shortlistProducts: Array<{
     candidateId: string;
     title: string;
     identityStatus: string;
     storeDomain: string | null;
     familyKey: string;
+    nicheMatched?: boolean;
   }>;
   productEvidenceLedger: ProductHistoricalEvidenceRecord[];
   distinctFamiliesCount: number;
@@ -122,6 +128,7 @@ export interface HistoricalReplayResult {
     rejectedPostCutoffCount: number;
     excludedFixtureCount: number;
     availabilityStatus: "AVAILABLE_AT_ASOF" | "NOT_AVAILABLE_AT_ASOF";
+    vacuousAsProviderHistoricalParityProof?: boolean;
     leakagePrevented: boolean;
   };
   walmartPointInTimeAudit?: {
@@ -131,6 +138,7 @@ export interface HistoricalReplayResult {
     rejectedPostCutoffCount: number;
     excludedFixtureCount: number;
     availabilityStatus: "AVAILABLE_AT_ASOF" | "NOT_AVAILABLE_AT_ASOF";
+    vacuousAsProviderHistoricalParityProof?: boolean;
     leakagePrevented: boolean;
   };
   demandCoverageStatus: "INSUFFICIENT_HISTORICAL_EVIDENCE" | "AUTHORITATIVE_DEMAND_CONFIRMED";
@@ -139,7 +147,8 @@ export interface HistoricalReplayResult {
 }
 
 export interface FullBacktestOutput {
-  version: "12.4.3.4.3" | "12.4.3.4.6";
+  version: "12.4.3.4.3" | "12.4.3.4.6" | "12.4.3.5.1";
+  sourceSha?: string;
   evaluatedAt: string;
   policyScenarioVerdict: "PASS" | "FAIL";
   historicalDevVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
@@ -1223,21 +1232,55 @@ export async function runRealHistoricalProductReplay(): Promise<{
     });
     const wmtPit = filterWalmartEvidencePointInTime(parsedWmtForPit as any, asOf);
 
+    const petNicheRegex =
+      /\b(pet|dog|cat|puppy|kitten|paw|fur|hair\s*remover|lint\s*roller|chomchom|uproot|litter|fountain|feeder|kittyspout|uahpet|groom|leash|collar|bark|chew)\b/i;
+
+    let currentSourceSha = "unknown";
+    try {
+      currentSourceSha = execSync("git rev-parse HEAD", {
+        cwd: process.cwd(),
+        encoding: "utf8",
+      }).trim();
+    } catch {}
+
+    const datasetFingerprintSha256 = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify(
+          adsList.map((a) => ({
+            id: a.id,
+            firstSeenAt: a.firstSeenAt ? new Date(a.firstSeenAt).toISOString() : null,
+          }))
+        )
+      )
+      .digest("hex");
+
+    const shortlistProductsWithNiche = shortlistRes.shortlist.map((c) => {
+      const combined = `${c.title || ""} ${c.storeDomain || ""}`;
+      const nicheMatched = petNicheRegex.test(combined);
+      return {
+        candidateId: c.candidateId,
+        title: c.title,
+        identityStatus: c.identityStatus || "UNRESOLVED",
+        storeDomain: c.storeDomain || null,
+        familyKey: c.familyKey || "replayed_family",
+        nicheMatched,
+      };
+    });
+    const nicheMatchedCount = shortlistProductsWithNiche.filter((p) => p.nicheMatched).length;
+
     return {
       split,
+      sourceSha: currentSourceSha,
+      datasetFingerprintSha256,
       windowStart: split === "DEV" ? "2026-06-01T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
       windowEnd: split === "DEV" ? DEV_CUTOFF.toISOString() : HOLDOUT_CUTOFF.toISOString(),
       asOfTimestamp: asOf.toISOString(),
       historicalObservationCount: adsList.length,
       reconstructedCandidateCount: reconstructedCandidates.length,
       shortlistCount: shortlistRes.shortlist.length,
-      shortlistProducts: shortlistRes.shortlist.map((c) => ({
-        candidateId: c.candidateId,
-        title: c.title,
-        identityStatus: c.identityStatus || "UNRESOLVED",
-        storeDomain: c.storeDomain || null,
-        familyKey: c.familyKey || "replayed_family",
-      })),
+      nicheMatchedCount,
+      shortlistProducts: shortlistProductsWithNiche,
       productEvidenceLedger,
       distinctFamiliesCount: shortlistRes.distinctFamiliesCount ?? 0,
       futureLeakageDetected: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length > 0,
@@ -1250,6 +1293,7 @@ export async function runRealHistoricalProductReplay(): Promise<{
         rejectedPostCutoffCount: amzPit.rejectedPostCutoffCount,
         excludedFixtureCount: amzPit.excludedFixtureCount,
         availabilityStatus: amzPit.availabilityStatus,
+        vacuousAsProviderHistoricalParityProof: amzPit.totalEvaluatedCount === 0,
         leakagePrevented: amzPit.leakagePrevented,
       },
       walmartPointInTimeAudit: {
@@ -1260,11 +1304,12 @@ export async function runRealHistoricalProductReplay(): Promise<{
         excludedFixtureCount: wmtPit.excludedFixtureRecords.length,
         availabilityStatus:
           wmtPit.eligibleRecords.length > 0 ? "AVAILABLE_AT_ASOF" : "NOT_AVAILABLE_AT_ASOF",
+        vacuousAsProviderHistoricalParityProof: parsedWmtForPit.length === 0,
         leakagePrevented: true,
       },
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",
-      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
+      notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Niche-matched shortlist items: ${nicheMatchedCount}/${shortlistProductsWithNiche.length}. Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,
     };
   };
 
@@ -1320,6 +1365,7 @@ export async function runBacktestV12_4_3_4_2(
 
   const output: FullBacktestOutput = {
     version: "12.4.3.4.6",
+    sourceSha: devReplay.sourceSha,
     evaluatedAt: new Date().toISOString(),
     policyScenarioVerdict: policyScenarios.verdict,
     historicalDevVerdict: devReplay.verdict,
@@ -1357,6 +1403,7 @@ export async function runBacktestV12_4_3_4_2(
     JSON.stringify(
       {
         version: "12.4.3.4.3",
+        sourceSha: devReplay.sourceSha,
         evaluatedAt: output.evaluatedAt,
         policyScenarioVerdict: output.policyScenarioVerdict,
         pointInTimeIntegrityVerdict: output.pointInTimeIntegrityVerdict,
@@ -1369,6 +1416,12 @@ export async function runBacktestV12_4_3_4_2(
           zeroOverlapVerified: true,
           devRecordsEvaluated: devReplay.historicalObservationCount,
           holdoutRecordsEvaluated: holdoutReplay.historicalObservationCount,
+          devDatasetFingerprintSha256: devReplay.datasetFingerprintSha256,
+          holdoutDatasetFingerprintSha256: holdoutReplay.datasetFingerprintSha256,
+          devShortlistNicheMatchedCount: devReplay.nicheMatchedCount,
+          holdoutShortlistNicheMatchedCount: holdoutReplay.nicheMatchedCount,
+          walmartPointInTimeVacuousAsHistoricalParityProof:
+            devReplay.walmartPointInTimeAudit?.vacuousAsProviderHistoricalParityProof ?? true,
           zeroFutureLeakageVerified: pointInTimeIntegrityPass,
         },
       },

@@ -469,6 +469,15 @@ export function validateWalmartAcceptanceArtifacts(
       "08_UI_BROWSER_AND_RELOAD_PARITY.json",
       "Disabled Walmart state must render 'Server pilot disabled', never 'Key Required'."
     );
+    if (a08.evidenceOrigin !== undefined) {
+      check(
+        a08.evidenceOrigin === "TEST_FIXTURE" &&
+          a08.claimedAsLiveWalmartProductConfirmation === false,
+        "UI_FIXTURE_CLAIMED_AS_LIVE_WALMART",
+        "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+        "Wave D Chromium UI parity uses deterministic TEST_FIXTURE data and must never be claimed as a live Walmart product confirmation."
+      );
+    }
   }
 
   // 09: Score & Gate Non-Inflation Audit (M35, M41, M42, M43, M44, M45)
@@ -658,8 +667,14 @@ export function validateWalmartAcceptanceArtifacts(
     );
   }
 
-  // 15: Performance Budget & Process Audit
+  // 15: Performance Budget & Process Audit (M54, M55)
   if (a15) {
+    check(
+      a15.orphanedProcessesAfterRun === 0,
+      "OWNED_ORPHAN_PROCESSES_DETECTED",
+      "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
+      "Runner-owned orphaned processes after run must be 0."
+    );
     check(
       a15.orphanedProcessesAfterRun === 0 &&
         a15.budgetCompliance?.maxConcurrentObserved <= 1 &&
@@ -669,6 +684,15 @@ export function validateWalmartAcceptanceArtifacts(
       "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
       "Performance and process hygiene audit must show 0 orphaned processes and full compliance with provider caps."
     );
+    if (a15.budgetCompliance?.rawRequestsPerMinuteObserved !== undefined) {
+      check(
+        a15.budgetCompliance.rawRequestsPerMinuteObserved <= 6 &&
+          a15.budgetCompliance.withinCapCompliance === true,
+        "RAW_RATE_CAP_OVERRUN_DETECTED",
+        "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
+        "Raw rolling-minute request count must not exceed 6/min and withinCapCompliance must be true."
+      );
+    }
   }
 
   // 16: Test Wave Results & SHA consistency (M02)
@@ -683,6 +707,199 @@ export function validateWalmartAcceptanceArtifacts(
       "16_TEST_WAVE_RESULTS.json",
       "Every test wave in 16_TEST_WAVE_RESULTS.json must pass and match 00_BRANCH_AND_BASELINE.json codeSha."
     );
+  }
+
+  // Section 10 Measured Gate Ledger, Full Regression, Owned Process & Dynamic Diagnostics Checks (M49..M59)
+  const gateLedgerPath = path.join(artifactDir, "02_GATE_EXECUTION_LEDGER.json");
+  if (fs.existsSync(gateLedgerPath)) {
+    const gateLedger = readJsonSafe(
+      artifactDir,
+      "02_GATE_EXECUTION_LEDGER.json",
+      failures
+    );
+    if (gateLedger && a00) {
+      const reqIds: string[] = Array.isArray(gateLedger.requiredGateIds)
+        ? gateLedger.requiredGateIds
+        : [];
+      const gates: any[] = Array.isArray(gateLedger.gates)
+        ? gateLedger.gates
+        : [];
+      const gateIdSet = new Set(gates.map((g) => g?.id));
+      const allRequiredPresent =
+        reqIds.length >= 6 &&
+        reqIds.every((id) => {
+          const found = gates.find((g) => g?.id === id);
+          return (
+            gateIdSet.has(id) &&
+            found &&
+            found.executionStatus !== "NOT_RUN" &&
+            found.executionStatus !== "CANCELLED"
+          );
+        });
+      check(
+        allRequiredPresent && gateLedger.completion?.complete === true,
+        "REQUIRED_WAVE_MISSING_OR_INCOMPLETE",
+        "02_GATE_EXECUTION_LEDGER.json",
+        "All required gates must be present and executed in 02_GATE_EXECUTION_LEDGER.json."
+      );
+
+      const allGatesPassed = gates
+        .filter((g) => g?.required !== false)
+        .every(
+          (g) =>
+            g.executionStatus === "PASS" &&
+            (g.exitCode === undefined || g.exitCode === null || g.exitCode === 0)
+        );
+      check(
+        allGatesPassed &&
+          gateLedger.completion?.passed === true &&
+          gateLedger.allRequiredWavesPassed === true,
+        "WAVE_FAILURE_CONTRADICTS_SUMMARY",
+        "02_GATE_EXECUTION_LEDGER.json",
+        "Every required gate in 02_GATE_EXECUTION_LEDGER.json must have executionStatus=PASS and exitCode=0 when allRequiredWavesPassed=true."
+      );
+
+      const allGateShasMatch =
+        gateLedger.sourceSha === a00.codeSha &&
+        gates.every((g) => g?.sourceSha === a00.codeSha);
+      check(
+        allGateShasMatch,
+        "GATE_LEDGER_SOURCE_SHA_MISMATCH",
+        "02_GATE_EXECUTION_LEDGER.json",
+        "Every gate in 02_GATE_EXECUTION_LEDGER.json must match 00_BRANCH_AND_BASELINE.json codeSha."
+      );
+    }
+  }
+
+  const fullRegPath = path.join(
+    artifactDir,
+    "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json"
+  );
+  if (fs.existsSync(fullRegPath)) {
+    const fullReg = readJsonSafe(
+      artifactDir,
+      "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+      failures
+    );
+    if (fullReg) {
+      check(
+        fullReg.targetedOnly === false &&
+          fullReg.inventoryComplete === true &&
+          typeof fullReg.totalDiscoveredTestFiles === "number" &&
+          fullReg.totalDiscoveredTestFiles >= 150 &&
+          typeof fullReg.executedTestFilesCount === "number" &&
+          fullReg.executedTestFilesCount >= 130,
+        "TARGETED_REGRESSION_CLAIMED_AS_FULL",
+        "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "Full repository regression must discover >=150 test files, execute >=130 test files, and have targetedOnly=false."
+      );
+
+      check(
+        Number(fullReg.requiredActiveSuiteFailedTestCases ?? 1) === 0 &&
+          Number(fullReg.newRegressionTestCases ?? 1) === 0,
+        "ACTIVE_REGRESSION_FAILURE_UNRESOLVED",
+        "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "Active required unit and integration test suites must have 0 failed test cases and 0 new regressions."
+      );
+    }
+  }
+
+  const ownedProcPath = path.join(
+    artifactDir,
+    "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json"
+  );
+  if (fs.existsSync(ownedProcPath)) {
+    const ownedProc = readJsonSafe(
+      artifactDir,
+      "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json",
+      failures
+    );
+    if (ownedProc) {
+      check(
+        ownedProc.orphanedOwnedProcessesAfterRun === 0 &&
+          Array.isArray(ownedProc.orphanedOwnedPids) &&
+          ownedProc.orphanedOwnedPids.length === 0,
+        "OWNED_ORPHAN_PROCESSES_DETECTED",
+        "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json",
+        "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json must show 0 runner-owned orphaned processes after run."
+      );
+    }
+  }
+
+  const liveDiagPath = path.join(
+    artifactDir,
+    "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json"
+  );
+  if (fs.existsSync(liveDiagPath)) {
+    const liveDiag = readJsonSafe(
+      artifactDir,
+      "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+      failures
+    );
+    if (liveDiag) {
+      const amz = liveDiag.providers?.amazonUs;
+      if (amz && amz.configured === false) {
+        check(
+          amz.liveVerdict !== "LIVE_VERIFIED" && amz.querySucceeded === false,
+          "AMAZON_STATE_MISMATCH_FALSE_LIVE",
+          "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+          "When Amazon Creators API is not configured, liveVerdict must not be LIVE_VERIFIED."
+        );
+      }
+      const g07 = liveDiag.providers?.tiktokUsG07;
+      if (g07 && g07.configured === false) {
+        check(
+          g07.verdict !== "PASS" && liveDiag.gates?.g07?.verdict !== "PASS",
+          "G07_STATE_MISMATCH_FALSE_PASS",
+          "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+          "When TikTok US ad provider is not configured, G07 verdict must not be PASS."
+        );
+      }
+    }
+  }
+
+  const g15DiagPath = path.join(
+    artifactDir,
+    "08_G15_60D_DEMAND_COVERAGE_BY_PRODUCT.json"
+  );
+  if (fs.existsSync(g15DiagPath)) {
+    const g15Diag = readJsonSafe(
+      artifactDir,
+      "08_G15_60D_DEMAND_COVERAGE_BY_PRODUCT.json",
+      failures
+    );
+    if (g15Diag) {
+      if (Number(g15Diag.qualifiedProductsCount ?? 0) < 3) {
+        check(
+          g15Diag.verdict === "INSUFFICIENT_EVIDENCE",
+          "G15_FALSE_PASS_WITHOUT_60D_HISTORY",
+          "08_G15_60D_DEMAND_COVERAGE_BY_PRODUCT.json",
+          "G15 verdict must be INSUFFICIENT_EVIDENCE when fewer than 3 products have >=60 days of authoritative longitudinal demand."
+        );
+      }
+    }
+  }
+
+  const g16DiagPath = path.join(
+    artifactDir,
+    "09_G16_MERCHANT_LIVE_PROOF_BY_CANDIDATE.json"
+  );
+  if (fs.existsSync(g16DiagPath)) {
+    const g16Diag = readJsonSafe(
+      artifactDir,
+      "09_G16_MERCHANT_LIVE_PROOF_BY_CANDIDATE.json",
+      failures
+    );
+    if (g16Diag) {
+      if (Number(g16Diag.verifiedLiveMerchantsCount ?? 0) < 3) {
+        check(
+          g16Diag.verdict !== "PASS",
+          "G16_FALSE_PASS_WITHOUT_3_OF_3_LIVE_MERCHANTS",
+          "09_G16_MERCHANT_LIVE_PROOF_BY_CANDIDATE.json",
+          "G16 verdict must not be PASS when verifiedLiveMerchantsCount < 3."
+        );
+      }
+    }
   }
 
   // 17: Requirement Traceability W01..W60 (M39)
@@ -1289,6 +1506,136 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
     expectedFailureCode: "OVERALL_VERDICT_FALSE_PASS_WITH_EXTERNAL_BLOCKERS",
     mutate: (d) => {
       d.overallVerdict = "PASS";
+    },
+  },
+  {
+    mutationId: "M49",
+    targetFile: "02_GATE_EXECUTION_LEDGER.json",
+    description: "Drop a required gate from 02_GATE_EXECUTION_LEDGER.json while claiming complete=true",
+    expectedFailureCode: "REQUIRED_WAVE_MISSING_OR_INCOMPLETE",
+    mutate: (d) => {
+      if (Array.isArray(d.gates) && d.gates.length > 0) {
+        d.gates = d.gates.slice(0, d.gates.length - 1);
+      }
+    },
+  },
+  {
+    mutationId: "M50",
+    targetFile: "02_GATE_EXECUTION_LEDGER.json",
+    description: "Mark a required wave executionStatus='FAIL' (exitCode=1) while keeping allRequiredWavesPassed=true",
+    expectedFailureCode: "WAVE_FAILURE_CONTRADICTS_SUMMARY",
+    mutate: (d) => {
+      if (Array.isArray(d.gates) && d.gates.length > 0) {
+        d.gates[0].executionStatus = "FAIL";
+        d.gates[0].exitCode = 1;
+      }
+    },
+  },
+  {
+    mutationId: "M51",
+    targetFile: "02_GATE_EXECUTION_LEDGER.json",
+    description: "Tamper with gate sourceSha so it mismatches 00_BRANCH_AND_BASELINE.json codeSha",
+    expectedFailureCode: "GATE_LEDGER_SOURCE_SHA_MISMATCH",
+    mutate: (d) => {
+      if (Array.isArray(d.gates) && d.gates.length > 0) {
+        d.gates[0].sourceSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+      }
+    },
+  },
+  {
+    mutationId: "M52",
+    targetFile: "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+    description: "Claim targeted-only 4-file suite as full repository regression",
+    expectedFailureCode: "TARGETED_REGRESSION_CLAIMED_AS_FULL",
+    mutate: (d) => {
+      d.targetedOnly = true;
+      d.executedTestFilesCount = 4;
+    },
+  },
+  {
+    mutationId: "M53",
+    targetFile: "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+    description: "Introduce unresolved active regression failure while claiming PASS",
+    expectedFailureCode: "ACTIVE_REGRESSION_FAILURE_UNRESOLVED",
+    mutate: (d) => {
+      d.requiredActiveSuiteFailedTestCases = 2;
+      d.newRegressionTestCases = 2;
+    },
+  },
+  {
+    mutationId: "M54",
+    targetFile: "06_DISK_RAM_OWNED_PROCESSES_AUDIT.json",
+    description: "Report non-zero runner-owned orphaned process count after barrier",
+    expectedFailureCode: "OWNED_ORPHAN_PROCESSES_DETECTED",
+    mutate: (d) => {
+      d.orphanedOwnedProcessesAfterRun = 1;
+      d.orphanedOwnedPids = [999999];
+    },
+  },
+  {
+    mutationId: "M55",
+    targetFile: "15_PERFORMANCE_BUDGET_AND_PROCESS_AUDIT.json",
+    description: "Exceed raw 6 req/min rolling window rate cap (rawRequestsPerMinuteObserved = 9)",
+    expectedFailureCode: "RAW_RATE_CAP_OVERRUN_DETECTED",
+    mutate: (d) => {
+      if (d.budgetCompliance) {
+        d.budgetCompliance.rawRequestsPerMinuteObserved = 9;
+        d.budgetCompliance.withinCapCompliance = false;
+      }
+    },
+  },
+  {
+    mutationId: "M56",
+    targetFile: "08_G15_60D_DEMAND_COVERAGE_BY_PRODUCT.json",
+    description: "Claim G15 verdict='PASS' when qualifiedProductsCount < 3 (0/60 days covered)",
+    expectedFailureCode: "G15_FALSE_PASS_WITHOUT_60D_HISTORY",
+    mutate: (d) => {
+      d.qualifiedProductsCount = 0;
+      d.verdict = "PASS";
+    },
+  },
+  {
+    mutationId: "M57",
+    targetFile: "09_G16_MERCHANT_LIVE_PROOF_BY_CANDIDATE.json",
+    description: "Claim G16 verdict='PASS' when only 2/3 shortlisted candidates have live-verified merchants",
+    expectedFailureCode: "G16_FALSE_PASS_WITHOUT_3_OF_3_LIVE_MERCHANTS",
+    mutate: (d) => {
+      d.verifiedLiveMerchantsCount = 2;
+      d.verdict = "PASS";
+    },
+  },
+  {
+    mutationId: "M58",
+    targetFile: "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+    description: "Claim Amazon Creators API liveVerdict='LIVE_VERIFIED' when configured=false",
+    expectedFailureCode: "AMAZON_STATE_MISMATCH_FALSE_LIVE",
+    mutate: (d) => {
+      if (d.providers?.amazonUs) {
+        d.providers.amazonUs.configured = false;
+        d.providers.amazonUs.liveVerdict = "LIVE_VERIFIED";
+      }
+    },
+  },
+  {
+    mutationId: "M59",
+    targetFile: "07_LIVE_PROVIDER_DIAGNOSTICS_AMAZON_WALMART_G07.json",
+    description: "Claim G07 TikTok US verdict='PASS' when TikTok provider is unconfigured",
+    expectedFailureCode: "G07_STATE_MISMATCH_FALSE_PASS",
+    mutate: (d) => {
+      if (d.providers?.tiktokUsG07) {
+        d.providers.tiktokUsG07.configured = false;
+        d.providers.tiktokUsG07.verdict = "PASS";
+      }
+    },
+  },
+  {
+    mutationId: "M60",
+    targetFile: "08_UI_BROWSER_AND_RELOAD_PARITY.json",
+    description: "Mislabel Wave D Chromium UI parity TEST_FIXTURE as live Walmart product confirmation",
+    expectedFailureCode: "UI_FIXTURE_CLAIMED_AS_LIVE_WALMART",
+    mutate: (d) => {
+      d.evidenceOrigin = "REAL_JINA_READER";
+      d.claimedAsLiveWalmartProductConfirmation = true;
     },
   },
 ];

@@ -690,6 +690,368 @@ describe("KH-02 V12.4.3.5.1 — Walmart US Jina Reader REST Pilot Unit & Fault-I
   });
 });
 
+import {
+  computeRequiredWaveCompletion,
+  computeEngineeringVerdict,
+  computeOverallBusinessVerdict,
+  computeReleaseVerdicts,
+  evaluatePetGadgetsNicheFit,
+  computePeakConcurrentIntervals,
+  type GateResult,
+  type FullRegressionInventorySummary,
+} from "../../../../scripts/kh02/acceptanceTruth";
+
 function chomFromEnv(): string {
   return normalizeWalmartJinaEnvelope(buildChomChomPdpJinaBody()).envelope!.html!;
 }
+
+describe("V12.4.3.5.1 — Acceptance Truth Reducer, Dynamic Diagnostics & Ownership-Aware Process Ledger", () => {
+  const EXPECTED_SHA = "7ae0491995a004e1e4c34d8e43de711813bf5232";
+  const REQUIRED_IDS = [
+    "WAVE_A_UNIT",
+    "WAVE_B_INTEGRATION",
+    "WAVE_C_BUILD",
+    "WAVE_D_CHROMIUM",
+    "WAVE_E_LIVE_PROBE",
+    "WAVE_F_BACKTEST",
+    "WAVE_H_FULL_REGRESSION",
+  ] as const;
+
+  const buildValidGates = (): GateResult[] =>
+    REQUIRED_IDS.map((id) => ({
+      id,
+      required: true,
+      executionStatus: "PASS",
+      observedAt: "2026-11-01T08:00:00.000Z",
+      sourceSha: EXPECTED_SHA,
+      exitCode: 0,
+    }));
+
+  const buildValidRegressionSummary = (): FullRegressionInventorySummary => ({
+    totalDiscoveredTestFiles: 153,
+    executedTestFilesCount: 141,
+    excludedOrDeferredFilesCount: 12,
+    targetedOnly: false,
+    inventoryComplete: true,
+    totalExecutedTestCases: 1711,
+    passedTestCases: 1694,
+    failedTestCases: 17,
+    requiredActiveSuiteFailedTestCases: 0,
+    baselineKnownPolicySupersededTestCases: 17,
+    newRegressionTestCases: 0,
+  });
+
+  it("passes computeRequiredWaveCompletion and computeEngineeringVerdict only when all required waves pass on matching SHA with 0 owned orphans and full regression", () => {
+    const gates = buildValidGates();
+    const comp = computeRequiredWaveCompletion(REQUIRED_IDS, gates, EXPECTED_SHA);
+    expect(comp.complete).toBe(true);
+    expect(comp.passed).toBe(true);
+    expect(comp.missing).toEqual([]);
+    expect(comp.invalid).toEqual([]);
+
+    const eng = computeEngineeringVerdict({
+      requiredIds: REQUIRED_IDS,
+      results: gates,
+      expectedSha: EXPECTED_SHA,
+      validatorPassed: true,
+      validatorChecksFailed: 0,
+      diskGuardPassed: true,
+      minFreeDiskGiB: 45,
+      diskThresholdGiB: 15,
+      shaParityVerified: true,
+      regressionInventory: buildValidRegressionSummary(),
+      ownedOrphanCount: 0,
+      nonInflationVerified: true,
+      nonInflationCandidatesCount: 3,
+    });
+    expect(eng).toBe("PASS");
+  });
+
+  it("rejects missing required wave, failed wave, altered SHA, targeted-only regression, non-zero owned orphans, and disk < threshold", () => {
+    const baseGates = buildValidGates();
+
+    // 1. Missing required wave -> INCOMPLETE
+    const missingGates = baseGates.slice(0, 6);
+    const missingComp = computeRequiredWaveCompletion(REQUIRED_IDS, missingGates, EXPECTED_SHA);
+    expect(missingComp.complete).toBe(false);
+    expect(missingComp.passed).toBe(false);
+    expect(missingComp.missing).toContain("WAVE_H_FULL_REGRESSION");
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: missingGates,
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: buildValidRegressionSummary(),
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("INCOMPLETE");
+
+    // 2. Failed wave -> FAIL
+    const failedGates = baseGates.map((g, idx) =>
+      idx === 1 ? { ...g, executionStatus: "FAIL" as const, exitCode: 1 } : g
+    );
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: failedGates,
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: buildValidRegressionSummary(),
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("FAIL");
+
+    // 3. Altered SHA -> FAIL
+    const badShaGates = baseGates.map((g, idx) =>
+      idx === 2 ? { ...g, sourceSha: "deadbeef".repeat(5) } : g
+    );
+    const badShaComp = computeRequiredWaveCompletion(REQUIRED_IDS, badShaGates, EXPECTED_SHA);
+    expect(badShaComp.passed).toBe(false);
+    expect(badShaComp.invalid).toContain("WAVE_C_BUILD");
+
+    // 4. Targeted-only regression claimed as full -> INCOMPLETE
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: baseGates,
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: { ...buildValidRegressionSummary(), targetedOnly: true },
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("INCOMPLETE");
+
+    // 5. Non-zero owned orphan count -> FAIL
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: baseGates,
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: buildValidRegressionSummary(),
+        ownedOrphanCount: 1,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("FAIL");
+
+    // 6. Disk below threshold -> BLOCKED
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: baseGates,
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: false,
+        minFreeDiskGiB: 12,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: buildValidRegressionSummary(),
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("BLOCKED");
+  });
+
+  it("derives multi-verdict release truth dynamically from G07/G15/G16 and provider diagnostics without false FULL_ACCEPTANCE", () => {
+    const mockDiagnostics: any = {
+      sourceSha: EXPECTED_SHA,
+      evaluatedAt: "2026-11-01T08:00:00.000Z",
+      dataAsOf: "2026-11-01T04:22:41.831Z",
+      providers: {
+        walmartUs: {
+          providerId: "WALMART_US",
+          transport: "JINA_READER_REST_NO_KEY",
+          defaultFeatureEnabled: false,
+          defaultLiveAllowed: false,
+          probeExecutionStatus: "DID_RUN",
+          classificationIntegrityStatus: "PASS",
+          liveProviderStatus: "BLOCKED_PROVIDER",
+          liveVerdict: "BLOCKED_PROVIDER",
+          verifiedLiveProductCount: 0,
+          attemptedLiveCallsCount: 2,
+          reason: "Walmart anti-bot verification ('Robot or human?').",
+        },
+        amazonUs: {
+          providerId: "AMAZON_US",
+          transport: "CREATORS_API_AND_PLAYWRIGHT_MCP",
+          defaultFeatureEnabled: false,
+          defaultLiveAllowed: false,
+          configured: false,
+          authenticated: null,
+          querySucceeded: false,
+          liveVerdict: "CREDENTIALS_REQUIRED",
+          verifiedLiveProductCount: 0,
+          attemptedLiveCallsCount: 0,
+          missingEnvKeys: ["AMAZON_CREATORS_CREDENTIAL_ID"],
+          reason: "Missing Amazon Creators API credentials.",
+        },
+      },
+      gates: {
+        g07: {
+          gateId: "G07",
+          verdict: "BLOCKED",
+          evaluatedFromSource: "diagnoseKH02Source('TIKTOK_ADS')",
+          reason: "TikTok US live provider not configured.",
+        },
+        g15: {
+          gateId: "G15",
+          verdict: "INSUFFICIENT_EVIDENCE",
+          requiredCoveredDays: 60,
+          qualifiedProductsCount: 0,
+          requiredQualifiedProductsCount: 3,
+          totalDemandObservationsInDb: 0,
+          evaluatedProducts: [],
+          reason: "0/3 candidates have >=60 days demand.",
+          remediationGuidance: "Import verified Google Trends CSVs.",
+        },
+        g16: {
+          gateId: "G16",
+          verdict: "PARTIAL_2_OF_3",
+          snapshotFreshness: "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+          evaluatedRunId: "kh02_run_1793506961831_zvxlw",
+          evaluatedWorkspaceId: "default-workspace",
+          evaluatedRunCreatedAt: "2026-11-01T04:22:41.831Z",
+          verifiedLiveMerchantsCount: 2,
+          requiredLiveMerchantsCount: 3,
+          distinctFamiliesCount: 3,
+          distinctCanonicalProductsCount: 3,
+          candidates: [],
+          reason: "2/3 verified live merchants (3rd is CheckoutChamp funnel).",
+        },
+      },
+      shortlistQuality: {
+        targetNiche: "Pet Gadgets",
+        storedRunShortlistNicheMatchedCount: 3,
+        storedRunShortlistTotalCount: 3,
+        holdoutBacktestShortlistNicheMatchedCount: 1,
+        holdoutBacktestShortlistTotalCount: 3,
+        holdoutNicheMismatches: [],
+        allThreeNicheMatchedAndVerified: false,
+      },
+    };
+
+    expect(computeOverallBusinessVerdict(mockDiagnostics)).toBe("INSUFFICIENT_EVIDENCE");
+
+    const release = computeReleaseVerdicts({
+      releaseVersion: "12.4.3.5.1",
+      runtimeReleaseIdentity: "12.4.3.5.0.3",
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      baseSha: "fbe51a06ab8354c886d0415a9599f977c83caabc",
+      masterHeadSha: "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+      codeSha: EXPECTED_SHA,
+      testedTreeSha: "1111111111111111111111111111111111111111",
+      engineeringInput: {
+        requiredIds: REQUIRED_IDS,
+        results: buildValidGates(),
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: buildValidRegressionSummary(),
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      },
+      diagnostics: mockDiagnostics,
+      backtestOutput: {
+        backtestEngineExecuted: "PASS",
+        pointInTimeIntegrityVerdict: "PASS",
+        policyScenarioVerdict: "PASS",
+        policyScenariosPassed: "16/16",
+        devObservationsCount: 4,
+        holdoutObservationsCount: 28,
+        businessHistoricalEvidenceSufficient: "INSUFFICIENT_EVIDENCE",
+        overallHistoricalBacktestVerdict: "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      },
+      nonInflationSummary: {
+        comparedCandidatesCount: 3,
+        candidateSetMatch: true,
+        providerPathExercised: true,
+        walmartEvidenceRowsExercised: 6,
+        scoreDeltaAbsMax: 0,
+        rankingChanged: false,
+        gateChanges: 0,
+        nonInflationVerified: true,
+      },
+      negativeMutationsCaught: "60/60",
+      ancestryVerified: true,
+    });
+
+    expect(release.engineeringVerdict).toBe("PASS");
+    expect(release.liveWalmartProviderVerdict).toBe("BLOCKED_PROVIDER");
+    expect(release.liveAmazonProviderVerdict).toBe("CREDENTIALS_REQUIRED");
+    expect(release.kh02BusinessVerdict).toBe("INSUFFICIENT_EVIDENCE");
+    expect(release.historicalG07Verdict).toBe("BLOCKED");
+    expect(release.historicalG15Verdict).toBe("INSUFFICIENT_EVIDENCE");
+    expect(release.historicalG16Verdict).toBe("PARTIAL_2_OF_3");
+    expect(release.overallVerdict).toBe("ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS");
+    expect(release.remainingExternalBlockers.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("evaluates Pet Gadgets niche fit and peak concurrent process intervals accurately", () => {
+    expect(
+      evaluatePetGadgetsNicheFit("UAHPET Fresh Food Automatic Pet Feeder", "uahpet.com").matches
+    ).toBe(true);
+    expect(
+      evaluatePetGadgetsNicheFit("The KittySpout™ - Wireless Fountain", "kittyspout.com").matches
+    ).toBe(true);
+    expect(
+      evaluatePetGadgetsNicheFit(
+        "Car Fender Panel Dent Edge Repair Tools",
+        "pdrcanada.ca"
+      ).matches
+    ).toBe(false);
+    expect(
+      evaluatePetGadgetsNicheFit("Natural Relief in Weeks", " try.audizen.com").matches
+    ).toBe(false);
+
+    // Peak concurrency interval check
+    expect(
+      computePeakConcurrentIntervals([
+        { startedAtMs: 1000, endedAtMs: 3000 },
+        { startedAtMs: 2000, endedAtMs: 4000 },
+        { startedAtMs: 4500, endedAtMs: 5500 },
+      ])
+    ).toBe(2);
+
+    expect(
+      computePeakConcurrentIntervals([
+        { startedAtMs: 1000, endedAtMs: 2000 },
+        { startedAtMs: 2500, endedAtMs: 3500 },
+      ])
+    ).toBe(1);
+  });
+});

@@ -2,9 +2,31 @@ import path from "path";
 import os from "os";
 import fs from "fs";
 import crypto from "crypto";
+import { beforeAll, afterAll } from "vitest";
 import { createClient } from "@libsql/client";
 import { canonicalizeSqliteDatabasePath } from "@/lib/database/databaseConfig";
 import { assertSafeTestDatabase } from "@/lib/database/databaseSafety";
+
+function sanitizeLeakedTestAuthEnv() {
+  delete process.env.ADMIN_API_KEY;
+  delete process.env.SWAI_ADMIN_TOKEN;
+  delete process.env.ADMIN_SECRET;
+  delete process.env.SWAI_DEPLOYMENT_MODE;
+  delete process.env.SWAI_REMOTE_ACCESS;
+  delete process.env.SWAI_REQUIRE_AUTH;
+  delete process.env.SWAI_E2E_SERVER;
+  process.env.HOST = "127.0.0.1";
+}
+
+sanitizeLeakedTestAuthEnv();
+
+beforeAll(() => {
+  sanitizeLeakedTestAuthEnv();
+});
+
+afterAll(() => {
+  sanitizeLeakedTestAuthEnv();
+});
 
 // Ensure every Vitest worker runs against a completely isolated SQLite test database
 if (!process.env.TEST_DATABASE_URL) {
