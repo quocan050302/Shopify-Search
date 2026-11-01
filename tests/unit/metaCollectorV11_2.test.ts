@@ -19,7 +19,8 @@ describe("SWAI V11.2 — Meta Creative & Freshness Normalization", () => {
 
     const normalized = normalizeMetaCollectorAd(rawSummary);
 
-    expect(normalized.mediaType).toBe("IMAGE");
+    // Without a verified image/thumbnail URL, mediaType remains UNKNOWN (no unverified IMAGE claim)
+    expect(normalized.mediaType).toBe("UNKNOWN");
     expect(normalized.thumbnailUrl).toBeNull();
     expect(normalized.mediaAvailability).toBe("RESTRICTED");
     expect(normalized.creativeUrl).toBe("https://www.facebook.com/ads/library/?id=12345678901");

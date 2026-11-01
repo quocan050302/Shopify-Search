@@ -55,12 +55,18 @@ describe("SWAI KH-02 — Test Connections Flow & Truthful Diagnostics", () => {
   });
 
   describe("3. Truthful Connection State: Does not auto-switch to CONNECTED merely on configuration", () => {
-    it("reports CONFIGURED with transport NOT_TESTED when credentials/endpoint exist but unprobed", async () => {
-      // Simulate TikTok Organic configured with API key
+    it("reports CONFIGURED with transport NOT_TESTED when credentials/endpoint exist but unprobed, and keeps TIKTOK_ORGANIC DISABLED", async () => {
+      // Permanently disabled TikTok Organic stays DISABLED even when HASDATA_API_KEY is present
       process.env.HASDATA_API_KEY = "dummy_hasdata_test_key";
+      const organicDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { checkLiveTransport: false });
+      expect(organicDiag.configured).toBe(false);
+      expect(organicDiag.status).toBe("DISABLED");
+      expect(organicDiag.transportStatus).toBe("DISABLED");
+      expect(organicDiag.transportConnected).toBeNull();
 
-      // Diagnose without checking live transport (static check)
-      const diag = await diagnoseKH02Source("TIKTOK_ORGANIC", { checkLiveTransport: false });
+      // Active TikTok Ads US configured with session cookie reports CONFIGURED with transport NOT_TESTED
+      process.env.TIKTOK_CC_COOKIE = "sessionid=dummy_test_session_cookie";
+      const diag = await diagnoseKH02Source("TIKTOK_ADS", { checkLiveTransport: false });
       expect(diag.configured).toBe(true);
       expect(diag.status).toBe("CONFIGURED");
       expect(diag.transportStatus).toBe("NOT_TESTED");

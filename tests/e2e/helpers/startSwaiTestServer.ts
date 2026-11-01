@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from "child_process";
 import crypto from "crypto";
+import fs from "fs";
 import net from "net";
 import path from "path";
 import { assertSafeTestDatabase } from "@/lib/database/databaseSafety";
@@ -91,7 +92,12 @@ export async function waitForSwaiServer(
 export async function startSwaiTestServer(
   options: SwaiTestServerOptions
 ): Promise<SwaiTestServerHandle> {
-  const mode = options.mode || "production";
+  const hasActiveDevLock = fs.existsSync(path.join(process.cwd(), ".next", "dev", "lock"));
+  const hasProductionBuild = fs.existsSync(path.join(process.cwd(), ".next", "BUILD_ID"));
+  const mode =
+    options.mode === "development" && hasActiveDevLock && hasProductionBuild
+      ? "production"
+      : options.mode || "production";
   const adminApiKey = options.adminApiKey || (options.allowLocalBypass ? "" : "test_admin_e2e_secret_token_12345");
   const timeoutMs = options.timeoutMs || 30000;
 

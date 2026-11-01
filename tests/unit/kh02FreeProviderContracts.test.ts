@@ -16,6 +16,13 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("Free provider contracts", () => {
   it("requests exact date range and persists epoch timestamps, never display ranges", async () => {
+    // Default V12.4 zero-spend mode uses Google Free Demand pipeline without calling SerpApi
+    const freeModeDiag = await defaultDemandProvider.diagnose();
+    expect(freeModeDiag.configured).toBe(true);
+    expect((freeModeDiag.dimensions as any)?.freeQuotaMode).toBe("ZERO_COST_FREE_ONLY");
+
+    // Isolated SERPAPI_LEGACY mode enforces exact date range and epoch timestamp persistence
+    vi.stubEnv("DEMAND_PROVIDER_MODE", "SERPAPI_LEGACY");
     const fetchMock = vi.fn().mockResolvedValueOnce(response(freeAccount)).mockResolvedValueOnce(response({ interest_over_time: { timeline_data: [
       { date: "Jun 7 - 13, 2026", timestamp: "1780790400", values: [{ extracted_value: 80 }] },
       { timestamp: "1781395200", values: [{ value: "<1" }] },
@@ -38,6 +45,7 @@ describe("Free provider contracts", () => {
     { ...freeAccount, total_searches_left: 0 },
     { ...freeAccount, total_searches_left: undefined },
   ])("does not query a paid, exhausted, or unknown account: %j", async account => {
+    vi.stubEnv("DEMAND_PROVIDER_MODE", "SERPAPI_LEGACY");
     const fetchMock = vi.fn().mockResolvedValue(response(account));
     vi.stubGlobal("fetch", fetchMock);
     expect((await defaultDemandProvider.fetchSeries(query)).status).toBe("BLOCKED");
@@ -45,7 +53,16 @@ describe("Free provider contracts", () => {
   });
 
   it("does not mark the unimplemented Google alpha key as an active provider", async () => {
-    vi.stubEnv("SERPAPI_API_KEY", ""); vi.stubEnv("GOOGLE_TRENDS_API_KEY", "alpha-key");
+    vi.stubEnv("SERPAPI_API_KEY", "");
+    vi.stubEnv("GOOGLE_TRENDS_API_KEY", "alpha-key");
+
+    // In default GOOGLE_FREE_ONLY mode, BigQuery remains NOT_CONFIGURED without BIGQUERY_PROJECT_ID
+    const freeDiag = await defaultDemandProvider.diagnose();
+    expect((freeDiag.dimensions as any)?.bigqueryStatus).toBe("NOT_CONFIGURED");
+    expect(freeDiag.missingRequirements).toContain("BIGQUERY_PROJECT_ID");
+
+    // In SERPAPI_LEGACY mode, GOOGLE_TRENDS_API_KEY alone does not mark provider configured
+    vi.stubEnv("DEMAND_PROVIDER_MODE", "SERPAPI_LEGACY");
     expect((await defaultDemandProvider.diagnose()).configured).toBe(false);
     const diag = await diagnoseKH02Source("DEMAND_HISTORY");
     expect(diag.transportStatus).toBe("NOT_CONFIGURED");
@@ -54,6 +71,14 @@ describe("Free provider contracts", () => {
   });
 
   it("tests the non-metered account endpoint without spending search quota", async () => {
+    // In default GOOGLE_FREE_ONLY mode, DEMAND_HISTORY is ENGINE_READY with zero spend
+    const defaultDiag = await diagnoseKH02Source("DEMAND_HISTORY", { checkLiveTransport: true });
+    expect(defaultDiag.status).toBe("ENGINE_READY");
+    expect(defaultDiag.queryExecuted).toBe(false);
+    expect(defaultDiag.estimatedQueryCost?.isPaid).toBe(false);
+
+    // In SERPAPI_LEGACY mode, live transport check queries non-metered /account.json only
+    vi.stubEnv("DEMAND_PROVIDER_MODE", "SERPAPI_LEGACY");
     const fetchMock = vi.fn().mockResolvedValue(response(freeAccount)); vi.stubGlobal("fetch", fetchMock);
     const diag = await diagnoseKH02Source("DEMAND_HISTORY", { checkLiveTransport: true });
     expect(diag.transportConnected).toBe(true);

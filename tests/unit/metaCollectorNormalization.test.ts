@@ -21,6 +21,7 @@ describe("MetaAdsCollector Normalization & Provenance", () => {
       cta: "Shop Now",
       link_url: "https://example.com/products/eraser",
       media_type: "image",
+      image_url: "https://scontent.xx.fbcdn.net/v/t39.35426-6/eraser.jpg",
       start_date: "2026-03-01T12:00:00Z",
       status: "ACTIVE",
     };
@@ -65,24 +66,41 @@ describe("MetaAdsCollector Normalization & Provenance", () => {
     ).toThrow(/missing or invalid Meta Library ID/);
   });
 
-  it("honest media type classification: never defaults to VIDEO", () => {
+  it("honest media type classification: never defaults to VIDEO or IMAGE without verified media URL", () => {
     // No media type specified
     const unk = normalizeMetaCollectorAd({ library_id: "9988776655" });
     expect(unk.mediaType).toBe("UNKNOWN");
 
-    // Video explicitly specified
-    const vid = normalizeMetaCollectorAd({
+    // Claimed media_type without a verified media URL remains UNKNOWN (strict anti-fabrication)
+    const claimedVidNoUrl = normalizeMetaCollectorAd({
       library_id: "9988776656",
       media_type: "video",
+      video_duration: 35,
+    });
+    expect(claimedVidNoUrl.mediaType).toBe("UNKNOWN");
+    expect(claimedVidNoUrl.durationSeconds).toBe(35);
+
+    const claimedImgNoUrl = normalizeMetaCollectorAd({
+      library_id: "9988776657",
+      media_type: "IMAGE",
+    });
+    expect(claimedImgNoUrl.mediaType).toBe("UNKNOWN");
+
+    // Video with verified video URL is classified as VIDEO
+    const vid = normalizeMetaCollectorAd({
+      library_id: "9988776659",
+      media_type: "video",
+      video_hd_url: "https://video.xx.fbcdn.net/v/t42.1790-2/ad_video.mp4",
       video_duration: 35,
     });
     expect(vid.mediaType).toBe("VIDEO");
     expect(vid.durationSeconds).toBe(35);
 
-    // Image explicitly specified
+    // Image with verified image URL is classified as IMAGE
     const img = normalizeMetaCollectorAd({
-      library_id: "9988776657",
+      library_id: "9988776660",
       media_type: "IMAGE",
+      image_url: "https://scontent.xx.fbcdn.net/v/t39.35426-6/ad_image.jpg",
     });
     expect(img.mediaType).toBe("IMAGE");
 

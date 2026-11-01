@@ -700,6 +700,10 @@ import {
   type GateResult,
   type FullRegressionInventorySummary,
 } from "../../../../scripts/kh02/acceptanceTruth";
+import {
+  evaluatePointInTimeNicheCandidate,
+  replayCandidateListForNiche,
+} from "../../../../scripts/kh02/runBacktestV12_4_3_4_2";
 
 function chomFromEnv(): string {
   return normalizeWalmartJinaEnvelope(buildChomChomPdpJinaBody()).envelope!.html!;
@@ -729,15 +733,15 @@ describe("V12.4.3.5.1 — Acceptance Truth Reducer, Dynamic Diagnostics & Owners
 
   const buildValidRegressionSummary = (): FullRegressionInventorySummary => ({
     totalDiscoveredTestFiles: 153,
-    executedTestFilesCount: 141,
-    excludedOrDeferredFilesCount: 12,
+    executedTestFilesCount: 153,
+    excludedOrDeferredFilesCount: 0,
     targetedOnly: false,
     inventoryComplete: true,
-    totalExecutedTestCases: 1711,
-    passedTestCases: 1694,
-    failedTestCases: 17,
+    totalExecutedTestCases: 1745,
+    passedTestCases: 1745,
+    failedTestCases: 0,
     requiredActiveSuiteFailedTestCases: 0,
-    baselineKnownPolicySupersededTestCases: 17,
+    baselineKnownPolicySupersededTestCases: 0,
     newRegressionTestCases: 0,
   });
 
@@ -1053,5 +1057,344 @@ describe("V12.4.3.5.1 — Acceptance Truth Reducer, Dynamic Diagnostics & Owners
         { startedAtMs: 2500, endedAtMs: 3500 },
       ])
     ).toBe(1);
+  });
+
+  it("rejects any non-zero failedTestCases or baselineKnownPolicySupersededTestCases (Workstream A zero-exemption)", () => {
+    expect(
+      computeEngineeringVerdict({
+        requiredIds: REQUIRED_IDS,
+        results: buildValidGates(),
+        expectedSha: EXPECTED_SHA,
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 45,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: {
+          ...buildValidRegressionSummary(),
+          failedTestCases: 17,
+          baselineKnownPolicySupersededTestCases: 17,
+        },
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      })
+    ).toBe("FAIL");
+  });
+});
+
+describe("V12.4.3.5.1 Workstream C (Section 4.5) — Point-in-Time Niche-Accurate Historical Replay & Shortlist Integrity", () => {
+  const AS_OF = new Date("2026-10-30T12:00:00.000Z");
+
+  it("1. matches positive Pet Gadgets products (cat water fountain, pet hair remover, automatic pet feeder, dog grooming brush)", () => {
+    const cases = [
+      {
+        candidateId: "cand_fountain",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        expectedFamily: "pet_water_fountain",
+      },
+      {
+        candidateId: "cand_remover",
+        title: "The #1 Pet Hair/Lint/Dust Cleaner",
+        storeDomain: "cc.uprootclean.com",
+        canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+        expectedFamily: "pet_hair_remover_roller",
+      },
+      {
+        candidateId: "cand_feeder",
+        title: "Automatic Dog Feeder for Easy Daily Meals",
+        storeDomain: "kingspetboutique.info",
+        canonicalProductUrl: "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+        expectedFamily: "automatic_pet_feeder",
+      },
+      {
+        candidateId: "cand_brush",
+        title: "Self-Cleaning Dog Grooming Brush",
+        storeDomain: "pawgroom.com",
+        canonicalProductUrl: "https://pawgroom.com/products/dog-grooming-brush",
+        expectedFamily: "pet_grooming_brush",
+      },
+    ];
+
+    for (const c of cases) {
+      const res = evaluatePointInTimeNicheCandidate(c, "Pet Gadgets", AS_OF);
+      expect(res.matchStatus).toBe("MATCH");
+      expect(res.nicheMatched).toBe(true);
+      expect(res.rejectionReasonCode).toBe("NONE");
+      expect(res.familyKey).toBe(c.expectedFamily);
+    }
+  });
+
+  it("2. rejects negative cross-niche products (Car Fender Panel Dent Edge Repair Tools, Natural Relief in Weeks, Portable Blender, Auto Detailing Putty Gel)", () => {
+    const crossNicheCases = [
+      {
+        candidateId: "cand_dent",
+        title: "Car Fender Panel Dent Edge Repair Tools",
+        storeDomain: "pdrcanada.ca",
+        canonicalProductUrl: "https://pdrcanada.ca/products/fender-dent-repair",
+      },
+      {
+        candidateId: "cand_relief",
+        title: "Natural Relief in Weeks",
+        storeDomain: "try.audizen.com",
+        canonicalProductUrl: "https://try.audizen.com/products/natural-relief",
+      },
+      {
+        candidateId: "cand_blender",
+        title: "BlendJet 2 Portable Blender",
+        storeDomain: "blendjet.com",
+        canonicalProductUrl: "https://blendjet.com/products/blendjet-2",
+      },
+      {
+        candidateId: "cand_putty",
+        title: "Auto Detailing Putty Gel",
+        storeDomain: "cleanauto.com",
+        canonicalProductUrl: "https://cleanauto.com/products/putty-gel",
+      },
+    ];
+
+    for (const c of crossNicheCases) {
+      const res = evaluatePointInTimeNicheCandidate(c, "Pet Gadgets", AS_OF);
+      expect(res.matchStatus).toBe("MISMATCH");
+      expect(res.nicheMatched).toBe(false);
+      expect(res.rejectionReasonCode).toBe("CROSS_NICHE_MISMATCH");
+    }
+  });
+
+  it("3 & 4. rejects ambiguous single-token overlap on 'hair', 'water', and 'roller' (Crystal Hair Eraser V2, Rosemary Hair Growth Serum, Alkaline Water Pitcher, Solar Garden Water Fountain)", () => {
+    const ambiguousCases = [
+      {
+        candidateId: "cand_crystal_hair",
+        title: "Crystal Hair Eraser V2",
+        storeDomain: "bleame.com",
+        canonicalProductUrl: "https://bleame.com/products/crystal-hair-eraser",
+      },
+      {
+        candidateId: "cand_rosemary_hair",
+        title: "Rosemary Hair Growth Serum",
+        storeDomain: "haircare.com",
+        canonicalProductUrl: "https://haircare.com/products/rosemary-hair-growth-serum",
+      },
+      {
+        candidateId: "cand_water_pitcher",
+        title: "Alkaline Water Pitcher",
+        storeDomain: "purewater.com",
+        canonicalProductUrl: "https://purewater.com/products/alkaline-water-pitcher",
+      },
+      {
+        candidateId: "cand_solar_fountain",
+        title: "Solar Garden Water Fountain",
+        storeDomain: "gardendecor.com",
+        canonicalProductUrl: "https://gardendecor.com/products/solar-garden-water-fountain",
+      },
+      {
+        candidateId: "cand_ice_roller",
+        title: "Stainless Steel Face Ice Roller",
+        storeDomain: "glowskin.com",
+        canonicalProductUrl: "https://glowskin.com/products/face-ice-roller",
+      },
+    ];
+
+    for (const c of ambiguousCases) {
+      const res = evaluatePointInTimeNicheCandidate(c, "Pet Gadgets", AS_OF);
+      expect(res.matchStatus).toBe("MISMATCH");
+      expect(res.nicheMatched).toBe(false);
+      expect(res.rejectionReasonCode).toBe("AMBIGUOUS_SINGLE_TOKEN_OVERLAP");
+    }
+  });
+
+  it("5. classifies brand-only / domain-only / ad-ID placeholder noise and generic promo slogans as UNCERTAIN", () => {
+    const brandOnly = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_uproot_brand",
+        title: "Uproot Clean",
+        storeDomain: "order.uprootclean.com",
+        canonicalProductUrl: "https://order.uprootclean.com/main/wmtabs/wmt004-1",
+        bodyText: "",
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(brandOnly.matchStatus).toBe("UNCERTAIN");
+    expect(brandOnly.rejectionReasonCode).toBe("BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF");
+
+    const googleAdPlaceholder = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_google_cr",
+        title: "Google Ad: CR04416288182297690113",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com",
+        bodyText: "",
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(googleAdPlaceholder.matchStatus).toBe("UNCERTAIN");
+    expect(googleAdPlaceholder.rejectionReasonCode).toBe("BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF");
+
+    const genericPromo = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_sale_promo",
+        title: "SALE + FREE Shipping!",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(genericPromo.matchStatus).toBe("UNCERTAIN");
+    expect(genericPromo.rejectionReasonCode).toBe("GENERIC_PROMO_OR_SLOGAN_WITHOUT_NICHE_PROOF");
+  });
+
+  it("6. enforces accessory rejection, duplicate suppression, per-family cap, and < 3 shortlist shortfall without padding", () => {
+    const accessoryRes = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_filter_refill",
+        title: "Replacement Filter Pack for Cat Water Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/replacement-filter-pack",
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(accessoryRes.matchStatus).toBe("UNCERTAIN");
+    expect(accessoryRes.rejectionReasonCode).toBe("ACCESSORY_OR_SUBPRODUCT_NOT_CORE");
+    expect(accessoryRes.isAccessoryOrSubProduct).toBe(true);
+
+    // 2 fountains in the same family + 2 unrelated cross-niche products -> only 1 fountain selected, shortlistCount = 1, shortfall = 2
+    const shortfallReplay = replayCandidateListForNiche(
+      [
+        {
+          candidateId: "cand_fountain_a",
+          title: "The #1 Vet-Recommended Cat Fountain",
+          storeDomain: "kittyspout.com",
+          canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+          identityStatus: "VERIFIED",
+        },
+        {
+          candidateId: "cand_fountain_b_same_family",
+          title: "Pawira Stainless Steel Cat Water Fountain",
+          storeDomain: "pawira.com",
+          canonicalProductUrl: "https://pawira.com/products/pawira-stainless-steel-water-fountain",
+          identityStatus: "VERIFIED",
+        },
+        {
+          candidateId: "cand_cross_dent",
+          title: "Car Fender Panel Dent Edge Repair Tools",
+          storeDomain: "pdrcanada.ca",
+          canonicalProductUrl: "https://pdrcanada.ca/products/fender-dent-repair",
+          identityStatus: "VERIFIED",
+        },
+        {
+          candidateId: "cand_cross_relief",
+          title: "Natural Relief in Weeks",
+          storeDomain: "try.audizen.com",
+          canonicalProductUrl: "https://try.audizen.com/products/natural-relief",
+          identityStatus: "VERIFIED",
+        },
+      ],
+      "Pet Gadgets",
+      AS_OF,
+      3
+    );
+
+    expect(shortfallReplay.matchedCandidates).toHaveLength(2);
+    expect(shortfallReplay.shortlistCount).toBe(1);
+    expect(shortfallReplay.nicheMatchedCount).toBe(1);
+    expect(shortfallReplay.distinctFamiliesCount).toBe(1);
+    expect(shortfallReplay.shortlistShortfallCount).toBe(2);
+    expect(shortfallReplay.nicheCoverageStatus).toBe("INSUFFICIENT_NICHE_COVERAGE");
+  });
+
+  it("7. is driven dynamically by input niche ('Kitchen Gadgets' matches kitchen tools and rejects Pet Gadgets)", () => {
+    const candidates = [
+      {
+        candidateId: "cand_blender",
+        title: "BlendJet 2 Portable Blender",
+        storeDomain: "blendjet.com",
+        canonicalProductUrl: "https://blendjet.com/products/blendjet-2",
+        identityStatus: "VERIFIED",
+      },
+      {
+        candidateId: "cand_chopper",
+        title: "Electric Garlic Chopper & Vegetable Slicer",
+        storeDomain: "chopmaster.com",
+        canonicalProductUrl: "https://chopmaster.com/products/electric-garlic-chopper",
+        identityStatus: "VERIFIED",
+      },
+      {
+        candidateId: "cand_cat_fountain",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        identityStatus: "VERIFIED",
+      },
+    ];
+
+    const kitchenReplay = replayCandidateListForNiche(candidates, "Kitchen Gadgets", AS_OF, 3);
+    expect(kitchenReplay.shortlistCount).toBe(2);
+    expect(kitchenReplay.nicheMatchedCount).toBe(2);
+    expect(kitchenReplay.shortlist.map((c) => c.candidateId)).toEqual([
+      "cand_blender",
+      "cand_chopper",
+    ]);
+
+    const petReplay = replayCandidateListForNiche(candidates, "Pet Gadgets", AS_OF, 3);
+    expect(petReplay.shortlistCount).toBe(1);
+    expect(petReplay.shortlist[0]?.candidateId).toBe("cand_cat_fountain");
+  });
+
+  it("8. enforces point-in-time cutoff on metadataUpdatedAt > asOf and deterministic output across parallel invocations", async () => {
+    const postCutoffRes = evaluatePointInTimeNicheCandidate(
+      {
+        candidateId: "cand_future_meta",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        observedAt: "2026-10-20T00:00:00.000Z",
+        metadataUpdatedAt: "2026-11-01T00:00:00.000Z", // > AS_OF
+      },
+      "Pet Gadgets",
+      AS_OF
+    );
+    expect(postCutoffRes.matchStatus).toBe("UNCERTAIN");
+    expect(postCutoffRes.rejectionReasonCode).toBe("POST_CUTOFF_NICHE_EVIDENCE_REJECTED");
+
+    const sampleInput = [
+      {
+        candidateId: "cand_1",
+        title: "The #1 Vet-Recommended Cat Fountain",
+        storeDomain: "kittyspout.com",
+        canonicalProductUrl: "https://kittyspout.com/products/kittyspout-wireless-fountain",
+        identityStatus: "VERIFIED",
+      },
+      {
+        candidateId: "cand_2",
+        title: "The #1 Pet Hair/Lint/Dust Cleaner",
+        storeDomain: "cc.uprootclean.com",
+        canonicalProductUrl: "https://cc.uprootclean.com/main/phr",
+        identityStatus: "VERIFIED",
+      },
+      {
+        candidateId: "cand_3",
+        title: "Automatic Dog Feeder for Easy Daily Meals",
+        storeDomain: "kingspetboutique.info",
+        canonicalProductUrl: "https://kingspetboutique.info/products/automatic-pet-feeder-drinking-fountain",
+        identityStatus: "VERIFIED",
+      },
+    ];
+
+    const parallelRuns = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        Promise.resolve(replayCandidateListForNiche(sampleInput, "Pet Gadgets", AS_OF, 3))
+      )
+    );
+    const baselineJson = JSON.stringify(parallelRuns[0]);
+    for (const r of parallelRuns) {
+      expect(JSON.stringify(r)).toBe(baselineJson);
+    }
   });
 });

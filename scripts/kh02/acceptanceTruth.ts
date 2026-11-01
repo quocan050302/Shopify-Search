@@ -173,7 +173,9 @@ export function computeEngineeringVerdict(
     input.validatorChecksFailed > 0 ||
     !input.shaParityVerified ||
     !input.nonInflationVerified ||
+    input.regressionInventory.failedTestCases > 0 ||
     input.regressionInventory.requiredActiveSuiteFailedTestCases > 0 ||
+    input.regressionInventory.baselineKnownPolicySupersededTestCases > 0 ||
     input.regressionInventory.newRegressionTestCases > 0 ||
     input.ownedOrphanCount !== 0
   ) {
@@ -895,6 +897,12 @@ export interface ComputeReleaseVerdictsInput {
     policyScenariosPassed: string;
     devObservationsCount: number;
     holdoutObservationsCount: number;
+    devShortlistCount?: number;
+    devShortlistNicheMatchedCount?: number;
+    devNicheCoverageStatus?: string;
+    holdoutShortlistCount?: number;
+    holdoutShortlistNicheMatchedCount?: number;
+    holdoutNicheCoverageStatus?: string;
     businessHistoricalEvidenceSufficient: "PASS" | "INSUFFICIENT_EVIDENCE";
     overallHistoricalBacktestVerdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   };
@@ -907,6 +915,36 @@ export interface ComputeReleaseVerdictsInput {
     rankingChanged: boolean;
     gateChanges: number;
     nonInflationVerified: boolean;
+  };
+  e2eExecutionSummary?: {
+    totalSpecs: number;
+    executedSpecsCount?: number;
+    passedSpecsCount: number;
+    failedSpecsCount: number;
+    envPrerequisiteBlockedSpecsCount?: number;
+    skippedWithoutAttemptCount: number;
+  };
+  e2eSpecsSummary?: {
+    totalSpecs: number;
+    executedSpecsCount?: number;
+    passedSpecsCount: number;
+    failedSpecsCount: number;
+    envPrerequisiteBlockedSpecsCount?: number;
+    skippedWithoutAttemptCount: number;
+  };
+  nicheRelevanceSummary?: {
+    crossNicheFalsePositivesInDevTop3?: number;
+    crossNicheFalsePositivesInHoldoutTop3?: number;
+    devCrossNicheFalsePositives?: number;
+    holdoutCrossNicheFalsePositives?: number;
+    paddedWithMismatchOrUncertainCount?: number;
+    devShortlistCount?: number;
+    devNicheMatchedCount?: number;
+    devNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+    holdoutShortlistCount?: number;
+    holdoutNicheMatchedCount?: number;
+    holdoutNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+    nicheUnitAndReplayTestsPassed?: boolean;
   };
   negativeMutationsCaught: string;
   ancestryVerified: boolean;
@@ -931,8 +969,91 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   const historicalG15Verdict = input.diagnostics.gates.g15.verdict;
   const historicalG16Verdict = input.diagnostics.gates.g16.verdict;
 
+  const broadRegressionVerdict: "PASS" | "FAIL" | "INCOMPLETE" =
+    !input.engineeringInput.regressionInventory.inventoryComplete ||
+    input.engineeringInput.regressionInventory.targetedOnly ||
+    input.engineeringInput.regressionInventory.totalExecutedTestCases <= 0
+      ? "INCOMPLETE"
+      : input.engineeringInput.regressionInventory.failedTestCases === 0 &&
+        input.engineeringInput.regressionInventory.requiredActiveSuiteFailedTestCases === 0 &&
+        input.engineeringInput.regressionInventory.baselineKnownPolicySupersededTestCases === 0 &&
+        input.engineeringInput.regressionInventory.newRegressionTestCases === 0
+      ? "PASS"
+      : "FAIL";
+
+  const e2eSummary = input.e2eExecutionSummary || input.e2eSpecsSummary;
+  const e2eExecutedCount =
+    e2eSummary?.executedSpecsCount ??
+    (e2eSummary
+      ? e2eSummary.passedSpecsCount +
+        e2eSummary.failedSpecsCount +
+        (e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0)
+      : 0);
+
+  const requiredE2eCoverageVerdict:
+    | "PASS"
+    | "ENV_PREREQUISITE_BLOCKED"
+    | "FAIL"
+    | "INCOMPLETE" = !e2eSummary
+    ? engineeringVerdict === "PASS"
+      ? "PASS"
+      : "INCOMPLETE"
+    : e2eSummary.skippedWithoutAttemptCount > 0 ||
+      e2eExecutedCount < e2eSummary.totalSpecs
+    ? "INCOMPLETE"
+    : e2eSummary.failedSpecsCount > 0
+    ? "FAIL"
+    : (e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0) > 0
+    ? "ENV_PREREQUISITE_BLOCKED"
+    : e2eSummary.passedSpecsCount === e2eSummary.totalSpecs
+    ? "PASS"
+    : "INCOMPLETE";
+
+  const historicalReplayIntegrityVerdict: "PASS" | "FAIL" =
+    input.backtestOutput.backtestEngineExecuted === "PASS" &&
+    input.backtestOutput.pointInTimeIntegrityVerdict === "PASS" &&
+    input.backtestOutput.policyScenarioVerdict === "PASS"
+      ? "PASS"
+      : "FAIL";
+
+  const holdoutMismatchesCount =
+    input.diagnostics.shortlistQuality?.holdoutNicheMismatches?.length ?? 0;
+  const nr = input.nicheRelevanceSummary;
+  const devCrossFp =
+    nr?.crossNicheFalsePositivesInDevTop3 ?? nr?.devCrossNicheFalsePositives ?? 0;
+  const holdoutCrossFp =
+    nr?.crossNicheFalsePositivesInHoldoutTop3 ??
+    nr?.holdoutCrossNicheFalsePositives ??
+    0;
+  const paddedMismatchCount = nr?.paddedWithMismatchOrUncertainCount ?? 0;
+  const nicheTestsPassed = nr?.nicheUnitAndReplayTestsPassed ?? true;
+  const holdoutMatched = nr?.holdoutNicheMatchedCount ?? 3;
+  const holdoutShortlist = nr?.holdoutShortlistCount ?? 3;
+  const devMatched = nr?.devNicheMatchedCount ?? 0;
+  const devShortlist = nr?.devShortlistCount ?? 0;
+
+  const nicheRelevanceVerdict: "PASS" | "FAIL" = nr
+    ? nicheTestsPassed &&
+      devCrossFp === 0 &&
+      holdoutCrossFp === 0 &&
+      paddedMismatchCount === 0 &&
+      holdoutMatched === holdoutShortlist &&
+      devMatched === devShortlist &&
+      holdoutMismatchesCount === 0
+      ? "PASS"
+      : "FAIL"
+    : holdoutMismatchesCount === 0
+    ? "PASS"
+    : "FAIL";
+
   const deliveryVerdict: "READY_FOR_REVIEW" | "INCOMPLETE" | "BLOCKED" =
-    engineeringVerdict === "PASS" && input.ancestryVerified
+    engineeringVerdict === "PASS" &&
+    broadRegressionVerdict === "PASS" &&
+    (requiredE2eCoverageVerdict === "PASS" ||
+      requiredE2eCoverageVerdict === "ENV_PREREQUISITE_BLOCKED") &&
+    historicalReplayIntegrityVerdict === "PASS" &&
+    nicheRelevanceVerdict === "PASS" &&
+    input.ancestryVerified
       ? "READY_FOR_REVIEW"
       : engineeringVerdict === "BLOCKED"
       ? "BLOCKED"
@@ -1000,6 +1121,15 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   if (engineeringVerdict !== "PASS") {
     overallVerdict = engineeringVerdict;
   } else if (
+    broadRegressionVerdict !== "PASS" ||
+    historicalReplayIntegrityVerdict !== "PASS" ||
+    nicheRelevanceVerdict !== "PASS" ||
+    requiredE2eCoverageVerdict === "FAIL"
+  ) {
+    overallVerdict = "FAIL";
+  } else if (requiredE2eCoverageVerdict === "INCOMPLETE") {
+    overallVerdict = "INCOMPLETE";
+  } else if (
     kh02BusinessVerdict === "PASS" &&
     liveWalmartProviderVerdict === "LIVE_VERIFIED" &&
     historicalEvidenceVerdict === "PASS" &&
@@ -1009,6 +1139,42 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   } else {
     overallVerdict = "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS";
   }
+
+  const liveProvidersEntry = {
+    WALMART_US: liveWalmartProviderVerdict,
+    AMAZON_US: liveAmazonProviderVerdict,
+    TIKTOK_US_G07: input.diagnostics.providers.tiktokUsG07?.verdict || historicalG07Verdict,
+    TIKTOK_ADS: input.diagnostics.providers.tiktokUsG07?.verdict || historicalG07Verdict,
+    GOOGLE_ADS: input.diagnostics.providers.googleAds?.diagnosticStatus || "CONFIGURED",
+    META_ADS: input.diagnostics.providers.metaAds?.diagnosticStatus || "CONFIGURED",
+    DEMAND_HISTORY: input.diagnostics.providers.demandHistory?.diagnosticStatus || "BLOCKED",
+  };
+
+  const verdictMatrix = {
+    ENGINEERING_TESTS: engineeringVerdict,
+    BROAD_REGRESSION: broadRegressionVerdict,
+    REQUIRED_E2E_COVERAGE: requiredE2eCoverageVerdict,
+    HISTORICAL_REPLAY_INTEGRITY: historicalReplayIntegrityVerdict,
+    NICHE_RELEVANCE: nicheRelevanceVerdict,
+    LIVE_PROVIDERS: liveProvidersEntry,
+    CURRENT_LIVE_PROVIDERS: liveProvidersEntry,
+    HISTORICAL_DEMAND_G15: historicalG15Verdict,
+    MERCHANT_TOP3_G16: historicalG16Verdict,
+    HISTORICAL_STORED_PROOF: {
+      snapshotRunId: input.diagnostics.gates.g16.evaluatedRunId,
+      snapshotCreatedAt: input.diagnostics.gates.g16.evaluatedRunCreatedAt,
+      snapshotFreshness: input.diagnostics.gates.g16.snapshotFreshness,
+      storedG16Verdict: historicalG16Verdict,
+      verifiedLiveMerchantsCount: input.diagnostics.gates.g16.verifiedLiveMerchantsCount,
+      requiredLiveMerchantsCount: input.diagnostics.gates.g16.requiredLiveMerchantsCount,
+      storedShortlistNicheMatchedCount:
+        input.diagnostics.shortlistQuality.storedRunShortlistNicheMatchedCount,
+      storedShortlistTotalCount:
+        input.diagnostics.shortlistQuality.storedRunShortlistTotalCount,
+    },
+    BUSINESS_EVERGREEN_COVERAGE: kh02BusinessVerdict,
+    FINAL_RELEASE: overallVerdict,
+  };
 
   return {
     releaseVersion: input.releaseVersion,
@@ -1020,6 +1186,10 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     testedCodeSha: input.codeSha,
     testedTreeSha: input.testedTreeSha,
     engineeringVerdict,
+    broadRegressionVerdict,
+    requiredE2eCoverageVerdict,
+    historicalReplayIntegrityVerdict,
+    nicheRelevanceVerdict,
     liveWalmartProviderVerdict,
     liveAmazonProviderVerdict,
     kh02BusinessVerdict,
@@ -1029,8 +1199,11 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     historicalG16Verdict,
     deliveryVerdict,
     overallVerdict,
+    verdictMatrix,
     nonInflationSummary: input.nonInflationSummary,
     backtestSummary: input.backtestOutput,
+    e2eExecutionSummary: input.e2eExecutionSummary || null,
+    nicheRelevanceSummary: input.nicheRelevanceSummary || null,
     remainingExternalBlockers,
     negativeMutationsCaught: input.negativeMutationsCaught,
     completedAt: new Date().toISOString(),
@@ -1368,27 +1541,38 @@ export function captureOwnershipAwareResourceSnapshot(
 // TASK D: FULL REPOSITORY TEST INVENTORY & SHARD CLASSIFICATION
 // ============================================================================
 
-export const LEGACY_PRE_V12_4_POLICY_SUPERSEDED_UNIT_FILES: Record<
+export const HISTORICAL_REPAIRED_PRE_V12_4_UNIT_FILES: Record<
   string,
   string
 > = {
   "tests/unit/kh02FreeProviderContracts.test.ts":
-    "Pre-V12.4.3.4 test expecting defaultDemandProvider to be SERPAPI_LEGACY (/account.json); superseded in V12.4.3.4 by GOOGLE_FREE_ONLY zero-spend default.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally tested pre-V12.4.3.4 SERPAPI_LEGACY defaultDemandProvider; updated to assert GOOGLE_FREE_ONLY zero-spend default.",
   "tests/unit/kh02SourceAdapters.test.ts":
-    "Pre-V12.4.3.4 test expecting listKH02SourceCapabilities() to include 5 active sources including TIKTOK_ORGANIC (HasData); superseded when TIKTOK_ORGANIC was permanently disabled.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally tested 5 active sources including TIKTOK_ORGANIC (HasData); updated to assert 4 active sources + TIKTOK_ORGANIC permanently disabled.",
   "tests/unit/kh02TestConnectionsFlow.test.ts":
-    "Pre-V12.4.3.4 test expecting TIKTOK_ORGANIC with HASDATA_API_KEY to report CONFIGURED; superseded when TIKTOK_ORGANIC was permanently disabled.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally tested TIKTOK_ORGANIC with HASDATA_API_KEY as CONFIGURED; updated to assert DISABLED under zero-spend policy.",
   "tests/unit/kh02V12_1_2_RuntimeOwnership.test.ts":
-    "Pre-V12.4 test checking legacy V12.1.2 DEMAND_HISTORY readiness copy ('requires 3+ temporal observations'); superseded by V12.4 Google Trends BigQuery/CSV diagnostics.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally checked legacy V12.1.2 DEMAND_HISTORY copy; updated to assert V12.4 Google Trends BigQuery/CSV diagnostics.",
   "tests/unit/kh02V12_2_1_ProviderActivation.test.ts":
-    "Pre-V12.4 test expecting TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED when HASDATA_API_KEY is absent; superseded when TIKTOK_ORGANIC was permanently disabled.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally expected TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED; updated to assert DISABLED.",
   "tests/unit/kh02V12_2_2_TruthfulDiagnostics.test.ts":
-    "Pre-V12.4 test expecting TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED and SKIPPED instead of DISABLED; superseded when TIKTOK_ORGANIC was permanently disabled.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally expected TIKTOK_ORGANIC to report CREDENTIALS_REQUIRED/SKIPPED; updated to assert DISABLED.",
   "tests/unit/metaCollectorNormalization.test.ts":
-    "Pre-V12.4.3.2.1 test expecting media_type='image'/'video' without a media URL to classify as IMAGE/VIDEO; superseded in V12.4.3.2.1 which requires a verified media URL or returns UNKNOWN.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally expected media_type='image'/'video' without URL to classify as IMAGE/VIDEO; updated to assert V12.4.3.2.1 strict media URL proof.",
   "tests/unit/metaCollectorV11_2.test.ts":
-    "Pre-V12.4.3.2.1 test expecting summary creative with has_image=true and no URL to return mediaType='IMAGE'; superseded in V12.4.3.2.1 which returns UNKNOWN when URL is absent.",
+    "Repaired in V12.4.3.5.1 Workstream A: originally expected has_image=true without URL to return IMAGE; updated to assert UNKNOWN without URL and IMAGE with URL.",
 };
+
+export const EIGHT_REPAIRED_LEGACY_UNIT_FILES: Record<string, string> =
+  HISTORICAL_REPAIRED_PRE_V12_4_UNIT_FILES;
+
+/**
+ * Workstream A (Section 2.4): Fail-exemption removed. Zero unit files are exempted from activeRequiredUnitFiles.
+ */
+export const LEGACY_PRE_V12_4_POLICY_SUPERSEDED_UNIT_FILES: Record<
+  string,
+  string
+> = {};
 
 export const STANDALONE_SERVER_OR_BROWSER_E2E_FILES: Record<string, string> = {
   "tests/integration/kh01BrowserE2E.test.ts":

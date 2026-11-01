@@ -801,6 +801,231 @@ export function validateWalmartAcceptanceArtifacts(
         "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
         "Active required unit and integration test suites must have 0 failed test cases and 0 new regressions."
       );
+
+      check(
+        fullReg.zeroLegacyFailExemptionEnforced !== false &&
+          Number(fullReg.failedTestCases ?? 1) === 0 &&
+          Number(fullReg.baselineKnownPolicySupersededTestCases ?? 1) === 0,
+        "LEGACY_FAIL_EXEMPTION_REENABLED",
+        "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+        "Workstream A requires 0 failedTestCases and 0 baselineKnownPolicySupersededTestCases (no legacy fail-exemption)."
+      );
+    }
+  }
+
+  const legacy17Path = path.join(
+    artifactDir,
+    "03_LEGACY_17_ASSERTION_COMPARISON.json"
+  );
+  if (fs.existsSync(legacy17Path)) {
+    const legacy17 = readJsonSafe(
+      artifactDir,
+      "03_LEGACY_17_ASSERTION_COMPARISON.json",
+      failures
+    );
+    if (legacy17) {
+      check(
+        Array.isArray(legacy17.assertions) &&
+          legacy17.assertions.length === 17 &&
+          legacy17.qaBaselineFailedCount === 17 &&
+          (legacy17.currentBranchFailedCount ??
+            legacy17.currentHeadFailedCount) === 0 &&
+          legacy17.all17RepairedAndPassing === true,
+        "BASELINE_DIFF_PROOF_MISSING_17_ASSERTIONS",
+        "03_LEGACY_17_ASSERTION_COMPARISON.json",
+        "03_LEGACY_17_ASSERTION_COMPARISON.json must document all 17 baseline failing assertions on origin/QA and prove 0 failures on current branch."
+      );
+    }
+  }
+
+  const e2eReceiptsPath = path.join(
+    artifactDir,
+    "06_ALL_12_E2E_EXECUTION_RECEIPTS.json"
+  );
+  if (fs.existsSync(e2eReceiptsPath)) {
+    const e2eReceipts = readJsonSafe(
+      artifactDir,
+      "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+      failures
+    );
+    if (e2eReceipts && a00) {
+      check(
+        e2eReceipts.totalSpecs === 12 &&
+          Array.isArray(e2eReceipts.receipts) &&
+          e2eReceipts.receipts.length === 12 &&
+          e2eReceipts.skippedWithoutAttemptCount === 0 &&
+          e2eReceipts.failedSpecsCount === 0 &&
+          e2eReceipts.receipts.every(
+            (r: any) => r.classification === "PASS" && r.exitCode === 0
+          ),
+        "E2E_SPEC_SKIPPED_OR_UNCOUNTED",
+        "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+        "All 12 E2E specs (6 in tests/integration + 6 in tests/e2e) must be executed and accounted for with 0 skipped and 0 failed."
+      );
+      check(
+        e2eReceipts.sourceSha === a00.codeSha &&
+          Array.isArray(e2eReceipts.receipts) &&
+          e2eReceipts.receipts.every((r: any) => r.sourceSha === a00.codeSha),
+        "TESTED_SHA_DRIFT_IN_E2E_RECEIPTS",
+        "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+        "Every E2E execution receipt in 06_ALL_12_E2E_EXECUTION_RECEIPTS.json must match 00_BRANCH_AND_BASELINE.json codeSha."
+      );
+    }
+  }
+
+  if (a11) {
+    if (a11.nicheCoverageStatus !== undefined) {
+      check(
+        Number(a11.shortlistCount ?? 0) >= 3 ||
+          a11.nicheCoverageStatus === "INSUFFICIENT_NICHE_COVERAGE",
+        "DEV_INSUFFICIENT_NICHE_COVERAGE_MISLABELED_SUFFICIENT",
+        "11_DEV_BACKTEST_SUMMARY.json",
+        "When DEV shortlist has < 3 niche-matched products, nicheCoverageStatus must be INSUFFICIENT_NICHE_COVERAGE."
+      );
+    }
+    if (a11.joinedMetadataLeakageAudit !== undefined) {
+      check(
+        a11.joinedMetadataLeakageAudit?.leakagePrevented === true,
+        "POST_CUTOFF_JOINED_METADATA_OR_NICHE_LEAK",
+        "11_DEV_BACKTEST_SUMMARY.json",
+        "Joined product metadata lookahead guard must have leakagePrevented=true in 11_DEV_BACKTEST_SUMMARY.json."
+      );
+    }
+  }
+
+  const nicheFunnelPath = path.join(
+    artifactDir,
+    "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json"
+  );
+  if (fs.existsSync(nicheFunnelPath)) {
+    const nicheFunnel = readJsonSafe(
+      artifactDir,
+      "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+      failures
+    );
+    if (nicheFunnel) {
+      const holdoutTop3: any[] = Array.isArray(nicheFunnel.holdoutTop3)
+        ? nicheFunnel.holdoutTop3
+        : [];
+      const devTop3: any[] = Array.isArray(nicheFunnel.devTop3)
+        ? nicheFunnel.devTop3
+        : [];
+      check(
+        nicheFunnel.crossNicheFalsePositivesInDevTop3 === 0 &&
+          nicheFunnel.crossNicheFalsePositivesInHoldoutTop3 === 0 &&
+          holdoutTop3.length === 3 &&
+          holdoutTop3.every(
+            (p) => p.nicheMatched === true && p.matchStatus === "MATCH"
+          ) &&
+          devTop3.every(
+            (p) => p.nicheMatched === true && p.matchStatus === "MATCH"
+          ),
+        "CROSS_NICHE_FALSE_POSITIVE_IN_TOP3",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "Zero cross-niche false positives are permitted in DEV or HOLDOUT Top-3 shortlists."
+      );
+      check(
+        nicheFunnel.paddedWithMismatchOrUncertainCount === 0 &&
+          Number(nicheFunnel.devShortlistCount ?? 0) ===
+            Number(nicheFunnel.devNicheMatchedCount ?? 0) &&
+          Number(nicheFunnel.holdoutShortlistCount ?? 0) ===
+            Number(nicheFunnel.holdoutNicheMatchedCount ?? 0),
+        "SHORTLIST_PADDED_WITH_MISMATCH_OR_UNCERTAIN",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "Shortlists with < 3 niche-matched candidates must never be padded with MISMATCH or UNCERTAIN products."
+      );
+      check(
+        nicheFunnel.crossNicheInputVerification?.drivenByInputNiche === true &&
+          Number(
+            nicheFunnel.crossNicheInputVerification?.kitchenGadgetsMatchedCount ?? 0
+          ) >= 2 &&
+          Number(
+            nicheFunnel.crossNicheInputVerification?.kitchenGadgetsRejectedPetCount ?? 0
+          ) >= 1,
+        "NICHE_PARAMETER_IGNORED_HARDCODED_PET_GADGETS",
+        "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+        "Niche replay evaluator must dynamically respect input niche (e.g. 'Kitchen Gadgets') rather than hardcoding 'Pet Gadgets'."
+      );
+    }
+  }
+
+  const g16Sec8Path = path.join(
+    artifactDir,
+    "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json"
+  );
+  if (fs.existsSync(g16Sec8Path)) {
+    const g16Sec8 = readJsonSafe(
+      artifactDir,
+      "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+      failures
+    );
+    if (g16Sec8) {
+      check(
+        g16Sec8.snapshotFreshness === "HISTORICAL_SNAPSHOT_RE_EVALUATED" &&
+          g16Sec8.claimedAsCurrentLiveRunVerification === false &&
+          (Number(g16Sec8.verifiedLiveMerchantsCount ?? 0) >= 3 ||
+            g16Sec8.verdict !== "PASS"),
+        "HISTORICAL_SNAPSHOT_CONFLATED_WITH_CURRENT_LIVE_G16",
+        "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+        "Historical stored run G16 proof must be labeled HISTORICAL_SNAPSHOT_RE_EVALUATED and never claimed as current live run verification."
+      );
+    }
+  }
+
+  const procLedgerSec8Path = path.join(
+    artifactDir,
+    "17_DISK_RAM_OWNED_PROCESS_LEDGER.json"
+  );
+  if (fs.existsSync(procLedgerSec8Path)) {
+    const procLedgerSec8 = readJsonSafe(
+      artifactDir,
+      "17_DISK_RAM_OWNED_PROCESS_LEDGER.json",
+      failures
+    );
+    if (procLedgerSec8) {
+      check(
+        procLedgerSec8.orphanedOwnedProcessesAfterRun === 0 &&
+          Array.isArray(procLedgerSec8.orphanedOwnedPids) &&
+          procLedgerSec8.orphanedOwnedPids.length === 0 &&
+          Number(procLedgerSec8.observedPeakConcurrentHeavy ?? 0) <= 2,
+        "ORPHANED_PROCESSES_IN_BOUNDED_DAG",
+        "17_DISK_RAM_OWNED_PROCESS_LEDGER.json",
+        "Bounded async DAG ledger must show 0 orphaned owned processes and observedPeakConcurrentHeavy <= 2."
+      );
+    }
+  }
+
+  const multiVerdictSec8Path = path.join(
+    artifactDir,
+    "19_FINAL_MULTI_VERDICT_SUMMARY.json"
+  );
+  if (fs.existsSync(multiVerdictSec8Path)) {
+    const mv = readJsonSafe(
+      artifactDir,
+      "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+      failures
+    );
+    if (mv) {
+      const hasBlockers =
+        mv.liveWalmartProviderVerdict !== "LIVE_VERIFIED" ||
+        mv.liveAmazonProviderVerdict !== "LIVE_VERIFIED" ||
+        mv.kh02BusinessVerdict !== "PASS" ||
+        mv.historicalG15Verdict !== "PASS";
+      check(
+        mv.verdictMatrix?.ENGINEERING_TESTS === "PASS" &&
+          mv.verdictMatrix?.BROAD_REGRESSION === "PASS" &&
+          mv.verdictMatrix?.REQUIRED_E2E_COVERAGE === "PASS" &&
+          mv.verdictMatrix?.HISTORICAL_REPLAY_INTEGRITY === "PASS" &&
+          mv.verdictMatrix?.NICHE_RELEVANCE === "PASS" &&
+          (!hasBlockers ||
+            (mv.verdictMatrix?.FINAL_RELEASE ===
+              "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS" &&
+              mv.verdictMatrix?.FINAL_RELEASE !== "FULL_ACCEPTANCE" &&
+              mv.overallVerdict !== "FULL_ACCEPTANCE")),
+        "FINAL_RELEASE_FALSE_FULL_ACCEPTANCE",
+        "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+        "19_FINAL_MULTI_VERDICT_SUMMARY.json must report FINAL_RELEASE='ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS' (never FULL_ACCEPTANCE) when external provider or 60d G15 blockers exist."
+      );
     }
   }
 
@@ -1638,6 +1863,137 @@ const FORTY_PHYSICAL_MUTATION_SPECS: MutationSpec[] = [
       d.claimedAsLiveWalmartProductConfirmation = true;
     },
   },
+  {
+    mutationId: "M61",
+    targetFile: "03_FULL_REGRESSION_INVENTORY_AND_RESULTS.json",
+    description: "Re-enable legacy fail-exemption on the 8 pre-V12.4 unit test files (baselineKnownPolicySupersededTestCases = 17)",
+    expectedFailureCode: "LEGACY_FAIL_EXEMPTION_REENABLED",
+    mutate: (d) => {
+      d.zeroLegacyFailExemptionEnforced = false;
+      d.failedTestCases = 17;
+      d.baselineKnownPolicySupersededTestCases = 17;
+    },
+  },
+  {
+    mutationId: "M62",
+    targetFile: "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+    description: "Omit or skip one of the 12 required E2E specs without execution receipt",
+    expectedFailureCode: "E2E_SPEC_SKIPPED_OR_UNCOUNTED",
+    mutate: (d) => {
+      d.skippedWithoutAttemptCount = 1;
+      if (Array.isArray(d.receipts) && d.receipts.length > 0) {
+        d.receipts = d.receipts.slice(0, 11);
+      }
+    },
+  },
+  {
+    mutationId: "M63",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Inject cross-niche product ('Car Fender Panel Dent Edge Repair Tools') into Pet Gadgets HOLDOUT Top-3 shortlist",
+    expectedFailureCode: "CROSS_NICHE_FALSE_POSITIVE_IN_TOP3",
+    mutate: (d) => {
+      d.crossNicheFalsePositivesInHoldoutTop3 = 1;
+      if (Array.isArray(d.holdoutTop3) && d.holdoutTop3.length > 0) {
+        d.holdoutTop3[0].title = "Car Fender Panel Dent Edge Repair Tools";
+        d.holdoutTop3[0].nicheMatched = false;
+        d.holdoutTop3[0].matchStatus = "MISMATCH";
+      }
+    },
+  },
+  {
+    mutationId: "M64",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Pad < 3 niche-matched DEV shortlist with MISMATCH or UNCERTAIN candidates ('Auto Detailing Putty Gel')",
+    expectedFailureCode: "SHORTLIST_PADDED_WITH_MISMATCH_OR_UNCERTAIN",
+    mutate: (d) => {
+      d.paddedWithMismatchOrUncertainCount = 2;
+      d.devShortlistCount = 2;
+      d.devNicheMatchedCount = 0;
+    },
+  },
+  {
+    mutationId: "M65",
+    targetFile: "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json",
+    description: "Hardcode 'Pet Gadgets' so cross-niche input ('Kitchen Gadgets') is ignored",
+    expectedFailureCode: "NICHE_PARAMETER_IGNORED_HARDCODED_PET_GADGETS",
+    mutate: (d) => {
+      if (d.crossNicheInputVerification) {
+        d.crossNicheInputVerification.drivenByInputNiche = false;
+        d.crossNicheInputVerification.kitchenGadgetsMatchedCount = 0;
+      }
+    },
+  },
+  {
+    mutationId: "M66",
+    targetFile: "19_FINAL_MULTI_VERDICT_SUMMARY.json",
+    description: "Claim FINAL_RELEASE='FULL_ACCEPTANCE' in 9-verdict matrix while Walmart is BLOCKED_PROVIDER and G15 is INSUFFICIENT_EVIDENCE",
+    expectedFailureCode: "FINAL_RELEASE_FALSE_FULL_ACCEPTANCE",
+    mutate: (d) => {
+      if (d.verdictMatrix) {
+        d.verdictMatrix.FINAL_RELEASE = "FULL_ACCEPTANCE";
+      }
+      d.overallVerdict = "FULL_ACCEPTANCE";
+    },
+  },
+  {
+    mutationId: "M67",
+    targetFile: "11_DEV_BACKTEST_SUMMARY.json",
+    description: "Allow post-cutoff joined ResearchProduct metadata to leak into point-in-time DEV replay",
+    expectedFailureCode: "POST_CUTOFF_JOINED_METADATA_OR_NICHE_LEAK",
+    mutate: (d) => {
+      if (!d.joinedMetadataLeakageAudit) d.joinedMetadataLeakageAudit = {};
+      d.joinedMetadataLeakageAudit.leakagePrevented = false;
+    },
+  },
+  {
+    mutationId: "M68",
+    targetFile: "06_ALL_12_E2E_EXECUTION_RECEIPTS.json",
+    description: "Alter sourceSha in an E2E execution receipt so it drifts from TESTED_SOURCE_SHA",
+    expectedFailureCode: "TESTED_SHA_DRIFT_IN_E2E_RECEIPTS",
+    mutate: (d) => {
+      d.sourceSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+    },
+  },
+  {
+    mutationId: "M69",
+    targetFile: "17_DISK_RAM_OWNED_PROCESS_LEDGER.json",
+    description: "Report orphanedOwnedProcessesAfterRun > 0 in bounded async DAG ledger",
+    expectedFailureCode: "ORPHANED_PROCESSES_IN_BOUNDED_DAG",
+    mutate: (d) => {
+      d.orphanedOwnedProcessesAfterRun = 2;
+      d.orphanedOwnedPids = [888881, 888882];
+    },
+  },
+  {
+    mutationId: "M70",
+    targetFile: "03_LEGACY_17_ASSERTION_COMPARISON.json",
+    description: "Omit baseline failing assertions from 17-assertion differential proof",
+    expectedFailureCode: "BASELINE_DIFF_PROOF_MISSING_17_ASSERTIONS",
+    mutate: (d) => {
+      d.qaBaselineFailedCount = 12;
+      d.all17RepairedAndPassing = false;
+    },
+  },
+  {
+    mutationId: "M71",
+    targetFile: "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json",
+    description: "Conflate historical stored snapshot G16 evaluation (2/3) with current live run verification",
+    expectedFailureCode: "HISTORICAL_SNAPSHOT_CONFLATED_WITH_CURRENT_LIVE_G16",
+    mutate: (d) => {
+      d.claimedAsCurrentLiveRunVerification = true;
+      d.snapshotFreshness = "CURRENT_LIVE_RUN";
+    },
+  },
+  {
+    mutationId: "M72",
+    targetFile: "11_DEV_BACKTEST_SUMMARY.json",
+    description: "Mislabel DEV window with 0 niche-matched products as SUFFICIENT_NICHE_COVERAGE",
+    expectedFailureCode: "DEV_INSUFFICIENT_NICHE_COVERAGE_MISLABELED_SUFFICIENT",
+    mutate: (d) => {
+      d.shortlistCount = 0;
+      d.nicheCoverageStatus = "SUFFICIENT_NICHE_COVERAGE";
+    },
+  },
 ];
 
 /**
@@ -1698,6 +2054,157 @@ export function runPhysicalNegativeMutationSuite40(
               historicalG16Verdict: "PARTIAL_2_OF_3",
               deliveryVerdict: "READY_FOR_REVIEW",
               overallVerdict: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      let codeShaFallback = "0000000000000000000000000000000000000000";
+      try {
+        const a00Raw = JSON.parse(
+          fs.readFileSync(path.join(tempRoot, "00_BRANCH_AND_BASELINE.json"), "utf8")
+        );
+        codeShaFallback = String(a00Raw.codeSha || codeShaFallback);
+      } catch {}
+
+      if (!fs.existsSync(path.join(tempRoot, "03_LEGACY_17_ASSERTION_COMPARISON.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "03_LEGACY_17_ASSERTION_COMPARISON.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              qaBaselineSha: "fbe51a06ab8354c886d0415a9599f977c83caabc",
+              qaBaselineFailedCount: 17,
+              currentHeadFailedCount: 0,
+              all17RepairedAndPassing: true,
+              assertions: Array.from({ length: 17 }, (_, i) => ({
+                index: i + 1,
+                qaStatus: "failed",
+                headStatus: "passed",
+              })),
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "06_ALL_12_E2E_EXECUTION_RECEIPTS.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "06_ALL_12_E2E_EXECUTION_RECEIPTS.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              totalSpecs: 12,
+              skippedWithoutAttemptCount: 0,
+              failedSpecsCount: 0,
+              receipts: Array.from({ length: 12 }, (_, i) => ({
+                specIndex: i + 1,
+                sourceSha: codeShaFallback,
+                classification: "PASS",
+                exitCode: 0,
+              })),
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "11_NICHE_RELEVANCE_CANDIDATE_FUNNEL_AND_TOP3.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              niche: "Pet Gadgets",
+              devShortlistCount: 0,
+              devNicheMatchedCount: 0,
+              holdoutShortlistCount: 3,
+              holdoutNicheMatchedCount: 3,
+              paddedWithMismatchOrUncertainCount: 0,
+              crossNicheFalsePositivesInDevTop3: 0,
+              crossNicheFalsePositivesInHoldoutTop3: 0,
+              devTop3: [],
+              holdoutTop3: [
+                { candidateId: "c1", title: "The #1 Pet Hair/Lint/Dust Cleaner", nicheMatched: true, matchStatus: "MATCH" },
+                { candidateId: "c2", title: "Automatic Dog Feeder for Easy Daily Meals", nicheMatched: true, matchStatus: "MATCH" },
+                { candidateId: "c3", title: "The #1 Vet-Recommended Cat Fountain", nicheMatched: true, matchStatus: "MATCH" },
+              ],
+              crossNicheInputVerification: {
+                drivenByInputNiche: true,
+                kitchenGadgetsMatchedCount: 2,
+                kitchenGadgetsRejectedPetCount: 2,
+              },
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "15_G16_TOP3_MERCHANT_PROOF_BY_CANDIDATE.json"),
+          JSON.stringify(
+            {
+              sourceSha: codeShaFallback,
+              snapshotFreshness: "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+              claimedAsCurrentLiveRunVerification: false,
+              verifiedLiveMerchantsCount: 2,
+              verdict: "PARTIAL_2_OF_3",
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "17_DISK_RAM_OWNED_PROCESS_LEDGER.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "17_DISK_RAM_OWNED_PROCESS_LEDGER.json"),
+          JSON.stringify(
+            {
+              codeSha: codeShaFallback,
+              orphanedOwnedProcessesAfterRun: 0,
+              orphanedOwnedPids: [],
+              observedPeakConcurrentHeavy: 2,
+            },
+            null,
+            2
+          )
+        );
+      }
+
+      if (!fs.existsSync(path.join(tempRoot, "19_FINAL_MULTI_VERDICT_SUMMARY.json"))) {
+        fs.writeFileSync(
+          path.join(tempRoot, "19_FINAL_MULTI_VERDICT_SUMMARY.json"),
+          JSON.stringify(
+            {
+              codeSha: codeShaFallback,
+              engineeringVerdict: "PASS",
+              liveWalmartProviderVerdict: "BLOCKED_PROVIDER",
+              liveAmazonProviderVerdict: "CREDENTIALS_REQUIRED",
+              kh02BusinessVerdict: "INSUFFICIENT_EVIDENCE",
+              historicalG15Verdict: "INSUFFICIENT_EVIDENCE",
+              overallVerdict: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+              verdictMatrix: {
+                ENGINEERING_TESTS: "PASS",
+                BROAD_REGRESSION: "PASS",
+                REQUIRED_E2E_COVERAGE: "PASS",
+                HISTORICAL_REPLAY_INTEGRITY: "PASS",
+                NICHE_RELEVANCE: "PASS",
+                LIVE_PROVIDERS: {
+                  WALMART_US: "BLOCKED_PROVIDER",
+                  AMAZON_US: "CREDENTIALS_REQUIRED",
+                  TIKTOK_US_G07: "BLOCKED",
+                },
+                HISTORICAL_DEMAND_G15: "INSUFFICIENT_EVIDENCE",
+                MERCHANT_TOP3_G16: "PARTIAL_2_OF_3",
+                FINAL_RELEASE: "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+              },
             },
             null,
             2

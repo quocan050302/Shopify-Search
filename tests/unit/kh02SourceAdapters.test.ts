@@ -18,9 +18,10 @@ describe("SWAI KH-02 — Multi-Source Adapters & Readiness", () => {
     process.env = originalEnv;
   });
 
-  it("lists all 5 intelligence sources with truthful geographic and cost capability declarations", () => {
+  it("lists all active intelligence sources (excluding permanently disabled TIKTOK_ORGANIC) with truthful geographic and cost capability declarations", () => {
     const capabilities = listKH02SourceCapabilities();
-    expect(capabilities).toHaveLength(5);
+    expect(capabilities).toHaveLength(4);
+    expect(capabilities.map((c) => c.source)).not.toContain("TIKTOK_ORGANIC");
 
     const meta = getKH02SourceCapabilities("META_ADS");
     expect(meta.supportsUS).toBe(true);

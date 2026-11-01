@@ -25,22 +25,22 @@ describe("SWAI KH-02 V12.2.1 — Provider Runtime Activation & Truthful Diagnost
   });
 
   describe("1. Source Status & Diagnostics Mapping (Section 17-21, 93)", () => {
-    it("diagnoses TikTok Organic as CREDENTIALS_REQUIRED when HASDATA_API_KEY is missing", async () => {
+    it("diagnoses TikTok Organic as permanently DISABLED by policy regardless of HASDATA_API_KEY", async () => {
       delete process.env.HASDATA_API_KEY;
       delete process.env.TIKTOK_ORGANIC_API_KEY;
 
       const diag = await diagnoseKH02Source("TIKTOK_ORGANIC");
-      expect(diag.status).toBe("CREDENTIALS_REQUIRED");
-      expect(diag.missingRequirements).toContain("HASDATA_API_KEY");
+      expect(diag.status).toBe("DISABLED");
+      expect(diag.missingRequirements).toEqual([]);
       expect(diag.dimensions).toBeDefined();
       expect(diag.dimensions?.configured).toBe(false);
       expect(diag.dimensions?.transportConnected).toBeNull();
-      expect(diag.dimensions?.authenticated).toBe(false);
-      expect(diag.dimensions?.blockerCode).toBe("MISSING_CREDENTIALS");
+      expect(diag.dimensions?.authenticated).toBeNull();
+      expect(diag.dimensions?.blockerCode).toBe("DISABLED_BY_POLICY");
 
       const readiness = await checkKH02ProviderReadiness("TIKTOK_ORGANIC");
-      expect(readiness.diagnosticStatus).toBe("CREDENTIALS_REQUIRED");
-      expect(readiness.status).toBe("CREDENTIALS_REQUIRED");
+      expect(readiness.diagnosticStatus).toBe("DISABLED");
+      expect(readiness.status).toBe("NOT_CONFIGURED");
       expect(readiness.ready).toBe(false);
     });
 
@@ -116,9 +116,17 @@ describe("SWAI KH-02 V12.2.1 — Provider Runtime Activation & Truthful Diagnost
     });
 
     it("never assumes transportConnected or authenticated from key presence alone", async () => {
+      // Permanently disabled TIKTOK_ORGANIC remains configured=false even when HASDATA_API_KEY is set
       process.env.HASDATA_API_KEY = "test_key_unverified";
-      // Without checkLiveTransport, transportConnected & authenticated must be null
-      const diag = await diagnoseKH02Source("TIKTOK_ORGANIC", { checkLiveTransport: false });
+      const organicDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { checkLiveTransport: false });
+      expect(organicDiag.configured).toBe(false);
+      expect(organicDiag.status).toBe("DISABLED");
+      expect(organicDiag.dimensions?.transportConnected).toBeNull();
+      expect(organicDiag.dimensions?.authenticated).toBeNull();
+
+      // Active TIKTOK_ADS with session cookie configured but unprobed keeps transportConnected & authenticated null
+      process.env.TIKTOK_CC_COOKIE = "sessionid=test_unverified_cookie";
+      const diag = await diagnoseKH02Source("TIKTOK_ADS", { checkLiveTransport: false });
       expect(diag.configured).toBe(true);
       expect(diag.dimensions?.transportConnected).toBeNull();
       expect(diag.dimensions?.authenticated).toBeNull();

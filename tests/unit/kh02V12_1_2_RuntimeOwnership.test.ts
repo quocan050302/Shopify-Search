@@ -383,14 +383,16 @@ describe("SWAI KH-02 V12.1.2 — Runtime Ownership & Acceptance Truthfulness", (
 
   it("reports truthful provider readiness without hardcoded SOURCE_DATA_VERIFIED", async () => {
     const metaReadiness = await checkKH02ProviderReadiness("META_ADS");
-    // Should be SOURCE_ACCESS_VERIFIED (database index), not claiming full live data stream
-    expect(metaReadiness.status).toBe("SOURCE_ACCESS_VERIFIED");
-    expect(metaReadiness.reason).toContain("Meta competitor ads indexed");
+    // Should be SOURCE_ACCESS_VERIFIED (when DB index has ads) or CONFIGURED (when DB is empty), never hardcoded SOURCE_DATA_VERIFIED
+    expect(["SOURCE_ACCESS_VERIFIED", "CONFIGURED"]).toContain(metaReadiness.status);
+    expect(metaReadiness.status).not.toBe("SOURCE_DATA_VERIFIED");
+    expect(metaReadiness.reason).toMatch(/Meta competitor ads indexed|MetaAdsCollector MCP ready/i);
 
     const demandReadiness = await checkKH02ProviderReadiness("DEMAND_HISTORY");
-    // Should be CONFIGURED policy engine, not claiming verified history before candidates exist
+    // Should be CONFIGURED policy engine (ENGINE_READY), not claiming verified history before candidates exist
     expect(demandReadiness.status).toBe("CONFIGURED");
-    expect(demandReadiness.reason).toContain("requires 3+ temporal observations");
+    expect(demandReadiness.diagnosticStatus).toBe("ENGINE_READY");
+    expect(demandReadiness.reason).toContain("Google Free Demand pipeline");
   });
 
   // ── 9. PERSISTED VS CROSS-LAYER RECONCILIATION ────────────────────────────

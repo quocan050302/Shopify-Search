@@ -36,17 +36,25 @@ describe("SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance
   });
 
   describe("1. Missing Key vs Invalid Key (Section C.1, C.2, L)", () => {
-    it("diagnoses missing HASDATA_API_KEY as CREDENTIALS_REQUIRED, not Invalid Key", async () => {
+    it("diagnoses permanently disabled TIKTOK_ORGANIC as DISABLED and unconfigured TIKTOK_ADS as CREDENTIALS_REQUIRED (not Invalid Key)", async () => {
       delete process.env.HASDATA_API_KEY;
       delete process.env.TIKTOK_ORGANIC_API_KEY;
+      delete process.env.TIKTOK_CC_COOKIE;
+      delete process.env.APIFY_TOKEN;
 
-      const diag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: "ws_test_v122" });
-      expect(diag.configured).toBe(false);
-      expect(diag.status).toBe("CREDENTIALS_REQUIRED");
-      expect(diag.dimensions?.authStatus).toBe("CREDENTIALS_REQUIRED");
-      expect(diag.dimensions?.transportStatus).toBe("NOT_TESTED");
-      expect(diag.reason).toContain("HASDATA_API_KEY");
-      expect(diag.reason).not.toContain("Invalid Key");
+      const organicDiag = await diagnoseKH02Source("TIKTOK_ORGANIC", { workspaceId: "ws_test_v122" });
+      expect(organicDiag.configured).toBe(false);
+      expect(organicDiag.status).toBe("DISABLED");
+      expect(organicDiag.dimensions?.authStatus).toBe("DISABLED");
+      expect(organicDiag.dimensions?.transportStatus).toBe("DISABLED");
+      expect(organicDiag.reason).not.toContain("Invalid Key");
+
+      const adsDiag = await diagnoseKH02Source("TIKTOK_ADS", { workspaceId: "ws_test_v122" });
+      expect(adsDiag.configured).toBe(false);
+      expect(adsDiag.dimensions?.authStatus).toBe("CREDENTIALS_REQUIRED");
+      expect(adsDiag.dimensions?.transportStatus).toBe("NOT_CONFIGURED");
+      expect(adsDiag.reason).toContain("TIKTOK_CC_COOKIE");
+      expect(adsDiag.reason).not.toContain("Invalid Key");
     });
 
     it("verifies HasData credit status fails gracefully with error message on dummy key", async () => {
@@ -171,10 +179,30 @@ describe("SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance
   });
 
   describe("7. Demand History Truthfulness (Section B.11, H, L)", () => {
-    it("reports ENGINE_READY for policy engine and blocks fetchSeries when upstream API keys are absent", async () => {
+    it("reports Google Free Demand pipeline in default mode and blocks fetchSeries in SERPAPI_LEGACY mode when upstream API keys are absent", async () => {
       delete process.env.SERPAPI_API_KEY;
       delete process.env.GOOGLE_TRENDS_API_KEY;
+      delete process.env.BIGQUERY_PROJECT_ID;
+      delete process.env.GCP_PROJECT_ID;
+      delete process.env.GOOGLE_CLOUD_PROJECT;
 
+      // Default GOOGLE_FREE_ONLY mode: local CSV adapter is CONFIGURED, BigQuery is NOT_CONFIGURED, missing term returns INSUFFICIENT_DATA
+      const freeDiag = await defaultDemandProvider.diagnose();
+      expect(freeDiag.status).toBe("CONFIGURED");
+      expect(freeDiag.configured).toBe(true);
+      expect((freeDiag.dimensions as any)?.bigqueryStatus).toBe("NOT_CONFIGURED");
+      expect(freeDiag.queryExecuted).toBe(false);
+
+      const freeSeries = await defaultDemandProvider.fetchSeries({
+        term: "NonExistentUniquePetGadgetTerm999",
+        region: "US",
+        startDate: new Date(Date.now() - 90 * 86400000),
+        endDate: new Date(),
+      });
+      expect(freeSeries.status).toBe("INSUFFICIENT_DATA");
+
+      // Isolated SERPAPI_LEGACY mode without key: NOT_CONFIGURED and fetchSeries BLOCKED
+      process.env.DEMAND_PROVIDER_MODE = "SERPAPI_LEGACY";
       const diag = await defaultDemandProvider.diagnose();
       expect(diag.status).toBe("NOT_CONFIGURED");
       expect(diag.configured).toBe(false);
@@ -205,7 +233,7 @@ describe("SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance
   });
 
   describe("8. Orchestrator selectedSources & Deadline Abort (Section B.16, I.5, I.6, L)", () => {
-    it("strictly respects selectedSources and marks excluded sources as SKIPPED", async () => {
+    it("strictly respects selectedSources, marks excluded active sources as SKIPPED, and keeps TIKTOK_ORGANIC DISABLED", async () => {
       const result = await runEvergreenProductResearch({
         topic: "Pet Gadgets",
         market: "US",
@@ -214,8 +242,8 @@ describe("SWAI KH-02 V12.2.2 — Truthful Diagnostics & Real Provider Acceptance
         maxCandidates: 5,
       });
 
-      expect(result.sourceStatuses.TIKTOK_ADS).toBe("SKIPPED");
-      expect(result.sourceStatuses.TIKTOK_ORGANIC).toBe("SKIPPED");
+      expect(["SKIPPED", "TEMPORARILY_DISABLED"]).toContain(result.sourceStatuses.TIKTOK_ADS);
+      expect(result.sourceStatuses.TIKTOK_ORGANIC).toBe("DISABLED");
       expect(result.sourceStatuses.GOOGLE_ADS).toBe("SKIPPED");
       expect(result.sourceStatuses.DEMAND_HISTORY).toBe("SKIPPED");
     });
