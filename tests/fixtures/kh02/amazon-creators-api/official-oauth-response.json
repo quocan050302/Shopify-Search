@@ -1,0 +1,14 @@
+{
+  "_fixtureMeta": {
+    "origin": "OFFICIAL_DOCUMENTATION_EXAMPLE",
+    "provenance": "TEST_FIXTURE",
+    "endpoint": "https://api.amazon.com/auth/o2/token",
+    "credentialVersion": "3.1",
+    "description": "Official Amazon Associates Creators API OAuth 2.0 client_credentials token response example (lower-camel / snake_case OAuth contract)"
+  },
+  "access_token": "Atc|MQEBIH8xOfficialCreatorsApiExampleTokenV1243503",
+  "token_type": "bearer",
+  "expires_in": 3600,
+  "scope": "creatorsapi::default"
+}
+

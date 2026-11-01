@@ -265,7 +265,7 @@ export default function ProductsPage() {
   const frontendReleaseVersion =
     process.env.NEXT_PUBLIC_SWAI_RELEASE_VERSION ||
     runtimeIdentity?.releaseVersion ||
-    "12.4.3.5.0.2";
+    "12.4.3.5.0.3";
 
   const previewClientAmazonAsin = useCallback((rawUrl: string) => {
     const trimmed = (rawUrl || "").trim();

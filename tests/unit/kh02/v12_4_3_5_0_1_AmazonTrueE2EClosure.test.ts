@@ -1789,8 +1789,8 @@ describe("KH-02 V12.4.3.5.0.1 — Amazon US Real E2E Integration & 40 Negative C
   });
 
   it("N40: Release version is 12.4.3.5.0.1 and independent validator catches all 32 physical-file negative control mutations (0 escapes)", () => {
-    expect(["12.4.3.5.0.1", "12.4.3.5.0.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
-    expect(["12.4.3.5.0.1", "12.4.3.5.0.2"]).toContain(getRuntimeVersionInfo().appVersion);
+    expect(["12.4.3.5.0.1", "12.4.3.5.0.2", "12.4.3.5.0.3"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    expect(["12.4.3.5.0.1", "12.4.3.5.0.2", "12.4.3.5.0.3"]).toContain(getRuntimeVersionInfo().appVersion);
 
     const tmpFixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_v1243501_n40_"));
     try {

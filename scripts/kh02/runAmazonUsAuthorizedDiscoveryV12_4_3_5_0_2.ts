@@ -507,42 +507,40 @@ async function main() {
       if (kw.includes("UAHPET")) {
         return new Response(
           JSON.stringify({
-            SearchResult: {
-              TotalResultCount: 2,
-              Items: [
+            searchResult: {
+              totalResultCount: 2,
+              items: [
                 {
-                  ASIN: "B08N5WRWNW",
-                  ParentASIN: "B08N5WRW00",
-                  DetailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
-                  ItemInfo: {
-                    Title: {
-                      DisplayValue:
+                  asin: "B08N5WRWNW",
+                  parentASIN: "B08N5WRW00",
+                  detailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
+                  itemInfo: {
+                    title: {
+                      displayValue:
                         "UAHPET Wireless Cat Water Fountain Stainless Steel",
                     },
-                    ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
-                    ManufactureInfo: { Model: { DisplayValue: "UAH-WF-01" } },
+                    byLineInfo: { brand: { displayValue: "UAHPET" } },
+                    manufactureInfo: { model: { displayValue: "UAH-WF-01" } },
                   },
-                  Offers: {
-                    V2: {
-                      Listings: [
-                        {
-                          Price: { Amount: 49.99, Currency: "USD" },
-                          Availability: { Message: "In Stock" },
-                          MerchantInfo: { Name: "UAHPET Official" },
-                        },
-                      ],
-                    },
+                  offersV2: {
+                    listings: [
+                      {
+                        price: { amount: 49.99, currency: "USD" },
+                        availability: { message: "In Stock" },
+                        merchantInfo: { name: "UAHPET Official" },
+                      },
+                    ],
                   },
                 },
                 {
-                  ASIN: "B08N5WRACC",
-                  DetailPageURL: "https://www.amazon.com/dp/B08N5WRACC",
-                  ItemInfo: {
-                    Title: {
-                      DisplayValue:
+                  asin: "B08N5WRACC",
+                  detailPageURL: "https://www.amazon.com/dp/B08N5WRACC",
+                  itemInfo: {
+                    title: {
+                      displayValue:
                         "UAHPET Replacement Filters 6 Pack for Cat Water Fountain",
                     },
-                    ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
+                    byLineInfo: { brand: { displayValue: "UAHPET" } },
                   },
                 },
               ],
@@ -552,7 +550,7 @@ async function main() {
         );
       }
       return new Response(
-        JSON.stringify({ SearchResult: { TotalResultCount: 0, Items: [] } }),
+        JSON.stringify({ searchResult: { totalResultCount: 0, items: [] } }),
         { status: 200, headers: { "x-amzn-requestid": "amz-mock-req-empty-2" } }
       );
     },

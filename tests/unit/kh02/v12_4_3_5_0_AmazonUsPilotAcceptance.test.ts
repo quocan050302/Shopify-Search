@@ -1037,7 +1037,7 @@ describe("KH-02 V12.4.3.5.0 — Amazon US Product Evidence Pilot Acceptance Suit
   });
 
   it("A29: Release version is 12.4.3.5.0+ and validator checks exact 40-hex CODE_SHA", () => {
-    expect(["12.4.3.5.0", "12.4.3.5.0.1", "12.4.3.5.0.2"]).toContain(SWAI_KH02_RELEASE_VERSION);
+    expect(["12.4.3.5.0", "12.4.3.5.0.1", "12.4.3.5.0.2", "12.4.3.5.0.3"]).toContain(SWAI_KH02_RELEASE_VERSION);
     expect(MANDATORY_AMAZON_PILOT_ARTIFACTS).toHaveLength(24);
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02-v124350-a29-"));

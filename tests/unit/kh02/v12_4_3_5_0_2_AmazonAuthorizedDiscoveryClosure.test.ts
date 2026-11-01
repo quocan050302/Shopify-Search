@@ -280,34 +280,32 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
 
       return new Response(
         JSON.stringify({
-          SearchResult: {
-            TotalResultCount: 1,
-            Items: [
+          searchResult: {
+            totalResultCount: 1,
+            items: [
               {
-                ASIN: "B08N5WRWNW",
-                ParentASIN: "B08N5WRW00",
-                DetailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
-                ItemInfo: {
-                  Title: {
-                    DisplayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
+                asin: "B08N5WRWNW",
+                parentASIN: "B08N5WRW00",
+                detailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
+                itemInfo: {
+                  title: {
+                    displayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
                   },
-                  ByLineInfo: {
-                    Brand: { DisplayValue: "UAHPET" },
+                  byLineInfo: {
+                    brand: { displayValue: "UAHPET" },
                   },
-                  ManufactureInfo: {
-                    Model: { DisplayValue: "UAH-WF-01" },
+                  manufactureInfo: {
+                    model: { displayValue: "UAH-WF-01" },
                   },
                 },
-                Offers: {
-                  V2: {
-                    Listings: [
-                      {
-                        Price: { Amount: 49.99, Currency: "USD" },
-                        Availability: { Message: "In Stock" },
-                        MerchantInfo: { Name: "UAHPET Official" },
-                      },
-                    ],
-                  },
+                offersV2: {
+                  listings: [
+                    {
+                      price: { amount: 49.99, currency: "USD" },
+                      availability: { message: "In Stock" },
+                      merchantInfo: { name: "UAHPET Official" },
+                    },
+                  ],
                 },
               },
             ],
@@ -374,12 +372,12 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
       }
       return new Response(
         JSON.stringify({
-          ItemsResult: {
-            Items: [
+          itemResults: {
+            items: [
               {
-                ASIN: "B08N5WRWNW",
-                ItemInfo: {
-                  Title: { DisplayValue: "UAHPET Wireless Cat Water Fountain" },
+                asin: "B08N5WRWNW",
+                itemInfo: {
+                  title: { displayValue: "UAHPET Wireless Cat Water Fountain" },
                 },
               },
             ],
@@ -475,7 +473,7 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
         }
         return new Response(
           JSON.stringify({
-            SearchResult: { TotalResultCount: 0, Items: [] },
+            searchResult: { totalResultCount: 0, items: [] },
           }),
           { status: 200 }
         );
@@ -492,16 +490,16 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
 
   it("D13: normalizeAmazonSearchItem preserves null price/currency when absent and includes image only when license permits", () => {
     const rawItem = {
-      ASIN: "B08N5WRWNW",
-      ParentASIN: "B08N5WRW00",
-      DetailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
-      ItemInfo: {
-        Title: { DisplayValue: "UAHPET Wireless Cat Water Fountain" },
-        ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
+      asin: "B08N5WRWNW",
+      parentASIN: "B08N5WRW00",
+      detailPageURL: "https://www.amazon.com/dp/B08N5WRWNW",
+      itemInfo: {
+        title: { displayValue: "UAHPET Wireless Cat Water Fountain" },
+        byLineInfo: { brand: { displayValue: "UAHPET" } },
       },
-      Images: {
-        Primary: {
-          Medium: { URL: "https://m.media-amazon.com/images/I/test.jpg" },
+      images: {
+        primary: {
+          medium: { url: "https://m.media-amazon.com/images/I/test.jpg" },
         },
       },
     };
@@ -549,10 +547,10 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
   it("D14: normalizeAmazonSearchItem rejects non-US detail URLs, non-USD currencies, and invalid ASINs", () => {
     const badCurrency = normalizeAmazonSearchItem(
       {
-        ASIN: "B08N5WRWNW",
-        ItemInfo: { Title: { DisplayValue: "UAHPET Fountain" } },
-        Offers: {
-          V2: { Listings: [{ Price: { Amount: 39.99, Currency: "GBP" } }] },
+        asin: "B08N5WRWNW",
+        itemInfo: { title: { displayValue: "UAHPET Fountain" } },
+        offersV2: {
+          listings: [{ price: { amount: 39.99, currency: "GBP" } }],
         },
       },
       {
@@ -582,12 +580,12 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
 
     const accessoryNorm = normalizeAmazonSearchItem(
       {
-        ASIN: "B08N5WRACC",
-        ItemInfo: {
-          Title: {
-            DisplayValue: "UAHPET Replacement Filters 6 Pack for Cat Water Fountain",
+        asin: "B08N5WRACC",
+        itemInfo: {
+          title: {
+            displayValue: "UAHPET Replacement Filters 6 Pack for Cat Water Fountain",
           },
-          ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
+          byLineInfo: { brand: { displayValue: "UAHPET" } },
         },
       },
       {
@@ -604,16 +602,16 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
 
     const exactNorm = normalizeAmazonSearchItem(
       {
-        ASIN: "B08N5WRWNW",
-        ItemInfo: {
-          Title: {
-            DisplayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
+        asin: "B08N5WRWNW",
+        itemInfo: {
+          title: {
+            displayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
           },
-          ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
-          ManufactureInfo: { Model: { DisplayValue: "UAH-WF-01" } },
+          byLineInfo: { brand: { displayValue: "UAHPET" } },
+          manufactureInfo: { model: { displayValue: "UAH-WF-01" } },
         },
-        Offers: {
-          V2: { Listings: [{ Price: { Amount: 49.99, Currency: "USD" } }] },
+        offersV2: {
+          listings: [{ price: { amount: 49.99, currency: "USD" } }],
         },
       },
       {
@@ -693,16 +691,16 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
           searchCalls++;
           return new Response(
             JSON.stringify({
-              SearchResult: {
-                TotalResultCount: 1,
-                Items: [
+              searchResult: {
+                totalResultCount: 1,
+                items: [
                   {
-                    ASIN: `B08N5WRW0${searchCalls}`,
-                    ItemInfo: {
-                      Title: {
-                        DisplayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
+                    asin: `B08N5WRW0${searchCalls}`,
+                    itemInfo: {
+                      title: {
+                        displayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
                       },
-                      ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
+                      byLineInfo: { brand: { displayValue: "UAHPET" } },
                     },
                   },
                 ],
@@ -714,21 +712,19 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
         getItemsCalls++;
         return new Response(
           JSON.stringify({
-            ItemsResult: {
-              Items: [
+            itemResults: {
+              items: [
                 {
-                  ASIN: "B08N5WRW01",
-                  ItemInfo: {
-                    Title: {
-                      DisplayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
+                  asin: "B08N5WRW01",
+                  itemInfo: {
+                    title: {
+                      displayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
                     },
-                    ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
-                    ManufactureInfo: { Model: { DisplayValue: "UAH-WF-01" } },
+                    byLineInfo: { brand: { displayValue: "UAHPET" } },
+                    manufactureInfo: { model: { displayValue: "UAH-WF-01" } },
                   },
-                  Offers: {
-                    V2: {
-                      Listings: [{ Price: { Amount: 49.99, Currency: "USD" } }],
-                    },
+                  offersV2: {
+                    listings: [{ price: { amount: 49.99, currency: "USD" } }],
                   },
                 },
               ],
@@ -794,22 +790,20 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
         }
         return new Response(
           JSON.stringify({
-            SearchResult: {
-              TotalResultCount: 1,
-              Items: [
+            searchResult: {
+              totalResultCount: 1,
+              items: [
                 {
-                  ASIN: "B08N5WRWNW",
-                  ItemInfo: {
-                    Title: {
-                      DisplayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
+                  asin: "B08N5WRWNW",
+                  itemInfo: {
+                    title: {
+                      displayValue: "UAHPET Wireless Cat Water Fountain Stainless Steel",
                     },
-                    ByLineInfo: { Brand: { DisplayValue: "UAHPET" } },
-                    ManufactureInfo: { Model: { DisplayValue: "UAH-WF-01" } },
+                    byLineInfo: { brand: { displayValue: "UAHPET" } },
+                    manufactureInfo: { model: { displayValue: "UAH-WF-01" } },
                   },
-                  Offers: {
-                    V2: {
-                      Listings: [{ Price: { Amount: 49.99, Currency: "USD" } }],
-                    },
+                  offersV2: {
+                    listings: [{ price: { amount: 49.99, currency: "USD" } }],
                   },
                 },
               ],
@@ -1055,8 +1049,8 @@ describe("KH-02 V12.4.3.5.0.2 — Authorized Amazon US Product Discovery & Anti-
     expect(mismatchCutoff.notComparableReason).toContain("Cutoff mismatch");
   });
 
-  it("D24: Release version is 12.4.3.5.0.2 and canonical valid fixture passes all 13 independent validator checks", () => {
-    expect(SWAI_KH02_RELEASE_VERSION).toBe("12.4.3.5.0.2");
+  it("D24: Release version is 12.4.3.5.0.2+ and canonical valid fixture passes all 13 independent validator checks", () => {
+    expect(["12.4.3.5.0.2", "12.4.3.5.0.3"]).toContain(SWAI_KH02_RELEASE_VERSION);
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kh02_v1243502_valid_"));
     try {
       const sha = "2222222222222222222222222222222222222222";

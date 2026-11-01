@@ -76,10 +76,10 @@ function makeBaseCandidate(
 
 describe("SWAI KH-02 V12.4.3.2 — Live Discovery, Forensic Demand Audit, Audience Relevance & UX ViewModel", () => {
   describe("1. Release & Runtime Identity", () => {
-    it("reports release version 12.4.3.2..12.4.3.5.0.2", () => {
-      expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.(2|2\.1|3|3\.1|3\.2|4\.1|4\.2|4\.3|4\.4|4\.5|4\.6|4\.7|4\.8|4\.9|5\.0|5\.0\.1|5\.0\.2)$/);
+    it("reports release version 12.4.3.2..12.4.3.5.0.3", () => {
+      expect(SWAI_KH02_RELEASE_VERSION).toMatch(/^12\.4\.3\.(2|2\.1|3|3\.1|3\.2|4\.1|4\.2|4\.3|4\.4|4\.5|4\.6|4\.7|4\.8|4\.9|5\.0|5\.0\.1|5\.0\.2|5\.0\.3)$/);
       const runtime = evaluateKH02RuntimeIdentity();
-      expect(runtime.releaseVersion).toMatch(/^12\.4\.3\.(2|2\.1|3|3\.1|3\.2|4\.1|4\.2|4\.3|4\.4|4\.5|4\.6|4\.7|4\.8|4\.9|5\.0|5\.0\.1|5\.0\.2)$/);
+      expect(runtime.releaseVersion).toMatch(/^12\.4\.3\.(2|2\.1|3|3\.1|3\.2|4\.1|4\.2|4\.3|4\.4|4\.5|4\.6|4\.7|4\.8|4\.9|5\.0|5\.0\.1|5\.0\.2|5\.0\.3)$/);
     });
   });
 

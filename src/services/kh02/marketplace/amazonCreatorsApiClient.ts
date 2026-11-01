@@ -1,19 +1,28 @@
 /**
- * SWAI KH-02 V12.4.3.5.0.2 — Official Amazon Associates Creators API Client (US Marketplace)
+ * SWAI KH-02 V12.4.3.5.0.3 — Official Amazon Associates Creators API Client (US Marketplace)
  *
- * Implements Section 5B:
+ * Implements Official Amazon Creators API v1 Contracts:
  * - resolveCreatorsApiEligibility(env, registrationStatus): AmazonAccessDecision
  * - createCreatorsApiClient(config): CreatorsApiClient
+ * - buildCreatorsSearchItemsPayload(intent, cfg)
+ * - buildCreatorsGetItemsPayload(asins, cfg)
+ * - parseCreatorsSearchItemsEnvelope(parsedJson, options)
+ * - parseCreatorsGetItemsEnvelope(parsedJson, requestedAsins, options)
+ * - normalizeCreatorsApiItemShape(rawItem, options)
  * - searchItemsByCandidateIntent(intent, context): Promise<SearchItemsResponse>
  * - getItemsByAsins(asins, context): Promise<GetItemsResponse>
  * - classifyCreatorsApiFailure(error, response): ClassifiedCreatorsApiStatus
  *
  * Hard Compliance Boundaries:
  * - Uses ONLY official Amazon Associates Creators API endpoints:
- *   - OAuth 2.0 token endpoint (NA): https://api.amazon.com/auth/o2/token (grant_type=client_credentials)
+ *   - OAuth 2.0 token endpoint (3.1 NA default): https://api.amazon.com/auth/o2/token
+ *   - OAuth 2.0 token endpoint (3.2 EU): https://api.amazon.co.uk/auth/o2/token
+ *   - OAuth 2.0 token endpoint (3.3 FE): https://api.amazon.co.jp/auth/o2/token
  *   - SearchItems endpoint: https://creatorsapi.amazon/catalog/v1/searchItems
  *   - GetItems endpoint: https://creatorsapi.amazon/catalog/v1/getItems
- * - Marketplace header: x-marketplace: www.amazon.com
+ * - OAuth 2.0 request uses Content-Type: application/json with grant_type=client_credentials
+ *   and scope="creatorsapi::default".
+ * - Marketplace header & payload field: www.amazon.com
  * - Never writes credentials or bearer tokens to logs, telemetry, or returned objects.
  * - Never treats the mere presence of env vars as verified authentication or live success.
  */
@@ -28,33 +37,49 @@ import { AmazonProviderBudget } from "./amazonUsBudget";
 
 export const OFFICIAL_CREATORS_API_DOCS_VERIFIED = [
   "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction",
+  "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/get-started/using-curl",
   "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/operations/search-items",
+  "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/operations/get-items",
   "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference",
   "https://affiliate-program.amazon.com/creatorsapi/docs/en-us/get-started/using-sdk",
   "https://affiliate-program.amazon.com/help/operating/policies",
 ] as const;
 
-export const CREATORS_API_OAUTH_TOKEN_ENDPOINT = "https://api.amazon.com/auth/o2/token";
+export const CREATORS_API_OAUTH_TOKEN_ENDPOINT_NA = "https://api.amazon.com/auth/o2/token";
+export const CREATORS_API_OAUTH_TOKEN_ENDPOINT_EU = "https://api.amazon.co.uk/auth/o2/token";
+export const CREATORS_API_OAUTH_TOKEN_ENDPOINT_FE = "https://api.amazon.co.jp/auth/o2/token";
+export const CREATORS_API_OAUTH_TOKEN_ENDPOINT = CREATORS_API_OAUTH_TOKEN_ENDPOINT_NA;
+
+export const CREATORS_API_OAUTH_SCOPE = "creatorsapi::default";
+export const CREATORS_API_DEFAULT_CREDENTIAL_VERSION = "3.1";
+
 export const CREATORS_API_SEARCH_ITEMS_ENDPOINT =
   "https://creatorsapi.amazon/catalog/v1/searchItems";
 export const CREATORS_API_GET_ITEMS_ENDPOINT =
   "https://creatorsapi.amazon/catalog/v1/getItems";
 export const CREATORS_API_US_MARKETPLACE = "www.amazon.com";
 
+/**
+ * Official lower-camel Amazon Creators API v1 resource names for SearchItems and GetItems.
+ */
 export const CREATORS_API_DEFAULT_RESOURCES = [
-  "ItemInfo.Title",
-  "ItemInfo.ByLineInfo",
-  "ItemInfo.Classifications",
-  "ItemInfo.ExternalIds",
-  "ItemInfo.ManufactureInfo",
-  "ItemInfo.ProductInfo",
-  "ItemInfo.Features",
-  "Images.Primary.Medium",
-  "Offers.V2.Listings.Price",
-  "Offers.V2.Listings.Availability",
-  "Offers.V2.Listings.MerchantInfo",
-  "ParentASIN",
+  "images.primary.medium",
+  "itemInfo.title",
+  "itemInfo.byLineInfo",
+  "itemInfo.classifications",
+  "itemInfo.externalIds",
+  "itemInfo.features",
+  "itemInfo.manufactureInfo",
+  "itemInfo.productInfo",
+  "offersV2.listings.availability",
+  "offersV2.listings.condition",
+  "offersV2.listings.isBuyBoxWinner",
+  "offersV2.listings.merchantInfo",
+  "offersV2.listings.price",
+  "parentASIN",
 ] as const;
+
+export type CreatorsApiCredentialVersion = "3.1" | "3.2" | "3.3";
 
 export interface CreatorsApiRegistrationStatus {
   accountApproved?: boolean;
@@ -73,6 +98,8 @@ export interface AmazonAccessDecision {
   hasCredentialSecret: boolean;
   hasPartnerTag: boolean;
   partnerTagMasked: string | null;
+  credentialVersion: CreatorsApiCredentialVersion;
+  tokenEndpoint: string;
   registeredMarketplace: string;
   transportVerified: boolean;
   authenticated: boolean;
@@ -95,15 +122,77 @@ export interface CreatorsApiClientConfig {
   credentialId: string;
   credentialSecret: string;
   partnerTag: string;
+  credentialVersion?: CreatorsApiCredentialVersion | string;
   marketplace?: string;
   tokenEndpoint?: string;
   searchItemsEndpoint?: string;
   getItemsEndpoint?: string;
   timeoutMs?: number;
   fetchFn?: typeof fetch;
+  allowIsolatedTestHost?: boolean;
+  isIsolatedTestTransport?: boolean;
+  allowLegacyPaApiShape?: boolean;
 }
 
+/**
+ * Official lower-camel Amazon Creators API item representation (with optional legacy PA-API fields
+ * kept on the TypeScript interface only for explicit legacy compatibility adapter tests).
+ */
 export interface RawCreatorsApiItem {
+  asin?: string;
+  parentASIN?: string;
+  detailPageURL?: string;
+  itemInfo?: {
+    title?: { displayValue?: string; label?: string; locale?: string };
+    byLineInfo?: {
+      brand?: { displayValue?: string; label?: string; locale?: string };
+      manufacturer?: { displayValue?: string; label?: string; locale?: string };
+    };
+    manufactureInfo?: {
+      model?: { displayValue?: string; label?: string; locale?: string };
+      itemPartNumber?: { displayValue?: string; label?: string; locale?: string };
+    };
+    externalIds?: {
+      upcs?: { displayValues?: string[]; label?: string; locale?: string };
+      eans?: { displayValues?: string[]; label?: string; locale?: string };
+      isbns?: { displayValues?: string[]; label?: string; locale?: string };
+    };
+    classifications?: {
+      binding?: { displayValue?: string };
+      productGroup?: { displayValue?: string };
+    };
+    features?: { displayValues?: string[]; label?: string; locale?: string };
+  };
+  images?: {
+    primary?: {
+      medium?: { url?: string; width?: number; height?: number };
+    };
+  };
+  offersV2?: {
+    listings?: Array<{
+      id?: string;
+      isBuyBoxWinner?: boolean;
+      price?: {
+        amount?: number;
+        currency?: string;
+        displayAmount?: string;
+      };
+      availability?: {
+        message?: string;
+        type?: string;
+        maxOrderQuantity?: number;
+        minOrderQuantity?: number;
+      };
+      merchantInfo?: {
+        id?: string;
+        name?: string;
+      };
+      condition?: {
+        value?: string;
+      };
+    }>;
+  };
+  // Legacy PA-API uppercase properties (ignored unless allowLegacyPaApiShape === true)
   ASIN?: string;
   ParentASIN?: string;
   DetailPageURL?: string;
@@ -165,6 +254,12 @@ export interface RawCreatorsApiItem {
   };
 }
 
+export interface CreatorsApiPartialError {
+  code: string;
+  message: string;
+  itemId?: string | null;
+}
+
 export interface CreatorsApiSearchIntentInput {
   candidateId: string;
   normalizedKeywords: string;
@@ -199,6 +294,7 @@ export interface SearchItemsResponse {
   marketplace: string;
   totalResultCount: number | null;
   items: RawCreatorsApiItem[];
+  partialErrors?: CreatorsApiPartialError[];
   errorCode: string | null;
   errorMessage: string | null;
   retryable: boolean;
@@ -220,6 +316,9 @@ export interface GetItemsResponse {
   requestedAsins: string[];
   marketplace: string;
   items: RawCreatorsApiItem[];
+  itemsByAsin?: Record<string, RawCreatorsApiItem>;
+  missingAsins?: string[];
+  partialErrors?: CreatorsApiPartialError[];
   errorCode: string | null;
   errorMessage: string | null;
   retryable: boolean;
@@ -233,9 +332,22 @@ export interface ClassifiedCreatorsApiStatus {
   sanitizedMessage: string;
 }
 
+export interface CreatorsApiTokenTelemetrySummary {
+  tokenRequestsAttempted: number;
+  tokenRequestsSucceeded: number;
+  tokenCacheHits: number;
+  concurrentDeduplicationsCount: number;
+  tokenRefreshesOn401Count: number;
+  lastTokenHttpStatus: number | null;
+  lastTokenErrorCode: string | null;
+}
+
 export interface CreatorsApiClient {
   readonly marketplace: string;
   readonly partnerTagMasked: string;
+  readonly credentialVersion?: CreatorsApiCredentialVersion;
+  readonly isIsolatedTestTransport?: boolean;
+  readonly transportProvenance?: "OFFICIAL_UPSTREAM" | "TEST_FIXTURE";
   searchItemsByCandidateIntent(
     intent: CreatorsApiSearchIntentInput,
     context: CreatorsApiRequestContext
@@ -244,6 +356,7 @@ export interface CreatorsApiClient {
     asins: string[],
     context: CreatorsApiRequestContext
   ): Promise<GetItemsResponse>;
+  getTokenTelemetrySummary?(): CreatorsApiTokenTelemetrySummary;
 }
 
 function maskPartnerTag(tag: string | null | undefined): string | null {
@@ -264,9 +377,786 @@ export function redactSecretsFromMessage(
       msg = msg.replace(new RegExp(escaped, "g"), "[REDACTED_SECRET]");
     }
   }
-  msg = msg.replace(/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [REDACTED_TOKEN]");
-  msg = msg.replace(/client_secret=[^&\s]+/gi, "client_secret=[REDACTED_SECRET]");
+  msg = msg.replace(/Bearer\s+[A-Za-z0-9._~+/=|-]+/gi, "Bearer [REDACTED_TOKEN]");
+  msg = msg.replace(/client_secret=[^&\s"]+/gi, "client_secret=[REDACTED_SECRET]");
+  msg = msg.replace(/"client_secret"\s*:\s*"[^"]*"/gi, '"client_secret":"[REDACTED_SECRET]"');
+  msg = msg.replace(/"access_token"\s*:\s*"[^"]*"/gi, '"access_token":"[REDACTED_TOKEN]"');
   return msg.slice(0, 400);
+}
+
+export function resolveCreatorsApiCredentialVersion(
+  rawVersion?: string | null
+): CreatorsApiCredentialVersion {
+  const clean = String(rawVersion || CREATORS_API_DEFAULT_CREDENTIAL_VERSION).trim();
+  if (clean === "3.2") return "3.2";
+  if (clean === "3.3") return "3.3";
+  return "3.1";
+}
+
+export function resolveCreatorsApiTokenEndpointByVersion(
+  version: CreatorsApiCredentialVersion = "3.1"
+): string {
+  switch (version) {
+    case "3.2":
+      return CREATORS_API_OAUTH_TOKEN_ENDPOINT_EU;
+    case "3.3":
+      return CREATORS_API_OAUTH_TOKEN_ENDPOINT_FE;
+    case "3.1":
+    default:
+      return CREATORS_API_OAUTH_TOKEN_ENDPOINT_NA;
+  }
+}
+
+const OFFICIAL_ALLOWED_AMAZON_API_HOSTS = new Set([
+  "api.amazon.com",
+  "api.amazon.co.uk",
+  "api.amazon.co.jp",
+  "creatorsapi.amazon",
+]);
+
+export function isLocalhostEndpointUrl(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
+export function validateCreatorsApiEndpointUrl(
+  rawUrl: string,
+  options?: { allowIsolatedTestHost?: boolean }
+): { valid: boolean; isLocalhost: boolean; reason: string | null } {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return {
+      valid: false,
+      isLocalhost: false,
+      reason: `Invalid endpoint URL '${rawUrl}'.`,
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const isLocalhost = host === "127.0.0.1" || host === "localhost";
+
+  if (isLocalhost) {
+    if (
+      options?.allowIsolatedTestHost &&
+      (parsed.protocol === "http:" || parsed.protocol === "https:")
+    ) {
+      return { valid: true, isLocalhost: true, reason: null };
+    }
+    return {
+      valid: false,
+      isLocalhost: true,
+      reason:
+        "Localhost Creators API endpoint requires explicit allowIsolatedTestHost=true in isolated test mode.",
+    };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return {
+      valid: false,
+      isLocalhost: false,
+      reason: `CreatorsApiClient endpoints must use HTTPS (received '${parsed.protocol}').`,
+    };
+  }
+
+  if (!OFFICIAL_ALLOWED_AMAZON_API_HOSTS.has(host)) {
+    return {
+      valid: false,
+      isLocalhost: false,
+      reason: `Untrusted CreatorsApiClient endpoint host '${host}'. Only official Amazon API hosts are permitted.`,
+    };
+  }
+
+  return { valid: true, isLocalhost: false, reason: null };
+}
+
+/**
+ * Pure request payload builder for official Amazon Creators API v1 SearchItems.
+ */
+export function buildCreatorsSearchItemsPayload(
+  intent: CreatorsApiSearchIntentInput,
+  cfg: {
+    partnerTag: string;
+    marketplace?: string;
+    resources?: readonly string[];
+  }
+): {
+  keywords: string;
+  marketplace: string;
+  partnerTag: string;
+  partnerType: "Associates";
+  searchIndex: string;
+  itemCount: number;
+  resources: string[];
+  currencyOfPreference: "USD";
+  languagesOfPreference: ["en_US"];
+  brand?: string;
+} {
+  const rawWords = String(intent.normalizedKeywords || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 7);
+  let cleanKeywords = rawWords.join(" ");
+  if (cleanKeywords.length > 60) {
+    cleanKeywords = cleanKeywords.slice(0, 60).trim();
+  }
+  const itemCount = Math.min(10, Math.max(1, Math.floor(intent.itemCount ?? 5)));
+  const marketplace = String(cfg.marketplace || CREATORS_API_US_MARKETPLACE)
+    .trim()
+    .toLowerCase();
+  const partnerTag = String(cfg.partnerTag || "").trim();
+  const cleanBrand =
+    typeof intent.brand === "string" && intent.brand.trim().length > 0
+      ? intent.brand.trim()
+      : undefined;
+
+  return {
+    keywords: cleanKeywords,
+    marketplace,
+    partnerTag,
+    partnerType: "Associates",
+    searchIndex: intent.searchIndex || "All",
+    itemCount,
+    resources: [...(cfg.resources || CREATORS_API_DEFAULT_RESOURCES)],
+    currencyOfPreference: "USD",
+    languagesOfPreference: ["en_US"],
+    ...(cleanBrand ? { brand: cleanBrand } : {}),
+  };
+}
+
+/**
+ * Pure request payload builder for official Amazon Creators API v1 GetItems.
+ */
+export function buildCreatorsGetItemsPayload(
+  asins: string[],
+  cfg: {
+    partnerTag: string;
+    marketplace?: string;
+    resources?: readonly string[];
+  }
+): {
+  itemIds: string[];
+  itemIdType: "ASIN";
+  marketplace: string;
+  partnerTag: string;
+  partnerType: "Associates";
+  resources: string[];
+  currencyOfPreference: "USD";
+  languagesOfPreference: ["en_US"];
+} {
+  const validAsins = Array.from(
+    new Set(
+      (asins || [])
+        .map((a) => String(a || "").trim().toUpperCase())
+        .filter((a) => isValidStrictAmazonAsin(a))
+    )
+  ).slice(0, 10);
+  const marketplace = String(cfg.marketplace || CREATORS_API_US_MARKETPLACE)
+    .trim()
+    .toLowerCase();
+  const partnerTag = String(cfg.partnerTag || "").trim();
+
+  return {
+    itemIds: validAsins,
+    itemIdType: "ASIN",
+    marketplace,
+    partnerTag,
+    partnerType: "Associates",
+    resources: [...(cfg.resources || CREATORS_API_DEFAULT_RESOURCES)],
+    currencyOfPreference: "USD",
+    languagesOfPreference: ["en_US"],
+  };
+}
+
+function extractPartialErrorsFromEnvelope(parsed: any): CreatorsApiPartialError[] {
+  const rawErrors = Array.isArray(parsed?.errors)
+    ? parsed.errors
+    : Array.isArray(parsed?.Errors)
+    ? parsed.Errors
+    : [];
+  const out: CreatorsApiPartialError[] = [];
+  for (const e of rawErrors) {
+    if (!e || typeof e !== "object") continue;
+    const code = String(e.code || e.Code || "UNKNOWN_ERROR").trim();
+    const message = String(e.message || e.Message || "").trim();
+    const itemIdMatch = message.match(/\b([A-Z0-9]{10})\b/);
+    out.push({
+      code,
+      message,
+      itemId: itemIdMatch ? itemIdMatch[1] : null,
+    });
+  }
+  return out;
+}
+
+export interface ParsedSearchItemsEnvelope {
+  valid: boolean;
+  status: MarketplaceEvidenceStatus;
+  items: RawCreatorsApiItem[];
+  totalResultCount: number | null;
+  partialErrors: CreatorsApiPartialError[];
+  errorCode: string | null;
+  errorMessage: string | null;
+  schemaOrigin:
+    | "OFFICIAL_LOWER_CAMEL"
+    | "OFFICIAL_ERROR_ENVELOPE"
+    | "LEGACY_PAAPI_COMPAT"
+    | "INVALID";
+}
+
+/**
+ * Pure parser for official Amazon Creators API v1 SearchItems response envelope.
+ * Rejects wrong top-level schemas (including uppercase PA-API `SearchResult.Items` unless
+ * `allowLegacyPaApiShape: true` is explicitly passed) with `SCHEMA_MISMATCH` rather than
+ * silently returning `QUERY_SUCCEEDED_EMPTY`.
+ */
+export function parseCreatorsSearchItemsEnvelope(
+  parsedJson: unknown,
+  options?: { allowLegacyPaApiShape?: boolean }
+): ParsedSearchItemsEnvelope {
+  if (!parsedJson || typeof parsedJson !== "object" || Array.isArray(parsedJson)) {
+    return {
+      valid: false,
+      status: "PROVIDER_ERROR",
+      items: [],
+      totalResultCount: null,
+      partialErrors: [],
+      errorCode: "PARSE_FAILED",
+      errorMessage: "PARSE_FAILED: SearchItems HTTP 200 body is not a JSON object.",
+      schemaOrigin: "INVALID",
+    };
+  }
+
+  const obj = parsedJson as Record<string, any>;
+  const partialErrors = extractPartialErrorsFromEnvelope(obj);
+
+  if (obj.searchResult && typeof obj.searchResult === "object") {
+    if (!Array.isArray(obj.searchResult.items)) {
+      return {
+        valid: false,
+        status: "PROVIDER_ERROR",
+        items: [],
+        totalResultCount: null,
+        partialErrors,
+        errorCode: "SCHEMA_MISMATCH",
+        errorMessage:
+          "SCHEMA_MISMATCH: searchResult object is missing lower-camel 'items' array.",
+        schemaOrigin: "INVALID",
+      };
+    }
+
+    const items: RawCreatorsApiItem[] = obj.searchResult.items;
+    const totalResultCount =
+      typeof obj.searchResult.totalResultCount === "number" &&
+      Number.isFinite(obj.searchResult.totalResultCount)
+        ? obj.searchResult.totalResultCount
+        : items.length;
+
+    if (items.length === 0) {
+      return {
+        valid: true,
+        status: "QUERY_SUCCEEDED_EMPTY",
+        items: [],
+        totalResultCount: 0,
+        partialErrors,
+        errorCode: null,
+        errorMessage: null,
+        schemaOrigin: "OFFICIAL_LOWER_CAMEL",
+      };
+    }
+
+    return {
+      valid: true,
+      status: "OBSERVED_UNVERIFIED",
+      items,
+      totalResultCount,
+      partialErrors,
+      errorCode: null,
+      errorMessage: null,
+      schemaOrigin: "OFFICIAL_LOWER_CAMEL",
+    };
+  }
+
+  if (
+    partialErrors.length > 0 &&
+    partialErrors.some((e) => /^NoResults$/i.test(e.code))
+  ) {
+    return {
+      valid: true,
+      status: "QUERY_SUCCEEDED_EMPTY",
+      items: [],
+      totalResultCount: 0,
+      partialErrors,
+      errorCode: "NoResults",
+      errorMessage: null,
+      schemaOrigin: "OFFICIAL_ERROR_ENVELOPE",
+    };
+  }
+
+  if (
+    options?.allowLegacyPaApiShape === true &&
+    obj.SearchResult &&
+    Array.isArray(obj.SearchResult.Items)
+  ) {
+    const items: RawCreatorsApiItem[] = obj.SearchResult.Items;
+    const totalResultCount =
+      typeof obj.SearchResult.TotalResultCount === "number"
+        ? obj.SearchResult.TotalResultCount
+        : items.length;
+    return {
+      valid: true,
+      status: items.length > 0 ? "OBSERVED_UNVERIFIED" : "QUERY_SUCCEEDED_EMPTY",
+      items,
+      totalResultCount: items.length > 0 ? totalResultCount : 0,
+      partialErrors,
+      errorCode: null,
+      errorMessage: null,
+      schemaOrigin: "LEGACY_PAAPI_COMPAT",
+    };
+  }
+
+  if (obj.SearchResult) {
+    return {
+      valid: false,
+      status: "PROVIDER_ERROR",
+      items: [],
+      totalResultCount: null,
+      partialErrors,
+      errorCode: "SCHEMA_MISMATCH",
+      errorMessage:
+        "SCHEMA_MISMATCH: Received legacy uppercase PA-API 'SearchResult' instead of official Creators API lower-camel 'searchResult.items'.",
+      schemaOrigin: "INVALID",
+    };
+  }
+
+  return {
+    valid: false,
+    status: "PROVIDER_ERROR",
+    items: [],
+    totalResultCount: null,
+    partialErrors,
+    errorCode: "SCHEMA_MISMATCH",
+    errorMessage:
+      "SCHEMA_MISMATCH: SearchItems response is missing official 'searchResult.items' envelope.",
+    schemaOrigin: "INVALID",
+  };
+}
+
+export interface ParsedGetItemsEnvelope {
+  valid: boolean;
+  status: MarketplaceEvidenceStatus;
+  items: RawCreatorsApiItem[];
+  itemsByAsin: Record<string, RawCreatorsApiItem>;
+  missingAsins: string[];
+  partialErrors: CreatorsApiPartialError[];
+  errorCode: string | null;
+  errorMessage: string | null;
+  schemaOrigin:
+    | "OFFICIAL_LOWER_CAMEL"
+    | "OFFICIAL_ERROR_ENVELOPE"
+    | "LEGACY_PAAPI_COMPAT"
+    | "INVALID";
+}
+
+/**
+ * Pure parser for official Amazon Creators API v1 GetItems response envelope.
+ * Indexes returned items by normalized ASIN (`itemsByAsin`), tracks `missingAsins` and
+ * `partialErrors`, and fails closed with `SCHEMA_MISMATCH` on unrecognized HTTP 200 envelopes.
+ */
+export function parseCreatorsGetItemsEnvelope(
+  parsedJson: unknown,
+  requestedAsins: string[] = [],
+  options?: { allowLegacyPaApiShape?: boolean }
+): ParsedGetItemsEnvelope {
+  const cleanRequested = Array.from(
+    new Set(
+      (requestedAsins || [])
+        .map((a) => String(a || "").trim().toUpperCase())
+        .filter((a) => isValidStrictAmazonAsin(a))
+    )
+  );
+
+  if (!parsedJson || typeof parsedJson !== "object" || Array.isArray(parsedJson)) {
+    return {
+      valid: false,
+      status: "PROVIDER_ERROR",
+      items: [],
+      itemsByAsin: {},
+      missingAsins: cleanRequested,
+      partialErrors: [],
+      errorCode: "PARSE_FAILED",
+      errorMessage: "PARSE_FAILED: GetItems HTTP 200 body is not a JSON object.",
+      schemaOrigin: "INVALID",
+    };
+  }
+
+  const obj = parsedJson as Record<string, any>;
+  const partialErrors = extractPartialErrorsFromEnvelope(obj);
+
+  const indexItemsByAsin = (
+    items: RawCreatorsApiItem[],
+    allowLegacy: boolean
+  ): Record<string, RawCreatorsApiItem> => {
+    const map: Record<string, RawCreatorsApiItem> = {};
+    for (const item of items) {
+      if (!item || typeof item !== "object") continue;
+      const rawAsin =
+        typeof item.asin === "string"
+          ? item.asin
+          : allowLegacy && typeof item.ASIN === "string"
+          ? item.ASIN
+          : "";
+      const normAsin = rawAsin.trim().toUpperCase();
+      if (isValidStrictAmazonAsin(normAsin)) {
+        map[normAsin] = item;
+      }
+    }
+    return map;
+  };
+
+  if (obj.itemResults && typeof obj.itemResults === "object") {
+    if (!Array.isArray(obj.itemResults.items)) {
+      return {
+        valid: false,
+        status: "PROVIDER_ERROR",
+        items: [],
+        itemsByAsin: {},
+        missingAsins: cleanRequested,
+        partialErrors,
+        errorCode: "SCHEMA_MISMATCH",
+        errorMessage:
+          "SCHEMA_MISMATCH: itemResults object is missing lower-camel 'items' array.",
+        schemaOrigin: "INVALID",
+      };
+    }
+
+    const items: RawCreatorsApiItem[] = obj.itemResults.items;
+    const itemsByAsin = indexItemsByAsin(items, Boolean(options?.allowLegacyPaApiShape));
+    const missingAsins = cleanRequested.filter((a) => !itemsByAsin[a]);
+
+    return {
+      valid: true,
+      status: items.length > 0 ? "OBSERVED_UNVERIFIED" : "QUERY_SUCCEEDED_EMPTY",
+      items,
+      itemsByAsin,
+      missingAsins,
+      partialErrors,
+      errorCode: null,
+      errorMessage: null,
+      schemaOrigin: "OFFICIAL_LOWER_CAMEL",
+    };
+  }
+
+  if (
+    partialErrors.length > 0 &&
+    partialErrors.some((e) =>
+      /^(?:ItemNotAccessible|InvalidParameterValue|NoResults)$/i.test(e.code)
+    )
+  ) {
+    return {
+      valid: true,
+      status: "QUERY_SUCCEEDED_EMPTY",
+      items: [],
+      itemsByAsin: {},
+      missingAsins: cleanRequested,
+      partialErrors,
+      errorCode: partialErrors[0].code,
+      errorMessage: partialErrors[0].message || null,
+      schemaOrigin: "OFFICIAL_ERROR_ENVELOPE",
+    };
+  }
+
+  if (
+    options?.allowLegacyPaApiShape === true &&
+    obj.ItemsResult &&
+    Array.isArray(obj.ItemsResult.Items)
+  ) {
+    const items: RawCreatorsApiItem[] = obj.ItemsResult.Items;
+    const itemsByAsin = indexItemsByAsin(items, true);
+    const missingAsins = cleanRequested.filter((a) => !itemsByAsin[a]);
+    return {
+      valid: true,
+      status: items.length > 0 ? "OBSERVED_UNVERIFIED" : "QUERY_SUCCEEDED_EMPTY",
+      items,
+      itemsByAsin,
+      missingAsins,
+      partialErrors,
+      errorCode: null,
+      errorMessage: null,
+      schemaOrigin: "LEGACY_PAAPI_COMPAT",
+    };
+  }
+
+  if (obj.ItemsResult) {
+    return {
+      valid: false,
+      status: "PROVIDER_ERROR",
+      items: [],
+      itemsByAsin: {},
+      missingAsins: cleanRequested,
+      partialErrors,
+      errorCode: "SCHEMA_MISMATCH",
+      errorMessage:
+        "SCHEMA_MISMATCH: Received legacy uppercase PA-API 'ItemsResult' instead of official Creators API lower-camel 'itemResults.items'.",
+      schemaOrigin: "INVALID",
+    };
+  }
+
+  return {
+    valid: false,
+    status: "PROVIDER_ERROR",
+    items: [],
+    itemsByAsin: {},
+    missingAsins: cleanRequested,
+    partialErrors,
+    errorCode: "SCHEMA_MISMATCH",
+    errorMessage:
+      "SCHEMA_MISMATCH: GetItems response is missing official 'itemResults.items' envelope.",
+    schemaOrigin: "INVALID",
+  };
+}
+
+export interface NormalizedCreatorsApiItemShape {
+  schemaValid: boolean;
+  schemaOrigin: "OFFICIAL_LOWER_CAMEL" | "LEGACY_PAAPI_COMPAT" | "INVALID";
+  asin: string | null;
+  parentAsin: string | null;
+  detailPageUrl: string | null;
+  title: string | null;
+  brand: string | null;
+  manufacturer: string | null;
+  modelNumber: string | null;
+  partNumber: string | null;
+  gtinList: string[];
+  features: string[];
+  primaryMediumImageUrl: string | null;
+  priceAmount: number | null;
+  priceCurrency: string | null;
+  priceDisplayAmount: string | null;
+  availabilityMessage: string | null;
+  availabilityType: string | null;
+  merchantName: string | null;
+  merchantId: string | null;
+}
+
+/**
+ * Pure item-level field normalizer for official Amazon Creators API v1 items.
+ * Extracts lower-camel fields (`asin`, `parentASIN`, `detailPageURL`, `itemInfo.*`,
+ * `offersV2.listings`, `images.primary.medium.url`). Rejects uppercase PA-API items
+ * unless `options.allowLegacyPaApiShape === true`.
+ */
+export function normalizeCreatorsApiItemShape(
+  rawItem: unknown,
+  options?: { allowLegacyPaApiShape?: boolean }
+): NormalizedCreatorsApiItemShape {
+  const empty: NormalizedCreatorsApiItemShape = {
+    schemaValid: false,
+    schemaOrigin: "INVALID",
+    asin: null,
+    parentAsin: null,
+    detailPageUrl: null,
+    title: null,
+    brand: null,
+    manufacturer: null,
+    modelNumber: null,
+    partNumber: null,
+    gtinList: [],
+    features: [],
+    primaryMediumImageUrl: null,
+    priceAmount: null,
+    priceCurrency: null,
+    priceDisplayAmount: null,
+    availabilityMessage: null,
+    availabilityType: null,
+    merchantName: null,
+    merchantId: null,
+  };
+
+  if (!rawItem || typeof rawItem !== "object" || Array.isArray(rawItem)) {
+    return empty;
+  }
+
+  const item = rawItem as RawCreatorsApiItem;
+  const hasLowerCamelAsin = typeof item.asin === "string" && item.asin.trim().length > 0;
+  const hasLegacyUppercaseAsin =
+    typeof item.ASIN === "string" && item.ASIN.trim().length > 0;
+
+  if (!hasLowerCamelAsin && (!hasLegacyUppercaseAsin || !options?.allowLegacyPaApiShape)) {
+    return empty;
+  }
+
+  const useLegacy = !hasLowerCamelAsin && Boolean(options?.allowLegacyPaApiShape);
+  const schemaOrigin = useLegacy ? "LEGACY_PAAPI_COMPAT" : "OFFICIAL_LOWER_CAMEL";
+
+  const rawAsin = (useLegacy ? item.ASIN : item.asin) || "";
+  const asin = rawAsin.trim().toUpperCase() || null;
+
+  const rawParentAsin =
+    (typeof item.parentASIN === "string"
+      ? item.parentASIN
+      : useLegacy && typeof item.ParentASIN === "string"
+      ? item.ParentASIN
+      : "") || "";
+  const parentAsin = rawParentAsin.trim().toUpperCase() || null;
+
+  const rawDetailUrl =
+    (typeof item.detailPageURL === "string"
+      ? item.detailPageURL
+      : useLegacy && typeof item.DetailPageURL === "string"
+      ? item.DetailPageURL
+      : "") || "";
+  const detailPageUrl = rawDetailUrl.trim() || null;
+
+  const title =
+    (
+      item.itemInfo?.title?.displayValue ??
+      (useLegacy ? item.ItemInfo?.Title?.DisplayValue : undefined) ??
+      ""
+    ).trim() || null;
+
+  const brand =
+    (
+      item.itemInfo?.byLineInfo?.brand?.displayValue ??
+      (useLegacy ? item.ItemInfo?.ByLineInfo?.Brand?.DisplayValue : undefined) ??
+      ""
+    ).trim() || null;
+
+  const manufacturer =
+    (
+      item.itemInfo?.byLineInfo?.manufacturer?.displayValue ??
+      (useLegacy ? item.ItemInfo?.ByLineInfo?.Manufacturer?.DisplayValue : undefined) ??
+      ""
+    ).trim() || null;
+
+  const modelNumber =
+    (
+      item.itemInfo?.manufactureInfo?.model?.displayValue ??
+      (useLegacy ? item.ItemInfo?.ManufactureInfo?.Model?.DisplayValue : undefined) ??
+      ""
+    ).trim() || null;
+
+  const partNumber =
+    (
+      item.itemInfo?.manufactureInfo?.itemPartNumber?.displayValue ??
+      (useLegacy
+        ? item.ItemInfo?.ManufactureInfo?.ItemPartNumber?.DisplayValue
+        : undefined) ??
+      ""
+    ).trim() || null;
+
+  const upcs =
+    item.itemInfo?.externalIds?.upcs?.displayValues ??
+    (useLegacy ? item.ItemInfo?.ExternalIds?.UPCs?.DisplayValues : undefined) ??
+    [];
+  const eans =
+    item.itemInfo?.externalIds?.eans?.displayValues ??
+    (useLegacy ? item.ItemInfo?.ExternalIds?.EANs?.DisplayValues : undefined) ??
+    [];
+  const isbns =
+    item.itemInfo?.externalIds?.isbns?.displayValues ??
+    (useLegacy ? item.ItemInfo?.ExternalIds?.ISBNs?.DisplayValues : undefined) ??
+    [];
+  const gtinList = [...upcs, ...eans, ...isbns]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+
+  const rawFeatures =
+    item.itemInfo?.features?.displayValues ??
+    (useLegacy ? item.ItemInfo?.Features?.DisplayValues : undefined) ??
+    [];
+  const features = rawFeatures
+    .map((f) => String(f || "").trim())
+    .filter(Boolean);
+
+  const primaryMediumImageUrl =
+    (
+      item.images?.primary?.medium?.url ??
+      (useLegacy ? item.Images?.Primary?.Medium?.URL : undefined) ??
+      ""
+    ).trim() || null;
+
+  // Prefer offersV2.listings (BuyBox winner or index 0)
+  const lowerListings = Array.isArray(item.offersV2?.listings)
+    ? item.offersV2!.listings!
+    : [];
+  const primaryLowerListing =
+    lowerListings.find((l) => l && l.isBuyBoxWinner === true) || lowerListings[0] || null;
+
+  const legacyListings = useLegacy
+    ? item.Offers?.V2?.Listings || item.Offers?.Listings || []
+    : [];
+  const primaryLegacyListing = legacyListings[0] || null;
+
+  const rawAmount =
+    primaryLowerListing?.price?.amount ??
+    (useLegacy ? primaryLegacyListing?.Price?.Amount : undefined);
+  const priceAmount =
+    typeof rawAmount === "number" && Number.isFinite(rawAmount) ? rawAmount : null;
+
+  const rawCurrency =
+    primaryLowerListing?.price?.currency ??
+    (useLegacy ? primaryLegacyListing?.Price?.Currency : undefined) ??
+    "";
+  const priceCurrency = String(rawCurrency || "").trim().toUpperCase() || null;
+
+  const rawDisplayAmount =
+    primaryLowerListing?.price?.displayAmount ??
+    (useLegacy ? primaryLegacyListing?.Price?.DisplayAmount : undefined) ??
+    "";
+  const priceDisplayAmount = String(rawDisplayAmount || "").trim() || null;
+
+  const rawAvailabilityMsg =
+    primaryLowerListing?.availability?.message ??
+    (useLegacy ? primaryLegacyListing?.Availability?.Message : undefined) ??
+    "";
+  const availabilityMessage = String(rawAvailabilityMsg || "").trim() || null;
+
+  const rawAvailabilityType =
+    primaryLowerListing?.availability?.type ??
+    (useLegacy ? primaryLegacyListing?.Availability?.Type : undefined) ??
+    "";
+  const availabilityType = String(rawAvailabilityType || "").trim() || null;
+
+  const rawMerchantName =
+    primaryLowerListing?.merchantInfo?.name ??
+    (useLegacy ? primaryLegacyListing?.MerchantInfo?.Name : undefined) ??
+    "";
+  const merchantName = String(rawMerchantName || "").trim() || null;
+
+  const rawMerchantId =
+    primaryLowerListing?.merchantInfo?.id ??
+    (useLegacy ? primaryLegacyListing?.MerchantInfo?.Id : undefined) ??
+    "";
+  const merchantId = String(rawMerchantId || "").trim() || null;
+
+  return {
+    schemaValid: true,
+    schemaOrigin,
+    asin,
+    parentAsin,
+    detailPageUrl,
+    title,
+    brand,
+    manufacturer,
+    modelNumber,
+    partNumber,
+    gtinList,
+    features,
+    primaryMediumImageUrl,
+    priceAmount,
+    priceCurrency,
+    priceDisplayAmount,
+    availabilityMessage,
+    availabilityType,
+    merchantName,
+    merchantId,
+  };
 }
 
 /**
@@ -301,6 +1191,11 @@ export function resolveCreatorsApiEligibility(
     env.AMAZON_CREATORS_API_PARTNER_TAG ||
     ""
   ).trim();
+  const credentialVersion = resolveCreatorsApiCredentialVersion(
+    env.KH02_AMAZON_CREATORS_API_CREDENTIAL_VERSION ||
+      env.AMAZON_CREATORS_API_CREDENTIAL_VERSION
+  );
+  const tokenEndpoint = resolveCreatorsApiTokenEndpointByVersion(credentialVersion);
   const registeredMarketplace = (
     registrationStatus.marketplace ||
     env.KH02_AMAZON_CREATORS_API_MARKETPLACE ||
@@ -323,7 +1218,7 @@ export function resolveCreatorsApiEligibility(
 
   const setupChecklist: string[] = [
     "1. Enroll an eligible US Amazon Associates account at affiliate-program.amazon.com.",
-    "2. Generate official Creators API OAuth 2.0 Credential ID and Credential Secret.",
+    "2. Generate official Creators API OAuth 2.0 Credential ID and Credential Secret (version 3.1 NA for US).",
     "3. Set KH02_AMAZON_US_ENABLED=true and KH02_AMAZON_US_LIVE_ALLOWED=true on the server.",
     "4. Configure KH02_AMAZON_CREATORS_API_CREDENTIAL_ID, KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET, and KH02_AMAZON_ASSOCIATES_PARTNER_TAG in server-only environment.",
   ];
@@ -337,6 +1232,8 @@ export function resolveCreatorsApiEligibility(
       hasCredentialSecret,
       hasPartnerTag,
       partnerTagMasked: maskPartnerTag(partnerTag),
+      credentialVersion,
+      tokenEndpoint,
       registeredMarketplace,
       transportVerified: false,
       authenticated: false,
@@ -361,6 +1258,8 @@ export function resolveCreatorsApiEligibility(
       hasCredentialSecret,
       hasPartnerTag,
       partnerTagMasked: maskPartnerTag(partnerTag),
+      credentialVersion,
+      tokenEndpoint,
       registeredMarketplace,
       transportVerified,
       authenticated: false,
@@ -386,6 +1285,8 @@ export function resolveCreatorsApiEligibility(
       hasCredentialSecret,
       hasPartnerTag,
       partnerTagMasked: maskPartnerTag(partnerTag),
+      credentialVersion,
+      tokenEndpoint,
       registeredMarketplace,
       transportVerified,
       authenticated: false,
@@ -410,6 +1311,8 @@ export function resolveCreatorsApiEligibility(
       hasCredentialSecret,
       hasPartnerTag,
       partnerTagMasked: maskPartnerTag(partnerTag),
+      credentialVersion,
+      tokenEndpoint,
       registeredMarketplace,
       transportVerified,
       authenticated: false,
@@ -439,6 +1342,8 @@ export function resolveCreatorsApiEligibility(
       hasCredentialSecret,
       hasPartnerTag,
       partnerTagMasked: maskPartnerTag(partnerTag),
+      credentialVersion,
+      tokenEndpoint,
       registeredMarketplace,
       transportVerified,
       authenticated: false,
@@ -463,6 +1368,8 @@ export function resolveCreatorsApiEligibility(
     hasCredentialSecret,
     hasPartnerTag,
     partnerTagMasked: maskPartnerTag(partnerTag),
+    credentialVersion,
+    tokenEndpoint,
     registeredMarketplace,
     transportVerified,
     authenticated,
@@ -501,13 +1408,13 @@ export function classifyCreatorsApiFailure(
     typeof response?.httpStatus === "number" && Number.isFinite(response.httpStatus)
       ? response.httpStatus
       : null;
-  const errObj = response?.parsedJson?.Errors?.[0] || response?.parsedJson?.errors?.[0];
+  const errObj = response?.parsedJson?. errors?.[0] || response?.parsedJson?.Errors?.[0];
   const upstreamCode = String(
-    errObj?.Code || errObj?.code || response?.parsedJson?.error || ""
+    errObj?.code || errObj?.Code || response?.parsedJson?.error || ""
   ).trim();
   const upstreamMsg = String(
-    errObj?.Message ||
-      errObj?.message ||
+    errObj?.message ||
+      errObj?.Message ||
       response?.parsedJson?.error_description ||
       response?.bodyText ||
       (error instanceof Error ? error.message : String(error || ""))
@@ -531,7 +1438,7 @@ export function classifyCreatorsApiFailure(
 
   if (
     httpStatus === 403 ||
-    /accessdenied|access_denied|invalidpartnertag|associatenoteligible|forbidden|not_authorized/i.test(
+    /accessdenied|access_denied|invalidpartnertag|associatenoteligible|forbidden|not_authorized|invalid_scope/i.test(
       combined
     )
   ) {
@@ -557,9 +1464,7 @@ export function classifyCreatorsApiFailure(
     };
   }
 
-  if (
-    /abort|timed_out|timeout|etimedout|deadline/i.test(combined)
-  ) {
+  if (/abort|timed_out|timeout|etimedout|deadline/i.test(combined)) {
     return {
       status: "TIMED_OUT",
       errorCode: "REQUEST_TIMED_OUT",
@@ -582,8 +1487,8 @@ export function classifyCreatorsApiFailure(
   if (
     httpStatus === 200 &&
     (/ItemNotAccessible|NoResults/i.test(upstreamCode) ||
-      (Array.isArray(response?.parsedJson?.SearchResult?.Items) &&
-        response?.parsedJson?.SearchResult?.Items.length === 0))
+      (Array.isArray(response?.parsedJson?.searchResult?.items) &&
+        response?.parsedJson?.searchResult?.items.length === 0))
   ) {
     return {
       status: "QUERY_SUCCEEDED_EMPTY",
@@ -605,8 +1510,12 @@ export function classifyCreatorsApiFailure(
 }
 
 /**
- * Section 5B.7: Creates an official Amazon Associates Creators API client with short-lived OAuth 2.0
- * client_credentials token caching, strict US marketplace header, secret redaction, and shared budget integration.
+ * Section 5B.7: Creates an official Amazon Associates Creators API client with:
+ * - Official OAuth 2.0 JSON body (`grant_type: "client_credentials"`, `scope: "creatorsapi::default"`)
+ * - In-flight token promise deduplication + clock-skew caching
+ * - Single automatic token refresh on 401 token expiry
+ * - Official lower-camel SearchItems & GetItems payload builders and envelope parsers
+ * - Strict US marketplace header (`x-marketplace: www.amazon.com`) & secret redaction
  */
 export function createCreatorsApiClient(
   config: CreatorsApiClientConfig
@@ -614,10 +1523,17 @@ export function createCreatorsApiClient(
   const credentialId = String(config.credentialId || "").trim();
   const credentialSecret = String(config.credentialSecret || "").trim();
   const partnerTag = String(config.partnerTag || "").trim();
+  const credentialVersion = resolveCreatorsApiCredentialVersion(
+    config.credentialVersion
+  );
   const marketplace = String(config.marketplace || CREATORS_API_US_MARKETPLACE)
     .trim()
     .toLowerCase();
-  const tokenEndpoint = config.tokenEndpoint || CREATORS_API_OAUTH_TOKEN_ENDPOINT;
+  const allowIsolatedTestHost = Boolean(config.allowIsolatedTestHost);
+  const allowLegacyPaApiShape = Boolean(config.allowLegacyPaApiShape);
+
+  const tokenEndpoint =
+    config.tokenEndpoint || resolveCreatorsApiTokenEndpointByVersion(credentialVersion);
   const searchItemsEndpoint =
     config.searchItemsEndpoint || CREATORS_API_SEARCH_ITEMS_ENDPOINT;
   const getItemsEndpoint = config.getItemsEndpoint || CREATORS_API_GET_ITEMS_ENDPOINT;
@@ -634,68 +1550,103 @@ export function createCreatorsApiClient(
       `BLOCKED_POLICY: CreatorsApiClient only supports '${CREATORS_API_US_MARKETPLACE}', received '${marketplace}'.`
     );
   }
+
+  const tokenEndpointCheck = validateCreatorsApiEndpointUrl(tokenEndpoint, {
+    allowIsolatedTestHost,
+  });
+  const searchEndpointCheck = validateCreatorsApiEndpointUrl(searchItemsEndpoint, {
+    allowIsolatedTestHost,
+  });
+  const getItemsEndpointCheck = validateCreatorsApiEndpointUrl(getItemsEndpoint, {
+    allowIsolatedTestHost,
+  });
+
   if (
-    !tokenEndpoint.startsWith("https://") ||
-    !searchItemsEndpoint.startsWith("https://") ||
-    !getItemsEndpoint.startsWith("https://")
+    !tokenEndpointCheck.valid ||
+    !searchEndpointCheck.valid ||
+    !getItemsEndpointCheck.valid
   ) {
-    throw new Error(
-      "BLOCKED_POLICY: CreatorsApiClient endpoints must use HTTPS."
-    );
+    const errReason =
+      tokenEndpointCheck.reason ||
+      searchEndpointCheck.reason ||
+      getItemsEndpointCheck.reason ||
+      "Invalid Creators API endpoint";
+    throw new Error(`BLOCKED_POLICY: ${errReason}`);
   }
 
-  let cachedToken: { accessToken: string; expiresAtMs: number } | null = null;
+  const isIsolatedTestTransport = Boolean(
+    config.isIsolatedTestTransport ||
+      allowIsolatedTestHost ||
+      tokenEndpointCheck.isLocalhost ||
+      searchEndpointCheck.isLocalhost ||
+      getItemsEndpointCheck.isLocalhost
+  );
+  const transportProvenance: "OFFICIAL_UPSTREAM" | "TEST_FIXTURE" =
+    isIsolatedTestTransport ? "TEST_FIXTURE" : "OFFICIAL_UPSTREAM";
 
-  async function acquireBearerToken(signal?: AbortSignal): Promise<{
+  let cachedToken: { accessToken: string; expiresAtMs: number } | null = null;
+  let inFlightTokenPromise: Promise<{
+    ok: boolean;
+    accessToken: string | null;
+    httpStatus: number | null;
+    classifiedError: ClassifiedCreatorsApiStatus | null;
+  }> | null = null;
+
+  const tokenTelemetry: CreatorsApiTokenTelemetrySummary = {
+    tokenRequestsAttempted: 0,
+    tokenRequestsSucceeded: 0,
+    tokenCacheHits: 0,
+    concurrentDeduplicationsCount: 0,
+    tokenRefreshesOn401Count: 0,
+    lastTokenHttpStatus: null,
+    lastTokenErrorCode: null,
+  };
+
+  async function performOAuthTokenFetch(signal?: AbortSignal): Promise<{
     ok: boolean;
     accessToken: string | null;
     httpStatus: number | null;
     classifiedError: ClassifiedCreatorsApiStatus | null;
   }> {
-    const now = Date.now();
-    if (cachedToken && cachedToken.expiresAtMs - 60_000 > now) {
-      return {
-        ok: true,
-        accessToken: cachedToken.accessToken,
-        httpStatus: 200,
-        classifiedError: null,
-      };
-    }
-
+    tokenTelemetry.tokenRequestsAttempted++;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(new Error("TIMED_OUT")), timeoutMs);
     const onParentAbort = () => controller.abort(signal?.reason || new Error("ABORTED"));
     if (signal) {
       if (signal.aborted) {
         clearTimeout(timer);
+        const classified = classifyCreatorsApiFailure(new Error("TIMED_OUT"));
+        tokenTelemetry.lastTokenErrorCode = classified.errorCode;
         return {
           ok: false,
           accessToken: null,
           httpStatus: null,
-          classifiedError: classifyCreatorsApiFailure(new Error("TIMED_OUT")),
+          classifiedError: classified,
         };
       }
       signal.addEventListener("abort", onParentAbort, { once: true });
     }
 
     try {
-      const formBody = new URLSearchParams({
+      const jsonBody = JSON.stringify({
         grant_type: "client_credentials",
         client_id: credentialId,
         client_secret: credentialSecret,
-      }).toString();
+        scope: CREATORS_API_OAUTH_SCOPE,
+      });
 
       const resp = await fetchImpl(tokenEndpoint, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: formBody,
+        body: jsonBody,
         signal: controller.signal,
       });
 
       const httpStatus = typeof resp.status === "number" ? resp.status : null;
+      tokenTelemetry.lastTokenHttpStatus = httpStatus;
       const bodyText = await resp.text();
       let parsedJson: any = null;
       try {
@@ -704,7 +1655,7 @@ export function createCreatorsApiClient(
         parsedJson = null;
       }
 
-      if (!resp.ok || !parsedJson?.access_token) {
+      if (!resp.ok) {
         const classified = classifyCreatorsApiFailure(null, {
           httpStatus: httpStatus ?? 401,
           bodyText: redactSecretsFromMessage(bodyText, [
@@ -713,6 +1664,7 @@ export function createCreatorsApiClient(
           ]),
           parsedJson,
         });
+        tokenTelemetry.lastTokenErrorCode = classified.errorCode;
         return {
           ok: false,
           accessToken: null,
@@ -721,15 +1673,44 @@ export function createCreatorsApiClient(
         };
       }
 
-      const expiresInSec = Number(parsedJson.expires_in) || 3600;
-      const accessToken = String(parsedJson.access_token).trim();
+      const rawAccessToken =
+        typeof parsedJson?.access_token === "string"
+          ? parsedJson.access_token.trim()
+          : "";
+      const rawExpiresIn = Number(parsedJson?.expires_in);
+      if (
+        !parsedJson ||
+        !rawAccessToken ||
+        !Number.isFinite(rawExpiresIn) ||
+        rawExpiresIn <= 0
+      ) {
+        const malformedErr: ClassifiedCreatorsApiStatus = {
+          status: "AUTHENTICATION_FAILED",
+          errorCode: "OAUTH_TOKEN_PARSE_FAILED",
+          retryable: false,
+          isEntitlementOrAuthError: true,
+          sanitizedMessage:
+            "AUTHENTICATION_FAILED: OAuth 2.0 token response is missing required access_token or positive expires_in.",
+        };
+        tokenTelemetry.lastTokenErrorCode = malformedErr.errorCode;
+        return {
+          ok: false,
+          accessToken: null,
+          httpStatus,
+          classifiedError: malformedErr,
+        };
+      }
+
+      const skewBufferMs = Math.min(60_000, Math.floor((rawExpiresIn * 1000) / 3));
       cachedToken = {
-        accessToken,
-        expiresAtMs: Date.now() + Math.max(60, expiresInSec) * 1000,
+        accessToken: rawAccessToken,
+        expiresAtMs: Date.now() + rawExpiresIn * 1000 - skewBufferMs,
       };
+      tokenTelemetry.tokenRequestsSucceeded++;
+      tokenTelemetry.lastTokenErrorCode = null;
       return {
         ok: true,
-        accessToken,
+        accessToken: rawAccessToken,
         httpStatus,
         classifiedError: null,
       };
@@ -740,11 +1721,13 @@ export function createCreatorsApiClient(
           [credentialId, credentialSecret]
         )
       );
+      const classified = classifyCreatorsApiFailure(sanitizedErr);
+      tokenTelemetry.lastTokenErrorCode = classified.errorCode;
       return {
         ok: false,
         accessToken: null,
         httpStatus: null,
-        classifiedError: classifyCreatorsApiFailure(sanitizedErr),
+        classifiedError: classified,
       };
     } finally {
       clearTimeout(timer);
@@ -752,32 +1735,68 @@ export function createCreatorsApiClient(
     }
   }
 
+  async function acquireBearerToken(
+    signal?: AbortSignal,
+    forceRefresh = false
+  ): Promise<{
+    ok: boolean;
+    accessToken: string | null;
+    httpStatus: number | null;
+    classifiedError: ClassifiedCreatorsApiStatus | null;
+  }> {
+    if (forceRefresh) {
+      cachedToken = null;
+    }
+    const now = Date.now();
+    if (!forceRefresh && cachedToken && cachedToken.expiresAtMs > now) {
+      tokenTelemetry.tokenCacheHits++;
+      return {
+        ok: true,
+        accessToken: cachedToken.accessToken,
+        httpStatus: 200,
+        classifiedError: null,
+      };
+    }
+
+    if (inFlightTokenPromise) {
+      tokenTelemetry.concurrentDeduplicationsCount++;
+      return inFlightTokenPromise;
+    }
+
+    inFlightTokenPromise = performOAuthTokenFetch(signal).finally(() => {
+      inFlightTokenPromise = null;
+    });
+    return inFlightTokenPromise;
+  }
+
   return {
     marketplace,
     partnerTagMasked: maskPartnerTag(partnerTag) || "***",
+    credentialVersion,
+    isIsolatedTestTransport,
+    transportProvenance,
+
+    getTokenTelemetrySummary() {
+      return { ...tokenTelemetry };
+    },
 
     async searchItemsByCandidateIntent(intent, context) {
       const startedAtMs = Date.now();
       const startedAt = new Date(startedAtMs).toISOString();
-      const cleanKeywords = String(intent.normalizedKeywords || "").trim();
-      const itemCount = Math.min(10, Math.max(1, intent.itemCount ?? 5));
-
-      const requestPayload = {
+      const requestPayload = buildCreatorsSearchItemsPayload(intent, {
         partnerTag,
-        partnerType: "Associates",
-        keywords: cleanKeywords,
-        searchIndex: intent.searchIndex || "All",
-        itemCount,
-        resources: [...CREATORS_API_DEFAULT_RESOURCES],
-      };
+        marketplace,
+        resources: CREATORS_API_DEFAULT_RESOURCES,
+      });
+      const cleanKeywords = requestPayload.keywords;
 
       const requestHash =
         computeDeterministicEvidenceHash({
           operation: "SearchItems",
           marketplace,
           keywords: cleanKeywords,
-          itemCount,
-          resources: CREATORS_API_DEFAULT_RESOURCES,
+          itemCount: requestPayload.itemCount,
+          resources: requestPayload.resources,
         }) || "req_hash";
       const providerInvocationRef = `amz_inv_${context.researchRunId}_${context.candidateId}_search_${requestHash.slice(0, 10)}`;
 
@@ -800,6 +1819,7 @@ export function createCreatorsApiClient(
           marketplace,
           totalResultCount: null,
           items: [],
+          partialErrors: [],
           errorCode: "EMPTY_SEARCH_KEYWORDS",
           errorMessage: "SearchItems keywords cannot be empty.",
           retryable: false,
@@ -807,7 +1827,8 @@ export function createCreatorsApiClient(
       }
 
       const executeHttpCall = async (opSignal?: AbortSignal): Promise<SearchItemsResponse> => {
-        const tokenRes = await acquireBearerToken(opSignal || context.signal);
+        const activeSignal = opSignal || context.signal;
+        let tokenRes = await acquireBearerToken(activeSignal, false);
         if (!tokenRes.ok || !tokenRes.accessToken) {
           const completedAt = new Date().toISOString();
           const errInfo = tokenRes.classifiedError!;
@@ -829,23 +1850,38 @@ export function createCreatorsApiClient(
             marketplace,
             totalResultCount: null,
             items: [],
+            partialErrors: [],
             errorCode: errInfo.errorCode,
             errorMessage: errInfo.sanitizedMessage,
             retryable: errInfo.retryable,
           };
         }
 
-        const resp = await fetchImpl(searchItemsEndpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${tokenRes.accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "x-marketplace": marketplace,
-          },
-          body: JSON.stringify(requestPayload),
-          signal: opSignal || context.signal,
-        });
+        const sendCatalogPost = async (bearerToken: string) => {
+          return fetchImpl(searchItemsEndpoint, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "x-marketplace": marketplace,
+              "x-amzn-credential-version": credentialVersion,
+            },
+            body: JSON.stringify(requestPayload),
+            signal: activeSignal,
+          });
+        };
+
+        let resp = await sendCatalogPost(tokenRes.accessToken);
+        // Single refresh + retry on 401 expired token (R06)
+        if (resp.status === 401) {
+          tokenTelemetry.tokenRefreshesOn401Count++;
+          const refreshedToken = await acquireBearerToken(activeSignal, true);
+          if (refreshedToken.ok && refreshedToken.accessToken) {
+            tokenRes = refreshedToken;
+            resp = await sendCatalogPost(refreshedToken.accessToken);
+          }
+        }
 
         const httpStatus = typeof resp.status === "number" ? resp.status : null;
         const upstreamRequestId =
@@ -867,7 +1903,7 @@ export function createCreatorsApiClient(
         });
         const completedAt = new Date().toISOString();
 
-        if (!resp.ok || !parsedJson) {
+        if (!resp.ok) {
           const classified = classifyCreatorsApiFailure(null, {
             httpStatus,
             bodyText: redactSecretsFromMessage(rawText, [
@@ -894,27 +1930,22 @@ export function createCreatorsApiClient(
             marketplace,
             totalResultCount: null,
             items: [],
+            partialErrors: [],
             errorCode: classified.errorCode,
             errorMessage: classified.sanitizedMessage,
             retryable: classified.retryable,
           };
         }
 
-        const items: RawCreatorsApiItem[] = Array.isArray(
-          parsedJson?.SearchResult?.Items
-        )
-          ? parsedJson.SearchResult.Items
-          : [];
-        const totalResultCount =
-          typeof parsedJson?.SearchResult?.TotalResultCount === "number"
-            ? parsedJson.SearchResult.TotalResultCount
-            : items.length;
+        const envelope = parseCreatorsSearchItemsEnvelope(parsedJson, {
+          allowLegacyPaApiShape,
+        });
 
-        if (items.length === 0) {
+        if (!envelope.valid) {
           return {
             attempted: true,
-            succeeded: true,
-            status: "QUERY_SUCCEEDED_EMPTY",
+            succeeded: false,
+            status: envelope.status,
             httpStatus,
             httpStatusOrigin: httpStatus !== null ? "OBSERVED" : "UNOBSERVED_NULL",
             startedAt,
@@ -926,10 +1957,11 @@ export function createCreatorsApiClient(
             rawResponseHash,
             requestedKeywords: cleanKeywords,
             marketplace,
-            totalResultCount: 0,
+            totalResultCount: null,
             items: [],
-            errorCode: null,
-            errorMessage: null,
+            partialErrors: envelope.partialErrors,
+            errorCode: envelope.errorCode,
+            errorMessage: envelope.errorMessage,
             retryable: false,
           };
         }
@@ -937,7 +1969,7 @@ export function createCreatorsApiClient(
         return {
           attempted: true,
           succeeded: true,
-          status: "OBSERVED_UNVERIFIED",
+          status: envelope.status,
           httpStatus,
           httpStatusOrigin: httpStatus !== null ? "OBSERVED" : "UNOBSERVED_NULL",
           startedAt,
@@ -949,9 +1981,10 @@ export function createCreatorsApiClient(
           rawResponseHash,
           requestedKeywords: cleanKeywords,
           marketplace,
-          totalResultCount,
-          items,
-          errorCode: null,
+          totalResultCount: envelope.totalResultCount,
+          items: envelope.items,
+          partialErrors: envelope.partialErrors,
+          errorCode: envelope.errorCode,
           errorMessage: null,
           retryable: false,
         };
@@ -994,6 +2027,7 @@ export function createCreatorsApiClient(
             marketplace,
             totalResultCount: null,
             items: [],
+            partialErrors: [],
             errorCode: budgetRes.blockedDecision.reasonCode,
             errorMessage: budgetRes.blockedDecision.reason,
             retryable: false,
@@ -1025,6 +2059,7 @@ export function createCreatorsApiClient(
           marketplace,
           totalResultCount: null,
           items: [],
+          partialErrors: [],
           errorCode: classified.errorCode,
           errorMessage: classified.sanitizedMessage,
           retryable: classified.retryable,
@@ -1053,6 +2088,7 @@ export function createCreatorsApiClient(
           marketplace,
           totalResultCount: null,
           items: [],
+          partialErrors: [],
           errorCode: classified.errorCode,
           errorMessage: classified.sanitizedMessage,
           retryable: classified.retryable,
@@ -1063,20 +2099,19 @@ export function createCreatorsApiClient(
     async getItemsByAsins(asins, context) {
       const startedAtMs = Date.now();
       const startedAt = new Date(startedAtMs).toISOString();
-      const validAsins = Array.from(
-        new Set(
-          (asins || [])
-            .map((a) => String(a || "").trim().toUpperCase())
-            .filter((a) => isValidStrictAmazonAsin(a))
-        )
-      ).slice(0, 10);
+      const requestPayload = buildCreatorsGetItemsPayload(asins, {
+        partnerTag,
+        marketplace,
+        resources: CREATORS_API_DEFAULT_RESOURCES,
+      });
+      const validAsins = requestPayload.itemIds;
 
       const requestHash =
         computeDeterministicEvidenceHash({
           operation: "GetItems",
           marketplace,
           itemIds: validAsins,
-          resources: CREATORS_API_DEFAULT_RESOURCES,
+          resources: requestPayload.resources,
         }) || "getitems_hash";
       const providerInvocationRef = `amz_inv_${context.researchRunId}_${context.candidateId}_getitems_${requestHash.slice(0, 10)}`;
 
@@ -1098,22 +2133,18 @@ export function createCreatorsApiClient(
           requestedAsins: [],
           marketplace,
           items: [],
+          itemsByAsin: {},
+          missingAsins: [],
+          partialErrors: [],
           errorCode: "NO_VALID_ASINS",
           errorMessage: "GetItems requires at least one valid 10-character Amazon ASIN.",
           retryable: false,
         };
       }
 
-      const requestPayload = {
-        partnerTag,
-        partnerType: "Associates",
-        itemIds: validAsins,
-        itemIdType: "ASIN",
-        resources: [...CREATORS_API_DEFAULT_RESOURCES],
-      };
-
       const executeHttpCall = async (opSignal?: AbortSignal): Promise<GetItemsResponse> => {
-        const tokenRes = await acquireBearerToken(opSignal || context.signal);
+        const activeSignal = opSignal || context.signal;
+        let tokenRes = await acquireBearerToken(activeSignal, false);
         if (!tokenRes.ok || !tokenRes.accessToken) {
           const completedAt = new Date().toISOString();
           const errInfo = tokenRes.classifiedError!;
@@ -1134,23 +2165,39 @@ export function createCreatorsApiClient(
             requestedAsins: validAsins,
             marketplace,
             items: [],
+            itemsByAsin: {},
+            missingAsins: validAsins,
+            partialErrors: [],
             errorCode: errInfo.errorCode,
             errorMessage: errInfo.sanitizedMessage,
             retryable: errInfo.retryable,
           };
         }
 
-        const resp = await fetchImpl(getItemsEndpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${tokenRes.accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "x-marketplace": marketplace,
-          },
-          body: JSON.stringify(requestPayload),
-          signal: opSignal || context.signal,
-        });
+        const sendCatalogPost = async (bearerToken: string) => {
+          return fetchImpl(getItemsEndpoint, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "x-marketplace": marketplace,
+              "x-amzn-credential-version": credentialVersion,
+            },
+            body: JSON.stringify(requestPayload),
+            signal: activeSignal,
+          });
+        };
+
+        let resp = await sendCatalogPost(tokenRes.accessToken);
+        if (resp.status === 401) {
+          tokenTelemetry.tokenRefreshesOn401Count++;
+          const refreshedToken = await acquireBearerToken(activeSignal, true);
+          if (refreshedToken.ok && refreshedToken.accessToken) {
+            tokenRes = refreshedToken;
+            resp = await sendCatalogPost(refreshedToken.accessToken);
+          }
+        }
 
         const httpStatus = typeof resp.status === "number" ? resp.status : null;
         const upstreamRequestId =
@@ -1172,7 +2219,7 @@ export function createCreatorsApiClient(
         });
         const completedAt = new Date().toISOString();
 
-        if (!resp.ok || !parsedJson) {
+        if (!resp.ok) {
           const classified = classifyCreatorsApiFailure(null, {
             httpStatus,
             bodyText: redactSecretsFromMessage(rawText, [
@@ -1198,22 +2245,49 @@ export function createCreatorsApiClient(
             requestedAsins: validAsins,
             marketplace,
             items: [],
+            itemsByAsin: {},
+            missingAsins: validAsins,
+            partialErrors: [],
             errorCode: classified.errorCode,
             errorMessage: classified.sanitizedMessage,
             retryable: classified.retryable,
           };
         }
 
-        const items: RawCreatorsApiItem[] = Array.isArray(
-          parsedJson?.ItemsResult?.Items
-        )
-          ? parsedJson.ItemsResult.Items
-          : [];
+        const envelope = parseCreatorsGetItemsEnvelope(parsedJson, validAsins, {
+          allowLegacyPaApiShape,
+        });
+
+        if (!envelope.valid) {
+          return {
+            attempted: true,
+            succeeded: false,
+            status: envelope.status,
+            httpStatus,
+            httpStatusOrigin: httpStatus !== null ? "OBSERVED" : "UNOBSERVED_NULL",
+            startedAt,
+            completedAt,
+            durationMs: Math.max(0, Date.now() - startedAtMs),
+            providerInvocationRef,
+            upstreamRequestId,
+            requestHash,
+            rawResponseHash,
+            requestedAsins: validAsins,
+            marketplace,
+            items: [],
+            itemsByAsin: {},
+            missingAsins: validAsins,
+            partialErrors: envelope.partialErrors,
+            errorCode: envelope.errorCode,
+            errorMessage: envelope.errorMessage,
+            retryable: false,
+          };
+        }
 
         return {
           attempted: true,
           succeeded: true,
-          status: items.length > 0 ? "OBSERVED_UNVERIFIED" : "QUERY_SUCCEEDED_EMPTY",
+          status: envelope.status,
           httpStatus,
           httpStatusOrigin: httpStatus !== null ? "OBSERVED" : "UNOBSERVED_NULL",
           startedAt,
@@ -1225,9 +2299,12 @@ export function createCreatorsApiClient(
           rawResponseHash,
           requestedAsins: validAsins,
           marketplace,
-          items,
-          errorCode: null,
-          errorMessage: null,
+          items: envelope.items,
+          itemsByAsin: envelope.itemsByAsin,
+          missingAsins: envelope.missingAsins,
+          partialErrors: envelope.partialErrors,
+          errorCode: envelope.errorCode,
+          errorMessage: envelope.errorMessage,
           retryable: false,
         };
       };
@@ -1268,6 +2345,9 @@ export function createCreatorsApiClient(
             requestedAsins: validAsins,
             marketplace,
             items: [],
+            itemsByAsin: {},
+            missingAsins: validAsins,
+            partialErrors: [],
             errorCode: budgetRes.blockedDecision.reasonCode,
             errorMessage: budgetRes.blockedDecision.reason,
             retryable: false,
@@ -1300,6 +2380,9 @@ export function createCreatorsApiClient(
           requestedAsins: validAsins,
           marketplace,
           items: [],
+          itemsByAsin: {},
+          missingAsins: validAsins,
+          partialErrors: [],
           errorCode: classified.errorCode,
           errorMessage: classified.sanitizedMessage,
           retryable: classified.retryable,
@@ -1308,4 +2391,3 @@ export function createCreatorsApiClient(
     },
   };
 }
-

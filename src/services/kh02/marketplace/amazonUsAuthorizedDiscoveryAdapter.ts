@@ -37,8 +37,11 @@ import {
   createAmazonProviderBudget,
 } from "./amazonUsBudget";
 import {
+  AmazonAccessDecision,
   CreatorsApiClient,
   RawCreatorsApiItem,
+  createCreatorsApiClient,
+  normalizeCreatorsApiItemShape,
   resolveCreatorsApiEligibility,
 } from "./amazonCreatorsApiClient";
 
@@ -412,6 +415,7 @@ export interface NormalizeAmazonSearchItemInvocation {
   accessPolicyStatus: AmazonAccessPolicyStatus;
   observationClass?: MarketplaceObservationClass;
   imageLicensePermitted?: boolean;
+  allowLegacyPaApiShape?: boolean;
 }
 
 export type NormalizedAmazonSearchItemResult =
@@ -427,7 +431,7 @@ export type NormalizedAmazonSearchItemResult =
     };
 
 /**
- * Section 5A.5: Normalizes an official Creators API item into AmazonProductEvidence.
+ * Section 5A.5: Normalizes an official Creators API v1 lower-camel item into AmazonProductEvidence.
  * Preserves nullable price/currency, licenses image only when permitted, validates canonical URL/ASIN,
  * and never invents US delivery or USD currency when absent.
  */
@@ -443,7 +447,25 @@ export function normalizeAmazonSearchItem(
     };
   }
 
-  const rawAsin = String(raw.ASIN || "").trim().toUpperCase();
+  const shape = normalizeCreatorsApiItemShape(raw, {
+    allowLegacyPaApiShape: invocation.allowLegacyPaApiShape,
+  });
+
+  if (!shape.schemaValid) {
+    const legacyCandidateAsin =
+      typeof (raw as any).ASIN === "string"
+        ? String((raw as any).ASIN).trim().toUpperCase()
+        : null;
+    return {
+      kind: "REJECTED",
+      asin: legacyCandidateAsin,
+      rejectionReason: legacyCandidateAsin
+        ? "SCHEMA_MISMATCH:LEGACY_UPPERCASE_PAAPI_ITEM_REJECTED"
+        : "INVALID_ITEM_ASIN:MISSING",
+    };
+  }
+
+  const rawAsin = String(shape.asin || "").trim().toUpperCase();
   if (!isValidStrictAmazonAsin(rawAsin)) {
     return {
       kind: "REJECTED",
@@ -452,32 +474,48 @@ export function normalizeAmazonSearchItem(
     };
   }
 
-  const rawParentAsin = raw.ParentASIN
-    ? String(raw.ParentASIN).trim().toUpperCase()
-    : null;
   const validParentAsin =
-    rawParentAsin && isValidStrictAmazonAsin(rawParentAsin) ? rawParentAsin : null;
+    shape.parentAsin && isValidStrictAmazonAsin(shape.parentAsin)
+      ? shape.parentAsin
+      : null;
 
-  const detailUrl = raw.DetailPageURL
-    ? String(raw.DetailPageURL).trim()
-    : `https://www.amazon.com/dp/${rawAsin}`;
+  const hasExplicitDetailUrl = Boolean(shape.detailPageUrl);
+  const detailUrl = shape.detailPageUrl || `https://www.amazon.com/dp/${rawAsin}`;
   const urlCheck = validateAmazonUsProductUrl(detailUrl);
+
+  // If an explicit detailPageURL was returned by upstream, it must be a valid Amazon US product URL matching the item ASIN
+  if (hasExplicitDetailUrl && !urlCheck.valid) {
+    if (urlCheck.rejectionCode === "NON_US_AMAZON_MARKETPLACE") {
+      return {
+        kind: "REJECTED",
+        asin: rawAsin,
+        rejectionReason: `NON_US_DETAIL_PAGE_URL:${detailUrl}`,
+      };
+    }
+    return {
+      kind: "REJECTED",
+      asin: rawAsin,
+      rejectionReason: `INVALID_DETAIL_PAGE_URL:${urlCheck.rejectionCode || "REJECTED"}:${detailUrl}`,
+    };
+  }
+
+  if (
+    hasExplicitDetailUrl &&
+    urlCheck.extractedAsin &&
+    urlCheck.extractedAsin !== rawAsin
+  ) {
+    return {
+      kind: "REJECTED",
+      asin: rawAsin,
+      rejectionReason: `DETAIL_URL_ASIN_MISMATCH:${urlCheck.extractedAsin}!=${rawAsin}`,
+    };
+  }
+
   const canonicalUrl = urlCheck.valid
     ? urlCheck.canonicalAmazonUrl!
     : `https://www.amazon.com/dp/${rawAsin}`;
 
-  // If DetailPageURL points to a non-US Amazon domain, reject immediately
-  if (!urlCheck.valid && urlCheck.rejectionCode === "NON_US_AMAZON_MARKETPLACE") {
-    return {
-      kind: "REJECTED",
-      asin: rawAsin,
-      rejectionReason: `NON_US_DETAIL_PAGE_URL:${detailUrl}`,
-    };
-  }
-
-  const titleSanitized = sanitizeUntrustedAmazonText(
-    raw.ItemInfo?.Title?.DisplayValue
-  );
+  const titleSanitized = sanitizeUntrustedAmazonText(shape.title);
   if (!titleSanitized.sanitized) {
     return {
       kind: "REJECTED",
@@ -487,26 +525,16 @@ export function normalizeAmazonSearchItem(
   }
 
   const brandSanitized = sanitizeUntrustedAmazonText(
-    raw.ItemInfo?.ByLineInfo?.Brand?.DisplayValue ||
-      raw.ItemInfo?.ByLineInfo?.Manufacturer?.DisplayValue
+    shape.brand || shape.manufacturer
   );
   const modelSanitized = sanitizeUntrustedAmazonText(
-    raw.ItemInfo?.ManufactureInfo?.Model?.DisplayValue ||
-      raw.ItemInfo?.ManufactureInfo?.ItemPartNumber?.DisplayValue
+    shape.modelNumber || shape.partNumber
   );
-  const gtinRaw =
-    raw.ItemInfo?.ExternalIds?.UPCs?.DisplayValues?.[0] ||
-    raw.ItemInfo?.ExternalIds?.EANs?.DisplayValues?.[0] ||
-    raw.ItemInfo?.ExternalIds?.ISBNs?.DisplayValues?.[0] ||
-    null;
+  const gtinRaw = shape.gtinList[0] || null;
   const gtinSanitized = sanitizeUntrustedAmazonText(gtinRaw);
 
-  const primaryListing =
-    raw.Offers?.V2?.Listings?.[0] || raw.Offers?.Listings?.[0] || null;
-  const rawAmount = primaryListing?.Price?.Amount;
-  const rawCurrency = primaryListing?.Price?.Currency
-    ? String(primaryListing.Price.Currency).trim().toUpperCase()
-    : null;
+  const rawAmount = shape.priceAmount;
+  const rawCurrency = shape.priceCurrency;
 
   if (rawCurrency && rawCurrency !== "USD") {
     return {
@@ -524,16 +552,12 @@ export function normalizeAmazonSearchItem(
   const currency: string | null = price !== null ? rawCurrency || null : rawCurrency;
 
   const availabilitySanitized = sanitizeUntrustedAmazonText(
-    primaryListing?.Availability?.Message || primaryListing?.Availability?.Type
+    shape.availabilityMessage || shape.availabilityType
   );
-  const merchantSanitized = sanitizeUntrustedAmazonText(
-    primaryListing?.MerchantInfo?.Name
-  );
+  const merchantSanitized = sanitizeUntrustedAmazonText(shape.merchantName);
 
   // Image URL is included ONLY when official API license permits
-  const rawImageUrl = raw.Images?.Primary?.Medium?.URL
-    ? String(raw.Images.Primary.Medium.URL).trim()
-    : null;
+  const rawImageUrl = shape.primaryMediumImageUrl;
   const licensedImageUrl =
     invocation.imageLicensePermitted === true &&
     rawImageUrl &&
@@ -549,7 +573,7 @@ export function normalizeAmazonSearchItem(
     productTitle: titleSanitized.sanitized,
     brand: brandSanitized.sanitized,
     modelNumber: modelSanitized.sanitized,
-    sku: null,
+    sku: shape.partNumber,
   });
 
   const missingFields: string[] = [];
@@ -596,7 +620,7 @@ export function normalizeAmazonSearchItem(
     requestMode: "AUTHORIZED_SEARCH",
     requestedMarket: "US",
     verifiedDeliveryMarket: null,
-    sourceUrl: canonicalUrl,
+    sourceUrl: hasExplicitDetailUrl ? detailUrl : canonicalUrl,
     finalUrl: canonicalUrl,
     canonicalAmazonUrl: canonicalUrl,
     asin: canonicalIdentity.asin,
@@ -610,7 +634,7 @@ export function normalizeAmazonSearchItem(
     price,
     availability: availabilitySanitized.sanitized,
     modelNumber: canonicalIdentity.modelNumber,
-    sku: null,
+    sku: canonicalIdentity.sku,
     gtin: gtinSanitized.sanitized,
     observedAt: invocation.observedAt,
     sourceTimestamp: invocation.observedAt,
@@ -738,6 +762,9 @@ export interface DiscoverAmazonProductsParams {
   env?: Record<string, string | undefined>;
   budget?: AmazonProviderBudget;
   creatorsApiClient?: CreatorsApiClient | null;
+  transportFactory?: () => typeof fetch;
+  allowIsolatedTestHost?: boolean;
+  autoConstructRuntimeClient?: boolean;
   observationClassOverride?: MarketplaceObservationClass;
   signal?: AbortSignal;
 }
@@ -745,6 +772,7 @@ export interface DiscoverAmazonProductsParams {
 export interface AmazonDiscoveryResult {
   runStatus: MarketplaceEvidenceStatus;
   accessPolicyStatus: AmazonAccessPolicyStatus;
+  eligibility?: AmazonAccessDecision;
   searchQueryPlan: AmazonDiscoveryPlan;
   providerRequestLedger: AmazonProviderOperationRecord[];
   rawAndNormalizedManifest: Array<{
@@ -776,19 +804,78 @@ export interface AmazonDiscoveryResult {
 /**
  * Section 5A.3: Executes bounded authorized Amazon product discovery for KH-02 candidates.
  * Checks policy and entitlement BEFORE making any network calls; never falls back to browser scraping.
+ * Never treats `Boolean(client)` as upstream authentication proof before an actual upstream call succeeds.
  */
 export async function discoverAmazonProductsForCandidates(
   params: DiscoverAmazonProductsParams
 ): Promise<AmazonDiscoveryResult> {
   const env = params.env || process.env;
-  const eligibility = resolveCreatorsApiEligibility(env, {
-    authenticated: Boolean(params.creatorsApiClient),
-    transportVerified: Boolean(params.creatorsApiClient),
+  const initialEligibility = resolveCreatorsApiEligibility(env, {
+    authenticated: false,
+    querySucceeded: false,
+    transportVerified: false,
   });
+
+  let activeClient: CreatorsApiClient | null = params.creatorsApiClient || null;
+  const allowRuntimeConstruction = params.autoConstructRuntimeClient !== false;
+
+  if (
+    !activeClient &&
+    allowRuntimeConstruction &&
+    initialEligibility.featureEnabled &&
+    initialEligibility.liveAllowed &&
+    initialEligibility.configured &&
+    initialEligibility.eligibleForLiveRequests &&
+    (params.policyContext ? params.policyContext.featureEnabled && params.policyContext.liveAllowed : true)
+  ) {
+    const credId = (
+      env.KH02_AMAZON_CREATORS_API_CREDENTIAL_ID ||
+      env.AMAZON_CREATORS_API_CREDENTIAL_ID ||
+      ""
+    ).trim();
+    const credSecret = (
+      env.KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+      env.AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+      ""
+    ).trim();
+    const partnerTag = (
+      env.KH02_AMAZON_ASSOCIATES_PARTNER_TAG ||
+      env.AMAZON_CREATORS_API_PARTNER_TAG ||
+      ""
+    ).trim();
+    const allowIsolatedTestHost = Boolean(
+      params.allowIsolatedTestHost ||
+        String(env.KH02_AMAZON_CREATORS_API_ALLOW_ISOLATED_TEST_HOST || "false")
+          .trim()
+          .toLowerCase() === "true"
+    );
+    try {
+      activeClient = createCreatorsApiClient({
+        credentialId: credId,
+        credentialSecret: credSecret,
+        partnerTag,
+        credentialVersion: initialEligibility.credentialVersion,
+        marketplace: initialEligibility.registeredMarketplace,
+        tokenEndpoint: env.KH02_AMAZON_CREATORS_API_TOKEN_ENDPOINT || undefined,
+        searchItemsEndpoint:
+          env.KH02_AMAZON_CREATORS_API_SEARCH_ITEMS_ENDPOINT || undefined,
+        getItemsEndpoint:
+          env.KH02_AMAZON_CREATORS_API_GET_ITEMS_ENDPOINT || undefined,
+        fetchFn: params.transportFactory ? params.transportFactory() : undefined,
+        allowIsolatedTestHost,
+        isIsolatedTestTransport: Boolean(
+          params.transportFactory || allowIsolatedTestHost
+        ),
+      });
+    } catch {
+      activeClient = null;
+    }
+  }
+
   const policy =
     params.policyContext ||
     resolveAmazonUsPolicyContext(env, {
-      creatorsApiEntitlementVerified: Boolean(params.creatorsApiClient),
+      creatorsApiEntitlementVerified: Boolean(activeClient),
     });
 
   const budget =
@@ -817,6 +904,7 @@ export async function discoverAmazonProductsForCandidates(
     return {
       runStatus: "DISABLED",
       accessPolicyStatus: "DISABLED_BY_DEFAULT",
+      eligibility: initialEligibility,
       searchQueryPlan: plan,
       providerRequestLedger: [],
       rawAndNormalizedManifest: [],
@@ -828,10 +916,13 @@ export async function discoverAmazonProductsForCandidates(
   // 2. Live not allowed -> 0 network calls, BLOCKED_POLICY
   if (!policy.liveAllowed) {
     return {
-      runStatus: !eligibility.configured ? "CREDENTIALS_REQUIRED" : "BLOCKED_POLICY",
-      accessPolicyStatus: !eligibility.configured
+      runStatus: !initialEligibility.configured
+        ? "CREDENTIALS_REQUIRED"
+        : "BLOCKED_POLICY",
+      accessPolicyStatus: !initialEligibility.configured
         ? "CREDENTIALS_REQUIRED"
         : policy.accessPolicyStatus,
+      eligibility: initialEligibility,
       searchQueryPlan: plan,
       providerRequestLedger: [],
       rawAndNormalizedManifest: [],
@@ -841,15 +932,16 @@ export async function discoverAmazonProductsForCandidates(
   }
 
   // 3. Missing credentials or uninitialized client -> 0 network calls, CREDENTIALS_REQUIRED / ACCESS_NOT_GRANTED
-  if (!params.creatorsApiClient) {
-    const blockedStatus: MarketplaceEvidenceStatus = !eligibility.configured
+  if (!activeClient) {
+    const blockedStatus: MarketplaceEvidenceStatus = !initialEligibility.configured
       ? "CREDENTIALS_REQUIRED"
       : "ACCESS_NOT_GRANTED";
     return {
       runStatus: blockedStatus,
-      accessPolicyStatus: !eligibility.configured
+      accessPolicyStatus: !initialEligibility.configured
         ? "CREDENTIALS_REQUIRED"
         : "ACCESS_NOT_GRANTED",
+      eligibility: initialEligibility,
       searchQueryPlan: plan,
       providerRequestLedger: [],
       rawAndNormalizedManifest: [],
@@ -857,6 +949,13 @@ export async function discoverAmazonProductsForCandidates(
       marketplaceEvidence: [],
     };
   }
+
+  const effectiveObservationClass: MarketplaceObservationClass =
+    params.observationClassOverride ||
+    (activeClient.isIsolatedTestTransport ||
+    activeClient.transportProvenance === "TEST_FIXTURE"
+      ? "TEST_FIXTURE"
+      : "AUTHORIZED_LIVE");
 
   const providerRequestLedger: AmazonProviderOperationRecord[] = [];
   const rawAndNormalizedManifest: AmazonDiscoveryResult["rawAndNormalizedManifest"] = [];
@@ -873,13 +972,16 @@ export async function discoverAmazonProductsForCandidates(
     decision: AmazonMatchDecision;
   }> = [];
 
+  let anyUpstreamCallAuthenticated = false;
+  let anyUpstreamQuerySucceeded = false;
+
   for (const candId of plan.selectedCandidateIds) {
     if (params.signal?.aborted) break;
     const cand = candidateById.get(candId);
     const qPlan = plan.candidateQueryPlans.find((p) => p.candidateId === candId);
     if (!cand || !qPlan?.primaryIntent) continue;
 
-    const searchRes = await params.creatorsApiClient.searchItemsByCandidateIntent(
+    const searchRes = await activeClient.searchItemsByCandidateIntent(
       {
         candidateId: cand.candidateId,
         normalizedKeywords: qPlan.primaryIntent.normalizedKeywords,
@@ -896,8 +998,10 @@ export async function discoverAmazonProductsForCandidates(
       }
     );
 
-    const observationClass: MarketplaceObservationClass =
-      params.observationClassOverride || "AUTHORIZED_LIVE";
+    if (searchRes.succeeded) {
+      anyUpstreamCallAuthenticated = true;
+      anyUpstreamQuerySucceeded = true;
+    }
 
     providerRequestLedger.push({
       operationId: `amz_op_search_${searchRes.requestHash.slice(0, 12)}`,
@@ -922,7 +1026,7 @@ export async function discoverAmazonProductsForCandidates(
       responseHash: searchRes.rawResponseHash,
       status: searchRes.status,
       outcomeCategory: searchRes.errorCode || searchRes.status,
-      observationClass,
+      observationClass: effectiveObservationClass,
       transportSessionId: null,
       aborted: false,
       errorMessage: searchRes.errorMessage,
@@ -955,7 +1059,7 @@ export async function discoverAmazonProductsForCandidates(
         observedAt: searchRes.completedAt,
         rawResponseHash: searchRes.rawResponseHash,
         accessPolicyStatus: policy.accessPolicyStatus,
-        observationClass,
+        observationClass: effectiveObservationClass,
       });
 
       if (norm.kind === "REJECTED") {
@@ -992,7 +1096,8 @@ export async function discoverAmazonProductsForCandidates(
       rawAndNormalizedManifest.push({
         candidateId: d.candidateId,
         asin: d.asin,
-        providerInvocationRef: d.updatedEvidence.providerInvocationRef || searchRes.providerInvocationRef,
+        providerInvocationRef:
+          d.updatedEvidence.providerInvocationRef || searchRes.providerInvocationRef,
         providerRequestId: d.updatedEvidence.providerRequestId,
         rawEvidenceHash: d.updatedEvidence.rawEvidenceHash,
         extractedFieldsHash: d.updatedEvidence.extractedFieldsHash,
@@ -1028,7 +1133,7 @@ export async function discoverAmazonProductsForCandidates(
     !params.signal?.aborted
   ) {
     const asinsToFetch = matchedAsinsPendingDetail.map((m) => m.decision.asin);
-    const getItemsRes = await params.creatorsApiClient.getItemsByAsins(asinsToFetch, {
+    const getItemsRes = await activeClient.getItemsByAsins(asinsToFetch, {
       workspaceId: params.workspaceId,
       researchRunId: params.researchRunId,
       candidateId: matchedAsinsPendingDetail[0].candidate.candidateId,
@@ -1036,8 +1141,10 @@ export async function discoverAmazonProductsForCandidates(
       signal: params.signal,
     });
 
-    const observationClass: MarketplaceObservationClass =
-      params.observationClassOverride || "AUTHORIZED_LIVE";
+    if (getItemsRes.succeeded) {
+      anyUpstreamCallAuthenticated = true;
+      anyUpstreamQuerySucceeded = true;
+    }
 
     if (getItemsRes.attempted) {
       providerRequestLedger.push({
@@ -1061,23 +1168,57 @@ export async function discoverAmazonProductsForCandidates(
         responseHash: getItemsRes.rawResponseHash,
         status: getItemsRes.status,
         outcomeCategory: getItemsRes.errorCode || getItemsRes.status,
-        observationClass,
+        observationClass: effectiveObservationClass,
         transportSessionId: null,
         aborted: false,
         errorMessage: getItemsRes.errorMessage,
       });
     }
 
-    if (getItemsRes.succeeded && getItemsRes.items.length > 0) {
+    if (getItemsRes.succeeded) {
       const detailByAsin = new Map<string, RawCreatorsApiItem>();
-      for (const item of getItemsRes.items) {
-        if (item.ASIN) detailByAsin.set(item.ASIN.trim().toUpperCase(), item);
+      if (getItemsRes.itemsByAsin) {
+        for (const [k, v] of Object.entries(getItemsRes.itemsByAsin)) {
+          if (k && v) detailByAsin.set(k.trim().toUpperCase(), v);
+        }
+      }
+      for (const item of getItemsRes.items || []) {
+        const itemAsin = String(item?.asin || item?.ASIN || "")
+          .trim()
+          .toUpperCase();
+        if (itemAsin && isValidStrictAmazonAsin(itemAsin)) {
+          detailByAsin.set(itemAsin, item);
+        }
+      }
+
+      // Record any partial item-level errors returned by GetItems without dropping valid items
+      for (const partialErr of getItemsRes.partialErrors || []) {
+        const matchedTarget = matchedAsinsPendingDetail.find(
+          (m) => m.decision.asin === partialErr.itemId
+        );
+        rawAndNormalizedManifest.push({
+          candidateId:
+            matchedTarget?.candidate.candidateId ||
+            matchedAsinsPendingDetail[0].candidate.candidateId,
+          asin: partialErr.itemId || null,
+          providerInvocationRef: getItemsRes.providerInvocationRef,
+          providerRequestId: getItemsRes.upstreamRequestId,
+          rawEvidenceHash: getItemsRes.rawResponseHash,
+          extractedFieldsHash: null,
+          observedAt: getItemsRes.completedAt,
+          status: "PARTIAL",
+          identityMatch: "REJECTED",
+          rejectionReasons: [
+            `GET_ITEMS_PARTIAL_ERROR:${partialErr.code}:${partialErr.message}`,
+          ],
+        });
       }
 
       for (let i = 0; i < marketplaceEvidence.length; i++) {
         const existingEv = marketplaceEvidence[i];
         if (!existingEv.asin) continue;
-        const detailRaw = detailByAsin.get(existingEv.asin);
+        // Match strictly by normalized ASIN, never by array index!
+        const detailRaw = detailByAsin.get(existingEv.asin.trim().toUpperCase());
         const cand = candidateById.get(existingEv.candidateId);
         if (!detailRaw || !cand) continue;
 
@@ -1090,7 +1231,7 @@ export async function discoverAmazonProductsForCandidates(
           observedAt: getItemsRes.completedAt,
           rawResponseHash: getItemsRes.rawResponseHash,
           accessPolicyStatus: policy.accessPolicyStatus,
-          observationClass,
+          observationClass: effectiveObservationClass,
         });
         if (normDetail.kind === "EVIDENCE") {
           const verifiedDetail = verifyAmazonProductIdentity(
@@ -1102,6 +1243,12 @@ export async function discoverAmazonProductsForCandidates(
       }
     }
   }
+
+  const finalEligibility = resolveCreatorsApiEligibility(env, {
+    authenticated: anyUpstreamCallAuthenticated,
+    querySucceeded: anyUpstreamQuerySucceeded,
+    transportVerified: providerRequestLedger.some((op) => op.attemptCount > 0),
+  });
 
   let runStatus: MarketplaceEvidenceStatus = "NOT_ATTEMPTED";
   if (providerRequestLedger.length === 0) {
@@ -1125,6 +1272,7 @@ export async function discoverAmazonProductsForCandidates(
   return {
     runStatus,
     accessPolicyStatus: policy.accessPolicyStatus,
+    eligibility: finalEligibility,
     searchQueryPlan: plan,
     providerRequestLedger,
     rawAndNormalizedManifest,

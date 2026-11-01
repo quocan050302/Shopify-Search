@@ -37,6 +37,7 @@ import {
 } from "./amazonUsMcpTransport";
 import { evaluateAmazonUsEvidenceGate } from "./amazonUsEvidenceGate";
 import {
+  AmazonAccessDecision,
   CreatorsApiClient,
   createCreatorsApiClient,
   resolveCreatorsApiEligibility,
@@ -449,7 +450,21 @@ export async function fetchAuthorizedAmazonProductEvidence(
       }
     );
     const completedAt = new Date().toISOString();
-    const rawItem = getRes.items[0] || null;
+    const targetAsin = urlValidation.extractedAsin.trim().toUpperCase();
+    const rawItem =
+      getRes.itemsByAsin?.[targetAsin] ||
+      getRes.items.find(
+        (it) =>
+          String(it?.asin || it?.ASIN || "")
+            .trim()
+            .toUpperCase() === targetAsin
+      ) ||
+      null;
+    const apiObservationClass: MarketplaceObservationClass =
+      input.creatorsApiClient.isIsolatedTestTransport ||
+      input.creatorsApiClient.transportProvenance === "TEST_FIXTURE"
+        ? "TEST_FIXTURE"
+        : "AUTHORIZED_LIVE";
     if (getRes.succeeded && rawItem) {
       const norm = normalizeAmazonSearchItem(rawItem, {
         workspaceId: input.workspaceId,
@@ -460,7 +475,7 @@ export async function fetchAuthorizedAmazonProductEvidence(
         observedAt: getRes.completedAt,
         rawResponseHash: getRes.rawResponseHash,
         accessPolicyStatus: policy.accessPolicyStatus,
-        observationClass: "AUTHORIZED_LIVE",
+        observationClass: apiObservationClass,
       });
       if (norm.kind === "EVIDENCE") {
         const verified = verifyAmazonProductIdentity(
@@ -492,7 +507,7 @@ export async function fetchAuthorizedAmazonProductEvidence(
           responseHash: ev.rawEvidenceHash,
           status: ev.status,
           outcomeCategory: "OBSERVED_SUCCESS",
-          observationClass: "AUTHORIZED_LIVE",
+          observationClass: apiObservationClass,
           transportSessionId: null,
           aborted: false,
           errorMessage: null,
@@ -504,6 +519,12 @@ export async function fetchAuthorizedAmazonProductEvidence(
         };
       }
     }
+    const missingItemStatus: MarketplaceEvidenceStatus =
+      getRes.succeeded && !rawItem
+        ? getRes.partialErrors && getRes.partialErrors.length > 0
+          ? "PARTIAL"
+          : "QUERY_SUCCEEDED_EMPTY"
+        : getRes.status;
     const opRecord: AmazonProviderOperationRecord = {
       operationId,
       providerInvocationRef: getRes.providerInvocationRef,
@@ -523,15 +544,22 @@ export async function fetchAuthorizedAmazonProductEvidence(
       durationMs: getRes.durationMs,
       requestHash: getRes.requestHash,
       responseHash: getRes.rawResponseHash,
-      status: getRes.status,
-      outcomeCategory: getRes.errorCode || getRes.status,
-      observationClass: "UNVERIFIED",
+      status: missingItemStatus,
+      outcomeCategory:
+        getRes.succeeded && !rawItem
+          ? "REQUESTED_ASIN_NOT_IN_GETITEMS_RESPONSE"
+          : getRes.errorCode || getRes.status,
+      observationClass: apiObservationClass === "TEST_FIXTURE" ? "TEST_FIXTURE" : "UNVERIFIED",
       transportSessionId: null,
       aborted: false,
-      errorMessage: getRes.errorMessage,
+      errorMessage:
+        getRes.errorMessage ||
+        (getRes.succeeded && !rawItem
+          ? `Requested ASIN ${targetAsin} was not returned in GetItems itemResults.items.`
+          : null),
     };
     return {
-      status: getRes.status,
+      status: missingItemStatus,
       evidence: null,
       operationRecord: opRecord,
     };
@@ -973,6 +1001,150 @@ export async function fetchAuthorizedAmazonProductEvidence(
   };
 }
 
+export interface ResolveAmazonCreatorsApiRuntimeClientOptions {
+  env?: Record<string, string | undefined>;
+  policy?: AmazonPolicyContext;
+  signal?: AbortSignal;
+  transportFactory?: () => typeof fetch;
+  allowIsolatedTestHost?: boolean;
+}
+
+export interface ResolvedAmazonCreatorsApiRuntimeClient {
+  client: CreatorsApiClient | null;
+  createdFromRuntimeFactory: boolean;
+  eligibility: AmazonAccessDecision;
+  reasonCode:
+    | "RUNTIME_CLIENT_CONSTRUCTED"
+    | "POLICY_DISABLED"
+    | "LIVE_NOT_ALLOWED"
+    | "CREDENTIALS_MISSING_OR_INCOMPLETE"
+    | "UNSUPPORTED_MARKETPLACE"
+    | "CLIENT_CONSTRUCTION_FAILED";
+  reason: string;
+}
+
+/**
+ * Runtime factory that constructs an official `CreatorsApiClient` from server environment
+ * when `featureEnabled && liveAllowed && eligibility.configured` are all satisfied.
+ * Never constructs a client or makes network calls when policy is disabled, live is not allowed,
+ * or credentials/partnerTag are missing.
+ */
+export function resolveAmazonCreatorsApiRuntimeClient(
+  options: ResolveAmazonCreatorsApiRuntimeClientOptions = {}
+): ResolvedAmazonCreatorsApiRuntimeClient {
+  const env = options.env || process.env;
+  const eligibility = resolveCreatorsApiEligibility(env, {
+    authenticated: false,
+    querySucceeded: false,
+    transportVerified: false,
+  });
+
+  if (
+    (options.policy && options.policy.featureEnabled === false) ||
+    !eligibility.featureEnabled
+  ) {
+    return {
+      client: null,
+      createdFromRuntimeFactory: false,
+      eligibility,
+      reasonCode: "POLICY_DISABLED",
+      reason: eligibility.reason,
+    };
+  }
+
+  if (
+    (options.policy && options.policy.accessPolicyStatus === "LIVE_NOT_ALLOWED") ||
+    !eligibility.liveAllowed
+  ) {
+    return {
+      client: null,
+      createdFromRuntimeFactory: false,
+      eligibility,
+      reasonCode: "LIVE_NOT_ALLOWED",
+      reason: eligibility.reason,
+    };
+  }
+
+  if (!eligibility.configured) {
+    return {
+      client: null,
+      createdFromRuntimeFactory: false,
+      eligibility,
+      reasonCode: "CREDENTIALS_MISSING_OR_INCOMPLETE",
+      reason: eligibility.reason,
+    };
+  }
+
+  if (!eligibility.eligibleForLiveRequests) {
+    return {
+      client: null,
+      createdFromRuntimeFactory: false,
+      eligibility,
+      reasonCode: "UNSUPPORTED_MARKETPLACE",
+      reason: eligibility.reason,
+    };
+  }
+
+  const credId = (
+    env.KH02_AMAZON_CREATORS_API_CREDENTIAL_ID ||
+    env.AMAZON_CREATORS_API_CREDENTIAL_ID ||
+    ""
+  ).trim();
+  const credSecret = (
+    env.KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+    env.AMAZON_CREATORS_API_CREDENTIAL_SECRET ||
+    ""
+  ).trim();
+  const partnerTag = (
+    env.KH02_AMAZON_ASSOCIATES_PARTNER_TAG ||
+    env.AMAZON_CREATORS_API_PARTNER_TAG ||
+    ""
+  ).trim();
+  const allowIsolatedTestHost = Boolean(
+    options.allowIsolatedTestHost ||
+      String(env.KH02_AMAZON_CREATORS_API_ALLOW_ISOLATED_TEST_HOST || "false")
+        .trim()
+        .toLowerCase() === "true"
+  );
+
+  try {
+    const client = createCreatorsApiClient({
+      credentialId: credId,
+      credentialSecret: credSecret,
+      partnerTag,
+      credentialVersion: eligibility.credentialVersion,
+      marketplace: eligibility.registeredMarketplace,
+      tokenEndpoint: env.KH02_AMAZON_CREATORS_API_TOKEN_ENDPOINT || undefined,
+      searchItemsEndpoint:
+        env.KH02_AMAZON_CREATORS_API_SEARCH_ITEMS_ENDPOINT || undefined,
+      getItemsEndpoint:
+        env.KH02_AMAZON_CREATORS_API_GET_ITEMS_ENDPOINT || undefined,
+      fetchFn: options.transportFactory ? options.transportFactory() : undefined,
+      allowIsolatedTestHost,
+      isIsolatedTestTransport: Boolean(
+        options.transportFactory || allowIsolatedTestHost
+      ),
+    });
+
+    return {
+      client,
+      createdFromRuntimeFactory: true,
+      eligibility,
+      reasonCode: "RUNTIME_CLIENT_CONSTRUCTED",
+      reason:
+        "Constructed official Amazon Creators API runtime client from server environment.",
+    };
+  } catch (err) {
+    return {
+      client: null,
+      createdFromRuntimeFactory: false,
+      eligibility,
+      reasonCode: "CLIENT_CONSTRUCTION_FAILED",
+      reason: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export interface RunAmazonUsPilotEnrichmentParams {
   workspaceId: string;
   researchRunId: string;
@@ -998,6 +1170,8 @@ export interface RunAmazonUsPilotEnrichmentParams {
   mcpSession?: AmazonPlaywrightMcpSession | null;
   mcpConnectOptions?: ConnectAmazonPlaywrightMcpOptions;
   creatorsApiClient?: CreatorsApiClient | null;
+  creatorsApiTransportFactory?: () => typeof fetch;
+  allowIsolatedTestHost?: boolean;
   signal?: AbortSignal;
   env?: Record<string, string | undefined>;
   reportProgress?: (message: string) => Promise<void>;
@@ -1014,14 +1188,28 @@ export async function runAmazonUsPilotEnrichment(
   marketplaceEvidence: AmazonProductEvidence[];
   marketplaceTelemetry: AmazonMarketplaceTelemetry;
 }> {
-  const policy = resolveAmazonUsPolicyContext(params.env || process.env, {
-    creatorsApiEntitlementVerified: Boolean(params.creatorsApiClient),
-  });
+  const effectiveEnv = params.env || process.env;
   const requestMode: AmazonRequestMode = params.requestMode || "URL_VERIFICATION";
   const isExplicitTestFixture =
     requestMode === "TEST_FIXTURE" ||
     requestMode === "USER_IMPORTED" ||
     Boolean(params.fixtureSnapshotsByUrl);
+
+  const runtimeClientResolution =
+    params.creatorsApiClient || (!params.optInRequested && !isExplicitTestFixture)
+      ? null
+      : resolveAmazonCreatorsApiRuntimeClient({
+          env: effectiveEnv,
+          signal: params.signal,
+          transportFactory: params.creatorsApiTransportFactory,
+          allowIsolatedTestHost: params.allowIsolatedTestHost,
+        });
+  const effectiveCreatorsApiClient: CreatorsApiClient | null =
+    params.creatorsApiClient || runtimeClientResolution?.client || null;
+
+  const policy = resolveAmazonUsPolicyContext(effectiveEnv, {
+    creatorsApiEntitlementVerified: Boolean(effectiveCreatorsApiClient),
+  });
 
   // If server flag is OFF and not an explicit fixture/import test, return DISABLED with zero operations
   if (!policy.featureEnabled && !isExplicitTestFixture) {
@@ -1215,7 +1403,7 @@ export async function runAmazonUsPilotEnrichment(
         budget,
         mcpSession: ownedSession,
         ownsMcpSession: false,
-        creatorsApiClient: params.creatorsApiClient || null,
+        creatorsApiClient: effectiveCreatorsApiClient,
         directSnapshotForImportOrFixture: directSnap,
         signal: params.signal,
       });
@@ -1262,9 +1450,11 @@ export async function runAmazonUsPilotEnrichment(
         niche: params.niche || "",
         candidates: discoveryTargets,
         policyContext: policy,
-        env: params.env || process.env,
+        env: effectiveEnv,
         budget,
-        creatorsApiClient: params.creatorsApiClient || null,
+        creatorsApiClient: effectiveCreatorsApiClient,
+        transportFactory: params.creatorsApiTransportFactory,
+        allowIsolatedTestHost: params.allowIsolatedTestHost,
         signal: params.signal,
       });
 

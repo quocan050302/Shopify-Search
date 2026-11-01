@@ -171,6 +171,8 @@ export interface RunEvergreenResearchInput {
   amazonPilotCandidateUrls?: Record<string, string>;
   amazonPilotRequestMode?: AmazonRequestMode;
   amazonPilotFixtureSnapshots?: Record<string, any>;
+  amazonPilotEnv?: Record<string, string | undefined>;
+  amazonPilotTransportFactory?: () => typeof fetch;
   signal?: AbortSignal;
 }
 
@@ -1897,6 +1899,8 @@ export async function runEvergreenProductResearch(
     candidateAmazonUrls: input.amazonPilotCandidateUrls,
     requestMode: input.amazonPilotRequestMode,
     fixtureSnapshotsByUrl: input.amazonPilotFixtureSnapshots,
+    env: input.amazonPilotEnv,
+    creatorsApiTransportFactory: input.amazonPilotTransportFactory,
     signal: abortSignal,
   });
 
