@@ -671,7 +671,7 @@ export function compareCandidateToWalmartListing(
       walmartItemId,
       matchLevel: "UNCERTAIN",
       verifiedIdentity: false,
-      presence: "FOUND",
+      presence: isAccessoryMismatch ? "NO_MATCH_IN_SCOPE" : "FOUND",
       matchedByGtinUpc,
       matchedByModel,
       matchedByBrand,

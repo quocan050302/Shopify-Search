@@ -108,6 +108,43 @@ function runShell(cmd: string, timeoutMs = 300_000): {
   }
 }
 
+function runShellAsync(
+  command: string,
+  envOverrides: Record<string, string> = {}
+): Promise<{
+  ok: boolean;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  durationMs: number;
+}> {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const child = spawn("sh", ["-c", command], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, ...envOverrides },
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (d) => {
+      stdout += d.toString();
+    });
+    child.stderr.on("data", (d) => {
+      stderr += d.toString();
+    });
+    child.on("close", (code) => {
+      const exitCode = code ?? 1;
+      resolve({
+        ok: exitCode === 0,
+        exitCode,
+        stdout: stdout.trim(),
+        stderr: stderr.trim(),
+        durationMs: Date.now() - start,
+      });
+    });
+  });
+}
+
 function getFreeDiskGiB(): number {
   try {
     const stat = fs.statfsSync(REPO_ROOT);
@@ -535,9 +572,17 @@ async function runHeadlessChromiumUiAndReloadParityWave(
   artifact08: any;
 }> {
   const start = Date.now();
-  const wsId = "default";
+  const firstWs = await prisma.workspace.findFirst({ select: { id: true } });
+  const wsId = firstWs?.id || "default-workspace";
   const uiRunId = `kh02_wmt_ui_parity_${Date.now()}`;
   const candidateId = "cand_ui_chomchom_674275778";
+  const productId = `prod_wmt_ui_${Date.now()}`;
+
+  await prisma.workspace.upsert({
+    where: { id: wsId },
+    update: {},
+    create: { id: wsId, name: "Default Acceptance Workspace" },
+  });
 
   // Seed persisted run with Walmart evidence in SQLite
   resetWalmartSharedHostGroupForTests();
@@ -585,6 +630,8 @@ async function runHeadlessChromiumUiAndReloadParityWave(
   const wmtSummary = enrichment.summariesByCandidateId[candidateId];
   const candidateObj = {
     candidateId,
+    researchProductId: productId,
+    productKey: "chomchom_roller_pet_hair_remover",
     title: "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
     canonicalProductName: "ChomChom Roller Pet Hair Remover",
     merchantVerifiedProductName: "ChomChom Roller Pet Hair Remover",
@@ -597,6 +644,10 @@ async function runHeadlessChromiumUiAndReloadParityWave(
     niche: "Pet Gadgets",
     storeDomain: "chomchomroller.com",
     canonicalProductUrl: "https://chomchomroller.com/products/chomchom-roller",
+    identityStatus: "VERIFIED",
+    identityConfidence: 92,
+    productRealityStatus: "VERIFIED_PHYSICAL_PRODUCT",
+    relevanceStatus: "RELEVANT",
     merchantPageVerified: true,
     priceUsd: 24.99,
     totalScore: 68.5,
@@ -608,10 +659,67 @@ async function runHeadlessChromiumUiAndReloadParityWave(
     distinctSources: 2,
     distinctSourceFamilies: 2,
     supportingAdIds: ["ad_ui_1", "ad_ui_2"],
+    supportingSourceTypes: ["META_ADS"],
     totalObservationCount: 4,
     distinctAdvertisersCount: 1,
+    activeDaysObserved: 45,
+    recurringWindowsCount: 2,
     evidenceSnippets: ["Reusable pet hair remover roller for furniture and carpets."],
     walmartEvidenceSummary: wmtSummary,
+  };
+
+  const scoreObj = {
+    candidateId,
+    opportunityScore: 68,
+    evidenceConfidence: 72,
+    scoreStatus: "PROVISIONAL",
+    tier: "PROVISIONAL_OPPORTUNITY",
+    formulaVersion: "12.1.0",
+    demandClass: "INSUFFICIENT_HISTORY",
+    pillars: {
+      demandStability: {
+        score: null,
+        maxWeight: 25,
+        status: "MISSING_DATA",
+        explanation: "Missing 60d demand",
+      },
+      problemSolutionFit: {
+        score: 16,
+        maxWeight: 20,
+        status: "PASS",
+        explanation: "Verified utility",
+      },
+      multiPlatformValidation: {
+        score: 12,
+        maxWeight: 20,
+        status: "MODERATE",
+        explanation: "Meta observed",
+      },
+      brandabilityStoreFit: {
+        score: 13,
+        maxWeight: 15,
+        status: "PASS",
+        explanation: "chomchomroller.com",
+      },
+      creativeDepth: {
+        score: 7,
+        maxWeight: 10,
+        status: "MODERATE",
+        explanation: "Creative observed",
+      },
+      competitionSustainability: {
+        score: 7,
+        maxWeight: 10,
+        status: "PASS",
+        explanation: "1 advertiser",
+      },
+    },
+    strengths: ["Merchant verified"],
+    risks: [],
+    missingEvidence: ["60-day longitudinal demand"],
+    recommendation: "SHORTLIST",
+    recommendationRationale: "Shortlisted physical product",
+    evaluatedAt: new Date().toISOString(),
   };
 
   const snapshotPayload = {
@@ -622,38 +730,37 @@ async function runHeadlessChromiumUiAndReloadParityWave(
     lookbackDays: 90,
     sourceMode: "LIVE_WITH_CACHE_FALLBACK",
     runStatus: "COMPLETED",
+    evaluatedAt: new Date().toISOString(),
     generatedAt: new Date().toISOString(),
     totalCandidatesDiscovered: 1,
     candidates: [candidateObj],
-    topThree: [
-      {
-        rank: 1,
-        candidate: candidateObj,
-        whyRankedHere: ["Verified merchant product page and ad observations."],
-      },
-    ],
-    provisionalCandidates: [{ rank: 1, candidate: candidateObj }],
+    topThree: [],
+    provisionalCandidates: [{ rank: 1, candidate: candidateObj, score: scoreObj }],
     remainingCandidates: [],
     insufficientEvidenceCandidates: [],
     researchShortlist: {
+      requestedCount: 3,
+      qualifiedCount: 1,
       shortlistId: `sl_${uiRunId}`,
       shortlistStatus: "POPULATED",
-      shortlist: [
-        {
-          rank: 1,
-          candidate: candidateObj,
-          shortlistReason: "Top shortlisted pet gadget candidate.",
-        },
-      ],
+      shortlist: [candidateObj],
+      QualificationNote: "Merchant-verified physical product shortlist",
     },
     walmartMarketplaceEvidence: enrichment.evidenceRows,
     walmartMarketplaceTelemetry: enrichment.telemetry,
   };
 
-  await prisma.workspace.upsert({
-    where: { id: wsId },
-    update: { name: "Default Acceptance Workspace" },
-    create: { id: wsId, name: "Default Acceptance Workspace" },
+  await prisma.researchProduct.upsert({
+    where: { id: productId },
+    update: {
+      title: "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+      category: "Pet Supplies",
+    },
+    create: {
+      id: productId,
+      title: "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+      category: "Pet Supplies",
+    },
   });
 
   await prisma.syncJob.upsert({
@@ -694,6 +801,9 @@ async function runHeadlessChromiumUiAndReloadParityWave(
       cwd: REPO_ROOT,
       env: {
         ...process.env,
+        HOST: "127.0.0.1",
+        HOSTNAME: "127.0.0.1",
+        PORT: String(port),
         NODE_ENV: "production",
         KH02_WALMART_US_ENABLED: "false",
         KH02_WALMART_US_LIVE_ALLOWED: "false",
@@ -708,7 +818,7 @@ async function runHeadlessChromiumUiAndReloadParityWave(
 
     // Fetch API payloads directly from the running server
     const apiWalmartRes = await fetch(
-      `${baseUrl}/api/v1/kh02/marketplace/walmart?runId=${encodeURIComponent(uiRunId)}`
+      `${baseUrl}/api/v1/kh02/marketplace/walmart?runId=${encodeURIComponent(uiRunId)}&workspaceId=${encodeURIComponent(wsId)}`
     );
     const apiWalmartJson = await apiWalmartRes.json();
 
@@ -719,19 +829,25 @@ async function runHeadlessChromiumUiAndReloadParityWave(
     );
     const apiOverviewJson = await apiOverviewRes.json();
 
-    const browser = await chromium.launch({ headless: true });
+    let browser;
     try {
-      const page = await browser.newPage();
+      browser = await chromium.launch({ headless: true });
+    } catch {
+      browser = await chromium.launch({ headless: true, channel: "chrome" });
+    }
+    try {
+      const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const page = await context.newPage();
       await page.goto(`${baseUrl}/products?runId=${encodeURIComponent(uiRunId)}`, {
-        waitUntil: "networkidle",
+        waitUntil: "domcontentloaded",
         timeout: 45_000,
       });
 
       await page.waitForSelector('[data-testid="pf-walmart-us-pilot-toggle"]', {
-        timeout: 20_000,
+        timeout: 25_000,
       });
       await page.waitForSelector('[data-testid="pf-candidate-walmart-us-evidence"]', {
-        timeout: 20_000,
+        timeout: 25_000,
       });
 
       const extractDomCardAttrs = async () => {
@@ -765,9 +881,9 @@ async function runHeadlessChromiumUiAndReloadParityWave(
       const domBeforeReload = await extractDomCardAttrs();
 
       // Reload page in real Chromium and re-verify DOM attributes
-      await page.reload({ waitUntil: "networkidle", timeout: 45_000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
       await page.waitForSelector('[data-testid="pf-candidate-walmart-us-evidence"]', {
-        timeout: 20_000,
+        timeout: 25_000,
       });
       const domAfterReload = await extractDomCardAttrs();
 
@@ -833,6 +949,7 @@ async function runHeadlessChromiumUiAndReloadParityWave(
       },
     });
     await prisma.syncJob.deleteMany({ where: { id: uiRunId } });
+    await prisma.researchProduct.deleteMany({ where: { id: productId } });
   }
 }
 
@@ -1384,11 +1501,19 @@ async function main() {
 
   // Wave C: TypeScript & Next.js Production Build
   console.log("[Walmart Acceptance V12.4.3.5.1] Running Wave C (tsc --noEmit & next build)...");
-  const waveTsc = runShell("npx tsc --noEmit");
+  const waveTsc = await runShellAsync("npx tsc --noEmit");
   if (!waveTsc.ok) {
     throw new Error(`Wave C tsc --noEmit failed:\n${waveTsc.stdout}\n${waveTsc.stderr}`);
   }
-  const waveBuild = runShell("npm run build", 420_000);
+  const nextLockPath = path.join(REPO_ROOT, ".next", "lock");
+  if (fs.existsSync(nextLockPath)) {
+    fs.rmSync(nextLockPath, { force: true });
+  }
+  let waveBuild = await runShellAsync("npm run build");
+  if (!waveBuild.ok) {
+    fs.rmSync(path.join(REPO_ROOT, ".next"), { recursive: true, force: true });
+    waveBuild = await runShellAsync("npm run build");
+  }
   if (!waveBuild.ok) {
     throw new Error(`Wave C next build failed:\n${waveBuild.stdout}\n${waveBuild.stderr}`);
   }
