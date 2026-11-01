@@ -1,0 +1,13 @@
+{
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "evaluatedAt": "2026-11-01T14:21:17.717Z",
+  "captureToReadbackVerified": true,
+  "hashDomainSeparated": true,
+  "persistedProofValidationStatus": "CONTENT_VALIDATED_WITH_SOURCE",
+  "landingSnapshotSemanticStatus": "SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF",
+  "commercialSemanticDigestSha256": "7d37c39a9844e26ca4c85a5fcbf9042360dc39cbb999a6182631e97bc63cbc0d",
+  "rawSchemaPayloadRef": "sha256:2aa2abda866ea0e5ecdeaa1c73a6502ed05f42e89e613525404e833ede197b3f",
+  "oversizePayloadRejected": true,
+  "midJsonTruncatedPayloadRejected": true,
+  "oversizeOrTruncatedAcceptedCount": 0
+}

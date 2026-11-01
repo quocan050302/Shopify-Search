@@ -1,0 +1,31 @@
+{
+  "codeSha": "858792b679abf22bea19801af203c89d7758a447",
+  "derivedFromTestSuite": "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts",
+  "passedTestsCountInWaveB": 71,
+  "failedTestsCountInWaveB": 0,
+  "workspaceIsolation": {
+    "crossWorkspaceWriteRejected": true,
+    "crossWorkspaceReadHttpStatus": 403
+  },
+  "workerFencing": {
+    "staleClaimTokenRejected": true,
+    "staleFencingTokenRejected": true,
+    "staleFencingGenerationRejected": true,
+    "expiredLeaseRejected": true
+  },
+  "persistenceFailureHandling": {
+    "injectedFailureSurfaced": true,
+    "errorCode": "WALMART_EVIDENCE_PERSISTENCE_FAILED",
+    "silentSuccessWhenWriteFails": false
+  },
+  "getRouteReadOnlyAudit": {
+    "route": "/api/v1/kh02/marketplace/walmart",
+    "dbMutationsOnGet": 0,
+    "networkCallsOnGet": 0,
+    "rescoringOnGet": 0
+  },
+  "childVerifyJobAudit": {
+    "jobType": "KH02_WALMART_VERIFY",
+    "enqueuedAndExecutedSuccessfully": true
+  }
+}

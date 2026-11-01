@@ -1,0 +1,47 @@
+{
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "evaluatedAt": "2026-11-01T14:21:17.649Z",
+  "evaluatedRunId": "kh02_run_1793532895465_z4tgh",
+  "evaluatedWorkspaceId": "acceptance_v12_2_4_ws",
+  "unverifiedObservationsRebrandedAsLiveCount": 0,
+  "existingIngestOutcomeAcceptedAsLiveCount": 0,
+  "updatedIngestOutcomeWithoutFreshEnvelopeAcceptedCount": 0,
+  "manualOrUserObservedAcceptedAsLiveCount": 0,
+  "deterministicFallbackAcceptedAsLiveCount": 0,
+  "unverifiedLiveOriginObservationsCount": 13,
+  "candidatesObservationProvenance": [
+    {
+      "candidateId": "cand_861882032",
+      "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+      "storeDomain": "dogfriendlyco.com",
+      "liveObservationsCount": 0,
+      "cachedOrFallbackObservationsCount": 10,
+      "unverifiedPersistedOriginCount": 10,
+      "hasLiveObservation": false,
+      "status": "UNVERIFIED",
+      "reasonCode": "UNVERIFIED_LINEAGE_ABSENT"
+    },
+    {
+      "candidateId": "cand_756670427",
+      "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+      "storeDomain": "tailorsgift.com",
+      "liveObservationsCount": 0,
+      "cachedOrFallbackObservationsCount": 2,
+      "unverifiedPersistedOriginCount": 2,
+      "hasLiveObservation": false,
+      "status": "PROBABLE",
+      "reasonCode": "UNVERIFIED_LINEAGE_ABSENT"
+    },
+    {
+      "candidateId": "cand_1037293781",
+      "title": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+      "storeDomain": "gluxehaus.com",
+      "liveObservationsCount": 0,
+      "cachedOrFallbackObservationsCount": 1,
+      "unverifiedPersistedOriginCount": 1,
+      "hasLiveObservation": false,
+      "status": "PROBABLE",
+      "reasonCode": "UNVERIFIED_LINEAGE_ABSENT"
+    }
+  ]
+}

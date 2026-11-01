@@ -1,0 +1,260 @@
+{
+  "split": "DEV",
+  "niche": "Pet Gadgets",
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "datasetFingerprintSha256": "f9e80915cea9901a325fec6da7c8654cf37ffcec1a0aea29be60b120f067a72c",
+  "windowStart": "2026-06-01T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+  "historicalObservationCount": 60,
+  "reconstructedCandidateCount": 5,
+  "nicheFunnel": {
+    "sourceAdsCount": 60,
+    "excludedFixtureOrQuarantineAdsCount": 40,
+    "pointInTimeAdsCount": 20,
+    "reconstructedCandidatesCount": 5,
+    "matchedCount": 0,
+    "mismatchCount": 4,
+    "uncertainCount": 1,
+    "identityVerifiedOrProbableCount": 2,
+    "identityVerifiedCount": 0,
+    "provisionalDiscoveryCount": 0,
+    "funnelProbableCount": 0,
+    "distinctMatchedFamiliesCount": 0,
+    "shortlistedCount": 0,
+    "shortlistShortfallCount": 3
+  },
+  "shortlistCount": 0,
+  "nicheMatchedCount": 0,
+  "verifiedIdentityCount": 0,
+  "funnelProbableCount": 0,
+  "shortlistShortfallCount": 3,
+  "nicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+  "identityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+  "candidateFunnel": {
+    "sourceAds": 60,
+    "nonSyntheticSourceAds": 20,
+    "reconstructedCandidates": 5,
+    "identityResolved": 2,
+    "nicheEligible": 0,
+    "nicheMatchingCandidates": 0,
+    "identityVerifiedCandidates": 0,
+    "liveVerifiedCandidates": 0,
+    "provisionalCandidates": 0,
+    "nicheRejectedMismatch": 4,
+    "nicheRejectedUncertain": 1,
+    "familyDeduped": 0,
+    "shortlistSelected": 0,
+    "verifiedIdentityCount": 0,
+    "funnelProbableCount": 0
+  },
+  "rejectionReasonHistogram": {
+    "AMBIGUOUS_SINGLE_TOKEN_OVERLAP": 2,
+    "CROSS_NICHE_MISMATCH": 2,
+    "BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF": 1
+  },
+  "candidateEvaluations": [
+    {
+      "candidateId": "cand_hist_bleame.example.com_crystal_hair_eraser_v2",
+      "title": "Crystal Hair Eraser V2",
+      "storeDomain": "bleame.example.com",
+      "canonicalProductUrl": "https://bleame.example.com/eraser",
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 6,
+      "observationsCount": 6,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "AMBIGUOUS_SINGLE_TOKEN_OVERLAP",
+      "reasons": [
+        "Candidate 'Crystal Hair Eraser V2' matches ambiguous token 'hair' for human beauty/personal care, not 'Pet Gadgets'"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_bleame.example.com_crystal_hair_eraser_v2",
+        "domain:bleame.example.com",
+        "url:https://bleame.example.com/eraser"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_bleame.example.com_crystal_hair_eraser_v2",
+        "domain:bleame.example.com",
+        "url:https://bleame.example.com/eraser"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_auto_detailing_putty_gel",
+      "title": "Auto Detailing Putty Gel",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 6,
+      "observationsCount": 6,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "CROSS_NICHE_MISMATCH",
+      "reasons": [
+        "Candidate 'Auto Detailing Putty Gel' does not target 'Pet Gadgets' audience/category"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_auto_detailing_putty_gel",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_auto_detailing_putty_gel",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_stainless_steel_face_ice_rolle",
+      "title": "Stainless Steel Face Ice Roller",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 6,
+      "observationsCount": 6,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "AMBIGUOUS_SINGLE_TOKEN_OVERLAP",
+      "reasons": [
+        "Candidate 'Stainless Steel Face Ice Roller' matches ambiguous token 'roller'/'brush' for human skin/home use, not 'Pet Gadgets'"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_stainless_steel_face_ice_rolle",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_stainless_steel_face_ice_rolle",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_order.uprootclean.com_uproot_clean",
+      "title": "Uproot Clean",
+      "storeDomain": "order.uprootclean.com",
+      "canonicalProductUrl": "https://order.uprootclean.com/main/wmtabs/wmt004-1",
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "FUNNEL_UNVERIFIED",
+      "isCheckoutChampFunnel": true,
+      "identityReasonCodes": [
+        "CHECKOUTCHAMP_OR_FUNNEL_UNVERIFIED_WITHOUT_ROOT_JSON_LD"
+      ],
+      "familyKey": "pet_hair_remover_roller",
+      "observationCount": 1,
+      "observationsCount": 1,
+      "matchStatus": "UNCERTAIN",
+      "nicheMatched": false,
+      "rejectionReasonCode": "BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF",
+      "reasons": [
+        "Brand-only headline 'Uproot Clean' without concrete product title, body copy, or verified product slug"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_order.uprootclean.com_uproot_clean",
+        "domain:order.uprootclean.com",
+        "url:https://order.uprootclean.com/main/wmtabs/wmt004-1"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_order.uprootclean.com_uproot_clean",
+        "domain:order.uprootclean.com",
+        "url:https://order.uprootclean.com/main/wmtabs/wmt004-1"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_custom_dog___cat_sweatpants",
+      "title": "Custom Dog & Cat Sweatpants",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 1,
+      "observationsCount": 1,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "CROSS_NICHE_MISMATCH",
+      "reasons": [
+        "Candidate 'Custom Dog & Cat Sweatpants' is human apparel/personalized merchandise rather than a functional pet gadget"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_custom_dog___cat_sweatpants",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_custom_dog___cat_sweatpants",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    }
+  ],
+  "shortlistProducts": [],
+  "productEvidenceLedger": [],
+  "distinctFamiliesCount": 0,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 0,
+    "trustedPointInTimeJoinedCount": 0,
+    "rejectedPostCutoffJoinedCount": 0,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 0,
+    "adObservationOnlyCount": 20,
+    "excludedFixtureRecordCount": 40,
+    "leakagePrevented": true
+  },
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": true,
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed for niche 'Pet Gadgets' with 60 historical records (20 non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=0). Niche-matched discovery shortlist items: 0/0 (nicheCoverageStatus=INSUFFICIENT_NICHE_COVERAGE, verifiedIdentityCount=0/0, identityCoverageStatus=INSUFFICIENT_VERIFIED_IDENTITY, funnelProbableCount=0, shortfall=3). Demand evaluation detail: No niche-matched candidates in DEV window at asOf (INSUFFICIENT_NICHE_COVERAGE). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

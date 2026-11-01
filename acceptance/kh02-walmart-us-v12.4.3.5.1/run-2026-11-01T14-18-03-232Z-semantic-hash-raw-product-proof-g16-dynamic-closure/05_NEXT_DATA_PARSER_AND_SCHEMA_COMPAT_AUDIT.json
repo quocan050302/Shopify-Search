@@ -1,0 +1,51 @@
+{
+  "botWallAndInnerErrorAudit": {
+    "outer200WithBotWallStatus": "BLOCKED_PROVIDER",
+    "outer200WithInner429Status": "RATE_LIMITED",
+    "falseSuccessCount": 0
+  },
+  "malformedNextDataAudit": {
+    "missingScriptStatus": "PARSE_ERROR",
+    "corruptJsonStatus": "PARSE_ERROR",
+    "classifiedAsNoMatch": false
+  },
+  "emptySearchAudit": {
+    "queryStatus": "SUCCEEDED",
+    "presence": "NO_MATCH_IN_SCOPE",
+    "listingsCount": 0
+  },
+  "deduplicationAudit": {
+    "rawItemCount": 4,
+    "dedupedItemCount": 3,
+    "dedupedByItemId": true,
+    "preservedProvenance": [
+      "SPONSORED",
+      "ORGANIC"
+    ]
+  },
+  "upcStringPreservation": {
+    "sonyItemId": "16504921979",
+    "sonyUpc": "027242930698",
+    "typeofUpc": "string",
+    "leadingZeroPreserved": true
+  },
+  "nullablePriceAudit": {
+    "missingPriceValue": null,
+    "coercedToZero": false
+  },
+  "outOfStockAudit": {
+    "presence": "FOUND",
+    "availability": "OUT_OF_STOCK"
+  },
+  "locationContextAudit": {
+    "observedPostalCode": "95829",
+    "observedStoreIds": [
+      "3081"
+    ],
+    "claimedAsNationwidePriceOrStock": false
+  },
+  "pdpIdentityAudit": {
+    "mismatchedItemIdStatus": "PARSE_ERROR",
+    "mismatchedItemIdAccepted": false
+  }
+}

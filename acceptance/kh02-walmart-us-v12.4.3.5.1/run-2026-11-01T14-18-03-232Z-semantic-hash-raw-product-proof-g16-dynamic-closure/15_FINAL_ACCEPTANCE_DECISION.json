@@ -1,0 +1,151 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "runtimeReleaseIdentity": "12.4.3.5.0.3",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "codeSha": "858792b679abf22bea19801af203c89d7758a447",
+  "testedCodeSha": "858792b679abf22bea19801af203c89d7758a447",
+  "testedTreeSha": "8ca81e7ae74047393307c953e9cc6d29eeff71af",
+  "engineeringVerdict": "PASS",
+  "broadRegressionVerdict": "PASS",
+  "requiredE2eCoverageVerdict": "PASS",
+  "historicalReplayIntegrityVerdict": "PASS",
+  "nicheRelevanceVerdict": "PASS",
+  "historicalProductIdentityTruthVerdict": "PASS",
+  "liveWalmartProviderVerdict": "BLOCKED_PROVIDER",
+  "liveAmazonProviderVerdict": "CREDENTIALS_REQUIRED",
+  "kh02BusinessVerdict": "INSUFFICIENT_EVIDENCE",
+  "historicalEvidenceVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "historicalG07Verdict": "BLOCKED",
+  "historicalG15Verdict": "INSUFFICIENT_EVIDENCE",
+  "historicalG16Verdict": "INSUFFICIENT_EVIDENCE",
+  "deliveryVerdict": "READY_FOR_REVIEW",
+  "overallVerdict": "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+  "verdictMatrix": {
+    "ENGINEERING_TESTS": "PASS",
+    "BROAD_REGRESSION": "PASS",
+    "REQUIRED_E2E_COVERAGE": "PASS",
+    "HISTORICAL_REPLAY_INTEGRITY": "PASS",
+    "NICHE_RELEVANCE": "PASS",
+    "HISTORICAL_PRODUCT_IDENTITY_TRUTH": "PASS",
+    "HISTORICAL_VERIFIED_IDENTITY_COVERAGE": "INSUFFICIENT_VERIFIED_IDENTITY",
+    "PERSISTED_PRODUCT_SCHEMA_PROOF": "INSUFFICIENT_EVIDENCE",
+    "PERSISTED_LIVE_ORIGIN_PROOF": "INSUFFICIENT_EVIDENCE",
+    "PERSISTED_SCHEMA_TRUTH_ENFORCEMENT": "PASS",
+    "LIVE_OBSERVATION_ORIGIN_ENFORCEMENT": "PASS",
+    "LIVE_PROVIDERS": {
+      "WALMART_US": "BLOCKED_PROVIDER",
+      "AMAZON_US": "CREDENTIALS_REQUIRED",
+      "TIKTOK_US_G07": "BLOCKED",
+      "TIKTOK_ADS": "BLOCKED",
+      "GOOGLE_ADS": "CONFIGURED",
+      "META_ADS": "SOURCE_ACCESS_VERIFIED",
+      "DEMAND_HISTORY": "ENGINE_READY"
+    },
+    "CURRENT_LIVE_PROVIDERS": {
+      "WALMART_US": "BLOCKED_PROVIDER",
+      "AMAZON_US": "CREDENTIALS_REQUIRED",
+      "TIKTOK_US_G07": "BLOCKED",
+      "TIKTOK_ADS": "BLOCKED",
+      "GOOGLE_ADS": "CONFIGURED",
+      "META_ADS": "SOURCE_ACCESS_VERIFIED",
+      "DEMAND_HISTORY": "ENGINE_READY"
+    },
+    "HISTORICAL_DEMAND_G15": "INSUFFICIENT_EVIDENCE",
+    "MERCHANT_TOP3_G16": "INSUFFICIENT_EVIDENCE",
+    "HISTORICAL_STORED_PROOF": {
+      "snapshotRunId": "kh02_run_1793532895465_z4tgh",
+      "snapshotCreatedAt": "2026-11-01T11:34:55.465Z",
+      "snapshotFreshness": "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+      "reconstructionStatus": "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE",
+      "previousSnapshotClaimedVerifiedCount": 2,
+      "verifiedFromPersistedEvidenceCount": 0,
+      "persistedSchemaVerifiedCount": 0,
+      "persistedLiveOriginVerifiedCount": 0,
+      "newLiveVerifiedDuringThisRun": 0,
+      "storedG16Verdict": "INSUFFICIENT_EVIDENCE",
+      "verifiedLiveMerchantsCount": 0,
+      "requiredLiveMerchantsCount": 3,
+      "storedShortlistNicheMatchedCount": 3,
+      "storedShortlistTotalCount": 3
+    },
+    "BUSINESS_EVERGREEN_COVERAGE": "INSUFFICIENT_EVIDENCE",
+    "FINAL_RELEASE": "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS"
+  },
+  "nonInflationSummary": {
+    "comparedCandidatesCount": 3,
+    "candidateSetMatch": true,
+    "providerPathExercised": true,
+    "walmartEvidenceRowsExercised": 3,
+    "scoreDeltaAbsMax": 0,
+    "rankingChanged": false,
+    "gateChanges": 0,
+    "nonInflationVerified": true
+  },
+  "backtestSummary": {
+    "backtestEngineExecuted": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "policyScenarioVerdict": "PASS",
+    "policyScenariosPassed": "21/21",
+    "devObservationsCount": 60,
+    "holdoutObservationsCount": 377,
+    "businessHistoricalEvidenceSufficient": "INSUFFICIENT_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "e2eExecutionSummary": null,
+  "nicheRelevanceSummary": {
+    "devCrossNicheFalsePositives": 0,
+    "holdoutCrossNicheFalsePositives": 0,
+    "paddedWithMismatchOrUncertainCount": 0,
+    "holdoutNicheMatchedCount": 3,
+    "holdoutShortlistCount": 3
+  },
+  "historicalIdentitySummary": {
+    "devVerifiedIdentityCount": 0,
+    "holdoutVerifiedIdentityCount": 0,
+    "holdoutFunnelProbableCount": 1,
+    "holdoutIdentityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+    "urlPathOnlyPromotedToVerifiedCount": 0,
+    "funnelPromotedToVerifiedCount": 0,
+    "discoveryRefsCopiedToIndependentProofCount": 0,
+    "g16PreviousSnapshotClaimedVerifiedCount": 2,
+    "g16VerifiedFromPersistedEvidenceCount": 0,
+    "g16ReconstructionStatus": "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE",
+    "g16SyntheticHydrationUsed": false
+  },
+  "remainingExternalBlockers": [
+    {
+      "blockerId": "EXT_WALMART_JINA_BOT_WALL",
+      "dimension": "liveWalmartProviderVerdict",
+      "status": "BLOCKED_PROVIDER",
+      "detail": "WALMART_BOT_OR_CAPTCHA_WALL"
+    },
+    {
+      "blockerId": "EXT_AMAZON_CREATORS_CREDENTIALS",
+      "dimension": "liveAmazonProviderVerdict",
+      "status": "CREDENTIALS_REQUIRED",
+      "detail": "CREDENTIALS_REQUIRED: Official Amazon Associates Creators API credentials (KH02_AMAZON_CREATORS_API_CREDENTIAL_ID, KH02_AMAZON_CREATORS_API_CREDENTIAL_SECRET, KH02_AMAZON_ASSOCIATES_PARTNER_TAG) are not configured in server environment."
+    },
+    {
+      "blockerId": "EXT_G15_60D_LONGITUDINAL_DEMAND",
+      "dimension": "historicalG15Verdict",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "detail": "ProductDemandObservation table has 0 rows (0/3 shortlisted candidates meet >=60d authoritative product-level longitudinal demand)."
+    },
+    {
+      "blockerId": "EXT_G07_TIKTOK_US_SOURCE",
+      "dimension": "historicalG07Verdict",
+      "status": "BLOCKED",
+      "detail": "Automated TikTok US ad provider is unconfigured (TIKTOK_CC_COOKIE or APIFY_TOKEN required); database cache / manual Creative Center batch import available."
+    },
+    {
+      "blockerId": "EXT_G16_TOP3_LIVE_MERCHANT_PROOF",
+      "dimension": "historicalG16Verdict",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "detail": "Evaluated run 'kh02_run_1793532895465_z4tgh' has 0/3 live-verified merchant candidates reconstructable from persisted DB rows (stored snapshot claimed 2/3; immutable DB rows in workspace 'acceptance_v12_2_4_ws' have 0 fresh live-ingested observation(s) (0/3 candidates with live origin) and 0 persisted product-schema proof(s) (0/3 candidates with schema proof))."
+    }
+  ],
+  "negativeMutationsCaught": "96/96",
+  "completedAt": "2026-11-01T14:21:18.092Z"
+}

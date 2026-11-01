@@ -1,0 +1,27 @@
+# KH-02 V12.4.3.5.1 — Walmart US Product Discovery + PDP Evidence (Jina Reader REST, No API Key)
+## Executive Acceptance Summary (Semantic-Hash vs Raw Product-Schema Proof Separation + Dynamic G16 Diagnostics)
+
+- **Release Version**: `12.4.3.5.1` (Runtime compatibility version: `12.4.3.5.0.3`)
+- **Target Branch**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Base Branch (`origin/QA`) SHA**: `fbe51a06ab8354c886d0415a9599f977c83caabc` (`origin/master` SHA: `5dd5128b4ec9ce70e957a2f250b9012a25e9118c`, identical git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`)
+- **Tested `CODE_SHA`**: `858792b679abf22bea19801af203c89d7758a447` (Tested Tree SHA: `8ca81e7ae74047393307c953e9cc6d29eeff71af`)
+- **Engineering Verdict**: `PASS`
+- **Persisted Schema Truth Enforcement**: `PASS` (`semanticContentHashNotRawProofCount: 4`, `rawSourceHashTamperedNonFixtureCount: 0`)
+- **Live Observation Origin Enforcement**: `PASS`
+- **G16 Negative & Positive Matrix Receipts**: `39/39` PASS (`M01..M17` = 17/17, `L01..L16` = 16/16, `P01..P06` = 6/6) + `55/55` total G16 negative tests PASS.
+- **Broad Regression (153/153 Test Files)**: `PASS` (`107` unit files + `34` integration files + `12` E2E specs = `153/153` files executed, `1761/1761` tests passed, `0` failed, `0` exempted).
+- **Niche-Accurate & Identity-Truthful Historical Replay (`Pet Gadgets`)**:
+  - **DEV (`<= 2026-10-24`)**: `60` observations -> `5` candidates -> `0` niche-matched -> `shortlistCount: 0`, `verifiedIdentityCount: 0`, `nicheCoverageStatus: INSUFFICIENT_NICHE_COVERAGE`, `identityCoverageStatus: INSUFFICIENT_VERIFIED_IDENTITY`.
+  - **HOLDOUT (`2026-10-24 .. 2026-10-30`)**: `377` observations -> `318` candidates -> `3/3` (100%) niche-matched Pet Gadgets Top-3 across `3` distinct product families (`nicheCoverageStatus: SUFFICIENT_NICHE_COVERAGE`), with `verifiedIdentityCount: 0`, `funnelProbableCount: 1` (`cc.uprootclean.com/main/phr` classified as `PROBABLE` + `FUNNEL_UNVERIFIED`), and `identityCoverageStatus: INSUFFICIENT_VERIFIED_IDENTITY`.
+- **G16 Persisted Lineage Reconstruction (`kh02_run_1793506961831_zvxlw`)**:
+  - `previousSnapshotClaimedVerifiedCount: 2`
+  - `verifiedFromPersistedEvidenceCount: 0`
+  - `unverifiedLiveOriginObservationsCount: 13`
+  - `reconstructionStatus: HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE`
+  - `dynamicReason`: `Evaluated run 'kh02_run_1793532895465_z4tgh' has 0/3 live-verified merchant candidates reconstructable from persisted DB rows (stored snapshot claimed 2/3; immutable DB rows in workspace 'acceptance_v12_2_4_ws' have 0 fresh live-ingested observation(s) (0/3 candidates with live origin) and 0 persisted product-schema proof(s) (0/3 candidates with schema proof)).`
+  - `historicalG16Verdict: INSUFFICIENT_EVIDENCE`
+- **Live Walmart Provider Verdict**: `BLOCKED_PROVIDER`
+- **Live Amazon Provider Verdict**: `CREDENTIALS_REQUIRED`
+- **KH-02 Business Verdict**: `INSUFFICIENT_EVIDENCE` (G07 TikTok US: `BLOCKED`; G15 >=60d demand: `INSUFFICIENT_EVIDENCE`; G16 Persisted Top-3: `INSUFFICIENT_EVIDENCE`)
+- **Overall Verdict**: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`
+- **96-Case Physical-File Negative Mutation Suite**: `PASS` (`96/96` caught, `0` false passes)

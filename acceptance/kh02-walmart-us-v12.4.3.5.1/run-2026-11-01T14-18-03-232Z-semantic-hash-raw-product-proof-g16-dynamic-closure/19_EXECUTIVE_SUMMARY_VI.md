@@ -1,0 +1,43 @@
+# Báo Cáo Nghiệm Thu Kỹ Thuật & Thực Thi Đầy Đủ — KH-02 V12.4.3.5.1 (Semantic-Hash vs Raw Product-Schema Proof Separation + Dynamic G16 Diagnostics)
+
+- **Nhánh (Branch)**: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- **Commit Mã Nguồn Đã Test (`TESTED_SOURCE_SHA`)**: `858792b679abf22bea19801af203c89d7758a447` (Tree SHA: `8ca81e7ae74047393307c953e9cc6d29eeff71af`)
+- **Quan Hệ Với `origin/QA` & `origin/master`**: `origin/QA` (`fbe51a06ab8354c886d0415a9599f977c83caabc`) và `origin/master` (`5dd5128b4ec9ce70e957a2f250b9012a25e9118c`) chia sẻ cùng git tree `96bdcb6f658ec7b696c156df3c2a03aa51f6031e`.
+- **Tách Bạch Miền Băm Thương Mại (`COMMERCIAL_SEMANTIC_DIGEST_SHA256`) và Bằng Chứng Schema Sản Phẩm Thô (`RAW_SCHEMA_PAYLOAD_SHA256`) + Chẩn Đoán G16 Động**:
+  - **Workstream A (`landingPageSnapshotService.ts`, `merchantIdentityPolicy.ts`, `offerExtractionService.ts`, `landingPageInspectionService.ts`, `researchResultPersistenceService.ts`)**:
+    - Tách bạch rõ ràng `LandingPageSnapshot.contentHash` (`COMMERCIAL_SEMANTIC_DIGEST_SHA256`, dùng cho so sánh thay đổi thương mại trong `compareLandingPageSnapshots`) khỏi SHA-256 của payload JSON-LD sản phẩm thô (`RAW_SCHEMA_PAYLOAD_SHA256`).
+    - Phân loại chính xác các dòng `LandingPageSnapshot` thực tế trong DB có `observationsJson` dạng CRO và `contentHash` ngữ nghĩa là `SEMANTIC_CONTENT_HASH_NOT_RAW_PROOF` (`semanticContentHashNotRawProofCount = 4`, `rawSourceHashTamperedNonFixtureCount = 0`), không bao giờ gán nhầm là `RAW_SOURCE_HASH_TAMPERED`.
+    - Bảo toàn các khối `<script type="application/ld+json">` thô trong `parsePublicLandingPage` và lưu trực tiếp bằng chứng `@type: "Product" | "ProductGroup"` hợp lệ (`<= 32KB`, không bao giờ cắt cụt giữa chừng JSON) vào bảng `ResearchEvidence` (`observationMethod = "MERCHANT_PDP_JSON_LD"`, `classification = "SOURCE_OBSERVED"`, `sourceContentRef = "sha256:<hex>"`) trong cùng transaction `persistCompletedResearchResult`.
+  - **Workstream B & C (`acceptanceTruth.ts`)**:
+    - Thay thế hoàn toàn chuỗi `reason` tĩnh của G16 bằng hàm thuần `buildG16DiagnosticReason(...)` phản ánh chính xác số lượng ứng viên, trạng thái `productSchemaProofStatus`, `originProofStatus`, và `isCheckoutChampFunnel` thực tế.
+    - Bổ sung đầy đủ các trường chẩn đoán chi tiết trên từng ứng viên G16 (`canonicalProductKey`, `productSchemaProofStatus`, `proofMethod`, `persistedProofRowIds`, `proofSourceObservedAt`, `originProofStatus`, `authenticLiveObservationIds`, `matchingRunId`, `matchingWorkspaceId`, `g16PredicateStatuses`, `rejectionReasonCodes`, `storedSnapshotClaimDiff`).
+- **Ma Trận Kiểm Thử G16 Schema & Origin (`M01..M17`, `L01..L16`, `P01..P06`)**:
+  - `merchantSchemaNegativeCount`: `17/17` PASS (`M01..M17`)
+  - `liveOriginNegativeCount`: `16/16` PASS (`L01..L16`)
+  - `positiveContractCount`: `6/6` PASS (`P01..P06`)
+  - Tổng hợp `runG16NegativeTests()`: `55/55` PASS (100%).
+- **Thực Thi Toàn Bộ 153/153 File Test (Bao Gồm 12/12 Spec E2E)**:
+  - Unit Suite (`107/107` file = `99` + `8`): `1546/1546` PASS (100%).
+  - Integration Suite (`34/34` file): `181/181` PASS (100%).
+  - E2E Matrix (`12/12` spec = `6` Vitest Integration E2E + `6` Playwright Browser E2E): `34/34` test case PASS (100%, `0` skipped, `0` failed).
+  - Tổng cộng: `153/153` file test thực thi (`1761/1761` test case PASS, `0` fail, `0` miễn trừ).
+- **Replay Lịch Sử DEV / HOLDOUT (`Pet Gadgets`)**:
+  - **DEV (`<= 2026-10-24`)**: `60` quan sát lịch sử -> `5` ứng viên tái tạo -> `shortlistCount = 0`, `verifiedIdentityCount = 0`, `nicheCoverageStatus = INSUFFICIENT_NICHE_COVERAGE`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+  - **HOLDOUT (`2026-10-24 .. 2026-10-30`)**: `377` quan sát lịch sử -> `318` ứng viên tái tạo -> `shortlistCount = 3`, `nicheMatchedCount = 3` (`nicheCoverageStatus = SUFFICIENT_NICHE_COVERAGE`), `verifiedIdentityCount = 0`, `funnelProbableCount = 1`, `identityCoverageStatus = INSUFFICIENT_VERIFIED_IDENTITY`.
+- **Ma Trận Verdict Tách Bạch & 96 Đột Biến Âm Tính (Negative Mutations)**:
+  - `ENGINEERING_TESTS`: `PASS`
+  - `BROAD_REGRESSION`: `PASS`
+  - `REQUIRED_E2E_COVERAGE`: `PASS`
+  - `HISTORICAL_REPLAY_INTEGRITY`: `PASS`
+  - `NICHE_RELEVANCE`: `PASS`
+  - `HISTORICAL_PRODUCT_IDENTITY_TRUTH`: `PASS`
+  - `HISTORICAL_VERIFIED_IDENTITY_COVERAGE`: `INSUFFICIENT_VERIFIED_IDENTITY`
+  - `PERSISTED_PRODUCT_SCHEMA_PROOF`: `INSUFFICIENT_EVIDENCE`
+  - `PERSISTED_LIVE_ORIGIN_PROOF`: `INSUFFICIENT_EVIDENCE`
+  - `PERSISTED_SCHEMA_TRUTH_ENFORCEMENT`: `PASS`
+  - `LIVE_OBSERVATION_ORIGIN_ENFORCEMENT`: `PASS`
+  - `LIVE_PROVIDERS`: `WALMART_US=BLOCKED_PROVIDER`, `AMAZON_US=CREDENTIALS_REQUIRED`, `TIKTOK_US_G07=BLOCKED`
+  - `HISTORICAL_DEMAND_G15`: `INSUFFICIENT_EVIDENCE`
+  - `MERCHANT_TOP3_G16`: `INSUFFICIENT_EVIDENCE` (`previousSnapshotClaimedVerifiedCount = 2`, `verifiedFromPersistedEvidenceCount = 0`, `reconstructionStatus = HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE`)
+  - `FINAL_RELEASE`: `ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS`
+  - Bộ đột biến âm tính trên file vật lý: `96/96` bị bắt chính xác (`0` false pass).

@@ -1,0 +1,330 @@
+{
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "evaluatedAt": "2026-11-01T14:21:17.719Z",
+  "passed": true,
+  "totalMatrixCases": 39,
+  "passedMatrixCases": 39,
+  "failedMatrixCases": 0,
+  "merchantSchemaNegativeCount": 17,
+  "liveOriginNegativeCount": 16,
+  "positiveContractCount": 6,
+  "cases": [
+    {
+      "testId": "M01",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "LandingPageSnapshot with pageTitle + finalUrl + contentHash only (no observationsJson Product JSON-LD) is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "identityStatus=PROBABLE, validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE",
+      "observedOutcome": "identityStatus=PROBABLE, validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE"
+    },
+    {
+      "testId": "M02",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "LandingPageSnapshot with CRO observationsJson lacking Product JSON-LD is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "identityStatus=PROBABLE, validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD",
+      "observedOutcome": "identityStatus=PROBABLE, validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD"
+    },
+    {
+      "testId": "M03",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "ResearchProduct row with /products/... URL alone is discovery-only and NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "identityStatus=PROBABLE, validationStatus=PRODUCT_ROW_DISCOVERY_ONLY",
+      "observedOutcome": "identityStatus=PROBABLE, validationStatus=PRODUCT_ROW_DISCOVERY_ONLY"
+    },
+    {
+      "testId": "M04",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "CompetitorOfferSnapshot price/offer-only row is NOT VERIFIED identity proof",
+      "passed": true,
+      "expectedOutcome": "identityStatus=PROBABLE, validationStatus=OFFER_SNAPSHOT_NOT_IDENTITY_PROOF",
+      "observedOutcome": "identityStatus=PROBABLE, validationStatus=OFFER_SNAPSHOT_NOT_IDENTITY_PROOF"
+    },
+    {
+      "testId": "M05",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "CheckoutChamp / funnel domain (cc.uprootclean.com, /main/phr) without root JSON-LD product schema stays PROBABLE / FUNNEL_UNVERIFIED",
+      "passed": true,
+      "expectedOutcome": "identityStatus=PROBABLE, verificationEvidenceStatus=FUNNEL_UNVERIFIED",
+      "observedOutcome": "identityStatus=PROBABLE, verificationEvidenceStatus=FUNNEL_UNVERIFIED"
+    },
+    {
+      "testId": "M06",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "ResearchEvidence with JSON-LD @type Organization / WebSite / BreadcrumbList / ItemList / Article (not Product) is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=NON_PRODUCT_JSON_LD_TYPE",
+      "observedOutcome": "validationStatus=NON_PRODUCT_JSON_LD_TYPE"
+    },
+    {
+      "testId": "M07",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "ResearchEvidence with observedValue='{\"schemaVerified\":true}' or '{\"hasJsonLdProduct\":true}' without actual Product JSON-LD is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD",
+      "observedOutcome": "validationStatus=NO_PRODUCT_JSON_LD_IN_PAYLOAD"
+    },
+    {
+      "testId": "M08",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "LandingPageSnapshot with httpStatus 403/500 or accessStatus=BLOCKED is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=HTTP_OR_ACCESS_BLOCKED",
+      "observedOutcome": "validationStatus=HTTP_OR_ACCESS_BLOCKED"
+    },
+    {
+      "testId": "M09",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "ResearchEvidence with observationMethod=MANUAL_ENTRY or classification=INFERRED is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=UNSAFE_OBSERVATION_METHOD_OR_CLASSIFICATION",
+      "observedOutcome": "validationStatus=UNSAFE_OBSERVATION_METHOD_OR_CLASSIFICATION"
+    },
+    {
+      "testId": "M10",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Valid Product JSON-LD for a different product/SKU on the same merchant domain is NOT VERIFIED for target candidate",
+      "passed": true,
+      "expectedOutcome": "validationStatus=PRODUCT_OR_SKU_MISMATCH_REJECTED",
+      "observedOutcome": "validationStatus=PRODUCT_OR_SKU_MISMATCH_REJECTED"
+    },
+    {
+      "testId": "M11",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Valid Product JSON-LD for the same slug on an unrelated merchant domain is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=DOMAIN_MISMATCH_REJECTED",
+      "observedOutcome": "validationStatus=DOMAIN_MISMATCH_REJECTED"
+    },
+    {
+      "testId": "M12",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Valid Product JSON-LD with observedAt > asOf is rejected as POST_CUTOFF",
+      "passed": true,
+      "expectedOutcome": "validationStatus=POST_CUTOFF_OR_INVALID_DATE",
+      "observedOutcome": "validationStatus=POST_CUTOFF_OR_INVALID_DATE"
+    },
+    {
+      "testId": "M13",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Valid Product JSON-LD in another workspaceId is rejected as CROSS_WORKSPACE_REJECTED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=CROSS_WORKSPACE_REJECTED",
+      "observedOutcome": "validationStatus=CROSS_WORKSPACE_REJECTED"
+    },
+    {
+      "testId": "M14",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Synthetic / fixture proof (uahpet_lp_hash_v12_4_3_3, TEST_FIXTURE, jsonld:<domain>) is rejected",
+      "passed": true,
+      "expectedOutcome": "validationStatus=SYNTHETIC_OR_FIXTURE_REJECTED",
+      "observedOutcome": "validationStatus=SYNTHETIC_OR_FIXTURE_REJECTED"
+    },
+    {
+      "testId": "M15",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Missing or invalid date (null, empty, 'not-a-date', new Date('invalid')) fails closed",
+      "passed": true,
+      "expectedOutcome": "validationStatus=POST_CUTOFF_OR_INVALID_DATE",
+      "observedOutcome": "validationStatus=POST_CUTOFF_OR_INVALID_DATE"
+    },
+    {
+      "testId": "M16",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Hash-only proof where raw source content is absent returns RAW_SOURCE_NOT_RECONSTRUCTABLE and is NOT VERIFIED",
+      "passed": true,
+      "expectedOutcome": "validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE, identityStatus=PROBABLE",
+      "observedOutcome": "validationStatus=RAW_SOURCE_NOT_RECONSTRUCTABLE, identityStatus=PROBABLE"
+    },
+    {
+      "testId": "M17",
+      "category": "MERCHANT_SCHEMA_NEGATIVE",
+      "description": "Tampered content hash (raw Product JSON-LD payload does not match stored SHA-256 hash) is rejected",
+      "passed": true,
+      "expectedOutcome": "validationStatus=RAW_SOURCE_HASH_TAMPERED",
+      "observedOutcome": "validationStatus=RAW_SOURCE_HASH_TAMPERED"
+    },
+    {
+      "testId": "L01",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "DiscoveryRunAd.ingestOutcome = EXISTING is rejected as reused historical DB ad",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=REUSED_EXISTING_AD",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=REUSED_EXISTING_AD"
+    },
+    {
+      "testId": "L02",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "DiscoveryRunAd.ingestOutcome = UPDATED without live origin is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=PERSISTED_LIVE_ORIGIN_UNVERIFIED"
+    },
+    {
+      "testId": "L03",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "DiscoveryRunAd.ingestOutcome = NEW with empty AdObservation.rawPayload is rejected (PERSISTED_LIVE_ORIGIN_UNVERIFIED)",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, derivedProvenance=PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, derivedProvenance=PERSISTED_LIVE_ORIGIN_UNVERIFIED"
+    },
+    {
+      "testId": "L04",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "AdObservation.evidenceType = MANUAL_ENTRY or USER_OBSERVED is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false"
+    },
+    {
+      "testId": "L05",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "AdObservation.rawPayload containing origin = DETERMINISTIC_FALLBACK is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC"
+    },
+    {
+      "testId": "L06",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "AdObservation.rawPayload containing TEST_FIXTURE / CONTROLLED_FIXTURE / SYNTHETIC / MOCK is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC"
+    },
+    {
+      "testId": "L07",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "Fabricated IDs obs_<runId>_<candidateId> or req_<runId> are rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=FALLBACK_OR_SYNTHETIC"
+    },
+    {
+      "testId": "L08",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "Missing providerRequestId and missing mcpInvocationRef in rawPayload is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false"
+    },
+    {
+      "testId": "L09",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "Missing evidenceReference or sourceUrl is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false"
+    },
+    {
+      "testId": "L10",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "DiscoveryRunAd.workspaceId != candidate workspaceId is rejected as CROSS_WORKSPACE_OR_RUN",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN"
+    },
+    {
+      "testId": "L11",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "DiscoveryRunAd.runId != expected run lineage is rejected as CROSS_WORKSPACE_OR_RUN",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_WORKSPACE_OR_RUN"
+    },
+    {
+      "testId": "L12",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "AdObservation.observedAt > asOf or sourceTimestamp > asOf is rejected as POST_CUTOFF_OR_INVALID_DATE",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE"
+    },
+    {
+      "testId": "L13",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "Invalid or missing observedAt or sourceTimestamp is rejected as POST_CUTOFF_OR_INVALID_DATE",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=POST_CUTOFF_OR_INVALID_DATE"
+    },
+    {
+      "testId": "L14",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "AdObservation linked to another candidate's adId or another merchant domain is rejected as CROSS_CANDIDATE_OR_DOMAIN",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_CANDIDATE_OR_DOMAIN",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=CROSS_CANDIDATE_OR_DOMAIN"
+    },
+    {
+      "testId": "L15",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "Caller mutating provenance=LIVE_PROVIDER in memory on an observation lacking DB rawPayload/ledger backing is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticallyLiveObservation=false, evaluateG16Candidate.isLiveVerified=false",
+      "observedOutcome": "isAuthenticallyLiveObservation=false, evaluateG16Candidate.isLiveVerified=false"
+    },
+    {
+      "testId": "L16",
+      "category": "LIVE_ORIGIN_NEGATIVE",
+      "description": "rawPayload with malformed JSON or contradicting DiscoveryRunAd.providerId is rejected",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=MALFORMED_OR_CONTRADICTORY_PAYLOAD",
+      "observedOutcome": "isAuthenticLiveProviderObservation=false, originEvidenceClassification=MALFORMED_OR_CONTRADICTORY_PAYLOAD"
+    },
+    {
+      "testId": "P01",
+      "category": "POSITIVE_CONTRACT",
+      "description": "Real persisted ResearchEvidence / LandingPageSnapshot with valid schema.org @type=Product JSON-LD, matching domain/product/workspace, observedAt <= asOf, and valid SHA-256 hash produces VERIFIED",
+      "passed": true,
+      "expectedOutcome": "identityStatus=VERIFIED, proofMethod=JSON_LD_PRODUCT_SCHEMA, validationStatus=CONTENT_VALIDATED_WITH_SOURCE",
+      "observedOutcome": "identityStatus=VERIFIED, proofMethod=JSON_LD_PRODUCT_SCHEMA, validationStatus=CONTENT_VALIDATED_WITH_SOURCE"
+    },
+    {
+      "testId": "P02",
+      "category": "POSITIVE_CONTRACT",
+      "description": "Real persisted SHOPIFY_PRODUCT_JSON payload with provenance produces VERIFIED with proofMethod=SHOPIFY_PRODUCT_JSON and hasJsonLdProduct=false",
+      "passed": true,
+      "expectedOutcome": "identityStatus=VERIFIED, proofMethod=SHOPIFY_PRODUCT_JSON, hasJsonLdProduct=false",
+      "observedOutcome": "identityStatus=VERIFIED, proofMethod=SHOPIFY_PRODUCT_JSON, hasJsonLdProduct=false"
+    },
+    {
+      "testId": "P03",
+      "category": "POSITIVE_CONTRACT",
+      "description": "Real persisted AdObservation + DiscoveryRunAd with ingestOutcome=NEW, SCRAPED_POST, AUTOMATED_SCRAPE, rawPayload live execution envelope, providerRequestId, evidenceReference, same workspace/run/product, <= asOf is accepted as AUTHENTIC_LIVE_INGEST",
+      "passed": true,
+      "expectedOutcome": "isAuthenticLiveProviderObservation=true, originEvidenceClassification=AUTHENTIC_LIVE_INGEST, derivedProvenance=LIVE_PROVIDER",
+      "observedOutcome": "isAuthenticLiveProviderObservation=true, originEvidenceClassification=AUTHENTIC_LIVE_INGEST, derivedProvenance=LIVE_PROVIDER"
+    },
+    {
+      "testId": "P04",
+      "category": "POSITIVE_CONTRACT",
+      "description": "Current stored DB snapshot (DiscoveryRunAd EXISTING + AdObservation rawPayload=null + zero workspace merchant schema rows) reconstructs to 0/3 live-verified under G16 (INSUFFICIENT_EVIDENCE)",
+      "passed": true,
+      "expectedOutcome": "verifiedLiveCount=0, g16Verdict=INSUFFICIENT_EVIDENCE",
+      "observedOutcome": "verifiedLiveCount=0, g16Verdict=INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "testId": "P05",
+      "category": "POSITIVE_CONTRACT",
+      "description": "CheckoutChamp funnel without root schema stays PROBABLE, while a verified root merchant domain with real Product schema is VERIFIED",
+      "passed": true,
+      "expectedOutcome": "funnel=PROBABLE/FUNNEL_UNVERIFIED, rootDomainWithSchema=VERIFIED/INDEPENDENT_VERIFIED",
+      "observedOutcome": "funnel=PROBABLE/FUNNEL_UNVERIFIED, rootDomainWithSchema=VERIFIED/INDEPENDENT_VERIFIED"
+    },
+    {
+      "testId": "P06",
+      "category": "POSITIVE_CONTRACT",
+      "description": "Three genuinely distinct Pet Gadgets products with persisted valid Product JSON-LD proofs and persisted origin-authentic live observations across three families PASS G16",
+      "passed": true,
+      "expectedOutcome": "verifiedLiveCount=3, distinctFamiliesCount=3, distinctCanonicalProductsCount=3, g16Verdict=PASS",
+      "observedOutcome": "verifiedLiveCount=3, distinctFamiliesCount=3, distinctCanonicalProductsCount=3, g16Verdict=PASS"
+    }
+  ],
+  "fullG16NegativeSuite": {
+    "totalTests": 55,
+    "totalPassed": 55,
+    "passed": true
+  }
+}

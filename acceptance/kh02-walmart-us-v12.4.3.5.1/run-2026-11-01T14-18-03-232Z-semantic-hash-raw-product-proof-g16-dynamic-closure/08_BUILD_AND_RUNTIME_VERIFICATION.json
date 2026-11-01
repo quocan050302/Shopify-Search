@@ -1,0 +1,15 @@
+{
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "evaluatedAt": "2026-11-01T14:19:48.512Z",
+  "tscNoEmit": {
+    "ok": true,
+    "exitCode": 0,
+    "durationMs": 5408
+  },
+  "nextProductionBuild": {
+    "ok": true,
+    "exitCode": 0,
+    "durationMs": 21030,
+    "buildIdPresent": true
+  }
+}

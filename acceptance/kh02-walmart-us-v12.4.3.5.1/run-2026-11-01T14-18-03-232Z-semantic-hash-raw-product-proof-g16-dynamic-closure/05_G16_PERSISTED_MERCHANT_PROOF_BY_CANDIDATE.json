@@ -1,0 +1,1938 @@
+{
+  "sourceSha": "858792b679abf22bea19801af203c89d7758a447",
+  "gateId": "G16",
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "snapshotFreshness": "HISTORICAL_SNAPSHOT_RE_EVALUATED",
+  "reconstructionStatus": "HISTORICAL_SNAPSHOT_PROOF_NOT_RECONSTRUCTABLE",
+  "evaluatedRunId": "kh02_run_1793532895465_z4tgh",
+  "evaluatedWorkspaceId": "acceptance_v12_2_4_ws",
+  "evaluatedRunCreatedAt": "2026-11-01T11:34:55.465Z",
+  "previousSnapshotClaimedVerifiedCount": 2,
+  "verifiedFromPersistedEvidenceCount": 0,
+  "newLiveVerifiedDuringThisRun": 0,
+  "verifiedLiveMerchantsCount": 0,
+  "requiredLiveMerchantsCount": 3,
+  "distinctFamiliesCount": 0,
+  "distinctCanonicalProductsCount": 0,
+  "candidates": [
+    {
+      "candidateId": "cand_861882032",
+      "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+      "storeDomain": "dogfriendlyco.com",
+      "canonicalProductUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+      "canonicalProductKey": "dogfriendlyco.com/pages/easy-on-v1",
+      "familyKey": "pet_car_seat_harness",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveVerified": true,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "productSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "proofMethod": "NONE",
+      "persistedProofRowIds": [],
+      "proofSourceObservedAt": null,
+      "originProofStatus": "INSUFFICIENT_EVIDENCE",
+      "authenticLiveObservationIds": [],
+      "matchingRunId": null,
+      "matchingWorkspaceId": "acceptance_v12_2_4_ws",
+      "isCheckoutChampFunnel": false,
+      "nicheRelevantToPetGadgets": true,
+      "nicheRelevanceReason": "Title/domain contains verified pet/grooming/feeder/fountain/fur-removal signal.",
+      "authenticallyLive": false,
+      "sameRunLineage": false,
+      "candidateProductMatch": false,
+      "verifiedMerchantIdentity": false,
+      "nonFunnelStore": true,
+      "g16PredicateStatuses": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": false,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "persistedRunAdIds": [
+        "cmvw6rer8007lxng9tt5azmxu",
+        "cmvw6reri007rxng9seekq3x5",
+        "cmvw6reru007xxng9203a06m3",
+        "cmvw6retc008rxng9ug4n1r9v",
+        "cmvw6retp008xxng95s0mixn9"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "EXISTING",
+        "EXISTING",
+        "EXISTING",
+        "EXISTING",
+        "EXISTING"
+      ],
+      "persistedAdObservationIds": [
+        "cmvxr6rar000dk4g9wpnd4guo",
+        "cmvxr6rax000hk4g961obkerf",
+        "cmvxr6rb3000lk4g9x3kka9qr",
+        "cmvxr6rbx0015k4g96tq8ya19",
+        "cmvxr6rc20019k4g91wd5gzty",
+        "cmvw6rera007oxng9n1ddazu0",
+        "cmvw6rerl007uxng94ucqagz2",
+        "cmvw6rerv0080xng9up2l7ojs",
+        "cmvw6retf008uxng9pmghf8vc",
+        "cmvw6rets0090xng9zpiqv9po"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedMerchantProofRefs": [],
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "All 5 DiscoveryRunAd rows for candidate 'cand_861882032' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+        "Observation 'cmvxr6rar000dk4g9wpnd4guo' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rax000hk4g961obkerf' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rb3000lk4g9x3kka9qr' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rbx0015k4g96tq8ya19' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rc20019k4g91wd5gzty' carries origin='DETERMINISTIC_FALLBACK'.",
+        "AdObservation 'cmvw6rera007oxng9n1ddazu0': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rerl007uxng94ucqagz2': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rerv0080xng9up2l7ojs': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6retf008uxng9pmghf8vc': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rets0090xng9zpiqv9po': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "ResearchProduct:cand_861882032: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "rejectionReasonCodes": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'UNVERIFIED', expected 'VERIFIED'"
+      ],
+      "rejectionReasons": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'UNVERIFIED', expected 'VERIFIED'"
+      ],
+      "storedSnapshotClaimDiff": {
+        "snapshotClaimedIdentityStatus": "VERIFIED",
+        "reconstructedIdentityStatus": "UNVERIFIED",
+        "snapshotClaimedLiveVerified": true,
+        "reconstructedLiveVerified": false,
+        "snapshotClaimedLiveObservationsCount": 5,
+        "reconstructedLiveObservationsCount": 0,
+        "claimDowngraded": true
+      },
+      "liveObservationsCount": 0,
+      "unverifiedPersistedOriginCount": 10
+    },
+    {
+      "candidateId": "cand_756670427",
+      "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+      "storeDomain": "tailorsgift.com",
+      "canonicalProductUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+      "canonicalProductKey": "tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+      "familyKey": "wide_blades",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveVerified": true,
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "productSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "proofMethod": "NONE",
+      "persistedProofRowIds": [],
+      "proofSourceObservedAt": null,
+      "originProofStatus": "INSUFFICIENT_EVIDENCE",
+      "authenticLiveObservationIds": [],
+      "matchingRunId": null,
+      "matchingWorkspaceId": "acceptance_v12_2_4_ws",
+      "isCheckoutChampFunnel": false,
+      "nicheRelevantToPetGadgets": true,
+      "nicheRelevanceReason": "Title/domain contains verified pet/grooming/feeder/fountain/fur-removal signal.",
+      "authenticallyLive": false,
+      "sameRunLineage": false,
+      "candidateProductMatch": false,
+      "verifiedMerchantIdentity": false,
+      "nonFunnelStore": true,
+      "g16PredicateStatuses": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": false,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "persistedRunAdIds": [
+        "cmvw6repu0070xng9md8udryj"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "EXISTING"
+      ],
+      "persistedAdObservationIds": [
+        "cmvxr6ra10001k4g9riab3skg",
+        "cmvw6req20073xng9q1iruruz"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedMerchantProofRefs": [],
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "All 1 DiscoveryRunAd rows for candidate 'cand_756670427' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+        "Observation 'cmvxr6ra10001k4g9riab3skg' carries origin='DETERMINISTIC_FALLBACK'.",
+        "AdObservation 'cmvw6req20073xng9q1iruruz': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "ResearchProduct:cand_756670427: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "rejectionReasonCodes": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "rejectionReasons": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "storedSnapshotClaimDiff": {
+        "snapshotClaimedIdentityStatus": "VERIFIED",
+        "reconstructedIdentityStatus": "PROBABLE",
+        "snapshotClaimedLiveVerified": true,
+        "reconstructedLiveVerified": false,
+        "snapshotClaimedLiveObservationsCount": 1,
+        "reconstructedLiveObservationsCount": 0,
+        "claimDowngraded": true
+      },
+      "liveObservationsCount": 0,
+      "unverifiedPersistedOriginCount": 2
+    },
+    {
+      "candidateId": "cand_1037293781",
+      "title": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+      "storeDomain": "gluxehaus.com",
+      "canonicalProductUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+      "canonicalProductKey": "gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+      "familyKey": "pet_bed_calming",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveVerified": false,
+      "identityStatus": "PROBABLE",
+      "verificationEvidenceStatus": "DISCOVERY_ONLY",
+      "productSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "proofMethod": "NONE",
+      "persistedProofRowIds": [],
+      "proofSourceObservedAt": null,
+      "originProofStatus": "INSUFFICIENT_EVIDENCE",
+      "authenticLiveObservationIds": [],
+      "matchingRunId": null,
+      "matchingWorkspaceId": "acceptance_v12_2_4_ws",
+      "isCheckoutChampFunnel": false,
+      "nicheRelevantToPetGadgets": true,
+      "nicheRelevanceReason": "Title/domain contains verified pet/grooming/feeder/fountain/fur-removal signal.",
+      "authenticallyLive": false,
+      "sameRunLineage": false,
+      "candidateProductMatch": false,
+      "verifiedMerchantIdentity": false,
+      "nonFunnelStore": true,
+      "g16PredicateStatuses": {
+        "authenticallyLive": false,
+        "sameRunLineage": false,
+        "candidateProductMatch": false,
+        "verifiedMerchantIdentity": false,
+        "nonFunnelStore": true
+      },
+      "isLiveVerified": false,
+      "verificationMethod": "UNVERIFIED_LINEAGE_ABSENT",
+      "persistedRunAdIds": [
+        "cmvx9bjh6002u3ag95vlfxccs"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "NEW"
+      ],
+      "persistedAdObservationIds": [
+        "cmvx9bjh8002x3ag9pad265ci"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedMerchantProofRefs": [],
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "AdObservation 'cmvx9bjh8002x3ag9pad265ci': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793502886209_3dhx9, expected=kh02_run_1793532895465_z4tgh",
+        "ResearchProduct:cand_1037293781: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "rejectionReasonCodes": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "rejectionReasons": [
+        "Missing independent merchant verification proof (URL strings alone are insufficient)",
+        "Candidate has zero sourceObservations attached (numeric liveObservationsCount fallback is forbidden)",
+        "Identity status is 'PROBABLE', expected 'VERIFIED'"
+      ],
+      "storedSnapshotClaimDiff": {
+        "snapshotClaimedIdentityStatus": "VERIFIED",
+        "reconstructedIdentityStatus": "PROBABLE",
+        "snapshotClaimedLiveVerified": false,
+        "reconstructedLiveVerified": false,
+        "snapshotClaimedLiveObservationsCount": 0,
+        "reconstructedLiveObservationsCount": 0,
+        "claimDowngraded": true
+      },
+      "liveObservationsCount": 0,
+      "unverifiedPersistedOriginCount": 1
+    }
+  ],
+  "persistedProofAudit": [
+    {
+      "candidateId": "cand_861882032",
+      "researchProductId": "cand_861882032",
+      "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+      "storeDomain": "dogfriendlyco.com",
+      "canonicalProductUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "researchRunId": "kh02_run_1793532895465_z4tgh",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveObservationsCount": 5,
+      "snapshotClaimedLiveVerified": true,
+      "persistedRunAdIds": [
+        "cmvw6rer8007lxng9tt5azmxu",
+        "cmvw6reri007rxng9seekq3x5",
+        "cmvw6reru007xxng9203a06m3",
+        "cmvw6retc008rxng9ug4n1r9v",
+        "cmvw6retp008xxng95s0mixn9"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "EXISTING",
+        "EXISTING",
+        "EXISTING",
+        "EXISTING",
+        "EXISTING"
+      ],
+      "persistedAdObservationIds": [
+        "cmvxr6rar000dk4g9wpnd4guo",
+        "cmvxr6rax000hk4g961obkerf",
+        "cmvxr6rb3000lk4g9x3kka9qr",
+        "cmvxr6rbx0015k4g96tq8ya19",
+        "cmvxr6rc20019k4g91wd5gzty",
+        "cmvw6rera007oxng9n1ddazu0",
+        "cmvw6rerl007uxng94ucqagz2",
+        "cmvw6rerv0080xng9up2l7ojs",
+        "cmvw6retf008uxng9pmghf8vc",
+        "cmvw6rets0090xng9zpiqv9po"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedLiveSameRunObservations": [],
+      "persistedObservationClassifications": [
+        {
+          "observationId": "cmvw6rera007oxng9n1ddazu0",
+          "adId": "cmvw6rer8007lxng9tt5azmxu",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=2066413250610212",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=2066413250610212",
+          "observedAt": "2026-10-31T09:15:36.691Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        },
+        {
+          "observationId": "cmvw6rerl007uxng94ucqagz2",
+          "adId": "cmvw6reri007rxng9seekq3x5",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=942161505505900",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=942161505505900",
+          "observedAt": "2026-10-31T09:15:36.702Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        },
+        {
+          "observationId": "cmvw6rerv0080xng9up2l7ojs",
+          "adId": "cmvw6reru007xxng9203a06m3",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=1032858536094234",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=1032858536094234",
+          "observedAt": "2026-10-31T09:15:36.713Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        },
+        {
+          "observationId": "cmvw6retf008uxng9pmghf8vc",
+          "adId": "cmvw6retc008rxng9ug4n1r9v",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=893286146968209",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=893286146968209",
+          "observedAt": "2026-10-31T09:15:36.768Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        },
+        {
+          "observationId": "cmvw6rets0090xng9zpiqv9po",
+          "adId": "cmvw6retp008xxng95s0mixn9",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=1529624075207120",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=1529624075207120",
+          "observedAt": "2026-10-31T09:15:36.780Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        }
+      ],
+      "persistedResearchEvidenceIds": [],
+      "persistedLandingPageSnapshotIds": [],
+      "persistedOfferSnapshotIds": [],
+      "persistedMerchantProofAudits": [
+        {
+          "recordId": "cand_861882032",
+          "sourceTable": "ResearchProduct",
+          "workspaceId": null,
+          "productId": "cand_861882032",
+          "storeDomain": "dogfriendlyco.com",
+          "sourceUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+          "observedAt": "2026-10-31T09:21:53.748Z",
+          "validationStatus": "PRODUCT_ROW_DISCOVERY_ONLY",
+          "proofMethod": "NONE",
+          "schemaVerified": false,
+          "hasJsonLdProduct": false,
+          "rawSourceReconstructable": false,
+          "hashVerified": false,
+          "sourceFieldUsed": "productUrl",
+          "expectedHashRef": null,
+          "computedSha256": null,
+          "extractedProductName": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+          "extractedSku": null,
+          "extractedMerchantProductId": null,
+          "realColumnsInspected": [
+            "id",
+            "storeId",
+            "title",
+            "productUrl",
+            "currentPrice",
+            "currency",
+            "createdAt",
+            "updatedAt",
+            "store.domain"
+          ],
+          "rejectionReasons": [
+            "RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "hashDomain": "NONE"
+        }
+      ],
+      "validPersistedMerchantProofs": [],
+      "persistedProductSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "persistedLiveOriginProofStatus": "INSUFFICIENT_EVIDENCE",
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "All 5 DiscoveryRunAd rows for candidate 'cand_861882032' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+        "Observation 'cmvxr6rar000dk4g9wpnd4guo' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rax000hk4g961obkerf' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rb3000lk4g9x3kka9qr' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rbx0015k4g96tq8ya19' carries origin='DETERMINISTIC_FALLBACK'.",
+        "Observation 'cmvxr6rc20019k4g91wd5gzty' carries origin='DETERMINISTIC_FALLBACK'.",
+        "AdObservation 'cmvw6rera007oxng9n1ddazu0': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rerl007uxng94ucqagz2': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rerv0080xng9up2l7ojs': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6retf008uxng9pmghf8vc': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "AdObservation 'cmvw6rets0090xng9zpiqv9po': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "ResearchProduct:cand_861882032: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "persistedMerchantVerified": false,
+      "persistedMerchantProofRefs": [],
+      "reconstructedIdentityStatus": "UNVERIFIED",
+      "reconstructedVerificationEvidenceStatus": "MISSING",
+      "reconstructedIsCheckoutChampFunnel": false,
+      "reconstructedCandidateForG16": {
+        "candidateId": "cand_861882032",
+        "title": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+        "canonicalProductName": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+        "displayName": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+        "originalAdHeadline": "Rated #1 By Dog Owners",
+        "originalCreativeCode": null,
+        "adClaimedProductName": "Rated #1 By Dog Owners",
+        "merchantVerifiedProductName": null,
+        "brand": "Dog Friendly Co.",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": null,
+        "category": "Dog",
+        "problemStatement": "Rated #1 By Dog Owners Upgrade to our No-Pull Dog Harness for safer, more comfortable walks",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": "https://scontent.fhan3-3.fna.fbcdn.net/v/t39.35426-6/728544009_2515884545517196_3698424962552689384_n.jpg?_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=sK9H7FL5T3IQ7kNvwEiJNkq&_nc_oc=Adr103tTTFahy80VsgsOcewokb_ifNCLfSSLYwUiXTSchOLNzGpV6JznORuLlE9EIqU&_nc_zt=14&_nc_ht=scontent.fhan3-3.fna&_nc_gid=D_LReQUxOlhwEitvNXVJ-g&_nc_ss=78289&oh=00_AQSjpr6MwWIxAUOgbyb4qEESS56P5kqy45PkXRd3XTAE5g&oe=6AEB897D",
+        "videoUrl": "https://video.fhan3-3.fna.fbcdn.net/o1/v/t2/f2/m366/AQOTRoR56qOvHwGQTlAtgX48aBctJnZVRHcUhxD8xFOfnn5fOXrAiRlGBwJFPS1ktScx_2mpQ4aSN3cRxdm9qs9xBATHMzv2jHNBX7LNGs8w7Q.mp4?_nc_cat=107&_nc_oc=AdoKCYIYi03nAUVxEh2t-uB74aamgxcPdqk-hKKqprHnVwYxiAUrbo-vCGjCYI7FCeQ&_nc_sid=b66105&_nc_ht=video.fhan3-3.fna.fbcdn.net&_nc_ohc=nrwEszNKPIUQ7kNvwE2a_lx&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5WSV9VU0VDQVNFX1BST0RVQ1RfVFlQRS4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE2ODkyOTM2NDIyNzQ0NDgsImFzc2V0X2FnZV9kYXlzIjoxMzUsInZpX3VzZWNhc2VfaWQiOjEwMTM5LCJkdXJhdGlvbl9zIjozNywidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=f3893ccd7e9e2d32&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC80OTQ3ODQ0MTNDMUE3NEFBMURGMTg0RkE2ODM0MDRCM19tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0RFNEU1RkY4MTczQ0E3Q0M1RUEyMzEzRDJFRjYwNjg5X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACag2sC36pmABhUCKAJDMywXQELiDEm6XjUYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUAZbaeAQA&_nc_gid=D_LReQUxOlhwEitvNXVJ-g&_nc_ss=78289&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQSYWC7WryZlAhtNgnbtt0u6VJuqg5Rlzj62D8jj_y6k5A&oe=6AEB6F31",
+        "mediaSourceAdId": "cmvw6rer8007lxng9tt5azmxu",
+        "requestedUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+        "resolvedFinalUrl": "https://www.dogfriendlyco.com/pages/easy-on-v1",
+        "declaredCanonicalUrl": "https://www.dogfriendlyco.com/pages/easy-on-v1",
+        "normalizedProductUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+        "canonicalProductUrl": "https://dogfriendlyco.com/pages/easy-on-v1",
+        "storeDomain": "dogfriendlyco.com",
+        "imageReferences": [],
+        "advertiserNames": [
+          "Dog Friendly Co."
+        ],
+        "supportingAdIds": [
+          "cmvw6rer8007lxng9tt5azmxu",
+          "cmvw6reri007rxng9seekq3x5",
+          "cmvw6reru007xxng9203a06m3",
+          "cmvw6retc008rxng9ug4n1r9v",
+          "cmvw6retp008xxng95s0mixn9"
+        ],
+        "supportingExternalAdIds": [
+          "2066413250610212",
+          "942161505505900",
+          "1032858536094234",
+          "893286146968209",
+          "1529624075207120"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 10,
+        "liveObservationsCount": 5,
+        "cachedObservationsCount": 0,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-11-01T11:35:11.570Z",
+        "latestObservationDate": "2026-11-01T11:35:11.570Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [],
+        "identityStatus": "UNVERIFIED",
+        "resolutionSource": "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [],
+        "fetchOutcome": "UNVERIFIED_PERSISTED_DB",
+        "evidenceTimestamp": "2026-11-01T11:35:11.687Z",
+        "verificationReason": null,
+        "verificationLimitations": [],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [
+          "kh02_q_r1_2_a6f554d2"
+        ],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: dog."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "DOG",
+          "supportedAudiences": [
+            "DOG"
+          ],
+          "audienceMatch": "EXACT",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dog\""
+          ],
+          "relevanceReason": "Product explicitly targets dogs.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "candidateId": "cand_861882032",
+          "canonicalProductName": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog owners seeking practical care, feeding, or safety solutions for their pets",
+            "evidenceReference": "Observed quote: \"Dog Owners\" in Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.85,
+            "status": "OBSERVED"
+          },
+          "situationOrUseCase": {
+            "claimText": "Regular routine use in the home when utilizing no-pull dog harness: no more wrestling matches at the door",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Everyday inconvenience and friction addressed by No-Pull Dog Harness: No More Wrestling Matches at the Door",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Ad #cmvw6rer8007lxng9tt5azmxu",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://dogfriendlyco.com/pages/easy-on-v1",
+        "productKey": "merchant_tokens::dogfriendlyco.com::pet_car_seat_harness::door_harness_matches_more_pull_wrestling",
+        "variantKey": null,
+        "familyKey": "pet_car_seat_harness",
+        "familyLabel": "Pet Car Seat Cover & Safety Harness",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "researchProductId": "cand_861882032",
+        "existingProductVerified": false,
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Pet Car Seat Cover & Safety Harness' (productKey=merchant_tokens::dogfriendlyco.com::pet_car_seat_harness::door_harness_matches_more_pull_wrestling).",
+        "crossMerchantUncertainty": null,
+        "demandResolution": {
+          "productId": "cand_861882032",
+          "canonicalName": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+          "rawTerm": "No-Pull Dog Harness: No More Wrestling Matches at the Door",
+          "normalizedTerm": "No-Pull Dog Harness No More Wrestling Matches at",
+          "searchTermUsed": "No-Pull Dog Harness No More Wrestling Matches at",
+          "mappingReason": "Normalized 'No-Pull Dog Harness: No More Wrestling Matches at the Door' -> 'No-Pull Dog Harness No More Wrestling Matches at' (stripped promotional suffixes/capacities for clean product demand query)",
+          "requestedLookbackDays": 180,
+          "actualCoveredDays": 0,
+          "observationPointsCount": 0,
+          "coverageGaps": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "INSUFFICIENT_COVERAGE: Keyword 'No-Pull Dog Harness No More Wrestling Matches at' not found in Google Free demand sources (BigQuery / CSV import)."
+          ],
+          "assessment": {
+            "status": "INSUFFICIENT_HISTORY",
+            "eligibleForEvergreen": false,
+            "dataPointsCount": 0,
+            "distinctObservationDatesCount": 0,
+            "coveredDays": 0,
+            "meanInterest": null,
+            "stdDev": null,
+            "coefficientOfVariation": null,
+            "demandClass": "INSUFFICIENT_HISTORY",
+            "sourceAuthority": "UNKNOWN_SOURCE",
+            "temporalCoverageValid": false,
+            "productAttributionValid": false,
+            "demandObservationIds": [],
+            "calculationVersion": "12.4.3.1",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "missingEvidence": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "evaluatedAt": "2026-11-01T11:35:47.860Z"
+          },
+          "dataPoints": [],
+          "sourceStatus": "ENGINE_READY",
+          "cacheClassification": "NO_VALID_DEMAND_EVIDENCE",
+          "providerAttempted": true,
+          "providerStatus": "INSUFFICIENT_DATA",
+          "providerError": "INSUFFICIENT_COVERAGE: Keyword 'No-Pull Dog Harness No More Wrestling Matches at' not found in Google Free demand sources (BigQuery / CSV import)."
+        },
+        "workspaceId": "acceptance_v12_2_4_ws",
+        "merchantPageVerified": false,
+        "merchantVerificationProofRefs": []
+      }
+    },
+    {
+      "candidateId": "cand_756670427",
+      "researchProductId": "cand_756670427",
+      "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+      "storeDomain": "tailorsgift.com",
+      "canonicalProductUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "researchRunId": "kh02_run_1793532895465_z4tgh",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveObservationsCount": 1,
+      "snapshotClaimedLiveVerified": true,
+      "persistedRunAdIds": [
+        "cmvw6repu0070xng9md8udryj"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "EXISTING"
+      ],
+      "persistedAdObservationIds": [
+        "cmvxr6ra10001k4g9riab3skg",
+        "cmvw6req20073xng9q1iruruz"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedLiveSameRunObservations": [],
+      "persistedObservationClassifications": [
+        {
+          "observationId": "cmvw6req20073xng9q1iruruz",
+          "adId": "cmvw6repu0070xng9md8udryj",
+          "runId": "kh02_run_1793532895465_z4tgh",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "EXISTING",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=1096050279457250",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=1096050279457250",
+          "observedAt": "2026-10-31T09:15:36.637Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "POST_CUTOFF_OR_INVALID_DATE",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        }
+      ],
+      "persistedResearchEvidenceIds": [],
+      "persistedLandingPageSnapshotIds": [],
+      "persistedOfferSnapshotIds": [],
+      "persistedMerchantProofAudits": [
+        {
+          "recordId": "cand_756670427",
+          "sourceTable": "ResearchProduct",
+          "workspaceId": null,
+          "productId": "cand_756670427",
+          "storeDomain": "tailorsgift.com",
+          "sourceUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+          "observedAt": "2026-10-31T09:22:03.768Z",
+          "validationStatus": "PRODUCT_ROW_DISCOVERY_ONLY",
+          "proofMethod": "NONE",
+          "schemaVerified": false,
+          "hasJsonLdProduct": false,
+          "rawSourceReconstructable": false,
+          "hashVerified": false,
+          "sourceFieldUsed": "productUrl",
+          "expectedHashRef": null,
+          "computedSha256": null,
+          "extractedProductName": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+          "extractedSku": null,
+          "extractedMerchantProductId": null,
+          "realColumnsInspected": [
+            "id",
+            "storeId",
+            "title",
+            "productUrl",
+            "currentPrice",
+            "currency",
+            "createdAt",
+            "updatedAt",
+            "store.domain"
+          ],
+          "rejectionReasons": [
+            "RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "hashDomain": "NONE"
+        }
+      ],
+      "validPersistedMerchantProofs": [],
+      "persistedProductSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "persistedLiveOriginProofStatus": "INSUFFICIENT_EVIDENCE",
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "All 1 DiscoveryRunAd rows for candidate 'cand_756670427' have ingestOutcome='EXISTING' (reused historical DB ads rather than fresh live ingest).",
+        "Observation 'cmvxr6ra10001k4g9riab3skg' carries origin='DETERMINISTIC_FALLBACK'.",
+        "AdObservation 'cmvw6req20073xng9q1iruruz': INVALID_OR_MISSING_OBSERVATION_TIMESTAMPS: observedAt=Sat Oct 31 2026 16:15:36 GMT+0700 (Indochina Time), sourceTimestamp=null, runAdObservedAt=Sun Nov 01 2026 18:35:11 GMT+0700 (Indochina Time)",
+        "ResearchProduct:cand_756670427: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "persistedMerchantVerified": false,
+      "persistedMerchantProofRefs": [],
+      "reconstructedIdentityStatus": "PROBABLE",
+      "reconstructedVerificationEvidenceStatus": "DISCOVERY_ONLY",
+      "reconstructedIsCheckoutChampFunnel": false,
+      "reconstructedCandidateForG16": {
+        "candidateId": "cand_756670427",
+        "title": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+        "canonicalProductName": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+        "displayName": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+        "originalAdHeadline": "The Mutt-- Dog Grooming Brush Holder, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2 Clippers  | Large Size |",
+        "originalCreativeCode": "the-mutt-dog-grooming-brush-holder-et1533669177",
+        "adClaimedProductName": "The Mutt-- Dog Grooming Brush Holder, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2 Clippers  |",
+        "merchantVerifiedProductName": null,
+        "brand": "TailorsgiftShop",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": null,
+        "category": "Dog",
+        "problemStatement": "The Mutt-- Dog Grooming Brush Holder, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2 Clippers  | Large Size | The",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": "https://i.etsystatic.com/43087856/r/il/df2a22/5821432450/il_800x800.5821432450_hl68.jpg",
+        "videoUrl": null,
+        "mediaSourceAdId": "cmvw6repu0070xng9md8udryj",
+        "requestedUrl": "http://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177?aid=%7B%7Bad.id%7D%7D&asid=%7B%7Badset.id%7D%7D&cid=%7B%7Bcampaign.id%7D%7D",
+        "resolvedFinalUrl": "https://www.tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177?aid=%7B%7Bad.id%7D%7D&asid=%7B%7Badset.id%7D%7D&cid=%7B%7Bcampaign.id%7D%7D",
+        "declaredCanonicalUrl": "https://www.tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+        "normalizedProductUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+        "canonicalProductUrl": "https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+        "storeDomain": "tailorsgift.com",
+        "imageReferences": [
+          "https://i.etsystatic.com/43087856/r/il/df2a22/5821432450/il_800x800.5821432450_hl68.jpg"
+        ],
+        "advertiserNames": [
+          "TailorsgiftShop"
+        ],
+        "supportingAdIds": [
+          "cmvw6repu0070xng9md8udryj"
+        ],
+        "supportingExternalAdIds": [
+          "1096050279457250"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 2,
+        "liveObservationsCount": 1,
+        "cachedObservationsCount": 0,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-11-01T11:35:11.570Z",
+        "latestObservationDate": "2026-11-01T11:35:11.570Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [],
+        "fetchOutcome": "UNVERIFIED_PERSISTED_DB",
+        "evidenceTimestamp": "2026-11-01T11:35:11.696Z",
+        "verificationReason": null,
+        "verificationLimitations": [],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [
+          "kh02_q_r1_1_7646868a"
+        ],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, dog, grooming."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "DOG",
+          "supportedAudiences": [
+            "DOG"
+          ],
+          "audienceMatch": "EXACT",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dog\""
+          ],
+          "relevanceReason": "Product explicitly targets dogs.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "candidateId": "cand_756670427",
+          "canonicalProductName": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog owners seeking practical care, feeding, or safety solutions for their pets",
+            "evidenceReference": "Observed mention: \"Dog\" in Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Explicit customer demographic not in copy; inferred from dog mention."
+          },
+          "situationOrUseCase": {
+            "claimText": "Regular routine use in the home when utilizing dog grooming brush holder, gift for pet groomers, 8 scissors, 2 standard blades, 2 wide blades and 2",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Everyday inconvenience and friction addressed by Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Ad #cmvw6repu0070xng9md8udryj",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://tailorsgift.com/the-mutt-dog-grooming-brush-holder-et1533669177",
+        "productKey": "merchant_tokens::tailorsgift.com::wide_blades::blades_brush_groomers_grooming_holder_scissors_standard_wide",
+        "variantKey": null,
+        "familyKey": "wide_blades",
+        "familyLabel": "Wide Blades",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "researchProductId": "cand_756670427",
+        "existingProductVerified": false,
+        "adThumbnailUrl": "https://scontent.fhan3-3.fna.fbcdn.net/v/t39.35426-6/799872341_1368753101909300_4357149558686828481_n.jpg?_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=-v5oXS3LL88Q7kNvwFwf85M&_nc_oc=AdqGJWnah0aMxO1fUSLbftCxd6edP9qO9-gz0fINUZ70PDl6jReRZKL5sQMYfh2weUM&_nc_zt=14&_nc_ht=scontent.fhan3-3.fna&_nc_gid=vVmIwpjjApBdkFpdXFfhzQ&_nc_ss=7b289&oh=00_AQTzxQphLKuN1DMGEtbOKEjdd3YitswfepegzFAkw5fv4g&oe=6AEB9EC6",
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Wide Blades' (productKey=merchant_tokens::tailorsgift.com::wide_blades::blades_brush_groomers_grooming_holder_scissors_standard_wide).",
+        "crossMerchantUncertainty": null,
+        "demandResolution": {
+          "productId": "cand_756670427",
+          "canonicalName": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+          "rawTerm": "Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2",
+          "normalizedTerm": "Dog Grooming Brush Holder, Gift for Pet Groomers,",
+          "searchTermUsed": "Dog Grooming Brush Holder, Gift for Pet Groomers,",
+          "mappingReason": "Normalized 'Dog Grooming Brush Holder, Gift for Pet Groomers, 8 Scissors, 2 Standard Blades, 2 Wide Blades and 2' -> 'Dog Grooming Brush Holder, Gift for Pet Groomers,' (stripped promotional suffixes/capacities for clean product demand query)",
+          "requestedLookbackDays": 180,
+          "actualCoveredDays": 0,
+          "observationPointsCount": 0,
+          "coverageGaps": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "INSUFFICIENT_COVERAGE: Keyword 'Dog Grooming Brush Holder, Gift for Pet Groomers,' not found in Google Free demand sources (BigQuery / CSV import)."
+          ],
+          "assessment": {
+            "status": "INSUFFICIENT_HISTORY",
+            "eligibleForEvergreen": false,
+            "dataPointsCount": 0,
+            "distinctObservationDatesCount": 0,
+            "coveredDays": 0,
+            "meanInterest": null,
+            "stdDev": null,
+            "coefficientOfVariation": null,
+            "demandClass": "INSUFFICIENT_HISTORY",
+            "sourceAuthority": "UNKNOWN_SOURCE",
+            "temporalCoverageValid": false,
+            "productAttributionValid": false,
+            "demandObservationIds": [],
+            "calculationVersion": "12.4.3.1",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "missingEvidence": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "evaluatedAt": "2026-11-01T11:35:47.861Z"
+          },
+          "dataPoints": [],
+          "sourceStatus": "ENGINE_READY",
+          "cacheClassification": "NO_VALID_DEMAND_EVIDENCE",
+          "providerAttempted": true,
+          "providerStatus": "INSUFFICIENT_DATA",
+          "providerError": "INSUFFICIENT_COVERAGE: Keyword 'Dog Grooming Brush Holder, Gift for Pet Groomers,' not found in Google Free demand sources (BigQuery / CSV import)."
+        },
+        "workspaceId": "acceptance_v12_2_4_ws",
+        "merchantPageVerified": false,
+        "merchantVerificationProofRefs": []
+      }
+    },
+    {
+      "candidateId": "cand_1037293781",
+      "researchProductId": "cand_1037293781",
+      "title": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+      "storeDomain": "gluxehaus.com",
+      "canonicalProductUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+      "workspaceId": "acceptance_v12_2_4_ws",
+      "researchRunId": "kh02_run_1793532895465_z4tgh",
+      "snapshotClaimedIdentityStatus": "VERIFIED",
+      "snapshotClaimedLiveObservationsCount": 0,
+      "snapshotClaimedLiveVerified": false,
+      "persistedRunAdIds": [
+        "cmvx9bjh6002u3ag95vlfxccs"
+      ],
+      "persistedRunAdIngestOutcomes": [
+        "NEW"
+      ],
+      "persistedAdObservationIds": [
+        "cmvx9bjh8002x3ag9pad265ci"
+      ],
+      "persistedLiveSameRunObservationIds": [],
+      "persistedLiveSameRunObservations": [],
+      "persistedObservationClassifications": [
+        {
+          "observationId": "cmvx9bjh8002x3ag9pad265ci",
+          "adId": "cmvx9bjh6002u3ag95vlfxccs",
+          "runId": "kh02_run_1793502886209_3dhx9",
+          "workspaceId": "acceptance_v12_2_4_ws",
+          "providerId": "meta-ads-collector",
+          "ingestOutcome": "NEW",
+          "evidenceType": "META_COLLECTOR_PUBLIC_LIBRARY_OBSERVATION",
+          "verificationMethod": "META_COLLECTOR_GRAPHQL_ENDPOINT",
+          "evidenceReference": "https://www.facebook.com/ads/library/?id=27268153139520476",
+          "sourceUrl": "https://www.facebook.com/ads/library/?id=27268153139520476",
+          "observedAt": "2026-11-01T03:15:01.337Z",
+          "sourceTimestamp": null,
+          "rawPayloadPresent": true,
+          "rawPayloadParseable": false,
+          "providerRequestId": null,
+          "mcpInvocationRef": null,
+          "isAuthenticLiveProviderObservation": false,
+          "originEvidenceClassification": "CROSS_WORKSPACE_OR_RUN",
+          "derivedProvenance": "PERSISTED_LIVE_ORIGIN_UNVERIFIED",
+          "derivedSourceMode": "PERSISTED_DB_UNVERIFIED",
+          "isCached": true,
+          "isLiveRecord": false,
+          "rejectionReasons": [
+            "CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793502886209_3dhx9, expected=kh02_run_1793532895465_z4tgh"
+          ],
+          "realColumnsInspected": {
+            "AdObservation": [
+              "id",
+              "adId",
+              "observedAt",
+              "observationStatus",
+              "isActive",
+              "evidenceType",
+              "verificationMethod",
+              "evidenceReference",
+              "sourceTimestamp",
+              "confidence",
+              "rawPayload"
+            ],
+            "DiscoveryRunAd": [
+              "id",
+              "runId",
+              "adId",
+              "workspaceId",
+              "providerId",
+              "libraryId",
+              "ingestOutcome",
+              "sourceUrl",
+              "observedAt"
+            ]
+          }
+        }
+      ],
+      "persistedResearchEvidenceIds": [],
+      "persistedLandingPageSnapshotIds": [],
+      "persistedOfferSnapshotIds": [],
+      "persistedMerchantProofAudits": [
+        {
+          "recordId": "cand_1037293781",
+          "sourceTable": "ResearchProduct",
+          "workspaceId": null,
+          "productId": "cand_1037293781",
+          "storeDomain": "gluxehaus.com",
+          "sourceUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+          "observedAt": "2026-11-01T11:35:48.174Z",
+          "validationStatus": "PRODUCT_ROW_DISCOVERY_ONLY",
+          "proofMethod": "NONE",
+          "schemaVerified": false,
+          "hasJsonLdProduct": false,
+          "rawSourceReconstructable": false,
+          "hashVerified": false,
+          "sourceFieldUsed": "productUrl",
+          "expectedHashRef": null,
+          "computedSha256": null,
+          "extractedProductName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+          "extractedSku": null,
+          "extractedMerchantProductId": null,
+          "realColumnsInspected": [
+            "id",
+            "storeId",
+            "title",
+            "productUrl",
+            "currentPrice",
+            "currency",
+            "createdAt",
+            "updatedAt",
+            "store.domain"
+          ],
+          "rejectionReasons": [
+            "RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+          ],
+          "hashDomain": "NONE"
+        }
+      ],
+      "validPersistedMerchantProofs": [],
+      "persistedProductSchemaProofStatus": "INSUFFICIENT_EVIDENCE",
+      "persistedLiveOriginProofStatus": "INSUFFICIENT_EVIDENCE",
+      "rejectedCrossWorkspaceProofIds": [],
+      "rejectedSyntheticOrFallbackReasons": [
+        "AdObservation 'cmvx9bjh8002x3ag9pad265ci': CROSS_RUN_OBSERVATION_REJECTED: runId=kh02_run_1793502886209_3dhx9, expected=kh02_run_1793532895465_z4tgh",
+        "ResearchProduct:cand_1037293781: RESEARCH_PRODUCT_ROW_AND_URL_PATH_ARE_DISCOVERY_SIGNALS_ONLY_NOT_SCHEMA_PROOF"
+      ],
+      "persistedMerchantVerified": false,
+      "persistedMerchantProofRefs": [],
+      "reconstructedIdentityStatus": "PROBABLE",
+      "reconstructedVerificationEvidenceStatus": "DISCOVERY_ONLY",
+      "reconstructedIsCheckoutChampFunnel": false,
+      "reconstructedCandidateForG16": {
+        "candidateId": "cand_1037293781",
+        "title": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+        "canonicalProductName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+        "displayName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+        "originalAdHeadline": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats| Extra 10% OFF First Order",
+        "originalCreativeCode": "pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "adClaimedProductName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats| Extra 10% OFF First Order",
+        "merchantVerifiedProductName": null,
+        "brand": "GluxeHaus",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": "43189085503562",
+        "category": "Dog",
+        "problemStatement": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats| Extra 10% OFF First Order THE MASSIVE STORE-WIDE SALE IS LIVE",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": "https://gluxehaus.com/cdn/shop/files/847ae09f-c677-4e67-84cf-ecfc9e2434d0.jpg?v=1779814391",
+        "videoUrl": null,
+        "mediaSourceAdId": "cmvx9bjh6002u3ag95vlfxccs",
+        "requestedUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "resolvedFinalUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "declaredCanonicalUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "normalizedProductUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "canonicalProductUrl": "https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "storeDomain": "gluxehaus.com",
+        "imageReferences": [
+          "https://gluxehaus.com/cdn/shop/files/847ae09f-c677-4e67-84cf-ecfc9e2434d0.jpg?v=1779814391"
+        ],
+        "advertiserNames": [
+          "GluxeHaus"
+        ],
+        "supportingAdIds": [
+          "cmvx9bjh6002u3ag95vlfxccs"
+        ],
+        "supportingExternalAdIds": [
+          "27268153139520476"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "liveObservationsCount": 0,
+        "cachedObservationsCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-11-01T03:15:01.337Z",
+        "latestObservationDate": "2026-11-01T03:15:01.337Z",
+        "identityConfidence": "EXACT",
+        "sourceObservations": [],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "PERSISTED_DB_RECONSTRUCTION_UNVERIFIED",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [],
+        "fetchOutcome": "UNVERIFIED_PERSISTED_DB",
+        "evidenceTimestamp": "2026-11-01T11:35:11.699Z",
+        "verificationReason": null,
+        "verificationLimitations": [],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": true,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, puppy, kitten."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "DOG",
+          "supportedAudiences": [
+            "DOG",
+            "CAT",
+            "PET_GENERAL"
+          ],
+          "audienceMatch": "COMPATIBLE",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dogs\"",
+            "cat_term:\"cats\"",
+            "pet_term:\"pet\""
+          ],
+          "relevanceReason": "Multi-pet product explicitly supports both dogs and cats.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "candidateId": "cand_1037293781",
+          "canonicalProductName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
+            "evidenceReference": "Observed mentions: \"Cats\", \"Dogs\" in Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.78,
+            "status": "INFERRED",
+            "uncertaintyNote": "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated."
+          },
+          "situationOrUseCase": {
+            "claimText": "Daily resting, evening sleep, crate use, or cozy lounging in household living spaces",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Hard floor contact, stiffness, or lack of secure resting space causing restless sleep for pets",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from bedding category context; specific orthopedic claims not explicit in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Empathy and concern seeing an aging or exhausted pet visibly stiff, uncomfortable, or shivering on hard floors",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "A calm, well-rested pet sleeping comfortably with adequate cushioning and bed care ease",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Noticing a pet struggling to stand up, curling up on cold tile, or a flattened old pet bed needing replacement",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Concern over whether the pet will refuse to use it, whether the foam flattens quickly, and washability",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "High-density foam density certifications, removable zipper cover demonstration, and satisfaction guarantee",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Slow-recovery foam compression demo, water-repellent droplet test, or pet resting reactions",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Standard flat floor mats, generic fiber-fill cushions, or folded household blankets",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "True orthopedic memory foam core paired with an easy-off machine-washable waterproof inner liner",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Health Angle: 'Give your pet the deep orthopedic joint support they need for restful, pain-free sleep.'",
+            "evidenceReference": "Ad #cmvx9bjh6002u3ag95vlfxccs",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://gluxehaus.com/products/pet-cooling-pad-bed-for-dogs-cats-puppy-kitten-cool-mat-pet-blanket-ice-silk-material-soft-for-summer-sleeping-blue-breathable",
+        "productKey": "gluxehaus.com::pid::8094947934282",
+        "variantKey": "gluxehaus.com::pid::8094947934282::variant::43189085503562",
+        "familyKey": "pet_bed_calming",
+        "familyLabel": "Orthopedic & Calming Pet Bed",
+        "productRealityStatus": "VERIFIED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "researchProductId": "cand_1037293781",
+        "existingProductVerified": false,
+        "adThumbnailUrl": "https://scontent.fsgn5-11.fna.fbcdn.net/v/t39.35426-6/734784798_1866622800960140_1171276382269696073_n.jpg?stp=dst-jpg_s600x600_tt6&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=c53f8f&_nc_ohc=Sg8e0ACpmPQQ7kNvwHIkFwo&_nc_oc=AdpYohXzDZ7XXOl_Gy8p76nnlyF3zETUAzdKFvxjXu1vOA1XkZZFOhKcbjPExZjlp5L0V3oBCPZHX5gfu8_SXkyf&_nc_zt=14&_nc_ht=scontent.fsgn5-11.fna&_nc_gid=zqXtrab2d0RKYDYv3LIKwQ&_nc_ss=78289&oh=00_AQTbUZIzcmOTeV52TvnqO4TKQoujrGE6udEElObS5euSMQ&oe=6AEC7D41",
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Orthopedic & Calming Pet Bed' (productKey=gluxehaus.com::pid::8094947934282).",
+        "crossMerchantUncertainty": null,
+        "demandResolution": {
+          "productId": "cand_1037293781",
+          "canonicalName": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+          "rawTerm": "Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats",
+          "normalizedTerm": "Cooling Pet Bed – Breathable Summer Mat for",
+          "searchTermUsed": "Cooling Pet Bed – Breathable Summer Mat for",
+          "mappingReason": "Normalized 'Cooling Pet Bed – Breathable Summer Mat for Dogs & Cats' -> 'Cooling Pet Bed – Breathable Summer Mat for' (stripped promotional suffixes/capacities for clean product demand query)",
+          "requestedLookbackDays": 180,
+          "actualCoveredDays": 0,
+          "observationPointsCount": 0,
+          "coverageGaps": [
+            "No demand observations provided.",
+            "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "INSUFFICIENT_COVERAGE: Keyword 'Cooling Pet Bed – Breathable Summer Mat for' not found in Google Free demand sources (BigQuery / CSV import)."
+          ],
+          "assessment": {
+            "status": "INSUFFICIENT_HISTORY",
+            "eligibleForEvergreen": false,
+            "dataPointsCount": 0,
+            "distinctObservationDatesCount": 0,
+            "coveredDays": 0,
+            "meanInterest": null,
+            "stdDev": null,
+            "coefficientOfVariation": null,
+            "demandClass": "INSUFFICIENT_HISTORY",
+            "sourceAuthority": "UNKNOWN_SOURCE",
+            "temporalCoverageValid": false,
+            "productAttributionValid": false,
+            "demandObservationIds": [],
+            "calculationVersion": "12.4.3.1",
+            "explanation": "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+            "missingEvidence": [
+              "No demand observations provided.",
+              "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified."
+            ],
+            "evaluatedAt": "2026-11-01T11:35:47.832Z"
+          },
+          "dataPoints": [],
+          "sourceStatus": "ENGINE_READY",
+          "cacheClassification": "NO_VALID_DEMAND_EVIDENCE",
+          "providerAttempted": true,
+          "providerStatus": "INSUFFICIENT_DATA",
+          "providerError": "INSUFFICIENT_COVERAGE: Keyword 'Cooling Pet Bed – Breathable Summer Mat for' not found in Google Free demand sources (BigQuery / CSV import)."
+        },
+        "workspaceId": "acceptance_v12_2_4_ws",
+        "merchantPageVerified": false,
+        "merchantVerificationProofRefs": []
+      }
+    }
+  ],
+  "reason": "Evaluated run 'kh02_run_1793532895465_z4tgh' has 0/3 live-verified merchant candidates reconstructable from persisted DB rows (stored snapshot claimed 2/3; immutable DB rows in workspace 'acceptance_v12_2_4_ws' have 0 fresh live-ingested observation(s) (0/3 candidates with live origin) and 0 persisted product-schema proof(s) (0/3 candidates with schema proof)).",
+  "claimedAsCurrentLiveRunVerification": false,
+  "g16SyntheticHydrationUsed": false,
+  "fabricatedHydrationObservationsUsedCount": 0,
+  "syntheticJsonldProofRefsUsedCount": 0,
+  "crossWorkspaceProofsAcceptedCount": 0,
+  "imaginaryColumnsUsedCount": 0,
+  "hashOrTitleOnlyPromotedCount": 0,
+  "unverifiedObservationsRebrandedAsLiveCount": 0,
+  "unverifiedLiveOriginObservationsCount": 13,
+  "g16NegativeSuite": {
+    "totalNegativeCases": 55,
+    "passedNegativeCases": 55,
+    "allPassed": true,
+    "cases": [
+      {
+        "testId": "G16-MAT-A",
+        "description": "VERIFIED candidate with liveObservationsCount=5 and sourceObservations=[] fails with validLineageObservationsCount=0",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-B",
+        "description": "VERIFIED candidate with observation having provenance=CACHED_DB while candidate.liveObservationsCount=3 fails",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-C",
+        "description": "VERIFIED candidate with live observation missing researchRunId and executionRunId fails",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-D",
+        "description": "VERIFIED candidate with live observation from prior run run_old evaluated under run_new fails",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-E",
+        "description": "VERIFIED candidate with two duplicate observations having the same sourceObservationId deduplicates count to 1",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-F",
+        "description": "Candidate with storeDomain and canonicalProductUrl strings present but no merchant verification proof fails",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-G",
+        "description": "CheckoutChamp / funnel domain with identityStatus=VERIFIED and live observations is downgraded to PROBABLE and fails",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-H",
+        "description": "PROBABLE candidate with valid same-run live observations remains PROBABLE and fails G16",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-I",
+        "description": "Three live-verified candidates where two share the same familyKey in a broad niche fail Top-3 with INSUFFICIENT_EVIDENCE",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-J",
+        "description": "Three live-verified candidates where two resolve to the same canonical product URL/handle fail Top-3 with INSUFFICIENT_EVIDENCE",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-K",
+        "description": "Two valid live-verified candidates + one funnel/PROBABLE candidate produces verifiedLiveCount=2 and INSUFFICIENT_EVIDENCE",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-L",
+        "description": "Three genuinely distinct, merchant-verified, same-run live-observed candidates across three families PASS G16",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-M",
+        "description": "Observation belonging to a different candidate product/store domain fails belongsToCandidateProduct and G16",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-N",
+        "description": "Fabricated hydration observation IDs (obs_<runId>_<candId> and req_<runId>) are rejected by isAuthenticallyLiveObservation",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-O",
+        "description": "Synthetic jsonld:<storeDomain> proof reference is rejected by extractMerchantProofRefs and hasVerifiedMerchantIdentity",
+        "passed": true
+      },
+      {
+        "testId": "G16-MAT-P",
+        "description": "When strictPersistedProofRequired is true and persisted merchantEvidenceIndex is unverified, inline snapshot fields cannot force merchantVerified=true",
+        "passed": true
+      },
+      {
+        "testId": "M01",
+        "description": "LandingPageSnapshot with pageTitle + finalUrl + contentHash only (no observationsJson Product JSON-LD) is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M02",
+        "description": "LandingPageSnapshot with CRO observationsJson lacking Product JSON-LD is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M03",
+        "description": "ResearchProduct row with /products/... URL alone is discovery-only and NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M04",
+        "description": "CompetitorOfferSnapshot price/offer-only row is NOT VERIFIED identity proof",
+        "passed": true
+      },
+      {
+        "testId": "M05",
+        "description": "CheckoutChamp / funnel domain (cc.uprootclean.com, /main/phr) without root JSON-LD product schema stays PROBABLE / FUNNEL_UNVERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M06",
+        "description": "ResearchEvidence with JSON-LD @type Organization / WebSite / BreadcrumbList / ItemList / Article (not Product) is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M07",
+        "description": "ResearchEvidence with observedValue='{\"schemaVerified\":true}' or '{\"hasJsonLdProduct\":true}' without actual Product JSON-LD is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M08",
+        "description": "LandingPageSnapshot with httpStatus 403/500 or accessStatus=BLOCKED is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M09",
+        "description": "ResearchEvidence with observationMethod=MANUAL_ENTRY or classification=INFERRED is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M10",
+        "description": "Valid Product JSON-LD for a different product/SKU on the same merchant domain is NOT VERIFIED for target candidate",
+        "passed": true
+      },
+      {
+        "testId": "M11",
+        "description": "Valid Product JSON-LD for the same slug on an unrelated merchant domain is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M12",
+        "description": "Valid Product JSON-LD with observedAt > asOf is rejected as POST_CUTOFF",
+        "passed": true
+      },
+      {
+        "testId": "M13",
+        "description": "Valid Product JSON-LD in another workspaceId is rejected as CROSS_WORKSPACE_REJECTED",
+        "passed": true
+      },
+      {
+        "testId": "M14",
+        "description": "Synthetic / fixture proof (uahpet_lp_hash_v12_4_3_3, TEST_FIXTURE, jsonld:<domain>) is rejected",
+        "passed": true
+      },
+      {
+        "testId": "M15",
+        "description": "Missing or invalid date (null, empty, 'not-a-date', new Date('invalid')) fails closed",
+        "passed": true
+      },
+      {
+        "testId": "M16",
+        "description": "Hash-only proof where raw source content is absent returns RAW_SOURCE_NOT_RECONSTRUCTABLE and is NOT VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "M17",
+        "description": "Tampered content hash (raw Product JSON-LD payload does not match stored SHA-256 hash) is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L01",
+        "description": "DiscoveryRunAd.ingestOutcome = EXISTING is rejected as reused historical DB ad",
+        "passed": true
+      },
+      {
+        "testId": "L02",
+        "description": "DiscoveryRunAd.ingestOutcome = UPDATED without live origin is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L03",
+        "description": "DiscoveryRunAd.ingestOutcome = NEW with empty AdObservation.rawPayload is rejected (PERSISTED_LIVE_ORIGIN_UNVERIFIED)",
+        "passed": true
+      },
+      {
+        "testId": "L04",
+        "description": "AdObservation.evidenceType = MANUAL_ENTRY or USER_OBSERVED is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L05",
+        "description": "AdObservation.rawPayload containing origin = DETERMINISTIC_FALLBACK is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L06",
+        "description": "AdObservation.rawPayload containing TEST_FIXTURE / CONTROLLED_FIXTURE / SYNTHETIC / MOCK is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L07",
+        "description": "Fabricated IDs obs_<runId>_<candidateId> or req_<runId> are rejected",
+        "passed": true
+      },
+      {
+        "testId": "L08",
+        "description": "Missing providerRequestId and missing mcpInvocationRef in rawPayload is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L09",
+        "description": "Missing evidenceReference or sourceUrl is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L10",
+        "description": "DiscoveryRunAd.workspaceId != candidate workspaceId is rejected as CROSS_WORKSPACE_OR_RUN",
+        "passed": true
+      },
+      {
+        "testId": "L11",
+        "description": "DiscoveryRunAd.runId != expected run lineage is rejected as CROSS_WORKSPACE_OR_RUN",
+        "passed": true
+      },
+      {
+        "testId": "L12",
+        "description": "AdObservation.observedAt > asOf or sourceTimestamp > asOf is rejected as POST_CUTOFF_OR_INVALID_DATE",
+        "passed": true
+      },
+      {
+        "testId": "L13",
+        "description": "Invalid or missing observedAt or sourceTimestamp is rejected as POST_CUTOFF_OR_INVALID_DATE",
+        "passed": true
+      },
+      {
+        "testId": "L14",
+        "description": "AdObservation linked to another candidate's adId or another merchant domain is rejected as CROSS_CANDIDATE_OR_DOMAIN",
+        "passed": true
+      },
+      {
+        "testId": "L15",
+        "description": "Caller mutating provenance=LIVE_PROVIDER in memory on an observation lacking DB rawPayload/ledger backing is rejected",
+        "passed": true
+      },
+      {
+        "testId": "L16",
+        "description": "rawPayload with malformed JSON or contradicting DiscoveryRunAd.providerId is rejected",
+        "passed": true
+      },
+      {
+        "testId": "P01",
+        "description": "Real persisted ResearchEvidence / LandingPageSnapshot with valid schema.org @type=Product JSON-LD, matching domain/product/workspace, observedAt <= asOf, and valid SHA-256 hash produces VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "P02",
+        "description": "Real persisted SHOPIFY_PRODUCT_JSON payload with provenance produces VERIFIED with proofMethod=SHOPIFY_PRODUCT_JSON and hasJsonLdProduct=false",
+        "passed": true
+      },
+      {
+        "testId": "P03",
+        "description": "Real persisted AdObservation + DiscoveryRunAd with ingestOutcome=NEW, SCRAPED_POST, AUTOMATED_SCRAPE, rawPayload live execution envelope, providerRequestId, evidenceReference, same workspace/run/product, <= asOf is accepted as AUTHENTIC_LIVE_INGEST",
+        "passed": true
+      },
+      {
+        "testId": "P04",
+        "description": "Current stored DB snapshot (DiscoveryRunAd EXISTING + AdObservation rawPayload=null + zero workspace merchant schema rows) reconstructs to 0/3 live-verified under G16 (INSUFFICIENT_EVIDENCE)",
+        "passed": true
+      },
+      {
+        "testId": "P05",
+        "description": "CheckoutChamp funnel without root schema stays PROBABLE, while a verified root merchant domain with real Product schema is VERIFIED",
+        "passed": true
+      },
+      {
+        "testId": "P06",
+        "description": "Three genuinely distinct Pet Gadgets products with persisted valid Product JSON-LD proofs and persisted origin-authentic live observations across three families PASS G16",
+        "passed": true
+      }
+    ]
+  },
+  "shortlistQuality": {
+    "targetNiche": "Pet Gadgets",
+    "storedRunShortlistNicheMatchedCount": 3,
+    "storedRunShortlistTotalCount": 3,
+    "holdoutBacktestShortlistNicheMatchedCount": 3,
+    "holdoutBacktestShortlistTotalCount": 3,
+    "holdoutNicheMismatches": [],
+    "allThreeNicheMatchedAndVerified": false
+  }
+}
