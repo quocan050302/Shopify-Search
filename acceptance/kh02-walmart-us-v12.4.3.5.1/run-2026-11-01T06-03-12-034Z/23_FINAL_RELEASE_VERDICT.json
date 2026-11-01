@@ -1,0 +1,10 @@
+{
+  "releaseVersion": "12.4.3.5.1",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baseSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "overallVerdict": "PASS",
+  "liveWalmartJinaProbeStatus": "BLOCKED_PROVIDER",
+  "negativeMutationsCaught": "40/40",
+  "completedAt": "2026-11-01T06:03:48.841Z"
+}

@@ -1,0 +1,9 @@
+{
+  "split": "DEV",
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "asOfCutoffIso": "2026-08-01T00:00:00.000Z",
+  "status": "PASS",
+  "walmartScoreInflationDelta": 0,
+  "postCutoffWalmartLeaksInEligibleSet": 0,
+  "fixtureWalmartLeaksInEligibleSet": 0
+}

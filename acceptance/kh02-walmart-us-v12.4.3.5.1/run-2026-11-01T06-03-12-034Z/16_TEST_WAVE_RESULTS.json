@@ -1,0 +1,48 @@
+{
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "allRequiredWavesPassed": true,
+  "waves": [
+    {
+      "waveId": "WAVE_A_UNIT",
+      "name": "Walmart US Jina Reader Unit Suite (W01-W32, W50)",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 970
+    },
+    {
+      "waveId": "WAVE_B_INTEGRATION_AND_REGRESSION",
+      "name": "Walmart US Integration, Fencing, Worker, API & Amazon Regression Suite",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 2102
+    },
+    {
+      "waveId": "WAVE_C_TYPECHECK_AND_BUILD",
+      "name": "TypeScript Typecheck & Next.js Production Build",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 21304
+    },
+    {
+      "waveId": "WAVE_D_CHROMIUM_UI_RELOAD_PARITY",
+      "name": "Playwright Headless Chromium UI & Post-Reload Parity",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 5356
+    },
+    {
+      "waveId": "WAVE_E_LIVE_JINA_PROBE",
+      "name": "Controlled Live No-Key Jina Reader REST Probe",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 6566
+    },
+    {
+      "waveId": "WAVE_F_BACKTEST_POINT_IN_TIME_AUDIT",
+      "name": "DEV/HOLDOUT Point-in-Time Anti-Leakage Audit",
+      "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+      "passed": true,
+      "durationMs": 25
+    }
+  ]
+}

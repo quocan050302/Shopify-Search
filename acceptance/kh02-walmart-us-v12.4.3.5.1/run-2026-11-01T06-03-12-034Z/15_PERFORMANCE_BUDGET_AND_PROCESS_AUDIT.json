@@ -1,0 +1,11 @@
+{
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "orphanedProcessesAfterRun": 0,
+  "freeDiskGiBAfterWaves": 17.8,
+  "budgetCompliance": {
+    "maxConcurrentObserved": 1,
+    "maxOperationsPerRunObserved": 4,
+    "maxAttemptsPerOperationObserved": 2,
+    "maxRequestsPerMinuteObserved": 2
+  }
+}

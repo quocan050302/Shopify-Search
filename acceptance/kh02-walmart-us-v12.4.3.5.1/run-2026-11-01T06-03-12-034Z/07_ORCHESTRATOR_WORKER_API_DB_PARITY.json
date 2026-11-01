@@ -1,0 +1,28 @@
+{
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "workspaceIsolation": {
+    "crossWorkspaceWriteRejected": true,
+    "crossWorkspaceReadHttpStatus": 403
+  },
+  "workerFencing": {
+    "staleClaimTokenRejected": true,
+    "staleFencingTokenRejected": true,
+    "staleFencingGenerationRejected": true,
+    "expiredLeaseRejected": true
+  },
+  "persistenceFailureHandling": {
+    "injectedFailureSurfaced": true,
+    "errorCode": "WALMART_EVIDENCE_PERSISTENCE_FAILED",
+    "silentSuccessWhenWriteFails": false
+  },
+  "getRouteReadOnlyAudit": {
+    "route": "/api/v1/kh02/marketplace/walmart",
+    "dbMutationsOnGet": 0,
+    "networkCallsOnGet": 0,
+    "rescoringOnGet": 0
+  },
+  "childVerifyJobAudit": {
+    "jobType": "KH02_WALMART_VERIFY",
+    "enqueuedAndExecutedSuccessfully": true
+  }
+}

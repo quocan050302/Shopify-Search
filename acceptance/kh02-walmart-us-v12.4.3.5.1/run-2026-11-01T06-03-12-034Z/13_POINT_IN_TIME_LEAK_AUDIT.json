@@ -1,0 +1,13 @@
+{
+  "codeSha": "38a088eb8c98028ec843cb996d3b47e469517f55",
+  "zeroLeakCount": true,
+  "unfilteredFutureLeaksInEligibleSet": 0,
+  "fixtureLeaksInEligibleSet": 0,
+  "syntheticAudit": {
+    "cutoffIso": "2026-08-01T00:00:00.000Z",
+    "eligibleRetainedCount": 1,
+    "futureLeaksRejectedCount": 1,
+    "fixtureRecordsRejectedCount": 1,
+    "missingTimestampRejectedCount": 1
+  }
+}

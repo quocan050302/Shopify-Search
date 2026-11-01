@@ -1,0 +1,10 @@
+{
+  "overallVerdict": "PASS",
+  "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-walmart-us-v12.4.3.5.1/run-2026-11-01T06-03-12-034Z",
+  "validatedAt": "2026-11-01T06:03:48.842Z",
+  "checksExecuted": 68,
+  "checksPassed": 68,
+  "checksFailed": 0,
+  "failureCodes": [],
+  "failureDetails": []
+}
