@@ -1,0 +1,47 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:48.740Z",
+  "windowLabel": "2026-06-01T00:00:00.000Z..2026-10-24T00:00:00.000Z",
+  "cutoffIso": "2026-10-24T00:00:00.000Z",
+  "adsEvaluatedCount": 60,
+  "candidatesCount": 3,
+  "g15PassingCandidatesCount": 0,
+  "amazonHistoricalObservationsAtCutoff": "NOT_AVAILABLE_AT_ASOF",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "productEvidenceLedger": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_auto_detailing_putty_gel",
+      "title": "Auto Detailing Putty Gel",
+      "storeDomain": "competitor-store.com",
+      "familyKey": "putty_gel",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cand_hist_cc.uprootclean.com_uproot_clean_pet_hair_remover_",
+      "title": "Uproot Clean Pet Hair Remover - The Original",
+      "storeDomain": "cc.uprootclean.com",
+      "familyKey": "pet_hair_remover_roller",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    },
+    {
+      "candidateId": "cmvf78dp2000t4og9nor0ay67",
+      "title": "BlendJet 2 Portable Blender",
+      "storeDomain": "blendjet.com",
+      "familyKey": "blender_blendjet",
+      "observationCount": 0,
+      "coveredDays": 0,
+      "status": "INSUFFICIENT_HISTORY",
+      "eligibleForEvergreen": false,
+      "sources": []
+    }
+  ]
+}

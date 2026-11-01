@@ -1,0 +1,27 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:41:02.770Z",
+  "pointInTimeVerdict": "PASS",
+  "postCutoffAmazonLeakageRejected": true,
+  "negativeTimeTravelControlPassed": true,
+  "missingHistoricalAmazonClassifiedHonestly": "NOT_AVAILABLE_AT_ASOF",
+  "devAmazonAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  },
+  "holdoutAmazonAudit": {
+    "asOfTimestamp": "2026-10-30T12:00:00.000Z",
+    "totalEvaluatedCount": 0,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 0,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "leakagePrevented": true
+  }
+}

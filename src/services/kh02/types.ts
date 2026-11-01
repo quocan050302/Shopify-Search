@@ -588,4 +588,22 @@ export type RankedProductCandidate = Record<string, any>;
 export type EvergreenLeaderboardResponse = Record<string, any>;
 export type SourceConnectionSummary = Record<string, any>;
 
+// ─── V12.4.3.5.0 Marketplace Product Evidence Pilot Contracts ─────────────────
+export type {
+  MarketplaceSource,
+  MarketplaceEvidenceStatus,
+  IdentityMatch,
+  MarketplaceObservationClass,
+  MarketplaceVerificationScope,
+  AmazonAccessPolicyStatus,
+  AmazonRequestMode,
+  AmazonPolicyContext,
+  AmazonProductEvidence,
+  AmazonProviderOperationRecord,
+  AmazonEvidenceGateEvaluation,
+  AmazonMarketplaceTelemetry,
+  ProductAmazonEvidenceSummary,
+} from "./marketplace/marketplaceEvidenceTypes";
+
+
 

@@ -1,0 +1,73 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:41:02.763Z",
+  "reconciled": true,
+  "mismatchCount": 0,
+  "fieldComparisons": [
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "asin",
+      "sqliteValue": "B08N5WRWNW",
+      "httpGetValue": "B08N5WRWNW",
+      "chromiumDomValue": "B08N5WRWNW",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "canonicalAmazonUrl",
+      "sqliteValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "httpGetValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "chromiumDomValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "identityMatch",
+      "sqliteValue": "EXACT_PRODUCT",
+      "httpGetValue": "EXACT_PRODUCT",
+      "chromiumDomValue": "EXACT_PRODUCT",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "status",
+      "sqliteValue": "IDENTITY_VERIFIED",
+      "httpGetValue": "IDENTITY_VERIFIED",
+      "chromiumDomValue": "IDENTITY_VERIFIED",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "observedAt",
+      "sqliteValue": "2026-10-31T16:00:00.000Z",
+      "httpGetValue": "2026-10-31T16:00:00.000Z",
+      "chromiumDomValue": "2026-10-31T16:00:00.000Z",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "observationClass",
+      "sqliteValue": "IMPORTED_BY_USER",
+      "httpGetValue": "IMPORTED_BY_USER",
+      "chromiumDomValue": "IMPORTED_BY_USER",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "rawEvidenceHash",
+      "sqliteValue": "0b31b599cbe60a4e1f89a2276882bb71c74542c05ab13cb81cc8effb29bf0fba",
+      "httpGetValue": "0b31b599cbe60a4e1f89a2276882bb71c74542c05ab13cb81cc8effb29bf0fba",
+      "chromiumDomValue": "0b31b599cbe60a4e1f89a2276882bb71c74542c05ab13cb81cc8effb29bf0fba",
+      "matched": true
+    },
+    {
+      "candidateId": "cand_amz_parity_1",
+      "field": "extractedFieldsHash",
+      "sqliteValue": "dc8c834c02a1f79f680cd36a9b390662dd19e1858a9646e9734b0015949457c6",
+      "httpGetValue": "dc8c834c02a1f79f680cd36a9b390662dd19e1858a9646e9734b0015949457c6",
+      "chromiumDomValue": "dc8c834c02a1f79f680cd36a9b390662dd19e1858a9646e9734b0015949457c6",
+      "matched": true
+    }
+  ]
+}

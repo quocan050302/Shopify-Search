@@ -18,6 +18,11 @@ import {
 } from "@/services/kh02/evergreenResearchOrchestrator";
 import { materializeKH02CandidatesToDatabase } from "@/services/kh02/persistence/kh02PersistenceService";
 import {
+  attachAmazonEvidenceToExistingResearchRun,
+  persistAmazonEvidenceAtomically,
+} from "@/services/kh02/marketplace/marketplaceEvidencePersistence";
+import { runAmazonUsPilotEnrichment } from "@/services/kh02/marketplace/amazonUsEvidenceAdapter";
+import {
   SWAI_KH02_RELEASE_VERSION,
   getRuntimeBuildSha,
   getDatabaseFingerprint,
@@ -35,6 +40,15 @@ export interface ResearchInput {
   maxCandidates?: number;
   sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
   metaExecutionPolicy?: string;
+  enableAmazonUsPilot?: boolean;
+  amazonPilotCandidateUrls?: Record<string, string>;
+  targetResearchRunId?: string;
+  candidateIds?: string[];
+  candidateUrls?: Record<string, string>;
+  requestMode?: "URL_VERIFICATION" | "AUTHORIZED_SEARCH" | "USER_IMPORTED" | "TEST_FIXTURE";
+  fixtureSnapshotsByUrl?: Record<string, any>;
+  mcpConnectOptions?: Record<string, any>;
+  simulatePersistenceFailureForTest?: boolean;
   workspaceId: string;
 }
 
@@ -175,7 +189,8 @@ export function computeResearchIdempotencyKey(
   context: RequestContext
 ): string {
   const normTopic = input.topic.trim().toLowerCase();
-  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}`;
+  const amzSuffix = input.enableAmazonUsPilot ? ":amz1" : "";
+  const raw = `${context.workspaceId}:${normTopic}:${input.market || "US"}:${input.lookbackDays || 90}${amzSuffix}`;
   return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
 }
 
@@ -210,20 +225,27 @@ export function classifyResearchError(error: unknown): RetryDecision {
 }
 
 /**
- * Atomically claims the next PENDING KH-02 research job.
+ * Atomically claims the next PENDING KH-02 research or Amazon verification child job.
  */
 export async function claimNextResearchJob(
   workerId: string = WORKER_ID,
-  db: any = prisma
+  db: any = prisma,
+  options?: { jobId?: string; jobTypes?: string[] }
 ): Promise<ClaimedResearchJob | null> {
   const now = new Date();
+  const allowedJobTypes = options?.jobTypes || ["KH02_RESEARCH", "KH02_AMAZON_VERIFY"];
+
+  const whereClause: any = {
+    jobType: allowedJobTypes.length === 1 ? allowedJobTypes[0] : { in: allowedJobTypes },
+    status: "PENDING",
+  };
+  if (options?.jobId) {
+    whereClause.id = options.jobId;
+  }
 
   // Find candidate PENDING job
   const pendingJob = await db.syncJob.findFirst({
-    where: {
-      jobType: "KH02_RESEARCH",
-      status: "PENDING",
-    },
+    where: whereClause,
     orderBy: { createdAt: "asc" },
   });
 
@@ -307,12 +329,21 @@ export async function claimNextResearchJob(
       leaseExpiresAt: leaseExpiresAtStr,
     },
     payload: {
-      topic: payload.topic || "General Research",
+      topic: payload.topic || (pendingJob.jobType === "KH02_AMAZON_VERIFY" ? "Amazon US Verification" : "General Research"),
       market: payload.market || "US",
       lookbackDays: payload.lookbackDays || 90,
       maxCandidates: payload.maxCandidates || 15,
       sourceMode: payload.sourceMode,
       metaExecutionPolicy: payload.metaExecutionPolicy,
+      enableAmazonUsPilot: payload.enableAmazonUsPilot,
+      amazonPilotCandidateUrls: payload.amazonPilotCandidateUrls,
+      targetResearchRunId: payload.targetResearchRunId,
+      candidateIds: payload.candidateIds,
+      candidateUrls: payload.candidateUrls,
+      requestMode: payload.requestMode,
+      fixtureSnapshotsByUrl: payload.fixtureSnapshotsByUrl,
+      mcpConnectOptions: payload.mcpConnectOptions,
+      simulatePersistenceFailureForTest: payload.simulatePersistenceFailureForTest,
       workspaceId: pendingJob.workspaceId,
     },
   };
@@ -923,6 +954,85 @@ export async function completeResearchJob(
         : "COMPLETED";
 
     await materializeKH02CandidatesToDatabase(result, db).catch(() => null);
+    if (Array.isArray(result.marketplaceEvidence) && result.marketplaceEvidence.length > 0) {
+      try {
+        const persistRes = await persistAmazonEvidenceAtomically(
+          job.workspaceId,
+          job.id,
+          result.marketplaceEvidence,
+          {
+            db,
+            ownershipJobId: job.id,
+            expectedWorkerId: ownership.workerId,
+            expectedClaimToken: ownership.claimToken,
+            expectedFencingToken: ownership.fencingToken,
+            expectedFencingGeneration: ownership.fencingGeneration,
+            telemetry: result.marketplaceTelemetry || null,
+            simulateWriteFailureForTest: Boolean(
+              (result as any)._simulateAmazonPersistenceFailureForTest
+            ),
+          }
+        );
+        if (persistRes.blockedByOwnershipOrAbort) {
+          return {
+            success: false,
+            rowsAffected: 0,
+            reason: "OWNERSHIP_LOST",
+          };
+        }
+        if (result.marketplaceTelemetry) {
+          result.marketplaceTelemetry.persistenceStatus = "PERSISTED";
+          result.marketplaceTelemetry.persistenceError = null;
+        }
+      } catch (persistErr: any) {
+        const rawErr = persistErr instanceof Error ? persistErr.message : String(persistErr);
+        const sanitizedErr = rawErr
+          .replace(/key=[^&\s]+/gi, "key=REDACTED")
+          .replace(/Bearer\s+[^&\s]+/gi, "Bearer REDACTED")
+          .slice(0, 300);
+        result.marketplaceEvidence = [];
+        if (result.marketplaceTelemetry) {
+          result.marketplaceTelemetry.persistenceStatus = "FAILED";
+          result.marketplaceTelemetry.persistenceError = `AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${sanitizedErr}`;
+          result.marketplaceTelemetry.runStatus = "FAILED";
+          result.marketplaceTelemetry.identityVerifiedCount = 0;
+        }
+        for (const list of [
+          (result as any).candidates,
+          result.topThree,
+          result.researchShortlist?.shortlist,
+          result.provisionalCandidates,
+          result.remainingCandidates,
+          result.insufficientEvidenceCandidates,
+        ]) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list as any[]) {
+            const cand = item?.candidate || item;
+            if (!cand) continue;
+            delete cand.amazonEvidence;
+            delete cand.amazonEvidenceSummary;
+            cand.amazonEvidenceStatus = "FAILED";
+          }
+        }
+        if (result.runStatus !== "FAILED" && result.runStatus !== "PARTIAL") {
+          result.runStatus = "PARTIAL";
+        }
+        if (!Array.isArray(result.warnings)) {
+          result.warnings = [];
+        }
+        result.warnings.push(`AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${sanitizedErr}`);
+      }
+    } else if (result.marketplaceTelemetry) {
+      result.marketplaceTelemetry.persistenceStatus = "NOT_REQUIRED";
+      result.marketplaceTelemetry.persistenceError = null;
+    }
+
+    const finalTerminalStatus =
+      result.runStatus === "FAILED"
+        ? "FAILED"
+        : result.runStatus === "PARTIAL"
+        ? "PARTIALLY_COMPLETED"
+        : terminalStatus;
 
     // Preserve input metadata, runtime telemetry, and leaderboard result snapshot
     const mergedResultJson = JSON.stringify({
@@ -931,6 +1041,7 @@ export async function completeResearchJob(
         topic: meta.topic || result.topic,
         market: meta.market || result.market,
         lookbackDays: meta.lookbackDays || result.lookbackDays,
+        enableAmazonUsPilot: Boolean(meta.enableAmazonUsPilot),
       },
       _runtime: {
         ...runtime,
@@ -942,7 +1053,7 @@ export async function completeResearchJob(
       jobId,
       ownership,
       {
-        status: terminalStatus,
+        status: finalTerminalStatus,
         progress: 100,
         completedAt: new Date(),
         resultJson: mergedResultJson,
@@ -996,7 +1107,7 @@ export async function recoverStaleResearchJobs(
 
   const runningJobs = await db.syncJob.findMany({
     where: {
-      jobType: "KH02_RESEARCH",
+      jobType: { in: ["KH02_RESEARCH", "KH02_AMAZON_VERIFY"] },
       status: "RUNNING",
     },
   });
@@ -1089,12 +1200,272 @@ export async function recoverStaleResearchJobs(
 }
 
 /**
+ * Processes a child `KH02_AMAZON_VERIFY` job claimed by the worker.
+ * Enriches up to 3 selected candidates from an existing completed/partially-completed
+ * parent KH-02 research run without re-running Meta/Google discovery or modifying G15/G16.
+ */
+export async function processAmazonVerificationJob(
+  job: ClaimedResearchJob,
+  db: any = prisma
+): Promise<{
+  success: boolean;
+  verificationStatus?: string;
+  persistedCount?: number;
+  error?: string;
+}> {
+  activeJobId = job.id;
+  const ownership: JobOwnership = {
+    workerId: job.workerId,
+    claimToken: job.claimToken,
+    fencingToken: job.fencingToken,
+    fencingGeneration: job.fencingGeneration,
+    recordVersion: job.recordVersion,
+    fencingVersion: job.fencingGeneration,
+    leaseExpiresAt: job.leaseExpiresAt,
+  };
+
+  const abortController = new AbortController();
+  let lostOwnership = false;
+  let jobTimedOut = false;
+  const overallDeadlineTimer = setTimeout(() => {
+    jobTimedOut = true;
+    abortController.abort(
+      new Error("JOB_DEADLINE_EXCEEDED: Overall Amazon verification job deadline exceeded.")
+    );
+  }, KH02_MAX_JOB_DURATION_MS);
+
+  const heartbeat = startResearchHeartbeat(job.id, ownership, {
+    intervalMs: 15000,
+    db,
+    onLostOwnership: () => {
+      lostOwnership = true;
+      abortController.abort(new Error("OWNERSHIP_LOST: Worker lease lost."));
+    },
+  });
+
+  try {
+    const targetResearchRunId = String(job.payload.targetResearchRunId || "").trim();
+    const candidateUrls = job.payload.candidateUrls || {};
+    const requestedCandidateIds = Array.isArray(job.payload.candidateIds)
+      ? job.payload.candidateIds
+      : Object.keys(candidateUrls);
+
+    if (!targetResearchRunId) {
+      throw new Error("INVALID_VERIFY_JOB: Missing targetResearchRunId.");
+    }
+    if (requestedCandidateIds.length === 0 || requestedCandidateIds.length > 3) {
+      throw new Error(
+        `INVALID_CANDIDATE_COUNT: Expected 1..3 candidateIds, received ${requestedCandidateIds.length}.`
+      );
+    }
+
+    await updateResearchProgress(
+      job.id,
+      ownership,
+      { stage: "AMAZON_VERIFICATION", percent: 25 },
+      db
+    );
+
+    const parentJob = await db.syncJob.findFirst({
+      where: { id: targetResearchRunId, workspaceId: job.workspaceId },
+      select: { id: true, workspaceId: true, status: true, resultJson: true },
+    });
+    if (!parentJob) {
+      throw new Error(`RUN_NOT_FOUND: Parent research run '${targetResearchRunId}' not found.`);
+    }
+    if (
+      parentJob.status !== "COMPLETED" &&
+      parentJob.status !== "PARTIALLY_COMPLETED"
+    ) {
+      throw new Error(
+        `INVALID_PARENT_RUN_STATE: Parent run '${targetResearchRunId}' status is '${parentJob.status}'.`
+      );
+    }
+
+    let parentResult: any = {};
+    try {
+      parentResult = JSON.parse(parentJob.resultJson || "{}");
+    } catch {
+      throw new Error("CORRUPT_PARENT_RESULT_JSON: Unable to parse parent run resultJson.");
+    }
+
+    const allParentItems: any[] = [
+      ...(Array.isArray(parentResult.candidates) ? parentResult.candidates : []),
+      ...(Array.isArray(parentResult.topThree) ? parentResult.topThree : []),
+      ...(Array.isArray(parentResult.researchShortlist?.shortlist)
+        ? parentResult.researchShortlist.shortlist
+        : []),
+      ...(Array.isArray(parentResult.provisionalCandidates)
+        ? parentResult.provisionalCandidates
+        : []),
+      ...(Array.isArray(parentResult.remainingCandidates)
+        ? parentResult.remainingCandidates
+        : []),
+      ...(Array.isArray(parentResult.insufficientEvidenceCandidates)
+        ? parentResult.insufficientEvidenceCandidates
+        : []),
+    ];
+    const candidateById = new Map<string, any>();
+    for (const item of allParentItems) {
+      const c = item?.candidate || item;
+      if (c?.candidateId && !candidateById.has(c.candidateId)) {
+        candidateById.set(c.candidateId, { ...c });
+      }
+    }
+
+    const selectedCandidates: any[] = [];
+    for (const cid of requestedCandidateIds) {
+      const found = candidateById.get(cid);
+      if (!found) {
+        throw new Error(
+          `UNKNOWN_CANDIDATE_FOR_RUN: Candidate '${cid}' does not belong to run '${targetResearchRunId}'.`
+        );
+      }
+      selectedCandidates.push({
+        ...found,
+        amazonProductUrl: candidateUrls[cid] || found.amazonProductUrl || null,
+      });
+    }
+
+    const enrichment = await runAmazonUsPilotEnrichment({
+      workspaceId: job.workspaceId,
+      researchRunId: targetResearchRunId,
+      optInRequested: true,
+      candidates: selectedCandidates,
+      candidateAmazonUrls: candidateUrls,
+      requestMode: job.payload.requestMode || "URL_VERIFICATION",
+      fixtureSnapshotsByUrl: job.payload.fixtureSnapshotsByUrl,
+      mcpConnectOptions: job.payload.mcpConnectOptions,
+      signal: abortController.signal,
+      reportProgress: async (msg) => {
+        if (lostOwnership) throw new Error("OWNERSHIP_LOST");
+        if (jobTimedOut) throw new Error("JOB_DEADLINE_EXCEEDED");
+        await updateResearchProgress(
+          job.id,
+          ownership,
+          { stage: msg, percent: 60 },
+          db
+        );
+      },
+    });
+
+    if (lostOwnership) {
+      throw new Error("OWNERSHIP_LOST: Worker lost lease ownership during Amazon enrichment.");
+    }
+    if (jobTimedOut) {
+      throw new Error("JOB_DEADLINE_EXCEEDED: Overall Amazon verification job deadline exceeded.");
+    }
+
+    const attachRes = await attachAmazonEvidenceToExistingResearchRun(
+      {
+        workspaceId: job.workspaceId,
+        researchRunId: targetResearchRunId,
+        verifyJobId: job.id,
+        evidenceRows: enrichment.marketplaceEvidence,
+        telemetry: enrichment.marketplaceTelemetry,
+        candidateUrls,
+        expectedWorkerId: ownership.workerId,
+        expectedClaimToken: ownership.claimToken,
+        expectedFencingToken: ownership.fencingToken,
+        expectedFencingGeneration: ownership.fencingGeneration,
+        signal: abortController.signal,
+        isLeaseStillOwned: () => !lostOwnership,
+        simulateWriteFailureForTest: Boolean(job.payload.simulatePersistenceFailureForTest),
+      },
+      db
+    );
+
+    if (attachRes.blockedByOwnershipOrAbort) {
+      lostOwnership = true;
+      return {
+        success: false,
+        error: attachRes.blockReason || "OWNERSHIP_LOST",
+      };
+    }
+
+    const verificationStatus = enrichment.marketplaceTelemetry.runStatus;
+    const childTerminalStatus =
+      verificationStatus === "PARTIAL" ? "PARTIALLY_COMPLETED" : "COMPLETED";
+
+    const currentChildJob = await db.syncJob.findUnique({ where: { id: job.id } });
+    let childMeta: any = {};
+    try {
+      childMeta = JSON.parse(currentChildJob?.resultJson || "{}");
+    } catch {}
+
+    const childResultPayload = {
+      ...childMeta,
+      verifyJobId: job.id,
+      targetResearchRunId,
+      candidateIds: requestedCandidateIds,
+      candidateUrls,
+      status: childTerminalStatus,
+      verificationStatus,
+      persistedCount: attachRes.persistedCount,
+      marketplaceEvidence: enrichment.marketplaceEvidence,
+      marketplaceTelemetry: attachRes.updatedTelemetry || enrichment.marketplaceTelemetry,
+      _runtime: {
+        ...(childMeta._runtime || {}),
+        completedAt: new Date().toISOString(),
+      },
+    };
+
+    const completeRes = await withJobLock(job.id, async () =>
+      updateJobIfClaimOwned(
+        job.id,
+        ownership,
+        {
+          status: childTerminalStatus,
+          progress: 100,
+          completedAt: new Date(),
+          resultJson: JSON.stringify(childResultPayload),
+        },
+        db
+      )
+    );
+
+    if (!completeRes.success) {
+      throw new Error("OWNERSHIP_LOST: Failed to commit child verification job completion.");
+    }
+
+    processedJobs++;
+    activeJobId = null;
+    return {
+      success: true,
+      verificationStatus,
+      persistedCount: attachRes.persistedCount,
+    };
+  } catch (err: any) {
+    failedJobs++;
+    activeJobId = null;
+    const msg = err?.message || String(err);
+    if (!lostOwnership && !msg.startsWith("OWNERSHIP_LOST")) {
+      const wrappedErr = msg.includes("AMAZON_EVIDENCE_PERSISTENCE_FAILED")
+        ? err
+        : new Error(`AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${msg}`);
+      await failResearchJob(job.id, ownership, wrappedErr, db);
+    }
+    return { success: false, error: msg };
+  } finally {
+    clearTimeout(overallDeadlineTimer);
+    heartbeat.stop();
+  }
+}
+
+/**
  * Executes a claimed research job across all sources with active heartbeat protection.
  */
 export async function executeResearchJob(
   job: ClaimedResearchJob,
   db: any = prisma
 ): Promise<{ success: boolean; result?: EvergreenLeaderboardResult; error?: string }> {
+  if (job.jobType === "KH02_AMAZON_VERIFY") {
+    const verifyRes = await processAmazonVerificationJob(job, db);
+    return {
+      success: verifyRes.success,
+      error: verifyRes.error,
+    };
+  }
   activeJobId = job.id;
   const ownership: JobOwnership = {
     workerId: job.workerId,
@@ -1160,6 +1531,8 @@ export async function executeResearchJob(
         maxCandidates: job.payload.maxCandidates || 15,
         sourceMode: job.payload.sourceMode,
         metaExecutionPolicy: job.payload.metaExecutionPolicy,
+        enableAmazonUsPilot: job.payload.enableAmazonUsPilot,
+        amazonPilotCandidateUrls: job.payload.amazonPilotCandidateUrls,
         workspaceId: job.workspaceId,
         runId: job.id,
         signal: abortController.signal,

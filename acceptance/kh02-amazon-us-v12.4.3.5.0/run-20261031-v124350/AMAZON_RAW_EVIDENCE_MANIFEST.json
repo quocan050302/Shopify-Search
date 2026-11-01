@@ -1,0 +1,79 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:27.462Z",
+  "absentPriceStoredAsNullNotZero": true,
+  "reviewCountAndBsrExcludedFromSalesAndScore": true,
+  "promptInjectionAndScriptTagsStripped": true,
+  "evidenceRecords": [
+    {
+      "id": "amz_ev_d58b56bd42f923cd491e",
+      "candidateId": "cand_1",
+      "asin": "B08N5WRWNW",
+      "rawEvidenceHash": "0b31b599cbe60a4e1f89a2276882bb71c74542c05ab13cb81cc8effb29bf0fba",
+      "extractedFieldsHash": "dc8c834c02a1f79f680cd36a9b390662dd19e1858a9646e9734b0015949457c6",
+      "extractedCanonicalPayload": {
+        "asin": "B08N5WRWNW",
+        "parentAsin": "B08N5WRWN0",
+        "variationAsin": "B08N5WRWNW",
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B08N5WRWNW",
+        "productTitle": "UAHPET Wireless Cat Water Fountain Stainless Steel",
+        "brand": "UAHPET",
+        "merchant": "UAHPET Official",
+        "seller": "UAHPET Direct",
+        "currency": "USD",
+        "price": 49.99,
+        "availability": "In Stock",
+        "modelNumber": "UAH-WF-01",
+        "sku": "UAH-WF-01",
+        "gtin": null
+      }
+    },
+    {
+      "id": "amz_ev_6d1eb371fe21c72ed158",
+      "candidateId": "cand_2",
+      "asin": "B09V3KXJPB",
+      "rawEvidenceHash": "ac16123137b6107de5410a1ed4ed863459631d607981de8c75136d7117dbe16e",
+      "extractedFieldsHash": "0858559129a96fb160841034a4df13fb8a89dac46a0b9fc88312e4e8d1b8b6d9",
+      "extractedCanonicalPayload": {
+        "asin": "B09V3KXJPB",
+        "parentAsin": null,
+        "variationAsin": null,
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B09V3KXJPB",
+        "productTitle": "KittySpout Wireless Stainless Steel Cat Water Fountain",
+        "brand": null,
+        "merchant": null,
+        "seller": null,
+        "currency": "USD",
+        "price": null,
+        "availability": "In Stock",
+        "modelNumber": null,
+        "sku": null,
+        "gtin": null
+      }
+    },
+    {
+      "id": "amz_ev_f7b1195d8aa696fd00ef",
+      "candidateId": "cand_3",
+      "asin": "B07FZ8S74R",
+      "rawEvidenceHash": "4b080d1729a3202fa58081e57b615506ccb99194f95d1452f3f00fea02bd6a6d",
+      "extractedFieldsHash": "d30833928d10ec2e708b21d83c6ef8e4afb1332fa2b6a655055eb62b78166e70",
+      "extractedCanonicalPayload": {
+        "asin": "B07FZ8S74R",
+        "parentAsin": null,
+        "variationAsin": null,
+        "canonicalAmazonUrl": "https://www.amazon.com/dp/B07FZ8S74R",
+        "productTitle": "Uproot Clean Replacement Filters & Refill Pack Only",
+        "brand": "Uproot Clean",
+        "merchant": null,
+        "seller": null,
+        "currency": "USD",
+        "price": 14.99,
+        "availability": "In Stock",
+        "modelNumber": null,
+        "sku": null,
+        "gtin": null
+      }
+    }
+  ]
+}

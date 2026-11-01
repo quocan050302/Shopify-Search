@@ -1,0 +1,260 @@
+{
+  "_fixtureMeta": {
+    "origin": "OFFICIAL_DOCUMENTATION_EXAMPLE",
+    "provenance": "TEST_FIXTURE",
+    "endpoint": "https://creatorsapi.amazon/catalog/v1/searchItems",
+    "marketplace": "www.amazon.com",
+    "description": "Official Amazon Associates Creators API v1 SearchItems lower-camel JSON response contract example"
+  },
+  "searchResult": {
+    "totalResultCount": 4,
+    "searchURL": "https://www.amazon.com/s?k=UAHPET+Wireless+Cat+Water+Fountain&tag=swai-20",
+    "items": [
+      {
+        "asin": "B08N5WRWNW",
+        "parentASIN": "B08N5WRW00",
+        "detailPageURL": "https://www.amazon.com/dp/B08N5WRWNW?tag=swai-20&linkCode=osi&th=1&psc=1",
+        "images": {
+          "primary": {
+            "medium": {
+              "url": "https://m.media-amazon.com/images/I/41uahpet-fountain._SL160_.jpg",
+              "height": 160,
+              "width": 160
+            }
+          }
+        },
+        "itemInfo": {
+          "title": {
+            "displayValue": "UAHPET Wireless Cat Water Fountain Stainless Steel 67oz Battery Operated",
+            "label": "Title",
+            "locale": "en_US"
+          },
+          "byLineInfo": {
+            "brand": {
+              "displayValue": "UAHPET",
+              "label": "Brand",
+              "locale": "en_US"
+            },
+            "manufacturer": {
+              "displayValue": "UAHPET Official",
+              "label": "Manufacturer",
+              "locale": "en_US"
+            }
+          },
+          "manufactureInfo": {
+            "model": {
+              "displayValue": "UAH-WF-01",
+              "label": "Model",
+              "locale": "en_US"
+            },
+            "itemPartNumber": {
+              "displayValue": "PN-UAH-WF-01",
+              "label": "PartNumber",
+              "locale": "en_US"
+            }
+          },
+          "externalIds": {
+            "upcs": {
+              "displayValues": ["012345678905"],
+              "label": "UPC",
+              "locale": "en_US"
+            },
+            "eans": {
+              "displayValues": ["0012345678905"],
+              "label": "EAN",
+              "locale": "en_US"
+            }
+          },
+          "classifications": {
+            "binding": {
+              "displayValue": "Misc.",
+              "label": "Binding",
+              "locale": "en_US"
+            },
+            "productGroup": {
+              "displayValue": "Pet Products",
+              "label": "ProductGroup",
+              "locale": "en_US"
+            }
+          },
+          "features": {
+            "displayValues": [
+              "True wireless pump with 5000mAh rechargeable battery",
+              "304 food-grade stainless steel tray",
+              "Motion sensor and timed water dispensing modes"
+            ],
+            "label": "Features",
+            "locale": "en_US"
+          }
+        },
+        "offersV2": {
+          "listings": [
+            {
+              "id": "listing_uahpet_1",
+              "isBuyBoxWinner": true,
+              "price": {
+                "amount": 49.99,
+                "currency": "USD",
+                "displayAmount": "$49.99 ($49.99 / Count)"
+              },
+              "availability": {
+                "message": "In Stock",
+                "type": "Now",
+                "maxOrderQuantity": 10,
+                "minOrderQuantity": 1
+              },
+              "merchantInfo": {
+                "id": "ATVPDKIKX0DER",
+                "name": "UAHPET Official Store"
+              },
+              "condition": {
+                "value": "New"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "asin": "B08N5WRACC",
+        "parentASIN": "B08N5WRW00",
+        "detailPageURL": "https://www.amazon.com/dp/B08N5WRACC?tag=swai-20&linkCode=osi",
+        "itemInfo": {
+          "title": {
+            "displayValue": "UAHPET Replacement Filters 6 Pack for Wireless Cat Water Fountain",
+            "label": "Title",
+            "locale": "en_US"
+          },
+          "byLineInfo": {
+            "brand": {
+              "displayValue": "UAHPET",
+              "label": "Brand",
+              "locale": "en_US"
+            }
+          }
+        },
+        "offersV2": {
+          "listings": [
+            {
+              "price": {
+                "amount": 16.99,
+                "currency": "USD",
+                "displayAmount": "$16.99"
+              },
+              "availability": {
+                "message": "In Stock",
+                "type": "Now"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "asin": "B09KITTYS1",
+        "parentASIN": "B09KITTYS0",
+        "detailPageURL": "https://www.amazon.com/dp/B09KITTYS1?tag=swai-20&linkCode=osi&th=1",
+        "images": {
+          "primary": {
+            "medium": {
+              "url": "https://m.media-amazon.com/images/I/41kittyspout._SL160_.jpg",
+              "height": 160,
+              "width": 160
+            }
+          }
+        },
+        "itemInfo": {
+          "title": {
+            "displayValue": "KittySpout Stainless Steel Cat Water Fountain 4L Faucet Design",
+            "label": "Title",
+            "locale": "en_US"
+          },
+          "byLineInfo": {
+            "brand": {
+              "displayValue": "KittySpout",
+              "label": "Brand",
+              "locale": "en_US"
+            }
+          },
+          "manufactureInfo": {
+            "model": {
+              "displayValue": "KS-SS-4L",
+              "label": "Model",
+              "locale": "en_US"
+            }
+          }
+        },
+        "offersV2": {
+          "listings": [
+            {
+              "price": {
+                "amount": 54.95,
+                "currency": "USD",
+                "displayAmount": "$54.95"
+              },
+              "availability": {
+                "message": "In Stock",
+                "type": "Now"
+              },
+              "merchantInfo": {
+                "name": "KittySpout US"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "asin": "B09UPROOT1",
+        "parentASIN": "B09UPROOT0",
+        "detailPageURL": "https://www.amazon.com/dp/B09UPROOT1?tag=swai-20&linkCode=osi",
+        "images": {
+          "primary": {
+            "medium": {
+              "url": "https://m.media-amazon.com/images/I/41uproot._SL160_.jpg",
+              "height": 160,
+              "width": 160
+            }
+          }
+        },
+        "itemInfo": {
+          "title": {
+            "displayValue": "Uproot Cleaner Pro Pet Hair Remover Carpet & Couch Scraper Tool",
+            "label": "Title",
+            "locale": "en_US"
+          },
+          "byLineInfo": {
+            "brand": {
+              "displayValue": "Uproot Clean",
+              "label": "Brand",
+              "locale": "en_US"
+            }
+          },
+          "manufactureInfo": {
+            "model": {
+              "displayValue": "UP-PRO-01",
+              "label": "Model",
+              "locale": "en_US"
+            }
+          }
+        },
+        "offersV2": {
+          "listings": [
+            {
+              "price": {
+                "amount": 19.99,
+                "currency": "USD",
+                "displayAmount": "$19.99"
+              },
+              "availability": {
+                "message": "In Stock",
+                "type": "Now"
+              },
+              "merchantInfo": {
+                "name": "Uproot Clean LLC"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+

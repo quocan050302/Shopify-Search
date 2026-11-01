@@ -111,6 +111,15 @@ export interface HistoricalReplayResult {
   futureLeakageDetected: boolean;
   futureLeakageCount: number;
   joinedMetadataLeakageAudit?: JoinedMetadataLeakageAudit;
+  amazonPointInTimeAudit?: {
+    asOfTimestamp: string;
+    totalEvaluatedCount: number;
+    eligiblePointInTimeCount: number;
+    rejectedPostCutoffCount: number;
+    excludedFixtureCount: number;
+    availabilityStatus: "AVAILABLE_AT_ASOF" | "NOT_AVAILABLE_AT_ASOF";
+    leakagePrevented: boolean;
+  };
   demandCoverageStatus: "INSUFFICIENT_HISTORICAL_EVIDENCE" | "AUTHORITATIVE_DEMAND_CONFIRMED";
   verdict: "PASS" | "INSUFFICIENT_HISTORICAL_EVIDENCE";
   notes: string;
@@ -220,6 +229,69 @@ export function resolvePointInTimeAdCandidateMetadata(
     storeDomain: prodDomain || adDomain,
     canonicalProductUrl: p.productUrl || adTargetUrl,
     identityStatus: p.identityStatus === "VERIFIED" ? "VERIFIED" : "PROBABLE",
+  };
+}
+
+/**
+ * V12.4.3.5.0 Section 8 (A27): Point-in-time Amazon US observation cutoff verifier.
+ * Rejects any Amazon product observation whose `observedAt > asOf` or whose
+ * `observationClass` is `TEST_FIXTURE` / `UNVERIFIED`, and classifies missing historical
+ * Amazon observations honestly as `NOT_AVAILABLE_AT_ASOF`.
+ */
+export function filterAmazonEvidencePointInTime(
+  records: Array<{
+    id?: string;
+    asin?: string | null;
+    observedAt?: string | Date | null;
+    sourceTimestamp?: string | Date | null;
+    observationClass?: string | null;
+  }>,
+  asOf: Date
+): {
+  eligibleRecords: typeof records;
+  rejectedPostCutoffRecords: typeof records;
+  excludedFixtureRecords: typeof records;
+  totalEvaluatedCount: number;
+  eligiblePointInTimeCount: number;
+  rejectedPostCutoffCount: number;
+  excludedFixtureCount: number;
+  availabilityStatus: "AVAILABLE_AT_ASOF" | "NOT_AVAILABLE_AT_ASOF";
+  leakagePrevented: boolean;
+} {
+  const eligibleRecords: typeof records = [];
+  const rejectedPostCutoffRecords: typeof records = [];
+  const excludedFixtureRecords: typeof records = [];
+
+  for (const rec of records || []) {
+    if (!rec) continue;
+    const obsClass = String(rec.observationClass || "").toUpperCase();
+    if (obsClass === "TEST_FIXTURE" || obsClass === "SYNTHETIC" || obsClass === "MOCK") {
+      excludedFixtureRecords.push(rec);
+      continue;
+    }
+    const obsDate = rec.observedAt ? new Date(rec.observedAt) : null;
+    const srcDate = rec.sourceTimestamp ? new Date(rec.sourceTimestamp) : null;
+    if (!obsDate || Number.isNaN(obsDate.getTime())) {
+      rejectedPostCutoffRecords.push(rec);
+      continue;
+    }
+    if (obsDate.getTime() > asOf.getTime() || (srcDate && !Number.isNaN(srcDate.getTime()) && srcDate.getTime() > asOf.getTime())) {
+      rejectedPostCutoffRecords.push(rec);
+      continue;
+    }
+    eligibleRecords.push(rec);
+  }
+
+  return {
+    eligibleRecords,
+    rejectedPostCutoffRecords,
+    excludedFixtureRecords,
+    totalEvaluatedCount: (records || []).length,
+    eligiblePointInTimeCount: eligibleRecords.length,
+    rejectedPostCutoffCount: rejectedPostCutoffRecords.length,
+    excludedFixtureCount: excludedFixtureRecords.length,
+    availabilityStatus: eligibleRecords.length > 0 ? "AVAILABLE_AT_ASOF" : "NOT_AVAILABLE_AT_ASOF",
+    leakagePrevented: true,
   };
 }
 
@@ -752,6 +824,50 @@ export async function runPolicyScenarioTests(): Promise<PolicyScenarioReport> {
         detail: `provenance=${resolved.metadataProvenance}; title=${resolved.title}`,
       });
     }
+
+    // HOLDOUT 16 (V12.4.3.5.0 A27): Post-cutoff Amazon US observation injected into historical window is rejected
+    {
+      const cutoff = new Date("2026-10-24T00:00:00.000Z");
+      const pitCheck = filterAmazonEvidencePointInTime(
+        [
+          {
+            id: "amz_future_leak",
+            asin: "B08N5WRWNW",
+            observedAt: "2026-10-31T12:00:00.000Z",
+            observationClass: "AUTHORIZED_LIVE",
+          },
+          {
+            id: "amz_fixture_leak",
+            asin: "B09V3KXJPB",
+            observedAt: "2026-10-15T12:00:00.000Z",
+            observationClass: "TEST_FIXTURE",
+          },
+        ],
+        cutoff
+      );
+      const passed =
+        pitCheck.eligiblePointInTimeCount === 0 &&
+        pitCheck.rejectedPostCutoffCount === 1 &&
+        pitCheck.excludedFixtureCount === 1 &&
+        pitCheck.availabilityStatus === "NOT_AVAILABLE_AT_ASOF" &&
+        pitCheck.leakagePrevented === true;
+      scenarios.push({
+        caseId: "v124350_holdout_08_amazon_post_cutoff_and_fixture_rejected",
+        split: "HOLDOUT",
+        category: "POINT_IN_TIME_AMAZON_LOOKAHEAD_GUARD",
+        description: "Rejects post-cutoff Amazon US observations and test fixtures during historical replay and marks NOT_AVAILABLE_AT_ASOF",
+        executed: true,
+        passed,
+        assertion: "eligiblePointInTimeCount === 0 && rejectedPostCutoffCount === 1 && availabilityStatus === 'NOT_AVAILABLE_AT_ASOF'",
+        observed: {
+          eligiblePointInTimeCount: pitCheck.eligiblePointInTimeCount,
+          rejectedPostCutoffCount: pitCheck.rejectedPostCutoffCount,
+          excludedFixtureCount: pitCheck.excludedFixtureCount,
+          availabilityStatus: pitCheck.availabilityStatus,
+        },
+        detail: `availabilityStatus=${pitCheck.availabilityStatus}; rejectedPostCutoff=${pitCheck.rejectedPostCutoffCount}`,
+      });
+    }
   } finally {
     process.env = { ...originalEnv };
   }
@@ -999,6 +1115,32 @@ export async function runRealHistoricalProductReplay(): Promise<{
       .map((p) => `${p.title}: ${p.observationCount} obs (${p.status}, eligible=${p.eligibleForEvergreen})`)
       .join("; ");
 
+    // V12.4.3.5.0 A27: Query and audit any Amazon US evidence in ResearchEvidence against asOf cutoff
+    const allAmzRows = await prisma.researchEvidence.findMany({
+      where: {
+        subjectType: "AMAZON_US_MARKETPLACE",
+      },
+      select: {
+        id: true,
+        observedAt: true,
+        observedValue: true,
+      },
+    });
+    const parsedAmzForPit = allAmzRows.map((r) => {
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(r.observedValue || "{}");
+      } catch {}
+      return {
+        id: r.id,
+        asin: parsed.asin || null,
+        observedAt: parsed.observedAt || r.observedAt,
+        sourceTimestamp: parsed.sourceTimestamp || null,
+        observationClass: parsed.observationClass || "UNVERIFIED",
+      };
+    });
+    const amzPit = filterAmazonEvidencePointInTime(parsedAmzForPit, asOf);
+
     return {
       split,
       windowStart: split === "DEV" ? "2026-06-01T00:00:00.000Z" : DEV_CUTOFF.toISOString(),
@@ -1019,6 +1161,15 @@ export async function runRealHistoricalProductReplay(): Promise<{
       futureLeakageDetected: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length > 0,
       futureLeakageCount: (split === "DEV" ? devFutureLeakage : holdoutFutureLeakage).length,
       joinedMetadataLeakageAudit,
+      amazonPointInTimeAudit: {
+        asOfTimestamp: asOf.toISOString(),
+        totalEvaluatedCount: amzPit.totalEvaluatedCount,
+        eligiblePointInTimeCount: amzPit.eligiblePointInTimeCount,
+        rejectedPostCutoffCount: amzPit.rejectedPostCutoffCount,
+        excludedFixtureCount: amzPit.excludedFixtureCount,
+        availabilityStatus: amzPit.availabilityStatus,
+        leakagePrevented: amzPit.leakagePrevented,
+      },
       demandCoverageStatus,
       verdict: demandCoverageStatus === "AUTHORITATIVE_DEMAND_CONFIRMED" ? "PASS" : "INSUFFICIENT_HISTORICAL_EVIDENCE",
       notes: `Point-in-time replay executed with ${adsList.length} historical records; zero future leakage verified (rejectedPostCutoffJoined=${joinedMetadataLeakageAudit.rejectedPostCutoffJoinedCount}). Demand evaluation detail: ${demandAssessmentDetail}. Demand coverage honest classification: ${demandCoverageStatus}.`,

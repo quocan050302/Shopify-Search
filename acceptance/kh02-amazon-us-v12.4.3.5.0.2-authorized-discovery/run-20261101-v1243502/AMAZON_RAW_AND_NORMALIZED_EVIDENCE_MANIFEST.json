@@ -1,0 +1,29 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:29:52.054Z",
+  "workspaceId": "ws_controlled_v1243502",
+  "researchRunId": "run_controlled_v1243502",
+  "records": [
+    {
+      "candidateId": "cand_uahpet_1",
+      "workspaceId": "ws_controlled_v1243502",
+      "researchRunId": "run_controlled_v1243502",
+      "asin": "B08N5WRWNW",
+      "parentAsin": "B08N5WRW00",
+      "variationAsin": "B08N5WRWNW",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B08N5WRWNW",
+      "providerInvocationRef": "amz_inv_run_controlled_v1243502_cand_uahpet_1_search_2dfc25e7f7",
+      "providerRequestId": "amz-mock-req-uahpet-1",
+      "rawEvidenceHash": "4b69f3b5a7d8709e1d529dba701996575f0fb68605bd899b6ffa77c74e3ef3b5",
+      "expectedRawEvidenceHash": "4b69f3b5a7d8709e1d529dba701996575f0fb68605bd899b6ffa77c74e3ef3b5",
+      "extractedFieldsHash": "28ad81f107f68859133d2e95e0757a1c134d64fa3b58743776796caefc08703a",
+      "price": 49.99,
+      "priceAbsentInSource": false,
+      "verificationScope": "IDENTITY_CORROBORATED",
+      "observationClass": "TEST_FIXTURE",
+      "providerSourceOrigin": "TEST_FIXTURE",
+      "status": "IDENTITY_VERIFIED"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:53.595Z",
+  "headlessChromiumVerified": true,
+  "nonInflationNoticeVisibleInDom": true,
+  "screenshots": [
+    {
+      "name": "product-finder-amazon-evidence",
+      "relativePath": "screenshots/product-finder-amazon-evidence.png",
+      "sizeBytes": 265243
+    },
+    {
+      "name": "product-finder-reload-parity",
+      "relativePath": "screenshots/product-finder-reload-parity.png",
+      "sizeBytes": 245055
+    }
+  ]
+}

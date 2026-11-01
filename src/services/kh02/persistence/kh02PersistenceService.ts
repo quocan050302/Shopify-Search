@@ -15,6 +15,11 @@
 import { prisma } from "@/lib/db";
 import { EvergreenLeaderboardResult } from "../evergreenResearchOrchestrator";
 import { IntelligenceSource, ProviderSourceTelemetry, SourceRunStatus, ObservationProvenance } from "../types";
+import {
+  computeAmazonEvidenceCompositeId,
+  persistAmazonEvidenceAtomically,
+  summarizeAmazonEvidenceForProduct,
+} from "../marketplace/marketplaceEvidencePersistence";
 
 export interface KH02RunSummary {
   runId: string;
@@ -210,6 +215,8 @@ export async function createKH02ResearchRun(
     maxCandidates?: number;
     sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
     metaExecutionPolicy?: string;
+    enableAmazonUsPilot?: boolean;
+    amazonPilotCandidateUrls?: Record<string, string>;
   },
   db: any = prisma
 ): Promise<string> {
@@ -253,6 +260,8 @@ export async function createKH02ResearchRun(
         maxCandidates: params.maxCandidates || 15,
         sourceMode: params.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
         metaExecutionPolicy: params.metaExecutionPolicy,
+        enableAmazonUsPilot: params.enableAmazonUsPilot,
+        amazonPilotCandidateUrls: params.amazonPilotCandidateUrls,
       }),
       createdAt: new Date(),
     },
@@ -565,6 +574,110 @@ export async function persistKH02RankingSnapshot(
     syncRunIdOnArray(googleExec.rejectedRecords);
     syncRunIdOnArray(googleExec.providerInvocationRecords);
     syncRunIdOnArray(googleExec.creativeAssociationLedger);
+  }
+
+  // V12.4.3.5.0: Synchronize researchRunId & composite IDs on marketplaceEvidence and persist atomically
+  if (Array.isArray((result as any).marketplaceEvidence)) {
+    for (const ev of (result as any).marketplaceEvidence) {
+      if (ev && typeof ev === "object") {
+        ev.workspaceId = workspaceId;
+        ev.researchRunId = runId;
+        ev.id = computeAmazonEvidenceCompositeId(
+          workspaceId,
+          runId,
+          ev.candidateId,
+          ev.asin,
+          ev.sourceUrl
+        );
+      }
+    }
+    const telemetry = (result as any).marketplaceTelemetry;
+    if (telemetry && typeof telemetry === "object") {
+      if (Array.isArray(telemetry.operationLedger)) {
+        for (const op of telemetry.operationLedger) {
+          if (op && typeof op === "object") {
+            op.workspaceId = workspaceId;
+            op.researchRunId = runId;
+          }
+        }
+      }
+      if (Array.isArray(telemetry.rejectionLedger)) {
+        for (const rej of telemetry.rejectionLedger) {
+          if (rej && typeof rej === "object") {
+            rej.researchRunId = runId;
+          }
+        }
+      }
+      if (telemetry.gateEvaluation && typeof telemetry.gateEvaluation === "object") {
+        telemetry.gateEvaluation.workspaceId = workspaceId;
+        telemetry.gateEvaluation.researchRunId = runId;
+      }
+    }
+    // Re-sync amazonEvidenceSummary on candidates with the persisted runId
+    for (const list of allCandLists) {
+      if (!Array.isArray(list)) continue;
+      for (const item of list as any[]) {
+        const cand = item?.candidate || item;
+        if (!cand || !cand.candidateId) continue;
+        const summary = summarizeAmazonEvidenceForProduct(
+          cand.candidateId,
+          runId,
+          (result as any).marketplaceEvidence,
+          { telemetry }
+        );
+        if (summary.visible) {
+          cand.amazonEvidenceSummary = summary;
+        }
+      }
+    }
+    if ((result as any).marketplaceEvidence.length > 0) {
+      try {
+        const persistRes = await persistAmazonEvidenceAtomically(
+          workspaceId,
+          runId,
+          (result as any).marketplaceEvidence,
+          { db: prisma, telemetry }
+        );
+        if (persistRes.blockedByOwnershipOrAbort) {
+          throw new Error(
+            persistRes.blockReason || "STALE_WORKER_LEASE: Ownership lost during Amazon evidence persistence."
+          );
+        }
+        if (telemetry && typeof telemetry === "object") {
+          telemetry.persistenceStatus = "PERSISTED";
+          telemetry.persistenceError = null;
+        }
+      } catch (persistErr: any) {
+        const errMsg = String(persistErr?.message || persistErr).slice(0, 300);
+        (result as any).marketplaceEvidence = [];
+        if (telemetry && typeof telemetry === "object") {
+          telemetry.persistenceStatus = "FAILED";
+          telemetry.persistenceError = `AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`;
+          telemetry.runStatus = "FAILED";
+          telemetry.identityVerifiedCount = 0;
+        }
+        for (const list of allCandLists) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list as any[]) {
+            const cand = item?.candidate || item;
+            if (!cand) continue;
+            delete cand.amazonEvidence;
+            delete cand.amazonEvidenceSummary;
+            cand.amazonEvidenceStatus = "FAILED";
+          }
+        }
+        if (result.runStatus !== "FAILED" && result.runStatus !== "PARTIAL") {
+          result.runStatus = "PARTIAL";
+        }
+        if (!Array.isArray((result as any).warnings)) {
+          (result as any).warnings = [];
+        }
+        (result as any).warnings.push(`AMAZON_EVIDENCE_PERSISTENCE_FAILED: ${errMsg}`);
+      }
+    } else if (telemetry && typeof telemetry === "object") {
+      telemetry.persistenceStatus = "NOT_REQUIRED";
+      telemetry.persistenceError = null;
+    }
   }
 
   // V12.4.3.3 Section 9: Idempotently materialize discovered candidates into ResearchProduct

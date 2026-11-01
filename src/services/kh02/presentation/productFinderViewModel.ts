@@ -2,8 +2,10 @@ import type {
   DiscoveredProductCandidate,
   EvergreenLeaderboardResponse,
   RankedProductCandidate,
+  ProductAmazonEvidenceSummary,
 } from "../types";
 import { validateAndNormalizeMediaUrl } from "../media/productMediaResolver";
+import { summarizeAmazonEvidenceForProduct } from "../marketplace/marketplaceEvidenceTypes";
 
 export type CanonicalQualificationTier =
   | "VERIFIED_EVERGREEN"
@@ -58,6 +60,7 @@ export interface CanonicalRecommendedProduct {
   missingRequirements: string[];
   researchProductId: string | null;
   distinctnessNote: string | null;
+  amazonEvidenceSummary?: ProductAmazonEvidenceSummary | null;
   rawCandidate: DiscoveredProductCandidate;
   rawRankedItem: RankedProductCandidate | null;
 }
@@ -87,6 +90,7 @@ export interface ExplorerCandidateRow {
   rejectionReasonCode: string | null;
   researchProductId: string | null;
   inRankedSnapshot?: boolean;
+  amazonEvidenceSummary?: ProductAmazonEvidenceSummary | null;
   rawCandidate: DiscoveredProductCandidate;
   rawRankedItem: RankedProductCandidate | null;
 }
@@ -582,6 +586,16 @@ export function buildCanonicalRecommendedProducts(
 
     const modelParts = [candidate.model, candidate.sku, candidate.gtin].filter(Boolean);
 
+    const computedAmzSummary =
+      candidate.amazonEvidenceSummary ||
+      summarizeAmazonEvidenceForProduct(
+        candidate.candidateId,
+        leaderboard.researchRunId || "",
+        leaderboard.marketplaceEvidence,
+        { telemetry: leaderboard.marketplaceTelemetry }
+      );
+    const amazonEvidenceSummary = computedAmzSummary?.visible ? computedAmzSummary : null;
+
     results.push({
       rank: results.length + 1,
       candidateId: candidate.candidateId,
@@ -628,6 +642,7 @@ export function buildCanonicalRecommendedProducts(
         candidate.distinctnessRole === "SAME_FAMILY_MODEL_ALTERNATIVE"
           ? "Alternative model/merchant in same product family"
           : null,
+      amazonEvidenceSummary,
       rawCandidate: candidate,
       rawRankedItem: rankedItem,
     });
@@ -769,6 +784,16 @@ export function buildAllCandidatesExplorerList(
             merchantPageVerified
           );
 
+    const computedAmzRowSummary =
+      candidate.amazonEvidenceSummary ||
+      summarizeAmazonEvidenceForProduct(
+        candidate.candidateId,
+        leaderboard.researchRunId || "",
+        leaderboard.marketplaceEvidence,
+        { telemetry: leaderboard.marketplaceTelemetry }
+      );
+    const rowAmazonSummary = computedAmzRowSummary?.visible ? computedAmzRowSummary : null;
+
     rows.push({
       candidateId: candidate.candidateId,
       productKey: candidate.productKey || candidate.candidateId,
@@ -814,6 +839,7 @@ export function buildAllCandidatesExplorerList(
       rejectionReasonCode: candidate.rejectionDetail?.reasonCode || null,
       researchProductId: candidate.researchProductId || null,
       inRankedSnapshot: rankedSnapshotIds.has(candidate.candidateId),
+      amazonEvidenceSummary: rowAmazonSummary,
       rawCandidate: candidate,
       rawRankedItem: rankedItem,
     });

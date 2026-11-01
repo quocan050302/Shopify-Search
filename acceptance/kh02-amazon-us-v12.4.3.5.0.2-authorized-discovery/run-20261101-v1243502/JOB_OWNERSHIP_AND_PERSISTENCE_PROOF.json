@@ -1,0 +1,13 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:30:00.174Z",
+  "parentAndChildJobIdsDistinct": true,
+  "parentRunIdMatchesAttachedRunId": true,
+  "swallowedSqliteFailureCount": 0,
+  "midTransactionRollbackVerified": true,
+  "lostClaimFencingBlockedVerified": true,
+  "lostLeaseDuringAttachBlockedVerified": true,
+  "duplicateAsinConflictRejectedVerified": true,
+  "strongerLiveEvidencePreservedOverFixture": true
+}

@@ -1,0 +1,49 @@
+{
+  "version": "12.4.3.5.0",
+  "codeSha": "93dbb717fa4a778c21baa5a0412225b7632f8688",
+  "evaluatedAt": "2026-10-31T16:40:27.462Z",
+  "exactMatchRequiresBeyondBrandCorroboration": true,
+  "brandOnlyMatchExcludedFromExactProduct": true,
+  "variationChildAndParentAsinPreserved": true,
+  "canonicalDeduplicationVerified": true,
+  "records": [
+    {
+      "candidateId": "cand_1",
+      "asin": "B08N5WRWNW",
+      "parentAsin": "B08N5WRWN0",
+      "variationAsin": "B08N5WRWNW",
+      "identityMatch": "EXACT_PRODUCT",
+      "status": "IDENTITY_VERIFIED",
+      "brandOnlyCorroboration": false,
+      "matchingReasons": [
+        "Corroborated brand 'UAHPET'",
+        "Exact model match (UAH-WF-01)",
+        "Product token corroboration (wireless, cat, water, fountain, stainless, steel; ratio=1.00)"
+      ]
+    },
+    {
+      "candidateId": "cand_2",
+      "asin": "B09V3KXJPB",
+      "parentAsin": null,
+      "variationAsin": null,
+      "identityMatch": "PROBABLE_PRODUCT",
+      "status": "OBSERVED_UNVERIFIED",
+      "brandOnlyCorroboration": false,
+      "matchingReasons": [
+        "Probable product title token overlap (wireless, stainless, steel, cat, water, fountain) without independent brand/identifier corroboration"
+      ]
+    },
+    {
+      "candidateId": "cand_3",
+      "asin": "B07FZ8S74R",
+      "parentAsin": null,
+      "variationAsin": null,
+      "identityMatch": "BRAND_ONLY",
+      "status": "OBSERVED_UNVERIFIED",
+      "brandOnlyCorroboration": true,
+      "matchingReasons": [
+        "Brand 'Uproot Clean' matched, but product SKU/tokens differ (overlap=2/7)"
+      ]
+    }
+  ]
+}

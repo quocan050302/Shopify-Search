@@ -1,0 +1,192 @@
+{
+  "codeSha": "75de4e26cbef061e2fe000a0ade0b711a9bd5e38",
+  "releaseVersion": "12.4.3.5.0.1",
+  "evaluatedAt": "2026-10-31T20:13:09.771Z",
+  "postRunBrowserVerifyFlow": {
+    "executedInHeadlessChromium": true,
+    "releaseVersionBadgeInDom": "v12.4.3.5.0.1",
+    "pilotControlVisibleInDom": true,
+    "verifyFormSubmittedInBrowser": true,
+    "parentResearchRunId": "kh02_v1243501_parity_1793477583614",
+    "spawnedVerifyJobId": "kh02_amz_verify_mvwu8zph_8df55926",
+    "verifyJobFinalStatus": "COMPLETED",
+    "renderedAsinInDom": "B08N5WRWNW",
+    "renderedIdentityMatchInDom": "EXACT_PRODUCT"
+  },
+  "mismatchCount": 0,
+  "fieldComparisons": [
+    {
+      "fieldId": "asin",
+      "sqliteValue": "B08N5WRWNW",
+      "httpValue": "B08N5WRWNW",
+      "domValue": "B08N5WRWNW",
+      "match": true
+    },
+    {
+      "fieldId": "canonicalAmazonUrl",
+      "sqliteValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "httpValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "domValue": "https://www.amazon.com/dp/B08N5WRWNW",
+      "match": true
+    },
+    {
+      "fieldId": "identityMatch",
+      "sqliteValue": "EXACT_PRODUCT",
+      "httpValue": "EXACT_PRODUCT",
+      "domValue": "EXACT_PRODUCT",
+      "match": true
+    },
+    {
+      "fieldId": "status",
+      "sqliteValue": "IDENTITY_VERIFIED",
+      "httpValue": "IDENTITY_VERIFIED",
+      "domValue": "IDENTITY_VERIFIED",
+      "match": true
+    },
+    {
+      "fieldId": "observedAt",
+      "sqliteValue": "2026-10-31T20:13:08.485Z",
+      "httpValue": "2026-10-31T20:13:08.485Z",
+      "domValue": "2026-10-31T20:13:08.485Z",
+      "match": true
+    },
+    {
+      "fieldId": "observationClass",
+      "sqliteValue": "TEST_FIXTURE",
+      "httpValue": "TEST_FIXTURE",
+      "domValue": "TEST_FIXTURE",
+      "match": true
+    },
+    {
+      "fieldId": "rawEvidenceHash",
+      "sqliteValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "httpValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "domValue": "0722b68903e1fa16f5f8fb820fb2b60159e2c4690e4e7ab33e62398da397b759",
+      "match": true
+    },
+    {
+      "fieldId": "extractedFieldsHash",
+      "sqliteValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "httpValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "domValue": "f6e37ef8f7ef623fa9e79c56d930dee79d5d3d26fab0806585552effb3f26528",
+      "match": true
+    },
+    {
+      "fieldId": "brand",
+      "sqliteValue": "UAHPET",
+      "httpValue": "UAHPET",
+      "domValue": "UAHPET",
+      "match": true
+    },
+    {
+      "fieldId": "currency",
+      "sqliteValue": "USD",
+      "httpValue": "USD",
+      "domValue": "USD",
+      "match": true
+    },
+    {
+      "fieldId": "price",
+      "sqliteValue": 49.99,
+      "httpValue": 49.99,
+      "domValue": 49.99,
+      "match": true
+    },
+    {
+      "fieldId": "availability",
+      "sqliteValue": "In Stock",
+      "httpValue": "In Stock",
+      "domValue": "In Stock",
+      "match": true
+    },
+    {
+      "fieldId": "parentAsin",
+      "sqliteValue": "B08N5WR000",
+      "httpValue": "B08N5WR000",
+      "domValue": "B08N5WR000",
+      "match": true
+    },
+    {
+      "fieldId": "variationAsin",
+      "sqliteValue": "B08N5WRWNW",
+      "httpValue": "B08N5WRWNW",
+      "domValue": "B08N5WRWNW",
+      "match": true
+    },
+    {
+      "fieldId": "verificationScope",
+      "sqliteValue": "IDENTITY_CORROBORATED",
+      "httpValue": "IDENTITY_CORROBORATED",
+      "domValue": "IDENTITY_CORROBORATED",
+      "match": true
+    },
+    {
+      "fieldId": "providerInvocationRef",
+      "sqliteValue": "amz_inv_kh02_v1243501_parity_1793477583614_cand_amz_v1243501_1_a033ac9722bf",
+      "httpValue": "amz_inv_kh02_v1243501_parity_1793477583614_cand_amz_v1243501_1_a033ac9722bf",
+      "domValue": "amz_inv_kh02_v1243501_parity_1793477583614_cand_amz_v1243501_1_a033ac9722bf",
+      "match": true
+    },
+    {
+      "fieldId": "providerRequestId",
+      "sqliteValue": null,
+      "httpValue": null,
+      "domValue": null,
+      "match": true
+    },
+    {
+      "fieldId": "verifyJobId",
+      "sqliteValue": "kh02_amz_verify_mvwu8zph_8df55926",
+      "httpValue": "kh02_amz_verify_mvwu8zph_8df55926",
+      "domValue": "kh02_amz_verify_mvwu8zph_8df55926",
+      "match": true
+    },
+    {
+      "fieldId": "verifyJobStatus",
+      "sqliteValue": "COMPLETED",
+      "httpValue": "COMPLETED",
+      "domValue": "COMPLETED",
+      "match": true
+    },
+    {
+      "fieldId": "parentRunId",
+      "sqliteValue": "kh02_v1243501_parity_1793477583614",
+      "httpValue": "kh02_v1243501_parity_1793477583614",
+      "domValue": "kh02_v1243501_parity_1793477583614",
+      "match": true
+    },
+    {
+      "fieldId": "parentRunOpportunityScoreUnchanged",
+      "sqliteValue": 68,
+      "httpValue": 68,
+      "domValue": 68,
+      "match": true
+    },
+    {
+      "fieldId": "releaseVersion",
+      "sqliteValue": "v12.4.3.5.0.1",
+      "httpValue": "v12.4.3.5.0.1",
+      "domValue": "v12.4.3.5.0.1",
+      "match": true
+    },
+    {
+      "fieldId": "pilotControlVisible",
+      "sqliteValue": true,
+      "httpValue": true,
+      "domValue": true,
+      "match": true
+    },
+    {
+      "fieldId": "visibleSummaryFlag",
+      "sqliteValue": true,
+      "httpValue": true,
+      "domValue": true,
+      "match": true
+    }
+  ],
+  "workerBarrier": {
+    "runningCount": 0,
+    "pendingCount": 0,
+    "residualChildProcesses": 0
+  }
+}

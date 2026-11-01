@@ -1,0 +1,14 @@
+{
+  "releaseVersion": "12.4.3.5.0.2",
+  "codeSha": "1e0cde43a14d54444e64ea1a7e890488e491ee11",
+  "evaluatedAt": "2026-11-01T02:29:52.044Z",
+  "realProviderVerdict": "BLOCKED_POLICY",
+  "providerStatus": "DISABLED",
+  "accessPolicyStatus": "DISABLED_BY_DEFAULT",
+  "liveCallsAttempted": 0,
+  "liveCallsSucceeded": 0,
+  "verifiedLiveUsProductIdentitiesCount": 0,
+  "requiredLiveUsProductIdentitiesTarget": 3,
+  "blockerReason": "Amazon US pilot is disabled by default (KH02_AMAZON_US_ENABLED=false).",
+  "upstreamRequests": []
+}

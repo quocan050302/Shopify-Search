@@ -1,0 +1,64 @@
+{
+  "_fixtureMeta": {
+    "origin": "OFFICIAL_DOCUMENTATION_EXAMPLE",
+    "provenance": "TEST_FIXTURE",
+    "endpoint": "https://creatorsapi.amazon/catalog/v1/getItems",
+    "marketplace": "www.amazon.com",
+    "description": "Official Amazon Associates Creators API v1 GetItems partial success + item-level error contract example"
+  },
+  "itemResults": {
+    "items": [
+      {
+        "asin": "B08N5WRWNW",
+        "parentASIN": "B08N5WRW00",
+        "detailPageURL": "https://www.amazon.com/dp/B08N5WRWNW?tag=swai-20&linkCode=osi",
+        "itemInfo": {
+          "title": {
+            "displayValue": "UAHPET Wireless Cat Water Fountain Stainless Steel 67oz Battery Operated",
+            "label": "Title",
+            "locale": "en_US"
+          },
+          "byLineInfo": {
+            "brand": {
+              "displayValue": "UAHPET",
+              "label": "Brand",
+              "locale": "en_US"
+            }
+          },
+          "manufactureInfo": {
+            "model": {
+              "displayValue": "UAH-WF-01",
+              "label": "Model",
+              "locale": "en_US"
+            }
+          }
+        },
+        "offersV2": {
+          "listings": [
+            {
+              "price": {
+                "amount": 49.99,
+                "currency": "USD",
+                "displayAmount": "$49.99"
+              },
+              "availability": {
+                "message": "In Stock",
+                "type": "Now"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "errors": [
+    {
+      "code": "ItemNotAccessible",
+      "message": "The ItemId B00MISSING is not accessible through the Creators API."
+    },
+    {
+      "code": "InvalidParameterValue",
+      "message": "The ItemId B00INVALID2 provided in the request is not valid."
+    }
+  ]
+}

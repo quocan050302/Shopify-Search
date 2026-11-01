@@ -1,0 +1,89 @@
+{
+  "releaseVersion": "12.4.3.5.0.3",
+  "codeSha": "ade0883f0fbe4c6d00fdf6ce0875ee4cbd10b381",
+  "evaluatedAt": "2026-11-01T04:17:02.240Z",
+  "maxCandidatesPerRun": 3,
+  "maxTotalOperationsPerRun": 4,
+  "maxConcurrency": 1,
+  "tokenAcquisitionCountedAgainstProductBudget": false,
+  "intents": [
+    {
+      "intentId": "amz_intent_cand_uahpet_1_1_c9c5eccc20",
+      "candidateId": "cand_uahpet_1",
+      "normalizedKeywords": "UAHPET Wireless Cat Water Fountain Stainless Steel UAH-WF-01",
+      "verifiedBrand": "UAHPET",
+      "verifiedModel": "UAH-WF-01",
+      "intentRank": 1,
+      "sourceProvenance": "MERCHANT_VERIFIED_TITLE_AND_BRAND",
+      "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    },
+    {
+      "intentId": "amz_intent_cand_uahpet_1_2_74b82710b6",
+      "candidateId": "cand_uahpet_1",
+      "normalizedKeywords": "UAHPET Automatic Pet Water Fountain UAH-WF-01",
+      "verifiedBrand": "UAHPET",
+      "verifiedModel": "UAH-WF-01",
+      "intentRank": 2,
+      "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+      "reason": "Secondary corroboration query combining verified brand and specific product family.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    },
+    {
+      "intentId": "amz_intent_cand_kittyspout_2_1_01497cacbd",
+      "candidateId": "cand_kittyspout_2",
+      "normalizedKeywords": "KittySpout Stainless Steel Cat Water Fountain 4L KS-SS-4L",
+      "verifiedBrand": "KittySpout",
+      "verifiedModel": "KS-SS-4L",
+      "intentRank": 1,
+      "sourceProvenance": "MERCHANT_VERIFIED_TITLE_AND_BRAND",
+      "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    },
+    {
+      "intentId": "amz_intent_cand_kittyspout_2_2_7c066eadbd",
+      "candidateId": "cand_kittyspout_2",
+      "normalizedKeywords": "KittySpout Automatic Pet Water Fountain KS-SS-4L",
+      "verifiedBrand": "KittySpout",
+      "verifiedModel": "KS-SS-4L",
+      "intentRank": 2,
+      "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+      "reason": "Secondary corroboration query combining verified brand and specific product family.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    },
+    {
+      "intentId": "amz_intent_cand_uproot_3_1_b61b3b9920",
+      "candidateId": "cand_uproot_3",
+      "normalizedKeywords": "Uproot Clean Cleaner Pro Pet Hair Remover Tool UP-PRO-01",
+      "verifiedBrand": "Uproot Clean",
+      "verifiedModel": "UP-PRO-01",
+      "intentRank": 1,
+      "sourceProvenance": "MERCHANT_VERIFIED_TITLE_AND_BRAND",
+      "reason": "Primary candidate-specific query combining verified brand, specific product title, and model identifier.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    },
+    {
+      "intentId": "amz_intent_cand_uproot_3_2_0be31b9864",
+      "candidateId": "cand_uproot_3",
+      "normalizedKeywords": "Uproot Clean Pet Hair Remover UP-PRO-01",
+      "verifiedBrand": "Uproot Clean",
+      "verifiedModel": "UP-PRO-01",
+      "intentRank": 2,
+      "sourceProvenance": "PRODUCT_FAMILY_FALLBACK",
+      "reason": "Secondary corroboration query combining verified brand and specific product family.",
+      "suppressedTerms": [
+        "GENERIC_NICHE_SUPPRESSED:Pet Gadgets"
+      ]
+    }
+  ]
+}

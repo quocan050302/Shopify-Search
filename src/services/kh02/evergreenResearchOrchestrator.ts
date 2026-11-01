@@ -74,6 +74,13 @@ import {
   selectQueriesForSearchRound,
   ShortlistCoverageState,
 } from "./discovery/discoveryQueryPlanner";
+import {
+  AmazonMarketplaceTelemetry,
+  AmazonProductEvidence,
+  AmazonRequestMode,
+} from "./marketplace/marketplaceEvidenceTypes";
+import { runAmazonUsPilotEnrichment } from "./marketplace/amazonUsEvidenceAdapter";
+import { summarizeAmazonEvidenceForProduct } from "./marketplace/marketplaceEvidencePersistence";
 
 export interface RankedLeaderboardItem {
   rank: number | null;
@@ -133,6 +140,8 @@ export interface EvergreenLeaderboardResult {
     unmatchedCreatives: number;
     creativeAssociationLedger: Array<any>;
   };
+  marketplaceEvidence?: AmazonProductEvidence[];
+  marketplaceTelemetry?: AmazonMarketplaceTelemetry;
 }
 
 export interface ResearchProgressPayload {
@@ -158,6 +167,12 @@ export interface RunEvergreenResearchInput {
   selectedSources?: IntelligenceSource[];
   sourceMode?: "LIVE_WITH_CACHE_FALLBACK" | "CACHE_ONLY" | "LIVE_ONLY";
   metaExecutionPolicy?: string;
+  enableAmazonUsPilot?: boolean;
+  amazonPilotCandidateUrls?: Record<string, string>;
+  amazonPilotRequestMode?: AmazonRequestMode;
+  amazonPilotFixtureSnapshots?: Record<string, any>;
+  amazonPilotEnv?: Record<string, string | undefined>;
+  amazonPilotTransportFactory?: () => typeof fetch;
   signal?: AbortSignal;
 }
 
@@ -1865,6 +1880,55 @@ export async function runEvergreenProductResearch(
     researchShortlist.shortlist.map((s) => s.candidateId)
   );
 
+  // V12.4.3.5.0: Optional Guarded Amazon US Product Evidence Pilot (post-scoring, zero G15/G16 or score weight mutation)
+  const amazonPilotTargets =
+    researchShortlist.shortlist.length > 0
+      ? researchShortlist.shortlist
+      : candidates.slice(0, 3);
+  const amazonOptIn = Boolean(
+    input.enableAmazonUsPilot ||
+      (input.amazonPilotCandidateUrls &&
+        Object.keys(input.amazonPilotCandidateUrls).length > 0)
+  );
+  const amazonEnrichment = await runAmazonUsPilotEnrichment({
+    workspaceId: input.workspaceId,
+    researchRunId: runId,
+    niche: input.topic,
+    optInRequested: amazonOptIn,
+    candidates: amazonPilotTargets,
+    candidateAmazonUrls: input.amazonPilotCandidateUrls,
+    requestMode: input.amazonPilotRequestMode,
+    fixtureSnapshotsByUrl: input.amazonPilotFixtureSnapshots,
+    env: input.amazonPilotEnv,
+    creatorsApiTransportFactory: input.amazonPilotTransportFactory,
+    signal: abortSignal,
+  });
+
+  if (amazonEnrichment.marketplaceEvidence.length > 0) {
+    for (const c of candidates) {
+      const summary = summarizeAmazonEvidenceForProduct(
+        c.candidateId,
+        runId,
+        amazonEnrichment.marketplaceEvidence,
+        { telemetry: amazonEnrichment.marketplaceTelemetry }
+      );
+      if (summary.visible) {
+        (c as any).amazonEvidenceSummary = summary;
+      }
+    }
+    for (const s of researchShortlist.shortlist) {
+      const summary = summarizeAmazonEvidenceForProduct(
+        s.candidateId,
+        runId,
+        amazonEnrichment.marketplaceEvidence,
+        { telemetry: amazonEnrichment.marketplaceTelemetry }
+      );
+      if (summary.visible) {
+        (s as any).amazonEvidenceSummary = summary;
+      }
+    }
+  }
+
   // Build QueryYield metrics for each executed or planned query
   const candidateMatchesQuery = (
     c: { matchedQueryIds?: string[]; sourceObservations?: Array<{ queryId?: string | null; matchedQueryIds?: string[] }> },
@@ -2201,6 +2265,8 @@ export async function runEvergreenProductResearch(
       creativeAssociationLedger:
         providerTelemetry.GOOGLE_ADS?.enrichmentExecution?.creativeAssociationLedger ?? [],
     },
+    marketplaceEvidence: amazonEnrichment.marketplaceEvidence,
+    marketplaceTelemetry: amazonEnrichment.marketplaceTelemetry,
   };
 
   // Pure orchestrator: returns result without unowned writes to SyncJob
