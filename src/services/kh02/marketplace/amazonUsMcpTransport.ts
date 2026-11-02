@@ -69,6 +69,16 @@ export interface PlaywrightMcpHandshakeProof {
   requiredToolsPresent: boolean;
   missingRequiredTools: string[];
   toolInvocationRecords?: PlaywrightMcpToolInvocationRecord[];
+  homeAndLocationReadback?: {
+    attempted: boolean;
+    searchBoxReady: boolean;
+    initialDeliveryText: string | null;
+    requestedPostalCode: string | null;
+    observedDeliveryLocationText: string | null;
+    observedDeliveryPostalCode: string | null;
+    observedCurrency: string | null;
+    usDeliveryVerified: boolean;
+  } | null;
   startedAt: string;
   completedAt: string;
   lastToolCompletedAt?: string | null;
@@ -967,11 +977,153 @@ export async function connectAmazonPlaywrightMcp(
           }
         }
 
+        const parsePlaywrightMcpEvaluateJson = (rawText: string): any => {
+          if (!rawText) return null;
+          const resultSection = rawText
+            .split(/###\s+Ran Playwright code/i)[0]
+            .replace(/^[\s\S]*?###\s+Result\s*/i, "")
+            .trim();
+          for (const candidateStr of [resultSection, rawText]) {
+            if (!candidateStr) continue;
+            try {
+              const firstParse = JSON.parse(candidateStr);
+              return typeof firstParse === "string"
+                ? JSON.parse(firstParse)
+                : firstParse;
+            } catch {}
+            const lineMatch = candidateStr.match(/^"(\{.*\})"$/m);
+            if (lineMatch) {
+              try {
+                const unescaped = JSON.parse(`"${lineMatch[1]}"`);
+                return typeof unescaped === "string"
+                  ? JSON.parse(unescaped)
+                  : unescaped;
+              } catch {}
+            }
+            const objMatch = candidateStr.match(/\{[\s\S]*?\}/);
+            if (objMatch) {
+              try {
+                return JSON.parse(objMatch[0]);
+              } catch {}
+            }
+          }
+          return null;
+        };
+
+        let resolvedCanonicalUrl = canonicalMatch?.[1] || urlMatch?.[1] || url;
+        const isSearchNav = /\/s(?:\?|\/|$)/i.test(url);
+        if (
+          isPinnedOfficialMcp &&
+          discoveredTools.includes("browser_evaluate") &&
+          !isSearchNav &&
+          !structuredLineMatch?.[1]
+        ) {
+          try {
+            const evalRes = await client!.callTool({
+              name: "browser_evaluate",
+              arguments: {
+                function: `() => {
+                  const canon = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || null;
+                  const title = document.querySelector('#productTitle')?.textContent?.trim() || null;
+                  const byline = document.querySelector('#bylineInfo')?.textContent?.trim() || null;
+                  const brand = byline ? byline.replace(/^(?:Visit the|Brand:|by)\\s+/i, '').replace(/\\s+Store$/i, '').trim() : null;
+                  const glow = document.querySelector('#glow-ingress-block')?.textContent?.replace(/\\s+/g, ' ').trim() ||
+                    document.querySelector('#contextualIngressPtLabel_deliveryShortLine')?.textContent?.replace(/\\s+/g, ' ').trim() || null;
+                  const zipMatch = glow ? glow.match(/\\b(\\d{5})\\b/) : null;
+                  const zip = zipMatch ? zipMatch[1] : null;
+                  const corePriceNode =
+                    document.querySelector('#corePriceDisplay_desktop_feature_div .a-price.priceToPay .a-offscreen') ||
+                    document.querySelector('#corePriceDisplay_desktop_feature_div .a-price .a-offscreen') ||
+                    document.querySelector('#corePrice_feature_div .a-price .a-offscreen') ||
+                    document.querySelector('#Apex_desktop .a-price.priceToPay .a-offscreen');
+                  const rawPriceText = corePriceNode?.textContent?.trim() || null;
+                  const availNode =
+                    document.querySelector('#availability span.a-size-medium') ||
+                    document.querySelector('#availability span') ||
+                    document.querySelector('#availability');
+                  const availRaw = availNode?.textContent?.replace(/\\s+/g, ' ').trim() || null;
+                  const avail = availRaw ? availRaw.split('{')[0].trim() : null;
+                  let seller = document.querySelector('#sellerProfileTriggerId')?.textContent?.trim() ||
+                    document.querySelector('#tabular-buybox .tabular-buybox-text[tabular-attribute-name="Sold by"]')?.textContent?.replace(/\\s+/g, ' ').trim() || null;
+                  if (!seller) {
+                    const mInfo = document.querySelector('#merchant-info')?.textContent?.replace(/\\s+/g, ' ').trim() || '';
+                    const sm = mInfo.match(/Sold by\\s+([^.]+?)(?:\\s+and\\s+|\\.|$)/i);
+                    if (sm) seller = sm[1].trim();
+                  }
+                  let modelNumber = null;
+                  const bodyText = (
+                    (document.querySelector('#detailBullets_feature_div')?.textContent || '') + '\\n' +
+                    (document.querySelector('#productDetails_techSpec_section_1')?.textContent || '') + '\\n' +
+                    (document.querySelector('#productDetails_detailBullets_sections1')?.textContent || '') + '\\n' +
+                    (document.querySelector('#productOverview_feature_div')?.textContent || '')
+                  ).replace(/[\\u200E\\u200F]/g, ' ');
+                  const modMatch = bodyText.match(/(?:Item\\s+model\\s+number|Model\\s+Number)\\s*[:\\s]*([A-Za-z0-9][A-Za-z0-9\\-_.]{1,28})/i);
+                  if (modMatch) modelNumber = modMatch[1].trim();
+                  return JSON.stringify({
+                    finalUrl: window.location.href,
+                    canonicalUrl: canon,
+                    productTitle: title,
+                    brand,
+                    modelNumber,
+                    seller,
+                    rawPriceText,
+                    availability: avail,
+                    deliveryLocationText: glow,
+                    deliveryPostalCode: zip,
+                  });
+                }`,
+              },
+            });
+            const evalText = ((evalRes as any)?.content || [])
+              .filter((c: any) => c && typeof c.text === "string")
+              .map((c: any) => c.text)
+              .join("\n");
+            const domObj = parsePlaywrightMcpEvaluateJson(evalText);
+            if (domObj && typeof domObj === "object") {
+              if (domObj.canonicalUrl) {
+                resolvedCanonicalUrl = String(domObj.canonicalUrl).trim();
+              }
+              const priceNum =
+                domObj.rawPriceText && /^\$[0-9]+(?:\.[0-9]{2})?$/.test(String(domObj.rawPriceText).trim())
+                  ? Number(String(domObj.rawPriceText).replace(/[^0-9.]/g, ""))
+                  : null;
+              const zipConfirmed =
+                domObj.deliveryPostalCode ||
+                handshakeProof.homeAndLocationReadback?.observedDeliveryPostalCode ||
+                null;
+              parsedStructuredData = {
+                ...parsedStructuredData,
+                asin: parsedStructuredData?.asin || validateAmazonUsProductUrl(url).extractedAsin,
+                productTitle: domObj.productTitle || parsedStructuredData?.productTitle || null,
+                brand: domObj.brand || parsedStructuredData?.brand || null,
+                modelNumber: domObj.modelNumber || parsedStructuredData?.modelNumber || null,
+                seller: domObj.seller || parsedStructuredData?.seller || null,
+                merchant: domObj.seller || parsedStructuredData?.merchant || null,
+                price:
+                  priceNum !== null && Number.isFinite(priceNum) && priceNum > 0
+                    ? priceNum
+                    : parsedStructuredData?.price ?? null,
+                currency:
+                  priceNum !== null && zipConfirmed
+                    ? "USD"
+                    : parsedStructuredData?.currency ?? null,
+                availability: domObj.availability || parsedStructuredData?.availability || null,
+                deliveryLocationText:
+                  domObj.deliveryLocationText ||
+                  parsedStructuredData?.deliveryLocationText ||
+                  null,
+                deliveryPostalCode: zipConfirmed,
+                explicitUsDeliveryConfirmed: Boolean(zipConfirmed),
+              };
+            }
+          } catch {}
+        }
+
         return {
           snapshot: {
             sourceUrl: url,
             finalUrl: urlMatch?.[1] || url,
-            canonicalUrl: canonicalMatch?.[1] || urlMatch?.[1] || url,
+            canonicalUrl: resolvedCanonicalUrl,
             httpStatus:
               parsedHttpStatus !== null && Number.isFinite(parsedHttpStatus)
                 ? parsedHttpStatus
@@ -991,16 +1143,210 @@ export async function connectAmazonPlaywrightMcp(
             `INVALID_SEARCH_URL: ${searchCheck.rejectionReason || "Invalid Amazon US search URL"}`
           );
         }
+
+        const parseEvalJson = (rawText: string): any => {
+          if (!rawText) return null;
+          const resultSection = rawText
+            .split(/###\s+Ran Playwright code/i)[0]
+            .replace(/^[\s\S]*?###\s+Result\s*/i, "")
+            .trim();
+          for (const candidateStr of [resultSection, rawText]) {
+            if (!candidateStr) continue;
+            try {
+              const firstParse = JSON.parse(candidateStr);
+              return typeof firstParse === "string"
+                ? JSON.parse(firstParse)
+                : firstParse;
+            } catch {}
+            const lineMatch = candidateStr.match(/^"(\{.*\})"$/m);
+            if (lineMatch) {
+              try {
+                const unescaped = JSON.parse(`"${lineMatch[1]}"`);
+                return typeof unescaped === "string"
+                  ? JSON.parse(unescaped)
+                  : unescaped;
+              } catch {}
+            }
+            const objMatch = candidateStr.match(/\{[\s\S]*?\}/);
+            if (objMatch) {
+              try {
+                return JSON.parse(objMatch[0]);
+              } catch {}
+            }
+          }
+          return null;
+        };
+
+        // Phase 1 & 2: On first search in a real Playwright MCP session, verify Amazon home & attempt US ZIP 95829
+        if (
+          isPinnedOfficialMcp &&
+          discoveredTools.includes("browser_evaluate") &&
+          !handshakeProof.homeAndLocationReadback
+        ) {
+          try {
+            await client!.callTool({
+              name: "browser_navigate",
+              arguments: { url: "https://www.amazon.com/" },
+            });
+            const locEvalRes = await client!.callTool({
+              name: "browser_evaluate",
+              arguments: {
+                function: `async () => {
+                  const searchBox = document.querySelector('#twotabsearchtextbox');
+                  const initialGlow = document.querySelector('#glow-ingress-block')?.textContent?.replace(/\\s+/g, ' ').trim() || null;
+                  const csrf = document.querySelector('meta[name="anti-csrftoken-a2z"]')?.getAttribute('content') || '';
+                  try {
+                    await fetch('/portal-migration/hz/glow/address-change?actionSource=glow', {
+                      method: 'POST',
+                      headers: {
+                        'content-type': 'application/json',
+                        ...(csrf ? { 'anti-csrftoken-a2z': csrf } : {}),
+                      },
+                      body: JSON.stringify({
+                        locationType: 'LOCATION_INPUT',
+                        zipCode: '95829',
+                        storeContext: 'generic',
+                        deviceType: 'web',
+                        pageType: 'Gateway',
+                        actionSource: 'glow',
+                      }),
+                    });
+                  } catch {}
+                  return JSON.stringify({
+                    searchBoxReady: Boolean(searchBox),
+                    initialDeliveryText: initialGlow,
+                  });
+                }`,
+              },
+            });
+            const locText = ((locEvalRes as any)?.content || [])
+              .filter((c: any) => c && typeof c.text === "string")
+              .map((c: any) => c.text)
+              .join("\n");
+            const locParsed = parseEvalJson(locText);
+            handshakeProof.homeAndLocationReadback = {
+              attempted: true,
+              searchBoxReady: Boolean(locParsed?.searchBoxReady),
+              initialDeliveryText: locParsed?.initialDeliveryText || null,
+              requestedPostalCode: "95829",
+              observedDeliveryLocationText: locParsed?.initialDeliveryText || null,
+              observedDeliveryPostalCode:
+                locParsed?.initialDeliveryText?.match(/\b(\d{5})\b/)?.[1] || null,
+              observedCurrency: null,
+              usDeliveryVerified: Boolean(
+                locParsed?.initialDeliveryText?.match(/\b(\d{5})\b/)?.[1]
+              ),
+            };
+          } catch {}
+        }
+
         const prodSnap = await this.navigateAndCaptureProductSnapshot(searchUrl, navOpts);
-        const searchCardsResult = parseAmazonSearchSnapshotCards({
-          sourceUrl: prodSnap.snapshot.sourceUrl,
-          finalUrl: prodSnap.snapshot.finalUrl,
-          httpStatus: prodSnap.snapshot.httpStatus,
-          pageTitle: prodSnap.snapshot.pageTitle,
-          rawHtml: prodSnap.snapshot.html,
-          accessibilityTreeText: prodSnap.snapshot.html,
-          structuredData: prodSnap.snapshot.structuredData as any,
-        });
+
+        if (isPinnedOfficialMcp && discoveredTools.includes("browser_evaluate")) {
+          try {
+            const domSearchRes = await client!.callTool({
+              name: "browser_evaluate",
+              arguments: {
+                function: `() => {
+                  const glow = document.querySelector('#glow-ingress-block')?.textContent?.replace(/\\s+/g, ' ').trim() || null;
+                  const zipMatch = glow ? glow.match(/\\b(\\d{5})\\b/) : null;
+                  const zip = zipMatch ? zipMatch[1] : null;
+                  const nodes = Array.from(document.querySelectorAll('[data-component-type="s-search-result"][data-asin]'));
+                  const cards = [];
+                  for (const node of nodes) {
+                    const asin = (node.getAttribute('data-asin') || '').trim();
+                    if (!asin) continue;
+                    const text = node.textContent || '';
+                    const isSponsored =
+                      Boolean(node.querySelector('.puis-sponsored-label-text, .s-sponsored-label-info-icon')) ||
+                      /\\bSponsored\\b/i.test(text);
+                    const h2List = Array.from(node.querySelectorAll('h2'));
+                    const h2Texts = h2List
+                      .map(el => el.textContent?.replace(/\\s+/g, ' ').trim() || '')
+                      .filter(Boolean);
+                    const brandHeader =
+                      h2Texts.length >= 2 && h2Texts[0].length <= 36
+                        ? h2Texts[0]
+                        : null;
+                    const titleText =
+                      h2Texts.length >= 2
+                        ? h2Texts.join(' ')
+                        : h2Texts[0] || null;
+                    const linkEl =
+                      h2List.map(el => el.closest('a') || el.querySelector('a')).find(Boolean) ||
+                      node.querySelector('a.a-link-normal[href*="/dp/"]') ||
+                      node.querySelector('a[href*="/dp/"]');
+                    const href = linkEl ? linkEl.getAttribute('href') : null;
+                    const priceEl = node.querySelector('.a-price .a-offscreen');
+                    const priceText = priceEl ? priceEl.textContent?.trim() : null;
+                    cards.push({
+                      asin,
+                      title: titleText,
+                      brand: brandHeader,
+                      href,
+                      price: priceText,
+                      currency: priceText && priceText.startsWith('$') && zip ? 'USD' : null,
+                      isSponsored,
+                    });
+                    if (cards.filter(c => !c.isSponsored).length >= 8) break;
+                  }
+                  return JSON.stringify({
+                    finalUrl: window.location.href,
+                    deliveryLocationText: glow,
+                    deliveryPostalCode: zip,
+                    cards,
+                  });
+                }`,
+              },
+            });
+            const domSearchText = ((domSearchRes as any)?.content || [])
+              .filter((c: any) => c && typeof c.text === "string")
+              .map((c: any) => c.text)
+              .join("\n");
+            const domObj = parseEvalJson(domSearchText);
+            if (domObj && typeof domObj === "object") {
+              if (domObj.finalUrl) {
+                prodSnap.snapshot.finalUrl = String(domObj.finalUrl);
+              }
+              if (handshakeProof.homeAndLocationReadback) {
+                handshakeProof.homeAndLocationReadback.observedDeliveryLocationText =
+                  domObj.deliveryLocationText ||
+                  handshakeProof.homeAndLocationReadback.observedDeliveryLocationText;
+                handshakeProof.homeAndLocationReadback.observedDeliveryPostalCode =
+                  domObj.deliveryPostalCode ||
+                  handshakeProof.homeAndLocationReadback.observedDeliveryPostalCode;
+                handshakeProof.homeAndLocationReadback.usDeliveryVerified = Boolean(
+                  handshakeProof.homeAndLocationReadback.observedDeliveryPostalCode
+                );
+                if (handshakeProof.homeAndLocationReadback.usDeliveryVerified) {
+                  handshakeProof.homeAndLocationReadback.observedCurrency = "USD";
+                }
+              }
+              prodSnap.snapshot.structuredData = {
+                ...prodSnap.snapshot.structuredData,
+                deliveryLocationText: domObj.deliveryLocationText || null,
+                deliveryPostalCode: domObj.deliveryPostalCode || null,
+                searchCards: Array.isArray(domObj.cards) ? domObj.cards : undefined,
+              };
+            }
+          } catch {}
+        }
+
+        const searchCardsResult = parseAmazonSearchSnapshotCards(
+          {
+            sourceUrl: prodSnap.snapshot.sourceUrl,
+            finalUrl: prodSnap.snapshot.finalUrl,
+            httpStatus: prodSnap.snapshot.httpStatus,
+            pageTitle: prodSnap.snapshot.pageTitle,
+            rawHtml: prodSnap.snapshot.html,
+            accessibilityTreeText: prodSnap.snapshot.html,
+            structuredData: prodSnap.snapshot.structuredData as any,
+          },
+          {
+            maxCards: 5,
+            expectedQuery: searchCheck.query,
+          }
+        );
         return {
           snapshot: prodSnap.snapshot,
           searchCardsResult,

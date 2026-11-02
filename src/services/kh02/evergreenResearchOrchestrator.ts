@@ -1914,7 +1914,7 @@ export async function runEvergreenProductResearch(
     researchShortlist.shortlist.map((s) => s.candidateId)
   );
 
-  // V12.4.3.6: Dynamic Amazon US Verification Target Selection (post-scoring, zero G15/G16 or score weight mutation)
+  // V12.4.3.7: Dynamic Amazon US Verification Target Selection (never fallback to rejected/skipped candidates)
   const amazonTargetSelection = selectDynamicAmazonVerificationTargets(
     candidates,
     researchShortlist.shortlist,
@@ -1923,12 +1923,7 @@ export async function runEvergreenProductResearch(
       candidateAmazonUrls: input.amazonPilotCandidateUrls,
     }
   );
-  const amazonPilotTargets =
-    amazonTargetSelection.selectedCandidates.length > 0
-      ? amazonTargetSelection.selectedCandidates
-      : researchShortlist.shortlist.length > 0
-      ? researchShortlist.shortlist
-      : candidates.slice(0, 3);
+  const amazonPilotTargets = amazonTargetSelection.selectedCandidates;
   const amazonOptIn = Boolean(
     input.enableAmazonUsPilot ||
       (input.amazonPilotCandidateUrls &&

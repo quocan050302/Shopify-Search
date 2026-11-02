@@ -307,6 +307,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      body &&
+      typeof body === "object" &&
+      (body.amazonTargetHost !== undefined ||
+        body.amazonMcpCommand !== undefined ||
+        body.amazonMcpArgs !== undefined ||
+        body.amazonBudgetOverride !== undefined ||
+        body.amazonCreatorsApiKey !== undefined ||
+        body.amazonBypassPolicy !== undefined)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "FORBIDDEN_AMAZON_POLICY_OVERRIDE",
+            message:
+              "Client requests cannot override server-side Amazon US host allowlist, Playwright MCP command/flags, budget caps, or policy.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const parseResult = ResearchRequestSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(

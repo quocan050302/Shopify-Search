@@ -454,7 +454,7 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     headNoun: "jump_starter",
     pattern: /\b(jump\s+starter|car\s+battery\s+booster)\b/i,
   },
-  // Home Decor
+  // Home Decor & Home Organization
   {
     familyKey: "rechargeable_wall_sconce",
     familyLabel: "Rechargeable Wall Sconce & Accent Lamp",
@@ -466,6 +466,24 @@ const PRODUCT_FAMILY_RULES: ProductFamilyRule[] = [
     familyLabel: "Stretch Sofa Cover & Couch Slipcover",
     headNoun: "sofa_cover",
     pattern: /\b(sofa\s+(?:cover|slipcover)|couch\s+cover|cushion\s+cover)\b/i,
+  },
+  {
+    familyKey: "kitchen_drawer_organizer",
+    familyLabel: "Expandable Kitchen & Utensil Drawer Organizer",
+    headNoun: "drawer_organizer",
+    pattern: /\b(drawer\s+(?:organizer|divider|tray)|utensil\s+(?:organizer|divider|tray)|silverware\s+(?:organizer|tray))\b/i,
+  },
+  {
+    familyKey: "under_sink_organizer_rack",
+    familyLabel: "Sliding Under-Sink & Cabinet Storage Rack",
+    headNoun: "under_sink_rack",
+    pattern: /\b(under[-_\s]?sink\s+(?:organizer|rack|storage|caddy)|sliding\s+cabinet\s+(?:organizer|rack))\b/i,
+  },
+  {
+    familyKey: "shoe_storage_organizer_box",
+    familyLabel: "Stackable Shoe Storage Box & Closet Bin",
+    headNoun: "shoe_storage_box",
+    pattern: /\b(shoe\s+(?:storage|organizer|box|boxes|bin|rack)|acrylic\s+shoe\s+box|stackable\s+shoe)\b/i,
   },
 ];
 

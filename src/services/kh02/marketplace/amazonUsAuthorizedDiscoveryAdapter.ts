@@ -12,9 +12,12 @@
 
 import {
   AmazonAccessPolicyStatus,
+  AmazonCombinedIdentityVerdict,
+  AmazonMetaCandidateEquivalenceVerdict,
   AmazonPolicyContext,
   AmazonProductEvidence,
   AmazonProviderOperationRecord,
+  AmazonSearchIdentityVerdict,
   IdentityMatch,
   MarketplaceEvidenceStatus,
   MarketplaceObservationClass,
@@ -67,6 +70,7 @@ export interface AmazonSearchIntent {
   verifiedBrand: string | null;
   verifiedModel: string | null;
   intentRank: number;
+  intentMode?: "PRODUCT_SPECIFIC_VERIFICATION" | "DISCOVERY_ONLY";
   sourceProvenance:
     | "MERCHANT_VERIFIED_TITLE_AND_BRAND"
     | "CANONICAL_PRODUCT_AND_MODEL"
@@ -80,6 +84,7 @@ export interface DeriveAmazonSearchIntentsOptions {
   maxIntentsPerCandidate?: number;
   maxKeywordLength?: number;
   maxTokens?: number;
+  requireProductSpecificVerification?: boolean;
 }
 
 const GENERIC_NICHE_TERMS = new Set([
@@ -262,6 +267,21 @@ export function deriveAmazonSearchIntents(
     if (!normalized) continue;
     const key = normalized.toLowerCase();
     if (seenNormalized.has(key)) continue;
+
+    const tokenCount = normalized.split(/\s+/).filter(Boolean).length;
+    const isProductSpecific = Boolean(
+      verifiedBrand ||
+        verifiedModel ||
+        (item.provenance !== "PRODUCT_FAMILY_FALLBACK" && tokenCount >= 2)
+    );
+    const intentMode: AmazonSearchIntent["intentMode"] = isProductSpecific
+      ? "PRODUCT_SPECIFIC_VERIFICATION"
+      : "DISCOVERY_ONLY";
+    if (options.requireProductSpecificVerification && intentMode === "DISCOVERY_ONLY") {
+      suppressedTerms.push(`DISCOVERY_ONLY_QUERY_SUPPRESSED:${normalized}`);
+      continue;
+    }
+
     seenNormalized.add(key);
 
     const intentRank = intents.length + 1;
@@ -277,6 +297,7 @@ export function deriveAmazonSearchIntents(
       verifiedBrand,
       verifiedModel,
       intentRank,
+      intentMode,
       sourceProvenance: item.provenance,
       reason: item.reason,
       suppressedTerms: Array.from(new Set(suppressedTerms)),
@@ -682,10 +703,17 @@ export interface AmazonMatchDecision {
   parentAsin: string | null;
   variationAsin: string | null;
   canonicalAmazonUrl: string | null;
+  observedSearchHref?: string | null;
+  observedSearchHrefOrigin?: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP" | "NONE";
+  searchRankPosition?: number | null;
   identityMatch: IdentityMatch;
+  searchIdentityVerdict?: AmazonSearchIdentityVerdict;
+  metaCandidateEquivalenceVerdict?: AmazonMetaCandidateEquivalenceVerdict;
+  combinedIdentityVerdict?: AmazonCombinedIdentityVerdict;
   status: MarketplaceEvidenceStatus;
   rankScore: number;
   selectedAsBest: boolean;
+  firstCardDisposition?: string | null;
   matchingReasons: string[];
   rejectionReasons: string[];
   updatedEvidence: AmazonProductEvidence;
@@ -717,8 +745,10 @@ export function selectAmazonCandidateMatches(
 ): AmazonMatchDecision[] {
   const decisions: AmazonMatchDecision[] = [];
 
-  for (const listing of listings || []) {
+  for (let idx = 0; idx < (listings || []).length; idx++) {
+    const listing = listings[idx];
     if (!listing || !listing.asin) continue;
+    const rankPosition = listing.searchRankPosition ?? idx + 1;
     const verified = verifyAmazonProductIdentity(candidate, listing);
     const baseWeight = matchRankWeight(verified.identityMatch);
     const hasPriceBonus = verified.updatedEvidence.price !== null ? 3 : 0;
@@ -731,23 +761,52 @@ export function selectAmazonCandidateMatches(
       parentAsin: listing.parentAsin,
       variationAsin: listing.variationAsin,
       canonicalAmazonUrl: listing.canonicalAmazonUrl,
+      observedSearchHref: listing.observedSearchHref ?? null,
+      observedSearchHrefOrigin:
+        listing.observedSearchHrefOrigin ??
+        (listing.observedSearchHref ? "OBSERVED_HREF" : "DERIVED_NORMALIZED_DP"),
+      searchRankPosition: rankPosition,
       identityMatch: verified.identityMatch,
+      searchIdentityVerdict: verified.searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: verified.metaCandidateEquivalenceVerdict,
+      combinedIdentityVerdict: verified.combinedIdentityVerdict,
       status: verified.status,
       rankScore,
       selectedAsBest: false,
+      firstCardDisposition: null,
       matchingReasons: verified.matchingReasons,
       rejectionReasons: verified.rejectionReasons,
-      updatedEvidence: verified.updatedEvidence,
+      updatedEvidence: {
+        ...verified.updatedEvidence,
+        observedSearchHref: listing.observedSearchHref ?? null,
+        observedSearchHrefOrigin:
+          listing.observedSearchHrefOrigin ??
+          (listing.observedSearchHref ? "OBSERVED_HREF" : "DERIVED_NORMALIZED_DP"),
+        searchRankPosition: rankPosition,
+      },
     });
   }
 
   decisions.sort((a, b) => {
     if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
+    const posA = a.searchRankPosition ?? 999;
+    const posB = b.searchRankPosition ?? 999;
+    if (posA !== posB) return posA - posB;
     return a.asin.localeCompare(b.asin);
   });
 
   if (decisions.length > 0 && decisions[0].identityMatch !== "NO_MATCH") {
     decisions[0].selectedAsBest = true;
+  }
+
+  const firstCardByRank = decisions.find((d) => d.searchRankPosition === 1) || decisions[0];
+  if (firstCardByRank) {
+    const disposition = firstCardByRank.selectedAsBest
+      ? `FIRST_CARD_SELECTED_FOR_PDP:asin=${firstCardByRank.asin},match=${firstCardByRank.identityMatch}`
+      : `FIRST_CARD_NOT_SELECTED:asin=${firstCardByRank.asin},match=${firstCardByRank.identityMatch},reasons=${firstCardByRank.rejectionReasons.join("|") || "LOWER_RANK_SCORE"}`;
+    for (const d of decisions) {
+      d.firstCardDisposition = disposition;
+    }
   }
 
   return decisions;

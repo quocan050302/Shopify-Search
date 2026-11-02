@@ -12,7 +12,10 @@
  */
 
 import {
+  AmazonCombinedIdentityVerdict,
+  AmazonMetaCandidateEquivalenceVerdict,
   AmazonProductEvidence,
+  AmazonSearchIdentityVerdict,
   IdentityMatch,
   MarketplaceEvidenceStatus,
   MarketplaceObservationClass,
@@ -52,6 +55,8 @@ export interface AsinExtractionProvenanceResult {
   parentAsin: string | null;
   variationAsin: string | null;
   canonicalAmazonUrl: string | null;
+  observedCanonicalUrl?: string | null;
+  canonicalUrlOrigin?: "OBSERVED_CANONICAL" | "DERIVED_NORMALIZED_DP" | "NONE";
   urlAsin: string | null;
   canonicalTagAsin: string | null;
   structuredDataAsin: string | null;
@@ -528,25 +533,55 @@ export function extractAmazonAsinFromProductEvidence(
   }
 
   let canonicalTagAsin: string | null = null;
+  let observedCanonicalUrl: string | null = null;
   if (canonicalTags?.canonicalUrl) {
-    const canonCheck = validateAmazonUsProductUrl(canonicalTags.canonicalUrl);
-    if (!canonCheck.valid) {
-      return {
-        valid: false,
-        asin: null,
-        parentAsin: null,
-        variationAsin: null,
-        canonicalAmazonUrl: null,
-        urlAsin,
-        canonicalTagAsin: null,
-        structuredDataAsin: null,
-        provenanceSources,
-        discrepancyDetected: true,
-        rejectionReason: `Invalid canonical link tag URL: ${canonCheck.rejectionReason}`,
-      };
+    const rawCanon = String(canonicalTags.canonicalUrl).trim();
+    const canonCheck = validateAmazonUsProductUrl(rawCanon);
+    if (canonCheck.valid && canonCheck.extractedAsin) {
+      canonicalTagAsin = canonCheck.extractedAsin;
+      observedCanonicalUrl = rawCanon;
+      provenanceSources.push("CANONICAL_LINK_TAG");
+    } else {
+      // Amazon US PDPs sometimes emit <link rel="canonical" href="https://www.amazon.com/clp/<ASIN>">
+      let parsedCanon: URL | null = null;
+      try {
+        parsedCanon = new URL(rawCanon);
+      } catch {
+        parsedCanon = null;
+      }
+      const clpMatch =
+        parsedCanon &&
+        parsedCanon.protocol === "https:" &&
+        ALLOWED_AMAZON_US_HOSTS.has(parsedCanon.hostname.toLowerCase()) &&
+        parsedCanon.pathname.match(/^\/clp\/([A-Za-z0-9]{10})(?:\/|$)/);
+      const clpCandidate = clpMatch ? clpMatch[1].toUpperCase() : null;
+      if (
+        clpMatch &&
+        clpCandidate &&
+        clpMatch[1] === clpCandidate &&
+        isValidStrictAmazonAsin(clpCandidate)
+      ) {
+        canonicalTagAsin = clpCandidate;
+        observedCanonicalUrl = rawCanon;
+        provenanceSources.push("CANONICAL_LINK_TAG");
+      } else {
+        return {
+          valid: false,
+          asin: null,
+          parentAsin: null,
+          variationAsin: null,
+          canonicalAmazonUrl: null,
+          observedCanonicalUrl: null,
+          canonicalUrlOrigin: "NONE",
+          urlAsin,
+          canonicalTagAsin: null,
+          structuredDataAsin: null,
+          provenanceSources,
+          discrepancyDetected: true,
+          rejectionReason: `Invalid canonical link tag URL: ${canonCheck.rejectionReason}`,
+        };
+      }
     }
-    canonicalTagAsin = canonCheck.extractedAsin;
-    if (canonicalTagAsin) provenanceSources.push("CANONICAL_LINK_TAG");
   }
 
   let dataAsinAttr: string | null = null;
@@ -667,6 +702,8 @@ export function extractAmazonAsinFromProductEvidence(
     parentAsin: parentAsin || null,
     variationAsin: variationAsin || (parentAsin && parentAsin !== resolvedAsin ? resolvedAsin : null),
     canonicalAmazonUrl: `https://www.amazon.com/dp/${resolvedAsin}`,
+    observedCanonicalUrl,
+    canonicalUrlOrigin: observedCanonicalUrl ? "OBSERVED_CANONICAL" : "DERIVED_NORMALIZED_DP",
     urlAsin,
     canonicalTagAsin: canonicalTagAsin || dataAsinAttr,
     structuredDataAsin,
@@ -1036,11 +1073,13 @@ export interface RawAmazonSnapshotInput {
       title?: string | null;
       productTitle?: string | null;
       url?: string | null;
+      href?: string | null;
       brand?: string | null;
       price?: number | string | null;
       currency?: string | null;
       isSponsored?: boolean;
       sponsoredLabel?: string | null;
+      rawSnippet?: string | null;
     }>;
   } | null;
 }
@@ -1251,9 +1290,21 @@ export function parseAmazonProductEvidence(
   sanitizationWarnings.push(...brandSanitized.warnings);
 
   const merchantSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.merchant);
-  const sellerSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.seller);
+  const rawSellerFallback =
+    snapshot.structuredData?.seller ??
+    snapshot.html?.match(
+      /\bSold\s+by\s+(?:<a[^>]*>|<span[^>]*>)?\s*([A-Za-z0-9][A-Za-z0-9\s\-&'.]{1,48}?)(?:<\/a>|<\/span>|\s+and\s+|\s+Fulfilled\s+by|\n|<|$)/i
+    )?.[1]?.trim() ??
+    null;
+  const sellerSanitized = sanitizeUntrustedAmazonText(rawSellerFallback);
   const availSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.availability);
-  const modelSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.modelNumber);
+  const rawModelFallback =
+    snapshot.structuredData?.modelNumber ??
+    snapshot.html?.match(
+      /\b(?:Item\s+model\s+number|Model\s+Number)\s*[:<\s\u200E\u200F]*(?:<\/span>|<\/th>|<\/td>|\s)*\s*(?:<span[^>]*>|<td[^>]*>)?\s*([A-Za-z0-9][A-Za-z0-9\-_.]{1,32})\b/i
+    )?.[1]?.trim() ??
+    null;
+  const modelSanitized = sanitizeUntrustedAmazonText(rawModelFallback);
   const skuSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.sku);
   const gtinSanitized = sanitizeUntrustedAmazonText(snapshot.structuredData?.gtin);
 
@@ -1295,7 +1346,7 @@ export function parseAmazonProductEvidence(
     snapshot.structuredData?.priceSourceAsin || snapshot.structuredData?.priceAsin || null;
   const isCarouselOrMismatchedPriceSource =
     snapshot.structuredData?.isSuggestedOrCarouselPrice === true ||
-    /carousel|suggested|sponsored|related|also_bought|other_seller/i.test(
+    /carousel|suggested|sponsored|related|also_bought|other_seller|coupon|discount_badge|save_amount/i.test(
       String(snapshot.structuredData?.priceSource || "")
     ) ||
     Boolean(
@@ -1386,6 +1437,24 @@ export function parseAmazonProductEvidence(
   const idSeed = `${responseMetadata.workspaceId}:${responseMetadata.researchRunId}:${responseMetadata.candidateId}:AMAZON_US:${canonicalIdentity.asin}`;
   const idHash = computeDeterministicEvidenceHash(idSeed)?.slice(0, 20) || canonicalIdentity.asin;
 
+  const commercialUsStatus: AmazonProductEvidence["commercialUsStatus"] =
+    verifiedDeliveryMarket === "US" &&
+    observedDeliveryPostalCode !== null &&
+    explicitCurrency === "USD" &&
+    parsedPrice !== null
+      ? "US_COMMERCIAL_VERIFIED"
+      : verifiedDeliveryMarket === "US" || (explicitCurrency === "USD" && parsedPrice !== null)
+      ? "PARTIAL_US_COMMERCIAL"
+      : "UNVERIFIED";
+  const sellerStatus: AmazonProductEvidence["sellerStatus"] =
+    sellerSanitized.sanitized || merchantSanitized.sanitized ? "OBSERVED" : "NOT_OBSERVED";
+  const availabilityStatus: AmazonProductEvidence["availabilityStatus"] =
+    availSanitized.sanitized ? "OBSERVED" : "NOT_OBSERVED";
+  const provenanceStatus: AmazonProductEvidence["provenanceStatus"] =
+    Boolean(rawEvidenceHash && extractedFieldsHash && localInvocationRef && observedAt)
+      ? "PROVENANCE_VERIFIED"
+      : "UNVERIFIED";
+
   return {
     id: `amz_ev_${idHash}`,
     workspaceId: responseMetadata.workspaceId,
@@ -1399,6 +1468,8 @@ export function parseAmazonProductEvidence(
     sourceUrl: snapshot.sourceUrl,
     finalUrl: snapshot.finalUrl || canonicalIdentity.canonicalAmazonUrl,
     canonicalAmazonUrl: canonicalIdentity.canonicalAmazonUrl,
+    observedCanonicalUrl: asinCheck.observedCanonicalUrl ?? null,
+    canonicalUrlOrigin: asinCheck.canonicalUrlOrigin ?? "DERIVED_NORMALIZED_DP",
     asin: canonicalIdentity.asin,
     parentAsin: canonicalIdentity.parentAsin,
     variationAsin: canonicalIdentity.variationAsin,
@@ -1428,6 +1499,10 @@ export function parseAmazonProductEvidence(
     observationClass,
     verificationScope: "LISTING_OBSERVED",
     identityMatch: "AMBIGUOUS",
+    commercialUsStatus,
+    sellerStatus,
+    availabilityStatus,
+    provenanceStatus,
     isCached: Boolean(responseMetadata.isCached || observationClass === "CACHED"),
     matchedCanonicalKey: canonicalIdentity.canonicalIdentityKey,
     productFamilyKey: canonicalIdentity.productFamilyKey,
@@ -1483,8 +1558,25 @@ function normalizeBrandToken(raw: string | null | undefined): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+export interface VerifyAmazonProductIdentityOptions {
+  searchCard?: {
+    asin: string;
+    productTitle: string;
+    brand?: string | null;
+    model?: string | null;
+    observedSearchHref?: string | null;
+    observedSearchHrefOrigin?: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP" | "NONE";
+    searchRankPosition?: number | null;
+  } | null;
+  sessionClosedCleanly?: boolean;
+}
+
 /**
  * Strictly verifies whether an observed Amazon product listing matches a specific KH-02 candidate.
+ * Implements V12.4.3.7 Two-Tier Identity Model:
+ * - Phase A (`searchIdentityVerdict`): Compares observed Search card (`data-asin` + title tokens) to opened PDP.
+ * - Phase B (`metaCandidateEquivalenceVerdict`): Compares Amazon item to Meta-derived candidate.
+ * - Combined (`combinedIdentityVerdict`): Never uses Search->PDP PASS to auto-promote Meta->Amazon EXACT_PRODUCT.
  * - EXACT_PRODUCT requires independent product-specific corroboration (brand/merchant match + specific product/model/title match).
  * - Matching brand alone NEVER returns EXACT_PRODUCT (returns BRAND_ONLY).
  * - Accessories/refills/different SKUs of the same brand return BRAND_ONLY or NO_MATCH.
@@ -1503,15 +1595,145 @@ export function verifyAmazonProductIdentity(
     gtin?: string | null;
     asin?: string | null;
   },
-  evidence: AmazonProductEvidence
+  evidence: AmazonProductEvidence,
+  options?: VerifyAmazonProductIdentityOptions
 ): {
   identityMatch: IdentityMatch;
   status: MarketplaceEvidenceStatus;
   verificationScope: MarketplaceVerificationScope | null;
+  searchIdentityVerdict: AmazonSearchIdentityVerdict;
+  metaCandidateEquivalenceVerdict: AmazonMetaCandidateEquivalenceVerdict;
+  combinedIdentityVerdict: AmazonCombinedIdentityVerdict;
+  searchTitleTokenCoverage: number | null;
+  searchBrandCrossConfirmed: boolean;
+  searchModelCrossConfirmed: boolean;
   matchingReasons: string[];
   rejectionReasons: string[];
   updatedEvidence: AmazonProductEvidence;
 } {
+  // Phase A: Search Card -> PDP identity verification (if searchCard provided)
+  let searchIdentityVerdict: AmazonSearchIdentityVerdict =
+    options?.searchCard
+      ? "INSUFFICIENT_EVIDENCE"
+      : evidence.requestMode === "AUTHORIZED_SEARCH"
+      ? "SEARCH_ONLY_NOT_VERIFIED"
+      : "DIRECT_PDP_ONLY";
+  let searchTitleTokenCoverage: number | null = null;
+  let searchBrandCrossConfirmed = false;
+  let searchModelCrossConfirmed = false;
+
+  if (options?.searchCard && evidence.asin && evidence.productTitle) {
+    const cardAsinNorm = String(options.searchCard.asin || "").trim().toUpperCase();
+    const pdpAsinNorm = String(evidence.asin || "").trim().toUpperCase();
+    if (!cardAsinNorm || cardAsinNorm !== pdpAsinNorm) {
+      searchIdentityVerdict = "MISMATCH_ASIN";
+    } else {
+      const cardTokens = tokenizeMeaningfulProductWords(options.searchCard.productTitle);
+      const pdpTokens = tokenizeMeaningfulProductWords(evidence.productTitle);
+      const pdpSet = new Set(pdpTokens);
+      const matchedSearchTokens = cardTokens.filter((t) => pdpSet.has(t));
+      searchTitleTokenCoverage =
+        cardTokens.length > 0
+          ? Math.round((matchedSearchTokens.length / cardTokens.length) * 100) / 100
+          : 0;
+      const pdpBrandNorm = normalizeBrandToken(
+        evidence.brand || evidence.merchant || evidence.seller || ""
+      );
+      const cardTextNorm = String(
+        `${options.searchCard.brand || ""} ${options.searchCard.productTitle || ""}`
+      )
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      searchBrandCrossConfirmed = Boolean(
+        pdpBrandNorm &&
+          pdpBrandNorm.length >= 3 &&
+          (cardTextNorm.includes(pdpBrandNorm) ||
+            evidence.productTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "")
+              .includes(pdpBrandNorm))
+      );
+      const pdpModelNorm = String(evidence.modelNumber || "")
+        .trim()
+        .toLowerCase();
+      searchModelCrossConfirmed = Boolean(
+        pdpModelNorm &&
+          pdpModelNorm.length >= 2 &&
+          (String(options.searchCard.productTitle || "")
+            .toLowerCase()
+            .includes(pdpModelNorm) ||
+            evidence.productTitle.toLowerCase().includes(pdpModelNorm))
+      );
+
+      if (
+        cardTokens.length > 0 &&
+        (searchTitleTokenCoverage >= 0.5 || matchedSearchTokens.length >= 2)
+      ) {
+        searchIdentityVerdict = "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED";
+      } else {
+        searchIdentityVerdict = "MISMATCH_TITLE";
+      }
+    }
+  }
+
+  const baseEnrichedEvidence: AmazonProductEvidence = {
+    ...evidence,
+    ...(options?.searchCard?.observedSearchHref !== undefined
+      ? { observedSearchHref: options.searchCard.observedSearchHref }
+      : {}),
+    ...(options?.searchCard?.observedSearchHrefOrigin !== undefined
+      ? { observedSearchHrefOrigin: options.searchCard.observedSearchHrefOrigin }
+      : {}),
+    ...(options?.searchCard?.searchRankPosition !== undefined
+      ? { searchRankPosition: options.searchCard.searchRankPosition }
+      : {}),
+    ...(options?.sessionClosedCleanly !== undefined
+      ? {
+          sessionLifecycleStatus: options.sessionClosedCleanly
+            ? "CLOSED_CLEANLY"
+            : "UNVERIFIED",
+        }
+      : {}),
+    searchIdentityVerdict,
+    searchTitleTokenCoverage,
+    searchBrandCrossConfirmed,
+    searchModelCrossConfirmed,
+  };
+
+  if (
+    searchIdentityVerdict === "MISMATCH_ASIN" ||
+    searchIdentityVerdict === "MISMATCH_TITLE"
+  ) {
+    const mismatchReason =
+      searchIdentityVerdict === "MISMATCH_ASIN"
+        ? `SEARCH_TO_PDP_ASIN_MISMATCH: Search card ASIN '${options?.searchCard?.asin}' != PDP ASIN '${evidence.asin}'`
+        : `SEARCH_TO_PDP_TITLE_MISMATCH: Search card title tokens did not match PDP title (coverage=${searchTitleTokenCoverage ?? 0})`;
+    const rejReasons = [...evidence.rejectionReasons, mismatchReason];
+    return {
+      identityMatch: "NO_MATCH",
+      status: "OBSERVED_UNVERIFIED",
+      verificationScope: "LISTING_OBSERVED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "UNVERIFIED",
+      combinedIdentityVerdict: "REJECTED_IDENTITY",
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
+      matchingReasons: [],
+      rejectionReasons: rejReasons,
+      updatedEvidence: {
+        ...baseEnrichedEvidence,
+        identityMatch: "NO_MATCH",
+        status: "OBSERVED_UNVERIFIED",
+        verificationScope: "LISTING_OBSERVED",
+        metaCandidateEquivalenceVerdict: "UNVERIFIED",
+        combinedIdentityVerdict: "REJECTED_IDENTITY",
+        matchingReasons: [],
+        rejectionReasons: rejReasons,
+      },
+    };
+  }
+
   if (
     evidence.rejectionReasons.length > 0 ||
     !evidence.asin ||
@@ -1528,15 +1750,23 @@ export function verifyAmazonProductIdentity(
       identityMatch: "NO_MATCH",
       status: evidence.status,
       verificationScope: null,
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "UNVERIFIED",
+      combinedIdentityVerdict: "REJECTED_IDENTITY",
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons: [],
       rejectionReasons:
         evidence.rejectionReasons.length > 0
           ? evidence.rejectionReasons
           : ["EVIDENCE_NOT_ELIGIBLE_FOR_IDENTITY_MATCH"],
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "NO_MATCH",
         verificationScope: null,
+        metaCandidateEquivalenceVerdict: "UNVERIFIED",
+        combinedIdentityVerdict: "REJECTED_IDENTITY",
       },
     };
   }
@@ -1551,17 +1781,31 @@ export function verifyAmazonProductIdentity(
 
   if (candWords.length === 0 || amzWords.length === 0) {
     const reasons = ["INSUFFICIENT_PRODUCT_TITLE_TOKENS"];
+    const combinedVerdict: AmazonCombinedIdentityVerdict =
+      searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+        ? "AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED"
+        : searchIdentityVerdict === "SEARCH_ONLY_NOT_VERIFIED"
+        ? "DISCOVERED_NOT_VERIFIED"
+        : "AMAZON_DIRECT_PDP_OBSERVED_META_MATCH_UNVERIFIED";
     return {
       identityMatch: "AMBIGUOUS",
       status: "OBSERVED_UNVERIFIED",
       verificationScope: "LISTING_OBSERVED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "MISSING_IDENTIFIERS",
+      combinedIdentityVerdict: combinedVerdict,
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons: [],
       rejectionReasons: reasons,
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "AMBIGUOUS",
         status: "OBSERVED_UNVERIFIED",
         verificationScope: "LISTING_OBSERVED",
+        metaCandidateEquivalenceVerdict: "MISSING_IDENTIFIERS",
+        combinedIdentityVerdict: combinedVerdict,
         rejectionReasons: reasons,
       },
     };
@@ -1652,6 +1896,16 @@ export function verifyAmazonProductIdentity(
     brandMatched &&
     (conflictingModel || accessoryMismatch || matchedProductTokens.length < 2 || overlapRatio < 0.5)
   ) {
+    const metaVerdict: AmazonMetaCandidateEquivalenceVerdict = conflictingModel
+      ? "CONTRADICTORY_MODEL"
+      : "MISSING_IDENTIFIERS";
+    const combinedVerdict: AmazonCombinedIdentityVerdict = conflictingModel
+      ? "REJECTED_IDENTITY"
+      : searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+      ? "AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED"
+      : searchIdentityVerdict === "SEARCH_ONLY_NOT_VERIFIED"
+      ? "DISCOVERED_NOT_VERIFIED"
+      : "AMAZON_DIRECT_PDP_OBSERVED_META_MATCH_UNVERIFIED";
     matchingReasons.push(
       `Brand '${evidence.brand || candidate.brand}' matched, but product SKU/tokens differ (overlap=${matchedProductTokens.length}/${nonBrandCandWords.length})`
     );
@@ -1659,13 +1913,21 @@ export function verifyAmazonProductIdentity(
       identityMatch: "BRAND_ONLY",
       status: "OBSERVED_UNVERIFIED",
       verificationScope: "LISTING_OBSERVED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: metaVerdict,
+      combinedIdentityVerdict: combinedVerdict,
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons,
       rejectionReasons,
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "BRAND_ONLY",
         status: "OBSERVED_UNVERIFIED",
         verificationScope: "LISTING_OBSERVED",
+        metaCandidateEquivalenceVerdict: metaVerdict,
+        combinedIdentityVerdict: combinedVerdict,
         matchingReasons,
         rejectionReasons,
       },
@@ -1681,13 +1943,21 @@ export function verifyAmazonProductIdentity(
       identityMatch: "NO_MATCH",
       status: "OBSERVED_UNVERIFIED",
       verificationScope: "LISTING_OBSERVED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "CONTRADICTORY_BRAND",
+      combinedIdentityVerdict: "REJECTED_IDENTITY",
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons: [],
       rejectionReasons,
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "NO_MATCH",
         status: "OBSERVED_UNVERIFIED",
         verificationScope: "LISTING_OBSERVED",
+        metaCandidateEquivalenceVerdict: "CONTRADICTORY_BRAND",
+        combinedIdentityVerdict: "REJECTED_IDENTITY",
         matchingReasons: [],
         rejectionReasons,
       },
@@ -1716,13 +1986,21 @@ export function verifyAmazonProductIdentity(
       identityMatch: "EXACT_PRODUCT",
       status: "IDENTITY_VERIFIED",
       verificationScope: "IDENTITY_CORROBORATED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "EXACT_PRODUCT",
+      combinedIdentityVerdict: "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons,
       rejectionReasons: [],
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "EXACT_PRODUCT",
         status: "IDENTITY_VERIFIED",
         verificationScope: "IDENTITY_CORROBORATED",
+        metaCandidateEquivalenceVerdict: "EXACT_PRODUCT",
+        combinedIdentityVerdict: "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
         matchingReasons,
         rejectionReasons: [],
       },
@@ -1731,6 +2009,12 @@ export function verifyAmazonProductIdentity(
 
   // Case 4: Strong product token overlap without brand confirmation -> PROBABLE_PRODUCT
   if (!conflictingModel && !accessoryMismatch && matchedProductTokens.length >= 2 && overlapRatio >= 0.6) {
+    const combinedVerdict: AmazonCombinedIdentityVerdict =
+      searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+        ? "AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED"
+        : searchIdentityVerdict === "SEARCH_ONLY_NOT_VERIFIED"
+        ? "DISCOVERED_NOT_VERIFIED"
+        : "AMAZON_DIRECT_PDP_OBSERVED_META_MATCH_UNVERIFIED";
     matchingReasons.push(
       `Probable product title token overlap (${matchedProductTokens.join(", ")}) without independent brand/identifier corroboration`
     );
@@ -1738,18 +2022,39 @@ export function verifyAmazonProductIdentity(
       identityMatch: "PROBABLE_PRODUCT",
       status: "OBSERVED_UNVERIFIED",
       verificationScope: "LISTING_OBSERVED",
+      searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: "PROBABLE_SAME_FAMILY",
+      combinedIdentityVerdict: combinedVerdict,
+      searchTitleTokenCoverage,
+      searchBrandCrossConfirmed,
+      searchModelCrossConfirmed,
       matchingReasons,
       rejectionReasons,
       updatedEvidence: {
-        ...evidence,
+        ...baseEnrichedEvidence,
         identityMatch: "PROBABLE_PRODUCT",
         status: "OBSERVED_UNVERIFIED",
         verificationScope: "LISTING_OBSERVED",
+        metaCandidateEquivalenceVerdict: "PROBABLE_SAME_FAMILY",
+        combinedIdentityVerdict: combinedVerdict,
         matchingReasons,
         rejectionReasons,
       },
     };
   }
+
+  const fallbackMetaVerdict: AmazonMetaCandidateEquivalenceVerdict = conflictingModel
+    ? "CONTRADICTORY_MODEL"
+    : matchedProductTokens.length >= 1
+    ? "CATEGORY_ONLY"
+    : "UNVERIFIED";
+  const fallbackCombinedVerdict: AmazonCombinedIdentityVerdict = conflictingModel
+    ? "REJECTED_IDENTITY"
+    : searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+    ? "AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED"
+    : searchIdentityVerdict === "SEARCH_ONLY_NOT_VERIFIED"
+    ? "DISCOVERED_NOT_VERIFIED"
+    : "AMAZON_DIRECT_PDP_OBSERVED_META_MATCH_UNVERIFIED";
 
   rejectionReasons.push(
     `INSUFFICIENT_PRODUCT_CORROBORATION: overlap=${matchedProductTokens.length}/${nonBrandCandWords.length}`
@@ -1758,13 +2063,21 @@ export function verifyAmazonProductIdentity(
     identityMatch: "NO_MATCH",
     status: "OBSERVED_UNVERIFIED",
     verificationScope: "LISTING_OBSERVED",
+    searchIdentityVerdict,
+    metaCandidateEquivalenceVerdict: fallbackMetaVerdict,
+    combinedIdentityVerdict: fallbackCombinedVerdict,
+    searchTitleTokenCoverage,
+    searchBrandCrossConfirmed,
+    searchModelCrossConfirmed,
     matchingReasons: [],
     rejectionReasons,
     updatedEvidence: {
-      ...evidence,
+      ...baseEnrichedEvidence,
       identityMatch: "NO_MATCH",
       status: "OBSERVED_UNVERIFIED",
       verificationScope: "LISTING_OBSERVED",
+      metaCandidateEquivalenceVerdict: fallbackMetaVerdict,
+      combinedIdentityVerdict: fallbackCombinedVerdict,
       matchingReasons: [],
       rejectionReasons,
     },
@@ -1906,6 +2219,10 @@ export function validateAmazonUsSearchUrl(
 export interface ParsedAmazonSearchCard {
   asin: string;
   canonicalAmazonUrl: string;
+  observedSearchHref: string | null;
+  rawObservedHref?: string | null;
+  observedSearchHrefOrigin: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP";
+  searchRankPosition: number;
   productTitle: string;
   brand: string | null;
   price: number | null;
@@ -1918,6 +2235,8 @@ export interface ParsedAmazonSearchSnapshotResult {
   botWallDetected: boolean;
   botWallStatus: "CAPTCHA_BLOCKED" | "BLOCKED_PROVIDER" | "RATE_LIMITED" | null;
   botWallReason: string | null;
+  queryParameterVerified?: boolean;
+  queryParameterMismatch?: boolean;
   observedDeliveryPostalCode: string | null;
   cards: ParsedAmazonSearchCard[];
   rejectedCards: Array<{
@@ -1927,36 +2246,49 @@ export interface ParsedAmazonSearchSnapshotResult {
   }>;
 }
 
+export interface ParseAmazonSearchSnapshotOptions {
+  maxCards?: number;
+  expectedQuery?: string | null;
+  requireObservedHref?: boolean;
+}
+
 /**
  * Parses an Amazon US search snapshot (`https://www.amazon.com/s?k=...`) captured via
  * the local Playwright MCP session.
  * - Detects CAPTCHA / Robot Check / automated access block first.
- * - Extracts non-sponsored search result cards with strict 10-char ASIN, product title,
- *   canonical `/dp/{ASIN}` URL, and optional observed USD price & US delivery ZIP.
+ * - Verifies that the landed URL's `k` query parameter matches the requested query when applicable.
+ * - Extracts up to `maxCards` (default 5) non-sponsored search result cards with strict 10-char ASIN,
+ *   product title, observed card `href` (`observedSearchHref`), canonical `/dp/{ASIN}` URL, and optional
+ *   observed USD price & US delivery ZIP.
+ * - Never invents Search card brand/model when not explicitly provided.
  * - Rejects sponsored cards (`Sponsored`, `/sspa/click`, `gp/slredirect`, `AdHolder`)
  *   and non-ASIN 10-char tokens (`CATEGORIES`, `BESTSELLER`, etc.).
  */
-export function parseAmazonSearchSnapshotCards(snapshot: {
-  sourceUrl: string;
-  finalUrl?: string | null;
-  httpStatus?: number | null;
-  pageTitle?: string | null;
-  rawHtml?: string | null;
-  accessibilityTreeText?: string | null;
-  structuredData?: {
-    deliveryLocationText?: string | null;
-    deliveryPostalCode?: string | null;
-    searchCards?: Array<{
-      asin?: string | null;
-      title?: string | null;
-      brand?: string | null;
-      price?: number | string | null;
-      currency?: string | null;
-      href?: string | null;
-      isSponsored?: boolean;
-    }>;
-  } | null;
-}): ParsedAmazonSearchSnapshotResult {
+export function parseAmazonSearchSnapshotCards(
+  snapshot: {
+    sourceUrl: string;
+    finalUrl?: string | null;
+    httpStatus?: number | null;
+    pageTitle?: string | null;
+    rawHtml?: string | null;
+    accessibilityTreeText?: string | null;
+    structuredData?: {
+      deliveryLocationText?: string | null;
+      deliveryPostalCode?: string | null;
+      searchCards?: Array<{
+        asin?: string | null;
+        title?: string | null;
+        brand?: string | null;
+        price?: number | string | null;
+        currency?: string | null;
+        href?: string | null;
+        isSponsored?: boolean;
+      }>;
+    } | null;
+  },
+  options?: ParseAmazonSearchSnapshotOptions
+): ParsedAmazonSearchSnapshotResult {
+  const maxCards = Math.max(1, Math.min(20, options?.maxCards ?? 5));
   const combinedText = `${snapshot.pageTitle || ""}\n${snapshot.rawHtml || ""}\n${
     snapshot.accessibilityTreeText || ""
   }`;
@@ -1973,6 +2305,8 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
       botWallDetected: true,
       botWallStatus: "RATE_LIMITED",
       botWallReason: "HTTP_429_OR_RATE_LIMITED",
+      queryParameterVerified: false,
+      queryParameterMismatch: false,
       observedDeliveryPostalCode: null,
       cards: [],
       rejectedCards: [],
@@ -1981,13 +2315,15 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
 
   if (
     /validateCaptcha|opfcaptcha|Enter the characters you see below|not a robot|api-services-support@amazon\.com|type the characters you see in this image|Robot Check/i.test(
-      combinedText
+      `${combinedText} ${snapshot.finalUrl || ""}`
     )
   ) {
     return {
       botWallDetected: true,
       botWallStatus: "CAPTCHA_BLOCKED",
       botWallReason: "AMAZON_CAPTCHA_CHALLENGE_DETECTED",
+      queryParameterVerified: false,
+      queryParameterMismatch: false,
       observedDeliveryPostalCode: null,
       cards: [],
       rejectedCards: [],
@@ -2005,10 +2341,50 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
       botWallDetected: true,
       botWallStatus: "BLOCKED_PROVIDER",
       botWallReason: `HTTP_${httpStatus ?? "UNOBSERVED"}_OR_BOT_WALL_BLOCKED`,
+      queryParameterVerified: false,
+      queryParameterMismatch: false,
       observedDeliveryPostalCode: null,
       cards: [],
       rejectedCards: [],
     };
+  }
+
+  // Verify landed search URL k query parameter if both sourceUrl and finalUrl are search URLs or expectedQuery is passed
+  let queryParameterVerified = true;
+  let queryParameterMismatch = false;
+  try {
+    const srcParsed = snapshot.sourceUrl ? new URL(snapshot.sourceUrl) : null;
+    const finParsed = snapshot.finalUrl ? new URL(snapshot.finalUrl) : null;
+    const expectedK = (
+      options?.expectedQuery ??
+      srcParsed?.searchParams.get("k") ??
+      ""
+    )
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+    if (expectedK && finParsed) {
+      const landedK = (finParsed.searchParams.get("k") ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+      if (!landedK || landedK !== expectedK) {
+        queryParameterVerified = false;
+        queryParameterMismatch = true;
+        return {
+          botWallDetected: false,
+          botWallStatus: null,
+          botWallReason: `SEARCH_QUERY_K_PARAMETER_MISMATCH:expected=${expectedK},landed=${landedK || "MISSING"}`,
+          queryParameterVerified: false,
+          queryParameterMismatch: true,
+          observedDeliveryPostalCode: null,
+          cards: [],
+          rejectedCards: [],
+        };
+      }
+    }
+  } catch {
+    // URL parsing handled by validateAmazonUsSearchUrl at transport boundary
   }
 
   const observedDeliveryPostalCode =
@@ -2024,6 +2400,66 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
   const cards: ParsedAmazonSearchCard[] = [];
   const rejectedCards: Array<{ asin: string | null; title: string | null; reason: string }> = [];
   const seenAsins = new Set<string>();
+
+  const normalizeCardHref = (
+    rawHref: string | null | undefined,
+    expectedAsin: string
+  ): {
+    valid: boolean;
+    observedSearchHref: string | null;
+    rawObservedHref: string | null;
+    origin: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP";
+    rejectionReason?: string;
+  } => {
+    if (!rawHref || typeof rawHref !== "string" || !rawHref.trim()) {
+      if (options?.requireObservedHref) {
+        return {
+          valid: false,
+          observedSearchHref: null,
+          rawObservedHref: null,
+          origin: "DERIVED_NORMALIZED_DP",
+          rejectionReason: "MISSING_OBSERVED_SEARCH_CARD_HREF",
+        };
+      }
+      return {
+        valid: true,
+        observedSearchHref: null,
+        rawObservedHref: null,
+        origin: "DERIVED_NORMALIZED_DP",
+      };
+    }
+    const rawTrimmed = rawHref.trim();
+    const fullHref = rawTrimmed.startsWith("http")
+      ? rawTrimmed
+      : rawTrimmed.startsWith("/")
+      ? `https://www.amazon.com${rawTrimmed}`
+      : `https://www.amazon.com/${rawTrimmed}`;
+    const urlCheck = validateAmazonUsProductUrl(fullHref);
+    if (!urlCheck.valid || !urlCheck.extractedAsin) {
+      return {
+        valid: false,
+        observedSearchHref: null,
+        rawObservedHref: rawTrimmed,
+        origin: "OBSERVED_HREF",
+        rejectionReason: `INVALID_OBSERVED_SEARCH_CARD_HREF:${urlCheck.rejectionCode || "INVALID"}`,
+      };
+    }
+    if (urlCheck.extractedAsin !== expectedAsin) {
+      return {
+        valid: false,
+        observedSearchHref: null,
+        rawObservedHref: rawTrimmed,
+        origin: "OBSERVED_HREF",
+        rejectionReason: `SEARCH_CARD_HREF_ASIN_MISMATCH:href=${urlCheck.extractedAsin}!=card=${expectedAsin}`,
+      };
+    }
+    return {
+      valid: true,
+      observedSearchHref: fullHref,
+      rawObservedHref: rawTrimmed,
+      origin: "OBSERVED_HREF",
+    };
+  };
 
   const pushCandidateCard = (rawCard: {
     asin?: string | null;
@@ -2072,6 +2508,27 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
     if (seenAsins.has(rawAsin)) {
       return;
     }
+
+    const hrefCheck = normalizeCardHref(rawCard.href, rawAsin);
+    if (!hrefCheck.valid) {
+      rejectedCards.push({
+        asin: rawAsin,
+        title: cleanTitle,
+        reason: hrefCheck.rejectionReason || "INVALID_OBSERVED_SEARCH_CARD_HREF",
+      });
+      return;
+    }
+
+    if (cards.length >= maxCards) {
+      seenAsins.add(rawAsin);
+      rejectedCards.push({
+        asin: rawAsin,
+        title: cleanTitle,
+        reason: `SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_${maxCards}`,
+      });
+      return;
+    }
+
     seenAsins.add(rawAsin);
 
     let parsedPrice: number | null = null;
@@ -2102,9 +2559,14 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
     }
 
     const cleanBrand = sanitizeUntrustedAmazonText(rawCard.brand).sanitized;
+    const rankPos = cards.length + 1;
     cards.push({
       asin: rawAsin,
       canonicalAmazonUrl: `https://www.amazon.com/dp/${rawAsin}`,
+      observedSearchHref: hrefCheck.observedSearchHref,
+      rawObservedHref: hrefCheck.rawObservedHref,
+      observedSearchHrefOrigin: hrefCheck.origin,
+      searchRankPosition: rankPos,
       productTitle: cleanTitle,
       brand: cleanBrand,
       price: parsedPrice,
@@ -2150,12 +2612,12 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
 
   // 3. Accessibility snapshot lines containing `/dp/ASIN` links and headings
   if (snapshot.accessibilityTreeText) {
-    const dpRegex = /(?:heading|link)\s+["']([^"'\n]{6,240})["'][\s\S]{0,600}?\/dp\/([A-Z0-9]{10})\b/gi;
+    const dpRegex = /(?:heading|link)\s+["']([^"'\n]{6,240})["'][\s\S]{0,600}?((?:\/[A-Za-z0-9\-_%]+)?\/dp\/([A-Z0-9]{10})(?:\/[^\s"'\])]*)?)/gi;
     let m: RegExpExecArray | null;
     while ((m = dpRegex.exec(snapshot.accessibilityTreeText)) !== null) {
       let titleText = m[1] || "";
-      const asinCandidate = m[2] || "";
-      let brandCandidate: string | null = null;
+      const matchedHref = m[2] || "";
+      const asinCandidate = m[3] || "";
       const windowStart = Math.max(0, m.index - 160);
       const windowEnd = Math.min(
         snapshot.accessibilityTreeText.length,
@@ -2170,25 +2632,26 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
         /heading\s+["']([^"'\n]{12,260})["']\s+\[level=2\]/i
       );
       if (subHeadingMatch?.[1] && !titleText.includes(subHeadingMatch[1])) {
-        brandCandidate = titleText.length <= 40 ? titleText : null;
         titleText = `${titleText} ${subHeadingMatch[1]}`.trim();
       }
       const priceMatch = windowText.match(/\$[0-9]+(?:\.[0-9]{2})?/)?.[0] || null;
       pushCandidateCard({
         asin: asinCandidate,
         title: titleText,
-        brand: brandCandidate,
+        brand: null,
+        href: matchedHref,
         price: priceMatch,
         rawSnippet: windowText,
       });
     }
 
     // Fallback: direct `/dp/ASIN` URLs in accessibility tree with nearby link/heading title or URL slug
-    const urlDpRegex = /\/([A-Za-z0-9-]{6,160})\/dp\/([A-Z0-9]{10})\b/g;
+    const urlDpRegex = /(\/([A-Za-z0-9-]{6,160})\/dp\/([A-Z0-9]{10})(?:\/[^\s"'\])]*)?)/g;
     let um: RegExpExecArray | null;
     while ((um = urlDpRegex.exec(snapshot.accessibilityTreeText)) !== null) {
-      const slugText = (um[1] || "").replace(/-/g, " ").trim();
-      const asinCandidate = um[2] || "";
+      const matchedHref = um[1] || "";
+      const slugText = (um[2] || "").replace(/-/g, " ").trim();
+      const asinCandidate = um[3] || "";
       const windowStart = Math.max(0, um.index - 320);
       const windowEnd = Math.min(
         snapshot.accessibilityTreeText.length,
@@ -2208,7 +2671,8 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
       pushCandidateCard({
         asin: asinCandidate,
         title: nearbyTitle,
-        brand: headingsInWindow.length >= 2 && headingsInWindow[0].length <= 40 ? headingsInWindow[0] : null,
+        brand: null,
+        href: matchedHref,
         price: priceMatch,
         rawSnippet: windowText,
       });
@@ -2219,6 +2683,8 @@ export function parseAmazonSearchSnapshotCards(snapshot: {
     botWallDetected: false,
     botWallStatus: null,
     botWallReason: null,
+    queryParameterVerified,
+    queryParameterMismatch: false,
     observedDeliveryPostalCode,
     cards,
     rejectedCards,

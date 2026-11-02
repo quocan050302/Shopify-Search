@@ -1223,6 +1223,15 @@ export function normalizeSourceObservation(
     raw.evidenceReference === "Ad:raw" ||
     /^ad:raw(?:$|[_:-])/i.test(String(explicitId || "")) ||
     /^ad:raw$/i.test(String(title || ""));
+  const isInternalDerivedIdPattern = Boolean(
+    explicitId && /^(?:derived_obs_|query_hash_|internal_derived_)/i.test(explicitId)
+  );
+  const isSyntheticPlaceholderIdPattern = Boolean(
+    explicitId &&
+      /^(?:ad_[0-9]{1,3}|meta_ad_test_|demo_|synthetic_|fake_)(?:$|[_:-])/i.test(
+        explicitId
+      )
+  );
   const hasExplicitSourceIdOrigin =
     raw.sourceIdOrigin === "INTERNAL_DERIVED" ||
     raw.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
@@ -1231,7 +1240,12 @@ export function normalizeSourceObservation(
   let sourceRecordId: string;
   let sourceIdOrigin: SourceIdOrigin;
 
-  if (!explicitId || raw.sourceIdOrigin === "INTERNAL_DERIVED" || isPlaceholderEvidenceRef) {
+  if (
+    !explicitId ||
+    raw.sourceIdOrigin === "INTERNAL_DERIVED" ||
+    isPlaceholderEvidenceRef ||
+    isInternalDerivedIdPattern
+  ) {
     const fingerprintPayload = [
       String(source),
       String(landingPageUrl || ""),
@@ -1247,7 +1261,10 @@ export function normalizeSourceObservation(
       .slice(0, 16);
     sourceRecordId = explicitId || `derived_obs_${hex}`;
     sourceIdOrigin = "INTERNAL_DERIVED";
-  } else if (raw.sourceIdOrigin === "SYNTHETIC_REJECTED") {
+  } else if (
+    raw.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+    isSyntheticPlaceholderIdPattern
+  ) {
     sourceRecordId = explicitId;
     sourceIdOrigin = "SYNTHETIC_REJECTED";
   } else {
@@ -2933,8 +2950,8 @@ export async function enrichProductCandidatesWithEvidence(
             candidate.canonicalProductUrl || "",
             candidate.originalAdHeadline || "",
             ...candidate.sourceObservations
-              .map((o) => o.title || o.description || "")
-              .slice(0, 3),
+              .slice(0, 3)
+              .flatMap((o) => [o.title || "", o.description || o.observedContent || ""]),
           ]
             .filter(Boolean)
             .join(" ");

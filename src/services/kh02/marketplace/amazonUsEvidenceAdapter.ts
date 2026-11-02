@@ -21,6 +21,7 @@ import {
   resolveAmazonUsPolicyContext,
 } from "./marketplaceEvidenceTypes";
 import {
+  ParsedAmazonSearchCard,
   RawAmazonSnapshotInput,
   parseAmazonProductEvidence,
   parseAmazonSearchSnapshotCards,
@@ -313,6 +314,7 @@ export interface FetchAuthorizedAmazonEvidenceInput {
   ownsMcpSession?: boolean;
   creatorsApiClient?: CreatorsApiClient | null;
   directSnapshotForImportOrFixture?: RawAmazonSnapshotInput | null;
+  selectedSearchCard?: ParsedAmazonSearchCard | null;
   observedAt?: string;
   sourceTimestamp?: string | null;
   signal?: AbortSignal;
@@ -790,8 +792,13 @@ export async function fetchAuthorizedAmazonProductEvidence(
         throw new Error("MCP_NOT_CONFIGURED: No active Playwright MCP session available.");
       }
 
+      const navTargetUrl =
+        input.selectedSearchCard?.observedSearchHref &&
+        validateAmazonUsProductUrl(input.selectedSearchCard.observedSearchHref).valid
+          ? input.selectedSearchCard.observedSearchHref
+          : urlValidation.canonicalAmazonUrl || input.sourceUrl;
       const navOut = await input.mcpSession.navigateAndCaptureProductSnapshot(
-        urlValidation.canonicalAmazonUrl || input.sourceUrl,
+        navTargetUrl,
         { signal: opSignal }
       );
       if (
@@ -947,7 +954,9 @@ export async function fetchAuthorizedAmazonProductEvidence(
     isCached: false,
   });
 
-  const verified = verifyAmazonProductIdentity(input.candidate, parsed);
+  const verified = verifyAmazonProductIdentity(input.candidate, parsed, {
+    searchCard: input.selectedSearchCard ?? null,
+  });
   const providerSourceOrigin: AmazonProductEvidence["providerSourceOrigin"] =
     input.mcpSession?.serverOrigin === "LOCAL_MCP_TEST_DOUBLE"
       ? "LOCAL_MCP_TEST_DOUBLE"
@@ -1403,6 +1412,18 @@ export async function runAmazonUsPilotEnrichment(
   let pdpNotExecutedCount = 0;
   const candidatesWithoutUrl: RunAmazonUsPilotEnrichmentParams["candidates"] = [];
   let discoverySummary: AmazonMarketplaceTelemetry["discoverySummary"] | undefined;
+  const searchCardsLedger: Array<{
+    candidateId: string;
+    searchUrl: string;
+    normalizedKeywords: string;
+    queryParameterVerified: boolean;
+    observedDeliveryPostalCode: string | null;
+    selectedAsin: string | null;
+    selectedObservedHref: string | null;
+    firstCardDisposition: string | null;
+    cards: any[];
+    rejectedCards: any[];
+  }> = [];
 
   try {
     for (const candidate of params.candidates) {
@@ -1858,12 +1879,12 @@ export async function runAmazonUsPilotEnrichment(
               continue;
             }
 
-            // Evaluate candidate identity match across non-sponsored search cards
+            // Evaluate candidate identity match across non-sponsored search cards (never copy candidate.brand onto Search cards)
             const cardEvidences: AmazonProductEvidence[] = searchCardsResult.cards.map(
-              (card) =>
-                parseAmazonProductEvidence(
+              (card) => {
+                const parsedCard = parseAmazonProductEvidence(
                   {
-                    sourceUrl: card.canonicalAmazonUrl,
+                    sourceUrl: card.observedSearchHref || card.canonicalAmazonUrl,
                     finalUrl: card.canonicalAmazonUrl,
                     canonicalUrl: card.canonicalAmazonUrl,
                     httpStatus: searchSnap.httpStatus ?? null,
@@ -1871,7 +1892,7 @@ export async function runAmazonUsPilotEnrichment(
                     structuredData: {
                       asin: card.asin,
                       productTitle: card.productTitle,
-                      brand: card.brand || candidate.brand || null,
+                      brand: card.brand || null,
                       price: card.price,
                       currency: card.currency,
                       deliveryPostalCode: card.observedDeliveryPostalCode,
@@ -1888,16 +1909,65 @@ export async function runAmazonUsPilotEnrichment(
                     requestMode: "AUTHORIZED_SEARCH",
                     accessPolicyStatus: policy.accessPolicyStatus,
                   }
-                )
+                );
+                return {
+                  ...parsedCard,
+                  observedSearchHref: card.observedSearchHref ?? null,
+                  observedSearchHrefOrigin: card.observedSearchHrefOrigin,
+                  searchRankPosition: card.searchRankPosition,
+                  searchIdentityVerdict: "SEARCH_ONLY_NOT_VERIFIED",
+                  combinedIdentityVerdict: "DISCOVERED_NOT_VERIFIED",
+                };
+              }
             );
 
             const matchDecisions = selectAmazonCandidateMatches(candidate, cardEvidences);
-            const selectedBest = matchDecisions.find(
-              (d) =>
-                d.selectedAsBest &&
-                (d.identityMatch === "EXACT_PRODUCT" ||
-                  d.identityMatch === "PROBABLE_PRODUCT")
-            );
+            // Select best exact/probable card or top non-contradictory card for PDP inspection
+            const selectedBest =
+              matchDecisions.find(
+                (d) =>
+                  d.selectedAsBest &&
+                  (d.identityMatch === "EXACT_PRODUCT" ||
+                    d.identityMatch === "PROBABLE_PRODUCT")
+              ) ||
+              matchDecisions.find(
+                (d) =>
+                  !d.rejectionReasons.some((r) =>
+                    /BRAND_CONFLICT|MODEL_CONFLICT|ACCESSORY_VS_MAIN_PRODUCT_MISMATCH/i.test(r)
+                  )
+              ) ||
+              null;
+
+            const selectedCardRecordForAudit =
+              (selectedBest &&
+                searchCardsResult.cards.find((c) => c.asin === selectedBest.asin)) ||
+              null;
+            searchCardsLedger.push({
+              candidateId: candidate.candidateId,
+              searchUrl,
+              normalizedKeywords,
+              queryParameterVerified: Boolean(searchCardsResult.queryParameterVerified),
+              observedDeliveryPostalCode: searchCardsResult.observedDeliveryPostalCode,
+              selectedAsin: selectedBest?.asin || null,
+              selectedObservedHref: selectedCardRecordForAudit?.observedSearchHref || null,
+              firstCardDisposition:
+                selectedBest?.firstCardDisposition ||
+                matchDecisions[0]?.firstCardDisposition ||
+                null,
+              cards: searchCardsResult.cards.map((c) => ({
+                ...c,
+                selectedForPdp: c.asin === selectedBest?.asin,
+                searchIdentityVerdict:
+                  c.asin === selectedBest?.asin
+                    ? "SELECTED_FOR_PDP_INSPECTION"
+                    : "SEARCH_ONLY_NOT_VERIFIED",
+                combinedIdentityVerdict:
+                  c.asin === selectedBest?.asin
+                    ? "SELECTED_FOR_PDP_INSPECTION"
+                    : "DISCOVERED_NOT_VERIFIED",
+              })),
+              rejectedCards: searchCardsResult.rejectedCards,
+            });
 
             const snapAfterSearch = budget.getSnapshot();
             if (
@@ -1907,9 +1977,14 @@ export async function runAmazonUsPilotEnrichment(
               pdpNotExecutedCount++;
               const fallbackDecision = matchDecisions[0];
               if (fallbackDecision) {
-                marketplaceEvidence.push(fallbackDecision.updatedEvidence);
-                (candidate as any).amazonEvidence = fallbackDecision.updatedEvidence;
-                (candidate as any).amazonEvidenceStatus = fallbackDecision.updatedEvidence.status;
+                const unverifiedCardEv: AmazonProductEvidence = {
+                  ...fallbackDecision.updatedEvidence,
+                  searchIdentityVerdict: "SEARCH_ONLY_NOT_VERIFIED",
+                  combinedIdentityVerdict: "DISCOVERED_NOT_VERIFIED",
+                };
+                marketplaceEvidence.push(unverifiedCardEv);
+                (candidate as any).amazonEvidence = unverifiedCardEv;
+                (candidate as any).amazonEvidenceStatus = unverifiedCardEv.status;
                 if (fallbackDecision.rejectionReasons.length > 0) {
                   rejectionLedger.push({
                     candidateId: candidate.candidateId,
@@ -1925,22 +2000,32 @@ export async function runAmazonUsPilotEnrichment(
               continue;
             }
 
-            // Navigate to canonical PDP https://www.amazon.com/dp/{ASIN} within shared 4-op budget
+            // Navigate to the selected Search card's exact observedSearchHref (or canonical /dp/{ASIN}) within shared 4-op budget
             pdpOperationsAttempted++;
-            const pdpUrl = `https://www.amazon.com/dp/${selectedBest.asin}`;
+            const selectedCardRecord =
+              searchCardsResult.cards.find((c) => c.asin === selectedBest.asin) || null;
+            const pdpUrl =
+              selectedCardRecord?.observedSearchHref &&
+              validateAmazonUsProductUrl(selectedCardRecord.observedSearchHref).valid
+                ? selectedCardRecord.observedSearchHref
+                : `https://www.amazon.com/dp/${selectedBest.asin}`;
+            const canonicalDpUrl = `https://www.amazon.com/dp/${selectedBest.asin}`;
             const pdpRes = await fetchAuthorizedAmazonProductEvidence({
               workspaceId: params.workspaceId,
               researchRunId: params.researchRunId,
               candidateId: candidate.candidateId,
               sourceUrl: pdpUrl,
               candidate,
+              selectedSearchCard: selectedCardRecord,
               requestMode: isExplicitTestFixture ? "TEST_FIXTURE" : "URL_VERIFICATION",
               policyContext: policy,
               budget,
               mcpSession: ownedSession,
               ownsMcpSession: false,
               directSnapshotForImportOrFixture:
-                params.fixtureSnapshotsByUrl?.[pdpUrl] || null,
+                params.fixtureSnapshotsByUrl?.[pdpUrl] ||
+                params.fixtureSnapshotsByUrl?.[canonicalDpUrl] ||
+                null,
               signal: params.signal,
             });
 
@@ -2374,7 +2459,9 @@ export async function runAmazonUsPilotEnrichment(
       mcpSessionLifecycle,
       localMcpPilotDiagnostics,
       ...(discoverySummary ? { discoverySummary } : {}),
-    },
+      ...(searchCardsLedger.length > 0 ? { searchCardsLedger } : {}),
+      ...(connectionHandshakeProof ? { handshakeProof: connectionHandshakeProof } : {}),
+    } as any,
   };
 }
 
@@ -2501,10 +2588,9 @@ export function selectDynamicAmazonVerificationTargets(
     const directUrl = urlMap[cid] || c.amazonProductUrl || null;
 
     if (
-      !directUrl &&
-      (c.relevanceStatus === "IRRELEVANT" ||
-        c.productRealityStatus === "REJECTED" ||
-        c.productRealityStatus === "NON_PHYSICAL")
+      c.relevanceStatus === "IRRELEVANT" ||
+      c.productRealityStatus === "REJECTED" ||
+      c.productRealityStatus === "NON_PHYSICAL"
     ) {
       decisions.push({
         candidateId: cid,
@@ -2523,8 +2609,8 @@ export function selectDynamicAmazonVerificationTargets(
     }
 
     if (
-      !directUrl &&
-      (c.identityStatus === "UNRESOLVED" || c.productRealityStatus === "UNRESOLVED")
+      c.identityStatus === "UNRESOLVED" ||
+      c.productRealityStatus === "UNRESOLVED"
     ) {
       decisions.push({
         candidateId: cid,
@@ -2544,7 +2630,6 @@ export function selectDynamicAmazonVerificationTargets(
 
     const obsList: any[] = Array.isArray(c.sourceObservations) ? c.sourceObservations : [];
     const isSyntheticOnly =
-      !directUrl &&
       obsList.length > 0 &&
       obsList.every((o: any) => {
         const p = typeof o?.provenance === "string" ? o.provenance.toUpperCase() : "";
@@ -2572,12 +2657,11 @@ export function selectDynamicAmazonVerificationTargets(
     }
 
     if (
-      !directUrl &&
-      ((productKey && selectedProductKeys.has(productKey)) ||
-        (familyKey &&
-          familyKey !== "unresolved_family" &&
-          familyKey !== "UNRESOLVED_FAMILY" &&
-          selectedFamilyKeys.has(familyKey)))
+      (productKey && selectedProductKeys.has(productKey)) ||
+      (familyKey &&
+        familyKey !== "unresolved_family" &&
+        familyKey !== "UNRESOLVED_FAMILY" &&
+        selectedFamilyKeys.has(familyKey))
     ) {
       decisions.push({
         candidateId: cid,

@@ -49,6 +49,30 @@ export type IdentityMatch =
   | "NO_MATCH"
   | "AMBIGUOUS";
 
+export type AmazonSearchIdentityVerdict =
+  | "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+  | "MISMATCH_ASIN"
+  | "MISMATCH_TITLE"
+  | "INSUFFICIENT_EVIDENCE"
+  | "DIRECT_PDP_ONLY"
+  | "SEARCH_ONLY_NOT_VERIFIED";
+
+export type AmazonMetaCandidateEquivalenceVerdict =
+  | "EXACT_PRODUCT"
+  | "PROBABLE_SAME_FAMILY"
+  | "CATEGORY_ONLY"
+  | "CONTRADICTORY_MODEL"
+  | "CONTRADICTORY_BRAND"
+  | "MISSING_IDENTIFIERS"
+  | "UNVERIFIED";
+
+export type AmazonCombinedIdentityVerdict =
+  | "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED"
+  | "AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED"
+  | "AMAZON_DIRECT_PDP_OBSERVED_META_MATCH_UNVERIFIED"
+  | "DISCOVERED_NOT_VERIFIED"
+  | "REJECTED_IDENTITY";
+
 export type MarketplaceObservationClass =
   | "AUTHORIZED_LIVE"
   | "IMPORTED_BY_USER"
@@ -127,6 +151,11 @@ export interface AmazonProductEvidence {
   sourceUrl: string | null;
   finalUrl: string | null;
   canonicalAmazonUrl: string | null;
+  observedCanonicalUrl?: string | null;
+  canonicalUrlOrigin?: "OBSERVED_CANONICAL" | "DERIVED_NORMALIZED_DP" | "NONE";
+  observedSearchHref?: string | null;
+  observedSearchHrefOrigin?: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP" | "NONE";
+  searchRankPosition?: number | null;
   asin: string | null;
   parentAsin: string | null;
   variationAsin: string | null;
@@ -154,6 +183,17 @@ export interface AmazonProductEvidence {
   observationClass: MarketplaceObservationClass;
   verificationScope: MarketplaceVerificationScope | null;
   identityMatch: IdentityMatch;
+  searchIdentityVerdict?: AmazonSearchIdentityVerdict;
+  metaCandidateEquivalenceVerdict?: AmazonMetaCandidateEquivalenceVerdict;
+  combinedIdentityVerdict?: AmazonCombinedIdentityVerdict;
+  searchTitleTokenCoverage?: number | null;
+  searchBrandCrossConfirmed?: boolean;
+  searchModelCrossConfirmed?: boolean;
+  commercialUsStatus?: "US_COMMERCIAL_VERIFIED" | "PARTIAL_US_COMMERCIAL" | "UNVERIFIED";
+  sellerStatus?: "OBSERVED" | "NOT_OBSERVED";
+  availabilityStatus?: "OBSERVED" | "NOT_OBSERVED";
+  provenanceStatus?: "PROVENANCE_VERIFIED" | "UNVERIFIED";
+  sessionLifecycleStatus?: "CLOSED_CLEANLY" | "UNVERIFIED";
   isCached: boolean;
   matchedCanonicalKey: string | null;
   productFamilyKey?: string | null;
@@ -360,14 +400,28 @@ export interface ProductAmazonEvidenceSummary {
   parentAsin: string | null;
   variationAsin: string | null;
   canonicalAmazonUrl: string | null;
+  observedCanonicalUrl?: string | null;
+  canonicalUrlOrigin?: "OBSERVED_CANONICAL" | "DERIVED_NORMALIZED_DP" | "NONE";
+  observedSearchHref?: string | null;
+  observedSearchHrefOrigin?: "OBSERVED_HREF" | "DERIVED_NORMALIZED_DP" | "NONE";
+  searchRankPosition?: number | null;
   productTitle: string | null;
   brand: string | null;
+  modelNumber?: string | null;
+  seller?: string | null;
   price: number | null;
   currency: string | null;
   availability: string | null;
   observedDeliveryPostalCode?: string | null;
   identityMatch: IdentityMatch;
   identityMatchLabel: string;
+  searchIdentityVerdict?: AmazonSearchIdentityVerdict;
+  metaCandidateEquivalenceVerdict?: AmazonMetaCandidateEquivalenceVerdict;
+  combinedIdentityVerdict?: AmazonCombinedIdentityVerdict;
+  commercialUsStatus?: "US_COMMERCIAL_VERIFIED" | "PARTIAL_US_COMMERCIAL" | "UNVERIFIED";
+  sellerStatus?: "OBSERVED" | "NOT_OBSERVED";
+  availabilityStatus?: "OBSERVED" | "NOT_OBSERVED";
+  provenanceStatus?: "PROVENANCE_VERIFIED" | "UNVERIFIED";
   observationClass: MarketplaceObservationClass;
   verificationScope: MarketplaceVerificationScope | null;
   providerSourceOrigin?: AmazonProviderSourceOrigin;
@@ -683,14 +737,28 @@ export function summarizeAmazonEvidenceForProduct(
       parentAsin: bestRow.parentAsin,
       variationAsin: bestRow.variationAsin,
       canonicalAmazonUrl: bestRow.canonicalAmazonUrl,
+      observedCanonicalUrl: bestRow.observedCanonicalUrl ?? bestRow.canonicalAmazonUrl,
+      canonicalUrlOrigin: bestRow.canonicalUrlOrigin ?? (bestRow.canonicalAmazonUrl ? "DERIVED_NORMALIZED_DP" : "NONE"),
+      observedSearchHref: bestRow.observedSearchHref ?? null,
+      observedSearchHrefOrigin: bestRow.observedSearchHrefOrigin ?? (bestRow.observedSearchHref ? "OBSERVED_HREF" : "NONE"),
+      searchRankPosition: bestRow.searchRankPosition ?? null,
       productTitle: bestRow.productTitle,
       brand: bestRow.brand,
+      modelNumber: bestRow.modelNumber ?? null,
+      seller: bestRow.seller ?? bestRow.merchant ?? null,
       price: bestRow.price,
       currency: bestRow.currency,
       availability: bestRow.availability,
       observedDeliveryPostalCode: bestRow.observedDeliveryPostalCode ?? null,
       identityMatch: bestRow.identityMatch,
       identityMatchLabel: formatAmazonIdentityMatchLabel(bestRow.identityMatch),
+      searchIdentityVerdict: bestRow.searchIdentityVerdict,
+      metaCandidateEquivalenceVerdict: bestRow.metaCandidateEquivalenceVerdict,
+      combinedIdentityVerdict: bestRow.combinedIdentityVerdict,
+      commercialUsStatus: bestRow.commercialUsStatus,
+      sellerStatus: bestRow.sellerStatus,
+      availabilityStatus: bestRow.availabilityStatus,
+      provenanceStatus: bestRow.provenanceStatus,
       observationClass: bestRow.observationClass,
       verificationScope: bestRow.verificationScope,
       providerSourceOrigin:
