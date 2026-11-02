@@ -1,0 +1,75 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:27:41.011Z",
+  "browserEngine": "Playwright Headless Chromium",
+  "overallParityPassed": true,
+  "crossNicheDomOverlapCount": 0,
+  "provisionalRenderedAsEvergreenWinnersCount": 0,
+  "walmartLiveHttpRequestsDuringBothNiches": 0,
+  "nicheA": {
+    "topic": "Pet Gadgets",
+    "workspaceId": "ws_v12_4_3_6_niche_a_pet",
+    "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+    "parityPassed": true,
+    "domCardsBeforeReloadCount": 3,
+    "domCardsAfterReloadCount": 3,
+    "domCandidateIds": [
+      "cand_2112683702",
+      "cand_598170608",
+      "cand_1233695536"
+    ],
+    "cardsAfterReload": [
+      {
+        "candidateId": "cand_2112683702",
+        "opportunityScore": "55",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#1\nResearch Shortlist · Historical Evidence\nChomChom Roller Pet Hair Remover and Reusable Lint Roller\nchomchomroller.com\n·\nPet Hair & Fur Remover Roller/Scraper\nMerchant Page Verified\nVerified Physica"
+      },
+      {
+        "candidateId": "cand_598170608",
+        "opportunityScore": "42",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#2\nResearch Shortlist · Historical Evidence\nFurbo Dog Camera Treat Tossing Full HD Wifi Pet Camera\nfurbo.com\n·\nFurbo Camera\nMerchant Page Verified\nVerified Physical Product\nDog Owners\nResearch Score\n4"
+      },
+      {
+        "candidateId": "cand_1233695536",
+        "opportunityScore": "42",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#3\nResearch Shortlist · Historical Evidence\nPETLIBRO Dockstream Cordless Cat Water Fountain\npetlibro.com\n·\nAutomatic Pet Water Fountain\nMerchant Page Verified\nVerified Physical Product\nDog & Cat House"
+      }
+    ]
+  },
+  "nicheB": {
+    "topic": "Home Organization",
+    "workspaceId": "ws_v12_4_3_6_niche_b_home",
+    "researchRunId": "kh02_v12_4_3_6_niche_b_1793600856973",
+    "parityPassed": true,
+    "domCardsBeforeReloadCount": 3,
+    "domCardsAfterReloadCount": 3,
+    "domCandidateIds": [
+      "cand_1598428182",
+      "cand_73868310",
+      "cand_1593234636"
+    ],
+    "cardsAfterReload": [
+      {
+        "candidateId": "cand_1598428182",
+        "opportunityScore": "42",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#1\nResearch Shortlist · Historical Evidence\nStackable Clear Acrylic Shoe Storage Organizer Boxes\nclosetcube.com\n·\nStorage Boxes\nMerchant Page Verified\nVerified Physical Product\nTarget Niche Fit\nResear"
+      },
+      {
+        "candidateId": "cand_73868310",
+        "opportunityScore": "42",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#2\nResearch Shortlist · Historical Evidence\nExpandable Bamboo Kitchen Drawer Organizer Tray\ntidyhomeco.com\n·\nDrawer Organizer\nMerchant Page Verified\nVerified Physical Product\nTarget Niche Fit\nResearch"
+      },
+      {
+        "candidateId": "cand_1593234636",
+        "opportunityScore": "42",
+        "evergreenStatus": "PROVISIONAL",
+        "textSnippet": "#3\nResearch Shortlist · Historical Evidence\n2-Tier Sliding Under Sink Organizer Storage Rack\nunder5sink.com\n·\nOrganizer Rack\nMerchant Page Verified\nVerified Physical Product\nTarget Niche Fit\nResearch "
+      }
+    ]
+  }
+}

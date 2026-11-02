@@ -1,0 +1,586 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:27:42.290Z",
+  "totalMutationsExecuted": 52,
+  "sourceMutationsExecuted": 4,
+  "artifactMutationsExecuted": 48,
+  "caughtMutationsCount": 52,
+  "falsePassesCount": 0,
+  "sourceTreeRestoredClean": true,
+  "gitDiffBeforeAfterByteCount": 0,
+  "mutations": [
+    {
+      "mutationId": "V12_4_3_6_SRC_MUT_01",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Reintroduce Math.random() synthetic ad ID generation in productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_IN_DISCOVERY"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_IN_DISCOVERY"
+    },
+    {
+      "mutationId": "V12_4_3_6_SRC_MUT_02",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Reintroduce unsafe 'return raw as SourceObservation' early return in productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+      ],
+      "detail": "Caught by SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_SRC_MUT_03",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Remove exported normalizeSourceObservation from productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+      ],
+      "detail": "Caught by SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_SRC_MUT_04",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Truncate productCandidateDiscovery.ts to empty stub",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_IN_DISCOVERY",
+        "SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_IN_DISCOVERY, SOURCE_HAS_NORMALIZE_SOURCE_OBSERVATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_01",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_BRANCH_REMOTE_AND_CODE_SHA_PRECHECK.json",
+      "description": "Mutate branch to master",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_BRANCH_EXACT"
+      ],
+      "detail": "Caught by PRECHECK_BRANCH_EXACT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_02",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_BRANCH_REMOTE_AND_CODE_SHA_PRECHECK.json",
+      "description": "Mutate codeSha to wrong SHA",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_SHA_40HEX"
+      ],
+      "detail": "Caught by PRECHECK_SHA_40HEX"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_03",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_BRANCH_REMOTE_AND_CODE_SHA_PRECHECK.json",
+      "description": "Set ancestryVerified = false",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_ANCESTRY_VERIFIED"
+      ],
+      "detail": "Caught by PRECHECK_ANCESTRY_VERIFIED"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_04",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_SOURCE_OBSERVATION_TRUST_BOUNDARY_AUDIT.json",
+      "description": "Mutate missingProvenanceDefaultsTo = LIVE_PROVIDER",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+      ],
+      "detail": "Caught by ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_05",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_SOURCE_OBSERVATION_TRUST_BOUNDARY_AUDIT.json",
+      "description": "Mutate unobservedDeliveryMarketDefaultsTo = US",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+      ],
+      "detail": "Caught by ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_06",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_SOURCE_OBSERVATION_TRUST_BOUNDARY_AUDIT.json",
+      "description": "Mutate mathRandomCountInDiscoverySource = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+      ],
+      "detail": "Caught by ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_07",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_SOURCE_OBSERVATION_TRUST_BOUNDARY_AUDIT.json",
+      "description": "Set adRawPlaceholderRejectedFromLive = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+      ],
+      "detail": "Caught by ARTIFACT01_TRUST_BOUNDARY_AUDIT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_08",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "02_QUERY_PLANNER_AND_TWO_NICHE_INPUTS.json",
+      "description": "Set identicalQueryPlans = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT02_TWO_NICHE_QUERY_PLANS_DISTINCT"
+      ],
+      "detail": "Caught by ARTIFACT02_TWO_NICHE_QUERY_PLANS_DISTINCT"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_09",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_CANDIDATE_DISCOVERY_AND_RELEVANCE_FUNNEL.json",
+      "description": "Set crossNicheShortlistOverlapCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_CANDIDATE_DISCOVERY_FUNNEL"
+      ],
+      "detail": "Caught by ARTIFACT03_CANDIDATE_DISCOVERY_FUNNEL"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_10",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_CANDIDATE_DISCOVERY_AND_RELEVANCE_FUNNEL.json",
+      "description": "Set nonProductPromotedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_CANDIDATE_DISCOVERY_FUNNEL"
+      ],
+      "detail": "Caught by ARTIFACT03_CANDIDATE_DISCOVERY_FUNNEL"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_11",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_IDENTITY_FAMILY_DEDUPLICATION_PROOF.json",
+      "description": "Set reversedOrderProducesIdenticalShortlist = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_IDENTITY_FAMILY_DEDUPLICATION"
+      ],
+      "detail": "Caught by ARTIFACT04_IDENTITY_FAMILY_DEDUPLICATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_12",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_IDENTITY_FAMILY_DEDUPLICATION_PROOF.json",
+      "description": "Set nicheADistinctFamiliesInTop3 = 1 (homogeneous family violation)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_IDENTITY_FAMILY_DEDUPLICATION"
+      ],
+      "detail": "Caught by ARTIFACT04_IDENTITY_FAMILY_DEDUPLICATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_13",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_RANKING_AND_TOP3_SELECTION_DECISION_LEDGER.json",
+      "description": "Set shortfallPaddingDetected = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_RANKING_AND_TOP3_DECISION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT05_RANKING_AND_TOP3_DECISION_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_14",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_RANKING_AND_TOP3_SELECTION_DECISION_LEDGER.json",
+      "description": "Set provisionalPromotedToEvergreenWinnersCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_RANKING_AND_TOP3_DECISION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT05_RANKING_AND_TOP3_DECISION_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_15",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_DYNAMIC_AMAZON_TARGET_SELECTION_AND_MCP_EXECUTION.json",
+      "description": "Set operationsAttempted = 5 (exceeding 4-op cap)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_DYNAMIC_AMAZON_TARGET_SELECTION"
+      ],
+      "detail": "Caught by ARTIFACT06_DYNAMIC_AMAZON_TARGET_SELECTION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_16",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_DYNAMIC_AMAZON_TARGET_SELECTION_AND_MCP_EXECUTION.json",
+      "description": "Set fabricatedLiveSuccess = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_DYNAMIC_AMAZON_TARGET_SELECTION"
+      ],
+      "detail": "Caught by ARTIFACT06_DYNAMIC_AMAZON_TARGET_SELECTION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_17",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set mcpSessionClosedCleanly = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+      ],
+      "detail": "Caught by ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_18",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set allLiveOpsMatchSessionId = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+      ],
+      "detail": "Caught by ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_19",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set ownedChildPidTerminated = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+      ],
+      "detail": "Caught by ARTIFACT07_AMAZON_MCP_SAME_SESSION_LIFECYCLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_20",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_AMAZON_DB_PERSISTENCE_AND_API_READBACK.json",
+      "description": "Set parityPassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_AMAZON_DB_API_READBACK"
+      ],
+      "detail": "Caught by ARTIFACT08_AMAZON_DB_API_READBACK"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_21",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_CHROMIUM_DOM_AND_RELOAD_PARITY.json",
+      "description": "Inject DOM reload mismatch",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_CHROMIUM_DOM_RELOAD_PARITY"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_CHROMIUM_DOM_RELOAD_PARITY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_22",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_WALMART_OPERATIONAL_PAUSE_AND_PRIOR_BLOCKER_RECEIPT.json",
+      "description": "Set currentRunLiveWalmartHttpRequests = 1 (violating operational pause)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+      ],
+      "detail": "Caught by ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_23",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_WALMART_OPERATIONAL_PAUSE_AND_PRIOR_BLOCKER_RECEIPT.json",
+      "description": "Mutate Walmart 2026-11-02 CAPTCHA receipt SHA-256",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+      ],
+      "detail": "Caught by ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_24",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_WALMART_OPERATIONAL_PAUSE_AND_PRIOR_BLOCKER_RECEIPT.json",
+      "description": "Promote 2026-10-30 historical Walmart run as current live proof",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+      ],
+      "detail": "Caught by ARTIFACT10_WALMART_OPERATIONAL_PAUSE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_25",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_TWO_NICHE_DB_API_UI_E2E_PARITY.json",
+      "description": "Set crossNicheDomOverlapCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+      ],
+      "detail": "Caught by ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_26",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_TWO_NICHE_DB_API_UI_E2E_PARITY.json",
+      "description": "Set provisionalRenderedAsEvergreenWinnersCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+      ],
+      "detail": "Caught by ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_27",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_TWO_NICHE_DB_API_UI_E2E_PARITY.json",
+      "description": "Set nicheB.parityPassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+      ],
+      "detail": "Caught by ARTIFACT11_TWO_NICHE_DB_API_UI_PARITY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_28",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_NON_INFLATION_AND_PROVENANCE_ISOLATION_PROOF.json",
+      "description": "Set scoreDeltaAbsMax = 5.0",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_NON_INFLATION_PROOF"
+      ],
+      "detail": "Caught by ARTIFACT12_NON_INFLATION_PROOF"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_29",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_NON_INFLATION_AND_PROVENANCE_ISOLATION_PROOF.json",
+      "description": "Set g16PromotedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_NON_INFLATION_PROOF"
+      ],
+      "detail": "Caught by ARTIFACT12_NON_INFLATION_PROOF"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_30",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_READ_ONLY_GET_AND_WORKSPACE_ISOLATION_PROOF.json",
+      "description": "Set crossWorkspaceDenied = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_READ_ONLY_GET_AND_WORKSPACE_ISOLATION"
+      ],
+      "detail": "Caught by ARTIFACT13_READ_ONLY_GET_AND_WORKSPACE_ISOLATION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_31",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_NEGATIVE_CONTROL_MATRIX_48_CASES.json",
+      "description": "Mark N01 failed in 48-case matrix",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_NEGATIVE_CONTROL_MATRIX_48_CASES"
+      ],
+      "detail": "Caught by ARTIFACT14_NEGATIVE_CONTROL_MATRIX_48_CASES"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_32",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_TARGETED_UNIT_AND_INTEGRATION_RESULTS.json",
+      "description": "Set failedTests = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_TARGETED_SUITES_PASSED"
+      ],
+      "detail": "Caught by ARTIFACT15_TARGETED_SUITES_PASSED"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_33",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_FULL_REPOSITORY_REGRESSION_INVENTORY.json",
+      "description": "Set excludedOrDeferredFilesCount = 2",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_FULL_REPOSITORY_REGRESSION"
+      ],
+      "detail": "Caught by ARTIFACT16_FULL_REPOSITORY_REGRESSION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_34",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_FULL_REPOSITORY_REGRESSION_INVENTORY.json",
+      "description": "Set failedTestCases = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_FULL_REPOSITORY_REGRESSION"
+      ],
+      "detail": "Caught by ARTIFACT16_FULL_REPOSITORY_REGRESSION"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_35",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_ALL_E2E_EXECUTION_RECEIPTS.json",
+      "description": "Set skippedWithoutAttemptCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT17_ALL_12_E2E_SPECS_PASSED"
+      ],
+      "detail": "Caught by ARTIFACT17_ALL_12_E2E_SPECS_PASSED"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_36",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_REAL_DEV_HISTORICAL_REPLAY_SUMMARY.json",
+      "description": "Set DEV postCutoffRowsIncludedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT18_DEV_HISTORICAL_REPLAY"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_HISTORICAL_REPLAY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_37",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_REAL_DEV_HISTORICAL_REPLAY_SUMMARY.json",
+      "description": "Fabricate DEV business verdict PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT18_DEV_HISTORICAL_REPLAY"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_HISTORICAL_REPLAY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_38",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "19_REAL_HOLDOUT_HISTORICAL_REPLAY_SUMMARY.json",
+      "description": "Fabricate HOLDOUT verifiedIdentityCount = 3",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT19_HOLDOUT_HISTORICAL_REPLAY"
+      ],
+      "detail": "Caught by ARTIFACT19_HOLDOUT_HISTORICAL_REPLAY"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_39",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "20_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "description": "Set semanticHashAcceptedAsRawProductSchemaProofCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT20_POINT_IN_TIME_NO_LOOKAHEAD"
+      ],
+      "detail": "Caught by ARTIFACT20_POINT_IN_TIME_NO_LOOKAHEAD"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_40",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "22_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+      "description": "Set peakConcurrentHeavyProcesses = 4 (exceeding cap of 2)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_41",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "22_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+      "description": "Set ownedOrphanCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_42",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "22_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+      "description": "Set minFreeDiskGiB = 10 (below 15 GiB floor)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT22_PROCESS_RAM_DISK_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_43",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Fabricate AMAZON_US_DELIVERY_PRICE_LIVE_PILOT = PASS when US ZIP/USD unobserved",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_SECTION16_VERDICT_TABLE"
+      ],
+      "detail": "Caught by ARTIFACT24_SECTION16_VERDICT_TABLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_44",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Fabricate WALMART_LIVE_OPERATIONAL_STATUS = PASS while paused/blocked",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_SECTION16_VERDICT_TABLE"
+      ],
+      "detail": "Caught by ARTIFACT24_SECTION16_VERDICT_TABLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_45",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Fabricate KH02_FULL_BUSINESS_ACCEPTANCE = PASS without G15/G16 live proof",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_SECTION16_VERDICT_TABLE"
+      ],
+      "detail": "Caught by ARTIFACT24_SECTION16_VERDICT_TABLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_46",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Fabricate G15_LONGITUDINAL_DEMAND_60D = PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_SECTION16_VERDICT_TABLE"
+      ],
+      "detail": "Caught by ARTIFACT24_SECTION16_VERDICT_TABLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_47",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Fabricate G16_INDEPENDENT_MERCHANT_PROOF = PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_SECTION16_VERDICT_TABLE"
+      ],
+      "detail": "Caught by ARTIFACT24_SECTION16_VERDICT_TABLE"
+    },
+    {
+      "mutationId": "V12_4_3_6_ART_MUT_48",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_RELEASE_VERDICT.json",
+      "description": "Mutate codeSha on 24_FINAL_RELEASE_VERDICT.json",
+      "caught": true,
+      "failedCheckIds": [
+        "SHA_PARITY_24"
+      ],
+      "detail": "Caught by SHA_PARITY_24"
+    }
+  ]
+}

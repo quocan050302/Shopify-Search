@@ -1,0 +1,32 @@
+=== KH-02 V12.4.3.6 GIT DIFF & COMMIT PARITY ===
+Evaluated At: 2026-11-02T06:27:42.459Z
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Tested CODE_SHA: 0597c5717d13b5749e039bd6777aea12e910d08b
+Tested Tree SHA: 8bb850abe46cd1ef2efe45092e1c00f49e513574
+Prior Baseline SHA: b656a71ed6b43e040aa0000ebeb7b071ea6e9a39
+
+--- git log -n 5 --oneline ---
+0597c57 feat(kh02): implement evidence-grounded niche-to-top3 discovery v12.4.3.6
+b656a71 test(kh02): record live persistence and fail-closed acceptance truth
+075b766 fix(kh02): fail-close acceptance and prove same-session MCP live parity
+0e9bf47 test(kh02): record truthful Amazon MCP and Walmart Jina live pilot acceptance
+c099392 fix(kh02): make Amazon MCP live pilot gates and Walmart reporting fail closed
+
+--- git diff --stat b656a71..HEAD ---
+...runRealNicheTop3DiscoveryAcceptanceV12_4_3_6.ts | 3021 ++++++++++++++++++++
+ .../validateRealNicheTop3DiscoveryV12_4_3_6.ts     | 1215 ++++++++
+ src/services/kh02/evergreenResearchOrchestrator.ts |   43 +-
+ .../kh02/identity/productCandidateDiscovery.ts     |  614 +++-
+ .../kh02/marketplace/amazonUsEvidenceAdapter.ts    |  316 ++
+ src/services/kh02/marketplace/amazonUsIdentity.ts  |    1 +
+ src/services/kh02/marketplace/walmartJinaPolicy.ts |   36 +
+ .../kh02/marketplace/walmartJinaReaderClient.ts    |    4 +
+ src/services/kh02/marketplace/walmartJinaTypes.ts  |   29 +
+ .../kh02/marketplace/walmartUsResearchAdapter.ts   |    6 +
+ .../kh02/scoring/evergreenOpportunityScoring.ts    |   33 +-
+ src/services/kh02/types.ts                         |   11 +
+ .../v12_4_3_6_RealNicheToTop3Discovery.test.ts     | 1559 ++++++++++
+ 13 files changed, 6797 insertions(+), 91 deletions(-)
+
+--- git status -s (excluding untracked acceptance dir) ---
+?? acceptance/kh02-v12.4.3.6-real-niche-top3-discovery/

@@ -1,0 +1,14 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:22:53.259Z",
+  "mathRandomCountInDiscoverySource": 0,
+  "missingProvenanceDefaultsTo": "UNKNOWN",
+  "missingSourceRecordIdOrigin": "INTERNAL_DERIVED",
+  "missingSourceRecordIdDeterministic": true,
+  "sampleDerivedSourceRecordId": "derived_obs_1d67a3e18c0a787a",
+  "unobservedDeliveryMarketDefaultsTo": null,
+  "adRawPlaceholderRejectedFromLive": true,
+  "futureTimestampRejectedFromLive": true,
+  "crossWorkspaceRejectedFromLive": true,
+  "contradictoryFlagsFailClosed": true
+}

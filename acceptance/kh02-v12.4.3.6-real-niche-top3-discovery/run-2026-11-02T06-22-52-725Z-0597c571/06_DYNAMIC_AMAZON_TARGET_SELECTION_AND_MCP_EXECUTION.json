@@ -1,0 +1,1214 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "executedAt": "2026-11-02T06:23:05.866Z",
+  "niche": "Pet Gadgets",
+  "routeId": "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+  "pinnedPackage": "@playwright/mcp@0.0.83",
+  "targetSelectionLedger": {
+    "niche": "Pet Gadgets",
+    "selectedCandidates": [
+      {
+        "candidateId": "cand_2112683702",
+        "title": "Chomchom Roller Pet Hair Remover",
+        "canonicalProductName": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+        "displayName": "Chomchom Roller Pet Hair Remover",
+        "originalAdHeadline": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+        "originalCreativeCode": "chomchom-roller-pet-hair-remover",
+        "adClaimedProductName": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+        "merchantVerifiedProductName": null,
+        "brand": "ChomChom Roller",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": null,
+        "category": "Pet Gadgets",
+        "problemStatement": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller Reusable dog and cat hair remover brush for furniture, couch",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "ad_pet_chom_1",
+        "requestedUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "resolvedFinalUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "declaredCanonicalUrl": null,
+        "normalizedProductUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "canonicalProductUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "storeDomain": "chomchomroller.com",
+        "imageReferences": [],
+        "advertiserNames": [
+          "ChomChom Roller",
+          "ChomChom Official"
+        ],
+        "supportingAdIds": [
+          "ad_pet_chom_1",
+          "ad_pet_chom_dup"
+        ],
+        "supportingExternalAdIds": [
+          "ad_pet_chom_1",
+          "ad_pet_chom_dup"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 2,
+        "liveObservationsCount": 0,
+        "cachedObservationsCount": 2,
+        "distinctAdvertisersCount": 2,
+        "earliestObservationDate": "2026-10-15T10:00:00Z",
+        "latestObservationDate": "2026-10-15T10:02:00Z",
+        "identityConfidence": "HIGH_CONFIDENCE",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "ad_pet_chom_1",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=51001",
+            "landingPageUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+            "advertiserDomain": "chomchomroller.com",
+            "advertiserOrCreator": "ChomChom Roller",
+            "title": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+            "description": "Reusable dog and cat hair remover brush for furniture, couches, and carpets.",
+            "provenance": "CACHED_SOURCE",
+            "observedAt": "2026-10-15T10:00:00Z",
+            "sourceIdOrigin": "UPSTREAM_PROVIDER",
+            "sourceExternalAdId": "ad_pet_chom_1",
+            "storeDomainEvidence": null,
+            "productMatchHint": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": null,
+            "reportedLastShownAt": null,
+            "sourceTimestamp": null,
+            "ingestedAt": null,
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": null,
+            "metrics": {},
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": null
+            },
+            "evidenceReference": "Ad:ad_pet_chom_1",
+            "isLiveRecord": false
+          },
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "ad_pet_chom_dup",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=51002",
+            "landingPageUrl": "https://www.chomchomroller.com/products/chomchom-roller-pet-hair-remover?utm_source=fb&fbclid=IwAR99",
+            "advertiserDomain": "chomchomroller.com",
+            "advertiserOrCreator": "ChomChom Official",
+            "title": "ChomChom Reusable Pet Fur Remover Roller — Blue Edition",
+            "description": "Instantly lifts dog and cat hair from sofas and beds.",
+            "provenance": "CACHED_SOURCE",
+            "observedAt": "2026-10-15T10:02:00Z",
+            "sourceIdOrigin": "UPSTREAM_PROVIDER",
+            "sourceExternalAdId": "ad_pet_chom_dup",
+            "storeDomainEvidence": null,
+            "productMatchHint": "ChomChom Reusable Pet Fur Remover Roller — Blue Edition",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": null,
+            "reportedLastShownAt": null,
+            "sourceTimestamp": null,
+            "ingestedAt": null,
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": null,
+            "metrics": {},
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": null
+            },
+            "evidenceReference": "Ad:ad_pet_chom_dup",
+            "isLiveRecord": false
+          }
+        ],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "Product URL Locator (/products/chomchom-roller-pet-hair-remover) Pending Merchant Metadata Verification",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Product Handle: chomchom-roller-pet-hair-remover",
+          "Canonical URL: https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+          "Ad Copy Headline: ChomChom Roller Pet Hair Remover and Reusable Lint Roller"
+        ],
+        "fetchOutcome": "NOT_FETCHED",
+        "evidenceTimestamp": null,
+        "verificationReason": "Identified candidate 'ChomChom Roller Pet Hair Remover and Reusable Lint Roller' from product URL locator /products/chomchom-roller-pet-hair-remover; awaiting live merchant metadata verification.",
+        "verificationLimitations": [
+          "Merchant product page metadata has not been verified yet; URL locator and ad copy establish PROBABLE identity only."
+        ],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": false,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, dog, cat."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "PET_GENERAL",
+          "supportedAudiences": [
+            "DOG",
+            "CAT",
+            "PET_GENERAL"
+          ],
+          "audienceMatch": "COMPATIBLE",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dog\"",
+            "cat_term:\"cat\"",
+            "pet_term:\"pet\""
+          ],
+          "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "canonicalProductName": "Chomchom Roller Pet Hair Remover",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
+            "evidenceReference": "Observed mentions: \"cat\", \"dog\" in Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.78,
+            "status": "INFERRED",
+            "uncertaintyNote": "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated."
+          },
+          "situationOrUseCase": {
+            "claimText": "Quick surface touch-ups before heading out, before guests arrive, or maintaining couches/car seats",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Excessive Pet Hair accumulating on fabrics, furniture, car seats, and clothing that standard tools fail to remove efficiently",
+            "evidenceReference": "Observed quote: \"Pet Hair\" in Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.9,
+            "status": "OBSERVED"
+          },
+          "emotionalPain": {
+            "claimText": "Social embarrassment when hosting guests or leaving home in fur-covered clothes; fatigue from non-stop cleaning",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Fur-free surfaces in minutes with zero disposable sticky tape refills and minimal physical effort",
+            "evidenceReference": "Observed quote: \"reusable\" in Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.75,
+            "status": "INFERRED",
+            "uncertaintyNote": "Single-word quote \"reusable\" does not directly substantiate the full claim assertion (11 terms)."
+          },
+          "purchaseTrigger": {
+            "claimText": "A striking visual demonstration showing an effortless before-and-after fur extraction from a couch",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Skepticism over whether it works on specific delicate fabrics (velvet, silk) and ease of chamber emptying",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Uncut video demonstration on diverse fabric textures and a clear 30-day return policy",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "High: Instantaneous split-screen visual before-and-after fur removal swipe provides immediate proof",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Disposable sticky adhesive lint rollers, heavy domestic vacuums, and rubber squeegees",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Reusable self-cleaning chamber mechanism or multi-surface edge geometry eliminating recurring refill costs",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Efficiency Angle: 'Stop buying lint roller refills every month — clean your furniture quickly.' Empathy Angle: 'Love your pet without living in their fur.'",
+            "evidenceReference": "Facebook Ad #ad_pet_chom_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "productKey": "url::https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "variantKey": null,
+        "familyKey": "pet_hair_remover_roller",
+        "familyLabel": "Pet Hair & Fur Remover Roller/Scraper",
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Pet Hair & Fur Remover Roller/Scraper' (productKey=url::https://chomchomroller.com/products/chomchom-roller-pet-hair-remover).",
+        "crossMerchantUncertainty": null,
+        "amazonProductUrl": "https://www.amazon.com/dp/B00BAGTNAQ"
+      },
+      {
+        "candidateId": "cand_598170608",
+        "title": "Furbo Dog Camera",
+        "canonicalProductName": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+        "displayName": "Furbo Dog Camera",
+        "originalAdHeadline": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+        "originalCreativeCode": "furbo-dog-camera",
+        "adClaimedProductName": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+        "merchantVerifiedProductName": null,
+        "brand": "Furbo",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": null,
+        "category": "Pet Gadgets",
+        "problemStatement": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera Smart HD wifi pet camera with barking alerts and remote treat t",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "ad_pet_furbo_1",
+        "requestedUrl": "https://furbo.com/products/furbo-dog-camera",
+        "resolvedFinalUrl": "https://furbo.com/products/furbo-dog-camera",
+        "declaredCanonicalUrl": null,
+        "normalizedProductUrl": "https://furbo.com/products/furbo-dog-camera",
+        "canonicalProductUrl": "https://furbo.com/products/furbo-dog-camera",
+        "storeDomain": "furbo.com",
+        "imageReferences": [],
+        "advertiserNames": [
+          "Furbo"
+        ],
+        "supportingAdIds": [
+          "ad_pet_furbo_1"
+        ],
+        "supportingExternalAdIds": [
+          "ad_pet_furbo_1"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "liveObservationsCount": 0,
+        "cachedObservationsCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-15T10:05:00Z",
+        "latestObservationDate": "2026-10-15T10:05:00Z",
+        "identityConfidence": "HIGH_CONFIDENCE",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "ad_pet_furbo_1",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=51003",
+            "landingPageUrl": "https://furbo.com/products/furbo-dog-camera",
+            "advertiserDomain": "furbo.com",
+            "advertiserOrCreator": "Furbo",
+            "title": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+            "description": "Smart HD wifi pet camera with barking alerts and remote treat tossing for dogs.",
+            "provenance": "CACHED_SOURCE",
+            "observedAt": "2026-10-15T10:05:00Z",
+            "sourceIdOrigin": "UPSTREAM_PROVIDER",
+            "sourceExternalAdId": "ad_pet_furbo_1",
+            "storeDomainEvidence": null,
+            "productMatchHint": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": null,
+            "reportedLastShownAt": null,
+            "sourceTimestamp": null,
+            "ingestedAt": null,
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": null,
+            "metrics": {},
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": null
+            },
+            "evidenceReference": "Ad:ad_pet_furbo_1",
+            "isLiveRecord": false
+          }
+        ],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "Product URL Locator (/products/furbo-dog-camera) Pending Merchant Metadata Verification",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Product Handle: furbo-dog-camera",
+          "Canonical URL: https://furbo.com/products/furbo-dog-camera",
+          "Ad Copy Headline: Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera"
+        ],
+        "fetchOutcome": "NOT_FETCHED",
+        "evidenceTimestamp": null,
+        "verificationReason": "Identified candidate 'Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera' from product URL locator /products/furbo-dog-camera; awaiting live merchant metadata verification.",
+        "verificationLimitations": [
+          "Merchant product page metadata has not been verified yet; URL locator and ad copy establish PROBABLE identity only."
+        ],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": false,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: pet, dog, pet camera."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "PET_GENERAL",
+          "supportedAudiences": [
+            "DOG",
+            "PET_GENERAL"
+          ],
+          "audienceMatch": "COMPATIBLE",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dog\"",
+            "pet_term:\"pet\""
+          ],
+          "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "canonicalProductName": "Furbo Dog Camera",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog owners seeking practical care, feeding, or safety solutions for their pets",
+            "evidenceReference": "Observed quote: \"for dogs\" in Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.85,
+            "status": "OBSERVED"
+          },
+          "situationOrUseCase": {
+            "claimText": "Regular routine use in the home when utilizing furbo dog camera",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Everyday inconvenience and friction addressed by Furbo Dog Camera",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.65,
+            "status": "INFERRED",
+            "uncertaintyNote": "Derived from candidate title context without explicit problem statement in copy."
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Facebook Ad #ad_pet_furbo_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://furbo.com/products/furbo-dog-camera",
+        "productKey": "url::https://furbo.com/products/furbo-dog-camera",
+        "variantKey": null,
+        "familyKey": "furbo_camera",
+        "familyLabel": "Furbo Camera",
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Furbo Camera' (productKey=url::https://furbo.com/products/furbo-dog-camera).",
+        "crossMerchantUncertainty": null,
+        "amazonProductUrl": "https://www.amazon.com/dp/B01FXC7JWQ"
+      },
+      {
+        "candidateId": "cand_1233695536",
+        "title": "Dockstream Battery Operated Cat Water Fountain",
+        "canonicalProductName": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+        "displayName": "Dockstream Battery Operated Cat Water Fountain",
+        "originalAdHeadline": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+        "originalCreativeCode": "dockstream-battery-operated-cat-water-fountain",
+        "adClaimedProductName": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+        "merchantVerifiedProductName": null,
+        "brand": "PETLIBRO",
+        "model": null,
+        "sku": null,
+        "gtin": null,
+        "merchantProductId": null,
+        "variantId": null,
+        "category": "Pet Gadgets",
+        "problemStatement": "PETLIBRO Dockstream Cordless Cat Water Fountain Wireless stainless steel tray water fountain for cats and small dogs",
+        "targetAudience": "Homeowners, Pet Owners & Everyday Problem Solvers",
+        "thumbnailUrl": null,
+        "videoUrl": null,
+        "mediaSourceAdId": "ad_pet_petlibro_1",
+        "requestedUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "resolvedFinalUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "declaredCanonicalUrl": null,
+        "normalizedProductUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "canonicalProductUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "storeDomain": "petlibro.com",
+        "imageReferences": [],
+        "advertiserNames": [
+          "PETLIBRO"
+        ],
+        "supportingAdIds": [
+          "ad_pet_petlibro_1"
+        ],
+        "supportingExternalAdIds": [
+          "ad_pet_petlibro_1"
+        ],
+        "supportingSourceTypes": [
+          "META_ADS"
+        ],
+        "totalObservationCount": 1,
+        "liveObservationsCount": 0,
+        "cachedObservationsCount": 1,
+        "distinctAdvertisersCount": 1,
+        "earliestObservationDate": "2026-10-15T10:10:00Z",
+        "latestObservationDate": "2026-10-15T10:10:00Z",
+        "identityConfidence": "HIGH_CONFIDENCE",
+        "sourceObservations": [
+          {
+            "source": "META_ADS",
+            "sourceRecordId": "ad_pet_petlibro_1",
+            "sourceUrl": "https://www.facebook.com/ads/library/?id=51004",
+            "landingPageUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+            "advertiserDomain": "petlibro.com",
+            "advertiserOrCreator": "PETLIBRO",
+            "title": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+            "description": "Wireless stainless steel tray water fountain for cats and small dogs.",
+            "provenance": "CACHED_SOURCE",
+            "observedAt": "2026-10-15T10:10:00Z",
+            "sourceIdOrigin": "UPSTREAM_PROVIDER",
+            "sourceExternalAdId": "ad_pet_petlibro_1",
+            "storeDomainEvidence": null,
+            "productMatchHint": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+            "reportedPublishedAt": null,
+            "reportedFirstShownAt": null,
+            "reportedLastShownAt": null,
+            "sourceTimestamp": null,
+            "ingestedAt": null,
+            "requestedMarket": "US",
+            "verifiedDeliveryMarket": null,
+            "metrics": {},
+            "media": {
+              "thumbnailUrl": null,
+              "videoUrl": null,
+              "mediaType": null
+            },
+            "evidenceReference": "Ad:ad_pet_petlibro_1",
+            "isLiveRecord": false
+          }
+        ],
+        "identityStatus": "PROBABLE",
+        "resolutionSource": "Product URL Locator (/products/dockstream-battery-operated-cat-water-fountain) Pending Merchant Metadata Verification",
+        "requiresManualReview": false,
+        "identityEvidenceReferences": [
+          "Product Handle: dockstream-battery-operated-cat-water-fountain",
+          "Canonical URL: https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+          "Ad Copy Headline: PETLIBRO Dockstream Cordless Cat Water Fountain"
+        ],
+        "fetchOutcome": "NOT_FETCHED",
+        "evidenceTimestamp": null,
+        "verificationReason": "Identified candidate 'PETLIBRO Dockstream Cordless Cat Water Fountain' from product URL locator /products/dockstream-battery-operated-cat-water-fountain; awaiting live merchant metadata verification.",
+        "verificationLimitations": [
+          "Merchant product page metadata has not been verified yet; URL locator and ad copy establish PROBABLE identity only."
+        ],
+        "contradictions": [],
+        "hasUnresolvedContradiction": false,
+        "isEligibleAsEvergreenWinner": false,
+        "relevanceStatus": "RELEVANT",
+        "discoveryRelevanceDecision": "HIGH_RELEVANCE",
+        "matchedArchetypeId": null,
+        "matchedQueryIds": [],
+        "relevanceScore": 0.92,
+        "relevanceReasons": [
+          "Strong niche match on terms: cat, cat water fountain."
+        ],
+        "audienceRelevance": {
+          "requestedAudience": "PET_GENERAL",
+          "supportedAudiences": [
+            "DOG",
+            "CAT"
+          ],
+          "audienceMatch": "COMPATIBLE",
+          "audienceEvidenceReferences": [
+            "dog_term:\"dogs\"",
+            "cat_term:\"cat\""
+          ],
+          "relevanceReason": "Target audience is broad or compatible with candidate audience.",
+          "eligibleForPrimaryShortlist": true
+        },
+        "psychologyProfile": {
+          "canonicalProductName": "Dockstream Battery Operated Cat Water Fountain",
+          "productDomain": "PET",
+          "targetCustomer": {
+            "claimText": "Dog or cat owners with cats and dogs (and potentially multi-pet households) seeking everyday pet care solutions",
+            "evidenceReference": "Observed mentions: \"Cat\", \"dogs\" in Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "AD_COPY",
+            "confidence": 0.78,
+            "status": "INFERRED",
+            "uncertaintyNote": "Ad copy advertises compatibility with both dogs and cats; multi-pet household ownership is inferred rather than directly stated."
+          },
+          "situationOrUseCase": {
+            "claimText": "Daily automated hydration and feeding, especially during work hours or short travel",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "functionalProblem": {
+            "claimText": "Inconvenience of manual daily feeding schedules and concerns about pet hydration when away from home",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "emotionalPain": {
+            "claimText": "Daily annoyance with repetitive manual maintenance that detracts from quality leisure time",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "desiredOutcome": {
+            "claimText": "Quick, dependable resolution of the task with noticeable ease and peace of mind",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "purchaseTrigger": {
+            "claimText": "Encountering a direct product demonstration highlighting an immediate problem-solution contrast",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "INFERRED"
+          },
+          "mainObjections": {
+            "claimText": "Doubt about physical durability, ease of cleaning, and whether cheaper generic alternatives suffice",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Common objection patterns observed across ecommerce reviews in this product category."
+          },
+          "trustRequirements": {
+            "claimText": "Transparent product specifications, authentic product photography, and clear return/refund guarantees",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "HYPOTHESIS"
+          },
+          "demonstrationPotential": {
+            "claimText": "Moderate: Clear functional demonstration highlighting practical ease of use",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.75,
+            "status": "INFERRED"
+          },
+          "existingAlternatives": {
+            "claimText": "Conventional manual household tools or unspecialized generic accessories",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.85,
+            "status": "INFERRED"
+          },
+          "differentiationHypothesis": {
+            "claimText": "Improved ergonomics, specialized multi-function utility, or durable low-maintenance materials",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "HEADLINE",
+            "confidence": 0.78,
+            "status": "HYPOTHESIS"
+          },
+          "suggestedMessagingAngle": {
+            "claimText": "Problem-Solution Angle: 'Eliminate everyday hassle with a purpose-built tool designed for lasting reliability.'",
+            "evidenceReference": "Facebook Ad #ad_pet_petlibro_1",
+            "evidenceType": "MARKET_KNOWLEDGE",
+            "confidence": 0.8,
+            "status": "HYPOTHESIS",
+            "uncertaintyNote": "Must be A/B tested with actual ad creative variations to measure genuine CTR and conversion."
+          },
+          "unverifiedBusinessMetricsDisclaimer": "Public competitor ad copy reflects creative positioning and emotional marketing angles. It does NOT verify conversion rates, customer satisfaction scores, product return rates, or net profitability."
+        },
+        "sourcePageClassification": "ACTUAL_PRODUCT_PAGE",
+        "listingKey": "url::https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "productKey": "url::https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "variantKey": null,
+        "familyKey": "pet_water_fountain",
+        "familyLabel": "Automatic Pet Water Fountain",
+        "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+        "productRealityReason": null,
+        "rejectionDetail": null,
+        "distinctnessRole": "PRIMARY_FAMILY_REPRESENTATIVE",
+        "distinctnessReason": "Primary product representative for family 'Automatic Pet Water Fountain' (productKey=url::https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain).",
+        "crossMerchantUncertainty": null,
+        "amazonProductUrl": "https://www.amazon.com/dp/B0FDKQGRCK"
+      }
+    ],
+    "decisions": [
+      {
+        "candidateId": "cand_2112683702",
+        "title": "ChomChom Roller Pet Hair Remover and Reusable Lint Roller",
+        "familyKey": "pet_hair_remover_roller",
+        "productKey": "url::https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+        "selected": true,
+        "selectionRank": 1,
+        "verificationRoute": "DIRECT_CANONICAL_PDP",
+        "targetUrlOrQuery": "https://www.amazon.com/dp/B00BAGTNAQ",
+        "reasonCode": "SELECTED_DIRECT_AMAZON_URL",
+        "reasonDetail": "Selected for direct canonical PDP verification (https://www.amazon.com/dp/B00BAGTNAQ).",
+        "estimatedOperationsCost": 1
+      },
+      {
+        "candidateId": "cand_598170608",
+        "title": "Furbo Dog Camera Treat Tossing Full HD Wifi Pet Camera",
+        "familyKey": "furbo_camera",
+        "productKey": "url::https://furbo.com/products/furbo-dog-camera",
+        "selected": true,
+        "selectionRank": 2,
+        "verificationRoute": "DIRECT_CANONICAL_PDP",
+        "targetUrlOrQuery": "https://www.amazon.com/dp/B01FXC7JWQ",
+        "reasonCode": "SELECTED_DIRECT_AMAZON_URL",
+        "reasonDetail": "Selected for direct canonical PDP verification (https://www.amazon.com/dp/B01FXC7JWQ).",
+        "estimatedOperationsCost": 1
+      },
+      {
+        "candidateId": "cand_1233695536",
+        "title": "PETLIBRO Dockstream Cordless Cat Water Fountain",
+        "familyKey": "pet_water_fountain",
+        "productKey": "url::https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+        "selected": true,
+        "selectionRank": 3,
+        "verificationRoute": "DIRECT_CANONICAL_PDP",
+        "targetUrlOrQuery": "https://www.amazon.com/dp/B0FDKQGRCK",
+        "reasonCode": "SELECTED_DIRECT_AMAZON_URL",
+        "reasonDetail": "Selected for direct canonical PDP verification (https://www.amazon.com/dp/B0FDKQGRCK).",
+        "estimatedOperationsCost": 1
+      },
+      {
+        "candidateId": "cand_1598428182",
+        "title": "Stackable Clear Acrylic Shoe Storage Organizer Boxes",
+        "familyKey": "storage_boxes",
+        "productKey": "url::https://closetcube.com/products/stackable-clear-acrylic-shoe-storage-boxes",
+        "selected": false,
+        "selectionRank": null,
+        "verificationRoute": "SKIPPED",
+        "targetUrlOrQuery": null,
+        "reasonCode": "SKIPPED_IRRELEVANT_OR_REJECTED",
+        "reasonDetail": "Skipped — candidate relevanceStatus='IRRELEVANT', productRealityStatus='REJECTED'.",
+        "estimatedOperationsCost": 0
+      },
+      {
+        "candidateId": "cand_73868310",
+        "title": "Expandable Bamboo Kitchen Drawer Organizer Tray",
+        "familyKey": "drawer_organizer",
+        "productKey": "url::https://tidyhomeco.com/products/expandable-bamboo-kitchen-drawer-organizer",
+        "selected": false,
+        "selectionRank": null,
+        "verificationRoute": "SKIPPED",
+        "targetUrlOrQuery": null,
+        "reasonCode": "SKIPPED_IRRELEVANT_OR_REJECTED",
+        "reasonDetail": "Skipped — candidate relevanceStatus='IRRELEVANT', productRealityStatus='REJECTED'.",
+        "estimatedOperationsCost": 0
+      },
+      {
+        "candidateId": "cand_1593234636",
+        "title": "2-Tier Sliding Under Sink Organizer Storage Rack",
+        "familyKey": "organizer_rack",
+        "productKey": "url::https://under5sink.com/products/2-tier-sliding-under-sink-organizer-rack",
+        "selected": false,
+        "selectionRank": null,
+        "verificationRoute": "SKIPPED",
+        "targetUrlOrQuery": null,
+        "reasonCode": "SKIPPED_IRRELEVANT_OR_REJECTED",
+        "reasonDetail": "Skipped — candidate relevanceStatus='IRRELEVANT', productRealityStatus='REJECTED'.",
+        "estimatedOperationsCost": 0
+      },
+      {
+        "candidateId": "cand_907928197",
+        "title": "Unidentified Product (Source: Facebook Ad #ad_pet_blog_nonprod, Identity: Needs Review)",
+        "familyKey": "needs_review",
+        "productKey": "merchant_tokens::petblog.example.com::needs_review::blog_facebook_identity_needs_nonprod_review_source_unidentified",
+        "selected": false,
+        "selectionRank": null,
+        "verificationRoute": "SKIPPED",
+        "targetUrlOrQuery": null,
+        "reasonCode": "SKIPPED_IRRELEVANT_OR_REJECTED",
+        "reasonDetail": "Skipped — candidate relevanceStatus='RELEVANT', productRealityStatus='NON_PHYSICAL'.",
+        "estimatedOperationsCost": 0
+      }
+    ],
+    "totalEvaluatedCount": 7,
+    "selectedCount": 3,
+    "skippedCount": 4,
+    "plannedOperationsCount": 3,
+    "maxTargetsAllowed": 3,
+    "maxOperationsAllowed": 4
+  },
+  "operationsAttempted": 3,
+  "operationsLimit": 4,
+  "verifiedLiveProductCount": 3,
+  "verifiedLiveAsins": [
+    "B00BAGTNAQ",
+    "B01FXC7JWQ",
+    "B0FDKQGRCK"
+  ],
+  "distinctVerifiedProductFamilies": 3,
+  "distinctVerifiedProductFamilyKeys": [
+    "amz_family:chomchom:pet_hair_remover_roller",
+    "amz_family:furbo:pet_camera_treat_tosser",
+    "amz_family:petlibro:pet_water_fountain"
+  ],
+  "distinctCandidateIds": 3,
+  "usDeliveryConfirmedCount": 0,
+  "observedUsdPriceCount": 0,
+  "amazonProductIdentityPilotVerdict": "PASS",
+  "amazonUsDeliveryPriceLivePilotVerdict": "OBSERVED_PARTIAL",
+  "fabricatedLiveSuccess": false,
+  "telemetry": {
+    "provider": "AMAZON_US",
+    "featureEnabled": true,
+    "liveAllowed": true,
+    "accessPolicyStatus": "AUTHORIZED_USER_LIMITED_URL",
+    "allowedAccessRoute": "USER_AUTHORIZED_URL",
+    "runStatus": "IDENTITY_VERIFIED",
+    "operationsAttempted": 3,
+    "operationsSucceeded": 3,
+    "operationsBlocked": 0,
+    "candidatesEvaluated": 3,
+    "identityVerifiedCount": 3,
+    "probableMatchCount": 0,
+    "brandOnlyCount": 0,
+    "rejectedCount": 0,
+    "notAttemptedCount": 0,
+    "operationLedger": [
+      {
+        "operationId": "amz_op_94982d9bfa39",
+        "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_2112683702_94982d9bfa39",
+        "providerRequestId": null,
+        "providerRequestIdOrigin": "ABSENT",
+        "workspaceId": "ws_amz_live_pilot",
+        "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+        "candidateId": "cand_2112683702",
+        "provider": "AMAZON_US",
+        "requestMode": "URL_VERIFICATION",
+        "sourceUrl": "https://www.amazon.com/dp/B00BAGTNAQ",
+        "finalUrl": "https://www.amazon.com/dp/B00BAGTNAQ",
+        "attemptCount": 1,
+        "maxAttemptsAllowed": 2,
+        "startedAt": "2026-11-02T06:22:53.843Z",
+        "completedAt": "2026-11-02T06:22:59.227Z",
+        "durationMs": 5393,
+        "requestHash": "13066a5d9fd98fba0d016f8bde6a6289920d3f5c88b3970382b4f7472c17e0a2",
+        "responseHash": "22ca4351b25e5606cf507763f3ec4ca7c56c24d2abad31f2b64b8fe1b5ca3b04",
+        "status": "IDENTITY_VERIFIED",
+        "outcomeCategory": "OBSERVED_SUCCESS",
+        "observationClass": "AUTHORIZED_LIVE",
+        "transportSessionId": "pw_mcp_mvyvgzpr_7d0156b4",
+        "aborted": false,
+        "errorMessage": null
+      },
+      {
+        "operationId": "amz_op_641c30758c37",
+        "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_598170608_641c30758c37",
+        "providerRequestId": null,
+        "providerRequestIdOrigin": "ABSENT",
+        "workspaceId": "ws_amz_live_pilot",
+        "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+        "candidateId": "cand_598170608",
+        "provider": "AMAZON_US",
+        "requestMode": "URL_VERIFICATION",
+        "sourceUrl": "https://www.amazon.com/dp/B01FXC7JWQ",
+        "finalUrl": "https://www.amazon.com/dp/B01FXC7JWQ",
+        "attemptCount": 1,
+        "maxAttemptsAllowed": 2,
+        "startedAt": "2026-11-02T06:22:59.236Z",
+        "completedAt": "2026-11-02T06:23:02.483Z",
+        "durationMs": 3253,
+        "requestHash": "ec215da922d3aef9e9824724f8a0893909b91b9231c9d6f3a32fb2217004448a",
+        "responseHash": "a53e508e21b3d83ad466516cc67b67295c1a42ae465127c1771b8454d1c4a3ec",
+        "status": "IDENTITY_VERIFIED",
+        "outcomeCategory": "OBSERVED_SUCCESS",
+        "observationClass": "AUTHORIZED_LIVE",
+        "transportSessionId": "pw_mcp_mvyvgzpr_7d0156b4",
+        "aborted": false,
+        "errorMessage": null
+      },
+      {
+        "operationId": "amz_op_79bdf22dad4c",
+        "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_1233695536_79bdf22dad4c",
+        "providerRequestId": null,
+        "providerRequestIdOrigin": "ABSENT",
+        "workspaceId": "ws_amz_live_pilot",
+        "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+        "candidateId": "cand_1233695536",
+        "provider": "AMAZON_US",
+        "requestMode": "URL_VERIFICATION",
+        "sourceUrl": "https://www.amazon.com/dp/B0FDKQGRCK",
+        "finalUrl": "https://www.amazon.com/dp/B0FDKQGRCK?th=1",
+        "attemptCount": 1,
+        "maxAttemptsAllowed": 2,
+        "startedAt": "2026-11-02T06:23:02.489Z",
+        "completedAt": "2026-11-02T06:23:05.467Z",
+        "durationMs": 2981,
+        "requestHash": "403f67a8cddeb31c3850462fd85418b73170e1374a8161ddc0edfaddf8f2550c",
+        "responseHash": "8af53bed2c0106c98e12804b1247809fb143b061c66a33daf591b283381ad106",
+        "status": "IDENTITY_VERIFIED",
+        "outcomeCategory": "OBSERVED_SUCCESS",
+        "observationClass": "AUTHORIZED_LIVE",
+        "transportSessionId": "pw_mcp_mvyvgzpr_7d0156b4",
+        "aborted": false,
+        "errorMessage": null
+      }
+    ],
+    "rejectionLedger": [],
+    "gateEvaluation": {
+      "evaluatedAt": "2026-11-02T06:23:05.866Z",
+      "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+      "workspaceId": "ws_amz_live_pilot",
+      "provider": "AMAZON_US",
+      "engineeringVerdict": "ENGINEERING_READY",
+      "realProviderVerdict": "REAL_PROVIDER_VERIFIED",
+      "overallPilotStatus": "FEATURE_ACCEPTED",
+      "policyStatus": "AUTHORIZED_USER_LIMITED_URL",
+      "verifiedLiveAsins": [
+        "B00BAGTNAQ",
+        "B01FXC7JWQ",
+        "B0FDKQGRCK"
+      ],
+      "distinctVerifiedProductFamilies": 3,
+      "distinctVerifiedProductFamilyKeys": [
+        "amz_family:chomchom:pet_hair_remover_roller",
+        "amz_family:furbo:pet_camera_treat_tosser",
+        "amz_family:petlibro:pet_water_fountain"
+      ],
+      "distinctCandidateIds": 3,
+      "usDeliveryConfirmedCount": 0,
+      "USDeliveryConfirmedCount": 0,
+      "observedUsdPriceCount": 0,
+      "requiredLiveTargetsMet": true,
+      "mcpSessionClosedCleanly": true,
+      "mcpSessionLifecycle": {
+        "sessionId": "pw_mcp_mvyvgzpr_7d0156b4",
+        "sessionCreated": true,
+        "ownershipMode": "OWNED",
+        "transportMode": "REAL_STDIO_MCP",
+        "serverOrigin": "PINNED_PLAYWRIGHT_MCP",
+        "ownedChildPid": 4856,
+        "startedAt": "2026-11-02T06:22:53.391Z",
+        "lastToolCompletedAt": "2026-11-02T06:23:05.462Z",
+        "closeStartedAt": "2026-11-02T06:23:05.470Z",
+        "closeFinishedAt": "2026-11-02T06:23:05.865Z",
+        "closedCleanly": true,
+        "ownedChildPidTerminated": true,
+        "closeError": null,
+        "toolInvocationsCount": 6,
+        "observedOperationIds": [
+          "amz_op_94982d9bfa39",
+          "amz_op_641c30758c37",
+          "amz_op_79bdf22dad4c"
+        ]
+      },
+      "counts": {
+        "totalEvidenceRows": 3,
+        "sameRunWorkspaceVerifiedRows": 3,
+        "authorizedLiveRows": 3,
+        "fixtureOrCachedRowsExcludedFromLive": 0,
+        "identityExactMatchCount": 3,
+        "identityProbableMatchCount": 0,
+        "brandOnlyMatchCount": 0,
+        "rejectedCount": 0,
+        "verifiedLiveUsProductIdentitiesCount": 3,
+        "requiredLiveUsProductIdentitiesTarget": 3,
+        "distinctVerifiedProductFamiliesCount": 3,
+        "distinctCandidateIdsCount": 3,
+        "usDeliveryConfirmedCount": 0,
+        "observedUsdPriceCount": 0
+      },
+      "g15DemandUnchanged": true,
+      "g16MerchantGateUnchanged": true,
+      "reasons": [
+        "Verified 3/3 distinct authorized live US Amazon product families (3 ASINs across 3 candidates).",
+        "Engineering gate=ENGINEERING_READY; Real provider gate=REAL_PROVIDER_VERIFIED; G15/G16 business gates untouched."
+      ],
+      "blockers": []
+    },
+    "mcpSessionLifecycle": {
+      "sessionId": "pw_mcp_mvyvgzpr_7d0156b4",
+      "sessionCreated": true,
+      "ownershipMode": "OWNED",
+      "transportMode": "REAL_STDIO_MCP",
+      "serverOrigin": "PINNED_PLAYWRIGHT_MCP",
+      "ownedChildPid": 4856,
+      "startedAt": "2026-11-02T06:22:53.391Z",
+      "lastToolCompletedAt": "2026-11-02T06:23:05.462Z",
+      "closeStartedAt": "2026-11-02T06:23:05.470Z",
+      "closeFinishedAt": "2026-11-02T06:23:05.865Z",
+      "closedCleanly": true,
+      "ownedChildPidTerminated": true,
+      "closeError": null,
+      "toolInvocationsCount": 6,
+      "observedOperationIds": [
+        "amz_op_94982d9bfa39",
+        "amz_op_641c30758c37",
+        "amz_op_79bdf22dad4c"
+      ]
+    },
+    "localMcpPilotDiagnostics": {
+      "routeId": "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+      "transportHandshakeStatus": "SUCCEEDED",
+      "actualBrowserToolExecutionStatus": "SUCCEEDED",
+      "realAmazonPageObservationStatus": "PUBLIC_PAGE_OBSERVED",
+      "productIdentityVerificationStatus": "IDENTITY_VERIFIED",
+      "creatorsApiAvailabilityStatus": "NOT_REQUIRED_FOR_LOCAL_MCP_PILOT",
+      "searchBlockedPolicyCount": 0,
+      "pdpNotExecutedCount": 0
+    }
+  },
+  "evidenceRows": [
+    {
+      "id": "amz_ev_e2275601411a5f37b770",
+      "workspaceId": "ws_amz_live_pilot",
+      "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+      "candidateId": "cand_2112683702",
+      "provider": "AMAZON_US",
+      "requestMode": "URL_VERIFICATION",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "sourceUrl": "https://www.amazon.com/dp/B00BAGTNAQ",
+      "finalUrl": "https://www.amazon.com/dp/B00BAGTNAQ",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B00BAGTNAQ",
+      "asin": "B00BAGTNAQ",
+      "parentAsin": null,
+      "variationAsin": null,
+      "productTitle": "ChomChom Roller Pet Hair Remover – Original Size Reusable Lint Roller for Cat & Dog Hair on Furniture, Couch, Carpet, Car, Rugs & Bedding – Portable, Eco-Friendly (White)",
+      "brand": "ChomChom Roller",
+      "merchant": null,
+      "seller": null,
+      "currency": null,
+      "price": null,
+      "availability": "In Stock",
+      "modelNumber": null,
+      "sku": null,
+      "gtin": null,
+      "observedAt": "2026-11-02T06:22:53.843Z",
+      "sourceTimestamp": null,
+      "rawEvidenceHash": "22ca4351b25e5606cf507763f3ec4ca7c56c24d2abad31f2b64b8fe1b5ca3b04",
+      "extractedFieldsHash": "26c8c6408da9ab84e2f802193f302172b4d1af301d82dbd960cb816cac9f3ecb",
+      "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_2112683702_94982d9bfa39",
+      "providerRequestId": null,
+      "responseEvidenceRef": "amz_raw:22ca4351b25e5606",
+      "evidenceOrigin": "AMAZON_US_LIVE_MCP",
+      "httpStatus": null,
+      "httpStatusOrigin": "UNOBSERVED_NULL",
+      "observationClass": "AUTHORIZED_LIVE",
+      "verificationScope": "IDENTITY_CORROBORATED",
+      "identityMatch": "EXACT_PRODUCT",
+      "isCached": false,
+      "matchedCanonicalKey": "amz_us:B00BAGTNAQ",
+      "productFamilyKey": "amz_family:chomchom:pet_hair_remover_roller",
+      "matchingReasons": [
+        "Corroborated brand 'ChomChom Roller'",
+        "Product token corroboration (chomchom, roller, pet, hair, remover, reusable, lint, roller; ratio=1.00)"
+      ],
+      "missingFields": [
+        "price",
+        "merchantOrSeller"
+      ],
+      "rejectionReasons": [],
+      "sanitizationWarnings": [],
+      "accessPolicyStatus": "AUTHORIZED_USER_LIMITED_URL",
+      "status": "IDENTITY_VERIFIED",
+      "providerSourceOrigin": "PINNED_PLAYWRIGHT_MCP"
+    },
+    {
+      "id": "amz_ev_4013d16cde50347f723b",
+      "workspaceId": "ws_amz_live_pilot",
+      "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+      "candidateId": "cand_598170608",
+      "provider": "AMAZON_US",
+      "requestMode": "URL_VERIFICATION",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "sourceUrl": "https://www.amazon.com/dp/B01FXC7JWQ",
+      "finalUrl": "https://www.amazon.com/dp/B01FXC7JWQ",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B01FXC7JWQ",
+      "asin": "B01FXC7JWQ",
+      "parentAsin": null,
+      "variationAsin": null,
+      "productTitle": "Furbo Dog Camera: Treat Tossing, Full HD Wifi Pet Camera and 2-Way Audio, Designed for Dogs, Compatible with Alexa (As Seen On Ellen), white (001-01WHTOA-1)",
+      "brand": "Furbo",
+      "merchant": null,
+      "seller": null,
+      "currency": null,
+      "price": null,
+      "availability": null,
+      "modelNumber": null,
+      "sku": null,
+      "gtin": null,
+      "observedAt": "2026-11-02T06:22:59.236Z",
+      "sourceTimestamp": null,
+      "rawEvidenceHash": "a53e508e21b3d83ad466516cc67b67295c1a42ae465127c1771b8454d1c4a3ec",
+      "extractedFieldsHash": "dc659b2f2e38986866238dedc3a2a2baff3982d48cc404d96b6d5dbe7b580d71",
+      "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_598170608_641c30758c37",
+      "providerRequestId": null,
+      "responseEvidenceRef": "amz_raw:a53e508e21b3d83a",
+      "evidenceOrigin": "AMAZON_US_LIVE_MCP",
+      "httpStatus": null,
+      "httpStatusOrigin": "UNOBSERVED_NULL",
+      "observationClass": "AUTHORIZED_LIVE",
+      "verificationScope": "IDENTITY_CORROBORATED",
+      "identityMatch": "EXACT_PRODUCT",
+      "isCached": false,
+      "matchedCanonicalKey": "amz_us:B01FXC7JWQ",
+      "productFamilyKey": "amz_family:furbo:pet_camera_treat_tosser",
+      "matchingReasons": [
+        "Corroborated brand 'Furbo'",
+        "Product token corroboration (dog, camera, treat, tossing, full, wifi, pet, camera; ratio=1.00)"
+      ],
+      "missingFields": [
+        "price",
+        "availability",
+        "merchantOrSeller"
+      ],
+      "rejectionReasons": [],
+      "sanitizationWarnings": [],
+      "accessPolicyStatus": "AUTHORIZED_USER_LIMITED_URL",
+      "status": "IDENTITY_VERIFIED",
+      "providerSourceOrigin": "PINNED_PLAYWRIGHT_MCP"
+    },
+    {
+      "id": "amz_ev_c07005bb2980321a330a",
+      "workspaceId": "ws_amz_live_pilot",
+      "researchRunId": "kh02_v12_4_3_6_amz_live_1793600573389",
+      "candidateId": "cand_1233695536",
+      "provider": "AMAZON_US",
+      "requestMode": "URL_VERIFICATION",
+      "requestedMarket": "US",
+      "verifiedDeliveryMarket": null,
+      "observedDeliveryPostalCode": null,
+      "sourceUrl": "https://www.amazon.com/dp/B0FDKQGRCK",
+      "finalUrl": "https://www.amazon.com/dp/B0FDKQGRCK?th=1",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B0FDKQGRCK",
+      "asin": "B0FDKQGRCK",
+      "parentAsin": null,
+      "variationAsin": null,
+      "productTitle": "PETLIBRO Upgrade Cat Water Fountain Stainless Steel Tray, Dockstream 2 Cat Fountain Indoor, 3L/101oz Auto Cat Fountains for Drinking, App Monitoring Pet Water Fountain Dog, 5G WiFi Cat Water Dispenser",
+      "brand": "PETLIBRO",
+      "merchant": null,
+      "seller": null,
+      "currency": null,
+      "price": null,
+      "availability": "In Stock",
+      "modelNumber": null,
+      "sku": null,
+      "gtin": null,
+      "observedAt": "2026-11-02T06:23:02.489Z",
+      "sourceTimestamp": null,
+      "rawEvidenceHash": "8af53bed2c0106c98e12804b1247809fb143b061c66a33daf591b283381ad106",
+      "extractedFieldsHash": "3cb97109bed0329bf0c51e05f2e64bc46859f12b8eb5d157e2126338e4de0944",
+      "providerInvocationRef": "amz_inv_kh02_v12_4_3_6_amz_live_1793600573389_cand_1233695536_79bdf22dad4c",
+      "providerRequestId": null,
+      "responseEvidenceRef": "amz_raw:8af53bed2c0106c9",
+      "evidenceOrigin": "AMAZON_US_LIVE_MCP",
+      "httpStatus": null,
+      "httpStatusOrigin": "UNOBSERVED_NULL",
+      "observationClass": "AUTHORIZED_LIVE",
+      "verificationScope": "IDENTITY_CORROBORATED",
+      "identityMatch": "EXACT_PRODUCT",
+      "isCached": false,
+      "matchedCanonicalKey": "amz_us:B0FDKQGRCK",
+      "productFamilyKey": "amz_family:petlibro:pet_water_fountain",
+      "matchingReasons": [
+        "Corroborated brand 'PETLIBRO'",
+        "Product token corroboration (dockstream, cat, water, fountain; ratio=0.80)"
+      ],
+      "missingFields": [
+        "price",
+        "merchantOrSeller"
+      ],
+      "rejectionReasons": [],
+      "sanitizationWarnings": [],
+      "accessPolicyStatus": "AUTHORIZED_USER_LIMITED_URL",
+      "status": "IDENTITY_VERIFIED",
+      "providerSourceOrigin": "PINNED_PLAYWRIGHT_MCP"
+    }
+  ]
+}

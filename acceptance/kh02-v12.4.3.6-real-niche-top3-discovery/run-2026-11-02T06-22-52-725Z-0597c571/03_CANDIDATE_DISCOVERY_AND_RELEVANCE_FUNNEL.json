@@ -1,0 +1,31 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:22:53.385Z",
+  "rawInputObservationsCount": 8,
+  "crossNicheShortlistOverlapCount": 0,
+  "nonProductPromotedCount": 0,
+  "nicheA": {
+    "topic": "Pet Gadgets",
+    "totalDiscoveredCandidatesCount": 7,
+    "relevantCandidatesCount": 4,
+    "rejectedIrrelevantCount": 3,
+    "shortlistedCount": 3,
+    "shortlistedCandidateIds": [
+      "cand_2112683702",
+      "cand_598170608",
+      "cand_1233695536"
+    ]
+  },
+  "nicheB": {
+    "topic": "Home Organization",
+    "totalDiscoveredCandidatesCount": 7,
+    "relevantCandidatesCount": 3,
+    "rejectedIrrelevantCount": 4,
+    "shortlistedCount": 3,
+    "shortlistedCandidateIds": [
+      "cand_1598428182",
+      "cand_73868310",
+      "cand_1593234636"
+    ]
+  }
+}

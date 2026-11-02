@@ -1,0 +1,12 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:27:41.718Z",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "amazonPostCutoffExcludedCount": 1,
+  "amazonFixtureExcludedCount": 1,
+  "walmartPostCutoffExcludedCount": 1,
+  "walmartFixtureExcludedCount": 1,
+  "postCutoffIncludedInReplayCount": 0,
+  "fixtureRowsIncludedInLiveReplayCount": 0,
+  "semanticHashAcceptedAsRawProductSchemaProofCount": 0
+}

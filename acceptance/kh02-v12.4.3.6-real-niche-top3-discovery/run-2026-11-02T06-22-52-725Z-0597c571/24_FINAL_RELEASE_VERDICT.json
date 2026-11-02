@@ -1,0 +1,84 @@
+{
+  "releaseVersion": "12.4.3.6",
+  "runtimeReleaseIdentity": "12.4.3.5.0.3",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "testedTreeSha": "8bb850abe46cd1ef2efe45092e1c00f49e513574",
+  "evaluatedAt": "2026-11-02T06:27:42.290Z",
+  "verdictTable": {
+    "ENGINEERING_FOUNDATION": "PASS",
+    "NICHE_TO_TOP3_DISCOVERY_PIPELINE": "PASS",
+    "PROVENANCE_NORMALIZATION_TRUST_BOUNDARY": "PASS",
+    "IDENTITY_AND_FAMILY_DEDUPLICATION": "PASS",
+    "TWO_NICHE_DYNAMIC_DISCOVERY_PROOF": "PASS",
+    "DB_API_UI_PARITY": "PASS",
+    "AMAZON_LOCAL_MCP_ENGINEERING": "PASS",
+    "AMAZON_PRODUCT_IDENTITY_PILOT": "PASS",
+    "AMAZON_US_DELIVERY_PRICE_LIVE_PILOT": "OBSERVED_PARTIAL",
+    "AMAZON_CREATORS_API": "BLOCKED_MISSING_CREDENTIALS",
+    "WALMART_JINA_ENGINEERING": "PASS",
+    "WALMART_LIVE_OPERATIONAL_STATUS": "PAUSED_BLOCKED_PROVIDER",
+    "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY": "PASS",
+    "HISTORICAL_BUSINESS_EVIDENCE": "INSUFFICIENT_EVIDENCE",
+    "G07_PAID_MEDIA_PERSISTENCE": "BLOCKED",
+    "G15_LONGITUDINAL_DEMAND_60D": "INSUFFICIENT_EVIDENCE",
+    "G16_INDEPENDENT_MERCHANT_PROOF": "INSUFFICIENT_EVIDENCE",
+    "KH02_FULL_BUSINESS_ACCEPTANCE": "INSUFFICIENT_EVIDENCE",
+    "OVERALL_RELEASE": "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS"
+  },
+  "ENGINEERING_FOUNDATION": "PASS",
+  "NICHE_TO_TOP3_DISCOVERY_PIPELINE": "PASS",
+  "PROVENANCE_NORMALIZATION_TRUST_BOUNDARY": "PASS",
+  "IDENTITY_AND_FAMILY_DEDUPLICATION": "PASS",
+  "TWO_NICHE_DYNAMIC_DISCOVERY_PROOF": "PASS",
+  "DB_API_UI_PARITY": "PASS",
+  "AMAZON_LOCAL_MCP_ENGINEERING": "PASS",
+  "AMAZON_PRODUCT_IDENTITY_PILOT": "PASS",
+  "AMAZON_US_DELIVERY_PRICE_LIVE_PILOT": "OBSERVED_PARTIAL",
+  "AMAZON_CREATORS_API": "BLOCKED_MISSING_CREDENTIALS",
+  "WALMART_JINA_ENGINEERING": "PASS",
+  "WALMART_LIVE_OPERATIONAL_STATUS": "PAUSED_BLOCKED_PROVIDER",
+  "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY": "PASS",
+  "HISTORICAL_BUSINESS_EVIDENCE": "INSUFFICIENT_EVIDENCE",
+  "G07_PAID_MEDIA_PERSISTENCE": "BLOCKED",
+  "G15_LONGITUDINAL_DEMAND_60D": "INSUFFICIENT_EVIDENCE",
+  "G16_INDEPENDENT_MERCHANT_PROOF": "INSUFFICIENT_EVIDENCE",
+  "KH02_FULL_BUSINESS_ACCEPTANCE": "INSUFFICIENT_EVIDENCE",
+  "OVERALL_RELEASE": "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS",
+  "metricsSummary": {
+    "negativeControlMatrix48Cases": "51/51",
+    "fullRepositoryTestFiles": "155/155",
+    "fullRepositoryTestCases": "1852/1852",
+    "e2eSpecs": "12/12",
+    "e2eTestCases": "34/34",
+    "physicalMutationsCaught": "52/52",
+    "devHistoricalReplay": {
+      "observations": 19,
+      "shortlistCount": 0,
+      "verifiedIdentities": 0
+    },
+    "holdoutHistoricalReplay": {
+      "observations": 380,
+      "shortlistCount": 3,
+      "nicheMatchedCount": 3,
+      "verifiedIdentities": 0
+    },
+    "amazonLivePilot": {
+      "verifiedLiveAsins": [
+        "B00BAGTNAQ",
+        "B01FXC7JWQ",
+        "B0FDKQGRCK"
+      ],
+      "distinctProductFamilies": 3,
+      "usDeliveryConfirmedCount": 0,
+      "observedUsdPriceCount": 0,
+      "mcpSessionClosedCleanly": true
+    },
+    "walmartOperationalPause": {
+      "operationalStatus": "PAUSED_EXTERNAL",
+      "upstreamBlockerStatus": "BLOCKED_PROVIDER",
+      "currentRunLiveWalmartHttpRequests": 0,
+      "priorBlockerSha256": "d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4"
+    }
+  }
+}

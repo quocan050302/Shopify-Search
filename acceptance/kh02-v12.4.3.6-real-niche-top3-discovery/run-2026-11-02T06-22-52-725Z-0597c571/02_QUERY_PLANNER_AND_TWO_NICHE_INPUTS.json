@@ -1,0 +1,87 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:22:53.385Z",
+  "identicalQueryPlans": false,
+  "nicheA": {
+    "topic": "Pet Gadgets",
+    "market": "US",
+    "nicheIntent": "BROAD_CATEGORY",
+    "subqueriesCount": 3,
+    "subqueries": [
+      {
+        "subquery": "pet hair remover",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "High-demand everyday deshedding & cleaning tool within Pet Gadgets domain",
+        "maxResults": 10,
+        "archetypeId": "pet_grooming_hair_removal",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 2,
+        "expectedProductCategory": "Pet Grooming"
+      },
+      {
+        "subquery": "automatic pet feeder",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Smart hardware / electronic gadget for feeding within Pet Gadgets domain",
+        "maxResults": 10,
+        "archetypeId": "pet_feeding",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 3,
+        "expectedProductCategory": "Pet Feeding"
+      },
+      {
+        "subquery": "dog water fountain",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Smart pet hydration and filtration appliance within Pet Gadgets domain",
+        "maxResults": 10,
+        "archetypeId": "pet_hydration",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 4,
+        "expectedProductCategory": "Pet Hydration"
+      }
+    ]
+  },
+  "nicheB": {
+    "topic": "Home Organization",
+    "market": "US",
+    "nicheIntent": "BROAD_CATEGORY",
+    "subqueriesCount": 3,
+    "subqueries": [
+      {
+        "subquery": "home organization tool",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Targets concrete physical tools in the home organization niche.",
+        "maxResults": 10,
+        "archetypeId": "home_organization_tool",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 2,
+        "expectedProductCategory": "home organization Tools & Gadgets"
+      },
+      {
+        "subquery": "home organization kit",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Targets complete physical product kits in the home organization niche.",
+        "maxResults": 10,
+        "archetypeId": "home_organization_kit",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 3,
+        "expectedProductCategory": "home organization Starter & Repair Kits"
+      },
+      {
+        "subquery": "home organization organizer",
+        "searchType": "KEYWORD_EXACT_PHRASE",
+        "rationale": "Targets physical organizers and holders for home organization.",
+        "maxResults": 10,
+        "archetypeId": "home_organization_organizer",
+        "origin": "DETERMINISTIC_FALLBACK",
+        "roundNumber": 1,
+        "priority": 4,
+        "expectedProductCategory": "home organization Storage & Organizers"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:27:41.011Z",
+  "readOnlyVerified": true,
+  "digestBeforeGet": "493a22386e2a4c4b2feb3cb5b9b7879df7c68c379b5cdb209ad34f0dcb86a6fa",
+  "digestAfterGet": "493a22386e2a4c4b2feb3cb5b9b7879df7c68c379b5cdb209ad34f0dcb86a6fa",
+  "crossWorkspaceDenied": true,
+  "crossWorkspaceHttpStatus": 403
+}

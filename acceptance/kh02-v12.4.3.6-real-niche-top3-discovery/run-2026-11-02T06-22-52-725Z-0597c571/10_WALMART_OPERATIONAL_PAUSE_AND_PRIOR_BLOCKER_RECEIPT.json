@@ -1,0 +1,34 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:23:05.868Z",
+  "policy": {
+    "featureEnabled": false,
+    "liveAllowed": false,
+    "operationalStatus": "PAUSED_EXTERNAL",
+    "upstreamBlockerStatus": "BLOCKED_PROVIDER",
+    "disabledReason": "Server pilot disabled"
+  },
+  "currentRunLiveWalmartHttpRequests": 0,
+  "currentRunJinaProbesExecuted": 0,
+  "currentRunWalmartChildProcessesSpawned": 0,
+  "priorLiveBlockerReference": {
+    "latestLiveProbeDate": "2026-11-02",
+    "status": "BLOCKED_PROVIDER",
+    "outerHttpStatus": 200,
+    "jinaJsonCode": 200,
+    "jinaStatus": 20000,
+    "innerFinalUrl": "https://www.walmart.com/blocked?url=L3NlYXJjaD9xPUNob21DaG9tJTIwUm9sbGVyJTIwUGV0JTIwSGFpciUyMFJlbW92ZXI=&uuid=879ab0ec-a2ae-11f0-b0ec-6508305a5841&vid=&g=b",
+    "innerPath": "/blocked",
+    "pageTitle": "Robot or human?",
+    "captchaMarkers": [
+      "px-captcha",
+      "/px/PXu6b0qd2S/init.js",
+      "blockScript"
+    ],
+    "validatedProductsCount": 0,
+    "responseBytes": 16845,
+    "responseSha256": "d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4",
+    "historicalStandalone20261030Status": "HISTORICAL_ONLY",
+    "liveCallsPermittedInNormalRun": false
+  }
+}

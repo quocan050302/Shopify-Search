@@ -1,0 +1,317 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:23:32.400Z",
+  "suiteFile": "tests/unit/kh02/v12_4_3_6_RealNicheToTop3Discovery.test.ts",
+  "allPassed": true,
+  "totalCasesCount": 51,
+  "passedCasesCount": 51,
+  "failedCasesCount": 0,
+  "cases": [
+    {
+      "caseId": "N01",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N01: Observation missing provenance must NOT default to LIVE_PROVIDER",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N02",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N02: Observation missing sourceRecordId must NOT generate Math.random ID treated as verified provider ID",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N03",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N03: Observation with sourceMode = LIVE_WITH_CACHE_FALLBACK and cached row resolves to CACHED_SOURCE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N04",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N04: Observation with verifiedDeliveryMarket absent remains null even if requestedMarket = 'US'",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N05",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N05: Observation with 'Ad:raw' placeholder cannot pass live lineage",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N06",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N06: Observation with missing sourceUrl cannot pass live observation check",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N07",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N07: Observation with forged future sourceTimestamp is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N08",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N08: Observation with another workspace's workspaceId is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N09",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N09: Observation with another run's researchRunId is rejected from current-run live proof",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N10",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 1: Provenance & Normalization Trust Boundary (N01..N10) N10: Observation with contradictory provenance flags fails closed",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N11",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N11: Cross-niche beauty product in 'Pet Gadgets' is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N12",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N12: Pet product in 'Home Organization' is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N13",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N13: Insurance / lead generation / digital course / ebook is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N14",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N14: Store homepage / /collections/all without specific SKU cannot become VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N15",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N15: CheckoutChamp / generic funnel without specific product proof cannot become VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N16",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N16: Brand-only mention without product title/handle cannot enter Top 3",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N17",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N17: Accessory / replacement filter cannot masquerade as main fountain/feeder product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N18",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 2: Niche Relevance & Physical Product Gate (N11..N18) N18: Generic promotional slogan ('50% Off Today', 'Shop Now') is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N19",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N19: Same canonical URL with different ad copy collapses to one product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N20",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N20: Color/size/pack variants collapse to one family",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N21",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N21: Same Shopify product ID across tracking query params collapses to one product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N22",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N22: Same GTIN/UPC across two ads collapses to one product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N23",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N23: Three products from the same product family cannot fill all 3 broad-niche slots when distinct families exist, and homogeneous single-family pool reports honest diversity status",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N24",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N24: 20x duplicated identical ad observations deduplicate to 1 creative/source without weight inflation",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N25",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 3: Identity, Family & Deduplication (N19..N25) N25: Reversed input observation order produces identical family keys, shortlist, and ranking",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N26",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N26: < 60 days demand coverage cannot become VERIFIED_EVERGREEN",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N27",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N27: < 3 distinct demand dates cannot become VERIFIED_EVERGREEN",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N28",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N28: Broad category Google Trends series ('pet gadgets') cannot satisfy product-level G15",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N29",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N29: Synthetic/seeded/fixture demand points cannot satisfy G15",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N30",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N30: Future-dated demand points (> asOf) are rejected in replay",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N31",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N31: Post-cutoff joined ResearchProduct.updatedAt > asOf is rejected in replay",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N32",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N32: Shortlist of 1 or 2 valid candidates is NOT padded to 3",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N33",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 4: Evergreen & Longitudinal Demand Gates (N26..N33) N33: Provisional candidate cannot appear in evergreenWinners (topThree)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N34",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N34: Non-Amazon URL is rejected before MCP launch",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N35",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N35: Non-US Amazon domain (amazon.co.uk, amazon.ca) is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N36",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N36: Malformed ASIN (B0INVALID!, 9-char, 11-char) is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N37",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N37: Sponsored search card cannot auto-verify as exact product match",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N38",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N38: Accessory search result cannot verify main product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N39",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N39: Missing US ZIP / non-USD currency (VND) keeps verifiedDeliveryMarket = null, price = null, currency = null",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N40",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N40: Operation #5 in a single run is blocked by the 4-op budget cap",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N41",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 5: Amazon Local MCP Guardrails (N34..N41) N41: Unclosed or mismatched MCP sessionId fails the lifecycle gate",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N42",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N42: Default policy keeps Walmart disabled/paused (featureEnabled = false, liveAllowed = false, operationalStatus = PAUSED_EXTERNAL)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N43",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N43: Client passing enableWalmartUsPilot = true while server policy is disabled executes 0 HTTP requests",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N44",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N44: Outer HTTP 200 + Jina code: 200 + inner /blocked + 'Robot or human?' + px-captcha classifies as BLOCKED_PROVIDER, retryable = false, validatedProducts = 0",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N45",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N45: Bot wall on search immediately aborts follow-up PDP (PDP_NOT_EXECUTED)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N46",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N46: Non-r.jina.ai or non-www.walmart.com target URL is rejected before fetch",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N47",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N47: Forbidden headers (Authorization, Cookie, X-Proxy-Url, X-Forwarded-For) are rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "N48",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 6: Walmart Operational Pause & Regression (N42..N48) N48: Leading-zero GTIN/UPC ('027242930698') is preserved as string",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "P01",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 7: Dynamic Two-Niche Discovery ('Pet Gadgets' vs 'Home Organization') & Dynamic Amazon Target Selection P01: Niche A ('Pet Gadgets') and Niche B ('Home Organization') generate non-identical query plans, candidate sets, and Top 3 shortlists with zero cross-niche leakage",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "P02",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 7: Dynamic Two-Niche Discovery ('Pet Gadgets' vs 'Home Organization') & Dynamic Amazon Target Selection P02: Dynamic Amazon target selection chooses eligible runtime niche candidates, skips rejected/duplicate-family items, and records full targetSelectionLedger",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "P03",
+      "testName": "KH-02 V12.4.3.6 — Real Niche-to-Top3 Discovery Foundation & 48-Case Negative Control Matrix Group 7: Dynamic Two-Niche Discovery ('Pet Gadgets' vs 'Home Organization') & Dynamic Amazon Target Selection P03: Canonical Recommended & Explorer view-models preserve Niche A vs Niche B shortlist separation, truthful qualification badges, and Amazon/Walmart telemetry parity",
+      "passed": true,
+      "status": "passed"
+    }
+  ]
+}

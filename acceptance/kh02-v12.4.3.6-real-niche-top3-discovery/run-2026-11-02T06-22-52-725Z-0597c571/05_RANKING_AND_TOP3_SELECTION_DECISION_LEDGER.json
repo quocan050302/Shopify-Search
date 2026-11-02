@@ -1,0 +1,118 @@
+{
+  "codeSha": "0597c5717d13b5749e039bd6777aea12e910d08b",
+  "evaluatedAt": "2026-11-02T06:22:53.388Z",
+  "shortfallPaddingDetected": false,
+  "provisionalPromotedToEvergreenWinnersCount": 0,
+  "nicheAShortlistLedger": [
+    {
+      "rank": 1,
+      "candidateId": "cand_2112683702",
+      "productKey": "url::https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+      "familyKey": "pet_hair_remover_roller",
+      "title": "Chomchom Roller Pet Hair Remover",
+      "storeDomain": "chomchomroller.com",
+      "canonicalProductUrl": "https://chomchomroller.com/products/chomchom-roller-pet-hair-remover",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 55,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_598170608",
+      "productKey": "url::https://furbo.com/products/furbo-dog-camera",
+      "familyKey": "furbo_camera",
+      "title": "Furbo Dog Camera",
+      "storeDomain": "furbo.com",
+      "canonicalProductUrl": "https://furbo.com/products/furbo-dog-camera",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 42,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1233695536",
+      "productKey": "url::https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+      "familyKey": "pet_water_fountain",
+      "title": "Dockstream Battery Operated Cat Water Fountain",
+      "storeDomain": "petlibro.com",
+      "canonicalProductUrl": "https://petlibro.com/products/dockstream-battery-operated-cat-water-fountain",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 42,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    }
+  ],
+  "nicheBShortlistLedger": [
+    {
+      "rank": 1,
+      "candidateId": "cand_1598428182",
+      "productKey": "url::https://closetcube.com/products/stackable-clear-acrylic-shoe-storage-boxes",
+      "familyKey": "storage_boxes",
+      "title": "Stackable Clear Acrylic Shoe Storage Boxes",
+      "storeDomain": "closetcube.com",
+      "canonicalProductUrl": "https://closetcube.com/products/stackable-clear-acrylic-shoe-storage-boxes",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 42,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_73868310",
+      "productKey": "url::https://tidyhomeco.com/products/expandable-bamboo-kitchen-drawer-organizer",
+      "familyKey": "drawer_organizer",
+      "title": "Expandable Bamboo Kitchen Drawer Organizer",
+      "storeDomain": "tidyhomeco.com",
+      "canonicalProductUrl": "https://tidyhomeco.com/products/expandable-bamboo-kitchen-drawer-organizer",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 42,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_1593234636",
+      "productKey": "url::https://under5sink.com/products/2-tier-sliding-under-sink-organizer-rack",
+      "familyKey": "organizer_rack",
+      "title": "2 Tier Sliding Under Sink Organizer Rack",
+      "storeDomain": "under5sink.com",
+      "canonicalProductUrl": "https://under5sink.com/products/2-tier-sliding-under-sink-organizer-rack",
+      "productRealityStatus": "EVIDENCE_SUPPORTED_PHYSICAL_PRODUCT",
+      "relevanceStatus": "RELEVANT",
+      "opportunityScore": 42,
+      "tier": "PROVISIONAL_OPPORTUNITY",
+      "missingEvidence": [
+        "Insufficient historical data (0 points observed, minimum 3 required). Evergreen sustainability cannot be verified.",
+        "Single-platform evidence: Lacks corroboration on secondary ad or social channels.",
+        "No verified video creative available for hook analysis."
+      ]
+    }
+  ]
+}
