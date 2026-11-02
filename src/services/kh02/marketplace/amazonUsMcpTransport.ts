@@ -1228,11 +1228,11 @@ export function buildAmazonUiPhaseContextProof(input: {
     ? hr.perSearchReadbacks
     : [];
   const searchObservedAt =
-    (typeof hr?.searchReadbackObservedAt === "string" && hr.searchReadbackObservedAt) ||
     (typeof perSearchReadbacks[0]?.observedAt === "string" &&
       perSearchReadbacks[0].observedAt) ||
     (typeof searchOps[0]?.completedAt === "string" && searchOps[0].completedAt) ||
     (typeof searchOps[0]?.startedAt === "string" && searchOps[0].startedAt) ||
+    (typeof hr?.searchReadbackObservedAt === "string" && hr.searchReadbackObservedAt) ||
     (typeof searchCardsLedger[0]?.observedAt === "string" &&
       searchCardsLedger[0].observedAt) ||
     null;
@@ -1244,10 +1244,10 @@ export function buildAmazonUiPhaseContextProof(input: {
       ? hr.searchPageExplicitCurrency
       : null;
   const searchSnapshotHash =
-    (typeof hr?.searchSnapshotHash === "string" && hr.searchSnapshotHash) ||
     (typeof perSearchReadbacks[0]?.rawSnapshotHash === "string" &&
       perSearchReadbacks[0].rawSnapshotHash) ||
     (typeof searchOps[0]?.responseHash === "string" && searchOps[0].responseHash) ||
+    (typeof hr?.searchSnapshotHash === "string" && hr.searchSnapshotHash) ||
     null;
   const searchAttempted = Boolean(
     searchSnapshotHash || searchPageZip || searchOps.length > 0 || perSearchReadbacks.length > 0
@@ -2939,14 +2939,18 @@ export async function connectAmazonPlaywrightMcp(
             .update(textItems || url, "utf8")
             .digest("hex");
           if (isSearchNav) {
-            handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
-              lastToolCompletedAt;
+            if (!handshakeProof.homeAndLocationReadback.searchReadbackObservedAt) {
+              handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
+                lastToolCompletedAt;
+            }
             if (!handshakeProof.homeAndLocationReadback.searchSnapshotHash) {
               handshakeProof.homeAndLocationReadback.searchSnapshotHash = snapTextHash;
             }
           } else {
-            handshakeProof.homeAndLocationReadback.pdpReadbackObservedAt =
-              lastToolCompletedAt;
+            if (!handshakeProof.homeAndLocationReadback.pdpReadbackObservedAt) {
+              handshakeProof.homeAndLocationReadback.pdpReadbackObservedAt =
+                lastToolCompletedAt;
+            }
             if (!handshakeProof.homeAndLocationReadback.pdpSnapshotHash) {
               handshakeProof.homeAndLocationReadback.pdpSnapshotHash = snapTextHash;
             }
@@ -3411,13 +3415,21 @@ export async function connectAmazonPlaywrightMcp(
                 .update(JSON.stringify(domObj), "utf8")
                 .digest("hex");
               if (handshakeProof.homeAndLocationReadback) {
-                handshakeProof.homeAndLocationReadback.searchPageZip =
-                  domObj.deliveryPostalCode || null;
-                handshakeProof.homeAndLocationReadback.searchPageExplicitCurrency =
-                  domObj.explicitCurrency || null;
-                handshakeProof.homeAndLocationReadback.searchSnapshotHash = searchSnapHash;
-                handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
-                  lastToolCompletedAt;
+                if (!handshakeProof.homeAndLocationReadback.searchPageZip) {
+                  handshakeProof.homeAndLocationReadback.searchPageZip =
+                    domObj.deliveryPostalCode || null;
+                }
+                if (!handshakeProof.homeAndLocationReadback.searchPageExplicitCurrency) {
+                  handshakeProof.homeAndLocationReadback.searchPageExplicitCurrency =
+                    domObj.explicitCurrency || null;
+                }
+                if (!handshakeProof.homeAndLocationReadback.searchSnapshotHash) {
+                  handshakeProof.homeAndLocationReadback.searchSnapshotHash = searchSnapHash;
+                }
+                if (!handshakeProof.homeAndLocationReadback.searchReadbackObservedAt) {
+                  handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
+                    lastToolCompletedAt;
+                }
                 if (!Array.isArray(handshakeProof.homeAndLocationReadback.perSearchReadbacks)) {
                   handshakeProof.homeAndLocationReadback.perSearchReadbacks = [];
                 }

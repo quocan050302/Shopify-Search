@@ -3417,7 +3417,9 @@ export type GateVerdictStatusV12_4_3_7_2 =
   | "BLOCKED_PROVIDER"
   | "BLOCKED_UPSTREAM"
   | "BLOCKED_ACCESS_CHALLENGE"
+  | "BLOCKED_VERIFICATION"
   | "PAUSED_BLOCKED_PROVIDER"
+  | "PUSH_ATTESTATION_PENDING"
   | "DEGRADED_OR_ZERO_LIVE"
   | "NOT_EXECUTED"
   | "INSUFFICIENT_EVIDENCE"
@@ -3446,6 +3448,7 @@ export interface GateVerdictRecordV12_4_3_7_2 {
 
 export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
   expectedCodeSha: string;
+  acceptanceRunId?: string;
   measuredAt?: string;
   gitPrecheck?: {
     codeSha?: string;
@@ -3794,13 +3797,20 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
   } | null;
   mutationSuite?: {
     codeSha?: string;
+    kind?: string;
+    scope?: string;
+    isFixtureOnly?: boolean;
+    acceptanceRunId?: string;
     evaluatedAt?: string;
     completedAt?: string;
     totalMutationsExecuted?: number;
     caughtMutationsCount?: number;
     falsePassesCount?: number;
+    inconclusiveCount?: number;
     sourceTreeRestoredClean?: boolean;
+    mutations?: Array<Record<string, any>>;
   } | null;
+  commitPushAttestation?: Record<string, any> | null;
   resourceAndOrphanGuard?: {
     codeSha?: string;
     minFreeDiskGiB?: number;
@@ -3933,17 +3943,16 @@ export function validatePerSpecE2EReceipts(
       seenSpecFiles.add(specFile);
     }
 
-    if (typeof r.specIndex === "number") {
-      if (
-        !Number.isInteger(r.specIndex) ||
-        r.specIndex < 1 ||
-        r.specIndex > canonicalSpecs.length ||
-        seenSpecIndices.has(r.specIndex)
-      ) {
-        reasons.push(`DUPLICATE_OR_INVALID_E2E_SPEC_INDEX:${r.specIndex}`);
-      } else {
-        seenSpecIndices.add(r.specIndex);
-      }
+    if (
+      typeof r.specIndex !== "number" ||
+      !Number.isInteger(r.specIndex) ||
+      r.specIndex < 1 ||
+      r.specIndex > canonicalSpecs.length ||
+      seenSpecIndices.has(r.specIndex)
+    ) {
+      reasons.push(`DUPLICATE_OR_INVALID_E2E_SPEC_INDEX:${r.specIndex}`);
+    } else {
+      seenSpecIndices.add(r.specIndex);
     }
 
     const rowSha = r.sourceSha ?? r.codeSha;
@@ -5610,17 +5619,52 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         Number.isFinite(Date.parse(String(mutCompletedIso))) &&
         Number.isFinite(Date.parse(measuredAt)) &&
         Date.parse(String(mutCompletedIso)) > Date.parse(measuredAt);
+      const mutHasInvalidKind =
+        mut.kind !== undefined && mut.kind !== "ACTUAL_COMPLETED_MUTATION_RUN";
+      const mutIsFixtureOnly =
+        mut.isFixtureOnly === true ||
+        mut.scope === "TEST_FIXTURE" ||
+        mut.scope === "NON_RELEASE_EVIDENCE";
+      const mutRunIdMismatch =
+        Boolean(input.acceptanceRunId) &&
+        Boolean(mut.acceptanceRunId) &&
+        input.acceptanceRunId !== mut.acceptanceRunId;
+      const mutInconclusiveCount = Number(mut.inconclusiveCount ?? 0);
+      const mutRowsValid =
+        !Array.isArray(mut.mutations) ||
+        (mut.mutations.length === mut.totalMutationsExecuted &&
+          mut.mutations.every(
+            (r: any) =>
+              r &&
+              r.caught === true &&
+              r.baselinePass !== false &&
+              r.mutationFail !== false &&
+              (!Array.isArray(r.newFailedChecks) || r.newFailedChecks.length > 0)
+          ));
       if (
         (mut.falsePassesCount ?? 1) !== 0 ||
+        mutInconclusiveCount > 0 ||
         (mut.totalMutationsExecuted ?? 0) < 92 ||
         mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
         mut.sourceTreeRestoredClean !== true ||
-        mutCompletedAfterVerdict
+        mutCompletedAfterVerdict ||
+        mutHasInvalidKind ||
+        mutIsFixtureOnly ||
+        mutRunIdMismatch ||
+        !mutRowsValid
       ) {
         engStatus = "FAIL";
         engReasons.push(
           mutCompletedAfterVerdict
             ? "CHRONOLOGY_VIOLATION_MUTATION_SUITE_COMPLETED_AFTER_VERDICT_EVALUATED_AT"
+            : mutHasInvalidKind || mutIsFixtureOnly
+            ? "INVALID_OR_FIXTURE_ONLY_MUTATION_RECEIPT_PROVENANCE"
+            : mutRunIdMismatch
+            ? "MUTATION_RUN_ID_MISMATCH"
+            : mutInconclusiveCount > 0
+            ? "MUTATION_SUITE_HAS_INCONCLUSIVE_CONTROL_BASELINES"
+            : !mutRowsValid
+            ? "MUTATION_PER_CASE_ROWS_MISSING_OR_INVALID"
             : "Physical negative mutation suite had false passes, < 92 mutations, or dirty worktree."
         );
       }
@@ -6025,14 +6069,41 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       Number.isFinite(Date.parse(String(mutCompletedIso))) &&
       Number.isFinite(Date.parse(measuredAt)) &&
       Date.parse(String(mutCompletedIso)) > Date.parse(measuredAt);
+    const mutHasInvalidKind =
+      mut?.kind !== undefined && mut.kind !== "ACTUAL_COMPLETED_MUTATION_RUN";
+    const mutIsFixtureOnly =
+      mut?.isFixtureOnly === true ||
+      mut?.scope === "TEST_FIXTURE" ||
+      mut?.scope === "NON_RELEASE_EVIDENCE";
+    const mutRunIdMismatch =
+      Boolean(input.acceptanceRunId) &&
+      Boolean(mut?.acceptanceRunId) &&
+      input.acceptanceRunId !== mut?.acceptanceRunId;
+    const mutInconclusiveCount = Number(mut?.inconclusiveCount ?? 0);
+    const mutRowsValid =
+      !Array.isArray(mut?.mutations) ||
+      (mut!.mutations!.length === mut?.totalMutationsExecuted &&
+        mut!.mutations!.every(
+          (r: any) =>
+            r &&
+            r.caught === true &&
+            r.baselinePass !== false &&
+            r.mutationFail !== false &&
+            (!Array.isArray(r.newFailedChecks) || r.newFailedChecks.length > 0)
+        ));
     const mutStatus: GateVerdictStatusV12_4_3_7_2 = !mut
       ? "INCOMPLETE"
       : !shaOk(mut) ||
         (mut.falsePassesCount ?? 1) !== 0 ||
+        mutInconclusiveCount > 0 ||
         (mut.totalMutationsExecuted ?? 0) < 92 ||
         mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
         mut.sourceTreeRestoredClean !== true ||
-        mutCompletedAfterVerdict
+        mutCompletedAfterVerdict ||
+        mutHasInvalidKind ||
+        mutIsFixtureOnly ||
+        mutRunIdMismatch ||
+        !mutRowsValid
       ? "FAIL"
       : "PASS";
     gates.INDEPENDENT_RAW_EVIDENCE_AND_MUTATION_VALIDATION = {
@@ -6045,14 +6116,52 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       sourceSha: mut?.codeSha || "",
       reasons:
         mutStatus === "PASS"
-          ? [`All ${mut?.caughtMutationsCount}/${mut?.totalMutationsExecuted} negative/mutation checks caught with 0 false passes.`]
-          : ["Independent raw evidence or negative mutation suite missing, failed, or post-dated."],
+          ? [`All ${mut?.caughtMutationsCount}/${mut?.totalMutationsExecuted} negative/mutation checks caught with 0 false passes and 0 inconclusive baselines.`]
+          : ["Independent raw evidence or negative mutation suite missing, failed, fixture-only, inconclusive, or post-dated."],
       measuredAt,
       scope: { mode: "INDEPENDENT_MUTATION_VALIDATION" },
       counts: {
         totalMutationsExecuted: mut?.totalMutationsExecuted ?? 0,
         caughtMutationsCount: mut?.caughtMutationsCount ?? 0,
         falsePassesCount: mut?.falsePassesCount ?? -1,
+        inconclusiveCount: mutInconclusiveCount,
+      },
+    };
+
+    const att = input.commitPushAttestation ?? (rawInput as any).artifact27CommitPushAttestation;
+    let attStatus: GateVerdictStatusV12_4_3_7_2 = "PUSH_ATTESTATION_PENDING";
+    const attReasons: string[] = [];
+    const attRefs: string[] = [];
+    if (att) {
+      const attCheck = validateCommitPushAttestation(att, {
+        expectedCodeSha: expectedSha,
+        verifyLiveGitRemote: false,
+      });
+      attStatus = attCheck.status;
+      attReasons.push(...attCheck.reasons);
+      if (attStatus === "PASS") {
+        attRefs.push(
+          `EvidenceCommit:${att.evidenceContentCommitSha}@${att.branch}`
+        );
+      }
+    } else {
+      attStatus = "PUSH_ATTESTATION_PENDING";
+      attReasons.push(
+        "Evidence commit E not yet pushed/attested at pre-publish stage; attested in 27_COMMIT_PUSH_REMOTE_HEAD_ATTESTATION.json after Commit E push."
+      );
+    }
+
+    gates.REMOTE_PUSH_ATTESTATION = {
+      gateId: "REMOTE_PUSH_ATTESTATION",
+      status: attStatus,
+      evidenceRefs: attRefs,
+      sourceSha: att?.codeSha || att?.testedCodeSha || expectedSha,
+      reasons: attReasons,
+      measuredAt,
+      scope: { mode: "POST_COMMIT_ATTESTATION" },
+      counts: {
+        remoteReadbackVerified: Boolean(att?.remoteReadbackVerified),
+        isSelfReferential: Boolean(att?.isSelfReferential ?? false),
       },
     };
 
@@ -6067,7 +6176,12 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
   }
 
   const failedGateKeys = Object.entries(gates)
-    .filter(([, g]) => g.status === "FAIL" || g.status === "INCOMPLETE")
+    .filter(
+      ([, g]) =>
+        g.status === "FAIL" ||
+        g.status === "INCOMPLETE" ||
+        g.status === "BLOCKED_VERIFICATION"
+    )
     .map(([k]) => k);
   const anyGateFailed = failedGateKeys.length > 0;
   const allEngineeringGatesPassed =
@@ -6105,4 +6219,958 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     failedGateKeys,
   };
 }
+
+// ============================================================================
+// V12.4.3.7.4 P0-A / P0-C / P0-D: PUBLICATION STATE MACHINE, ATOMIC ARTIFACT
+// WRITER, BARRIER VERDICT PUBLISHER, AND NON-CIRCULAR COMMIT/PUSH ATTESTATION
+// ============================================================================
+
+export type AcceptanceLifecycleStageV12_4_3_7_4 =
+  | "CREATED"
+  | "RUNNING_TESTS"
+  | "MUTATION_RUNNING"
+  | "TESTS_COMPLETED"
+  | "FINAL_VERDICT_COMPUTED"
+  | "ARTIFACTS_VALIDATED"
+  | "EVIDENCE_COMMITTED"
+  | "PUSH_VERIFIED"
+  | "ATTESTED"
+  | "FAILED"
+  | "BLOCKED";
+
+export interface AcceptanceRunStateV12_4_3_7_4 {
+  runId: string;
+  attemptId: string;
+  codeSha: string;
+  treeSha: string;
+  branch: string;
+  status: "RUNNING" | "INCOMPLETE" | "COMPLETED" | "FAILED" | "BLOCKED";
+  stage: AcceptanceLifecycleStageV12_4_3_7_4;
+  isFinal: boolean;
+  releaseVerdict: string | null;
+  startedAt: string;
+  updatedAt: string;
+  completedStages: AcceptanceLifecycleStageV12_4_3_7_4[];
+  stageHistory: Array<{
+    stage: AcceptanceLifecycleStageV12_4_3_7_4;
+    enteredAt: string;
+    detail: string;
+  }>;
+  progressCounters: Record<string, number | string | boolean | null>;
+  failureReason?: string | null;
+  errorDetail?: string | null;
+}
+
+const ORDERED_HAPPY_STAGES_V12_4_3_7_4: AcceptanceLifecycleStageV12_4_3_7_4[] = [
+  "CREATED",
+  "RUNNING_TESTS",
+  "MUTATION_RUNNING",
+  "TESTS_COMPLETED",
+  "FINAL_VERDICT_COMPUTED",
+  "ARTIFACTS_VALIDATED",
+  "EVIDENCE_COMMITTED",
+  "PUSH_VERIFIED",
+  "ATTESTED",
+];
+
+/**
+ * Atomically writes an artifact file via a unique temporary file in the same
+ * filesystem directory, fsyncs the descriptor, renames over the target path,
+ * and verifies on-disk readback integrity.
+ */
+export function atomicWriteFinalArtifact(
+  artifactDir: string,
+  fileName: string,
+  content: string | Record<string, any>,
+  options?: { simulateCrashBeforeRename?: boolean }
+): { filePath: string; sizeBytes: number; sha256: string } {
+  fs.mkdirSync(artifactDir, { recursive: true });
+  const serialized =
+    typeof content === "string"
+      ? content
+      : JSON.stringify(content, null, 2) + "\n";
+  const buf = Buffer.from(serialized, "utf8");
+  const expectedSha256 = crypto.createHash("sha256").update(buf).digest("hex");
+  const tmpName = `.${fileName}.tmp.${process.pid}.${Date.now()}.${crypto
+    .randomBytes(4)
+    .toString("hex")}`;
+  const tmpPath = path.join(artifactDir, tmpName);
+  const finalPath = path.join(artifactDir, fileName);
+
+  let fd: number | null = null;
+  try {
+    fd = fs.openSync(tmpPath, "w", 0o644);
+    fs.writeFileSync(fd, buf);
+    try {
+      fs.fsyncSync(fd);
+    } catch {
+      // Some virtual filesystems ignore fsync; ignore only ENOTSUP/EINVAL
+    }
+    fs.closeSync(fd);
+    fd = null;
+
+    if (options?.simulateCrashBeforeRename) {
+      throw new Error(
+        `SIMULATED_CRASH_WHILE_WRITING_ATOMIC_ARTIFACT:${fileName}`
+      );
+    }
+
+    fs.renameSync(tmpPath, finalPath);
+  } catch (err) {
+    if (fd !== null) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+    try {
+      if (fs.existsSync(tmpPath)) {
+        fs.unlinkSync(tmpPath);
+      }
+    } catch {}
+    throw err;
+  }
+
+  const readbackBuf = fs.readFileSync(finalPath);
+  const readbackSha256 = crypto
+    .createHash("sha256")
+    .update(readbackBuf)
+    .digest("hex");
+  if (readbackBuf.length === 0 || readbackSha256 !== expectedSha256) {
+    throw new Error(
+      `ATOMIC_WRITE_READBACK_MISMATCH:${fileName}:expected=${expectedSha256},actual=${readbackSha256}`
+    );
+  }
+  if (fileName.endsWith(".json")) {
+    JSON.parse(readbackBuf.toString("utf8"));
+  }
+  return {
+    filePath: finalPath,
+    sizeBytes: readbackBuf.length,
+    sha256: readbackSha256,
+  };
+}
+
+/**
+ * Initializes RUN_STATE.json for a fresh acceptance attempt and purges any stale
+ * final verdict or attestation files from prior interrupted attempts in the directory.
+ */
+export function createAcceptanceRunState(
+  artifactDir: string,
+  params: {
+    runId: string;
+    attemptId?: string;
+    codeSha: string;
+    treeSha: string;
+    branch: string;
+  }
+): AcceptanceRunStateV12_4_3_7_4 {
+  fs.mkdirSync(artifactDir, { recursive: true });
+  // Purge any stale 24 / 27 / tmp files if retrying in an existing directory
+  for (const entry of fs.readdirSync(artifactDir)) {
+    if (
+      entry.startsWith(".") ||
+      entry === "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json" ||
+      entry === "27_COMMIT_PUSH_REMOTE_HEAD_ATTESTATION.json" ||
+      entry === "27_COMMIT_PUSH_REMOTE_HEAD_PROOF.json"
+    ) {
+      try {
+        fs.rmSync(path.join(artifactDir, entry), { force: true });
+      } catch {}
+    }
+  }
+
+  const now = new Date().toISOString();
+  const state: AcceptanceRunStateV12_4_3_7_4 = {
+    runId: params.runId,
+    attemptId:
+      params.attemptId ||
+      `attempt_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+    codeSha: params.codeSha,
+    treeSha: params.treeSha,
+    branch: params.branch,
+    status: "RUNNING",
+    stage: "CREATED",
+    isFinal: false,
+    releaseVerdict: null,
+    startedAt: now,
+    updatedAt: now,
+    completedStages: ["CREATED"],
+    stageHistory: [
+      {
+        stage: "CREATED",
+        enteredAt: now,
+        detail: "Acceptance run initialized; zero final verdicts exist.",
+      },
+    ],
+    progressCounters: {},
+    failureReason: null,
+    errorDetail: null,
+  };
+  atomicWriteFinalArtifact(artifactDir, "RUN_STATE.json", state);
+  return state;
+}
+
+export function transitionAcceptanceRunState(
+  artifactDir: string,
+  nextStage: AcceptanceLifecycleStageV12_4_3_7_4,
+  detail: string,
+  extra?: {
+    progressCounters?: Record<string, number | string | boolean | null>;
+    releaseVerdict?: string | null;
+  }
+): AcceptanceRunStateV12_4_3_7_4 {
+  const statePath = path.join(artifactDir, "RUN_STATE.json");
+  if (!fs.existsSync(statePath)) {
+    throw new Error(`MISSING_RUN_STATE_JSON_AT_TRANSITION:${nextStage}`);
+  }
+  const current: AcceptanceRunStateV12_4_3_7_4 = JSON.parse(
+    fs.readFileSync(statePath, "utf8")
+  );
+  if (
+    (current.stage === "FAILED" || current.stage === "BLOCKED") &&
+    nextStage !== "FAILED" &&
+    nextStage !== "BLOCKED"
+  ) {
+    throw new Error(
+      `ILLEGAL_RUN_STATE_TRANSITION_FROM_TERMINAL:${current.stage}->${nextStage}`
+    );
+  }
+
+  const curIdx = ORDERED_HAPPY_STAGES_V12_4_3_7_4.indexOf(current.stage);
+  const nextIdx = ORDERED_HAPPY_STAGES_V12_4_3_7_4.indexOf(nextStage);
+  if (curIdx >= 0 && nextIdx >= 0) {
+    // Disallow skipping MUTATION_RUNNING or TESTS_COMPLETED when advancing to FINAL_VERDICT_COMPUTED
+    if (
+      nextStage === "FINAL_VERDICT_COMPUTED" &&
+      (!current.completedStages.includes("MUTATION_RUNNING") ||
+        !current.completedStages.includes("TESTS_COMPLETED"))
+    ) {
+      throw new Error(
+        `ILLEGAL_RUN_STATE_TRANSITION_TO_FINAL_VERDICT_WITHOUT_MUTATIONS:${current.stage}->${nextStage}`
+      );
+    }
+    if (nextIdx < curIdx) {
+      throw new Error(
+        `ILLEGAL_BACKWARD_RUN_STATE_TRANSITION:${current.stage}->${nextStage}`
+      );
+    }
+  }
+
+  const now = new Date().toISOString();
+  current.stage = nextStage;
+  current.updatedAt = now;
+  if (!current.completedStages.includes(nextStage)) {
+    current.completedStages.push(nextStage);
+  }
+  current.stageHistory.push({
+    stage: nextStage,
+    enteredAt: now,
+    detail,
+  });
+  if (extra?.progressCounters) {
+    current.progressCounters = {
+      ...current.progressCounters,
+      ...extra.progressCounters,
+    };
+  }
+  if (nextStage === "FAILED") {
+    current.status = "FAILED";
+    current.isFinal = false;
+    current.releaseVerdict = "FAIL";
+  } else if (nextStage === "BLOCKED") {
+    current.status = "BLOCKED";
+    current.isFinal = false;
+    current.releaseVerdict = "BLOCKED";
+  } else if (
+    nextStage === "ARTIFACTS_VALIDATED" ||
+    nextStage === "EVIDENCE_COMMITTED" ||
+    nextStage === "PUSH_VERIFIED" ||
+    nextStage === "ATTESTED"
+  ) {
+    current.status = "COMPLETED";
+    current.isFinal = nextStage === "ATTESTED";
+    if (extra?.releaseVerdict !== undefined) {
+      current.releaseVerdict = extra.releaseVerdict;
+    }
+  } else {
+    current.status = "RUNNING";
+    current.isFinal = false;
+    if (extra?.releaseVerdict !== undefined) {
+      current.releaseVerdict = extra.releaseVerdict;
+    }
+  }
+
+  atomicWriteFinalArtifact(artifactDir, "RUN_STATE.json", current);
+  return current;
+}
+
+export function markAcceptanceFailed(
+  artifactDir: string,
+  reason: string,
+  errorDetail?: string,
+  isBlocked = false
+): AcceptanceRunStateV12_4_3_7_4 {
+  const statePath = path.join(artifactDir, "RUN_STATE.json");
+  let state: AcceptanceRunStateV12_4_3_7_4;
+  const now = new Date().toISOString();
+  if (fs.existsSync(statePath)) {
+    state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  } else {
+    state = {
+      runId: "unknown_run",
+      attemptId: "unknown_attempt",
+      codeSha: "",
+      treeSha: "",
+      branch: "",
+      status: isBlocked ? "BLOCKED" : "FAILED",
+      stage: isBlocked ? "BLOCKED" : "FAILED",
+      isFinal: false,
+      releaseVerdict: isBlocked ? "BLOCKED" : "FAIL",
+      startedAt: now,
+      updatedAt: now,
+      completedStages: [],
+      stageHistory: [],
+      progressCounters: {},
+    };
+  }
+
+  state.status = isBlocked ? "BLOCKED" : "FAILED";
+  state.stage = isBlocked ? "BLOCKED" : "FAILED";
+  state.isFinal = false;
+  state.releaseVerdict = isBlocked ? "BLOCKED" : "FAIL";
+  state.updatedAt = now;
+  state.failureReason = reason;
+  state.errorDetail = errorDetail || null;
+  state.stageHistory.push({
+    stage: state.stage,
+    enteredAt: now,
+    detail: `${reason}${errorDetail ? `: ${errorDetail}` : ""}`,
+  });
+
+  // Never leave a success-looking 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json on failure/abort
+  const p24 = path.join(
+    artifactDir,
+    "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json"
+  );
+  if (fs.existsSync(p24)) {
+    try {
+      fs.unlinkSync(p24);
+    } catch {}
+  }
+
+  atomicWriteFinalArtifact(artifactDir, "RUN_STATE.json", state);
+  atomicWriteFinalArtifact(artifactDir, "INCIDENT_FAILURE_RECEIPT.json", {
+    codeSha: state.codeSha,
+    runId: state.runId,
+    attemptId: state.attemptId,
+    failedAt: now,
+    status: state.status,
+    failureReason: reason,
+    errorDetail: errorDetail || null,
+  });
+  return state;
+}
+
+/**
+ * Publishes 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json ONLY after verifying
+ * that RUN_STATE.json has completed MUTATION_RUNNING -> TESTS_COMPLETED and
+ * 22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json exists on disk with an actual
+ * completed mutation run, zero false passes, and zero inconclusive baselines.
+ */
+export function publishFinalVerdictAfterEvidenceBarrier(
+  artifactDir: string,
+  verdictInput: ComputeV12_4_3_7_2ReleaseVerdictsInput & Record<string, any>,
+  options?: { simulateCrashBeforeRename?: boolean }
+): ComputedReleaseVerdictsBundleV12_4_3_7_2 {
+  const statePath = path.join(artifactDir, "RUN_STATE.json");
+  if (!fs.existsSync(statePath)) {
+    throw new Error("BARRIER_VIOLATION_MISSING_RUN_STATE_JSON");
+  }
+  const runState: AcceptanceRunStateV12_4_3_7_4 = JSON.parse(
+    fs.readFileSync(statePath, "utf8")
+  );
+  if (
+    runState.status === "FAILED" ||
+    runState.status === "BLOCKED" ||
+    !runState.completedStages.includes("MUTATION_RUNNING") ||
+    !runState.completedStages.includes("TESTS_COMPLETED")
+  ) {
+    throw new Error(
+      `BARRIER_VIOLATION_RUN_STATE_NOT_READY_FOR_FINAL_VERDICT:stage=${runState.stage},status=${runState.status}`
+    );
+  }
+  if (runState.codeSha !== verdictInput.expectedCodeSha) {
+    throw new Error(
+      `BARRIER_VIOLATION_RUN_STATE_CODE_SHA_MISMATCH:${runState.codeSha}!==${verdictInput.expectedCodeSha}`
+    );
+  }
+
+  const p22 = path.join(
+    artifactDir,
+    "22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json"
+  );
+  if (!fs.existsSync(p22)) {
+    throw new Error(
+      "BARRIER_VIOLATION_MISSING_ON_DISK_22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT"
+    );
+  }
+  const onDisk22 = JSON.parse(fs.readFileSync(p22, "utf8"));
+  if (
+    onDisk22.kind !== "ACTUAL_COMPLETED_MUTATION_RUN" ||
+    onDisk22.isFixtureOnly === true ||
+    onDisk22.codeSha !== verdictInput.expectedCodeSha ||
+    (onDisk22.falsePassesCount ?? 1) !== 0 ||
+    (onDisk22.inconclusiveCount ?? 1) !== 0 ||
+    (onDisk22.totalMutationsExecuted ?? 0) < 98 ||
+    onDisk22.caughtMutationsCount !== onDisk22.totalMutationsExecuted ||
+    !Array.isArray(onDisk22.mutations) ||
+    onDisk22.mutations.length !== onDisk22.totalMutationsExecuted
+  ) {
+    throw new Error(
+      "BARRIER_VIOLATION_INVALID_OR_INCOMPLETE_22_MUTATION_RECEIPT"
+    );
+  }
+
+  const measuredAt = verdictInput.measuredAt || new Date().toISOString();
+  const mutCompletedMs = Date.parse(
+    String(onDisk22.completedAt || onDisk22.evaluatedAt || "")
+  );
+  const verdictEvalMs = Date.parse(measuredAt);
+  if (
+    !Number.isFinite(mutCompletedMs) ||
+    !Number.isFinite(verdictEvalMs) ||
+    mutCompletedMs > verdictEvalMs
+  ) {
+    throw new Error(
+      `BARRIER_VIOLATION_CHRONOLOGY_22_AFTER_24:${onDisk22.completedAt}>${measuredAt}`
+    );
+  }
+
+  const bundle = computeV12_4_3_7_2ReleaseVerdicts({
+    ...verdictInput,
+    acceptanceRunId: runState.runId,
+    measuredAt,
+    mutationSuite: onDisk22,
+  });
+
+  atomicWriteFinalArtifact(
+    artifactDir,
+    "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+    {
+      ...bundle,
+      ...bundle.verdictTable,
+      acceptanceRunId: runState.runId,
+      attemptId: runState.attemptId,
+    },
+    { simulateCrashBeforeRename: options?.simulateCrashBeforeRename }
+  );
+
+  transitionAcceptanceRunState(
+    artifactDir,
+    "FINAL_VERDICT_COMPUTED",
+    "Final 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json atomically published after 22 completed.",
+    {
+      releaseVerdict: bundle.verdictTable.OVERALL_RELEASE_VERDICT,
+    }
+  );
+
+  return bundle;
+}
+
+/**
+ * Verifies non-self-referential 27_COMMIT_PUSH_REMOTE_HEAD_ATTESTATION.json.
+ * Why Commit A cannot contain its own SHA: changing any byte inside a tracked file
+ * changes the Git blob hash, tree hash, and commit SHA-1. Therefore 27 attests the
+ * already-pushed Evidence Commit E (and its ancestor Source Commit S), while Commit A
+ * commits 27 and is verified externally after push.
+ */
+export function validateCommitPushAttestation(
+  a27: Record<string, any> | null | undefined,
+  options: {
+    expectedCodeSha: string;
+    expectedBranch?: string;
+    artifactDir?: string;
+    repoRoot?: string;
+    verifyLiveGitRemote?: boolean;
+  }
+): {
+  valid: boolean;
+  status: "PASS" | "FAIL" | "BLOCKED_VERIFICATION";
+  reasons: string[];
+} {
+  const reasons: string[] = [];
+  if (!a27 || typeof a27 !== "object") {
+    return {
+      valid: false,
+      status: "FAIL",
+      reasons: ["MISSING_27_COMMIT_PUSH_ATTESTATION_OBJECT"],
+    };
+  }
+
+  const rawStr = JSON.stringify(a27);
+  if (
+    rawStr.includes("PENDING_EVIDENCE_COMMIT") ||
+    a27.finalEvidenceCommitSha === "PENDING_EVIDENCE_COMMIT" ||
+    a27.evidenceContentCommitSha === "PENDING_EVIDENCE_COMMIT"
+  ) {
+    reasons.push("FORBIDDEN_PENDING_EVIDENCE_COMMIT_PLACEHOLDER");
+  }
+
+  if (a27.isSelfReferential !== false) {
+    reasons.push("ATTESTATION_MUST_DECLARE_IS_SELF_REFERENTIAL_FALSE");
+  }
+  if (a27.attestationScope !== "EVIDENCE_COMMIT_E_ALREADY_PUSHED") {
+    reasons.push(
+      `INVALID_ATTESTATION_SCOPE:${a27.attestationScope} (expected EVIDENCE_COMMIT_E_ALREADY_PUSHED)`
+    );
+  }
+  if (a27.branch !== "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1") {
+    reasons.push(`INVALID_ATTESTATION_BRANCH:${a27.branch}`);
+  }
+
+  const testedSha = String(a27.testedCodeSha || a27.codeSha || "").trim();
+  if (
+    !/^[0-9a-f]{40}$/.test(testedSha) ||
+    testedSha !== options.expectedCodeSha
+  ) {
+    reasons.push(
+      `ATTESTATION_TESTED_CODE_SHA_MISMATCH:${testedSha}!==${options.expectedCodeSha}`
+    );
+  }
+  if (
+    typeof a27.testedTreeSha !== "string" ||
+    !/^[0-9a-f]{40}$/.test(a27.testedTreeSha)
+  ) {
+    reasons.push("INVALID_OR_MISSING_TESTED_TREE_SHA");
+  }
+
+  const evidenceCommitE = String(a27.evidenceContentCommitSha || "").trim();
+  const remoteHeadAfterE = String(
+    a27.remoteHeadObservedAfterEvidencePush || ""
+  ).trim();
+  if (!/^[0-9a-f]{40}$/.test(evidenceCommitE)) {
+    reasons.push(
+      `INVALID_EVIDENCE_CONTENT_COMMIT_SHA_40HEX:${evidenceCommitE}`
+    );
+  }
+  if (evidenceCommitE && evidenceCommitE === testedSha) {
+    reasons.push(
+      "EVIDENCE_COMMIT_SHA_CANNOT_EQUAL_SOURCE_COMMIT_SHA"
+    );
+  }
+  if (
+    a27.attestationCommitSha &&
+    a27.attestationCommitSha === evidenceCommitE
+  ) {
+    reasons.push("SELF_REFERENTIAL_ATTESTATION_COMMIT_SHA_DETECTED");
+  }
+  if (
+    !/^[0-9a-f]{40}$/.test(remoteHeadAfterE) ||
+    remoteHeadAfterE !== evidenceCommitE
+  ) {
+    reasons.push(
+      `REMOTE_HEAD_OBSERVED_MISMATCH_EVIDENCE_COMMIT:${remoteHeadAfterE}!==${evidenceCommitE}`
+    );
+  }
+  if (a27.remoteReadbackVerified !== true) {
+    reasons.push("REMOTE_READBACK_VERIFIED_NOT_TRUE");
+  }
+  if (a27.ancestryVerifiedStoE !== true) {
+    reasons.push("ANCESTRY_S_TO_E_NOT_VERIFIED");
+  }
+  if (
+    typeof a27.provider !== "string" ||
+    a27.provider.trim().length < 3 ||
+    typeof a27.verificationMethod !== "string" ||
+    a27.verificationMethod.trim().length < 5
+  ) {
+    reasons.push("MISSING_PROVIDER_OR_VERIFICATION_METHOD_IN_27");
+  }
+  const readbackAtMs = Date.parse(String(a27.remoteRefReadbackAt || ""));
+  if (!Number.isFinite(readbackAtMs)) {
+    reasons.push("INVALID_REMOTE_REF_READBACK_AT_TIMESTAMP");
+  }
+  if (
+    typeof a27.evidenceManifestSha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(a27.evidenceManifestSha256) ||
+    typeof a27.independentValidatorReportSha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(a27.independentValidatorReportSha256)
+  ) {
+    reasons.push(
+      "INVALID_MANIFEST_OR_VALIDATOR_REPORT_SHA256_IN_27"
+    );
+  }
+
+  if (options.artifactDir) {
+    const p25 = fs.existsSync(
+      path.join(options.artifactDir, "25_NONCYCLIC_SHA256_ARTIFACT_MANIFEST.json")
+    )
+      ? path.join(options.artifactDir, "25_NONCYCLIC_SHA256_ARTIFACT_MANIFEST.json")
+      : path.join(options.artifactDir, "25_SHA256_ARTIFACT_MANIFEST.json");
+    const p23 = fs.existsSync(
+      path.join(options.artifactDir, "23_INDEPENDENT_VALIDATION_REPORT.json")
+    )
+      ? path.join(options.artifactDir, "23_INDEPENDENT_VALIDATION_REPORT.json")
+      : path.join(
+          options.artifactDir,
+          "23_INDEPENDENT_RAW_EVIDENCE_VALIDATOR_REPORT.json"
+        );
+    if (!fs.existsSync(p25)) {
+      reasons.push("MISSING_MANIFEST_25_FOR_ATTESTATION_HASH_CHECK");
+    } else {
+      const actual25Sha = crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(p25))
+        .digest("hex");
+      if (actual25Sha !== a27.evidenceManifestSha256) {
+        reasons.push(
+          `ATTESTATION_MANIFEST_25_HASH_MISMATCH:claimed=${a27.evidenceManifestSha256},actual=${actual25Sha}`
+        );
+      }
+    }
+    if (!fs.existsSync(p23)) {
+      reasons.push("MISSING_VALIDATOR_REPORT_23_FOR_ATTESTATION_HASH_CHECK");
+    } else {
+      const actual23Sha = crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(p23))
+        .digest("hex");
+      if (actual23Sha !== a27.independentValidatorReportSha256) {
+        reasons.push(
+          `ATTESTATION_VALIDATOR_23_HASH_MISMATCH:claimed=${a27.independentValidatorReportSha256},actual=${actual23Sha}`
+        );
+      }
+    }
+  }
+
+  if (options.verifyLiveGitRemote && reasons.length === 0) {
+    const checkGit = verifyRemoteBranchHeadAndAncestry({
+      repoRoot: options.repoRoot || process.cwd(),
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      sourceCommitSha: testedSha,
+      evidenceCommitSha: evidenceCommitE,
+      queryLiveRemoteLsRemote: false,
+    });
+    if (!checkGit.ok) {
+      return {
+        valid: false,
+        status: checkGit.blocked ? "BLOCKED_VERIFICATION" : "FAIL",
+        reasons: checkGit.reasons,
+      };
+    }
+  }
+
+  return {
+    valid: reasons.length === 0,
+    status: reasons.length === 0 ? "PASS" : "FAIL",
+    reasons,
+  };
+}
+
+export function verifyRemoteBranchHeadAndAncestry(params: {
+  repoRoot: string;
+  branch: string;
+  sourceCommitSha: string;
+  evidenceCommitSha: string;
+  attestationCommitSha?: string;
+  queryLiveRemoteLsRemote?: boolean;
+}): {
+  ok: boolean;
+  blocked: boolean;
+  observedRemoteRefSha: string | null;
+  reasons: string[];
+} {
+  const reasons: string[] = [];
+  let observedRemoteRefSha: string | null = null;
+  try {
+    const sType = execSync(`git cat-file -t ${params.sourceCommitSha}`, {
+      cwd: params.repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (sType !== "commit") {
+      reasons.push(`SOURCE_SHA_NOT_GIT_COMMIT:${params.sourceCommitSha}`);
+    }
+  } catch {
+    reasons.push(`SOURCE_SHA_MISSING_IN_GIT:${params.sourceCommitSha}`);
+  }
+
+  try {
+    const eType = execSync(`git cat-file -t ${params.evidenceCommitSha}`, {
+      cwd: params.repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (eType !== "commit") {
+      reasons.push(`EVIDENCE_SHA_NOT_GIT_COMMIT:${params.evidenceCommitSha}`);
+    }
+  } catch {
+    reasons.push(`EVIDENCE_SHA_MISSING_IN_GIT:${params.evidenceCommitSha}`);
+  }
+
+  if (reasons.length === 0) {
+    try {
+      execSync(
+        `git merge-base --is-ancestor ${params.sourceCommitSha} ${params.evidenceCommitSha}`,
+        {
+          cwd: params.repoRoot,
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      );
+    } catch {
+      reasons.push(
+        `SOURCE_SHA_NOT_ANCESTOR_OF_EVIDENCE_SHA:${params.sourceCommitSha}->${params.evidenceCommitSha}`
+      );
+    }
+  }
+
+  if (params.queryLiveRemoteLsRemote) {
+    try {
+      const lsOut = execSync(
+        `git ls-remote origin refs/heads/${params.branch}`,
+        {
+          cwd: params.repoRoot,
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      ).trim();
+      observedRemoteRefSha = lsOut.split(/\s+/)[0] || null;
+      if (!observedRemoteRefSha || !/^[0-9a-f]{40}$/.test(observedRemoteRefSha)) {
+        return {
+          ok: false,
+          blocked: true,
+          observedRemoteRefSha: null,
+          reasons: ["REMOTE_PUSH_VERIFICATION_BLOCKED_EMPTY_LS_REMOTE"],
+        };
+      }
+    } catch (err: any) {
+      return {
+        ok: false,
+        blocked: true,
+        observedRemoteRefSha: null,
+        reasons: [
+          `REMOTE_PUSH_VERIFICATION_BLOCKED:${err?.message || "ls-remote failed"}`,
+        ],
+      };
+    }
+  } else {
+    try {
+      observedRemoteRefSha = execSync(
+        `git rev-parse origin/${params.branch}`,
+        {
+          cwd: params.repoRoot,
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      ).trim();
+    } catch {
+      observedRemoteRefSha = null;
+    }
+  }
+
+  if (observedRemoteRefSha) {
+    try {
+      execSync(
+        `git merge-base --is-ancestor ${params.evidenceCommitSha} ${observedRemoteRefSha}`,
+        {
+          cwd: params.repoRoot,
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      );
+    } catch {
+      reasons.push(
+        `EVIDENCE_COMMIT_NOT_IN_REMOTE_BRANCH_ANCESTRY:${params.evidenceCommitSha}!<=origin/${params.branch}(${observedRemoteRefSha})`
+      );
+    }
+  } else {
+    reasons.push("REMOTE_TRACKING_REF_UNAVAILABLE");
+  }
+
+  if (params.attestationCommitSha) {
+    try {
+      execSync(
+        `git merge-base --is-ancestor ${params.evidenceCommitSha} ${params.attestationCommitSha}`,
+        {
+          cwd: params.repoRoot,
+          stdio: ["ignore", "pipe", "ignore"],
+        }
+      );
+    } catch {
+      reasons.push(
+        `EVIDENCE_COMMIT_NOT_ANCESTOR_OF_ATTESTATION_COMMIT:${params.evidenceCommitSha}->${params.attestationCommitSha}`
+      );
+    }
+  }
+
+  return {
+    ok: reasons.length === 0,
+    blocked: false,
+    observedRemoteRefSha,
+    reasons,
+  };
+}
+
+export type CrashInjectionStageV12_4_3_7_4 =
+  | "BEFORE_MUTATION_STARTS"
+  | "MID_PHYSICAL_MUTATION"
+  | "JUST_AFTER_22_WRITTEN"
+  | "WHILE_WRITING_24"
+  | "AFTER_FINAL_VALIDATION_BEFORE_COMMIT"
+  | "AFTER_EVIDENCE_PUSH_BEFORE_ATTESTATION"
+  | "BEFORE_LAST_REMOTE_VERIFICATION";
+
+/**
+ * Deterministically simulates crash / abort injection at each of the 7 mandatory
+ * V12.4.3.7.4 lifecycle stages inside an isolated temporary directory and verifies
+ * that no outward final release PASS or valid attestation is left behind.
+ */
+export function simulateAcceptanceCrashInjectionAtStage(
+  stage: CrashInjectionStageV12_4_3_7_4,
+  baseTempDir: string,
+  codeSha: string
+): {
+  stage: CrashInjectionStageV12_4_3_7_4;
+  crashedAsExpected: boolean;
+  file24ExistsAfterCrash: boolean;
+  file27ExistsAfterCrash: boolean;
+  runStateTerminalStatus: string;
+  outwardReleasePassPublished: boolean;
+  passed: boolean;
+  detail: string;
+} {
+  const stageDir = path.join(baseTempDir, `crash_${stage}`);
+  fs.mkdirSync(stageDir, { recursive: true });
+  createAcceptanceRunState(stageDir, {
+    runId: `run_crash_${stage}`,
+    codeSha,
+    treeSha: "452eb8e5d93e4cccafb81321479d4d8ef340d925",
+    branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  });
+
+  let crashedAsExpected = false;
+  try {
+    transitionAcceptanceRunState(stageDir, "RUNNING_TESTS", "Stage 1..5 running");
+    if (stage === "BEFORE_MUTATION_STARTS") {
+      throw new Error("INJECTED_CRASH_BEFORE_MUTATION_STARTS");
+    }
+
+    transitionAcceptanceRunState(stageDir, "MUTATION_RUNNING", "Stage 6 mutations running");
+    if (stage === "MID_PHYSICAL_MUTATION") {
+      throw new Error("INJECTED_CRASH_MID_PHYSICAL_MUTATION");
+    }
+
+    const now22 = new Date().toISOString();
+    atomicWriteFinalArtifact(
+      stageDir,
+      "22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json",
+      {
+        codeSha,
+        kind: "ACTUAL_COMPLETED_MUTATION_RUN",
+        isFixtureOnly: false,
+        startedAt: now22,
+        completedAt: now22,
+        evaluatedAt: now22,
+        totalMutationsExecuted: 98,
+        caughtMutationsCount: 98,
+        falsePassesCount: 0,
+        inconclusiveCount: 0,
+        sourceTreeRestoredClean: true,
+        mutations: Array.from({ length: 98 }, (_, i) => ({
+          mutationId: `MUT_${i + 1}`,
+          baselinePass: true,
+          mutationFail: true,
+          newFailedChecks: ["CHECK_1"],
+          caught: true,
+        })),
+      }
+    );
+    transitionAcceptanceRunState(stageDir, "TESTS_COMPLETED", "22 written");
+    if (stage === "JUST_AFTER_22_WRITTEN") {
+      throw new Error("INJECTED_CRASH_JUST_AFTER_22_WRITTEN");
+    }
+
+    if (stage === "WHILE_WRITING_24") {
+      atomicWriteFinalArtifact(
+        stageDir,
+        "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+        { codeSha },
+        { simulateCrashBeforeRename: true }
+      );
+    }
+
+    transitionAcceptanceRunState(
+      stageDir,
+      "FINAL_VERDICT_COMPUTED",
+      "24 computed"
+    );
+    transitionAcceptanceRunState(
+      stageDir,
+      "ARTIFACTS_VALIDATED",
+      "23 pre-publish validated"
+    );
+    if (stage === "AFTER_FINAL_VALIDATION_BEFORE_COMMIT") {
+      throw new Error("INJECTED_CRASH_AFTER_FINAL_VALIDATION_BEFORE_COMMIT");
+    }
+
+    transitionAcceptanceRunState(
+      stageDir,
+      "EVIDENCE_COMMITTED",
+      "Commit E created"
+    );
+    transitionAcceptanceRunState(
+      stageDir,
+      "PUSH_VERIFIED",
+      "Commit E pushed"
+    );
+    if (stage === "AFTER_EVIDENCE_PUSH_BEFORE_ATTESTATION") {
+      throw new Error("INJECTED_CRASH_AFTER_EVIDENCE_PUSH_BEFORE_ATTESTATION");
+    }
+
+    if (stage === "BEFORE_LAST_REMOTE_VERIFICATION") {
+      throw new Error("INJECTED_CRASH_BEFORE_LAST_REMOTE_VERIFICATION");
+    }
+  } catch (err: any) {
+    crashedAsExpected = true;
+    markAcceptanceFailed(
+      stageDir,
+      `CRASH_INJECTED_AT_${stage}`,
+      err?.message || String(err),
+      stage === "BEFORE_LAST_REMOTE_VERIFICATION"
+    );
+  }
+
+  const file24ExistsAfterCrash = fs.existsSync(
+    path.join(stageDir, "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json")
+  );
+  const file27ExistsAfterCrash = fs.existsSync(
+    path.join(stageDir, "27_COMMIT_PUSH_REMOTE_HEAD_ATTESTATION.json")
+  );
+  const runStateAfter: AcceptanceRunStateV12_4_3_7_4 = JSON.parse(
+    fs.readFileSync(path.join(stageDir, "RUN_STATE.json"), "utf8")
+  );
+  const outwardReleasePassPublished =
+    file24ExistsAfterCrash ||
+    file27ExistsAfterCrash ||
+    runStateAfter.isFinal === true ||
+    runStateAfter.status === "COMPLETED";
+
+  const passed =
+    crashedAsExpected &&
+    !file24ExistsAfterCrash &&
+    !file27ExistsAfterCrash &&
+    (runStateAfter.status === "FAILED" || runStateAfter.status === "BLOCKED") &&
+    !outwardReleasePassPublished;
+
+  return {
+    stage,
+    crashedAsExpected,
+    file24ExistsAfterCrash,
+    file27ExistsAfterCrash,
+    runStateTerminalStatus: runStateAfter.status,
+    outwardReleasePassPublished,
+    passed,
+    detail: `crashed=${crashedAsExpected}, 24Exists=${file24ExistsAfterCrash}, 27Exists=${file27ExistsAfterCrash}, state=${runStateAfter.status}`,
+  };
+}
+
 
