@@ -1868,6 +1868,7 @@ export async function collectMetaProductSignals(
         title: ad.headline,
         description: ad.bodyText,
         matchedQueryIds,
+        workspaceId: query.workspaceId || "default-workspace",
         researchRunId,
         queryId: isFreshLive && binding ? binding.queryId : null,
         providerRequestId,

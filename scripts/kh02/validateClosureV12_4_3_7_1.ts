@@ -23,6 +23,7 @@ import crypto from "crypto";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { computeV12_4_3_7_2ReleaseVerdicts } from "./acceptanceTruth";
 
 export const REQUIRED_V12_4_3_7_1_ARTIFACTS = [
   "00_BRANCH_REMOTE_CODE_SHA_AND_TREE.json",
@@ -693,13 +694,53 @@ export function validateClosureArtifactsV12_4_3_7_1(
     `pitVerdict=${a27?.pointInTimeIntegrityVerdict}, postCutoffIncluded=${a27?.postCutoffIncludedInReplayCount}`
   );
 
-  // 12. Final Release Verdict Table (30) — Section 12 Exact Contract
+  // 12. Final Release Verdict Table (30) — Section 12 Exact Contract & Independent Recomputation
   const vTable = a30?.verdictTable || a30;
+  let recomputedVerdictMatch = true;
+  if (a30?.verdictsByGate) {
+    const recomputed = computeV12_4_3_7_2ReleaseVerdicts({
+      expectedCodeSha: expectedSha,
+      artifact00BranchAndSha: a00,
+      artifact01RuntimePrecheck: a01,
+      artifact02StandaloneReference: a02,
+      artifact03ServerWorkerProof: a03,
+      artifact04HttpPostAndFencing: a04,
+      artifact05LiveMeta: a05,
+      artifact06DiscoveryFunnel: a06,
+      artifact07FamilyDedup: a07,
+      artifact08AmazonUiPreflight: a08,
+      artifact09AmazonTargetPlan: a09,
+      artifact10AmazonMcpLedger: a10,
+      artifact11AmazonSearchCards: a11,
+      artifact12AmazonPdpVerdicts: a12,
+      artifact13AmazonMcpSession: a13,
+      artifact14DbPersistence: a14,
+      artifact15RealHttpGetParity: a15,
+      artifact16UiDomReloadParity: a16,
+      artifact17SecondaryNiche: a17,
+      artifact18WalmartPaused: a18,
+      artifact19NonInflation: a19,
+      artifact20ReadOnlyIsolation: a20,
+      artifact21TestMatrix: a21,
+      artifact22TargetedSuites: a22,
+      artifact23FullRegression: a23,
+      artifact24E2EReceipts: a24,
+      artifact25DevReplay: a25,
+      artifact26HoldoutReplay: a26,
+      artifact27PointInTimeAudit: a27,
+    });
+    for (const [gateId, gateStatus] of Object.entries(recomputed.verdictTable)) {
+      if (vTable?.[gateId] && vTable[gateId] !== gateStatus) {
+        recomputedVerdictMatch = false;
+      }
+    }
+  }
   addCheck(
     "ARTIFACT30_SECTION12_VERDICT_TABLE",
     "RELEASE_VERDICT",
-    "Final release verdict table matches Section 12 fail-closed separation of engineering vs live/business verdicts",
-    vTable?.CODE_AND_ENGINEERING_GATES === "PASS" &&
+    "Final release verdict table matches Section 12 fail-closed separation of engineering vs live/business verdicts and independent recomputation",
+    recomputedVerdictMatch &&
+      vTable?.CODE_AND_ENGINEERING_GATES === "PASS" &&
       vTable?.STANDALONE_REFERENCE_EVIDENCE_INTEGRITY === "PASS" &&
       vTable?.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E === "PASS" &&
       (vTable?.META_LIVE_CURRENT_RUN_COLLECTION === "PASS" ||
@@ -735,6 +776,7 @@ export function validateClosureArtifactsV12_4_3_7_1(
       vTable?.OVERALL_RELEASE_STATUS ===
         "ENGINEERING_AND_COMMERCIAL_FOUNDATION_READY_WITH_TRUTHFUL_LIVE_AND_EXTERNAL_GATES",
     JSON.stringify({
+      recomputedVerdictMatch,
       ENG: vTable?.CODE_AND_ENGINEERING_GATES,
       REF: vTable?.STANDALONE_REFERENCE_EVIDENCE_INTEGRITY,
       NET_WKR: vTable?.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E,

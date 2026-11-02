@@ -906,6 +906,685 @@ export async function ensureAmazonUsDeliveryContextViaUi(
   };
 }
 
+export interface AmazonUiPhaseRecord {
+  phaseId:
+    | "phase1_initial_home"
+    | "phase2_zip_dialog_action"
+    | "phase3_home_readback"
+    | "phase4_search_readback"
+    | "phase5_pdp_readback"
+    | "phase6_post_session_close";
+  attempted: boolean;
+  observedFields: Record<string, any>;
+  selectorOrTool: string | null;
+  observedAt: string | null;
+  rawSnapshotHash: string | null;
+  sessionId: string | null;
+  status:
+    | "VERIFIED"
+    | "SUCCEEDED"
+    | "PARTIAL"
+    | "UNKNOWN"
+    | "FAILED"
+    | "BLOCKED"
+    | "NOT_ATTEMPTED";
+  reason: string;
+  [key: string]: any;
+}
+
+export interface AmazonUiContextProof {
+  codeSha: string;
+  evaluatedAt: string;
+  workspaceId: string | null;
+  researchRunId: string | null;
+  sessionId: string | null;
+  ownedChildPid: number | null;
+  internalGlowFetchUsed: boolean;
+  targetUsZip: string;
+  searchBoxReady: boolean;
+  locationTriggerFound: boolean;
+  dialogOpened: boolean;
+  zipInputFilled: boolean;
+  applyClicked: boolean;
+  confirmationClicked: boolean;
+  initialDeliveryHeaderText: string | null;
+  finalDeliveryHeaderText: string | null;
+  observedDeliveryPostalCode: string | null;
+  verifiedDeliveryMarket: "US" | null;
+  usDeliveryVerified: boolean;
+  observedDisplayedCurrencyCode: string | null;
+  currencyPreferenceVerifiedUsd: boolean;
+  finalEffectiveUsDeliveryVerified: boolean;
+  finalEffectiveCurrencyUsdVerified: boolean;
+  status:
+    | "US_DISPLAYED_CONTEXT_VERIFIED"
+    | "US_ZIP_VERIFIED"
+    | "US_ZIP_VERIFIED_CURRENCY_PARTIAL"
+    | "NOT_USD_VERIFIED"
+    | "US_NOT_CONFIRMED"
+    | "CAPTCHA_BLOCKED"
+    | "AUTHENTICATION_REQUIRED";
+  stepsExecuted: string[];
+  phase1_initial_home: AmazonUiPhaseRecord;
+  phase2_zip_dialog_action: AmazonUiPhaseRecord;
+  phase3_home_readback: AmazonUiPhaseRecord;
+  phase4_search_readback: AmazonUiPhaseRecord;
+  phase5_pdp_readback: AmazonUiPhaseRecord;
+  phase6_post_session_close: AmazonUiPhaseRecord;
+  phases: {
+    phase1_initial_home: AmazonUiPhaseRecord;
+    phase2_zip_dialog_action: AmazonUiPhaseRecord;
+    phase3_home_readback: AmazonUiPhaseRecord;
+    phase4_search_readback: AmazonUiPhaseRecord;
+    phase5_pdp_readback: AmazonUiPhaseRecord;
+    phase6_post_session_close: AmazonUiPhaseRecord;
+  };
+  finalZipVerdict: "PASS" | "NOT_CONFIRMED_ON_LIVE_DOM" | "BLOCKED_ACCESS_CHALLENGE";
+  finalUsdCommercialVerdict:
+    | "PASS"
+    | "OBSERVED_NON_USD_OR_PARTIAL"
+    | "BLOCKED_ACCESS_CHALLENGE";
+  contradictionsDetected: string[];
+  homeAndLocationReadback: Record<string, any> | null;
+}
+
+/**
+ * V12.4.3.7.2 P0-C: Reconciles Amazon UI preflight, homepage readback, search readback,
+ * PDP readback, and session close into a single self-consistent 6-phase proof object.
+ * Never uses truthy defaults (`?? true`) or hardcoded `stepsExecuted`.
+ */
+export function buildAmazonUiPhaseContextProof(input: {
+  codeSha: string;
+  workspaceId?: string | null;
+  researchRunId?: string | null;
+  sessionId?: string | null;
+  targetUsZip?: string;
+  homeAndLocationReadback?: Record<string, any> | null;
+  searchCardsLedger?: Array<Record<string, any>> | null;
+  sessionLifecycle?: Record<string, any> | null;
+  evaluatedPdpRows?: Array<Record<string, any>>;
+  pdpCandidates?: Array<Record<string, any>>;
+  internalGlowFetchUsed?: boolean;
+}): AmazonUiContextProof {
+  const evaluatedAt = new Date().toISOString();
+  const targetUsZip = input.targetUsZip || "95829";
+  const hr = input.homeAndLocationReadback || null;
+  const lc = input.sessionLifecycle || null;
+  const pdpRows = Array.isArray(input.evaluatedPdpRows)
+    ? input.evaluatedPdpRows
+    : Array.isArray(input.pdpCandidates)
+    ? input.pdpCandidates
+    : [];
+  const sessionId =
+    input.sessionId ||
+    (hr?.sessionId as string) ||
+    (lc?.sessionId as string) ||
+    null;
+  const ownedChildPid =
+    typeof hr?.ownedChildPid === "number"
+      ? hr.ownedChildPid
+      : typeof lc?.ownedChildPid === "number"
+      ? lc.ownedChildPid
+      : null;
+
+  const ledger: AmazonUiLocationActionStep[] = Array.isArray(hr?.uiActionLedger)
+    ? hr.uiActionLedger
+    : [];
+  const stepsExecuted = ledger
+    .map((s) => String(s?.step || "").trim())
+    .filter(Boolean);
+
+  const findStep = (stepName: string) =>
+    ledger.find((s) => s && s.step === stepName) || null;
+
+  const stepInitial = findStep("READ_INITIAL_CONTEXT") || findStep("WAIT_SEARCH_BOX_READY");
+  const stepModal = findStep("OPEN_LOCATION_POPOVER_AND_APPLY_ZIP");
+  const stepAfterHome = findStep("REFRESH_AND_READBACK_AFTER_APPLY");
+
+  const searchBoxReady = Boolean(hr?.searchBoxReady === true);
+  const locationTriggerFound = Boolean(hr?.deliveryLinkVisible === true);
+  const dialogOpened = Boolean(hr?.locationDialogOpened === true);
+  const zipFieldVisible = Boolean(hr?.zipFieldVisible === true);
+  const applyClicked = Boolean(hr?.applyClicked === true);
+  const zipInputFilled = Boolean(zipFieldVisible && applyClicked);
+  const confirmationClicked = Boolean(hr?.confirmationHandled === true);
+
+  const initialDeliveryHeaderText =
+    typeof hr?.initialDeliveryText === "string" ? hr.initialDeliveryText : null;
+  const initialObservedZip =
+    typeof hr?.initialObservedZip === "string" ? hr.initialObservedZip : null;
+  const initialExplicitCurrency =
+    typeof hr?.initialExplicitCurrency === "string" ? hr.initialExplicitCurrency : null;
+
+  const phase1: AmazonUiPhaseRecord = {
+    phaseId: "phase1_initial_home",
+    attempted: Boolean(hr?.attempted === true),
+    observedFields: {
+      searchBoxReady,
+      deliveryLinkVisible: locationTriggerFound,
+      initialDeliveryText: initialDeliveryHeaderText,
+      initialObservedZip,
+      initialExplicitCurrency,
+      initialExplicitCurrencySource: hr?.initialExplicitCurrencySource || null,
+    },
+    selectorOrTool: stepInitial
+      ? `${stepInitial.toolName}:#twotabsearchtextbox,#nav-global-location-popover-link,#glow-ingress-block`
+      : hr?.attempted
+      ? "browser_evaluate:#glow-ingress-block"
+      : null,
+    observedAt: stepInitial?.completedAt || stepInitial?.invokedAt || null,
+    rawSnapshotHash: stepInitial?.snapshotHash || hr?.homeSnapshotHash || null,
+    sessionId,
+    status: !hr?.attempted
+      ? "NOT_ATTEMPTED"
+      : searchBoxReady
+      ? "SUCCEEDED"
+      : "FAILED",
+    reason: !hr?.attempted
+      ? "Homepage preflight not attempted."
+      : searchBoxReady
+      ? `Initial home loaded (delivery='${initialDeliveryHeaderText || "none"}', currency='${initialExplicitCurrency || "none"}').`
+      : "Search box was not ready on initial homepage.",
+  };
+
+  const alreadyTargetZipOnInitial = initialObservedZip === targetUsZip;
+  const phase2: AmazonUiPhaseRecord = {
+    phaseId: "phase2_zip_dialog_action",
+    attempted: Boolean(stepModal || alreadyTargetZipOnInitial),
+    observedFields: {
+      targetUsZip,
+      locationDialogOpened: dialogOpened,
+      zipFieldVisible,
+      zipInputFilled,
+      applyClicked,
+      confirmationHandled: confirmationClicked,
+      alreadyTargetZipOnInitial,
+    },
+    selectorOrTool: stepModal
+      ? `${stepModal.toolName}:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate`
+      : alreadyTargetZipOnInitial
+      ? "DOM:#glow-ingress-block(ALREADY_TARGET_ZIP)"
+      : null,
+    observedAt: stepModal?.completedAt || stepInitial?.completedAt || null,
+    rawSnapshotHash: stepModal?.snapshotHash || stepInitial?.snapshotHash || null,
+    sessionId,
+    status: alreadyTargetZipOnInitial
+      ? "VERIFIED"
+      : dialogOpened && zipInputFilled && applyClicked
+      ? "SUCCEEDED"
+      : stepModal
+      ? "FAILED"
+      : "NOT_ATTEMPTED",
+    reason: alreadyTargetZipOnInitial
+      ? `Initial homepage already displayed target US ZIP ${targetUsZip}.`
+      : dialogOpened && zipInputFilled && applyClicked
+      ? `Opened location popover, entered ${targetUsZip} in #GLUXZipUpdateInput, and clicked Apply.`
+      : "Location dialog or ZIP Apply control did not complete.",
+  };
+
+  const homeAfterDeliveryText =
+    typeof hr?.observedDeliveryLocationText === "string"
+      ? hr.observedDeliveryLocationText
+      : null;
+  const homeAfterZip =
+    typeof hr?.observedDeliveryPostalCode === "string"
+      ? hr.observedDeliveryPostalCode
+      : null;
+  const homeAfterCurrency =
+    typeof hr?.observedCurrency === "string" ? hr.observedCurrency : null;
+  const homeZipMatches = homeAfterZip === targetUsZip;
+
+  const phase3: AmazonUiPhaseRecord = {
+    phaseId: "phase3_home_readback",
+    attempted: Boolean(stepAfterHome || (hr?.attempted && alreadyTargetZipOnInitial)),
+    observedFields: {
+      observedDeliveryLocationText: homeAfterDeliveryText,
+      observedZip: homeAfterZip,
+      observedExplicitCurrency: homeAfterCurrency,
+      explicitCurrencySource: hr?.explicitCurrencySource || null,
+      usDeliveryVerifiedOnHome: homeZipMatches,
+    },
+    selectorOrTool: stepAfterHome
+      ? `${stepAfterHome.toolName}:#glow-ingress-block,#icp-touch-link-cop`
+      : hr?.attempted
+      ? "browser_evaluate:#glow-ingress-block"
+      : null,
+    observedAt: stepAfterHome?.completedAt || stepInitial?.completedAt || null,
+    rawSnapshotHash: stepAfterHome?.snapshotHash || hr?.homeSnapshotHash || null,
+    sessionId,
+    status: homeZipMatches
+      ? homeAfterCurrency === "USD"
+        ? "VERIFIED"
+        : "PARTIAL"
+      : hr?.attempted
+      ? "FAILED"
+      : "NOT_ATTEMPTED",
+    reason: homeZipMatches
+      ? `Homepage readback confirmed '${homeAfterDeliveryText}' (ZIP=${homeAfterZip}, homeExplicitCurrency=${homeAfterCurrency || "UNKNOWN"}).`
+      : `Homepage readback did not confirm target ZIP ${targetUsZip} (observed=${homeAfterZip || "null"}).`,
+  };
+
+  const searchPageZip =
+    typeof hr?.searchPageZip === "string" ? hr.searchPageZip : null;
+  const searchPageCurrency =
+    typeof hr?.searchPageExplicitCurrency === "string"
+      ? hr.searchPageExplicitCurrency
+      : null;
+  const searchSnapshotHash =
+    typeof hr?.searchSnapshotHash === "string" ? hr.searchSnapshotHash : null;
+  const searchAttempted = Boolean(searchSnapshotHash || searchPageZip);
+
+  const phase4: AmazonUiPhaseRecord = {
+    phaseId: "phase4_search_readback",
+    attempted: searchAttempted,
+    observedFields: {
+      searchPageZip,
+      searchPageExplicitCurrency: searchPageCurrency,
+      usZipMaintainedOnSearch: searchPageZip === targetUsZip,
+    },
+    selectorOrTool: searchAttempted
+      ? "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]"
+      : null,
+    observedAt: searchAttempted ? evaluatedAt : null,
+    rawSnapshotHash: searchSnapshotHash,
+    sessionId,
+    status: !searchAttempted
+      ? "NOT_ATTEMPTED"
+      : searchPageZip === targetUsZip
+      ? searchPageCurrency === "USD"
+        ? "VERIFIED"
+        : "PARTIAL"
+      : "UNKNOWN",
+    reason: !searchAttempted
+      ? "Search page readback not recorded."
+      : `Search page header ZIP=${searchPageZip || "null"}, searchExplicitCurrency=${searchPageCurrency || "UNKNOWN"}.`,
+  };
+
+  const pdpPageZipFromHr =
+    typeof hr?.pdpPageZip === "string" ? hr.pdpPageZip : null;
+  const pdpCurrencyFromHr =
+    typeof hr?.pdpExplicitCurrency === "string" ? hr.pdpExplicitCurrency : null;
+  const pdpSnapshotHash =
+    typeof hr?.pdpSnapshotHash === "string"
+      ? hr.pdpSnapshotHash
+      : (pdpRows[0]?.rawEvidenceHash as string) || null;
+
+  const pdpZipsObserved = pdpRows
+    .map((r) => r?.observedDeliveryPostalCode)
+    .filter((z): z is string => typeof z === "string" && z.length > 0);
+  const pdpUsdRows = pdpRows.filter(
+    (r) =>
+      r?.currency === "USD" &&
+      typeof r?.price === "number" &&
+      Number.isFinite(r.price) &&
+      r.price > 0
+  );
+  const effectivePdpZip =
+    pdpPageZipFromHr || (pdpZipsObserved.length > 0 ? pdpZipsObserved[0] : null);
+  const effectivePdpCurrency =
+    pdpCurrencyFromHr ||
+    (pdpUsdRows.length > 0
+      ? "USD"
+      : (pdpRows.find((r) => typeof r?.currency === "string")?.currency as string) ||
+        null);
+  const pdpAttempted = Boolean(pdpSnapshotHash || pdpRows.length > 0);
+  const explicitCurrencySource = String(hr?.explicitCurrencySource || "");
+
+  const phase5: AmazonUiPhaseRecord = {
+    phaseId: "phase5_pdp_readback",
+    attempted: pdpAttempted,
+    observedFields: {
+      pdpPageZip: effectivePdpZip,
+      pdpExplicitCurrency: effectivePdpCurrency,
+      explicitCurrencySource: explicitCurrencySource || (effectivePdpCurrency ? "DOM:PDP" : null),
+      pdpEvaluatedCount: pdpRows.length,
+      pdpNumericUsdPriceCount: pdpUsdRows.length,
+      asinsObserved: pdpRows.map((r) => r?.asin).filter(Boolean),
+    },
+    selectorOrTool: pdpAttempted
+      ? "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]"
+      : null,
+    observedAt: pdpAttempted ? evaluatedAt : null,
+    rawSnapshotHash: pdpSnapshotHash,
+    sessionId,
+    status: !pdpAttempted
+      ? "NOT_ATTEMPTED"
+      : effectivePdpZip === targetUsZip &&
+        effectivePdpCurrency === "USD" &&
+        explicitCurrencySource !== "SYMBOL_ONLY_UNVERIFIED" &&
+        pdpUsdRows.length >= 1
+      ? "VERIFIED"
+      : effectivePdpZip === targetUsZip
+      ? "PARTIAL"
+      : "FAILED",
+    reason: !pdpAttempted
+      ? "No PDP readback recorded."
+      : `PDP readback observed ZIP=${effectivePdpZip || "null"}, currency=${effectivePdpCurrency || "null"} (usdPricedRows=${pdpUsdRows.length}/${pdpRows.length}).`,
+  };
+
+  const closedCleanly = Boolean(lc?.closedCleanly === true || lc?.mcpSessionClosedCleanly === true);
+  const pidTerminated = Boolean(lc?.ownedChildPidTerminated === true);
+  const allOpsSameSession = Boolean(lc?.allLiveOpsMatchSessionId !== false && sessionId);
+
+  const phase6: AmazonUiPhaseRecord = {
+    phaseId: "phase6_post_session_close",
+    attempted: Boolean(lc),
+    observedFields: {
+      sessionId,
+      ownedChildPid,
+      mcpSessionClosedCleanly: closedCleanly,
+      ownedChildPidTerminated: pidTerminated,
+      allLiveOpsMatchSessionId: allOpsSameSession,
+      closeFinishedAt: lc?.closeFinishedAt || null,
+    },
+    selectorOrTool: lc ? "browser_close+SIGTERM_WAIT_EXIT" : null,
+    observedAt: (lc?.closeFinishedAt as string) || evaluatedAt,
+    rawSnapshotHash: sessionId
+      ? crypto
+          .createHash("sha256")
+          .update(
+            JSON.stringify({
+              sessionId,
+              ownedChildPid,
+              closedCleanly,
+              pidTerminated,
+            }),
+            "utf8"
+          )
+          .digest("hex")
+      : null,
+    sessionId,
+    status: !lc
+      ? "NOT_ATTEMPTED"
+      : closedCleanly && pidTerminated && allOpsSameSession
+      ? "VERIFIED"
+      : "FAILED",
+    reason: !lc
+      ? "Session close lifecycle not provided."
+      : `Session ${sessionId || "none"} (PID=${ownedChildPid ?? "null"}) closedCleanly=${closedCleanly}, pidTerminated=${pidTerminated}.`,
+  };
+
+  // Strict derivation of finalEffectiveUsDeliveryVerified & finalEffectiveCurrencyUsdVerified:
+  // - Never borrow homepage ZIP when PDP ZIP is missing
+  // - Never infer USD from bare '$' symbol or search card alone
+  const finalEffectiveUsDeliveryVerified = Boolean(
+    !input.internalGlowFetchUsed &&
+      (phase2.status === "SUCCEEDED" || phase2.status === "VERIFIED") &&
+      homeZipMatches &&
+      phase5.attempted &&
+      effectivePdpZip === targetUsZip
+  );
+
+  const finalEffectiveCurrencyUsdVerified = Boolean(
+    !input.internalGlowFetchUsed &&
+      phase5.attempted &&
+      effectivePdpCurrency === "USD" &&
+      explicitCurrencySource !== "SYMBOL_ONLY_UNVERIFIED" &&
+      pdpUsdRows.length >= 1
+  );
+
+  const observedDeliveryPostalCode = finalEffectiveUsDeliveryVerified
+    ? targetUsZip
+    : homeZipMatches
+    ? homeAfterZip
+    : null;
+  const observedDisplayedCurrencyCode = finalEffectiveCurrencyUsdVerified
+    ? "USD"
+    : effectivePdpCurrency || homeAfterCurrency || null;
+
+  let status: AmazonUiContextProof["status"];
+  if (hr?.status === "AUTHENTICATION_REQUIRED") {
+    status = "AUTHENTICATION_REQUIRED";
+  } else if (hr?.status === "BLOCKED_PROVIDER") {
+    status = "CAPTCHA_BLOCKED";
+  } else if (finalEffectiveUsDeliveryVerified && finalEffectiveCurrencyUsdVerified) {
+    status = "US_DISPLAYED_CONTEXT_VERIFIED";
+  } else if (finalEffectiveUsDeliveryVerified) {
+    status = "US_ZIP_VERIFIED_CURRENCY_PARTIAL";
+  } else {
+    status = "US_NOT_CONFIRMED";
+  }
+
+  const finalZipVerdict: AmazonUiContextProof["finalZipVerdict"] =
+    status === "CAPTCHA_BLOCKED" || status === "AUTHENTICATION_REQUIRED"
+      ? "BLOCKED_ACCESS_CHALLENGE"
+      : finalEffectiveUsDeliveryVerified
+      ? "PASS"
+      : "NOT_CONFIRMED_ON_LIVE_DOM";
+
+  const finalUsdCommercialVerdict: AmazonUiContextProof["finalUsdCommercialVerdict"] =
+    status === "CAPTCHA_BLOCKED" || status === "AUTHENTICATION_REQUIRED"
+      ? "BLOCKED_ACCESS_CHALLENGE"
+      : finalEffectiveCurrencyUsdVerified
+      ? "PASS"
+      : "OBSERVED_NON_USD_OR_PARTIAL";
+
+  const proof: AmazonUiContextProof = {
+    codeSha: input.codeSha,
+    evaluatedAt,
+    workspaceId: input.workspaceId ?? null,
+    researchRunId: input.researchRunId ?? null,
+    sessionId,
+    ownedChildPid,
+    internalGlowFetchUsed: Boolean(input.internalGlowFetchUsed),
+    targetUsZip,
+    searchBoxReady,
+    locationTriggerFound,
+    dialogOpened,
+    zipInputFilled,
+    applyClicked,
+    confirmationClicked,
+    initialDeliveryHeaderText,
+    finalDeliveryHeaderText: homeAfterDeliveryText,
+    observedDeliveryPostalCode,
+    verifiedDeliveryMarket: finalEffectiveUsDeliveryVerified ? "US" : null,
+    usDeliveryVerified: finalEffectiveUsDeliveryVerified,
+    observedDisplayedCurrencyCode,
+    currencyPreferenceVerifiedUsd: finalEffectiveCurrencyUsdVerified,
+    finalEffectiveUsDeliveryVerified,
+    finalEffectiveCurrencyUsdVerified,
+    status,
+    stepsExecuted,
+    phase1_initial_home: phase1,
+    phase2_zip_dialog_action: phase2,
+    phase3_home_readback: phase3,
+    phase4_search_readback: phase4,
+    phase5_pdp_readback: phase5,
+    phase6_post_session_close: phase6,
+    phases: {
+      phase1_initial_home: phase1,
+      phase2_zip_dialog_action: phase2,
+      phase3_home_readback: phase3,
+      phase4_search_readback: phase4,
+      phase5_pdp_readback: phase5,
+      phase6_post_session_close: phase6,
+    },
+    finalZipVerdict,
+    finalUsdCommercialVerdict,
+    contradictionsDetected: [],
+    homeAndLocationReadback: hr,
+  };
+
+  const consistency = validateAmazonUiContextProofConsistency(proof);
+  proof.contradictionsDetected = consistency.contradictions;
+  return proof;
+}
+
+export function validateAmazonUiContextProofConsistency(
+  proof: Partial<AmazonUiContextProof> & Record<string, any>
+): { consistent: boolean; valid: boolean; contradictions: string[] } {
+  const contradictions: string[] = [];
+  if (!proof || typeof proof !== "object") {
+    return {
+      consistent: false,
+      valid: false,
+      contradictions: ["MISSING_PROOF_OBJECT"],
+    };
+  }
+  const hr = proof.homeAndLocationReadback;
+  const phases = proof.phases || {
+    phase1_initial_home: proof.phase1_initial_home,
+    phase2_zip_dialog_action: proof.phase2_zip_dialog_action,
+    phase3_home_readback: proof.phase3_home_readback,
+    phase4_search_readback: proof.phase4_search_readback,
+    phase5_pdp_readback: proof.phase5_pdp_readback,
+    phase6_post_session_close: proof.phase6_post_session_close,
+  };
+
+  if (proof.internalGlowFetchUsed === true) {
+    contradictions.push("FORBIDDEN_INTERNAL_GLOW_FETCH_USED");
+  }
+
+  if (hr && typeof hr === "object") {
+    if (
+      typeof hr.locationDialogOpened === "boolean" &&
+      proof.dialogOpened !== hr.locationDialogOpened
+    ) {
+      contradictions.push(
+        `TOP_LEVEL_DIALOG_OPENED_MISMATCH(top=${proof.dialogOpened},nested=${hr.locationDialogOpened})`
+      );
+    }
+    if (
+      typeof hr.applyClicked === "boolean" &&
+      proof.applyClicked !== hr.applyClicked
+    ) {
+      contradictions.push(
+        `TOP_LEVEL_APPLY_CLICKED_MISMATCH(top=${proof.applyClicked},nested=${hr.applyClicked})`
+      );
+    }
+    if (
+      typeof hr.observedDeliveryPostalCode === "string" &&
+      hr.observedDeliveryPostalCode.length > 0 &&
+      proof.observedDeliveryPostalCode !== hr.observedDeliveryPostalCode
+    ) {
+      contradictions.push(
+        `TOP_LEVEL_ZIP_MISMATCH(top=${proof.observedDeliveryPostalCode},nested=${hr.observedDeliveryPostalCode})`
+      );
+    }
+    if (
+      proof.status === "US_NOT_CONFIRMED" &&
+      (hr.status === "US_DISPLAYED_CONTEXT_VERIFIED" || hr.usDeliveryVerified === true)
+    ) {
+      contradictions.push(
+        `TOP_LEVEL_STATUS_CONTRADICTS_NESTED_READBACK(top=${proof.status},nested=${hr.status})`
+      );
+    }
+  }
+
+  if (
+    phases &&
+    typeof phases === "object" &&
+    phases.phase1_initial_home &&
+    phases.phase2_zip_dialog_action &&
+    phases.phase3_home_readback &&
+    phases.phase4_search_readback &&
+    phases.phase5_pdp_readback &&
+    phases.phase6_post_session_close
+  ) {
+    const p1SearchReady =
+      proof.phase1_initial_home?.searchBoxReady ??
+      phases.phase1_initial_home?.searchBoxReady ??
+      phases.phase1_initial_home?.observedFields?.searchBoxReady;
+    if (typeof p1SearchReady === "boolean" && proof.searchBoxReady !== p1SearchReady) {
+      contradictions.push(
+        `TOP_LEVEL_SEARCH_BOX_READY_MISMATCH(top=${proof.searchBoxReady},phase1=${p1SearchReady})`
+      );
+    }
+
+    const p2Steps =
+      proof.phase2_zip_dialog_action?.stepsExecuted ??
+      phases.phase2_zip_dialog_action?.stepsExecuted;
+    if (
+      Array.isArray(p2Steps) &&
+      p2Steps.length === 0 &&
+      Array.isArray(proof.stepsExecuted) &&
+      proof.stepsExecuted.length > 0
+    ) {
+      contradictions.push("TOP_LEVEL_STEPS_EXECUTED_CONTRADICTS_EMPTY_PHASE2_STEPS");
+    }
+
+    const p2Dialog =
+      proof.phase2_zip_dialog_action?.dialogOpened ??
+      phases.phase2_zip_dialog_action?.dialogOpened ??
+      phases.phase2_zip_dialog_action?.observedFields?.locationDialogOpened;
+    if (typeof p2Dialog === "boolean" && proof.dialogOpened !== p2Dialog) {
+      contradictions.push(
+        `TOP_LEVEL_DIALOG_OPENED_MISMATCH(top=${proof.dialogOpened},phase2=${p2Dialog})`
+      );
+    }
+
+    const p3Zip = phases.phase3_home_readback?.observedFields?.observedZip || null;
+    const p5Zip = phases.phase5_pdp_readback?.observedFields?.pdpPageZip || null;
+    const p5Curr = phases.phase5_pdp_readback?.observedFields?.pdpExplicitCurrency || null;
+    const p5UsdCount = Number(
+      proof.phase5_pdp_readback?.usdPdpConfirmedCount ??
+        phases.phase5_pdp_readback?.usdPdpConfirmedCount ??
+        phases.phase5_pdp_readback?.observedFields?.pdpNumericUsdPriceCount ??
+        0
+    );
+    const p5ObsCurrencies: string[] | null = Array.isArray(
+      proof.phase5_pdp_readback?.observedCurrencies ??
+        phases.phase5_pdp_readback?.observedCurrencies
+    )
+      ? proof.phase5_pdp_readback?.observedCurrencies ??
+        phases.phase5_pdp_readback?.observedCurrencies
+      : null;
+
+    if (
+      proof.finalZipVerdict === "PASS" &&
+      (!proof.observedDeliveryPostalCode ||
+        (proof.targetUsZip && proof.observedDeliveryPostalCode !== proof.targetUsZip))
+    ) {
+      contradictions.push(
+        `FINAL_ZIP_VERDICT_PASS_WITH_MISSING_OR_MISMATCHED_ZIP(zip=${proof.observedDeliveryPostalCode},target=${proof.targetUsZip})`
+      );
+    }
+
+    if (
+      proof.finalUsdCommercialVerdict === "PASS" &&
+      (p5UsdCount < 1 ||
+        proof.observedDisplayedCurrencyCode !== "USD" ||
+        (p5ObsCurrencies && !p5ObsCurrencies.includes("USD")))
+    ) {
+      contradictions.push(
+        `FINAL_USD_VERDICT_PASS_WITHOUT_CONFIRMED_USD_PDP(usdCount=${p5UsdCount},curr=${proof.observedDisplayedCurrencyCode})`
+      );
+    }
+
+    if (
+      proof.finalEffectiveUsDeliveryVerified === true &&
+      (p3Zip !== proof.targetUsZip || p5Zip !== proof.targetUsZip)
+    ) {
+      contradictions.push(
+        `US_DELIVERY_VERIFIED_WITHOUT_HOME_AND_PDP_ZIP(p3Zip=${p3Zip},p5Zip=${p5Zip},target=${proof.targetUsZip})`
+      );
+    }
+    if (
+      proof.finalEffectiveCurrencyUsdVerified === true &&
+      (p5Curr !== "USD" || p5UsdCount < 1)
+    ) {
+      contradictions.push(
+        `USD_VERIFIED_WITHOUT_PDP_USD_PRICE(p5Curr=${p5Curr},p5UsdCount=${p5UsdCount})`
+      );
+    }
+    if (
+      phases.phase6_post_session_close?.attempted === true &&
+      (phases.phase6_post_session_close?.observedFields?.mcpSessionClosedCleanly !== true ||
+        phases.phase6_post_session_close?.observedFields?.ownedChildPidTerminated !== true)
+    ) {
+      contradictions.push("MCP_SESSION_OR_CHILD_PID_NOT_CLEANLY_TERMINATED");
+    }
+  } else {
+    contradictions.push("MISSING_SIX_PHASE_UI_PROOF");
+  }
+
+  return {
+    consistent: contradictions.length === 0,
+    valid: contradictions.length === 0,
+    contradictions,
+  };
+}
+
 export interface PlaywrightMcpHandshakeProof {
   executed: boolean;
   connected: boolean;
@@ -1450,13 +2129,17 @@ export async function connectAmazonPlaywrightMcp(
       pkgIdx !== -1
     ) {
       try {
-        const npxDir = path.join(
-          process.env.LOCALAPPDATA ||
-            path.join(os.homedir(), "AppData", "Local"),
-          "npm-cache",
-          "_npx"
-        );
-        if (fs.existsSync(npxDir)) {
+        const candidateNpxDirs = [
+          path.join(os.homedir(), ".npm", "_npx"),
+          path.join(
+            process.env.LOCALAPPDATA ||
+              path.join(os.homedir(), "AppData", "Local"),
+            "npm-cache",
+            "_npx"
+          ),
+        ];
+        for (const npxDir of candidateNpxDirs) {
+          if (!fs.existsSync(npxDir)) continue;
           for (const d of fs.readdirSync(npxDir)) {
             const pkgDir = path.join(
               npxDir,

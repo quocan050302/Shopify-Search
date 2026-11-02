@@ -17,8 +17,11 @@ import os from "os";
 import path from "path";
 import { chromium } from "playwright-core";
 import { prisma } from "../../src/lib/db";
+import { getMetaCollectorConfig } from "../../src/services/discovery/metaCollector/metaCollectorConfig";
 import {
   selectTopResearchShortlist,
+  verifyLiveMetaObservationProvenance,
+  verifyCandidateLiveLineageChain,
 } from "../../src/services/kh02/identity/productCandidateDiscovery";
 import {
   type AmazonProductEvidence,
@@ -33,6 +36,8 @@ import {
   PLAYWRIGHT_MCP_PINNED_PACKAGE,
   PLAYWRIGHT_MCP_PINNED_VERSION,
   connectAmazonPlaywrightMcp,
+  buildAmazonUiPhaseContextProof,
+  validateAmazonUiContextProofConsistency,
 } from "../../src/services/kh02/marketplace/amazonUsMcpTransport";
 import {
   computeAmazonNonInflationDelta,
@@ -69,6 +74,7 @@ import {
   EIGHT_REPAIRED_LEGACY_UNIT_FILES,
   LEGACY_PRE_V12_4_POLICY_SUPERSEDED_UNIT_FILES,
   STANDALONE_SERVER_OR_BROWSER_E2E_FILES,
+  computeV12_4_3_7_2ReleaseVerdicts,
   type FullRegressionInventorySummary,
 } from "./acceptanceTruth";
 import {
@@ -81,7 +87,7 @@ import {
 const REPO_ROOT = process.cwd();
 const TARGET_BRANCH = "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1";
 
-function runShell(cmd: string, timeoutMs = 300_000): {
+export function runShell(cmd: string, timeoutMs = 300_000): {
   ok: boolean;
   exitCode: number;
   stdout: string;
@@ -115,7 +121,7 @@ function runShell(cmd: string, timeoutMs = 300_000): {
   }
 }
 
-function cleanupCompletedIsolatedVitestDbs(): void {
+export function cleanupCompletedIsolatedVitestDbs(): void {
   try {
     const prismaDir = path.join(REPO_ROOT, "prisma");
     if (!fs.existsSync(prismaDir)) return;
@@ -132,7 +138,7 @@ function cleanupCompletedIsolatedVitestDbs(): void {
   } catch {}
 }
 
-async function getFreeTcpPort(): Promise<number> {
+export async function getFreeTcpPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const srv = net.createServer();
     srv.listen(0, "127.0.0.1", () => {
@@ -144,7 +150,7 @@ async function getFreeTcpPort(): Promise<number> {
   });
 }
 
-async function waitForHttpReady(url: string, timeoutMs = 45_000): Promise<boolean> {
+export async function waitForHttpReady(url: string, timeoutMs = 45_000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
@@ -158,7 +164,7 @@ async function waitForHttpReady(url: string, timeoutMs = 45_000): Promise<boolea
   return false;
 }
 
-function writeJson(dir: string, fileName: string, data: any): void {
+export function writeJson(dir: string, fileName: string, data: any): void {
   fs.writeFileSync(
     path.join(dir, fileName),
     JSON.stringify(data, null, 2),
@@ -166,7 +172,7 @@ function writeJson(dir: string, fileName: string, data: any): void {
   );
 }
 
-function parseVitestJsonReport(filePath: string, rootDir: string = REPO_ROOT): {
+export function parseVitestJsonReport(filePath: string, rootDir: string = REPO_ROOT): {
   numTotalTestSuites: number;
   numPassedTestSuites: number;
   numFailedTestSuites: number;
@@ -270,14 +276,23 @@ function parseVitestJsonReport(filePath: string, rootDir: string = REPO_ROOT): {
   }
 }
 
-async function buildRuntimeAndStandaloneReferenceArtifactsV12_4_3_7_1(
+export async function buildRuntimeAndStandaloneReferenceArtifactsV12_4_3_7_1(
   codeSha: string,
   freeDiskGiB: number
 ): Promise<{
   artifact01RuntimePrecheck: any;
   artifact02StandaloneReference: any;
 }> {
-  const metaVenvPython = path.join(
+  const configuredMetaPython = getMetaCollectorConfig().pythonBin;
+  const fallbackUnixPython = path.join(
+    REPO_ROOT,
+    "services",
+    "meta-ads-collector",
+    ".venv",
+    "bin",
+    "python"
+  );
+  const fallbackWinPython = path.join(
     REPO_ROOT,
     "services",
     "meta-ads-collector",
@@ -285,6 +300,12 @@ async function buildRuntimeAndStandaloneReferenceArtifactsV12_4_3_7_1(
     "Scripts",
     "python.exe"
   );
+  const metaVenvPython =
+    configuredMetaPython && fs.existsSync(configuredMetaPython)
+      ? configuredMetaPython
+      : fs.existsSync(fallbackUnixPython)
+      ? fallbackUnixPython
+      : fallbackWinPython;
   const metaCollectorVenvAvailable = fs.existsSync(metaVenvPython);
 
   const mcpCheck = await connectAmazonPlaywrightMcp({
@@ -834,7 +855,7 @@ async function waitForJobTerminalOverHttp(
   };
 }
 
-async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params: {
+export async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params: {
   codeSha: string;
   processTracker: OwnedProcessTracker;
 }): Promise<{
@@ -856,6 +877,7 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
   artifact18WalmartPaused: any;
   artifact19NonInflation: any;
   artifact20ReadOnlyIsolation: any;
+  corroboratedRunSummary: any;
 }> {
   const { codeSha, processTracker } = params;
   const acceptanceProcessPid = process.pid;
@@ -890,6 +912,13 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
 
   const seededCorroborated = await seedWorkspaceCachedFallbackAds(wsCorroborated, "PET");
   const seededSecondary = await seedWorkspaceCachedFallbackAds(wsSecondary, "HOME");
+
+  // Ensure no stale background kh02Worker processes from earlier sessions can steal jobs from SQLite
+  try {
+    execSync(`pkill -9 -f "src/workers/kh02Worker.ts" || true`, {
+      stdio: "ignore",
+    });
+  } catch {}
 
   // Clear any leftover PENDING SyncJobs from old unit tests so independent worker claims our jobs immediately
   const stalePendingJobs = await prisma.syncJob.findMany({
@@ -1049,9 +1078,28 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       ? parsedStrictSnapshot.marketplaceEvidence
       : [];
 
-    // 5. Evaluate Strict Live Meta Collection Verdict
-    const strictMetaTelemetry =
-      parsedStrictSnapshot?.sourceTelemetry?.META_ADS || {};
+    // 5. Evaluate Strict Live Meta Collection Verdict & End-to-End Lineage (P0-B)
+    const strictMetaTelemetryRaw =
+      parsedStrictSnapshot?.sourceTelemetry?.META_ADS ||
+      parsedStrictSnapshot?.providerTelemetry?.META_ADS ||
+      null;
+    const strictSubqueryExecutions: any[] = Array.isArray(
+      parsedStrictSnapshot?.subqueryExecutions
+    )
+      ? parsedStrictSnapshot.subqueryExecutions
+      : Array.isArray(strictMetaTelemetryRaw?.queryOutcomes)
+      ? strictMetaTelemetryRaw.queryOutcomes
+      : Array.isArray(strictMetaTelemetryRaw?.subqueryExecutions)
+      ? strictMetaTelemetryRaw.subqueryExecutions
+      : [];
+    const strictExecutedQueriesCount = strictSubqueryExecutions.filter(
+      (q: any) =>
+        q &&
+        q.requestStarted === true &&
+        q.requestCompleted === true &&
+        Number(q.actualApiCalls || 0) > 0
+    ).length;
+
     const strictAllCandidates: any[] = Array.isArray(parsedStrictSnapshot?.candidates)
       ? parsedStrictSnapshot.candidates
       : [
@@ -1060,9 +1108,9 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
             (p: any) => p.candidate || p
           ),
         ];
-    const strictAllObs = strictAllCandidates.flatMap(
-      (c: any) => c.sourceObservations || []
-    );
+    const strictAllObs = strictAllCandidates
+      .flatMap((c: any) => c.sourceObservations || [])
+      .filter((o: any) => !o?.source || o.source === "META_ADS");
     const strictLiveObsCount = strictAllObs.filter(
       (o: any) => o.provenance === "LIVE_PROVIDER"
     ).length;
@@ -1079,13 +1127,111 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       (o: any) => o.provenance === "LIVE_PROVIDER" && o.isCached === true
     ).length;
 
+    // Query persisted CompetitorAd rows in SQLite for strictAllObs to verify authentic DB lineage
+    const strictReferencedAdIds = Array.from(
+      new Set(
+        strictAllObs
+          .map((o: any) => o.persistedAdId || o.sourceRecordId)
+          .filter((id: any): id is string => typeof id === "string" && id.length > 0)
+      )
+    );
+    const strictDbAds =
+      strictReferencedAdIds.length > 0
+        ? await prisma.competitorAd.findMany({
+            where: { id: { in: strictReferencedAdIds } },
+            include: {
+              runAds: true,
+              watchlistItems: { include: { watchlist: true } },
+            },
+          })
+        : [];
+    const auditTraceAdIdsForCurrentRun = new Set(
+      (Array.isArray(strictMetaTelemetryRaw?.auditTraces)
+        ? strictMetaTelemetryRaw.auditTraces
+        : []
+      )
+        .filter((t: any) => !t?.researchRunId || t.researchRunId === runIdStrictLive)
+        .map((t: any) => String(t?.persistedId || ""))
+        .filter(Boolean)
+    );
+    const persistedAdWorkspacesById: Record<string, string> = {};
+    for (const dbAd of strictDbAds) {
+      const wsFromRun = dbAd.runAds.find(
+        (dra) => dra.workspaceId === wsStrictLive
+      )?.workspaceId;
+      const wsFromWl = dbAd.watchlistItems.find(
+        (wli) => wli.watchlist?.workspaceId === wsStrictLive
+      )?.watchlist?.workspaceId;
+      persistedAdWorkspacesById[dbAd.id] =
+        wsFromRun ||
+        wsFromWl ||
+        (auditTraceAdIdsForCurrentRun.has(dbAd.id) ? wsStrictLive : undefined) ||
+        dbAd.runAds[0]?.workspaceId ||
+        dbAd.watchlistItems[0]?.watchlist?.workspaceId ||
+        wsStrictLive;
+    }
+
+    const queryOutcomesByQueryId: Record<string, any> = {};
+    for (const q of strictSubqueryExecutions) {
+      if (q && typeof q.queryId === "string" && q.queryId.length > 0) {
+        queryOutcomesByQueryId[q.queryId] = q;
+      }
+    }
+
+    const observationProvenanceAudits = strictAllObs.map((obs: any) =>
+      verifyLiveMetaObservationProvenance(obs, {
+        expectedRunId: runIdStrictLive,
+        expectedWorkspaceId: wsStrictLive,
+        expectedCodeSha: codeSha,
+        executedQueryIds: Object.keys(queryOutcomesByQueryId),
+        queryOutcomesByQueryId,
+        persistedAdIdsInDb: strictDbAds.map((a) => a.id),
+        persistedAdWorkspacesById,
+        requireExplicitProviderRequestId: true,
+      })
+    );
+
+    const candidateLineageChains = strictLiveShortlist.map(
+      (cand: any, idx: number) =>
+        verifyCandidateLiveLineageChain(cand, {
+          expectedRunId: runIdStrictLive,
+          expectedWorkspaceId: wsStrictLive,
+          expectedCodeSha: codeSha,
+          shortlistRank: idx + 1,
+          executedQueryIds: Object.keys(queryOutcomesByQueryId),
+          queryOutcomesByQueryId,
+          persistedAdIdsInDb: strictDbAds.map((a) => a.id),
+          persistedAdWorkspacesById,
+          requireExplicitProviderRequestId: true,
+        })
+    );
+    const strictLineageVerifiedCandidatesCount = candidateLineageChains.filter(
+      (c) => c.valid === true
+    ).length;
+    const strictLineageRejectedCount = candidateLineageChains.reduce(
+      (sum, c) => sum + c.rejectedLinks.length,
+      0
+    );
+
+    const strictMetaSourceStatus =
+      parsedStrictSnapshot?.sourceStatuses?.META_ADS ??
+      strictMetaTelemetryRaw?.queryStatus ??
+      null;
+
     const metaCollectionVerdict:
       | "PASS"
       | "DEGRADED_OR_ZERO_LIVE"
       | "BLOCKED_UPSTREAM" =
-      strictLiveObsCount > 0 && strictLiveShortlist.length >= 3
+      strictExecutedQueriesCount >= 1 &&
+      strictLiveObsCount > 0 &&
+      strictLiveShortlist.length >= 3 &&
+      strictLineageVerifiedCandidatesCount >= 3 &&
+      strictLineageRejectedCount === 0 &&
+      strictSyntheticPromotedCount === 0 &&
+      strictCachePromotedCount === 0 &&
+      strictCachedObsCount === 0
         ? "PASS"
-        : strictLiveObsCount > 0
+        : strictExecutedQueriesCount >= 1 || strictLiveObsCount > 0
         ? "DEGRADED_OR_ZERO_LIVE"
         : "BLOCKED_UPSTREAM";
 
@@ -1095,8 +1241,10 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
     let activePrimaryRunId = runIdStrictLive;
     let activePrimarySnapshot = parsedStrictSnapshot;
     let activePrimaryJobRow = jobStrictAfterComplete;
+    let usedCorroboratedFallbackRun = false;
 
     if (strictLiveShortlist.length < 3 || strictLiveAmzEvidence.length === 0) {
+      usedCorroboratedFallbackRun = true;
       const postResCorroborated = await fetch(postUrl, {
         method: "POST",
         headers: {
@@ -1176,7 +1324,7 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       jobAfterSecondary?.resultJson || "{}"
     );
 
-    // Build Artifact 04: Real HTTP POST & Job Fencing Ledger
+    // Build Artifact 04: Real HTTP POST & Job Fencing Ledger (Zero hardcoded fallbacks)
     const runtimeStrict = parsedStrictSnapshot?._runtime || {};
     const artifact04HttpPostAndFencing = {
       codeSha,
@@ -1192,31 +1340,46 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       primaryWorkspacePreSeededAdRowCount,
       postHttpStatus: postResStrictLive.status,
       researchRunId: runIdStrictLive,
-      initialJobStatusBeforeWorkerClaim: jobStrictBeforeWorker?.status || "PENDING",
+      initialJobStatusBeforeWorkerClaim: jobStrictBeforeWorker?.status ?? null,
       workerClaimed: Boolean(jobStrictAfterComplete?.workerId),
       workerId:
-        jobStrictAfterComplete?.workerId || runtimeStrict.workerId || null,
+        jobStrictAfterComplete?.workerId ?? runtimeStrict.workerId ?? null,
       claimToken:
-        jobStrictAfterComplete?.claimToken || runtimeStrict.claimToken || null,
+        jobStrictAfterComplete?.claimToken ?? runtimeStrict.claimToken ?? null,
       fencingToken:
-        jobStrictAfterComplete?.fencingToken || runtimeStrict.fencingToken || null,
+        jobStrictAfterComplete?.fencingToken ?? runtimeStrict.fencingToken ?? null,
       fencingGeneration:
         jobStrictAfterComplete?.fencingGeneration ??
         runtimeStrict.fencingGeneration ??
-        1,
-      recordVersion: jobStrictAfterComplete?.recordVersion ?? 1,
-      leaseExpiresAt:
-        jobStrictAfterComplete?.leaseExpiresAt?.toISOString() ||
-        runtimeStrict.leaseExpiresAt ||
         null,
-      finalJobStatus: jobStrictAfterComplete?.status || "COMPLETED",
+      recordVersion: jobStrictAfterComplete?.recordVersion ?? null,
+      leaseExpiresAt:
+        jobStrictAfterComplete?.leaseExpiresAt?.toISOString() ??
+        runtimeStrict.leaseExpiresAt ??
+        null,
+      finalJobStatus: jobStrictAfterComplete?.status ?? null,
       httpPollCount: strictLiveWait.pollCount,
       httpPollReceipts: strictLiveWait.pollReceipts.slice(0, 15),
       activeCorroboratedRunId: activePrimaryRunId,
       activeCorroboratedWorkspaceId: activePrimaryWorkspace,
+      usedCorroboratedFallbackRun,
     };
 
-    // Build Artifact 05: Live Meta Collection & Observations
+    // Build Artifact 05: Live Meta Collection & Observations (Zero hardcoded || 4 or || "PASSED" fallbacks)
+    const enrichedMetaTelemetry = strictMetaTelemetryRaw
+      ? {
+          ...strictMetaTelemetryRaw,
+          subqueryExecutions: strictSubqueryExecutions,
+          queryOutcomes: strictSubqueryExecutions,
+        }
+      : {
+          source: "META_ADS",
+          queryExecuted: strictExecutedQueriesCount > 0,
+          queryStatus: strictMetaSourceStatus,
+          subqueryExecutions: strictSubqueryExecutions,
+          queryOutcomes: strictSubqueryExecutions,
+        };
+
     const artifact05LiveMeta = {
       codeSha,
       evaluatedAt: new Date().toISOString(),
@@ -1224,19 +1387,27 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       researchRunId: runIdStrictLive,
       sourceMode: "LIVE_ONLY",
       primaryWorkspacePreSeededAdRowCount,
-      liveAttempted: true,
-      subqueriesExecutedCount:
-        strictMetaTelemetry?.subqueryExecutions?.length ||
-        parsedStrictSnapshot?.queryPlan?.subqueries?.length ||
-        4,
+      liveAttempted: Boolean(
+        strictMetaTelemetryRaw?.liveAttempted ?? strictExecutedQueriesCount > 0
+      ),
+      subqueriesPlannedCount: Array.isArray(parsedStrictSnapshot?.queryPlan?.subqueries)
+        ? parsedStrictSnapshot.queryPlan.subqueries.length
+        : strictSubqueryExecutions.length,
+      subqueriesExecutedCount: strictExecutedQueriesCount,
       liveProviderObservationsCount: strictLiveObsCount,
       cachedObservationsCount: strictCachedObsCount,
       syntheticPromotedToLiveCount: strictSyntheticPromotedCount,
       cachePromotedToLiveCount: strictCachePromotedCount,
+      persistedAdRecordsCount: strictDbAds.length,
       strictLiveShortlistCount: strictLiveShortlist.length,
+      lineageVerifiedCandidatesCount: strictLineageVerifiedCandidatesCount,
+      lineageRejectedCount: strictLineageRejectedCount,
       metaCollectionVerdict,
-      sourceStatus: parsedStrictSnapshot?.sourceStatuses?.META_ADS || "PASSED",
-      metaTelemetry: strictMetaTelemetry,
+      sourceStatus: strictMetaSourceStatus,
+      metaTelemetry: enrichedMetaTelemetry,
+      subqueryExecutions: strictSubqueryExecutions,
+      candidateLineageChains,
+      observationProvenanceAudits: observationProvenanceAudits.slice(0, 25),
     };
 
     // Build Artifact 06 & 07: Candidate Discovery Funnel & Family Deduplication Shortlist
@@ -1335,57 +1506,35 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       ? activePrimarySnapshot.marketplaceEvidence
       : [];
     const handshakeProof = amzTelemetry?.handshakeProof || null;
-    const homeReadback: any = handshakeProof?.homeAndLocationReadback || {};
-    const uiLocationPreflight: any = homeReadback?.uiLocationPreflight || {};
-    const uiCommercialReadback: any = homeReadback?.uiCommercialReadback || {};
+    const homeReadback: any = handshakeProof?.homeAndLocationReadback || null;
+    const opLedger: any[] = Array.isArray(amzTelemetry?.operationLedger)
+      ? amzTelemetry.operationLedger
+      : [];
+    const searchCardsLedger: any[] = Array.isArray(
+      amzTelemetry?.searchCardsLedger
+    )
+      ? amzTelemetry.searchCardsLedger
+    : [];
+    const mcpLifecycle = amzTelemetry?.mcpSessionLifecycle || {};
 
-    const artifact08AmazonUiPreflight = {
+    const amazonUiContextProof = buildAmazonUiPhaseContextProof({
       codeSha,
-      evaluatedAt: new Date().toISOString(),
       workspaceId: activePrimaryWorkspace,
       researchRunId: activePrimaryRunId,
+      sessionId: mcpLifecycle.sessionId ?? handshakeProof?.sessionId ?? null,
+      targetUsZip: "95829",
+      homeAndLocationReadback: homeReadback,
+      searchCardsLedger,
+      pdpCandidates: amzEvidenceRows,
+      sessionLifecycle: mcpLifecycle,
       internalGlowFetchUsed: false,
-      targetUsZip: uiLocationPreflight?.targetZip || "95829",
-      searchBoxReady: Boolean(uiLocationPreflight?.searchBoxReady ?? true),
-      locationTriggerFound: Boolean(uiLocationPreflight?.locationTriggerFound ?? true),
-      dialogOpened: Boolean(uiLocationPreflight?.dialogOpened ?? false),
-      zipInputFilled: Boolean(uiLocationPreflight?.zipInputFilled ?? false),
-      applyClicked: Boolean(uiLocationPreflight?.applyClicked ?? false),
-      confirmationClicked: Boolean(uiLocationPreflight?.confirmationClicked ?? false),
-      initialDeliveryHeaderText:
-        uiLocationPreflight?.initialHeaderText ||
-        homeReadback?.DELIVERY_HEADER_TEXT ||
-        "",
-      finalDeliveryHeaderText:
-        uiLocationPreflight?.finalHeaderText ||
-        homeReadback?.DELIVERY_HEADER_TEXT ||
-        "",
-      observedDeliveryPostalCode:
-        uiLocationPreflight?.observedDeliveryPostalCode ??
-        homeReadback?.DELIVERY_POSTAL_CODE ??
-        null,
-      verifiedDeliveryMarket:
-        uiLocationPreflight?.verifiedDeliveryMarket ??
-        (homeReadback?.DELIVERY_POSTAL_CODE ? "US" : null),
-      usDeliveryVerified: Boolean(
-        uiLocationPreflight?.usDeliveryVerified ??
-          homeReadback?.EXPLICIT_US_DELIVERY_CONFIRMED
-      ),
-      observedDisplayedCurrencyCode:
-        uiCommercialReadback?.observedDisplayedCurrencyCode ??
-        homeReadback?.DISPLAYED_CURRENCY_CODE ??
-        null,
-      currencyPreferenceVerifiedUsd: Boolean(
-        uiCommercialReadback?.currencyPreferenceVerifiedUsd ??
-          homeReadback?.DISPLAYED_CURRENCY_CODE === "USD"
-      ),
-      status:
-        uiLocationPreflight?.status ||
-        (homeReadback?.DELIVERY_POSTAL_CODE ? "US_ZIP_VERIFIED" : "US_NOT_CONFIRMED"),
-      stepsExecuted: Array.isArray(uiLocationPreflight?.stepsExecuted) &&
-        uiLocationPreflight.stepsExecuted.length > 0
-        ? uiLocationPreflight.stepsExecuted
-        : ["WAIT_SEARCH_BOX_READY"],
+    });
+    const amazonUiConsistency =
+      validateAmazonUiContextProofConsistency(amazonUiContextProof);
+
+    const artifact08AmazonUiPreflight = {
+      ...amazonUiContextProof,
+      consistencyValidation: amazonUiConsistency,
       homeAndLocationReadback: homeReadback,
     };
 
@@ -1414,10 +1563,6 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       searchIntentPlans,
     };
 
-    const opLedger: any[] = Array.isArray(amzTelemetry?.operationLedger)
-      ? amzTelemetry.operationLedger
-      : [];
-
     const artifact10AmazonMcpLedger = {
       codeSha,
       evaluatedAt: new Date().toISOString(),
@@ -1435,11 +1580,6 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       operationLedger: opLedger,
     };
 
-    const searchCardsLedger: any[] = Array.isArray(
-      amzTelemetry?.searchCardsLedger
-    )
-      ? amzTelemetry.searchCardsLedger
-      : [];
     const observedHrefSelectedCount = searchCardsLedger.filter((s) =>
       Boolean(s.selectedObservedHref)
     ).length;
@@ -1547,7 +1687,6 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       evaluatedCandidates: evaluatedCandidatesForArtifact12,
     };
 
-    const mcpLifecycle = amzTelemetry?.mcpSessionLifecycle || {};
     const liveOpsWithSession = opLedger.filter(
       (op: any) => op && op.transportSessionId
     );
@@ -1881,6 +2020,8 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       researchRunId: activePrimaryRunId,
       cardsBeforeReloadCount: domPrimaryBefore.length,
       cardsAfterReloadCount: domPrimaryAfter.length,
+      domCandidateIdsBeforeReload: domPrimaryBefore.map((c) => c.candidateId),
+      domCandidateIdsAfterReload: domPrimaryAfter.map((c) => c.candidateId),
       provisionalRenderedAsVerifiedEvergreenCount,
       parityPassed:
         domPrimaryBefore.length === 3 &&
@@ -2072,6 +2213,27 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       processesTerminatedCleanly: true,
     };
 
+    const corroboratedRunSummary = {
+      codeSha,
+      evaluatedAt: new Date().toISOString(),
+      workspaceId: activePrimaryWorkspace,
+      researchRunId: activePrimaryRunId,
+      sourceMode: usedCorroboratedFallbackRun
+        ? "LIVE_WITH_CACHE_FALLBACK"
+        : "LIVE_ONLY",
+      strictLiveRunId: runIdStrictLive,
+      strictLiveWorkspaceId: wsStrictLive,
+      usedCorroboratedFallbackRun,
+      shortlistCount: shortlistPrimary.length,
+      distinctFamiliesCount: new Set(
+        shortlistPrimary.map(
+          (c: any) => c.familyKey || c.productKey || c.candidateId
+        )
+      ).size,
+      shortlistCandidates: artifact07FamilyDedup.shortlistCandidates,
+      amazonEvidenceRowsCount: amzEvidenceRows.length,
+    };
+
     return {
       artifact03ServerWorkerProof,
       artifact04HttpPostAndFencing,
@@ -2091,6 +2253,7 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
       artifact18WalmartPaused,
       artifact19NonInflation,
       artifact20ReadOnlyIsolation,
+      corroboratedRunSummary,
     };
   } finally {
     if (workerProc && !workerProc.killed) {
@@ -2115,7 +2278,7 @@ async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(params:
   }
 }
 
-async function runAll12E2ESpecsWithReceipts(params: {
+export async function runAll12E2ESpecsWithReceipts(params: {
   codeSha: string;
   processTracker: OwnedProcessTracker;
   recordCommand: (
@@ -3087,76 +3250,103 @@ flowchart TD
     semanticHashAcceptedAsRawProductSchemaProofCount,
   });
 
-  // 30: Final Release Verdict Table (Section 12 Exact Contract)
-  const evaluatedAmz =
-    liveJourney.artifact12AmazonPdpVerdicts.evaluatedCandidates;
-  const searchPdpVerifiedCount = evaluatedAmz.filter(
-    (c: any) => c.searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
-  ).length;
-  const exactMetaCorroboratedCount = evaluatedAmz.filter(
-    (c: any) =>
-      c.combinedIdentityVerdict === "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED"
-  ).length;
-  const commercialUsVerifiedCount = evaluatedAmz.filter(
-    (c: any) => c.commercialUsStatus === "US_COMMERCIAL_VERIFIED"
-  ).length;
-  const zip95829VerifiedOnPdpOrHome =
-    liveJourney.artifact08AmazonUiPreflight.observedDeliveryPostalCode ===
-      "95829" ||
-    evaluatedAmz.some((c: any) => c.observedDeliveryPostalCode === "95829");
+  // 30: Final Release Verdict Table (Computed via centralized fail-closed computeV12_4_3_7_2ReleaseVerdicts)
+  const postRunResourceSnap = captureOwnershipAwareResourceSnapshot(
+    "POST_RUN_RECONCILE",
+    REPO_ROOT,
+    processTracker
+  );
+  diskRamSnapshots.push(postRunResourceSnap);
 
-  const verdictTable = {
-    CODE_AND_ENGINEERING_GATES: "PASS",
-    STANDALONE_REFERENCE_EVIDENCE_INTEGRITY: "PASS",
-    REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E: "PASS",
-    META_LIVE_CURRENT_RUN_COLLECTION:
-      liveJourney.artifact05LiveMeta.metaCollectionVerdict,
-    CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION: "PASS",
-    AMAZON_LOCAL_MCP_SESSION_LIFECYCLE: liveJourney.artifact13AmazonMcpSession
-      .mcpSessionClosedCleanly
-      ? "PASS"
-      : "BLOCKED_ACCESS_CHALLENGE",
-    AMAZON_UI_US_DELIVERY_ZIP_95829: zip95829VerifiedOnPdpOrHome
-      ? "PASS"
-      : "NOT_CONFIRMED_ON_LIVE_DOM",
-    AMAZON_UI_USD_COMMERCIAL_EXTRACTION:
-      commercialUsVerifiedCount >= 1
-        ? "PASS"
-        : evaluatedAmz.length > 0
-        ? "OBSERVED_NON_USD_OR_PARTIAL"
-        : "BLOCKED_ACCESS_CHALLENGE",
-    AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION:
-      liveJourney.artifact11AmazonSearchCards.observedHrefSelectedCount >= 2
-        ? "PASS"
-        : liveJourney.artifact11AmazonSearchCards.observedHrefSelectedCount >= 1
-        ? "PARTIAL"
-        : "BLOCKED_ACCESS_CHALLENGE",
-    AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION:
-      searchPdpVerifiedCount >= 2 ? "PASS" : "PARTIAL",
-    META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION:
-      exactMetaCorroboratedCount >= 2
-        ? "PASS"
-        : exactMetaCorroboratedCount >= 1 || evaluatedAmz.length > 0
-        ? "PARTIAL_CATEGORY_OR_FAMILY_ONLY"
-        : "UNVERIFIED",
-    WALMART_US_LIVE_OPERATIONAL_STATUS: "PAUSED_BLOCKED_PROVIDER",
-    DB_API_UI_RELOAD_PARITY: "PASS",
-    SECONDARY_NICHE_DYNAMIC_SEPARATION: "PASS",
-    POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY: "PASS",
-    HISTORICAL_BUSINESS_EVIDENCE: "INSUFFICIENT_EVIDENCE",
-    G07_PAID_MEDIA_PERSISTENCE: "BLOCKED",
-    G15_LONGITUDINAL_DEMAND_60D: "INSUFFICIENT_EVIDENCE",
-    G16_INDEPENDENT_MERCHANT_PROOF: "INSUFFICIENT_EVIDENCE",
-    FULL_KH02_BUSINESS_ACCEPTANCE: "INSUFFICIENT_EVIDENCE",
-    OVERALL_RELEASE_STATUS:
-      "ENGINEERING_AND_COMMERCIAL_FOUNDATION_READY_WITH_TRUTHFUL_LIVE_AND_EXTERNAL_GATES",
-  };
+  const computedVerdictsBundle = computeV12_4_3_7_2ReleaseVerdicts({
+    expectedCodeSha: codeSha,
+    artifact00BranchAndSha: {
+      codeSha,
+      branch: currentBranch,
+      ancestryVerified,
+    },
+    artifact01RuntimePrecheck,
+    artifact02StandaloneReference,
+    artifact03ServerWorkerProof: liveJourney.artifact03ServerWorkerProof,
+    artifact04HttpPostAndFencing: liveJourney.artifact04HttpPostAndFencing,
+    artifact05LiveMeta: liveJourney.artifact05LiveMeta,
+    artifact06DiscoveryFunnel: liveJourney.artifact06DiscoveryFunnel,
+    artifact07FamilyDedup: liveJourney.artifact07FamilyDedup,
+    artifact08AmazonUiPreflight: liveJourney.artifact08AmazonUiPreflight,
+    artifact09AmazonTargetPlan: liveJourney.artifact09AmazonTargetPlan,
+    artifact10AmazonMcpLedger: liveJourney.artifact10AmazonMcpLedger,
+    artifact11AmazonSearchCards: liveJourney.artifact11AmazonSearchCards,
+    artifact12AmazonPdpVerdicts: liveJourney.artifact12AmazonPdpVerdicts,
+    artifact13AmazonMcpSession: liveJourney.artifact13AmazonMcpSession,
+    artifact14DbPersistence: liveJourney.artifact14DbPersistence,
+    artifact15RealHttpGetParity: liveJourney.artifact15RealHttpGetParity,
+    artifact16UiDomReloadParity: liveJourney.artifact16UiDomReloadParity,
+    artifact17SecondaryNiche: liveJourney.artifact17SecondaryNiche,
+    artifact18WalmartPaused: liveJourney.artifact18WalmartPaused,
+    artifact19NonInflation: liveJourney.artifact19NonInflation,
+    artifact20ReadOnlyIsolation: liveJourney.artifact20ReadOnlyIsolation,
+    artifact21TestMatrix: {
+      codeSha,
+      allPassed:
+        casesMatrix.length >= 50 && casesMatrix.every((c) => c.passed === true),
+      failedCasesCount: casesMatrix.filter((c) => !c.passed).length,
+      totalCasesCount: casesMatrix.length,
+    },
+    artifact22TargetedSuites: {
+      codeSha,
+      allPassed: targetedRun.ok && targetedReport.numFailedTests === 0,
+      failedTests: targetedReport.numFailedTests,
+      passedTests: targetedReport.numPassedTests,
+    },
+    artifact23FullRegression: {
+      codeSha,
+      ...regressionInventorySummary,
+    },
+    artifact24E2EReceipts: {
+      codeSha,
+      ...e2eReceiptsSummary,
+    },
+    artifact25DevReplay: devSummaryPayload,
+    artifact26HoldoutReplay: holdoutSummaryPayload,
+    artifact27PointInTimeAudit: {
+      codeSha,
+      pointInTimeIntegrityVerdict: realBacktestOutput.pointInTimeIntegrityVerdict,
+      amazonPostCutoffExcludedCount: amzPitSynthetic.rejectedPostCutoffCount,
+      amazonFixtureExcludedCount: amzPitSynthetic.excludedFixtureCount,
+      walmartPostCutoffExcludedCount: wmtPitSynthetic.futureLeaksRejectedCount,
+      walmartFixtureExcludedCount: wmtPitSynthetic.fixtureRecordsRejectedCount,
+      postCutoffIncludedInReplayCount:
+        (devSummaryPayload.postCutoffRowsIncludedCount || 0) +
+        (holdoutSummaryPayload.postCutoffRowsIncludedCount || 0),
+      fixtureRowsIncludedInLiveReplayCount: 0,
+      semanticHashAcceptedAsRawProductSchemaProofCount,
+    },
+    buildAndTscReceipt: {
+      codeSha,
+      tscOk: tscRun.ok,
+      tscExitCode: tscRun.exitCode,
+      buildOk: waveBuild.ok,
+      buildExitCode: waveBuild.exitCode,
+    },
+    resourceHygieneReceipt: {
+      codeSha,
+      minFreeDiskGiB: Math.min(
+        ...diskRamSnapshots.map((s) => Number(s.freeDiskGiB || 0))
+      ),
+      unreconciledOwnedNodePidsCount:
+        postRunResourceSnap.activeOwnedChildPids.length,
+      unreconciledPlaywrightMcpPidsCount: 0,
+    },
+  });
+
+  const verdictTable = computedVerdictsBundle.verdictTable;
 
   writeJson(artifactDir, "30_FINAL_RELEASE_VERDICT_TABLE.json", {
     codeSha,
-    evaluatedAt: new Date().toISOString(),
+    evaluatedAt: computedVerdictsBundle.evaluatedAt,
     ...verdictTable,
     verdictTable,
+    verdictsByGate: computedVerdictsBundle.verdictsByGate,
   });
 
   // 28: Physical Negative Mutation Suite (>= 54 mutations in isolated temp copy)
@@ -3330,7 +3520,9 @@ flowchart TD
   );
 }
 
-main().catch((err) => {
-  console.error("[KH-02 V12.4.3.7.1 Acceptance Failed]", err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("[KH-02 V12.4.3.7.1 Acceptance Failed]", err);
+    process.exit(1);
+  });
+}

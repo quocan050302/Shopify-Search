@@ -112,6 +112,7 @@ export interface EvergreenLeaderboardResult {
   insufficientEvidenceCandidates: RankedLeaderboardItem[];
   rejectedCandidates?: RankedLeaderboardItem[];
   providerTelemetry?: Record<IntelligenceSource, ProviderSourceTelemetry>;
+  sourceTelemetry?: Record<IntelligenceSource, ProviderSourceTelemetry>;
   totalCandidatesDiscovered: number;
   totalObservationsCollected?: number;
   sourceObservations?: SourceObservation[];
@@ -127,6 +128,7 @@ export interface EvergreenLeaderboardResult {
   discoveryPlannerTelemetry?: DiscoveryPlannerTelemetry;
   plannedQueries?: DiscoveryQuery[];
   queryExecutions?: MetaSubqueryExecution[];
+  subqueryExecutions?: MetaSubqueryExecution[];
   queryYields?: QueryYield[];
   shortlistCoverage?: ShortlistCoverageState;
   lookbackCoverage?: KH02LookbackCoverage;
@@ -524,8 +526,7 @@ export async function runEvergreenProductResearch(
         allMetaQueryOutcomes.push(...execMeta.queryOutcomes);
       }
       if (allMetaQueryOutcomes.length === 0 && round1Queries.length > 0) {
-        const liveWasAttempted = Boolean(execMeta?.attempted);
-        const liveDidSucceed = Boolean(execMeta?.liveSucceeded);
+        // V12.4.3.7.2 P0-B: Never synthesize requestStarted=true or actualApiCalls=1 when upstream queryOutcomes are absent.
         for (const rq of round1Queries) {
           allMetaQueryOutcomes.push({
             queryId: rq.queryId,
@@ -534,25 +535,19 @@ export async function runEvergreenProductResearch(
             keyword: rq.phrase,
             searchType: rq.searchType,
             planned: true,
-            attempted: liveWasAttempted,
-            requestStarted: liveWasAttempted,
-            requestCompleted: liveWasAttempted && liveDidSucceed,
-            status: liveWasAttempted
-              ? liveDidSucceed
-                ? freshLiveCount > 0
-                  ? "SUCCEEDED_WITH_RESULTS"
-                  : "SUCCEEDED_EMPTY"
-                : "FAILED"
-              : "NOT_ATTEMPTED",
-            startedAt: liveWasAttempted ? execMeta?.startedAt || generatedAt : null,
-            completedAt: liveWasAttempted ? execMeta?.completedAt || new Date().toISOString() : null,
-            actualApiCalls: liveWasAttempted ? 1 : 0,
-            returnedCount: liveWasAttempted ? freshLiveCount : 0,
-            upstreamReturnedCount: liveWasAttempted ? (execMeta?.upstreamReturnedCount ?? freshLiveCount) : null,
-            uniqueUpstreamIdsCount: liveWasAttempted ? freshLiveCount : null,
+            attempted: false,
+            requestStarted: false,
+            requestCompleted: false,
+            status: "NOT_ATTEMPTED",
+            startedAt: null,
+            completedAt: null,
+            actualApiCalls: 0,
+            returnedCount: 0,
+            upstreamReturnedCount: null,
+            uniqueUpstreamIdsCount: null,
             cachedRecordsUsed: cachedObservationsCount,
-            provenance: freshLiveCount > 0 ? "LIVE_PROVIDER" : cachedObservationsCount > 0 ? "CACHED_SOURCE" : "NONE",
-            uniqueReturnedCount: liveWasAttempted ? freshLiveCount : 0,
+            provenance: cachedObservationsCount > 0 ? "CACHED_SOURCE" : "NONE",
+            uniqueReturnedCount: 0,
             duplicateCount: 0,
             roundNumber: rq.roundNumber ?? 1,
             origin: rq.origin,
@@ -631,7 +626,11 @@ export async function runEvergreenProductResearch(
         lastLiveQueryRecordCount,
         lastSuccessfulLiveQueryAt: liveAttempted && liveSucceeded ? metaNow : null,
         auditTraces: execMeta?.auditTraces || [],
-      };
+        queryOutcomes: [...allMetaQueryOutcomes],
+        workspaceId: input.workspaceId,
+        researchRunId: runId,
+        sourceMode: input.sourceMode || "LIVE_WITH_CACHE_FALLBACK",
+      } as any;
     } catch (err: any) {
       sourceStatuses.META_ADS = "FAILED";
       errors.push(`Meta Ads collection failed: ${err.message}`);
@@ -1074,6 +1073,7 @@ export async function runEvergreenProductResearch(
             ...execMetaR2.auditTraces,
           ];
         }
+        (providerTelemetry.META_ADS as any).queryOutcomes = [...allMetaQueryOutcomes];
         if (metaRound2Result.status === "PASSED") {
           sourceStatuses.META_ADS = "PASSED";
           providerTelemetry.META_ADS.queryStatus = "PASSED";
@@ -2309,6 +2309,7 @@ export async function runEvergreenProductResearch(
     insufficientEvidenceCandidates,
     rejectedCandidates,
     providerTelemetry,
+    sourceTelemetry: providerTelemetry,
     totalCandidatesDiscovered: rawCandidates.length,
     totalObservationsCollected: adObservations.length + secondaryObservations.length,
     sourceObservations: adObservations.concat(secondaryObservations),
@@ -2323,6 +2324,7 @@ export async function runEvergreenProductResearch(
     discoveryPlannerTelemetry,
     plannedQueries: validatedQueries,
     queryExecutions: allMetaQueryOutcomes,
+    subqueryExecutions: allMetaQueryOutcomes,
     queryYields,
     shortlistCoverage,
     lookbackCoverage,

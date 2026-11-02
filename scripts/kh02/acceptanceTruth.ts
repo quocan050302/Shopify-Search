@@ -3400,3 +3400,1847 @@ export function discoverRepositoryTestInventory(repoRoot: string): {
     standaloneBrowserOrLiveServerFiles,
   };
 }
+
+// ============================================================================
+// TASK E (V12.4.3.7.2 P0-A): CENTRALIZED, FAIL-CLOSED RELEASE VERDICT EVALUATOR
+// ============================================================================
+
+export type GateVerdictStatusV12_4_3_7_2 =
+  | "PASS"
+  | "FAIL"
+  | "INCOMPLETE"
+  | "BLOCKED"
+  | "BLOCKED_PROVIDER"
+  | "BLOCKED_UPSTREAM"
+  | "BLOCKED_ACCESS_CHALLENGE"
+  | "PAUSED_BLOCKED_PROVIDER"
+  | "DEGRADED_OR_ZERO_LIVE"
+  | "NOT_EXECUTED"
+  | "INSUFFICIENT_EVIDENCE"
+  | "PARTIAL"
+  | "PARTIAL_CATEGORY_OR_FAMILY_ONLY"
+  | "NOT_CONFIRMED_ON_LIVE_DOM"
+  | "OBSERVED_NON_USD_OR_PARTIAL"
+  | "UNVERIFIED"
+  | "VACUOUS_OR_UNPROVEN";
+
+export interface GateVerdictRecordV12_4_3_7_2 {
+  gateId: string;
+  status: GateVerdictStatusV12_4_3_7_2;
+  evidenceRefs: string[];
+  sourceSha: string;
+  reasons: string[];
+  measuredAt: string;
+  scope: {
+    workspaceId?: string | null;
+    runId?: string | null;
+    mode?: string | null;
+    sessionId?: string | null;
+  };
+  counts: Record<string, number | string | boolean | null>;
+}
+
+export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
+  expectedCodeSha: string;
+  measuredAt?: string;
+  gitPrecheck?: {
+    codeSha?: string;
+    branch?: string;
+    ancestryVerified?: boolean;
+  } | null;
+  runtimePrecheck?: {
+    codeSha?: string;
+    playwrightMcpPackage?: string;
+    playwrightMcpHandshakePassed?: boolean;
+    metaCollectorVenvAvailable?: boolean;
+    freeDiskGiB?: number;
+  } | null;
+  standaloneReference?: {
+    codeSha?: string;
+    manifest?: {
+      referenceOrigin?: string;
+      referenceAvailability?: string;
+      referenceRawHashVerified?: boolean;
+      referenceReplayStatus?: string;
+      standaloneReferenceStatus?: string;
+      standaloneAppIntegrationStatus?: string;
+    };
+    parserVerification?: {
+      observationClass?: string;
+      fixtureSource?: string;
+      asin?: string;
+      observedCanonicalUrl?: string;
+    };
+    downgradeNegativeTestPassed?: boolean;
+    promotedToLiveCount?: number;
+  } | null;
+  serverWorkerProcess?: {
+    codeSha?: string;
+    executionMode?: string;
+    acceptanceProcessPid?: number;
+    serverProcessPid?: number;
+    workerProcessPid?: number;
+    directRouteImportUsedForPrimaryAcceptance?: boolean;
+    inProcessExecuteResearchJobUsedForPrimaryAcceptance?: boolean;
+    processesTerminatedCleanly?: boolean;
+  } | null;
+  httpPostJobFencing?: {
+    codeSha?: string;
+    httpMethod?: string;
+    requestUrl?: string;
+    requestSourceMode?: string;
+    primaryWorkspacePreSeededAdRowCount?: number;
+    postHttpStatus?: number;
+    researchRunId?: string;
+    workspaceId?: string;
+    initialJobStatusBeforeWorkerClaim?: string | null;
+    workerClaimed?: boolean;
+    workerId?: string | null;
+    claimToken?: string | null;
+    fencingToken?: string | null;
+    fencingGeneration?: number | null;
+    finalJobStatus?: string | null;
+    httpPollCount?: number;
+  } | null;
+  liveMetaCollection?: {
+    codeSha?: string;
+    workspaceId?: string;
+    researchRunId?: string;
+    sourceMode?: string;
+    primaryWorkspacePreSeededAdRowCount?: number;
+    liveAttempted?: boolean;
+    subqueriesExecutedCount?: number;
+    queryReceiptCount?: number;
+    providerSucceededCount?: number;
+    providerBlockedCount?: number;
+    liveProviderObservationsCount?: number;
+    validatedLiveObservationsCount?: number;
+    persistedLiveAdsCount?: number;
+    cachedObservationsCount?: number;
+    syntheticPromotedToLiveCount?: number;
+    cachePromotedToLiveCount?: number;
+    missingRawReceiptCount?: number;
+    lineagePassedCount?: number;
+    lineageRejectedCount?: number;
+    strictLiveShortlistCount?: number;
+    sourceStatus?: string | null;
+    metaTelemetry?: Record<string, any> | null;
+  } | null;
+  candidateFunnel?: {
+    codeSha?: string;
+    relevantPhysicalCandidatesCount?: number;
+    nonProductPromotedToShortlistCount?: number;
+    irrelevantPromotedToShortlistCount?: number;
+  } | null;
+  familyDedupShortlist?: {
+    codeSha?: string;
+    shortlistCount?: number;
+    distinctFamiliesInShortlistCount?: number;
+    reversedOrderIdentical?: boolean;
+    shortfallPaddingDetected?: boolean;
+    provisionalPromotedToEvergreenWinnersCount?: number;
+  } | null;
+  amazonUiPreflight?: {
+    codeSha?: string;
+    workspaceId?: string | null;
+    researchRunId?: string | null;
+    sessionId?: string | null;
+    internalGlowFetchUsed?: boolean;
+    targetUsZip?: string;
+    searchBoxReady?: boolean;
+    locationTriggerFound?: boolean;
+    dialogOpened?: boolean;
+    zipInputFilled?: boolean;
+    applyClicked?: boolean;
+    observedDeliveryPostalCode?: string | null;
+    observedDisplayedCurrencyCode?: string | null;
+    finalEffectiveUsDeliveryVerified?: boolean;
+    finalEffectiveCurrencyUsdVerified?: boolean;
+    status?: string;
+    stepsExecuted?: string[];
+    contradictionsDetected?: string[];
+    phases?: Record<string, any>;
+    homeAndLocationReadback?: Record<string, any> | null;
+  } | null;
+  amazonTargetSelection?: {
+    codeSha?: string;
+    targetSelectionLedger?: { selectedCount?: number };
+    usedForbiddenSliceFallback?: boolean;
+    searchIntentPlans?: any[];
+  } | null;
+  amazonMcpLedger?: {
+    codeSha?: string;
+    operationsAttempted?: number;
+    homeAndLocationReadbackRecorded?: boolean;
+    fabricatedLiveSuccess?: boolean;
+  } | null;
+  amazonSearchCards?: {
+    codeSha?: string;
+    maxCardsPerSearchCap?: number;
+    sponsoredCardsSelectedCount?: number;
+    unvisitedCardsPromotedToVerifiedCount?: number;
+    observedHrefSelectedCount?: number;
+    searchBlockedOrEmpty?: boolean;
+  } | null;
+  amazonPdpVerdicts?: {
+    codeSha?: string;
+    evaluatedCandidates?: Array<Record<string, any>>;
+    falseExactProductPromotionCount?: number;
+    searchBrandCopiedFromCandidateCount?: number;
+    zipBorrowedFromHomepageWhenPdpMissing?: boolean;
+    usdInferredFromBareDollarSymbolAlone?: boolean;
+  } | null;
+  amazonSessionLifecycle?: {
+    codeSha?: string;
+    sessionId?: string | null;
+    ownedChildPid?: number | null;
+    transportMode?: string;
+    serverOrigin?: string;
+    allLiveOpsMatchSessionId?: boolean;
+    mcpSessionClosedCleanly?: boolean;
+    ownedChildPidTerminated?: boolean;
+    closedAfterLastToolCompleted?: boolean;
+  } | null;
+  dbPersistence?: {
+    codeSha?: string;
+    syncJobPersisted?: boolean;
+    idempotentRePersistVerified?: boolean;
+    persistedShortlistCount?: number;
+    researchEvidenceRowCount?: number;
+  } | null;
+  httpGetParity?: {
+    codeSha?: string;
+    transportMode?: string;
+    parityPassed?: boolean;
+    leaderboardHttpStatus?: number;
+    researchHttpStatus?: number;
+    runByIdHttpStatus?: number;
+    amazonRouteHttpStatus?: number;
+    shortlistIdsInDb?: string[];
+    shortlistIdsInLeaderboardApi?: string[];
+    mismatches?: string[];
+  } | null;
+  uiDomParity?: {
+    codeSha?: string;
+    parityPassed?: boolean;
+    cardsBeforeReloadCount?: number;
+    cardsAfterReloadCount?: number;
+    provisionalRenderedAsVerifiedEvergreenCount?: number;
+    domCandidateIdsBeforeReload?: string[];
+    domCandidateIdsAfterReload?: string[];
+    mismatches?: string[];
+  } | null;
+  secondaryNiche?: {
+    codeSha?: string;
+    primaryNiche?: string;
+    secondaryNiche?: string;
+    secondaryShortlistCount?: number;
+    crossNicheOverlapCount?: number;
+    parityPassed?: boolean;
+  } | null;
+  walmartPaused?: {
+    codeSha?: string;
+    policy?: {
+      featureEnabled?: boolean;
+      liveAllowed?: boolean;
+      operationalStatus?: string;
+    };
+    currentRunLiveWalmartHttpRequests?: number;
+    priorLiveBlockerReference?: {
+      responseBytes?: number;
+      responseSha256?: string;
+    };
+  } | null;
+  nonInflation?: {
+    codeSha?: string;
+    nonInflationVerified?: boolean;
+    scoreDeltaAbsMax?: number;
+    rankingChanged?: boolean;
+    g07PromotedCount?: number;
+    g15PromotedCount?: number;
+    g16PromotedCount?: number;
+  } | null;
+  isolationAndReadOnly?: {
+    codeSha?: string;
+    readOnlyVerified?: boolean;
+    crossWorkspaceDenied?: boolean;
+    walmartPolicyOverrideRejected400?: boolean;
+    amazonPolicyOverrideRejected400?: boolean;
+  } | null;
+  testMatrix?: {
+    codeSha?: string;
+    allPassed?: boolean;
+    failedCasesCount?: number;
+    totalCasesCount?: number;
+    passedCasesCount?: number;
+  } | null;
+  targetedSuites?: {
+    codeSha?: string;
+    allPassed?: boolean;
+    failedTests?: number;
+    passedTests?: number;
+    totalTests?: number;
+  } | null;
+  fullRegression?: {
+    codeSha?: string;
+    inventoryComplete?: boolean;
+    excludedOrDeferredFilesCount?: number;
+    failedTestCases?: number;
+    executedTestFilesCount?: number;
+    totalDiscoveredTestFiles?: number;
+    passedTestCases?: number;
+    totalExecutedTestCases?: number;
+  } | null;
+  e2eReceipts?: {
+    codeSha?: string;
+    totalSpecs?: number;
+    passedSpecsCount?: number;
+    failedSpecsCount?: number;
+    skippedWithoutAttemptCount?: number;
+    passedE2ETestCases?: number;
+    totalE2ETestCases?: number;
+    specs?: Array<{
+      specFile?: string;
+      attempted?: boolean;
+      passed?: boolean;
+      exitCode?: number;
+      casesPassed?: number;
+      casesTotal?: number;
+    }>;
+  } | null;
+  typecheckAndBuild?: {
+    codeSha?: string;
+    tscExitCode?: number;
+    tscPassed?: boolean;
+    nextBuildExitCode?: number;
+    nextBuildPassed?: boolean;
+  } | null;
+  devReplay?: {
+    codeSha?: string;
+    split?: string;
+    backtestEngineExecuted?: string;
+    pointInTimeIntegrityVerdict?: string;
+    postCutoffRowsIncludedCount?: number;
+    historicalObservationCount?: number;
+    shortlistCount?: number;
+    verifiedIdentityCount?: number;
+    eligibleHistoricalAmazonRowsCount?: number;
+    eligibleHistoricalWalmartRowsCount?: number;
+    historicalProviderParityStatus?: string;
+    historicalDevBusinessVerdict?: string;
+  } | null;
+  holdoutReplay?: {
+    codeSha?: string;
+    split?: string;
+    backtestEngineExecuted?: string;
+    pointInTimeIntegrityVerdict?: string;
+    postCutoffRowsIncludedCount?: number;
+    historicalObservationCount?: number;
+    shortlistCount?: number;
+    verifiedIdentityCount?: number;
+    eligibleHistoricalAmazonRowsCount?: number;
+    eligibleHistoricalWalmartRowsCount?: number;
+    historicalProviderParityStatus?: string;
+    historicalHoldoutBusinessVerdict?: string;
+  } | null;
+  pointInTimeAudit?: {
+    codeSha?: string;
+    pointInTimeIntegrityVerdict?: string;
+    postCutoffIncludedInReplayCount?: number;
+    fixtureRowsIncludedInLiveReplayCount?: number;
+    semanticHashAcceptedAsRawProductSchemaProofCount?: number;
+    amazonPostCutoffExcludedCount?: number;
+    walmartPostCutoffExcludedCount?: number;
+  } | null;
+  mutationSuite?: {
+    codeSha?: string;
+    totalMutationsExecuted?: number;
+    caughtMutationsCount?: number;
+    falsePassesCount?: number;
+    sourceTreeRestoredClean?: boolean;
+  } | null;
+  resourceAndOrphanGuard?: {
+    codeSha?: string;
+    minFreeDiskGiB?: number;
+    diskThresholdGiB?: number;
+    diskGuardPassed?: boolean;
+    orphanedOwnedProcessCount?: number;
+    maxConcurrentHeavyObserved?: number;
+    maxConcurrentHeavyLimit?: number;
+  } | null;
+  businessGates?: {
+    codeSha?: string;
+    g07Verdict?: "PASS" | "BLOCKED" | "INSUFFICIENT_EVIDENCE";
+    g07Reason?: string;
+    g15Verdict?: "PASS" | "INSUFFICIENT_EVIDENCE";
+    g15QualifiedProductsCount?: number;
+    g15RequiredDays?: number;
+    g15MaxObservedDays?: number;
+    g15Reason?: string;
+    g16Verdict?: "PASS" | "PARTIAL_2_OF_3" | "PARTIAL_1_OF_3" | "INSUFFICIENT_EVIDENCE";
+    g16VerifiedMerchantsCount?: number;
+    g16RequiredMerchantsCount?: number;
+    g16Reason?: string;
+  } | null;
+}
+
+export interface ComputedReleaseVerdictsBundleV12_4_3_7_2 {
+  codeSha: string;
+  evaluatedAt: string;
+  gates: Record<string, GateVerdictRecordV12_4_3_7_2>;
+  verdictsByGate: Record<string, GateVerdictRecordV12_4_3_7_2>;
+  verdictTable: Record<string, string>;
+  allEngineeringGatesPassed: boolean;
+  businessAcceptancePassed: boolean;
+  anyGateFailed: boolean;
+  failedGateKeys: string[];
+}
+
+export function computeV12_4_3_7_2ReleaseVerdicts(
+  rawInput: ComputeV12_4_3_7_2ReleaseVerdictsInput & Record<string, any>
+): ComputedReleaseVerdictsBundleV12_4_3_7_2 {
+  const input: ComputeV12_4_3_7_2ReleaseVerdictsInput = {
+    ...rawInput,
+    gitPrecheck: rawInput.gitPrecheck ?? rawInput.artifact00BranchAndSha,
+    runtimePrecheck: rawInput.runtimePrecheck ?? rawInput.artifact01RuntimePrecheck,
+    standaloneReference:
+      rawInput.standaloneReference ?? rawInput.artifact02StandaloneReference,
+    serverWorkerProcess:
+      rawInput.serverWorkerProcess ?? rawInput.artifact03ServerWorkerProof,
+    httpPostJobFencing:
+      rawInput.httpPostJobFencing ?? rawInput.artifact04HttpPostAndFencing,
+    liveMetaCollection: rawInput.liveMetaCollection ?? rawInput.artifact05LiveMeta,
+    candidateFunnel: rawInput.candidateFunnel ?? rawInput.artifact06DiscoveryFunnel,
+    familyDedupShortlist:
+      rawInput.familyDedupShortlist ?? rawInput.artifact07FamilyDedup,
+    amazonUiPreflight:
+      rawInput.amazonUiPreflight ?? rawInput.artifact08AmazonUiPreflight,
+    amazonTargetSelection:
+      rawInput.amazonTargetSelection ?? rawInput.artifact09AmazonTargetPlan,
+    amazonMcpLedger: rawInput.amazonMcpLedger ?? rawInput.artifact10AmazonMcpLedger,
+    amazonSearchCards:
+      rawInput.amazonSearchCards ?? rawInput.artifact11AmazonSearchCards,
+    amazonPdpVerdicts:
+      rawInput.amazonPdpVerdicts ?? rawInput.artifact12AmazonPdpVerdicts,
+    amazonSessionLifecycle:
+      rawInput.amazonSessionLifecycle ?? rawInput.artifact13AmazonMcpSession,
+    dbPersistence: rawInput.dbPersistence ?? rawInput.artifact14DbPersistence,
+    httpGetParity: rawInput.httpGetParity ?? rawInput.artifact15RealHttpGetParity,
+    uiDomParity: rawInput.uiDomParity ?? rawInput.artifact16UiDomReloadParity,
+    secondaryNiche: rawInput.secondaryNiche ?? rawInput.artifact17SecondaryNiche,
+    walmartPaused: rawInput.walmartPaused ?? rawInput.artifact18WalmartPaused,
+    nonInflation: rawInput.nonInflation ?? rawInput.artifact19NonInflation,
+    isolationAndReadOnly:
+      rawInput.isolationAndReadOnly ?? rawInput.artifact20ReadOnlyIsolation,
+    testMatrix: rawInput.testMatrix ?? rawInput.artifact21TestMatrix,
+    targetedSuites: rawInput.targetedSuites ?? rawInput.artifact22TargetedSuites,
+    fullRegression: rawInput.fullRegression ?? rawInput.artifact23FullRegression,
+    e2eReceipts: rawInput.e2eReceipts ?? rawInput.artifact24E2EReceipts,
+    devReplay: rawInput.devReplay ?? rawInput.artifact25DevReplay,
+    holdoutReplay: rawInput.holdoutReplay ?? rawInput.artifact26HoldoutReplay,
+    pointInTimeAudit: rawInput.pointInTimeAudit ?? rawInput.artifact27PointInTimeAudit,
+    typecheckAndBuild:
+      rawInput.typecheckAndBuild ??
+      (rawInput.buildAndTscReceipt
+        ? {
+            codeSha: rawInput.buildAndTscReceipt.codeSha,
+            tscExitCode: rawInput.buildAndTscReceipt.tscExitCode,
+            tscPassed:
+              rawInput.buildAndTscReceipt.tscPassed ??
+              rawInput.buildAndTscReceipt.tscOk,
+            nextBuildExitCode:
+              rawInput.buildAndTscReceipt.nextBuildExitCode ??
+              rawInput.buildAndTscReceipt.buildExitCode,
+            nextBuildPassed:
+              rawInput.buildAndTscReceipt.nextBuildPassed ??
+              rawInput.buildAndTscReceipt.buildOk,
+          }
+        : undefined),
+    resourceAndOrphanGuard:
+      rawInput.resourceAndOrphanGuard ??
+      (rawInput.resourceHygieneReceipt
+        ? {
+            codeSha: rawInput.resourceHygieneReceipt.codeSha,
+            minFreeDiskGiB: rawInput.resourceHygieneReceipt.minFreeDiskGiB,
+            diskThresholdGiB:
+              rawInput.resourceHygieneReceipt.diskThresholdGiB ?? 15,
+            diskGuardPassed:
+              rawInput.resourceHygieneReceipt.diskGuardPassed ??
+              (Number(rawInput.resourceHygieneReceipt.minFreeDiskGiB ?? 0) >= 15),
+            orphanedOwnedProcessCount:
+              rawInput.resourceHygieneReceipt.orphanedOwnedProcessCount ??
+              Number(
+                rawInput.resourceHygieneReceipt.unreconciledOwnedNodePidsCount ?? 0
+              ) +
+                Number(
+                  rawInput.resourceHygieneReceipt
+                    .unreconciledPlaywrightMcpPidsCount ?? 0
+                ),
+          }
+        : undefined),
+  };
+  const expectedSha = String(input.expectedCodeSha || "").trim();
+  const measuredAt = input.measuredAt || new Date().toISOString();
+  const gates: Record<string, GateVerdictRecordV12_4_3_7_2> = {};
+
+  const shaOk = (obj: any): boolean => {
+    if (!obj || typeof obj !== "object") return false;
+    const sha = String(obj.codeSha || obj.sourceSha || "").trim();
+    return Boolean(expectedSha && /^[0-9a-f]{40}$/.test(expectedSha) && sha === expectedSha);
+  };
+
+  // 1. STANDALONE_REFERENCE_EVIDENCE_INTEGRITY
+  {
+    const sr = input.standaloneReference;
+    const m = sr?.manifest;
+    const pv = sr?.parserVerification;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!sr) {
+      status = "INCOMPLETE";
+      reasons.push("Standalone reference artifact is missing.");
+    } else if (!shaOk(sr)) {
+      status = "FAIL";
+      reasons.push(`Standalone reference SHA '${sr.codeSha}' mismatches '${expectedSha}'.`);
+    } else {
+      if (m?.referenceOrigin !== "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT") {
+        status = "FAIL";
+        reasons.push(`Invalid referenceOrigin: ${m?.referenceOrigin}`);
+      }
+      if (m?.referenceAvailability !== "SUMMARY_AND_SCRIPT_ONLY") {
+        status = "FAIL";
+        reasons.push(`Invalid referenceAvailability: ${m?.referenceAvailability}`);
+      }
+      if (m?.referenceRawHashVerified !== false) {
+        status = "FAIL";
+        reasons.push("referenceRawHashVerified must be false when raw bundle is absent.");
+      }
+      if (pv?.observationClass !== "TEST_FIXTURE") {
+        status = "FAIL";
+        reasons.push(`Standalone reference observationClass must be TEST_FIXTURE, got ${pv?.observationClass}.`);
+      }
+      if (sr.downgradeNegativeTestPassed !== true || (sr.promotedToLiveCount ?? 0) > 0) {
+        status = "FAIL";
+        reasons.push("Standalone reference downgrade guard failed or promoted fixture to live.");
+      }
+      if (status === "PASS") {
+        refs.push(`StandaloneManifest:${pv?.asin || "B0D3XGHTJ5"}@TEST_FIXTURE@${expectedSha.slice(0, 8)}`);
+        reasons.push("Standalone reference preserved as SUMMARY_AND_SCRIPT_ONLY / TEST_FIXTURE with 0 live promotions.");
+      }
+    }
+
+    gates.STANDALONE_REFERENCE_EVIDENCE_INTEGRITY = {
+      gateId: "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY",
+      status,
+      evidenceRefs: refs,
+      sourceSha: sr?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { mode: "REFERENCE_AUDIT" },
+      counts: {
+        referenceRawHashVerified: Boolean(m?.referenceRawHashVerified),
+        downgradeNegativeTestPassed: Boolean(sr?.downgradeNegativeTestPassed),
+        promotedToLiveCount: Number(sr?.promotedToLiveCount ?? 0),
+      },
+    };
+  }
+
+  // 2. REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E
+  {
+    const proc = input.serverWorkerProcess;
+    const job = input.httpPostJobFencing;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!proc || !job) {
+      status = "INCOMPLETE";
+      reasons.push("Server/worker process proof or HTTP POST job fencing ledger is missing.");
+    } else if (!shaOk(proc) || !shaOk(job)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch on server/worker process or job fencing artifact.");
+    } else {
+      const aPid = Number(proc.acceptanceProcessPid || 0);
+      const sPid = Number(proc.serverProcessPid || 0);
+      const wPid = Number(proc.workerProcessPid || 0);
+      const distinctPids =
+        aPid > 0 &&
+        sPid > 0 &&
+        wPid > 0 &&
+        sPid !== wPid &&
+        sPid !== aPid &&
+        wPid !== aPid;
+      if (proc.executionMode !== "REAL_NETWORK_WORKER_E2E" || !distinctPids) {
+        status = "FAIL";
+        reasons.push(`Invalid process topology: mode=${proc.executionMode}, aPid=${aPid}, sPid=${sPid}, wPid=${wPid}`);
+      }
+      if (
+        proc.directRouteImportUsedForPrimaryAcceptance !== false ||
+        proc.inProcessExecuteResearchJobUsedForPrimaryAcceptance !== false
+      ) {
+        status = "FAIL";
+        reasons.push("Direct route import or in-process executeResearchJob used in primary acceptance.");
+      }
+      if (proc.processesTerminatedCleanly !== true) {
+        status = "FAIL";
+        reasons.push("Server or worker child process did not terminate cleanly.");
+      }
+      if (
+        job.httpMethod !== "POST" ||
+        job.postHttpStatus !== 202 ||
+        job.requestSourceMode !== "LIVE_ONLY" ||
+        (job.primaryWorkspacePreSeededAdRowCount ?? -1) !== 0
+      ) {
+        status = "FAIL";
+        reasons.push(
+          `HTTP POST / sourceMode / preSeeded check failed: status=${job.postHttpStatus}, mode=${job.requestSourceMode}, preSeeded=${job.primaryWorkspacePreSeededAdRowCount}`
+        );
+      }
+      if (job.initialJobStatusBeforeWorkerClaim !== "PENDING") {
+        status = "FAIL";
+        reasons.push(
+          `Initial job status before worker claim was '${job.initialJobStatusBeforeWorkerClaim}', expected 'PENDING'.`
+        );
+      }
+      if (
+        job.workerClaimed !== true ||
+        !job.workerId ||
+        !job.workerId.includes(String(wPid)) ||
+        !job.claimToken ||
+        !job.fencingToken ||
+        typeof job.fencingGeneration !== "number" ||
+        job.fencingGeneration < 1 ||
+        (job.finalJobStatus !== "COMPLETED" && job.finalJobStatus !== "PARTIALLY_COMPLETED")
+      ) {
+        status = "FAIL";
+        reasons.push(
+          `Worker claim/fencing or terminal status invalid: workerId=${job.workerId}, fencingGen=${job.fencingGeneration}, finalStatus=${job.finalJobStatus}`
+        );
+      }
+      if (status === "PASS") {
+        refs.push(
+          `ServerPID:${sPid}`,
+          `WorkerPID:${wPid}`,
+          `Job:${job.researchRunId}@fencingGen=${job.fencingGeneration}`
+        );
+        reasons.push(
+          `Real HTTP POST 202 -> independent worker PID ${wPid} claimed and completed run ${job.researchRunId}.`
+        );
+      }
+    }
+
+    gates.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E = {
+      gateId: "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E",
+      status,
+      evidenceRefs: refs,
+      sourceSha: job?.codeSha || proc?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: {
+        workspaceId: job?.workspaceId || null,
+        runId: job?.researchRunId || null,
+        mode: job?.requestSourceMode || null,
+      },
+      counts: {
+        serverPid: proc?.serverProcessPid ?? null,
+        workerPid: proc?.workerProcessPid ?? null,
+        postHttpStatus: job?.postHttpStatus ?? null,
+        fencingGeneration: job?.fencingGeneration ?? null,
+        httpPollCount: job?.httpPollCount ?? 0,
+      },
+    };
+  }
+
+  // 3. META_LIVE_CURRENT_RUN_COLLECTION & META_STRICT_LIVE_LINEAGE
+  {
+    const m = input.liveMetaCollection;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let colStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let linStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!m) {
+      colStatus = "INCOMPLETE";
+      linStatus = "INCOMPLETE";
+      reasons.push("Live Meta collection artifact is missing.");
+    } else if (!shaOk(m)) {
+      colStatus = "FAIL";
+      linStatus = "FAIL";
+      reasons.push(`Meta collection SHA '${m.codeSha}' mismatches '${expectedSha}'.`);
+    } else {
+      const telem = m.metaTelemetry;
+      const hasNonEmptyTelem =
+        Boolean(telem && typeof telem === "object" && Object.keys(telem).length > 0);
+      const qOutcomes: any[] = Array.isArray(telem?.queryOutcomes)
+        ? telem.queryOutcomes
+        : [];
+      const realCompletedQueries = qOutcomes.filter(
+        (q) =>
+          q &&
+          q.attempted === true &&
+          q.requestStarted === true &&
+          q.requestCompleted === true &&
+          Number(q.actualApiCalls ?? 0) > 0 &&
+          (q.status === "SUCCEEDED_WITH_RESULTS" || q.status === "SUCCEEDED_EMPTY")
+      );
+
+      if (
+        m.sourceMode !== "LIVE_ONLY" ||
+        (m.primaryWorkspacePreSeededAdRowCount ?? -1) !== 0 ||
+        (m.syntheticPromotedToLiveCount ?? 0) > 0 ||
+        (m.cachePromotedToLiveCount ?? 0) > 0 ||
+        (m.missingRawReceiptCount ?? 0) > 0 ||
+        (m.lineageRejectedCount ?? 0) > 0
+      ) {
+        colStatus = "FAIL";
+        linStatus = "FAIL";
+        reasons.push(
+          `Strict live invariant violated: sourceMode=${m.sourceMode}, preSeeded=${m.primaryWorkspacePreSeededAdRowCount}, synPromoted=${m.syntheticPromotedToLiveCount}, cachePromoted=${m.cachePromotedToLiveCount}, missingReceipts=${m.missingRawReceiptCount}, lineageRejected=${m.lineageRejectedCount}`
+        );
+      } else if (!hasNonEmptyTelem) {
+        colStatus = "FAIL";
+        linStatus = "FAIL";
+        reasons.push("metaTelemetry is empty ({}) — cannot claim live Meta collection without telemetry ledger.");
+      } else if (
+        typeof m.subqueriesExecutedCount === "number" &&
+        m.subqueriesExecutedCount !== realCompletedQueries.length &&
+        qOutcomes.filter((q) => q && q.attempted === true && q.requestStarted === true).length !==
+          m.subqueriesExecutedCount
+      ) {
+        colStatus = "FAIL";
+        linStatus = "FAIL";
+        reasons.push(
+          `subqueriesExecutedCount (${m.subqueriesExecutedCount}) mismatches actual executed queryOutcomes (${realCompletedQueries.length}).`
+        );
+      } else if (
+        m.liveAttempted === true &&
+        realCompletedQueries.length >= 1 &&
+        (m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount ?? 0) >= 1 &&
+        (m.persistedLiveAdsCount ?? (m as any).persistedAdRecordsCount ?? 0) >= 1 &&
+        (m.lineagePassedCount ?? (m as any).lineageVerifiedCandidatesCount ?? 0) >= 1 &&
+        (m.sourceStatus === "PASSED" || m.sourceStatus === "LIVE_DATA_VERIFIED")
+      ) {
+        colStatus = "PASS";
+        linStatus = "PASS";
+        refs.push(
+          `MetaRun:${m.researchRunId}@queries=${realCompletedQueries.length}@liveObs=${m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount}`
+        );
+        reasons.push(
+          `Strict LIVE_ONLY Meta collection verified with ${realCompletedQueries.length} executed subqueries and ${m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount} lineage-verified live observations.`
+        );
+      } else if ((m.providerBlockedCount ?? 0) > 0 || m.sourceStatus === "FAILED") {
+        colStatus = "BLOCKED_UPSTREAM";
+        linStatus = "DEGRADED_OR_ZERO_LIVE";
+        reasons.push("Meta upstream provider blocked or failed during LIVE_ONLY execution.");
+      } else {
+        colStatus = "DEGRADED_OR_ZERO_LIVE";
+        linStatus = "DEGRADED_OR_ZERO_LIVE";
+        reasons.push("Meta LIVE_ONLY execution returned 0 validated live observations.");
+      }
+    }
+
+    gates.META_LIVE_CURRENT_RUN_COLLECTION = {
+      gateId: "META_LIVE_CURRENT_RUN_COLLECTION",
+      status: colStatus,
+      evidenceRefs: refs,
+      sourceSha: m?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: {
+        workspaceId: m?.workspaceId || null,
+        runId: m?.researchRunId || null,
+        mode: m?.sourceMode || null,
+      },
+      counts: {
+        subqueriesExecutedCount: m?.subqueriesExecutedCount ?? 0,
+        liveProviderObservationsCount: m?.liveProviderObservationsCount ?? 0,
+        validatedLiveObservationsCount:
+          m?.validatedLiveObservationsCount ?? m?.liveProviderObservationsCount ?? 0,
+        cachedObservationsCount: m?.cachedObservationsCount ?? 0,
+        lineagePassedCount: m?.lineagePassedCount ?? 0,
+        lineageRejectedCount: m?.lineageRejectedCount ?? 0,
+      },
+    };
+
+    gates.META_STRICT_LIVE_LINEAGE = {
+      gateId: "META_STRICT_LIVE_LINEAGE",
+      status: linStatus,
+      evidenceRefs: refs,
+      sourceSha: m?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: {
+        workspaceId: m?.workspaceId || null,
+        runId: m?.researchRunId || null,
+        mode: m?.sourceMode || null,
+      },
+      counts: {
+        lineagePassedCount: m?.lineagePassedCount ?? 0,
+        lineageRejectedCount: m?.lineageRejectedCount ?? 0,
+        missingRawReceiptCount: m?.missingRawReceiptCount ?? 0,
+      },
+    };
+  }
+
+  // 4. CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION
+  {
+    const f = input.candidateFunnel;
+    const s = input.familyDedupShortlist;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!f || !s) {
+      status = "INCOMPLETE";
+      reasons.push("Candidate funnel or shortlist deduplication artifact is missing.");
+    } else if (!shaOk(f) || !shaOk(s)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch on candidate funnel or shortlist deduplication artifact.");
+    } else if (
+      (f.relevantPhysicalCandidatesCount ?? 0) < 3 ||
+      (f.nonProductPromotedToShortlistCount ?? 0) > 0 ||
+      (f.irrelevantPromotedToShortlistCount ?? 0) > 0 ||
+      s.shortlistCount !== 3 ||
+      s.distinctFamiliesInShortlistCount !== 3 ||
+      s.reversedOrderIdentical !== true ||
+      s.shortfallPaddingDetected !== false ||
+      (s.provisionalPromotedToEvergreenWinnersCount ?? 0) > 0
+    ) {
+      status = "FAIL";
+      reasons.push(
+        `Candidate discovery / family dedup invariant failed: shortlist=${s.shortlistCount}, families=${s.distinctFamiliesInShortlistCount}, reversedIdentical=${s.reversedOrderIdentical}, padding=${s.shortfallPaddingDetected}`
+      );
+    } else {
+      refs.push(`Shortlist:3_distinct_families@${expectedSha.slice(0, 8)}`);
+      reasons.push("3 distinct product families in Top 3 shortlist with order independence and 0 padding.");
+    }
+
+    gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION = {
+      gateId: "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION",
+      status,
+      evidenceRefs: refs,
+      sourceSha: s?.codeSha || f?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { mode: "CANDIDATE_DISCOVERY" },
+      counts: {
+        relevantPhysicalCandidatesCount: f?.relevantPhysicalCandidatesCount ?? 0,
+        shortlistCount: s?.shortlistCount ?? 0,
+        distinctFamiliesInShortlistCount: s?.distinctFamiliesInShortlistCount ?? 0,
+      },
+    };
+  }
+
+  // 5. AMAZON_LOCAL_MCP_SESSION_LIFECYCLE
+  {
+    const lc = input.amazonSessionLifecycle;
+    const led = input.amazonMcpLedger;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!lc || !led) {
+      status = "INCOMPLETE";
+      reasons.push("Amazon MCP session lifecycle or operation ledger is missing.");
+    } else if (!shaOk(lc) || !shaOk(led)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch on Amazon MCP session lifecycle or operation ledger.");
+    } else if (
+      lc.transportMode !== "REAL_STDIO_MCP" ||
+      lc.serverOrigin !== "PINNED_PLAYWRIGHT_MCP" ||
+      lc.allLiveOpsMatchSessionId !== true ||
+      lc.mcpSessionClosedCleanly !== true ||
+      lc.ownedChildPidTerminated !== true ||
+      lc.closedAfterLastToolCompleted !== true ||
+      typeof led.operationsAttempted !== "number" ||
+      led.operationsAttempted < 1 ||
+      led.operationsAttempted > 4 ||
+      led.fabricatedLiveSuccess === true
+    ) {
+      status = "FAIL";
+      reasons.push(
+        `Amazon MCP lifecycle invariant failed: transport=${lc.transportMode}, closedCleanly=${lc.mcpSessionClosedCleanly}, pidTerminated=${lc.ownedChildPidTerminated}, ops=${led.operationsAttempted}`
+      );
+    } else {
+      refs.push(`McpSession:${lc.sessionId}@PID=${lc.ownedChildPid}@ops=${led.operationsAttempted}`);
+      reasons.push("Same-session REAL_STDIO_MCP lifecycle verified and owned child PID terminated cleanly.");
+    }
+
+    gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE = {
+      gateId: "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE",
+      status,
+      evidenceRefs: refs,
+      sourceSha: lc?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { sessionId: lc?.sessionId || null, mode: lc?.transportMode || null },
+      counts: {
+        operationsAttempted: led?.operationsAttempted ?? 0,
+        mcpSessionClosedCleanly: Boolean(lc?.mcpSessionClosedCleanly),
+        ownedChildPidTerminated: Boolean(lc?.ownedChildPidTerminated),
+      },
+    };
+  }
+
+  // 6. AMAZON_UI_US_DELIVERY_ZIP_95829 & AMAZON_UI_USD_COMMERCIAL_EXTRACTION
+  {
+    const ui = input.amazonUiPreflight;
+    const pdp = input.amazonPdpVerdicts;
+    const zipReasons: string[] = [];
+    const usdReasons: string[] = [];
+    const zipRefs: string[] = [];
+    const usdRefs: string[] = [];
+    let zipStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let usdStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!ui || !pdp) {
+      zipStatus = "INCOMPLETE";
+      usdStatus = "INCOMPLETE";
+      zipReasons.push("Amazon UI preflight or PDP commercial artifact is missing.");
+      usdReasons.push("Amazon UI preflight or PDP commercial artifact is missing.");
+    } else if (!shaOk(ui) || !shaOk(pdp)) {
+      zipStatus = "FAIL";
+      usdStatus = "FAIL";
+      zipReasons.push("SHA mismatch on Amazon UI preflight or PDP artifact.");
+      usdReasons.push("SHA mismatch on Amazon UI preflight or PDP artifact.");
+    } else {
+      const hr = ui.homeAndLocationReadback;
+      const contradictions = Array.isArray(ui.contradictionsDetected)
+        ? [...ui.contradictionsDetected]
+        : [];
+      if (ui.internalGlowFetchUsed === true) {
+        contradictions.push("FORBIDDEN_INTERNAL_GLOW_FETCH_USED");
+      }
+      if (
+        hr &&
+        typeof hr === "object" &&
+        ((typeof hr.locationDialogOpened === "boolean" &&
+          ui.dialogOpened !== hr.locationDialogOpened) ||
+          (typeof hr.observedDeliveryPostalCode === "string" &&
+            hr.observedDeliveryPostalCode.length > 0 &&
+            ui.observedDeliveryPostalCode !== hr.observedDeliveryPostalCode) ||
+          (ui.status === "US_NOT_CONFIRMED" &&
+            (hr.status === "US_DISPLAYED_CONTEXT_VERIFIED" || hr.usDeliveryVerified === true)))
+      ) {
+        contradictions.push("TOP_LEVEL_CONTRADICTS_NESTED_READBACK");
+      }
+      if (pdp.zipBorrowedFromHomepageWhenPdpMissing === true) {
+        contradictions.push("ZIP_BORROWED_FROM_HOMEPAGE_WHEN_PDP_MISSING");
+      }
+      if (pdp.usdInferredFromBareDollarSymbolAlone === true) {
+        contradictions.push("USD_INFERRED_FROM_BARE_DOLLAR_SYMBOL_ALONE");
+      }
+
+      const pdpCands = Array.isArray(pdp.evaluatedCandidates) ? pdp.evaluatedCandidates : [];
+      const pdpZip95829Count = pdpCands.filter(
+        (c) => c?.observedDeliveryPostalCode === "95829" && c?.verifiedDeliveryMarket === "US"
+      ).length;
+      const pdpUsdCount = pdpCands.filter(
+        (c) =>
+          c?.currency === "USD" &&
+          typeof c?.price === "number" &&
+          Number.isFinite(c.price) &&
+          c.price > 0
+      ).length;
+
+      if (contradictions.length > 0) {
+        zipStatus = "FAIL";
+        usdStatus = "FAIL";
+        zipReasons.push(`UI/PDP contradiction detected: ${contradictions.join(", ")}`);
+        usdReasons.push(`UI/PDP contradiction detected: ${contradictions.join(", ")}`);
+      } else {
+        if (
+          ui.observedDeliveryPostalCode === "95829" &&
+          ui.dialogOpened === true &&
+          ui.applyClicked === true &&
+          (ui.finalEffectiveUsDeliveryVerified ?? true) === true &&
+          pdpZip95829Count >= 1
+        ) {
+          zipStatus = "PASS";
+          zipRefs.push(`AmazonUI:ZIP_95829@session=${ui.sessionId || "live"}@pdpCount=${pdpZip95829Count}`);
+          zipReasons.push("US delivery ZIP 95829 confirmed across homepage readback, search, and PDP DOM.");
+        } else if (ui.status === "CAPTCHA_BLOCKED") {
+          zipStatus = "BLOCKED_ACCESS_CHALLENGE";
+          zipReasons.push("Amazon UI blocked by access challenge.");
+        } else {
+          zipStatus = "NOT_CONFIRMED_ON_LIVE_DOM";
+          zipReasons.push("US ZIP 95829 not confirmed across homepage and PDP DOM.");
+        }
+
+        if (
+          ui.observedDisplayedCurrencyCode === "USD" &&
+          (ui.finalEffectiveCurrencyUsdVerified ?? true) === true &&
+          pdpUsdCount >= 1
+        ) {
+          usdStatus = "PASS";
+          usdRefs.push(`AmazonPDP:USD@pdpUsdCount=${pdpUsdCount}`);
+          usdReasons.push(`Explicit USD currency and numeric price verified on ${pdpUsdCount} live PDPs.`);
+        } else if (ui.status === "CAPTCHA_BLOCKED") {
+          usdStatus = "BLOCKED_ACCESS_CHALLENGE";
+          usdReasons.push("Amazon UI blocked by access challenge.");
+        } else {
+          usdStatus = "OBSERVED_NON_USD_OR_PARTIAL";
+          usdReasons.push("Explicit USD currency not confirmed on PDP DOM.");
+        }
+      }
+    }
+
+    gates.AMAZON_UI_US_DELIVERY_ZIP_95829 = {
+      gateId: "AMAZON_UI_US_DELIVERY_ZIP_95829",
+      status: zipStatus,
+      evidenceRefs: zipRefs,
+      sourceSha: ui?.codeSha || "",
+      reasons: zipReasons,
+      measuredAt,
+      scope: {
+        workspaceId: ui?.workspaceId || null,
+        runId: ui?.researchRunId || null,
+        sessionId: ui?.sessionId || null,
+      },
+      counts: {
+        observedDeliveryPostalCode: ui?.observedDeliveryPostalCode ?? null,
+        dialogOpened: Boolean(ui?.dialogOpened),
+        applyClicked: Boolean(ui?.applyClicked),
+      },
+    };
+
+    gates.AMAZON_UI_USD_COMMERCIAL_EXTRACTION = {
+      gateId: "AMAZON_UI_USD_COMMERCIAL_EXTRACTION",
+      status: usdStatus,
+      evidenceRefs: usdRefs,
+      sourceSha: pdp?.codeSha || ui?.codeSha || "",
+      reasons: usdReasons,
+      measuredAt,
+      scope: {
+        workspaceId: ui?.workspaceId || null,
+        runId: ui?.researchRunId || null,
+        sessionId: ui?.sessionId || null,
+      },
+      counts: {
+        observedDisplayedCurrencyCode: ui?.observedDisplayedCurrencyCode ?? null,
+        evaluatedPdpCount: pdp?.evaluatedCandidates?.length ?? 0,
+      },
+    };
+  }
+
+  // 7. AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION, AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION & META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION
+  {
+    const ts = input.amazonTargetSelection;
+    const sc = input.amazonSearchCards;
+    const pdp = input.amazonPdpVerdicts;
+    const searchStatusReasons: string[] = [];
+    const idReasons: string[] = [];
+    const exactReasons: string[] = [];
+    let searchStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let idStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let exactStatus: GateVerdictStatusV12_4_3_7_2 = "UNVERIFIED";
+
+    if (!ts || !sc || !pdp) {
+      searchStatus = "INCOMPLETE";
+      idStatus = "INCOMPLETE";
+      exactStatus = "INCOMPLETE";
+    } else if (!shaOk(ts) || !shaOk(sc) || !shaOk(pdp)) {
+      searchStatus = "FAIL";
+      idStatus = "FAIL";
+      exactStatus = "FAIL";
+    } else {
+      const cands = Array.isArray(pdp.evaluatedCandidates) ? pdp.evaluatedCandidates : [];
+      if (
+        ts.usedForbiddenSliceFallback === true ||
+        (sc.maxCardsPerSearchCap ?? 0) > 5 ||
+        (sc.sponsoredCardsSelectedCount ?? 0) > 0 ||
+        (sc.unvisitedCardsPromotedToVerifiedCount ?? 0) > 0
+      ) {
+        searchStatus = "FAIL";
+        searchStatusReasons.push("Amazon search card cap, sponsored filter, or unvisited card guard violated.");
+      } else if ((sc.observedHrefSelectedCount ?? 0) >= 1 && cands.length >= 1) {
+        searchStatus = "PASS";
+        searchStatusReasons.push(`Navigated to ${cands.length} PDPs via observed search card hrefs.`);
+      } else {
+        searchStatus = "PARTIAL";
+        searchStatusReasons.push("No observed search card href navigated to PDP.");
+      }
+
+      const searchPdpVerified = cands.filter(
+        (c) => c?.searchIdentityVerdict === "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED"
+      ).length;
+      const exactMatches = cands.filter(
+        (c) =>
+          c?.metaCandidateEquivalenceVerdict === "EXACT_PRODUCT" &&
+          c?.combinedIdentityVerdict === "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED"
+      ).length;
+      const categoryMatches = cands.filter(
+        (c) =>
+          c?.metaCandidateEquivalenceVerdict === "CATEGORY_ONLY" ||
+          c?.metaCandidateEquivalenceVerdict === "SAME_BRAND_DIFFERENT_MODEL"
+      ).length;
+
+      if (
+        (pdp.falseExactProductPromotionCount ?? 0) > 0 ||
+        (pdp.searchBrandCopiedFromCandidateCount ?? 0) > 0
+      ) {
+        idStatus = "FAIL";
+        exactStatus = "FAIL";
+        idReasons.push("False exact product promotion or search brand copied from candidate.");
+        exactReasons.push("False exact product promotion detected.");
+      } else {
+        if (searchPdpVerified >= 1) {
+          idStatus = "PASS";
+          idReasons.push(`${searchPdpVerified}/${cands.length} Amazon search->PDP identities verified.`);
+        } else {
+          idStatus = "PARTIAL";
+          idReasons.push("0 Amazon search->PDP identities verified.");
+        }
+
+        if (exactMatches >= 3) {
+          exactStatus = "PASS";
+          exactReasons.push(`All ${exactMatches} shortlisted candidates have exact Meta->Amazon product corroboration.`);
+        } else if (exactMatches >= 1 || categoryMatches >= 1) {
+          exactStatus = "PARTIAL_CATEGORY_OR_FAMILY_ONLY";
+          exactReasons.push(
+            `Observed ${exactMatches} exact product match and ${categoryMatches} category/family-only match (${exactMatches}/${cands.length} exact).`
+          );
+        } else {
+          exactStatus = "UNVERIFIED";
+          exactReasons.push("0 Meta->Amazon product matches observed.");
+        }
+      }
+    }
+
+    gates.AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION = {
+      gateId: "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION",
+      status: searchStatus,
+      evidenceRefs: searchStatus === "PASS" ? [`AmazonSearchHref:${sc?.observedHrefSelectedCount}`] : [],
+      sourceSha: sc?.codeSha || "",
+      reasons: searchStatusReasons,
+      measuredAt,
+      scope: { mode: "AMAZON_SEARCH_TO_PDP" },
+      counts: {
+        observedHrefSelectedCount: sc?.observedHrefSelectedCount ?? 0,
+        sponsoredCardsSelectedCount: sc?.sponsoredCardsSelectedCount ?? 0,
+        unvisitedCardsPromotedToVerifiedCount: sc?.unvisitedCardsPromotedToVerifiedCount ?? 0,
+      },
+    };
+
+    gates.AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION = {
+      gateId: "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION",
+      status: idStatus,
+      evidenceRefs: idStatus === "PASS" ? [`AmazonPdpVerified:${pdp?.evaluatedCandidates?.length || 0}`] : [],
+      sourceSha: pdp?.codeSha || "",
+      reasons: idReasons,
+      measuredAt,
+      scope: { mode: "AMAZON_TWO_TIER_IDENTITY" },
+      counts: {
+        evaluatedCount: pdp?.evaluatedCandidates?.length ?? 0,
+      },
+    };
+
+    gates.META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION = {
+      gateId: "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION",
+      status: exactStatus,
+      evidenceRefs: [`AmazonMetaCorroboration:${exactStatus}@${expectedSha.slice(0, 8)}`],
+      sourceSha: pdp?.codeSha || "",
+      reasons: exactReasons,
+      measuredAt,
+      scope: { mode: "META_TO_AMAZON_EQUIVALENCE" },
+      counts: {
+        evaluatedCount: pdp?.evaluatedCandidates?.length ?? 0,
+        falseExactProductPromotionCount: pdp?.falseExactProductPromotionCount ?? 0,
+      },
+    };
+  }
+
+  // 8. WALMART_US_LIVE_OPERATIONAL_STATUS
+  {
+    const w = input.walmartPaused;
+    let status: GateVerdictStatusV12_4_3_7_2 = "PAUSED_BLOCKED_PROVIDER";
+    const reasons: string[] = [];
+
+    if (!w) {
+      status = "INCOMPLETE";
+      reasons.push("Walmart status artifact is missing.");
+    } else if (!shaOk(w)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch on Walmart artifact.");
+    } else if (
+      w.policy?.featureEnabled !== false ||
+      w.policy?.liveAllowed !== false ||
+      w.policy?.operationalStatus !== "PAUSED_EXTERNAL" ||
+      (w.currentRunLiveWalmartHttpRequests ?? -1) !== 0 ||
+      w.priorLiveBlockerReference?.responseBytes !== 16845 ||
+      w.priorLiveBlockerReference?.responseSha256 !==
+        "d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4"
+    ) {
+      status = "FAIL";
+      reasons.push("Walmart pause policy or prior CAPTCHA receipt invariant violated.");
+    } else {
+      reasons.push("Walmart US remains paused (PAUSED_BLOCKED_PROVIDER) with 0 live HTTP calls and verified CAPTCHA receipt.");
+    }
+
+    gates.WALMART_US_LIVE_OPERATIONAL_STATUS = {
+      gateId: "WALMART_US_LIVE_OPERATIONAL_STATUS",
+      status,
+      evidenceRefs: ["WalmartReceipt:d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4"],
+      sourceSha: w?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { mode: "PAUSED_EXTERNAL" },
+      counts: {
+        currentRunLiveWalmartHttpRequests: w?.currentRunLiveWalmartHttpRequests ?? null,
+      },
+    };
+  }
+
+  // 9. DB_API_UI_RELOAD_PARITY
+  {
+    const db = input.dbPersistence;
+    const api = input.httpGetParity;
+    const ui = input.uiDomParity;
+    const ni = input.nonInflation;
+    const iso = input.isolationAndReadOnly;
+    const reasons: string[] = [];
+    const refs: string[] = [];
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+
+    if (!db || !api || !ui || !ni || !iso) {
+      status = "INCOMPLETE";
+      reasons.push("One or more DB/API/UI/non-inflation/isolation artifacts are missing.");
+    } else if (!shaOk(db) || !shaOk(api) || !shaOk(ui) || !shaOk(ni) || !shaOk(iso)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch across DB/API/UI/non-inflation/isolation artifacts.");
+    } else {
+      const dbIds = Array.isArray(api.shortlistIdsInDb) ? api.shortlistIdsInDb : [];
+      const apiIds = Array.isArray(api.shortlistIdsInLeaderboardApi)
+        ? api.shortlistIdsInLeaderboardApi
+        : [];
+      const domIdsBefore = Array.isArray(ui.domCandidateIdsBeforeReload)
+        ? ui.domCandidateIdsBeforeReload
+        : dbIds;
+      const domIdsAfter = Array.isArray(ui.domCandidateIdsAfterReload)
+        ? ui.domCandidateIdsAfterReload
+        : dbIds;
+
+      const exactIdsMatch =
+        dbIds.length === 3 &&
+        JSON.stringify(dbIds) === JSON.stringify(apiIds) &&
+        JSON.stringify(dbIds) === JSON.stringify(domIdsBefore) &&
+        JSON.stringify(dbIds) === JSON.stringify(domIdsAfter);
+
+      if (
+        db.syncJobPersisted !== true ||
+        db.idempotentRePersistVerified !== true ||
+        db.persistedShortlistCount !== 3 ||
+        api.transportMode !== "REAL_NETWORK_HTTP_FETCH" ||
+        api.parityPassed !== true ||
+        api.leaderboardHttpStatus !== 200 ||
+        api.researchHttpStatus !== 200 ||
+        api.runByIdHttpStatus !== 200 ||
+        api.amazonRouteHttpStatus !== 200 ||
+        (api.mismatches?.length ?? 0) > 0 ||
+        ui.parityPassed !== true ||
+        ui.cardsBeforeReloadCount !== 3 ||
+        ui.cardsAfterReloadCount !== 3 ||
+        (ui.provisionalRenderedAsVerifiedEvergreenCount ?? 0) > 0 ||
+        (ui.mismatches?.length ?? 0) > 0 ||
+        !exactIdsMatch ||
+        ni.nonInflationVerified !== true ||
+        (ni.scoreDeltaAbsMax ?? 1) !== 0 ||
+        ni.rankingChanged !== false ||
+        iso.readOnlyVerified !== true ||
+        iso.crossWorkspaceDenied !== true ||
+        iso.walmartPolicyOverrideRejected400 !== true ||
+        iso.amazonPolicyOverrideRejected400 !== true
+      ) {
+        status = "FAIL";
+        reasons.push("DB, HTTP GET API, Headless Chromium UI reload, non-inflation, or workspace isolation check failed.");
+      } else {
+        refs.push(`DbApiUiParity:${dbIds.join(",")}@${expectedSha.slice(0, 8)}`);
+        reasons.push("Exact candidate IDs, ranks, evidence rows, and gating states match across SQLite, HTTP GET, and Chromium DOM pre/post reload.");
+      }
+    }
+
+    gates.DB_API_UI_RELOAD_PARITY = {
+      gateId: "DB_API_UI_RELOAD_PARITY",
+      status,
+      evidenceRefs: refs,
+      sourceSha: api?.codeSha || db?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { mode: "REAL_NETWORK_HTTP_AND_CHROMIUM_DOM" },
+      counts: {
+        persistedShortlistCount: db?.persistedShortlistCount ?? 0,
+        cardsBeforeReloadCount: ui?.cardsBeforeReloadCount ?? 0,
+        cardsAfterReloadCount: ui?.cardsAfterReloadCount ?? 0,
+        apiMismatches: api?.mismatches?.length ?? 0,
+        uiMismatches: ui?.mismatches?.length ?? 0,
+      },
+    };
+  }
+
+  // 10. SECONDARY_NICHE_DYNAMIC_SEPARATION
+  {
+    const sn = input.secondaryNiche;
+    let status: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    const reasons: string[] = [];
+
+    if (!sn) {
+      status = "INCOMPLETE";
+      reasons.push("Secondary niche artifact is missing.");
+    } else if (!shaOk(sn)) {
+      status = "FAIL";
+      reasons.push("SHA mismatch on secondary niche artifact.");
+    } else if (
+      sn.primaryNiche !== "Pet Gadgets" ||
+      sn.secondaryNiche !== "Home Organization" ||
+      sn.secondaryShortlistCount !== 3 ||
+      sn.crossNicheOverlapCount !== 0 ||
+      sn.parityPassed !== true
+    ) {
+      status = "FAIL";
+      reasons.push("Secondary niche dynamic separation or overlap check failed.");
+    } else {
+      reasons.push("Secondary niche ('Home Organization') produced 3 distinct candidates with 0 overlap against 'Pet Gadgets'.");
+    }
+
+    gates.SECONDARY_NICHE_DYNAMIC_SEPARATION = {
+      gateId: "SECONDARY_NICHE_DYNAMIC_SEPARATION",
+      status,
+      evidenceRefs: status === "PASS" ? [`SecondaryNiche:Home_Organization@${expectedSha.slice(0, 8)}`] : [],
+      sourceSha: sn?.codeSha || "",
+      reasons,
+      measuredAt,
+      scope: { mode: "SECONDARY_NICHE_ISOLATION" },
+      counts: {
+        secondaryShortlistCount: sn?.secondaryShortlistCount ?? 0,
+        crossNicheOverlapCount: sn?.crossNicheOverlapCount ?? -1,
+      },
+    };
+  }
+
+  // 11. POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY, HISTORICAL_PROVIDER_PARITY_TRUTH & HISTORICAL_BUSINESS_EVIDENCE
+  {
+    const dev = input.devReplay;
+    const hold = input.holdoutReplay;
+    const pit = input.pointInTimeAudit;
+    let pitStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let provParityStatus: GateVerdictStatusV12_4_3_7_2 = "VACUOUS_OR_UNPROVEN";
+    let histBizStatus: GateVerdictStatusV12_4_3_7_2 = "INSUFFICIENT_EVIDENCE";
+    const pitReasons: string[] = [];
+    const provReasons: string[] = [];
+    const bizReasons: string[] = [];
+
+    if (!dev || !hold || !pit) {
+      pitStatus = "INCOMPLETE";
+      provParityStatus = "INCOMPLETE";
+      histBizStatus = "INCOMPLETE";
+      pitReasons.push("DEV, HOLDOUT, or point-in-time audit artifact is missing.");
+    } else if (!shaOk(dev) || !shaOk(hold) || !shaOk(pit)) {
+      pitStatus = "FAIL";
+      provParityStatus = "FAIL";
+      histBizStatus = "FAIL";
+      pitReasons.push("SHA mismatch on DEV, HOLDOUT, or point-in-time audit artifact.");
+    } else {
+      if (
+        dev.split !== "DEV" ||
+        hold.split !== "HOLDOUT" ||
+        dev.backtestEngineExecuted !== "PASS" ||
+        hold.backtestEngineExecuted !== "PASS" ||
+        dev.pointInTimeIntegrityVerdict !== "PASS" ||
+        hold.pointInTimeIntegrityVerdict !== "PASS" ||
+        pit.pointInTimeIntegrityVerdict !== "PASS" ||
+        (dev.postCutoffRowsIncludedCount ?? -1) !== 0 ||
+        (hold.postCutoffRowsIncludedCount ?? -1) !== 0 ||
+        (pit.postCutoffIncludedInReplayCount ?? -1) !== 0 ||
+        (pit.fixtureRowsIncludedInLiveReplayCount ?? -1) !== 0 ||
+        (pit.semanticHashAcceptedAsRawProductSchemaProofCount ?? -1) !== 0 ||
+        (dev.historicalObservationCount ?? 0) < 1 ||
+        (hold.historicalObservationCount ?? 0) < 1
+      ) {
+        pitStatus = "FAIL";
+        pitReasons.push("Point-in-time historical replay or no-lookahead audit failed.");
+      } else {
+        pitStatus = "PASS";
+        pitReasons.push(
+          `Point-in-time replay verified on DEV (${dev.historicalObservationCount} obs) and HOLDOUT (${hold.historicalObservationCount} obs) with 0 post-cutoff leaks.`
+        );
+      }
+
+      const histAmzCount =
+        Number(dev.eligibleHistoricalAmazonRowsCount ?? 0) +
+        Number(hold.eligibleHistoricalAmazonRowsCount ?? 0);
+      const histWmtCount =
+        Number(dev.eligibleHistoricalWalmartRowsCount ?? 0) +
+        Number(hold.eligibleHistoricalWalmartRowsCount ?? 0);
+      if (histAmzCount > 0 && histWmtCount > 0) {
+        provParityStatus = "PASS";
+        provReasons.push(`Historical Amazon (${histAmzCount}) and Walmart (${histWmtCount}) records verified.`);
+      } else {
+        provParityStatus = "VACUOUS_OR_UNPROVEN";
+        provReasons.push(
+          "Zero pre-cutoff live Amazon/Walmart provider rows exist in historical DB; fixture post-cutoff rejection passes no-lookahead guard, but historical marketplace parity is VACUOUS_OR_UNPROVEN."
+        );
+      }
+
+      if (
+        (dev.verifiedIdentityCount ?? 0) >= 3 &&
+        (hold.verifiedIdentityCount ?? 0) >= 3 &&
+        dev.historicalDevBusinessVerdict === "PASS" &&
+        hold.historicalHoldoutBusinessVerdict === "PASS"
+      ) {
+        histBizStatus = "PASS";
+        bizReasons.push("DEV and HOLDOUT both achieved >= 3 verified evergreen winners.");
+      } else if (
+        (hold.verifiedIdentityCount ?? 0) > 0 &&
+        hold.historicalHoldoutBusinessVerdict === "INSUFFICIENT_HISTORICAL_EVIDENCE"
+      ) {
+        // Tampered verifiedIdentityCount when historicalHoldoutBusinessVerdict is INSUFFICIENT
+        pitStatus = "FAIL";
+        histBizStatus = "FAIL";
+        bizReasons.push("Contradictory HOLDOUT verifiedIdentityCount vs historicalHoldoutBusinessVerdict.");
+      } else {
+        histBizStatus = "INSUFFICIENT_EVIDENCE";
+        bizReasons.push(
+          `DEV shortlist=${dev.shortlistCount}/verified=${dev.verifiedIdentityCount}; HOLDOUT shortlist=${hold.shortlistCount}/verified=${hold.verifiedIdentityCount} (INSUFFICIENT_HISTORICAL_EVIDENCE).`
+        );
+      }
+    }
+
+    gates.POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY = {
+      gateId: "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY",
+      status: pitStatus,
+      evidenceRefs: pitStatus === "PASS" ? [`Backtest:DEV_2026_10_24+HOLDOUT_2026_10_30@${expectedSha.slice(0, 8)}`] : [],
+      sourceSha: pit?.codeSha || "",
+      reasons: pitReasons,
+      measuredAt,
+      scope: { mode: "POINT_IN_TIME_REPLAY" },
+      counts: {
+        devObs: dev?.historicalObservationCount ?? 0,
+        holdoutObs: hold?.historicalObservationCount ?? 0,
+        postCutoffIncluded: pit?.postCutoffIncludedInReplayCount ?? -1,
+      },
+    };
+
+    gates.HISTORICAL_PROVIDER_PARITY_TRUTH = {
+      gateId: "HISTORICAL_PROVIDER_PARITY_TRUTH",
+      status: provParityStatus,
+      evidenceRefs: [`HistoricalProviderParity:${provParityStatus}@${expectedSha.slice(0, 8)}`],
+      sourceSha: pit?.codeSha || "",
+      reasons: provReasons,
+      measuredAt,
+      scope: { mode: "HISTORICAL_PROVIDER_PARITY" },
+      counts: {
+        eligibleHistoricalAmazonRowsCount:
+          (dev?.eligibleHistoricalAmazonRowsCount ?? 0) +
+          (hold?.eligibleHistoricalAmazonRowsCount ?? 0),
+        eligibleHistoricalWalmartRowsCount:
+          (dev?.eligibleHistoricalWalmartRowsCount ?? 0) +
+          (hold?.eligibleHistoricalWalmartRowsCount ?? 0),
+      },
+    };
+
+    gates.HISTORICAL_BUSINESS_EVIDENCE = {
+      gateId: "HISTORICAL_BUSINESS_EVIDENCE",
+      status: histBizStatus,
+      evidenceRefs: [`HistoricalBusiness:${histBizStatus}@${expectedSha.slice(0, 8)}`],
+      sourceSha: hold?.codeSha || "",
+      reasons: bizReasons,
+      measuredAt,
+      scope: { mode: "HISTORICAL_BUSINESS_EVALUATION" },
+      counts: {
+        devShortlistCount: dev?.shortlistCount ?? 0,
+        devVerifiedIdentityCount: dev?.verifiedIdentityCount ?? 0,
+        holdoutShortlistCount: hold?.shortlistCount ?? 0,
+        holdoutVerifiedIdentityCount: hold?.verifiedIdentityCount ?? 0,
+      },
+    };
+  }
+
+  // 12. E2E_SPEC_COVERAGE & CODE_AND_ENGINEERING_GATES
+  {
+    const git = input.gitPrecheck;
+    const rt = input.runtimePrecheck;
+    const tm = input.testMatrix;
+    const ts = input.targetedSuites;
+    const reg = input.fullRegression;
+    const e2e = input.e2eReceipts;
+    const tb = input.typecheckAndBuild;
+    const mut = input.mutationSuite;
+    const res = input.resourceAndOrphanGuard;
+
+    let e2eStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    const e2eReasons: string[] = [];
+
+    if (!e2e) {
+      e2eStatus = "INCOMPLETE";
+      e2eReasons.push("E2E receipts artifact is missing.");
+    } else if (!shaOk(e2e)) {
+      e2eStatus = "FAIL";
+      e2eReasons.push("SHA mismatch on E2E receipts artifact.");
+    } else {
+      const specsList = Array.isArray(e2e.specs) ? e2e.specs : [];
+      const allSpecsAttemptedAndPassed =
+        specsList.length > 0
+          ? specsList.length === 12 &&
+            specsList.every(
+              (s) =>
+                s &&
+                s.attempted === true &&
+                s.passed === true &&
+                s.exitCode === 0 &&
+                (s.casesPassed ?? 0) > 0 &&
+                s.casesPassed === s.casesTotal
+            )
+          : true;
+      if (
+        e2e.totalSpecs !== 12 ||
+        e2e.passedSpecsCount !== 12 ||
+        e2e.failedSpecsCount !== 0 ||
+        e2e.skippedWithoutAttemptCount !== 0 ||
+        (e2e.passedE2ETestCases ?? 0) < 34 ||
+        e2e.passedE2ETestCases !== e2e.totalE2ETestCases ||
+        !allSpecsAttemptedAndPassed
+      ) {
+        e2eStatus = "FAIL";
+        e2eReasons.push(
+          `E2E coverage incomplete or failed: specs=${e2e.passedSpecsCount}/${e2e.totalSpecs}, cases=${e2e.passedE2ETestCases}/${e2e.totalE2ETestCases}, skipped=${e2e.skippedWithoutAttemptCount}`
+        );
+      } else {
+        e2eReasons.push(`All 12/12 E2E specs (${e2e.passedE2ETestCases}/${e2e.totalE2ETestCases} cases) passed with 0 skips.`);
+      }
+    }
+
+    gates.E2E_SPEC_COVERAGE = {
+      gateId: "E2E_SPEC_COVERAGE",
+      status: e2eStatus,
+      evidenceRefs: e2eStatus === "PASS" ? [`E2E:12_specs_${e2e?.passedE2ETestCases}_cases@${expectedSha.slice(0, 8)}`] : [],
+      sourceSha: e2e?.codeSha || "",
+      reasons: e2eReasons,
+      measuredAt,
+      scope: { mode: "E2E_SUITE" },
+      counts: {
+        totalSpecs: e2e?.totalSpecs ?? 0,
+        passedSpecsCount: e2e?.passedSpecsCount ?? 0,
+        passedE2ETestCases: e2e?.passedE2ETestCases ?? 0,
+        totalE2ETestCases: e2e?.totalE2ETestCases ?? 0,
+      },
+    };
+
+    let engStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    const engReasons: string[] = [];
+
+    if (!git || !rt || !tm || !ts || !reg || !e2e) {
+      engStatus = "INCOMPLETE";
+      engReasons.push("Required engineering precheck or test suite receipt is missing.");
+    } else if (
+      !shaOk(git) ||
+      !shaOk(rt) ||
+      !shaOk(tm) ||
+      !shaOk(ts) ||
+      !shaOk(reg) ||
+      !shaOk(e2e) ||
+      (tb && !shaOk(tb)) ||
+      (mut && !shaOk(mut)) ||
+      (res && !shaOk(res))
+    ) {
+      engStatus = "FAIL";
+      engReasons.push("SHA parity failure across engineering test/build/mutation/resource artifacts.");
+    } else {
+      if (
+        git.branch !== "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" ||
+        git.ancestryVerified !== true
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Git branch or ancestry verification failed.");
+      }
+      if (
+        rt.playwrightMcpPackage !== "@playwright/mcp@0.0.83" ||
+        rt.playwrightMcpHandshakePassed !== true ||
+        rt.metaCollectorVenvAvailable !== true ||
+        (rt.freeDiskGiB ?? 0) < 15
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Runtime MCP handshake, Python venv, or 15 GiB disk precheck failed.");
+      }
+      const tmPassedCases =
+        tm.passedCasesCount ??
+        (tm.allPassed === true && tm.failedCasesCount === 0
+          ? tm.totalCasesCount
+          : 0);
+      if (
+        tm.allPassed !== true ||
+        (tm.failedCasesCount ?? 1) !== 0 ||
+        (tm.totalCasesCount ?? 0) < 50 ||
+        tmPassedCases !== tm.totalCasesCount
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Positive/negative test matrix failed or incomplete.");
+      }
+      const tsTotalTests =
+        ts.totalTests ??
+        Number(ts.passedTests ?? 0) + Number(ts.failedTests ?? 0);
+      if (
+        ts.allPassed !== true ||
+        (ts.failedTests ?? 1) !== 0 ||
+        (ts.passedTests ?? 0) < 350 ||
+        ts.passedTests !== tsTotalTests
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Targeted unit/integration suites failed or overreported.");
+      }
+      if (
+        reg.inventoryComplete !== true ||
+        (reg.excludedOrDeferredFilesCount ?? 1) !== 0 ||
+        (reg.failedTestCases ?? 1) !== 0 ||
+        (reg.executedTestFilesCount ?? 0) < 157 ||
+        reg.executedTestFilesCount !== reg.totalDiscoveredTestFiles ||
+        (reg.passedTestCases ?? 0) < 1940 ||
+        reg.passedTestCases !== reg.totalExecutedTestCases
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Full repository regression failed or inventory incomplete.");
+      }
+      if (e2eStatus !== "PASS") {
+        engStatus = "FAIL";
+        engReasons.push(...e2eReasons);
+      }
+      if (
+        tb &&
+        (tb.tscPassed !== true ||
+          tb.tscExitCode !== 0 ||
+          tb.nextBuildPassed !== true ||
+          tb.nextBuildExitCode !== 0)
+      ) {
+        engStatus = "FAIL";
+        engReasons.push(
+          `TypeScript or Next.js build failed: tscExit=${tb.tscExitCode}, buildExit=${tb.nextBuildExitCode}`
+        );
+      }
+      if (
+        mut &&
+        ((mut.falsePassesCount ?? 1) !== 0 ||
+          (mut.totalMutationsExecuted ?? 0) < 54 ||
+          mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
+          mut.sourceTreeRestoredClean !== true)
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("Physical negative mutation suite had false passes or dirty worktree.");
+      }
+      if (
+        res &&
+        (res.diskGuardPassed !== true ||
+          (res.minFreeDiskGiB ?? 0) < (res.diskThresholdGiB ?? 15) ||
+          (res.orphanedOwnedProcessCount ?? 1) !== 0)
+      ) {
+        engStatus = "FAIL";
+        engReasons.push(
+          `Resource or orphan process guard failed: minDiskGiB=${res.minFreeDiskGiB}, orphans=${res.orphanedOwnedProcessCount}`
+        );
+      }
+      // Also require core engineering sub-gates to be PASS
+      if (
+        gates.STANDALONE_REFERENCE_EVIDENCE_INTEGRITY.status !== "PASS" ||
+        gates.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E.status !== "PASS" ||
+        gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION.status !== "PASS" ||
+        gates.DB_API_UI_RELOAD_PARITY.status !== "PASS" ||
+        gates.SECONDARY_NICHE_DYNAMIC_SEPARATION.status !== "PASS" ||
+        gates.POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY.status !== "PASS"
+      ) {
+        engStatus = "FAIL";
+        engReasons.push("One or more core engineering sub-gates did not PASS.");
+      }
+    }
+
+    if (engStatus === "PASS") {
+      engReasons.push(
+        `All engineering gates passed on ${expectedSha.slice(0, 8)}: ${reg?.executedTestFilesCount} test files (${reg?.passedTestCases} tests), 12 E2E specs (${e2e?.passedE2ETestCases} cases), tsc=0, build=0, 0 orphans.`
+      );
+    }
+
+    gates.CODE_AND_ENGINEERING_GATES = {
+      gateId: "CODE_AND_ENGINEERING_GATES",
+      status: engStatus,
+      evidenceRefs:
+        engStatus === "PASS"
+          ? [
+              `Regression:${reg?.executedTestFilesCount}_files_${reg?.passedTestCases}_cases`,
+              `E2E:12_specs_${e2e?.passedE2ETestCases}_cases`,
+              `Mutations:${mut?.caughtMutationsCount ?? "pending"}`,
+            ]
+          : [],
+      sourceSha: expectedSha,
+      reasons: engReasons,
+      measuredAt,
+      scope: { mode: "ENGINEERING_ACCEPTANCE" },
+      counts: {
+        executedTestFilesCount: reg?.executedTestFilesCount ?? 0,
+        passedTestCases: reg?.passedTestCases ?? 0,
+        passedE2ETestCases: e2e?.passedE2ETestCases ?? 0,
+        orphanedOwnedProcessCount: res?.orphanedOwnedProcessCount ?? 0,
+      },
+    };
+  }
+
+  // 13. BUSINESS GATES: G07, G15, G16, FULL_KH02_BUSINESS_ACCEPTANCE, OVERALL_RELEASE_STATUS
+  {
+    const bg = input.businessGates;
+    const g07Status: GateVerdictStatusV12_4_3_7_2 =
+      bg?.g07Verdict === "PASS"
+        ? "PASS"
+        : bg?.g07Verdict === "INSUFFICIENT_EVIDENCE"
+        ? "INSUFFICIENT_EVIDENCE"
+        : "BLOCKED";
+
+    const g15HasRealTimeSeries =
+      (bg?.g15QualifiedProductsCount ?? 0) >= 3 &&
+      (bg?.g15MaxObservedDays ?? 0) >= (bg?.g15RequiredDays ?? 60);
+    let g15Status: GateVerdictStatusV12_4_3_7_2 = "INSUFFICIENT_EVIDENCE";
+    if (bg?.g15Verdict === "PASS") {
+      g15Status = g15HasRealTimeSeries ? "PASS" : "FAIL";
+    }
+
+    const g16HasAllThreeIndependentProofs =
+      (bg?.g16VerifiedMerchantsCount ?? 0) >= (bg?.g16RequiredMerchantsCount ?? 3) &&
+      (bg?.g16RequiredMerchantsCount ?? 3) >= 3;
+    let g16Status: GateVerdictStatusV12_4_3_7_2 = "INSUFFICIENT_EVIDENCE";
+    if (bg?.g16Verdict === "PASS") {
+      g16Status = g16HasAllThreeIndependentProofs ? "PASS" : "FAIL";
+    } else if (bg?.g16Verdict === "PARTIAL_2_OF_3" || bg?.g16Verdict === "PARTIAL_1_OF_3") {
+      g16Status = "INSUFFICIENT_EVIDENCE";
+    }
+
+    gates.G07_PAID_MEDIA_PERSISTENCE = {
+      gateId: "G07_PAID_MEDIA_PERSISTENCE",
+      status: g07Status,
+      evidenceRefs: [`G07:${g07Status}@${expectedSha.slice(0, 8)}`],
+      sourceSha: bg?.codeSha || expectedSha,
+      reasons: [
+        bg?.g07Reason ||
+          "TikTok Ads US live provider remains disabled/unauthenticated under zero-spend policy (G07 = BLOCKED).",
+      ],
+      measuredAt,
+      scope: { mode: "G07_PAID_MEDIA" },
+      counts: {},
+    };
+
+    gates.G15_LONGITUDINAL_DEMAND_60D = {
+      gateId: "G15_LONGITUDINAL_DEMAND_60D",
+      status: g15Status,
+      evidenceRefs: [`G15:${g15Status}@qualified=${bg?.g15QualifiedProductsCount ?? 0}`],
+      sourceSha: bg?.codeSha || expectedSha,
+      reasons: [
+        g15Status === "FAIL"
+          ? "G15 falsely claimed PASS without >= 3 products having >= 60 covered days of longitudinal demand."
+          : bg?.g15Reason ||
+            "Fewer than 3 products have >= 60 covered days of authoritative product-level longitudinal demand (G15 = INSUFFICIENT_EVIDENCE).",
+      ],
+      measuredAt,
+      scope: { mode: "G15_DEMAND_60D" },
+      counts: {
+        qualifiedProductsCount: bg?.g15QualifiedProductsCount ?? 0,
+        requiredDays: bg?.g15RequiredDays ?? 60,
+        maxObservedDays: bg?.g15MaxObservedDays ?? 0,
+      },
+    };
+
+    gates.G16_INDEPENDENT_MERCHANT_PROOF = {
+      gateId: "G16_INDEPENDENT_MERCHANT_PROOF",
+      status: g16Status,
+      evidenceRefs: [`G16:${g16Status}@verified=${bg?.g16VerifiedMerchantsCount ?? 0}`],
+      sourceSha: bg?.codeSha || expectedSha,
+      reasons: [
+        g16Status === "FAIL"
+          ? "G16 falsely claimed PASS without 3/3 independent persisted merchant schema proofs."
+          : bg?.g16Reason ||
+            "0/3 shortlisted candidates have independent persisted DB merchant schema + live same-run lineage proof (G16 = INSUFFICIENT_EVIDENCE).",
+      ],
+      measuredAt,
+      scope: { mode: "G16_MERCHANT_PROOF" },
+      counts: {
+        verifiedMerchantsCount: bg?.g16VerifiedMerchantsCount ?? 0,
+        requiredMerchantsCount: bg?.g16RequiredMerchantsCount ?? 3,
+      },
+    };
+
+    let fullBizStatus: GateVerdictStatusV12_4_3_7_2 = "INSUFFICIENT_EVIDENCE";
+    const fullBizReasons: string[] = [];
+    if (
+      gates.CODE_AND_ENGINEERING_GATES.status === "FAIL" ||
+      g15Status === "FAIL" ||
+      g16Status === "FAIL" ||
+      gates.HISTORICAL_BUSINESS_EVIDENCE.status === "FAIL"
+    ) {
+      fullBizStatus = "FAIL";
+      fullBizReasons.push("Engineering or business gate integrity check failed.");
+    } else if (
+      gates.CODE_AND_ENGINEERING_GATES.status === "PASS" &&
+      g07Status === "PASS" &&
+      g15Status === "PASS" &&
+      g16Status === "PASS" &&
+      gates.HISTORICAL_BUSINESS_EVIDENCE.status === "PASS"
+    ) {
+      fullBizStatus = "PASS";
+      fullBizReasons.push("All engineering and business gates (G07, G15, G16, historical) passed.");
+    } else {
+      fullBizStatus = "INSUFFICIENT_EVIDENCE";
+      fullBizReasons.push(
+        `Business acceptance remains INSUFFICIENT_EVIDENCE (G07=${g07Status}, G15=${g15Status}, G16=${g16Status}, HistoricalBusiness=${gates.HISTORICAL_BUSINESS_EVIDENCE.status}).`
+      );
+    }
+
+    gates.FULL_KH02_BUSINESS_ACCEPTANCE = {
+      gateId: "FULL_KH02_BUSINESS_ACCEPTANCE",
+      status: fullBizStatus,
+      evidenceRefs: [`FullBusiness:${fullBizStatus}@${expectedSha.slice(0, 8)}`],
+      sourceSha: expectedSha,
+      reasons: fullBizReasons,
+      measuredAt,
+      scope: { mode: "BUSINESS_ACCEPTANCE" },
+      counts: {
+        g07: g07Status,
+        g15: g15Status,
+        g16: g16Status,
+      },
+    };
+  }
+
+  const failedGateKeys = Object.entries(gates)
+    .filter(([, g]) => g.status === "FAIL" || g.status === "INCOMPLETE")
+    .map(([k]) => k);
+  const anyGateFailed = failedGateKeys.length > 0;
+  const allEngineeringGatesPassed =
+    gates.CODE_AND_ENGINEERING_GATES?.status === "PASS" && !anyGateFailed;
+  const businessAcceptancePassed =
+    allEngineeringGatesPassed &&
+    gates.FULL_KH02_BUSINESS_ACCEPTANCE?.status === "PASS";
+
+  let overallReleaseStatus: string;
+  if (!allEngineeringGatesPassed) {
+    overallReleaseStatus = "FAILED_ENGINEERING_OR_TRUTH_GATES";
+  } else if (businessAcceptancePassed) {
+    overallReleaseStatus = "FULL_ENGINEERING_AND_BUSINESS_PASS";
+  } else {
+    overallReleaseStatus =
+      "ENGINEERING_AND_COMMERCIAL_FOUNDATION_READY_WITH_TRUTHFUL_LIVE_AND_EXTERNAL_GATES";
+  }
+
+  const verdictTable: Record<string, string> = {};
+  for (const [k, g] of Object.entries(gates)) {
+    verdictTable[k] = g.status;
+  }
+  verdictTable.OVERALL_RELEASE_STATUS = overallReleaseStatus;
+
+  return {
+    codeSha: expectedSha,
+    evaluatedAt: measuredAt,
+    gates,
+    verdictsByGate: gates,
+    verdictTable,
+    allEngineeringGatesPassed,
+    businessAcceptancePassed,
+    anyGateFailed,
+    failedGateKeys,
+  };
+}
+

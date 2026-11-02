@@ -533,7 +533,38 @@ export async function persistKH02RankingSnapshot(
       }
     }
   }
+  if (Array.isArray((result as any).subqueryExecutions)) {
+    for (const q of (result as any).subqueryExecutions) {
+      if (
+        q &&
+        typeof q === "object" &&
+        (!q.researchRunId || q.researchRunId === previousInMemoryRunId)
+      ) {
+        q.researchRunId = runId;
+      }
+    }
+  }
+  const metaTelem =
+    (result as any)?.providerTelemetry?.META_ADS ||
+    (result as any)?.sourceTelemetry?.META_ADS;
+  if (metaTelem && typeof metaTelem === "object") {
+    if (!metaTelem.researchRunId || metaTelem.researchRunId === previousInMemoryRunId) {
+      metaTelem.researchRunId = runId;
+    }
+    if (Array.isArray(metaTelem.queryOutcomes)) {
+      for (const q of metaTelem.queryOutcomes) {
+        if (
+          q &&
+          typeof q === "object" &&
+          (!q.researchRunId || q.researchRunId === previousInMemoryRunId)
+        ) {
+          q.researchRunId = runId;
+        }
+      }
+    }
+  }
   const allCandLists = [
+    (result as any).candidates,
     (result as any).evergreenLeaderboard,
     result.topThree,
     result.researchShortlist?.shortlist,
@@ -545,16 +576,36 @@ export async function persistKH02RankingSnapshot(
     if (!Array.isArray(list)) continue;
     for (const item of list as any[]) {
       const cand = item?.candidate || item;
-      if (!cand || !Array.isArray(cand.sourceObservations)) continue;
-      for (const obs of cand.sourceObservations) {
-        if (
-          obs &&
-          typeof obs === "object" &&
-          obs.isCached !== true &&
-          obs.sourceMode !== "CACHE_ONLY" &&
-          (!obs.researchRunId || obs.researchRunId === previousInMemoryRunId)
-        ) {
-          obs.researchRunId = runId;
+      if (!cand) continue;
+      if (Array.isArray(cand.sourceObservations)) {
+        for (const obs of cand.sourceObservations) {
+          if (
+            obs &&
+            typeof obs === "object" &&
+            obs.isCached !== true &&
+            obs.sourceMode !== "CACHE_ONLY" &&
+            (!obs.researchRunId || obs.researchRunId === previousInMemoryRunId)
+          ) {
+            obs.researchRunId = runId;
+          }
+          if (obs && typeof obs === "object" && !obs.workspaceId && workspaceId) {
+            obs.workspaceId = workspaceId;
+          }
+        }
+      }
+      if (Array.isArray(cand.observationReceipts)) {
+        for (const rec of cand.observationReceipts) {
+          if (
+            rec &&
+            typeof rec === "object" &&
+            rec.isCached !== true &&
+            (!rec.researchRunId || rec.researchRunId === previousInMemoryRunId)
+          ) {
+            rec.researchRunId = runId;
+          }
+          if (rec && typeof rec === "object" && !rec.workspaceId && workspaceId) {
+            rec.workspaceId = workspaceId;
+          }
         }
       }
     }

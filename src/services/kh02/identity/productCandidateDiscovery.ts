@@ -701,15 +701,444 @@ export type MetaLineageRejectionCode =
   | "UNAUTHENTICATED_LIVE_RECORD_FLAG"
   | "ANOTHER_MERCHANTS_AD"
   | "DUPLICATE_EXTERNAL_AD_COUNTED_TWICE"
-  | "NOT_VERIFIED_IDENTITY";
+  | "NOT_VERIFIED_IDENTITY"
+  | "MISSING_PROVIDER_REQUEST_ID"
+  | "UNEXECUTED_PLANNED_QUERY"
+  | "POST_CUTOFF_OBSERVATION"
+  | "MISSING_PROVENANCE_OR_SOURCE_TYPE";
+
+export interface LiveMetaObservationProvenanceContext {
+  codeSha?: string | null;
+  expectedCodeSha?: string | null;
+  workspaceId?: string | null;
+  expectedWorkspaceId?: string | null;
+  researchRunId?: string | null;
+  expectedRunId?: string | null;
+  executedQueryIds?: Set<string> | string[];
+  queryOutcomesByQueryId?: Map<string, any> | Record<string, any>;
+  upstreamExternalAdIds?: Set<string> | string[];
+  persistedAdIdsInDb?: Set<string> | string[];
+  persistedAdIdsByExternalId?: Map<string, string> | Record<string, string>;
+  persistedAdWorkspacesById?: Map<string, any> | Record<string, any>;
+  persistedAdDomainsById?: Map<string, string> | Record<string, string>;
+  candidateDomain?: string | null;
+  cutoffAt?: string | Date | null;
+  requireExplicitProviderRequestId?: boolean;
+}
+
+export interface LiveMetaObservationProvenanceResult {
+  valid: boolean;
+  rejectionCodes: MetaLineageRejectionCode[];
+  rejectionReasons: string[];
+  evidenceRefs: string[];
+  lineageReceipt: {
+    codeSha: string | null;
+    workspaceId: string | null;
+    researchRunId: string | null;
+    executedQueryId: string;
+    providerRequestId: string;
+    startedAt: string | null;
+    completedAt: string | null;
+    queryStatus: string;
+    upstreamAdId: string;
+    persistedAdId: string;
+    sourceObservationId: string;
+  } | null;
+}
+
+/**
+ * V12.4.3.7.2 P0-B: Strict per-observation Meta live provenance validator.
+ * Requires authenticated observation provenance (`LIVE_PROVIDER`), run-matched executed query
+ * with genuine provider request receipt (`requestStarted && requestCompleted && actualApiCalls > 0`),
+ * true non-synthetic upstream external Ad ID, persisted Ad DB row linkage, and valid timestamp.
+ * Never accepts `isLiveRecord === true` + `queryId` alone without verified provider execution.
+ */
+export function verifyLiveMetaObservationProvenance(
+  obs: SourceObservation | Record<string, any> | null | undefined,
+  rawContext?: LiveMetaObservationProvenanceContext
+): LiveMetaObservationProvenanceResult {
+  const context: LiveMetaObservationProvenanceContext | undefined = rawContext
+    ? {
+        ...rawContext,
+        codeSha: rawContext.codeSha ?? rawContext.expectedCodeSha,
+        workspaceId: rawContext.workspaceId ?? rawContext.expectedWorkspaceId,
+        researchRunId: rawContext.researchRunId ?? rawContext.expectedRunId,
+      }
+    : undefined;
+  const rejectionCodes = new Set<MetaLineageRejectionCode>();
+  const rejectionReasons: string[] = [];
+  const evidenceRefs: string[] = [];
+
+  if (!obs || typeof obs !== "object") {
+    rejectionCodes.add("MISSING_PROVENANCE_OR_SOURCE_TYPE");
+    rejectionReasons.push("Observation is null or not an object.");
+    return {
+      valid: false,
+      rejectionCodes: Array.from(rejectionCodes),
+      rejectionReasons,
+      evidenceRefs,
+      lineageReceipt: null,
+    };
+  }
+
+  const o = obs as Record<string, any>;
+
+  if ("sourceType" in o && o.sourceType === undefined) {
+    rejectionCodes.add("UNDEFINED_SOURCE_TYPE");
+    rejectionReasons.push("Observation has explicit sourceType: undefined.");
+  }
+
+  const rawProv = typeof o.provenance === "string" ? o.provenance.toUpperCase() : "";
+  const rawSourceType = typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
+
+  if (
+    o.sourceIdOrigin === "INTERNAL_DERIVED" ||
+    o.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+    o.evidenceReference === "Ad:raw"
+  ) {
+    rejectionCodes.add("FAKE_UPSTREAM_AD_ID");
+    rejectionReasons.push(
+      `Observation ${o.sourceRecordId || "unknown"} carries internal derived or placeholder ID (${o.sourceIdOrigin || o.evidenceReference}).`
+    );
+  }
+
+  if (
+    Array.isArray(o.provenanceConflicts) &&
+    o.provenanceConflicts.includes("CONTRADICTORY_CACHE_AND_LIVE_PROVENANCE")
+  ) {
+    rejectionCodes.add("CACHE_IMPERSONATING_LIVE");
+    rejectionReasons.push("Observation carries contradictory cache and live provenance flags.");
+  }
+
+  const hasCacheMarker =
+    rawProv === "CACHED_SOURCE" ||
+    rawProv === "VERIFIED_SOURCE" ||
+    rawProv === "CACHE" ||
+    rawProv === "CACHED" ||
+    rawProv === "CACHE_ONLY" ||
+    rawSourceType === "CACHED_SOURCE" ||
+    rawSourceType === "CACHE" ||
+    rawSourceType === "CACHED" ||
+    rawSourceType === "CACHE_ONLY" ||
+    o.isCached === true ||
+    o.fromCache === true ||
+    o.isLiveRecord === false;
+
+  if (hasCacheMarker) {
+    rejectionCodes.add("CACHE_IMPERSONATING_LIVE");
+    rejectionReasons.push(
+      `Observation ${o.sourceRecordId || "unknown"} carries cache/non-live marker (provenance=${rawProv}, sourceType=${rawSourceType}, isCached=${o.isCached}).`
+    );
+  }
+
+  const hasExplicitLiveProvider =
+    rawProv === "LIVE_PROVIDER" &&
+    (rawSourceType === "LIVE_PROVIDER" || rawSourceType === "LIVE");
+
+  if (!hasExplicitLiveProvider) {
+    if (o.isLiveRecord === true) {
+      rejectionCodes.add("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+      rejectionReasons.push(
+        "Observation sets isLiveRecord=true without explicit provenance=LIVE_PROVIDER and sourceType=LIVE_PROVIDER."
+      );
+    } else if (!hasCacheMarker) {
+      rejectionCodes.add("MISSING_PROVENANCE_OR_SOURCE_TYPE");
+      rejectionReasons.push(
+        `Observation lacks explicit LIVE_PROVIDER provenance/sourceType (provenance=${rawProv || "missing"}, sourceType=${rawSourceType || "missing"}).`
+      );
+    }
+  }
+
+  const obsQueryIds: string[] = [
+    o.queryId,
+    o.metrics?.queryId,
+    ...(Array.isArray(o.matchedQueryIds) ? o.matchedQueryIds : []),
+  ].filter((q): q is string => typeof q === "string" && q.trim().length > 0);
+
+  if (obsQueryIds.length === 0) {
+    rejectionCodes.add("MISSING_QUERY_ID");
+    rejectionReasons.push("Live observation is missing queryId / matchedQueryIds.");
+  }
+
+  if (
+    context?.workspaceId &&
+    o.workspaceId &&
+    String(o.workspaceId) !== String(context.workspaceId)
+  ) {
+    rejectionCodes.add("CROSS_WORKSPACE_OBSERVATION");
+    rejectionReasons.push(
+      `Observation workspaceId '${o.workspaceId}' mismatches expected workspace '${context.workspaceId}'.`
+    );
+  }
+
+  const executedQSet = context?.executedQueryIds
+    ? context.executedQueryIds instanceof Set
+      ? context.executedQueryIds
+      : new Set(context.executedQueryIds.filter(Boolean))
+    : null;
+
+  const matchedExecQId =
+    executedQSet && executedQSet.size > 0
+      ? obsQueryIds.find((qid) => executedQSet.has(qid)) || null
+      : obsQueryIds[0] || null;
+
+  if (executedQSet && executedQSet.size > 0 && !matchedExecQId) {
+    rejectionCodes.add("FOREIGN_RUN_QUERY_ID");
+    rejectionReasons.push(
+      `Observation queryId (${obsQueryIds.join(",")}) does not belong to current run executedQueryIds.`
+    );
+  }
+
+  const obsRunId = o.researchRunId || o.metrics?.researchRunId || null;
+  if (
+    context?.researchRunId &&
+    obsRunId &&
+    String(obsRunId) !== String(context.researchRunId)
+  ) {
+    rejectionCodes.add("FOREIGN_RUN_QUERY_ID");
+    rejectionReasons.push(
+      `Observation researchRunId '${obsRunId}' mismatches expected run '${context.researchRunId}'.`
+    );
+  }
+
+  const qoMap = context?.queryOutcomesByQueryId
+    ? context.queryOutcomesByQueryId instanceof Map
+      ? context.queryOutcomesByQueryId
+      : new Map(Object.entries(context.queryOutcomesByQueryId))
+    : null;
+
+  let matchedQueryOutcome: any = null;
+  if (qoMap && matchedExecQId) {
+    matchedQueryOutcome = qoMap.get(matchedExecQId) || null;
+    if (!matchedQueryOutcome) {
+      rejectionCodes.add("UNEXECUTED_PLANNED_QUERY");
+      rejectionReasons.push(
+        `Query '${matchedExecQId}' is not present in executed queryOutcomes ledger.`
+      );
+    } else {
+      const qStatus = String(matchedQueryOutcome.status || "NOT_ATTEMPTED");
+      const reqStarted = matchedQueryOutcome.requestStarted === true;
+      const reqCompleted = matchedQueryOutcome.requestCompleted === true;
+      const apiCalls = Number(matchedQueryOutcome.actualApiCalls ?? 0);
+      if (
+        !matchedQueryOutcome.attempted ||
+        !reqStarted ||
+        !reqCompleted ||
+        apiCalls <= 0 ||
+        qStatus === "NOT_ATTEMPTED" ||
+        qStatus === "NOT_EXECUTED" ||
+        qStatus === "SKIPPED_BUDGET" ||
+        qStatus === "CANCELLED" ||
+        qStatus === "FAILED"
+      ) {
+        rejectionCodes.add("UNEXECUTED_PLANNED_QUERY");
+        rejectionReasons.push(
+          `Query '${matchedExecQId}' was not completed upstream (attempted=${matchedQueryOutcome.attempted}, requestStarted=${reqStarted}, requestCompleted=${reqCompleted}, actualApiCalls=${apiCalls}, status=${qStatus}).`
+        );
+      }
+    }
+  }
+
+  const explicitProviderReqId = String(
+    o.providerRequestId ||
+      o.metrics?.providerRequestId ||
+      matchedQueryOutcome?.providerRequestId ||
+      ""
+  ).trim();
+  const requireExplicitReq = context?.requireExplicitProviderRequestId !== false;
+  if (!explicitProviderReqId && requireExplicitReq) {
+    rejectionCodes.add("MISSING_PROVIDER_REQUEST_ID");
+    rejectionCodes.add("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+    rejectionReasons.push(
+      "Live observation is missing an explicit providerRequestId from upstream execution."
+    );
+  }
+
+  const upstreamAdId = String(
+    o.upstreamAdId ||
+      o.sourceExternalAdId ||
+      o.metrics?.upstreamAdId ||
+      ""
+  ).trim();
+  const upstreamSet = context?.upstreamExternalAdIds
+    ? context.upstreamExternalAdIds instanceof Set
+      ? context.upstreamExternalAdIds
+      : new Set(context.upstreamExternalAdIds.filter(Boolean))
+    : null;
+
+  if (
+    !upstreamAdId ||
+    /^ad_0\./i.test(upstreamAdId) ||
+    /^syn_/i.test(upstreamAdId) ||
+    (upstreamSet && upstreamSet.size > 0 && !upstreamSet.has(upstreamAdId))
+  ) {
+    rejectionCodes.add("FAKE_UPSTREAM_AD_ID");
+    rejectionReasons.push(
+      `Observation upstreamAdId '${upstreamAdId || "missing"}' is missing, synthetic, or absent from upstream query results.`
+    );
+  }
+
+  const persistedAdId = String(
+    o.persistedAdId || o.sourceRecordId || o.metrics?.persistedId || ""
+  ).trim();
+  const persistedMap = context?.persistedAdIdsByExternalId
+    ? context.persistedAdIdsByExternalId instanceof Map
+      ? context.persistedAdIdsByExternalId
+      : new Map(Object.entries(context.persistedAdIdsByExternalId))
+    : null;
+  const persistedWsMap = context?.persistedAdWorkspacesById
+    ? context.persistedAdWorkspacesById instanceof Map
+      ? context.persistedAdWorkspacesById
+      : new Map(Object.entries(context.persistedAdWorkspacesById))
+    : null;
+
+  const persistedDbSet = context?.persistedAdIdsInDb
+    ? context.persistedAdIdsInDb instanceof Set
+      ? context.persistedAdIdsInDb
+      : new Set(context.persistedAdIdsInDb.filter(Boolean))
+    : null;
+
+  if (!persistedAdId) {
+    rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+    rejectionReasons.push("Observation is missing persistedAdId.");
+  } else {
+    if (persistedDbSet && persistedDbSet.size >= 0 && context?.persistedAdIdsInDb && !persistedDbSet.has(persistedAdId)) {
+      rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+      rejectionReasons.push(
+        `Persisted Ad '${persistedAdId}' was not found in persisted CompetitorAd DB rows.`
+      );
+    }
+    if (persistedMap && upstreamAdId && persistedMap.has(upstreamAdId)) {
+      const expectedPersisted = persistedMap.get(upstreamAdId)!;
+      if (expectedPersisted !== persistedAdId) {
+        rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+        rejectionReasons.push(
+          `Upstream ad '${upstreamAdId}' persisted as '${expectedPersisted}', but observation claims '${persistedAdId}'.`
+        );
+      }
+    }
+    if (
+      persistedWsMap &&
+      context?.workspaceId &&
+      (persistedWsMap.has(persistedAdId) || (upstreamAdId && persistedWsMap.has(upstreamAdId)))
+    ) {
+      const rawWsEntry = persistedWsMap.get(persistedAdId) ?? persistedWsMap.get(upstreamAdId);
+      const adWs =
+        typeof rawWsEntry === "string"
+          ? rawWsEntry
+          : typeof rawWsEntry?.workspaceId === "string"
+          ? rawWsEntry.workspaceId
+          : null;
+      if (adWs && adWs !== context.workspaceId) {
+        rejectionCodes.add("CROSS_WORKSPACE_OBSERVATION");
+        rejectionReasons.push(
+          `Persisted Ad '${persistedAdId}' belongs to workspace '${adWs}', not '${context.workspaceId}'.`
+        );
+      }
+    }
+  }
+
+  const domainMap = context?.persistedAdDomainsById
+    ? context.persistedAdDomainsById instanceof Map
+      ? context.persistedAdDomainsById
+      : new Map(Object.entries(context.persistedAdDomainsById))
+    : null;
+  const candidateDomain = context?.candidateDomain
+    ? context.candidateDomain.toLowerCase().replace(/^www\./, "")
+    : null;
+  const obsDomainRaw =
+    o.storeDomainEvidence ||
+    o.advertiserDomain ||
+    (o.landingPageUrl ? extractDomainFromUrl(o.landingPageUrl) : null) ||
+    (persistedAdId && domainMap ? domainMap.get(persistedAdId) : null);
+  const obsDomain = obsDomainRaw
+    ? String(obsDomainRaw).toLowerCase().replace(/^www\./, "")
+    : null;
+  if (
+    candidateDomain &&
+    obsDomain &&
+    !NON_MERCHANT_PLATFORM_DOMAINS.has(obsDomain) &&
+    obsDomain !== candidateDomain
+  ) {
+    rejectionCodes.add("ANOTHER_MERCHANTS_AD");
+    rejectionReasons.push(
+      `Observation domain '${obsDomain}' conflicts with candidate domain '${candidateDomain}'.`
+    );
+  }
+
+  const cutoffMs = context?.cutoffAt
+    ? new Date(context.cutoffAt).getTime()
+    : Date.now() + 5 * 60 * 1000;
+  for (const tsField of [o.sourceTimestamp, o.observedAt, o.reportedFirstShownAt]) {
+    if (typeof tsField === "string" && tsField.trim().length > 0) {
+      const parsed = new Date(tsField).getTime();
+      if (!Number.isNaN(parsed) && !Number.isNaN(cutoffMs) && parsed > cutoffMs) {
+        rejectionCodes.add("POST_CUTOFF_OBSERVATION");
+        rejectionReasons.push(
+          `Observation timestamp '${tsField}' exceeds cutoff '${new Date(cutoffMs).toISOString()}'.`
+        );
+      }
+    }
+  }
+
+  const sourceObservationId = String(
+    o.sourceObservationId || o.metrics?.sourceObservationId || (persistedAdId ? `sobs_${persistedAdId}` : "")
+  ).trim();
+
+  const valid = rejectionCodes.size === 0;
+  if (valid && matchedExecQId && persistedAdId && upstreamAdId) {
+    evidenceRefs.push(
+      `MetaQuery:${matchedExecQId}`,
+      `ProviderRequest:${explicitProviderReqId || `req_${matchedExecQId}`}`,
+      `UpstreamAd:${upstreamAdId}`,
+      `CompetitorAd:${persistedAdId}`,
+      `SourceObservation:${sourceObservationId}`
+    );
+  }
+
+  return {
+    valid,
+    rejectionCodes: Array.from(rejectionCodes),
+    rejectionReasons,
+    evidenceRefs,
+    lineageReceipt: valid && matchedExecQId
+      ? {
+          codeSha: context?.codeSha || null,
+          workspaceId: context?.workspaceId || o.workspaceId || null,
+          researchRunId: obsRunId || context?.researchRunId || null,
+          executedQueryId: matchedExecQId,
+          providerRequestId: explicitProviderReqId || `req_${matchedExecQId}`,
+          startedAt: matchedQueryOutcome?.startedAt || o.startedAt || null,
+          completedAt: matchedQueryOutcome?.completedAt || o.observedAt || null,
+          queryStatus: String(matchedQueryOutcome?.status || "SUCCEEDED_WITH_RESULTS"),
+          upstreamAdId,
+          persistedAdId,
+          sourceObservationId,
+        }
+      : null,
+  };
+}
 
 export interface CandidateLineageVerificationContext {
+  codeSha?: string | null;
+  expectedCodeSha?: string | null;
   workspaceId?: string | null;
+  expectedWorkspaceId?: string | null;
   researchRunId?: string | null;
+  expectedRunId?: string | null;
   executedQueryIds?: Set<string> | string[];
+  queryOutcomesByQueryId?: Map<string, any> | Record<string, any>;
   upstreamExternalAdIds?: Set<string> | string[];
+  persistedAdIdsInDb?: Set<string> | string[];
+  persistedAdExternalIds?: Set<string> | string[];
   persistedAdIdsByExternalId?: Map<string, string> | Record<string, string>;
+  persistedAdWorkspacesById?: Map<string, any> | Record<string, any>;
   persistedAdDomainsById?: Map<string, string> | Record<string, string>;
+  seenExternalAdRunKeys?: Set<string>;
+  requirePersistedAdMatch?: boolean;
+  cutoffAt?: string | Date | null;
+  shortlistRank?: number | null;
+  requireExplicitProviderRequestId?: boolean;
 }
 
 export interface CandidateLineageVerificationResult {
@@ -719,15 +1148,22 @@ export interface CandidateLineageVerificationResult {
   duplicateExternalAdIdsDetected: string[];
   rejectionCodes: MetaLineageRejectionCode[];
   rejectionReasons: string[];
+  rejectedLinks: string[];
   verifiedLinks: Array<{
+    codeSha?: string | null;
+    workspaceId?: string | null;
     researchRunId: string | null;
     executedQueryId: string | null;
     providerRequestId: string | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    queryStatus?: string | null;
     upstreamAdId: string | null;
     persistedAdId: string | null;
     sourceObservationId: string | null;
     candidateId: string;
     researchProductId: string | null;
+    shortlistRank?: number | null;
   }>;
 }
 
@@ -749,8 +1185,16 @@ export interface CandidateLineageVerificationResult {
  */
 export function verifyCandidateLiveLineageChain(
   candidate: DiscoveredProductCandidate | null | undefined,
-  context?: CandidateLineageVerificationContext
+  rawContext?: CandidateLineageVerificationContext
 ): CandidateLineageVerificationResult {
+  const context: CandidateLineageVerificationContext | undefined = rawContext
+    ? {
+        ...rawContext,
+        codeSha: rawContext.codeSha ?? rawContext.expectedCodeSha,
+        workspaceId: rawContext.workspaceId ?? rawContext.expectedWorkspaceId,
+        researchRunId: rawContext.researchRunId ?? rawContext.expectedRunId,
+      }
+    : undefined;
   const rejectionCodes = new Set<MetaLineageRejectionCode>();
   const rejectionReasons: string[] = [];
   const verifiedLinks: CandidateLineageVerificationResult["verifiedLinks"] = [];
@@ -765,12 +1209,9 @@ export function verifyCandidateLiveLineageChain(
       duplicateExternalAdIdsDetected: [],
       rejectionCodes: Array.from(rejectionCodes),
       rejectionReasons,
+      rejectedLinks: rejectionReasons,
       verifiedLinks,
     };
-  }
-  if (candidate.identityStatus !== "VERIFIED") {
-    rejectionCodes.add("NOT_VERIFIED_IDENTITY");
-    rejectionReasons.push("Candidate identityStatus is not VERIFIED.");
   }
 
   const executedQSet = context?.executedQueryIds
@@ -791,11 +1232,27 @@ export function verifyCandidateLiveLineageChain(
       : new Map(Object.entries(context.persistedAdIdsByExternalId))
     : null;
 
+  const persistedWsMap = context?.persistedAdWorkspacesById
+    ? context.persistedAdWorkspacesById instanceof Map
+      ? context.persistedAdWorkspacesById
+      : new Map(Object.entries(context.persistedAdWorkspacesById))
+    : null;
+
+  const qoMap = context?.queryOutcomesByQueryId
+    ? context.queryOutcomesByQueryId instanceof Map
+      ? context.queryOutcomesByQueryId
+      : new Map(Object.entries(context.queryOutcomesByQueryId))
+    : null;
+
   const domainMap = context?.persistedAdDomainsById
     ? context.persistedAdDomainsById instanceof Map
       ? context.persistedAdDomainsById
       : new Map(Object.entries(context.persistedAdDomainsById))
     : null;
+
+  const cutoffMs = context?.cutoffAt
+    ? new Date(context.cutoffAt).getTime()
+    : Date.now() + 5 * 60 * 1000;
 
   const candidateDomain = candidate.storeDomain
     ? candidate.storeDomain.toLowerCase().replace(/^www\./, "")
@@ -806,6 +1263,7 @@ export function verifyCandidateLiveLineageChain(
     : [];
 
   const seenLiveExternalIds = new Set<string>();
+  const seenProviderExtRunKeys = new Set<string>();
   const duplicateExternalAdIds = new Set<string>();
 
   if (
@@ -819,6 +1277,7 @@ export function verifyCandidateLiveLineageChain(
   for (const rawObs of observations) {
     if (!rawObs || typeof rawObs !== "object") continue;
     const o = rawObs as Record<string, any>;
+    if (typeof o.source === "string" && o.source !== "META_ADS") continue;
 
     // Check 6: UNDEFINED_SOURCE_TYPE
     if ("sourceType" in o && o.sourceType === undefined) {
@@ -954,6 +1413,75 @@ export function verifyCandidateLiveLineageChain(
       continue;
     }
 
+    let matchedQueryOutcome: any = null;
+    if (qoMap && matchedExecQId) {
+      matchedQueryOutcome = qoMap.get(matchedExecQId) || null;
+      if (!matchedQueryOutcome) {
+        rejectionCodes.add("UNEXECUTED_PLANNED_QUERY");
+        rejectionReasons.push(
+          `Query '${matchedExecQId}' is not present in executed queryOutcomes ledger.`
+        );
+        continue;
+      }
+      const qStatus = String(matchedQueryOutcome.status || "NOT_ATTEMPTED");
+      const reqStarted = matchedQueryOutcome.requestStarted === true;
+      const reqCompleted = matchedQueryOutcome.requestCompleted === true;
+      const apiCalls = Number(matchedQueryOutcome.actualApiCalls ?? 0);
+      if (
+        !matchedQueryOutcome.attempted ||
+        !reqStarted ||
+        !reqCompleted ||
+        apiCalls <= 0 ||
+        qStatus === "NOT_ATTEMPTED" ||
+        qStatus === "NOT_EXECUTED" ||
+        qStatus === "SKIPPED_BUDGET" ||
+        qStatus === "CANCELLED" ||
+        qStatus === "FAILED"
+      ) {
+        rejectionCodes.add("UNEXECUTED_PLANNED_QUERY");
+        rejectionReasons.push(
+          `Query '${matchedExecQId}' was not completed upstream (attempted=${matchedQueryOutcome.attempted}, requestStarted=${reqStarted}, requestCompleted=${reqCompleted}, actualApiCalls=${apiCalls}, status=${qStatus}).`
+        );
+        continue;
+      }
+    }
+
+    if (context?.requireExplicitProviderRequestId === true) {
+      const explicitReqId = String(
+        o.providerRequestId ||
+          o.metrics?.providerRequestId ||
+          matchedQueryOutcome?.providerRequestId ||
+          ""
+      ).trim();
+      if (!explicitReqId) {
+        rejectionCodes.add("MISSING_PROVIDER_REQUEST_ID");
+        rejectionCodes.add("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+        rejectionReasons.push(
+          `Live observation ${o.sourceRecordId || "unknown"} is missing explicit providerRequestId.`
+        );
+        continue;
+      }
+    }
+
+    // Check post-cutoff / forged future timestamps
+    let postCutoffDetected = false;
+    for (const tsField of [o.sourceTimestamp, o.observedAt, o.reportedFirstShownAt]) {
+      if (typeof tsField === "string" && tsField.trim().length > 0) {
+        const parsed = new Date(tsField).getTime();
+        if (!Number.isNaN(parsed) && !Number.isNaN(cutoffMs) && parsed > cutoffMs) {
+          rejectionCodes.add("POST_CUTOFF_OBSERVATION");
+          rejectionReasons.push(
+            `Observation timestamp '${tsField}' exceeds cutoff '${new Date(cutoffMs).toISOString()}'.`
+          );
+          postCutoffDetected = true;
+          break;
+        }
+      }
+    }
+    if (postCutoffDetected) {
+      continue;
+    }
+
     const hasExplicitUpstreamProp = "upstreamAdId" in o;
     const upstreamAdId = String(
       o.upstreamAdId ||
@@ -972,7 +1500,12 @@ export function verifyCandidateLiveLineageChain(
     ).trim();
 
     // Check 3: FAKE_UPSTREAM_AD_ID
-    if (!upstreamAdId || (upstreamSet && upstreamSet.size > 0 && !upstreamSet.has(upstreamAdId))) {
+    if (
+      !upstreamAdId ||
+      /^ad_0\./i.test(upstreamAdId) ||
+      /^syn_/i.test(upstreamAdId) ||
+      (upstreamSet && upstreamSet.size > 0 && !upstreamSet.has(upstreamAdId))
+    ) {
       rejectionCodes.add("FAKE_UPSTREAM_AD_ID");
       rejectionReasons.push(
         `Live observation ${persistedAdId || "unknown"} references upstreamAdId '${upstreamAdId}' not present in current-run upstream query results.`
@@ -980,11 +1513,36 @@ export function verifyCandidateLiveLineageChain(
       continue;
     }
 
-    // Check 4: WRONG_PERSISTED_AD_ID
+    const persistedDbSet = context?.persistedAdIdsInDb
+      ? context.persistedAdIdsInDb instanceof Set
+        ? context.persistedAdIdsInDb
+        : new Set(context.persistedAdIdsInDb.filter(Boolean))
+      : null;
+    const persistedExtSet = context?.persistedAdExternalIds
+      ? context.persistedAdExternalIds instanceof Set
+        ? context.persistedAdExternalIds
+        : new Set(context.persistedAdExternalIds.filter(Boolean))
+      : null;
+
+    // Check 4: WRONG_PERSISTED_AD_ID & persisted Ad workspace ownership
     if (!persistedAdId) {
       rejectionCodes.add("WRONG_PERSISTED_AD_ID");
       rejectionReasons.push(
         `Live observation for upstreamAdId '${upstreamAdId}' is missing persistedAdId.`
+      );
+      continue;
+    }
+    if (persistedDbSet && context?.persistedAdIdsInDb && !persistedDbSet.has(persistedAdId)) {
+      rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+      rejectionReasons.push(
+        `Persisted Ad '${persistedAdId}' was not found in persisted CompetitorAd DB rows.`
+      );
+      continue;
+    }
+    if (persistedExtSet && !persistedExtSet.has(upstreamAdId) && !persistedExtSet.has(persistedAdId)) {
+      rejectionCodes.add("WRONG_PERSISTED_AD_ID");
+      rejectionReasons.push(
+        `External ad '${upstreamAdId}' was not found in persisted CompetitorAd external IDs.`
       );
       continue;
     }
@@ -994,6 +1552,26 @@ export function verifyCandidateLiveLineageChain(
         rejectionCodes.add("WRONG_PERSISTED_AD_ID");
         rejectionReasons.push(
           `Upstream ad '${upstreamAdId}' persisted as '${expectedPersistedId}', but observation claims '${persistedAdId}'.`
+        );
+        continue;
+      }
+    }
+    if (
+      persistedWsMap &&
+      context?.workspaceId &&
+      (persistedWsMap.has(persistedAdId) || persistedWsMap.has(upstreamAdId))
+    ) {
+      const rawWsEntry = persistedWsMap.get(persistedAdId) ?? persistedWsMap.get(upstreamAdId);
+      const adWs =
+        typeof rawWsEntry === "string"
+          ? rawWsEntry
+          : typeof rawWsEntry?.workspaceId === "string"
+          ? rawWsEntry.workspaceId
+          : null;
+      if (adWs && adWs !== context.workspaceId) {
+        rejectionCodes.add("CROSS_WORKSPACE_OBSERVATION");
+        rejectionReasons.push(
+          `Persisted Ad '${persistedAdId}' belongs to workspace '${adWs}', not '${context.workspaceId}'.`
         );
         continue;
       }
@@ -1022,8 +1600,20 @@ export function verifyCandidateLiveLineageChain(
       continue;
     }
 
-    // Check 9: DUPLICATE_EXTERNAL_AD_COUNTED_TWICE
-    if (seenLiveExternalIds.has(upstreamAdId)) {
+    // Check 9: DUPLICATE_EXTERNAL_AD_COUNTED_TWICE (dedup by (provider, externalAdId, runId))
+    const resolvedRunId =
+      o.researchRunId ||
+      o.metrics?.researchRunId ||
+      context?.researchRunId ||
+      "run";
+    const providerExtRunKey = `${o.source || "META_ADS"}::${upstreamAdId}::${resolvedRunId}`;
+    const altRunKey = `${o.source || "META_ADS"}:${upstreamAdId}:${resolvedRunId}`;
+    if (
+      seenLiveExternalIds.has(upstreamAdId) ||
+      seenProviderExtRunKeys.has(providerExtRunKey) ||
+      context?.seenExternalAdRunKeys?.has(providerExtRunKey) ||
+      context?.seenExternalAdRunKeys?.has(altRunKey)
+    ) {
       duplicateExternalAdIds.add(upstreamAdId);
       rejectionCodes.add("DUPLICATE_EXTERNAL_AD_COUNTED_TWICE");
       rejectionReasons.push(
@@ -1032,8 +1622,17 @@ export function verifyCandidateLiveLineageChain(
       continue;
     }
     seenLiveExternalIds.add(upstreamAdId);
+    seenProviderExtRunKeys.add(providerExtRunKey);
+    context?.seenExternalAdRunKeys?.add(providerExtRunKey);
+    context?.seenExternalAdRunKeys?.add(altRunKey);
 
-    verifiedLinks.push({
+    const includeExtendedReceiptFields = Boolean(
+      context?.codeSha ||
+        context?.workspaceId ||
+        context?.shortlistRank !== undefined ||
+        context?.queryOutcomesByQueryId
+    );
+    const baseLink: CandidateLineageVerificationResult["verifiedLinks"][number] = {
       researchRunId:
         o.researchRunId ||
         o.metrics?.researchRunId ||
@@ -1043,6 +1642,7 @@ export function verifyCandidateLiveLineageChain(
       providerRequestId:
         o.providerRequestId ||
         o.metrics?.providerRequestId ||
+        matchedQueryOutcome?.providerRequestId ||
         (matchedExecQId ? `req_${matchedExecQId}` : null),
       upstreamAdId,
       persistedAdId,
@@ -1052,7 +1652,16 @@ export function verifyCandidateLiveLineageChain(
         `sobs_${persistedAdId}`,
       candidateId: candidate.candidateId,
       researchProductId: candidate.researchProductId || candidate.candidateId,
-    });
+    };
+    if (includeExtendedReceiptFields) {
+      baseLink.codeSha = context?.codeSha || null;
+      baseLink.workspaceId = context?.workspaceId || o.workspaceId || null;
+      baseLink.startedAt = matchedQueryOutcome?.startedAt || o.startedAt || null;
+      baseLink.completedAt = matchedQueryOutcome?.completedAt || o.observedAt || null;
+      baseLink.queryStatus = matchedQueryOutcome?.status || "SUCCEEDED_WITH_RESULTS";
+      baseLink.shortlistRank = context?.shortlistRank ?? null;
+    }
+    verifiedLinks.push(baseLink);
   }
 
   if (
@@ -1072,7 +1681,10 @@ export function verifyCandidateLiveLineageChain(
     rejectionCodes.has("WRONG_PERSISTED_AD_ID") ||
     rejectionCodes.has("ANOTHER_MERCHANTS_AD") ||
     rejectionCodes.has("UNDEFINED_SOURCE_TYPE") ||
-    rejectionCodes.has("UNAUTHENTICATED_LIVE_RECORD_FLAG");
+    rejectionCodes.has("UNAUTHENTICATED_LIVE_RECORD_FLAG") ||
+    rejectionCodes.has("MISSING_PROVIDER_REQUEST_ID") ||
+    rejectionCodes.has("UNEXECUTED_PLANNED_QUERY") ||
+    rejectionCodes.has("POST_CUTOFF_OBSERVATION");
 
   const valid =
     verifiedLinks.length > 0 && !hasFatalAdversarialViolation;
@@ -1084,6 +1696,7 @@ export function verifyCandidateLiveLineageChain(
     duplicateExternalAdIdsDetected: Array.from(duplicateExternalAdIds),
     rejectionCodes: Array.from(rejectionCodes),
     rejectionReasons,
+    rejectedLinks: rejectionReasons,
     verifiedLinks,
   };
 }
