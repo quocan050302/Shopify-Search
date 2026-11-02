@@ -1,0 +1,31 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "readOnlyVerified": true,
+  "crossWorkspaceDenied": true,
+  "crossWorkspaceHttpStatus": 403,
+  "amazonLiveGetRoute": {
+    "route": "/api/v1/kh02/marketplace/amazon",
+    "workspaceId": "ws_amz_live_pilot",
+    "researchRunId": "kh02_amz_live_mcp_1793590097625",
+    "dbMutationsCount": 0,
+    "digestBefore": "be5b28f8bf4bddeca0f38759a1e99e5cc0155866a01150d1d096f69770360324",
+    "digestAfter": "be5b28f8bf4bddeca0f38759a1e99e5cc0155866a01150d1d096f69770360324",
+    "returnedCandidatesCount": 3
+  },
+  "amazonGetRoute": {
+    "route": "/api/v1/kh02/marketplace/amazon",
+    "httpStatus": 200,
+    "dbMutationsCount": 0,
+    "digestBefore": "80e16ed282f6b707deff65fab959dd265aba116eda3063555f551d114351efab",
+    "digestAfter": "80e16ed282f6b707deff65fab959dd265aba116eda3063555f551d114351efab",
+    "returnedCandidatesCount": 1
+  },
+  "walmartGetRoute": {
+    "route": "/api/v1/kh02/marketplace/walmart",
+    "httpStatus": 200,
+    "dbMutationsCount": 0,
+    "digestBefore": "80e16ed282f6b707deff65fab959dd265aba116eda3063555f551d114351efab",
+    "digestAfter": "80e16ed282f6b707deff65fab959dd265aba116eda3063555f551d114351efab",
+    "returnedCandidatesCount": 1
+  }
+}

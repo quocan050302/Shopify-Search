@@ -1,0 +1,628 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "executedAt": "2026-11-02T03:33:32.182Z",
+  "totalMutationsExecuted": 56,
+  "caughtMutationsCount": 56,
+  "falsePassesCount": 0,
+  "suiteVerdict": "PASS",
+  "cases": [
+    {
+      "mutationId": "ORIG_MUT_01",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "description": "Tamper branch name away from feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "expectedFailureCode": "BRANCH_MISMATCH",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "BRANCH_MISMATCH"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_02",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "description": "Tamper codeSha to mismatched SHA",
+      "expectedFailureCode": "CODE_SHA_MISMATCH",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "CODE_SHA_MISMATCH"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_03",
+      "targetFile": "01_ORIGINAL_PILOT_CONTRACT_AND_SCOPE.json",
+      "description": "Claim Amazon pilot requires paid API",
+      "expectedFailureCode": "ORIGINAL_PILOT_CONTRACT_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "ORIGINAL_PILOT_CONTRACT_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_04",
+      "targetFile": "02_AMAZON_PLAYWRIGHT_MCP_PACKAGE_AND_CLI_AUDIT.json",
+      "description": "Change pinned Playwright MCP package version",
+      "expectedFailureCode": "AMAZON_MCP_CLI_CONTRACT_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_MCP_CLI_CONTRACT_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_05",
+      "targetFile": "02_AMAZON_PLAYWRIGHT_MCP_PACKAGE_AND_CLI_AUDIT.json",
+      "description": "Enable personal browser cookies in Amazon MCP audit",
+      "expectedFailureCode": "AMAZON_MCP_CLI_CONTRACT_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_MCP_CLI_CONTRACT_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_06",
+      "targetFile": "03_AMAZON_PLAYWRIGHT_MCP_HANDSHAKE_AND_TOOLS.json",
+      "description": "Remove browser_snapshot from discovered MCP tools",
+      "expectedFailureCode": "AMAZON_MCP_HANDSHAKE_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_MCP_HANDSHAKE_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_07",
+      "targetFile": "03_AMAZON_PLAYWRIGHT_MCP_HANDSHAKE_AND_TOOLS.json",
+      "description": "Leave orphan process after MCP session close",
+      "expectedFailureCode": "AMAZON_MCP_HANDSHAKE_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_MCP_HANDSHAKE_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_08",
+      "targetFile": "04_AMAZON_POLICY_BUDGET_AND_URL_GUARDS.json",
+      "description": "Set default Amazon featureEnabled=true",
+      "expectedFailureCode": "AMAZON_POLICY_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_POLICY_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_09",
+      "targetFile": "04_AMAZON_POLICY_BUDGET_AND_URL_GUARDS.json",
+      "description": "Mislabel unattested local MCP search as CREDENTIALS_REQUIRED",
+      "expectedFailureCode": "AMAZON_POLICY_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_POLICY_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_10",
+      "targetFile": "04_AMAZON_POLICY_BUDGET_AND_URL_GUARDS.json",
+      "description": "Allow 5th Amazon operation in a single run",
+      "expectedFailureCode": "AMAZON_POLICY_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_POLICY_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_11",
+      "targetFile": "04_AMAZON_POLICY_BUDGET_AND_URL_GUARDS.json",
+      "description": "Accept non-US Amazon domain (.co.uk)",
+      "expectedFailureCode": "AMAZON_POLICY_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_POLICY_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_12",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "Accept sponsored Amazon search card as organic match",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_13",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "Promote brand-only Amazon listing to EXACT_PRODUCT",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_14",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "Coerce missing Amazon price to $0.00",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_15",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "Fabricate US delivery ZIP 10001 when unobserved",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_16",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "Allow TEST_FIXTURE session to produce AUTHORIZED_LIVE",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_17",
+      "targetFile": "06_AMAZON_WORKER_DB_API_DOM_3WAY_PARITY.json",
+      "description": "Introduce Amazon DOM reload ASIN drift",
+      "expectedFailureCode": "AMAZON_3WAY_PARITY_DRIFT",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_3WAY_PARITY_DRIFT"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_18",
+      "targetFile": "06_AMAZON_WORKER_DB_API_DOM_3WAY_PARITY.json",
+      "description": "Claim fixture Chromium parity run is live Amazon confirmation",
+      "expectedFailureCode": "AMAZON_3WAY_PARITY_DRIFT",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_3WAY_PARITY_DRIFT"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_19",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "Fabricate verifiedLiveProductCount > 0 when Amazon page was blocked by CAPTCHA",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_20",
+      "targetFile": "08_WALMART_JINA_PROTOCOL_HEADERS_AND_BUDGET_AUDIT.json",
+      "description": "Remove X-Respond-With: html from Walmart Jina headers",
+      "expectedFailureCode": "WALMART_PROTOCOL_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PROTOCOL_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_21",
+      "targetFile": "08_WALMART_JINA_PROTOCOL_HEADERS_AND_BUDGET_AUDIT.json",
+      "description": "Allow Authorization/Cookie header in free Walmart Jina mode",
+      "expectedFailureCode": "WALMART_PROTOCOL_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PROTOCOL_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_22",
+      "targetFile": "08_WALMART_JINA_PROTOCOL_HEADERS_AND_BUDGET_AUDIT.json",
+      "description": "Increase Walmart maxLogicalOperationsPerRun above 4",
+      "expectedFailureCode": "WALMART_PROTOCOL_OR_BUDGET_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PROTOCOL_OR_BUDGET_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_23",
+      "targetFile": "09_WALMART_NEXT_DATA_PARSER_AND_IDENTITY_AUDIT.json",
+      "description": "Misclassify HTTP 200 Walmart PerimeterX bot wall as SUCCEEDED",
+      "expectedFailureCode": "WALMART_PARSER_OR_IDENTITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PARSER_OR_IDENTITY_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_24",
+      "targetFile": "09_WALMART_NEXT_DATA_PARSER_AND_IDENTITY_AUDIT.json",
+      "description": "Strip leading zero from Sony UPC 027242930698 -> 27242930698",
+      "expectedFailureCode": "WALMART_PARSER_OR_IDENTITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PARSER_OR_IDENTITY_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_25",
+      "targetFile": "09_WALMART_NEXT_DATA_PARSER_AND_IDENTITY_AUDIT.json",
+      "description": "Allow Walmart accessory refill to match main candidate as FOUND",
+      "expectedFailureCode": "WALMART_PARSER_OR_IDENTITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_PARSER_OR_IDENTITY_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_26",
+      "targetFile": "10_WALMART_WORKER_DB_API_DOM_3WAY_PARITY.json",
+      "description": "Introduce Walmart DOM reload itemId drift",
+      "expectedFailureCode": "WALMART_3WAY_PARITY_DRIFT",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_3WAY_PARITY_DRIFT"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_27",
+      "targetFile": "11_WALMART_LIVE_JINA_PILOT_EXECUTION_TRUTH.json",
+      "description": "Relabel TEST_FIXTURE row as REAL_JINA_READER in live Walmart probe",
+      "expectedFailureCode": "WALMART_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "WALMART_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_28",
+      "targetFile": "12_NON_INFLATION_AMAZON_WALMART_ON_VS_OFF.json",
+      "description": "Inflate Opportunity Score by +2.5 when Amazon/Walmart evidence is enabled",
+      "expectedFailureCode": "SCORE_OR_GATE_INFLATION_DETECTED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "SCORE_OR_GATE_INFLATION_DETECTED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_29",
+      "targetFile": "12_NON_INFLATION_AMAZON_WALMART_ON_VS_OFF.json",
+      "description": "Promote G15 60-day demand gate from marketplace listing existence",
+      "expectedFailureCode": "SCORE_OR_GATE_INFLATION_DETECTED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "SCORE_OR_GATE_INFLATION_DETECTED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_30",
+      "targetFile": "13_READ_ONLY_GET_DB_DIGEST_PROOF.json",
+      "description": "Mutate SQLite database during GET /api/v1/kh02/marketplace/amazon",
+      "expectedFailureCode": "GET_ROUTE_MUTATED_DATABASE",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "GET_ROUTE_MUTATED_DATABASE"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_31",
+      "targetFile": "14_UI_PRODUCT_FINDER_HEADLESS_CHROMIUM_AUDIT.json",
+      "description": "Render 'Key Required' for free Walmart Jina Reader pilot in UI",
+      "expectedFailureCode": "UI_CHROMIUM_AUDIT_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "UI_CHROMIUM_AUDIT_FAILED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_32",
+      "targetFile": "16_FULL_REPOSITORY_REGRESSION_INVENTORY.json",
+      "description": "Mark regression inventory as targetedOnly=true instead of full repo",
+      "expectedFailureCode": "FULL_REGRESSION_INCOMPLETE_OR_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FULL_REGRESSION_INCOMPLETE_OR_FAILED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_33",
+      "targetFile": "18_ALL_E2E_EXECUTION_RECEIPTS.json",
+      "description": "Skip 1 of the 12 E2E specs without execution",
+      "expectedFailureCode": "E2E_SPECS_INCOMPLETE_OR_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "E2E_SPECS_INCOMPLETE_OR_FAILED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_34",
+      "targetFile": "19_REAL_DEV_BACKTEST_SUMMARY.json",
+      "description": "Include post-cutoff future row in DEV historical replay",
+      "expectedFailureCode": "DEV_BACKTEST_INTEGRITY_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "DEV_BACKTEST_INTEGRITY_FAILED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_35",
+      "targetFile": "20_REAL_HOLDOUT_BACKTEST_SUMMARY.json",
+      "description": "Include post-cutoff future row in HOLDOUT historical replay",
+      "expectedFailureCode": "HOLDOUT_BACKTEST_INTEGRITY_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "HOLDOUT_BACKTEST_INTEGRITY_FAILED"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_36",
+      "targetFile": "21_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "description": "Accept LandingPageSnapshot semantic contentHash as raw schema.org Product proof",
+      "expectedFailureCode": "POINT_IN_TIME_LOOKAHEAD_LEAK",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "POINT_IN_TIME_LOOKAHEAD_LEAK"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_37",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N01 & N02: Empty operation ledger (operationsAttempted=0) claiming transportHandshakeStatus=SUCCEEDED",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_38",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N03: Handshake-only with actualBrowserToolExecutionStatus=NOT_ATTEMPTED claiming PUBLIC_PAGE_OBSERVED",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_39",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N04 & N14 & N42: Tamper rawEvidenceHash on live Amazon row so it diverges from operationLedger responseHash",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_40",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N05 & N47: Claim mcpSessionClosedCleanly=true while ownedChildPidTerminated=false",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_41",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N06..N10 & N45: Count 2 ChomChom ASINs (distinctVerifiedProductFamilies=1) as REAL_PROVIDER_VERIFIED / requiredLiveTargetsMet=true",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_42",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "N21: Infer currency=USD from bare '$' symbol without explicit currency evidence",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_43",
+      "targetFile": "05_AMAZON_IDENTITY_PARSER_AND_SPONSORED_FILTER_AUDIT.json",
+      "description": "N24: Assign carousel/suggested item price to inspected main ASIN",
+      "expectedFailureCode": "AMAZON_IDENTITY_OR_PARSER_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_IDENTITY_OR_PARSER_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_44",
+      "targetFile": "26_FINAL_RELEASE_VERDICT.json",
+      "description": "N17 & N41: Overwrite AMAZON_LOCAL_MCP_LIVE_OBSERVATION with CREDENTIALS_REQUIRED when local MCP observed pages",
+      "expectedFailureCode": "FINAL_RELEASE_VERDICT_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_45",
+      "targetFile": "26_FINAL_RELEASE_VERDICT.json",
+      "description": "N44: Relabel blocked Walmart Jina probe as WALMART_LIVE_JINA_PILOT=LIVE_VERIFIED",
+      "expectedFailureCode": "FINAL_RELEASE_VERDICT_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_46",
+      "targetFile": "15_TARGETED_AMAZON_WALMART_TEST_MATRIX.json",
+      "description": "N40: Force failedTests=1 in targeted test matrix while keeping ENGINEERING_VERDICT=PASS",
+      "expectedFailureCode": "TARGETED_MATRIX_INCOMPLETE_OR_FAILED",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "TARGETED_MATRIX_INCOMPLETE_OR_FAILED",
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_47",
+      "targetFile": "24_OWNED_PROCESS_RAM_DISK_LEDGER.json",
+      "description": "N46: Breach minimum 15 GiB free disk guard (minFreeDiskGiB=10.5)",
+      "expectedFailureCode": "PROCESS_RAM_DISK_GUARD_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "PROCESS_RAM_DISK_GUARD_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_48",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "N48: Reuse historical 52/52 standalone baseline as current live pass evidence",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_49",
+      "targetFile": "26_FINAL_RELEASE_VERDICT.json",
+      "description": "P0-A (F02): Null e2eExecutionSummary while claiming ENGINEERING_ACCEPTANCE=PASS",
+      "expectedFailureCode": "FINAL_RELEASE_VERDICT_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_50",
+      "targetFile": "26_FINAL_RELEASE_VERDICT.json",
+      "description": "P0-A (F02): Null nicheRelevanceSummary while claiming NICHE_RELEVANCE=PASS",
+      "expectedFailureCode": "FINAL_RELEASE_VERDICT_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_51",
+      "targetFile": "26_FINAL_RELEASE_VERDICT.json",
+      "description": "P0-A (F02): Wrong sourceSha on historicalIdentitySummary",
+      "expectedFailureCode": "FINAL_RELEASE_VERDICT_INVALID",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "FINAL_RELEASE_VERDICT_INVALID"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_52",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "P0-B (F03): Mismatch transportSessionId on live MCP operation vs mcpSessionLifecycle.sessionId",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_53",
+      "targetFile": "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+      "description": "P0-B (F03): Premature closeStartedAt (< lastToolCompletedAt) on mcpSessionLifecycle",
+      "expectedFailureCode": "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "AMAZON_LIVE_PILOT_TRUTH_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_54",
+      "targetFile": "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+      "description": "P0-C (F05): Tamper rawEvidenceHash in domAfterReload on live Amazon candidate",
+      "expectedFailureCode": "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "LIVE_VS_FIXTURE_PARITY_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_55",
+      "targetFile": "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+      "description": "P0-C (F06): Relabel TEST_FIXTURE row as AUTHORIZED_LIVE in fixture parity section",
+      "expectedFailureCode": "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "LIVE_VS_FIXTURE_PARITY_VIOLATION"
+      ],
+      "caught": true
+    },
+    {
+      "mutationId": "ORIG_MUT_56",
+      "targetFile": "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+      "description": "P0-C (F05): Claim liveDbApiDomParityStatus=REAL_LIVE_DB_API_DOM_PARITY_NOT_PROVEN",
+      "expectedFailureCode": "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+      "validatorVerdictAfterMutation": "FAIL",
+      "observedFailureCodes": [
+        "LIVE_VS_FIXTURE_PARITY_VIOLATION"
+      ],
+      "caught": true
+    }
+  ]
+}

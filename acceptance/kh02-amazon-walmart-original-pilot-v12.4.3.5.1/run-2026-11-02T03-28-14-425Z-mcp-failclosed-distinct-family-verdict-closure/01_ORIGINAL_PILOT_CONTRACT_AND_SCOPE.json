@@ -1,0 +1,29 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "releaseVersion": "12.4.3.5.1",
+  "amazonPilot": {
+    "provider": "AMAZON_US",
+    "routeId": "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
+    "pinnedPackage": "@playwright/mcp@0.0.83",
+    "transport": "stdio",
+    "browserMode": "headless_isolated_chrome_no_login",
+    "requiresPaidApi": false,
+    "creatorsApiIndependent": true,
+    "maxOperationsPerRun": 4,
+    "maxAttemptsPerOperation": 2,
+    "maxConcurrency": 1
+  },
+  "walmartPilot": {
+    "provider": "WALMART_US",
+    "routeId": "JINA_READER_REST_NO_KEY",
+    "endpointPrefixes": [
+      "https://r.jina.ai/https://www.walmart.com/search?q=",
+      "https://r.jina.ai/https://www.walmart.com/ip/"
+    ],
+    "requiresApiKey": false,
+    "maxLogicalOperationsPerRun": 4,
+    "maxAttemptsPerOperation": 2,
+    "maxRequestsPerMinuteAcrossWorkers": 6,
+    "maxConcurrency": 1
+  }
+}

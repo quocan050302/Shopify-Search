@@ -1,0 +1,31 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "tscNoEmit": {
+    "exitCode": 0,
+    "passed": true,
+    "durationMs": 6729
+  },
+  "productionBuild": {
+    "exitCode": 0,
+    "passed": true,
+    "durationMs": 33515
+  },
+  "chromiumUiAudit": {
+    "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+    "realChromiumVerified": true,
+    "browserEngine": "Playwright Headless Chromium",
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "researchRunId": "kh02_orig_pilot_ui_1793590397071",
+    "candidateId": "cand_orig_chomchom_b08n5wrwnw_674275778",
+    "liveAmazonWorkspaceId": "ws_amz_live_pilot",
+    "liveAmazonResearchRunId": "kh02_amz_live_mcp_1793590097625",
+    "liveAmazonCardsRenderedBeforeAndAfterReload": true,
+    "walmartDisabledReasonRendered": "Server pilot disabled",
+    "walmartDisabledReasonRenderedKeyRequired": false,
+    "amazonCardRenderedBeforeAndAfterReload": true,
+    "walmartCardRenderedBeforeAndAfterReload": true,
+    "amazonDeliveryPostalCodeRendered": "10001",
+    "walmartLocationPostalCodeRendered": "95829",
+    "nonInflationDisclaimerPresentInPage": true
+  }
+}

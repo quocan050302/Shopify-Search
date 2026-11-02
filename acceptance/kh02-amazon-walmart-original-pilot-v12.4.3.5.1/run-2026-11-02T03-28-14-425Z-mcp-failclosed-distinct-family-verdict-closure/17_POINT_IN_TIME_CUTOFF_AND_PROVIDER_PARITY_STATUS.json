@@ -1,0 +1,20 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "evaluatedAt": "2026-11-02T03:33:31.290Z",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "amazonPostCutoffExcludedCount": 1,
+  "amazonFixtureExcludedCount": 1,
+  "walmartPostCutoffExcludedCount": 1,
+  "walmartFixtureExcludedCount": 1,
+  "postCutoffIncludedInReplayCount": 0,
+  "fixtureRowsIncludedInLiveReplayCount": 0,
+  "semanticHashAcceptedAsRawProductSchemaProofCount": 0,
+  "amazonDevHistoricalParityStatus": "PROVIDER_HISTORICAL_PARITY_NOT_PROVEN",
+  "amazonHoldoutHistoricalParityStatus": "PROVIDER_HISTORICAL_PARITY_NOT_PROVEN",
+  "walmartDevHistoricalParityStatus": "PROVIDER_HISTORICAL_PARITY_NOT_PROVEN",
+  "walmartHoldoutHistoricalParityStatus": "PROVIDER_HISTORICAL_PARITY_NOT_PROVEN",
+  "amazonDevAvailabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+  "amazonHoldoutAvailabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+  "walmartDevAvailabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+  "walmartHoldoutAvailabilityStatus": "NOT_AVAILABLE_AT_ASOF"
+}

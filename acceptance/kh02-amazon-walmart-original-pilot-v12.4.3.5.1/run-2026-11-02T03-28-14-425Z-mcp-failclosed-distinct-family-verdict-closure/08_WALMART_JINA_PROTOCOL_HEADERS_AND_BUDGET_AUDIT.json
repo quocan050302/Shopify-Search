@@ -1,0 +1,42 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "defaultPolicy": {
+    "featureEnabled": false,
+    "liveAllowed": false,
+    "requiresApiKey": false
+  },
+  "clientOverrideBlockedWhenServerDisabled": true,
+  "urlValidation": {
+    "searchUrlPrefix": "https://r.jina.ai/https://www.walmart.com/search?q=",
+    "sampleSearchUrl": "https://r.jina.ai/https://www.walmart.com/search?q=ChomChom%20Roller",
+    "pdpUrlPrefix": "https://r.jina.ai/https://www.walmart.com/ip/",
+    "samplePdpUrl": "https://r.jina.ai/https://www.walmart.com/ip/674275778",
+    "rejectsSJinaAi": true,
+    "rejectsNonWalmartHost": true,
+    "rejectsNonNumericItemId": true
+  },
+  "headersAudit": {
+    "exactHeaders": {
+      "Accept": "application/json",
+      "X-Cache-Tolerance": "0",
+      "X-Respond-With": "html",
+      "X-Timeout": "25"
+    },
+    "valid": true,
+    "forbiddenHeadersAbsent": true
+  },
+  "budgetCaps": {
+    "maxConcurrentOperationsPerProviderGroup": 1,
+    "maxLogicalOperationsPerRun": 4,
+    "fifthOperationRejectedWith": "BUDGET_EXHAUSTED",
+    "maxAttemptsPerOperation": 2,
+    "thirdAttemptRejectedWith": "BUDGET_EXHAUSTED",
+    "maxRequestsPerMinuteAcrossWorkers": 6
+  },
+  "attemptGenerationFence": {
+    "staleAttempt1RejectedAfterAttempt2": true
+  },
+  "freePilotHaltOn401Or402": {
+    "haltsImmediately": true
+  }
+}

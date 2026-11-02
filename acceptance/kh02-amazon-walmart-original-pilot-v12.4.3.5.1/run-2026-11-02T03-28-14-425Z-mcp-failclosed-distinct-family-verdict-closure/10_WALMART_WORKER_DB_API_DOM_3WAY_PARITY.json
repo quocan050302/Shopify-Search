@@ -1,0 +1,47 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "workspaceId": "acceptance_v12_2_3_ws",
+  "researchRunId": "kh02_orig_pilot_ui_1793590397071",
+  "candidateId": "cand_orig_chomchom_b08n5wrwnw_674275778",
+  "evidenceOrigin": "TEST_FIXTURE",
+  "claimedAsLiveWalmartProductConfirmation": false,
+  "domBeforeReload": {
+    "candidateId": "cand_orig_chomchom_b08n5wrwnw_674275778",
+    "runId": "kh02_orig_pilot_ui_1793590397071",
+    "queryStatus": "SUCCEEDED",
+    "presence": "FOUND",
+    "matchLevel": "EXACT",
+    "itemId": "674275778",
+    "canonicalWalmartUrl": "https://www.walmart.com/ip/674275778",
+    "upc": "856957004000",
+    "priceDisplay": "$24.99 USD",
+    "seller": "Walmart.com",
+    "locationPostalCode": "95829",
+    "availability": "IN_STOCK",
+    "observedAt": "2026-11-02T03:33:17.099Z",
+    "evidenceOrigin": "TEST_FIXTURE"
+  },
+  "domAfterReload": {
+    "candidateId": "cand_orig_chomchom_b08n5wrwnw_674275778",
+    "runId": "kh02_orig_pilot_ui_1793590397071",
+    "queryStatus": "SUCCEEDED",
+    "presence": "FOUND",
+    "matchLevel": "EXACT",
+    "itemId": "674275778",
+    "canonicalWalmartUrl": "https://www.walmart.com/ip/674275778",
+    "upc": "856957004000",
+    "priceDisplay": "$24.99 USD",
+    "seller": "Walmart.com",
+    "locationPostalCode": "95829",
+    "availability": "IN_STOCK",
+    "observedAt": "2026-11-02T03:33:17.099Z",
+    "evidenceOrigin": "TEST_FIXTURE"
+  },
+  "reloadParity": {
+    "parityPassed": true,
+    "workspaceId": "acceptance_v12_2_3_ws",
+    "researchRunId": "kh02_orig_pilot_ui_1793590397071",
+    "checkedCandidatesCount": 1,
+    "mismatches": []
+  }
+}

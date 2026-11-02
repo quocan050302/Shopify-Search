@@ -1,0 +1,15 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "pinnedPackage": "@playwright/mcp@0.0.83",
+  "packageVersion": "0.0.83",
+  "cliArgs": [
+    "-y",
+    "@playwright/mcp@0.0.83",
+    "--headless",
+    "--isolated",
+    "--block-service-workers"
+  ],
+  "usesPersonalProfileOrCookies": false,
+  "usesStealthEvasionOrProxy": false,
+  "usesCaptchaSolver": false
+}

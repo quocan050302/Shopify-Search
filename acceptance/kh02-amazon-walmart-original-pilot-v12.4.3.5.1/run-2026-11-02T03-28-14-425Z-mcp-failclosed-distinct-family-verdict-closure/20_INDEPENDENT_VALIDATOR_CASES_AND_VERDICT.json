@@ -1,0 +1,11 @@
+{
+  "overallVerdict": "PASS",
+  "artifactDir": "D:\\Project_github\\Running-Ads\\acceptance\\kh02-amazon-walmart-original-pilot-v12.4.3.5.1\\run-2026-11-02T03-28-14-425Z-mcp-failclosed-distinct-family-verdict-closure",
+  "validatedAt": "2026-11-02T03:33:32.283Z",
+  "expectedCodeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "checksExecuted": 122,
+  "checksPassed": 122,
+  "checksFailed": 0,
+  "failureCodes": [],
+  "failureDetails": []
+}

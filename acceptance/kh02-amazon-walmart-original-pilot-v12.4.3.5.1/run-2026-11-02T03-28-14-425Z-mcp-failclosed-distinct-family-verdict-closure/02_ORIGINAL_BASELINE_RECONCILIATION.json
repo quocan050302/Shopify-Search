@@ -1,0 +1,15 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "evaluatedAt": "2026-11-02T03:33:32.213Z",
+  "historicalAmazonStandaloneBaseline2026_10_30": {
+    "operations": "52/52 (26 searches + 26 PDP inspections across 13 rounds)",
+    "classification": "HISTORICAL_ONLY",
+    "usedAsCurrentPassEvidence": false
+  },
+  "historicalWalmartStandaloneBaseline2026_10_30": {
+    "operations": "21/21 (7 searches + 14 PDP inspections, ZIP 95829 / Sacramento / store 3081)",
+    "classification": "HISTORICAL_ONLY",
+    "usedAsCurrentPassEvidence": false
+  },
+  "currentRunMeasuredIndependently": true
+}

@@ -1,0 +1,40 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "split": "DEV",
+  "niche": "Pet Gadgets",
+  "datasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+  "windowStart": "2026-06-01T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfCutoffIso": "2026-10-24T00:00:00.000Z",
+  "backtestEngineExecuted": "PASS",
+  "pointInTimeIntegrityVerdict": "PASS",
+  "policyScenarioVerdict": "PASS",
+  "historicalObservationCount": 19,
+  "reconstructedCandidateCount": 3,
+  "shortlistCount": 0,
+  "nicheMatchedCount": 0,
+  "verifiedIdentityCount": 0,
+  "postCutoffRowsIncludedCount": 0,
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 1,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 1,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": false,
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 1,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 1,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": false,
+    "leakagePrevented": true
+  },
+  "historicalDevBusinessVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "shortlistProducts": []
+}

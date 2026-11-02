@@ -1,0 +1,24 @@
+{
+  "codeSha": "075b7669d18b231168550c0be6f7153bb748f73c",
+  "defaultPolicy": {
+    "featureEnabled": false,
+    "liveAllowed": false,
+    "status": "DISABLED_BY_DEFAULT"
+  },
+  "liveWithoutRouteAuthBlocked": true,
+  "localMcpPilotWorksWhenCreatorsCredentialsAbsent": true,
+  "unattestedSearchMarkedAs": "SEARCH_BLOCKED_POLICY",
+  "unattestedSearchNeverMarkedCredentialsRequired": true,
+  "budgetCaps": {
+    "maxOperationsPerRun": 4,
+    "maxAttemptsPerOperation": 2,
+    "maxConcurrency": 1,
+    "fifthOperationRejected": true
+  },
+  "urlGuards": {
+    "acceptsCanonicalDpUrl": true,
+    "rejectsNonUsDomain": true,
+    "rejectsShorteners": true,
+    "validatesSearchUrlSeparately": true
+  }
+}
