@@ -1,0 +1,19 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "testedCodeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "testedTreeSha": "2124fcbae166220cecdd6acc9925e289b06dd12c",
+  "evidenceContentCommitSha": "ab1f120c5d6e75d731d90937723f9f057d21dbde",
+  "remoteHeadObservedAfterEvidencePush": "ab1f120c5d6e75d731d90937723f9f057d21dbde",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "attestationScope": "EVIDENCE_COMMIT_E_ALREADY_PUSHED",
+  "isSelfReferential": false,
+  "remoteReadbackVerified": true,
+  "ancestryVerifiedStoE": true,
+  "provider": "GITHUB_REMOTE_LS_REMOTE",
+  "verificationMethod": "git ls-remote origin refs/heads/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "remoteRefReadbackAt": "2026-11-02T16:52:04.318Z",
+  "evidenceManifestSha256": "a1a733970c590f86e1fadfe55aeb72630aab649e90974c9f4b830ea74abf9a6c",
+  "independentValidatorReportSha256": "fec9d508adeab6155ebf9460583a6a9da50e3068022d771be0c01d46fcece394",
+  "ancestryVerified": true,
+  "attestedAt": "2026-11-02T16:52:04.318Z"
+}

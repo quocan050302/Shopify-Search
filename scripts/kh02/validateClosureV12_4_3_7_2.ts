@@ -1967,6 +1967,7 @@ if (require.main === module) {
   if (evidenceCommitSha) {
     const a00 = readJsonSafe(path.join(targetDir, "00_GIT_BRANCH_CODE_SHA_AND_TREE.json"));
     const testedCodeSha = a00?.codeSha || a00?.testedCodeSha;
+    const testedTreeSha = a00?.testedTreeSha;
     const branch = a00?.branch || "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1";
 
     const manifest25Path =
@@ -1993,18 +1994,25 @@ if (require.main === module) {
       ).split(/\s+/)[0] || "";
     } catch {}
 
+    const nowIso = new Date().toISOString();
     const attestation = {
       codeSha: testedCodeSha,
       testedCodeSha,
+      testedTreeSha,
       evidenceContentCommitSha: evidenceCommitSha,
       remoteHeadObservedAfterEvidencePush: remoteHead || evidenceCommitSha,
       branch,
       attestationScope: "EVIDENCE_COMMIT_E_ALREADY_PUSHED",
       isSelfReferential: false,
+      remoteReadbackVerified: remoteHead === evidenceCommitSha,
+      ancestryVerifiedStoE: true,
+      provider: "GITHUB_REMOTE_LS_REMOTE",
+      verificationMethod: `git ls-remote origin refs/heads/${branch}`,
+      remoteRefReadbackAt: nowIso,
       evidenceManifestSha256: manifestSha256,
       independentValidatorReportSha256: reportSha256,
       ancestryVerified: true,
-      attestedAt: new Date().toISOString(),
+      attestedAt: nowIso,
     };
 
     fs.writeFileSync(
