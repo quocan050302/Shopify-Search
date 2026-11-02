@@ -1,0 +1,23 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:03:15.482Z",
+  "allPassed": true,
+  "totalSuites": 9,
+  "passedSuites": 9,
+  "failedSuites": 0,
+  "totalTests": 337,
+  "passedTests": 337,
+  "failedTests": 0,
+  "durationMs": 23218,
+  "suitesExecuted": [
+    "tests/unit/kh02/v12_4_3_7_RealSourceToTop3LiveClosure.test.ts",
+    "tests/unit/kh02/v12_4_3_6_RealNicheToTop3Discovery.test.ts",
+    "tests/unit/kh02/v12_4_3_5_1_OriginalAmazonWalmartPilotMatrix.test.ts",
+    "src/services/kh02/__tests__/walmartUsJinaPilotV12_4_3_5_1.test.ts",
+    "tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts",
+    "tests/unit/kh02/v12_4_3_5_0_AmazonUsPilotAcceptance.test.ts",
+    "tests/unit/kh02/v12_4_3_5_0_1_AmazonTrueE2EClosure.test.ts",
+    "tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts",
+    "tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts"
+  ]
+}

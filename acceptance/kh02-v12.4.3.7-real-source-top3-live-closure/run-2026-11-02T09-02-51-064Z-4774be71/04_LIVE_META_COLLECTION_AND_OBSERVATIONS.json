@@ -1,0 +1,15 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:08:21.692Z",
+  "workspaceId": "ws_v12_4_3_7_live_pet_1793610427546",
+  "researchRunId": "kh02_run_1793610427837_c8ihk",
+  "liveAttempted": true,
+  "subqueriesExecutedCount": 4,
+  "liveProviderObservationsCount": 35,
+  "cachedObservationsCount": 3,
+  "syntheticPromotedToLiveCount": 0,
+  "cachePromotedToLiveCount": 0,
+  "metaCollectionVerdict": "DEGRADED_CACHE_SUPPLEMENTED",
+  "sourceStatus": "PASSED",
+  "metaTelemetry": {}
+}

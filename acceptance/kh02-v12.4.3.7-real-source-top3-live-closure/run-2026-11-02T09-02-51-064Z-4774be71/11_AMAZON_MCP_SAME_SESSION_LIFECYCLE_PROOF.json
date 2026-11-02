@@ -1,0 +1,23 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:08:21.708Z",
+  "sessionId": "pw_mcp_mvz1d9k5_5a813a6e",
+  "transportMode": "REAL_STDIO_MCP",
+  "serverOrigin": "PINNED_PLAYWRIGHT_MCP",
+  "ownedChildPid": 20104,
+  "startedAt": "2026-11-02T09:07:57.221Z",
+  "lastToolCompletedAt": "2026-11-02T09:08:15.079Z",
+  "closeStartedAt": "2026-11-02T09:08:15.610Z",
+  "closeFinishedAt": "2026-11-02T09:08:15.923Z",
+  "closedAfterLastToolCompleted": true,
+  "allLiveOpsMatchSessionId": true,
+  "ownedChildPidTerminated": true,
+  "mcpSessionClosedCleanly": true,
+  "toolInvocationsCount": 8,
+  "observedOperationIds": [
+    "amz_op_kh02_run_1793610427837_c8ihk_cand_1212440541_mcp_search",
+    "amz_op_6637013783bc",
+    "amz_op_kh02_run_1793610427837_c8ihk_cand_1587534715_mcp_search",
+    "amz_op_dc37f3defaa1"
+  ]
+}

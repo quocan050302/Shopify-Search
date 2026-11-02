@@ -1,0 +1,359 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:03:15.473Z",
+  "suiteFile": "tests/unit/kh02/v12_4_3_7_RealSourceToTop3LiveClosure.test.ts",
+  "allPassed": true,
+  "totalCasesCount": 58,
+  "passedCasesCount": 58,
+  "failedCasesCount": 0,
+  "cases": [
+    {
+      "caseId": "A01",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A01: Unknown observation provenance is rejected and never promoted to LIVE_PROVIDER",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A02",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A02: Synthetic ad record ID (ad_1, meta_ad_test_1, demo_1) cannot become ACTUAL_SOURCE_ID",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A03",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A03: Derived query hash (query_hash_abc123) cannot become ACTUAL_SOURCE_ID or LIVE_PROVIDER",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A04",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A04: Missing providerRequestId remains null and never copies local providerInvocationRef",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A05",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A05: LIVE_ONLY with conflicting non-live policy or failure returns zero promoted observations",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A06",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A06: Cache fallback observations remain CACHED_SOURCE and never promote to LIVE_PROVIDER",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A07",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A07: Seeded fixture observations stay SEEDED_FIXTURE and never count as live or cached",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A08",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A08: Stale historical cache cannot count as current-run live ads in Product Finder ViewModel",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A09",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A09: Non-merchant shell page (/collections/all, /pages/about-us, /cart) cannot become verified physical product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A10",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A10: Irrelevant audience product (Men's Bifold Wallet) is excluded from Pet Gadgets primary shortlist",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A11",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A11: Duplicate variants of the same product family collapse so Top 3 shortlist never repeats the same product",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A12",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group A — Source Trust & Provenance Integrity (12 cases) A12: Shortlist with < 3 eligible products is never padded with rejected or fictional items",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B01",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B01: Feature flag off (KH02_AMAZON_US_ENABLED=false) blocks live MCP/search (DISABLED_BY_DEFAULT)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B02",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B02: Live flag off (KH02_AMAZON_US_LIVE_ALLOWED=false) blocks live MCP/search (LIVE_NOT_ALLOWED)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B03",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B03: Unattested search (KH02_AMAZON_US_LOCAL_MCP_SEARCH_ATTESTED=false) blocks live search (SEARCH_BLOCKED_POLICY)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B04",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B04: Disallowed host (amazon.co.uk, evil.example.com) is rejected for both Search and PDP URLs",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B05",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B05: HTTP, IP literal, URL shortener, and URL credentials are rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B06",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B06: Malformed ASIN (9-char, 11-char, CATEGORIES, BESTSELLER) is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B07",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B07: Sponsored search card (Sponsored, /sspa/click, /gp/slredirect, AdHolder) is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B08",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B08: Missing data-asin search card is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B09",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B09: Missing h2 title search card is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B10",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B10: Missing or mismatched observed href on search card is rejected when requireObservedHref=true",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B11",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B11: Search URL k query parameter mismatch fails queryParameterVerified and returns 0 cards",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B12",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B12: 5-card extraction cap is enforced (max 5 non-sponsored cards retained; 6th+ card rejected)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B13",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B13: Synthesized /dp/<ASIN> without observed href is labeled DERIVED_NORMALIZED_DP, while observed href is OBSERVED_HREF",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B14",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B14: Canonical /clp/<ASIN> link tag is preserved as OBSERVED_CANONICAL while canonicalAmazonUrl is DERIVED_NORMALIZED_DP",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B15",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B15: Search card ASIN != PDP ASIN fails searchIdentityVerdict (MISMATCH_ASIN)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B16",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B16: Search card title token mismatch with PDP title fails searchIdentityVerdict (MISMATCH_TITLE)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B17",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B17: Coupon discount or carousel price is never treated as core price",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B18",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B18: Missing price remains null, never 0",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B19",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B19: Non-US delivery (Deliver to Vietnam) or raw $ without USD/US-ZIP proof leaves verifiedDeliveryMarket=null and commercialUsStatus=UNVERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B20",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group B — Amazon Search/PDP Standalone Contract (20 cases) B20: Standalone reference contract reproduction (B0D3XGHTJ5 faroro TD20 $49.99 USD Sacramento 95829 WECACO /clp/B0D3XGHTJ5 + 4 DISCOVERED_NOT_VERIFIED cards)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C01",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C01: Brand-only match returns BRAND_ONLY / MISSING_IDENTIFIERS and never EXACT_PRODUCT",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C02",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C02: Category-only match with Search->PDP verified returns AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C03",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C03: Accessory/refill mismatch (Replacement Filter Pack vs Main Feeder) is rejected",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C04",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C04: Contradictory model (candidate TD99 vs Amazon TD20) returns CONTRADICTORY_MODEL / REJECTED_IDENTITY",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C05",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C05: Contradictory brand (candidate Furbo vs Amazon faroro) returns CONTRADICTORY_BRAND / REJECTED_IDENTITY",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C06",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C06: Search->PDP verified alone without Meta brand/identifier match never promotes Meta equivalence to EXACT_PRODUCT",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C07",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C07: Search-only card not opened as PDP remains SEARCH_ONLY_NOT_VERIFIED / DISCOVERED_NOT_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C08",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C08: Exact brand + exact model + Search->PDP verified returns META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C09",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C09: Exact brand + exact GTIN + matching tokens returns EXACT_PRODUCT",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C10",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C10: selectAmazonCandidateMatches records searchRankPosition, observedSearchHref, and firstCardDisposition",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C11",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C11: Amazon corroboration never inflates opportunityScore, G07, G15, or G16",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C12",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group C — Meta->Amazon Equivalence Two-Tier Model (12 cases) C12: selectDynamicAmazonVerificationTargets skips IRRELEVANT, REJECTED, UNRESOLVED, and SYNTHETIC_DEMO even when directUrl is provided",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D01",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D01: Unauthenticated/invalid-token POST /api/v1/kh02/research is rejected fail-closed",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D02",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D02: Empty workspaceId in createKH02ResearchRun is rejected with 400 NO_WORKSPACE_CONFIGURED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D03",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D03: Nonexistent workspace is rejected (403/404) and never auto-created in DB",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D04",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D04: Cross-workspace GET /api/v1/kh02/research/runs/[runId] from Workspace B cannot read Workspace A run",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D05",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D05: Cross-workspace loadAmazonEvidenceForRun(wsB, runA) returns zero rows",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D06",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D06: Stale worker lease / mismatched claimToken blocks persistAmazonEvidenceAtomically",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D07",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D07: Aborted AbortSignal blocks persistAmazonEvidenceAtomically with zero rows written",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D08",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D08: Duplicate persistAmazonEvidenceAtomically calls are idempotent and preserve stronger AUTHORIZED_LIVE IDENTITY_VERIFIED rows",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D09",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D09: GET /api/v1/kh02/leaderboard and GET /api/v1/kh02/research are strictly read-only",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D10",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D10: Client-supplied Walmart policy override on POST /api/v1/kh02/research is rejected with HTTP 400 FORBIDDEN_WALMART_POLICY_OVERRIDE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D11",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D11: Client-supplied Amazon policy override on POST /api/v1/kh02/research is rejected with HTTP 400 FORBIDDEN_AMAZON_POLICY_OVERRIDE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D12",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group D — Real API, Worker Fencing, Persistence & Isolation (12 cases) D12: Walmart US remains paused by default (PAUSED_EXTERNAL / BLOCKED_PROVIDER) with 0 outbound HTTP calls",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "E01",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group E — Positive End-to-End Deterministic Wiring (2 cases) E01: Search -> Observed href PDP navigation -> Two-Tier Identity -> DB Persistence -> Read-only API & ViewModel parity",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "E02",
+      "testName": "KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite Group E — Positive End-to-End Deterministic Wiring (2 cases) E02: Category-only Meta candidate opening observed Amazon PDP records AMAZON_SEARCH_PDP_VERIFIED_META_MATCH_UNVERIFIED without false EXACT_PRODUCT promotion",
+      "passed": true,
+      "status": "passed"
+    }
+  ]
+}

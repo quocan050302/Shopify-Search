@@ -1,0 +1,17 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:08:21.691Z",
+  "workspaceId": "ws_v12_4_3_7_live_pet_1793610427546",
+  "researchRunId": "kh02_run_1793610427837_c8ihk",
+  "postHttpStatus": 202,
+  "initialJobStatus": "PENDING",
+  "workerClaimed": true,
+  "workerId": "worker_v12_4_3_7_primary",
+  "claimToken": "96bc57c7-30a7-49ac-8f5c-899a7dd29597",
+  "fencingToken": "c80fc4b8-56ad-4ccc-b213-e874e516941a",
+  "fencingGeneration": 1,
+  "finalJobStatus": "COMPLETED",
+  "workerExecutionSuccess": true,
+  "startedAt": "2026-11-02T09:07:07.853Z",
+  "completedAt": "2026-11-02T09:08:16.182Z"
+}

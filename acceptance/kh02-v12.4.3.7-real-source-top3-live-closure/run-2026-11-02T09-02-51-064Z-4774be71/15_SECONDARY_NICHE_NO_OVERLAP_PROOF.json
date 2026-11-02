@@ -1,0 +1,39 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:08:25.739Z",
+  "primaryNiche": "Pet Gadgets",
+  "secondaryNiche": "Home Organization",
+  "secondaryWorkspaceId": "ws_v12_4_3_7_live_home_1793610427546",
+  "secondaryResearchRunId": "kh02_run_1793610496207_enx4c",
+  "secondaryShortlistCount": 3,
+  "domCardsBeforeReloadCount": 3,
+  "domCardsAfterReloadCount": 3,
+  "crossNicheOverlapCount": 0,
+  "parityPassed": true,
+  "secondaryShortlistCandidates": [
+    {
+      "rank": 1,
+      "candidateId": "cand_296203731",
+      "title": "Stackable Clear Acrylic Shoe Storage Boxes",
+      "storeDomain": "closetcube.example",
+      "canonicalProductUrl": "https://closetcube.example/products/stackable-clear-acrylic-shoe-storage-boxes",
+      "familyKey": "shoe_storage_organizer_box"
+    },
+    {
+      "rank": 2,
+      "candidateId": "cand_1457910739",
+      "title": "Expandable Bamboo Kitchen Drawer Organizer",
+      "storeDomain": "tidyhomeco.example",
+      "canonicalProductUrl": "https://tidyhomeco.example/products/expandable-bamboo-kitchen-drawer-organizer",
+      "familyKey": "kitchen_drawer_organizer"
+    },
+    {
+      "rank": 3,
+      "candidateId": "cand_78267697",
+      "title": "2 Tier Sliding Under Sink Organizer Rack",
+      "storeDomain": "undersinkpro.example",
+      "canonicalProductUrl": "https://undersinkpro.example/products/2-tier-sliding-under-sink-organizer-rack",
+      "familyKey": "under_sink_organizer_rack"
+    }
+  ]
+}

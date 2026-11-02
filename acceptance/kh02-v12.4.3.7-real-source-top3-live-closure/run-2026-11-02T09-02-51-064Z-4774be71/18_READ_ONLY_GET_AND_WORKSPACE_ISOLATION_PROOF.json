@@ -1,0 +1,11 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:08:21.841Z",
+  "readOnlyVerified": true,
+  "dbCountBeforeGets": 2,
+  "dbCountAfterGets": 2,
+  "crossWorkspaceDenied": true,
+  "crossWorkspaceHttpStatus": 403,
+  "walmartPolicyOverrideRejected400": true,
+  "amazonPolicyOverrideRejected400": true
+}

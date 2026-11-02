@@ -1,0 +1,36 @@
+{
+  "codeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "evaluatedAt": "2026-11-02T09:02:52.252Z",
+  "availabilityStatus": "REFERENCE_SUMMARY_ONLY / ORIGINAL_RAW_BUNDLE_UNAVAILABLE",
+  "checkedPaths": [
+    "FINAL_RESULT.json",
+    "operation-ledger.json",
+    "executed_test.py"
+  ],
+  "referenceContractVerified": {
+    "asin": "B0D3XGHTJ5",
+    "brand": "faroro",
+    "model": "TD20",
+    "seller": "WECACO",
+    "price": 49.99,
+    "currency": "USD",
+    "availability": "In Stock",
+    "observedDeliveryPostalCode": "95829",
+    "verifiedDeliveryMarket": "US",
+    "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+    "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+    "canonicalAmazonUrl": "https://www.amazon.com/dp/B0D3XGHTJ5",
+    "observedSearchHref": "https://www.amazon.com/faroro-Automatic-Cat-Feeder-Programmable/dp/B0D3XGHTJ5/ref=sr_1_1",
+    "observedSearchHrefOrigin": "OBSERVED_HREF",
+    "searchIdentityVerdict": "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED",
+    "metaCandidateEquivalenceVerdict": "EXACT_PRODUCT",
+    "combinedIdentityVerdict": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+    "commercialUsStatus": "US_COMMERCIAL_VERIFIED",
+    "discoveredNotVerifiedAsins": [
+      "B0DCNNN5FC",
+      "B0HB9H7CXV",
+      "B0GSR1GTHW",
+      "B0GVSFS68N"
+    ]
+  }
+}
