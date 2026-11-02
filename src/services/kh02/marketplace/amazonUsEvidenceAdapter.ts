@@ -2378,3 +2378,319 @@ export async function runAmazonUsPilotEnrichment(
   };
 }
 
+export interface AmazonDynamicTargetSelectionDecision {
+  candidateId: string;
+  title: string;
+  familyKey: string | null;
+  productKey: string | null;
+  selected: boolean;
+  selectionRank: number | null;
+  verificationRoute: "DIRECT_CANONICAL_PDP" | "BOUNDED_PUBLIC_SEARCH" | "SKIPPED";
+  targetUrlOrQuery: string | null;
+  reasonCode:
+    | "SELECTED_DIRECT_AMAZON_URL"
+    | "SELECTED_SHORTLISTED_DISTINCT_FAMILY"
+    | "SELECTED_ELIGIBLE_CANDIDATE"
+    | "SKIPPED_IRRELEVANT_OR_REJECTED"
+    | "SKIPPED_NON_PHYSICAL_OR_UNRESOLVED"
+    | "SKIPPED_SYNTHETIC_OR_DERIVED_ONLY"
+    | "SKIPPED_DUPLICATE_PRODUCT_OR_FAMILY"
+    | "SKIPPED_INSUFFICIENT_PRODUCT_IDENTITY_FOR_SEARCH"
+    | "SKIPPED_PILOT_TARGET_CAP_REACHED"
+    | "SKIPPED_OPERATION_BUDGET_CAP_REACHED";
+  reasonDetail: string;
+  estimatedOperationsCost: number;
+}
+
+export interface AmazonDynamicTargetSelectionResult {
+  niche: string;
+  selectedCandidates: Array<any>;
+  decisions: AmazonDynamicTargetSelectionDecision[];
+  totalEvaluatedCount: number;
+  selectedCount: number;
+  skippedCount: number;
+  plannedOperationsCount: number;
+  maxTargetsAllowed: number;
+  maxOperationsAllowed: number;
+}
+
+/**
+ * V12.4.3.6 Section 07: Dynamic Amazon Verification Target Selection Policy.
+ *
+ * Selects up to `maxTargetsAllowed` (default 3) eligible physical-product candidates discovered
+ * for the runtime niche (never hardcoded pilot products), respecting the 4-operation budget cap
+ * and recording why every evaluated candidate was selected or skipped.
+ */
+export function selectDynamicAmazonVerificationTargets(
+  candidates: Array<any>,
+  shortlist: Array<any> = [],
+  options?: {
+    niche?: string;
+    candidateAmazonUrls?: Record<string, string>;
+    maxTargetsAllowed?: number;
+    maxOperationsAllowed?: number;
+  }
+): AmazonDynamicTargetSelectionResult {
+  const niche = String(options?.niche || "").trim();
+  const maxTargetsAllowed = Math.max(
+    1,
+    Math.min(AMAZON_PILOT_MAX_CANDIDATES_PER_RUN, options?.maxTargetsAllowed ?? AMAZON_PILOT_MAX_CANDIDATES_PER_RUN)
+  );
+  const maxOperationsAllowed = Math.max(1, Math.min(4, options?.maxOperationsAllowed ?? 4));
+  const urlMap = options?.candidateAmazonUrls || {};
+
+  const shortlistIds = new Set(
+    (Array.isArray(shortlist) ? shortlist : [])
+      .map((s) => s?.candidateId)
+      .filter(Boolean)
+  );
+
+  // Merge shortlist + remaining candidates without duplicates
+  const seenIds = new Set<string>();
+  const combinedPool: Array<any> = [];
+  for (const item of [...(Array.isArray(shortlist) ? shortlist : []), ...(Array.isArray(candidates) ? candidates : [])]) {
+    if (!item || typeof item !== "object") continue;
+    const cid = String(item.candidateId || "");
+    if (!cid || seenIds.has(cid)) continue;
+    seenIds.add(cid);
+    combinedPool.push(item);
+  }
+
+  // Deterministic ordering by direct URL -> shortlisted -> verified identity -> live obs -> relevance -> obs count -> productKey
+  combinedPool.sort((a, b) => {
+    const urlA = Boolean(urlMap[a.candidateId] || a.amazonProductUrl) ? 1 : 0;
+    const urlB = Boolean(urlMap[b.candidateId] || b.amazonProductUrl) ? 1 : 0;
+    if (urlA !== urlB) return urlB - urlA;
+
+    const shortA = shortlistIds.has(a.candidateId) ? 1 : 0;
+    const shortB = shortlistIds.has(b.candidateId) ? 1 : 0;
+    if (shortA !== shortB) return shortB - shortA;
+
+    const verA = a.identityStatus === "VERIFIED" ? 2 : a.identityStatus === "PROBABLE" ? 1 : 0;
+    const verB = b.identityStatus === "VERIFIED" ? 2 : b.identityStatus === "PROBABLE" ? 1 : 0;
+    if (verA !== verB) return verB - verA;
+
+    const liveA = Number(a.liveObservationsCount || 0);
+    const liveB = Number(b.liveObservationsCount || 0);
+    if (liveA !== liveB) return liveB - liveA;
+
+    const relA = Number(a.relevanceScore || 0);
+    const relB = Number(b.relevanceScore || 0);
+    if (relA !== relB) return relB - relA;
+
+    const obsA = Number(a.totalObservationCount || 0);
+    const obsB = Number(b.totalObservationCount || 0);
+    if (obsA !== obsB) return obsB - obsA;
+
+    const keyA = String(a.productKey || a.canonicalProductUrl || a.candidateId || "");
+    const keyB = String(b.productKey || b.canonicalProductUrl || b.candidateId || "");
+    return keyA.localeCompare(keyB);
+  });
+
+  const selectedCandidates: Array<any> = [];
+  const decisions: AmazonDynamicTargetSelectionDecision[] = [];
+  const selectedProductKeys = new Set<string>();
+  const selectedFamilyKeys = new Set<string>();
+  let plannedOperationsCount = 0;
+
+  for (const c of combinedPool) {
+    const cid = String(c.candidateId || "");
+    const title = String(c.canonicalProductName || c.title || cid);
+    const familyKey = c.familyKey ? String(c.familyKey) : null;
+    const productKey = c.productKey ? String(c.productKey) : null;
+    const directUrl = urlMap[cid] || c.amazonProductUrl || null;
+
+    if (
+      !directUrl &&
+      (c.relevanceStatus === "IRRELEVANT" ||
+        c.productRealityStatus === "REJECTED" ||
+        c.productRealityStatus === "NON_PHYSICAL")
+    ) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery: null,
+        reasonCode: "SKIPPED_IRRELEVANT_OR_REJECTED",
+        reasonDetail: `Skipped — candidate relevanceStatus='${c.relevanceStatus || "UNKNOWN"}', productRealityStatus='${c.productRealityStatus || "UNKNOWN"}'.`,
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    if (
+      !directUrl &&
+      (c.identityStatus === "UNRESOLVED" || c.productRealityStatus === "UNRESOLVED")
+    ) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery: null,
+        reasonCode: "SKIPPED_NON_PHYSICAL_OR_UNRESOLVED",
+        reasonDetail: `Skipped — candidate identity is unresolved (${c.identityStatus || "UNRESOLVED"}).`,
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    const obsList: any[] = Array.isArray(c.sourceObservations) ? c.sourceObservations : [];
+    const isSyntheticOnly =
+      !directUrl &&
+      obsList.length > 0 &&
+      obsList.every((o: any) => {
+        const p = typeof o?.provenance === "string" ? o.provenance.toUpperCase() : "";
+        return (
+          p === "SYNTHETIC_DEMO" ||
+          p === "SEEDED_FIXTURE" ||
+          o?.sourceIdOrigin === "SYNTHETIC_REJECTED"
+        );
+      });
+    if (isSyntheticOnly) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery: null,
+        reasonCode: "SKIPPED_SYNTHETIC_OR_DERIVED_ONLY",
+        reasonDetail: "Skipped — candidate is backed only by synthetic demo or seeded fixture records.",
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    if (
+      !directUrl &&
+      ((productKey && selectedProductKeys.has(productKey)) ||
+        (familyKey &&
+          familyKey !== "unresolved_family" &&
+          familyKey !== "UNRESOLVED_FAMILY" &&
+          selectedFamilyKeys.has(familyKey)))
+    ) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery: null,
+        reasonCode: "SKIPPED_DUPLICATE_PRODUCT_OR_FAMILY",
+        reasonDetail: `Skipped — product/family ('${familyKey || productKey}') already has a higher-priority target selected.`,
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    let route: "DIRECT_CANONICAL_PDP" | "BOUNDED_PUBLIC_SEARCH" = "DIRECT_CANONICAL_PDP";
+    let targetUrlOrQuery: string | null = directUrl;
+    const estimatedCost = 1;
+
+    if (!directUrl) {
+      const intents = deriveAmazonSearchIntents(c, niche);
+      if (intents.length === 0) {
+        decisions.push({
+          candidateId: cid,
+          title,
+          familyKey,
+          productKey,
+          selected: false,
+          selectionRank: null,
+          verificationRoute: "SKIPPED",
+          targetUrlOrQuery: null,
+          reasonCode: "SKIPPED_INSUFFICIENT_PRODUCT_IDENTITY_FOR_SEARCH",
+          reasonDetail: "Skipped — candidate lacks specific product title/brand/model tokens for bounded Amazon search.",
+          estimatedOperationsCost: 0,
+        });
+        continue;
+      }
+      route = "BOUNDED_PUBLIC_SEARCH";
+      targetUrlOrQuery = intents[0].normalizedKeywords;
+    }
+
+    if (selectedCandidates.length >= maxTargetsAllowed) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery,
+        reasonCode: "SKIPPED_PILOT_TARGET_CAP_REACHED",
+        reasonDetail: `Skipped — Amazon pilot target cap (${maxTargetsAllowed} candidates/run) reached.`,
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    if (plannedOperationsCount + estimatedCost > maxOperationsAllowed) {
+      decisions.push({
+        candidateId: cid,
+        title,
+        familyKey,
+        productKey,
+        selected: false,
+        selectionRank: null,
+        verificationRoute: "SKIPPED",
+        targetUrlOrQuery,
+        reasonCode: "SKIPPED_OPERATION_BUDGET_CAP_REACHED",
+        reasonDetail: `Skipped — Amazon operation budget cap (${maxOperationsAllowed} operations/run) reached.`,
+        estimatedOperationsCost: 0,
+      });
+      continue;
+    }
+
+    selectedCandidates.push(c);
+    if (productKey) selectedProductKeys.add(productKey);
+    if (familyKey) selectedFamilyKeys.add(familyKey);
+    plannedOperationsCount += estimatedCost;
+
+    decisions.push({
+      candidateId: cid,
+      title,
+      familyKey,
+      productKey,
+      selected: true,
+      selectionRank: selectedCandidates.length,
+      verificationRoute: route,
+      targetUrlOrQuery,
+      reasonCode: directUrl
+        ? "SELECTED_DIRECT_AMAZON_URL"
+        : shortlistIds.has(cid)
+        ? "SELECTED_SHORTLISTED_DISTINCT_FAMILY"
+        : "SELECTED_ELIGIBLE_CANDIDATE",
+      reasonDetail: directUrl
+        ? `Selected for direct canonical PDP verification (${directUrl}).`
+        : `Selected for bounded Amazon corroboration via query '${targetUrlOrQuery}'.`,
+      estimatedOperationsCost: estimatedCost,
+    });
+  }
+
+  return {
+    niche,
+    selectedCandidates,
+    decisions,
+    totalEvaluatedCount: combinedPool.length,
+    selectedCount: selectedCandidates.length,
+    skippedCount: decisions.filter((d) => !d.selected).length,
+    plannedOperationsCount,
+    maxTargetsAllowed,
+    maxOperationsAllowed,
+  };
+}
+

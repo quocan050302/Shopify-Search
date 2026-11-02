@@ -415,6 +415,9 @@ export async function runWalmartUsPilotEnrichment(
       persistenceStatus: "SKIPPED_DISABLED",
       persistenceError: null,
       requestLedger: [],
+      operationalStatus: policy.operationalStatus,
+      upstreamBlockerStatus: policy.upstreamBlockerStatus,
+      priorLiveBlockerReference: policy.priorLiveBlockerReference ?? null,
     };
 
     const summariesByCandidateId: Record<string, WalmartEvidenceSummary> = {};
@@ -1663,6 +1666,9 @@ export async function runWalmartUsPilotEnrichment(
     persistenceStatus: "NOT_APPLICABLE",
     persistenceError: null,
     requestLedger,
+    operationalStatus: policy.operationalStatus,
+    upstreamBlockerStatus: policy.upstreamBlockerStatus,
+    priorLiveBlockerReference: policy.priorLiveBlockerReference ?? null,
   };
 
   const summariesByCandidateId: Record<string, WalmartEvidenceSummary> = {};

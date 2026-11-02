@@ -269,12 +269,39 @@ export function verifyEvergreenCandidateIndependently(
     disqualifiers.push(`Evidence confidence (${evidenceConfidence}/100) is below 65/100 threshold.`);
   }
 
+  const rawObsList: any[] = Array.isArray(candidate?.sourceObservations)
+    ? candidate.sourceObservations
+    : [];
+  if (rawObsList.length > 0) {
+    const hasUntrustedObs = rawObsList.some((o: any) => {
+      const p = typeof o?.provenance === "string" ? o.provenance.toUpperCase() : "";
+      return (
+        p === "SYNTHETIC_DEMO" ||
+        p === "SEEDED_FIXTURE" ||
+        p === "TEST_FIXTURE" ||
+        p === "CONTROLLED_FIXTURE" ||
+        p === "UNKNOWN" ||
+        p === "UNVERIFIED" ||
+        o?.sourceIdOrigin === "INTERNAL_DERIVED" ||
+        o?.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+        o?.evidenceReference === "Ad:raw" ||
+        (Array.isArray(o?.provenanceConflicts) && o.provenanceConflicts.length > 0)
+      );
+    });
+    if (hasUntrustedObs) {
+      disqualifiers.push(
+        "Candidate contains synthetic, fixture, unverified, or internally derived source observations."
+      );
+    }
+  }
+
   const observationRecordIds: string[] = Array.from(
     new Set([
       ...(Array.isArray(candidate?.supportingAdIds) ? candidate.supportingAdIds : []),
-      ...(Array.isArray(candidate?.sourceObservations)
-        ? candidate.sourceObservations.map((o: any) => o.sourceRecordId || o.evidenceReference).filter(Boolean)
-        : []),
+      ...rawObsList
+        .filter((o: any) => o?.sourceIdOrigin !== "INTERNAL_DERIVED" && o?.evidenceReference !== "Ad:raw")
+        .map((o: any) => o.sourceRecordId || o.evidenceReference)
+        .filter(Boolean),
     ])
   );
   if (observationRecordIds.length === 0) {

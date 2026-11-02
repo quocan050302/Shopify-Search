@@ -18,12 +18,32 @@
 import {
   WALMART_NON_INFLATION_NOTICE,
   WalmartEvidenceSummary,
+  WalmartOperationalStatus,
   WalmartPilotPolicy,
   WalmartPilotPolicyLimits,
+  WalmartPriorLiveBlockerReference,
   WalmartProductEvidence,
   WalmartProviderTelemetry,
   WalmartQueryExecutionStatus,
 } from "./walmartJinaTypes";
+
+export const WALMART_2026_11_02_CAPTCHA_BLOCKER_REFERENCE: WalmartPriorLiveBlockerReference = {
+  latestLiveProbeDate: "2026-11-02",
+  status: "BLOCKED_PROVIDER",
+  outerHttpStatus: 200,
+  jinaJsonCode: 200,
+  jinaStatus: 20000,
+  innerFinalUrl:
+    "https://www.walmart.com/blocked?url=L3NlYXJjaD9xPUNob21DaG9tJTIwUm9sbGVyJTIwUGV0JTIwSGFpciUyMFJlbW92ZXI=&uuid=879ab0ec-a2ae-11f0-b0ec-6508305a5841&vid=&g=b",
+  innerPath: "/blocked",
+  pageTitle: "Robot or human?",
+  captchaMarkers: ["px-captcha", "/px/PXu6b0qd2S/init.js", "blockScript"],
+  validatedProductsCount: 0,
+  responseBytes: 16845,
+  responseSha256: "d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4",
+  historicalStandalone20261030Status: "HISTORICAL_ONLY",
+  liveCallsPermittedInNormalRun: false,
+};
 
 export const DEFAULT_WALMART_PILOT_LIMITS: WalmartPilotPolicyLimits = {
   maxConcurrentOperationsPerProviderGroup: 1,
@@ -58,11 +78,17 @@ function parsePositiveIntClamped(
 export function resolveWalmartUsPilotPolicy(
   env: Record<string, string | undefined> = process.env
 ): WalmartPilotPolicy {
+  const forcedPause =
+    String(env.KH02_WALMART_OPERATIONAL_PAUSE || "")
+      .trim()
+      .toLowerCase() === "true";
   const featureEnabled =
+    !forcedPause &&
     String(env.KH02_WALMART_US_ENABLED || "")
       .trim()
       .toLowerCase() === "true";
   const liveAllowed =
+    !forcedPause &&
     featureEnabled &&
     String(env.KH02_WALMART_US_LIVE_ALLOWED || "")
       .trim()
@@ -107,17 +133,21 @@ export function resolveWalmartUsPilotPolicy(
   };
 
   let status: WalmartQueryExecutionStatus = "DISABLED";
+  let operationalStatus: WalmartOperationalStatus = "PAUSED_EXTERNAL";
   let reason = "Server pilot disabled (KH02_WALMART_US_ENABLED=false)";
 
   if (!featureEnabled) {
     status = "DISABLED";
+    operationalStatus = "PAUSED_EXTERNAL";
     reason = "Server pilot disabled";
   } else if (!liveAllowed) {
     status = "NOT_ATTEMPTED";
+    operationalStatus = "ACTIVE_OFFLINE_FIXTURE";
     reason =
       "Walmart US pilot enabled in fixture/offline mode only; live Jina Reader requests blocked by policy (KH02_WALMART_US_LIVE_ALLOWED=false)";
   } else {
     status = "PENDING";
+    operationalStatus = "ACTIVE_LIVE_PILOT";
     reason =
       "Walmart US free Jina Reader REST pilot enabled (no API key required; rate cap <=6 req/60s, <=4 ops/run)";
   }
@@ -126,6 +156,12 @@ export function resolveWalmartUsPilotPolicy(
     provider: "WALMART_US",
     featureEnabled,
     liveAllowed,
+    operationalStatus,
+    upstreamBlockerStatus: "BLOCKED_PROVIDER",
+    priorLiveBlockerReference: {
+      ...WALMART_2026_11_02_CAPTCHA_BLOCKER_REFERENCE,
+      liveCallsPermittedInNormalRun: liveAllowed,
+    },
     freeReaderMode: true,
     requiresApiKey: false,
     authenticated: false,

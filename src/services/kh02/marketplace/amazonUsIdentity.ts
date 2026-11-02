@@ -1116,6 +1116,7 @@ export function parseAmazonProductEvidence(
       requestMode,
       requestedMarket: "US",
       verifiedDeliveryMarket: null,
+      observedDeliveryPostalCode: null,
       sourceUrl: snapshot.sourceUrl || null,
       finalUrl: snapshot.finalUrl || null,
       canonicalAmazonUrl: partial?.canonicalAmazonUrl || null,

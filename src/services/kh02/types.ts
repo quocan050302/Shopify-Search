@@ -279,8 +279,15 @@ export type ObservationProvenance =
   | "MANUAL_IMPORT"
   | "CACHED_SOURCE"
   | "CONTROLLED_FIXTURE"
+  | "SYNTHETIC_DEMO"
+  | "SEEDED_FIXTURE"
   | "UNVERIFIED"
   | "NONE";
+
+export type SourceIdOrigin =
+  | "UPSTREAM_PROVIDER"
+  | "INTERNAL_DERIVED"
+  | "SYNTHETIC_REJECTED";
 
 
 export type ProductMatchConfidence =
@@ -422,6 +429,10 @@ export interface SourceObservation {
   sourceMode?: string | null;
   isCached?: boolean;
   isLiveRecord?: boolean;
+  sourceIdOrigin?: SourceIdOrigin;
+  sourceTimestamp?: string | null;
+  ingestedAt?: string | null;
+  provenanceConflicts?: string[];
 }
 
 export interface ProviderExecutionMetadata {

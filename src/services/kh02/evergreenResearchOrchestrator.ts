@@ -79,7 +79,10 @@ import {
   AmazonProductEvidence,
   AmazonRequestMode,
 } from "./marketplace/marketplaceEvidenceTypes";
-import { runAmazonUsPilotEnrichment } from "./marketplace/amazonUsEvidenceAdapter";
+import {
+  runAmazonUsPilotEnrichment,
+  selectDynamicAmazonVerificationTargets,
+} from "./marketplace/amazonUsEvidenceAdapter";
 import { summarizeAmazonEvidenceForProduct } from "./marketplace/marketplaceEvidencePersistence";
 import {
   EvidenceOrigin,
@@ -734,7 +737,9 @@ export async function runEvergreenProductResearch(
       if (relDiff !== 0) return relDiff;
       const obsDiff = b.totalObservationCount - a.totalObservationCount;
       if (obsDiff !== 0) return obsDiff;
-      return 0;
+      const keyA = String(a.productKey || a.canonicalProductUrl || a.candidateId || "");
+      const keyB = String(b.productKey || b.canonicalProductUrl || b.candidateId || "");
+      return keyA.localeCompare(keyB);
     });
 
     const interleaveGroup = (group: DiscoveredProductCandidate[]) => {
@@ -1756,12 +1761,26 @@ export async function runEvergreenProductResearch(
     };
   }
 
-  // Sort by opportunityScore desc, then evidenceConfidence desc
+  // Sort by opportunityScore desc, then evidenceConfidence desc, then deterministic productKey
   rankedItems.sort((a, b) => {
     const scoreA = a.score.opportunityScore || 0;
     const scoreB = b.score.opportunityScore || 0;
     if (scoreB !== scoreA) return scoreB - scoreA;
-    return b.score.evidenceConfidence - a.score.evidenceConfidence;
+    const confDiff = b.score.evidenceConfidence - a.score.evidenceConfidence;
+    if (confDiff !== 0) return confDiff;
+    const keyA = String(
+      a.candidate.productKey ||
+        a.candidate.canonicalProductUrl ||
+        a.candidate.candidateId ||
+        ""
+    );
+    const keyB = String(
+      b.candidate.productKey ||
+        b.candidate.canonicalProductUrl ||
+        b.candidate.candidateId ||
+        ""
+    );
+    return keyA.localeCompare(keyB);
   });
 
   // ── Stage 10: Partition into Verified Winners, Provisional, Insufficient & Rejected ─
@@ -1895,9 +1914,19 @@ export async function runEvergreenProductResearch(
     researchShortlist.shortlist.map((s) => s.candidateId)
   );
 
-  // V12.4.3.5.0: Optional Guarded Amazon US Product Evidence Pilot (post-scoring, zero G15/G16 or score weight mutation)
+  // V12.4.3.6: Dynamic Amazon US Verification Target Selection (post-scoring, zero G15/G16 or score weight mutation)
+  const amazonTargetSelection = selectDynamicAmazonVerificationTargets(
+    candidates,
+    researchShortlist.shortlist,
+    {
+      niche: input.topic,
+      candidateAmazonUrls: input.amazonPilotCandidateUrls,
+    }
+  );
   const amazonPilotTargets =
-    researchShortlist.shortlist.length > 0
+    amazonTargetSelection.selectedCandidates.length > 0
+      ? amazonTargetSelection.selectedCandidates
+      : researchShortlist.shortlist.length > 0
       ? researchShortlist.shortlist
       : candidates.slice(0, 3);
   const amazonOptIn = Boolean(
@@ -1918,6 +1947,8 @@ export async function runEvergreenProductResearch(
     creatorsApiTransportFactory: input.amazonPilotTransportFactory,
     signal: abortSignal,
   });
+  (amazonEnrichment.marketplaceTelemetry as any).targetSelectionLedger =
+    amazonTargetSelection.decisions;
 
   if (amazonEnrichment.marketplaceEvidence.length > 0) {
     for (const c of candidates) {

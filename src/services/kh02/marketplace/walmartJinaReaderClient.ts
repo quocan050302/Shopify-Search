@@ -60,6 +60,10 @@ const FORBIDDEN_HEADER_NAMES = new Set([
   "x-proxy",
   "x-proxy-url",
   "proxy-authorization",
+  "x-forwarded-for",
+  "x-real-ip",
+  "cf-connecting-ip",
+  "forwarded",
 ]);
 
 export interface WalmartItemIdValidation {

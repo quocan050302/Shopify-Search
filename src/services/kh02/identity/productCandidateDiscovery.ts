@@ -6,8 +6,14 @@
  * the unified 6-level Product Distinctness & Family Engine (Section 5).
  */
 
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
-import { SourceObservation, ProductMatchConfidence } from "../types";
+import {
+  SourceObservation,
+  ProductMatchConfidence,
+  ObservationProvenance,
+  SourceIdOrigin,
+} from "../types";
 import {
   canonicalizeProductUrl,
   extractDomainFromUrl,
@@ -334,7 +340,6 @@ export function mergeDuplicateCandidateRecords(
   duplicate: DiscoveredProductCandidate,
   comparison: PairwiseIdentityComparison
 ): DiscoveredProductCandidate {
-  primary.totalObservationCount += duplicate.totalObservationCount;
   for (const adId of duplicate.supportingAdIds) {
     if (!primary.supportingAdIds.includes(adId)) {
       primary.supportingAdIds.push(adId);
@@ -374,30 +379,42 @@ export function mergeDuplicateCandidateRecords(
   if (!Array.isArray(primary.sourceObservations)) {
     primary.sourceObservations = [];
   }
+  let overlappingObsCount = 0;
   if (Array.isArray(duplicate.sourceObservations)) {
     for (const obs of duplicate.sourceObservations) {
-    const isDupObs = primary.sourceObservations.some((existing) => {
-      if (
-        existing.sourceRecordId &&
-        obs.sourceRecordId &&
-        existing.sourceRecordId === obs.sourceRecordId
-      ) {
-        return true;
+      const isDupObs = primary.sourceObservations.some((existing) => {
+        if (
+          existing.sourceRecordId &&
+          obs.sourceRecordId &&
+          existing.sourceRecordId === obs.sourceRecordId
+        ) {
+          return true;
+        }
+        if (
+          existing.sourceExternalAdId &&
+          obs.sourceExternalAdId &&
+          existing.sourceExternalAdId === obs.sourceExternalAdId
+        ) {
+          return true;
+        }
+        return false;
+      });
+      if (!isDupObs) {
+        primary.sourceObservations.push(obs);
+      } else {
+        overlappingObsCount++;
       }
-      if (
-        existing.sourceExternalAdId &&
-        obs.sourceExternalAdId &&
-        existing.sourceExternalAdId === obs.sourceExternalAdId
-      ) {
-        return true;
-      }
-      return false;
-    });
-    if (!isDupObs) {
-      primary.sourceObservations.push(obs);
     }
   }
-}
+  const netDuplicateObservations = Math.max(
+    0,
+    (duplicate.totalObservationCount || 0) - overlappingObsCount
+  );
+  primary.totalObservationCount = Math.max(
+    primary.sourceObservations.length,
+    (primary.totalObservationCount || 0) + netDuplicateObservations
+  );
+
   if (duplicate.earliestObservationDate) {
     if (
       !primary.earliestObservationDate ||
@@ -429,11 +446,75 @@ export function mergeDuplicateCandidateRecords(
       ])
     );
   }
-  // Prefer verified identity/metadata if duplicate was verified and primary wasn't
+
+  const duplicateObsList = Array.isArray(duplicate.sourceObservations)
+    ? duplicate.sourceObservations
+    : [];
+  const duplicateIsSyntheticOrDerived =
+    duplicateObsList.length > 0 &&
+    duplicateObsList.every((o: any) => {
+      const p = typeof o?.provenance === "string" ? o.provenance.toUpperCase() : "";
+      return (
+        p === "SYNTHETIC_DEMO" ||
+        p === "SEEDED_FIXTURE" ||
+        p === "TEST_FIXTURE" ||
+        p === "CONTROLLED_FIXTURE" ||
+        p === "UNVERIFIED" ||
+        p === "UNKNOWN" ||
+        o?.sourceIdOrigin === "INTERNAL_DERIVED" ||
+        o?.sourceIdOrigin === "SYNTHETIC_REJECTED"
+      );
+    });
+  const duplicateHasLiveObs =
+    (duplicate.liveObservationsCount ?? 0) > 0 ||
+    duplicateObsList.some((o) => isLiveProviderObservation(o));
+  const primaryHasLiveObs =
+    (primary.liveObservationsCount ?? 0) > 0 ||
+    primary.sourceObservations.some((o) => isLiveProviderObservation(o));
+
+  if (!Array.isArray(primary.contradictions)) {
+    primary.contradictions = [];
+  }
+  if (Array.isArray(duplicate.contradictions)) {
+    for (const cNote of duplicate.contradictions) {
+      if (!primary.contradictions.includes(cNote)) {
+        primary.contradictions.push(cNote);
+      }
+    }
+  }
+
+  // Record multi-source conflict notes when duplicate carries a conflicting title or domain
   if (
-    duplicate.identityStatus === "VERIFIED" &&
-    primary.identityStatus !== "VERIFIED"
+    primary.canonicalProductName &&
+    duplicate.canonicalProductName &&
+    primary.canonicalProductName.trim().toLowerCase() !==
+      duplicate.canonicalProductName.trim().toLowerCase()
   ) {
+    const conflictNote = `Multi-source identity conflict: primary '${primary.canonicalProductName}' vs merged '${duplicate.canonicalProductName}'`;
+    if (!primary.contradictions.includes(conflictNote)) {
+      primary.contradictions.push(conflictNote);
+    }
+  }
+  if (
+    primary.storeDomain &&
+    duplicate.storeDomain &&
+    primary.storeDomain.trim().toLowerCase() !==
+      duplicate.storeDomain.trim().toLowerCase()
+  ) {
+    const domainConflict = `Multi-source domain conflict: primary '${primary.storeDomain}' vs merged '${duplicate.storeDomain}'`;
+    if (!primary.contradictions.includes(domainConflict)) {
+      primary.contradictions.push(domainConflict);
+    }
+  }
+
+  // Prefer verified identity/metadata ONLY if duplicate was legitimately verified (never from synthetic/derived-only or cached overwriting live-verified)
+  const canDuplicateUpgradePrimary =
+    duplicate.identityStatus === "VERIFIED" &&
+    primary.identityStatus !== "VERIFIED" &&
+    !duplicateIsSyntheticOrDerived &&
+    !(primaryHasLiveObs && !duplicateHasLiveObs);
+
+  if (canDuplicateUpgradePrimary) {
     primary.identityStatus = "VERIFIED";
     primary.identityConfidence = "EXACT";
     primary.title = duplicate.title;
@@ -443,16 +524,18 @@ export function mergeDuplicateCandidateRecords(
     primary.verificationReason = duplicate.verificationReason;
     primary.fetchOutcome = duplicate.fetchOutcome;
   }
-  if (!primary.sku && duplicate.sku) primary.sku = duplicate.sku;
-  if (!primary.gtin && duplicate.gtin) primary.gtin = duplicate.gtin;
-  if (!primary.model && duplicate.model) primary.model = duplicate.model;
-  if (!primary.brand && duplicate.brand) primary.brand = duplicate.brand;
-  if (!primary.merchantProductId && duplicate.merchantProductId) {
-    primary.merchantProductId = duplicate.merchantProductId;
-  }
-  if (!primary.thumbnailUrl && duplicate.thumbnailUrl) {
-    primary.thumbnailUrl = duplicate.thumbnailUrl;
-    primary.mediaSourceAdId = duplicate.mediaSourceAdId;
+  if (!duplicateIsSyntheticOrDerived) {
+    if (!primary.sku && duplicate.sku) primary.sku = duplicate.sku;
+    if (!primary.gtin && duplicate.gtin) primary.gtin = duplicate.gtin;
+    if (!primary.model && duplicate.model) primary.model = duplicate.model;
+    if (!primary.brand && duplicate.brand) primary.brand = duplicate.brand;
+    if (!primary.merchantProductId && duplicate.merchantProductId) {
+      primary.merchantProductId = duplicate.merchantProductId;
+    }
+    if (!primary.thumbnailUrl && duplicate.thumbnailUrl) {
+      primary.thumbnailUrl = duplicate.thumbnailUrl;
+      primary.mediaSourceAdId = duplicate.mediaSourceAdId;
+    }
   }
 
   primary.mergedCandidateIds = Array.from(
@@ -487,8 +570,9 @@ export function mergeDuplicateCandidateRecords(
 }
 
 /**
- * V12.4.3.3.1 G04/G16: Strictly determines whether an observation originated from a live provider
- * execution rather than a cached/historical fallback record or an untyped record (`sourceType: undefined`).
+ * V12.4.3.3.1 / V12.4.3.6 G04/G16: Strictly determines whether an observation originated from a live provider
+ * execution rather than a cached/historical fallback record, an untyped record (`sourceType: undefined`),
+ * an internally derived ID (`sourceIdOrigin: "INTERNAL_DERIVED"`), or a synthetic/unverified record.
  */
 export function isLiveProviderObservation(
   obs: SourceObservation | Record<string, any> | null | undefined,
@@ -502,7 +586,38 @@ export function isLiveProviderObservation(
     return false;
   }
 
-  // Explicit cache / non-live markers always disqualify (including VERIFIED_SOURCE which is a historical DB marker)
+  // Internally derived or synthetic IDs and placeholder Ad:raw references never qualify as live provider records
+  if (
+    o.sourceIdOrigin === "INTERNAL_DERIVED" ||
+    o.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+    o.evidenceReference === "Ad:raw" ||
+    (Array.isArray(o.provenanceConflicts) && o.provenanceConflicts.length > 0)
+  ) {
+    return false;
+  }
+
+  // Explicit missing sourceUrl without landingPageUrl or providerRequestId disqualifies live observation claim
+  if (
+    "sourceUrl" in o &&
+    !o.sourceUrl &&
+    !(o.landingPageUrl || o.landingUrl) &&
+    !o.providerRequestId
+  ) {
+    return false;
+  }
+
+  // Forged future timestamps disqualify live observation claim
+  const nowLimitMs = Date.now() + 5 * 60 * 1000;
+  for (const tsField of [o.sourceTimestamp, o.observedAt, o.reportedFirstShownAt]) {
+    if (typeof tsField === "string" && tsField.trim().length > 0) {
+      const parsed = new Date(tsField).getTime();
+      if (!Number.isNaN(parsed) && parsed > nowLimitMs) {
+        return false;
+      }
+    }
+  }
+
+  // Explicit cache / non-live / synthetic / unknown markers always disqualify
   const rawProv = typeof o.provenance === "string" ? o.provenance.toUpperCase() : "";
   const rawSourceType =
     typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
@@ -512,10 +627,20 @@ export function isLiveProviderObservation(
     rawProv === "CACHE" ||
     rawProv === "CACHED" ||
     rawProv === "CACHE_ONLY" ||
+    rawProv === "SYNTHETIC_DEMO" ||
+    rawProv === "SEEDED_FIXTURE" ||
+    rawProv === "TEST_FIXTURE" ||
+    rawProv === "CONTROLLED_FIXTURE" ||
+    rawProv === "UNKNOWN" ||
+    rawProv === "UNVERIFIED" ||
+    rawProv === "NONE" ||
     rawSourceType === "CACHED_SOURCE" ||
     rawSourceType === "CACHE" ||
     rawSourceType === "CACHED" ||
     rawSourceType === "CACHE_ONLY" ||
+    rawSourceType === "SYNTHETIC_DEMO" ||
+    rawSourceType === "SEEDED_FIXTURE" ||
+    rawSourceType === "TEST_FIXTURE" ||
     o.isCached === true ||
     o.fromCache === true ||
     o.isLiveRecord === false
@@ -568,6 +693,7 @@ export function isLiveProviderObservation(
 export type MetaLineageRejectionCode =
   | "MISSING_QUERY_ID"
   | "FOREIGN_RUN_QUERY_ID"
+  | "CROSS_WORKSPACE_OBSERVATION"
   | "FAKE_UPSTREAM_AD_ID"
   | "WRONG_PERSISTED_AD_ID"
   | "CACHE_IMPERSONATING_LIVE"
@@ -578,6 +704,7 @@ export type MetaLineageRejectionCode =
   | "NOT_VERIFIED_IDENTITY";
 
 export interface CandidateLineageVerificationContext {
+  workspaceId?: string | null;
   researchRunId?: string | null;
   executedQueryIds?: Set<string> | string[];
   upstreamExternalAdIds?: Set<string> | string[];
@@ -707,6 +834,30 @@ export function verifyCandidateLiveLineageChain(
     const rawSourceType =
       typeof o.sourceType === "string" ? o.sourceType.toUpperCase() : "";
 
+    // Check internal derived ID / synthetic / provenance conflicts
+    if (
+      o.sourceIdOrigin === "INTERNAL_DERIVED" ||
+      o.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+      o.evidenceReference === "Ad:raw"
+    ) {
+      rejectionCodes.add("FAKE_UPSTREAM_AD_ID");
+      rejectionReasons.push(
+        `Observation ${o.sourceRecordId || "unknown"} has internally derived or placeholder ID (${o.sourceIdOrigin || o.evidenceReference}).`
+      );
+      continue;
+    }
+
+    if (
+      Array.isArray(o.provenanceConflicts) &&
+      o.provenanceConflicts.includes("CONTRADICTORY_CACHE_AND_LIVE_PROVENANCE")
+    ) {
+      rejectionCodes.add("CACHE_IMPERSONATING_LIVE");
+      rejectionReasons.push(
+        `Observation ${o.sourceRecordId || "unknown"} carries contradictory cache and live provenance flags.`
+      );
+      continue;
+    }
+
     // Check 5: CACHE_IMPERSONATING_LIVE
     if (
       rawProv === "CACHED_SOURCE" ||
@@ -765,7 +916,19 @@ export function verifyCandidateLiveLineageChain(
       continue;
     }
 
-    // Check 2: FOREIGN_RUN_QUERY_ID
+    // Check 2: FOREIGN_RUN_QUERY_ID & CROSS_WORKSPACE_OBSERVATION
+    if (
+      context?.workspaceId &&
+      o.workspaceId &&
+      o.workspaceId !== context.workspaceId
+    ) {
+      rejectionCodes.add("CROSS_WORKSPACE_OBSERVATION");
+      rejectionReasons.push(
+        `Live observation ${o.sourceRecordId || "unknown"} workspaceId (${o.workspaceId}) does not match current workspace (${context.workspaceId}).`
+      );
+      continue;
+    }
+
     const matchedExecQId =
       executedQSet && executedQSet.size > 0
         ? obsQueryIds.find((qid) => executedQSet.has(qid)) || null
@@ -904,6 +1067,7 @@ export function verifyCandidateLiveLineageChain(
 
   const hasFatalAdversarialViolation =
     rejectionCodes.has("FOREIGN_RUN_QUERY_ID") ||
+    rejectionCodes.has("CROSS_WORKSPACE_OBSERVATION") ||
     rejectionCodes.has("FAKE_UPSTREAM_AD_ID") ||
     rejectionCodes.has("WRONG_PERSISTED_AD_ID") ||
     rejectionCodes.has("ANOTHER_MERCHANTS_AD") ||
@@ -992,55 +1156,317 @@ export function isCandidateLiveVerified(
   return typeof c.liveObservationsCount === "number" && c.liveObservationsCount > 0;
 }
 
+const VALID_OBSERVATION_PROVENANCES = new Set<ObservationProvenance>([
+  "LIVE_PROVIDER",
+  "REAL_UPSTREAM",
+  "CACHED_SOURCE",
+  "VERIFIED_SOURCE",
+  "VERIFIED_IMPORTED",
+  "USER_IMPORTED",
+  "MANUAL_IMPORT",
+  "SYNTHETIC_DEMO",
+  "SEEDED_FIXTURE",
+  "TEST_FIXTURE",
+  "CONTROLLED_FIXTURE",
+  "UNKNOWN",
+  "UNVERIFIED",
+  "NONE",
+]);
+
+/**
+ * V12.4.3.6 Section 04: Deterministic Source Observation Trust-Boundary Normalizer.
+ *
+ * Enforces:
+ * - Zero random ID generation in identity or provenance paths.
+ * - Missing sourceRecordId derives a deterministic content fingerprint with sourceIdOrigin = "INTERNAL_DERIVED".
+ * - Unknown or missing provenance defaults to "UNKNOWN" (never "LIVE_PROVIDER").
+ * - Contradictory provenance flags (e.g., isCached=true + provenance="LIVE_PROVIDER", or forged future timestamps) fail closed.
+ * - verifiedDeliveryMarket remains null unless independently observed (requestedMarket is search intent only).
+ * - Preserves sourceTimestamp, ingestedAt, and observedAt without fabricating upstream timestamps.
+ * - Rejects "Ad:raw" placeholder as verified proof.
+ */
+export function normalizeSourceObservation(
+  rawInput: SourceObservation | Record<string, any> | null | undefined,
+  options?: {
+    sourceMode?: string;
+    referenceNowMs?: number;
+  }
+): SourceObservation {
+  const raw: Record<string, any> =
+    rawInput && typeof rawInput === "object" ? rawInput : {};
+  const source = (raw.source || "META_ADS") as SourceObservation["source"];
+  const landingPageUrl =
+    raw.landingPageUrl || raw.landingUrl || raw.landingPage?.url || null;
+  const sourceUrl = raw.sourceUrl || null;
+  const advertiserDomain =
+    raw.advertiserDomain || raw.advertiser?.domain || null;
+  const advertiserOrCreator =
+    raw.advertiserOrCreator || raw.advertiser?.name || null;
+  const storeDomainEvidence =
+    raw.storeDomainEvidence || raw.advertiser?.domain || null;
+  const title = raw.title ?? raw.headline ?? null;
+  const description = raw.description ?? raw.bodyText ?? null;
+
+  const explicitIdCandidates = [
+    raw.sourceRecordId,
+    raw.id,
+    raw.metaAdId,
+    raw.sourceExternalAdId,
+    raw.upstreamAdId,
+  ];
+  const explicitId =
+    explicitIdCandidates
+      .find((v) => typeof v === "string" && v.trim().length > 0)
+      ?.trim() || null;
+
+  const isPlaceholderEvidenceRef =
+    raw.evidenceReference === "Ad:raw" ||
+    /^ad:raw(?:$|[_:-])/i.test(String(explicitId || "")) ||
+    /^ad:raw$/i.test(String(title || ""));
+  const hasExplicitSourceIdOrigin =
+    raw.sourceIdOrigin === "INTERNAL_DERIVED" ||
+    raw.sourceIdOrigin === "SYNTHETIC_REJECTED" ||
+    raw.sourceIdOrigin === "UPSTREAM_PROVIDER";
+
+  let sourceRecordId: string;
+  let sourceIdOrigin: SourceIdOrigin;
+
+  if (!explicitId || raw.sourceIdOrigin === "INTERNAL_DERIVED" || isPlaceholderEvidenceRef) {
+    const fingerprintPayload = [
+      String(source),
+      String(landingPageUrl || ""),
+      String(sourceUrl || ""),
+      String(advertiserDomain || ""),
+      String(title || ""),
+      String(description || ""),
+    ].join("|");
+    const hex = crypto
+      .createHash("sha256")
+      .update(fingerprintPayload)
+      .digest("hex")
+      .slice(0, 16);
+    sourceRecordId = explicitId || `derived_obs_${hex}`;
+    sourceIdOrigin = "INTERNAL_DERIVED";
+  } else if (raw.sourceIdOrigin === "SYNTHETIC_REJECTED") {
+    sourceRecordId = explicitId;
+    sourceIdOrigin = "SYNTHETIC_REJECTED";
+  } else {
+    sourceRecordId = explicitId;
+    sourceIdOrigin = hasExplicitSourceIdOrigin
+      ? raw.sourceIdOrigin
+      : "UPSTREAM_PROVIDER";
+  }
+
+  const provenanceConflicts: string[] = Array.isArray(raw.provenanceConflicts)
+    ? [...raw.provenanceConflicts]
+    : [];
+
+  const rawProv =
+    typeof raw.provenance === "string"
+      ? raw.provenance.trim().toUpperCase()
+      : "";
+  const rawSourceType =
+    typeof raw.sourceType === "string"
+      ? raw.sourceType.trim().toUpperCase()
+      : "";
+
+  const isExplicitCacheFlag =
+    rawProv === "CACHED_SOURCE" ||
+    rawSourceType === "CACHE" ||
+    rawSourceType === "CACHED" ||
+    rawSourceType === "CACHE_ONLY" ||
+    rawSourceType === "CACHED_SOURCE" ||
+    raw.isCached === true ||
+    raw.fromCache === true ||
+    raw.isLiveRecord === false ||
+    options?.sourceMode === "CACHE_ONLY" ||
+    (options?.sourceMode === "LIVE_WITH_CACHE_FALLBACK" &&
+      (raw.isCached === true ||
+        raw.fromCache === true ||
+        raw.sourceMode === "CACHED" ||
+        rawSourceType === "CACHED_SOURCE"));
+
+  const claimsLive =
+    rawProv === "LIVE_PROVIDER" ||
+    rawSourceType === "LIVE_PROVIDER" ||
+    rawSourceType === "LIVE" ||
+    raw.isLiveRecord === true;
+
+  if (
+    (raw.isCached === true ||
+      raw.fromCache === true ||
+      rawSourceType === "CACHE" ||
+      rawSourceType === "CACHED" ||
+      rawSourceType === "CACHE_ONLY" ||
+      rawSourceType === "CACHED_SOURCE" ||
+      rawProv === "CACHED_SOURCE") &&
+    claimsLive
+  ) {
+    if (!provenanceConflicts.includes("CONTRADICTORY_CACHE_AND_LIVE_PROVENANCE")) {
+      provenanceConflicts.push("CONTRADICTORY_CACHE_AND_LIVE_PROVENANCE");
+    }
+  }
+
+  if (sourceIdOrigin === "INTERNAL_DERIVED" && claimsLive) {
+    if (!provenanceConflicts.includes("INTERNAL_DERIVED_ID_CANNOT_BE_LIVE_PROVIDER")) {
+      provenanceConflicts.push("INTERNAL_DERIVED_ID_CANNOT_BE_LIVE_PROVIDER");
+    }
+  }
+
+  if (isPlaceholderEvidenceRef && claimsLive) {
+    if (!provenanceConflicts.includes("PLACEHOLDER_AD_RAW_EVIDENCE_REF")) {
+      provenanceConflicts.push("PLACEHOLDER_AD_RAW_EVIDENCE_REF");
+    }
+  }
+
+  if (
+    "sourceUrl" in raw &&
+    !sourceUrl &&
+    !landingPageUrl &&
+    !raw.providerRequestId &&
+    claimsLive
+  ) {
+    if (!provenanceConflicts.includes("LIVE_OBSERVATION_MISSING_SOURCE_URL")) {
+      provenanceConflicts.push("LIVE_OBSERVATION_MISSING_SOURCE_URL");
+    }
+  }
+
+  const reportedFirstShownAt =
+    raw.startedAt instanceof Date
+      ? raw.startedAt.toISOString()
+      : raw.reportedFirstShownAt || raw.startedAt || null;
+  const reportedLastShownAt =
+    raw.lastSeenAt instanceof Date
+      ? raw.lastSeenAt.toISOString()
+      : raw.reportedLastShownAt || raw.lastSeenAt || null;
+  const sourceTimestamp: string | null =
+    raw.sourceTimestamp instanceof Date
+      ? raw.sourceTimestamp.toISOString()
+      : raw.sourceTimestamp || reportedFirstShownAt || null;
+  const ingestedAt: string | null =
+    raw.ingestedAt instanceof Date
+      ? raw.ingestedAt.toISOString()
+      : raw.ingestedAt || null;
+
+  const refNowMs = options?.referenceNowMs ?? Date.now();
+  const futureToleranceMs = 5 * 60 * 1000;
+  for (const [tsLabel, tsVal] of [
+    ["FORGED_FUTURE_SOURCE_TIMESTAMP", sourceTimestamp],
+    ["FORGED_FUTURE_OBSERVED_AT_TIMESTAMP", raw.observedAt],
+  ] as const) {
+    if (typeof tsVal === "string" && tsVal.trim().length > 0) {
+      const parsed = new Date(tsVal).getTime();
+      if (!Number.isNaN(parsed) && parsed > refNowMs + futureToleranceMs) {
+        if (!provenanceConflicts.includes(tsLabel)) {
+          provenanceConflicts.push(tsLabel);
+        }
+      }
+    }
+  }
+
+  let normalizedProvenance: ObservationProvenance;
+  if (provenanceConflicts.includes("CONTRADICTORY_CACHE_AND_LIVE_PROVENANCE")) {
+    normalizedProvenance = "CACHED_SOURCE";
+  } else if (provenanceConflicts.length > 0) {
+    normalizedProvenance = "UNVERIFIED";
+  } else if (isExplicitCacheFlag) {
+    normalizedProvenance = "CACHED_SOURCE";
+  } else if (
+    sourceIdOrigin === "INTERNAL_DERIVED" ||
+    sourceIdOrigin === "SYNTHETIC_REJECTED"
+  ) {
+    normalizedProvenance =
+      rawProv === "SYNTHETIC_DEMO" ||
+      rawProv === "SEEDED_FIXTURE" ||
+      rawProv === "TEST_FIXTURE" ||
+      rawProv === "CONTROLLED_FIXTURE"
+        ? (rawProv as ObservationProvenance)
+        : "UNVERIFIED";
+  } else if (
+    rawProv &&
+    VALID_OBSERVATION_PROVENANCES.has(rawProv as ObservationProvenance)
+  ) {
+    normalizedProvenance = rawProv as ObservationProvenance;
+  } else {
+    normalizedProvenance = "UNKNOWN";
+  }
+
+  const normalizedEvidenceReference = isPlaceholderEvidenceRef
+    ? null
+    : raw.evidenceReference || (explicitId ? `Ad:${explicitId}` : null);
+
+  const observedAt: string =
+    (typeof raw.observedAt === "string" && raw.observedAt.trim().length > 0
+      ? raw.observedAt
+      : null) ||
+    ingestedAt ||
+    sourceTimestamp ||
+    new Date(refNowMs).toISOString();
+
+  const normalizedObs: SourceObservation = {
+    ...(raw as any),
+    source,
+    sourceRecordId,
+    sourceIdOrigin,
+    sourceExternalAdId:
+      raw.sourceExternalAdId || raw.metaAdId || explicitId || null,
+    sourceUrl,
+    landingPageUrl,
+    storeDomainEvidence,
+    advertiserOrCreator,
+    advertiserDomain,
+    productMatchHint:
+      raw.productMatchHint || raw.headline || raw.title || null,
+    reportedPublishedAt: raw.reportedPublishedAt ?? null,
+    reportedFirstShownAt,
+    reportedLastShownAt,
+    sourceTimestamp,
+    ingestedAt,
+    observedAt,
+    requestedMarket: raw.requestedMarket || "US",
+    verifiedDeliveryMarket: raw.verifiedDeliveryMarket ?? null,
+    title,
+    description,
+    metrics: raw.metrics || {},
+    media: raw.media || {
+      thumbnailUrl: raw.thumbnailUrl || null,
+      videoUrl: raw.videoUrl || null,
+      mediaType: raw.mediaType || null,
+    },
+    provenance: normalizedProvenance,
+    provenanceConflicts:
+      provenanceConflicts.length > 0 ? provenanceConflicts : undefined,
+    evidenceReference: normalizedEvidenceReference,
+  };
+
+  // Preserve explicit undefined sourceType only if originally present on raw (so UNDEFINED_SOURCE_TYPE check still sees it)
+  if ("sourceType" in raw && raw.sourceType === undefined) {
+    normalizedObs.sourceType = undefined;
+  } else if (provenanceConflicts.length > 0 || normalizedProvenance === "CACHED_SOURCE") {
+    normalizedObs.isLiveRecord = false;
+  }
+
+  return normalizedObs;
+}
+
 /**
  * Extracts consolidated product candidates from multi-source ad observations.
  */
 export function discoverProductCandidatesFromAds(
   rawObservations: Array<SourceObservation | Record<string, any>>,
   topic: string = "general",
-  options?: { plannedArchetypes?: PlannedProductArchetype[] }
+  options?: {
+    plannedArchetypes?: PlannedProductArchetype[];
+    sourceMode?: string;
+    referenceNowMs?: number;
+  }
 ): DiscoveredProductCandidate[] {
-  const observations: SourceObservation[] = rawObservations.map((raw: any) => {
-    if (raw && typeof raw.source === "string" && ("sourceRecordId" in raw || "title" in raw)) {
-      return raw as SourceObservation;
-    }
-    return {
-      source: raw.source || "META_ADS",
-      sourceRecordId: raw.sourceRecordId || raw.id || raw.metaAdId || `ad_${Math.random().toString(36).slice(2, 8)}`,
-      sourceExternalAdId: raw.sourceExternalAdId || raw.metaAdId || raw.id || null,
-      sourceUrl: raw.sourceUrl || null,
-      landingPageUrl: raw.landingPageUrl || raw.landingUrl || raw.landingPage?.url || null,
-      storeDomainEvidence: raw.storeDomainEvidence || raw.advertiser?.domain || null,
-      advertiserOrCreator: raw.advertiserOrCreator || raw.advertiser?.name || null,
-      advertiserDomain: raw.advertiserDomain || raw.advertiser?.domain || null,
-      productMatchHint: raw.productMatchHint || raw.headline || raw.title || null,
-      reportedPublishedAt: null,
-      reportedFirstShownAt: raw.startedAt instanceof Date ? raw.startedAt.toISOString() : raw.startedAt || null,
-      reportedLastShownAt: raw.lastSeenAt instanceof Date ? raw.lastSeenAt.toISOString() : raw.lastSeenAt || null,
-      observedAt: raw.observedAt || new Date().toISOString(),
-      requestedMarket: raw.requestedMarket || "US",
-      verifiedDeliveryMarket: raw.verifiedDeliveryMarket || "US",
-      title: raw.title ?? raw.headline ?? null,
-      description: raw.description ?? raw.bodyText ?? null,
-      metrics: raw.metrics || {},
-      media: raw.media || {
-        thumbnailUrl: raw.thumbnailUrl || null,
-        videoUrl: raw.videoUrl || null,
-        mediaType: raw.mediaType || null,
-      },
-      provenance:
-        raw.provenance === "CACHED_SOURCE" ||
-        raw.sourceType === "CACHE" ||
-        raw.sourceType === "CACHED" ||
-        raw.sourceType === "CACHE_ONLY" ||
-        raw.isCached === true ||
-        raw.fromCache === true ||
-        raw.isLiveRecord === false
-          ? "CACHED_SOURCE"
-          : raw.provenance || "LIVE_PROVIDER",
-      evidenceReference: raw.evidenceReference || `Ad:${raw.id || "raw"}`,
-    } as SourceObservation;
-  });
+  const observations: SourceObservation[] = rawObservations.map((raw: any) =>
+    normalizeSourceObservation(raw, {
+      sourceMode: options?.sourceMode,
+      referenceNowMs: options?.referenceNowMs,
+    })
+  );
 
   const candidateMap = new Map<
     string,
@@ -1981,6 +2407,7 @@ export function selectTopResearchShortlist(
     topic?: string;
     allowSameFamilyAlternativesOnShortfall?: boolean;
     allowSameStoreMultipleSlots?: boolean;
+    allowSyntheticFixtures?: boolean;
     executedQueryIds?: string[] | Set<string>;
   }
 ): ResearchShortlistResult {
@@ -2007,6 +2434,25 @@ export function selectTopResearchShortlist(
 
   // 1. Filter candidates through the mandatory Product Reality Gate
   const realityPassed = candidates.filter((c) => {
+    // Reject purely synthetic demo / seeded fixture candidates from real shortlist unless explicitly permitted
+    if (options?.allowSyntheticFixtures !== true) {
+      const obsList = Array.isArray(c.sourceObservations) ? c.sourceObservations : [];
+      if (
+        obsList.length > 0 &&
+        obsList.every((o: any) => {
+          const p = typeof o?.provenance === "string" ? o.provenance.toUpperCase() : "";
+          return (
+            p === "SYNTHETIC_DEMO" ||
+            p === "SEEDED_FIXTURE" ||
+            o?.sourceIdOrigin === "SYNTHETIC_REJECTED"
+          );
+        })
+      ) {
+        c.productRealityStatus = "REJECTED";
+        c.productRealityReason = "Excluded — Candidate is backed only by synthetic demo or seeded fixture observations.";
+        return false;
+      }
+    }
     if (!c.audienceRelevance && options?.topic) {
       c.audienceRelevance = evaluateProductAudienceRelevance(c, options.topic);
     }
@@ -2032,7 +2478,7 @@ export function selectTopResearchShortlist(
 
   // 2. Sort eligible candidates: when current-run executedQueryIds are provided (G04), prioritize
   //    current-run live-grounded candidates ahead of cache-only fallbacks; within each tier, prefer
-  //    VERIFIED identity, higher relevance score, video media, and observation count.
+  //    VERIFIED identity, higher relevance score, video media, observation count, and deterministic productKey.
   realityPassed.sort((a, b) => {
     const liveA = isLiveGroundedForCurrentRun(a) ? 1 : 0;
     const liveB = isLiveGroundedForCurrentRun(b) ? 1 : 0;
@@ -2048,7 +2494,11 @@ export function selectTopResearchShortlist(
     const vidA = a.videoUrl ? 1 : 0;
     const vidB = b.videoUrl ? 1 : 0;
     if (vidA !== vidB) return vidB - vidA;
-    return b.totalObservationCount - a.totalObservationCount;
+    const obsDiff = b.totalObservationCount - a.totalObservationCount;
+    if (obsDiff !== 0) return obsDiff;
+    const keyA = String(a.productKey || a.canonicalProductUrl || a.candidateId || "");
+    const keyB = String(b.productKey || b.canonicalProductUrl || b.candidateId || "");
+    return keyA.localeCompare(keyB);
   });
 
   // 3. Consolidate actual product duplicates via clusterProductCandidates (F01, B11–B17)

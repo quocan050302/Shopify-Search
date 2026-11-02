@@ -80,10 +80,36 @@ export interface WalmartPilotPolicyLimits {
   maxNextDataBytes: number;
 }
 
+export type WalmartOperationalStatus =
+  | "PAUSED_EXTERNAL"
+  | "ACTIVE_OFFLINE_FIXTURE"
+  | "ACTIVE_LIVE_PILOT"
+  | "DISABLED";
+
+export interface WalmartPriorLiveBlockerReference {
+  latestLiveProbeDate: string;
+  status: "BLOCKED_PROVIDER";
+  outerHttpStatus: number;
+  jinaJsonCode: number;
+  jinaStatus: number;
+  innerFinalUrl: string;
+  innerPath: string;
+  pageTitle: string;
+  captchaMarkers: string[];
+  validatedProductsCount: number;
+  responseBytes: number;
+  responseSha256: string;
+  historicalStandalone20261030Status: "HISTORICAL_ONLY";
+  liveCallsPermittedInNormalRun: boolean;
+}
+
 export interface WalmartPilotPolicy {
   provider: "WALMART_US";
   featureEnabled: boolean;
   liveAllowed: boolean;
+  operationalStatus?: WalmartOperationalStatus;
+  upstreamBlockerStatus?: "BLOCKED_PROVIDER";
+  priorLiveBlockerReference?: WalmartPriorLiveBlockerReference;
   freeReaderMode: true;
   requiresApiKey: false;
   authenticated: false;
@@ -366,6 +392,9 @@ export interface WalmartProviderTelemetry {
   persistenceStatus: "NOT_APPLICABLE" | "PERSISTED" | "PERSISTENCE_FAILED" | "SKIPPED_DISABLED";
   persistenceError: string | null;
   requestLedger: WalmartProviderRequestRecord[];
+  operationalStatus?: WalmartOperationalStatus;
+  upstreamBlockerStatus?: WalmartQueryExecutionStatus;
+  priorLiveBlockerReference?: WalmartPriorLiveBlockerReference | null;
 }
 
 export interface WalmartEvidenceSummary {
