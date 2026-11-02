@@ -1641,7 +1641,7 @@ export async function collectKh02AcceptanceDiagnostics(params: {
             : distinctFamiliesCount >= reqTargets &&
               rawAsinsCount >= reqTargets &&
               distinctCandidatesCount >= reqTargets &&
-              sessionClosed !== false
+              sessionClosed === true
             ? "PASS"
             : pageObsStatus === "BLOCKED_CAPTCHA_OR_BOT_WALL"
             ? "BLOCKED"
@@ -1907,51 +1907,250 @@ export interface ComputeReleaseVerdictsInput {
     gateChanges: number;
     nonInflationVerified: boolean;
   };
-  e2eExecutionSummary?: {
-    totalSpecs: number;
-    executedSpecsCount?: number;
-    passedSpecsCount: number;
-    failedSpecsCount: number;
-    envPrerequisiteBlockedSpecsCount?: number;
-    skippedWithoutAttemptCount: number;
-  };
-  e2eSpecsSummary?: {
-    totalSpecs: number;
-    executedSpecsCount?: number;
-    passedSpecsCount: number;
-    failedSpecsCount: number;
-    envPrerequisiteBlockedSpecsCount?: number;
-    skippedWithoutAttemptCount: number;
-  };
-  nicheRelevanceSummary?: {
-    crossNicheFalsePositivesInDevTop3?: number;
-    crossNicheFalsePositivesInHoldoutTop3?: number;
-    devCrossNicheFalsePositives?: number;
-    holdoutCrossNicheFalsePositives?: number;
-    paddedWithMismatchOrUncertainCount?: number;
-    devShortlistCount?: number;
-    devNicheMatchedCount?: number;
-    devNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
-    holdoutShortlistCount?: number;
-    holdoutNicheMatchedCount?: number;
-    holdoutNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
-    nicheUnitAndReplayTestsPassed?: boolean;
-  };
-  historicalIdentitySummary?: {
-    devVerifiedIdentityCount?: number;
-    holdoutVerifiedIdentityCount?: number;
-    holdoutFunnelProbableCount?: number;
-    holdoutIdentityCoverageStatus?: "SUFFICIENT_VERIFIED_IDENTITY" | "INSUFFICIENT_VERIFIED_IDENTITY";
-    urlPathOnlyPromotedToVerifiedCount?: number;
-    funnelPromotedToVerifiedCount?: number;
-    discoveryRefsCopiedToIndependentProofCount?: number;
-    g16PreviousSnapshotClaimedVerifiedCount?: number;
-    g16VerifiedFromPersistedEvidenceCount?: number;
-    g16ReconstructionStatus?: string;
-    g16SyntheticHydrationUsed?: boolean;
-  };
+  e2eExecutionSummary?:
+    | RequiredEvidenceSummary<E2eExecutionSummaryData>
+    | E2eExecutionSummaryData
+    | null;
+  e2eSpecsSummary?:
+    | RequiredEvidenceSummary<E2eExecutionSummaryData>
+    | E2eExecutionSummaryData
+    | null;
+  nicheRelevanceSummary?:
+    | RequiredEvidenceSummary<NicheRelevanceSummaryData>
+    | NicheRelevanceSummaryData
+    | null;
+  historicalIdentitySummary?:
+    | RequiredEvidenceSummary<HistoricalIdentitySummaryData>
+    | HistoricalIdentitySummaryData
+    | null;
+  liveDbApiDomParitySummary?:
+    | RequiredEvidenceSummary<LiveDbApiDomParitySummaryData>
+    | LiveDbApiDomParitySummaryData
+    | null;
   negativeMutationsCaught: string;
   ancestryVerified: boolean;
+}
+
+export interface RequiredEvidenceSummary<T> {
+  present?: boolean;
+  status?: "MEASURED" | "INCOMPLETE" | "FAIL" | string;
+  sourceSha: string | null;
+  observedAt: string | null;
+  sourceArtifactPath?: string | null;
+  data: T | null;
+}
+
+export function validateRequiredEvidenceSummary<T extends Record<string, any>>(
+  summary: RequiredEvidenceSummary<T> | T | null | undefined,
+  expectedCodeSha: string
+): {
+  status: "PASS" | "FAIL" | "INCOMPLETE";
+  reason: string;
+  unwrapped: T | null;
+  sourceSha: string | null;
+} {
+  if (summary === null || summary === undefined || typeof summary !== "object") {
+    return {
+      status: "INCOMPLETE",
+      reason: "MISSING_EVIDENCE_SUMMARY",
+      unwrapped: null,
+      sourceSha: null,
+    };
+  }
+  const cleanExpected = (expectedCodeSha || "").trim();
+  if (
+    typeof (summary as RequiredEvidenceSummary<T>).present === "boolean" ||
+    "data" in summary
+  ) {
+    const wrapped = summary as RequiredEvidenceSummary<T>;
+    if (wrapped.status === "FAIL") {
+      return {
+        status: "FAIL",
+        reason: "EVIDENCE_SUMMARY_STATUS_FAIL",
+        unwrapped: wrapped.data ?? null,
+        sourceSha: wrapped.sourceSha ?? null,
+      };
+    }
+    if (
+      wrapped.present === false ||
+      wrapped.status === "INCOMPLETE" ||
+      !wrapped.data ||
+      typeof wrapped.data !== "object"
+    ) {
+      return {
+        status: "INCOMPLETE",
+        reason: "EVIDENCE_SUMMARY_NOT_PRESENT",
+        unwrapped: null,
+        sourceSha: wrapped.sourceSha ?? null,
+      };
+    }
+    const sha = (wrapped.sourceSha ?? (wrapped.data as any).sourceSha ?? "").trim();
+    if (!sha) {
+      return {
+        status: "INCOMPLETE",
+        reason: "MISSING_SOURCE_SHA",
+        unwrapped: wrapped.data,
+        sourceSha: null,
+      };
+    }
+    if (cleanExpected && sha !== cleanExpected) {
+      return {
+        status: "FAIL",
+        reason: "SOURCE_SHA_MISMATCH",
+        unwrapped: wrapped.data,
+        sourceSha: sha,
+      };
+    }
+    if (!wrapped.observedAt || Number.isNaN(Date.parse(wrapped.observedAt))) {
+      return {
+        status: "INCOMPLETE",
+        reason: "INVALID_OBSERVED_AT",
+        unwrapped: wrapped.data,
+        sourceSha: sha,
+      };
+    }
+    if (
+      wrapped.sourceArtifactPath !== undefined &&
+      wrapped.sourceArtifactPath !== null &&
+      !String(wrapped.sourceArtifactPath).trim()
+    ) {
+      return {
+        status: "INCOMPLETE",
+        reason: "MISSING_SOURCE_ARTIFACT_PATH",
+        unwrapped: wrapped.data,
+        sourceSha: sha,
+      };
+    }
+    return {
+      status: "PASS",
+      reason: "VALID",
+      unwrapped: wrapped.data,
+      sourceSha: sha,
+    };
+  }
+
+  const direct = summary as T;
+  const sha = typeof (direct as any).sourceSha === "string"
+    ? (direct as any).sourceSha.trim()
+    : "";
+  if (cleanExpected && sha && sha !== cleanExpected) {
+    return {
+      status: "FAIL",
+      reason: "SOURCE_SHA_MISMATCH",
+      unwrapped: direct,
+      sourceSha: sha,
+    };
+  }
+  if (cleanExpected && !sha) {
+    return {
+      status: "INCOMPLETE",
+      reason: "MISSING_SOURCE_SHA",
+      unwrapped: direct,
+      sourceSha: null,
+    };
+  }
+  return {
+    status: "PASS",
+    reason: "VALID",
+    unwrapped: direct,
+    sourceSha: sha || null,
+  };
+}
+
+export interface E2eExecutionSummaryData {
+  sourceSha?: string | null;
+  observedAt?: string | null;
+  sourceArtifactPath?: string | null;
+  totalSpecs: number;
+  executedSpecsCount?: number;
+  passedSpecsCount: number;
+  failedSpecsCount: number;
+  envPrerequisiteBlockedSpecsCount?: number;
+  skippedWithoutAttemptCount: number;
+  totalE2ETestCases?: number;
+  passedE2ETestCases?: number;
+  failedE2ETestCases?: number;
+  specReceipts?: Array<{
+    specFile: string;
+    attempted: boolean;
+    passed: boolean;
+    failed: boolean;
+    envPrerequisiteBlocked: boolean;
+    exitCode: number | null;
+    durationMs: number;
+  }>;
+}
+
+export interface NicheRelevanceSummaryData {
+  sourceSha?: string | null;
+  observedAt?: string | null;
+  sourceArtifactPath?: string | null;
+  targetNiche?: string | null;
+  nicheTestsPassed?: boolean;
+  nicheUnitAndReplayTestsPassed?: boolean;
+  paddingDetectedCount?: number;
+  unrelatedAcceptedCount?: number;
+  crossNicheFalsePositiveAcceptedCount?: number;
+  crossNicheFalsePositivesInDevTop3?: number;
+  crossNicheFalsePositivesInHoldoutTop3?: number;
+  devCrossNicheFalsePositives?: number;
+  holdoutCrossNicheFalsePositives?: number;
+  ambiguousNicheAcceptedCount?: number;
+  brandOnlyFalsePositiveAcceptedCount?: number;
+  shortlistPaddedWithUnrelatedCount?: number;
+  paddedWithMismatchOrUncertainCount?: number;
+  devShortlistCount?: number;
+  devNicheMatchedCount?: number;
+  devNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+  holdoutShortlistCount?: number;
+  holdoutNicheMatchedCount?: number;
+  holdoutNicheMismatchesCount?: number;
+  holdoutNicheMismatches?: any[];
+  holdoutNicheCoverageStatus?: "SUFFICIENT_NICHE_COVERAGE" | "INSUFFICIENT_NICHE_COVERAGE";
+}
+
+export interface HistoricalIdentitySummaryData {
+  sourceSha?: string | null;
+  observedAt?: string | null;
+  sourceArtifactPath?: string | null;
+  devShortlistCount?: number;
+  devVerifiedIdentityCount?: number;
+  holdoutShortlistCount?: number;
+  holdoutVerifiedIdentityCount?: number;
+  holdoutFunnelProbableCount?: number;
+  holdoutIdentityCoverageStatus?: "SUFFICIENT_VERIFIED_IDENTITY" | "INSUFFICIENT_VERIFIED_IDENTITY";
+  urlPathSlugPromotedToVerifiedCount?: number;
+  urlPathOnlyPromotedToVerifiedCount?: number;
+  funnelOrCheckoutChampPromotedToVerifiedCount?: number;
+  funnelPromotedToVerifiedCount?: number;
+  discoveryRefsCopiedToIndependentProofCount?: number;
+  postCutoffObservationsIncludedCount?: number;
+  syntheticFixturesPromotedToLiveCount?: number;
+  g16PreviousSnapshotClaimedVerifiedCount?: number;
+  g16VerifiedFromPersistedEvidenceCount?: number;
+  g16ReconstructionStatus?: string;
+  g16SyntheticHydrationUsed?: boolean;
+}
+
+export interface LiveDbApiDomParitySummaryData {
+  sourceSha?: string | null;
+  observedAt?: string | null;
+  sourceArtifactPath?: string | null;
+  amazonLiveDbApiDomParityVerdict?: "PASS" | "NOT_PROVEN" | "BLOCKED" | "FAIL" | string;
+  walmartLiveDbApiDomParityVerdict?: "PASS" | "BLOCKED_PROVIDER" | "NOT_PROVEN" | "FAIL" | string;
+  engineeringFixtureParityVerdict?: "PASS" | "FAIL" | "INCOMPLETE" | string;
+  overallLiveDbApiDomParityVerdict?:
+    | "AMAZON_LIVE_PARITY_PASS_WALMART_BLOCKED_PROVIDER"
+    | "PASS"
+    | "NOT_PROVEN"
+    | "FAIL"
+    | string;
+  liveDbApiDomParityStatus?: string;
+  fixtureParityStatus?: string;
+  candidateLineageCount?: number;
+  allCandidatesMatched?: boolean;
+  verifiedLiveAmazonProductFamiliesCount?: number;
+  verifiedLiveWalmartProductFamiliesCount?: number;
 }
 
 export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
@@ -2041,7 +2240,7 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     amzMcpGate?.productIdentityPilotVerdict === "PASS" &&
     mcpDistinctFamilies >= mcpRequiredTargets &&
     mcpRawAsins >= mcpRequiredTargets &&
-    mcpSessionClosed !== false
+    mcpSessionClosed === true
       ? "PASS"
       : amzMcpGate?.productIdentityPilotVerdict === "BLOCKED" ||
         amazonLocalMcpLiveObservationVerdict === "BLOCKED_PROVIDER"
@@ -2145,33 +2344,59 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       ? "PASS"
       : "FAIL";
 
-  const e2eSummary = input.e2eExecutionSummary || input.e2eSpecsSummary;
+  // P0-A: Fail-closed REQUIRED_E2E_COVERAGE (never defaults to PASS when absent/null/wrong-SHA)
+  const rawE2eSummaryInput = input.e2eExecutionSummary ?? input.e2eSpecsSummary;
+  const e2eValidation = validateRequiredEvidenceSummary<E2eExecutionSummaryData>(
+    rawE2eSummaryInput,
+    input.codeSha
+  );
+  const e2eSummary = e2eValidation.unwrapped;
+  const e2eComputedExecuted = e2eSummary
+    ? Number(e2eSummary.passedSpecsCount ?? 0) +
+      Number(e2eSummary.failedSpecsCount ?? 0) +
+      Number(e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0)
+    : 0;
   const e2eExecutedCount =
-    e2eSummary?.executedSpecsCount ??
-    (e2eSummary
-      ? e2eSummary.passedSpecsCount +
-        e2eSummary.failedSpecsCount +
-        (e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0)
-      : 0);
+    e2eSummary?.executedSpecsCount ?? e2eComputedExecuted;
+  const e2eReceiptsMismatch =
+    e2eSummary &&
+    typeof e2eSummary.executedSpecsCount === "number" &&
+    e2eSummary.executedSpecsCount !== e2eComputedExecuted;
+  const e2eSpecReceiptsArrayMismatch =
+    e2eSummary &&
+    Array.isArray(e2eSummary.specReceipts) &&
+    (e2eSummary.specReceipts.length !== e2eSummary.totalSpecs ||
+      e2eSummary.specReceipts.filter((r) => r.attempted).length !== e2eExecutedCount ||
+      e2eSummary.specReceipts.filter((r) => r.passed).length !==
+        e2eSummary.passedSpecsCount ||
+      e2eSummary.specReceipts.filter((r) => r.failed).length !==
+        e2eSummary.failedSpecsCount);
 
   const requiredE2eCoverageVerdict:
     | "PASS"
     | "ENV_PREREQUISITE_BLOCKED"
     | "FAIL"
-    | "INCOMPLETE" = !e2eSummary
-    ? engineeringVerdict === "PASS"
+    | "INCOMPLETE" =
+    e2eValidation.status === "FAIL"
+      ? "FAIL"
+      : !e2eSummary || e2eValidation.status === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : e2eSummary.failedSpecsCount > 0 ||
+        e2eReceiptsMismatch ||
+        e2eSpecReceiptsArrayMismatch
+      ? "FAIL"
+      : typeof e2eSummary.totalSpecs !== "number" ||
+        e2eSummary.totalSpecs < 12 ||
+        e2eSummary.skippedWithoutAttemptCount > 0 ||
+        e2eExecutedCount < e2eSummary.totalSpecs
+      ? "INCOMPLETE"
+      : (e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0) > 0
+      ? "ENV_PREREQUISITE_BLOCKED"
+      : e2eSummary.passedSpecsCount === e2eSummary.totalSpecs &&
+        e2eSummary.failedSpecsCount === 0 &&
+        e2eSummary.skippedWithoutAttemptCount === 0
       ? "PASS"
-      : "INCOMPLETE"
-    : e2eSummary.skippedWithoutAttemptCount > 0 ||
-      e2eExecutedCount < e2eSummary.totalSpecs
-    ? "INCOMPLETE"
-    : e2eSummary.failedSpecsCount > 0
-    ? "FAIL"
-    : (e2eSummary.envPrerequisiteBlockedSpecsCount ?? 0) > 0
-    ? "ENV_PREREQUISITE_BLOCKED"
-    : e2eSummary.passedSpecsCount === e2eSummary.totalSpecs
-    ? "PASS"
-    : "INCOMPLETE";
+      : "INCOMPLETE";
 
   const historicalReplayIntegrityVerdict: "PASS" | "FAIL" =
     input.backtestOutput?.backtestEngineExecuted === "PASS" &&
@@ -2180,43 +2405,242 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
       ? "PASS"
       : "FAIL";
 
-  const holdoutMismatchesCount =
+  // P0-A: Fail-closed NICHE_RELEVANCE (never defaults to PASS when absent/null/wrong-SHA; no ?? true or ?? 3)
+  const nrValidation = validateRequiredEvidenceSummary<NicheRelevanceSummaryData>(
+    input.nicheRelevanceSummary,
+    input.codeSha
+  );
+  const nr = nrValidation.unwrapped;
+  const diagHoldoutMismatchesCount =
     input.diagnostics?.shortlistQuality?.holdoutNicheMismatches?.length ?? 0;
-  const nr = input.nicheRelevanceSummary;
-  const devCrossFp =
-    nr?.crossNicheFalsePositivesInDevTop3 ?? nr?.devCrossNicheFalsePositives ?? 0;
-  const holdoutCrossFp =
+  const nrHoldoutMismatchesCount = nr
+    ? Array.isArray(nr.holdoutNicheMismatches)
+      ? nr.holdoutNicheMismatches.length
+      : typeof nr.holdoutNicheMismatchesCount === "number"
+      ? nr.holdoutNicheMismatchesCount
+      : diagHoldoutMismatchesCount
+    : diagHoldoutMismatchesCount;
+  const devCrossFp = Number(
+    nr?.crossNicheFalsePositiveAcceptedCount ??
+      nr?.crossNicheFalsePositivesInDevTop3 ??
+      nr?.devCrossNicheFalsePositives ??
+      0
+  );
+  const holdoutCrossFp = Number(
     nr?.crossNicheFalsePositivesInHoldoutTop3 ??
-    nr?.holdoutCrossNicheFalsePositives ??
-    0;
-  const paddedMismatchCount = nr?.paddedWithMismatchOrUncertainCount ?? 0;
-  const nicheTestsPassed = nr?.nicheUnitAndReplayTestsPassed ?? true;
-  const holdoutMatched = nr?.holdoutNicheMatchedCount ?? 3;
-  const holdoutShortlist = nr?.holdoutShortlistCount ?? 3;
-  const devMatched = nr?.devNicheMatchedCount ?? 0;
-  const devShortlist = nr?.devShortlistCount ?? 0;
+      nr?.holdoutCrossNicheFalsePositives ??
+      0
+  );
+  const ambiguousFp = Number(nr?.ambiguousNicheAcceptedCount ?? 0);
+  const brandOnlyFp = Number(nr?.brandOnlyFalsePositiveAcceptedCount ?? 0);
+  const paddedMismatchCount = Number(
+    nr?.shortlistPaddedWithUnrelatedCount ??
+      nr?.paddedWithMismatchOrUncertainCount ??
+      0
+  );
+  const nicheTestsPassed: boolean | null =
+    typeof nr?.nicheTestsPassed === "boolean"
+      ? nr.nicheTestsPassed
+      : typeof nr?.nicheUnitAndReplayTestsPassed === "boolean"
+      ? nr.nicheUnitAndReplayTestsPassed
+      : null;
+  const holdoutMatched: number | null =
+    typeof nr?.holdoutNicheMatchedCount === "number"
+      ? nr.holdoutNicheMatchedCount
+      : null;
+  const holdoutShortlist: number | null =
+    typeof nr?.holdoutShortlistCount === "number"
+      ? nr.holdoutShortlistCount
+      : null;
+  const devMatched: number | null =
+    typeof nr?.devNicheMatchedCount === "number"
+      ? nr.devNicheMatchedCount
+      : null;
+  const devShortlist: number | null =
+    typeof nr?.devShortlistCount === "number" ? nr.devShortlistCount : null;
 
-  const nicheRelevanceVerdict: "PASS" | "FAIL" = nr
-    ? nicheTestsPassed &&
-      devCrossFp === 0 &&
-      holdoutCrossFp === 0 &&
-      paddedMismatchCount === 0 &&
-      holdoutMatched === holdoutShortlist &&
-      devMatched === devShortlist &&
-      holdoutMismatchesCount === 0
+  const nicheRelevanceVerdict: "PASS" | "FAIL" | "INCOMPLETE" =
+    nrValidation.status === "FAIL"
+      ? "FAIL"
+      : !nr
+      ? "INCOMPLETE"
+      : nicheTestsPassed === false ||
+        devCrossFp > 0 ||
+        holdoutCrossFp > 0 ||
+        ambiguousFp > 0 ||
+        brandOnlyFp > 0 ||
+        paddedMismatchCount > 0 ||
+        nrHoldoutMismatchesCount > 0 ||
+        (holdoutShortlist !== null &&
+          holdoutMatched !== null &&
+          (holdoutMatched < holdoutShortlist || holdoutShortlist <= 0)) ||
+        (devShortlist !== null &&
+          devMatched !== null &&
+          devMatched < devShortlist)
+      ? "FAIL"
+      : nrValidation.status === "INCOMPLETE" ||
+        nicheTestsPassed === null ||
+        holdoutShortlist === null ||
+        holdoutMatched === null ||
+        devShortlist === null ||
+        devMatched === null
+      ? "INCOMPLETE"
+      : "PASS";
+
+  const historicalNicheShortlistCoverageVerdict:
+    | "PASS"
+    | "INSUFFICIENT_NICHE_COVERAGE"
+    | "FAIL"
+    | "INCOMPLETE" =
+    nicheRelevanceVerdict === "FAIL"
+      ? "FAIL"
+      : nicheRelevanceVerdict === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : (devShortlist ?? 0) >= 3 &&
+        (devMatched ?? 0) >= 3 &&
+        (holdoutShortlist ?? 0) >= 3 &&
+        (holdoutMatched ?? 0) >= 3
       ? "PASS"
-      : "FAIL"
-    : holdoutMismatchesCount === 0
-    ? "PASS"
-    : "FAIL";
+      : "INSUFFICIENT_NICHE_COVERAGE";
+
+  // P0-A: Fail-closed HISTORICAL_PRODUCT_IDENTITY_TRUTH (never defaults to PASS when absent/null/wrong-SHA)
+  const hiValidation =
+    validateRequiredEvidenceSummary<HistoricalIdentitySummaryData>(
+      input.historicalIdentitySummary,
+      input.codeSha
+    );
+  const hi = hiValidation.unwrapped;
+  const urlSlugPromoted = Number(
+    hi?.urlPathSlugPromotedToVerifiedCount ??
+      hi?.urlPathOnlyPromotedToVerifiedCount ??
+      0
+  );
+  const funnelPromoted = Number(
+    hi?.funnelOrCheckoutChampPromotedToVerifiedCount ??
+      hi?.funnelPromotedToVerifiedCount ??
+      0
+  );
+  const discoveryCopied = Number(
+    hi?.discoveryRefsCopiedToIndependentProofCount ?? 0
+  );
+  const postCutoffIncluded = Number(
+    hi?.postCutoffObservationsIncludedCount ?? 0
+  );
+  const syntheticPromoted = Number(
+    hi?.syntheticFixturesPromotedToLiveCount ??
+      (hi?.g16SyntheticHydrationUsed === true ? 1 : 0)
+  );
+  const hasMeasuredHistoricalIdentityCounts =
+    Boolean(hi) &&
+    (typeof hi?.holdoutVerifiedIdentityCount === "number" ||
+      typeof hi?.devVerifiedIdentityCount === "number" ||
+      typeof hi?.holdoutIdentityCoverageStatus === "string");
+
+  const historicalProductIdentityTruthVerdict: "PASS" | "FAIL" | "INCOMPLETE" =
+    hiValidation.status === "FAIL"
+      ? "FAIL"
+      : !hi || hiValidation.status === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : urlSlugPromoted > 0 ||
+        funnelPromoted > 0 ||
+        discoveryCopied > 0 ||
+        postCutoffIncluded > 0 ||
+        syntheticPromoted > 0 ||
+        hi.g16SyntheticHydrationUsed === true
+      ? "FAIL"
+      : !hasMeasuredHistoricalIdentityCounts
+      ? "INCOMPLETE"
+      : "PASS";
+
+  // P0-C: Live vs Fixture DB/API/DOM Parity Verdicts
+  const liveParityValidation =
+    validateRequiredEvidenceSummary<LiveDbApiDomParitySummaryData>(
+      input.liveDbApiDomParitySummary,
+      input.codeSha
+    );
+  const lp = liveParityValidation.unwrapped;
+  const amazonLiveDbApiDomParityVerdict:
+    | "PASS"
+    | "NOT_PROVEN"
+    | "BLOCKED"
+    | "FAIL" =
+    liveParityValidation.status === "FAIL"
+      ? "FAIL"
+      : (lp?.amazonLiveDbApiDomParityVerdict as any) || "NOT_PROVEN";
+  const walmartLiveDbApiDomParityVerdict:
+    | "PASS"
+    | "BLOCKED_PROVIDER"
+    | "NOT_PROVEN"
+    | "FAIL" =
+    liveParityValidation.status === "FAIL"
+      ? "FAIL"
+      : (lp?.walmartLiveDbApiDomParityVerdict as any) ||
+        (walmartLiveJinaPilotVerdict === "BLOCKED_PROVIDER"
+          ? "BLOCKED_PROVIDER"
+          : "NOT_PROVEN");
+  const engineeringFixtureParityVerdict:
+    | "PASS"
+    | "PASS (TEST_FIXTURE)"
+    | "FAIL"
+    | "INCOMPLETE" =
+    liveParityValidation.status === "FAIL"
+      ? "FAIL"
+      : (lp?.engineeringFixtureParityVerdict as any) ||
+        (lp?.fixtureParityStatus === "PARITY_PASS_TEST_FIXTURE"
+          ? "PASS (TEST_FIXTURE)"
+          : engineeringVerdict === "PASS"
+          ? "PASS (TEST_FIXTURE)"
+          : "INCOMPLETE");
+  const liveDbApiDomParityVerdict:
+    | "AMAZON_LIVE_PARITY_PASS_WALMART_BLOCKED_PROVIDER"
+    | "PASS"
+    | "NOT_PROVEN"
+    | "FAIL" =
+    liveParityValidation.status === "FAIL" ||
+    amazonLiveDbApiDomParityVerdict === "FAIL" ||
+    walmartLiveDbApiDomParityVerdict === "FAIL"
+      ? "FAIL"
+      : (lp?.overallLiveDbApiDomParityVerdict as any) ||
+        (lp?.liveDbApiDomParityStatus as any) ||
+        (amazonLiveDbApiDomParityVerdict === "PASS" &&
+        walmartLiveDbApiDomParityVerdict === "PASS"
+          ? "PASS"
+          : amazonLiveDbApiDomParityVerdict === "PASS" &&
+            walmartLiveDbApiDomParityVerdict === "BLOCKED_PROVIDER"
+          ? "AMAZON_LIVE_PARITY_PASS_WALMART_BLOCKED_PROVIDER"
+          : "NOT_PROVEN");
+
+  // Composite ENGINEERING_ACCEPTANCE: fail-closed if any required engineering sub-verdict is FAIL or INCOMPLETE
+  const engineeringAcceptanceMapped:
+    | "PASS"
+    | "FAIL"
+    | "INCOMPLETE"
+    | "RESOURCE_BLOCKED" =
+    engineeringVerdict === "BLOCKED"
+      ? "RESOURCE_BLOCKED"
+      : engineeringVerdict === "FAIL" ||
+        broadRegressionVerdict === "FAIL" ||
+        requiredE2eCoverageVerdict === "FAIL" ||
+        nicheRelevanceVerdict === "FAIL" ||
+        historicalProductIdentityTruthVerdict === "FAIL" ||
+        historicalReplayIntegrityVerdict === "FAIL"
+      ? "FAIL"
+      : engineeringVerdict === "INCOMPLETE" ||
+        broadRegressionVerdict === "INCOMPLETE" ||
+        requiredE2eCoverageVerdict === "INCOMPLETE" ||
+        nicheRelevanceVerdict === "INCOMPLETE" ||
+        historicalProductIdentityTruthVerdict === "INCOMPLETE"
+      ? "INCOMPLETE"
+      : "PASS";
 
   const deliveryVerdict: "READY_FOR_REVIEW" | "INCOMPLETE" | "BLOCKED" =
-    engineeringVerdict === "PASS" &&
+    engineeringAcceptanceMapped === "PASS" &&
     broadRegressionVerdict === "PASS" &&
     (requiredE2eCoverageVerdict === "PASS" ||
       requiredE2eCoverageVerdict === "ENV_PREREQUISITE_BLOCKED") &&
     historicalReplayIntegrityVerdict === "PASS" &&
     nicheRelevanceVerdict === "PASS" &&
+    historicalProductIdentityTruthVerdict === "PASS" &&
     input.ancestryVerified
       ? "READY_FOR_REVIEW"
       : engineeringVerdict === "BLOCKED"
@@ -2291,16 +2715,24 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     | "BLOCKED"
     | "INCOMPLETE";
 
-  if (engineeringVerdict !== "PASS") {
-    overallVerdict = engineeringVerdict;
+  if (engineeringVerdict === "BLOCKED") {
+    overallVerdict = "BLOCKED";
   } else if (
-    broadRegressionVerdict !== "PASS" ||
-    historicalReplayIntegrityVerdict !== "PASS" ||
-    nicheRelevanceVerdict !== "PASS" ||
+    engineeringAcceptanceMapped === "FAIL" ||
+    broadRegressionVerdict === "FAIL" ||
+    historicalReplayIntegrityVerdict === "FAIL" ||
+    nicheRelevanceVerdict === "FAIL" ||
+    historicalProductIdentityTruthVerdict === "FAIL" ||
     requiredE2eCoverageVerdict === "FAIL"
   ) {
     overallVerdict = "FAIL";
-  } else if (requiredE2eCoverageVerdict === "INCOMPLETE") {
+  } else if (
+    engineeringAcceptanceMapped === "INCOMPLETE" ||
+    broadRegressionVerdict === "INCOMPLETE" ||
+    nicheRelevanceVerdict === "INCOMPLETE" ||
+    historicalProductIdentityTruthVerdict === "INCOMPLETE" ||
+    requiredE2eCoverageVerdict === "INCOMPLETE"
+  ) {
     overallVerdict = "INCOMPLETE";
   } else if (
     kh02BusinessVerdict === "PASS" &&
@@ -2312,18 +2744,6 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   } else {
     overallVerdict = "ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS";
   }
-
-  const hi = input.historicalIdentitySummary;
-  const historicalProductIdentityTruthVerdict: "PASS" | "FAIL" = hi
-    ? (hi.urlPathOnlyPromotedToVerifiedCount ?? 0) === 0 &&
-      (hi.funnelPromotedToVerifiedCount ?? 0) === 0 &&
-      (hi.discoveryRefsCopiedToIndependentProofCount ?? 0) === 0 &&
-      hi.g16SyntheticHydrationUsed === false &&
-      ((hi.holdoutVerifiedIdentityCount ?? 0) >= 3 ||
-        hi.holdoutIdentityCoverageStatus === "INSUFFICIENT_VERIFIED_IDENTITY")
-      ? "PASS"
-      : "FAIL"
-    : "PASS";
 
   const liveProvidersEntry = {
     WALMART_US: liveWalmartProviderVerdict,
@@ -2359,8 +2779,6 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
   const persistedLiveOriginProofVerdict: "PASS" | "INSUFFICIENT_EVIDENCE" =
     persistedLiveOriginVerifiedCount >= 3 ? "PASS" : "INSUFFICIENT_EVIDENCE";
 
-  const engineeringAcceptanceMapped =
-    engineeringVerdict === "BLOCKED" ? "RESOURCE_BLOCKED" : engineeringVerdict;
   const amazonMcpEngineeringVerdict =
     engineeringVerdict === "PASS"
       ? "PASS"
@@ -2385,9 +2803,14 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     REQUIRED_E2E_COVERAGE: requiredE2eCoverageVerdict,
     HISTORICAL_REPLAY_INTEGRITY: historicalReplayIntegrityVerdict,
     NICHE_RELEVANCE: nicheRelevanceVerdict,
+    HISTORICAL_NICHE_SHORTLIST_COVERAGE: historicalNicheShortlistCoverageVerdict,
     HISTORICAL_PRODUCT_IDENTITY_TRUTH: historicalProductIdentityTruthVerdict,
     HISTORICAL_VERIFIED_IDENTITY_COVERAGE:
       hi?.holdoutIdentityCoverageStatus || "INSUFFICIENT_VERIFIED_IDENTITY",
+    LIVE_DB_API_DOM_PARITY: liveDbApiDomParityVerdict,
+    AMAZON_REAL_LIVE_DB_API_DOM_PARITY: amazonLiveDbApiDomParityVerdict,
+    WALMART_REAL_LIVE_DB_API_DOM_PARITY: walmartLiveDbApiDomParityVerdict,
+    ENGINEERING_FIXTURE_PARITY: engineeringFixtureParityVerdict,
     PERSISTED_PRODUCT_SCHEMA_PROOF: persistedProductSchemaProofVerdict,
     PERSISTED_LIVE_ORIGIN_PROOF: persistedLiveOriginProofVerdict,
     PERSISTED_SCHEMA_TRUTH_ENFORCEMENT: historicalProductIdentityTruthVerdict,
@@ -2463,7 +2886,12 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     requiredE2eCoverageVerdict,
     historicalReplayIntegrityVerdict,
     nicheRelevanceVerdict,
+    historicalNicheShortlistCoverageVerdict,
     historicalProductIdentityTruthVerdict,
+    liveDbApiDomParityVerdict,
+    amazonLiveDbApiDomParityVerdict,
+    walmartLiveDbApiDomParityVerdict,
+    engineeringFixtureParityVerdict,
     liveWalmartProviderVerdict,
     liveAmazonProviderVerdict,
     amazonCreatorsApiVerdict,
@@ -2475,6 +2903,14 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     amazonLivePilotVerdict,
     walmartLiveJinaPilotVerdict,
     ENGINEERING_ACCEPTANCE: engineeringAcceptanceMapped,
+    REQUIRED_E2E_COVERAGE: requiredE2eCoverageVerdict,
+    NICHE_RELEVANCE: nicheRelevanceVerdict,
+    HISTORICAL_NICHE_SHORTLIST_COVERAGE: historicalNicheShortlistCoverageVerdict,
+    HISTORICAL_PRODUCT_IDENTITY_TRUTH: historicalProductIdentityTruthVerdict,
+    LIVE_DB_API_DOM_PARITY: liveDbApiDomParityVerdict,
+    AMAZON_REAL_LIVE_DB_API_DOM_PARITY: amazonLiveDbApiDomParityVerdict,
+    WALMART_REAL_LIVE_DB_API_DOM_PARITY: walmartLiveDbApiDomParityVerdict,
+    ENGINEERING_FIXTURE_PARITY: engineeringFixtureParityVerdict,
     AMAZON_MCP_ENGINEERING: amazonMcpEngineeringVerdict,
     AMAZON_LOCAL_MCP_HANDSHAKE: amazonLocalMcpHandshakeVerdict,
     AMAZON_MCP_PUBLIC_PAGE_OBSERVED:
@@ -2507,9 +2943,10 @@ export function computeReleaseVerdicts(input: ComputeReleaseVerdictsInput) {
     verdictMatrix,
     nonInflationSummary: input.nonInflationSummary,
     backtestSummary: input.backtestOutput,
-    e2eExecutionSummary: input.e2eExecutionSummary || null,
-    nicheRelevanceSummary: input.nicheRelevanceSummary || null,
-    historicalIdentitySummary: input.historicalIdentitySummary || null,
+    e2eExecutionSummary: e2eSummary || null,
+    nicheRelevanceSummary: nr || null,
+    historicalIdentitySummary: hi || null,
+    liveDbApiDomParitySummary: lp || null,
     remainingExternalBlockers,
     negativeMutationsCaught: input.negativeMutationsCaught,
     completedAt: new Date().toISOString(),

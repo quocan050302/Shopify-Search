@@ -219,6 +219,9 @@ export interface AmazonEvidenceGateEvaluation {
   observedUsdPriceCount?: number;
   requiredLiveTargetsMet?: boolean;
   mcpSessionClosedCleanly?: boolean | null;
+  mcpSessionLifecycle?: AmazonMcpSessionLifecycleProof | null;
+  mcpSessionLifecycleProof?: AmazonMcpSessionLifecycleProof | null;
+  mcpSessionVerifiedForLiveOperations?: boolean;
   counts: {
     totalEvidenceRows: number;
     sameRunWorkspaceVerifiedRows: number;
@@ -239,6 +242,42 @@ export interface AmazonEvidenceGateEvaluation {
   g16MerchantGateUnchanged: true;
   reasons: string[];
   blockers: string[];
+}
+
+export interface AmazonMcpSessionLifecycleProof {
+  sessionId: string | null;
+  transportMode:
+    | "REAL_STDIO_MCP"
+    | "TEST_DOUBLE"
+    | "CREATORS_API_HTTP"
+    | "FIXTURE_SNAPSHOT"
+    | "NONE"
+    | string
+    | null;
+  serverOrigin:
+    | "PINNED_PLAYWRIGHT_MCP"
+    | "LOCAL_TEST_SERVER"
+    | "LOCAL_MCP_TEST_DOUBLE"
+    | "TEST_FIXTURE"
+    | "NONE";
+  ownershipMode: "ADAPTER_OWNED" | "CALLER_BORROWED" | "OWNED" | "BORROWED" | "NONE";
+  ownedChildPid: number | null;
+  startedAt: string | null;
+  lastToolCompletedAt: string | null;
+  closeStartedAt: string | null;
+  closeFinishedAt: string | null;
+  closedCleanly: boolean | "UNKNOWN";
+  ownedChildPidTerminated: boolean | "UNKNOWN";
+  closeError: string | null;
+  toolInvocationsCount?: number;
+  observedOperationIds: string[];
+  allLiveOpsMatchSessionId?: boolean;
+  // Backward-compatible telemetry fields
+  sessionCreated?: boolean;
+  transportKind?: string | null;
+  reusedAcrossCandidates?: boolean;
+  closedInFinally?: boolean;
+  toolCallCount?: number;
 }
 
 export interface AmazonMarketplaceTelemetry {
@@ -270,18 +309,7 @@ export interface AmazonMarketplaceTelemetry {
   gateEvaluation?: AmazonEvidenceGateEvaluation;
   persistenceStatus?: "PERSISTED" | "NOT_REQUIRED" | "FAILED";
   persistenceError?: string | null;
-  mcpSessionLifecycle?: {
-    sessionCreated: boolean;
-    ownershipMode: "OWNED" | "BORROWED" | "NONE";
-    transportMode: string | null;
-    serverOrigin:
-      | "PINNED_PLAYWRIGHT_MCP"
-      | "LOCAL_MCP_TEST_DOUBLE"
-      | "TEST_FIXTURE"
-      | "NONE";
-    closedCleanly: boolean;
-    toolInvocationsCount: number;
-  };
+  mcpSessionLifecycle?: AmazonMcpSessionLifecycleProof;
   discoverySummary?: {
     discoveryAttempted: boolean;
     discoveryStatus: MarketplaceEvidenceStatus;

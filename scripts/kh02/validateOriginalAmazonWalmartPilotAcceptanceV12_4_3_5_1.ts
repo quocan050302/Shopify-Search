@@ -70,6 +70,33 @@ export const REQUIRED_SECTION_8_ARTIFACTS_00_TO_26 = [
   "26_SOURCE_COMMIT_EVIDENCE_COMMIT_REMOTE_PUSH_PROOF.json",
 ] as const;
 
+export const REQUIRED_V12_4_3_5_1_CLOSURE_ARTIFACTS_00_TO_23 = [
+  "00_BRANCH_AND_TESTED_SHA.json",
+  "01_ROOT_CAUSE_AND_FUNCTION_CHANGE_MAP.md",
+  "02_FAIL_CLOSED_VERDICT_CONTRACT_PROOF.json",
+  "03_AMAZON_REAL_MCP_SESSION_LIFECYCLE_PROOF.json",
+  "04_AMAZON_LIVE_SEARCH_AND_PDP_LEDGER.json",
+  "05_AMAZON_DISTINCT_PRODUCT_FAMILY_PROOF.json",
+  "06_AMAZON_US_DELIVERY_AND_USD_OBSERVATION_TRUTH.json",
+  "07_AMAZON_LIVE_DB_PERSISTENCE_AND_API_READBACK.json",
+  "08_AMAZON_LIVE_CHROMIUM_DOM_AND_RELOAD_PARITY.json",
+  "09_WALMART_LIVE_JINA_PROBE_AND_BOTWALL_TRUTH.json",
+  "10_FIXTURE_PARITY_ENGINEERING_ONLY_AUDIT.json",
+  "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+  "12_GET_NONMUTATION_LEASE_AND_WORKSPACE_SECURITY.json",
+  "13_FULL_DISCOVERED_TEST_INVENTORY_AND_SHARD_RESULTS.json",
+  "14_ALL_E2E_SPEC_EXECUTION_RECEIPTS.json",
+  "15_FRESH_TSC_BUILD_AND_RUNTIME_PROOF.json",
+  "16_DEV_HOLDOUT_DATASET_FINGERPRINTS_AND_REPLAY.json",
+  "17_POINT_IN_TIME_CUTOFF_AND_PROVIDER_PARITY_STATUS.json",
+  "18_NICHE_RELEVANCE_AND_G07_G15_G16_GATE_MATRIX.json",
+  "19_NEGATIVE_MUTATION_AND_CONTROL_RESULTS.json",
+  "20_ASYNC_TASK_BARRIER_PID_AND_DISK_LEDGER.json",
+  "21_INDEPENDENT_VALIDATOR_REPORT.json",
+  "22_FINAL_MULTI_VERDICT_MANIFEST_AND_REPORT_VI.md",
+  "23_COMMIT_AND_REMOTE_PUSH_VERIFICATION.json",
+] as const;
+
 export interface OriginalPilotValidationFailure {
   code: string;
   file: string;
@@ -390,6 +417,28 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
       (reportedDistinctFamilies >= 3 ||
         a07.realProviderVerdict !== "REAL_PROVIDER_VERIFIED");
 
+    const sessionLifecycle = a07.mcpSessionLifecycle ?? null;
+    const sessionId =
+      typeof sessionLifecycle?.sessionId === "string"
+        ? sessionLifecycle.sessionId.trim()
+        : "";
+    const allLiveOpsMatchSession =
+      sessionId.length > 0 &&
+      ledgerOps.length >= 1 &&
+      ledgerOps.every(
+        (op) =>
+          typeof op?.transportSessionId === "string" &&
+          op.transportSessionId === sessionId
+      );
+    const closeOrderedAfterLastTool =
+      sessionLifecycle &&
+      typeof sessionLifecycle.lastToolCompletedAt === "string" &&
+      typeof sessionLifecycle.closeStartedAt === "string" &&
+      Date.parse(sessionLifecycle.closeStartedAt) >=
+        Date.parse(sessionLifecycle.lastToolCompletedAt);
+    const notReusedSeparateHandshakeSession =
+      !a03?.sessionId || sessionId !== a03.sessionId;
+
     check(
       a07.codeSha === canonicalCodeSha &&
         a07.probeExecuted === true &&
@@ -402,7 +451,13 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
         a07.operationsAttempted >= 1 &&
         a07.operationsAttempted <= 4 &&
         a07.mcpSessionClosedCleanly === true &&
-        a07.ownedChildPidTerminated !== false &&
+        a07.ownedChildPidTerminated === true &&
+        sessionLifecycle?.closedCleanly === true &&
+        sessionLifecycle?.ownedChildPidTerminated === true &&
+        a07.allLiveOpsMatchSessionId === true &&
+        allLiveOpsMatchSession &&
+        Boolean(closeOrderedAfterLastTool) &&
+        notReusedSeparateHandshakeSession &&
         a07.historicalBaselineReusedAsCurrentEvidence !== true &&
         a07.fabricatedLiveSuccess === false &&
         liveRowLineageValid &&
@@ -411,7 +466,7 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
           a07.verifiedLiveProductCount === 0),
       "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
       "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
-      "Amazon live pilot execution truth failed validation, had mismatched invocation hash, unclosed session PID, or fabricated live product family verification."
+      "Amazon live pilot execution truth failed validation, had mismatched invocation hash, unclosed or mismatched sessionId, premature close timestamp, or fabricated live product family verification."
     );
   }
 
@@ -657,6 +712,80 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
     );
   }
 
+  // Validate 11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json whenever present (including during negative mutation runs)
+  const a11ParityPath = path.join(
+    artifactDir,
+    "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json"
+  );
+  if (!options.skipPostValidationFiles || fs.existsSync(a11ParityPath)) {
+    const a11Parity = readJsonSafe(
+      artifactDir,
+      "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+      failures
+    );
+    if (a11Parity) {
+      const candidateLineage: any[] = Array.isArray(
+        a11Parity.amazonLive3WayParity?.candidateLineage
+      )
+        ? a11Parity.amazonLive3WayParity.candidateLineage
+        : [];
+      const allLiveCandidatesValid =
+        candidateLineage.length >= 3 &&
+        candidateLineage.every(
+          (c) =>
+            c &&
+            c.matched === true &&
+            c.mcpLiveRow?.observationClass === "AUTHORIZED_LIVE" &&
+            c.dbRow?.observationClass === "AUTHORIZED_LIVE" &&
+            c.apiRow?.observationClass === "AUTHORIZED_LIVE" &&
+            c.domBeforeReload?.observationClass === "AUTHORIZED_LIVE" &&
+            c.domAfterReload?.observationClass === "AUTHORIZED_LIVE" &&
+            typeof c.mcpLiveRow?.asin === "string" &&
+            c.mcpLiveRow.asin === c.dbRow?.asin &&
+            c.dbRow.asin === c.apiRow?.asin &&
+            c.apiRow.asin === c.domBeforeReload?.asin &&
+            c.domBeforeReload.asin === c.domAfterReload?.asin &&
+            typeof c.mcpLiveRow?.rawEvidenceHash === "string" &&
+            c.mcpLiveRow.rawEvidenceHash.length >= 16 &&
+            c.mcpLiveRow.rawEvidenceHash === c.dbRow?.rawEvidenceHash &&
+            c.dbRow.rawEvidenceHash === c.apiRow?.rawEvidenceHash &&
+            c.apiRow.rawEvidenceHash === c.domBeforeReload?.rawEvidenceHash &&
+            c.domBeforeReload.rawEvidenceHash ===
+              c.domAfterReload?.rawEvidenceHash
+        );
+      const fixtureRemainsTestFixture =
+        a11Parity.amazonFixture3WayParity?.domAfterReload?.observationClass ===
+          "TEST_FIXTURE" &&
+        a11Parity.amazonFixture3WayParity?.claimedAsLiveAmazonConfirmation ===
+          false &&
+        a11Parity.walmartFixture3WayParity?.domAfterReload?.evidenceOrigin ===
+          "TEST_FIXTURE" &&
+        a11Parity.walmartFixture3WayParity
+          ?.claimedAsLiveWalmartProductConfirmation === false;
+
+      check(
+        a11Parity.codeSha === canonicalCodeSha &&
+          a11Parity.fixtureParityStatus === "PARITY_PASS_TEST_FIXTURE" &&
+          a11Parity.liveDbApiDomParityStatus ===
+            "AMAZON_LIVE_PARITY_PASS_WALMART_BLOCKED_PROVIDER" &&
+          a11Parity.amazonLiveDbApiDomParityVerdict === "PASS" &&
+          a11Parity.walmartLiveDbApiDomParityVerdict === "BLOCKED_PROVIDER" &&
+          a11Parity.amazonLive3WayParity?.parityPassed === true &&
+          a11Parity.amazonLive3WayParity?.idempotencyAudit
+            ?.idempotentVerified === true &&
+          a11Parity.amazonLive3WayParity?.readOnlyGetDigestAudit
+            ?.readOnlyVerified === true &&
+          a11Parity.amazonLive3WayParity?.crossWorkspaceSecurityAudit
+            ?.denied === true &&
+          allLiveCandidatesValid &&
+          fixtureRemainsTestFixture,
+        "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+        "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+        "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json must prove 3-way live Amazon parity (MCP -> SQLite -> API GET -> Chromium DOM before & after reload) with matching rawEvidenceHash, keep Walmart BLOCKED_PROVIDER, and never relabel TEST_FIXTURE as AUTHORIZED_LIVE."
+      );
+    }
+  }
+
   // Validate 24 and 26 whenever present (including during negative mutation runs)
   const a24Path = path.join(artifactDir, "24_OWNED_PROCESS_RAM_DISK_LEDGER.json");
   if (!options.skipPostValidationFiles || fs.existsSync(a24Path)) {
@@ -700,9 +829,47 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
           a18?.failedSpecsCount === 0
       );
 
+      const e2eSummaryValid =
+        a26.e2eExecutionSummary &&
+        a26.e2eExecutionSummary.status === "MEASURED" &&
+        a26.e2eExecutionSummary.sourceSha === canonicalCodeSha &&
+        a26.e2eExecutionSummary.data?.passedSpecsCount === 12 &&
+        a26.e2eExecutionSummary.data?.failedSpecsCount === 0;
+      const nicheSummaryValid =
+        a26.nicheRelevanceSummary &&
+        a26.nicheRelevanceSummary.status === "MEASURED" &&
+        a26.nicheRelevanceSummary.sourceSha === canonicalCodeSha &&
+        a26.nicheRelevanceSummary.data?.nicheTestsPassed === true &&
+        a26.nicheRelevanceSummary.data?.holdoutNicheMatchedCount === 3 &&
+        a26.nicheRelevanceSummary.data?.holdoutShortlistCount === 3;
+      const histIdentitySummaryValid =
+        a26.historicalIdentitySummary &&
+        a26.historicalIdentitySummary.status === "MEASURED" &&
+        a26.historicalIdentitySummary.sourceSha === canonicalCodeSha;
+      const liveParitySummaryValid =
+        a26.liveDbApiDomParitySummary &&
+        a26.liveDbApiDomParitySummary.status === "MEASURED" &&
+        a26.liveDbApiDomParitySummary.sourceSha === canonicalCodeSha &&
+        a26.liveDbApiDomParitySummary.data?.amazonLiveDbApiDomParityVerdict ===
+          "PASS";
+
       check(
         a26.codeSha === canonicalCodeSha &&
           a26.ENGINEERING_VERDICT === "PASS" &&
+          a26.ENGINEERING_ACCEPTANCE === "PASS" &&
+          a26.REQUIRED_E2E_COVERAGE === "PASS" &&
+          a26.NICHE_RELEVANCE === "PASS" &&
+          a26.HISTORICAL_PRODUCT_IDENTITY_TRUTH !== "FAIL" &&
+          a26.HISTORICAL_PRODUCT_IDENTITY_TRUTH !== "INCOMPLETE" &&
+          a26.AMAZON_REAL_LIVE_DB_API_DOM_PARITY === "PASS" &&
+          a26.WALMART_REAL_LIVE_DB_API_DOM_PARITY === "BLOCKED_PROVIDER" &&
+          a26.ENGINEERING_FIXTURE_PARITY === "PASS (TEST_FIXTURE)" &&
+          a26.LIVE_DB_API_DOM_PARITY ===
+            "AMAZON_LIVE_PARITY_PASS_WALMART_BLOCKED_PROVIDER" &&
+          Boolean(e2eSummaryValid) &&
+          Boolean(nicheSummaryValid) &&
+          Boolean(histIdentitySummaryValid) &&
+          Boolean(liveParitySummaryValid) &&
           engSubwavesAllPass &&
           a26.AMAZON_MCP_INTEGRATION_ENGINEERING_VERDICT === "PASS" &&
           a26.WALMART_JINA_INTEGRATION_ENGINEERING_VERDICT === "PASS" &&
@@ -725,7 +892,7 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
               a26.WALMART_LIVE_PILOT_VERDICT !== "PASS")),
         "FINAL_RELEASE_VERDICT_INVALID",
         "26_FINAL_RELEASE_VERDICT.json",
-        "26_FINAL_RELEASE_VERDICT.json must match codeSha, cross-check against test/provider evidence, never claim PASS on <3 distinct Amazon families or blocked Walmart, and never claim VERIFIED US ZIP/USD when unobserved."
+        "26_FINAL_RELEASE_VERDICT.json must match codeSha, bind all required summaries to codeSha, cross-check against test/provider/parity evidence, never claim PASS on <3 distinct Amazon families or blocked Walmart, and never claim VERIFIED US ZIP/USD when unobserved."
       );
     }
   }
@@ -740,12 +907,12 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
       check(
         a22.codeSha === canonicalCodeSha &&
           typeof a22.totalMutationsExecuted === "number" &&
-          a22.totalMutationsExecuted >= 30 &&
+          a22.totalMutationsExecuted >= 48 &&
           a22.caughtMutationsCount === a22.totalMutationsExecuted &&
           a22.falsePassesCount === 0,
         "NEGATIVE_MUTATION_SUITE_FAILED",
         "22_NEGATIVE_MUTATION_SUITE_30PLUS_CASES.json",
-        "Negative mutation suite must execute >=30 physical-file mutations with 0 false passes."
+        "Negative mutation suite must execute >=48 physical-file mutations with 0 false passes."
       );
     }
 
@@ -787,8 +954,13 @@ export function validateOriginalAmazonWalmartPilotArtifacts(
           item.file === "23_CODE_SHA_TESTED_TREE_AND_ARTIFACT_DIGEST_MANIFEST.json" ||
           item.file === "27_COMMIT_PUSH_REMOTE_SHA_VERIFICATION.json" ||
           item.file === "26_SOURCE_COMMIT_EVIDENCE_COMMIT_REMOTE_PUSH_PROOF.json" ||
+          item.file === "23_COMMIT_AND_REMOTE_PUSH_VERIFICATION.json" ||
           item.file === "28_FINAL_OWNER_REPORT_VI.md" ||
-          item.file === "25_FINAL_OWNER_REPORT_VI.md"
+          item.file === "25_FINAL_OWNER_REPORT_VI.md" ||
+          item.file === "22_FINAL_MULTI_VERDICT_MANIFEST_AND_REPORT_VI.md" ||
+          item.file === "23_INDEPENDENT_VALIDATOR_REPORT.json" ||
+          item.file === "21_INDEPENDENT_VALIDATOR_REPORT.json" ||
+          item.file === "20_INDEPENDENT_VALIDATOR_CASES_AND_VERDICT.json"
         ) {
           continue;
         }
@@ -1314,6 +1486,92 @@ export function runOriginalPilotPhysicalNegativeMutationSuite36(
         expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
         mutate: (d) => {
           d.historicalBaselineReusedAsCurrentEvidence = true;
+        },
+      },
+      {
+        id: "ORIG_MUT_49",
+        file: "26_FINAL_RELEASE_VERDICT.json",
+        description: "P0-A (F02): Null e2eExecutionSummary while claiming ENGINEERING_ACCEPTANCE=PASS",
+        expectedCode: "FINAL_RELEASE_VERDICT_INVALID",
+        mutate: (d) => {
+          d.e2eExecutionSummary = null;
+        },
+      },
+      {
+        id: "ORIG_MUT_50",
+        file: "26_FINAL_RELEASE_VERDICT.json",
+        description: "P0-A (F02): Null nicheRelevanceSummary while claiming NICHE_RELEVANCE=PASS",
+        expectedCode: "FINAL_RELEASE_VERDICT_INVALID",
+        mutate: (d) => {
+          d.nicheRelevanceSummary = null;
+        },
+      },
+      {
+        id: "ORIG_MUT_51",
+        file: "26_FINAL_RELEASE_VERDICT.json",
+        description: "P0-A (F02): Wrong sourceSha on historicalIdentitySummary",
+        expectedCode: "FINAL_RELEASE_VERDICT_INVALID",
+        mutate: (d) => {
+          if (d.historicalIdentitySummary) {
+            d.historicalIdentitySummary.sourceSha = "0".repeat(40);
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_52",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "P0-B (F03): Mismatch transportSessionId on live MCP operation vs mcpSessionLifecycle.sessionId",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          if (Array.isArray(d.telemetry?.operationLedger) && d.telemetry.operationLedger.length > 0) {
+            d.telemetry.operationLedger[0].transportSessionId = "other_session_id";
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_53",
+        file: "07_AMAZON_LIVE_PILOT_EXECUTION_TRUTH.json",
+        description: "P0-B (F03): Premature closeStartedAt (< lastToolCompletedAt) on mcpSessionLifecycle",
+        expectedCode: "AMAZON_LIVE_PILOT_TRUTH_VIOLATION",
+        mutate: (d) => {
+          if (d.mcpSessionLifecycle) {
+            d.mcpSessionLifecycle.closeStartedAt = "2020-01-01T00:00:00.000Z";
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_54",
+        file: "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+        description: "P0-C (F05): Tamper rawEvidenceHash in domAfterReload on live Amazon candidate",
+        expectedCode: "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+        mutate: (d) => {
+          if (
+            Array.isArray(d.amazonLive3WayParity?.candidateLineage) &&
+            d.amazonLive3WayParity.candidateLineage.length > 0
+          ) {
+            d.amazonLive3WayParity.candidateLineage[0].domAfterReload.rawEvidenceHash =
+              "deadbeef".repeat(8);
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_55",
+        file: "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+        description: "P0-C (F06): Relabel TEST_FIXTURE row as AUTHORIZED_LIVE in fixture parity section",
+        expectedCode: "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+        mutate: (d) => {
+          if (d.amazonFixture3WayParity?.domAfterReload) {
+            d.amazonFixture3WayParity.domAfterReload.observationClass = "AUTHORIZED_LIVE";
+          }
+        },
+      },
+      {
+        id: "ORIG_MUT_56",
+        file: "11_LIVE_VS_FIXTURE_DB_API_DOM_PARITY.json",
+        description: "P0-C (F05): Claim liveDbApiDomParityStatus=REAL_LIVE_DB_API_DOM_PARITY_NOT_PROVEN",
+        expectedCode: "LIVE_VS_FIXTURE_PARITY_VIOLATION",
+        mutate: (d) => {
+          d.liveDbApiDomParityStatus = "REAL_LIVE_DB_API_DOM_PARITY_NOT_PROVEN";
         },
       },
     ];

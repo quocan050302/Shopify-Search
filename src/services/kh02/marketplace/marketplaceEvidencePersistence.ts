@@ -491,10 +491,18 @@ export async function loadAmazonEvidenceForRun(
               item &&
               item.workspaceId === workspaceId &&
               item.researchRunId === runId &&
-              item.provider === "AMAZON_US" &&
-              !parsedById.has(item.id)
+              item.provider === "AMAZON_US"
             ) {
-              parsedById.set(item.id, item);
+              const compositeId = computeAmazonEvidenceCompositeId(
+                workspaceId,
+                runId,
+                item.candidateId,
+                item.asin,
+                item.sourceUrl
+              );
+              if (!parsedById.has(item.id) && !parsedById.has(compositeId)) {
+                parsedById.set(item.id, item);
+              }
             }
           }
         }

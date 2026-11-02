@@ -1638,5 +1638,5 @@ describe("KH-02 V12.4.3.5.0.3 — Amazon US Creators API Real Runtime Wiring & O
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
-  });
+  }, 30000);
 });

@@ -88,7 +88,7 @@ describe("KH-01 Active Database Protection (FINAL-08-05)", () => {
     const emptyDbPath = path.join(scratchDir, "empty-active.db");
     const { createClient } = await import("@libsql/client");
     const client = createClient({ url: `file:${emptyDbPath}` });
-    await client.execute("CREATE TABLE dummy (col TEXT)");
+    await client.execute("CREATE TABLE IF NOT EXISTS dummy (col TEXT)");
     client.close();
 
     const result = await verifyActiveDatabaseMarkerAbsent(

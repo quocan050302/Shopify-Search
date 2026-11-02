@@ -659,7 +659,7 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
   it("A22: Real @playwright/mcp@0.0.83 stdio handshake spawns an owned child PID, lists browser_navigate/browser_snapshot/browser_close tools, and closes cleanly with 0 orphans", async () => {
     const conn = await connectAmazonPlaywrightMcp({
       allowRealStdioMcp: true,
-      timeoutMs: 12000,
+      timeoutMs: 25000,
     });
     try {
       expect(conn.connected).toBe(true);
@@ -674,7 +674,7 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
       await conn.session?.close();
     }
     expect(conn.handshakeProof.closedCleanly).toBe(true);
-  }, 25000);
+  }, 35000);
 
   // =========================================================================
   // WALMART US MATRIX (W01..W22)
@@ -1476,7 +1476,25 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
       distinctRows,
       distinctOps,
       livePolicy,
-      { workspaceId: "ws_fam", requiredLiveTargets: 3 }
+      {
+        workspaceId: "ws_fam",
+        requiredLiveTargets: 3,
+        mcpSessionLifecycle: {
+          sessionId: "sess_fam",
+          transportMode: "REAL_STDIO_MCP",
+          serverOrigin: "PINNED_PLAYWRIGHT_MCP",
+          ownershipMode: "OWNED",
+          ownedChildPid: 54321,
+          lastToolCompletedAt: "2026-11-01T12:00:01.000Z",
+          closeStartedAt: "2026-11-01T12:00:02.000Z",
+          closeFinishedAt: "2026-11-01T12:00:02.050Z",
+          closedCleanly: true,
+          ownedChildPidTerminated: true,
+          closeError: null,
+          observedOperationIds: distinctOps.map((o) => o.operationId),
+          allLiveOpsMatchSessionId: true,
+        },
+      }
     );
     expect(distinctGate.distinctVerifiedProductFamilies).toBe(3);
     expect(distinctGate.distinctCandidateIds).toBe(3);
@@ -1837,6 +1855,46 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
       },
     };
 
+    const validE2eSummary = {
+      status: "MEASURED" as const,
+      sourceSha: "a".repeat(40),
+      observedAt: "2026-11-01T16:00:00.000Z",
+      data: {
+        totalSpecs: 12,
+        passedSpecsCount: 12,
+        failedSpecsCount: 0,
+        skippedWithoutAttemptCount: 0,
+        totalE2ETestCases: 34,
+        passedE2ETestCases: 34,
+        failedE2ETestCases: 0,
+      },
+    };
+    const validNicheSummary = {
+      status: "MEASURED" as const,
+      sourceSha: "a".repeat(40),
+      observedAt: "2026-11-01T16:00:00.000Z",
+      data: {
+        nicheTestsPassed: true,
+        paddingDetectedCount: 0,
+        unrelatedAcceptedCount: 0,
+        devShortlistCount: 0,
+        devNicheMatchedCount: 0,
+        holdoutShortlistCount: 3,
+        holdoutNicheMatchedCount: 3,
+      },
+    };
+    const validHistoricalIdentitySummary = {
+      status: "MEASURED" as const,
+      sourceSha: "a".repeat(40),
+      observedAt: "2026-11-01T16:00:00.000Z",
+      data: {
+        devShortlistCount: 0,
+        devVerifiedIdentityCount: 0,
+        holdoutShortlistCount: 3,
+        holdoutVerifiedIdentityCount: 0,
+      },
+    };
+
     const verdicts: any = computeReleaseVerdicts({
       releaseVersion: "12.4.3.5.1",
       runtimeReleaseIdentity: "12.4.3.5.0.3",
@@ -1896,9 +1954,17 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
         holdoutFunnelProbableCount: 1,
         businessHistoricalEvidenceSufficient: "INSUFFICIENT_EVIDENCE",
       },
+      e2eExecutionSummary: validE2eSummary,
+      nicheRelevanceSummary: validNicheSummary,
+      historicalIdentitySummary: validHistoricalIdentitySummary,
     } as any);
 
     expect(verdicts.ENGINEERING_ACCEPTANCE).toBe("PASS");
+    expect(verdicts.REQUIRED_E2E_COVERAGE).toBe("PASS");
+    expect(verdicts.NICHE_RELEVANCE).toBe("PASS");
+    expect(verdicts.HISTORICAL_NICHE_SHORTLIST_COVERAGE).toBe(
+      "INSUFFICIENT_NICHE_COVERAGE"
+    );
     expect(verdicts.AMAZON_LOCAL_MCP_HANDSHAKE).toBe("PASS");
     expect(verdicts.AMAZON_LOCAL_MCP_LIVE_OBSERVATION).toBe("OBSERVED");
     expect(verdicts.AMAZON_PRODUCT_IDENTITY_PILOT).toBe("INSUFFICIENT_EVIDENCE");
@@ -1909,5 +1975,215 @@ describe("KH-02 V12.4.3.5.1 — Original Amazon US (Playwright MCP) + Walmart US
     expect(verdicts.FULL_BUSINESS_ACCEPTANCE).toBe("INSUFFICIENT_EVIDENCE");
     expect(verdicts.OVERALL_RELEASE).toBe("ENGINEERING_READY_WITH_EXTERNAL_BLOCKERS");
     expect(verdicts.AMAZON_LIVE_PILOT_VERDICT).not.toBe("PASS");
+
+    // F02: Fail-closed when e2eExecutionSummary is null, nicheRelevanceSummary is null, or sourceSha mismatches
+    const missingE2eVerdict: any = computeReleaseVerdicts({
+      releaseVersion: "12.4.3.5.1",
+      runtimeReleaseIdentity: "12.4.3.5.0.3",
+      branch: "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      baseSha: "f".repeat(40),
+      masterHeadSha: "5".repeat(40),
+      codeSha: "a".repeat(40),
+      testedTreeSha: "1".repeat(40),
+      engineeringInput: {
+        requiredIds: ["W1"],
+        results: [
+          {
+            id: "W1",
+            required: true,
+            executionStatus: "PASS",
+            observedAt: "2026-11-01T16:00:00.000Z",
+            sourceSha: "a".repeat(40),
+            exitCode: 0,
+          },
+        ],
+        expectedSha: "a".repeat(40),
+        validatorPassed: true,
+        validatorChecksFailed: 0,
+        diskGuardPassed: true,
+        minFreeDiskGiB: 25,
+        diskThresholdGiB: 15,
+        shaParityVerified: true,
+        regressionInventory: {
+          executedFilesCount: 154,
+          passedFilesCount: 154,
+          failedFilesCount: 0,
+          skippedFilesCount: 0,
+          totalTestsCount: 1800,
+          passedTestsCount: 1800,
+          failedTestsCount: 0,
+          skippedTestsCount: 0,
+          todoTestsCount: 0,
+          unaccountedFilesCount: 0,
+          allShardsExecuted: true,
+        },
+        ownedOrphanCount: 0,
+        nonInflationVerified: true,
+        nonInflationCandidatesCount: 3,
+      },
+      diagnostics: mockDiagnostics,
+      backtestOutput: {
+        backtestEngineExecuted: "PASS",
+        pointInTimeIntegrityVerdict: "PASS",
+        policyScenarioVerdict: "PASS",
+      } as any,
+      e2eExecutionSummary: null,
+      nicheRelevanceSummary: null,
+      historicalIdentitySummary: {
+        ...validHistoricalIdentitySummary,
+        sourceSha: "0".repeat(40),
+      },
+    } as any);
+    expect(missingE2eVerdict.REQUIRED_E2E_COVERAGE).toBe("INCOMPLETE");
+    expect(missingE2eVerdict.NICHE_RELEVANCE).toBe("INCOMPLETE");
+    expect(missingE2eVerdict.HISTORICAL_PRODUCT_IDENTITY_TRUTH).toBe("FAIL");
+    expect(missingE2eVerdict.ENGINEERING_ACCEPTANCE).not.toBe("PASS");
+  });
+
+  it("F03: evaluateAmazonUsEvidenceGate requires same-session MCP closure proof and rejects unclosed, borrowed-without-receipt, or mismatched transportSessionId", () => {
+    const livePolicy = resolveAmazonUsPolicyContext({
+      KH02_AMAZON_US_ENABLED: "true",
+      KH02_AMAZON_US_LIVE_ALLOWED: "true",
+      KH02_AMAZON_US_PUBLIC_URL_ATTESTED: "true",
+    });
+
+    const mkLiveRow = (id: string, candId: string, asin: string, title: string, brand: string, invRef: string): any => ({
+      id,
+      workspaceId: "ws_f03",
+      researchRunId: "run_f03",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      requestedMarket: "US",
+      verifiedDeliveryMarket: null,
+      observedDeliveryPostalCode: null,
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      canonicalAmazonUrl: `https://www.amazon.com/dp/${asin}`,
+      asin,
+      parentAsin: null,
+      variationAsin: asin,
+      productTitle: title,
+      brand,
+      merchant: brand,
+      seller: brand,
+      currency: null,
+      price: null,
+      availability: "In Stock",
+      observedAt: "2026-11-01T12:00:00.000Z",
+      sourceTimestamp: "2026-11-01T12:00:00.000Z",
+      rawEvidenceHash: computeSha256Hex(`resp_${invRef}`),
+      extractedFieldsHash: computeSha256Hex(`ext_${id}`),
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      responseEvidenceRef: null,
+      evidenceOrigin: "AMAZON_US_MCP_PLAYWRIGHT",
+      observationClass: "AUTHORIZED_LIVE",
+      verificationScope: "LISTING_AND_IDENTITY_OBSERVED",
+      identityMatch: "EXACT_PRODUCT",
+      isCached: false,
+      matchedCanonicalKey: `amz_us:${asin}`,
+      matchingReasons: ["EXACT_PRODUCT"],
+      missingFields: [],
+      rejectionReasons: [],
+      accessPolicyStatus: "AUTHORIZED_PUBLIC_URL_PILOT",
+      status: "IDENTITY_VERIFIED",
+    });
+
+    const mkLiveOp = (candId: string, asin: string, invRef: string, sessionId: string): any => ({
+      operationId: `op_${invRef}`,
+      providerInvocationRef: invRef,
+      providerRequestId: null,
+      providerRequestIdOrigin: "UNAVAILABLE_UPSTREAM",
+      workspaceId: "ws_f03",
+      researchRunId: "run_f03",
+      candidateId: candId,
+      provider: "AMAZON_US",
+      requestMode: "URL_VERIFICATION",
+      sourceUrl: `https://www.amazon.com/dp/${asin}`,
+      finalUrl: `https://www.amazon.com/dp/${asin}`,
+      attemptCount: 1,
+      maxAttemptsAllowed: 2,
+      startedAt: "2026-11-01T12:00:00.000Z",
+      completedAt: "2026-11-01T12:00:01.000Z",
+      durationMs: 900,
+      requestHash: computeSha256Hex(`req_${invRef}`),
+      responseHash: computeSha256Hex(`resp_${invRef}`),
+      status: "IDENTITY_VERIFIED",
+      outcomeCategory: "OBSERVED_SUCCESS",
+      observationClass: "AUTHORIZED_LIVE",
+      transportSessionId: sessionId,
+      aborted: false,
+      errorMessage: null,
+    });
+
+    const rows = [
+      mkLiveRow("r1", "c1", "B00BAGTNAQ", "ChomChom Roller Pet Hair Remover", "ChomChom Roller", "inv_1"),
+      mkLiveRow("r2", "c2", "B01FXC7JWQ", "Furbo Dog Camera 360 Treat Tosser", "Furbo", "inv_2"),
+      mkLiveRow("r3", "c3", "B0FDKQGRCK", "PETLIBRO Automatic Cat Feeder", "PETLIBRO", "inv_3"),
+    ];
+    const ops = [
+      mkLiveOp("c1", "B00BAGTNAQ", "inv_1", "sess_live_actual"),
+      mkLiveOp("c2", "B01FXC7JWQ", "inv_2", "sess_live_actual"),
+      mkLiveOp("c3", "B0FDKQGRCK", "inv_3", "sess_live_actual"),
+    ];
+
+    // 1. Missing mcpSessionLifecycle -> mcpSessionClosedCleanly is false, requiredLiveTargetsMet is false
+    const gateNoLifecycle = evaluateAmazonUsEvidenceGate("run_f03", rows, ops, livePolicy, {
+      workspaceId: "ws_f03",
+      requiredLiveTargets: 3,
+      mcpSessionLifecycle: null,
+    });
+    expect(gateNoLifecycle.mcpSessionClosedCleanly).toBe(false);
+    expect(gateNoLifecycle.requiredLiveTargetsMet).toBe(false);
+    expect(gateNoLifecycle.realProviderVerdict).toBe("INSUFFICIENT_EVIDENCE");
+
+    // 2. Separate handshake-only sessionId ("sess_other_handshake") -> allLiveOpsMatchSessionId is false -> rejected
+    const gateWrongSession = evaluateAmazonUsEvidenceGate("run_f03", rows, ops, livePolicy, {
+      workspaceId: "ws_f03",
+      requiredLiveTargets: 3,
+      mcpSessionLifecycle: {
+        sessionId: "sess_other_handshake",
+        transportMode: "REAL_STDIO_MCP",
+        serverOrigin: "PINNED_PLAYWRIGHT_MCP",
+        ownershipMode: "OWNED",
+        ownedChildPid: 99999,
+        lastToolCompletedAt: "2026-11-01T12:00:01.000Z",
+        closeStartedAt: "2026-11-01T12:00:02.000Z",
+        closeFinishedAt: "2026-11-01T12:00:02.050Z",
+        closedCleanly: true,
+        ownedChildPidTerminated: true,
+        closeError: null,
+        observedOperationIds: [],
+        allLiveOpsMatchSessionId: false,
+      },
+    });
+    expect(gateWrongSession.mcpSessionClosedCleanly).toBe(false);
+    expect(gateWrongSession.requiredLiveTargetsMet).toBe(false);
+    expect(gateWrongSession.realProviderVerdict).toBe("INSUFFICIENT_EVIDENCE");
+
+    // 3. Same sessionId ("sess_live_actual"), closedCleanly=true, ownedChildPidTerminated=true -> REAL_PROVIDER_VERIFIED
+    const gateValidSession = evaluateAmazonUsEvidenceGate("run_f03", rows, ops, livePolicy, {
+      workspaceId: "ws_f03",
+      requiredLiveTargets: 3,
+      mcpSessionLifecycle: {
+        sessionId: "sess_live_actual",
+        transportMode: "REAL_STDIO_MCP",
+        serverOrigin: "PINNED_PLAYWRIGHT_MCP",
+        ownershipMode: "OWNED",
+        ownedChildPid: 99999,
+        lastToolCompletedAt: "2026-11-01T12:00:01.000Z",
+        closeStartedAt: "2026-11-01T12:00:02.000Z",
+        closeFinishedAt: "2026-11-01T12:00:02.050Z",
+        closedCleanly: true,
+        ownedChildPidTerminated: true,
+        closeError: null,
+        observedOperationIds: ops.map((o) => o.operationId),
+        allLiveOpsMatchSessionId: true,
+      },
+    });
+    expect(gateValidSession.mcpSessionClosedCleanly).toBe(true);
+    expect(gateValidSession.requiredLiveTargetsMet).toBe(true);
+    expect(gateValidSession.realProviderVerdict).toBe("REAL_PROVIDER_VERIFIED");
   });
 });

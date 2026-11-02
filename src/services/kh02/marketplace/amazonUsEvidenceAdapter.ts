@@ -10,6 +10,7 @@
 import crypto from "crypto";
 import {
   AmazonMarketplaceTelemetry,
+  AmazonMcpSessionLifecycleProof,
   AmazonPolicyContext,
   AmazonProductEvidence,
   AmazonProviderOperationRecord,
@@ -1173,6 +1174,8 @@ export interface RunAmazonUsPilotEnrichmentParams {
   requestMode?: AmazonRequestMode;
   fixtureSnapshotsByUrl?: Record<string, RawAmazonSnapshotInput>;
   mcpSession?: AmazonPlaywrightMcpSession | null;
+  closeBorrowedMcpSession?: boolean;
+  borrowedSessionLifecycleReceipt?: Partial<AmazonMcpSessionLifecycleProof> | null;
   mcpConnectOptions?: ConnectAmazonPlaywrightMcpOptions;
   creatorsApiClient?: CreatorsApiClient | null;
   creatorsApiTransportFactory?: () => typeof fetch;
@@ -1223,12 +1226,29 @@ export async function runAmazonUsPilotEnrichment(
 
   // If server flag is OFF and not an explicit fixture/import test, return DISABLED with zero operations
   if (!policy.featureEnabled && !isExplicitTestFixture) {
+    const emptyLifecycle: AmazonMcpSessionLifecycleProof = {
+      sessionId: null,
+      sessionCreated: false,
+      ownershipMode: "NONE",
+      transportMode: null,
+      serverOrigin: "NONE",
+      ownedChildPid: null,
+      startedAt: null,
+      lastToolCompletedAt: null,
+      closeStartedAt: null,
+      closeFinishedAt: null,
+      closedCleanly: false,
+      ownedChildPidTerminated: false,
+      closeError: null,
+      toolInvocationsCount: 0,
+      observedOperationIds: [],
+    };
     const gateEvaluation = evaluateAmazonUsEvidenceGate(
       params.researchRunId,
       [],
       [],
       policy,
-      { workspaceId: params.workspaceId }
+      { workspaceId: params.workspaceId, mcpSessionLifecycle: emptyLifecycle }
     );
     return {
       marketplaceEvidence: [],
@@ -1251,25 +1271,35 @@ export async function runAmazonUsPilotEnrichment(
         operationLedger: [],
         rejectionLedger: [],
         gateEvaluation,
-        mcpSessionLifecycle: {
-          sessionCreated: false,
-          ownershipMode: "NONE",
-          transportMode: null,
-          serverOrigin: "NONE",
-          closedCleanly: true,
-          toolInvocationsCount: 0,
-        },
+        mcpSessionLifecycle: emptyLifecycle,
       },
     };
   }
 
   if (!params.optInRequested && !isExplicitTestFixture) {
+    const emptyLifecycle: AmazonMcpSessionLifecycleProof = {
+      sessionId: null,
+      sessionCreated: false,
+      ownershipMode: "NONE",
+      transportMode: null,
+      serverOrigin: "NONE",
+      ownedChildPid: null,
+      startedAt: null,
+      lastToolCompletedAt: null,
+      closeStartedAt: null,
+      closeFinishedAt: null,
+      closedCleanly: false,
+      ownedChildPidTerminated: false,
+      closeError: null,
+      toolInvocationsCount: 0,
+      observedOperationIds: [],
+    };
     const gateEvaluation = evaluateAmazonUsEvidenceGate(
       params.researchRunId,
       [],
       [],
       policy,
-      { workspaceId: params.workspaceId }
+      { workspaceId: params.workspaceId, mcpSessionLifecycle: emptyLifecycle }
     );
     return {
       marketplaceEvidence: [],
@@ -1292,14 +1322,7 @@ export async function runAmazonUsPilotEnrichment(
         operationLedger: [],
         rejectionLedger: [],
         gateEvaluation,
-        mcpSessionLifecycle: {
-          sessionCreated: false,
-          ownershipMode: "NONE",
-          transportMode: null,
-          serverOrigin: "NONE",
-          closedCleanly: true,
-          toolInvocationsCount: 0,
-        },
+        mcpSessionLifecycle: emptyLifecycle,
       },
     };
   }
@@ -2067,7 +2090,7 @@ export async function runAmazonUsPilotEnrichment(
       }
     }
   } finally {
-    if (createdSessionInternally && ownedSession) {
+    if ((createdSessionInternally || params.closeBorrowedMcpSession) && ownedSession) {
       await ownedSession.close().catch(() => {});
     }
   }
@@ -2118,18 +2141,164 @@ export async function runAmazonUsPilotEnrichment(
     runStatus = "FAILED";
   }
 
+  const rawToolRecords =
+    ownedSession?.getToolInvocationRecords?.() ??
+    ownedSession?.handshakeProof?.toolInvocationRecords ??
+    [];
+  const toolInvocationsCount = rawToolRecords.filter(
+    (r: any) => r?.toolName !== "browser_close"
+  ).length;
+
+  const observedOperationIds = operationLedger
+    .filter((op) => Boolean(op.transportSessionId))
+    .map((op) => op.operationId);
+
+  let mcpSessionLifecycle: AmazonMcpSessionLifecycleProof;
+  if (createdSessionInternally && ownedSession) {
+    const rawProof = ownedSession.getSessionLifecycleProof
+      ? ownedSession.getSessionLifecycleProof({
+          ownershipMode: "ADAPTER_OWNED",
+          observedOperationIds,
+        })
+      : null;
+    const rawOrigin =
+      rawProof?.serverOrigin ??
+      ownedSession.serverOrigin ??
+      (ownedSession.transportMode === "TEST_FIXTURE" ? "TEST_FIXTURE" : "NONE");
+    mcpSessionLifecycle = {
+      sessionId: rawProof?.sessionId ?? ownedSession.sessionId ?? null,
+      sessionCreated: true,
+      ownershipMode: "OWNED",
+      transportMode: rawProof?.transportMode ?? ownedSession.transportMode ?? null,
+      serverOrigin:
+        rawOrigin === "LOCAL_TEST_SERVER" ? "LOCAL_MCP_TEST_DOUBLE" : rawOrigin,
+      ownedChildPid:
+        rawProof?.ownedChildPid ?? ownedSession.handshakeProof?.ownedChildPid ?? null,
+      startedAt: rawProof?.startedAt ?? ownedSession.handshakeProof?.startedAt ?? null,
+      lastToolCompletedAt:
+        rawProof?.lastToolCompletedAt ??
+        ownedSession.handshakeProof?.lastToolCompletedAt ??
+        null,
+      closeStartedAt:
+        rawProof?.closeStartedAt ?? ownedSession.handshakeProof?.closeStartedAt ?? null,
+      closeFinishedAt:
+        rawProof?.closeFinishedAt ??
+        ownedSession.handshakeProof?.closeFinishedAt ??
+        null,
+      closedCleanly: Boolean(
+        rawProof ? rawProof.closedCleanly : ownedSession.handshakeProof?.closedCleanly
+      ),
+      ownedChildPidTerminated: Boolean(
+        rawProof
+          ? rawProof.ownedChildPidTerminated
+          : ownedSession.handshakeProof?.ownedChildPidTerminated ??
+              ownedSession.handshakeProof?.closedCleanly
+      ),
+      closeError:
+        rawProof?.closeError ?? ownedSession.handshakeProof?.closeError ?? null,
+      toolInvocationsCount,
+      observedOperationIds,
+    };
+  } else if (params.mcpSession && ownedSession) {
+    const rawProof = ownedSession.getSessionLifecycleProof
+      ? ownedSession.getSessionLifecycleProof({
+          ownershipMode: "CALLER_BORROWED",
+          observedOperationIds,
+        })
+      : null;
+    const receipt = params.borrowedSessionLifecycleReceipt;
+    const receiptMatches =
+      Boolean(receipt) &&
+      Boolean(ownedSession.sessionId) &&
+      receipt?.sessionId === ownedSession.sessionId;
+    const borrowedClosedCleanly = Boolean(
+      (params.closeBorrowedMcpSession && rawProof?.closedCleanly === true) ||
+        (receiptMatches &&
+          receipt?.closedCleanly === true &&
+          receipt?.ownedChildPidTerminated === true)
+    );
+    const borrowedPidTerminated = Boolean(
+      (params.closeBorrowedMcpSession && rawProof?.ownedChildPidTerminated === true) ||
+        (receiptMatches && receipt?.ownedChildPidTerminated === true)
+    );
+    mcpSessionLifecycle = {
+      sessionId: ownedSession.sessionId ?? null,
+      sessionCreated: true,
+      ownershipMode: "BORROWED",
+      transportMode: ownedSession.transportMode ?? null,
+      serverOrigin:
+        ownedSession.serverOrigin ??
+        (ownedSession.transportMode === "TEST_FIXTURE" ? "TEST_FIXTURE" : "NONE"),
+      ownedChildPid:
+        receipt?.ownedChildPid ??
+        rawProof?.ownedChildPid ??
+        ownedSession.handshakeProof?.ownedChildPid ??
+        null,
+      startedAt:
+        receipt?.startedAt ??
+        rawProof?.startedAt ??
+        ownedSession.handshakeProof?.startedAt ??
+        null,
+      lastToolCompletedAt:
+        receipt?.lastToolCompletedAt ??
+        rawProof?.lastToolCompletedAt ??
+        ownedSession.handshakeProof?.lastToolCompletedAt ??
+        null,
+      closeStartedAt:
+        receipt?.closeStartedAt ??
+        rawProof?.closeStartedAt ??
+        ownedSession.handshakeProof?.closeStartedAt ??
+        null,
+      closeFinishedAt:
+        receipt?.closeFinishedAt ??
+        rawProof?.closeFinishedAt ??
+        ownedSession.handshakeProof?.closeFinishedAt ??
+        null,
+      closedCleanly: borrowedClosedCleanly,
+      ownedChildPidTerminated: borrowedPidTerminated,
+      closeError:
+        receipt?.closeError ??
+        rawProof?.closeError ??
+        ownedSession.handshakeProof?.closeError ??
+        (borrowedClosedCleanly
+          ? null
+          : "BORROWED_MCP_SESSION_CLOSURE_NOT_VERIFIED_AT_ADAPTER_BOUNDARY"),
+      toolInvocationsCount,
+      observedOperationIds,
+    };
+  } else {
+    mcpSessionLifecycle = {
+      sessionId: null,
+      sessionCreated: false,
+      ownershipMode: "NONE",
+      transportMode:
+        policy.allowedAccessRoute === "OFFICIAL_CREATORS_API"
+          ? "CREATORS_API_HTTP"
+          : null,
+      serverOrigin: "NONE",
+      ownedChildPid: null,
+      startedAt: null,
+      lastToolCompletedAt: null,
+      closeStartedAt: null,
+      closeFinishedAt: null,
+      closedCleanly: false,
+      ownedChildPidTerminated: false,
+      closeError: null,
+      toolInvocationsCount: 0,
+      observedOperationIds: [],
+    };
+  }
+
   const gateEvaluation = evaluateAmazonUsEvidenceGate(
     params.researchRunId,
     marketplaceEvidence,
     operationLedger,
     policy,
-    { workspaceId: params.workspaceId }
+    {
+      workspaceId: params.workspaceId,
+      mcpSessionLifecycle,
+    }
   );
-
-  const toolInvocationsCount =
-    ownedSession?.getToolInvocationRecords?.().length ??
-    ownedSession?.handshakeProof?.toolInvocationRecords?.length ??
-    0;
 
   const localMcpPilotDiagnostics: AmazonMarketplaceTelemetry["localMcpPilotDiagnostics"] = {
     routeId: "AMAZON_LOCAL_MCP_PUBLIC_URL_PILOT",
@@ -2202,22 +2371,7 @@ export async function runAmazonUsPilotEnrichment(
       operationLedger,
       rejectionLedger,
       gateEvaluation,
-      mcpSessionLifecycle: {
-        sessionCreated: Boolean(ownedSession),
-        ownershipMode: createdSessionInternally
-          ? "OWNED"
-          : params.mcpSession
-          ? "BORROWED"
-          : "NONE",
-        transportMode: ownedSession?.transportMode || null,
-        serverOrigin:
-          ownedSession?.serverOrigin ||
-          (ownedSession?.transportMode === "TEST_FIXTURE" ? "TEST_FIXTURE" : "NONE"),
-        closedCleanly: createdSessionInternally
-          ? Boolean(ownedSession?.handshakeProof?.closedCleanly)
-          : true,
-        toolInvocationsCount,
-      },
+      mcpSessionLifecycle,
       localMcpPilotDiagnostics,
       ...(discoverySummary ? { discoverySummary } : {}),
     },

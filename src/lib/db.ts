@@ -45,8 +45,35 @@ export function getDatabaseUrl(): string {
 export function createPrismaClient(databaseUrl?: string): PrismaClient {
   const url = databaseUrl || getDatabaseUrl();
   assertSafeTestDatabase(url, process.env);
-  const adapter = new PrismaLibSql({ url });
-  return new PrismaClient({ adapter });
+  const createdClients: Array<{ close: () => void }> = [];
+  class TrackedPrismaLibSql extends PrismaLibSql {
+    createClient(config: any) {
+      const c = super.createClient(config);
+      createdClients.push(c);
+      return c;
+    }
+  }
+  const adapter = new TrackedPrismaLibSql({ url });
+  const rawClient = new PrismaClient({ adapter });
+  return new Proxy(rawClient, {
+    get(target, prop, receiver) {
+      if (prop === "$disconnect") {
+        return async () => {
+          try {
+            await target.$disconnect();
+          } finally {
+            for (const c of createdClients) {
+              try {
+                c.close();
+              } catch {}
+            }
+          }
+        };
+      }
+      const value = Reflect.get(target, prop, receiver);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
 }
 
 /**

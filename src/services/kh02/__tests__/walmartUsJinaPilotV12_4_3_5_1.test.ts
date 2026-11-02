@@ -1025,6 +1025,40 @@ describe("V12.4.3.5.1 — Acceptance Truth Reducer, Dynamic Diagnostics & Owners
       },
       negativeMutationsCaught: "60/60",
       ancestryVerified: true,
+      e2eExecutionSummary: {
+        status: "MEASURED",
+        sourceSha: EXPECTED_SHA,
+        observedAt: "2026-11-01T05:00:00.000Z",
+        data: {
+          totalSpecs: 12,
+          passedSpecsCount: 12,
+          failedSpecsCount: 0,
+          skippedWithoutAttemptCount: 0,
+        },
+      },
+      nicheRelevanceSummary: {
+        status: "MEASURED",
+        sourceSha: EXPECTED_SHA,
+        observedAt: "2026-11-01T05:00:00.000Z",
+        data: {
+          nicheTestsPassed: true,
+          devShortlistCount: 0,
+          devNicheMatchedCount: 0,
+          holdoutShortlistCount: 3,
+          holdoutNicheMatchedCount: 3,
+        },
+      },
+      historicalIdentitySummary: {
+        status: "MEASURED",
+        sourceSha: EXPECTED_SHA,
+        observedAt: "2026-11-01T05:00:00.000Z",
+        data: {
+          devShortlistCount: 0,
+          devVerifiedIdentityCount: 0,
+          holdoutShortlistCount: 3,
+          holdoutVerifiedIdentityCount: 0,
+        },
+      },
     });
 
     expect(release.engineeringVerdict).toBe("PASS");

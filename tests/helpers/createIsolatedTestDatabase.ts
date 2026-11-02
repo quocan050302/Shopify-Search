@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import crypto from "crypto";
+import v8 from "v8";
+import vm from "vm";
 import { createClient } from "@libsql/client";
 import { PrismaClient } from "@/generated/prisma/client";
 import { createPrismaClient } from "@/lib/db";
@@ -119,22 +121,41 @@ export async function createIsolatedTestDatabase(
 
   const canonical = canonicalizeSqliteDatabasePath(url);
 
-  // If local template exists, use it as fast copy; otherwise execute schema.sql DDL
+  // If local template exists, use it as fast copy; otherwise check/populate cached schema template in tmpdir
+  const cachedSchemaOnlyTemplate = path.join(
+    os.tmpdir(),
+    "swai-isolated-test-dbs",
+    "cached_clean_schema_template.db"
+  );
   if (fs.existsSync(sourceTemplatePath) && fs.statSync(sourceTemplatePath).size > 0) {
     fs.copyFileSync(sourceTemplatePath, filePath);
+  } else if (
+    schemaSqlPath === path.resolve(process.cwd(), "prisma/schema.sql") &&
+    fs.existsSync(cachedSchemaOnlyTemplate) &&
+    fs.statSync(cachedSchemaOnlyTemplate).size > 0
+  ) {
+    fs.copyFileSync(cachedSchemaOnlyTemplate, filePath);
   } else {
     fs.writeFileSync(filePath, "");
     await initializeIsolatedDatabaseSchema(url, schemaSqlPath);
+    if (schemaSqlPath === path.resolve(process.cwd(), "prisma/schema.sql")) {
+      try {
+        fs.copyFileSync(filePath, cachedSchemaOnlyTemplate);
+      } catch {}
+    }
   }
 
   // Configure WAL mode and busy timeout for safe multi-process concurrency
+  const pragmaClient = createClient({ url });
   try {
-    const pragmaClient = createClient({ url });
     await pragmaClient.execute("PRAGMA journal_mode = WAL;");
     await pragmaClient.execute("PRAGMA busy_timeout = 10000;");
-    pragmaClient.close();
   } catch {
     // Ignore pragma error if unsupported
+  } finally {
+    try {
+      pragmaClient.close();
+    } catch {}
   }
 
   const prisma = createPrismaClient(url);
@@ -150,8 +171,18 @@ export async function createIsolatedTestDatabase(
     }
 
     try {
+      v8.setFlagsFromString("--expose_gc");
+      const gc = vm.runInNewContext("gc");
+      if (typeof gc === "function") {
+        gc();
+        await new Promise((r) => setTimeout(r, 15));
+        gc();
+      }
+    } catch {}
+
+    try {
       if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
+        fs.rmSync(tempDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
       }
     } catch {
       // Handle Windows file locks with brief delay if needed

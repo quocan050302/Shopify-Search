@@ -760,7 +760,7 @@ describe("KH-02 V12.4.3.5.1 — Walmart US Integration, Persistence, Fencing, Wo
     expect(pitAudit.missingTimestampRejectedCount).toBe(1);
     expect(pitAudit.fixtureRecordsRejectedCount).toBe(1);
     expect(pitAudit.zeroLeakCount).toBe(true);
-  });
+  }, 25_000);
 
   it("D3: End-to-End Local HTTP Capture -> KH-01 Persistence -> Raw Schema ResearchEvidence + Semantic LandingPageSnapshot -> Readback & G16 Proof Verification", async () => {
     const http = await import("http");

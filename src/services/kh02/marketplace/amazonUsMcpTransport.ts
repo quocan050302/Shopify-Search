@@ -16,10 +16,14 @@
 
 import crypto from "crypto";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { MarketplaceObservationClass } from "./marketplaceEvidenceTypes";
+import {
+  AmazonMcpSessionLifecycleProof,
+  MarketplaceObservationClass,
+} from "./marketplaceEvidenceTypes";
 import {
   ParsedAmazonSearchSnapshotResult,
   RawAmazonSnapshotInput,
@@ -27,6 +31,8 @@ import {
   validateAmazonUsProductUrl,
   validateAmazonUsSearchUrl,
 } from "./amazonUsIdentity";
+
+export type { AmazonMcpSessionLifecycleProof };
 
 export const PLAYWRIGHT_MCP_PINNED_PACKAGE = "@playwright/mcp@0.0.83";
 export const PLAYWRIGHT_MCP_PINNED_VERSION = "0.0.83";
@@ -65,8 +71,13 @@ export interface PlaywrightMcpHandshakeProof {
   toolInvocationRecords?: PlaywrightMcpToolInvocationRecord[];
   startedAt: string;
   completedAt: string;
+  lastToolCompletedAt?: string | null;
+  closeStartedAt?: string | null;
+  closeFinishedAt?: string | null;
   durationMs: number;
   closedCleanly: boolean;
+  ownedChildPidTerminated?: boolean | "UNKNOWN";
+  closeError?: string | null;
   errorMessage: string | null;
 }
 
@@ -78,6 +89,10 @@ export interface AmazonPlaywrightMcpSession {
   readonly handshakeProof: PlaywrightMcpHandshakeProof;
   isAlive(): boolean;
   getToolInvocationRecords?(): PlaywrightMcpToolInvocationRecord[];
+  getSessionLifecycleProof?(options?: {
+    ownershipMode?: "ADAPTER_OWNED" | "CALLER_BORROWED";
+    observedOperationIds?: string[];
+  }): AmazonMcpSessionLifecycleProof;
   navigateAndCaptureProductSnapshot(
     url: string,
     options?: { timeoutMs?: number; signal?: AbortSignal }
@@ -141,6 +156,9 @@ export async function connectAmazonPlaywrightMcp(
   // 1. Explicit TEST_FIXTURE transport for unit/integration tests (never labeled REAL_STDIO_MCP or AUTHORIZED_LIVE)
   if (options.fixtureTransport?.enabled) {
     let closed = false;
+    let lastToolCompletedAt: string | null = null;
+    let closeStartedAt: string | null = null;
+    let closeFinishedAt: string | null = null;
     const toolInvocationRecords: PlaywrightMcpToolInvocationRecord[] = [];
     const completedAt = new Date().toISOString();
     const handshakeProof: PlaywrightMcpHandshakeProof = {
@@ -164,21 +182,37 @@ export async function connectAmazonPlaywrightMcp(
       toolInvocationRecords,
       startedAt,
       completedAt,
+      lastToolCompletedAt: null,
+      closeStartedAt: null,
+      closeFinishedAt: null,
       durationMs: Math.max(0, Date.now() - startedAtMs),
       closedCleanly: false,
+      ownedChildPidTerminated: false,
+      closeError: null,
       errorMessage: null,
+    };
+
+    const markFixtureClosed = () => {
+      if (closed) return;
+      closed = true;
+      const nowIso = new Date().toISOString();
+      closeStartedAt = closeStartedAt || nowIso;
+      closeFinishedAt = nowIso;
+      handshakeProof.closeStartedAt = closeStartedAt;
+      handshakeProof.closeFinishedAt = closeFinishedAt;
+      handshakeProof.closedCleanly = true;
+      handshakeProof.ownedChildPidTerminated = true;
+      handshakeProof.closeError = null;
     };
 
     if (options.signal) {
       if (options.signal.aborted) {
-        closed = true;
-        handshakeProof.closedCleanly = true;
+        markFixtureClosed();
       } else {
         options.signal.addEventListener(
           "abort",
           () => {
-            closed = true;
-            handshakeProof.closedCleanly = true;
+            markFixtureClosed();
           },
           { once: true }
         );
@@ -193,10 +227,33 @@ export async function connectAmazonPlaywrightMcp(
       handshakeProof,
       isAlive: () => !closed,
       getToolInvocationRecords: () => [...toolInvocationRecords],
+      getSessionLifecycleProof(opts) {
+        const ownershipMode = opts?.ownershipMode || "ADAPTER_OWNED";
+        return {
+          sessionId,
+          transportMode: "TEST_DOUBLE",
+          serverOrigin: "TEST_FIXTURE",
+          ownershipMode,
+          ownedChildPid: null,
+          startedAt,
+          lastToolCompletedAt,
+          closeStartedAt,
+          closeFinishedAt,
+          closedCleanly: closed ? handshakeProof.closedCleanly : false,
+          ownedChildPidTerminated: closed ? true : false,
+          closeError: handshakeProof.closeError ?? null,
+          toolInvocationsCount: toolInvocationRecords.length,
+          observedOperationIds: opts?.observedOperationIds || [],
+          sessionCreated: true,
+          transportKind: "TEST_FIXTURE",
+          reusedAcrossCandidates: true,
+          closedInFinally: closed && handshakeProof.closedCleanly === true,
+          toolCallCount: toolInvocationRecords.length,
+        };
+      },
       async navigateAndCaptureProductSnapshot(url, navOpts) {
         if (closed || navOpts?.signal?.aborted || options.signal?.aborted) {
-          closed = true;
-          handshakeProof.closedCleanly = true;
+          markFixtureClosed();
           throw new Error("MCP_SESSION_ABORTED: Test fixture MCP session aborted.");
         }
         const simErr = options.fixtureTransport?.simulateErrorByUrl?.[url];
@@ -205,6 +262,8 @@ export async function connectAmazonPlaywrightMcp(
         }
         const snap = options.fixtureTransport?.snapshotsByUrl?.[url];
         const invokedAt = new Date().toISOString();
+        lastToolCompletedAt = invokedAt;
+        handshakeProof.lastToolCompletedAt = invokedAt;
         const reqHash = crypto
           .createHash("sha256")
           .update(JSON.stringify({ url }), "utf8")
@@ -274,8 +333,7 @@ export async function connectAmazonPlaywrightMcp(
         };
       },
       async close() {
-        closed = true;
-        handshakeProof.closedCleanly = true;
+        markFixtureClosed();
       },
     };
 
@@ -386,7 +444,33 @@ export async function connectAmazonPlaywrightMcp(
   let transport: StdioClientTransport | null = null;
   let client: Client | null = null;
   let closed = false;
+  let closePromise: Promise<void> | null = null;
   let ownedChildPid: number | null = null;
+  let lastToolCompletedAt: string | null = null;
+  let closeStartedAt: string | null = null;
+  let closeFinishedAt: string | null = null;
+  let ownedChildPidTerminated: boolean | "UNKNOWN" = "UNKNOWN";
+  let closeError: string | null = null;
+
+  const isOwnedPidAlive = (pid: number | null): boolean => {
+    if (!pid || pid <= 0) return false;
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const waitForOwnedPidExit = async (pid: number | null, maxWaitMs: number): Promise<boolean> => {
+    if (!pid || pid <= 0) return true;
+    const deadline = Date.now() + maxWaitMs;
+    while (Date.now() < deadline) {
+      if (!isOwnedPidAlive(pid)) return true;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    return !isOwnedPidAlive(pid);
+  };
 
   const cleanupPlaywrightMcpTempDir = () => {
     try {
@@ -400,17 +484,45 @@ export async function connectAmazonPlaywrightMcp(
   const safeCloseTransport = async () => {
     if (closed) return;
     closed = true;
+    if (!closeStartedAt) {
+      closeStartedAt = new Date().toISOString();
+    }
+    const closeErrors: string[] = [];
     try {
       await client?.close();
-    } catch {}
+    } catch (err: any) {
+      closeErrors.push(`client.close: ${err?.message || String(err)}`);
+    }
     try {
       await transport?.close();
-    } catch {}
+    } catch (err: any) {
+      closeErrors.push(`transport.close: ${err?.message || String(err)}`);
+    }
     const proc = (transport as any)?._process;
-    if (proc && typeof proc.pid === "number" && !proc.killed) {
-      try {
-        process.kill(proc.pid, "SIGTERM");
-      } catch {}
+    const targetPid = ownedChildPid || (proc && typeof proc.pid === "number" ? proc.pid : null);
+    if (targetPid && targetPid > 0) {
+      if (isOwnedPidAlive(targetPid)) {
+        try {
+          process.kill(targetPid, "SIGTERM");
+        } catch {}
+      }
+      let exited = await waitForOwnedPidExit(targetPid, 1000);
+      if (!exited && isOwnedPidAlive(targetPid)) {
+        try {
+          process.kill(targetPid, "SIGKILL");
+        } catch {}
+        exited = await waitForOwnedPidExit(targetPid, 1000);
+      }
+      ownedChildPidTerminated = exited;
+      if (!exited) {
+        closeErrors.push(`OWNED_CHILD_PID_${targetPid}_STILL_ALIVE_AFTER_CLOSE`);
+      }
+    } else {
+      ownedChildPidTerminated = true;
+    }
+    closeFinishedAt = new Date().toISOString();
+    if (closeErrors.length > 0 && ownedChildPidTerminated !== true) {
+      closeError = closeErrors.join("; ");
     }
     cleanupPlaywrightMcpTempDir();
   };
@@ -429,10 +541,61 @@ export async function connectAmazonPlaywrightMcp(
     }
   }
 
+  const resolvePinnedPlaywrightMcpSpawn = (
+    cmd: string,
+    cmdArgs: string[]
+  ): { spawnCommand: string; spawnArgs: string[] } => {
+    const pkgIdx = cmdArgs.indexOf(PLAYWRIGHT_MCP_PINNED_PACKAGE);
+    if (
+      (cmd === "npx" || cmd === "npx.cmd") &&
+      pkgIdx !== -1
+    ) {
+      try {
+        const npxDir = path.join(
+          process.env.LOCALAPPDATA ||
+            path.join(os.homedir(), "AppData", "Local"),
+          "npm-cache",
+          "_npx"
+        );
+        if (fs.existsSync(npxDir)) {
+          for (const d of fs.readdirSync(npxDir)) {
+            const pkgDir = path.join(
+              npxDir,
+              d,
+              "node_modules",
+              "@playwright",
+              "mcp"
+            );
+            const pkgJsonPath = path.join(pkgDir, "package.json");
+            const cliJsPath = path.join(pkgDir, "cli.js");
+            if (fs.existsSync(pkgJsonPath) && fs.existsSync(cliJsPath)) {
+              const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+              if (
+                pkgJson?.name === "@playwright/mcp" &&
+                pkgJson?.version === PLAYWRIGHT_MCP_PINNED_VERSION
+              ) {
+                const mcpFlags = cmdArgs.slice(pkgIdx + 1);
+                return {
+                  spawnCommand: process.execPath,
+                  spawnArgs: [cliJsPath, ...mcpFlags],
+                };
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+    return { spawnCommand: cmd, spawnArgs: cmdArgs };
+  };
+
   try {
-    transport = new StdioClientTransport({
+    const { spawnCommand, spawnArgs } = resolvePinnedPlaywrightMcpSpawn(
       command,
-      args,
+      args
+    );
+    transport = new StdioClientTransport({
+      command: spawnCommand,
+      args: spawnArgs,
       stderr: "pipe",
     });
 
@@ -544,8 +707,13 @@ export async function connectAmazonPlaywrightMcp(
       toolInvocationRecords,
       startedAt,
       completedAt,
+      lastToolCompletedAt: null,
+      closeStartedAt: null,
+      closeFinishedAt: null,
       durationMs: Math.max(0, Date.now() - startedAtMs),
       closedCleanly: false,
+      ownedChildPidTerminated: "UNKNOWN",
+      closeError: null,
       errorMessage: null,
     };
 
@@ -557,10 +725,48 @@ export async function connectAmazonPlaywrightMcp(
       handshakeProof,
       isAlive: () => !closed,
       getToolInvocationRecords: () => [...toolInvocationRecords],
+      getSessionLifecycleProof(opts) {
+        const ownershipMode = opts?.ownershipMode || "ADAPTER_OWNED";
+        const mappedTransportMode =
+          serverOrigin === "PINNED_PLAYWRIGHT_MCP" ? "REAL_STDIO_MCP" : "TEST_DOUBLE";
+        const mappedServerOrigin =
+          serverOrigin === "PINNED_PLAYWRIGHT_MCP"
+            ? "PINNED_PLAYWRIGHT_MCP"
+            : "LOCAL_TEST_SERVER";
+        const isClosedCleanly = closed ? handshakeProof.closedCleanly === true : false;
+        const pidTerminatedVal: boolean | "UNKNOWN" = closed
+          ? ownedChildPidTerminated === true
+          : isOwnedPidAlive(ownedChildPid)
+          ? false
+          : "UNKNOWN";
+        const captureToolCallsCount = toolInvocationRecords.filter(
+          (r) => r.toolName !== "browser_close"
+        ).length;
+        return {
+          sessionId,
+          transportMode: mappedTransportMode,
+          serverOrigin: mappedServerOrigin,
+          ownershipMode,
+          ownedChildPid,
+          startedAt,
+          lastToolCompletedAt,
+          closeStartedAt,
+          closeFinishedAt,
+          closedCleanly: isClosedCleanly,
+          ownedChildPidTerminated: pidTerminatedVal,
+          closeError,
+          toolInvocationsCount: captureToolCallsCount,
+          observedOperationIds: opts?.observedOperationIds || [],
+          sessionCreated: true,
+          transportKind: "REAL_STDIO_MCP",
+          reusedAcrossCandidates: true,
+          closedInFinally: isClosedCleanly,
+          toolCallCount: captureToolCallsCount,
+        };
+      },
       async navigateAndCaptureProductSnapshot(url, navOpts) {
         if (closed || navOpts?.signal?.aborted || options.signal?.aborted) {
-          await safeCloseTransport();
-          handshakeProof.closedCleanly = true;
+          await this.close();
           throw new Error("MCP_SESSION_ABORTED: Playwright MCP session aborted.");
         }
 
@@ -573,6 +779,8 @@ export async function connectAmazonPlaywrightMcp(
           name: "browser_navigate",
           arguments: { url },
         });
+        lastToolCompletedAt = new Date().toISOString();
+        handshakeProof.lastToolCompletedAt = lastToolCompletedAt;
         const navRespHash = crypto
           .createHash("sha256")
           .update(JSON.stringify(navResult || null), "utf8")
@@ -604,6 +812,8 @@ export async function connectAmazonPlaywrightMcp(
           name: "browser_snapshot",
           arguments: {},
         });
+        lastToolCompletedAt = new Date().toISOString();
+        handshakeProof.lastToolCompletedAt = lastToolCompletedAt;
         const snapRespHash = crypto
           .createHash("sha256")
           .update(JSON.stringify(snapResult || null), "utf8")
@@ -799,23 +1009,45 @@ export async function connectAmazonPlaywrightMcp(
         };
       },
       async close() {
-        try {
-          if (!closed && discoveredTools.includes("browser_close")) {
-            await client?.callTool({ name: "browser_close", arguments: {} }).catch(() => null);
-          }
-        } finally {
-          await safeCloseTransport();
-          let pidTerminated = true;
-          if (ownedChildPid && ownedChildPid > 0) {
-            try {
-              process.kill(ownedChildPid, 0);
-              pidTerminated = false;
-            } catch {
-              pidTerminated = true;
-            }
-          }
-          handshakeProof.closedCleanly = pidTerminated;
+        if (closePromise) {
+          return closePromise;
         }
+        closePromise = (async () => {
+          closeStartedAt = closeStartedAt || new Date().toISOString();
+          handshakeProof.closeStartedAt = closeStartedAt;
+          try {
+            if (!closed && discoveredTools.includes("browser_close")) {
+              const closeInvokedAt = new Date().toISOString();
+              const closeReqHash = crypto
+                .createHash("sha256")
+                .update(JSON.stringify({ tool: "browser_close" }), "utf8")
+                .digest("hex");
+              await Promise.race([
+                client?.callTool({ name: "browser_close", arguments: {} }),
+                new Promise((resolve) => setTimeout(resolve, 2500)),
+              ]).catch(() => null);
+              if (!lastToolCompletedAt) {
+                lastToolCompletedAt = closeStartedAt;
+                handshakeProof.lastToolCompletedAt = lastToolCompletedAt;
+              }
+              toolInvocationRecords.push({
+                toolName: "browser_close",
+                url: "about:blank",
+                invokedAt: closeInvokedAt,
+                requestHash: closeReqHash,
+                responseHash: null,
+              });
+            }
+          } finally {
+            await safeCloseTransport();
+            const pidTerminated = ownedChildPidTerminated === true;
+            handshakeProof.closeFinishedAt = closeFinishedAt;
+            handshakeProof.ownedChildPidTerminated = pidTerminated;
+            handshakeProof.closeError = closeError;
+            handshakeProof.closedCleanly = pidTerminated && closeError === null;
+          }
+        })();
+        return closePromise;
       },
     };
 

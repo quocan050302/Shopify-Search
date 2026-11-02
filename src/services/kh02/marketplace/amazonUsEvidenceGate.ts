@@ -29,8 +29,21 @@ export interface EvaluateAmazonEvidenceGateOptions {
   mcpSessionLifecycle?: {
     sessionId?: string | null;
     transportKind?: string | null;
-    closedCleanly?: boolean | null;
-    ownedChildPidTerminated?: boolean | null;
+    transportMode?: string | null;
+    serverOrigin?: string | null;
+    ownershipMode?: string | null;
+    ownedChildPid?: number | null;
+    startedAt?: string | null;
+    lastToolCompletedAt?: string | null;
+    closeStartedAt?: string | null;
+    closeFinishedAt?: string | null;
+    closedCleanly?: boolean | "UNKNOWN" | null;
+    ownedChildPidTerminated?: boolean | "UNKNOWN" | null;
+    closeError?: string | null;
+    toolInvocationsCount?: number;
+    observedOperationIds?: string[];
+    allLiveOpsMatchSessionId?: boolean;
+    sessionCreated?: boolean;
   } | null;
 }
 
@@ -96,19 +109,6 @@ export function evaluateAmazonUsEvidenceGate(
   const eligibleVerifiedLiveRows: AmazonProductEvidence[] = [];
   let usDeliveryConfirmedCount = 0;
   let observedUsdPriceCount = 0;
-
-  const mcpSessionClosedCleanly: boolean | null =
-    options.mcpSessionLifecycle === undefined || options.mcpSessionLifecycle === null
-      ? null
-      : options.mcpSessionLifecycle.closedCleanly === true &&
-        options.mcpSessionLifecycle.ownedChildPidTerminated !== false;
-
-  if (mcpSessionClosedCleanly === false) {
-    engineeringIntegrityOk = false;
-    blockers.push(
-      "MCP_SESSION_NOT_CLOSED_CLEANLY: Owned Playwright MCP session or child PID was not cleanly terminated."
-    );
-  }
 
   for (const row of evidenceRows || []) {
     if (!row) continue;
@@ -292,11 +292,97 @@ export function evaluateAmazonUsEvidenceGate(
   const verifiedLiveAsinsList = Array.from(verifiedLiveAsins);
   const verifiedLiveUsProductIdentitiesCount = verifiedLiveAsins.size;
 
+  const isCreatorsApiRoute =
+    policyContext.accessPolicyStatus === "AUTHORIZED_CREATORS_API" ||
+    policyContext.allowedAccessRoute === "OFFICIAL_CREATORS_API";
+  const liveMcpOps = (invocationLedger || []).filter(
+    (op) =>
+      Boolean(op) &&
+      op.observationClass === "AUTHORIZED_LIVE" &&
+      Boolean(op.transportSessionId)
+  );
+
+  let mcpSessionClosedCleanly: boolean | null = null;
+  if (options.mcpSessionLifecycle === undefined || options.mcpSessionLifecycle === null) {
+    if (!isCreatorsApiRoute && (liveMcpOps.length > 0 || eligibleVerifiedLiveRows.length > 0)) {
+      mcpSessionClosedCleanly = false;
+      blockers.push(
+        "MCP_SESSION_CLOSURE_UNPROVEN: Live Playwright MCP operations executed without a verified session lifecycle closure receipt."
+      );
+    } else {
+      mcpSessionClosedCleanly = null;
+    }
+  } else {
+    const lc = options.mcpSessionLifecycle;
+    if (lc.ownershipMode === "NONE" && lc.sessionCreated === false && liveMcpOps.length === 0) {
+      mcpSessionClosedCleanly = null;
+    } else {
+      const lcSessionId =
+        typeof lc.sessionId === "string" && lc.sessionId.trim().length > 0
+          ? lc.sessionId.trim()
+          : null;
+      const lcTransport = lc.transportMode || lc.transportKind || null;
+      const lcOrigin =
+        lc.serverOrigin ||
+        (lcTransport === "REAL_STDIO_MCP" ? "PINNED_PLAYWRIGHT_MCP" : null);
+      const lcClosed =
+        lc.closedCleanly === true && lc.ownedChildPidTerminated === true;
+      const sessionMismatch =
+        liveMcpOps.length > 0 &&
+        (!lcSessionId ||
+          liveMcpOps.some((op) => op.transportSessionId !== lcSessionId));
+      const closeStartedMs = lc.closeStartedAt ? Date.parse(lc.closeStartedAt) : NaN;
+      const closedBeforeOpFinish =
+        Number.isFinite(closeStartedMs) &&
+        liveMcpOps.some(
+          (op) =>
+            Boolean(op.completedAt) &&
+            Number.isFinite(Date.parse(op.completedAt)) &&
+            closeStartedMs < Date.parse(op.completedAt)
+        );
+      const invalidLiveMcpOrigin =
+        liveMcpOps.length > 0 &&
+        (lcTransport !== "REAL_STDIO_MCP" || lcOrigin !== "PINNED_PLAYWRIGHT_MCP");
+
+      mcpSessionClosedCleanly =
+        lcClosed && !sessionMismatch && !closedBeforeOpFinish && !invalidLiveMcpOrigin;
+
+      if (!mcpSessionClosedCleanly) {
+        engineeringIntegrityOk = false;
+        if (!lcClosed) {
+          blockers.push(
+            "MCP_SESSION_NOT_CLOSED_CLEANLY: Owned Playwright MCP session or child PID was not cleanly terminated."
+          );
+        }
+        if (sessionMismatch) {
+          blockers.push(
+            `MCP_SESSION_ID_MISMATCH: Live MCP operation transportSessionId does not match closed MCP sessionId '${lcSessionId || "null"}'.`
+          );
+        }
+        if (closedBeforeOpFinish) {
+          blockers.push(
+            "MCP_SESSION_CLOSED_BEFORE_OPERATIONS_COMPLETED: Session closeStartedAt precedes operation completedAt."
+          );
+        }
+        if (invalidLiveMcpOrigin) {
+          blockers.push(
+            `MCP_SESSION_ORIGIN_NOT_AUTHENTIC: Live Playwright MCP gate requires REAL_STDIO_MCP and PINNED_PLAYWRIGHT_MCP origin (observed transport=${lcTransport || "null"}, origin=${lcOrigin || "null"}).`
+          );
+        }
+      }
+    }
+  }
+
+  const mcpSessionRequirementMet =
+    isCreatorsApiRoute && liveMcpOps.length === 0
+      ? mcpSessionClosedCleanly !== false
+      : mcpSessionClosedCleanly === true;
+
   const requiredLiveTargetsMet = Boolean(
     verifiedLiveUsProductIdentitiesCount >= requiredLiveTargets &&
       distinctVerifiedProductFamilies >= requiredLiveTargets &&
       distinctCandidateIds >= requiredLiveTargets &&
-      mcpSessionClosedCleanly !== false
+      mcpSessionRequirementMet
   );
 
   const engineeringVerdict = engineeringIntegrityOk
@@ -394,6 +480,7 @@ export function evaluateAmazonUsEvidenceGate(
     observedUsdPriceCount,
     requiredLiveTargetsMet,
     mcpSessionClosedCleanly,
+    mcpSessionLifecycle: (options.mcpSessionLifecycle as any) ?? null,
     counts: {
       totalEvidenceRows: (evidenceRows || []).length,
       sameRunWorkspaceVerifiedRows,

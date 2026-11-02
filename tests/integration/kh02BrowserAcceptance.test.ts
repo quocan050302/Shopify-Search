@@ -5,14 +5,17 @@
 import { describe, it, expect } from "vitest";
 import { runKh02BrowserE2E } from "../../scripts/kh02/runKh02BrowserE2E";
 import { startSwaiTestServer, type SwaiTestServerHandle } from "../e2e/helpers/startSwaiTestServer";
+import { createIsolatedTestDatabase, type TestDatabaseHandle } from "../helpers/createIsolatedTestDatabase";
 import fs from "fs";
 import path from "path";
 
 describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
   it("launches Chromium, interacts with /products, and captures visual artifacts", async (ctx) => {
-    const envBase = process.env.SWAI_BASE_URL || process.env.BASE_URL;
-    let baseUrl = envBase && envBase.startsWith("http") ? envBase : "http://127.0.0.1:3000";
+    const rawEnvBase = process.env.SWAI_BASE_URL || process.env.BASE_URL;
+    const envBase = rawEnvBase && rawEnvBase.startsWith("http") ? rawEnvBase : undefined;
+    let baseUrl = envBase ? envBase : "http://127.0.0.1:3000";
     let ownedServer: SwaiTestServerHandle | null = null;
+    let ownedDb: TestDatabaseHandle | null = null;
     let isServerReachable = await fetch(`${baseUrl}/api/v1/kh02/version`)
       .then(async (r) => {
         if (!r.ok) return false;
@@ -22,8 +25,9 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
       .catch(() => false);
 
     if (!isServerReachable && !envBase) {
+      ownedDb = await createIsolatedTestDatabase({ prefix: "kh02-browser-acc" });
       ownedServer = await startSwaiTestServer({
-        databaseUrl: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || "file:./test.db",
+        databaseUrl: ownedDb.url,
         allowLocalBypass: true,
       });
       baseUrl = ownedServer.baseUrl;
@@ -60,6 +64,9 @@ describe("SWAI KH-02 V12.1.1 — Chromium Browser E2E Acceptance", () => {
     } finally {
       if (ownedServer) {
         await ownedServer.stop();
+      }
+      if (ownedDb) {
+        await ownedDb.teardown();
       }
     }
   }, 120000);
