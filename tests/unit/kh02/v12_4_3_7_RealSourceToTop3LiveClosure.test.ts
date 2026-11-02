@@ -914,10 +914,15 @@ describe("KH-02 V12.4.3.7 — Real Source-to-Top3 Live Execution Closure Suite",
           workspaceId: TEST_WS_A,
           researchRunId: TEST_RUN_A,
           candidateId: "cand_faroro_td20",
-          observationClass: "AUTHORIZED_LIVE",
+          observationClass: "TEST_FIXTURE",
+          requestMode: "TEST_FIXTURE",
+          fixtureSource: "USER_REPORTED_REFERENCE_FIELDS",
+          referenceOrigin: "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT",
         }
       );
 
+      expect(pdpEv.observationClass).toBe("TEST_FIXTURE");
+      expect(pdpEv.evidenceOrigin).toBe("USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT");
       expect(pdpEv.asin).toBe("B0D3XGHTJ5");
       expect(pdpEv.brand).toBe("faroro");
       expect(pdpEv.modelNumber).toBe("TD20");

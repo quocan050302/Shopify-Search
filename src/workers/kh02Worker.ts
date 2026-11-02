@@ -2189,7 +2189,9 @@ const isEntrypoint =
 
 if (isEntrypoint) {
   const isOnce = process.argv.includes("--once");
-  runWorkerLoop({ once: isOnce }).catch((err) => {
+  const pollArg = process.argv.find((a) => a.startsWith("--poll-interval-ms="));
+  const pollIntervalMs = pollArg ? Math.max(100, Number(pollArg.split("=")[1]) || 2000) : 2000;
+  runWorkerLoop({ once: isOnce, pollIntervalMs }).catch((err) => {
     console.error("Fatal worker error:", err);
     process.exit(1);
   });

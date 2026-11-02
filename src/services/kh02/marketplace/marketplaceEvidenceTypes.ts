@@ -201,6 +201,9 @@ export interface AmazonProductEvidence {
   missingFields: string[];
   rejectionReasons: string[];
   sanitizationWarnings?: string[];
+  extractionWarnings?: string[];
+  fixtureSource?: string | null;
+  referenceOrigin?: string | null;
   accessPolicyStatus: AmazonAccessPolicyStatus;
   status: MarketplaceEvidenceStatus;
 }

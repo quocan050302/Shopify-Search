@@ -11,6 +11,8 @@
  * - verifyAmazonProductIdentity(candidate, evidence)
  */
 
+import fs from "fs";
+import path from "path";
 import {
   AmazonCombinedIdentityVerdict,
   AmazonMetaCandidateEquivalenceVerdict,
@@ -22,6 +24,80 @@ import {
   MarketplaceVerificationScope,
   computeDeterministicEvidenceHash,
 } from "./marketplaceEvidenceTypes";
+
+export interface StandaloneAmazonReferenceManifest {
+  schemaVersion: string;
+  releaseVersion: string;
+  referenceId: string;
+  referenceOrigin: "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT";
+  referenceAvailability: "SUMMARY_AND_SCRIPT_ONLY";
+  referenceRawHashVerified: false;
+  referenceReplayStatus: "NOT_EXECUTED" | "REPLAYED_DIRECTLY";
+  standaloneReferenceStatus: "USER_REPORTED_SEARCH_TO_PDP_PASS";
+  standaloneAppIntegrationStatus: "NOT_TESTED_BY_REFERENCE";
+  rawBundleExpectedFiles: string[];
+  reportedExecutionContext: {
+    observedAt: string;
+    searchQuery: string;
+    searchUrl: string;
+    requestedPostalCode: string;
+    observedDeliveryLocationText: string;
+    observedDeliveryPostalCode: string;
+    observedCurrency: string;
+  };
+  reportedSearchCards: Array<{
+    rank: number;
+    asin: string;
+    title: string;
+    brand: string | null;
+    observedSearchHref: string | null;
+    observedSearchHrefNote?: string;
+    price: string;
+    currency: string;
+    isSponsored: boolean;
+  }>;
+  reportedPdpObservation: {
+    asin: string;
+    productTitle: string;
+    brand: string;
+    modelNumber: string;
+    seller: string;
+    price: number;
+    currency: string;
+    availability: string;
+    observedDeliveryLocationText: string;
+    observedDeliveryPostalCode: string;
+    observedCanonicalUrl: string;
+    canonicalUrlOrigin: string;
+    derivedNormalizedCanonicalUrl: string;
+  };
+  trustBoundaryPolicy: {
+    fixtureObservationClass: "TEST_FIXTURE";
+    fixtureSource: "USER_REPORTED_REFERENCE_FIELDS";
+    forbiddenObservationClasses: string[];
+    canSatisfyCurrentRunLiveGate: false;
+    explanation: string;
+  };
+}
+
+export function loadStandaloneAmazonReferenceManifest(): StandaloneAmazonReferenceManifest {
+  const manifestPath = path.resolve(
+    process.cwd(),
+    "src/services/kh02/marketplace/REFERENCE_AMAZON_STANDALONE_2026_11_02.json"
+  );
+  const raw = fs.readFileSync(manifestPath, "utf8");
+  const parsed = JSON.parse(raw) as StandaloneAmazonReferenceManifest;
+  if (
+    parsed.referenceOrigin !== "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT" ||
+    parsed.referenceAvailability !== "SUMMARY_AND_SCRIPT_ONLY" ||
+    parsed.referenceRawHashVerified !== false ||
+    parsed.standaloneReferenceStatus !== "USER_REPORTED_SEARCH_TO_PDP_PASS" ||
+    parsed.standaloneAppIntegrationStatus !== "NOT_TESTED_BY_REFERENCE"
+  ) {
+    throw new Error("INVALID_STANDALONE_AMAZON_REFERENCE_MANIFEST");
+  }
+  return parsed;
+}
 
 export interface AmazonUrlValidationResult {
   valid: boolean;
@@ -1096,6 +1172,8 @@ export interface ParseAmazonEvidenceMetadata {
   requestMode?: "URL_VERIFICATION" | "AUTHORIZED_SEARCH" | "USER_IMPORTED" | "TEST_FIXTURE" | "NONE";
   accessPolicyStatus?: AmazonProductEvidence["accessPolicyStatus"];
   isCached?: boolean;
+  fixtureSource?: "USER_REPORTED_REFERENCE_FIELDS" | "DETERMINISTIC_UNIT_FIXTURE" | null;
+  referenceOrigin?: "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT" | null;
 }
 
 /**
@@ -1109,11 +1187,37 @@ export function parseAmazonProductEvidence(
 ): AmazonProductEvidence {
   const observedAt = responseMetadata.observedAt || new Date().toISOString();
   const sourceTimestamp = responseMetadata.sourceTimestamp ?? null;
-  const observationClass: MarketplaceObservationClass =
-    responseMetadata.observationClass || "UNVERIFIED";
-  const requestMode = responseMetadata.requestMode || "URL_VERIFICATION";
-  const accessPolicyStatus =
-    responseMetadata.accessPolicyStatus || "FIXTURE_OR_USER_IMPORT_ONLY";
+  const structRefOrigin = (snapshot.structuredData as any)?.referenceOrigin || null;
+  const structFixtureSource = (snapshot.structuredData as any)?.fixtureSource || null;
+  const effectiveReferenceOrigin =
+    responseMetadata.referenceOrigin || structRefOrigin || null;
+  const effectiveFixtureSource =
+    responseMetadata.fixtureSource || structFixtureSource || null;
+  const isExternalReferenceOrFixture =
+    responseMetadata.requestMode === "TEST_FIXTURE" ||
+    responseMetadata.observationClass === "TEST_FIXTURE" ||
+    Boolean(effectiveFixtureSource) ||
+    effectiveReferenceOrigin === "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT";
+  const attemptedLivePromotionOnFixture =
+    isExternalReferenceOrFixture && responseMetadata.observationClass === "AUTHORIZED_LIVE";
+
+  const observationClass: MarketplaceObservationClass = isExternalReferenceOrFixture
+    ? "TEST_FIXTURE"
+    : responseMetadata.observationClass || "UNVERIFIED";
+  const requestMode = isExternalReferenceOrFixture
+    ? "TEST_FIXTURE"
+    : responseMetadata.requestMode || "URL_VERIFICATION";
+  const accessPolicyStatus = isExternalReferenceOrFixture
+    ? "FIXTURE_OR_USER_IMPORT_ONLY"
+    : responseMetadata.accessPolicyStatus || "FIXTURE_OR_USER_IMPORT_ONLY";
+  const resolvedEvidenceOrigin =
+    effectiveReferenceOrigin === "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT"
+      ? "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT"
+      : effectiveFixtureSource
+      ? `AMAZON_US_FIXTURE_${effectiveFixtureSource}`
+      : observationClass === "AUTHORIZED_LIVE"
+      ? "AMAZON_US_LIVE_MCP"
+      : `AMAZON_US_${observationClass}`;
 
   // Extract only वास्तविक (genuine) upstream providerRequestId; never copy local providerInvocationRef
   const localInvocationRef =
@@ -1176,7 +1280,7 @@ export function parseAmazonProductEvidence(
       providerInvocationRef: localInvocationRef,
       providerRequestId,
       responseEvidenceRef: rawEvidenceHash ? `amz_raw:${rawEvidenceHash.slice(0, 16)}` : null,
-      evidenceOrigin: observationClass === "AUTHORIZED_LIVE" ? "AMAZON_US_LIVE_MCP" : `AMAZON_US_${observationClass}`,
+      evidenceOrigin: resolvedEvidenceOrigin,
       httpStatus:
         typeof snapshot.httpStatus === "number" && Number.isFinite(snapshot.httpStatus)
           ? snapshot.httpStatus
@@ -1193,7 +1297,12 @@ export function parseAmazonProductEvidence(
       matchingReasons: [],
       missingFields: ["asin", "productTitle", "brand"],
       rejectionReasons: reasons,
-      sanitizationWarnings: partial?.sanitizationWarnings || [],
+      sanitizationWarnings: [
+        ...(attemptedLivePromotionOnFixture
+          ? ["EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE"]
+          : []),
+        ...(partial?.sanitizationWarnings || []),
+      ],
       accessPolicyStatus,
       status,
     };
@@ -1490,10 +1599,7 @@ export function parseAmazonProductEvidence(
     providerInvocationRef: localInvocationRef,
     providerRequestId,
     responseEvidenceRef: rawEvidenceHash ? `amz_raw:${rawEvidenceHash.slice(0, 16)}` : null,
-    evidenceOrigin:
-      observationClass === "AUTHORIZED_LIVE"
-        ? "AMAZON_US_LIVE_MCP"
-        : `AMAZON_US_${observationClass}`,
+    evidenceOrigin: resolvedEvidenceOrigin,
     httpStatus,
     httpStatusOrigin,
     observationClass,
@@ -1509,7 +1615,17 @@ export function parseAmazonProductEvidence(
     matchingReasons: [`Observed canonical ASIN ${canonicalIdentity.asin}`],
     missingFields,
     rejectionReasons: [],
-    sanitizationWarnings,
+    fixtureSource: effectiveFixtureSource,
+    referenceOrigin: effectiveReferenceOrigin,
+    extractionWarnings: attemptedLivePromotionOnFixture
+      ? ["EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE"]
+      : [],
+    sanitizationWarnings: [
+      ...(attemptedLivePromotionOnFixture
+        ? ["EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE"]
+        : []),
+      ...sanitizationWarnings,
+    ],
     accessPolicyStatus,
     status: "OBSERVED_UNVERIFIED",
   };
@@ -2229,6 +2345,8 @@ export interface ParsedAmazonSearchCard {
   currency: "USD" | null;
   observedDeliveryPostalCode: string | null;
   isSponsored: false;
+  searchIdentityVerdict?: AmazonSearchIdentityVerdict;
+  combinedIdentityVerdict?: AmazonCombinedIdentityVerdict;
 }
 
 export interface ParsedAmazonSearchSnapshotResult {
@@ -2275,6 +2393,7 @@ export function parseAmazonSearchSnapshotCards(
     structuredData?: {
       deliveryLocationText?: string | null;
       deliveryPostalCode?: string | null;
+      currency?: string | null;
       searchCards?: Array<{
         asin?: string | null;
         title?: string | null;
@@ -2573,6 +2692,8 @@ export function parseAmazonSearchSnapshotCards(
       currency: parsedCurrency,
       observedDeliveryPostalCode,
       isSponsored: false,
+      searchIdentityVerdict: "SEARCH_ONLY_NOT_VERIFIED",
+      combinedIdentityVerdict: "DISCOVERED_NOT_VERIFIED",
     });
   };
 
