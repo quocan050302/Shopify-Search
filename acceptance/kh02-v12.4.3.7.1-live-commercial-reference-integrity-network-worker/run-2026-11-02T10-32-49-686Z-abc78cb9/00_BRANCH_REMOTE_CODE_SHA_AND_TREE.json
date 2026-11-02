@@ -1,0 +1,17 @@
+{
+  "releaseVersion": "12.4.3.7.1",
+  "runtimeReleaseIdentity": "12.4.3.5.0.3",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "codeSha": "abc78cb97b627c49849db389e6920e19c46c58ae",
+  "testedTreeSha": "28d7143d96415a88b63796634c4e830630126d5d",
+  "remoteFeatureShaBeforePush": "e1077477c7ab8fc54e129f7c95f557da5e3baecd",
+  "priorBaselineSha": "e1077477c7ab8fc54e129f7c95f557da5e3baecd",
+  "priorTestedCodeSha": "4774be7148aec2b2a1efc23791c5ec5c789f231c",
+  "baseQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "mergeBaseQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "masterHeadSha": "5dd5128b4ec9ce70e957a2f250b9012a25e9118c",
+  "mergeBaseMasterSha": "a135423477962d5ef842d4d6c1b85295fd05131e",
+  "ancestryVerified": true,
+  "checkedAt": "2026-11-02T10:32:50.038Z"
+}

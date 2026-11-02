@@ -1,0 +1,190 @@
+{
+  "split": "DEV",
+  "niche": "Pet Gadgets",
+  "sourceSha": "abc78cb97b627c49849db389e6920e19c46c58ae",
+  "datasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+  "windowStart": "2026-06-01T00:00:00.000Z",
+  "windowEnd": "2026-10-24T00:00:00.000Z",
+  "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+  "historicalObservationCount": 19,
+  "reconstructedCandidateCount": 3,
+  "nicheFunnel": {
+    "sourceAdsCount": 19,
+    "excludedFixtureOrQuarantineAdsCount": 16,
+    "pointInTimeAdsCount": 3,
+    "reconstructedCandidatesCount": 3,
+    "matchedCount": 0,
+    "mismatchCount": 3,
+    "uncertainCount": 0,
+    "identityVerifiedOrProbableCount": 0,
+    "identityVerifiedCount": 0,
+    "provisionalDiscoveryCount": 0,
+    "funnelProbableCount": 0,
+    "distinctMatchedFamiliesCount": 0,
+    "shortlistedCount": 0,
+    "shortlistShortfallCount": 3
+  },
+  "shortlistCount": 0,
+  "nicheMatchedCount": 0,
+  "verifiedIdentityCount": 0,
+  "funnelProbableCount": 0,
+  "shortlistShortfallCount": 3,
+  "nicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+  "identityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY",
+  "candidateFunnel": {
+    "sourceAds": 19,
+    "nonSyntheticSourceAds": 3,
+    "reconstructedCandidates": 3,
+    "identityResolved": 0,
+    "nicheEligible": 0,
+    "nicheMatchingCandidates": 0,
+    "identityVerifiedCandidates": 0,
+    "liveVerifiedCandidates": 0,
+    "provisionalCandidates": 0,
+    "nicheRejectedMismatch": 3,
+    "nicheRejectedUncertain": 0,
+    "familyDeduped": 0,
+    "shortlistSelected": 0,
+    "verifiedIdentityCount": 0,
+    "funnelProbableCount": 0
+  },
+  "rejectionReasonHistogram": {
+    "CROSS_NICHE_MISMATCH": 3
+  },
+  "candidateEvaluations": [
+    {
+      "candidateId": "cand_hist_competitor-store.com_innovative_ergonomic_neck_clou",
+      "title": "Innovative ergonomic neck cloud cushion",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 1,
+      "observationsCount": 1,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "CROSS_NICHE_MISMATCH",
+      "reasons": [
+        "Candidate 'Innovative ergonomic neck cloud cushion' does not target 'Pet Gadgets' audience/category"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_innovative_ergonomic_neck_clou",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_innovative_ergonomic_neck_clou",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_top_ad__7234567890111111111",
+      "title": "Top Ad: 7234567890111111111",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 1,
+      "observationsCount": 1,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "CROSS_NICHE_MISMATCH",
+      "reasons": [
+        "Candidate 'Top Ad: 7234567890111111111' does not target 'Pet Gadgets' audience/category"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_top_ad__7234567890111111111",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_top_ad__7234567890111111111",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    },
+    {
+      "candidateId": "cand_hist_competitor-store.com_top_ad__7234567890222222222",
+      "title": "Top Ad: 7234567890222222222",
+      "storeDomain": "competitor-store.com",
+      "canonicalProductUrl": null,
+      "identityStatus": "UNVERIFIED",
+      "verificationEvidenceStatus": "MISSING",
+      "isCheckoutChampFunnel": false,
+      "identityReasonCodes": [
+        "MISSING_CONCRETE_MERCHANT_DOMAIN_OR_URL"
+      ],
+      "familyKey": "replayed_family",
+      "observationCount": 1,
+      "observationsCount": 1,
+      "matchStatus": "MISMATCH",
+      "nicheMatched": false,
+      "rejectionReasonCode": "CROSS_NICHE_MISMATCH",
+      "reasons": [
+        "Candidate 'Top Ad: 7234567890222222222' does not target 'Pet Gadgets' audience/category"
+      ],
+      "proofRefs": [
+        "candidate:cand_hist_competitor-store.com_top_ad__7234567890222222222",
+        "domain:competitor-store.com"
+      ],
+      "discoveryRefs": [
+        "candidate:cand_hist_competitor-store.com_top_ad__7234567890222222222",
+        "domain:competitor-store.com"
+      ],
+      "independentMerchantProofRefs": [],
+      "evidenceRefIds": [],
+      "evidenceObservedAt": null
+    }
+  ],
+  "shortlistProducts": [],
+  "productEvidenceLedger": [],
+  "distinctFamiliesCount": 0,
+  "futureLeakageDetected": false,
+  "futureLeakageCount": 0,
+  "joinedMetadataLeakageAudit": {
+    "joinedLinksEvaluatedCount": 0,
+    "trustedPointInTimeJoinedCount": 0,
+    "rejectedPostCutoffJoinedCount": 0,
+    "unverifiedTimestampJoinedCount": 0,
+    "postCutoffFallbackAppliedCount": 0,
+    "adObservationOnlyCount": 3,
+    "excludedFixtureRecordCount": 16,
+    "leakagePrevented": true
+  },
+  "amazonPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 1,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 1,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": false,
+    "leakagePrevented": true
+  },
+  "walmartPointInTimeAudit": {
+    "asOfTimestamp": "2026-10-24T00:00:00.000Z",
+    "totalEvaluatedCount": 1,
+    "eligiblePointInTimeCount": 0,
+    "rejectedPostCutoffCount": 0,
+    "excludedFixtureCount": 1,
+    "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+    "vacuousAsProviderHistoricalParityProof": false,
+    "leakagePrevented": true
+  },
+  "demandCoverageStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "notes": "Point-in-time replay executed for niche 'Pet Gadgets' with 19 historical records (3 non-synthetic); zero future leakage verified (rejectedPostCutoffJoined=0). Niche-matched discovery shortlist items: 0/0 (nicheCoverageStatus=INSUFFICIENT_NICHE_COVERAGE, verifiedIdentityCount=0/0, identityCoverageStatus=INSUFFICIENT_VERIFIED_IDENTITY, funnelProbableCount=0, shortfall=3). Demand evaluation detail: No niche-matched candidates in DEV window at asOf (INSUFFICIENT_NICHE_COVERAGE). Demand coverage honest classification: INSUFFICIENT_HISTORICAL_EVIDENCE."
+}

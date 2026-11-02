@@ -1,0 +1,172 @@
+{
+  "codeSha": "abc78cb97b627c49849db389e6920e19c46c58ae",
+  "generatedAt": "2026-11-02T10:38:36.027Z",
+  "filesCount": 33,
+  "files": [
+    {
+      "fileName": "00_BRANCH_REMOTE_CODE_SHA_AND_TREE.json",
+      "sizeBytes": 845,
+      "sha256": "8996e43c82c13072d97b4299c7a3c4fa592ddf8d9eff5dfc9ba2abc859520245"
+    },
+    {
+      "fileName": "01_RUNTIME_MCP_AND_ENV_PRECHECK.json",
+      "sizeBytes": 1153,
+      "sha256": "781974a634cc183be6430125d527a27b98f58535e1660ffb2c20aad4272084e9"
+    },
+    {
+      "fileName": "02_STANDALONE_REFERENCE_PROVENANCE_AND_RAW_BUNDLE_STATUS.json",
+      "sizeBytes": 5246,
+      "sha256": "3bf0dd64aa1acf80a4875ead990c91243f57a994b2aaf83e6fc9baabd7a43410"
+    },
+    {
+      "fileName": "03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "sizeBytes": 973,
+      "sha256": "f6e18d4162df174edfa78beae441760db3e02d4e20d4c5b223c5ddb1c5a08ec2"
+    },
+    {
+      "fileName": "04_REAL_HTTP_POST_AND_JOB_FENCING_LEDGER.json",
+      "sizeBytes": 3011,
+      "sha256": "5fd82b964bc30211d997b544f1466be8b4c107caa2cac7210bc15e7e2efe9d86"
+    },
+    {
+      "fileName": "05_LIVE_META_COLLECTION_AND_OBSERVATIONS.json",
+      "sizeBytes": 606,
+      "sha256": "501b03bc212e009bbec35f428110614a98fc7102605d67657a9ddf1f33cf7f93"
+    },
+    {
+      "fileName": "06_CANDIDATE_DISCOVERY_AND_NICHE_RELEVANCE_FUNNEL.json",
+      "sizeBytes": 1526,
+      "sha256": "065cb08d129e382bcecf2372eb4bb27e8e9a15ddfb52ac14eddf6d1d67e93a53"
+    },
+    {
+      "fileName": "07_PRODUCT_FAMILY_DEDUPLICATION_AND_SHORTLIST.json",
+      "sizeBytes": 2089,
+      "sha256": "8c8c8371ebe64e10e34e75a9c69c7373fbddf935ae30b7f2303d32abd716dc9c"
+    },
+    {
+      "fileName": "08_AMAZON_UI_LOCATION_AND_CURRENCY_PREFLIGHT.json",
+      "sizeBytes": 5141,
+      "sha256": "35e1a3106b6a3fed7c45c7737394dbc15bfe9d0ed7189b9a8f75efed71cd38bd"
+    },
+    {
+      "fileName": "09_AMAZON_TARGET_SELECTION_AND_SEARCH_INTENT_PLAN.json",
+      "sizeBytes": 66776,
+      "sha256": "caa6b6ca734ebd5c146b3bdf11ac313e859d5cc1ff03133df89c4f6c89be5774"
+    },
+    {
+      "fileName": "10_AMAZON_LIVE_MCP_OPERATION_LEDGER.json",
+      "sizeBytes": 11923,
+      "sha256": "e53c5fd65ed1eec17d3c6954d64833126f0c02e37691f84578d5930ff7798298"
+    },
+    {
+      "fileName": "11_AMAZON_SEARCH_CARDS_AND_OBSERVED_HREF_SELECTION.json",
+      "sizeBytes": 25323,
+      "sha256": "d77cf13ac208c77220f00e742020cb38341c5be00a3002d93afcd09fe0f70f47"
+    },
+    {
+      "fileName": "12_AMAZON_PDP_COMMERCIAL_AND_TWO_TIER_IDENTITY_VERDICTS.json",
+      "sizeBytes": 6801,
+      "sha256": "31377229daff0399c6dc07844f940a40874df4454700355acb7b0f4b072f99f8"
+    },
+    {
+      "fileName": "13_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "sizeBytes": 848,
+      "sha256": "ae5359b5e1f2db2365417fca075bb732f6354d32987abee6f3dcfd582611682a"
+    },
+    {
+      "fileName": "14_DB_PERSISTENCE_SNAPSHOT_AND_RESEARCH_EVIDENCE_ROWS.json",
+      "sizeBytes": 10110,
+      "sha256": "43e7cb80c2bbe8152fa5e42d492671f53220322bffff291fa6c0b095f187d3f4"
+    },
+    {
+      "fileName": "15_REAL_HTTP_GET_API_PARITY_REPORT.json",
+      "sizeBytes": 704,
+      "sha256": "81bf596b8b493976ba99b73fd8647706d54c7ea3a3024451ac3c0975ef62a3c9"
+    },
+    {
+      "fileName": "16_PRODUCT_FINDER_UI_DOM_AND_RELOAD_PARITY.json",
+      "sizeBytes": 2645,
+      "sha256": "962dd116f7dadc3d60877618caef68258bfee134122c610221825e8422586b33"
+    },
+    {
+      "fileName": "17_SECONDARY_NICHE_NO_OVERLAP_PROOF.json",
+      "sizeBytes": 1488,
+      "sha256": "9ca76545837e9a58b69394a75a3498105c9b1736c9b8f18d3f9fa68e87db3f40"
+    },
+    {
+      "fileName": "18_WALMART_PAUSED_STATUS_AND_PRIOR_CAPTCHA_RECEIPT.json",
+      "sizeBytes": 1190,
+      "sha256": "a053ab78ffda5893476021792fb19d43b5f906d94149eb90b9b803b65aad3f3c"
+    },
+    {
+      "fileName": "19_NON_INFLATION_BEFORE_AFTER_PROOF.json",
+      "sizeBytes": 11047,
+      "sha256": "3dc7d6d2fc0390a10f6910da3967d27d603ea7da3046fbc0e4b4d061be813e82"
+    },
+    {
+      "fileName": "20_READ_ONLY_GET_AND_WORKSPACE_ISOLATION_PROOF.json",
+      "sizeBytes": 383,
+      "sha256": "690bb2fc05aa513563224c96f4ce0d85dd0a0aac45f090e6e254c130c71ce44e"
+    },
+    {
+      "fileName": "21_POSITIVE_AND_NEGATIVE_TEST_MATRIX_RESULTS.json",
+      "sizeBytes": 19515,
+      "sha256": "b6e15ef5a01da9c1e8be31c1252f5bbb0ed038ab56aaa8868620cf374cc83871"
+    },
+    {
+      "fileName": "22_TARGETED_UNIT_AND_INTEGRATION_TEST_RESULTS.json",
+      "sizeBytes": 1026,
+      "sha256": "ea7f9a40413bc863b247fa51b0865b7806b2dab33e3807f04795362fc07eabfc"
+    },
+    {
+      "fileName": "23_FULL_REPOSITORY_REGRESSION_RESULTS.json",
+      "sizeBytes": 1513,
+      "sha256": "86a91d510736e1fe27260e7e46014207c3294237dddd7fda688770e26e4485d7"
+    },
+    {
+      "fileName": "24_E2E_SPEC_EXECUTION_RECEIPTS.json",
+      "sizeBytes": 9523,
+      "sha256": "930efbfb65a2250c4e7e56dc2282dfc4df2cc34512053cb7fcb4b911246e2ea3"
+    },
+    {
+      "fileName": "25_HISTORICAL_DEV_REPLAY_2026_10_24.json",
+      "sizeBytes": 1427,
+      "sha256": "fa1de74c691812f5db0946fa8b1a92e2e1168bf209595ce1b7b8db2f8e11ac03"
+    },
+    {
+      "fileName": "26_HISTORICAL_HOLDOUT_REPLAY_2026_10_30.json",
+      "sizeBytes": 4706,
+      "sha256": "b0eb50e2551a7dea84eda02111a03b87a5447ea04132d2bf6451ad5a9c9ee654"
+    },
+    {
+      "fileName": "27_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "sizeBytes": 435,
+      "sha256": "09bb224ccd8898b8908e19535f98df98e4bad0382227d1b7260d4ab14a66db2d"
+    },
+    {
+      "fileName": "28_PHYSICAL_NEGATIVE_MUTATION_SUITE_RESULTS.json",
+      "sizeBytes": 24453,
+      "sha256": "962611f61bb1ebe6c79e982ab1a5af9e50f83ad95967e56a9d227fe45a164d09"
+    },
+    {
+      "fileName": "29_INDEPENDENT_VALIDATOR_REPORT.json",
+      "sizeBytes": 30948,
+      "sha256": "dc0560a35bb09d35fcffa29b2cb45ff204a9dc67681ccc38955334d5c7838a65"
+    },
+    {
+      "fileName": "30_FINAL_RELEASE_VERDICT_TABLE.json",
+      "sizeBytes": 2552,
+      "sha256": "0bd9e214ce0cf7968c7917d2b3fb6499388f532bc1c503a854fd07be6834c492"
+    },
+    {
+      "fileName": "31_FINAL_OWNER_REPORT_VI.md",
+      "sizeBytes": 5569,
+      "sha256": "c1066d8d0559f8a717bf0c77052cffed400aa5e63d5891a6b98d62860bb08efb"
+    },
+    {
+      "fileName": "AUDIT_CALL_GRAPH.md",
+      "sizeBytes": 3393,
+      "sha256": "b066ab5f6a3ee3c348959797ba1ed11c569ed15b600f6a5113cbaa4ae8b6b8bc"
+    }
+  ]
+}

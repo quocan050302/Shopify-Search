@@ -1,0 +1,281 @@
+{
+  "codeSha": "abc78cb97b627c49849db389e6920e19c46c58ae",
+  "evaluatedAt": "2026-11-02T10:38:31.587Z",
+  "workspaceId": "ws_v12_4_3_7_1_strict_live_1793615827414",
+  "researchRunId": "kh02_run_1793615829108_a2otf",
+  "maxCardsPerSearchCap": 5,
+  "sponsoredCardsSelectedCount": 0,
+  "unvisitedCardsPromotedToVerifiedCount": 0,
+  "observedHrefSelectedCount": 2,
+  "searchBlockedOrEmpty": false,
+  "searchCardsLedger": [
+    {
+      "candidateId": "cand_1212440541",
+      "searchUrl": "https://www.amazon.com/s?k=uahpet-official%20UAHPET%20Fresh%20Food%20Automatic%20Pet%20Feeder%20XLWSQ",
+      "normalizedKeywords": "uahpet-official UAHPET Fresh Food Automatic Pet Feeder XLWSQ",
+      "queryParameterVerified": true,
+      "observedDeliveryPostalCode": "95829",
+      "selectedAsin": "B0H1MB3YRQ",
+      "selectedObservedHref": "https://www.amazon.com/uahpet-Automatic-Semiconductor-Pre-Heating-Programmable/dp/B0H1MB3YRQ/ref=sr_1_1?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-1",
+      "firstCardDisposition": "FIRST_CARD_SELECTED_FOR_PDP:asin=B0H1MB3YRQ,match=PROBABLE_PRODUCT",
+      "cards": [
+        {
+          "asin": "B0H1MB3YRQ",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0H1MB3YRQ",
+          "observedSearchHref": "https://www.amazon.com/uahpet-Automatic-Semiconductor-Pre-Heating-Programmable/dp/B0H1MB3YRQ/ref=sr_1_1?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-1",
+          "rawObservedHref": "/uahpet-Automatic-Semiconductor-Pre-Heating-Programmable/dp/B0H1MB3YRQ/ref=sr_1_1?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-1",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 1,
+          "productTitle": "uahpet Cat Wet Food Automatic Feeder with Semiconductor Cooling & Pre-Heating, Programmable Timed Wet Food Dispenser for Cats, Stainless Steel Tray, Quiet, for 1-2 Cats Daily Use & Short Trips",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SELECTED_FOR_PDP_INSPECTION",
+          "combinedIdentityVerdict": "SELECTED_FOR_PDP_INSPECTION",
+          "selectedForPdp": true
+        },
+        {
+          "asin": "B0H3Q4L5P7",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0H3Q4L5P7",
+          "observedSearchHref": "https://www.amazon.com/Meowant-Automatic-Semiconductor-Pre-Heating-independent/dp/B0H3Q4L5P7/ref=sr_1_2?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-2",
+          "rawObservedHref": "/Meowant-Automatic-Semiconductor-Pre-Heating-independent/dp/B0H3Q4L5P7/ref=sr_1_2?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-2",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 2,
+          "productTitle": "Meowant Automatic Wet Food Cat Feeder, Semiconductor Cooling & Pre-Heating Global Recycled Standard Global Recycled Standard Global Recycled Standard",
+          "brand": "Meowant",
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0HC9RPP5T",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0HC9RPP5T",
+          "observedSearchHref": "https://www.amazon.com/Automatic-Dual-Temp-Semiconductor-Multi-function-Infrared/dp/B0HC9RPP5T/ref=sr_1_3?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-3",
+          "rawObservedHref": "/Automatic-Dual-Temp-Semiconductor-Multi-function-Infrared/dp/B0HC9RPP5T/ref=sr_1_3?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-3",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 3,
+          "productTitle": "Automatic Cat Feeder for Wet Food, Smart Dual-Temp Semiconductor",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0GRHQGDCB",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0GRHQGDCB",
+          "observedSearchHref": "https://www.amazon.com/PETLIBRO-Automatic-Semiconductor-Refrigerated-App-Controlled/dp/B0GRHQGDCB/ref=sr_1_4?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-4",
+          "rawObservedHref": "/PETLIBRO-Automatic-Semiconductor-Refrigerated-App-Controlled/dp/B0GRHQGDCB/ref=sr_1_4?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-4",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 4,
+          "productTitle": "PETLIBRO Automatic Wet Food Cat Feeder 2026 New Version with Semiconductor Cooling, Refrigerated 3 Fresh Meals in 3 Days, App-Controlled Pet Food Dispenser, Stainless Steel Bowl, Easy to Clean",
+          "brand": "PETLIBRO",
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0HLK1D2H3",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0HLK1D2H3",
+          "observedSearchHref": "https://www.amazon.com/HEAPETS-Automatic-Feeder-Personalized-Anti-Stealing/dp/B0HLK1D2H3/ref=sr_1_5?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-5",
+          "rawObservedHref": "/HEAPETS-Automatic-Feeder-Personalized-Anti-Stealing/dp/B0HLK1D2H3/ref=sr_1_5?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYalXysU2tLZEyw70zUcFRkCh7P9P4jH8-E5wouLJHci25bPtg_F0N5TymuerX55NwQ8Cpp6EsAAWwNK5VWrA7FnpubHM8I8GJowiyuKVY0zD76Du0op8goNxZ4VR6BBrgzAY0p3IM-6CgKOL5wEZuJmyym9pGC4EFIrEctNVrDOiDZR81vawEoba4tJvCJg3GpgmnqoghwG1nJjNCsnX00gIP9HCppNEg6-lwv8gHkw5c6dS-PqUV7rTFaThqNdDc5N3efMWGZgdiXobjvH-6M.miBLQ1rGrnI77p8IyU_5iUeSGxfPb9QzGRI3-gDD8tQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793615887&sr=8-5",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 5,
+          "productTitle": "RFID Automatic Cat Feeder, Collar Sensor for Personalized Meals",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        }
+      ],
+      "rejectedCards": [
+        {
+          "asin": "B0GWZN3RV6",
+          "title": "Automatic Dog Feeder - 8L/34 Cups Large Capacity Automatic Cat Food Dispenser with LCD Screen, Large Food Tray, Battery Operated, Timed Cat Feeder, Up to 50 Portions 6 Meals Per Day, Keeps Fresh Global Recycled Standard Global Recycled Standard Global Recycled Standard",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B09S8WMJY9",
+          "title": "PETLIBRO Automatic Cat Feeder, 5G WiFi Automatic Dog Food Dispenser with Freshness Preservation, 5L Timed Pet Feeder with Low Food Sensor, Up to 10 Meals Per Day, Granary Black",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0B5ZJY9MT",
+          "title": "PETLIBRO Automatic Cat Feeder with Camera, 1080P HD Video & Night Vision",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0D3LRBPSW",
+          "title": "White Black",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0D3LRBPSW",
+          "title": "White Black",
+          "reason": "SPONSORED_SEARCH_CARD_REJECTED"
+        },
+        {
+          "asin": "B0D8SXPRWH",
+          "title": "Pure White",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0D44QYZ7Z",
+          "title": "PETLIBRO Automatic Cat Feeder for 2 Cats, 5G&2.4G WiFi Pet Feeders, 5L Programmable Cat Food Dispenser with Airtight Lock-Fresh Technology, Dual Stainless Steel Bowls, Low Food Sensor",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B000GEWHNS",
+          "title": "PetSafe Automatic Dog Feeder, 5 Meals, 40 oz Capacity, Plastic, for Dry Food, Multiple Pets",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B06ZZC83MG",
+          "title": "Amazon Basics Automatic Pet Water Dispenser and Gravity Food Feeder Set for Cat and Dog, Easy to Clean, 152fl.oz food feeder, 135.3fl.oz water dispenser, Small, Pack of 2",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0BYDF2LS5",
+          "title": "PETLIBRO Automatic Cat Feeder, 5G WiFi Automatic Pet Feeder with Freshness Preservation, 3L Timed Cat Feeders for Dry Food, Up to 48 Portions 10 Meals Per Day, Granary Pet Feeder for Cat/Dog, White",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        }
+      ]
+    },
+    {
+      "candidateId": "cand_1587534715",
+      "searchUrl": "https://www.amazon.com/s?k=KittySpout%20The%20Wireless%20Fountain%20WF-F6-V1-B1",
+      "normalizedKeywords": "KittySpout The Wireless Fountain WF-F6-V1-B1",
+      "queryParameterVerified": true,
+      "observedDeliveryPostalCode": "95829",
+      "selectedAsin": "B0GR7P9CGR",
+      "selectedObservedHref": "https://www.amazon.com/KittySpoutTM-Wireless-Fountain-Stainless-Automatic/dp/B0GR7P9CGR/ref=sr_1_1?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-1",
+      "firstCardDisposition": "FIRST_CARD_SELECTED_FOR_PDP:asin=B0GR7P9CGR,match=EXACT_PRODUCT",
+      "cards": [
+        {
+          "asin": "B0GR7P9CGR",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0GR7P9CGR",
+          "observedSearchHref": "https://www.amazon.com/KittySpoutTM-Wireless-Fountain-Stainless-Automatic/dp/B0GR7P9CGR/ref=sr_1_1?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-1",
+          "rawObservedHref": "/KittySpoutTM-Wireless-Fountain-Stainless-Automatic/dp/B0GR7P9CGR/ref=sr_1_1?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-1",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 1,
+          "productTitle": "KittySpout™ Wireless Cat Water Fountain Stainless Steel, Cordless Battery Operated Automatic Pet Water Fountain for Cats, Quiet Indoor Drinking Fountain, Easy Clean, 4L Capacity",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SELECTED_FOR_PDP_INSPECTION",
+          "combinedIdentityVerdict": "SELECTED_FOR_PDP_INSPECTION",
+          "selectedForPdp": true
+        },
+        {
+          "asin": "B0GYZKHSVT",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0GYZKHSVT",
+          "observedSearchHref": "https://www.amazon.com/KittySpout-Stainless-Automatic-Circulating-Dishwasher/dp/B0GYZKHSVT/ref=sr_1_2?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-2",
+          "rawObservedHref": "/KittySpout-Stainless-Automatic-Circulating-Dishwasher/dp/B0GYZKHSVT/ref=sr_1_2?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-2",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 2,
+          "productTitle": "KittySpout 4L Stainless Steel Cat Water Fountain, Cordless Automatic Pet Drinking Dispenser, Quiet Circulating Water Bowl for Cats and Small Dogs, Dishwasher Safe, Indoor Use",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0FB8F2FNW",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0FB8F2FNW",
+          "observedSearchHref": "https://www.amazon.com/KittySpout-Stainless-Wireless-Fountain-4L/dp/B0FB8F2FNW/ref=sr_1_3?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-3",
+          "rawObservedHref": "/KittySpout-Stainless-Wireless-Fountain-4L/dp/B0FB8F2FNW/ref=sr_1_3?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-3",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 3,
+          "productTitle": "The KittySpout Stainless Steel Wireless Cat Water Fountain, 4L/108oz",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0DQC6H9FB",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0DQC6H9FB",
+          "observedSearchHref": "https://www.amazon.com/KittySpout-Stainless-Steel-Water-Fountain/dp/B0DQC6H9FB/ref=sr_1_4?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-4",
+          "rawObservedHref": "/KittySpout-Stainless-Steel-Water-Fountain/dp/B0DQC6H9FB/ref=sr_1_4?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-4",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 4,
+          "productTitle": "KittySpout Stainless Steel Cat Water Fountain Automatic Drinking Fountain, Quiet Circulating Water Bowl, Dishwasher Safe, Indoor Pet Fountain for Hydrated Healthy Cats (Stainless Steel, 4L Corded)",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        },
+        {
+          "asin": "B0FRF8X53F",
+          "canonicalAmazonUrl": "https://www.amazon.com/dp/B0FRF8X53F",
+          "observedSearchHref": "https://www.amazon.com/KittySpout-Stainless-Automatic-Circulating-Dishwasher/dp/B0FRF8X53F/ref=sr_1_5?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-5",
+          "rawObservedHref": "/KittySpout-Stainless-Automatic-Circulating-Dishwasher/dp/B0FRF8X53F/ref=sr_1_5?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk5vaBixwh-FS5cQnkqXfyxf25lWuPCYpqKteRuUIA6QlG4z7DzeR2tCBxU-b9mMv1Nbz1JiKhHIRzUH9AwGyaYt6pNtf9LRWCrDm9Rbsj8mtI_5pHg-FRGGbj0qifgCrAO3b_V0i0nHZQP9VaL9cZIh27Q7xqu5xvPh9ChW68pcc03NlTD4WcTNrj43A-NB8pIjNXMm-JcInuygUtYOnM3Q.Cs_k02eT-OSGCZeQ5Q-zwcFujNeyHN52n5JT53PQo8A&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793615897&sr=8-5",
+          "observedSearchHrefOrigin": "OBSERVED_HREF",
+          "searchRankPosition": 5,
+          "productTitle": "KittySpout Stainless Steel Cat Water Fountain Automatic Drinking Fountain, Quiet Circulating Water Bowl, Dishwasher Safe, Indoor Pet Fountain for Hydrated Healthy Cats (Stainless Steel, 2.2L Corded)",
+          "brand": null,
+          "price": null,
+          "currency": null,
+          "observedDeliveryPostalCode": "95829",
+          "isSponsored": false,
+          "searchIdentityVerdict": "SEARCH_ONLY_NOT_VERIFIED",
+          "combinedIdentityVerdict": "DISCOVERED_NOT_VERIFIED",
+          "selectedForPdp": false
+        }
+      ],
+      "rejectedCards": [
+        {
+          "asin": "B0FC1W656T",
+          "title": "Wireless KittySpout 2.0 Filters for 135oz/4L (4)",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0DJVX1BX6",
+          "title": "Cat Water Fountain Wireless,Stainless Steel-Rechargeable- Battery Operated Cat Water Fountain,108oz/ 3.2l Automatic Cordless Pet Fountain,Pet Fountain with 4200 Mah Battery",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0H2H5VLQM",
+          "title": "Cattasaurus 135oz Wireless Cat Water Fountain, 304 Stainless Steel Automatic Water Dispenser for Cats, Ultra Quiet, Smart Sensor, 6-Layer Filtration (Silvery, Fountain + 2 Filters (2-Week Supply))",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        },
+        {
+          "asin": "B0H1D251S2",
+          "title": "Wireless-Stainless Steel Cat Water Fountain-108oz/3.2L Pet Fountain Rechargeable & Cordless Design, Ultra-Quiet Pump-Easy to Clean-BPA-Free Automatic Water Dispenser",
+          "reason": "SEARCH_CARD_EXTRACTION_CAP_EXCEEDED_MAX_5"
+        }
+      ]
+    }
+  ]
+}

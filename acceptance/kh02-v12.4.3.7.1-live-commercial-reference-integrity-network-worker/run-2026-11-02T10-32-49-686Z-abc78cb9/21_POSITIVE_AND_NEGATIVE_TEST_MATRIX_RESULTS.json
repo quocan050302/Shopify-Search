@@ -1,0 +1,311 @@
+{
+  "codeSha": "abc78cb97b627c49849db389e6920e19c46c58ae",
+  "evaluatedAt": "2026-11-02T10:33:12.867Z",
+  "suiteFile": "tests/unit/kh02/v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+  "allPassed": true,
+  "totalCasesCount": 50,
+  "passedCasesCount": 50,
+  "failedCasesCount": 0,
+  "cases": [
+    {
+      "caseId": "A01",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A01: Cold homepage load waits for #twotabsearchtextbox readiness before clicking location trigger",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A02",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A02: Search box not ready after max bounded polls -> returns READY_TIMEOUT, usDeliveryVerified = false, does not fabricate ZIP",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A03",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A03: Location trigger #nav-global-location-popover-link missing -> returns UNKNOWN, observedDeliveryPostalCode = null",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A04",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A04: Location dialog opens, #GLUXZipUpdateInput filled with 95829, Apply clicked, confirmation handled, post-reload header shows Deliver to Sacramento 95829 -> observedDeliveryPostalCode = 95829, usDeliveryVerified = true",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A05",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A05: Location dialog opens, Apply clicked, but post-reload header still shows Deliver to Vietnam -> observedDeliveryPostalCode = null, verifiedDeliveryMarket = null, status = US_NOT_CONFIRMED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A06",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A06: Location dialog opens, #GLUXZipUpdateInput missing or Apply disabled -> status = DIALOG_OR_APPLY_UNAVAILABLE, usDeliveryVerified = false",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A07",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A07: CAPTCHA / bot wall during homepage or location modal -> CAPTCHA_BLOCKED / BLOCKED_PROVIDER, session aborts remaining ops and closes cleanly",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A08",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A08: Sign-in wall during location modal -> AUTHENTICATION_REQUIRED / BLOCKED_PROVIDER, no login attempted",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A09",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A09: No internal fetch('/portal-migration/hz/glow/address-change...') exists in amazonUsMcpTransport.ts",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A10",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A10: Search page header shows Deliver to Sacramento 95829 -> Search cards record observedDeliveryPostalCode = 95829",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A11",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A11: Currency symbol $ alone without explicit USD does NOT verify currency = USD (currency = null)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A12",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A12: US ZIP 95829 + non-USD currency (VND) yields commercialUsStatus = PARTIAL_US_COMMERCIAL or NOT_USD_VERIFIED, NOT US_COMMERCIAL_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A13",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A13: US ZIP 95829 + explicit USD + numeric buybox price $49.99 yields commercialUsStatus = US_COMMERCIAL_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A14",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A14: Carousel / related-item price is ignored when main buybox price is absent (price = null)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A15",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A15: PDP missing ZIP does NOT borrow homepage/search ZIP as if observed on PDP (observedDeliveryPostalCode = null on PDP)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "A16",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A16: Seller and availability statuses are OBSERVED when present and NOT_OBSERVED when absent (null, never Unknown or 0)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B01",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B01: REFERENCE_AMAZON_STANDALONE_2026_11_02.json has referenceOrigin = USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT and referenceAvailability = SUMMARY_AND_SCRIPT_ONLY",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B02",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B02: referenceRawHashVerified = false when original external .playwright-mcp raw file is not present on disk",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B03",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B03: Parser test on standalone reference values uses observationClass = TEST_FIXTURE, fixtureSource = USER_REPORTED_REFERENCE_FIELDS",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B04",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B04: Attempting to mark synthetic reference fixture as observationClass = AUTHORIZED_LIVE without live MCP tool invocation receipt is downgraded",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B05",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B05: Standalone reference artifact cannot satisfy current-run live Amazon acceptance gate",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B06",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B06: Current-run live Amazon evidence requires real sessionId, ownedChildPid, and non-empty toolInvocationRecords from REAL_STDIO_MCP",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B07",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B07: LOCAL_MCP_TEST_DOUBLE / fixture session is labeled TEST_FIXTURE, never AUTHORIZED_LIVE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B08",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B08: Fixture snapshots (fixtureSnapshotsByUrl) are labeled TEST_FIXTURE, never AUTHORIZED_LIVE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B09",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B09: providerRequestId remains null when Playwright MCP provides no upstream request ID; never copies providerInvocationRef",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B10",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B10: httpStatus remains null (httpStatusOrigin = UNOBSERVED_NULL) when Playwright MCP does not expose HTTP status; never defaults to 200",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B11",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B11: Canonical URL /clp/B0D3XGHTJ5 is preserved in observedCanonicalUrl with canonicalUrlOrigin = OBSERVED_CANONICAL while canonicalAmazonUrl = https://www.amazon.com/dp/B0D3XGHTJ5",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B12",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B12: Canonical URL with different ASIN (/dp/B099999999 vs /dp/B0D3XGHTJ5) is rejected with ASIN_DISCREPANCY_ACROSS_SOURCES",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "B13",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B13: Unvisited search cards (4 of 5) remain searchIdentityVerdict = SEARCH_ONLY_NOT_VERIFIED and combinedIdentityVerdict = DISCOVERED_NOT_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C01",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C01: POST /api/v1/kh02/research without x-workspace-id returns 400 or 401",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C02",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C02: POST /api/v1/kh02/research with client-supplied KH02_AMAZON_US_LIVE_ALLOWED or KH02_WALMART_US_LIVE_ALLOWED returns 400",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C03",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C03: POST /api/v1/kh02/research returns 202 with researchRunId and QUEUED SyncJob before worker claims it",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C04",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C04: Worker claims QUEUED job with distinct workerId, sets claimToken, fencingToken, fencingGeneration >= 1, leaseExpiresAt",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C05",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C05: Stale worker with outdated claimToken / fencingGeneration cannot overwrite job state or persist evidence",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C06",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C06: Worker completes job and writes ResearchEvidence rows (KH02_AMAZON_US_PRODUCT_EVIDENCE)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C07",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C07: GET /research/runs/{runId}, GET /research, GET /leaderboard, GET /marketplace/amazon return consistent workspace-scoped data",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C08",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C08: GET routes are strictly read-only (0 new/modified DB rows across repeated GET requests)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C09",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C09: GET with Workspace B header cannot read Workspace A run or Amazon evidence",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C10",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C10: Product Finder UI data contract preserves exact shortlist and Amazon evidence fields across serialization/reload",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C11",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C11: Provisional shortlist items (PROVISIONAL_CANDIDATE) never render as verified evergreen winners (evergreenWinnerCount = 0)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C12",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C12: Shortfall (< 3 candidates) is never padded with fabricated or irrelevant items",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C13",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C13: Secondary niche (Home Organization) has 0 overlap in candidateId, productFamilyKey, and asin with Pet Gadgets",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C14",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C14: Walmart remains paused (PAUSED_EXTERNAL / PAUSED_BLOCKED_PROVIDER) and makes 0 live Walmart HTTP requests",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "C15",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C15: MCP session lifecycle tracks ownedChildPid and verifies clean termination on close()",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D01",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D01: selectDynamicAmazonVerificationTargets selects up to 2 top shortlist candidates and never falls back to candidates.slice(0, 3)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D02",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D02: deriveAmazonSearchIntents strips marketing fluff (50% OFF, Free Shipping, emojis, URLs) and builds clean product query",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D03",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D03: Search card brand is never copied from candidate.brand when search card DOM lacks brand",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D04",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D04: Search -> PDP same-item identity (AMAZON_SEARCH_PDP_IDENTITY_VERIFIED) does NOT auto-promote metaCandidateEquivalenceVerdict to EXACT_PRODUCT when brand/model differ",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D05",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D05: Brand-only match (BRAND_ONLY) never promotes to EXACT_PRODUCT",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "caseId": "D06",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D06: Amazon/Walmart evidence attachment produces 0 delta on evergreenScore, ranking, G07, G15, G16",
+      "passed": true,
+      "status": "passed"
+    }
+  ]
+}
