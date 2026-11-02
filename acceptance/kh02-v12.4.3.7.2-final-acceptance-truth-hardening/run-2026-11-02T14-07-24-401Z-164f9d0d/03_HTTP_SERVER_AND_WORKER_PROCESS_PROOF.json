@@ -1,0 +1,19 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "evaluatedAt": "2026-11-02T14:12:01.763Z",
+  "executionMode": "REAL_NETWORK_WORKER_E2E",
+  "acceptanceProcessPid": 77567,
+  "serverProcessPid": 79772,
+  "workerProcessPid": 79774,
+  "distinctProcessPidsVerified": true,
+  "serverCommand": "node /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/next@16.4.2_@babel+core@7.29.7_supports-color@7.2.0__@types+node@20.19.43_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/next/dist/bin/next start -p 61765 -H 127.0.0.1",
+  "workerCommand": "node --import tsx src/workers/kh02Worker.ts --poll-interval-ms=400",
+  "serverBindUrl": "http://127.0.0.1:61765",
+  "serverStartedAt": "2026-11-02T14:10:18.585Z",
+  "serverStoppedAt": "2026-11-02T14:12:01.763Z",
+  "workerStartedAt": "2026-11-02T14:10:19.242Z",
+  "workerStoppedAt": "2026-11-02T14:12:01.749Z",
+  "directRouteImportUsedForPrimaryAcceptance": false,
+  "inProcessExecuteResearchJobUsedForPrimaryAcceptance": false,
+  "processesTerminatedCleanly": true
+}

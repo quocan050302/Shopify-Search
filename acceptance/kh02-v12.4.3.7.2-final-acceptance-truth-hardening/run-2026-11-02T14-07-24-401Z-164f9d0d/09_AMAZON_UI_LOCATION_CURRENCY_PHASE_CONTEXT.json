@@ -1,0 +1,364 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "evaluatedAt": "2026-11-02T14:11:56.188Z",
+  "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+  "researchRunId": "kh02_run_1793628619229_ga48s",
+  "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+  "ownedChildPid": 79851,
+  "internalGlowFetchUsed": false,
+  "targetUsZip": "95829",
+  "searchBoxReady": true,
+  "locationTriggerFound": true,
+  "dialogOpened": true,
+  "zipInputFilled": true,
+  "applyClicked": true,
+  "confirmationClicked": false,
+  "initialDeliveryHeaderText": "Deliver to Vietnam",
+  "finalDeliveryHeaderText": "Deliver to Sacramento 95829‌",
+  "observedDeliveryPostalCode": "95829",
+  "verifiedDeliveryMarket": "US",
+  "usDeliveryVerified": true,
+  "observedDisplayedCurrencyCode": "USD",
+  "currencyPreferenceVerifiedUsd": true,
+  "finalEffectiveUsDeliveryVerified": true,
+  "finalEffectiveCurrencyUsdVerified": true,
+  "status": "US_DISPLAYED_CONTEXT_VERIFIED",
+  "stepsExecuted": [
+    "NAVIGATE_HOME",
+    "WAIT_SEARCH_BOX_READY",
+    "WAIT_SEARCH_BOX_READY",
+    "READ_INITIAL_CONTEXT",
+    "OPEN_LOCATION_POPOVER_AND_APPLY_ZIP",
+    "REFRESH_AND_READBACK_AFTER_APPLY",
+    "REFRESH_AND_READBACK_AFTER_APPLY"
+  ],
+  "phase1_initial_home": {
+    "phaseId": "phase1_initial_home",
+    "attempted": true,
+    "observedFields": {
+      "searchBoxReady": true,
+      "deliveryLinkVisible": true,
+      "initialDeliveryText": "Deliver to Vietnam",
+      "initialObservedZip": null,
+      "initialExplicitCurrency": "VND",
+      "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop"
+    },
+    "selectorOrTool": "browser_evaluate:#twotabsearchtextbox,#nav-global-location-popover-link,#glow-ingress-block",
+    "observedAt": "2026-11-02T14:11:28.571Z",
+    "rawSnapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "SUCCEEDED",
+    "reason": "Initial home loaded (delivery='Deliver to Vietnam', currency='VND')."
+  },
+  "phase2_zip_dialog_action": {
+    "phaseId": "phase2_zip_dialog_action",
+    "attempted": true,
+    "observedFields": {
+      "targetUsZip": "95829",
+      "locationDialogOpened": true,
+      "zipFieldVisible": true,
+      "zipInputFilled": true,
+      "applyClicked": true,
+      "confirmationHandled": false,
+      "alreadyTargetZipOnInitial": false
+    },
+    "selectorOrTool": "browser_evaluate:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate",
+    "observedAt": "2026-11-02T14:11:33.283Z",
+    "rawSnapshotHash": "53960f75ade617a5ef5add3bbed2c9713f0a2dcff7c31ca2178a6e6a0443c4c1",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "SUCCEEDED",
+    "reason": "Opened location popover, entered 95829 in #GLUXZipUpdateInput, and clicked Apply."
+  },
+  "phase3_home_readback": {
+    "phaseId": "phase3_home_readback",
+    "attempted": true,
+    "observedFields": {
+      "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+      "observedZip": "95829",
+      "observedExplicitCurrency": "USD",
+      "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+      "usDeliveryVerifiedOnHome": true
+    },
+    "selectorOrTool": "browser_navigate:#glow-ingress-block,#icp-touch-link-cop",
+    "observedAt": "2026-11-02T14:11:36.079Z",
+    "rawSnapshotHash": "7fb01561c01d9164e8d9a92eb0e940611b8ab77783c13f8755ddce1ac90df753",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "VERIFIED",
+    "reason": "Homepage readback confirmed 'Deliver to Sacramento 95829‌' (ZIP=95829, homeExplicitCurrency=USD)."
+  },
+  "phase4_search_readback": {
+    "phaseId": "phase4_search_readback",
+    "attempted": true,
+    "observedFields": {
+      "searchPageZip": "95829",
+      "searchPageExplicitCurrency": null,
+      "usZipMaintainedOnSearch": true
+    },
+    "selectorOrTool": "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]",
+    "observedAt": "2026-11-02T14:11:56.188Z",
+    "rawSnapshotHash": "61e036c60940da0dfc4f0af75f29371eae915a854f33da00e3afbe3a4e7d91c7",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "PARTIAL",
+    "reason": "Search page header ZIP=95829, searchExplicitCurrency=UNKNOWN."
+  },
+  "phase5_pdp_readback": {
+    "phaseId": "phase5_pdp_readback",
+    "attempted": true,
+    "observedFields": {
+      "pdpPageZip": "95829",
+      "pdpExplicitCurrency": "USD",
+      "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+      "pdpEvaluatedCount": 2,
+      "pdpNumericUsdPriceCount": 2,
+      "asinsObserved": [
+        "B0H1MB3YRQ",
+        "B0GR7P9CGR"
+      ]
+    },
+    "selectorOrTool": "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]",
+    "observedAt": "2026-11-02T14:11:56.188Z",
+    "rawSnapshotHash": "76da2b8121d4b0941f3a49ebdb058104dfe09f2544d19deeb34e82596bf427f4",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "VERIFIED",
+    "reason": "PDP readback observed ZIP=95829, currency=USD (usdPricedRows=2/2)."
+  },
+  "phase6_post_session_close": {
+    "phaseId": "phase6_post_session_close",
+    "attempted": true,
+    "observedFields": {
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "ownedChildPid": 79851,
+      "mcpSessionClosedCleanly": true,
+      "ownedChildPidTerminated": true,
+      "allLiveOpsMatchSessionId": true,
+      "closeFinishedAt": "2026-11-02T14:11:50.668Z"
+    },
+    "selectorOrTool": "browser_close+SIGTERM_WAIT_EXIT",
+    "observedAt": "2026-11-02T14:11:50.668Z",
+    "rawSnapshotHash": "96b27825d743b1013e7eede4cc0c01496f1a0b4c34784f539006b4f4408dc551",
+    "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+    "status": "VERIFIED",
+    "reason": "Session pw_mcp_mvzc7i2t_ea9433b7 (PID=79851) closedCleanly=true, pidTerminated=true."
+  },
+  "phases": {
+    "phase1_initial_home": {
+      "phaseId": "phase1_initial_home",
+      "attempted": true,
+      "observedFields": {
+        "searchBoxReady": true,
+        "deliveryLinkVisible": true,
+        "initialDeliveryText": "Deliver to Vietnam",
+        "initialObservedZip": null,
+        "initialExplicitCurrency": "VND",
+        "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop"
+      },
+      "selectorOrTool": "browser_evaluate:#twotabsearchtextbox,#nav-global-location-popover-link,#glow-ingress-block",
+      "observedAt": "2026-11-02T14:11:28.571Z",
+      "rawSnapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "SUCCEEDED",
+      "reason": "Initial home loaded (delivery='Deliver to Vietnam', currency='VND')."
+    },
+    "phase2_zip_dialog_action": {
+      "phaseId": "phase2_zip_dialog_action",
+      "attempted": true,
+      "observedFields": {
+        "targetUsZip": "95829",
+        "locationDialogOpened": true,
+        "zipFieldVisible": true,
+        "zipInputFilled": true,
+        "applyClicked": true,
+        "confirmationHandled": false,
+        "alreadyTargetZipOnInitial": false
+      },
+      "selectorOrTool": "browser_evaluate:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate",
+      "observedAt": "2026-11-02T14:11:33.283Z",
+      "rawSnapshotHash": "53960f75ade617a5ef5add3bbed2c9713f0a2dcff7c31ca2178a6e6a0443c4c1",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "SUCCEEDED",
+      "reason": "Opened location popover, entered 95829 in #GLUXZipUpdateInput, and clicked Apply."
+    },
+    "phase3_home_readback": {
+      "phaseId": "phase3_home_readback",
+      "attempted": true,
+      "observedFields": {
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+        "observedZip": "95829",
+        "observedExplicitCurrency": "USD",
+        "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+        "usDeliveryVerifiedOnHome": true
+      },
+      "selectorOrTool": "browser_navigate:#glow-ingress-block,#icp-touch-link-cop",
+      "observedAt": "2026-11-02T14:11:36.079Z",
+      "rawSnapshotHash": "7fb01561c01d9164e8d9a92eb0e940611b8ab77783c13f8755ddce1ac90df753",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "VERIFIED",
+      "reason": "Homepage readback confirmed 'Deliver to Sacramento 95829‌' (ZIP=95829, homeExplicitCurrency=USD)."
+    },
+    "phase4_search_readback": {
+      "phaseId": "phase4_search_readback",
+      "attempted": true,
+      "observedFields": {
+        "searchPageZip": "95829",
+        "searchPageExplicitCurrency": null,
+        "usZipMaintainedOnSearch": true
+      },
+      "selectorOrTool": "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]",
+      "observedAt": "2026-11-02T14:11:56.188Z",
+      "rawSnapshotHash": "61e036c60940da0dfc4f0af75f29371eae915a854f33da00e3afbe3a4e7d91c7",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "PARTIAL",
+      "reason": "Search page header ZIP=95829, searchExplicitCurrency=UNKNOWN."
+    },
+    "phase5_pdp_readback": {
+      "phaseId": "phase5_pdp_readback",
+      "attempted": true,
+      "observedFields": {
+        "pdpPageZip": "95829",
+        "pdpExplicitCurrency": "USD",
+        "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+        "pdpEvaluatedCount": 2,
+        "pdpNumericUsdPriceCount": 2,
+        "asinsObserved": [
+          "B0H1MB3YRQ",
+          "B0GR7P9CGR"
+        ]
+      },
+      "selectorOrTool": "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]",
+      "observedAt": "2026-11-02T14:11:56.188Z",
+      "rawSnapshotHash": "76da2b8121d4b0941f3a49ebdb058104dfe09f2544d19deeb34e82596bf427f4",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "VERIFIED",
+      "reason": "PDP readback observed ZIP=95829, currency=USD (usdPricedRows=2/2)."
+    },
+    "phase6_post_session_close": {
+      "phaseId": "phase6_post_session_close",
+      "attempted": true,
+      "observedFields": {
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+        "ownedChildPid": 79851,
+        "mcpSessionClosedCleanly": true,
+        "ownedChildPidTerminated": true,
+        "allLiveOpsMatchSessionId": true,
+        "closeFinishedAt": "2026-11-02T14:11:50.668Z"
+      },
+      "selectorOrTool": "browser_close+SIGTERM_WAIT_EXIT",
+      "observedAt": "2026-11-02T14:11:50.668Z",
+      "rawSnapshotHash": "96b27825d743b1013e7eede4cc0c01496f1a0b4c34784f539006b4f4408dc551",
+      "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+      "status": "VERIFIED",
+      "reason": "Session pw_mcp_mvzc7i2t_ea9433b7 (PID=79851) closedCleanly=true, pidTerminated=true."
+    }
+  },
+  "finalZipVerdict": "PASS",
+  "finalUsdCommercialVerdict": "PASS",
+  "contradictionsDetected": [],
+  "homeAndLocationReadback": {
+    "attempted": true,
+    "status": "US_DISPLAYED_CONTEXT_VERIFIED",
+    "searchBoxReady": true,
+    "deliveryLinkVisible": true,
+    "homepageReady": true,
+    "locationDialogOpened": true,
+    "zipFieldVisible": true,
+    "applyClicked": true,
+    "confirmationHandled": false,
+    "initialDeliveryText": "Deliver to Vietnam",
+    "initialObservedZip": null,
+    "initialExplicitCurrency": "VND",
+    "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop",
+    "requestedPostalCode": "95829",
+    "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+    "observedDeliveryPostalCode": "95829",
+    "observedCurrency": "USD",
+    "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+    "usDeliveryVerified": true,
+    "homeSnapshotHash": "ab34dc50e3ce8ea4539c02839741bdb9b029ae1fa88b9f13dd9d9780f3d32b17",
+    "uiActionLedger": [
+      {
+        "step": "NAVIGATE_HOME",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T14:11:24.355Z",
+        "completedAt": "2026-11-02T14:11:26.025Z",
+        "durationMs": 1670,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/",
+        "snapshotHash": "c254625951da5f1bb4bf45ccca9b3af188e2fe9a91d631b9c1fbee855565b466"
+      },
+      {
+        "step": "WAIT_SEARCH_BOX_READY",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T14:11:26.535Z",
+        "completedAt": "2026-11-02T14:11:28.059Z",
+        "durationMs": 1524,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/ref=nav_logo",
+        "snapshotHash": "9646f5bf74c8b9d334a73a62cf65eff3815b6420d83e7c3d530e5d8a55e96dae"
+      },
+      {
+        "step": "WAIT_SEARCH_BOX_READY",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T14:11:28.059Z",
+        "completedAt": "2026-11-02T14:11:28.571Z",
+        "durationMs": 512,
+        "status": "SUCCEEDED",
+        "detail": "Poll 2/4: searchBoxReady=true",
+        "snapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125"
+      },
+      {
+        "step": "READ_INITIAL_CONTEXT",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T14:11:28.059Z",
+        "completedAt": "2026-11-02T14:11:28.571Z",
+        "durationMs": 0,
+        "status": "SUCCEEDED",
+        "detail": "initialGlow=Deliver to Vietnam, initialZip=null, initialCurrency=VND",
+        "snapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125"
+      },
+      {
+        "step": "OPEN_LOCATION_POPOVER_AND_APPLY_ZIP",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T14:11:28.571Z",
+        "completedAt": "2026-11-02T14:11:33.283Z",
+        "durationMs": 4712,
+        "status": "SUCCEEDED",
+        "detail": "dialogOpened=true, zipFieldVisible=true, applyClicked=true, confirmationHandled=false, reason=UI_ZIP_SUBMITTED",
+        "snapshotHash": "53960f75ade617a5ef5add3bbed2c9713f0a2dcff7c31ca2178a6e6a0443c4c1"
+      },
+      {
+        "step": "REFRESH_AND_READBACK_AFTER_APPLY",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T14:11:34.573Z",
+        "completedAt": "2026-11-02T14:11:36.079Z",
+        "durationMs": 1506,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/ref=nav_logo",
+        "snapshotHash": "7fb01561c01d9164e8d9a92eb0e940611b8ab77783c13f8755ddce1ac90df753"
+      },
+      {
+        "step": "REFRESH_AND_READBACK_AFTER_APPLY",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T14:11:36.079Z",
+        "completedAt": "2026-11-02T14:11:36.597Z",
+        "durationMs": 0,
+        "status": "SUCCEEDED",
+        "detail": "afterGlow=Deliver to Sacramento 95829‌, afterZip=95829, afterCurrency=null",
+        "snapshotHash": "ab34dc50e3ce8ea4539c02839741bdb9b029ae1fa88b9f13dd9d9780f3d32b17"
+      }
+    ],
+    "notes": [
+      "NOT_USD_VERIFIED: Observed ZIP 95829, but explicit currency is 'null' (source=NONE)."
+    ],
+    "searchPageZip": "95829",
+    "searchPageExplicitCurrency": null,
+    "searchSnapshotHash": "61e036c60940da0dfc4f0af75f29371eae915a854f33da00e3afbe3a4e7d91c7",
+    "pdpPageZip": "95829",
+    "pdpExplicitCurrency": "USD",
+    "pdpSnapshotHash": "76da2b8121d4b0941f3a49ebdb058104dfe09f2544d19deeb34e82596bf427f4"
+  },
+  "consistencyValidation": {
+    "consistent": true,
+    "valid": true,
+    "contradictions": []
+  }
+}

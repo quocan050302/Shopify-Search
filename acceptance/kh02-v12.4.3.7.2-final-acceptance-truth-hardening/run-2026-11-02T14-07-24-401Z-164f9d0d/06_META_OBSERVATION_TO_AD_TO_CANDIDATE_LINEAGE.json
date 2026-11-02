@@ -1,0 +1,867 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "evaluatedAt": "2026-11-02T14:12:01.777Z",
+  "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+  "researchRunId": "kh02_run_1793628619229_ga48s",
+  "sourceMode": "LIVE_ONLY",
+  "syntheticPromotedToLiveCount": 0,
+  "cachePromotedToLiveCount": 0,
+  "crossWorkspaceAdLinkedCount": 0,
+  "missingPersistedAdInDbCount": 0,
+  "unexecutedQueryObservationCount": 0,
+  "persistedAdRecordsCount": 22,
+  "lineageVerifiedCandidatesCount": 3,
+  "lineageRejectedCount": 0,
+  "candidateLineageChains": [
+    {
+      "valid": true,
+      "authenticatedLiveObservationCount": 2,
+      "uniqueLiveExternalAdIds": [
+        "2046326005986245",
+        "1802296680785588"
+      ],
+      "duplicateExternalAdIdsDetected": [],
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "rejectedLinks": [],
+      "verifiedLinks": [
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_3_97dce81f",
+          "providerRequestId": "cf1331faf6af4dba812c0fbc7b666db8",
+          "upstreamAdId": "2046326005986245",
+          "persistedAdId": "cmvqvm7sp002g23g9wlgnjffu",
+          "sourceObservationId": "cmvzc6djg002hjyg9gs5icr3m",
+          "candidateId": "cand_1212440541",
+          "researchProductId": "cand_453563126",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:28.321Z",
+          "completedAt": "2026-11-02T14:10:31.434Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 1
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_3_97dce81f",
+          "providerRequestId": "cf1331faf6af4dba812c0fbc7b666db8",
+          "upstreamAdId": "1802296680785588",
+          "persistedAdId": "cmvqvm7t8002y23g95smyus54",
+          "sourceObservationId": "cmvzc6djn002pjyg9aikxfuaz",
+          "candidateId": "cand_1212440541",
+          "researchProductId": "cand_453563126",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:28.321Z",
+          "completedAt": "2026-11-02T14:10:31.434Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 1
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "authenticatedLiveObservationCount": 1,
+      "uniqueLiveExternalAdIds": [
+        "1067995712370292"
+      ],
+      "duplicateExternalAdIdsDetected": [],
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "rejectedLinks": [],
+      "verifiedLinks": [
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_2_67d2af47",
+          "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+          "upstreamAdId": "1067995712370292",
+          "persistedAdId": "cmvsastxx002j8eg9368mmj4t",
+          "sourceObservationId": "cmvzc6dij001ljyg9y0adcldb",
+          "candidateId": "cand_1587534715",
+          "researchProductId": "cand_1587534715",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:24.451Z",
+          "completedAt": "2026-11-02T14:10:28.321Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 2
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "authenticatedLiveObservationCount": 8,
+      "uniqueLiveExternalAdIds": [
+        "1536941208479218",
+        "1464108218882438",
+        "1133000522848754",
+        "1641348457417375",
+        "2249466188957796",
+        "1806555653907868",
+        "1563296449176047",
+        "4546541612250472"
+      ],
+      "duplicateExternalAdIdsDetected": [],
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "rejectedLinks": [],
+      "verifiedLinks": [
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1536941208479218",
+          "persistedAdId": "cmvmlpdmp000uimg91229pnuq",
+          "sourceObservationId": "cmvzc6dgf0001jyg9odsyig9s",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1464108218882438",
+          "persistedAdId": "cmvmlpdn9001cimg996p166uf",
+          "sourceObservationId": "cmvzc6dgo0005jyg9zn72rg63",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1133000522848754",
+          "persistedAdId": "cmvmlpdnm001oimg9i4e3ejs2",
+          "sourceObservationId": "cmvzc6dgw0009jyg9sqh712ra",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1641348457417375",
+          "persistedAdId": "cmvmlpdoh002iimg9f3ngoctx",
+          "sourceObservationId": "cmvzc6dh2000djyg9s1huhood",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "2249466188957796",
+          "persistedAdId": "cmvmlpdp50036img9nt00uzw5",
+          "sourceObservationId": "cmvzc6dh7000hjyg9xyje6pyx",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1806555653907868",
+          "persistedAdId": "cmvquan2u009yx1g9lyq4ofgn",
+          "sourceObservationId": "cmvzc6dho000tjyg9q1qphpu0",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "1563296449176047",
+          "persistedAdId": "cmvquan3400a4x1g95xqkohzd",
+          "sourceObservationId": "cmvzc6dht000xjyg9udbzyh55",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        },
+        {
+          "researchRunId": "kh02_run_1793628619229_ga48s",
+          "executedQueryId": "kh02_q_r1_1_d8314351",
+          "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+          "upstreamAdId": "4546541612250472",
+          "persistedAdId": "cmvsastx6001z8eg9ty1hiuir",
+          "sourceObservationId": "cmvzc6dhz0011jyg9b3focq5t",
+          "candidateId": "cand_1613504636",
+          "researchProductId": "cmvmbtssi0003m1g9kow02t13",
+          "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+          "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+          "startedAt": "2026-11-02T14:10:20.719Z",
+          "completedAt": "2026-11-02T14:10:24.451Z",
+          "queryStatus": "SUCCEEDED_WITH_RESULTS",
+          "shortlistRank": 3
+        }
+      ]
+    }
+  ],
+  "observationProvenanceAudits": [
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_3_97dce81f",
+        "ProviderRequest:cf1331faf6af4dba812c0fbc7b666db8",
+        "UpstreamAd:2046326005986245",
+        "CompetitorAd:cmvqvm7sp002g23g9wlgnjffu",
+        "SourceObservation:cmvzc6djg002hjyg9gs5icr3m"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_3_97dce81f",
+        "providerRequestId": "cf1331faf6af4dba812c0fbc7b666db8",
+        "startedAt": "2026-11-02T14:10:28.321Z",
+        "completedAt": "2026-11-02T14:10:31.434Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "2046326005986245",
+        "persistedAdId": "cmvqvm7sp002g23g9wlgnjffu",
+        "sourceObservationId": "cmvzc6djg002hjyg9gs5icr3m"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_3_97dce81f",
+        "ProviderRequest:cf1331faf6af4dba812c0fbc7b666db8",
+        "UpstreamAd:1802296680785588",
+        "CompetitorAd:cmvqvm7t8002y23g95smyus54",
+        "SourceObservation:cmvzc6djn002pjyg9aikxfuaz"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_3_97dce81f",
+        "providerRequestId": "cf1331faf6af4dba812c0fbc7b666db8",
+        "startedAt": "2026-11-02T14:10:28.321Z",
+        "completedAt": "2026-11-02T14:10:31.434Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1802296680785588",
+        "persistedAdId": "cmvqvm7t8002y23g95smyus54",
+        "sourceObservationId": "cmvzc6djn002pjyg9aikxfuaz"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1067995712370292",
+        "CompetitorAd:cmvsastxx002j8eg9368mmj4t",
+        "SourceObservation:cmvzc6dij001ljyg9y0adcldb"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1067995712370292",
+        "persistedAdId": "cmvsastxx002j8eg9368mmj4t",
+        "sourceObservationId": "cmvzc6dij001ljyg9y0adcldb"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1536941208479218",
+        "CompetitorAd:cmvmlpdmp000uimg91229pnuq",
+        "SourceObservation:cmvzc6dgf0001jyg9odsyig9s"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1536941208479218",
+        "persistedAdId": "cmvmlpdmp000uimg91229pnuq",
+        "sourceObservationId": "cmvzc6dgf0001jyg9odsyig9s"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1464108218882438",
+        "CompetitorAd:cmvmlpdn9001cimg996p166uf",
+        "SourceObservation:cmvzc6dgo0005jyg9zn72rg63"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1464108218882438",
+        "persistedAdId": "cmvmlpdn9001cimg996p166uf",
+        "sourceObservationId": "cmvzc6dgo0005jyg9zn72rg63"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1133000522848754",
+        "CompetitorAd:cmvmlpdnm001oimg9i4e3ejs2",
+        "SourceObservation:cmvzc6dgw0009jyg9sqh712ra"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1133000522848754",
+        "persistedAdId": "cmvmlpdnm001oimg9i4e3ejs2",
+        "sourceObservationId": "cmvzc6dgw0009jyg9sqh712ra"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1641348457417375",
+        "CompetitorAd:cmvmlpdoh002iimg9f3ngoctx",
+        "SourceObservation:cmvzc6dh2000djyg9s1huhood"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1641348457417375",
+        "persistedAdId": "cmvmlpdoh002iimg9f3ngoctx",
+        "sourceObservationId": "cmvzc6dh2000djyg9s1huhood"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:2249466188957796",
+        "CompetitorAd:cmvmlpdp50036img9nt00uzw5",
+        "SourceObservation:cmvzc6dh7000hjyg9xyje6pyx"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "2249466188957796",
+        "persistedAdId": "cmvmlpdp50036img9nt00uzw5",
+        "sourceObservationId": "cmvzc6dh7000hjyg9xyje6pyx"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1806555653907868",
+        "CompetitorAd:cmvquan2u009yx1g9lyq4ofgn",
+        "SourceObservation:cmvzc6dho000tjyg9q1qphpu0"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1806555653907868",
+        "persistedAdId": "cmvquan2u009yx1g9lyq4ofgn",
+        "sourceObservationId": "cmvzc6dho000tjyg9q1qphpu0"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1563296449176047",
+        "CompetitorAd:cmvquan3400a4x1g95xqkohzd",
+        "SourceObservation:cmvzc6dht000xjyg9udbzyh55"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1563296449176047",
+        "persistedAdId": "cmvquan3400a4x1g95xqkohzd",
+        "sourceObservationId": "cmvzc6dht000xjyg9udbzyh55"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:4546541612250472",
+        "CompetitorAd:cmvsastx6001z8eg9ty1hiuir",
+        "SourceObservation:cmvzc6dhz0011jyg9b3focq5t"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "4546541612250472",
+        "persistedAdId": "cmvsastx6001z8eg9ty1hiuir",
+        "sourceObservationId": "cmvzc6dhz0011jyg9b3focq5t"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1536941208479218",
+        "CompetitorAd:cmvmlpdmp000uimg91229pnuq",
+        "SourceObservation:cmvzc6dgf0001jyg9odsyig9s"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1536941208479218",
+        "persistedAdId": "cmvmlpdmp000uimg91229pnuq",
+        "sourceObservationId": "cmvzc6dgf0001jyg9odsyig9s"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1464108218882438",
+        "CompetitorAd:cmvmlpdn9001cimg996p166uf",
+        "SourceObservation:cmvzc6dgo0005jyg9zn72rg63"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1464108218882438",
+        "persistedAdId": "cmvmlpdn9001cimg996p166uf",
+        "sourceObservationId": "cmvzc6dgo0005jyg9zn72rg63"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1133000522848754",
+        "CompetitorAd:cmvmlpdnm001oimg9i4e3ejs2",
+        "SourceObservation:cmvzc6dgw0009jyg9sqh712ra"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1133000522848754",
+        "persistedAdId": "cmvmlpdnm001oimg9i4e3ejs2",
+        "sourceObservationId": "cmvzc6dgw0009jyg9sqh712ra"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1641348457417375",
+        "CompetitorAd:cmvmlpdoh002iimg9f3ngoctx",
+        "SourceObservation:cmvzc6dh2000djyg9s1huhood"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1641348457417375",
+        "persistedAdId": "cmvmlpdoh002iimg9f3ngoctx",
+        "sourceObservationId": "cmvzc6dh2000djyg9s1huhood"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:2249466188957796",
+        "CompetitorAd:cmvmlpdp50036img9nt00uzw5",
+        "SourceObservation:cmvzc6dh7000hjyg9xyje6pyx"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "2249466188957796",
+        "persistedAdId": "cmvmlpdp50036img9nt00uzw5",
+        "sourceObservationId": "cmvzc6dh7000hjyg9xyje6pyx"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1806555653907868",
+        "CompetitorAd:cmvquan2u009yx1g9lyq4ofgn",
+        "SourceObservation:cmvzc6dho000tjyg9q1qphpu0"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1806555653907868",
+        "persistedAdId": "cmvquan2u009yx1g9lyq4ofgn",
+        "sourceObservationId": "cmvzc6dho000tjyg9q1qphpu0"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:1563296449176047",
+        "CompetitorAd:cmvquan3400a4x1g95xqkohzd",
+        "SourceObservation:cmvzc6dht000xjyg9udbzyh55"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1563296449176047",
+        "persistedAdId": "cmvquan3400a4x1g95xqkohzd",
+        "sourceObservationId": "cmvzc6dht000xjyg9udbzyh55"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_1_d8314351",
+        "ProviderRequest:9bb62d6283eb4d848f9fe96e71101f71",
+        "UpstreamAd:4546541612250472",
+        "CompetitorAd:cmvsastx6001z8eg9ty1hiuir",
+        "SourceObservation:cmvzc6dhz0011jyg9b3focq5t"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_1_d8314351",
+        "providerRequestId": "9bb62d6283eb4d848f9fe96e71101f71",
+        "startedAt": "2026-11-02T14:10:20.719Z",
+        "completedAt": "2026-11-02T14:10:24.451Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "4546541612250472",
+        "persistedAdId": "cmvsastx6001z8eg9ty1hiuir",
+        "sourceObservationId": "cmvzc6dhz0011jyg9b3focq5t"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1764530358140196",
+        "CompetitorAd:cmvsastxg00268eg91t8tblzk",
+        "SourceObservation:cmvzc6di30015jyg9yb7n3lad"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1764530358140196",
+        "persistedAdId": "cmvsastxg00268eg91t8tblzk",
+        "sourceObservationId": "cmvzc6di30015jyg9yb7n3lad"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1718454532575959",
+        "CompetitorAd:cmvsastxq002c8eg9xkn13v52",
+        "SourceObservation:cmvzc6di70019jyg9n4231zoh"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1718454532575959",
+        "persistedAdId": "cmvsastxq002c8eg9xkn13v52",
+        "sourceObservationId": "cmvzc6di70019jyg9n4231zoh"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:3202991749899349",
+        "CompetitorAd:cmvsastyq003a8eg92p6w2ime",
+        "SourceObservation:cmvzc6dif001hjyg9sdl3hx6u"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "3202991749899349",
+        "persistedAdId": "cmvsastyq003a8eg92p6w2ime",
+        "sourceObservationId": "cmvzc6dif001hjyg9sdl3hx6u"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1137301772072207",
+        "CompetitorAd:cmvtl5bp9001c1pg9jpp4097x",
+        "SourceObservation:cmvzc6dib001djyg92l9u8yub"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1137301772072207",
+        "persistedAdId": "cmvtl5bp9001c1pg9jpp4097x",
+        "sourceObservationId": "cmvzc6dib001djyg92l9u8yub"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1447495304112620",
+        "CompetitorAd:cmvwabksi0024glg99j2pzd9s",
+        "SourceObservation:cmvzc6dj00021jyg9pl522tkv"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1447495304112620",
+        "persistedAdId": "cmvwabksi0024glg99j2pzd9s",
+        "sourceObservationId": "cmvzc6dj00021jyg9pl522tkv"
+      }
+    },
+    {
+      "valid": true,
+      "rejectionCodes": [],
+      "rejectionReasons": [],
+      "evidenceRefs": [
+        "MetaQuery:kh02_q_r1_2_67d2af47",
+        "ProviderRequest:b1bcab2019734d6a8d897b4d98bc24c3",
+        "UpstreamAd:1433811018927896",
+        "CompetitorAd:cmvzbk0fw0036gtg9f4qu1mff",
+        "SourceObservation:cmvzc6dj40025jyg94ub5mpxm"
+      ],
+      "lineageReceipt": {
+        "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "researchRunId": "kh02_run_1793628619229_ga48s",
+        "executedQueryId": "kh02_q_r1_2_67d2af47",
+        "providerRequestId": "b1bcab2019734d6a8d897b4d98bc24c3",
+        "startedAt": "2026-11-02T14:10:24.451Z",
+        "completedAt": "2026-11-02T14:10:28.321Z",
+        "queryStatus": "SUCCEEDED_WITH_RESULTS",
+        "upstreamAdId": "1433811018927896",
+        "persistedAdId": "cmvzbk0fw0036gtg9f4qu1mff",
+        "sourceObservationId": "cmvzc6dj40025jyg94ub5mpxm"
+      }
+    }
+  ]
+}

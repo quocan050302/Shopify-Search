@@ -1,0 +1,1131 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "evaluatedAt": "2026-11-02T14:12:02.567Z",
+  "totalMutationsExecuted": 92,
+  "sourceMutationsExecuted": 8,
+  "artifactMutationsExecuted": 84,
+  "mandatoryV12_4_3_7_2ScenariosExecuted": 36,
+  "caughtMutationsCount": 92,
+  "falsePassesCount": 0,
+  "sourceTreeRestoredClean": true,
+  "gitDiffBeforeAfterByteCount": 0,
+  "mutations": [
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_01",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Reintroduce forbidden internal fetch('/portal-migration/hz/glow/address-change...') in amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_INTERNAL_GLOW_FETCH"
+      ],
+      "detail": "Caught by SOURCE_NO_INTERNAL_GLOW_FETCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_02",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported ensureAmazonUsDeliveryContextViaUi from amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_03",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported buildAmazonUiPhaseContextProof from amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_04",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsIdentity.ts",
+      "description": "Remove EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE guard from amazonUsIdentity.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD"
+      ],
+      "detail": "Caught by SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_05",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Reintroduce Math.random() synthetic ad ID generation in productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_06",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Remove exported verifyLiveMetaObservationProvenance from productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_07",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/evergreenResearchOrchestrator.ts",
+      "description": "Reintroduce forbidden candidates.slice(0, 3) fallback in evergreenResearchOrchestrator.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK"
+      ],
+      "detail": "Caught by SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_SRC_MUT_08",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "scripts/kh02/acceptanceTruth.ts",
+      "description": "Remove exported computeV12_4_3_7_2ReleaseVerdicts from acceptanceTruth.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_CENTRAL_VERDICT_COMPUTER"
+      ],
+      "detail": "Caught by SOURCE_HAS_CENTRAL_VERDICT_COMPUTER"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_01",
+      "scenarioNumber": 1,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_INDEPENDENT_VERDICT_RECOMPUTATION.json",
+      "description": "[1] Hardcoded PASS in verdict table while underlying test artifact fails",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_02",
+      "scenarioNumber": 2,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "[2] Missing 05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json fields / wrong codeSha",
+      "caught": true,
+      "failedCheckIds": [
+        "SHA_PARITY_05",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by SHA_PARITY_05, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_03",
+      "scenarioNumber": 3,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[3] Stale artifact with previous commit SHA mixed into current run folder",
+      "caught": true,
+      "failedCheckIds": [
+        "SHA_PARITY_09",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by SHA_PARITY_09, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_04",
+      "scenarioNumber": 4,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "[4] Default fallback subqueriesExecutedCount = 4 when subqueryExecutions is empty",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_05",
+      "scenarioNumber": 5,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "[5] Default fallback sourceStatus = 'PASSED' when sourceStatuses.META_ADS is missing and verdict claims PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_06",
+      "scenarioNumber": 6,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "description": "[6] Default fallback finalJobStatus = 'COMPLETED' when DB job status is FAILED",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_07",
+      "scenarioNumber": 7,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[7] Default fallback searchBoxReady ?? true when search box was not ready",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_08",
+      "scenarioNumber": 8,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[8] Default fallback stepsExecuted = ['WAIT_SEARCH_BOX_READY'] when stepsExecuted was empty",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_09",
+      "scenarioNumber": 9,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "[9] Planned Meta query marked requestStarted = true without provider call",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_10",
+      "scenarioNumber": 10,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "[10] metaTelemetry: {} while metaCollectionVerdict === 'PASS'",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_11",
+      "scenarioNumber": 11,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[11] Cached observation with isCached=true or sourceType='CACHED_SOURCE' promoted to LIVE_PROVIDER",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_12",
+      "scenarioNumber": 12,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[12] Observation with synthetic/derived ad ID (ad_1, meta_sim_1, Math.random) promoted to LIVE_PROVIDER",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_13",
+      "scenarioNumber": 13,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[13] Observation from another workspace linked into wsStrictLive",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_14",
+      "scenarioNumber": 14,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[14] Candidate in strict live shortlist without persisted CompetitorAd row in DB",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_15",
+      "scenarioNumber": 15,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_CORROBORATED_RUN_SHORTLIST_IF_APPLICABLE.json",
+      "description": "[15] LIVE_WITH_CACHE_FALLBACK corroborated run counted as strict LIVE_ONLY pass",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_CORROBORATED_RUN_SEPARATION"
+      ],
+      "detail": "Caught by ARTIFACT08_CORROBORATED_RUN_SEPARATION"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_16",
+      "scenarioNumber": 16,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[16] Observation with unexecuted queryId counted as current-run live observation",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_17",
+      "scenarioNumber": 17,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[17] Internal fetch('/portal-migration/hz/glow/address-change...') reintroduced in transport",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_18",
+      "scenarioNumber": 18,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[18] Top-level artifact09 claims dialogOpened=false while nested homeReadback claims dialogOpened=true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_19",
+      "scenarioNumber": 19,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[19] Top-level artifact09 claims observedDeliveryPostalCode=null while final verdict claims AMAZON_UI_US_DELIVERY_ZIP_95829='PASS'",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_20",
+      "scenarioNumber": 20,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json",
+      "description": "[20] Homepage shows ZIP 95829, PDP shows Deliver to Vietnam -> PDP falsely inherits US ZIP",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_21",
+      "scenarioNumber": 21,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json",
+      "description": "[21] Bare '$49.99' without explicit USD DOM/meta proof -> falsely marked currency='USD'",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_22",
+      "scenarioNumber": 22,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "[22] VND 1,297,853 on PDP -> falsely marked AMAZON_UI_USD_COMMERCIAL_EXTRACTION='PASS'",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_23",
+      "scenarioNumber": 23,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "description": "[23] Unvisited search card promoted to AMAZON_SEARCH_PDP_IDENTITY_VERIFIED",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_24",
+      "scenarioNumber": 24,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json",
+      "description": "[24] PDP verified for category-similar product (different brand/model) -> falsely promoted to META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_25",
+      "scenarioNumber": 25,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json",
+      "description": "[25] Standalone reference B0D3XGHTJ5 loaded with observationClass='AUTHORIZED_LIVE'",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_26",
+      "scenarioNumber": 26,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json",
+      "description": "[26] Missing raw FINAL_RESULT.json / operation-ledger.json while referenceRawHashVerified=true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_27",
+      "scenarioNumber": 27,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "description": "[27] Primary acceptance run executed via direct route import or in-process executeResearchJob",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_28",
+      "scenarioNumber": 28,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "description": "[28] serverProcessPid === workerProcessPid",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF",
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF, ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_29",
+      "scenarioNumber": 29,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "[29] GET /api/v1/kh02/leaderboard mutates SQLite rows",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_30",
+      "scenarioNumber": 30,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "[30] Cross-workspace GET returns another workspace's evidence",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_31",
+      "scenarioNumber": 31,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "[31] UI DOM after page.reload() differs from DB/API candidate IDs",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_32",
+      "scenarioNumber": 32,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_SECONDARY_NICHE_HOME_ORGANIZATION_PROOF.json",
+      "description": "[32] 'Home Organization' shortlist overlaps 'Pet Gadgets' shortlist",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_SECONDARY_NICHE_HOME_ORGANIZATION_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT14_SECONDARY_NICHE_HOME_ORGANIZATION_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_33",
+      "scenarioNumber": 33,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "20_HISTORICAL_DEV_REPLAY_2026_10_24.json",
+      "description": "[33] Post-cutoff record (observedAt > asOfTimestamp) included in DEV or HOLDOUT replay",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT20_HISTORICAL_DEV_REPLAY_2026_10_24",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT20_HISTORICAL_DEV_REPLAY_2026_10_24, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_34",
+      "scenarioNumber": 34,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "description": "[34] TEST_FIXTURE Amazon/Walmart row included in historical replay",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_35",
+      "scenarioNumber": 35,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_WALMART_PAUSED_AND_NON_INFLATION_PROOF.json",
+      "description": "[35] Amazon/Walmart evidence changes opportunityScore or promotes G07/G15/G16",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_WALMART_PAUSED_AND_NON_INFLATION_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_WALMART_PAUSED_AND_NON_INFLATION_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_NEG_SCENARIO_36",
+      "scenarioNumber": 36,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "26_PROCESS_PID_DISK_RAM_RECONCILIATION.json",
+      "description": "[36] Unreconciled owned child PID or free disk < 15 GiB",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT26_PROCESS_PID_DISK_RAM_RECONCILIATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT26_PROCESS_PID_DISK_RAM_RECONCILIATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_01",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "description": "Mutate branch to master",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_BRANCH_EXACT",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_BRANCH_EXACT, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_02",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "description": "Mutate codeSha to wrong SHA",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_SHA_40HEX",
+        "SHA_PARITY_00",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_SHA_40HEX, SHA_PARITY_00, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_03",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "description": "Set ancestryVerified = false",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_ANCESTRY_VERIFIED",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_ANCESTRY_VERIFIED, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_04",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_MCP_VENV_PRECHECK.json",
+      "description": "Set playwrightMcpHandshakePassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_05",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_MCP_VENV_PRECHECK.json",
+      "description": "Set freeDiskGiB = 8 (below 15 GiB floor)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_06",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_MCP_VENV_PRECHECK.json",
+      "description": "Set metaCollectorVenvAvailable = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_07",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json",
+      "description": "Mutate referenceAvailability to FULL_RAW_BUNDLE",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_08",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json",
+      "description": "Set downgradeNegativeTestPassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT02_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_09",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "description": "Set inProcessExecuteResearchJobUsedForPrimaryAcceptance = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_10",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "description": "Set processesTerminatedCleanly = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT03_REAL_HTTP_SERVER_AND_WORKER_PROCESS_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_11",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "description": "Set requestSourceMode = LIVE_WITH_CACHE_FALLBACK for strict live gate",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_12",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 9",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_13",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "description": "Set postHttpStatus = 500",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_14",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "description": "Set httpPollCount = 0",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_15",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "Set sourceMode = CACHE_ONLY",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_16",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 5",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_17",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set sourceMode = CACHE_ONLY",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_18",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set nonProductPromotedToShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_19",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set irrelevantPromotedToShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_20",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set distinctFamiliesInShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_21",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set shortfallPaddingDetected = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_22",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set reversedOrderIdentical = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_23",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "description": "Set provisionalPromotedToEvergreenWinnersCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_24",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "description": "Inject workspaceId mismatch between artifact 09 and artifact 10",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+      ],
+      "detail": "Caught by ARTIFACT09_AMAZON_UI_6_PHASE_CONTEXT_CONSISTENCY"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_25",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "description": "Set usedForbiddenSliceFallback = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_26",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "description": "Set operationsAttempted = 6 (exceeding 4-op budget cap)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_27",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "description": "Set fabricatedLiveSuccess = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_28",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "description": "Set sponsoredCardsSelectedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_29",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json",
+      "description": "Set searchBrandCopiedFromCandidateCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_30",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set mcpSessionClosedCleanly = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_31",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set ownedChildPidTerminated = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_32",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "description": "Set allLiveOpsMatchSessionId = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SAME_SESSION_LIFECYCLE, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_33",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "Set syncJobPersisted = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_34",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "Set HTTP transportMode = IN_PROCESS_ROUTE_CALL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_35",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "Set UI DOM provisionalRenderedAsVerifiedEvergreenCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_36",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "description": "Set amazonPolicyOverrideRejected400 = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_37",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_WALMART_PAUSED_AND_NON_INFLATION_PROOF.json",
+      "description": "Set currentRunLiveWalmartHttpRequests = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_WALMART_PAUSED_AND_NON_INFLATION_PROOF",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_WALMART_PAUSED_AND_NON_INFLATION_PROOF, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_38",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_TARGETED_V12_4_3_7_2_TEST_MATRIX_RESULTS.json",
+      "description": "Set failedCasesCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_TARGETED_V12_4_3_7_2_TEST_MATRIX",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_TARGETED_V12_4_3_7_2_TEST_MATRIX, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_39",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_FULL_REPOSITORY_REGRESSION_SHARD_RECEIPTS.json",
+      "description": "Set excludedOrDeferredFilesCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT17_FULL_REPOSITORY_REGRESSION_SHARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT17_FULL_REPOSITORY_REGRESSION_SHARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_40",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_FULL_REPOSITORY_REGRESSION_SHARD_RECEIPTS.json",
+      "description": "Set failedTestCases = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT17_FULL_REPOSITORY_REGRESSION_SHARDS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT17_FULL_REPOSITORY_REGRESSION_SHARDS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_41",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_ALL_12_E2E_SPEC_RECEIPTS.json",
+      "description": "Set skippedWithoutAttemptCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT18_ALL_12_E2E_SPECS_PASSED",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT18_ALL_12_E2E_SPECS_PASSED, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_42",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS.json",
+      "description": "Set tscExitCode = 2",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_43",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS.json",
+      "description": "Set buildExitCode = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS"
+      ],
+      "detail": "Caught by ARTIFACT19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_44",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30.json",
+      "description": "Fabricate HOLDOUT verifiedIdentityCount = 3",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_45",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30.json",
+      "description": "Fabricate HOLDOUT historicalProviderParityVerdict = PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30"
+      ],
+      "detail": "Caught by ARTIFACT21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_46",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "description": "Set semanticHashAcceptedAsRawProductSchemaProofCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT",
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT, ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_47",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "25_FULL_ROUTE_SPECIFIC_BUSINESS_GATE_STATUS.json",
+      "description": "Fabricate WALMART_US_LIVE_OPERATIONAL_STATUS = PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_2_BASE_ART_MUT_48",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "25_FULL_ROUTE_SPECIFIC_BUSINESS_GATE_STATUS.json",
+      "description": "Fabricate G16_INDEPENDENT_MERCHANT_PROOF = PASS",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_25_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    }
+  ]
+}

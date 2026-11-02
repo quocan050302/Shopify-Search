@@ -1,0 +1,157 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "generatedAt": "2026-11-02T14:12:02.569Z",
+  "filesCount": 30,
+  "files": [
+    {
+      "fileName": "00_GIT_BRANCH_CODE_SHA_PRECHECK.json",
+      "sizeBytes": 845,
+      "sha256": "888b6efbcca3789ac24aec2efb79bde2e1e71ab2f4ba26f3bb765ce521387744"
+    },
+    {
+      "fileName": "01_RUNTIME_DISK_RAM_MCP_VENV_PRECHECK.json",
+      "sizeBytes": 1173,
+      "sha256": "54c5c8f512fe71b4807b926ce236633c1203381f8eb8cb53e35916277e9f9851"
+    },
+    {
+      "fileName": "02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json",
+      "sizeBytes": 5246,
+      "sha256": "aaaf30cc570ae89caa2c44607da9829bbf85b3fc72bf958863981201195f9ae9"
+    },
+    {
+      "fileName": "03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json",
+      "sizeBytes": 1054,
+      "sha256": "0aa93ca0e8941be25cd19d5121ebbbd9970017b8400b0bfc5265fa8c1445e339"
+    },
+    {
+      "fileName": "04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json",
+      "sizeBytes": 3062,
+      "sha256": "a3b00da9ca52bea3773212d66837fa344cd370e4d3ce864d227bf1a65fe702ff"
+    },
+    {
+      "fileName": "05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json",
+      "sizeBytes": 61878,
+      "sha256": "6bf8bcaf86145e932028a46c181646226ab1b8660d324ecdadade41392fcb7b5"
+    },
+    {
+      "fileName": "06_META_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json",
+      "sizeBytes": 35700,
+      "sha256": "62d01260aba5cf4a5a633f5c1f281cd3404b11346fb86ecb36f528291a198e49"
+    },
+    {
+      "fileName": "07_STRICT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json",
+      "sizeBytes": 3401,
+      "sha256": "69b53a227d31d7fc89c26089c4b14d4945b558a4fdb0b712b7839229014ddf6a"
+    },
+    {
+      "fileName": "08_CORROBORATED_RUN_SHORTLIST_IF_APPLICABLE.json",
+      "sizeBytes": 2222,
+      "sha256": "4e577db8f3396d0be63a9e5c2a59f505fa26270ce02bdd142408aeb9d786d79b"
+    },
+    {
+      "fileName": "09_AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json",
+      "sizeBytes": 15123,
+      "sha256": "88ced14b006daeb8226a4ba15b91d08bc847e43b7a33df0596c1bc64b0c7c925"
+    },
+    {
+      "fileName": "10_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json",
+      "sizeBytes": 103715,
+      "sha256": "24c7fccfac2912d6e75d06af28ebb94da65d2ecda8dd83a2b8fd9d0c3859e145"
+    },
+    {
+      "fileName": "11_AMAZON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json",
+      "sizeBytes": 6801,
+      "sha256": "335238a642af6b335c96231b34828db74460246fd8b2ed7b061237c24868ad4b"
+    },
+    {
+      "fileName": "12_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json",
+      "sizeBytes": 848,
+      "sha256": "1d1216cb6b4b53b4b67e7c13f718acb6dafcc2f862279b2b8f6e5522b54396ba"
+    },
+    {
+      "fileName": "13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json",
+      "sizeBytes": 14752,
+      "sha256": "2b1f8fa1bf387a318ae797912d63948b68da8dce82e560baa0e652d20eadd317"
+    },
+    {
+      "fileName": "14_SECONDARY_NICHE_HOME_ORGANIZATION_PROOF.json",
+      "sizeBytes": 1488,
+      "sha256": "d36238a420a8de5849c9db9351be7228b545b9acdfdc841ae6da454b354106fd"
+    },
+    {
+      "fileName": "15_WALMART_PAUSED_AND_NON_INFLATION_PROOF.json",
+      "sizeBytes": 13106,
+      "sha256": "58f54c33c6cfebd146a9b41df92aeabd166c44348b103c2dba60c3c67d7b8595"
+    },
+    {
+      "fileName": "16_TARGETED_V12_4_3_7_2_TEST_MATRIX_RESULTS.json",
+      "sizeBytes": 34392,
+      "sha256": "d5f55f7d41e0a7713ea376cb0d9e78eabf7253835b944af6551136301e0bb0e4"
+    },
+    {
+      "fileName": "17_FULL_REPOSITORY_REGRESSION_SHARD_RECEIPTS.json",
+      "sizeBytes": 1511,
+      "sha256": "45d1afff150284dd99249e4a8d23b10b0b5e01663f80cd7ac88d240457eb7e70"
+    },
+    {
+      "fileName": "18_ALL_12_E2E_SPEC_RECEIPTS.json",
+      "sizeBytes": 9702,
+      "sha256": "240eab8c80620f380585832509527f8ab39fc1942e0eb13afc01a101a195863e"
+    },
+    {
+      "fileName": "19_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS.json",
+      "sizeBytes": 380,
+      "sha256": "df9b6d86688bda889775e33714ed0fa06523036707390e814c280778fcaa3e0f"
+    },
+    {
+      "fileName": "20_HISTORICAL_DEV_REPLAY_2026_10_24.json",
+      "sizeBytes": 1588,
+      "sha256": "7eca3b73c5646e34431a54b3f9caef3832eac7caff15a578f15141d285780fa1"
+    },
+    {
+      "fileName": "21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30.json",
+      "sizeBytes": 5079,
+      "sha256": "bfefc68ed3c988110433bd3e1e87f480bdad832fa209de384dd9d604174d37d1"
+    },
+    {
+      "fileName": "22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json",
+      "sizeBytes": 435,
+      "sha256": "57209d9b85728347fa6786863206292f61b833aac60caec770f880b423ec33d4"
+    },
+    {
+      "fileName": "23_EXPANDED_NEGATIVE_MUTATION_SUITE_RESULTS.json",
+      "sizeBytes": 52433,
+      "sha256": "a9b4d1d857249990e5c1021494764e0a1f5b49a0284a9b207cb93de6b41b5dfd"
+    },
+    {
+      "fileName": "24_INDEPENDENT_VERDICT_RECOMPUTATION.json",
+      "sizeBytes": 33758,
+      "sha256": "bfdee20085e41aec51928ffe97343dc05d787371516fe981717b85b6ff8c96ef"
+    },
+    {
+      "fileName": "25_FULL_ROUTE_SPECIFIC_BUSINESS_GATE_STATUS.json",
+      "sizeBytes": 18882,
+      "sha256": "c459b67d7116e380c21b423a07e4ca7496c565b092db56d25b229c63da895df9"
+    },
+    {
+      "fileName": "26_PROCESS_PID_DISK_RAM_RECONCILIATION.json",
+      "sizeBytes": 23276,
+      "sha256": "f55bbaa0a94c497bb3c56aacd8982ff8d0f2b72c1238bb890162ffa775891fb1"
+    },
+    {
+      "fileName": "28_FINAL_OWNER_REPORT_VI.md",
+      "sizeBytes": 4924,
+      "sha256": "3b3c5185ada4481d6ba5539125a0b3e92d19b2f909f7e7e890b633d3148d7ede"
+    },
+    {
+      "fileName": "29_COMMIT_PUSH_REMOTE_HEAD_PROOF.json",
+      "sizeBytes": 456,
+      "sha256": "0f52a58d7ade79d60cf50ead261b9d51e49f022086422182794bba5ca82b9373"
+    },
+    {
+      "fileName": "CALL_GRAPH_AND_FIELD_PROVENANCE.md",
+      "sizeBytes": 3740,
+      "sha256": "9e726de219856bdedb19495484585fc588b51dd2dc34713fd77462ae9e2dae70"
+    }
+  ]
+}

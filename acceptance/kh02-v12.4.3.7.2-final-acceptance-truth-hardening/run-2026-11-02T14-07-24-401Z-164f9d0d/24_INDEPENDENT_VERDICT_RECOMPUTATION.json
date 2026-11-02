@@ -1,0 +1,982 @@
+{
+  "codeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "evaluatedAt": "2026-11-02T14:12:02.153Z",
+  "gates": {
+    "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY": {
+      "gateId": "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "StandaloneManifest:B0D3XGHTJ5@TEST_FIXTURE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Standalone reference preserved as SUMMARY_AND_SCRIPT_ONLY / TEST_FIXTURE with 0 live promotions."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "REFERENCE_AUDIT"
+      },
+      "counts": {
+        "referenceRawHashVerified": false,
+        "downgradeNegativeTestPassed": true,
+        "promotedToLiveCount": 0
+      }
+    },
+    "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E": {
+      "gateId": "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E",
+      "status": "PASS",
+      "evidenceRefs": [
+        "ServerPID:79772",
+        "WorkerPID:79774",
+        "Job:kh02_run_1793628619229_ga48s@fencingGen=1"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Real HTTP POST 202 -> independent worker PID 79774 claimed and completed run kh02_run_1793628619229_ga48s."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": null,
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "serverPid": 79772,
+        "workerPid": 79774,
+        "postHttpStatus": 202,
+        "fencingGeneration": 1,
+        "httpPollCount": 115
+      }
+    },
+    "META_LIVE_CURRENT_RUN_COLLECTION": {
+      "gateId": "META_LIVE_CURRENT_RUN_COLLECTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "MetaRun:kh02_run_1793628619229_ga48s@queries=3@liveObs=33"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Strict LIVE_ONLY Meta collection verified with 3 executed subqueries and 33 lineage-verified live observations."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "subqueriesExecutedCount": 3,
+        "liveProviderObservationsCount": 33,
+        "validatedLiveObservationsCount": 33,
+        "cachedObservationsCount": 0,
+        "lineagePassedCount": 0,
+        "lineageRejectedCount": 0
+      }
+    },
+    "META_STRICT_LIVE_LINEAGE": {
+      "gateId": "META_STRICT_LIVE_LINEAGE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "MetaRun:kh02_run_1793628619229_ga48s@queries=3@liveObs=33"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Strict LIVE_ONLY Meta collection verified with 3 executed subqueries and 33 lineage-verified live observations."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "lineagePassedCount": 0,
+        "lineageRejectedCount": 0,
+        "missingRawReceiptCount": 0
+      }
+    },
+    "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION": {
+      "gateId": "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Shortlist:3_distinct_families@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "3 distinct product families in Top 3 shortlist with order independence and 0 padding."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "CANDIDATE_DISCOVERY"
+      },
+      "counts": {
+        "relevantPhysicalCandidatesCount": 10,
+        "shortlistCount": 3,
+        "distinctFamiliesInShortlistCount": 3
+      }
+    },
+    "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE": {
+      "gateId": "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "McpSession:pw_mcp_mvzc7i2t_ea9433b7@PID=79851@ops=4"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Same-session REAL_STDIO_MCP lifecycle verified and owned child PID terminated cleanly."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+        "mode": "REAL_STDIO_MCP"
+      },
+      "counts": {
+        "operationsAttempted": 4,
+        "mcpSessionClosedCleanly": true,
+        "ownedChildPidTerminated": true
+      }
+    },
+    "AMAZON_UI_US_DELIVERY_ZIP_95829": {
+      "gateId": "AMAZON_UI_US_DELIVERY_ZIP_95829",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonUI:ZIP_95829@session=pw_mcp_mvzc7i2t_ea9433b7@pdpCount=2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "US delivery ZIP 95829 confirmed across homepage readback, search, and PDP DOM."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7"
+      },
+      "counts": {
+        "observedDeliveryPostalCode": "95829",
+        "dialogOpened": true,
+        "applyClicked": true
+      }
+    },
+    "AMAZON_UI_USD_COMMERCIAL_EXTRACTION": {
+      "gateId": "AMAZON_UI_USD_COMMERCIAL_EXTRACTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonPDP:USD@pdpUsdCount=2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Explicit USD currency and numeric price verified on 2 live PDPs."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7"
+      },
+      "counts": {
+        "observedDisplayedCurrencyCode": "USD",
+        "evaluatedPdpCount": 2
+      }
+    },
+    "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION": {
+      "gateId": "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonSearchHref:2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Navigated to 2 PDPs via observed search card hrefs."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "AMAZON_SEARCH_TO_PDP"
+      },
+      "counts": {
+        "observedHrefSelectedCount": 2,
+        "sponsoredCardsSelectedCount": 0,
+        "unvisitedCardsPromotedToVerifiedCount": 0
+      }
+    },
+    "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION": {
+      "gateId": "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonPdpVerified:2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "2/2 Amazon search->PDP identities verified."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "AMAZON_TWO_TIER_IDENTITY"
+      },
+      "counts": {
+        "evaluatedCount": 2
+      }
+    },
+    "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION": {
+      "gateId": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION",
+      "status": "PARTIAL_CATEGORY_OR_FAMILY_ONLY",
+      "evidenceRefs": [
+        "AmazonMetaCorroboration:PARTIAL_CATEGORY_OR_FAMILY_ONLY@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Observed 1 exact product match and 1 category/family-only match (1/2 exact)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "META_TO_AMAZON_EQUIVALENCE"
+      },
+      "counts": {
+        "evaluatedCount": 2,
+        "falseExactProductPromotionCount": 0
+      }
+    },
+    "WALMART_US_LIVE_OPERATIONAL_STATUS": {
+      "gateId": "WALMART_US_LIVE_OPERATIONAL_STATUS",
+      "status": "PAUSED_BLOCKED_PROVIDER",
+      "evidenceRefs": [
+        "WalmartReceipt:d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Walmart US remains paused (PAUSED_BLOCKED_PROVIDER) with 0 live HTTP calls and verified CAPTCHA receipt."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "PAUSED_EXTERNAL"
+      },
+      "counts": {
+        "currentRunLiveWalmartHttpRequests": 0
+      }
+    },
+    "DB_API_UI_RELOAD_PARITY": {
+      "gateId": "DB_API_UI_RELOAD_PARITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "DbApiUiParity:cand_1212440541,cand_1587534715,cand_1613504636@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Exact candidate IDs, ranks, evidence rows, and gating states match across SQLite, HTTP GET, and Chromium DOM pre/post reload."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "REAL_NETWORK_HTTP_AND_CHROMIUM_DOM"
+      },
+      "counts": {
+        "persistedShortlistCount": 3,
+        "cardsBeforeReloadCount": 3,
+        "cardsAfterReloadCount": 3,
+        "apiMismatches": 0,
+        "uiMismatches": 0
+      }
+    },
+    "SECONDARY_NICHE_DYNAMIC_SEPARATION": {
+      "gateId": "SECONDARY_NICHE_DYNAMIC_SEPARATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "SecondaryNiche:Home_Organization@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Secondary niche ('Home Organization') produced 3 distinct candidates with 0 overlap against 'Pet Gadgets'."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "SECONDARY_NICHE_ISOLATION"
+      },
+      "counts": {
+        "secondaryShortlistCount": 3,
+        "crossNicheOverlapCount": 0
+      }
+    },
+    "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY": {
+      "gateId": "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Backtest:DEV_2026_10_24+HOLDOUT_2026_10_30@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Point-in-time replay verified on DEV (60 obs) and HOLDOUT (377 obs) with 0 post-cutoff leaks."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "POINT_IN_TIME_REPLAY"
+      },
+      "counts": {
+        "devObs": 60,
+        "holdoutObs": 377,
+        "postCutoffIncluded": 0
+      }
+    },
+    "HISTORICAL_PROVIDER_PARITY_TRUTH": {
+      "gateId": "HISTORICAL_PROVIDER_PARITY_TRUTH",
+      "status": "VACUOUS_OR_UNPROVEN",
+      "evidenceRefs": [
+        "HistoricalProviderParity:VACUOUS_OR_UNPROVEN@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Zero pre-cutoff live Amazon/Walmart provider rows exist in historical DB; fixture post-cutoff rejection passes no-lookahead guard, but historical marketplace parity is VACUOUS_OR_UNPROVEN."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "HISTORICAL_PROVIDER_PARITY"
+      },
+      "counts": {
+        "eligibleHistoricalAmazonRowsCount": 0,
+        "eligibleHistoricalWalmartRowsCount": 0
+      }
+    },
+    "HISTORICAL_BUSINESS_EVIDENCE": {
+      "gateId": "HISTORICAL_BUSINESS_EVIDENCE",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "HistoricalBusiness:INSUFFICIENT_EVIDENCE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "DEV shortlist=0/verified=0; HOLDOUT shortlist=3/verified=0 (INSUFFICIENT_HISTORICAL_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "HISTORICAL_BUSINESS_EVALUATION"
+      },
+      "counts": {
+        "devShortlistCount": 0,
+        "devVerifiedIdentityCount": 0,
+        "holdoutShortlistCount": 3,
+        "holdoutVerifiedIdentityCount": 0
+      }
+    },
+    "E2E_SPEC_COVERAGE": {
+      "gateId": "E2E_SPEC_COVERAGE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "E2E:12_specs_34_cases@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "All 12/12 E2E specs (34/34 cases) passed with 0 skips."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "E2E_SUITE"
+      },
+      "counts": {
+        "totalSpecs": 12,
+        "passedSpecsCount": 12,
+        "passedE2ETestCases": 34,
+        "totalE2ETestCases": 34
+      }
+    },
+    "CODE_AND_ENGINEERING_GATES": {
+      "gateId": "CODE_AND_ENGINEERING_GATES",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Regression:158_files_1998_cases",
+        "E2E:12_specs_34_cases",
+        "Mutations:pending"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "All engineering gates passed on 164f9d0d: 158 test files (1998 tests), 12 E2E specs (34 cases), tsc=0, build=0, 0 orphans."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "ENGINEERING_ACCEPTANCE"
+      },
+      "counts": {
+        "executedTestFilesCount": 158,
+        "passedTestCases": 1998,
+        "passedE2ETestCases": 34,
+        "orphanedOwnedProcessCount": 0
+      }
+    },
+    "G07_PAID_MEDIA_PERSISTENCE": {
+      "gateId": "G07_PAID_MEDIA_PERSISTENCE",
+      "status": "BLOCKED",
+      "evidenceRefs": [
+        "G07:BLOCKED@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "TikTok Ads US live provider remains disabled/unauthenticated under zero-spend policy (G07 = BLOCKED)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G07_PAID_MEDIA"
+      },
+      "counts": {}
+    },
+    "G15_LONGITUDINAL_DEMAND_60D": {
+      "gateId": "G15_LONGITUDINAL_DEMAND_60D",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "G15:INSUFFICIENT_EVIDENCE@qualified=0"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Fewer than 3 products have >= 60 covered days of authoritative product-level longitudinal demand (G15 = INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G15_DEMAND_60D"
+      },
+      "counts": {
+        "qualifiedProductsCount": 0,
+        "requiredDays": 60,
+        "maxObservedDays": 0
+      }
+    },
+    "G16_INDEPENDENT_MERCHANT_PROOF": {
+      "gateId": "G16_INDEPENDENT_MERCHANT_PROOF",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "G16:INSUFFICIENT_EVIDENCE@verified=0"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "0/3 shortlisted candidates have independent persisted DB merchant schema + live same-run lineage proof (G16 = INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G16_MERCHANT_PROOF"
+      },
+      "counts": {
+        "verifiedMerchantsCount": 0,
+        "requiredMerchantsCount": 3
+      }
+    },
+    "FULL_KH02_BUSINESS_ACCEPTANCE": {
+      "gateId": "FULL_KH02_BUSINESS_ACCEPTANCE",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "FullBusiness:INSUFFICIENT_EVIDENCE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Business acceptance remains INSUFFICIENT_EVIDENCE (G07=BLOCKED, G15=INSUFFICIENT_EVIDENCE, G16=INSUFFICIENT_EVIDENCE, HistoricalBusiness=INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "BUSINESS_ACCEPTANCE"
+      },
+      "counts": {
+        "g07": "BLOCKED",
+        "g15": "INSUFFICIENT_EVIDENCE",
+        "g16": "INSUFFICIENT_EVIDENCE"
+      }
+    }
+  },
+  "verdictsByGate": {
+    "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY": {
+      "gateId": "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "StandaloneManifest:B0D3XGHTJ5@TEST_FIXTURE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Standalone reference preserved as SUMMARY_AND_SCRIPT_ONLY / TEST_FIXTURE with 0 live promotions."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "REFERENCE_AUDIT"
+      },
+      "counts": {
+        "referenceRawHashVerified": false,
+        "downgradeNegativeTestPassed": true,
+        "promotedToLiveCount": 0
+      }
+    },
+    "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E": {
+      "gateId": "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E",
+      "status": "PASS",
+      "evidenceRefs": [
+        "ServerPID:79772",
+        "WorkerPID:79774",
+        "Job:kh02_run_1793628619229_ga48s@fencingGen=1"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Real HTTP POST 202 -> independent worker PID 79774 claimed and completed run kh02_run_1793628619229_ga48s."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": null,
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "serverPid": 79772,
+        "workerPid": 79774,
+        "postHttpStatus": 202,
+        "fencingGeneration": 1,
+        "httpPollCount": 115
+      }
+    },
+    "META_LIVE_CURRENT_RUN_COLLECTION": {
+      "gateId": "META_LIVE_CURRENT_RUN_COLLECTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "MetaRun:kh02_run_1793628619229_ga48s@queries=3@liveObs=33"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Strict LIVE_ONLY Meta collection verified with 3 executed subqueries and 33 lineage-verified live observations."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "subqueriesExecutedCount": 3,
+        "liveProviderObservationsCount": 33,
+        "validatedLiveObservationsCount": 33,
+        "cachedObservationsCount": 0,
+        "lineagePassedCount": 0,
+        "lineageRejectedCount": 0
+      }
+    },
+    "META_STRICT_LIVE_LINEAGE": {
+      "gateId": "META_STRICT_LIVE_LINEAGE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "MetaRun:kh02_run_1793628619229_ga48s@queries=3@liveObs=33"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Strict LIVE_ONLY Meta collection verified with 3 executed subqueries and 33 lineage-verified live observations."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "mode": "LIVE_ONLY"
+      },
+      "counts": {
+        "lineagePassedCount": 0,
+        "lineageRejectedCount": 0,
+        "missingRawReceiptCount": 0
+      }
+    },
+    "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION": {
+      "gateId": "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Shortlist:3_distinct_families@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "3 distinct product families in Top 3 shortlist with order independence and 0 padding."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "CANDIDATE_DISCOVERY"
+      },
+      "counts": {
+        "relevantPhysicalCandidatesCount": 10,
+        "shortlistCount": 3,
+        "distinctFamiliesInShortlistCount": 3
+      }
+    },
+    "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE": {
+      "gateId": "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "McpSession:pw_mcp_mvzc7i2t_ea9433b7@PID=79851@ops=4"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Same-session REAL_STDIO_MCP lifecycle verified and owned child PID terminated cleanly."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7",
+        "mode": "REAL_STDIO_MCP"
+      },
+      "counts": {
+        "operationsAttempted": 4,
+        "mcpSessionClosedCleanly": true,
+        "ownedChildPidTerminated": true
+      }
+    },
+    "AMAZON_UI_US_DELIVERY_ZIP_95829": {
+      "gateId": "AMAZON_UI_US_DELIVERY_ZIP_95829",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonUI:ZIP_95829@session=pw_mcp_mvzc7i2t_ea9433b7@pdpCount=2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "US delivery ZIP 95829 confirmed across homepage readback, search, and PDP DOM."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7"
+      },
+      "counts": {
+        "observedDeliveryPostalCode": "95829",
+        "dialogOpened": true,
+        "applyClicked": true
+      }
+    },
+    "AMAZON_UI_USD_COMMERCIAL_EXTRACTION": {
+      "gateId": "AMAZON_UI_USD_COMMERCIAL_EXTRACTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonPDP:USD@pdpUsdCount=2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Explicit USD currency and numeric price verified on 2 live PDPs."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "workspaceId": "ws_v12_4_3_7_1_strict_live_1793628618411",
+        "runId": "kh02_run_1793628619229_ga48s",
+        "sessionId": "pw_mcp_mvzc7i2t_ea9433b7"
+      },
+      "counts": {
+        "observedDisplayedCurrencyCode": "USD",
+        "evaluatedPdpCount": 2
+      }
+    },
+    "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION": {
+      "gateId": "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonSearchHref:2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Navigated to 2 PDPs via observed search card hrefs."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "AMAZON_SEARCH_TO_PDP"
+      },
+      "counts": {
+        "observedHrefSelectedCount": 2,
+        "sponsoredCardsSelectedCount": 0,
+        "unvisitedCardsPromotedToVerifiedCount": 0
+      }
+    },
+    "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION": {
+      "gateId": "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "AmazonPdpVerified:2"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "2/2 Amazon search->PDP identities verified."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "AMAZON_TWO_TIER_IDENTITY"
+      },
+      "counts": {
+        "evaluatedCount": 2
+      }
+    },
+    "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION": {
+      "gateId": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION",
+      "status": "PARTIAL_CATEGORY_OR_FAMILY_ONLY",
+      "evidenceRefs": [
+        "AmazonMetaCorroboration:PARTIAL_CATEGORY_OR_FAMILY_ONLY@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Observed 1 exact product match and 1 category/family-only match (1/2 exact)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "META_TO_AMAZON_EQUIVALENCE"
+      },
+      "counts": {
+        "evaluatedCount": 2,
+        "falseExactProductPromotionCount": 0
+      }
+    },
+    "WALMART_US_LIVE_OPERATIONAL_STATUS": {
+      "gateId": "WALMART_US_LIVE_OPERATIONAL_STATUS",
+      "status": "PAUSED_BLOCKED_PROVIDER",
+      "evidenceRefs": [
+        "WalmartReceipt:d2e2fcd4b0b64ca67ef00bb7026736592060526b29ac9546b51498f4750f0fd4"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Walmart US remains paused (PAUSED_BLOCKED_PROVIDER) with 0 live HTTP calls and verified CAPTCHA receipt."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "PAUSED_EXTERNAL"
+      },
+      "counts": {
+        "currentRunLiveWalmartHttpRequests": 0
+      }
+    },
+    "DB_API_UI_RELOAD_PARITY": {
+      "gateId": "DB_API_UI_RELOAD_PARITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "DbApiUiParity:cand_1212440541,cand_1587534715,cand_1613504636@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Exact candidate IDs, ranks, evidence rows, and gating states match across SQLite, HTTP GET, and Chromium DOM pre/post reload."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "REAL_NETWORK_HTTP_AND_CHROMIUM_DOM"
+      },
+      "counts": {
+        "persistedShortlistCount": 3,
+        "cardsBeforeReloadCount": 3,
+        "cardsAfterReloadCount": 3,
+        "apiMismatches": 0,
+        "uiMismatches": 0
+      }
+    },
+    "SECONDARY_NICHE_DYNAMIC_SEPARATION": {
+      "gateId": "SECONDARY_NICHE_DYNAMIC_SEPARATION",
+      "status": "PASS",
+      "evidenceRefs": [
+        "SecondaryNiche:Home_Organization@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Secondary niche ('Home Organization') produced 3 distinct candidates with 0 overlap against 'Pet Gadgets'."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "SECONDARY_NICHE_ISOLATION"
+      },
+      "counts": {
+        "secondaryShortlistCount": 3,
+        "crossNicheOverlapCount": 0
+      }
+    },
+    "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY": {
+      "gateId": "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Backtest:DEV_2026_10_24+HOLDOUT_2026_10_30@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Point-in-time replay verified on DEV (60 obs) and HOLDOUT (377 obs) with 0 post-cutoff leaks."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "POINT_IN_TIME_REPLAY"
+      },
+      "counts": {
+        "devObs": 60,
+        "holdoutObs": 377,
+        "postCutoffIncluded": 0
+      }
+    },
+    "HISTORICAL_PROVIDER_PARITY_TRUTH": {
+      "gateId": "HISTORICAL_PROVIDER_PARITY_TRUTH",
+      "status": "VACUOUS_OR_UNPROVEN",
+      "evidenceRefs": [
+        "HistoricalProviderParity:VACUOUS_OR_UNPROVEN@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Zero pre-cutoff live Amazon/Walmart provider rows exist in historical DB; fixture post-cutoff rejection passes no-lookahead guard, but historical marketplace parity is VACUOUS_OR_UNPROVEN."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "HISTORICAL_PROVIDER_PARITY"
+      },
+      "counts": {
+        "eligibleHistoricalAmazonRowsCount": 0,
+        "eligibleHistoricalWalmartRowsCount": 0
+      }
+    },
+    "HISTORICAL_BUSINESS_EVIDENCE": {
+      "gateId": "HISTORICAL_BUSINESS_EVIDENCE",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "HistoricalBusiness:INSUFFICIENT_EVIDENCE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "DEV shortlist=0/verified=0; HOLDOUT shortlist=3/verified=0 (INSUFFICIENT_HISTORICAL_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "HISTORICAL_BUSINESS_EVALUATION"
+      },
+      "counts": {
+        "devShortlistCount": 0,
+        "devVerifiedIdentityCount": 0,
+        "holdoutShortlistCount": 3,
+        "holdoutVerifiedIdentityCount": 0
+      }
+    },
+    "E2E_SPEC_COVERAGE": {
+      "gateId": "E2E_SPEC_COVERAGE",
+      "status": "PASS",
+      "evidenceRefs": [
+        "E2E:12_specs_34_cases@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "All 12/12 E2E specs (34/34 cases) passed with 0 skips."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "E2E_SUITE"
+      },
+      "counts": {
+        "totalSpecs": 12,
+        "passedSpecsCount": 12,
+        "passedE2ETestCases": 34,
+        "totalE2ETestCases": 34
+      }
+    },
+    "CODE_AND_ENGINEERING_GATES": {
+      "gateId": "CODE_AND_ENGINEERING_GATES",
+      "status": "PASS",
+      "evidenceRefs": [
+        "Regression:158_files_1998_cases",
+        "E2E:12_specs_34_cases",
+        "Mutations:pending"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "All engineering gates passed on 164f9d0d: 158 test files (1998 tests), 12 E2E specs (34 cases), tsc=0, build=0, 0 orphans."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "ENGINEERING_ACCEPTANCE"
+      },
+      "counts": {
+        "executedTestFilesCount": 158,
+        "passedTestCases": 1998,
+        "passedE2ETestCases": 34,
+        "orphanedOwnedProcessCount": 0
+      }
+    },
+    "G07_PAID_MEDIA_PERSISTENCE": {
+      "gateId": "G07_PAID_MEDIA_PERSISTENCE",
+      "status": "BLOCKED",
+      "evidenceRefs": [
+        "G07:BLOCKED@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "TikTok Ads US live provider remains disabled/unauthenticated under zero-spend policy (G07 = BLOCKED)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G07_PAID_MEDIA"
+      },
+      "counts": {}
+    },
+    "G15_LONGITUDINAL_DEMAND_60D": {
+      "gateId": "G15_LONGITUDINAL_DEMAND_60D",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "G15:INSUFFICIENT_EVIDENCE@qualified=0"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Fewer than 3 products have >= 60 covered days of authoritative product-level longitudinal demand (G15 = INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G15_DEMAND_60D"
+      },
+      "counts": {
+        "qualifiedProductsCount": 0,
+        "requiredDays": 60,
+        "maxObservedDays": 0
+      }
+    },
+    "G16_INDEPENDENT_MERCHANT_PROOF": {
+      "gateId": "G16_INDEPENDENT_MERCHANT_PROOF",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "G16:INSUFFICIENT_EVIDENCE@verified=0"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "0/3 shortlisted candidates have independent persisted DB merchant schema + live same-run lineage proof (G16 = INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "G16_MERCHANT_PROOF"
+      },
+      "counts": {
+        "verifiedMerchantsCount": 0,
+        "requiredMerchantsCount": 3
+      }
+    },
+    "FULL_KH02_BUSINESS_ACCEPTANCE": {
+      "gateId": "FULL_KH02_BUSINESS_ACCEPTANCE",
+      "status": "INSUFFICIENT_EVIDENCE",
+      "evidenceRefs": [
+        "FullBusiness:INSUFFICIENT_EVIDENCE@164f9d0d"
+      ],
+      "sourceSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+      "reasons": [
+        "Business acceptance remains INSUFFICIENT_EVIDENCE (G07=BLOCKED, G15=INSUFFICIENT_EVIDENCE, G16=INSUFFICIENT_EVIDENCE, HistoricalBusiness=INSUFFICIENT_EVIDENCE)."
+      ],
+      "measuredAt": "2026-11-02T14:12:02.153Z",
+      "scope": {
+        "mode": "BUSINESS_ACCEPTANCE"
+      },
+      "counts": {
+        "g07": "BLOCKED",
+        "g15": "INSUFFICIENT_EVIDENCE",
+        "g16": "INSUFFICIENT_EVIDENCE"
+      }
+    }
+  },
+  "verdictTable": {
+    "STANDALONE_REFERENCE_EVIDENCE_INTEGRITY": "PASS",
+    "REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E": "PASS",
+    "META_LIVE_CURRENT_RUN_COLLECTION": "PASS",
+    "META_STRICT_LIVE_LINEAGE": "PASS",
+    "CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION": "PASS",
+    "AMAZON_LOCAL_MCP_SESSION_LIFECYCLE": "PASS",
+    "AMAZON_UI_US_DELIVERY_ZIP_95829": "PASS",
+    "AMAZON_UI_USD_COMMERCIAL_EXTRACTION": "PASS",
+    "AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION": "PASS",
+    "AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION": "PASS",
+    "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION": "PARTIAL_CATEGORY_OR_FAMILY_ONLY",
+    "WALMART_US_LIVE_OPERATIONAL_STATUS": "PAUSED_BLOCKED_PROVIDER",
+    "DB_API_UI_RELOAD_PARITY": "PASS",
+    "SECONDARY_NICHE_DYNAMIC_SEPARATION": "PASS",
+    "POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY": "PASS",
+    "HISTORICAL_PROVIDER_PARITY_TRUTH": "VACUOUS_OR_UNPROVEN",
+    "HISTORICAL_BUSINESS_EVIDENCE": "INSUFFICIENT_EVIDENCE",
+    "E2E_SPEC_COVERAGE": "PASS",
+    "CODE_AND_ENGINEERING_GATES": "PASS",
+    "G07_PAID_MEDIA_PERSISTENCE": "BLOCKED",
+    "G15_LONGITUDINAL_DEMAND_60D": "INSUFFICIENT_EVIDENCE",
+    "G16_INDEPENDENT_MERCHANT_PROOF": "INSUFFICIENT_EVIDENCE",
+    "FULL_KH02_BUSINESS_ACCEPTANCE": "INSUFFICIENT_EVIDENCE",
+    "OVERALL_RELEASE_STATUS": "ENGINEERING_AND_COMMERCIAL_FOUNDATION_READY_WITH_TRUTHFUL_LIVE_AND_EXTERNAL_GATES"
+  },
+  "allEngineeringGatesPassed": true,
+  "businessAcceptancePassed": false,
+  "anyGateFailed": false,
+  "failedGateKeys": []
+}
