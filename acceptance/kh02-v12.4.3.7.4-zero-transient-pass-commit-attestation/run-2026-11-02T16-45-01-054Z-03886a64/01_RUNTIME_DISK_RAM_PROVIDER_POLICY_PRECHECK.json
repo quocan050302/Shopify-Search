@@ -1,0 +1,185 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:45:02.384Z",
+  "nodeVersion": "v22.22.3",
+  "platform": "darwin",
+  "playwrightMcpPackage": "@playwright/mcp@0.0.83",
+  "playwrightMcpHandshakePassed": true,
+  "playwrightMcpSpawnedPid": 12992,
+  "playwrightMcpTools": [
+    "browser_close",
+    "browser_resize",
+    "browser_console_messages",
+    "browser_handle_dialog",
+    "browser_emulate_media",
+    "browser_evaluate",
+    "browser_file_upload",
+    "browser_drop",
+    "browser_find",
+    "browser_fill_form",
+    "browser_press_key",
+    "browser_type",
+    "browser_navigate",
+    "browser_navigate_back",
+    "browser_network_requests",
+    "browser_network_request",
+    "browser_run_code_unsafe",
+    "browser_take_screenshot",
+    "browser_snapshot",
+    "browser_click",
+    "browser_drag",
+    "browser_hover",
+    "browser_select_option",
+    "browser_tabs",
+    "browser_wait_for"
+  ],
+  "metaCollectorVenvPath": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/services/meta-ads-collector/.venv/bin/python",
+  "metaCollectorVenvAvailable": true,
+  "freeDiskGiB": 31.87,
+  "diskThresholdGiB": 15,
+  "standaloneReference": {
+    "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+    "evaluatedAt": "2026-11-02T16:45:02.390Z",
+    "rawFilesPresentOnDisk": false,
+    "checkedPaths": [
+      "FINAL_RESULT.json",
+      "operation-ledger.json",
+      "executed_test.py"
+    ],
+    "manifest": {
+      "schemaVersion": "1.0.0",
+      "releaseVersion": "12.4.3.7.1",
+      "referenceId": "REFERENCE_AMAZON_STANDALONE_2026_11_02",
+      "referenceOrigin": "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT",
+      "referenceAvailability": "SUMMARY_AND_SCRIPT_ONLY",
+      "referenceRawHashVerified": false,
+      "referenceReplayStatus": "NOT_EXECUTED",
+      "standaloneReferenceStatus": "USER_REPORTED_SEARCH_TO_PDP_PASS",
+      "standaloneAppIntegrationStatus": "NOT_TESTED_BY_REFERENCE",
+      "rawBundleExpectedFiles": [
+        "run2-us/search.html",
+        "run2-us/pdp.html",
+        "FINAL_RESULT.json",
+        "operation-ledger.json",
+        "executed_test.py",
+        "MANIFEST.json"
+      ],
+      "reportedExecutionContext": {
+        "observedAt": "2026-11-02T06:44:09.248631Z",
+        "searchQuery": "automatic pet feeder with camera",
+        "searchUrl": "https://www.amazon.com/s?k=automatic+pet+feeder+with+camera",
+        "requestedPostalCode": "95829",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCurrency": "USD"
+      },
+      "reportedSearchCards": [
+        {
+          "rank": 1,
+          "asin": "B0D3XGHTJ5",
+          "title": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+          "brand": null,
+          "observedSearchHref": null,
+          "observedSearchHrefNote": "Exact long /dp/ search href was not materialized in summary-only report; never fabricate a synthetic observed href.",
+          "price": "$49.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 2,
+          "asin": "B0DCNNN5FC",
+          "title": "Automatic Cat Feeder with Camera 5G WiFi Timed Pet Feeder",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$69.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 3,
+          "asin": "B0HB9H7CXV",
+          "title": "Automatic Pet Feeder with Camera Dual Bowl Smart Dispenser",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$59.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 4,
+          "asin": "B0GSR1GTHW",
+          "title": "Smart Automatic Cat Food Dispenser with HD Camera 6L",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$54.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 5,
+          "asin": "B0GVSFS68N",
+          "title": "WiFi Automatic Pet Feeder with Camera for Cats and Small Dogs",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$45.99",
+          "currency": "USD",
+          "isSponsored": false
+        }
+      ],
+      "reportedPdpObservation": {
+        "asin": "B0D3XGHTJ5",
+        "productTitle": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+        "brand": "faroro",
+        "modelNumber": "TD20",
+        "seller": "WECACO",
+        "price": 49.99,
+        "currency": "USD",
+        "availability": "In Stock",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+        "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+        "derivedNormalizedCanonicalUrl": "https://www.amazon.com/dp/B0D3XGHTJ5"
+      },
+      "trustBoundaryPolicy": {
+        "fixtureObservationClass": "TEST_FIXTURE",
+        "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+        "forbiddenObservationClasses": [
+          "AUTHORIZED_LIVE"
+        ],
+        "canSatisfyCurrentRunLiveGate": false,
+        "canBackfillCurrentRunMissingCommercialFields": false,
+        "checkoutOrPurchaseClaim": false
+      }
+    },
+    "parserVerification": {
+      "observationClass": "TEST_FIXTURE",
+      "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+      "asin": "B0D3XGHTJ5",
+      "brand": "faroro",
+      "model": "TD20",
+      "seller": "WECACO",
+      "price": 49.99,
+      "currency": "USD",
+      "availability": "In Stock",
+      "observedDeliveryPostalCode": "95829",
+      "verifiedDeliveryMarket": "US",
+      "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+      "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B0D3XGHTJ5",
+      "observedSearchHref": "https://www.amazon.com/faroro-Automatic-Cat-Feeder-Programmable/dp/B0D3XGHTJ5/ref=sr_1_1",
+      "observedSearchHrefOrigin": "OBSERVED_HREF",
+      "searchIdentityVerdict": "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED",
+      "metaCandidateEquivalenceVerdict": "EXACT_PRODUCT",
+      "combinedIdentityVerdict": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      "commercialUsStatus": "US_COMMERCIAL_VERIFIED",
+      "discoveredNotVerifiedAsins": [
+        "B0DCNNN5FC",
+        "B0HB9H7CXV",
+        "B0GSR1GTHW",
+        "B0GVSFS68N"
+      ]
+    },
+    "downgradeNegativeTestPassed": true
+  }
+}

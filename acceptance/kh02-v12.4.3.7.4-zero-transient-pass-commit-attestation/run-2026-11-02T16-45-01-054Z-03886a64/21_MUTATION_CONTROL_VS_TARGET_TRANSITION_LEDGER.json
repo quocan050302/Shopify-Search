@@ -1,0 +1,2266 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:50:26.914Z",
+  "totalMutations": 118,
+  "caughtMutations": 118,
+  "inconclusiveMutations": 0,
+  "ledger": [
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_01",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Reintroduce forbidden internal fetch('/portal-migration/hz/glow/address-change...') in amazonUsMcpTransport.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_NO_INTERNAL_GLOW_FETCH",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_NO_INTERNAL_GLOW_FETCH"
+      ],
+      "detail": "Caught by SOURCE_NO_INTERNAL_GLOW_FETCH (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_02",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported isValidAmazonRawSnapshotHash from amazonUsMcpTransport.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_03",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported buildAmazonUiPhaseContextProof from amazonUsMcpTransport.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_04",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsIdentity.ts",
+      "description": "Remove EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE guard from amazonUsIdentity.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD"
+      ],
+      "detail": "Caught by SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_05",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Reintroduce Math.random() synthetic ad ID generation in productCandidateDiscovery.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_06",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/persistence/kh02PersistenceService.ts",
+      "description": "Remove !Array.isArray(browserEvidence.displayedCandidateIds) fail-closed guard from kh02PersistenceService.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD"
+      ],
+      "detail": "Caught by SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_07",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/evergreenResearchOrchestrator.ts",
+      "description": "Reintroduce forbidden candidates.slice(0, 3) fallback in evergreenResearchOrchestrator.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK"
+      ],
+      "detail": "Caught by SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_08",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "scripts/kh02/acceptanceTruth.ts",
+      "description": "Remove exported validatePerSpecE2EReceipts from acceptanceTruth.ts",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER"
+      ],
+      "detail": "Caught by SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A01",
+      "scenarioNumber": 1,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A01] missing receipts array",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A02",
+      "scenarioNumber": 2,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A02] has 11/12 spec rows",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A03",
+      "scenarioNumber": 3,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A03] duplicate specFile",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A04",
+      "scenarioNumber": 4,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A04] one spec receipt exitCode !== 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A05",
+      "scenarioNumber": 5,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A05] one spec classification = SKIPPED",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A06",
+      "scenarioNumber": 6,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A06] one spec failedTests > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A07",
+      "scenarioNumber": 7,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A07] summary totalE2ETestCases mismatch",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A08",
+      "scenarioNumber": 8,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A08] one spec wrong sourceSha",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A09",
+      "scenarioNumber": 9,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A09] one spec startedAt > endedAt",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A10",
+      "scenarioNumber": 10,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A10] one spec ownedPidsReconciled = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A11",
+      "scenarioNumber": 11,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A11] verdict matrix missing gate",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A12",
+      "scenarioNumber": 12,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json",
+      "description": "[A12] invalid typecheckAndBuild",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS"
+      ],
+      "detail": "Caught by ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A13",
+      "scenarioNumber": 13,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A13] invalid resourceAndOrphanGuard",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A14",
+      "scenarioNumber": 14,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A14] 24 contains Mutations:pending placeholder",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A15",
+      "scenarioNumber": 15,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A15] phase5 observedAt > closeFinishedAt",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A16",
+      "scenarioNumber": 16,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A16] phase4 observedAt equals evaluatedAt",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A17",
+      "scenarioNumber": 17,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A17] phase5 status = INCOMPLETE",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A18",
+      "scenarioNumber": 18,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "[A18] closeStartedAt < lastToolCompletedAt",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A19",
+      "scenarioNumber": 19,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A19] sessionId mismatch across phases",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A20",
+      "scenarioNumber": 20,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A20] missing or phony rawSnapshotHash",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A21",
+      "scenarioNumber": 21,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A21] finalEffectiveUsDeliveryVerified = false while finalZipVerdict = PASS",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A22",
+      "scenarioNumber": 22,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A22] finalEffectiveCurrencyUsdVerified = false while finalUsdCommercialVerdict = PASS",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A23",
+      "scenarioNumber": 23,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "[A23] currency inferred from $ symbol only",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A24",
+      "scenarioNumber": 24,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "[A24] homepage ZIP borrowed onto PDP",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A25",
+      "scenarioNumber": 25,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A25] domCandidateIdsBeforeReload missing",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A26",
+      "scenarioNumber": 26,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A26] DOM candidate IDs after reload differ",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A27",
+      "scenarioNumber": 27,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A27] GET API returns cached/fixture data",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A28",
+      "scenarioNumber": 28,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A28] sourceMode !== LIVE_ONLY",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A29",
+      "scenarioNumber": 29,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A29] metaTelemetry is empty {}",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A30",
+      "scenarioNumber": 30,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A30] subqueriesExecutedCount > actual completed queries",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A31",
+      "scenarioNumber": 31,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A31] query receipt missing providerRequestId",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A32",
+      "scenarioNumber": 32,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[A32] crossWorkspaceAdLinkedCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A33",
+      "scenarioNumber": 33,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A33] validatedLiveObservationsCount mismatch without rejected reason",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A34",
+      "scenarioNumber": 34,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A34] lineagePassedCount < 3",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A35",
+      "scenarioNumber": 35,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "description": "[A35] postCutoffRowsIncludedCount > 0 in DEV",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A36",
+      "scenarioNumber": 36,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json",
+      "description": "[A36] fixtureRowsIncludedInLiveReplayCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD"
+      ],
+      "detail": "Caught by ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A37",
+      "scenarioNumber": 37,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "description": "[A37] historicalProviderParityVerdict marked PASS",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A38",
+      "scenarioNumber": 38,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_WALMART_PAUSED_EXTERNAL_GATE.json",
+      "description": "[A38] currentRunLiveWalmartHttpRequests > 0 while PAUSED_EXTERNAL",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION"
+      ],
+      "detail": "Caught by ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A39",
+      "scenarioNumber": 39,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A39] FULL_KH02_BUSINESS_ACCEPTANCE marked PASS",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A40",
+      "scenarioNumber": 40,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A40] free disk < 15 GiB",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A41",
+      "scenarioNumber": 41,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A41] orphanedOwnedProcessCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A42",
+      "scenarioNumber": 42,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A42] maxConcurrentHeavyObserved > 2",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_01",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Mutate branch to master",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "PRECHECK_BRANCH_EXACT",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "PRECHECK_BRANCH_EXACT"
+      ],
+      "detail": "Caught by PRECHECK_BRANCH_EXACT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_02",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Mutate codeSha to wrong SHA",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "PRECHECK_SHA_40HEX",
+        "SHA_PARITY_00",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "PRECHECK_SHA_40HEX"
+      ],
+      "detail": "Caught by PRECHECK_SHA_40HEX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_03",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Set ancestryVerified = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "PRECHECK_ANCESTRY_VERIFIED",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "PRECHECK_ANCESTRY_VERIFIED"
+      ],
+      "detail": "Caught by PRECHECK_ANCESTRY_VERIFIED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_04",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set playwrightMcpHandshakePassed = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_05",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set freeDiskGiB = 8",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_06",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set metaCollectorVenvAvailable = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_07",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Mutate standalone referenceAvailability to FULL_RAW_BUNDLE",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_08",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set downgradeNegativeTestPassed = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_09",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set standalone observationClass = AUTHORIZED_LIVE",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_10",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set standalone referenceRawHashVerified = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_11",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set inProcessExecuteResearchJobUsedForPrimaryAcceptance = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_12",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set processesTerminatedCleanly = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_13",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set serverProcessPid === workerProcessPid",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_14",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set requestSourceMode = LIVE_WITH_CACHE_FALLBACK",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_15",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 9",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_16",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set postHttpStatus = 500",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_17",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set httpPollCount = 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_18",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 5",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_19",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set sourceMode = CACHE_ONLY",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_20",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set cachePromotedToLiveCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_21",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set syntheticPromotedToLiveCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_22",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set missingPersistedAdInDbCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_23",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set unexecutedQueryObservationCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_24",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set nonProductPromotedToShortlistCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_25",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set irrelevantPromotedToShortlistCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_26",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set distinctFamiliesInShortlistCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_27",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set shortfallPaddingDetected = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_28",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set reversedOrderIdentical = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_29",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set provisionalPromotedToEvergreenWinnersCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_30",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set corroboratedRunSeparation.promotedToStrictLiveOnlyGate = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_31",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "Inject workspaceId mismatch",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_32",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "Set internalGlowFetchUsed = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_33",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set usedForbiddenSliceFallback = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_34",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set operationsAttempted = 6",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_35",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set fabricatedLiveSuccess = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_36",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set sponsoredCardsSelectedCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_37",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set unvisitedCardsPromotedToVerifiedCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_38",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "Set searchBrandCopiedFromCandidateCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_39",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "Set falseExactProductPromotionCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_40",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set mcpSessionClosedCleanly = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_41",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set ownedChildPidTerminated = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_42",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set allLiveOpsMatchSessionId = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_43",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set syncJobPersisted = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_44",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set HTTP transportMode = IN_PROCESS_ROUTE_CALL",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_45",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set UI DOM provisionalRenderedAsVerifiedEvergreenCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_46",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set secondaryNiche.crossNicheOverlapCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_47",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_TARGETED_UNIT_INTEGRATION_RESULTS.json",
+      "description": "Set failedCasesCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS"
+      ],
+      "detail": "Caught by ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_48",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_FULL_REPOSITORY_REGRESSION_SHARDS.json",
+      "description": "Set excludedOrDeferredFilesCount = 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS"
+      ],
+      "detail": "Caught by ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_01",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "[V12.4.3.7.4-01] testedTreeSha mutated to invalid 39-hex",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "PRECHECK_TREE_SHA_40HEX",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "PRECHECK_TREE_SHA_40HEX"
+      ],
+      "detail": "Caught by PRECHECK_TREE_SHA_40HEX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_02",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_TRANSIENT_SUCCESS_ELIMINATION_SOURCE_AND_CRASH_TESTS.json",
+      "description": "[V12.4.3.7.4-02] Crash test stage reported failed",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT03_CRASH_TESTS_VALID",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT03_CRASH_TESTS_VALID"
+      ],
+      "detail": "Caught by ARTIFACT03_CRASH_TESTS_VALID (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_03",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "03_TRANSIENT_SUCCESS_ELIMINATION_SOURCE_AND_CRASH_TESTS.json",
+      "description": "[V12.4.3.7.4-03] Crash test stage had outward release pass published",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "ARTIFACT03_CRASH_TESTS_VALID",
+        "RUN_STATE_VALID"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT03_CRASH_TESTS_VALID"
+      ],
+      "detail": "Caught by ARTIFACT03_CRASH_TESTS_VALID (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_04",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[V12.4.3.7.4-04] E2E receipts array missing required specIndex",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_05",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json",
+      "description": "[V12.4.3.7.4-05] npm run build failed with exitCode 1",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS"
+      ],
+      "detail": "Caught by ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_06",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "[V12.4.3.7.4-06] Job fencing generation === 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_07",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[V12.4.3.7.4-07] validatedLiveObservationsCount === 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_08",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[V12.4.3.7.4-08] missingPersistedAdInDbCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_09",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "[V12.4.3.7.4-09] Shortlist count < 3",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_10",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "[V12.4.3.7.4-10] Amazon operationsAttempted > 4 cap",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_11",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[V12.4.3.7.4-11] Contradictions detected array non-empty",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_12",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "[V12.4.3.7.4-12] ownedChildPidTerminated = false",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_13",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "[V12.4.3.7.4-13] Evaluated candidates array is empty",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_14",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[V12.4.3.7.4-14] Secondary niche cross-niche overlap > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_15",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_WALMART_PAUSED_EXTERNAL_GATE.json",
+      "description": "[V12.4.3.7.4-15] Non-inflation rankingChanged = true",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION"
+      ],
+      "detail": "Caught by ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_16",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "description": "[V12.4.3.7.4-16] backtestEngineExecuted = FAIL",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_17",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST.json",
+      "description": "[V12.4.3.7.4-17] pointInTimeIntegrityVerdict = FAIL",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST"
+      ],
+      "detail": "Caught by ARTIFACT19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_18",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json",
+      "description": "[V12.4.3.7.4-18] postCutoffIncludedInReplayCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD"
+      ],
+      "detail": "Caught by ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_19",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[V12.4.3.7.4-19] unreconciledOwnedNodePidsCount > 0",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL (transitioned PASS -> FAIL)"
+    },
+    {
+      "mutationId": "V12_4_3_7_4_NEG_MUT_20",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[V12.4.3.7.4-20] ALL_12_CANONICAL_E2E_SPECS verdict set to FAIL",
+      "baselinePass": true,
+      "mutationFail": true,
+      "caught": true,
+      "inconclusive": false,
+      "failedCheckIds": [
+        "RUN_STATE_VALID",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "newFailedChecks": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH (transitioned PASS -> FAIL)"
+    }
+  ]
+}

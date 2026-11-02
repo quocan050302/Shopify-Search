@@ -1,0 +1,59 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "sourceSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:48:39.686Z",
+  "zeroLegacyFailExemptionEnforced": true,
+  "totalDiscoveredTestFiles": 160,
+  "executedTestFilesCount": 160,
+  "excludedOrDeferredFilesCount": 0,
+  "targetedOnly": false,
+  "inventoryComplete": true,
+  "totalExecutedTestCases": 2055,
+  "passedTestCases": 2055,
+  "failedTestCases": 0,
+  "requiredActiveSuiteFailedTestCases": 0,
+  "baselineKnownPolicySupersededTestCases": 0,
+  "newRegressionTestCases": 0,
+  "shards": [
+    {
+      "shardId": "SHARD_UNIT_106_FILES",
+      "filesCount": 106,
+      "totalTests": 1763,
+      "passedTests": 1763,
+      "failedTests": 0,
+      "durationMs": 49403
+    },
+    {
+      "shardId": "SHARD_REPAIRED_LEGACY_UNIT_8_FILES",
+      "filesCount": 8,
+      "totalTests": 77,
+      "passedTests": 77,
+      "failedTests": 0,
+      "durationMs": 7460
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_1_17_FILES",
+      "filesCount": 17,
+      "totalTests": 104,
+      "passedTests": 104,
+      "failedTests": 0,
+      "durationMs": 21496
+    },
+    {
+      "shardId": "SHARD_INTEGRATION_2_17_FILES",
+      "filesCount": 17,
+      "totalTests": 77,
+      "passedTests": 77,
+      "failedTests": 0,
+      "durationMs": 12672
+    },
+    {
+      "shardId": "SHARD_ALL_12_E2E_SPECS",
+      "filesCount": 12,
+      "totalTests": 34,
+      "passedTests": 34,
+      "failedTests": 0,
+      "durationMs": 133745
+    }
+  ]
+}

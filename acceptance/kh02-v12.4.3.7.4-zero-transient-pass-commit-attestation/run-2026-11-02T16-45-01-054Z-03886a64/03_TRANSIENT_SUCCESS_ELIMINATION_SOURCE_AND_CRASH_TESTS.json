@@ -1,0 +1,230 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:45:02.712Z",
+  "priorTestedCodeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "diffStatVsPriorTestedCodeSha": ".../00_GIT_BRANCH_CODE_SHA_AND_TREE.json           |    19 +\n ..._RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json |   185 +\n .../02_CALL_GRAPH_AND_FUNCTION_CHANGE_INVENTORY.md |    40 +\n .../03_FIX_VERIFICATION_AND_SOURCE_DIFF.json       |   160 +\n ...E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json |   230 +\n .../05_TARGETED_UNIT_INTEGRATION_RESULTS.json      |   802 ++\n .../06_FULL_REPOSITORY_REGRESSION_SHARDS.json      |    59 +\n ..._TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json |    15 +\n ...08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json |   264 +\n .../09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json    |  1605 +++\n ...ATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json |   867 ++\n .../11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json    |   156 +\n .../12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json      |  1717 +++\n ...MAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json |   462 +\n .../14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json  |    23 +\n ...ZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json |    74 +\n .../16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json       |   295 +\n .../17_WALMART_PAUSED_EXTERNAL_GATE.json           |   368 +\n .../18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json  |    43 +\n ..._HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST.json |   128 +\n ...STORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json |    12 +\n ...E_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json |   259 +\n .../22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json  |  1215 +++\n ..._INDEPENDENT_RAW_EVIDENCE_VALIDATOR_REPORT.json |   588 +\n .../24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json    |  2086 ++++\n .../25_SHA256_ARTIFACT_MANIFEST.json               |   142 +\n .../26_OWNER_REPORT_VI.md                          |    52 +\n .../27_COMMIT_PUSH_REMOTE_HEAD_PROOF.json          |    12 +\n .../BACKTEST_REPLAY_PROVENANCE.json                |    34 +\n .../POLICY_SCENARIO_RESULTS.json                   |   406 +\n .../REAL_HISTORICAL_DEV_BACKTEST.json              |   260 +\n .../REAL_HISTORICAL_HOLDOUT_BACKTEST.json          | 10809 +++++++++++++++++++\n scripts/kh02/acceptanceTruth.ts                    |  1100 +-\n scripts/kh02/runAcceptanceV12_4_3_7_2.ts           |   567 +-\n scripts/kh02/validateClosureV12_4_3_7_2.ts         |  1715 ++-\n .../kh02/marketplace/amazonUsMcpTransport.ts       |    38 +-\n ..._7_4_ZeroTransientPassCommitAttestation.test.ts |   410 +\n 37 files changed, 26076 insertions(+), 1141 deletions(-)",
+  "transientSuccessElimination": {
+    "preMutationSeedRemoved": true,
+    "provisionalReleasePassForbidden": true,
+    "statefulAcceptanceRunStateEnforced": true,
+    "barrierAtomicWriteEnforced": true
+  },
+  "crashTests": [
+    {
+      "stage": "BEFORE_MUTATION_STARTS",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "MID_PHYSICAL_MUTATION",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "JUST_AFTER_22_WRITTEN",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "WHILE_WRITING_24",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "AFTER_FINAL_VALIDATION_BEFORE_COMMIT",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "AFTER_EVIDENCE_PUSH_BEFORE_ATTESTATION",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "FAILED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=FAILED"
+    },
+    {
+      "stage": "BEFORE_LAST_REMOTE_VERIFICATION",
+      "crashedAsExpected": true,
+      "file24ExistsAfterCrash": false,
+      "file27ExistsAfterCrash": false,
+      "runStateTerminalStatus": "BLOCKED",
+      "outwardReleasePassPublished": false,
+      "passed": true,
+      "detail": "crashed=true, 24Exists=false, 27Exists=false, state=BLOCKED"
+    }
+  ],
+  "allCrashTestsPassed": true,
+  "standaloneReference": {
+    "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+    "evaluatedAt": "2026-11-02T16:45:02.390Z",
+    "rawFilesPresentOnDisk": false,
+    "checkedPaths": [
+      "FINAL_RESULT.json",
+      "operation-ledger.json",
+      "executed_test.py"
+    ],
+    "manifest": {
+      "schemaVersion": "1.0.0",
+      "releaseVersion": "12.4.3.7.1",
+      "referenceId": "REFERENCE_AMAZON_STANDALONE_2026_11_02",
+      "referenceOrigin": "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT",
+      "referenceAvailability": "SUMMARY_AND_SCRIPT_ONLY",
+      "referenceRawHashVerified": false,
+      "referenceReplayStatus": "NOT_EXECUTED",
+      "standaloneReferenceStatus": "USER_REPORTED_SEARCH_TO_PDP_PASS",
+      "standaloneAppIntegrationStatus": "NOT_TESTED_BY_REFERENCE",
+      "rawBundleExpectedFiles": [
+        "run2-us/search.html",
+        "run2-us/pdp.html",
+        "FINAL_RESULT.json",
+        "operation-ledger.json",
+        "executed_test.py",
+        "MANIFEST.json"
+      ],
+      "reportedExecutionContext": {
+        "observedAt": "2026-11-02T06:44:09.248631Z",
+        "searchQuery": "automatic pet feeder with camera",
+        "searchUrl": "https://www.amazon.com/s?k=automatic+pet+feeder+with+camera",
+        "requestedPostalCode": "95829",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCurrency": "USD"
+      },
+      "reportedSearchCards": [
+        {
+          "rank": 1,
+          "asin": "B0D3XGHTJ5",
+          "title": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+          "brand": null,
+          "observedSearchHref": null,
+          "observedSearchHrefNote": "Exact long /dp/ search href was not materialized in summary-only report; never fabricate a synthetic observed href.",
+          "price": "$49.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 2,
+          "asin": "B0DCNNN5FC",
+          "title": "Automatic Cat Feeder with Camera 5G WiFi Timed Pet Feeder",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$69.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 3,
+          "asin": "B0HB9H7CXV",
+          "title": "Automatic Pet Feeder with Camera Dual Bowl Smart Dispenser",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$59.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 4,
+          "asin": "B0GSR1GTHW",
+          "title": "Smart Automatic Cat Food Dispenser with HD Camera 6L",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$54.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 5,
+          "asin": "B0GVSFS68N",
+          "title": "WiFi Automatic Pet Feeder with Camera for Cats and Small Dogs",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$45.99",
+          "currency": "USD",
+          "isSponsored": false
+        }
+      ],
+      "reportedPdpObservation": {
+        "asin": "B0D3XGHTJ5",
+        "productTitle": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+        "brand": "faroro",
+        "modelNumber": "TD20",
+        "seller": "WECACO",
+        "price": 49.99,
+        "currency": "USD",
+        "availability": "In Stock",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+        "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+        "derivedNormalizedCanonicalUrl": "https://www.amazon.com/dp/B0D3XGHTJ5"
+      },
+      "trustBoundaryPolicy": {
+        "fixtureObservationClass": "TEST_FIXTURE",
+        "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+        "forbiddenObservationClasses": [
+          "AUTHORIZED_LIVE"
+        ],
+        "canSatisfyCurrentRunLiveGate": false,
+        "canBackfillCurrentRunMissingCommercialFields": false,
+        "checkoutOrPurchaseClaim": false
+      }
+    },
+    "parserVerification": {
+      "observationClass": "TEST_FIXTURE",
+      "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+      "asin": "B0D3XGHTJ5",
+      "brand": "faroro",
+      "model": "TD20",
+      "seller": "WECACO",
+      "price": 49.99,
+      "currency": "USD",
+      "availability": "In Stock",
+      "observedDeliveryPostalCode": "95829",
+      "verifiedDeliveryMarket": "US",
+      "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+      "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B0D3XGHTJ5",
+      "observedSearchHref": "https://www.amazon.com/faroro-Automatic-Cat-Feeder-Programmable/dp/B0D3XGHTJ5/ref=sr_1_1",
+      "observedSearchHrefOrigin": "OBSERVED_HREF",
+      "searchIdentityVerdict": "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED",
+      "metaCandidateEquivalenceVerdict": "EXACT_PRODUCT",
+      "combinedIdentityVerdict": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      "commercialUsStatus": "US_COMMERCIAL_VERIFIED",
+      "discoveredNotVerifiedAsins": [
+        "B0DCNNN5FC",
+        "B0HB9H7CXV",
+        "B0GSR1GTHW",
+        "B0GVSFS68N"
+      ]
+    },
+    "downgradeNegativeTestPassed": true
+  }
+}

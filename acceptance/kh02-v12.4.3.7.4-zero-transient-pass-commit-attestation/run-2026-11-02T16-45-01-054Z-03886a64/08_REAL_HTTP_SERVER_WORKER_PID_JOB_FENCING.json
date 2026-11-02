@@ -1,0 +1,264 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:50:09.541Z",
+  "executionMode": "REAL_NETWORK_WORKER_E2E",
+  "acceptanceProcessPid": 12979,
+  "serverProcessPid": 15475,
+  "workerProcessPid": 15479,
+  "distinctProcessPidsVerified": true,
+  "serverCommand": "node /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/next@16.4.2_@babel+core@7.29.7_supports-color@7.2.0__@types+node@20.19.43_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/next/dist/bin/next start -p 52371 -H 127.0.0.1",
+  "workerCommand": "node --import tsx src/workers/kh02Worker.ts --poll-interval-ms=400",
+  "serverBindUrl": "http://127.0.0.1:52371",
+  "serverStartedAt": "2026-11-02T16:48:39.952Z",
+  "serverStoppedAt": "2026-11-02T16:50:24.411Z",
+  "workerStartedAt": "2026-11-02T16:48:41.193Z",
+  "workerStoppedAt": "2026-11-02T16:50:24.347Z",
+  "directRouteImportUsedForPrimaryAcceptance": false,
+  "inProcessExecuteResearchJobUsedForPrimaryAcceptance": false,
+  "processesTerminatedCleanly": true,
+  "httpMethod": "POST",
+  "requestUrl": "http://127.0.0.1:52371/api/v1/kh02/research",
+  "requestHeaders": {
+    "content-type": "application/json",
+    "x-workspace-id": "ws_v12_4_3_7_1_strict_live_1793638119695"
+  },
+  "requestBody": {
+    "topic": "Pet Gadgets",
+    "market": "US",
+    "lookbackDays": 90,
+    "maxCandidates": 15,
+    "sourceMode": "LIVE_ONLY",
+    "metaExecutionPolicy": "LIVE_FIRST",
+    "enableAmazonUsPilot": true,
+    "enableWalmartUsPilot": false,
+    "asyncMode": true
+  },
+  "requestSourceMode": "LIVE_ONLY",
+  "primaryWorkspacePreSeededAdRowCount": 0,
+  "postHttpStatus": 202,
+  "researchRunId": "kh02_run_1793638121180_3tw49",
+  "initialJobStatusBeforeWorkerClaim": "PENDING",
+  "workerClaimed": true,
+  "workerId": "kh02-worker-15479-mvzhtsia",
+  "claimToken": "ed82b1f5-1f4c-4049-9771-97b03557dad2",
+  "fencingToken": "7cc389c4-dcfd-44d5-88cb-9d54652d7380",
+  "fencingGeneration": 1,
+  "recordVersion": 14,
+  "leaseExpiresAt": "2026-11-02T16:50:57.325Z",
+  "finalJobStatus": "COMPLETED",
+  "httpPollCount": 103,
+  "httpPollReceipts": [
+    {
+      "polledAt": "2026-11-02T16:48:41.245Z",
+      "httpStatus": 200,
+      "jobStatus": "PENDING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:42.064Z",
+      "httpStatus": 200,
+      "jobStatus": "PENDING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:42.872Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:43.681Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:44.488Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:45.296Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:46.108Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:46.917Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:47.725Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:48.531Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:49.344Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:50.154Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:50.964Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:51.784Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    },
+    {
+      "polledAt": "2026-11-02T16:48:52.588Z",
+      "httpStatus": 200,
+      "jobStatus": "RUNNING"
+    }
+  ],
+  "activeCorroboratedRunId": "kh02_run_1793638121180_3tw49",
+  "activeCorroboratedWorkspaceId": "ws_v12_4_3_7_1_strict_live_1793638119695",
+  "usedCorroboratedFallbackRun": false,
+  "serverWorkerProcess": {
+    "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+    "evaluatedAt": "2026-11-02T16:50:24.411Z",
+    "executionMode": "REAL_NETWORK_WORKER_E2E",
+    "acceptanceProcessPid": 12979,
+    "serverProcessPid": 15475,
+    "workerProcessPid": 15479,
+    "distinctProcessPidsVerified": true,
+    "serverCommand": "node /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/node_modules/.pnpm/next@16.4.2_@babel+core@7.29.7_supports-color@7.2.0__@types+node@20.19.43_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/next/dist/bin/next start -p 52371 -H 127.0.0.1",
+    "workerCommand": "node --import tsx src/workers/kh02Worker.ts --poll-interval-ms=400",
+    "serverBindUrl": "http://127.0.0.1:52371",
+    "serverStartedAt": "2026-11-02T16:48:39.952Z",
+    "serverStoppedAt": "2026-11-02T16:50:24.411Z",
+    "workerStartedAt": "2026-11-02T16:48:41.193Z",
+    "workerStoppedAt": "2026-11-02T16:50:24.347Z",
+    "directRouteImportUsedForPrimaryAcceptance": false,
+    "inProcessExecuteResearchJobUsedForPrimaryAcceptance": false,
+    "processesTerminatedCleanly": true
+  },
+  "httpPostJobFencing": {
+    "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+    "evaluatedAt": "2026-11-02T16:50:09.541Z",
+    "httpMethod": "POST",
+    "requestUrl": "http://127.0.0.1:52371/api/v1/kh02/research",
+    "requestHeaders": {
+      "content-type": "application/json",
+      "x-workspace-id": "ws_v12_4_3_7_1_strict_live_1793638119695"
+    },
+    "requestBody": {
+      "topic": "Pet Gadgets",
+      "market": "US",
+      "lookbackDays": 90,
+      "maxCandidates": 15,
+      "sourceMode": "LIVE_ONLY",
+      "metaExecutionPolicy": "LIVE_FIRST",
+      "enableAmazonUsPilot": true,
+      "enableWalmartUsPilot": false,
+      "asyncMode": true
+    },
+    "requestSourceMode": "LIVE_ONLY",
+    "primaryWorkspacePreSeededAdRowCount": 0,
+    "postHttpStatus": 202,
+    "researchRunId": "kh02_run_1793638121180_3tw49",
+    "initialJobStatusBeforeWorkerClaim": "PENDING",
+    "workerClaimed": true,
+    "workerId": "kh02-worker-15479-mvzhtsia",
+    "claimToken": "ed82b1f5-1f4c-4049-9771-97b03557dad2",
+    "fencingToken": "7cc389c4-dcfd-44d5-88cb-9d54652d7380",
+    "fencingGeneration": 1,
+    "recordVersion": 14,
+    "leaseExpiresAt": "2026-11-02T16:50:57.325Z",
+    "finalJobStatus": "COMPLETED",
+    "httpPollCount": 103,
+    "httpPollReceipts": [
+      {
+        "polledAt": "2026-11-02T16:48:41.245Z",
+        "httpStatus": 200,
+        "jobStatus": "PENDING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:42.064Z",
+        "httpStatus": 200,
+        "jobStatus": "PENDING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:42.872Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:43.681Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:44.488Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:45.296Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:46.108Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:46.917Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:47.725Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:48.531Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:49.344Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:50.154Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:50.964Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:51.784Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      },
+      {
+        "polledAt": "2026-11-02T16:48:52.588Z",
+        "httpStatus": 200,
+        "jobStatus": "RUNNING"
+      }
+    ],
+    "activeCorroboratedRunId": "kh02_run_1793638121180_3tw49",
+    "activeCorroboratedWorkspaceId": "ws_v12_4_3_7_1_strict_live_1793638119695",
+    "usedCorroboratedFallbackRun": false
+  }
+}

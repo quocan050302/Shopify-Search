@@ -1,0 +1,893 @@
+{
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "evaluatedAt": "2026-11-02T16:45:16.214Z",
+  "suiteFiles": [
+    "tests/unit/kh02/v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+    "tests/unit/kh02/v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+    "tests/unit/kh02/v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+    "tests/unit/kh02/v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts"
+  ],
+  "allPassed": true,
+  "totalCasesCount": 145,
+  "passedCasesCount": 145,
+  "failedCasesCount": 0,
+  "targetedSuitesTotalSuites": 13,
+  "targetedSuitesPassedSuites": 13,
+  "targetedSuitesFailedSuites": 0,
+  "targetedSuitesTotalTests": 482,
+  "targetedSuitesPassedTests": 482,
+  "targetedSuitesFailedTests": 0,
+  "durationMs": 13492,
+  "cases": [
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A01: Cold homepage load waits for #twotabsearchtextbox readiness before clicking location trigger",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A02: Search box not ready after max bounded polls -> returns READY_TIMEOUT, usDeliveryVerified = false, does not fabricate ZIP",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A03: Location trigger #nav-global-location-popover-link missing -> returns UNKNOWN, observedDeliveryPostalCode = null",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A04: Location dialog opens, #GLUXZipUpdateInput filled with 95829, Apply clicked, confirmation handled, post-reload header shows Deliver to Sacramento 95829 -> observedDeliveryPostalCode = 95829, usDeliveryVerified = true",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A05: Location dialog opens, Apply clicked, but post-reload header still shows Deliver to Vietnam -> observedDeliveryPostalCode = null, verifiedDeliveryMarket = null, status = US_NOT_CONFIRMED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A06: Location dialog opens, #GLUXZipUpdateInput missing or Apply disabled -> status = DIALOG_OR_APPLY_UNAVAILABLE, usDeliveryVerified = false",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A07: CAPTCHA / bot wall during homepage or location modal -> CAPTCHA_BLOCKED / BLOCKED_PROVIDER, session aborts remaining ops and closes cleanly",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A08: Sign-in wall during location modal -> AUTHENTICATION_REQUIRED / BLOCKED_PROVIDER, no login attempted",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A09: No internal fetch('/portal-migration/hz/glow/address-change...') exists in amazonUsMcpTransport.ts",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A10: Search page header shows Deliver to Sacramento 95829 -> Search cards record observedDeliveryPostalCode = 95829",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A11: Currency symbol $ alone without explicit USD does NOT verify currency = USD (currency = null)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A12: US ZIP 95829 + non-USD currency (VND) yields commercialUsStatus = PARTIAL_US_COMMERCIAL or NOT_USD_VERIFIED, NOT US_COMMERCIAL_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A13: US ZIP 95829 + explicit USD + numeric buybox price $49.99 yields commercialUsStatus = US_COMMERCIAL_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A14: Carousel / related-item price is ignored when main buybox price is absent (price = null)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A15: PDP missing ZIP does NOT borrow homepage/search ZIP as if observed on PDP (observedDeliveryPostalCode = null on PDP)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group A — Amazon UI ZIP + Currency + Commercial Context (16 cases) A16: Seller and availability statuses are OBSERVED when present and NOT_OBSERVED when absent (null, never Unknown or 0)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B01: REFERENCE_AMAZON_STANDALONE_2026_11_02.json has referenceOrigin = USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT and referenceAvailability = SUMMARY_AND_SCRIPT_ONLY",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B02: referenceRawHashVerified = false when original external .playwright-mcp raw file is not present on disk",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B03: Parser test on standalone reference values uses observationClass = TEST_FIXTURE, fixtureSource = USER_REPORTED_REFERENCE_FIELDS",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B04: Attempting to mark synthetic reference fixture as observationClass = AUTHORIZED_LIVE without live MCP tool invocation receipt is downgraded",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B05: Standalone reference artifact cannot satisfy current-run live Amazon acceptance gate",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B06: Current-run live Amazon evidence requires real sessionId, ownedChildPid, and non-empty toolInvocationRecords from REAL_STDIO_MCP",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B07: LOCAL_MCP_TEST_DOUBLE / fixture session is labeled TEST_FIXTURE, never AUTHORIZED_LIVE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B08: Fixture snapshots (fixtureSnapshotsByUrl) are labeled TEST_FIXTURE, never AUTHORIZED_LIVE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B09: providerRequestId remains null when Playwright MCP provides no upstream request ID; never copies providerInvocationRef",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B10: httpStatus remains null (httpStatusOrigin = UNOBSERVED_NULL) when Playwright MCP does not expose HTTP status; never defaults to 200",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B11: Canonical URL /clp/B0D3XGHTJ5 is preserved in observedCanonicalUrl with canonicalUrlOrigin = OBSERVED_CANONICAL while canonicalAmazonUrl = https://www.amazon.com/dp/B0D3XGHTJ5",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B12: Canonical URL with different ASIN (/dp/B099999999 vs /dp/B0D3XGHTJ5) is rejected with ASIN_DISCREPANCY_ACROSS_SOURCES",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group B — Standalone Reference / Fixture / Live Evidence Integrity (13 cases) B13: Unvisited search cards (4 of 5) remain searchIdentityVerdict = SEARCH_ONLY_NOT_VERIFIED and combinedIdentityVerdict = DISCOVERED_NOT_VERIFIED",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C01: POST /api/v1/kh02/research without x-workspace-id returns 400 or 401",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C02: POST /api/v1/kh02/research with client-supplied KH02_AMAZON_US_LIVE_ALLOWED or KH02_WALMART_US_LIVE_ALLOWED returns 400",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C03: POST /api/v1/kh02/research returns 202 with researchRunId and QUEUED SyncJob before worker claims it",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C04: Worker claims QUEUED job with distinct workerId, sets claimToken, fencingToken, fencingGeneration >= 1, leaseExpiresAt",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C05: Stale worker with outdated claimToken / fencingGeneration cannot overwrite job state or persist evidence",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C06: Worker completes job and writes ResearchEvidence rows (KH02_AMAZON_US_PRODUCT_EVIDENCE)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C07: GET /research/runs/{runId}, GET /research, GET /leaderboard, GET /marketplace/amazon return consistent workspace-scoped data",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C08: GET routes are strictly read-only (0 new/modified DB rows across repeated GET requests)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C09: GET with Workspace B header cannot read Workspace A run or Amazon evidence",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C10: Product Finder UI data contract preserves exact shortlist and Amazon evidence fields across serialization/reload",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C11: Provisional shortlist items (PROVISIONAL_CANDIDATE) never render as verified evergreen winners (evergreenWinnerCount = 0)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C12: Shortfall (< 3 candidates) is never padded with fabricated or irrelevant items",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C13: Secondary niche (Home Organization) has 0 overlap in candidateId, productFamilyKey, and asin with Pet Gadgets",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C14: Walmart remains paused (PAUSED_EXTERNAL / PAUSED_BLOCKED_PROVIDER) and makes 0 live Walmart HTTP requests",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group C — Real HTTP -> Separate Worker Process -> DB/API/UI (15 cases) C15: MCP session lifecycle tracks ownedChildPid and verifies clean termination on close()",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D01: selectDynamicAmazonVerificationTargets selects up to 2 top shortlist candidates and never falls back to candidates.slice(0, 3)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D02: deriveAmazonSearchIntents strips marketing fluff (50% OFF, Free Shipping, emojis, URLs) and builds clean product query",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D03: Search card brand is never copied from candidate.brand when search card DOM lacks brand",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D04: Search -> PDP same-item identity (AMAZON_SEARCH_PDP_IDENTITY_VERIFIED) does NOT auto-promote metaCandidateEquivalenceVerdict to EXACT_PRODUCT when brand/model differ",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D05: Brand-only match (BRAND_ONLY) never promotes to EXACT_PRODUCT",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_1_CommercialReferenceNetworkWorkerClosure.test.ts",
+      "testName": "KH-02 V12.4.3.7.1 — Commercial Context, Reference Integrity & Network-Worker Closure Group D — Meta -> Amazon Discovery & Identity Regression (6 cases) D06: Amazon/Walmart evidence attachment produces 0 delta on evergreenScore, ranking, G07, G15, G16",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios P0-A/P0-B: verifies authentic live Meta observation provenance and full candidate live lineage chain",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios P0-A/P0-C: computes all release verdicts fail-closed with PASS on valid evidence and truthful business gates",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S01: [1] Hardcoded PASS when underlying artifact is missing -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S02: [2] Hardcoded PASS when artifact has wrong CODE_SHA -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S03: [3] Summary artifact contradicting raw ledger -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S04: [4] `initialJobStatusBeforeWorkerClaim` missing or not `PENDING` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S05: [5] `finalJobStatus` missing or `FAILED` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S06: [6] `fencingGeneration` missing or `< 1` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S07: [7] `subqueriesExecutedCount` fallback `|| 4` when 0 queries ran -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S08: [8] `sourceStatus` fallback `|| 'PASSED'` when Meta failed -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S09: [9] `metaTelemetry` empty `{}` while claiming live Meta PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S10: [10] Cached observation labeled `LIVE_PROVIDER` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S11: [11] Synthetic/fixture ad promoted to live -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S12: [12] `Math.random()` or non-deterministic ID in candidate discovery -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S13: [13] Foreign-run `queryId` attached to current run -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S14: [14] Cross-workspace observation or evidence row -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S15: [15] Duplicate `externalAdId` counted twice -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S16: [16] Corroborated `LIVE_WITH_CACHE_FALLBACK` run claimed as strict `LIVE_ONLY` PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S17: [17] Amazon UI `dialogOpened=true` at top level while nested `locationDialogOpened=false` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S18: [18] Amazon UI `observedDeliveryPostalCode='95829'` when PDP shows Vietnam/null ZIP -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S19: [19] Amazon USD claimed from bare `$` without explicit USD signal -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S20: [20] Amazon internal `/portal-migration/hz/glow/address-change` fetch used -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S21: [21] Unvisited search card promoted to verified Amazon product -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S22: [22] Sponsored search card selected when non-sponsored policy applies -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S23: [23] Category-only Amazon match promoted to `EXACT_PRODUCT` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S24: [24] Standalone reference (`B0D3XGHTJ5`) promoted to `AUTHORIZED_LIVE` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S25: [25] `referenceRawHashVerified = true` without raw bundle -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S26: [26] Walmart live call attempted while paused -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S27: [27] Marketplace evidence changes `opportunityScore`, rank, G07, G15, or G16 -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S28: [28] Server PID == Worker PID or in-process `executeResearchJob` used -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S29: [29] Stale worker fencing token overwrites newer run -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S30: [30] GET endpoint mutates DB rows -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S31: [31] DOM after `page.reload()` differs from DOM before reload or GET JSON -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S32: [32] Secondary niche overlaps primary niche candidates -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S33: [33] Post-cutoff row included in DEV or HOLDOUT replay -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S34: [34] G15 marked PASS with `< 60` days real product-level demand -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S35: [35] G16 marked PASS without 3/3 independent persisted merchant proofs -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_2_FinalAcceptanceTruthHardening.test.ts",
+      "testName": "KH-02 V12.4.3.7.2 — Final Acceptance Truth Hardening & 36 Mandatory Negative Scenarios S36: [36] Orphaned Playwright/MCP/worker process or free disk `< 15 GiB` -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A01] 04_E2E_SPEC_INVENTORY missing receipts array -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A02] 04_E2E_SPEC_INVENTORY has 11/12 spec rows -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A03] Duplicate specFile or duplicate specIndex in E2E receipts -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A04] One spec receipt has exitCode !== 0 while summary says 12/12 passed -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A05] One spec receipt has classification = SKIPPED or FAIL -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A06] One spec receipt has totalTests = 0 or failedTests > 0 -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A07] Summary totalE2ETestCases !== sum(spec.totalTests) -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A08] One spec receipt has wrong sourceSha -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A09] One spec receipt has invalid timestamps or startedAt > endedAt -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) E2E Per-Spec Receipt Integrity (A01..A10) [A10] One spec receipt has ownedPidsReconciled = false -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Final Verdict Completeness & Chronology (A11..A14) [A11] computeV12_4_3_7_2ReleaseVerdicts called with missing mutationSuite -> INCOMPLETE (never PASS)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Final Verdict Completeness & Chronology (A11..A14) [A12] computeV12_4_3_7_2ReleaseVerdicts called with missing typecheckAndBuild -> INCOMPLETE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Final Verdict Completeness & Chronology (A11..A14) [A13] computeV12_4_3_7_2ReleaseVerdicts called with missing resourceAndOrphanGuard -> INCOMPLETE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Final Verdict Completeness & Chronology (A11..A14) [A14] 22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.completedAt > 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.evaluatedAt or reason string contains Mutations:pending -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A15] phase4_search_readback.observedAt or phase5_pdp_readback.observedAt > phase6_post_session_close.closeFinishedAt -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A16] phase4 or phase5 observedAt equals final report synthesis timestamp evaluatedAt -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A17] phase5_pdp_readback.status = INCOMPLETE while claiming Amazon PDP PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A18] closeStartedAt < lastToolCompletedAt in Amazon MCP session -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A19] sessionId mismatch across Phase 1..6 or operation ledger -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon MCP Chronology & Session Integrity (A15..A20) [A20] Missing or phony rawSnapshotHash on any phase/operation -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon Commercial US Context Truth (A21..A24) [A21] finalEffectiveUsDeliveryVerified = undefined or false while finalZipVerdict = PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon Commercial US Context Truth (A21..A24) [A22] finalEffectiveCurrencyUsdVerified = undefined or false while finalUsdCommercialVerdict = PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon Commercial US Context Truth (A21..A24) [A23] Currency inferred from $ symbol only (explicitCurrencySource = SYMBOL_ONLY_UNVERIFIED) -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Amazon Commercial US Context Truth (A21..A24) [A24] Homepage ZIP 95829 borrowed onto PDP whose own header shows non-US or null ZIP -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Browser DOM & API Parity (A25..A27) [A25] domCandidateIdsBeforeReload or domCandidateIdsAfterReload missing/undefined/non-array -> FAIL (never fallback to dbIds)",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Browser DOM & API Parity (A25..A27) [A26] DOM candidate IDs after reload differ from before reload or from GET API -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Browser DOM & API Parity (A25..A27) [A27] GET API returns cached/fixture data while claiming live run parity -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A28] sourceMode !== LIVE_ONLY or pre-seeded rows > 0 in live workspace -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A29] metaTelemetry is empty {} -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A30] subqueriesExecutedCount > actual completed query receipts -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A31] Any query receipt missing providerRequestId or timestamps -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A32] Cached/synthetic/cross-workspace ad promoted into live candidate -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A33] validatedLiveObservationsCount !== candidateAssociatedLiveObservationsCount without explicit rejected reason -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Meta Live Provenance & Lineage Reconciliation (A28..A34) [A34] lineagePassedCount < 3 while claiming strict-live Top 3 PASS -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A35] Post-cutoff row admitted into DEV or HOLDOUT replay -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A36] TEST_FIXTURE row admitted into historical replay -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A37] Historical provider parity marked PASS when pre-cutoff Amazon/Walmart rows = 0 -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A38] Walmart live HTTP requests > 0 while gate status is PAUSED_EXTERNAL -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A39] G07, G15, G16, or FULL_KH02_BUSINESS_ACCEPTANCE marked PASS without required proof -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A40] Free disk < 15 GiB -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A41] Orphaned test-spawned process remains after run -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_3_AmazonMcpSmokeChronologyFailClosed.test.ts",
+      "testName": "KH-02 V12.4.3.7.3 — 42 Mandatory Negative & Mutation Regression Tests (A01..A42) Historical, Walmart, Business Gate & Resource Hygiene (A35..A42) [A42] Concurrent heavy process count exceeds 2 -> FAIL",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof creates, transitions, and terminates RUN_STATE.json cleanly",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof rejects illegal transitions skipping mutation stages",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof marks terminal failure and records failure reason",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof passes all 7 mandatory crash injection stages without leaving outward release PASS",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof atomicWriteFinalArtifact writes file atomically and preserves contents",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-A: Acceptance State Machine & Crash Injection Proof publishFinalVerdictAfterEvidenceBarrier refuses to publish when mutationSuite is incomplete",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-B: Meaningful Mutations & Inconclusive Baseline Rejection rejects mutation receipts marked with kind !== ACTUAL_COMPLETED_MUTATION_RUN",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-B: Meaningful Mutations & Inconclusive Baseline Rejection rejects mutation receipts with isFixtureOnly === true or scope === TEST_FIXTURE",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-B: Meaningful Mutations & Inconclusive Baseline Rejection rejects mutation receipts with inconclusiveCount > 0",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-B: Meaningful Mutations & Inconclusive Baseline Rejection rejects mutation receipts when acceptanceRunId mismatches",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-C: Non-Circular Commit Attestation (S -> E -> A) validates a truthful non-placeholder, non-self-referential attestation",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-C: Non-Circular Commit Attestation (S -> E -> A) rejects PENDING_EVIDENCE_COMMIT placeholder",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-C: Non-Circular Commit Attestation (S -> E -> A) rejects self-referential attestation commit SHA",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-C: Non-Circular Commit Attestation (S -> E -> A) rejects unpushed evidence SHA when remote head does not match",
+      "passed": true,
+      "status": "passed"
+    },
+    {
+      "file": "v12_4_3_7_4_ZeroTransientPassCommitAttestation.test.ts",
+      "testName": "KH-02 V12.4.3.7.4 — Zero Transient False-Pass & True Post-Push Commit Attestation P0-C: Non-Circular Commit Attestation (S -> E -> A) rejects wrong branch name",
+      "passed": true,
+      "status": "passed"
+    }
+  ]
+}

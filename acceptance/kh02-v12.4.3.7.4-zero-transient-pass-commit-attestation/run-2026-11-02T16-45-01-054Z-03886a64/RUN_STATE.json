@@ -1,0 +1,61 @@
+{
+  "runId": "run-2026-11-02T16-45-01-054Z-03886a64",
+  "attemptId": "attempt_1793637901167_736b4f",
+  "codeSha": "03886a6402b63509758ea434605bea0967297f8a",
+  "treeSha": "2124fcbae166220cecdd6acc9925e289b06dd12c",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "status": "COMPLETED",
+  "stage": "ARTIFACTS_VALIDATED",
+  "isFinal": false,
+  "releaseVerdict": "ENGINEERING_AND_COMMERCIAL_FOUNDATION_READY_WITH_TRUTHFUL_LIVE_AND_EXTERNAL_GATES",
+  "startedAt": "2026-11-02T16:45:01.167Z",
+  "updatedAt": "2026-11-02T16:50:27.036Z",
+  "completedStages": [
+    "CREATED",
+    "RUNNING_TESTS",
+    "MUTATION_RUNNING",
+    "TESTS_COMPLETED",
+    "FINAL_VERDICT_COMPUTED",
+    "ARTIFACTS_VALIDATED"
+  ],
+  "stageHistory": [
+    {
+      "stage": "CREATED",
+      "enteredAt": "2026-11-02T16:45:01.167Z",
+      "detail": "Acceptance run initialized; zero final verdicts exist."
+    },
+    {
+      "stage": "RUNNING_TESTS",
+      "enteredAt": "2026-11-02T16:45:02.716Z",
+      "detail": "Stages 1..5 in progress"
+    },
+    {
+      "stage": "MUTATION_RUNNING",
+      "enteredAt": "2026-11-02T16:50:25.025Z",
+      "detail": "Running 118-case physical negative mutation suite"
+    },
+    {
+      "stage": "TESTS_COMPLETED",
+      "enteredAt": "2026-11-02T16:50:26.935Z",
+      "detail": "Stage 6 physical negative mutations finished cleanly"
+    },
+    {
+      "stage": "FINAL_VERDICT_COMPUTED",
+      "enteredAt": "2026-11-02T16:50:26.979Z",
+      "detail": "Final 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json atomically published after 22 completed."
+    },
+    {
+      "stage": "FINAL_VERDICT_COMPUTED",
+      "enteredAt": "2026-11-02T16:50:26.984Z",
+      "detail": "Final 24 verdict matrix published atomically"
+    },
+    {
+      "stage": "ARTIFACTS_VALIDATED",
+      "enteredAt": "2026-11-02T16:50:27.036Z",
+      "detail": "All pre-publish engineering artifacts verified by independent validator"
+    }
+  ],
+  "progressCounters": {},
+  "failureReason": null,
+  "errorDetail": null
+}
