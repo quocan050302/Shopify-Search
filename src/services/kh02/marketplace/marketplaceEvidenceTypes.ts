@@ -140,6 +140,7 @@ export interface AmazonPolicyContext {
 
 export interface AmazonProductEvidence {
   id: string;
+  operationId?: string | null;
   workspaceId: string;
   researchRunId: string;
   candidateId: string;

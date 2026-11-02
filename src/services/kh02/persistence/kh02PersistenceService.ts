@@ -2130,6 +2130,16 @@ export function reconcileDatabaseAndBrowser(
 ): LayerComparisonResult {
   const mismatches: ReconciliationMismatch[] = [];
 
+  if (!browserEvidence || typeof browserEvidence !== "object") {
+    mismatches.push({
+      field: "browserEvidence",
+      expected: "BrowserReconciliationEvidence object",
+      actual: browserEvidence ?? null,
+      reason: "Browser reconciliation evidence is missing or not an object",
+    });
+    return { reconciled: false, mismatches };
+  }
+
   // 1. Run ID equality
   if (browserEvidence.runId !== dbSnapshot.runId) {
     mismatches.push({
@@ -2137,6 +2147,17 @@ export function reconcileDatabaseAndBrowser(
       expected: dbSnapshot.runId,
       actual: browserEvidence.runId,
       reason: `Browser evidenced runId '${browserEvidence.runId}' does not match DB runId '${dbSnapshot.runId}'`,
+    });
+    return { reconciled: false, mismatches };
+  }
+
+  // 1b. Fail-closed check: displayedCandidateIds must be an explicit array from browser DOM
+  if (!Array.isArray(browserEvidence.displayedCandidateIds)) {
+    mismatches.push({
+      field: "displayedCandidateIds",
+      expected: dbSnapshot.candidateIds,
+      actual: browserEvidence.displayedCandidateIds ?? null,
+      reason: "Browser displayedCandidateIds is missing or not an array; never fall back to DB IDs",
     });
     return { reconciled: false, mismatches };
   }

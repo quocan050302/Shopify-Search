@@ -23,6 +23,10 @@ import { diagnoseKH02Source } from "../../src/services/kh02/providers/sourceRegi
 import { evaluateDemandHistoryEvidence } from "../../src/services/kh02/demand/temporalDemandEngine";
 import { resolveCreatorsApiEligibility } from "../../src/services/kh02/marketplace/amazonCreatorsApiClient";
 import { resolveAmazonUsPolicyContext } from "../../src/services/kh02/marketplace/marketplaceEvidenceTypes";
+import {
+  isValidAmazonRawSnapshotHash,
+  validateAmazonUiContextProofConsistency,
+} from "../../src/services/kh02/marketplace/amazonUsMcpTransport";
 import { resolveWalmartUsPilotPolicy } from "../../src/services/kh02/marketplace/walmartJinaPolicy";
 import {
   evaluateG16Candidate,
@@ -3515,6 +3519,7 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
     providerBlockedCount?: number;
     liveProviderObservationsCount?: number;
     validatedLiveObservationsCount?: number;
+    candidateAssociatedLiveObservationsCount?: number;
     persistedLiveAdsCount?: number;
     cachedObservationsCount?: number;
     syntheticPromotedToLiveCount?: number;
@@ -3525,6 +3530,7 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
     strictLiveShortlistCount?: number;
     sourceStatus?: string | null;
     metaTelemetry?: Record<string, any> | null;
+    candidateLineageAudit?: Array<Record<string, any>>;
   } | null;
   candidateFunnel?: {
     codeSha?: string;
@@ -3542,6 +3548,7 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
   } | null;
   amazonUiPreflight?: {
     codeSha?: string;
+    evaluatedAt?: string;
     workspaceId?: string | null;
     researchRunId?: string | null;
     sessionId?: string | null;
@@ -3600,6 +3607,9 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
     mcpSessionClosedCleanly?: boolean;
     ownedChildPidTerminated?: boolean;
     closedAfterLastToolCompleted?: boolean;
+    lastToolCompletedAt?: string | null;
+    closeStartedAt?: string | null;
+    closeFinishedAt?: string | null;
   } | null;
   dbPersistence?: {
     codeSha?: string;
@@ -3699,13 +3709,43 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
     skippedWithoutAttemptCount?: number;
     passedE2ETestCases?: number;
     totalE2ETestCases?: number;
-    specs?: Array<{
+    failedE2ETestCases?: number;
+    receipts?: Array<{
+      specIndex?: number;
       specFile?: string;
+      command?: string;
+      sourceSha?: string;
+      codeSha?: string;
+      startedAt?: string;
+      endedAt?: string;
+      durationMs?: number;
+      exitCode?: number;
+      totalTests?: number;
+      passedTests?: number;
+      failedTests?: number;
+      skippedTests?: number;
+      classification?: string;
+      stdoutHash?: string;
+      stderrHash?: string;
+      ownedPidsReconciled?: boolean;
+    }>;
+    specs?: Array<{
+      specIndex?: number;
+      specFile?: string;
+      sourceSha?: string;
+      codeSha?: string;
+      startedAt?: string;
+      endedAt?: string;
       attempted?: boolean;
       passed?: boolean;
+      classification?: string;
       exitCode?: number;
       casesPassed?: number;
       casesTotal?: number;
+      totalTests?: number;
+      passedTests?: number;
+      failedTests?: number;
+      ownedPidsReconciled?: boolean;
     }>;
   } | null;
   typecheckAndBuild?: {
@@ -3754,6 +3794,8 @@ export interface ComputeV12_4_3_7_2ReleaseVerdictsInput {
   } | null;
   mutationSuite?: {
     codeSha?: string;
+    evaluatedAt?: string;
+    completedAt?: string;
     totalMutationsExecuted?: number;
     caughtMutationsCount?: number;
     falsePassesCount?: number;
@@ -3794,6 +3836,375 @@ export interface ComputedReleaseVerdictsBundleV12_4_3_7_2 {
   businessAcceptancePassed: boolean;
   anyGateFailed: boolean;
   failedGateKeys: string[];
+}
+
+/**
+ * V12.4.3.7.3 P1-A: Fail-closed validation of all 12 canonical E2E spec receipts.
+ * Never defaults `allSpecsAttemptedAndPassed` to `true` when `receipts` / `specs` is absent.
+ */
+export function validatePerSpecE2EReceipts(
+  e2e: ComputeV12_4_3_7_2ReleaseVerdictsInput["e2eReceipts"] & Record<string, any> | null | undefined,
+  expectedCodeSha: string
+): {
+  valid: boolean;
+  status: "PASS" | "FAIL" | "INCOMPLETE";
+  reasons: string[];
+  computedTotalSpecs: number;
+  computedPassedSpecs: number;
+  computedTotalCases: number;
+  computedPassedCases: number;
+  computedFailedCases: number;
+} {
+  const reasons: string[] = [];
+  if (!e2e || typeof e2e !== "object") {
+    return {
+      valid: false,
+      status: "INCOMPLETE",
+      reasons: ["E2E receipts artifact is missing."],
+      computedTotalSpecs: 0,
+      computedPassedSpecs: 0,
+      computedTotalCases: 0,
+      computedPassedCases: 0,
+      computedFailedCases: 0,
+    };
+  }
+  const cleanExpectedSha = String(expectedCodeSha || "").trim();
+  const artifactSha = String(e2e.codeSha || e2e.sourceSha || "").trim();
+  if (!cleanExpectedSha || artifactSha !== cleanExpectedSha) {
+    return {
+      valid: false,
+      status: "FAIL",
+      reasons: [`E2E artifact SHA '${artifactSha}' mismatches '${cleanExpectedSha}'.`],
+      computedTotalSpecs: 0,
+      computedPassedSpecs: 0,
+      computedTotalCases: 0,
+      computedPassedCases: 0,
+      computedFailedCases: 0,
+    };
+  }
+
+  const rawRows: any[] | null = Array.isArray(e2e.receipts)
+    ? e2e.receipts
+    : Array.isArray(e2e.specs)
+    ? e2e.specs
+    : null;
+
+  if (!rawRows) {
+    return {
+      valid: false,
+      status: "FAIL",
+      reasons: [
+        "MISSING_PER_SPEC_E2E_RECEIPTS_ARRAY: E2E artifact omits per-spec receipts/specs array; summary counters alone cannot satisfy E2E_SPEC_COVERAGE.",
+      ],
+      computedTotalSpecs: 0,
+      computedPassedSpecs: 0,
+      computedTotalCases: 0,
+      computedPassedCases: 0,
+      computedFailedCases: 0,
+    };
+  }
+
+  const canonicalSpecs = Object.keys(STANDALONE_SERVER_OR_BROWSER_E2E_FILES);
+  if (rawRows.length !== canonicalSpecs.length) {
+    reasons.push(
+      `EXPECTED_12_CANONICAL_E2E_SPECS_GOT_${rawRows.length}: expected ${canonicalSpecs.length} canonical E2E spec receipts, got ${rawRows.length}.`
+    );
+  }
+
+  const seenSpecFiles = new Set<string>();
+  const seenSpecIndices = new Set<number>();
+  let sumTotalCases = 0;
+  let sumPassedCases = 0;
+  let sumFailedCases = 0;
+  let passedSpecs = 0;
+
+  for (let i = 0; i < rawRows.length; i++) {
+    const r = rawRows[i];
+    if (!r || typeof r !== "object") {
+      reasons.push(`INVALID_E2E_RECEIPT_ROW_AT_${i}`);
+      continue;
+    }
+    const specFile = String(r.specFile || "").trim();
+    if (!specFile || !canonicalSpecs.includes(specFile)) {
+      reasons.push(`NON_CANONICAL_OR_MISSING_E2E_SPEC_FILE:${specFile || `row_${i}`}`);
+    } else if (seenSpecFiles.has(specFile)) {
+      reasons.push(`DUPLICATE_E2E_SPEC_FILE:${specFile}`);
+    } else {
+      seenSpecFiles.add(specFile);
+    }
+
+    if (typeof r.specIndex === "number") {
+      if (
+        !Number.isInteger(r.specIndex) ||
+        r.specIndex < 1 ||
+        r.specIndex > canonicalSpecs.length ||
+        seenSpecIndices.has(r.specIndex)
+      ) {
+        reasons.push(`DUPLICATE_OR_INVALID_E2E_SPEC_INDEX:${r.specIndex}`);
+      } else {
+        seenSpecIndices.add(r.specIndex);
+      }
+    }
+
+    const rowSha = r.sourceSha ?? r.codeSha;
+    if (rowSha !== undefined && String(rowSha).trim() !== cleanExpectedSha) {
+      reasons.push(`PER_SPEC_SOURCE_SHA_MISMATCH:${specFile || i}`);
+    }
+
+    if (r.exitCode !== 0) {
+      reasons.push(`PER_SPEC_NONZERO_EXIT_CODE:${specFile || i}:exit=${r.exitCode}`);
+    }
+
+    if (r.classification !== undefined && r.classification !== "PASS") {
+      reasons.push(
+        `PER_SPEC_CLASSIFICATION_NOT_PASS:${specFile || i}:${r.classification}`
+      );
+    }
+    if (r.passed !== undefined && r.passed !== true) {
+      reasons.push(`PER_SPEC_PASSED_FALSE:${specFile || i}`);
+    }
+    if (r.attempted !== undefined && r.attempted !== true) {
+      reasons.push(`PER_SPEC_ATTEMPTED_FALSE:${specFile || i}`);
+    }
+
+    const totalCases = Number(r.totalTests ?? r.casesTotal ?? 0);
+    const passedCases = Number(r.passedTests ?? r.casesPassed ?? 0);
+    const failedCases = Number(
+      r.failedTests !== undefined ? r.failedTests : Math.max(0, totalCases - passedCases)
+    );
+    sumTotalCases += totalCases;
+    sumPassedCases += passedCases;
+    sumFailedCases += failedCases;
+
+    if (
+      !Number.isFinite(totalCases) ||
+      totalCases <= 0 ||
+      passedCases <= 0 ||
+      failedCases !== 0 ||
+      passedCases !== totalCases
+    ) {
+      reasons.push(
+        `PER_SPEC_TEST_COUNTS_INVALID:${specFile || i}(passed=${passedCases},total=${totalCases},failed=${failedCases})`
+      );
+    }
+
+    if (r.startedAt !== undefined || r.endedAt !== undefined) {
+      const startMs = Date.parse(String(r.startedAt || ""));
+      const endMs = Date.parse(String(r.endedAt || ""));
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || startMs > endMs) {
+        reasons.push(`PER_SPEC_TIMESTAMPS_INVALID:${specFile || i}`);
+      }
+    }
+
+    if (r.ownedPidsReconciled !== undefined && r.ownedPidsReconciled !== true) {
+      reasons.push(`PER_SPEC_OWNED_PIDS_NOT_RECONCILED:${specFile || i}`);
+    }
+
+    const rowPassed =
+      r.exitCode === 0 &&
+      (r.classification === undefined || r.classification === "PASS") &&
+      (r.passed === undefined || r.passed === true) &&
+      (r.attempted === undefined || r.attempted === true) &&
+      totalCases > 0 &&
+      failedCases === 0 &&
+      passedCases === totalCases;
+    if (rowPassed) {
+      passedSpecs++;
+    }
+  }
+
+  for (const requiredSpec of canonicalSpecs) {
+    if (!seenSpecFiles.has(requiredSpec)) {
+      reasons.push(`MISSING_CANONICAL_E2E_SPEC:${requiredSpec}`);
+    }
+  }
+
+  if (
+    e2e.totalSpecs !== canonicalSpecs.length ||
+    e2e.passedSpecsCount !== canonicalSpecs.length ||
+    e2e.failedSpecsCount !== 0 ||
+    e2e.skippedWithoutAttemptCount !== 0 ||
+    passedSpecs !== canonicalSpecs.length ||
+    e2e.totalE2ETestCases !== sumTotalCases ||
+    e2e.passedE2ETestCases !== sumPassedCases ||
+    (e2e.failedE2ETestCases !== undefined && e2e.failedE2ETestCases !== sumFailedCases) ||
+    sumPassedCases < 34 ||
+    sumPassedCases !== sumTotalCases ||
+    sumFailedCases !== 0
+  ) {
+    reasons.push(
+      `E2E_SUMMARY_TOTALS_MISMATCH_PER_SPEC_SUM(summarySpecs=${e2e.passedSpecsCount}/${e2e.totalSpecs},computedSpecs=${passedSpecs}/${rawRows.length},summaryCases=${e2e.passedE2ETestCases}/${e2e.totalE2ETestCases},computedCases=${sumPassedCases}/${sumTotalCases})`
+    );
+  }
+
+  return {
+    valid: reasons.length === 0,
+    status: reasons.length === 0 ? "PASS" : "FAIL",
+    reasons,
+    computedTotalSpecs: rawRows.length,
+    computedPassedSpecs: passedSpecs,
+    computedTotalCases: sumTotalCases,
+    computedPassedCases: sumPassedCases,
+    computedFailedCases: sumFailedCases,
+  };
+}
+
+/**
+ * V12.4.3.7.3 P1-F: Reconciles strict LIVE_ONLY Meta query outcomes, upstream observations,
+ * candidate-associated observations, persisted Ad rows, and Top-3 candidate lineage chains.
+ */
+export function reconcileLiveMetaLineageCounts(
+  m: Record<string, any> | null | undefined
+): {
+  valid: boolean;
+  contradictions: string[];
+  realCompletedQueriesCount: number;
+  validatedLiveObservationsCount: number;
+  candidateAssociatedLiveObservationsCount: number;
+  persistedLiveAdsCount: number;
+  lineagePassedCount: number;
+  lineageRejectedCount: number;
+  strictLiveShortlistCount: number;
+} {
+  const contradictions: string[] = [];
+  if (!m || typeof m !== "object") {
+    return {
+      valid: false,
+      contradictions: ["MISSING_LIVE_META_COLLECTION_OBJECT"],
+      realCompletedQueriesCount: 0,
+      validatedLiveObservationsCount: 0,
+      candidateAssociatedLiveObservationsCount: 0,
+      persistedLiveAdsCount: 0,
+      lineagePassedCount: 0,
+      lineageRejectedCount: 0,
+      strictLiveShortlistCount: 0,
+    };
+  }
+
+  const telem = m.metaTelemetry;
+  const hasNonEmptyTelem = Boolean(
+    telem && typeof telem === "object" && Object.keys(telem).length > 0
+  );
+  const qOutcomes: any[] = Array.isArray(telem?.queryOutcomes)
+    ? telem.queryOutcomes
+    : [];
+  const realCompletedQueries = qOutcomes.filter(
+    (q) =>
+      q &&
+      q.attempted === true &&
+      q.requestStarted === true &&
+      q.requestCompleted === true &&
+      Number(q.actualApiCalls ?? 0) > 0 &&
+      (q.status === "SUCCEEDED_WITH_RESULTS" || q.status === "SUCCEEDED_EMPTY")
+  );
+  const queriesMissingRequestId = realCompletedQueries.filter(
+    (q) =>
+      typeof q.providerRequestId !== "string" ||
+      q.providerRequestId.trim().length === 0
+  );
+
+  const validatedLiveObs = Number(
+    m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount ?? 0
+  );
+  const candidateAssocObs = Number(
+    m.candidateAssociatedLiveObservationsCount ?? validatedLiveObs
+  );
+  const uniqueUpstreamObs = Number(
+    m.uniqueAcceptedUpstreamObservationsCount ?? validatedLiveObs
+  );
+  const persistedAds = Number(
+    m.persistedLiveAdsCount ?? m.persistedAdRecordsCount ?? 0
+  );
+  const lineagePassed = Number(
+    m.lineagePassedCount ?? m.lineageVerifiedCandidatesCount ?? 0
+  );
+  const lineageRejected = Number(m.lineageRejectedCount ?? 0);
+  const strictShortlist = Number(m.strictLiveShortlistCount ?? 0);
+
+  if (m.sourceMode !== "LIVE_ONLY") {
+    contradictions.push(`NON_LIVE_ONLY_SOURCE_MODE:${m.sourceMode}`);
+  }
+  if ((m.primaryWorkspacePreSeededAdRowCount ?? -1) !== 0) {
+    contradictions.push(
+      `NONZERO_PRE_SEEDED_AD_ROWS:${m.primaryWorkspacePreSeededAdRowCount}`
+    );
+  }
+  if ((m.syntheticPromotedToLiveCount ?? 0) > 0) {
+    contradictions.push(
+      `SYNTHETIC_PROMOTED_TO_LIVE:${m.syntheticPromotedToLiveCount}`
+    );
+  }
+  if ((m.cachePromotedToLiveCount ?? 0) > 0) {
+    contradictions.push(`CACHE_PROMOTED_TO_LIVE:${m.cachePromotedToLiveCount}`);
+  }
+  if ((m.crossWorkspaceAdAdoptedCount ?? 0) > 0) {
+    contradictions.push(
+      `CROSS_WORKSPACE_AD_ADOPTED:${m.crossWorkspaceAdAdoptedCount}`
+    );
+  }
+  if ((m.missingRawReceiptCount ?? 0) > 0 || queriesMissingRequestId.length > 0) {
+    contradictions.push(
+      `MISSING_PROVIDER_REQUEST_RECEIPT(missingRaw=${m.missingRawReceiptCount ?? 0},queriesMissingId=${queriesMissingRequestId.length})`
+    );
+  }
+  if (lineageRejected > 0) {
+    contradictions.push(`LINEAGE_REJECTED_NONZERO:${lineageRejected}`);
+  }
+  if (!hasNonEmptyTelem || qOutcomes.length === 0) {
+    contradictions.push("EMPTY_META_TELEMETRY_OR_QUERY_OUTCOMES");
+  }
+  if (
+    typeof m.subqueriesExecutedCount === "number" &&
+    m.subqueriesExecutedCount !== realCompletedQueries.length &&
+    qOutcomes.filter((q) => q && q.attempted === true && q.requestStarted === true).length !==
+      m.subqueriesExecutedCount
+  ) {
+    contradictions.push(
+      `SUBQUERIES_EXECUTED_COUNT_MISMATCH(claimed=${m.subqueriesExecutedCount},actual=${realCompletedQueries.length})`
+    );
+  }
+  if (validatedLiveObs > candidateAssocObs || candidateAssocObs > uniqueUpstreamObs) {
+    contradictions.push(
+      `META_OBSERVATION_COUNT_HIERARCHY_VIOLATION(validated=${validatedLiveObs},candidateAssoc=${candidateAssocObs},upstream=${uniqueUpstreamObs})`
+    );
+  }
+  if (
+    m.candidateAssociatedLiveObservationsCount !== undefined &&
+    m.validatedLiveObservationsCount !== undefined &&
+    m.validatedLiveObservationsCount !== m.candidateAssociatedLiveObservationsCount &&
+    lineageRejected === 0
+  ) {
+    contradictions.push(
+      `UNRECONCILED_VALIDATED_VS_CANDIDATE_OBS_COUNT(validated=${m.validatedLiveObservationsCount},candidateAssoc=${m.candidateAssociatedLiveObservationsCount})`
+    );
+  }
+  if (Array.isArray(m.candidateLineageAudit)) {
+    const validChains = m.candidateLineageAudit.filter(
+      (c: any) => c && c.valid === true
+    ).length;
+    if (validChains !== lineagePassed) {
+      contradictions.push(
+        `CANDIDATE_LINEAGE_AUDIT_MISMATCH(auditValid=${validChains},lineagePassed=${lineagePassed})`
+      );
+    }
+  }
+  if (strictShortlist === 3 && lineagePassed < 3) {
+    contradictions.push(
+      `STRICT_LIVE_SHORTLIST_CLAIMS_3_WITH_INSUFFICIENT_LINEAGE(lineagePassed=${lineagePassed})`
+    );
+  }
+
+  return {
+    valid: contradictions.length === 0,
+    contradictions,
+    realCompletedQueriesCount: realCompletedQueries.length,
+    validatedLiveObservationsCount: validatedLiveObs,
+    candidateAssociatedLiveObservationsCount: candidateAssocObs,
+    persistedLiveAdsCount: persistedAds,
+    lineagePassedCount: lineagePassed,
+    lineageRejectedCount: lineageRejected,
+    strictLiveShortlistCount: strictShortlist,
+  };
 }
 
 export function computeV12_4_3_7_2ReleaseVerdicts(
@@ -4070,65 +4481,43 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       linStatus = "FAIL";
       reasons.push(`Meta collection SHA '${m.codeSha}' mismatches '${expectedSha}'.`);
     } else {
-      const telem = m.metaTelemetry;
-      const hasNonEmptyTelem =
-        Boolean(telem && typeof telem === "object" && Object.keys(telem).length > 0);
-      const qOutcomes: any[] = Array.isArray(telem?.queryOutcomes)
-        ? telem.queryOutcomes
-        : [];
-      const realCompletedQueries = qOutcomes.filter(
-        (q) =>
-          q &&
-          q.attempted === true &&
-          q.requestStarted === true &&
-          q.requestCompleted === true &&
-          Number(q.actualApiCalls ?? 0) > 0 &&
-          (q.status === "SUCCEEDED_WITH_RESULTS" || q.status === "SUCCEEDED_EMPTY")
-      );
-
-      if (
-        m.sourceMode !== "LIVE_ONLY" ||
-        (m.primaryWorkspacePreSeededAdRowCount ?? -1) !== 0 ||
-        (m.syntheticPromotedToLiveCount ?? 0) > 0 ||
-        (m.cachePromotedToLiveCount ?? 0) > 0 ||
-        (m.missingRawReceiptCount ?? 0) > 0 ||
-        (m.lineageRejectedCount ?? 0) > 0
-      ) {
+      const recon = reconcileLiveMetaLineageCounts(m as Record<string, any>);
+      if (!recon.valid) {
         colStatus = "FAIL";
         linStatus = "FAIL";
         reasons.push(
-          `Strict live invariant violated: sourceMode=${m.sourceMode}, preSeeded=${m.primaryWorkspacePreSeededAdRowCount}, synPromoted=${m.syntheticPromotedToLiveCount}, cachePromoted=${m.cachePromotedToLiveCount}, missingReceipts=${m.missingRawReceiptCount}, lineageRejected=${m.lineageRejectedCount}`
-        );
-      } else if (!hasNonEmptyTelem) {
-        colStatus = "FAIL";
-        linStatus = "FAIL";
-        reasons.push("metaTelemetry is empty ({}) — cannot claim live Meta collection without telemetry ledger.");
-      } else if (
-        typeof m.subqueriesExecutedCount === "number" &&
-        m.subqueriesExecutedCount !== realCompletedQueries.length &&
-        qOutcomes.filter((q) => q && q.attempted === true && q.requestStarted === true).length !==
-          m.subqueriesExecutedCount
-      ) {
-        colStatus = "FAIL";
-        linStatus = "FAIL";
-        reasons.push(
-          `subqueriesExecutedCount (${m.subqueriesExecutedCount}) mismatches actual executed queryOutcomes (${realCompletedQueries.length}).`
+          `Strict live Meta invariant / reconciliation violated: ${recon.contradictions.join(", ")}`
         );
       } else if (
         m.liveAttempted === true &&
-        realCompletedQueries.length >= 1 &&
-        (m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount ?? 0) >= 1 &&
-        (m.persistedLiveAdsCount ?? (m as any).persistedAdRecordsCount ?? 0) >= 1 &&
-        (m.lineagePassedCount ?? (m as any).lineageVerifiedCandidatesCount ?? 0) >= 1 &&
+        recon.realCompletedQueriesCount >= 1 &&
+        recon.validatedLiveObservationsCount >= 1 &&
+        recon.persistedLiveAdsCount >= 1 &&
+        recon.lineagePassedCount >= 3 &&
+        (m.strictLiveShortlistCount === undefined || recon.strictLiveShortlistCount === 3) &&
         (m.sourceStatus === "PASSED" || m.sourceStatus === "LIVE_DATA_VERIFIED")
       ) {
         colStatus = "PASS";
         linStatus = "PASS";
         refs.push(
-          `MetaRun:${m.researchRunId}@queries=${realCompletedQueries.length}@liveObs=${m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount}`
+          `MetaRun:${m.researchRunId}@queries=${recon.realCompletedQueriesCount}@liveObs=${recon.validatedLiveObservationsCount}@lineagePassed=${recon.lineagePassedCount}`
         );
         reasons.push(
-          `Strict LIVE_ONLY Meta collection verified with ${realCompletedQueries.length} executed subqueries and ${m.validatedLiveObservationsCount ?? m.liveProviderObservationsCount} lineage-verified live observations.`
+          `Strict LIVE_ONLY Meta collection verified with ${recon.realCompletedQueriesCount} executed subqueries, ${recon.validatedLiveObservationsCount} lineage-verified live observations, and ${recon.lineagePassedCount} lineage-verified shortlist candidates.`
+        );
+      } else if (
+        m.liveAttempted === true &&
+        recon.realCompletedQueriesCount >= 1 &&
+        recon.validatedLiveObservationsCount >= 1 &&
+        recon.persistedLiveAdsCount >= 1 &&
+        recon.lineagePassedCount > 0 &&
+        recon.lineagePassedCount < 3
+      ) {
+        // Fewer than 3 lineage-verified candidates cannot satisfy Top-3 strict live lineage PASS
+        colStatus = "FAIL";
+        linStatus = "FAIL";
+        reasons.push(
+          `Insufficient strict live candidate lineage: lineagePassedCount=${recon.lineagePassedCount} (< 3 required for Top-3 strict live shortlist).`
         );
       } else if ((m.providerBlockedCount ?? 0) > 0 || m.sourceStatus === "FAILED") {
         colStatus = "BLOCKED_UPSTREAM";
@@ -4159,7 +4548,8 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         validatedLiveObservationsCount:
           m?.validatedLiveObservationsCount ?? m?.liveProviderObservationsCount ?? 0,
         cachedObservationsCount: m?.cachedObservationsCount ?? 0,
-        lineagePassedCount: m?.lineagePassedCount ?? 0,
+        lineagePassedCount:
+          m?.lineagePassedCount ?? (m as any)?.lineageVerifiedCandidatesCount ?? 0,
         lineageRejectedCount: m?.lineageRejectedCount ?? 0,
       },
     };
@@ -4177,7 +4567,8 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         mode: m?.sourceMode || null,
       },
       counts: {
-        lineagePassedCount: m?.lineagePassedCount ?? 0,
+        lineagePassedCount:
+          m?.lineagePassedCount ?? (m as any)?.lineageVerifiedCandidatesCount ?? 0,
         lineageRejectedCount: m?.lineageRejectedCount ?? 0,
         missingRawReceiptCount: m?.missingRawReceiptCount ?? 0,
       },
@@ -4247,25 +4638,66 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     } else if (!shaOk(lc) || !shaOk(led)) {
       status = "FAIL";
       reasons.push("SHA mismatch on Amazon MCP session lifecycle or operation ledger.");
-    } else if (
-      lc.transportMode !== "REAL_STDIO_MCP" ||
-      lc.serverOrigin !== "PINNED_PLAYWRIGHT_MCP" ||
-      lc.allLiveOpsMatchSessionId !== true ||
-      lc.mcpSessionClosedCleanly !== true ||
-      lc.ownedChildPidTerminated !== true ||
-      lc.closedAfterLastToolCompleted !== true ||
-      typeof led.operationsAttempted !== "number" ||
-      led.operationsAttempted < 1 ||
-      led.operationsAttempted > 4 ||
-      led.fabricatedLiveSuccess === true
-    ) {
-      status = "FAIL";
-      reasons.push(
-        `Amazon MCP lifecycle invariant failed: transport=${lc.transportMode}, closedCleanly=${lc.mcpSessionClosedCleanly}, pidTerminated=${lc.ownedChildPidTerminated}, ops=${led.operationsAttempted}`
-      );
     } else {
-      refs.push(`McpSession:${lc.sessionId}@PID=${lc.ownedChildPid}@ops=${led.operationsAttempted}`);
-      reasons.push("Same-session REAL_STDIO_MCP lifecycle verified and owned child PID terminated cleanly.");
+      const opRows: any[] = Array.isArray((led as any).operationLedger)
+        ? (led as any).operationLedger
+        : [];
+      const closeStartMs =
+        typeof (lc as any).closeStartedAt === "string"
+          ? Date.parse((lc as any).closeStartedAt)
+          : NaN;
+      const closeFinishMs =
+        typeof (lc as any).closeFinishedAt === "string"
+          ? Date.parse((lc as any).closeFinishedAt)
+          : NaN;
+      const lastToolMs =
+        typeof (lc as any).lastToolCompletedAt === "string"
+          ? Date.parse((lc as any).lastToolCompletedAt)
+          : NaN;
+
+      const closeBeforeLastTool =
+        Number.isFinite(closeStartMs) &&
+        Number.isFinite(lastToolMs) &&
+        closeStartMs < lastToolMs;
+      const closeFinishBeforeCloseStart =
+        Number.isFinite(closeFinishMs) &&
+        Number.isFinite(closeStartMs) &&
+        closeFinishMs < closeStartMs;
+      const opSessionMismatch = opRows.some(
+        (op) => op && op.sessionId && lc.sessionId && op.sessionId !== lc.sessionId
+      );
+      const opAfterClose = opRows.some(
+        (op) =>
+          op &&
+          typeof op.completedAt === "string" &&
+          Number.isFinite(closeFinishMs) &&
+          Date.parse(op.completedAt) > closeFinishMs
+      );
+
+      if (
+        lc.transportMode !== "REAL_STDIO_MCP" ||
+        lc.serverOrigin !== "PINNED_PLAYWRIGHT_MCP" ||
+        lc.allLiveOpsMatchSessionId !== true ||
+        lc.mcpSessionClosedCleanly !== true ||
+        lc.ownedChildPidTerminated !== true ||
+        lc.closedAfterLastToolCompleted !== true ||
+        closeBeforeLastTool ||
+        closeFinishBeforeCloseStart ||
+        opSessionMismatch ||
+        opAfterClose ||
+        typeof led.operationsAttempted !== "number" ||
+        led.operationsAttempted < 1 ||
+        led.operationsAttempted > 4 ||
+        led.fabricatedLiveSuccess === true
+      ) {
+        status = "FAIL";
+        reasons.push(
+          `Amazon MCP lifecycle invariant failed: transport=${lc.transportMode}, closedCleanly=${lc.mcpSessionClosedCleanly}, pidTerminated=${lc.ownedChildPidTerminated}, ops=${led.operationsAttempted}, closeBeforeLastTool=${closeBeforeLastTool}, opSessionMismatch=${opSessionMismatch}`
+        );
+      } else {
+        refs.push(`McpSession:${lc.sessionId}@PID=${lc.ownedChildPid}@ops=${led.operationsAttempted}`);
+        reasons.push("Same-session REAL_STDIO_MCP lifecycle verified and owned child PID terminated cleanly.");
+      }
     }
 
     gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE = {
@@ -4284,32 +4716,45 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     };
   }
 
-  // 6. AMAZON_UI_US_DELIVERY_ZIP_95829 & AMAZON_UI_USD_COMMERCIAL_EXTRACTION
+  // 6. AMAZON_UI_US_DELIVERY_ZIP_95829, AMAZON_UI_USD_COMMERCIAL_EXTRACTION & AMAZON_UI_OBSERVATION_CHRONOLOGY
   {
     const ui = input.amazonUiPreflight;
     const pdp = input.amazonPdpVerdicts;
+    const lc = input.amazonSessionLifecycle;
+    const led = input.amazonMcpLedger;
     const zipReasons: string[] = [];
     const usdReasons: string[] = [];
+    const chronReasons: string[] = [];
     const zipRefs: string[] = [];
     const usdRefs: string[] = [];
+    const chronRefs: string[] = [];
     let zipStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
     let usdStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
+    let chronStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
 
-    if (!ui || !pdp) {
-      zipStatus = "INCOMPLETE";
-      usdStatus = "INCOMPLETE";
-      zipReasons.push("Amazon UI preflight or PDP commercial artifact is missing.");
-      usdReasons.push("Amazon UI preflight or PDP commercial artifact is missing.");
-    } else if (!shaOk(ui) || !shaOk(pdp)) {
+    if (!ui || !pdp || !lc) {
+      zipStatus = !ui || !pdp ? "INCOMPLETE" : "FAIL";
+      usdStatus = !ui || !pdp ? "INCOMPLETE" : "FAIL";
+      chronStatus = "INCOMPLETE";
+      zipReasons.push("Amazon UI preflight, PDP commercial, or session lifecycle artifact is missing.");
+      usdReasons.push("Amazon UI preflight, PDP commercial, or session lifecycle artifact is missing.");
+      chronReasons.push("Amazon UI preflight, PDP commercial, or session lifecycle artifact is missing.");
+    } else if (!shaOk(ui) || !shaOk(pdp) || !shaOk(lc)) {
       zipStatus = "FAIL";
       usdStatus = "FAIL";
-      zipReasons.push("SHA mismatch on Amazon UI preflight or PDP artifact.");
-      usdReasons.push("SHA mismatch on Amazon UI preflight or PDP artifact.");
+      chronStatus = "FAIL";
+      zipReasons.push("SHA mismatch on Amazon UI preflight, PDP, or lifecycle artifact.");
+      usdReasons.push("SHA mismatch on Amazon UI preflight, PDP, or lifecycle artifact.");
+      chronReasons.push("SHA mismatch on Amazon UI preflight, PDP, or lifecycle artifact.");
     } else {
       const hr = ui.homeAndLocationReadback;
-      const contradictions = Array.isArray(ui.contradictionsDetected)
-        ? [...ui.contradictionsDetected]
-        : [];
+      const consistency = validateAmazonUiContextProofConsistency(ui as any);
+      const contradictions = Array.from(
+        new Set([
+          ...(Array.isArray(ui.contradictionsDetected) ? ui.contradictionsDetected : []),
+          ...consistency.contradictions,
+        ])
+      );
       if (ui.internalGlowFetchUsed === true) {
         contradictions.push("FORBIDDEN_INTERNAL_GLOW_FETCH_USED");
       }
@@ -4333,7 +4778,105 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         contradictions.push("USD_INFERRED_FROM_BARE_DOLLAR_SYMBOL_ALONE");
       }
 
+      // Cross-check phase timestamps & sessionId against sessionLifecycle (lc) and operationLedger (led)
+      const phases = (ui as any).phases || {
+        phase1_initial_home: (ui as any).phase1_initial_home,
+        phase2_zip_dialog_action: (ui as any).phase2_zip_dialog_action,
+        phase3_home_readback: (ui as any).phase3_home_readback,
+        phase4_search_readback: (ui as any).phase4_search_readback,
+        phase5_pdp_readback: (ui as any).phase5_pdp_readback,
+        phase6_post_session_close: (ui as any).phase6_post_session_close,
+      };
+      const p4 = phases?.phase4_search_readback;
+      const p5 = phases?.phase5_pdp_readback;
+      const p6 = phases?.phase6_post_session_close;
+      const closeStartIso =
+        (lc as any).closeStartedAt ||
+        p6?.observedFields?.closeStartedAt ||
+        (ui as any).closeStartedAt ||
+        null;
+      const closeFinishIso =
+        (lc as any).closeFinishedAt ||
+        p6?.observedFields?.closeFinishedAt ||
+        p6?.observedAt ||
+        (ui as any).closeFinishedAt ||
+        null;
+      const lastToolIso =
+        (lc as any).lastToolCompletedAt ||
+        p6?.observedFields?.lastToolCompletedAt ||
+        (ui as any).lastToolCompletedAt ||
+        null;
+
+      if (
+        p4?.observedAt &&
+        closeFinishIso &&
+        Date.parse(p4.observedAt) > Date.parse(closeFinishIso)
+      ) {
+        contradictions.push("CHRONOLOGY_VIOLATION_PHASE4_OBSERVED_AFTER_SESSION_CLOSE");
+      }
+      if (
+        p5?.observedAt &&
+        closeFinishIso &&
+        Date.parse(p5.observedAt) > Date.parse(closeFinishIso)
+      ) {
+        contradictions.push("CHRONOLOGY_VIOLATION_PHASE5_OBSERVED_AFTER_SESSION_CLOSE");
+      }
+      if (
+        p4?.observedAt &&
+        closeStartIso &&
+        Date.parse(p4.observedAt) > Date.parse(closeStartIso)
+      ) {
+        contradictions.push("CHRONOLOGY_VIOLATION_PHASE4_OBSERVED_AFTER_CLOSE_STARTED");
+      }
+      if (
+        p5?.observedAt &&
+        closeStartIso &&
+        Date.parse(p5.observedAt) > Date.parse(closeStartIso)
+      ) {
+        contradictions.push("CHRONOLOGY_VIOLATION_PHASE5_OBSERVED_AFTER_CLOSE_STARTED");
+      }
+      if (
+        lastToolIso &&
+        closeStartIso &&
+        Date.parse(closeStartIso) < Date.parse(lastToolIso)
+      ) {
+        contradictions.push(
+          "CHRONOLOGY_VIOLATION_CLOSE_STARTED_BEFORE_LAST_TOOL_COMPLETED"
+        );
+      }
+      if (lc.sessionId && ui.sessionId && lc.sessionId !== ui.sessionId) {
+        contradictions.push("SESSION_ID_MISMATCH_BETWEEN_UI_PROOF_AND_LIFECYCLE");
+      }
+      const opRows: any[] = Array.isArray((led as any)?.operationLedger)
+        ? (led as any).operationLedger
+        : [];
+      for (const op of opRows) {
+        if (op?.sessionId && lc.sessionId && op.sessionId !== lc.sessionId) {
+          contradictions.push("SESSION_ID_MISMATCH_IN_OPERATION_LEDGER");
+        }
+        if (
+          op?.completedAt &&
+          closeFinishIso &&
+          Date.parse(op.completedAt) > Date.parse(closeFinishIso)
+        ) {
+          contradictions.push("CHRONOLOGY_VIOLATION_OPERATION_COMPLETED_AFTER_SESSION_CLOSE");
+        }
+      }
+
       const pdpCands = Array.isArray(pdp.evaluatedCandidates) ? pdp.evaluatedCandidates : [];
+      for (const c of pdpCands) {
+        if (!isValidAmazonRawSnapshotHash(c?.rawEvidenceHash)) {
+          contradictions.push("MISSING_OR_PHONY_PDP_CANDIDATE_RAW_EVIDENCE_HASH");
+        }
+        if (
+          c?.observedAt &&
+          closeFinishIso &&
+          Date.parse(c.observedAt) > Date.parse(closeFinishIso)
+        ) {
+          contradictions.push("CHRONOLOGY_VIOLATION_PDP_CANDIDATE_OBSERVED_AFTER_CLOSE");
+        }
+      }
+
       const pdpZip95829Count = pdpCands.filter(
         (c) => c?.observedDeliveryPostalCode === "95829" && c?.verifiedDeliveryMarket === "US"
       ).length;
@@ -4345,17 +4888,53 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
           c.price > 0
       ).length;
 
+      // Strict boolean checks without `?? true` defaults (P1-D)
+      if (
+        (ui as any).finalZipVerdict === "PASS" &&
+        ui.finalEffectiveUsDeliveryVerified !== true
+      ) {
+        contradictions.push(
+          "FINAL_ZIP_VERDICT_PASS_WITHOUT_EXPLICIT_US_DELIVERY_VERIFIED_TRUE"
+        );
+      }
+      if (
+        (ui as any).finalUsdCommercialVerdict === "PASS" &&
+        ui.finalEffectiveCurrencyUsdVerified !== true
+      ) {
+        contradictions.push(
+          "FINAL_USD_VERDICT_PASS_WITHOUT_EXPLICIT_USD_CURRENCY_VERIFIED_TRUE"
+        );
+      }
+      if (
+        ((ui as any).explicitCurrencySource === "SYMBOL_ONLY_UNVERIFIED" ||
+          hr?.explicitCurrencySource === "SYMBOL_ONLY_UNVERIFIED") &&
+        ((ui as any).finalUsdCommercialVerdict === "PASS" ||
+          ui.finalEffectiveCurrencyUsdVerified === true)
+      ) {
+        contradictions.push("USD_VERIFIED_FROM_SYMBOL_ONLY_UNVERIFIED");
+      }
+
       if (contradictions.length > 0) {
         zipStatus = "FAIL";
         usdStatus = "FAIL";
+        chronStatus = "FAIL";
         zipReasons.push(`UI/PDP contradiction detected: ${contradictions.join(", ")}`);
         usdReasons.push(`UI/PDP contradiction detected: ${contradictions.join(", ")}`);
+        chronReasons.push(`Amazon 6-phase chronology/consistency violation: ${contradictions.join(", ")}`);
       } else {
+        chronStatus = "PASS";
+        chronRefs.push(
+          `AmazonChronology:${ui.sessionId || "live"}@p4=${p4?.observedAt}@p5=${p5?.observedAt}@close=${closeFinishIso}`
+        );
+        chronReasons.push(
+          "All 6 Amazon browser phases have pre-close observation timestamps, valid raw snapshot hashes, and matching sessionId."
+        );
+
         if (
           ui.observedDeliveryPostalCode === "95829" &&
           ui.dialogOpened === true &&
           ui.applyClicked === true &&
-          (ui.finalEffectiveUsDeliveryVerified ?? true) === true &&
+          ui.finalEffectiveUsDeliveryVerified === true &&
           pdpZip95829Count >= 1
         ) {
           zipStatus = "PASS";
@@ -4371,7 +4950,7 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
 
         if (
           ui.observedDisplayedCurrencyCode === "USD" &&
-          (ui.finalEffectiveCurrencyUsdVerified ?? true) === true &&
+          ui.finalEffectiveCurrencyUsdVerified === true &&
           pdpUsdCount >= 1
         ) {
           usdStatus = "PASS";
@@ -4386,6 +4965,25 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         }
       }
     }
+
+    gates.AMAZON_UI_OBSERVATION_CHRONOLOGY = {
+      gateId: "AMAZON_UI_OBSERVATION_CHRONOLOGY",
+      status: chronStatus,
+      evidenceRefs: chronRefs,
+      sourceSha: ui?.codeSha || "",
+      reasons: chronReasons,
+      measuredAt,
+      scope: {
+        workspaceId: ui?.workspaceId || null,
+        runId: ui?.researchRunId || null,
+        sessionId: ui?.sessionId || null,
+      },
+      counts: {
+        contradictionsCount: Array.isArray(ui?.contradictionsDetected)
+          ? ui!.contradictionsDetected!.length
+          : 0,
+      },
+    };
 
     gates.AMAZON_UI_US_DELIVERY_ZIP_95829 = {
       gateId: "AMAZON_UI_US_DELIVERY_ZIP_95829",
@@ -4593,7 +5191,7 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     };
   }
 
-  // 9. DB_API_UI_RELOAD_PARITY
+  // 9. DB_API_UI_RELOAD_PARITY (P1-E: never fall back to dbIds when DOM IDs are missing)
   {
     const db = input.dbPersistence;
     const api = input.httpGetParity;
@@ -4615,15 +5213,19 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       const apiIds = Array.isArray(api.shortlistIdsInLeaderboardApi)
         ? api.shortlistIdsInLeaderboardApi
         : [];
-      const domIdsBefore = Array.isArray(ui.domCandidateIdsBeforeReload)
-        ? ui.domCandidateIdsBeforeReload
-        : dbIds;
-      const domIdsAfter = Array.isArray(ui.domCandidateIdsAfterReload)
-        ? ui.domCandidateIdsAfterReload
-        : dbIds;
+      const hasDomBeforeArray = Array.isArray(ui.domCandidateIdsBeforeReload);
+      const hasDomAfterArray = Array.isArray(ui.domCandidateIdsAfterReload);
+      const domIdsBefore = hasDomBeforeArray ? ui.domCandidateIdsBeforeReload! : [];
+      const domIdsAfter = hasDomAfterArray ? ui.domCandidateIdsAfterReload! : [];
+      const distinctDbIds = new Set(
+        dbIds.filter((id) => typeof id === "string" && id.trim().length > 0)
+      );
 
       const exactIdsMatch =
+        hasDomBeforeArray &&
+        hasDomAfterArray &&
         dbIds.length === 3 &&
+        distinctDbIds.size === 3 &&
         JSON.stringify(dbIds) === JSON.stringify(apiIds) &&
         JSON.stringify(dbIds) === JSON.stringify(domIdsBefore) &&
         JSON.stringify(dbIds) === JSON.stringify(domIdsAfter);
@@ -4638,6 +5240,7 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         api.researchHttpStatus !== 200 ||
         api.runByIdHttpStatus !== 200 ||
         api.amazonRouteHttpStatus !== 200 ||
+        ((api as any).returnedCachedOrFixtureAsLiveCount ?? 0) > 0 ||
         (api.mismatches?.length ?? 0) > 0 ||
         ui.parityPassed !== true ||
         ui.cardsBeforeReloadCount !== 3 ||
@@ -4776,6 +5379,16 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       if (histAmzCount > 0 && histWmtCount > 0) {
         provParityStatus = "PASS";
         provReasons.push(`Historical Amazon (${histAmzCount}) and Walmart (${histWmtCount}) records verified.`);
+      } else if (
+        (dev as any).historicalProviderParityVerdict === "PASS" ||
+        (hold as any).historicalProviderParityVerdict === "PASS" ||
+        (pit as any).historicalProviderParityStatus === "PASS" ||
+        (pit as any).historicalProviderParityVerdict === "PASS"
+      ) {
+        provParityStatus = "FAIL";
+        provReasons.push(
+          "Historical provider parity falsely claimed PASS when 0 pre-cutoff Amazon/Walmart rows exist."
+        );
       } else {
         provParityStatus = "VACUOUS_OR_UNPROVEN";
         provReasons.push(
@@ -4857,7 +5470,7 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     };
   }
 
-  // 12. E2E_SPEC_COVERAGE & CODE_AND_ENGINEERING_GATES
+  // 12. E2E_SPEC_COVERAGE & CODE_AND_ENGINEERING_GATES (P1-A & P1-B)
   {
     const git = input.gitPrecheck;
     const rt = input.runtimePrecheck;
@@ -4869,52 +5482,22 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     const mut = input.mutationSuite;
     const res = input.resourceAndOrphanGuard;
 
-    let e2eStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
-    const e2eReasons: string[] = [];
-
-    if (!e2e) {
-      e2eStatus = "INCOMPLETE";
-      e2eReasons.push("E2E receipts artifact is missing.");
-    } else if (!shaOk(e2e)) {
-      e2eStatus = "FAIL";
-      e2eReasons.push("SHA mismatch on E2E receipts artifact.");
-    } else {
-      const specsList = Array.isArray(e2e.specs) ? e2e.specs : [];
-      const allSpecsAttemptedAndPassed =
-        specsList.length > 0
-          ? specsList.length === 12 &&
-            specsList.every(
-              (s) =>
-                s &&
-                s.attempted === true &&
-                s.passed === true &&
-                s.exitCode === 0 &&
-                (s.casesPassed ?? 0) > 0 &&
-                s.casesPassed === s.casesTotal
-            )
-          : true;
-      if (
-        e2e.totalSpecs !== 12 ||
-        e2e.passedSpecsCount !== 12 ||
-        e2e.failedSpecsCount !== 0 ||
-        e2e.skippedWithoutAttemptCount !== 0 ||
-        (e2e.passedE2ETestCases ?? 0) < 34 ||
-        e2e.passedE2ETestCases !== e2e.totalE2ETestCases ||
-        !allSpecsAttemptedAndPassed
-      ) {
-        e2eStatus = "FAIL";
-        e2eReasons.push(
-          `E2E coverage incomplete or failed: specs=${e2e.passedSpecsCount}/${e2e.totalSpecs}, cases=${e2e.passedE2ETestCases}/${e2e.totalE2ETestCases}, skipped=${e2e.skippedWithoutAttemptCount}`
-        );
-      } else {
-        e2eReasons.push(`All 12/12 E2E specs (${e2e.passedE2ETestCases}/${e2e.totalE2ETestCases} cases) passed with 0 skips.`);
-      }
-    }
+    const e2eValidation = validatePerSpecE2EReceipts(e2e as any, expectedSha);
+    const e2eStatus: GateVerdictStatusV12_4_3_7_2 = e2eValidation.status;
+    const e2eReasons: string[] =
+      e2eValidation.status === "PASS"
+        ? [
+            `All 12/12 canonical E2E specs (${e2eValidation.computedPassedCases}/${e2eValidation.computedTotalCases} cases) passed with 0 skips and reconciled PIDs.`,
+          ]
+        : e2eValidation.reasons;
 
     gates.E2E_SPEC_COVERAGE = {
       gateId: "E2E_SPEC_COVERAGE",
       status: e2eStatus,
-      evidenceRefs: e2eStatus === "PASS" ? [`E2E:12_specs_${e2e?.passedE2ETestCases}_cases@${expectedSha.slice(0, 8)}`] : [],
+      evidenceRefs:
+        e2eStatus === "PASS"
+          ? [`E2E:12_specs_${e2eValidation.computedPassedCases}_cases@${expectedSha.slice(0, 8)}`]
+          : [],
       sourceSha: e2e?.codeSha || "",
       reasons: e2eReasons,
       measuredAt,
@@ -4930,9 +5513,14 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     let engStatus: GateVerdictStatusV12_4_3_7_2 = "PASS";
     const engReasons: string[] = [];
 
-    if (!git || !rt || !tm || !ts || !reg || !e2e) {
+    if (!git || !rt || !tm || !ts || !reg || !e2e || !tb || !mut || !res) {
       engStatus = "INCOMPLETE";
-      engReasons.push("Required engineering precheck or test suite receipt is missing.");
+      if (!tb) engReasons.push("MISSING_TYPECHECK_AND_BUILD_RECEIPT");
+      if (!mut) engReasons.push("MISSING_MUTATION_SUITE_RECEIPT");
+      if (!res) engReasons.push("MISSING_RESOURCE_AND_ORPHAN_GUARD_RECEIPT");
+      if (!git || !rt || !tm || !ts || !reg || !e2e) {
+        engReasons.push("Required engineering precheck or test suite receipt is missing.");
+      }
     } else if (
       !shaOk(git) ||
       !shaOk(rt) ||
@@ -4940,9 +5528,9 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       !shaOk(ts) ||
       !shaOk(reg) ||
       !shaOk(e2e) ||
-      (tb && !shaOk(tb)) ||
-      (mut && !shaOk(mut)) ||
-      (res && !shaOk(res))
+      !shaOk(tb) ||
+      !shaOk(mut) ||
+      !shaOk(res)
     ) {
       engStatus = "FAIL";
       engReasons.push("SHA parity failure across engineering test/build/mutation/resource artifacts.");
@@ -5006,36 +5594,46 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         engReasons.push(...e2eReasons);
       }
       if (
-        tb &&
-        (tb.tscPassed !== true ||
-          tb.tscExitCode !== 0 ||
-          tb.nextBuildPassed !== true ||
-          tb.nextBuildExitCode !== 0)
+        tb.tscPassed !== true ||
+        tb.tscExitCode !== 0 ||
+        tb.nextBuildPassed !== true ||
+        tb.nextBuildExitCode !== 0
       ) {
         engStatus = "FAIL";
         engReasons.push(
           `TypeScript or Next.js build failed: tscExit=${tb.tscExitCode}, buildExit=${tb.nextBuildExitCode}`
         );
       }
+      const mutCompletedIso = mut.completedAt || mut.evaluatedAt || null;
+      const mutCompletedAfterVerdict =
+        Boolean(mutCompletedIso) &&
+        Number.isFinite(Date.parse(String(mutCompletedIso))) &&
+        Number.isFinite(Date.parse(measuredAt)) &&
+        Date.parse(String(mutCompletedIso)) > Date.parse(measuredAt);
       if (
-        mut &&
-        ((mut.falsePassesCount ?? 1) !== 0 ||
-          (mut.totalMutationsExecuted ?? 0) < 54 ||
-          mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
-          mut.sourceTreeRestoredClean !== true)
-      ) {
-        engStatus = "FAIL";
-        engReasons.push("Physical negative mutation suite had false passes or dirty worktree.");
-      }
-      if (
-        res &&
-        (res.diskGuardPassed !== true ||
-          (res.minFreeDiskGiB ?? 0) < (res.diskThresholdGiB ?? 15) ||
-          (res.orphanedOwnedProcessCount ?? 1) !== 0)
+        (mut.falsePassesCount ?? 1) !== 0 ||
+        (mut.totalMutationsExecuted ?? 0) < 92 ||
+        mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
+        mut.sourceTreeRestoredClean !== true ||
+        mutCompletedAfterVerdict
       ) {
         engStatus = "FAIL";
         engReasons.push(
-          `Resource or orphan process guard failed: minDiskGiB=${res.minFreeDiskGiB}, orphans=${res.orphanedOwnedProcessCount}`
+          mutCompletedAfterVerdict
+            ? "CHRONOLOGY_VIOLATION_MUTATION_SUITE_COMPLETED_AFTER_VERDICT_EVALUATED_AT"
+            : "Physical negative mutation suite had false passes, < 92 mutations, or dirty worktree."
+        );
+      }
+      if (
+        res.diskGuardPassed !== true ||
+        (res.minFreeDiskGiB ?? 0) < (res.diskThresholdGiB ?? 15) ||
+        (res.orphanedOwnedProcessCount ?? 1) !== 0 ||
+        (typeof res.maxConcurrentHeavyObserved === "number" &&
+          res.maxConcurrentHeavyObserved > (res.maxConcurrentHeavyLimit ?? 2))
+      ) {
+        engStatus = "FAIL";
+        engReasons.push(
+          `Resource or orphan process guard failed: minDiskGiB=${res.minFreeDiskGiB}, orphans=${res.orphanedOwnedProcessCount}, peakHeavy=${res.maxConcurrentHeavyObserved}`
         );
       }
       // Also require core engineering sub-gates to be PASS
@@ -5043,6 +5641,8 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         gates.STANDALONE_REFERENCE_EVIDENCE_INTEGRITY.status !== "PASS" ||
         gates.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E.status !== "PASS" ||
         gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION.status !== "PASS" ||
+        gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE.status !== "PASS" ||
+        gates.AMAZON_UI_OBSERVATION_CHRONOLOGY.status !== "PASS" ||
         gates.DB_API_UI_RELOAD_PARITY.status !== "PASS" ||
         gates.SECONDARY_NICHE_DYNAMIC_SEPARATION.status !== "PASS" ||
         gates.POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY.status !== "PASS"
@@ -5052,9 +5652,9 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       }
     }
 
-    if (engStatus === "PASS") {
+    if (engStatus === "PASS" && mut && reg && e2e) {
       engReasons.push(
-        `All engineering gates passed on ${expectedSha.slice(0, 8)}: ${reg?.executedTestFilesCount} test files (${reg?.passedTestCases} tests), 12 E2E specs (${e2e?.passedE2ETestCases} cases), tsc=0, build=0, 0 orphans.`
+        `All engineering gates passed on ${expectedSha.slice(0, 8)}: ${reg.executedTestFilesCount} test files (${reg.passedTestCases} tests), 12 E2E specs (${e2e.passedE2ETestCases} cases), ${mut.caughtMutationsCount}/${mut.totalMutationsExecuted} mutations caught, tsc=0, build=0, 0 orphans.`
       );
     }
 
@@ -5062,11 +5662,11 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
       gateId: "CODE_AND_ENGINEERING_GATES",
       status: engStatus,
       evidenceRefs:
-        engStatus === "PASS"
+        engStatus === "PASS" && mut && reg && e2e
           ? [
-              `Regression:${reg?.executedTestFilesCount}_files_${reg?.passedTestCases}_cases`,
-              `E2E:12_specs_${e2e?.passedE2ETestCases}_cases`,
-              `Mutations:${mut?.caughtMutationsCount ?? "pending"}`,
+              `Regression:${reg.executedTestFilesCount}_files_${reg.passedTestCases}_cases`,
+              `E2E:12_specs_${e2e.passedE2ETestCases}_cases`,
+              `Mutations:${mut.caughtMutationsCount}/${mut.totalMutationsExecuted}`,
             ]
           : [],
       sourceSha: expectedSha,
@@ -5077,6 +5677,8 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
         executedTestFilesCount: reg?.executedTestFilesCount ?? 0,
         passedTestCases: reg?.passedTestCases ?? 0,
         passedE2ETestCases: e2e?.passedE2ETestCases ?? 0,
+        caughtMutationsCount: mut?.caughtMutationsCount ?? 0,
+        totalMutationsExecuted: mut?.totalMutationsExecuted ?? 0,
         orphanedOwnedProcessCount: res?.orphanedOwnedProcessCount ?? 0,
       },
     };
@@ -5085,9 +5687,14 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
   // 13. BUSINESS GATES: G07, G15, G16, FULL_KH02_BUSINESS_ACCEPTANCE, OVERALL_RELEASE_STATUS
   {
     const bg = input.businessGates;
+    const g07HasRealProof =
+      ((bg as any)?.g07LiveVerifiedCount ?? 0) >= 1 &&
+      (bg as any)?.g07LiveProviderAuthenticated === true;
     const g07Status: GateVerdictStatusV12_4_3_7_2 =
       bg?.g07Verdict === "PASS"
-        ? "PASS"
+        ? g07HasRealProof
+          ? "PASS"
+          : "FAIL"
         : bg?.g07Verdict === "INSUFFICIENT_EVIDENCE"
         ? "INSUFFICIENT_EVIDENCE"
         : "BLOCKED";
@@ -5167,9 +5774,12 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     const fullBizReasons: string[] = [];
     if (
       gates.CODE_AND_ENGINEERING_GATES.status === "FAIL" ||
+      g07Status === "FAIL" ||
       g15Status === "FAIL" ||
       g16Status === "FAIL" ||
-      gates.HISTORICAL_BUSINESS_EVIDENCE.status === "FAIL"
+      gates.HISTORICAL_BUSINESS_EVIDENCE.status === "FAIL" ||
+      ((bg as any)?.fullBusinessVerdict === "PASS" &&
+        (g07Status !== "PASS" || g15Status !== "PASS" || g16Status !== "PASS"))
     ) {
       fullBizStatus = "FAIL";
       fullBizReasons.push("Engineering or business gate integrity check failed.");
@@ -5205,6 +5815,257 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     };
   }
 
+  // 14. V12.4.3.7.3 SECTION 8 ROUTE-SPECIFIC GATE ALIASES
+  {
+    const aliasGate = (
+      newGateId: string,
+      baseGate: GateVerdictRecordV12_4_3_7_2,
+      overrideStatus?: GateVerdictStatusV12_4_3_7_2
+    ): GateVerdictRecordV12_4_3_7_2 => ({
+      ...baseGate,
+      gateId: newGateId,
+      status: overrideStatus ?? baseGate.status,
+    });
+
+    const git = input.gitPrecheck;
+    const gitStatus: GateVerdictStatusV12_4_3_7_2 = !git
+      ? "INCOMPLETE"
+      : !shaOk(git) ||
+        git.branch !== "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1" ||
+        git.ancestryVerified !== true
+      ? "FAIL"
+      : "PASS";
+    gates.GIT_BRANCH_AND_CODE_SHA_INTEGRITY = {
+      gateId: "GIT_BRANCH_AND_CODE_SHA_INTEGRITY",
+      status: gitStatus,
+      evidenceRefs: gitStatus === "PASS" ? [`GitBranch:${git?.branch}@${expectedSha.slice(0, 8)}`] : [],
+      sourceSha: git?.codeSha || "",
+      reasons:
+        gitStatus === "PASS"
+          ? ["Feature branch and origin/QA ancestry verified with exact CODE_SHA."]
+          : ["Git branch, ancestry, or CODE_SHA check failed."],
+      measuredAt,
+      scope: { mode: "GIT_PRECHECK" },
+      counts: { ancestryVerified: Boolean(git?.ancestryVerified) },
+    };
+
+    const reg = input.fullRegression;
+    const ts = input.targetedSuites;
+    const regStatus: GateVerdictStatusV12_4_3_7_2 =
+      !reg || !ts
+        ? "INCOMPLETE"
+        : !shaOk(reg) ||
+          !shaOk(ts) ||
+          ts.allPassed !== true ||
+          (ts.failedTests ?? 1) !== 0 ||
+          reg.inventoryComplete !== true ||
+          (reg.excludedOrDeferredFilesCount ?? 1) !== 0 ||
+          (reg.failedTestCases ?? 1) !== 0 ||
+          (reg.executedTestFilesCount ?? 0) < 157 ||
+          reg.executedTestFilesCount !== reg.totalDiscoveredTestFiles ||
+          reg.passedTestCases !== reg.totalExecutedTestCases
+        ? "FAIL"
+        : "PASS";
+    gates.FULL_REPOSITORY_UNIT_INTEGRATION_REGRESSION = {
+      gateId: "FULL_REPOSITORY_UNIT_INTEGRATION_REGRESSION",
+      status: regStatus,
+      evidenceRefs:
+        regStatus === "PASS"
+          ? [`Regression:${reg?.executedTestFilesCount}_files_${reg?.passedTestCases}_cases`]
+          : [],
+      sourceSha: reg?.codeSha || "",
+      reasons:
+        regStatus === "PASS"
+          ? [`All ${reg?.executedTestFilesCount} unit/integration test files passed (${reg?.passedTestCases} tests).`]
+          : ["Unit/integration regression failed or incomplete."],
+      measuredAt,
+      scope: { mode: "FULL_REGRESSION" },
+      counts: {
+        executedTestFilesCount: reg?.executedTestFilesCount ?? 0,
+        passedTestCases: reg?.passedTestCases ?? 0,
+      },
+    };
+
+    gates.ALL_12_CANONICAL_E2E_SPECS = aliasGate(
+      "ALL_12_CANONICAL_E2E_SPECS",
+      gates.E2E_SPEC_COVERAGE
+    );
+
+    const tb = input.typecheckAndBuild;
+    const tbStatus: GateVerdictStatusV12_4_3_7_2 = !tb
+      ? "INCOMPLETE"
+      : !shaOk(tb) ||
+        tb.tscPassed !== true ||
+        tb.tscExitCode !== 0 ||
+        tb.nextBuildPassed !== true ||
+        tb.nextBuildExitCode !== 0
+      ? "FAIL"
+      : "PASS";
+    gates.TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD = {
+      gateId: "TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD",
+      status: tbStatus,
+      evidenceRefs: tbStatus === "PASS" ? [`BuildAndTsc:PASS@${expectedSha.slice(0, 8)}`] : [],
+      sourceSha: tb?.codeSha || "",
+      reasons:
+        tbStatus === "PASS"
+          ? ["TypeScript (`tsc --noEmit`) and production build (`next build`) exited 0."]
+          : ["TypeScript or Next.js build missing or failed."],
+      measuredAt,
+      scope: { mode: "TYPECHECK_AND_BUILD" },
+      counts: {
+        tscExitCode: tb?.tscExitCode ?? -1,
+        nextBuildExitCode: tb?.nextBuildExitCode ?? -1,
+      },
+    };
+
+    gates.REAL_HTTP_SERVER_TO_INDEPENDENT_WORKER_EXECUTION = aliasGate(
+      "REAL_HTTP_SERVER_TO_INDEPENDENT_WORKER_EXECUTION",
+      gates.REAL_NETWORK_HTTP_TO_INDEPENDENT_WORKER_E2E
+    );
+    gates.STRICT_LIVE_ONLY_META_QUERY_PROVENANCE = aliasGate(
+      "STRICT_LIVE_ONLY_META_QUERY_PROVENANCE",
+      gates.META_LIVE_CURRENT_RUN_COLLECTION
+    );
+    gates.META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE = aliasGate(
+      "META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE",
+      gates.META_STRICT_LIVE_LINEAGE
+    );
+    gates.STRICT_LIVE_SHORTLIST_3_DISTINCT_FAMILIES = aliasGate(
+      "STRICT_LIVE_SHORTLIST_3_DISTINCT_FAMILIES",
+      gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION,
+      gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION.status === "PASS" &&
+        gates.META_STRICT_LIVE_LINEAGE.status === "PASS"
+        ? "PASS"
+        : gates.CANDIDATE_DISCOVERY_AND_FAMILY_DEDUPLICATION.status === "INCOMPLETE" ||
+          gates.META_STRICT_LIVE_LINEAGE.status === "INCOMPLETE"
+        ? "INCOMPLETE"
+        : "FAIL"
+    );
+    gates.AMAZON_LOCAL_PLAYWRIGHT_MCP_SMOKE_EXECUTION = aliasGate(
+      "AMAZON_LOCAL_PLAYWRIGHT_MCP_SMOKE_EXECUTION",
+      gates.AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION,
+      gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE.status === "PASS" &&
+        gates.AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION.status === "PASS"
+        ? "PASS"
+        : gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE.status === "INCOMPLETE" ||
+          gates.AMAZON_SEARCH_TO_OBSERVED_HREF_PDP_EXECUTION.status === "INCOMPLETE"
+        ? "INCOMPLETE"
+        : "FAIL"
+    );
+    gates.AMAZON_SIX_PHASE_OBSERVATION_CHRONOLOGY = aliasGate(
+      "AMAZON_SIX_PHASE_OBSERVATION_CHRONOLOGY",
+      gates.AMAZON_UI_OBSERVATION_CHRONOLOGY
+    );
+    gates.AMAZON_US_ZIP_95829_AND_EXPLICIT_USD_VERIFICATION = aliasGate(
+      "AMAZON_US_ZIP_95829_AND_EXPLICIT_USD_VERIFICATION",
+      gates.AMAZON_UI_US_DELIVERY_ZIP_95829,
+      gates.AMAZON_UI_US_DELIVERY_ZIP_95829.status === "PASS" &&
+        gates.AMAZON_UI_USD_COMMERCIAL_EXTRACTION.status === "PASS"
+        ? "PASS"
+        : gates.AMAZON_UI_US_DELIVERY_ZIP_95829.status === "FAIL" ||
+          gates.AMAZON_UI_USD_COMMERCIAL_EXTRACTION.status === "FAIL"
+        ? "FAIL"
+        : gates.AMAZON_UI_US_DELIVERY_ZIP_95829.status === "INCOMPLETE" ||
+          gates.AMAZON_UI_USD_COMMERCIAL_EXTRACTION.status === "INCOMPLETE"
+        ? "INCOMPLETE"
+        : gates.AMAZON_UI_USD_COMMERCIAL_EXTRACTION.status
+    );
+    gates.AMAZON_SEARCH_TO_PDP_IDENTITY_AND_META_EQUIVALENCE = aliasGate(
+      "AMAZON_SEARCH_TO_PDP_IDENTITY_AND_META_EQUIVALENCE",
+      gates.META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION,
+      gates.AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION.status === "FAIL" ||
+        gates.META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION.status === "FAIL"
+        ? "FAIL"
+        : gates.AMAZON_SEARCH_PDP_IDENTITY_VERIFICATION.status === "INCOMPLETE" ||
+          gates.META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION.status === "INCOMPLETE"
+        ? "INCOMPLETE"
+        : gates.META_TO_AMAZON_EXACT_PRODUCT_CORROBORATION.status
+    );
+    gates.AMAZON_MCP_SESSION_AND_OWNED_PID_CLEAN_EXIT = aliasGate(
+      "AMAZON_MCP_SESSION_AND_OWNED_PID_CLEAN_EXIT",
+      gates.AMAZON_LOCAL_MCP_SESSION_LIFECYCLE
+    );
+    gates.DB_HTTP_API_CHROMIUM_RELOAD_PARITY = aliasGate(
+      "DB_HTTP_API_CHROMIUM_RELOAD_PARITY",
+      gates.DB_API_UI_RELOAD_PARITY
+    );
+    gates.DEV_AND_HOLDOUT_POINT_IN_TIME_NO_LOOKAHEAD = aliasGate(
+      "DEV_AND_HOLDOUT_POINT_IN_TIME_NO_LOOKAHEAD",
+      gates.POINT_IN_TIME_HISTORICAL_REPLAY_INTEGRITY
+    );
+    gates.HISTORICAL_MARKETPLACE_PROVIDER_COVERAGE = aliasGate(
+      "HISTORICAL_MARKETPLACE_PROVIDER_COVERAGE",
+      gates.HISTORICAL_PROVIDER_PARITY_TRUTH
+    );
+    gates.HISTORICAL_WINNING_PRODUCT_BUSINESS_SUFFICIENCY = aliasGate(
+      "HISTORICAL_WINNING_PRODUCT_BUSINESS_SUFFICIENCY",
+      gates.HISTORICAL_BUSINESS_EVIDENCE
+    );
+    gates.WALMART_JINA_LIVE_OPERATIONAL_GATE = aliasGate(
+      "WALMART_JINA_LIVE_OPERATIONAL_GATE",
+      gates.WALMART_US_LIVE_OPERATIONAL_STATUS
+    );
+    gates.G07_TIKTOK_US_LIVE_ADS = aliasGate(
+      "G07_TIKTOK_US_LIVE_ADS",
+      gates.G07_PAID_MEDIA_PERSISTENCE
+    );
+    gates.G15_60D_PRODUCT_LONGITUDINAL_DEMAND = aliasGate(
+      "G15_60D_PRODUCT_LONGITUDINAL_DEMAND",
+      gates.G15_LONGITUDINAL_DEMAND_60D
+    );
+    gates.G16_3OF3_INDEPENDENT_MERCHANT_AND_LIVE_AD_PROOF = aliasGate(
+      "G16_3OF3_INDEPENDENT_MERCHANT_AND_LIVE_AD_PROOF",
+      gates.G16_INDEPENDENT_MERCHANT_PROOF
+    );
+
+    const mut = input.mutationSuite;
+    const mutCompletedIso = mut?.completedAt || mut?.evaluatedAt || null;
+    const mutCompletedAfterVerdict =
+      Boolean(mutCompletedIso) &&
+      Number.isFinite(Date.parse(String(mutCompletedIso))) &&
+      Number.isFinite(Date.parse(measuredAt)) &&
+      Date.parse(String(mutCompletedIso)) > Date.parse(measuredAt);
+    const mutStatus: GateVerdictStatusV12_4_3_7_2 = !mut
+      ? "INCOMPLETE"
+      : !shaOk(mut) ||
+        (mut.falsePassesCount ?? 1) !== 0 ||
+        (mut.totalMutationsExecuted ?? 0) < 92 ||
+        mut.caughtMutationsCount !== mut.totalMutationsExecuted ||
+        mut.sourceTreeRestoredClean !== true ||
+        mutCompletedAfterVerdict
+      ? "FAIL"
+      : "PASS";
+    gates.INDEPENDENT_RAW_EVIDENCE_AND_MUTATION_VALIDATION = {
+      gateId: "INDEPENDENT_RAW_EVIDENCE_AND_MUTATION_VALIDATION",
+      status: mutStatus,
+      evidenceRefs:
+        mutStatus === "PASS"
+          ? [`Mutations:${mut?.caughtMutationsCount}/${mut?.totalMutationsExecuted}@${expectedSha.slice(0, 8)}`]
+          : [],
+      sourceSha: mut?.codeSha || "",
+      reasons:
+        mutStatus === "PASS"
+          ? [`All ${mut?.caughtMutationsCount}/${mut?.totalMutationsExecuted} negative/mutation checks caught with 0 false passes.`]
+          : ["Independent raw evidence or negative mutation suite missing, failed, or post-dated."],
+      measuredAt,
+      scope: { mode: "INDEPENDENT_MUTATION_VALIDATION" },
+      counts: {
+        totalMutationsExecuted: mut?.totalMutationsExecuted ?? 0,
+        caughtMutationsCount: mut?.caughtMutationsCount ?? 0,
+        falsePassesCount: mut?.falsePassesCount ?? -1,
+      },
+    };
+
+    gates.ENGINEERING_AND_TRUTH_ACCEPTANCE = aliasGate(
+      "ENGINEERING_AND_TRUTH_ACCEPTANCE",
+      gates.CODE_AND_ENGINEERING_GATES
+    );
+    gates.FULL_KH02_AUTONOMOUS_WINNING_PRODUCT_BUSINESS_ACCEPTANCE = aliasGate(
+      "FULL_KH02_AUTONOMOUS_WINNING_PRODUCT_BUSINESS_ACCEPTANCE",
+      gates.FULL_KH02_BUSINESS_ACCEPTANCE
+    );
+  }
+
   const failedGateKeys = Object.entries(gates)
     .filter(([, g]) => g.status === "FAIL" || g.status === "INCOMPLETE")
     .map(([k]) => k);
@@ -5230,6 +6091,7 @@ export function computeV12_4_3_7_2ReleaseVerdicts(
     verdictTable[k] = g.status;
   }
   verdictTable.OVERALL_RELEASE_STATUS = overallReleaseStatus;
+  verdictTable.OVERALL_RELEASE_VERDICT = overallReleaseStatus;
 
   return {
     codeSha: expectedSha,

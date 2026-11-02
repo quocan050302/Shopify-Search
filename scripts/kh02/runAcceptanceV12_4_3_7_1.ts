@@ -1526,6 +1526,7 @@ export async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(
       homeAndLocationReadback: homeReadback,
       searchCardsLedger,
       pdpCandidates: amzEvidenceRows,
+      operationLedger: opLedger,
       sessionLifecycle: mcpLifecycle,
       internalGlowFetchUsed: false,
     });
@@ -1617,6 +1618,8 @@ export async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(
       amzEvidenceRows.length > 0
         ? amzEvidenceRows.map((r) => ({
             candidateId: r.candidateId,
+            operationId: r.operationId ?? r.providerInvocationRef ?? null,
+            observedAt: r.observedAt ?? null,
             asin: r.asin,
             productTitle: r.productTitle,
             brand: r.brand,
@@ -1647,6 +1650,8 @@ export async function runRealNetworkHttpToIndependentWorkerE2EAndChromiumParity(
           }))
         : opLedger.map((op: any) => ({
             candidateId: op.candidateId,
+            operationId: op.operationId ?? null,
+            observedAt: op.completedAt ?? op.startedAt ?? null,
             asin: null,
             productTitle: null,
             brand: null,
@@ -2431,12 +2436,35 @@ export async function runAll12E2ESpecsWithReceipts(params: {
     } catch {}
   }
 
-  const receipts = allOrderedSpecs
-    .map((item) => receiptsByIndex.get(item.specIndex))
-    .filter(Boolean);
+  const receipts = allOrderedSpecs.map((item) => {
+    const existing = receiptsByIndex.get(item.specIndex);
+    if (existing) return existing;
+    return {
+      specIndex: item.specIndex,
+      specFile: item.spec,
+      command: `npx vitest run ${item.spec}`,
+      sourceSha: params.codeSha,
+      startedAt: "",
+      endedAt: "",
+      durationMs: 0,
+      exitCode: -1,
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      skippedTests: 0,
+      classification: "SKIPPED" as const,
+      stdoutHash: "",
+      stderrHash: "",
+      ownedPidsReconciled: false,
+      failureExcerpt: "Spec was never attempted in runner",
+    };
+  });
 
   const passedSpecsCount = receipts.filter(
     (r) => r.classification === "PASS"
+  ).length;
+  const skippedWithoutAttemptCount = receipts.filter(
+    (r) => r.classification === "SKIPPED"
   ).length;
   const failedSpecsCount = receipts.filter(
     (r) => r.classification !== "PASS"
@@ -2458,7 +2486,7 @@ export async function runAll12E2ESpecsWithReceipts(params: {
     totalSpecs: receipts.length,
     passedSpecsCount,
     failedSpecsCount,
-    skippedWithoutAttemptCount: 12 - receipts.length,
+    skippedWithoutAttemptCount,
     totalE2ETestCases,
     passedE2ETestCases,
     failedE2ETestCases,

@@ -10,6 +10,7 @@ import {
 } from "../../../src/services/kh02/marketplace/amazonUsMcpTransport";
 import {
   computeV12_4_3_7_2ReleaseVerdicts,
+  STANDALONE_SERVER_OR_BROWSER_E2E_FILES,
   type ComputeV12_4_3_7_2ReleaseVerdictsInput,
 } from "../../../scripts/kh02/acceptanceTruth";
 
@@ -98,6 +99,8 @@ function makeValidHomeAndLocationReadback(overrides: Record<string, any> = {}) {
     homeSnapshotHash: "hash_home_001",
     searchSnapshotHash: "hash_search_001",
     pdpSnapshotHash: "hash_pdp_001",
+    searchReadbackObservedAt: "2026-11-02T10:00:10.000Z",
+    pdpReadbackObservedAt: "2026-11-02T10:00:15.000Z",
     uiActionLedger: [
       {
         step: "WAIT_SEARCH_BOX_READY",
@@ -136,6 +139,8 @@ function makeBaseValidVerdictInput(): ComputeV12_4_3_7_2ReleaseVerdictsInput {
   const hr = makeValidHomeAndLocationReadback();
   const pdpCandidate = {
     candidateId: "cand-petlibro-001",
+    operationId: "amz-op-pdp-001",
+    observedAt: "2026-11-02T10:00:15.000Z",
     asin: "B0FDKQGRCK",
     productTitle: "PETLIBRO Granary Automatic Cat Feeder 5L",
     brand: "PETLIBRO",
@@ -161,6 +166,8 @@ function makeBaseValidVerdictInput(): ComputeV12_4_3_7_2ReleaseVerdictsInput {
     mcpSessionClosedCleanly: true,
     ownedChildPidTerminated: true,
     closedAfterLastToolCompleted: true,
+    lastToolCompletedAt: "2026-11-02T10:00:16.000Z",
+    closeStartedAt: "2026-11-02T10:00:18.000Z",
     closeFinishedAt: "2026-11-02T10:00:20.000Z",
   };
   const uiProof = buildAmazonUiPhaseContextProof({
@@ -428,6 +435,25 @@ function makeBaseValidVerdictInput(): ComputeV12_4_3_7_2ReleaseVerdictsInput {
       skippedWithoutAttemptCount: 0,
       passedE2ETestCases: 34,
       totalE2ETestCases: 34,
+      failedE2ETestCases: 0,
+      receipts: Object.keys(STANDALONE_SERVER_OR_BROWSER_E2E_FILES).map((specFile, idx) => ({
+        specIndex: idx + 1,
+        specFile,
+        command: `npx vitest run ${specFile}`,
+        sourceSha: VALID_SHA,
+        startedAt: "2026-11-02T10:00:00.000Z",
+        endedAt: "2026-11-02T10:00:05.000Z",
+        durationMs: 5000,
+        exitCode: 0,
+        totalTests: idx === 0 ? 12 : 2,
+        passedTests: idx === 0 ? 12 : 2,
+        failedTests: 0,
+        skippedTests: 0,
+        classification: "PASS",
+        stdoutHash: `stdout_hash_${idx + 1}`,
+        stderrHash: `stderr_hash_${idx + 1}`,
+        ownedPidsReconciled: true,
+      })),
     },
     typecheckAndBuild: {
       codeSha: VALID_SHA,

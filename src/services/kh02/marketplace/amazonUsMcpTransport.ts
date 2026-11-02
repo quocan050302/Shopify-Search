@@ -924,6 +924,7 @@ export interface AmazonUiPhaseRecord {
     | "VERIFIED"
     | "SUCCEEDED"
     | "PARTIAL"
+    | "INCOMPLETE"
     | "UNKNOWN"
     | "FAILED"
     | "BLOCKED"
@@ -988,28 +989,51 @@ export interface AmazonUiContextProof {
   homeAndLocationReadback: Record<string, any> | null;
 }
 
+export function isValidAmazonRawSnapshotHash(hash: unknown): hash is string {
+  if (typeof hash !== "string") return false;
+  const trimmed = hash.trim();
+  if (trimmed.length < 8) return false;
+  if (/^(?:phony|fake|dummy|todo|null|undefined|invalid|forged|00000000)/i.test(trimmed)) {
+    return false;
+  }
+  if (/^(.)\1{7,}$/.test(trimmed)) {
+    return false;
+  }
+  return true;
+}
+
 /**
- * V12.4.3.7.2 P0-C: Reconciles Amazon UI preflight, homepage readback, search readback,
- * PDP readback, and session close into a single self-consistent 6-phase proof object.
- * Never uses truthy defaults (`?? true`) or hardcoded `stepsExecuted`.
+ * V12.4.3.7.2 P0-C / V12.4.3.7.3 P1-C: Reconciles Amazon UI preflight, homepage readback,
+ * search readback, PDP readback, and session close into a single self-consistent 6-phase proof object.
+ * Never uses truthy defaults (`?? true`), hardcoded `stepsExecuted`, or `evaluatedAt` as browser `observedAt`.
  */
 export function buildAmazonUiPhaseContextProof(input: {
   codeSha: string;
+  evaluatedAt?: string;
   workspaceId?: string | null;
   researchRunId?: string | null;
   sessionId?: string | null;
   targetUsZip?: string;
   homeAndLocationReadback?: Record<string, any> | null;
   searchCardsLedger?: Array<Record<string, any>> | null;
+  operationLedger?: Array<Record<string, any>> | null;
+  searchReadbackRecords?: Array<Record<string, any>> | null;
+  pdpReadbackRecords?: Array<Record<string, any>> | null;
   sessionLifecycle?: Record<string, any> | null;
   evaluatedPdpRows?: Array<Record<string, any>>;
   pdpCandidates?: Array<Record<string, any>>;
   internalGlowFetchUsed?: boolean;
 }): AmazonUiContextProof {
-  const evaluatedAt = new Date().toISOString();
+  const evaluatedAt = input.evaluatedAt || new Date().toISOString();
   const targetUsZip = input.targetUsZip || "95829";
   const hr = input.homeAndLocationReadback || null;
   const lc = input.sessionLifecycle || null;
+  const opLedger: Array<Record<string, any>> = Array.isArray(input.operationLedger)
+    ? input.operationLedger
+    : [];
+  const searchCardsLedger: Array<Record<string, any>> = Array.isArray(input.searchCardsLedger)
+    ? input.searchCardsLedger
+    : [];
   const pdpRows = Array.isArray(input.evaluatedPdpRows)
     ? input.evaluatedPdpRows
     : Array.isArray(input.pdpCandidates)
@@ -1072,7 +1096,11 @@ export function buildAmazonUiPhaseContextProof(input: {
       : hr?.attempted
       ? "browser_evaluate:#glow-ingress-block"
       : null,
-    observedAt: stepInitial?.completedAt || stepInitial?.invokedAt || null,
+    observedAt:
+      stepInitial?.completedAt ||
+      stepInitial?.invokedAt ||
+      hr?.initialHomeObservedAt ||
+      null,
     rawSnapshotHash: stepInitial?.snapshotHash || hr?.homeSnapshotHash || null,
     sessionId,
     status: !hr?.attempted
@@ -1090,7 +1118,9 @@ export function buildAmazonUiPhaseContextProof(input: {
   const alreadyTargetZipOnInitial = initialObservedZip === targetUsZip;
   const phase2: AmazonUiPhaseRecord = {
     phaseId: "phase2_zip_dialog_action",
-    attempted: Boolean(stepModal || alreadyTargetZipOnInitial),
+    attempted: Boolean(
+      stepModal || alreadyTargetZipOnInitial || (dialogOpened && applyClicked)
+    ),
     observedFields: {
       targetUsZip,
       locationDialogOpened: dialogOpened,
@@ -1104,9 +1134,20 @@ export function buildAmazonUiPhaseContextProof(input: {
       ? `${stepModal.toolName}:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate`
       : alreadyTargetZipOnInitial
       ? "DOM:#glow-ingress-block(ALREADY_TARGET_ZIP)"
+      : dialogOpened && applyClicked
+      ? "DOM:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate"
       : null,
-    observedAt: stepModal?.completedAt || stepInitial?.completedAt || null,
-    rawSnapshotHash: stepModal?.snapshotHash || stepInitial?.snapshotHash || null,
+    observedAt:
+      stepModal?.completedAt ||
+      hr?.zipSubmitObservedAt ||
+      stepInitial?.completedAt ||
+      hr?.initialHomeObservedAt ||
+      null,
+    rawSnapshotHash:
+      stepModal?.snapshotHash ||
+      stepInitial?.snapshotHash ||
+      hr?.homeSnapshotHash ||
+      null,
     sessionId,
     status: alreadyTargetZipOnInitial
       ? "VERIFIED"
@@ -1136,7 +1177,11 @@ export function buildAmazonUiPhaseContextProof(input: {
 
   const phase3: AmazonUiPhaseRecord = {
     phaseId: "phase3_home_readback",
-    attempted: Boolean(stepAfterHome || (hr?.attempted && alreadyTargetZipOnInitial)),
+    attempted: Boolean(
+      stepAfterHome ||
+        homeAfterZip ||
+        (hr?.attempted && alreadyTargetZipOnInitial)
+    ),
     observedFields: {
       observedDeliveryLocationText: homeAfterDeliveryText,
       observedZip: homeAfterZip,
@@ -1149,7 +1194,12 @@ export function buildAmazonUiPhaseContextProof(input: {
       : hr?.attempted
       ? "browser_evaluate:#glow-ingress-block"
       : null,
-    observedAt: stepAfterHome?.completedAt || stepInitial?.completedAt || null,
+    observedAt:
+      stepAfterHome?.completedAt ||
+      hr?.postReloadHomeObservedAt ||
+      stepInitial?.completedAt ||
+      hr?.initialHomeObservedAt ||
+      null,
     rawSnapshotHash: stepAfterHome?.snapshotHash || hr?.homeSnapshotHash || null,
     sessionId,
     status: homeZipMatches
@@ -1164,6 +1214,29 @@ export function buildAmazonUiPhaseContextProof(input: {
       : `Homepage readback did not confirm target ZIP ${targetUsZip} (observed=${homeAfterZip || "null"}).`,
   };
 
+  const searchOps = opLedger.filter(
+    (o) =>
+      o &&
+      (o.requestMode === "AUTHORIZED_SEARCH" ||
+        String(o.operationId || "").toLowerCase().includes("search"))
+  );
+  const perSearchReadbacks: Array<Record<string, any>> = Array.isArray(
+    input.searchReadbackRecords
+  )
+    ? input.searchReadbackRecords
+    : Array.isArray(hr?.perSearchReadbacks)
+    ? hr.perSearchReadbacks
+    : [];
+  const searchObservedAt =
+    (typeof hr?.searchReadbackObservedAt === "string" && hr.searchReadbackObservedAt) ||
+    (typeof perSearchReadbacks[0]?.observedAt === "string" &&
+      perSearchReadbacks[0].observedAt) ||
+    (typeof searchOps[0]?.completedAt === "string" && searchOps[0].completedAt) ||
+    (typeof searchOps[0]?.startedAt === "string" && searchOps[0].startedAt) ||
+    (typeof searchCardsLedger[0]?.observedAt === "string" &&
+      searchCardsLedger[0].observedAt) ||
+    null;
+
   const searchPageZip =
     typeof hr?.searchPageZip === "string" ? hr.searchPageZip : null;
   const searchPageCurrency =
@@ -1171,8 +1244,18 @@ export function buildAmazonUiPhaseContextProof(input: {
       ? hr.searchPageExplicitCurrency
       : null;
   const searchSnapshotHash =
-    typeof hr?.searchSnapshotHash === "string" ? hr.searchSnapshotHash : null;
-  const searchAttempted = Boolean(searchSnapshotHash || searchPageZip);
+    (typeof hr?.searchSnapshotHash === "string" && hr.searchSnapshotHash) ||
+    (typeof perSearchReadbacks[0]?.rawSnapshotHash === "string" &&
+      perSearchReadbacks[0].rawSnapshotHash) ||
+    (typeof searchOps[0]?.responseHash === "string" && searchOps[0].responseHash) ||
+    null;
+  const searchAttempted = Boolean(
+    searchSnapshotHash || searchPageZip || searchOps.length > 0 || perSearchReadbacks.length > 0
+  );
+  const searchSessionId =
+    (perSearchReadbacks[0]?.sessionId as string) ||
+    (searchOps[0]?.transportSessionId as string) ||
+    sessionId;
 
   const phase4: AmazonUiPhaseRecord = {
     phaseId: "phase4_search_readback",
@@ -1181,15 +1264,18 @@ export function buildAmazonUiPhaseContextProof(input: {
       searchPageZip,
       searchPageExplicitCurrency: searchPageCurrency,
       usZipMaintainedOnSearch: searchPageZip === targetUsZip,
+      searchOperationIds: searchOps.map((o) => o.operationId).filter(Boolean),
     },
     selectorOrTool: searchAttempted
       ? "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]"
       : null,
-    observedAt: searchAttempted ? evaluatedAt : null,
+    observedAt: searchAttempted ? searchObservedAt : null,
     rawSnapshotHash: searchSnapshotHash,
-    sessionId,
+    sessionId: searchSessionId,
     status: !searchAttempted
       ? "NOT_ATTEMPTED"
+      : !searchObservedAt || !isValidAmazonRawSnapshotHash(searchSnapshotHash)
+      ? "INCOMPLETE"
       : searchPageZip === targetUsZip
       ? searchPageCurrency === "USD"
         ? "VERIFIED"
@@ -1197,17 +1283,100 @@ export function buildAmazonUiPhaseContextProof(input: {
       : "UNKNOWN",
     reason: !searchAttempted
       ? "Search page readback not recorded."
-      : `Search page header ZIP=${searchPageZip || "null"}, searchExplicitCurrency=${searchPageCurrency || "UNKNOWN"}.`,
+      : !searchObservedAt
+      ? "Search page readback missing original pre-close observation timestamp."
+      : `Search page header ZIP=${searchPageZip || "null"}, searchExplicitCurrency=${searchPageCurrency || "UNKNOWN"} at ${searchObservedAt}.`,
   };
+
+  const pdpOps = opLedger.filter(
+    (o) =>
+      o &&
+      o.requestMode !== "AUTHORIZED_SEARCH" &&
+      !String(o.operationId || "").toLowerCase().includes("search")
+  );
+  const perPdpReadbacksFromHr: Array<Record<string, any>> = Array.isArray(
+    input.pdpReadbackRecords
+  )
+    ? input.pdpReadbackRecords
+    : Array.isArray(hr?.perPdpReadbacks)
+    ? hr.perPdpReadbacks
+    : [];
+
+  const perPdpRecords = pdpRows.map((r, idx) => {
+    const matchPdpOp =
+      pdpOps.find((o) => o && r?.candidateId && o.candidateId === r.candidateId) ||
+      pdpOps[idx] ||
+      null;
+    const matchHrReadback =
+      perPdpReadbacksFromHr.find((p) => p && r?.asin && p.asin === r.asin) ||
+      perPdpReadbacksFromHr[idx] ||
+      null;
+    const recOpId =
+      r?.operationId !== undefined
+        ? r.operationId
+        : r?.providerInvocationRef ||
+          matchPdpOp?.operationId ||
+          matchHrReadback?.operationId ||
+          hr?.defaultPdpOperationId ||
+          null;
+    const recObsAt =
+      r?.observedAt !== undefined
+        ? r.observedAt
+        : matchHrReadback?.observedAt ||
+          matchPdpOp?.completedAt ||
+          matchPdpOp?.startedAt ||
+          (idx === 0 ? hr?.pdpReadbackObservedAt : null) ||
+          null;
+    const recHash =
+      r?.rawEvidenceHash !== undefined
+        ? r.rawEvidenceHash
+        : r?.rawSnapshotHash !== undefined
+        ? r.rawSnapshotHash
+        : matchHrReadback?.rawSnapshotHash ||
+          matchPdpOp?.responseHash ||
+          (idx === 0 ? hr?.pdpSnapshotHash : null) ||
+          null;
+    const recSessionId =
+      r?.transportSessionId ||
+      matchPdpOp?.transportSessionId ||
+      matchHrReadback?.sessionId ||
+      sessionId;
+    return {
+      candidateId: r?.candidateId || null,
+      operationId: recOpId,
+      asin: r?.asin || null,
+      observedAt: recObsAt,
+      rawSnapshotHash: recHash,
+      observedDeliveryPostalCode: r?.observedDeliveryPostalCode ?? null,
+      verifiedDeliveryMarket: r?.verifiedDeliveryMarket ?? null,
+      price: typeof r?.price === "number" ? r.price : null,
+      currency: r?.currency ?? null,
+      sessionId: recSessionId,
+    };
+  });
 
   const pdpPageZipFromHr =
     typeof hr?.pdpPageZip === "string" ? hr.pdpPageZip : null;
   const pdpCurrencyFromHr =
     typeof hr?.pdpExplicitCurrency === "string" ? hr.pdpExplicitCurrency : null;
   const pdpSnapshotHash =
-    typeof hr?.pdpSnapshotHash === "string"
-      ? hr.pdpSnapshotHash
-      : (pdpRows[0]?.rawEvidenceHash as string) || null;
+    (typeof hr?.pdpSnapshotHash === "string" && hr.pdpSnapshotHash) ||
+    (typeof perPdpRecords[0]?.rawSnapshotHash === "string" &&
+      perPdpRecords[0].rawSnapshotHash) ||
+    null;
+
+  const pdpObservedAt =
+    (typeof hr?.pdpReadbackObservedAt === "string" && hr.pdpReadbackObservedAt) ||
+    (perPdpRecords
+      .map((r) => r.observedAt)
+      .filter((t): t is string => typeof t === "string" && t.length > 0)
+      .slice(-1)[0] ??
+      null) ||
+    (pdpOps
+      .map((o) => o?.completedAt || o?.startedAt)
+      .filter((t): t is string => typeof t === "string" && t.length > 0)
+      .slice(-1)[0] ??
+      null);
 
   const pdpZipsObserved = pdpRows
     .map((r) => r?.observedDeliveryPostalCode)
@@ -1219,6 +1388,7 @@ export function buildAmazonUiPhaseContextProof(input: {
       Number.isFinite(r.price) &&
       r.price > 0
   );
+  // Never borrow one PDP's ZIP if another evaluated PDP has a non-matching ZIP; only use pdpZipsObserved when present on PDP
   const effectivePdpZip =
     pdpPageZipFromHr || (pdpZipsObserved.length > 0 ? pdpZipsObserved[0] : null);
   const effectivePdpCurrency =
@@ -1227,8 +1397,26 @@ export function buildAmazonUiPhaseContextProof(input: {
       ? "USD"
       : (pdpRows.find((r) => typeof r?.currency === "string")?.currency as string) ||
         null);
-  const pdpAttempted = Boolean(pdpSnapshotHash || pdpRows.length > 0);
+  const pdpAttempted = Boolean(
+    pdpSnapshotHash || pdpRows.length > 0 || pdpOps.length > 0
+  );
   const explicitCurrencySource = String(hr?.explicitCurrencySource || "");
+
+  const anyPdpRecordIncomplete =
+    perPdpRecords.length > 0 &&
+    perPdpRecords.some(
+      (rec) =>
+        !rec.asin ||
+        !rec.operationId ||
+        !rec.observedAt ||
+        !isValidAmazonRawSnapshotHash(rec.rawSnapshotHash)
+    );
+  const pdpPhaseIncomplete =
+    pdpAttempted &&
+    (!pdpObservedAt ||
+      !isValidAmazonRawSnapshotHash(pdpSnapshotHash) ||
+      anyPdpRecordIncomplete);
+  const pdpSessionId = perPdpRecords[0]?.sessionId || sessionId;
 
   const phase5: AmazonUiPhaseRecord = {
     phaseId: "phase5_pdp_readback",
@@ -1240,15 +1428,18 @@ export function buildAmazonUiPhaseContextProof(input: {
       pdpEvaluatedCount: pdpRows.length,
       pdpNumericUsdPriceCount: pdpUsdRows.length,
       asinsObserved: pdpRows.map((r) => r?.asin).filter(Boolean),
+      perPdpRecords,
     },
     selectorOrTool: pdpAttempted
       ? "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]"
       : null,
-    observedAt: pdpAttempted ? evaluatedAt : null,
+    observedAt: pdpAttempted ? pdpObservedAt : null,
     rawSnapshotHash: pdpSnapshotHash,
-    sessionId,
+    sessionId: pdpSessionId,
     status: !pdpAttempted
       ? "NOT_ATTEMPTED"
+      : pdpPhaseIncomplete
+      ? "INCOMPLETE"
       : effectivePdpZip === targetUsZip &&
         effectivePdpCurrency === "USD" &&
         explicitCurrencySource !== "SYMBOL_ONLY_UNVERIFIED" &&
@@ -1259,26 +1450,35 @@ export function buildAmazonUiPhaseContextProof(input: {
       : "FAILED",
     reason: !pdpAttempted
       ? "No PDP readback recorded."
-      : `PDP readback observed ZIP=${effectivePdpZip || "null"}, currency=${effectivePdpCurrency || "null"} (usdPricedRows=${pdpUsdRows.length}/${pdpRows.length}).`,
+      : pdpPhaseIncomplete
+      ? "PDP readback is missing original operation ID, pre-close observation timestamp, or raw snapshot hash."
+      : `PDP readback observed ZIP=${effectivePdpZip || "null"}, currency=${effectivePdpCurrency || "null"} (usdPricedRows=${pdpUsdRows.length}/${pdpRows.length}) at ${pdpObservedAt}.`,
   };
 
   const closedCleanly = Boolean(lc?.closedCleanly === true || lc?.mcpSessionClosedCleanly === true);
   const pidTerminated = Boolean(lc?.ownedChildPidTerminated === true);
   const allOpsSameSession = Boolean(lc?.allLiveOpsMatchSessionId !== false && sessionId);
+  const closeStartedAt = (lc?.closeStartedAt as string) || null;
+  const closeFinishedAt = (lc?.closeFinishedAt as string) || null;
+  const lastToolCompletedAt = (lc?.lastToolCompletedAt as string) || null;
+  const sessionStartedAt = (lc?.startedAt as string) || null;
 
   const phase6: AmazonUiPhaseRecord = {
     phaseId: "phase6_post_session_close",
     attempted: Boolean(lc),
     observedFields: {
-      sessionId,
+      sessionId: (lc?.sessionId as string) || sessionId,
       ownedChildPid,
+      startedAt: sessionStartedAt,
+      lastToolCompletedAt,
+      closeStartedAt,
+      closeFinishedAt,
       mcpSessionClosedCleanly: closedCleanly,
       ownedChildPidTerminated: pidTerminated,
       allLiveOpsMatchSessionId: allOpsSameSession,
-      closeFinishedAt: lc?.closeFinishedAt || null,
     },
     selectorOrTool: lc ? "browser_close+SIGTERM_WAIT_EXIT" : null,
-    observedAt: (lc?.closeFinishedAt as string) || evaluatedAt,
+    observedAt: closeFinishedAt,
     rawSnapshotHash: sessionId
       ? crypto
           .createHash("sha256")
@@ -1293,10 +1493,10 @@ export function buildAmazonUiPhaseContextProof(input: {
           )
           .digest("hex")
       : null,
-    sessionId,
+    sessionId: (lc?.sessionId as string) || sessionId,
     status: !lc
       ? "NOT_ATTEMPTED"
-      : closedCleanly && pidTerminated && allOpsSameSession
+      : closedCleanly && pidTerminated && allOpsSameSession && Boolean(closeFinishedAt)
       ? "VERIFIED"
       : "FAILED",
     reason: !lc
@@ -1312,12 +1512,14 @@ export function buildAmazonUiPhaseContextProof(input: {
       (phase2.status === "SUCCEEDED" || phase2.status === "VERIFIED") &&
       homeZipMatches &&
       phase5.attempted &&
+      phase5.status !== "INCOMPLETE" &&
       effectivePdpZip === targetUsZip
   );
 
   const finalEffectiveCurrencyUsdVerified = Boolean(
     !input.internalGlowFetchUsed &&
       phase5.attempted &&
+      phase5.status !== "INCOMPLETE" &&
       effectivePdpCurrency === "USD" &&
       explicitCurrencySource !== "SYMBOL_ONLY_UNVERIFIED" &&
       pdpUsdRows.length >= 1
@@ -1532,23 +1734,34 @@ export function validateAmazonUiContextProofConsistency(
 
     if (
       proof.finalZipVerdict === "PASS" &&
-      (!proof.observedDeliveryPostalCode ||
+      (proof.finalEffectiveUsDeliveryVerified !== true ||
+        !proof.observedDeliveryPostalCode ||
         (proof.targetUsZip && proof.observedDeliveryPostalCode !== proof.targetUsZip))
     ) {
       contradictions.push(
-        `FINAL_ZIP_VERDICT_PASS_WITH_MISSING_OR_MISMATCHED_ZIP(zip=${proof.observedDeliveryPostalCode},target=${proof.targetUsZip})`
+        `FINAL_ZIP_VERDICT_PASS_WITH_MISSING_OR_MISMATCHED_ZIP(zip=${proof.observedDeliveryPostalCode},target=${proof.targetUsZip},verified=${proof.finalEffectiveUsDeliveryVerified})`
       );
     }
 
     if (
       proof.finalUsdCommercialVerdict === "PASS" &&
-      (p5UsdCount < 1 ||
+      (proof.finalEffectiveCurrencyUsdVerified !== true ||
+        p5UsdCount < 1 ||
         proof.observedDisplayedCurrencyCode !== "USD" ||
         (p5ObsCurrencies && !p5ObsCurrencies.includes("USD")))
     ) {
       contradictions.push(
-        `FINAL_USD_VERDICT_PASS_WITHOUT_CONFIRMED_USD_PDP(usdCount=${p5UsdCount},curr=${proof.observedDisplayedCurrencyCode})`
+        `FINAL_USD_VERDICT_PASS_WITHOUT_CONFIRMED_USD_PDP(usdCount=${p5UsdCount},curr=${proof.observedDisplayedCurrencyCode},verified=${proof.finalEffectiveCurrencyUsdVerified})`
       );
+    }
+
+    if (
+      (proof.finalUsdCommercialVerdict === "PASS" ||
+        proof.finalEffectiveCurrencyUsdVerified === true) &&
+      (proof.explicitCurrencySource === "SYMBOL_ONLY_UNVERIFIED" ||
+        hr?.explicitCurrencySource === "SYMBOL_ONLY_UNVERIFIED")
+    ) {
+      contradictions.push("USD_VERIFIED_FROM_SYMBOL_ONLY_UNVERIFIED");
     }
 
     if (
@@ -1573,6 +1786,157 @@ export function validateAmazonUiContextProofConsistency(
         phases.phase6_post_session_close?.observedFields?.ownedChildPidTerminated !== true)
     ) {
       contradictions.push("MCP_SESSION_OR_CHILD_PID_NOT_CLEANLY_TERMINATED");
+    }
+
+    const p1 = phases.phase1_initial_home;
+    const p2 = phases.phase2_zip_dialog_action;
+    const p3 = phases.phase3_home_readback;
+    const p4 = phases.phase4_search_readback;
+    const p5 = phases.phase5_pdp_readback;
+    const p6 = phases.phase6_post_session_close;
+
+    // A20: Missing or phony rawSnapshotHash on attempted browser phases
+    if (p1?.attempted === true && !isValidAmazonRawSnapshotHash(p1?.rawSnapshotHash)) {
+      contradictions.push("MISSING_OR_PHONY_RAW_SNAPSHOT_HASH_PHASE1");
+    }
+    if (p3?.attempted === true && !isValidAmazonRawSnapshotHash(p3?.rawSnapshotHash)) {
+      contradictions.push("MISSING_OR_PHONY_RAW_SNAPSHOT_HASH_PHASE3");
+    }
+    if (p4?.attempted === true && !isValidAmazonRawSnapshotHash(p4?.rawSnapshotHash)) {
+      contradictions.push("MISSING_OR_PHONY_RAW_SNAPSHOT_HASH_PHASE4");
+    }
+    if (p5?.attempted === true && !isValidAmazonRawSnapshotHash(p5?.rawSnapshotHash)) {
+      contradictions.push("MISSING_OR_PHONY_RAW_SNAPSHOT_HASH_PHASE5");
+    }
+
+    // A17: Phase 4 / Phase 5 incomplete or missing operation timestamp/hash
+    if (
+      p4?.attempted === true &&
+      (p4?.status === "INCOMPLETE" ||
+        typeof p4?.observedAt !== "string" ||
+        p4.observedAt.trim().length === 0)
+    ) {
+      contradictions.push("PHASE4_INCOMPLETE_MISSING_SEARCH_OP_TIMESTAMP");
+    }
+    if (
+      p5?.attempted === true &&
+      (p5?.status === "INCOMPLETE" ||
+        typeof p5?.observedAt !== "string" ||
+        p5.observedAt.trim().length === 0 ||
+        !isValidAmazonRawSnapshotHash(p5?.rawSnapshotHash))
+    ) {
+      contradictions.push("PHASE5_INCOMPLETE_MISSING_PDP_OP_TIMESTAMP_OR_HASH");
+    }
+
+    // A16: Phase 4 or Phase 5 observedAt synthesized from post-close report evaluatedAt
+    if (typeof proof.evaluatedAt === "string" && proof.evaluatedAt.trim().length > 0) {
+      if (p4?.observedAt && p4.observedAt === proof.evaluatedAt) {
+        contradictions.push("PHASE4_OBSERVED_AT_EQUALS_REPORT_EVALUATED_AT");
+      }
+      if (p5?.observedAt && p5.observedAt === proof.evaluatedAt) {
+        contradictions.push("PHASE5_OBSERVED_AT_EQUALS_REPORT_EVALUATED_AT");
+      }
+    }
+
+    // A15 & A18: Chronology ordering across phases and MCP session lifecycle
+    const parseIsoMs = (iso: unknown): number =>
+      typeof iso === "string" && iso.trim().length > 0 ? Date.parse(iso) : NaN;
+    const p1Ms = parseIsoMs(p1?.observedAt);
+    const p2Ms = parseIsoMs(p2?.observedAt);
+    const p3Ms = parseIsoMs(p3?.observedAt);
+    const p4Ms = parseIsoMs(p4?.observedAt);
+    const p5Ms = parseIsoMs(p5?.observedAt);
+    const lastToolMs = parseIsoMs(
+      p6?.observedFields?.lastToolCompletedAt ?? proof.lastToolCompletedAt
+    );
+    const closeStartMs = parseIsoMs(
+      p6?.observedFields?.closeStartedAt ?? proof.closeStartedAt
+    );
+    const closeFinishMs = parseIsoMs(
+      p6?.observedFields?.closeFinishedAt ?? p6?.observedAt ?? proof.closeFinishedAt
+    );
+
+    if (Number.isFinite(p1Ms) && Number.isFinite(p2Ms) && p1Ms > p2Ms) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE1_AFTER_PHASE2");
+    }
+    if (Number.isFinite(p2Ms) && Number.isFinite(p3Ms) && p2Ms > p3Ms) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE2_AFTER_PHASE3");
+    }
+    if (Number.isFinite(p3Ms) && Number.isFinite(p4Ms) && p3Ms > p4Ms) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE3_AFTER_PHASE4");
+    }
+    if (Number.isFinite(p4Ms) && Number.isFinite(p5Ms) && p4Ms > p5Ms) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE4_AFTER_PHASE5");
+    }
+    if (Number.isFinite(p4Ms) && Number.isFinite(closeStartMs) && p4Ms > closeStartMs) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE4_AFTER_CLOSE_STARTED");
+    }
+    if (Number.isFinite(p4Ms) && Number.isFinite(closeFinishMs) && p4Ms > closeFinishMs) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE4_AFTER_CLOSE_FINISHED");
+    }
+    if (Number.isFinite(p5Ms) && Number.isFinite(lastToolMs) && p5Ms > lastToolMs) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE5_AFTER_LAST_TOOL_COMPLETED");
+    }
+    if (Number.isFinite(p5Ms) && Number.isFinite(closeStartMs) && p5Ms > closeStartMs) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE5_AFTER_CLOSE_STARTED");
+    }
+    if (Number.isFinite(p5Ms) && Number.isFinite(closeFinishMs) && p5Ms > closeFinishMs) {
+      contradictions.push("CHRONOLOGY_VIOLATION_PHASE5_AFTER_CLOSE_FINISHED");
+    }
+    if (
+      Number.isFinite(lastToolMs) &&
+      Number.isFinite(closeStartMs) &&
+      closeStartMs < lastToolMs
+    ) {
+      contradictions.push(
+        "CHRONOLOGY_VIOLATION_CLOSE_STARTED_BEFORE_LAST_TOOL_COMPLETED"
+      );
+    }
+    if (
+      Number.isFinite(closeStartMs) &&
+      Number.isFinite(closeFinishMs) &&
+      closeFinishMs < closeStartMs
+    ) {
+      contradictions.push(
+        "CHRONOLOGY_VIOLATION_CLOSE_FINISHED_BEFORE_CLOSE_STARTED"
+      );
+    }
+
+    // A19: SessionId consistency across phases and PDP records
+    const phaseSessionIds = [
+      proof.sessionId,
+      p1?.sessionId,
+      p2?.sessionId,
+      p3?.sessionId,
+      p4?.sessionId,
+      p5?.sessionId,
+      p6?.sessionId,
+    ].filter((s): s is string => typeof s === "string" && s.trim().length > 0);
+    if (new Set(phaseSessionIds).size > 1) {
+      contradictions.push("SESSION_ID_MISMATCH_ACROSS_PHASES");
+    }
+
+    const perPdpRecords = Array.isArray(p5?.observedFields?.perPdpRecords)
+      ? p5.observedFields.perPdpRecords
+      : [];
+    for (const rec of perPdpRecords) {
+      if (
+        rec?.sessionId &&
+        proof.sessionId &&
+        rec.sessionId !== proof.sessionId
+      ) {
+        contradictions.push("SESSION_ID_MISMATCH_IN_PDP_RECORD");
+      }
+      if (
+        !rec?.observedAt ||
+        !isValidAmazonRawSnapshotHash(rec?.rawSnapshotHash)
+      ) {
+        contradictions.push("INVALID_PDP_RECORD_TIMESTAMP_OR_HASH");
+      }
+      const recMs = parseIsoMs(rec?.observedAt);
+      if (Number.isFinite(recMs) && Number.isFinite(closeFinishMs) && recMs > closeFinishMs) {
+        contradictions.push("CHRONOLOGY_VIOLATION_PDP_RECORD_AFTER_CLOSE_FINISHED");
+      }
     }
   } else {
     contradictions.push("MISSING_SIX_PHASE_UI_PROOF");
@@ -1644,6 +2008,21 @@ export interface PlaywrightMcpHandshakeProof {
     homeSnapshotHash?: string | null;
     searchSnapshotHash?: string | null;
     pdpSnapshotHash?: string | null;
+    searchReadbackObservedAt?: string | null;
+    pdpReadbackObservedAt?: string | null;
+    perSearchReadbacks?: Array<{
+      url: string;
+      observedAt: string;
+      rawSnapshotHash: string;
+      sessionId: string;
+    }>;
+    perPdpReadbacks?: Array<{
+      url: string;
+      asin: string | null;
+      observedAt: string;
+      rawSnapshotHash: string;
+      sessionId: string;
+    }>;
     uiActionLedger?: AmazonUiLocationActionStep[];
     notes?: string[];
   } | null;
@@ -2554,6 +2933,25 @@ export async function connectAmazonPlaywrightMcp(
 
         let resolvedCanonicalUrl = canonicalMatch?.[1] || urlMatch?.[1] || url;
         const isSearchNav = /\/s(?:\?|\/|$)/i.test(url);
+        if (handshakeProof.homeAndLocationReadback && lastToolCompletedAt) {
+          const snapTextHash = crypto
+            .createHash("sha256")
+            .update(textItems || url, "utf8")
+            .digest("hex");
+          if (isSearchNav) {
+            handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
+              lastToolCompletedAt;
+            if (!handshakeProof.homeAndLocationReadback.searchSnapshotHash) {
+              handshakeProof.homeAndLocationReadback.searchSnapshotHash = snapTextHash;
+            }
+          } else {
+            handshakeProof.homeAndLocationReadback.pdpReadbackObservedAt =
+              lastToolCompletedAt;
+            if (!handshakeProof.homeAndLocationReadback.pdpSnapshotHash) {
+              handshakeProof.homeAndLocationReadback.pdpSnapshotHash = snapTextHash;
+            }
+          }
+        }
         if (
           isPinnedOfficialMcp &&
           discoveredTools.includes("browser_evaluate") &&
@@ -2561,6 +2959,11 @@ export async function connectAmazonPlaywrightMcp(
           !structuredLineMatch?.[1]
         ) {
           try {
+            const evalPdpInvokedAt = new Date().toISOString();
+            const evalPdpReqHash = crypto
+              .createHash("sha256")
+              .update(JSON.stringify({ tool: "browser_evaluate", kind: "pdp", url }), "utf8")
+              .digest("hex");
             const evalRes = await client!.callTool({
               name: "browser_evaluate",
               arguments: {
@@ -2696,6 +3099,19 @@ export async function connectAmazonPlaywrightMcp(
                 }`,
               },
             });
+            lastToolCompletedAt = new Date().toISOString();
+            handshakeProof.lastToolCompletedAt = lastToolCompletedAt;
+            const evalPdpRespHash = crypto
+              .createHash("sha256")
+              .update(JSON.stringify(evalRes || null), "utf8")
+              .digest("hex");
+            toolInvocationRecords.push({
+              toolName: "browser_evaluate",
+              url,
+              invokedAt: evalPdpInvokedAt,
+              requestHash: evalPdpReqHash,
+              responseHash: evalPdpRespHash,
+            });
             const evalText = ((evalRes as any)?.content || [])
               .filter((c: any) => c && typeof c.text === "string")
               .map((c: any) => c.text)
@@ -2725,10 +3141,24 @@ export async function connectAmazonPlaywrightMcp(
                 .createHash("sha256")
                 .update(JSON.stringify(domObj), "utf8")
                 .digest("hex");
+              const extractedAsin =
+                parsedStructuredData?.asin || validateAmazonUsProductUrl(url).extractedAsin;
               if (handshakeProof.homeAndLocationReadback) {
                 handshakeProof.homeAndLocationReadback.pdpPageZip = pdpZipObserved;
                 handshakeProof.homeAndLocationReadback.pdpExplicitCurrency = explicitPdpCurrency;
                 handshakeProof.homeAndLocationReadback.pdpSnapshotHash = pdpSnapHash;
+                handshakeProof.homeAndLocationReadback.pdpReadbackObservedAt =
+                  lastToolCompletedAt;
+                if (!Array.isArray(handshakeProof.homeAndLocationReadback.perPdpReadbacks)) {
+                  handshakeProof.homeAndLocationReadback.perPdpReadbacks = [];
+                }
+                handshakeProof.homeAndLocationReadback.perPdpReadbacks.push({
+                  url,
+                  asin: extractedAsin || null,
+                  observedAt: lastToolCompletedAt,
+                  rawSnapshotHash: pdpSnapHash,
+                  sessionId,
+                });
                 if (
                   pdpZipObserved &&
                   pdpZipObserved === handshakeProof.homeAndLocationReadback.requestedPostalCode &&
@@ -2743,7 +3173,7 @@ export async function connectAmazonPlaywrightMcp(
               }
               parsedStructuredData = {
                 ...parsedStructuredData,
-                asin: parsedStructuredData?.asin || validateAmazonUsProductUrl(url).extractedAsin,
+                asin: extractedAsin,
                 productTitle: domObj.productTitle || parsedStructuredData?.productTitle || null,
                 brand: domObj.brand || parsedStructuredData?.brand || null,
                 modelNumber: domObj.modelNumber || parsedStructuredData?.modelNumber || null,
@@ -2844,6 +3274,14 @@ export async function connectAmazonPlaywrightMcp(
 
         if (isPinnedOfficialMcp && discoveredTools.includes("browser_evaluate")) {
           try {
+            const evalSearchInvokedAt = new Date().toISOString();
+            const evalSearchReqHash = crypto
+              .createHash("sha256")
+              .update(
+                JSON.stringify({ tool: "browser_evaluate", kind: "search", url: searchUrl }),
+                "utf8"
+              )
+              .digest("hex");
             const domSearchRes = await client!.callTool({
               name: "browser_evaluate",
               arguments: {
@@ -2946,6 +3384,19 @@ export async function connectAmazonPlaywrightMcp(
                 }`,
               },
             });
+            lastToolCompletedAt = new Date().toISOString();
+            handshakeProof.lastToolCompletedAt = lastToolCompletedAt;
+            const evalSearchRespHash = crypto
+              .createHash("sha256")
+              .update(JSON.stringify(domSearchRes || null), "utf8")
+              .digest("hex");
+            toolInvocationRecords.push({
+              toolName: "browser_evaluate",
+              url: searchUrl,
+              invokedAt: evalSearchInvokedAt,
+              requestHash: evalSearchReqHash,
+              responseHash: evalSearchRespHash,
+            });
             const domSearchText = ((domSearchRes as any)?.content || [])
               .filter((c: any) => c && typeof c.text === "string")
               .map((c: any) => c.text)
@@ -2965,6 +3416,17 @@ export async function connectAmazonPlaywrightMcp(
                 handshakeProof.homeAndLocationReadback.searchPageExplicitCurrency =
                   domObj.explicitCurrency || null;
                 handshakeProof.homeAndLocationReadback.searchSnapshotHash = searchSnapHash;
+                handshakeProof.homeAndLocationReadback.searchReadbackObservedAt =
+                  lastToolCompletedAt;
+                if (!Array.isArray(handshakeProof.homeAndLocationReadback.perSearchReadbacks)) {
+                  handshakeProof.homeAndLocationReadback.perSearchReadbacks = [];
+                }
+                handshakeProof.homeAndLocationReadback.perSearchReadbacks.push({
+                  url: searchUrl,
+                  observedAt: lastToolCompletedAt,
+                  rawSnapshotHash: searchSnapHash,
+                  sessionId,
+                });
               }
               prodSnap.snapshot.structuredData = {
                 ...prodSnap.snapshot.structuredData,
