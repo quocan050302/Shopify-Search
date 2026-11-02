@@ -1,0 +1,160 @@
+{
+  "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "evaluatedAt": "2026-11-02T15:14:47.796Z",
+  "priorTestedCodeSha": "164f9d0d1a6207cbb5a00490a7154396b5d07836",
+  "diffStatVsPriorTestedCodeSha": ".../00_GIT_BRANCH_CODE_SHA_PRECHECK.json           |    17 +\n .../01_RUNTIME_DISK_RAM_MCP_VENV_PRECHECK.json     |    40 +\n .../02_STANDALONE_AMAZON_REFERENCE_INTEGRITY.json  |   145 +\n .../03_HTTP_SERVER_AND_WORKER_PROCESS_PROOF.json   |    19 +\n .../04_HTTP_POST_JOB_CLAIM_AND_FENCING_LEDGER.json |   115 +\n .../05_LIVE_ONLY_META_QUERY_EXECUTION_LEDGER.json  |  1605 +++\n ...ETA_OBSERVATION_TO_AD_TO_CANDIDATE_LINEAGE.json |   867 ++\n ...CT_LIVE_SHORTLIST_AND_FAMILY_DEDUPLICATION.json |    98 +\n ...8_CORROBORATED_RUN_SHORTLIST_IF_APPLICABLE.json |    58 +\n ..._AMAZON_UI_LOCATION_CURRENCY_PHASE_CONTEXT.json |   364 +\n ...0_AMAZON_TARGET_SELECTION_AND_SEARCH_CARDS.json |  1626 +++\n ...ON_OBSERVED_HREF_PDP_AND_TWO_TIER_VERDICTS.json |    70 +\n ...12_AMAZON_MCP_SAME_SESSION_LIFECYCLE_PROOF.json |    23 +\n .../13_DB_HTTP_GET_CHROMIUM_DOM_RELOAD_PARITY.json |   256 +\n ...14_SECONDARY_NICHE_HOME_ORGANIZATION_PROOF.json |    39 +\n .../15_WALMART_PAUSED_AND_NON_INFLATION_PROOF.json |   368 +\n ...6_TARGETED_V12_4_3_7_2_TEST_MATRIX_RESULTS.json |   549 +\n ..._FULL_REPOSITORY_REGRESSION_SHARD_RECEIPTS.json |    59 +\n .../18_ALL_12_E2E_SPEC_RECEIPTS.json               |   230 +\n ...9_FRESH_TYPESCRIPT_AND_NEXT_BUILD_RECEIPTS.json |    15 +\n .../20_HISTORICAL_DEV_REPLAY_2026_10_24.json       |    43 +\n .../21_HISTORICAL_HOLDOUT_REPLAY_2026_10_30.json   |   128 +\n .../22_POINT_IN_TIME_NO_LOOKAHEAD_AUDIT.json       |    12 +\n ...3_EXPANDED_NEGATIVE_MUTATION_SUITE_RESULTS.json |  1131 ++\n .../24_INDEPENDENT_VERDICT_RECOMPUTATION.json      |   982 ++\n ...5_FULL_ROUTE_SPECIFIC_BUSINESS_GATE_STATUS.json |   528 +\n .../26_PROCESS_PID_DISK_RAM_RECONCILIATION.json    |   257 +\n .../27_SHA256_MANIFEST.json                        |   157 +\n .../28_FINAL_OWNER_REPORT_VI.md                    |    52 +\n .../29_COMMIT_PUSH_REMOTE_HEAD_PROOF.json          |    10 +\n .../BACKTEST_REPLAY_PROVENANCE.json                |    34 +\n .../CALL_GRAPH_AND_FIELD_PROVENANCE.md             |    37 +\n .../POLICY_SCENARIO_RESULTS.json                   |   406 +\n .../REAL_HISTORICAL_DEV_BACKTEST.json              |   260 +\n .../REAL_HISTORICAL_HOLDOUT_BACKTEST.json          | 10809 +++++++++++++++++++\n scripts/kh02/acceptanceTruth.ts                    |  1182 +-\n scripts/kh02/runAcceptanceV12_4_3_7_1.ts           |    36 +-\n scripts/kh02/runAcceptanceV12_4_3_7_2.ts           |   547 +-\n scripts/kh02/validateClosureV12_4_3_7_2.ts         |  1732 +--\n .../kh02/marketplace/amazonUsMcpTransport.ts       |   526 +-\n .../kh02/marketplace/marketplaceEvidenceTypes.ts   |     1 +\n .../kh02/persistence/kh02PersistenceService.ts     |    21 +\n ...2_4_3_7_2_FinalAcceptanceTruthHardening.test.ts |    26 +\n ..._7_3_AmazonMcpSmokeChronologyFailClosed.test.ts |  1029 ++\n 44 files changed, 25276 insertions(+), 1233 deletions(-)",
+  "fixesVerified": {
+    "P1_A_e2ePerSpecReceiptValidation": true,
+    "P1_B_finalVerdictChronologyAndNoMutationsPending": true,
+    "P1_C_amazonSixPhasePreCloseObservationChronology": true,
+    "P1_D_amazonZipAndExplicitUsdStrictBooleans": true,
+    "P1_E_browserDomCandidateIdsNoDbFallback": true,
+    "P1_F_metaLiveObservationLineageReconciliation": true,
+    "P2_independentRawEvidenceValidatorAnd98Mutations": true
+  },
+  "standaloneReference": {
+    "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+    "evaluatedAt": "2026-11-02T15:14:47.754Z",
+    "rawFilesPresentOnDisk": false,
+    "checkedPaths": [
+      "FINAL_RESULT.json",
+      "operation-ledger.json",
+      "executed_test.py"
+    ],
+    "manifest": {
+      "schemaVersion": "1.0.0",
+      "releaseVersion": "12.4.3.7.1",
+      "referenceId": "REFERENCE_AMAZON_STANDALONE_2026_11_02",
+      "referenceOrigin": "USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT",
+      "referenceAvailability": "SUMMARY_AND_SCRIPT_ONLY",
+      "referenceRawHashVerified": false,
+      "referenceReplayStatus": "NOT_EXECUTED",
+      "standaloneReferenceStatus": "USER_REPORTED_SEARCH_TO_PDP_PASS",
+      "standaloneAppIntegrationStatus": "NOT_TESTED_BY_REFERENCE",
+      "rawBundleExpectedFiles": [
+        "run2-us/search.html",
+        "run2-us/pdp.html",
+        "FINAL_RESULT.json",
+        "operation-ledger.json",
+        "executed_test.py",
+        "MANIFEST.json"
+      ],
+      "reportedExecutionContext": {
+        "observedAt": "2026-11-02T06:44:09.248631Z",
+        "searchQuery": "automatic pet feeder with camera",
+        "searchUrl": "https://www.amazon.com/s?k=automatic+pet+feeder+with+camera",
+        "requestedPostalCode": "95829",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCurrency": "USD"
+      },
+      "reportedSearchCards": [
+        {
+          "rank": 1,
+          "asin": "B0D3XGHTJ5",
+          "title": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+          "brand": null,
+          "observedSearchHref": null,
+          "observedSearchHrefNote": "Exact long /dp/ search href was not materialized in summary-only report; never fabricate a synthetic observed href.",
+          "price": "$49.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 2,
+          "asin": "B0DCNNN5FC",
+          "title": "Automatic Cat Feeder with Camera 5G WiFi Timed Pet Feeder",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$69.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 3,
+          "asin": "B0HB9H7CXV",
+          "title": "Automatic Pet Feeder with Camera Dual Bowl Smart Dispenser",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$59.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 4,
+          "asin": "B0GSR1GTHW",
+          "title": "Smart Automatic Cat Food Dispenser with HD Camera 6L",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$54.99",
+          "currency": "USD",
+          "isSponsored": false
+        },
+        {
+          "rank": 5,
+          "asin": "B0GVSFS68N",
+          "title": "WiFi Automatic Pet Feeder with Camera for Cats and Small Dogs",
+          "brand": null,
+          "observedSearchHref": null,
+          "price": "$45.99",
+          "currency": "USD",
+          "isSponsored": false
+        }
+      ],
+      "reportedPdpObservation": {
+        "asin": "B0D3XGHTJ5",
+        "productTitle": "Automatic Cat Feeder with Camera: 1080P HD Video with Night Vision, 5G WiFi Pet Feeder with 2-Way Audio, 4L Timed Cat Food Dispenser (TD20)",
+        "brand": "faroro",
+        "modelNumber": "TD20",
+        "seller": "WECACO",
+        "price": 49.99,
+        "currency": "USD",
+        "availability": "In Stock",
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829",
+        "observedDeliveryPostalCode": "95829",
+        "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+        "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+        "derivedNormalizedCanonicalUrl": "https://www.amazon.com/dp/B0D3XGHTJ5"
+      },
+      "trustBoundaryPolicy": {
+        "fixtureObservationClass": "TEST_FIXTURE",
+        "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+        "forbiddenObservationClasses": [
+          "AUTHORIZED_LIVE"
+        ],
+        "canSatisfyCurrentRunLiveGate": false,
+        "canBackfillCurrentRunMissingCommercialFields": false,
+        "checkoutOrPurchaseClaim": false
+      }
+    },
+    "parserVerification": {
+      "observationClass": "TEST_FIXTURE",
+      "fixtureSource": "USER_REPORTED_REFERENCE_FIELDS",
+      "asin": "B0D3XGHTJ5",
+      "brand": "faroro",
+      "model": "TD20",
+      "seller": "WECACO",
+      "price": 49.99,
+      "currency": "USD",
+      "availability": "In Stock",
+      "observedDeliveryPostalCode": "95829",
+      "verifiedDeliveryMarket": "US",
+      "observedCanonicalUrl": "https://www.amazon.com/clp/B0D3XGHTJ5",
+      "canonicalUrlOrigin": "OBSERVED_CANONICAL",
+      "canonicalAmazonUrl": "https://www.amazon.com/dp/B0D3XGHTJ5",
+      "observedSearchHref": "https://www.amazon.com/faroro-Automatic-Cat-Feeder-Programmable/dp/B0D3XGHTJ5/ref=sr_1_1",
+      "observedSearchHrefOrigin": "OBSERVED_HREF",
+      "searchIdentityVerdict": "AMAZON_SEARCH_PDP_IDENTITY_VERIFIED",
+      "metaCandidateEquivalenceVerdict": "EXACT_PRODUCT",
+      "combinedIdentityVerdict": "META_TO_AMAZON_EXACT_PRODUCT_CORROBORATED",
+      "commercialUsStatus": "US_COMMERCIAL_VERIFIED",
+      "discoveredNotVerifiedAsins": [
+        "B0DCNNN5FC",
+        "B0HB9H7CXV",
+        "B0GSR1GTHW",
+        "B0GVSFS68N"
+      ]
+    },
+    "downgradeNegativeTestPassed": true
+  }
+}

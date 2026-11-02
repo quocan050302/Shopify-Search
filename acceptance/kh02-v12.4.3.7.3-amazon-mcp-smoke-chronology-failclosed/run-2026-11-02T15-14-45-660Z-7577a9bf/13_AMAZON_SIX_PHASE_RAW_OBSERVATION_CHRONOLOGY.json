@@ -1,0 +1,462 @@
+{
+  "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "evaluatedAt": "2026-11-02T15:18:52.363Z",
+  "workspaceId": "ws_v12_4_3_7_1_strict_live_1793632646693",
+  "researchRunId": "kh02_run_1793632647516_jpnvz",
+  "sessionId": "pw_mcp_mvzell53_e7733be6",
+  "ownedChildPid": 88598,
+  "internalGlowFetchUsed": false,
+  "targetUsZip": "95829",
+  "searchBoxReady": true,
+  "locationTriggerFound": true,
+  "dialogOpened": true,
+  "zipInputFilled": true,
+  "applyClicked": true,
+  "confirmationClicked": false,
+  "initialDeliveryHeaderText": "Deliver to Vietnam",
+  "finalDeliveryHeaderText": "Deliver to Sacramento 95829‌",
+  "observedDeliveryPostalCode": "95829",
+  "verifiedDeliveryMarket": "US",
+  "usDeliveryVerified": true,
+  "observedDisplayedCurrencyCode": "USD",
+  "currencyPreferenceVerifiedUsd": true,
+  "finalEffectiveUsDeliveryVerified": true,
+  "finalEffectiveCurrencyUsdVerified": true,
+  "status": "US_DISPLAYED_CONTEXT_VERIFIED",
+  "stepsExecuted": [
+    "NAVIGATE_HOME",
+    "WAIT_SEARCH_BOX_READY",
+    "WAIT_SEARCH_BOX_READY",
+    "READ_INITIAL_CONTEXT",
+    "OPEN_LOCATION_POPOVER_AND_APPLY_ZIP",
+    "REFRESH_AND_READBACK_AFTER_APPLY",
+    "REFRESH_AND_READBACK_AFTER_APPLY"
+  ],
+  "phase1_initial_home": {
+    "phaseId": "phase1_initial_home",
+    "attempted": true,
+    "observedFields": {
+      "searchBoxReady": true,
+      "deliveryLinkVisible": true,
+      "initialDeliveryText": "Deliver to Vietnam",
+      "initialObservedZip": null,
+      "initialExplicitCurrency": "VND",
+      "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop"
+    },
+    "selectorOrTool": "browser_evaluate:#twotabsearchtextbox,#nav-global-location-popover-link,#glow-ingress-block",
+    "observedAt": "2026-11-02T15:18:26.481Z",
+    "rawSnapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "SUCCEEDED",
+    "reason": "Initial home loaded (delivery='Deliver to Vietnam', currency='VND')."
+  },
+  "phase2_zip_dialog_action": {
+    "phaseId": "phase2_zip_dialog_action",
+    "attempted": true,
+    "observedFields": {
+      "targetUsZip": "95829",
+      "locationDialogOpened": true,
+      "zipFieldVisible": true,
+      "zipInputFilled": true,
+      "applyClicked": true,
+      "confirmationHandled": false,
+      "alreadyTargetZipOnInitial": false
+    },
+    "selectorOrTool": "browser_evaluate:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate",
+    "observedAt": "2026-11-02T15:18:31.353Z",
+    "rawSnapshotHash": "c6ec412ebb2fbdfd285991cc0ff605f37dd4d611251f94d67203a731a81d695b",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "SUCCEEDED",
+    "reason": "Opened location popover, entered 95829 in #GLUXZipUpdateInput, and clicked Apply."
+  },
+  "phase3_home_readback": {
+    "phaseId": "phase3_home_readback",
+    "attempted": true,
+    "observedFields": {
+      "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+      "observedZip": "95829",
+      "observedExplicitCurrency": "USD",
+      "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+      "usDeliveryVerifiedOnHome": true
+    },
+    "selectorOrTool": "browser_navigate:#glow-ingress-block,#icp-touch-link-cop",
+    "observedAt": "2026-11-02T15:18:33.463Z",
+    "rawSnapshotHash": "7519f18cea24f2a6b9fab55e2c1d80062f3e3b120f52954a9ff076d49886c3e4",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "VERIFIED",
+    "reason": "Homepage readback confirmed 'Deliver to Sacramento 95829‌' (ZIP=95829, homeExplicitCurrency=USD)."
+  },
+  "phase4_search_readback": {
+    "phaseId": "phase4_search_readback",
+    "attempted": true,
+    "observedFields": {
+      "searchPageZip": "95829",
+      "searchPageExplicitCurrency": null,
+      "usZipMaintainedOnSearch": true,
+      "searchOperationIds": [
+        "amz_op_kh02_run_1793632647516_jpnvz_cand_1212440541_mcp_search",
+        "amz_op_kh02_run_1793632647516_jpnvz_cand_1587534715_mcp_search"
+      ]
+    },
+    "selectorOrTool": "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]",
+    "observedAt": "2026-11-02T15:18:43.593Z",
+    "rawSnapshotHash": "f22afec72a95ae337ca783cd430ccf9c6984ba96e32a645f871104980bf04d5b",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "PARTIAL",
+    "reason": "Search page header ZIP=95829, searchExplicitCurrency=UNKNOWN at 2026-11-02T15:18:43.593Z."
+  },
+  "phase5_pdp_readback": {
+    "phaseId": "phase5_pdp_readback",
+    "attempted": true,
+    "observedFields": {
+      "pdpPageZip": "95829",
+      "pdpExplicitCurrency": "USD",
+      "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+      "pdpEvaluatedCount": 2,
+      "pdpNumericUsdPriceCount": 2,
+      "asinsObserved": [
+        "B0H1MB3YRQ",
+        "B0GR7P9CGR"
+      ],
+      "perPdpRecords": [
+        {
+          "candidateId": "cand_1212440541",
+          "operationId": "amz_inv_kh02_run_1793632647516_jpnvz_cand_1212440541_eb10f0ae5cf7",
+          "asin": "B0H1MB3YRQ",
+          "observedAt": "2026-11-02T15:18:37.319Z",
+          "rawSnapshotHash": "c00f8c8976da40e45c96ff6a859ec8ab5b8adffbfe648a373f4159c95fc867be",
+          "observedDeliveryPostalCode": "95829",
+          "verifiedDeliveryMarket": "US",
+          "price": 129.99,
+          "currency": "USD",
+          "sessionId": "pw_mcp_mvzell53_e7733be6"
+        },
+        {
+          "candidateId": "cand_1587534715",
+          "operationId": "amz_inv_kh02_run_1793632647516_jpnvz_cand_1587534715_b18cb1329103",
+          "asin": "B0GR7P9CGR",
+          "observedAt": "2026-11-02T15:18:43.598Z",
+          "rawSnapshotHash": "daeb1c99e20c9b2841bc6034ef5c69002585b2deb046e69489fff3bf7c9fa71e",
+          "observedDeliveryPostalCode": "95829",
+          "verifiedDeliveryMarket": "US",
+          "price": 84.95,
+          "currency": "USD",
+          "sessionId": "pw_mcp_mvzell53_e7733be6"
+        }
+      ]
+    },
+    "selectorOrTool": "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]",
+    "observedAt": "2026-11-02T15:18:46.497Z",
+    "rawSnapshotHash": "cf539a772408ee9c6e7d3aace8a5026ced34ce1ebe9eb45a971efadca0ceb01d",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "VERIFIED",
+    "reason": "PDP readback observed ZIP=95829, currency=USD (usdPricedRows=2/2) at 2026-11-02T15:18:46.497Z."
+  },
+  "phase6_post_session_close": {
+    "phaseId": "phase6_post_session_close",
+    "attempted": true,
+    "observedFields": {
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "ownedChildPid": 88598,
+      "startedAt": "2026-11-02T15:18:20.487Z",
+      "lastToolCompletedAt": "2026-11-02T15:18:46.497Z",
+      "closeStartedAt": "2026-11-02T15:18:46.500Z",
+      "closeFinishedAt": "2026-11-02T15:18:46.785Z",
+      "mcpSessionClosedCleanly": true,
+      "ownedChildPidTerminated": true,
+      "allLiveOpsMatchSessionId": true
+    },
+    "selectorOrTool": "browser_close+SIGTERM_WAIT_EXIT",
+    "observedAt": "2026-11-02T15:18:46.785Z",
+    "rawSnapshotHash": "b62529f16ab72bd50b4c5619b7b5900857c5bec40f1b1337b4ab2b9d78895e29",
+    "sessionId": "pw_mcp_mvzell53_e7733be6",
+    "status": "VERIFIED",
+    "reason": "Session pw_mcp_mvzell53_e7733be6 (PID=88598) closedCleanly=true, pidTerminated=true."
+  },
+  "phases": {
+    "phase1_initial_home": {
+      "phaseId": "phase1_initial_home",
+      "attempted": true,
+      "observedFields": {
+        "searchBoxReady": true,
+        "deliveryLinkVisible": true,
+        "initialDeliveryText": "Deliver to Vietnam",
+        "initialObservedZip": null,
+        "initialExplicitCurrency": "VND",
+        "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop"
+      },
+      "selectorOrTool": "browser_evaluate:#twotabsearchtextbox,#nav-global-location-popover-link,#glow-ingress-block",
+      "observedAt": "2026-11-02T15:18:26.481Z",
+      "rawSnapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "SUCCEEDED",
+      "reason": "Initial home loaded (delivery='Deliver to Vietnam', currency='VND')."
+    },
+    "phase2_zip_dialog_action": {
+      "phaseId": "phase2_zip_dialog_action",
+      "attempted": true,
+      "observedFields": {
+        "targetUsZip": "95829",
+        "locationDialogOpened": true,
+        "zipFieldVisible": true,
+        "zipInputFilled": true,
+        "applyClicked": true,
+        "confirmationHandled": false,
+        "alreadyTargetZipOnInitial": false
+      },
+      "selectorOrTool": "browser_evaluate:#nav-global-location-popover-link,#GLUXZipUpdateInput,#GLUXZipUpdate",
+      "observedAt": "2026-11-02T15:18:31.353Z",
+      "rawSnapshotHash": "c6ec412ebb2fbdfd285991cc0ff605f37dd4d611251f94d67203a731a81d695b",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "SUCCEEDED",
+      "reason": "Opened location popover, entered 95829 in #GLUXZipUpdateInput, and clicked Apply."
+    },
+    "phase3_home_readback": {
+      "phaseId": "phase3_home_readback",
+      "attempted": true,
+      "observedFields": {
+        "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+        "observedZip": "95829",
+        "observedExplicitCurrency": "USD",
+        "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+        "usDeliveryVerifiedOnHome": true
+      },
+      "selectorOrTool": "browser_navigate:#glow-ingress-block,#icp-touch-link-cop",
+      "observedAt": "2026-11-02T15:18:33.463Z",
+      "rawSnapshotHash": "7519f18cea24f2a6b9fab55e2c1d80062f3e3b120f52954a9ff076d49886c3e4",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "VERIFIED",
+      "reason": "Homepage readback confirmed 'Deliver to Sacramento 95829‌' (ZIP=95829, homeExplicitCurrency=USD)."
+    },
+    "phase4_search_readback": {
+      "phaseId": "phase4_search_readback",
+      "attempted": true,
+      "observedFields": {
+        "searchPageZip": "95829",
+        "searchPageExplicitCurrency": null,
+        "usZipMaintainedOnSearch": true,
+        "searchOperationIds": [
+          "amz_op_kh02_run_1793632647516_jpnvz_cand_1212440541_mcp_search",
+          "amz_op_kh02_run_1793632647516_jpnvz_cand_1587534715_mcp_search"
+        ]
+      },
+      "selectorOrTool": "browser_evaluate:#glow-ingress-block,[data-component-type=s-search-result]",
+      "observedAt": "2026-11-02T15:18:43.593Z",
+      "rawSnapshotHash": "f22afec72a95ae337ca783cd430ccf9c6984ba96e32a645f871104980bf04d5b",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "PARTIAL",
+      "reason": "Search page header ZIP=95829, searchExplicitCurrency=UNKNOWN at 2026-11-02T15:18:43.593Z."
+    },
+    "phase5_pdp_readback": {
+      "phaseId": "phase5_pdp_readback",
+      "attempted": true,
+      "observedFields": {
+        "pdpPageZip": "95829",
+        "pdpExplicitCurrency": "USD",
+        "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+        "pdpEvaluatedCount": 2,
+        "pdpNumericUsdPriceCount": 2,
+        "asinsObserved": [
+          "B0H1MB3YRQ",
+          "B0GR7P9CGR"
+        ],
+        "perPdpRecords": [
+          {
+            "candidateId": "cand_1212440541",
+            "operationId": "amz_inv_kh02_run_1793632647516_jpnvz_cand_1212440541_eb10f0ae5cf7",
+            "asin": "B0H1MB3YRQ",
+            "observedAt": "2026-11-02T15:18:37.319Z",
+            "rawSnapshotHash": "c00f8c8976da40e45c96ff6a859ec8ab5b8adffbfe648a373f4159c95fc867be",
+            "observedDeliveryPostalCode": "95829",
+            "verifiedDeliveryMarket": "US",
+            "price": 129.99,
+            "currency": "USD",
+            "sessionId": "pw_mcp_mvzell53_e7733be6"
+          },
+          {
+            "candidateId": "cand_1587534715",
+            "operationId": "amz_inv_kh02_run_1793632647516_jpnvz_cand_1587534715_b18cb1329103",
+            "asin": "B0GR7P9CGR",
+            "observedAt": "2026-11-02T15:18:43.598Z",
+            "rawSnapshotHash": "daeb1c99e20c9b2841bc6034ef5c69002585b2deb046e69489fff3bf7c9fa71e",
+            "observedDeliveryPostalCode": "95829",
+            "verifiedDeliveryMarket": "US",
+            "price": 84.95,
+            "currency": "USD",
+            "sessionId": "pw_mcp_mvzell53_e7733be6"
+          }
+        ]
+      },
+      "selectorOrTool": "browser_evaluate:#glow-ingress-block,#corePriceDisplay_desktop_feature_div,input[name=currencyOfPreference]",
+      "observedAt": "2026-11-02T15:18:46.497Z",
+      "rawSnapshotHash": "cf539a772408ee9c6e7d3aace8a5026ced34ce1ebe9eb45a971efadca0ceb01d",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "VERIFIED",
+      "reason": "PDP readback observed ZIP=95829, currency=USD (usdPricedRows=2/2) at 2026-11-02T15:18:46.497Z."
+    },
+    "phase6_post_session_close": {
+      "phaseId": "phase6_post_session_close",
+      "attempted": true,
+      "observedFields": {
+        "sessionId": "pw_mcp_mvzell53_e7733be6",
+        "ownedChildPid": 88598,
+        "startedAt": "2026-11-02T15:18:20.487Z",
+        "lastToolCompletedAt": "2026-11-02T15:18:46.497Z",
+        "closeStartedAt": "2026-11-02T15:18:46.500Z",
+        "closeFinishedAt": "2026-11-02T15:18:46.785Z",
+        "mcpSessionClosedCleanly": true,
+        "ownedChildPidTerminated": true,
+        "allLiveOpsMatchSessionId": true
+      },
+      "selectorOrTool": "browser_close+SIGTERM_WAIT_EXIT",
+      "observedAt": "2026-11-02T15:18:46.785Z",
+      "rawSnapshotHash": "b62529f16ab72bd50b4c5619b7b5900857c5bec40f1b1337b4ab2b9d78895e29",
+      "sessionId": "pw_mcp_mvzell53_e7733be6",
+      "status": "VERIFIED",
+      "reason": "Session pw_mcp_mvzell53_e7733be6 (PID=88598) closedCleanly=true, pidTerminated=true."
+    }
+  },
+  "finalZipVerdict": "PASS",
+  "finalUsdCommercialVerdict": "PASS",
+  "contradictionsDetected": [],
+  "homeAndLocationReadback": {
+    "attempted": true,
+    "status": "US_DISPLAYED_CONTEXT_VERIFIED",
+    "searchBoxReady": true,
+    "deliveryLinkVisible": true,
+    "homepageReady": true,
+    "locationDialogOpened": true,
+    "zipFieldVisible": true,
+    "applyClicked": true,
+    "confirmationHandled": false,
+    "initialDeliveryText": "Deliver to Vietnam",
+    "initialObservedZip": null,
+    "initialExplicitCurrency": "VND",
+    "initialExplicitCurrencySource": "DOM:#icp-touch-link-cop",
+    "requestedPostalCode": "95829",
+    "observedDeliveryLocationText": "Deliver to Sacramento 95829‌",
+    "observedDeliveryPostalCode": "95829",
+    "observedCurrency": "USD",
+    "explicitCurrencySource": "DOM:input[name=currencyOfPreference]",
+    "usDeliveryVerified": true,
+    "homeSnapshotHash": "ab34dc50e3ce8ea4539c02839741bdb9b029ae1fa88b9f13dd9d9780f3d32b17",
+    "uiActionLedger": [
+      {
+        "step": "NAVIGATE_HOME",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T15:18:20.703Z",
+        "completedAt": "2026-11-02T15:18:23.411Z",
+        "durationMs": 2708,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/",
+        "snapshotHash": "8c1753ebd6166ca1301ed13ccb56f11c8074f22105d192519170980bab31f9dc"
+      },
+      {
+        "step": "WAIT_SEARCH_BOX_READY",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T15:18:24.812Z",
+        "completedAt": "2026-11-02T15:18:25.969Z",
+        "durationMs": 1158,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/ref=nav_logo",
+        "snapshotHash": "26bfcb23297c29cd6ae190bd0b7f8289202a5423ae5bf2620cd8df41be465afe"
+      },
+      {
+        "step": "WAIT_SEARCH_BOX_READY",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T15:18:25.970Z",
+        "completedAt": "2026-11-02T15:18:26.481Z",
+        "durationMs": 511,
+        "status": "SUCCEEDED",
+        "detail": "Poll 2/4: searchBoxReady=true",
+        "snapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125"
+      },
+      {
+        "step": "READ_INITIAL_CONTEXT",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T15:18:25.970Z",
+        "completedAt": "2026-11-02T15:18:26.481Z",
+        "durationMs": 0,
+        "status": "SUCCEEDED",
+        "detail": "initialGlow=Deliver to Vietnam, initialZip=null, initialCurrency=VND",
+        "snapshotHash": "fbec70d99e7ce319c16008a37528a0fb968e8180629d2b680d1ec06cf4a3f125"
+      },
+      {
+        "step": "OPEN_LOCATION_POPOVER_AND_APPLY_ZIP",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T15:18:26.481Z",
+        "completedAt": "2026-11-02T15:18:31.353Z",
+        "durationMs": 4872,
+        "status": "SUCCEEDED",
+        "detail": "dialogOpened=true, zipFieldVisible=true, applyClicked=true, confirmationHandled=false, reason=UI_ZIP_SUBMITTED",
+        "snapshotHash": "c6ec412ebb2fbdfd285991cc0ff605f37dd4d611251f94d67203a731a81d695b"
+      },
+      {
+        "step": "REFRESH_AND_READBACK_AFTER_APPLY",
+        "toolName": "browser_navigate",
+        "invokedAt": "2026-11-02T15:18:32.494Z",
+        "completedAt": "2026-11-02T15:18:33.463Z",
+        "durationMs": 970,
+        "status": "SUCCEEDED",
+        "detail": "Navigated to https://www.amazon.com/ref=nav_logo",
+        "snapshotHash": "7519f18cea24f2a6b9fab55e2c1d80062f3e3b120f52954a9ff076d49886c3e4"
+      },
+      {
+        "step": "REFRESH_AND_READBACK_AFTER_APPLY",
+        "toolName": "browser_evaluate",
+        "invokedAt": "2026-11-02T15:18:33.464Z",
+        "completedAt": "2026-11-02T15:18:33.974Z",
+        "durationMs": 0,
+        "status": "SUCCEEDED",
+        "detail": "afterGlow=Deliver to Sacramento 95829‌, afterZip=95829, afterCurrency=null",
+        "snapshotHash": "ab34dc50e3ce8ea4539c02839741bdb9b029ae1fa88b9f13dd9d9780f3d32b17"
+      }
+    ],
+    "notes": [
+      "NOT_USD_VERIFIED: Observed ZIP 95829, but explicit currency is 'null' (source=NONE)."
+    ],
+    "searchReadbackObservedAt": "2026-11-02T15:18:43.593Z",
+    "searchSnapshotHash": "f22afec72a95ae337ca783cd430ccf9c6984ba96e32a645f871104980bf04d5b",
+    "searchPageZip": "95829",
+    "searchPageExplicitCurrency": null,
+    "perSearchReadbacks": [
+      {
+        "url": "https://www.amazon.com/s?k=uahpet-official%20UAHPET%20Fresh%20Food%20Automatic%20Pet%20Feeder%20XLWSQ",
+        "observedAt": "2026-11-02T15:18:37.307Z",
+        "rawSnapshotHash": "a101006f988d29c9967b7beb4a638cd861d2ba028acbf096083f328ecd60c308",
+        "sessionId": "pw_mcp_mvzell53_e7733be6"
+      },
+      {
+        "url": "https://www.amazon.com/s?k=KittySpout%20The%20Wireless%20Fountain%20WF-F6-V1-B1",
+        "observedAt": "2026-11-02T15:18:43.593Z",
+        "rawSnapshotHash": "f22afec72a95ae337ca783cd430ccf9c6984ba96e32a645f871104980bf04d5b",
+        "sessionId": "pw_mcp_mvzell53_e7733be6"
+      }
+    ],
+    "pdpReadbackObservedAt": "2026-11-02T15:18:46.497Z",
+    "pdpSnapshotHash": "cf539a772408ee9c6e7d3aace8a5026ced34ce1ebe9eb45a971efadca0ceb01d",
+    "pdpPageZip": "95829",
+    "pdpExplicitCurrency": "USD",
+    "perPdpReadbacks": [
+      {
+        "url": "https://www.amazon.com/uahpet-Automatic-Semiconductor-Pre-Heating-Programmable/dp/B0H1MB3YRQ/ref=sr_1_1?dib=eyJ2IjoiMSJ9.-c0VQZdbcFnIi-ZRt7zftYLy3ERpbJnk4RuFF_0tj46JkGPV0k3nTtR-OtCwm-a4bOZl-YAt-5zEGGgCYKf6bdALOWOw71rL__kBPoCCITW3S8SLilh4Bm3B5slenO0xNYO9WZ6dToLZbgVZ0mqaTgbmCIcM3oCO2HITbdIWinX-dAnY75Wpov7EpyYycziFok1gjP_gtmFlATePqAUEyZeXjhfiyr42CW6eLbM7X33HnCLh_8yoag11xyAnl-_J9JNw5evbjbwt0xnXZsnvTEmenKtksdbVvsohg8g2A4A.PR1tjMfNokCbysiYqxw_Js1tqwb_s82daXUKSupm3DQ&dib_tag=se&keywords=uahpet-official+UAHPET+Fresh+Food+Automatic+Pet+Feeder+XLWSQ&nsdOptOutParam=true&qid=1793632714&sr=8-1",
+        "asin": "B0H1MB3YRQ",
+        "observedAt": "2026-11-02T15:18:40.905Z",
+        "rawSnapshotHash": "26d7cecc44da1b7316f1dcaa5bd74acd0146a58dc369fb300fb0ba2d54678d3d",
+        "sessionId": "pw_mcp_mvzell53_e7733be6"
+      },
+      {
+        "url": "https://www.amazon.com/KittySpoutTM-Wireless-Fountain-Stainless-Automatic/dp/B0GR7P9CGR/ref=sr_1_1?dib=eyJ2IjoiMSJ9.cPBx3hlmldwxmxFEVxU4hPJ-Tjr-sJNs40gWcwSVvYmLp1EQ7atwdd_RFQQyh5lbuCOGK1wlZFrHShjIckPgk7ba39v1g38wql4X8xFpdW9NkEObr0OFT792rgiMtbjJqglv7As_7OB3SrkxIwZCNdR8o5GQJe7IiG2zG-cISeeBUoFdgrupAs9A3tC8zIFY0Wf_ezYo9TGV8QBsq4IOwyYcoLk7rdV6sF7FmKf8Mpl27Q7xqu5xvPh9ChW68pccJlzBAQwrc6L_zjW8VFKB4XS-aCezhf58eXarba1AgH4.Z4wNr9LZm7qsoUDox-diIeGPQ3Wh1km5f6E4wViSLoo&dib_tag=se&keywords=KittySpout+The+Wireless+Fountain+WF-F6-V1-B1&qid=1793632721&sr=8-1",
+        "asin": "B0GR7P9CGR",
+        "observedAt": "2026-11-02T15:18:46.497Z",
+        "rawSnapshotHash": "cf539a772408ee9c6e7d3aace8a5026ced34ce1ebe9eb45a971efadca0ceb01d",
+        "sessionId": "pw_mcp_mvzell53_e7733be6"
+      }
+    ]
+  },
+  "consistencyValidation": {
+    "consistent": true,
+    "valid": true,
+    "contradictions": []
+  }
+}

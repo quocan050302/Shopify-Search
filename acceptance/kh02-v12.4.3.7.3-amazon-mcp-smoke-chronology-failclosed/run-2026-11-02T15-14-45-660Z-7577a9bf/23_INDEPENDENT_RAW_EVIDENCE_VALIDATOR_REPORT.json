@@ -1,0 +1,588 @@
+{
+  "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "evaluatedAt": "2026-11-02T15:18:58.591Z",
+  "artifactDir": "/Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search/acceptance/kh02-v12.4.3.7.3-amazon-mcp-smoke-chronology-failclosed/run-2026-11-02T15-14-45-660Z-7577a9bf",
+  "overallVerdict": "PASS",
+  "totalChecks": 82,
+  "passedChecks": 82,
+  "failedChecks": 0,
+  "failedCheckIds": [],
+  "recomputedVerdictsMatch": true,
+  "recomputedVerdictMismatches": [],
+  "checks": [
+    {
+      "id": "FILE_EXISTS_00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 00_GIT_BRANCH_CODE_SHA_AND_TREE.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=979 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=6734 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_02_CALL_GRAPH_AND_FUNCTION_CHANGE_INVENTORY.md",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 02_CALL_GRAPH_AND_FUNCTION_CHANGE_INVENTORY.md exists and is non-empty",
+      "passed": true,
+      "detail": "size=4350 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_03_FIX_VERIFICATION_AND_SOURCE_DIFF.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 03_FIX_VERIFICATION_AND_SOURCE_DIFF.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=9056 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=9702 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_05_TARGETED_UNIT_INTEGRATION_RESULTS.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 05_TARGETED_UNIT_INTEGRATION_RESULTS.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=49957 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_06_FULL_REPOSITORY_REGRESSION_SHARDS.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 06_FULL_REPOSITORY_REGRESSION_SHARDS.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=1511 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_07_TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 07_TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=380 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=8425 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=61878 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=35700 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=5770 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=109012 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=20667 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=848 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=7077 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=16338 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_17_WALMART_PAUSED_EXTERNAL_GATE.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 17_WALMART_PAUSED_EXTERNAL_GATE.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=13106 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=1588 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=5079 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=435 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=23484 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=56815 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=75007 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_26_OWNER_REPORT_VI.md",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 26_OWNER_REPORT_VI.md exists and is non-empty",
+      "passed": true,
+      "detail": "size=4863 bytes"
+    },
+    {
+      "id": "FILE_EXISTS_27_COMMIT_PUSH_REMOTE_HEAD_PROOF.json",
+      "category": "ARTIFACT_PRESENCE",
+      "description": "Artifact 27_COMMIT_PUSH_REMOTE_HEAD_PROOF.json exists and is non-empty",
+      "passed": true,
+      "detail": "size=574 bytes"
+    },
+    {
+      "id": "PRECHECK_BRANCH_EXACT",
+      "category": "GIT_HYGIENE",
+      "description": "Branch is strictly feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+      "passed": true,
+      "detail": "branch=feature/kh02-walmart-us-jina-reader-v12.4.3.5.1"
+    },
+    {
+      "id": "PRECHECK_SHA_40HEX",
+      "category": "GIT_HYGIENE",
+      "description": "codeSha is a valid 40-char hex SHA and matches expectedCodeSha",
+      "passed": true,
+      "detail": "codeSha=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "PRECHECK_ANCESTRY_VERIFIED",
+      "category": "GIT_HYGIENE",
+      "description": "Branch ancestry from origin/QA and prior V12.4.3.7.2 baseline SHA is verified",
+      "passed": true,
+      "detail": "ancestryVerified=true"
+    },
+    {
+      "id": "SHA_PARITY_00",
+      "category": "SHA_PARITY",
+      "description": "Artifact 00 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_01",
+      "category": "SHA_PARITY",
+      "description": "Artifact 01 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_03",
+      "category": "SHA_PARITY",
+      "description": "Artifact 03 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_04",
+      "category": "SHA_PARITY",
+      "description": "Artifact 04 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_05",
+      "category": "SHA_PARITY",
+      "description": "Artifact 05 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_06",
+      "category": "SHA_PARITY",
+      "description": "Artifact 06 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_07",
+      "category": "SHA_PARITY",
+      "description": "Artifact 07 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_08",
+      "category": "SHA_PARITY",
+      "description": "Artifact 08 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_09",
+      "category": "SHA_PARITY",
+      "description": "Artifact 09 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_10",
+      "category": "SHA_PARITY",
+      "description": "Artifact 10 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_11",
+      "category": "SHA_PARITY",
+      "description": "Artifact 11 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_12",
+      "category": "SHA_PARITY",
+      "description": "Artifact 12 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_13",
+      "category": "SHA_PARITY",
+      "description": "Artifact 13 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_14",
+      "category": "SHA_PARITY",
+      "description": "Artifact 14 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_15",
+      "category": "SHA_PARITY",
+      "description": "Artifact 15 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_16",
+      "category": "SHA_PARITY",
+      "description": "Artifact 16 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_17",
+      "category": "SHA_PARITY",
+      "description": "Artifact 17 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_18",
+      "category": "SHA_PARITY",
+      "description": "Artifact 18 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_19",
+      "category": "SHA_PARITY",
+      "description": "Artifact 19 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_20",
+      "category": "SHA_PARITY",
+      "description": "Artifact 20 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_21",
+      "category": "SHA_PARITY",
+      "description": "Artifact 21 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SHA_PARITY_24",
+      "category": "SHA_PARITY",
+      "description": "Artifact 24 carries matching codeSha/sourceSha",
+      "passed": true,
+      "detail": "observed=7577a9bfd58817053d23c8a5b134ac0f138fc7d2, expected=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    },
+    {
+      "id": "SOURCE_NO_INTERNAL_GLOW_FETCH",
+      "category": "SOURCE_INVARIANTS",
+      "description": "amazonUsMcpTransport.ts contains zero internal fetch('/portal-migration/hz/glow/address-change...') calls",
+      "passed": true,
+      "detail": "hasForbiddenGlowFetch=false"
+    },
+    {
+      "id": "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS",
+      "category": "SOURCE_INVARIANTS",
+      "description": "amazonUsMcpTransport.ts exports ensureAmazonUsDeliveryContextViaUi, readAmazonCommercialContextFromRenderedUi, buildAmazonUiPhaseContextProof, and isValidAmazonRawSnapshotHash",
+      "passed": true,
+      "detail": "hasUiEnsurer=true, hasCommercialReader=true, hasPhaseProof=true, hasValidHashFn=true"
+    },
+    {
+      "id": "SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD",
+      "category": "SOURCE_INVARIANTS",
+      "description": "amazonUsIdentity.ts downgrades external reference/fixture inputs from AUTHORIZED_LIVE with EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE",
+      "passed": true,
+      "detail": "hasReferenceDowngradeGuard=true"
+    },
+    {
+      "id": "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER",
+      "category": "SOURCE_INVARIANTS",
+      "description": "productCandidateDiscovery.ts contains zero Math.random() calls and exports normalizeSourceObservation + verifyLiveMetaObservationProvenance",
+      "passed": true,
+      "detail": "hasMathRandom=false, hasNormalizeFn=true, hasVerifyLiveMetaObs=true"
+    },
+    {
+      "id": "SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK",
+      "category": "SOURCE_INVARIANTS",
+      "description": "evergreenResearchOrchestrator.ts does not fall back to candidates.slice(0, 3) when dynamic Amazon target selection returns 0",
+      "passed": true,
+      "detail": "hasForbiddenFallback=false"
+    },
+    {
+      "id": "SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD",
+      "category": "SOURCE_INVARIANTS",
+      "description": "kh02PersistenceService.ts enforces !Array.isArray(browserEvidence.displayedCandidateIds) fail-closed guard",
+      "passed": true,
+      "detail": "hasBrowserDomArrayGuard=true"
+    },
+    {
+      "id": "SOURCE_HAS_FORBIDDEN_AMAZON_POLICY_OVERRIDE_GUARD",
+      "category": "SOURCE_INVARIANTS",
+      "description": "research/route.ts enforces FORBIDDEN_AMAZON_POLICY_OVERRIDE on POST /api/v1/kh02/research",
+      "passed": true,
+      "detail": "hasGuard=true"
+    },
+    {
+      "id": "SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER",
+      "category": "SOURCE_INVARIANTS",
+      "description": "acceptanceTruth.ts exports computeV12_4_3_7_2ReleaseVerdicts, validatePerSpecE2EReceipts, and reconcileLiveMetaLineageCounts",
+      "passed": true,
+      "detail": "verdictFn=true, e2eFn=true, metaFn=true"
+    },
+    {
+      "id": "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+      "category": "RUNTIME_PRECHECK",
+      "description": "Runtime precheck confirms Playwright MCP @0.0.83, Python Meta collector venv, and >= 15 GiB free disk",
+      "passed": true,
+      "detail": "mcpHandshake=true, metaVenv=true, diskGiB=23.07"
+    },
+    {
+      "id": "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+      "category": "STANDALONE_CONTRACT",
+      "description": "Standalone Amazon reference provenance strictly records USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT, SUMMARY_AND_SCRIPT_ONLY, referenceRawHashVerified=false, and observationClass=TEST_FIXTURE",
+      "passed": true,
+      "detail": "origin=USER_SUPPLIED_EXTERNAL_STANDALONE_REPORT, rawHashVerified=false, obsClass=TEST_FIXTURE"
+    },
+    {
+      "id": "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+      "category": "TEST_MATRIX",
+      "description": "All 12 canonical E2E specs have individual per-spec receipts in 04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json matching summary totals and CODE_SHA",
+      "passed": true,
+      "detail": "valid=true, specs=12/12, cases=34/34, reasons="
+    },
+    {
+      "id": "ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS",
+      "category": "TEST_MATRIX",
+      "description": "Targeted V12.4.3.7.3 (42 A01..A42 tests) + V12.4.3.7.2 + prior KH-02 suites executed and passed with 0 failures",
+      "passed": true,
+      "detail": "matrixPassed=130/130, targetedTests=467/467"
+    },
+    {
+      "id": "ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS",
+      "category": "TEST_MATRIX",
+      "description": "100% of discovered repository test files (>= 158 files) executed across bounded shards with 0 failures and 0 exclusions",
+      "passed": true,
+      "detail": "files=159/159, tests=2040/2040"
+    },
+    {
+      "id": "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS",
+      "category": "BUILD_GATES",
+      "description": "npx tsc --noEmit and npm run build both succeeded with exitCode === 0 on CODE_SHA",
+      "passed": true,
+      "detail": "tscExit=0, buildExit=0"
+    },
+    {
+      "id": "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+      "category": "REAL_NETWORK_WORKER_E2E",
+      "description": "Real HTTP server process and separate worker OS process have distinct positive PIDs and HTTP POST 202 LIVE_ONLY job claimed/completed with monotonic fencing",
+      "passed": true,
+      "detail": "serverPID=88533, workerPID=88535, postStatus=202, finalStatus=COMPLETED"
+    },
+    {
+      "id": "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+      "category": "META_PROVENANCE",
+      "description": "Live-Only Meta query outcome ledger reconciles completed queries, observations, persisted ads, and candidate lineage with 0 contradictions",
+      "passed": true,
+      "detail": "valid=true, queries=3, obs=33, ads=22, lineagePassed=3, contradictions="
+    },
+    {
+      "id": "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE",
+      "category": "META_PROVENANCE",
+      "description": "Meta observation -> persisted Ad -> candidate lineage verifies runId, workspaceId, queryId, providerRequestId, and externalAdId with 0 cross-workspace or synthetic promotions",
+      "passed": true,
+      "detail": "verifiedCandidates=3, rejected=0"
+    },
+    {
+      "id": "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+      "category": "REAL_PIPELINE",
+      "description": "Strict-live Top 3 shortlist has 3 distinct product families with order independence, 0 shortfall padding, and corroborated fallback explicitly separated",
+      "passed": true,
+      "detail": "shortlist=3, distinctFamilies=3"
+    },
+    {
+      "id": "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+      "category": "AMAZON_LIVE_COMMERCIAL",
+      "description": "Dynamic Amazon target selection selects <= 2 targets without slice(0,3) fallback, <= 4 logical ops, and <= 5 non-sponsored search cards",
+      "passed": true,
+      "detail": "selected=2, ops=4/4, observedHrefSelected=2"
+    },
+    {
+      "id": "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+      "category": "AMAZON_LIVE_COMMERCIAL",
+      "description": "Amazon 6-phase raw observation chronology satisfies phase1 <= phase2 <= phase3 <= phase4 <= phase5 <= lastToolCompletedAt <= closeStartedAt <= closeFinishedAt on same sessionId with valid rawSnapshotHash",
+      "passed": true,
+      "detail": "valid=true, contradictions=[], p4Obs=2026-11-02T15:18:43.593Z, p5Obs=2026-11-02T15:18:46.497Z, closeFin=2026-11-02T15:18:46.785Z"
+    },
+    {
+      "id": "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+      "category": "AMAZON_LIVE_COMMERCIAL",
+      "description": "Same-session REAL_STDIO_MCP lifecycle proves lastToolCompletedAt <= closeStartedAt <= closeFinishedAt and owned child PID terminated cleanly",
+      "passed": true,
+      "detail": "sessionId=pw_mcp_mvzell53_e7733be6, lastTool=2026-11-02T15:18:46.497Z, closeStart=2026-11-02T15:18:46.500Z, closeFinish=2026-11-02T15:18:46.785Z"
+    },
+    {
+      "id": "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+      "category": "AMAZON_LIVE_COMMERCIAL",
+      "description": "Amazon PDP extraction records commercial context and Two-Tier Identity verdicts without borrowing homepage ZIP or inferring USD from bare $",
+      "passed": true,
+      "detail": "evaluated=2, falseExact=0"
+    },
+    {
+      "id": "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+      "category": "DB_API_UI_PARITY",
+      "description": "SQLite DB, Real Network HTTP GET, and Headless Chromium DOM before/after page.reload() have explicit matching 3-item candidate arrays without dbIds fallback, plus secondary niche separation",
+      "passed": true,
+      "detail": "httpParity=true, domBefore=[\"cand_1212440541\",\"cand_1587534715\",\"cand_1613504636\"], domAfter=[\"cand_1212440541\",\"cand_1587534715\",\"cand_1613504636\"], secNicheOverlap=0"
+    },
+    {
+      "id": "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION",
+      "category": "WALMART_AND_NON_INFLATION",
+      "description": "Walmart US remains paused with 0 live HTTP requests and preserved CAPTCHA receipt; Amazon & Walmart produce 0 score/rank/gate inflation",
+      "passed": true,
+      "detail": "wmtLiveHttp=0, scoreDelta=0"
+    },
+    {
+      "id": "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+      "category": "HISTORICAL_BACKTEST",
+      "description": "DEV historical replay (2026-10-24T00:00:00.000Z) executed with pointInTimeIntegrityVerdict = PASS, 0 post-cutoff rows, and truthful INSUFFICIENT_HISTORICAL_EVIDENCE business verdict",
+      "passed": true,
+      "detail": "obs=60, shortlist=0, biz=INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    {
+      "id": "ARTIFACT19_HOLDOUT_2026_10_30_POINT_IN_TIME_BACKTEST",
+      "category": "HISTORICAL_BACKTEST",
+      "description": "HOLDOUT historical replay (2026-10-30T12:00:00.000Z) executed with pointInTimeIntegrityVerdict = PASS, 0 post-cutoff rows, and truthful INSUFFICIENT_HISTORICAL_EVIDENCE business verdict",
+      "passed": true,
+      "detail": "obs=377, shortlist=3, biz=INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    {
+      "id": "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD",
+      "category": "HISTORICAL_BACKTEST",
+      "description": "Point-in-time no-lookahead audit rejects post-cutoff and fixture records across Ads, ResearchProduct, Amazon, and Walmart",
+      "passed": true,
+      "detail": "pitVerdict=PASS, postCutoffIncluded=0"
+    },
+    {
+      "id": "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+      "category": "RESOURCE_HYGIENE",
+      "description": "Process, disk & RAM reconciliation confirms >= 15 GiB free disk, maxConcurrentHeavyObserved <= 2, and 0 unreconciled owned Node/MCP child PIDs",
+      "passed": true,
+      "detail": "minFreeDiskGiB=22.89, orphans=0, maxHeavy=2"
+    },
+    {
+      "id": "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH",
+      "category": "RELEASE_VERDICT",
+      "description": "Independent verdict recomputation matches 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json across all gates with zero false PASS and zero Mutations:pending placeholders",
+      "passed": true,
+      "detail": "All 50 gates matched recomputation"
+    },
+    {
+      "id": "ARTIFACT22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT_AND_CHRONOLOGY",
+      "category": "MUTATION_SUITE",
+      "description": "22_NEGATIVE_MUTATION_SUITE_FINAL_RECEIPT.json completed BEFORE 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json.evaluatedAt and caught >= 98 mutations with 0 false passes",
+      "passed": true,
+      "detail": "caught=98/98, falsePasses=0, mutCompleted=2026-11-02T15:18:58.567Z, verdictEval=2026-11-02T15:18:58.585Z"
+    },
+    {
+      "id": "ARTIFACT27_COMMIT_PUSH_REMOTE_HEAD_PROOF_VALID",
+      "category": "GIT_HYGIENE",
+      "description": "27_COMMIT_PUSH_REMOTE_HEAD_PROOF.json records verified testedCodeSha and target branch",
+      "passed": true,
+      "detail": "branch=feature/kh02-walmart-us-jina-reader-v12.4.3.5.1, testedCodeSha=7577a9bfd58817053d23c8a5b134ac0f138fc7d2"
+    }
+  ]
+}

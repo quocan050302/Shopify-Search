@@ -1,0 +1,1215 @@
+{
+  "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "startedAt": "2026-11-02T15:18:58.127Z",
+  "completedAt": "2026-11-02T15:18:58.567Z",
+  "evaluatedAt": "2026-11-02T15:18:58.567Z",
+  "totalMutationsExecuted": 98,
+  "sourceMutationsExecuted": 8,
+  "artifactMutationsExecuted": 90,
+  "mandatoryV12_4_3_7_3ScenariosExecuted": 42,
+  "mandatoryV12_4_3_7_2ScenariosExecuted": 42,
+  "caughtMutationsCount": 98,
+  "falsePassesCount": 0,
+  "sourceTreeRestoredClean": true,
+  "gitDiffBeforeAfterByteCount": 0,
+  "mutations": [
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_01",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Reintroduce forbidden internal fetch('/portal-migration/hz/glow/address-change...') in amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_INTERNAL_GLOW_FETCH"
+      ],
+      "detail": "Caught by SOURCE_NO_INTERNAL_GLOW_FETCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_02",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported isValidAmazonRawSnapshotHash from amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_03",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsMcpTransport.ts",
+      "description": "Remove exported buildAmazonUiPhaseContextProof from amazonUsMcpTransport.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+      ],
+      "detail": "Caught by SOURCE_HAS_UI_DELIVERY_COMMERCIAL_AND_PHASE_PROOF_FUNCTIONS"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_04",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/marketplace/amazonUsIdentity.ts",
+      "description": "Remove EXTERNAL_REFERENCE_OR_FIXTURE_DOWNGRADED_FROM_LIVE guard from amazonUsIdentity.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD"
+      ],
+      "detail": "Caught by SOURCE_HAS_REFERENCE_DOWNGRADE_GUARD"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_05",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/identity/productCandidateDiscovery.ts",
+      "description": "Reintroduce Math.random() synthetic ad ID generation in productCandidateDiscovery.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+      ],
+      "detail": "Caught by SOURCE_NO_MATH_RANDOM_AND_HAS_PROVENANCE_VERIFIER"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_06",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/persistence/kh02PersistenceService.ts",
+      "description": "Remove !Array.isArray(browserEvidence.displayedCandidateIds) fail-closed guard from kh02PersistenceService.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD"
+      ],
+      "detail": "Caught by SOURCE_HAS_BROWSER_DOM_ARRAY_FAIL_CLOSED_GUARD"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_07",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "src/services/kh02/evergreenResearchOrchestrator.ts",
+      "description": "Reintroduce forbidden candidates.slice(0, 3) fallback in evergreenResearchOrchestrator.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK"
+      ],
+      "detail": "Caught by SOURCE_NO_CANDIDATES_SLICE_0_3_FALLBACK"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_SRC_MUT_08",
+      "targetType": "SOURCE_CODE_TEMP_COPY",
+      "targetFile": "scripts/kh02/acceptanceTruth.ts",
+      "description": "Remove exported validatePerSpecE2EReceipts from acceptanceTruth.ts",
+      "caught": true,
+      "failedCheckIds": [
+        "SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER"
+      ],
+      "detail": "Caught by SOURCE_HAS_CENTRAL_VERDICT_E2E_AND_META_RECONCILER"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A01",
+      "scenarioNumber": 1,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A01] 04_E2E_SPEC_INVENTORY missing receipts array -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A02",
+      "scenarioNumber": 2,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A02] 04_E2E_SPEC_INVENTORY has 11/12 spec rows -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A03",
+      "scenarioNumber": 3,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A03] Duplicate specFile in E2E receipts -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A04",
+      "scenarioNumber": 4,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A04] One spec receipt has exitCode !== 0 while summary says 12/12 passed -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A05",
+      "scenarioNumber": 5,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A05] One spec receipt has classification = SKIPPED -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A06",
+      "scenarioNumber": 6,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A06] One spec receipt has totalTests = 0 or failedTests > 0 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A07",
+      "scenarioNumber": 7,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A07] Summary totalE2ETestCases !== sum(spec.totalTests) -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A08",
+      "scenarioNumber": 8,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A08] One spec receipt has wrong sourceSha -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A09",
+      "scenarioNumber": 9,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A09] One spec receipt has invalid timestamps startedAt > endedAt -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A10",
+      "scenarioNumber": 10,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "04_E2E_SPEC_INVENTORY_AND_12_CANONICAL_RECEIPTS.json",
+      "description": "[A10] One spec receipt has ownedPidsReconciled = false -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT04_ALL_12_E2E_SPEC_RECEIPTS_RECOMPUTED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A11",
+      "scenarioNumber": 11,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A11] Missing/tampered INDEPENDENT_RAW_EVIDENCE_AND_MUTATION_VALIDATION verdict -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A12",
+      "scenarioNumber": 12,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "07_TYPESCRIPT_NEXT_PRODUCTION_BUILD_RECEIPTS.json",
+      "description": "[A12] Missing/invalid typecheckAndBuild receipt -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT07_TYPESCRIPT_AND_NEXT_PRODUCTION_BUILD_RECEIPTS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A13",
+      "scenarioNumber": 13,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A13] Missing/invalid resourceAndOrphanGuard receipt -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A14",
+      "scenarioNumber": 14,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A14] 24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX contains Mutations:pending placeholder -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A15",
+      "scenarioNumber": 15,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A15] phase5_pdp_readback.observedAt > phase6_post_session_close.closeFinishedAt -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A16",
+      "scenarioNumber": 16,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A16] phase4 observedAt equals final report synthesis timestamp evaluatedAt -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A17",
+      "scenarioNumber": 17,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A17] phase5_pdp_readback.status = INCOMPLETE -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A18",
+      "scenarioNumber": 18,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "[A18] closeStartedAt < lastToolCompletedAt in Amazon MCP session -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A19",
+      "scenarioNumber": 19,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A19] sessionId mismatch across Phase 1..6 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A20",
+      "scenarioNumber": 20,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A20] Missing or phony rawSnapshotHash on phase3 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A21",
+      "scenarioNumber": 21,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A21] finalEffectiveUsDeliveryVerified = false while finalZipVerdict = PASS -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A22",
+      "scenarioNumber": 22,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "[A22] finalEffectiveCurrencyUsdVerified = false while finalUsdCommercialVerdict = PASS -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A23",
+      "scenarioNumber": 23,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "[A23] Currency inferred from $ symbol only -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A24",
+      "scenarioNumber": 24,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "[A24] Homepage ZIP 95829 borrowed onto PDP whose own header shows null ZIP -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A25",
+      "scenarioNumber": 25,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A25] domCandidateIdsBeforeReload or AfterReload missing -> FAIL (never fallback to dbIds)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A26",
+      "scenarioNumber": 26,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A26] DOM candidate IDs after reload differ from before reload -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A27",
+      "scenarioNumber": 27,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "[A27] GET API returns cached/fixture data while claiming live run parity -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A28",
+      "scenarioNumber": 28,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A28] sourceMode !== LIVE_ONLY or pre-seeded rows > 0 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A29",
+      "scenarioNumber": 29,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A29] metaTelemetry is empty {} -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A30",
+      "scenarioNumber": 30,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A30] subqueriesExecutedCount > actual completed query receipts -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A31",
+      "scenarioNumber": 31,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A31] Query receipt missing providerRequestId -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A32",
+      "scenarioNumber": 32,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "[A32] Cached/synthetic/cross-workspace ad promoted into live candidate -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A33",
+      "scenarioNumber": 33,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A33] validatedLiveObservationsCount !== candidateAssociatedLiveObservationsCount without rejected reason -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A34",
+      "scenarioNumber": 34,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "[A34] lineagePassedCount < 3 while claiming strict-live Top 3 PASS -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A35",
+      "scenarioNumber": 35,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "description": "[A35] Post-cutoff row admitted into DEV replay -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A36",
+      "scenarioNumber": 36,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD.json",
+      "description": "[A36] TEST_FIXTURE row admitted into historical replay -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT20_HISTORICAL_PROVIDER_VACUITY_AND_NO_LOOKAHEAD, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A37",
+      "scenarioNumber": 37,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST.json",
+      "description": "[A37] Historical provider parity marked PASS when pre-cutoff Amazon/Walmart rows = 0 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT18_DEV_2026_10_24_POINT_IN_TIME_BACKTEST, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A38",
+      "scenarioNumber": 38,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "17_WALMART_PAUSED_EXTERNAL_GATE.json",
+      "description": "[A38] Walmart live HTTP requests > 0 while gate status is PAUSED_EXTERNAL -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT17_WALMART_PAUSED_EXTERNAL_GATE_AND_NON_INFLATION, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A39",
+      "scenarioNumber": 39,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "24_FINAL_ROUTE_SPECIFIC_VERDICT_MATRIX.json",
+      "description": "[A39] G07, G15, G16, or FULL_KH02_BUSINESS_ACCEPTANCE marked PASS without required proof -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A40",
+      "scenarioNumber": 40,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A40] Free disk < 15 GiB -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A41",
+      "scenarioNumber": 41,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A41] Orphaned test-spawned process remains after run -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_NEG_SCENARIO_A42",
+      "scenarioNumber": 42,
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL.json",
+      "description": "[A42] Concurrent heavy process count exceeds 2 -> FAIL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+      ],
+      "detail": "Caught by ARTIFACT21_RESOURCE_RAM_DISK_HEAVY_CONCURRENCY_AND_PID_FINAL"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_01",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Mutate branch to master",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_BRANCH_EXACT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_BRANCH_EXACT, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_02",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Mutate codeSha to wrong SHA",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_SHA_40HEX",
+        "SHA_PARITY_00",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_SHA_40HEX, SHA_PARITY_00, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_03",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "00_GIT_BRANCH_CODE_SHA_AND_TREE.json",
+      "description": "Set ancestryVerified = false",
+      "caught": true,
+      "failedCheckIds": [
+        "PRECHECK_ANCESTRY_VERIFIED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by PRECHECK_ANCESTRY_VERIFIED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_04",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set playwrightMcpHandshakePassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_05",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set freeDiskGiB = 8 (below 15 GiB floor)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_06",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set metaCollectorVenvAvailable = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_RUNTIME_AND_MCP_PRECHECK",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_RUNTIME_AND_MCP_PRECHECK, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_07",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Mutate standaloneReference.manifest.referenceAvailability to FULL_RAW_BUNDLE",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_08",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set standaloneReference.downgradeNegativeTestPassed = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_09",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set standaloneReference.parserVerification.observationClass = AUTHORIZED_LIVE",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_10",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "01_RUNTIME_DISK_RAM_PROVIDER_POLICY_PRECHECK.json",
+      "description": "Set standaloneReference.manifest.referenceRawHashVerified = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT01_STANDALONE_REFERENCE_PROVENANCE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_11",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set inProcessExecuteResearchJobUsedForPrimaryAcceptance = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_12",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set processesTerminatedCleanly = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_13",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set serverProcessPid === workerProcessPid",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_14",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set requestSourceMode = LIVE_WITH_CACHE_FALLBACK for strict live gate",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_15",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 9",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_16",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set postHttpStatus = 500",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_17",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "08_REAL_HTTP_SERVER_WORKER_PID_JOB_FENCING.json",
+      "description": "Set httpPollCount = 0",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+      ],
+      "detail": "Caught by ARTIFACT08_REAL_HTTP_SERVER_WORKER_PID_AND_JOB_FENCING"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_18",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER.json",
+      "description": "Set primaryWorkspacePreSeededAdRowCount = 5",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT09_LIVE_ONLY_META_QUERY_OUTCOME_LEDGER_RECONCILED, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_19",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set sourceMode = CACHE_ONLY",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_20",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set cachePromotedToLiveCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_21",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set syntheticPromotedToLiveCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_22",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set missingPersistedAdInDbCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_23",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE.json",
+      "description": "Set unexecutedQueryObservationCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+      ],
+      "detail": "Caught by ARTIFACT10_META_OBSERVATION_TO_PERSISTED_AD_TO_CANDIDATE_LINEAGE"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_24",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set nonProductPromotedToShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_25",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set irrelevantPromotedToShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_26",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set distinctFamiliesInShortlistCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_27",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set shortfallPaddingDetected = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_28",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set reversedOrderIdentical = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_29",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set provisionalPromotedToEvergreenWinnersCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_30",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS.json",
+      "description": "Set corroboratedRunSeparation.promotedToStrictLiveOnlyGate = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+      ],
+      "detail": "Caught by ARTIFACT11_STRICT_LIVE_TOP3_AND_IDENTITY_TIERS"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_31",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "Inject workspaceId mismatch between artifact 13 and artifact 12",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_32",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY.json",
+      "description": "Set internalGlowFetchUsed = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT13_AMAZON_SIX_PHASE_RAW_OBSERVATION_CHRONOLOGY, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_33",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set usedForbiddenSliceFallback = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_34",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set operationsAttempted = 6 (exceeding 4-op budget cap)",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_35",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set fabricatedLiveSuccess = true",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_36",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set sponsoredCardsSelectedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_37",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "12_AMAZON_MCP_SMOKE_OPERATION_LEDGER.json",
+      "description": "Set unvisitedCardsPromotedToVerifiedCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT12_AMAZON_MCP_SMOKE_OPERATION_LEDGER, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_38",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "Set searchBrandCopiedFromCandidateCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_39",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX.json",
+      "description": "Set falseExactProductPromotionCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT15_AMAZON_SEARCH_PDP_AND_META_EQUIVALENCE_MATRIX, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_40",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set mcpSessionClosedCleanly = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_41",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set ownedChildPidTerminated = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_42",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT.json",
+      "description": "Set allLiveOpsMatchSessionId = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT14_AMAZON_MCP_SESSION_LIFECYCLE_PID_EXIT, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_43",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set syncJobPersisted = false",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_44",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set HTTP transportMode = IN_PROCESS_ROUTE_CALL",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_45",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set UI DOM provisionalRenderedAsVerifiedEvergreenCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_46",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "16_DB_API_UI_CHROMIUM_RELOAD_PARITY.json",
+      "description": "Set secondaryNiche.crossNicheOverlapCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT16_DB_API_UI_CHROMIUM_RELOAD_PARITY_AND_SECONDARY_NICHE, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_47",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "05_TARGETED_UNIT_INTEGRATION_RESULTS.json",
+      "description": "Set failedCasesCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT05_TARGETED_UNIT_INTEGRATION_RESULTS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    },
+    {
+      "mutationId": "V12_4_3_7_3_BASE_ART_MUT_48",
+      "targetType": "ARTIFACT_FILE_TEMP_COPY",
+      "targetFile": "06_FULL_REPOSITORY_REGRESSION_SHARDS.json",
+      "description": "Set excludedOrDeferredFilesCount = 1",
+      "caught": true,
+      "failedCheckIds": [
+        "ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS",
+        "ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+      ],
+      "detail": "Caught by ARTIFACT06_FULL_REPOSITORY_REGRESSION_SHARDS, ARTIFACT24_INDEPENDENT_VERDICT_RECOMPUTATION_EXACT_MATCH"
+    }
+  ]
+}

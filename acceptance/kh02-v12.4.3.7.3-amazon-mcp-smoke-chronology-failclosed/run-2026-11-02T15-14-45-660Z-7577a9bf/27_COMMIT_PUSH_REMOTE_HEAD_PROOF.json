@@ -1,0 +1,12 @@
+{
+  "codeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "testedCodeSha": "7577a9bfd58817053d23c8a5b134ac0f138fc7d2",
+  "testedTreeSha": "452eb8e5d93e4cccafb81321479d4d8ef340d925",
+  "finalEvidenceCommitSha": "PENDING_EVIDENCE_COMMIT",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "remoteFeatureShaBeforePush": "22667c87675ff9df7831384a38a39d3bb8fbc075",
+  "baseQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "mergeBaseQaSha": "fbe51a06ab8354c886d0415a9599f977c83caabc",
+  "ancestryVerified": true,
+  "recordedAt": "2026-11-02T15:18:58.586Z"
+}
