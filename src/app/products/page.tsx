@@ -991,18 +991,24 @@ export default function ProductsPage() {
   const evergreenWinnerCount = leaderboard?.topThree?.length ?? 0;
   const rawMetaLive =
     leaderboard?.sourceCoverage?.META_ADS?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.freshLiveCount ??
     leaderboard?.providerTelemetry?.META_ADS?.freshLiveAdsReturned ??
     0;
   const rawMetaCached =
     leaderboard?.sourceCoverage?.META_ADS?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.META_ADS?.cachedRecordsCount ??
     leaderboard?.providerTelemetry?.META_ADS?.cachedFallbackAdsReturned ??
     0;
   const googleFreshLiveAds =
+    leaderboard?.sourceCoverage?.GOOGLE_ADS?.freshLiveAdsCount ??
     leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS?.freshLiveCount ??
     leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsReturned ??
     0;
   const googleHistoricalAds =
+    leaderboard?.sourceCoverage?.GOOGLE_ADS?.historicalCachedAdsCount ??
     leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.historicalCachedAdsCount ??
+    leaderboard?.providerTelemetry?.GOOGLE_ADS?.cachedRecordsCount ??
     leaderboard?.providerTelemetry?.GOOGLE_ADS_TRANSPARENCY?.cachedFallbackAdsReturned ??
     0;
   const fallbackRunObservations = leaderboard?.lookbackCoverage?.totalObservationCount ?? 0;
@@ -2858,11 +2864,15 @@ export default function ProductsPage() {
                       },
                       {
                         label: "Google Ads Transparency",
-                        cov: leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY,
+                        cov:
+                          leaderboard?.sourceCoverage?.GOOGLE_ADS ||
+                          leaderboard?.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY,
                       },
                       {
                         label: "Demand History",
-                        cov: leaderboard?.sourceCoverage?.GOOGLE_TRENDS,
+                        cov:
+                          leaderboard?.sourceCoverage?.DEMAND_HISTORY ||
+                          leaderboard?.sourceCoverage?.GOOGLE_TRENDS,
                       },
                     ].map((src) => (
                       <div

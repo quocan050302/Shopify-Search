@@ -26,6 +26,8 @@ export interface GoogleMcpGateInput {
   originalResearchRunId?: string;
   runExecutionMode?: "FRESH_LIVE_CURRENT_RUN" | "REPLAY_CACHED_OR_PREVIOUS_RUN";
   evaluatedCandidateIds?: string[];
+  uiDisplayedCreativesCount?: number;
+  persistedCreativesCount?: number;
   invocationLedger?: Array<Partial<GoogleMcpProviderInvocationRecord> & Record<string, any>>;
   telemetry: any;
   rawManifest: {
@@ -587,17 +589,74 @@ export function evaluateGoogleMcpGates(
     }
   }
 
-  // If associations array didn't carry explicit associationVerdict per item, fall back to ledger counts ONLY if verifiedExactCount is 0
+  // Zero-raw vs non-zero declared/UI/persisted creatives guard (blocks "9 creatives UI vs 0 raw" false pass)
+  const declaredClassifiedCount =
+    typeof associationLedger?.classifiedDistinctCount === "number"
+      ? associationLedger.classifiedDistinctCount
+      : typeof associationLedger?.totalClassified === "number"
+      ? associationLedger.totalClassified
+      : null;
+  const declaredLedgerMatchesSum =
+    (Number(associationLedger?.productLevelMatchesCount ?? associationLedger?.exactMatches ?? 0) || 0) +
+    (Number(associationLedger?.probableProductMatchesCount ?? associationLedger?.probableMatches ?? 0) || 0) +
+    (Number(associationLedger?.brandLevelMatchesCount ?? associationLedger?.brandOnlyMatches ?? 0) || 0);
+  const declaredUiCreativesCount =
+    typeof input.uiDisplayedCreativesCount === "number"
+      ? input.uiDisplayedCreativesCount
+      : typeof (associationLedger as any)?.uiDisplayedCreativesCount === "number"
+      ? (associationLedger as any).uiDisplayedCreativesCount
+      : null;
+  const declaredPersistedCreativesCount =
+    typeof input.persistedCreativesCount === "number"
+      ? input.persistedCreativesCount
+      : typeof (associationLedger as any)?.persistedCreativesCount === "number"
+      ? (associationLedger as any).persistedCreativesCount
+      : null;
+
+  if (
+    rawIdSet.size === 0 &&
+    ((declaredClassifiedCount !== null && declaredClassifiedCount > 0) ||
+      declaredLedgerMatchesSum > 0 ||
+      (declaredUiCreativesCount !== null && declaredUiCreativesCount > 0) ||
+      (declaredPersistedCreativesCount !== null && declaredPersistedCreativesCount > 0) ||
+      associations.length > 0)
+  ) {
+    unknownAssociationCreativeIds.push("zero_raw_nonzero_declared_or_ui_creatives_mismatch");
+    lineageViolations.push("zero_raw_nonzero_declared_or_ui_creatives_mismatch");
+  }
+  if (
+    declaredClassifiedCount !== null &&
+    declaredClassifiedCount !== rawIdSet.size &&
+    declaredClassifiedCount !== normIdSet.size
+  ) {
+    unknownAssociationCreativeIds.push("declared_classified_count_mismatch");
+  }
+  if (declaredUiCreativesCount !== null && declaredUiCreativesCount > rawIdSet.size) {
+    unknownAssociationCreativeIds.push("ui_displayed_creatives_exceed_raw_count");
+    lineageViolations.push("ui_displayed_creatives_exceed_raw_count");
+  }
+  if (declaredPersistedCreativesCount !== null && declaredPersistedCreativesCount > rawIdSet.size) {
+    unknownAssociationCreativeIds.push("persisted_creatives_exceed_raw_count");
+    lineageViolations.push("persisted_creatives_exceed_raw_count");
+  }
+
+  // If associations array didn't carry explicit associationVerdict per item, fall back to ledger counts ONLY if rawIdSet.size > 0 and verifiedExactCount is 0
   const exactCount =
-    associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
+    rawIdSet.size === 0
+      ? 0
+      : associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
       ? verifiedExactCount
       : 0;
   const probableCount =
-    associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
+    rawIdSet.size === 0
+      ? 0
+      : associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
       ? verifiedProbableCount
       : associationLedger?.probableProductMatchesCount ?? associationLedger?.probableMatches ?? 0;
   const brandCount =
-    associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
+    rawIdSet.size === 0
+      ? 0
+      : associations.some((a: any) => a?.associationVerdict || a?.associationClassification || a?.verdict)
       ? verifiedBrandCount
       : associationLedger?.brandLevelMatchesCount ?? associationLedger?.brandOnlyMatches ?? 0;
 
@@ -606,7 +665,7 @@ export function evaluateGoogleMcpGates(
     unknownAssociationCreativeIds.length === 0 &&
     unknownAssociationCandidateIds.length === 0 &&
     runIdMismatchCreativeIds.length === 0 &&
-    (rawIdSet.size === 0 || associations.length === rawIdSet.size);
+    associations.length === rawIdSet.size;
 
   const g06Transport: "PASS" | "FAIL" = transportOk ? "PASS" : "FAIL";
   const g06LiveRetrieval: "PASS" | "INSUFFICIENT_EVIDENCE" | "FAIL" = !transportOk
@@ -866,14 +925,42 @@ export function runGoogleGateNegativeTests(): {
     },
     {
       testId: "G06-NEG-05",
-      description: "Association ledger references unknown creativeId -> GOOGLE_PRODUCT_ASSOCIATION FAIL",
+      description: "Association ledger references unknown creativeId OR declares 9 creatives when rawCount=0 -> GOOGLE_PRODUCT_ASSOCIATION FAIL",
       exec: () => {
         const base = makeValidGoogleGateInput();
         base.associationLedger.associations![0].creativeId = "cr_unknown_999";
         const res = evaluateGoogleMcpGates(base);
+
+        const zeroRaw9Declared = makeValidGoogleGateInput();
+        zeroRaw9Declared.rawManifest = {
+          rawCount: 0,
+          researchRunId: zeroRaw9Declared.researchRunId,
+          creatives: [],
+        };
+        zeroRaw9Declared.normalizationLedger = {
+          normalizationStageExecuted: true,
+          normalizedDistinctCount: 0,
+          rejectedBeforeNormalizationCount: 0,
+          records: [],
+          rejectedRecords: [],
+        };
+        zeroRaw9Declared.associationLedger = {
+          classifiedDistinctCount: 9,
+          probableProductMatchesCount: 5,
+          brandLevelMatchesCount: 4,
+          associations: [],
+        };
+        zeroRaw9Declared.uiDisplayedCreativesCount = 9;
+        const resZeroRaw = evaluateGoogleMcpGates(zeroRaw9Declared);
+
         return (
           res.subGates.GOOGLE_PRODUCT_ASSOCIATION === "FAIL" &&
-          res.overallG06Verdict === "FAIL"
+          res.overallG06Verdict === "FAIL" &&
+          resZeroRaw.subGates.GOOGLE_PRODUCT_ASSOCIATION === "FAIL" &&
+          resZeroRaw.overallG06Verdict === "FAIL" &&
+          resZeroRaw.setReconciliation.unknownAssociationCreativeIds.includes(
+            "zero_raw_nonzero_declared_or_ui_creatives_mismatch"
+          )
         );
       },
     },

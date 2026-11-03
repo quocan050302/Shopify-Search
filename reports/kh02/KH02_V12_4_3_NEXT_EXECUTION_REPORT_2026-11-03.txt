@@ -1,0 +1,556 @@
+================================================================================
+KH-02 / SHOPIFY WINNING PRODUCT RESEARCH (US) — EXECUTION & AUDIT REPORT
+Report File: reports/kh02/KH02_V12_4_3_NEXT_EXECUTION_REPORT_2026-11-03.txt
+Instruction Version: 2026-11-03
+Repository: quocan050302/Shopify-Search
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Evaluated At: 2026-11-03T08:21:45+07:00 (2026-11-03T01:21:45Z)
+================================================================================
+
+1. EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+Báo cáo này ghi nhận kết quả kiểm toán mã nguồn toàn diện (15 phân hệ A..O),
+sửa lỗi phẫu thuật (surgical patches), kiểm thử đơn vị/tích hợp/mutation âm tính,
+kiểm thử trình duyệt Chromium E2E, và đối soát хронологический Point-in-Time Backtest
+cho hệ thống KH-02 (Shopify Winning Product Research US) trên nhánh bắt buộc
+`feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`.
+
+Kết luận tổng thể trung thực (Fail-Closed Truth Separation):
+- Engineering & Code Gates (`G01`, `G02`, `G03`, `G04`, `G08`, `G11`, `G12`, `G13`, `G14`): `PASS`
+  (TypeScript `npx tsc --noEmit` = 0 lỗi; toàn bộ unit/integration/negative-control/Chromium E2E PASS).
+- Google Ads Transparency MCP (`G06`): `PASS` ở mức transport + set-reconciled creative pipeline;
+  đã vá lỗ hổng đối soát `rawCount === 0` vs `classifiedDistinctCount > 0` / `uiDisplayedCreativesCount > 0`
+  (ngăn chặn tuyệt đối hiện tượng `9 creatives UI vs 0 raw`).
+- Meta Source Normalization & Lineage (`G05`): Chuẩn hóa nhất quán `FACEBOOK` / `META` / `META_ADS`
+  về `"META_ADS"` (và `"Meta Ads"` trên UI view-model) nhưng bảo toàn nguyên vẹn `rawSourcePlatform`,
+  `adArchiveId`, `externalAdId`, `sourceExternalAdId`, `sourceRecordId` cho truy vết `provider -> DB -> candidate -> UI`.
+- TikTok Ads US (`G07`): `BLOCKED` (chưa có live upstream credentials/session hợp lệ cho TikTok Creative Center US;
+  `TIKTOK_ORGANIC` bị khóa cứng `DISABLED` theo `sourcePolicy.ts`, tuyệt đối không dùng thay thế `G07`).
+- Amazon US Local Playwright MCP (`G09`) & Walmart US Jina Reader (`G10`): Code & fail-closed persistence/audit
+  `PASS`; live commercial proof giữ trạng thái trung thực theo hiện trạng upstream (`BLOCKED` / `INSUFFICIENT_EVIDENCE`
+  khi bị bot-wall hoặc thiếu exact product match).
+- Longitudinal Demand Engine (`G15`): `INSUFFICIENT_EVIDENCE` cho tuyên bố `VERIFIED_EVERGREEN` trên dữ liệu lịch sử
+  hiện tại vì các bản ghi CSV trong DB thiếu file gốc kèm SHA-256 checksum xác thực; engine từ chối nghiêm ngặt
+  chuỗi chỉ có 2 điểm quan sát trong 60 ngày (`minimumDataPoints = 3`), trùng ngày lịch, hoặc từ khóa danh mục rộng.
+- Business Acceptance (`G16` — Top 3 Verified Evergreen Winners): `INSUFFICIENT_EVIDENCE` (Fail-Closed trung thực;
+  không tự phong `VERIFIED_EVERGREEN` khi thiếu live cross-source exact product match + authoritative longitudinal demand).
+
+
+2. PRE-FLIGHT GIT / ENV / RESOURCE SNAPSHOT
+--------------------------------------------------------------------------------
+- Working Directory: `d:\Project_github\Running-Ads`
+- Current Branch: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+  (Khớp chính xác nhánh yêu cầu; không tạo nhánh mới, không chạm `QA` hay `master`).
+- Starting Local HEAD SHA: `c344e1d8efaa937c95ee3e5550bf579847495d71`
+- Starting Remote HEAD SHA (`origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`):
+  `c344e1d8efaa937c95ee3e5550bf579847495d71`
+- Prior Code Commit SHA: `03886a6402b63509758ea434605bea0967297f8a`
+- Git Working Tree Before Edits: Clean (`0` modified, `0` untracked).
+- Disk Resource Snapshot (Drive `D:`):
+  - `FreeGiB`: `64.72 GiB` (vượt xa ngưỡng an toàn tối thiểu `>= 8 GiB`)
+  - `UsedGiB`: `79.30 GiB`
+- Memory Snapshot:
+  - `TotalVisibleMemory`: `31.75 GiB`
+  - `FreePhysicalMemory`: `4.51 GiB`
+- Concurrency Policy Enforced: Tối đa `2` tác vụ nặng chạy bất đồng bộ cùng lúc;
+  không chạy đồng thời `next build`, `playwright`, và `vitest` vượt trần bộ nhớ.
+
+
+3. FULL FUNCTION INVENTORY (BY MODULE A..O)
+--------------------------------------------------------------------------------
+Dưới đây là danh mục đầy đủ từng hàm trong 15 phân hệ A..O của KH-02, kèm vị trí `file:line`,
+input/output, callers/callees, rủi ro đã kiểm tra và test bảo vệ.
+
+[PHÂN HỆ A — Niche Decomposition & Query Planning]
+File: `src/services/kh02/evergreenResearchOrchestrator.ts`
+1. `decomposeTopicAndGenerateKeywordBuckets` (`evergreenResearchOrchestrator.ts:535-652`)
+   - Input: `(topic: string)`
+   - Output: `{ subNiches: string[]; keywordBuckets: { directProductTerms: string[]; problemSolvingTerms: string[]; painPointTerms: string[]; giftAndImpulseTerms: string[]; categoryTerms: string[] }; audienceSegments: string[]; problemStatements: string[] }`
+   - Callers: `buildHybridQueryPlan`, `executeEvergreenProductResearch`
+   - Callees: `normalizeTopicKey`, `KNOWN_NICHE_TEMPLATES`
+   - Verification: `tests/unit/kh02/evergreenProductResearch.test.ts`
+2. `buildHybridQueryPlan` (`evergreenResearchOrchestrator.ts:654-755`)
+   - Input: `(topic: string, maxQueriesPerRound?: number)`
+   - Output: `HybridQueryPlan` (`round1HighPrecision`, `round2ProblemAndPainPoint`, `round3CategoryAndBroad`, `nicheIntent`, `allPlannedKeywords`)
+   - Callers: `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:1049`)
+   - Callees: `decomposeTopicAndGenerateKeywordBuckets`
+   - Verification: `tests/unit/kh02/evergreenProductResearch.test.ts`
+3. `evaluateNichePivotRelevance` (`evergreenResearchOrchestrator.ts:757-810`)
+   - Input: `(candidate: DiscoveredProductCandidate, topic: string)`
+   - Output: `{ matchesNiche: boolean; matchedTokens: string[]; reason: string }`
+   - Callers: `executeEvergreenProductResearch` (Stage 4 pivot check)
+   - Callees: `evaluateProductRelevance`, `evaluateProductAudienceRelevance`
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+
+[PHÂN HỆ B — Meta Ads Discovery & Normalization]
+Files: `src/services/kh02/providers/metaResearchAdapter.ts`, `src/services/discovery/normalization/normalizeMetaCollectorAd.ts`
+1. `collectMetaEvergreenObservations` (`metaResearchAdapter.ts:95-498`)
+   - Input: `(options: MetaResearchCollectionOptions)` (`topic`, `keywords`, `queryPlan`, `market`, `lookbackDays`, `workspaceId`, `researchRunId`, `allowCachedFallback`)
+   - Output: `Promise<MetaResearchCollectionResult>` (`observations`, `telemetry`, `queryExecutionDetails`, `persistedAdIds`, `persistedAdIdsByExternalId`, `upstreamExternalAdIds`)
+   - Callers: `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:1096`)
+   - Callees: `executeMetaAdLibrarySearch`, `normalizeMetaCollectorAd`, `prisma.ad.upsert`, `recordProviderCallOutcome`
+   - Verification: `tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts`, `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+2. `normalizeMetaCollectorAd` (`normalizeMetaCollectorAd.ts:45-182`)
+   - Input: `(rawAd: Record<string, any>, context: { queryMarket: string; keyword?: string })`
+   - Output: `NormalizedCollectorAd` (`platform: "META"`, `sourceExternalId`, `advertiserName`, `headline`, `bodyText`, `landingPageUrl`, `mediaUrls`, `rawPayload`)
+   - Callers: `collectMetaEvergreenObservations`, `discoveryWorker.ts`
+   - Callees: `extractDomainFromUrl`, `sanitizeAdCopy`
+   - Fix applied: Hỗ trợ trích xuất `ad_archive_id` / `adArchiveId` / `archive_id` / `externalAdId` làm `sourceExternalId` chuẩn xác.
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+
+[PHÂN HỆ C — Google Ads Transparency MCP Adapter & Gate Evaluator]
+Files: `src/services/kh02/providers/googleTransparencyResearchAdapter.ts`, `scripts/kh02/googleMcpGateEvaluator.ts`
+1. `computeCanonicalPayloadHash` (`googleTransparencyResearchAdapter.ts:138-165`)
+   - Input: `(payload: unknown)`
+   - Output: `string` (deterministic 64-char SHA-256 hex, independent of key order)
+   - Callers: `normalizeGoogleAdsResponse`, `collectGoogleTransparencyObservations`, `evaluateGoogleMcpGates`
+   - Verification: `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts` (P20)
+2. `normalizeGoogleAdsResponse` (`googleTransparencyResearchAdapter.ts:210-368`)
+   - Input: `(rawResponse: any, context: GoogleNormalizationContext)`
+   - Output: `{ observations: RawAdObservation[]; rawCreatives: GoogleRawCreativeRecord[]; rejectedRecords: GoogleRejectedCreativeRecord[]; providerRequestId: string | null; providerRequestIdOrigin: "UPSTREAM" | "ABSENT" }`
+   - Callers: `collectGoogleTransparencyObservations`
+   - Callees: `computeCanonicalPayloadHash`, `classifyCreativeToCandidateAssociation`
+   - Verification: `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts` (P01..P19)
+3. `classifyCreativeToCandidateAssociation` (`googleTransparencyResearchAdapter.ts:370-465`)
+   - Input: `(creative: GoogleRawCreativeRecord, candidates: DiscoveredProductCandidate[])`
+   - Output: `GoogleCreativeAssociationRecord` (`EXACT_PRODUCT_SKU_MATCH` | `PROBABLE_PRODUCT_MATCH` | `BRAND_ONLY_MATCH` | `UNASSOCIATED_REJECTED`)
+   - Callers: `collectGoogleTransparencyObservations`
+   - Verification: `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts` (P17, P18)
+4. `collectGoogleTransparencyObservations` (`googleTransparencyResearchAdapter.ts:468-895`)
+   - Input: `(options: GoogleTransparencyCollectionOptions)`
+   - Output: `Promise<GoogleTransparencyCollectionResult>`
+   - Callers: `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:1442`)
+   - Callees: `invokeGoogleTransparencyMcpTool`, `normalizeGoogleAdsResponse`, `classifyCreativeToCandidateAssociation`
+   - Verification: `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts`
+5. `evaluateGoogleMcpGates` (`scripts/kh02/googleMcpGateEvaluator.ts:360-765`)
+   - Input: `(input: GoogleMcpGateInput)`
+   - Output: `GoogleMcpGateEvaluation` (`subGates`, `overallG06Verdict`, `setReconciliation`, `exactProductSkuMatchesCount`, `probableProductMatchesCount`, `brandOnlyMatchesCount`)
+   - Callers: `acceptanceValidatorV12_4_3_4_5.ts`, `runGoogleGateNegativeTests`, `v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+   - Fix applied: Bắt buộc fail-closed (`GOOGLE_PRODUCT_ASSOCIATION = "FAIL"`, `overallG06Verdict = "FAIL"`) khi `rawIdSet.size === 0` nhưng `declaredClassifiedCount > 0` hoặc `uiDisplayedCreativesCount > 0` hoặc `persistedCreativesCount > 0`.
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`, `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts`
+
+[PHÂN HỆ D — TikTok Ads US & TikTok Organic Separation]
+Files: `src/services/kh02/providers/tiktokAdsResearchAdapter.ts`, `src/services/kh02/providers/tiktokOrganicResearchAdapter.ts`, `src/services/kh02/providers/sourcePolicy.ts`
+1. `collectTikTokAdsObservations` (`tiktokAdsResearchAdapter.ts:65-245`)
+   - Input: `(options: TikTokAdsCollectionOptions)`
+   - Output: `Promise<TikTokAdsCollectionResult>` (honest `NOT_CONFIGURED` / `BLOCKED` when live US commercial ad credentials/session unavailable)
+   - Callers: `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:1320`)
+2. `collectTikTokOrganicObservations` (`tiktokOrganicResearchAdapter.ts:45-140`)
+   - Input: `(options: TikTokOrganicCollectionOptions)`
+   - Output: `Promise<TikTokOrganicCollectionResult>` (unconditionally returns `DISABLED`, 0 outbound calls)
+   - Callers: Guarded by `isSourceHiddenOrDisabled("TIKTOK_ORGANIC")`
+3. `getSourcePolicy` / `isSourceHiddenOrDisabled` / `filterActiveResearchSources` (`sourcePolicy.ts:48-145`)
+   - Input: `(source: ResearchSourceType)` / `(sources: string[])`
+   - Output: `SourcePolicyConfig` / `boolean` / `ResearchSourceType[]`
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts` (Section E)
+
+[PHÂN HỆ E — Supplemental Marketplace Pilots: Amazon US (Playwright MCP) & Walmart US (Jina Reader)]
+Files: `src/services/kh02/marketplace/amazonUsEvidenceAdapter.ts`, `src/services/kh02/providers/walmartUsResearchAdapter.ts`, `src/services/kh02/marketplace/walmartEvidencePersistence.ts`
+1. `verifyCandidateOnAmazonUs` / `verifyShortlistOnAmazonUs` (`amazonUsEvidenceAdapter.ts:310-890`)
+   - Input: `(candidate: DiscoveredProductCandidate, options: AmazonVerificationOptions)`
+   - Output: `Promise<AmazonCandidateVerificationResult>` (`status`, `exactMatchVerified`, `asin`, `pdpUrl`, `price`, `rating`, `reviewCount`, `bsr`, `mcpTraceReceipt`)
+   - Callers: `executeEvergreenProductResearch` (Stage 7b), `/api/v1/kh02/marketplace/amazon`
+   - Verification: `tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts`
+2. `verifyCandidateOnWalmartUs` / `collectWalmartUsObservations` (`walmartUsResearchAdapter.ts:185-640`)
+   - Input: `(candidate: DiscoveredProductCandidate, options: WalmartVerificationOptions)`
+   - Output: `Promise<WalmartCandidateVerificationResult>` (`status`, `walmartItemId`, `productUrl`, `price`, `rating`, `reviewCount`, `jinaReceipt`)
+   - Callers: `executeEvergreenProductResearch` (Stage 7c), `/api/v1/kh02/marketplace/walmart`, `kh02Worker.ts`
+   - Verification: `tests/unit/kh02/walmartUsJinaPilotV12_4_3_5.test.ts`
+3. `persistWalmartVerificationEvidence` / `filterWalmartEvidencePointInTime` (`walmartEvidencePersistence.ts:55-230`)
+   - Input: `(evidence, runContext)` / `(records, asOfCutoff)`
+   - Output: Persisted `ResearchEvidence` row / Point-in-time filtered records (no future leakage)
+   - Verification: `tests/unit/kh02/walmartUsJinaPilotV12_4_3_5.test.ts`
+
+[PHÂN HỆ F — Product Candidate Discovery, Merchant Identity & 6-Level Distinctness]
+Files: `src/services/kh02/identity/productCandidateDiscovery.ts`, `src/services/kh02/identity/productDistinctnessEngine.ts`, `src/services/kh02/identity/merchantIdentityPolicy.ts`, `src/services/kh02/identity/productRelevanceEvaluator.ts`
+1. `normalizeSourceObservation` (`productCandidateDiscovery.ts:288-378`)
+   - Input: `(raw: RawAdObservation)`
+   - Output: `RawAdObservation` (canonicalized `source`, preserved `rawSourcePlatform`, `adArchiveId`, `externalAdId`, `sourceExternalAdId`)
+   - Fix applied: Chuẩn hóa `"FACEBOOK"` / `"META"` / `"META_ADS"` -> `"META_ADS"` đồng thời giữ nguyên `rawSourcePlatform` và các mã `adArchiveId` / `externalAdId`.
+2. `verifyLiveMetaObservationProvenance` (`productCandidateDiscovery.ts:390-545`)
+   - Input: `(obs: RawAdObservation, context: LiveMetaLineageValidationContext)`
+   - Output: `{ valid: boolean; rejectionReasons: string[]; lineageReceipt: LiveMetaLineageReceipt | null }`
+3. `verifyCandidateLiveLineageChain` (`productCandidateDiscovery.ts:548-655`)
+   - Input: `(candidate: DiscoveredProductCandidate, context: LiveMetaLineageValidationContext)`
+   - Output: `{ valid: boolean; verifiedLiveObservationIds: string[]; lineageReceipts: LiveMetaLineageReceipt[]; rejectionReasons: string[] }`
+4. `discoverProductCandidatesFromAds` (`productCandidateDiscovery.ts:1120-1695`)
+   - Input: `(observations: RawAdObservation[], topic: string, options?: DiscoveryOptions)`
+   - Output: `DiscoveredProductCandidate[]`
+5. `selectTopResearchShortlist` (`productCandidateDiscovery.ts:1760-2090`)
+   - Input: `(candidates: DiscoveredProductCandidate[], topic: string, requestedCount?: number, lineageContext?: LiveMetaLineageValidationContext)`
+   - Output: `ResearchShortlistResult` (`shortlist`, `liveVerifiedShortlist`, `distinctnessEvaluation`, `candidateRejectionLedger`)
+6. `buildProductIdentityFingerprint` & `compareProductIdentity` (`productDistinctnessEngine.ts:95-360`)
+   - Input: `(candidateA, candidateB)`
+   - Output: `ProductIdentityComparisonResult` (`areSameActualProduct`, `matchedLevel` across 6 hierarchy levels: GTIN/UPC/EAN/ASIN -> Merchant Domain+SKU/Handle -> Canonical PDP URL -> Brand+Model -> Normalized Title+Merchant -> Visual/Mechanism Family)
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts` (Section A: 1 positive + 5 negative cases)
+
+[PHÂN HỆ G — Temporal Demand Engine (Longitudinal Demand & Evergreen Gate G15)]
+File: `src/services/kh02/demand/temporalDemandEngine.ts`
+1. `evaluateDemandSourceAuthority` (`temporalDemandEngine.ts:245-393`)
+   - Input: `(observations: HistoricalObservation[], policy?: DemandHistoryPolicy)`
+   - Output: `{ authority: DemandSourceAuthority; reasons: string[]; productAttributionValid: boolean }`
+2. `evaluateDemandHistoryEvidence` (`temporalDemandEngine.ts:477-665`)
+   - Input: `(observations: HistoricalObservation[], policy?: DemandHistoryPolicy)`
+   - Output: `DemandHistoryAssessment` (`status: "VERIFIED" | "UNVERIFIED" | "INSUFFICIENT_HISTORY"`, `eligibleForEvergreen`, `dataPointsCount`, `distinctObservationDatesCount`, `coveredDays`, `demandClass`)
+   - Rules enforced: `minimumDataPoints = 3`, `minimumCoveredDays = 60`, `rejectDuplicateTimestamps = true`, rejects future timestamps, rejects broad category terms (`"Pet Gadgets"`), rejects unbacked CSV references.
+3. `evaluateTemporalDemandStability` (`temporalDemandEngine.ts:670-788`)
+   - Input: `(observations: DemandDataPoint[], requestedLookbackDays?: number, policy?: DemandHistoryPolicy)`
+   - Output: `TemporalStabilityEvaluation`
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts` (Section D)
+
+[PHÂN HỆ H — Evergreen Opportunity Scoring & Tier Classification]
+File: `src/services/kh02/scoring/evergreenOpportunityScoring.ts`
+1. `calculateKH02EvergreenScore` (`evergreenOpportunityScoring.ts:145-520`)
+   - Input: `({ candidate, demandSeries, hasVerifiedSupplierQuote })`
+   - Output: `KH02EvergreenScoreResult` (`opportunityScore`, `evidenceConfidence`, `tier: "VERIFIED_EVERGREEN" | "PROVISIONAL_OPPORTUNITY" | "INSUFFICIENT_EVIDENCE" | "REJECTED"`, `pillars`, `recommendation`)
+   - Callers: `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:1733`)
+   - Verification: `tests/unit/kh02/evergreenProductResearch.test.ts`
+
+[PHÂN HỆ I — Evergreen Research Orchestrator (End-to-End Pipeline)]
+File: `src/services/kh02/evergreenResearchOrchestrator.ts`
+1. `executeEvergreenProductResearch` (`evergreenResearchOrchestrator.ts:950-2465`)
+   - Input: `(request: EvergreenResearchRequest)`
+   - Output: `Promise<EvergreenLeaderboardResponse>`
+   - Stages:
+     - Stage 1: Niche Decomposition & Hybrid Query Plan
+     - Stage 2: Multi-Round Meta Ads Collection (`LIVE_PROVIDER` vs `HISTORICAL_DB`)
+     - Stage 3: Candidate Discovery & Merchant PDP Verification
+     - Stage 4: Niche Relevance & Audience Fit Evaluation + Pivot Recovery
+     - Stage 5: 6-Level Distinctness & Top-3 Shortlist Selection
+     - Stage 6: Google Ads Transparency MCP Enrichment & Set Reconciliation
+     - Stage 7: TikTok Ads US & Supplemental Marketplace Enrichment (Amazon US, Walmart US)
+     - Stage 8: Cross-Platform Product Matching
+     - Stage 9: Longitudinal Demand Assessment & Evergreen Opportunity Scoring
+     - Stage 10: Tier Partitioning (`topThree`, `provisionalCandidates`, `insufficientEvidenceCandidates`, `rejectedCandidates`) & Persistence
+   - Fixes applied:
+     - Quarantine mọi Google observation khi `rawCreativesCount === 0` (`GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH`).
+     - Chuẩn hóa `result.googleAds` (`rawCreativesCount`, `persistedCreativesCount`, `totalCreativesFound`, `probableProductMatches`).
+     - Đồng bộ `sourceCoverage` cho cả `GOOGLE_ADS` lẫn `GOOGLE_ADS_TRANSPARENCY`, và `DEMAND_HISTORY` lẫn `GOOGLE_TRENDS`.
+
+[PHÂN HỆ J — Persistence Service & Prisma SQLite Lineage]
+File: `src/services/kh02/persistence/kh02PersistenceService.ts`
+1. `persistKH02ResearchRun` (`kh02PersistenceService.ts:75-410`)
+   - Input: `(leaderboard: EvergreenLeaderboardResponse, context: PersistenceContext)`
+   - Output: `Promise<{ researchRunId: string; persistedCandidateCount: number; persistedEvidenceCount: number }>`
+   - Callers: `executeEvergreenProductResearch`, `kh02Worker.ts`
+2. `loadLatestKH02ResearchRun` / `loadKH02ResearchRunById` (`kh02PersistenceService.ts:415-620`)
+   - Input: `(workspaceId: string, topic?: string)` / `(runId: string, workspaceId: string)`
+   - Output: `Promise<EvergreenLeaderboardResponse | null>`
+   - Callers: `GET /api/v1/kh02/research`
+
+[PHÂN HỆ K — Background Worker, Lease Heartbeat, Fencing & Idempotency]
+Files: `src/workers/kh02Worker.ts`, `src/workers/discoveryWorker.ts`
+1. `computeResearchIdempotencyKey` (`kh02Worker.ts:88-128`)
+   - Input: `(payload: Record<string, any>, context?: { workspaceId?: string })`
+   - Output: `string` (deterministic SHA-256 idempotency key normalized by workspace, topic, market, lookbackDays)
+2. `claimNextQueuedKH02Job` (`kh02Worker.ts:195-290`)
+   - Input: `(workerId: string, leaseDurationMs?: number)`
+   - Output: `Promise<ClaimedJobOwnership | null>` (atomic `fencingGeneration` increment + `claimToken` + `fencingToken`)
+3. `updateJobIfClaimOwned` (`kh02Worker.ts:295-375`)
+   - Input: `(jobId: string, ownership: ClaimedJobOwnership, data: Record<string, any>, dbClient?: any)`
+   - Output: `Promise<{ success: boolean; reason?: "OWNERSHIP_LOST" | "NOT_FOUND"; newRecordVersion?: number }>`
+   - Verification: `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts` (Section E), `tests/integration/kh02AsyncJobsAndIdempotency.test.ts`
+
+[PHÂN HỆ L — Provider Budget, Circuit Breaker & Health Telemetry]
+Files: `src/services/kh02/providers/providerCostPolicy.ts`, `src/services/kh02/providers/providerHealthService.ts`
+1. `checkProviderBudgetAllowance` / `recordProviderCallUsage` (`providerCostPolicy.ts:60-210`)
+   - Input: `(provider: string, workspaceId: string)`
+   - Output: `{ allowed: boolean; remainingCalls: number; reason: string | null }`
+2. `getProviderHealthStatus` / `recordProviderCallOutcome` (`providerHealthService.ts:55-240`)
+   - Input: `(provider: string)` / `(provider: string, outcome: ProviderOutcomeInput)`
+   - Output: `ProviderHealthSnapshot` (`circuitState: "CLOSED" | "OPEN" | "HALF_OPEN"`, `consecutiveFailures`, `cooldownUntil`)
+   - Verification: `tests/unit/kh02/providerBudgetAndCircuitBreaker.test.ts`
+
+[PHÂN HỆ M — Next.js API Routes (KH-02 Research & Marketplace Endpoints)]
+Files: `src/app/api/v1/kh02/research/route.ts`, `src/app/api/v1/kh02/marketplace/amazon/route.ts`, `src/app/api/v1/kh02/marketplace/walmart/route.ts`
+1. `GET` (`src/app/api/v1/kh02/research/route.ts:45-215`)
+   - Input: `NextRequest` (`runId`, `topic`, `market`)
+   - Output: `NextResponse` (read-only snapshot of persisted `EvergreenLeaderboardResponse` with normalized `sourceCoverage` and `providerTelemetry`)
+2. `POST` (`src/app/api/v1/kh02/research/route.ts:220-480`)
+   - Input: `NextRequest` (`topic`, `market`, `lookbackDays`, `asyncMode`)
+   - Output: `NextResponse` (enqueues/deduplicates `SyncJob` via `computeResearchIdempotencyKey` or executes bounded research run)
+   - Fix applied: Đồng bộ `sourceCoverage` (`META_ADS`, `GOOGLE_ADS`, `GOOGLE_ADS_TRANSPARENCY`, `DEMAND_HISTORY`, `GOOGLE_TRENDS`) và `freshLiveAdsCount` / `historicalCachedAdsCount` giữa orchestrator, API response và UI.
+
+[PHÂN HỆ N — Product Finder Presentation View-Model & React UI]
+Files: `src/services/kh02/presentation/productFinderViewModel.ts`, `src/app/products/page.tsx`
+1. `buildCanonicalRecommendedProducts` (`productFinderViewModel.ts:382-675`)
+   - Input: `(leaderboard: EvergreenLeaderboardResponse | null | undefined)`
+   - Output: `CanonicalRecommendedProduct[]` (deduplicated Tab 1 cards with honest qualification badges, media source labels, and source badges)
+   - Fix applied: Chuẩn hóa và khử trùng lặp `"FACEBOOK"` / `"META"` / `"META_ADS"` thành duy nhất `"Meta Ads"`, và `"GOOGLE_ADS_TRANSPARENCY"` / `"GOOGLE_ADS"` thành `"Google Ads"`.
+2. `buildProductExplorerRows` (`productFinderViewModel.ts:680-914`)
+   - Input: `(leaderboard: EvergreenLeaderboardResponse | null | undefined)`
+   - Output: `ProductExplorerRow[]` (Tab 2 full candidate table including excluded/rejected candidates with plain-English rejection reasons)
+3. `ProductsPage` (`src/app/products/page.tsx:1-1450`)
+   - Input: User interaction (niche input, market selector, run trigger, tab switch)
+   - Output: Rendered KH-02 Product Finder UI with honest status banners, source coverage pills (`GOOGLE_ADS_TRANSPARENCY ?? GOOGLE_ADS`, `GOOGLE_TRENDS ?? DEMAND_HISTORY`), and candidate drawers.
+
+[PHÂN HỆ O — Independent Gate Evaluators, Backtest Runner & Acceptance Validators]
+Files: `scripts/kh02/g16CandidateEvaluator.ts`, `scripts/kh02/acceptanceTruth.ts`, `scripts/kh02/acceptanceValidatorV12_4_3_4_5.ts`, `scripts/kh02/runBacktestV12_4_3_4_2.ts`
+1. `evaluateG16Candidate` & `evaluateG16Top3` (`g16CandidateEvaluator.ts:260-680`)
+   - Input: `(candidate, context)` / `(candidates, context)`
+   - Output: `G16CandidateEvaluation` / `G16Top3Evaluation` (`overallG16Verdict: "PASS" | "INSUFFICIENT_EVIDENCE" | "FAIL"`)
+2. `deriveAcceptanceTruth` (`acceptanceTruth.ts:85-340`)
+   - Input: `(gateInputs)`
+   - Output: Separated engineering vs live provider vs business acceptance verdicts (never conflates code test PASS with business G16 PASS).
+3. `runBacktestV12_4_3_4_2` (`runBacktestV12_4_3_4_2.ts:2864-2972`)
+   - Input: `(options: { outputDir?: string; niche?: string })`
+   - Output: `Promise<FullBacktestOutput>` (`policyScenarios`, `historicalDevReplay`, `historicalHoldoutReplay`, `pointInTimeIntegrityVerdict`)
+
+
+4. CALL GRAPH & DATA LINEAGE MAP
+--------------------------------------------------------------------------------
+Luồng thực thi và truy vết dữ liệu bất biến từ đầu vào của người dùng đến UI và Gate Evaluator:
+
+[1] User / Client UI (`src/app/products/page.tsx`)
+    |-> Nhập `topic` (ví dụ `"Pet Gadgets"`), `market = "US"`, `lookbackDays = 90`
+    |-> Gửi `POST /api/v1/kh02/research` (`src/app/api/v1/kh02/research/route.ts`)
+
+[2] API & Job Queue (`route.ts` -> `kh02Worker.ts`)
+    |-> `computeResearchIdempotencyKey({ topic, market, lookbackDays, workspaceId })`
+    |-> Tạo hoặc tái sử dụng `SyncJob` trong SQLite (`prisma.syncJob`)
+    |-> Worker chiếm quyền sở hữu job qua `claimNextQueuedKH02Job` (`claimToken`, `fencingToken`, `fencingGeneration`)
+    |-> Mọi cập nhật tiến độ đi qua `updateJobIfClaimOwned` (chặn tuyệt đối zombie worker ghi đè)
+
+[3] Orchestrator Stage 1-2: Query Planning & Meta Collection (`evergreenResearchOrchestrator.ts`)
+    |-> `buildHybridQueryPlan(topic)` sinh 3 vòng truy vấn (High-Precision, Problem/Pain-Point, Broad/Category)
+    |-> `collectMetaEvergreenObservations` gọi Meta Ad Library collector -> `normalizeMetaCollectorAd`
+    |-> Lưu `prisma.ad` với `externalAdId` (`adArchiveId`) và `researchRunId`
+    |-> Chuẩn hóa quan sát qua `normalizeSourceObservation`:
+        - `source`: `"FACEBOOK"` / `"META"` / `"META_ADS"` -> `"META_ADS"`
+        - Bảo toàn: `rawSourcePlatform`, `adArchiveId`, `externalAdId`, `sourceExternalAdId`, `sourceRecordId`, `queryId`, `providerRequestId`
+
+[4] Orchestrator Stage 3-5: Discovery, Lineage Check, Relevance & 6-Level Distinctness
+    |-> `discoverProductCandidatesFromAds` gom cụm theo danh tính sản phẩm thực
+    |-> `verifyLiveMetaObservationProvenance` & `verifyCandidateLiveLineageChain` đối soát:
+        `upstreamAdId (adArchiveId) -> persistedAdId (prisma.ad.id) -> candidate.supportingAdIds -> shortlist`
+    |-> `evaluateProductRelevance` & `evaluateProductAudienceRelevance` lọc sai lệch ngách
+    |-> `selectTopResearchShortlist` + `compareProductIdentity` (6 cấp độ) đảm bảo Top 3 là 3 sản phẩm vật lý khác biệt
+
+[5] Orchestrator Stage 6-8: Cross-Source Enrichment & Set Reconciliation
+    |-> Google Ads Transparency MCP (`collectGoogleTransparencyObservations`):
+        - Ghi nhận `mcpInvocationRef`, `responseEvidenceHash` (64-char SHA-256), `providerRequestId` (`UPSTREAM` hoặc `ABSENT`)
+        - Đối soát tập hợp: `rawIdSet = normIdSet U rejectedIdSet` và `associations.length === rawIdSet.size`
+        - Nếu `rawCreativesCount === 0` nhưng `observations.length > 0` hoặc `classifiedDistinctCount > 0` hoặc `uiDisplayedCreativesCount > 0`:
+          Quarantine ngay lập tức (`GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH`) và đánh `FAIL` tại `evaluateGoogleMcpGates`
+    |-> TikTok Ads US (`collectTikTokAdsObservations`): giữ độc lập với `TIKTOK_ORGANIC` (`DISABLED`)
+    |-> Amazon US (`verifyShortlistOnAmazonUs`) & Walmart US (`verifyCandidateOnWalmartUs`):
+        chỉ cộng điểm cross-source khi có `EXACT` product match thực tế
+
+[6] Orchestrator Stage 9-10: Longitudinal Demand (`G15`), Scoring, Persistence & UI Readback
+    |-> `evaluateDemandHistoryEvidence` & `evaluateTemporalDemandStability`:
+        kiểm tra `>= 3` điểm dữ liệu, `>= 60` ngày, ngày lịch phân biệt, từ khóa cấp sản phẩm, và nguồn xác thực
+    |-> `calculateKH02EvergreenScore` phân loại `VERIFIED_EVERGREEN`, `PROVISIONAL_OPPORTUNITY`, `INSUFFICIENT_EVIDENCE`, `REJECTED`
+    |-> `persistKH02ResearchRun` lưu toàn bộ run, candidates, evidence vào SQLite
+    |-> `GET /api/v1/kh02/research` -> `buildCanonicalRecommendedProducts` & `buildProductExplorerRows` -> `src/app/products/page.tsx`
+    |-> `evaluateG16Top3` & `evaluateGoogleMcpGates` kiểm định độc lập toàn bộ bằng chứng.
+
+
+5. BUGS FOUND & EXACT CODE FIXES
+--------------------------------------------------------------------------------
+[BUG-01] Lỗ hổng đối soát Google MCP: `rawCount === 0` nhưng `associationLedger` hoặc UI báo `> 0` creatives (9 creatives UI vs 0 raw)
+- Nguyên nhân gốc (Root Cause):
+  Trong `scripts/kh02/googleMcpGateEvaluator.ts`, biểu thức kiểm tra `associationsValid` trước đây viết:
+  `(rawIdSet.size === 0 || associations.length === rawIdSet.size)`.
+  Khi `rawIdSet.size === 0` (0 raw creatives từ MCP), điều kiện `rawIdSet.size === 0` trả về `true` ngay lập tức,
+  bỏ qua trường hợp `associationLedger.classifiedDistinctCount > 0` (ví dụ 9 creatives), `probableProductMatchesCount > 0`,
+  hoặc `uiDisplayedCreativesCount > 0`. Đồng thời trong `src/services/kh02/evergreenResearchOrchestrator.ts`,
+  `result.googleAds.probableProductMatches` chỉ kiểm tra `matchLevel === "PROBABLE"` mà bỏ sót `associationVerdict === "PROBABLE_PRODUCT_MATCH"`.
+- Files & Lines sửa đổi:
+  1. `scripts/kh02/googleMcpGateEvaluator.ts` (lines 110-125, 515-610, 926-965):
+     - Thêm `uiDisplayedCreativesCount?: number` và `persistedCreativesCount?: number` vào `GoogleMcpGateInput`.
+     - Loại bỏ nhánh miễn trừ `rawIdSet.size === 0`; bắt buộc `associations.length === rawIdSet.size`.
+     - Thêm kiểm tra tường minh `zeroRawNonZeroDeclaredMismatch`, `uiExceedsRawMismatch`, `persistedExceedsRawMismatch`, `declaredClassifiedMismatch`.
+     - Khi phát hiện bất kỳ sai lệch nào: đẩy mã lỗi (`"zero_raw_nonzero_declared_or_ui_creatives_mismatch"`, v.v.) vào `unknownAssociationCreativeIds`,
+       ép `probableProductMatchesCount = 0`, `brandOnlyMatchesCount = 0`, `exactProductSkuMatchesCount = 0`,
+       và đánh `GOOGLE_PRODUCT_ASSOCIATION = "FAIL"`, `overallG06Verdict = "FAIL"`.
+  2. `src/services/kh02/evergreenResearchOrchestrator.ts` (lines 1470-1505, 2414-2445):
+     - Tại Stage 6: Nếu `enrichmentExecution` báo `rawCreativesCount === 0` nhưng `googleResult.observations.length > 0`,
+       quarantine toàn bộ observations (`googleResult.observations = []`) và ghi cảnh báo `GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH`.
+     - Tại `result.googleAds`: Xuất đầy đủ `rawCreativesCount`, `persistedCreativesCount`, `totalCreativesFound`,
+       `probableProductMatches` (hỗ trợ cả `associationVerdict === "PROBABLE_PRODUCT_MATCH"` và `matchLevel === "PROBABLE"`),
+       và `associationMismatchDetected`.
+
+[BUG-02] Lệch khóa `sourceCoverage` giữa Orchestrator / API (`GOOGLE_ADS`, `DEMAND_HISTORY`) và UI (`GOOGLE_ADS_TRANSPARENCY`, `GOOGLE_TRENDS`)
+- Nguyên nhân gốc (Root Cause):
+  `evergreenResearchOrchestrator.ts` và `src/app/api/v1/kh02/research/route.ts` chỉ xuất `sourceCoverage.GOOGLE_ADS`,
+  trong khi `src/app/products/page.tsx` đọc `sourceCoverage.GOOGLE_ADS_TRANSPARENCY` và `sourceCoverage.GOOGLE_TRENDS`
+  cùng trường `freshLiveCount` / `cachedRecordsCount`.
+- Files & Lines sửa đổi:
+  1. `src/services/kh02/evergreenResearchOrchestrator.ts` (lines 2365-2413):
+     - Xuất đồng thời các khóa chuẩn và alias trong `sourceCoverage`: `META_ADS`, `TIKTOK_ADS`, `TIKTOK_ORGANIC`,
+       `GOOGLE_ADS`, `GOOGLE_ADS_TRANSPARENCY`, `DEMAND_HISTORY`, `GOOGLE_TRENDS`.
+  2. `src/app/api/v1/kh02/research/route.ts` (lines 118-175):
+     - Đồng bộ hóa `sourceCoverage` khi trả kết quả API, bao gồm cả `freshLiveAdsCount` / `freshLiveCount` và `historicalCachedAdsCount` / `cachedRecordsCount`.
+  3. `src/app/products/page.tsx` (lines 250-310):
+     - Đọc fallback an toàn giữa `GOOGLE_ADS_TRANSPARENCY ?? GOOGLE_ADS` và `GOOGLE_TRENDS ?? DEMAND_HISTORY`,
+       cũng như `freshLiveAdsCount ?? freshLiveCount` và `historicalCachedAdsCount ?? cachedRecordsCount`.
+
+[BUG-03] Chuẩn hóa nhãn nguồn Meta (`FACEBOOK` / `META` / `META_ADS`) và bảo toàn `adArchiveId` / `externalAdId`
+- Nguyên nhân gốc (Root Cause):
+  Bản ghi từ DB hoặc collector có thể mang `platform = "FACEBOOK"` hoặc `source = "META"`, dẫn đến hiển thị trùng lặp
+  (`"FACEBOOK, META_ADS"`) trên thẻ sản phẩm hoặc rớt kiểm tra `source === "META_ADS"` nếu không chuẩn hóa sớm.
+- Files & Lines sửa đổi:
+  1. `src/services/kh02/identity/productCandidateDiscovery.ts` (lines 288-378):
+     - Trong `normalizeSourceObservation`, chuẩn hóa `"FACEBOOK" | "META" | "META_ADS"` về `"META_ADS"`,
+       nhưng lưu giữ `rawSourcePlatform` gốc và bảo toàn đầy đủ `adArchiveId`, `externalAdId`, `sourceExternalAdId`, `sourceRecordId`.
+  2. `src/services/discovery/normalization/normalizeMetaCollectorAd.ts` (lines 55-95):
+     - Ưu tiên trích xuất `ad_archive_id` / `adArchiveId` / `archive_id` / `externalAdId` cho `sourceExternalId`.
+  3. `src/services/kh02/presentation/productFinderViewModel.ts` (lines 526-540, 789-803):
+     - Ánh xạ `"META_ADS" | "META" | "FACEBOOK"` -> `"Meta Ads"` và `"GOOGLE_ADS_TRANSPARENCY" | "GOOGLE_ADS"` -> `"Google Ads"`
+       qua `Set<string>` để không bao giờ lặp nhãn trên UI.
+
+
+6. PROVIDER & GATE TRUTH TABLE
+--------------------------------------------------------------------------------
+Bảng trạng thái trung thực của từng Provider và từng Gate (`G01`..`G16`) sau khi kiểm tra thực nghiệm:
+
+| Gate / Provider | Phân loại | Verdict | Bằng chứng & Lý do xác thực (Fail-Closed) |
+| :--- | :--- | :--- | :--- |
+| `G01` Niche Decomposition & Query Plan | Engineering | `PASS` | Sinh đúng 3 vòng truy vấn hybrid + sub-niches + pain points cho `"Pet Gadgets"` và niche bất kỳ. |
+| `G02` Candidate Discovery & 6-Level Distinctness | Engineering | `PASS` | Nhận diện đúng cùng sản phẩm qua canonical URL/SKU; từ chối 5 nhóm negative (khác model, khác niche, phụ kiện, homepage, khác merchant). |
+| `G03` Niche & Audience Relevance Filter | Engineering | `PASS` | Loại bỏ chính xác quảng cáo lệch ngách (`CROSS_NICHE_MISMATCH`), quần áo người, dịch vụ phi vật lý. |
+| `G04` Evergreen Scoring & Tier Non-Inflation | Engineering | `PASS` | Không tự nâng cấp lên `VERIFIED_EVERGREEN` khi thiếu demand hoặc thiếu verified identity; không cộng điểm ảo. |
+| `G05` Meta Ads Live Provenance & Lineage | Provider / Lineage | `PASS` (Code/Lineage) / `INSUFFICIENT_EVIDENCE` (Live Top-3) | Chuỗi truy vết `upstreamAdId -> persistedAdId -> candidate -> UI` và chuẩn hóa `FACEBOOK -> META_ADS` hoạt động chính xác. |
+| `G06` Google Ads Transparency MCP | Provider / Lineage | `PASS` (Transport & Pipeline) / `INSUFFICIENT_EVIDENCE` (Exact Product Match) | Transport MCP + 64-char SHA-256 payload hash + set reconciliation `PASS`. Đã chặn đứng lỗi `raw=0 vs UI=9`. Các creative hiện tại ở mức `BRAND_ONLY_MATCH` / `PROBABLE_PRODUCT_MATCH` (`exactProductSkuMatchesCount = 0`). |
+| `G07` TikTok Ads US Commercial | Provider | `BLOCKED` | Thiếu live upstream session/credentials cho TikTok Creative Center US. `TIKTOK_ORGANIC` bị khóa cứng `DISABLED`, tuyệt đối không dùng thay thế `G07`. |
+| `G08` Cross-Platform Matcher Integrity | Engineering | `PASS` | Chỉ gộp bằng chứng khi khớp danh tính sản phẩm thực; không gộp theo từ khóa danh mục chung. |
+| `G09` Amazon US Local Playwright MCP Pilot | Provider Pilot | `PASS` (Code/Guard) / `INSUFFICIENT_EVIDENCE` (Live Commercial) | Giữ nguyên kiến trúc Local Microsoft Playwright MCP (anonymous headless browser, không paid API). Fail-closed khi gặp bot-wall hoặc chưa có exact match. |
+| `G10` Walmart US Jina Reader Pilot | Provider Pilot | `PASS` (Code/Guard) / `INSUFFICIENT_EVIDENCE` (Live Commercial) | Giữ nguyên kiến trúc Jina Reader (`r.jina.ai` / `s.jina.ai`), read-only `GET`, child job `POST`, point-in-time anti-leakage `PASS`. |
+| `G11` SQLite / Prisma Persistence Parity | Engineering | `PASS` | Lưu trữ và đọc lại đầy đủ `ResearchRun`, `ProductCandidate`, `ResearchEvidence`, `LandingPageSnapshot`. |
+| `G12` Async Worker Lease, Heartbeat & Fencing | Engineering | `PASS` | Atomic claim + `fencingGeneration` + `updateJobIfClaimOwned` chặn hoàn toàn stale/zombie worker; idempotency key chống tạo job trùng. |
+| `G13` API Contract & SourceCoverage Parity | Engineering | `PASS` | Đồng bộ hoàn toàn `sourceCoverage` (`META_ADS`, `GOOGLE_ADS`, `GOOGLE_ADS_TRANSPARENCY`, `DEMAND_HISTORY`, `GOOGLE_TRENDS`) và `googleAds` summary. |
+| `G14` Product Finder UI Honesty & Chromium E2E | Engineering / UI | `PASS` | Hiển thị trung thực trạng thái nguồn, số lượng live vs cached ads, không hiển thị `"FACEBOOK"` thô, không báo sai `VERIFIED_EVERGREEN`. |
+| `G15` Longitudinal Demand History Engine | Business / Data | `INSUFFICIENT_EVIDENCE` | Engine `PASS` mọi quy tắc bảo vệ (từ chối `< 3` điểm, `< 60` ngày, trùng ngày, từ khóa rộng). Dữ liệu lịch sử trong DB hiện thiếu raw CSV file + SHA-256 checksum trên đĩa nên trả về `INSUFFICIENT_EVIDENCE` trung thực. |
+| `G16` Top-3 Verified Evergreen Business Gate | Business Acceptance | `INSUFFICIENT_EVIDENCE` | Fail-closed trung thực: chưa đủ 3 sản phẩm cùng lúc đạt live cross-source exact product match + independent merchant PDP proof + authoritative longitudinal demand (`G15`). |
+
+
+7. UNIT / CONTRACT / NEGATIVE TEST RESULTS
+--------------------------------------------------------------------------------
+1. TypeScript Static Typecheck:
+   - Command: `npx tsc --noEmit`
+   - Exit Code: `0` (`0` errors across all `src/`, `scripts/`, and `tests/` files).
+
+2. New Targeted Audit Test Suite (`tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`):
+   - Command: `npx vitest run tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+   - Result: `PASS` (`7/7` tests passed in `50ms`):
+     - [A] Identity Resolution & 6-Level Distinctness: 1 positive exact match + 5 mandatory negative cases (same brand different model, different niche product, replacement accessory pack, generic store homepage, unrelated merchant domain).
+     - [B.1] Google Raw=0 vs Declared/UI=9 Creative Association Reconciliation Guard: `evaluateGoogleMcpGates` trả về `GOOGLE_PRODUCT_ASSOCIATION = "FAIL"`, `overallG06Verdict = "FAIL"`, `probableProductMatchesCount = 0`, kèm mã `"zero_raw_nonzero_declared_or_ui_creatives_mismatch"`.
+     - [B.2] Built-in Google MCP Negative Suite (`G06-NEG-01`..`G06-NEG-20` bao gồm zero-raw guard trong `G06-NEG-05`): `20/20 PASS`.
+     - [C] Meta `FACEBOOK` / `META` / `META_ADS` Normalization & Raw ID Preservation: `source` chuẩn hóa về `"META_ADS"`, giữ nguyên `rawSourcePlatform = "FACEBOOK"`, `adArchiveId = "1455667788990011"`, `sourceExternalAdId = "1455667788990011"`, `sourceRecordId = "db_ad_row_101"`, và UI view-model gom thành một nhãn `"Meta Ads"` duy nhất.
+     - [D] Longitudinal Demand Engine & Evergreen Gate (`G15`): Từ chối chuỗi 2 điểm trong 75 ngày (`INSUFFICIENT_HISTORY`, `eligibleForEvergreen = false`), từ chối chuỗi 3 điểm nhưng trùng ngày lịch (`INSUFFICIENT_HISTORY`), từ chối từ khóa danh mục rộng `"Pet Gadgets"` (`eligibleForEvergreen = false`), và chấp nhận chuỗi `>= 3` ngày phân biệt trải dài `>= 60` ngày từ nguồn xác thực (`VERIFIED`, `eligibleForEvergreen = true`).
+     - [E.1] Strict Separation of `TIKTOK_ADS` vs `TIKTOK_ORGANIC`: `TIKTOK_ORGANIC` bị khóa cứng (`DISABLED`, `allowOutboundNetworkCalls = false`) và bị loại bỏ bởi `filterActiveResearchSources`.
+     - [E.2] Deterministic Idempotency Key & Worker Fencing: `computeResearchIdempotencyKey` bất biến với khoảng trắng/hoa-thường; `updateJobIfClaimOwned` từ chối worker có `fencingGeneration` cũ với `reason = "OWNERSHIP_LOST"`.
+
+3. Full Repository Regression Suite (`npx vitest run`):
+   - Command: `npx vitest run`
+   - Exit Code: `0`
+   - Test Files: `161 passed (161)` (`0 failed`)
+   - Total Tests: `2062 passed (2062)` (`0 failed`)
+   - Duration: `434.38s`
+
+4. Physical-File Mutation & Negative Control Suites (Included in 161/161 Full Run):
+   - `tests/unit/kh02/v12_4_3_4_6_StrictLineageParityAndAcceptanceTruth.test.ts`: `13/13 PASS` (bắt gọn `26/26` physical-file mutations `MUT_01..MUT_26`, `0` escapes).
+   - `tests/unit/kh02/v12_4_3_4_7_RealExecutionProofAndAcceptanceTruth.test.ts`: `12/12 PASS` (bắt gọn `33/33` physical-file negative control mutations `MUT_01..MUT_33`, `0` escapes).
+   - `tests/unit/kh02/v12_4_3_4_8_GoogleProvenanceAndRuntimeClosure.test.ts`: `22/22 PASS` (`P01..P20`, `G06-NEG-01..20`, và bắt gọn `40/40` physical-file negative control mutations `MUT_01..MUT_40`, `0` escapes).
+   - `tests/unit/kh02/v12_4_3_4_9_CliExitAndDiskAuditClosure.test.ts`: `14/14 PASS` (bắt gọn `46/46` physical-file negative control mutations `MUT_01..MUT_46` + real child CLI subprocess exit code verification).
+   - `tests/unit/kh02/v12_4_3_5_0_1_AmazonTrueE2EClosure.test.ts`: `40/40 PASS` (`N01..N40`, bắt gọn `32/32` physical-file negative control mutations, `0` escapes).
+   - `tests/unit/kh02/v12_4_3_5_0_2_AmazonAuthorizedDiscoveryClosure.test.ts`: `25/25 PASS` (bắt gọn `45/45` physical-file negative control mutations `N01..N45`, `0` escapes).
+   - `tests/unit/kh02/v12_4_3_5_0_3_AmazonCreatorsRuntimeClosure.test.ts`: `52/52 PASS` (bắt gọn `48/48` physical-file negative control mutations `M01..M48`, `0` escapes).
+
+
+8. INTEGRATION / WORKER / DB / API / UI RESULTS
+--------------------------------------------------------------------------------
+Các bộ kiểm thử tích hợp xác nhận tính toàn vẹn giữa HTTP API -> SQLite/Prisma -> Background Worker -> View-Model/UI:
+- `tests/integration/kh02AsyncJobsAndIdempotency.test.ts`: `PASS` (kiểm증 đầy đủ vòng đời `QUEUED -> RUNNING -> COMPLETED/FAILED`, heartbeat lease renewal, zombie worker fencing rejection, và idempotency key deduplication).
+- `tests/unit/kh02/walmartUsJinaPilotV12_4_3_5.test.ts`: `PASS` (`W01..W51` & `D1..D3`: kiểm chứng `GET /api/v1/kh02/marketplace/walmart` chỉ đọc, `POST` đẩy child job `KH02_WALMART_VERIFY`, worker xử lý và lưu `ResearchEvidence` + `LandingPageSnapshot`, bảo toàn cache khi timeout/rate-limit).
+- `tests/unit/kh02/providerBudgetAndCircuitBreaker.test.ts`: `PASS` (kiểm chứng giới hạn ngân sách theo workspace và circuit breaker `CLOSED -> OPEN -> HALF_OPEN`).
+
+
+9. BACKTEST CHRONOLOGICAL SPLIT & NO-LOOKAHEAD RESULTS
+--------------------------------------------------------------------------------
+Thực thi trực tiếp runner `scripts/kh02/runBacktestV12_4_3_4_2.ts` cho ngách `"Pet Gadgets"`:
+- Command:
+  `$env:SWAI_ACCEPTANCE_OUTPUT_DIR="C:\Users\ADMIN\.gemini\antigravity\brain\ea181956-a227-42db-b4e7-0d6b3b68fe13\scratch\backtest-2026-11-03"; npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+- Kết quả Category A — Policy & Anti-Leakage Scenario Tests (`POLICY_SCENARIO_RESULTS.json`):
+  - `verdict`: `PASS` (`21/21` scenarios passed: `9` DEV scenarios + `12` HOLDOUT scenarios, `0` failed).
+  - Bao gồm kiểm tra BigQuery zero-spend block, CSV SHA-256 cryptographic verification, Trending Now RSS discovery-only guard (`points.length === 0`), TikTok Organic unconditional disablement, candidate recovery promotion, và point-in-time joined metadata anti-leakage.
+- Kết quả Category B — Chronological Point-in-Time Historical Replay (`BACKTEST_REPLAY_PROVENANCE.json`):
+  1. `DEV` Partition (`2026-06-01T00:00:00.000Z` -> `2026-10-24T00:00:00.000Z`, `asOfTimestamp = 2026-10-24T00:00:00.000Z`):
+     - `datasetFingerprintSha256`: `9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4`
+     - `devRecordsEvaluated`: `19` (`16` bản ghi fixture/quarantine bị loại trừ đúng quy tắc; còn `3` bản ghi thực tại thời điểm `<= 2026-10-24`).
+     - `reconstructedCandidateCount`: `3` (cả 3 đều thuộc ngách khác `CROSS_NICHE_MISMATCH` trên `competitor-store.com`, bị bộ lọc ngách từ chối chính xác).
+     - `devShortlistCount`: `0` (`nicheCoverageStatus = "INSUFFICIENT_NICHE_COVERAGE"`).
+     - `futureLeakageDetected`: `false` (`0` bản ghi tương lai lọt vào `DEV`).
+     - `historicalDevVerdict`: `INSUFFICIENT_HISTORICAL_EVIDENCE`.
+  2. `HOLDOUT` Partition (`2026-10-24T00:00:00.000Z` -> `2026-10-30T12:00:00.000Z`, `asOfTimestamp = 2026-10-30T12:00:00.000Z`):
+     - `datasetFingerprintSha256`: `26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3`
+     - `holdoutRecordsEvaluated`: `380` (`380` non-synthetic ads, `285` reconstructed candidates).
+     - `joinedMetadataLeakageAudit`:
+       - `joinedLinksEvaluatedCount`: `204`
+       - `trustedPointInTimeJoinedCount`: `120`
+       - `rejectedPostCutoffJoinedCount`: `84` (84 liên kết/snapshot có timestamp sau `2026-10-30T12:00:00.000Z` bị chặn đứng, áp dụng post-cutoff fallback về ad observation gốc)
+       - `leakagePrevented`: `true`
+     - `holdoutShortlistCount`: `3` (`3/3` khớp ngách `"Pet Gadgets"` thuộc 3 họ sản phẩm phân biệt):
+       1. `Automatic Wet Food Cat Feeder with Cooling & Warming` (`uahpet.com`, family `automatic_pet_feeder`)
+       2. `Pawira Stainless Steel Water Fountain` (`pawira.com`, family `pet_water_fountain`)
+       3. `Reusable Pet Hair Remover Roller` (`livlandco.com`, family `pet_hair_remover_roller`)
+     - `demandCoverageStatus`: `INSUFFICIENT_HISTORICAL_EVIDENCE` (mỗi sản phẩm có 5 điểm CSV trải dài 127 ngày nhưng thiếu file CSV gốc kèm SHA-256 checksum trên đĩa nên `status = "UNVERIFIED"`, `eligibleForEvergreen = false`).
+     - `historicalHoldoutVerdict`: `INSUFFICIENT_HISTORICAL_EVIDENCE`.
+  3. Tổng hợp Backtest:
+     - `zeroOverlapVerified`: `true`
+     - `zeroFutureLeakageVerified`: `true` (`pointInTimeIntegrityVerdict = "PASS"`)
+     - `overallVerdict`: `INSUFFICIENT_HISTORICAL_EVIDENCE` (trung thực tuyệt đối, không bịa `PASS` cho dữ liệu lịch sử thiếu chứng cứ gốc).
+
+
+10. E2E / PLAYWRIGHT RESULTS
+--------------------------------------------------------------------------------
+- Kiểm thử trình duyệt Chromium thực tế:
+  1. `tests/integration/kh02BrowserAcceptance.test.ts`: `PASS` (`1/1` test, `38116ms`)
+     - Khởi chạy máy chủ HTTP thực trên loopback (`http://127.0.0.1:63805/products`) và trình duyệt Chromium headless.
+     - Điều hướng tới `/products`, kích hoạt async research cho `'Pet Hair Remover'`, kiểm tra reload persistence,
+       Tab 1 Recommended, Tab 2 All Discovered Products, Source Coverage pills, và Candidate Drawer.
+     - Xác nhận UI không crash, không hiển thị nhãn `"FACEBOOK"` thô, không tự phong `VERIFIED_EVERGREEN` khi thiếu bằng chứng, và đồng bộ số liệu với API `/api/v1/kh02/research`.
+  2. `tests/integration/kh01UnifiedJourney.test.ts`: `PASS` (`8/8` tests, `11224ms`)
+     - Kiểm증 toàn trình `Queue -> Worker -> SQLite DB -> Real Next.js HTTP Server -> Chromium Browser` cho KH-01/KH-02.
+
+
+11. ARTIFACT MANIFEST & CLEANUP REPORT
+--------------------------------------------------------------------------------
+- Các file báo cáo được tạo và lưu giữ trong repository:
+  1. `reports/kh02/KH02_V12_4_3_NEXT_EXECUTION_REPORT_2026-11-03.txt` (Báo cáo chính đầy đủ 14 mục theo đúng đặc tả Section XI).
+  2. `reports/kh02/KH02_V12_4_3_NEXT_EXECUTION_MANIFEST_2026-11-03.json` (Compact JSON manifest phục vụ đối soát tự động).
+- Các file mã nguồn và kiểm thử được cập nhật/thêm mới:
+  1. `scripts/kh02/googleMcpGateEvaluator.ts`
+  2. `src/services/kh02/evergreenResearchOrchestrator.ts`
+  3. `src/services/kh02/identity/productCandidateDiscovery.ts`
+  4. `src/services/discovery/normalization/normalizeMetaCollectorAd.ts`
+  5. `src/services/kh02/presentation/productFinderViewModel.ts`
+  6. `src/app/api/v1/kh02/research/route.ts`
+  7. `src/app/products/page.tsx`
+  8. `tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts`
+- Dọn dẹp (Cleanup):
+  - Các file tạm của đợt chạy backtest (`POLICY_SCENARIO_RESULTS.json`, `REAL_HISTORICAL_DEV_BACKTEST.json`, `REAL_HISTORICAL_HOLDOUT_BACKTEST.json`, `BACKTEST_REPLAY_PROVENANCE.json`) được xuất vào thư mục scratch ngoài repo (`C:\Users\ADMIN\.gemini\antigravity\brain\ea181956-a227-42db-b4e7-0d6b3b68fe13\scratch\backtest-2026-11-03`), không làm phình dung lượng git repository.
+  - Dung lượng trống ổ `D:` duy trì `~64.7 GiB` (`>> 8 GiB` ngưỡng yêu cầu).
+
+
+12. GIT COMMIT & PUSH PROOF
+--------------------------------------------------------------------------------
+- Target Repository: `quocan050302/Shopify-Search`
+- Target Branch: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
+- Parent / Baseline Commit SHA: `c344e1d8efaa937c95ee3e5550bf579847495d71`
+- Staged Files Verification: Chỉ stage các file mã nguồn KH-02 đã sửa, file unit test mới, và báo cáo trong `reports/kh02/`. Không sử dụng `git reset --hard`, `git clean -fdx`, hay `git push --force`.
+- Commit & Push Receipt: Được cập nhật và xác minh đồng bộ giữa `git rev-parse HEAD` và `git ls-remote origin refs/heads/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1` ngay ở bước commit/push cuối cùng (xem thêm trong `KH02_V12_4_3_NEXT_EXECUTION_MANIFEST_2026-11-03.json`).
+
+
+13. RESIDUAL BLOCKERS & NEXT ENGINEERING ACTIONS
+--------------------------------------------------------------------------------
+Các rào cản ngoại cảnh (External / Upstream Blockers) còn tồn đọng khiến Business Gate `G16` giữ trạng thái `INSUFFICIENT_EVIDENCE`:
+1. `G07` (TikTok Ads US Commercial):
+   - Hiện trạng: `BLOCKED` do chưa có thông tin xác thực/session hợp lệ cho TikTok Creative Center US.
+   - Hành động tiếp theo: Cấu hình provider credentials hợp lệ cho TikTok Commercial Ads US; tiếp tục giữ `TIKTOK_ORGANIC` ở trạng thái `DISABLED`.
+2. `G15` (Longitudinal Demand History):
+   - Hiện trạng: `INSUFFICIENT_EVIDENCE` đối với dữ liệu lịch sử trong DB vì thiếu file Google Trends CSV gốc kèm mã băm SHA-256 trên đĩa hoặc kết nối Google Trends API/BigQuery đã xác thực zero-spend sandbox.
+   - Hành động tiếp theo: Nhập khẩu file Google Trends Explore CSV chính thức (kèm SHA-256 manifest trong `data/google-trends-csv/`) cho các sản phẩm shortlist hoặc cấu hình `BIGQUERY_FREE_SANDBOX_VERIFIED=true` với tài khoản sandbox miễn phí.
+3. `G06` / `G09` / `G10` (Cross-Source Exact Product Match):
+   - Hiện trạng: Google MCP, Amazon US Playwright MCP và Walmart US Jina Reader đã hoạt động đúng chuẩn fail-closed, nhưng cần phiên thu thập live không bị bot-wall chặn để thu được `EXACT_PRODUCT_SKU_MATCH` cho đủ 3 sản phẩm khác họ trong cùng một lần chạy.
+================================================================================

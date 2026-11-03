@@ -78,10 +78,22 @@ export function normalizeMetaCollectorAd(
       ? anyRaw.library_id.trim()
       : typeof anyRaw?.libraryId === "string" && anyRaw.libraryId.trim()
       ? anyRaw.libraryId.trim()
+      : typeof anyRaw?.ad_archive_id === "string" && anyRaw.ad_archive_id.trim()
+      ? anyRaw.ad_archive_id.trim()
+      : typeof anyRaw?.adArchiveId === "string" && anyRaw.adArchiveId.trim()
+      ? anyRaw.adArchiveId.trim()
+      : typeof anyRaw?.externalAdId === "string" && anyRaw.externalAdId.trim()
+      ? anyRaw.externalAdId.trim()
       : "";
 
   if (!/^\d{5,25}$/.test(rawId)) {
-    const rawVal = anyRaw?.id ?? anyRaw?.library_id ?? anyRaw?.libraryId;
+    const rawVal =
+      anyRaw?.id ??
+      anyRaw?.library_id ??
+      anyRaw?.libraryId ??
+      anyRaw?.ad_archive_id ??
+      anyRaw?.adArchiveId ??
+      anyRaw?.externalAdId;
     throw new Error(
       `MetaAdsCollector record rejected: missing or invalid Meta Library ID ('${String(rawVal)}'). Must be a numeric string of at least 5 digits.`
     );

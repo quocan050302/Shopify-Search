@@ -188,6 +188,38 @@ export async function GET(request: NextRequest) {
         lookbackCov?.historicalCachedAdsCount ??
         obsList.filter((o: any) => o?.source === "META_ADS" && o?.provenance !== "LIVE_PROVIDER").length;
 
+      const googleLiveCount =
+        leaderboard.sourceCoverage?.GOOGLE_ADS?.freshLiveAdsCount ??
+        leaderboard.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.freshLiveAdsCount ??
+        obsList.filter(
+          (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance === "LIVE_PROVIDER"
+        ).length;
+      const googleCachedCount =
+        leaderboard.sourceCoverage?.GOOGLE_ADS?.historicalCachedAdsCount ??
+        leaderboard.sourceCoverage?.GOOGLE_ADS_TRANSPARENCY?.historicalCachedAdsCount ??
+        obsList.filter(
+          (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance !== "LIVE_PROVIDER"
+        ).length;
+      const googleCov = {
+        freshLiveAdsCount: googleLiveCount,
+        historicalCachedAdsCount: googleCachedCount,
+        totalObservationsCount: googleLiveCount + googleCachedCount,
+        queryExecuted: Boolean(googleTel?.queryExecuted),
+        queryStatus:
+          leaderboard.sourceStatuses?.GOOGLE_ADS || googleTel?.queryStatus || "SKIPPED",
+      };
+      const demandCov = leaderboard.sourceCoverage?.DEMAND_HISTORY ||
+        leaderboard.sourceCoverage?.GOOGLE_TRENDS || {
+          freshLiveAdsCount: 0,
+          historicalCachedAdsCount: 0,
+          totalObservationsCount: 0,
+          queryExecuted: Boolean(leaderboard.providerTelemetry?.DEMAND_HISTORY?.queryExecuted),
+          queryStatus:
+            leaderboard.sourceStatuses?.DEMAND_HISTORY ||
+            leaderboard.providerTelemetry?.DEMAND_HISTORY?.queryStatus ||
+            "NOT_VERIFIED",
+        };
+
       leaderboard = {
         ...leaderboard,
         researchRunId: resolvedRunId || leaderboard.researchRunId,
@@ -195,8 +227,9 @@ export async function GET(request: NextRequest) {
         marketplaceTelemetry,
         walmartMarketplaceEvidence,
         walmartMarketplaceTelemetry,
-        sourceCoverage: leaderboard.sourceCoverage || {
-          META_ADS: {
+        sourceCoverage: {
+          ...(leaderboard.sourceCoverage || {}),
+          META_ADS: leaderboard.sourceCoverage?.META_ADS || {
             freshLiveAdsCount: metaLiveCount,
             historicalCachedAdsCount: metaCachedCount,
             totalObservationsCount: metaLiveCount + metaCachedCount,
@@ -204,18 +237,10 @@ export async function GET(request: NextRequest) {
             queryStatus:
               leaderboard.sourceStatuses?.META_ADS || metaTel?.queryStatus || "NOT_CONFIGURED",
           },
-          GOOGLE_ADS: {
-            freshLiveAdsCount: obsList.filter(
-              (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance === "LIVE_PROVIDER"
-            ).length,
-            historicalCachedAdsCount: obsList.filter(
-              (o: any) => o?.source === "GOOGLE_ADS" && o?.provenance !== "LIVE_PROVIDER"
-            ).length,
-            totalObservationsCount: obsList.filter((o: any) => o?.source === "GOOGLE_ADS").length,
-            queryExecuted: Boolean(googleTel?.queryExecuted),
-            queryStatus:
-              leaderboard.sourceStatuses?.GOOGLE_ADS || googleTel?.queryStatus || "SKIPPED",
-          },
+          GOOGLE_ADS: googleCov,
+          GOOGLE_ADS_TRANSPARENCY: googleCov,
+          DEMAND_HISTORY: demandCov,
+          GOOGLE_TRENDS: demandCov,
         },
       };
     }

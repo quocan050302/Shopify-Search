@@ -523,14 +523,18 @@ export function buildCanonicalRecommendedProducts(
       verifiedEvidenceItems.push("Physical product supported");
     }
 
-    const sources =
+    const sources: string[] =
       candidate.supportingSourceTypes && candidate.supportingSourceTypes.length > 0
-        ? candidate.supportingSourceTypes.map((s: any) =>
-            s === "META_ADS"
-              ? "Meta Ads"
-              : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
-              ? "Google Ads"
-              : s
+        ? Array.from<string>(
+            new Set<string>(
+              candidate.supportingSourceTypes.map((s: any) =>
+                s === "META_ADS" || s === "META" || s === "FACEBOOK"
+                  ? "Meta Ads"
+                  : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
+                  ? "Google Ads"
+                  : String(s)
+              )
+            )
           )
         : ["Meta Ads"];
 
@@ -782,14 +786,18 @@ export function buildAllCandidatesExplorerList(
         candidate.fetchOutcome !== "HOMEPAGE"
     );
 
-    const sources =
+    const sources: string[] =
       candidate.supportingSourceTypes && candidate.supportingSourceTypes.length > 0
-        ? candidate.supportingSourceTypes.map((s: any) =>
-            s === "META_ADS"
-              ? "Meta Ads"
-              : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
-              ? "Google Ads"
-              : s
+        ? Array.from<string>(
+            new Set<string>(
+              candidate.supportingSourceTypes.map((s: any) =>
+                s === "META_ADS" || s === "META" || s === "FACEBOOK"
+                  ? "Meta Ads"
+                  : s === "GOOGLE_ADS_TRANSPARENCY" || s === "GOOGLE_ADS"
+                  ? "Google Ads"
+                  : String(s)
+              )
+            )
           )
         : ["Meta Ads"];
 

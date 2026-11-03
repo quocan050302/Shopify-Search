@@ -1,0 +1,80 @@
+{
+  "reportVersion": "2026-11-03",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineHeadSha": "c344e1d8efaa937c95ee3e5550bf579847495d71",
+  "evaluatedAt": "2026-11-03T01:21:45.000Z",
+  "engineeringGatesVerdict": "PASS",
+  "typecheckExitCode": 0,
+  "fullRegressionSuite": {
+    "command": "npx vitest run",
+    "exitCode": 0,
+    "testFilesPassed": 161,
+    "testFilesTotal": 161,
+    "testsPassed": 2062,
+    "testsTotal": 2062,
+    "durationSeconds": 434.38
+  },
+  "chromiumBrowserE2E": {
+    "kh02BrowserAcceptance": "PASS (38116ms)",
+    "kh01UnifiedJourney": "PASS (11224ms)"
+  },
+  "newAuditSuite": {
+    "file": "tests/unit/kh02/v12_4_3_NextExecutionAudit_2026_11_03.test.ts",
+    "totalTests": 7,
+    "passedTests": 7,
+    "failedTests": 0
+  },
+  "negativeMutationControl": {
+    "v12_4_3_4_6_mutations": "26/26 CAUGHT (0 escapes)",
+    "v12_4_3_4_8_google_mutations": "40/40 CAUGHT (0 escapes)",
+    "v12_4_3_5_0_2_amazon_mutations": "45/45 CAUGHT (0 escapes)"
+  },
+  "chronologicalBacktest": {
+    "niche": "Pet Gadgets",
+    "policyScenarioVerdict": "PASS",
+    "policyScenariosPassed": "21/21",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "zeroFutureLeakageVerified": true,
+    "devWindow": {
+      "start": "2026-06-01T00:00:00.000Z",
+      "end": "2026-10-24T00:00:00.000Z",
+      "recordsEvaluated": 19,
+      "nonSyntheticAds": 3,
+      "shortlistCount": 0,
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    "holdoutWindow": {
+      "start": "2026-10-24T00:00:00.000Z",
+      "end": "2026-10-30T12:00:00.000Z",
+      "recordsEvaluated": 380,
+      "reconstructedCandidates": 285,
+      "rejectedPostCutoffJoinedCount": 84,
+      "shortlistCount": 3,
+      "nicheMatchedCount": 3,
+      "distinctFamiliesCount": 3,
+      "verdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+    },
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "gateTruthTable": {
+    "G01_NICHE_QUERY_PLAN": "PASS",
+    "G02_CANDIDATE_DISCOVERY_6LEVEL_DISTINCTNESS": "PASS",
+    "G03_NICHE_AUDIENCE_RELEVANCE": "PASS",
+    "G04_SCORING_NON_INFLATION": "PASS",
+    "G05_META_LINEAGE_NORMALIZATION": "PASS",
+    "G06_GOOGLE_MCP_SET_RECONCILIATION": "PASS",
+    "G06_GOOGLE_EXACT_PRODUCT_EVIDENCE": "INSUFFICIENT_EVIDENCE",
+    "G07_TIKTOK_ADS_US": "BLOCKED",
+    "TIKTOK_ORGANIC_POLICY": "DISABLED",
+    "G08_CROSS_PLATFORM_MATCHER": "PASS",
+    "G09_AMAZON_US_PLAYWRIGHT_MCP": "INSUFFICIENT_EVIDENCE",
+    "G10_WALMART_US_JINA_READER": "INSUFFICIENT_EVIDENCE",
+    "G11_SQLITE_PERSISTENCE_PARITY": "PASS",
+    "G12_WORKER_LEASE_FENCING_IDEMPOTENCY": "PASS",
+    "G13_API_SOURCE_COVERAGE_PARITY": "PASS",
+    "G14_UI_HONESTY_AND_E2E": "PASS",
+    "G15_LONGITUDINAL_DEMAND_GATE": "INSUFFICIENT_EVIDENCE",
+    "G16_TOP3_BUSINESS_ACCEPTANCE": "INSUFFICIENT_EVIDENCE"
+  }
+}

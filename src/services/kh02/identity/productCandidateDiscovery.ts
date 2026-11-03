@@ -957,6 +957,9 @@ export function verifyLiveMetaObservationProvenance(
   const upstreamAdId = String(
     o.upstreamAdId ||
       o.sourceExternalAdId ||
+      o.externalAdId ||
+      o.adArchiveId ||
+      o.ad_archive_id ||
       o.metrics?.upstreamAdId ||
       ""
   ).trim();
@@ -1277,7 +1280,15 @@ export function verifyCandidateLiveLineageChain(
   for (const rawObs of observations) {
     if (!rawObs || typeof rawObs !== "object") continue;
     const o = rawObs as Record<string, any>;
-    if (typeof o.source === "string" && o.source !== "META_ADS") continue;
+    const normalizedObsSource =
+      typeof o.source === "string" ? o.source.trim().toUpperCase() : "META_ADS";
+    if (
+      normalizedObsSource !== "META_ADS" &&
+      normalizedObsSource !== "META" &&
+      normalizedObsSource !== "FACEBOOK"
+    ) {
+      continue;
+    }
 
     // Check 6: UNDEFINED_SOURCE_TYPE
     if ("sourceType" in o && o.sourceType === undefined) {
@@ -1486,6 +1497,9 @@ export function verifyCandidateLiveLineageChain(
     const upstreamAdId = String(
       o.upstreamAdId ||
         o.sourceExternalAdId ||
+        o.externalAdId ||
+        o.adArchiveId ||
+        o.ad_archive_id ||
         o.metrics?.upstreamAdId ||
         (!hasExplicitUpstreamProp
           ? candidate.supportingExternalAdIds?.[0] || o.sourceRecordId || ""
@@ -1807,7 +1821,20 @@ export function normalizeSourceObservation(
 ): SourceObservation {
   const raw: Record<string, any> =
     rawInput && typeof rawInput === "object" ? rawInput : {};
-  const source = (raw.source || "META_ADS") as SourceObservation["source"];
+  const rawSourceCandidate = String(
+    raw.source || raw.platform || "META_ADS"
+  )
+    .trim()
+    .toUpperCase();
+  const source: SourceObservation["source"] =
+    rawSourceCandidate === "FACEBOOK" ||
+    rawSourceCandidate === "META" ||
+    rawSourceCandidate === "META_ADS"
+      ? "META_ADS"
+      : rawSourceCandidate === "GOOGLE_ADS_TRANSPARENCY" ||
+        rawSourceCandidate === "GOOGLE_ADS"
+      ? "GOOGLE_ADS"
+      : ((raw.source || "META_ADS") as SourceObservation["source"]);
   const landingPageUrl =
     raw.landingPageUrl || raw.landingUrl || raw.landingPage?.url || null;
   const sourceUrl = raw.sourceUrl || null;
@@ -1824,6 +1851,11 @@ export function normalizeSourceObservation(
     raw.sourceRecordId,
     raw.id,
     raw.metaAdId,
+    raw.adArchiveId,
+    raw.ad_archive_id,
+    raw.library_id,
+    raw.libraryId,
+    raw.externalAdId,
     raw.sourceExternalAdId,
     raw.upstreamAdId,
   ];
@@ -2033,13 +2065,31 @@ export function normalizeSourceObservation(
     sourceTimestamp ||
     new Date(refNowMs).toISOString();
 
+  const preservedExternalAdId =
+    raw.sourceExternalAdId ||
+    raw.externalAdId ||
+    raw.adArchiveId ||
+    raw.ad_archive_id ||
+    raw.library_id ||
+    raw.libraryId ||
+    raw.metaAdId ||
+    explicitId ||
+    null;
+
   const normalizedObs: SourceObservation = {
     ...(raw as any),
     source,
+    rawSourcePlatform: raw.source || raw.platform || "META_ADS",
     sourceRecordId,
     sourceIdOrigin,
-    sourceExternalAdId:
-      raw.sourceExternalAdId || raw.metaAdId || explicitId || null,
+    sourceExternalAdId: preservedExternalAdId,
+    externalAdId: raw.externalAdId || preservedExternalAdId,
+    adArchiveId:
+      raw.adArchiveId ||
+      raw.ad_archive_id ||
+      raw.library_id ||
+      raw.libraryId ||
+      preservedExternalAdId,
     sourceUrl,
     landingPageUrl,
     storeDomainEvidence,
