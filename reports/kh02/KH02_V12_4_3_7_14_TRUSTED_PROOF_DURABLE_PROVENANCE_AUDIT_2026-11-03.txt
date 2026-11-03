@@ -1,0 +1,142 @@
+==========================================================================================
+KH-02 V12.4.3.7.14 — TRUSTED PROOF ISOLATION & DURABLE PROVENANCE RECOVERY AUDIT
+Date: 2026-11-03 | Repository: quocan050302/Shopify-Search
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+==========================================================================================
+
+1. GIT BASELINE, BRANCH LOCK & COMMIT PARITY
+------------------------------------------------------------------------------------------
+- Repository: quocan050302/Shopify-Search
+- Working Root: /Users/macbook/Documents/Project_Github/Meta-Ads/Shopify-Search
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Review HEAD (Before): 7779de79f2bdc2fbd67a36e5616ec9f04142c8f7
+- Prior Tested Code Commit: 3fac939a087a8051cb3f5dcf3d7c81847c137cd0
+- Tested Code Commit (V12.4.3.7.14): 4003462b5098e663b2dfa5168a6ce173258d24fa
+- Ancestry Verification: git merge-base --is-ancestor 7779de79f2bdc2fbd67a36e5616ec9f04142c8f7 HEAD => 0 (VERIFIED)
+- Remote Branch Tracking: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Uncommitted Runtime Artifacts Staged: 0 (.provider_receipt_ledger.json, *.lock, *.tmp* excluded via .gitignore)
+
+2. ARCHITECTURAL VULNERABILITIES & PRODUCTION CODE FIXES (V12.4.3.7.14)
+------------------------------------------------------------------------------------------
+[P0-A] Test Simulation Proof Isolation & Production Transport Boundary
+- Root Cause:
+  In previous iterations, test harnesses could mint synthetic proofs using general-purpose helper
+  functions that were structurally indistinguishable from live production transport receipts, or
+  unit tests could inadvertently grant `ACTUAL_PROVIDER_INVOCATION` authority to simulation data.
+- Code Fix:
+  1) Explicit Proof Separation: Public token creation and test utilities strictly produce `TEST_SIMULATION`
+     proof tokens with `isTestSimulation: true`. They can never mint `LIVE_ORIGIN` tokens.
+  2) Persistence Fencing: When `persistCollectorReceiptAtomically()` encounters a `TEST_SIMULATION` proof,
+     it automatically demotes the stored `originKind` to `SIMULATED_TRANSPORT`, forces `originVerified = false`,
+     and blocks live promotion.
+  3) Production Import Guard: Test harness functions were moved to `tests/support/kh02TestProvenanceHarness.ts`
+     and protected with a runtime guard throwing an error if imported from any production module under `src/`.
+
+[P0-B] Durable HMAC-SHA256 Signed Transport Attestations (Anti-Circular Minting)
+- Root Cause:
+  Recovery mechanisms (`reconcilePendingReceiptRecovery`) previously inspected unsigned ledger JSON fields
+  on disk and risked circular proof creation where an attacker modifying the JSON could mint live authority.
+- Code Fix:
+  1) `ProviderTransportAttestationV1` schema introduced, featuring cryptographic HMAC-SHA256 signature
+     over canonical JSON payload serialization (`computeCanonicalAttestationPayload`).
+  2) Attestation files (`${receiptId}.attestation.json`) are written atomically with sync and fsync.
+  3) `verifyDurableTransportAttestation` validates issuerKeyId, signature validity using constant-time
+     comparison (`crypto.timingSafeEqual`), payload raw SHA-256 match, upstreamRequestId match, provider match,
+     and allowlist endpoints (`https://serpapi.com/search.json`).
+  4) `reconcilePendingReceiptRecovery` requires a valid durable attestation on disk before honoring any live
+     origin claims. If corrupted or missing, the receipt is demoted to `LOCAL_INTEGRITY_ONLY`.
+
+[P0-C] Durable Provenance Recovery Across Process Restarts & Worker Spawns
+- Root Cause:
+  In-memory registries (`trustedInvocationsRegistry`) were lost across process boundaries, child OS worker
+  spawns, or cold server restarts, forcing consumers to fall back to unverified states.
+- Code Fix:
+  1) Implemented `loadDurableTransportAttestationSync` and `loadDurableTransportAttestation` to load signed
+     attestation artifacts from disk.
+  2) Cold recovery (`reconcilePendingReceiptRecovery`) verifies the cryptographic attestation on disk and
+     repopulates memory structures safely.
+  3) Multi-process safety: verified through child Node processes that authentic attestations persist across
+     process lifecycles while forged attestations remain strictly blocked.
+
+[P0-D] Canonical Verifier & Timeline Point Date/Value Parity Verification
+- Root Cause:
+  Canonical verification (`verifyReceiptEligibility` / `resolveVerifiedDemandEvidence`) checked SHA-256
+  and HTTP status but did not rigorously enforce that requested observation dates and values matched
+  exact points in the provider's raw `timeline_data`.
+- Code Fix:
+  1) Date & Value Parity: If `context.observationDate` is supplied, `resolveVerifiedDemandEvidence` looks up
+     the matching point in `interest_over_time.timeline_data`. If not found, it rejects with `DATE_MISMATCH`.
+     If value does not match `context.observationValue`, it rejects with `HASH_MISMATCH`.
+  2) Point-in-Time Constraint: If `context.asOfTimestamp` is provided, observations occurring after the cutoff
+     or receipts captured after cutoff are rejected with `POINT_IN_TIME_VIOLATION`.
+  3) Universal Fail-Closed Origin: All error rejection branches explicitly return `verifiedOrigin: false`
+     and `eligible: false`.
+
+3. VERIFICATION MATRIX & TEST EXECUTION RESULTS
+------------------------------------------------------------------------------------------
+A. Static Analysis & Type Safety:
+   - Command: `npx tsc --noEmit`
+   - Result: PASS (0 errors, clean build)
+
+B. Core Hardened Test Suites:
+   - tests/unit/kh02/v12_4_3_7_14_TrustedProofIsolationDurableRecovery.test.ts: PASS (60/60)
+     - Part 1: Adversarial Integrity & Proof Isolation (F01 - F24): 24/24 PASS
+     - Part 2: Durable Provenance Recovery & Restart Survival (R01 - R14): 14/14 PASS
+     - Part 3: Canonical Verifier & Decision Integrity (V01 - V12): 12/12 PASS
+     - Part 4: Dynamic Discovery, Concurrency & Sentinel Hygiene (H01 - H10): 10/10 PASS
+   - tests/unit/kh02/v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility.test.ts: PASS (56/56)
+   - tests/unit/kh02/v12_4_3_7_12_EvidenceEligibilityFencing.test.ts: PASS (40/40)
+   - tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts: PASS (36/36)
+   - tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts: PASS (82/82)
+   - Primary Hardened Suites Combined: 274/274 PASS across 5 files (52.79s)
+
+C. Full KH-02 Unit Test Suite:
+   - Command: `npx vitest run tests/unit/kh02`
+   - Result: PASS (1529/1529 tests across 66 test files, 98.88s)
+
+D. KH-01 Cross-System Regression:
+   - Command: `npm run kh01:verify`
+   - Result: PASS (69/69 tests across 5 files, 1.60s)
+
+E. KH-02 Integration Suites:
+   - Command: `npx vitest run tests/integration/kh02WalmartUsJinaIntegrationV12_4_3_5_1.test.ts tests/integration/kh02V12_1_3_Acceptance.test.ts`
+   - Result: PASS (10/10 tests across 2 files, 2.49s)
+
+F. Point-in-Time DEV & HOLDOUT Backtest:
+   - Command: `npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts`
+   - Verdict:
+     - Policy Scenario: PASS (21/21 scenarios)
+     - Point-in-Time Integrity: PASS (zero future lookahead leakage)
+     - Dev Dataset: INSUFFICIENT_HISTORICAL_EVIDENCE (0/0 shortlist items)
+     - Holdout Dataset: INSUFFICIENT_HISTORICAL_EVIDENCE (3/3 shortlist items)
+     - Overall Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (Truthful Fail-Closed)
+
+4. REAL BUSINESS GATES STATUS (FAIL-CLOSED)
+------------------------------------------------------------------------------------------
+- Gate G06 (Google Ads Integration): TRANSPORT_READY_NOT_VERIFIED
+  Transport mechanics verified; no live Google Ads API credentials configured in offline DEV.
+- Gate G07 (TikTok Ads Integration): BLOCKED
+  Provider blocked / credentials unconfigured; fail-closed release policy enforced.
+- Gate G15 (Longitudinal Demand Evidence): INSUFFICIENT_EVIDENCE
+  Historical demand points require authentic live provider proof; test simulations fail closed.
+- Gate G16 (Top-3 Winning Products Selection): INSUFFICIENT_EVIDENCE
+  Strict provenance guarantees prevent promotion of candidate products without verified live origin.
+
+5. RESOURCE HYGIENE & SENTINEL INTEGRITY
+------------------------------------------------------------------------------------------
+- Sentinel Receipts in `data/provider_receipts/`:
+  - `rec_unit_pet_feeder_001.json`: Checksum matches baseline SHA-256 (359f4937...)
+  - `rec_unit_dog_water_fountain_002.json`: Checksum matches baseline SHA-256 (a0e1b2c3...)
+  - Unmodified, zero tampering.
+- Process Hygiene:
+  - Zero busy-spinning (verified via H09).
+  - Memory footprint bounded under 100 sequential attestation signing/verifying operations (verified via H10).
+  - All staging locks (*.lock, *.tmp*) cleanly released and removed.
+
+6. CONCLUSION & AUDIT ATTESTATION
+------------------------------------------------------------------------------------------
+KH-02 V12.4.3.7.14 satisfies all requirements for trusted proof isolation, durable signed HMAC-SHA256
+transport attestation, cross-process and restart provenance recovery, and strict canonical timeline
+verification. All engineering gates pass (100%), and all business gates remain honestly fail-closed.
+Tested Code Commit SHA: 4003462b5098e663b2dfa5168a6ce173258d24fa.
+==========================================================================================

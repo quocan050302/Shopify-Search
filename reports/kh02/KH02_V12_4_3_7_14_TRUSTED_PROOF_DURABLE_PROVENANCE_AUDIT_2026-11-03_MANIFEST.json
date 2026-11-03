@@ -1,0 +1,51 @@
+{
+  "version": "12.4.3.7.14",
+  "auditDate": "2026-11-03T22:56:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineReviewHeadSha": "7779de79f2bdc2fbd67a36e5616ec9f04142c8f7",
+  "priorCodeCommitSha": "3fac939a087a8051cb3f5dcf3d7c81847c137cd0",
+  "testedCodeCommitSha": "4003462b5098e663b2dfa5168a6ce173258d24fa",
+  "engineeringVerdict": "PASS",
+  "engineeringGates": {
+    "typeScriptNoEmit": "PASS (0 errors)",
+    "v12_4_3_7_14_TrustedProofIsolationDurableRecovery": "PASS (60/60: F01-F24, R01-R14, V01-V12, H01-H10)",
+    "v12_4_3_7_13_UnforgeableCollectorUnifiedEligibility": "PASS (56/56)",
+    "v12_4_3_7_12_EvidenceEligibilityFencing": "PASS (40/40)",
+    "v12_4_3_7_11_AtomicReceiptCommitReadback": "PASS (36/36)",
+    "postReviewHardening": "PASS (82/82)",
+    "primaryHardenedSuitesCombined": "PASS (274/274 across 5 files, 52.79s)",
+    "kh02UnitSuites": "PASS (1529/1529 across 66 files, 98.88s)",
+    "kh01Verify": "PASS (69/69 across 5 files, 1.60s)",
+    "kh02IntegrationSuites": "PASS (10/10 across 2 files, 2.49s)",
+    "pointInTimeBacktestPolicy": "PASS (21/21 scenarios, zero lookahead leakage)"
+  },
+  "backtestVerdicts": {
+    "policyScenarioVerdict": "PASS",
+    "pointInTimeIntegrityVerdict": "PASS",
+    "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "historicalHoldoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+    "overallHistoricalBacktestVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "trustedProofIsolationAndDurableProvenanceGuarantees": {
+    "testSimulationProofsStrictlyIsolated": true,
+    "publicTokenMinterNeverProducesLiveOrigin": true,
+    "productionImportGuardProtectsHarness": true,
+    "durableTransportAttestationSignedHmacSha256": true,
+    "canonicalPayloadSerializationDeterministic": true,
+    "constantTimeSignatureVerification": true,
+    "zeroCircularProofMintingFromLedger": true,
+    "coldProcessRestartRecoveryPreservesOrigin": true,
+    "multiProcessChildVerificationConsistent": true,
+    "timelinePointDateValueParityEnforced": true,
+    "pointInTimeViolationsRejectedFailClosed": true,
+    "dynamicTestFileDiscoveryWithoutHardcoding": true,
+    "productionSentinelUnchanged": true
+  }
+}
