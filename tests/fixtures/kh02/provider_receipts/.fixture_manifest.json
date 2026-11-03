@@ -1,0 +1,8 @@
+{
+  "notice": "All files in this directory are unit test fixtures with originKind=UNIT_FIXTURE and cannot verify live provider origin in production.",
+  "fixtureShas": [
+    "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f"
+  ]
+}

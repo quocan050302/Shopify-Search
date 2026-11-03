@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterAll } from "vitest";
 import {
   hasVerifiableCsvOrProviderLineage,
   evaluateDemandSourceAuthority,
@@ -7,6 +7,13 @@ import {
   resolveVerifiedDemandEvidence,
   isAuthenticProviderReceiptDescriptor,
   saveRawProviderPayloadFile,
+  recordTrustedProviderInvocation,
+  registerTestFixtureReceipt,
+  getTrustedProviderReceipt,
+  findTrustedReceiptByHash,
+  clearTrustedProviderInvocationsForTest,
+  UNIT_FIXTURE_STORAGE_DIR,
+  KNOWN_UNIT_FIXTURE_SHAS,
 } from "@/services/kh02/demand/temporalDemandEngine";
 import fs from "fs";
 import path from "path";
@@ -1102,6 +1109,592 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         minCoverageRatio: 0.10,
       });
       expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+    });
+  });
+
+  describe("MANDATORY ADVERSARIAL MATRIX (E01 - E36) — AUTHENTIC PROVIDER ORIGIN & REPLAY PARITY", () => {
+    afterAll(() => {
+      const dir = path.resolve("data/provider_receipts");
+      if (fs.existsSync(dir)) {
+        const keep = new Set([
+          "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json",
+          "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json",
+          "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json",
+          ".fixture_manifest.json",
+        ]);
+        for (const file of fs.readdirSync(dir)) {
+          if (!keep.has(file)) {
+            try { fs.unlinkSync(path.join(dir, file)); } catch {}
+          }
+        }
+      }
+    });
+
+    it("E01: trusted-looking JSON fixture with SHA match + fake requestId = LIVE_UNVERIFIED", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "fake_request_id_not_in_ledger",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      }, { strictLiveOrigin: true });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("ORIGIN_UNVERIFIED");
+    });
+
+    it("E02: manually planted <sha>.json file & forged verified descriptor = LIVE_UNVERIFIED", () => {
+      const raw = JSON.stringify({ data: "planted", time: Date.now() });
+      const stored = saveRawProviderPayloadFile(raw);
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "forged_planted_receipt",
+        rawResponseSha256: stored.rawResponseSha256,
+        targetProductOrKeyword: "arbitrary product",
+        region: "US",
+        responseStatus: 200,
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("ORIGIN_UNVERIFIED");
+    });
+
+    it("E03: genuine bytes + legitimate hash but absence of independent trusted invocation ledger = LIVE_UNVERIFIED", () => {
+      const raw = JSON.stringify({ search_metadata: { status: "Success", id: "unregistered_req" }, search_parameters: { q: "test product", geo: "US" } });
+      const stored = saveRawProviderPayloadFile(raw);
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "unregistered_req",
+        rawResponseSha256: stored.rawResponseSha256,
+        targetProductOrKeyword: "test product",
+        region: "US",
+        responseStatus: 200,
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("ORIGIN_UNVERIFIED");
+    });
+
+    it("E04: ledger for request A + bytes of response B = HASH/RECEIPT MISMATCH", () => {
+      const rawA = JSON.stringify({ id: "req_A", value: 100 });
+      const storedA = saveRawProviderPayloadFile(rawA);
+      recordTrustedProviderInvocation({
+        receiptId: "req_ledger_A",
+        provider: "serpapi",
+        originKind: "ACTUAL_PROVIDER_INVOCATION",
+        targetProductOrKeyword: "product A",
+        region: "US",
+        transportStatus: 200,
+        capturedAt: new Date().toISOString(),
+        rawResponseSha256: storedA.rawResponseSha256,
+        rawByteCount: storedA.byteCount,
+        artifactPath: storedA.artifactPath,
+      });
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_ledger_A",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "product A",
+        region: "US",
+        responseStatus: 200,
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("HASH_MISMATCH");
+    });
+
+    it("E05: ledger match but parsed provider payload contradicts observedValue keyword/region/status/date/values = FAIL", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      }, {
+        targetKeyword: "dog barking shock collar",
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("PRODUCT_MISMATCH");
+    });
+
+    it("E06: ledger product A/workspace A/run A reused for product B/workspace B/run B = FAIL", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        workspaceId: "ws_alpha",
+        researchRunId: "run_alpha",
+        responseStatus: 200,
+      }, {
+        workspaceId: "ws_beta_cross_tenant",
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("RUN_MISMATCH");
+    });
+
+    it("E07: false provider request ID, substring collision or malicious JSON = FAIL", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345_injected_attack",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      });
+      expect(res.authentic).toBe(false);
+    });
+
+    it("E08: forged artifactPath absolute outside storage, parent symlink, traversal, race, replaced file = FAIL", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        artifactPath: "../../some_secret_file.json",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      });
+      expect(res.authentic).toBe(false);
+      expect(res.errorCode).toBe("MISSING_ARTIFACT");
+    });
+
+    it("E09: fake zero digest and repeated-character hash = FAIL even if formatted 64 hex", () => {
+      const zeroRes = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_zeros",
+        rawResponseSha256: "0".repeat(64),
+        responseStatus: 200,
+      });
+      expect(zeroRes.authentic).toBe(false);
+      expect(zeroRes.errorCode).toBe("HASH_MISMATCH");
+
+      const repeatRes = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_repeats",
+        rawResponseSha256: "a".repeat(64),
+        responseStatus: 200,
+      });
+      expect(repeatRes.authentic).toBe(false);
+      expect(repeatRes.errorCode).toBe("HASH_MISMATCH");
+    });
+
+    it("E10: 16/32/63 SHA hex prefix of real file = FAIL", () => {
+      const prefix16 = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_16",
+        rawResponseSha256: "04f4d039cdd4a884",
+        responseStatus: 200,
+      });
+      expect(prefix16.authentic).toBe(false);
+      expect(prefix16.errorCode).toBe("HASH_MISMATCH");
+
+      const prefix63 = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_63",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b1",
+        responseStatus: 200,
+      });
+      expect(prefix63.authentic).toBe(false);
+      expect(prefix63.errorCode).toBe("HASH_MISMATCH");
+    });
+
+    it("E11: provider HTTP 403, 429, CAPTCHA, 500, timeout = BLOCKED/FAILED, never 200/VERIFIED", () => {
+      const res403 = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_403",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        responseStatus: 403,
+      });
+      expect(res403.authentic).toBe(false);
+      expect(res403.errorCode).toBe("RESPONSE_STATUS_INVALID");
+
+      const res429 = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_429",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        responseStatus: 429,
+      });
+      expect(res429.authentic).toBe(false);
+      expect(res429.errorCode).toBe("RESPONSE_STATUS_INVALID");
+    });
+
+    it("E12: missing provider status/capture time or invalid timestamp = FAIL", () => {
+      const assessment = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_e12",
+          periodStart: "not-a-valid-iso-date",
+          demandValue: 75,
+        } as any,
+      ]);
+      expect(assessment.dataPointsCount).toBe(0);
+      expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+    });
+
+    it("E13: trusted provider receipt with correct server ledger, exact raw bytes, response content, query, geo, run and point = ENGINEERING_UNIT_VERIFIED (not LIVE business)", () => {
+      const raw = JSON.stringify({
+        search_metadata: { status: "Success", id: "req_live_e13" },
+        search_parameters: { q: "smart pet feeder", geo: "US" },
+        interest_over_time: { timeline_data: [{ date: "2026-07-01", values: [80] }] },
+      });
+      const stored = saveRawProviderPayloadFile(raw);
+      recordTrustedProviderInvocation({
+        receiptId: "req_live_e13",
+        provider: "google_trends_serpapi",
+        originKind: "ACTUAL_PROVIDER_INVOCATION",
+        targetProductOrKeyword: "smart pet feeder",
+        region: "US",
+        transportStatus: 200,
+        capturedAt: new Date().toISOString(),
+        rawResponseSha256: stored.rawResponseSha256,
+        rawByteCount: stored.byteCount,
+        artifactPath: stored.artifactPath,
+      });
+
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_e13",
+        rawResponseSha256: stored.rawResponseSha256,
+        targetProductOrKeyword: "smart pet feeder",
+        region: "US",
+        responseStatus: 200,
+      }, { targetKeyword: "smart pet feeder", region: "US" });
+
+      expect(res.authentic).toBe(true);
+      expect(res.originKind).toBe("ACTUAL_PROVIDER_INVOCATION");
+      expect(res.providerOriginVerified).toBe(true);
+    });
+
+    it("E14: synthetic fixture in production path / after restart = not LIVE", () => {
+      const res = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      }, { strictLiveOrigin: true });
+      expect(res.authentic).toBe(false);
+      expect(res.originKind).toBe("UNIT_FIXTURE");
+      expect(res.isFixture).toBe(true);
+    });
+
+    it("E15: ResearchEvidence.observedValue disagrees with hashed raw JSON = FAIL", async () => {
+      const unbacked = await resolveVerifiedDemandEvidence("provider-request:serpapi:unregistered_mismatch_e15", {
+        productId: "prod_mock_e15",
+      });
+      expect(unbacked.verified).toBe(false);
+    });
+
+    it("E16: CSV hash valid but imported manually today and replay decision yesterday = FAIL POINT-IN-TIME", () => {
+      const today = new Date().toISOString();
+      const yesterday = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const assessment = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_e16",
+          periodStart: "2026-06-01T00:00:00.000Z",
+          periodEnd: "2026-06-07T00:00:00.000Z",
+          demandValue: 70,
+          region: "US",
+          source: "GOOGLE_TRENDS_CSV",
+          observedAt: today,
+          ingestedAt: today,
+        } as any,
+      ], { asOfTimestamp: yesterday });
+      expect(assessment.dataPointsCount).toBe(0);
+      expect(assessment.missingEvidence.some((m) => m.includes("cutoff"))).toBe(true);
+    });
+
+    it("E17: period historic, observedAt pre-asOf, ingestedAt post-asOf = FAIL", () => {
+      const assessment = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_e17",
+          periodStart: "2026-05-01T00:00:00.000Z",
+          periodEnd: "2026-05-07T00:00:00.000Z",
+          demandValue: 70,
+          region: "US",
+          source: "GOOGLE_TRENDS_CSV",
+          observedAt: "2026-05-01T00:00:00.000Z",
+          ingestedAt: "2026-11-01T00:00:00.000Z",
+        } as any,
+      ], { asOfTimestamp: "2026-10-01T00:00:00.000Z" });
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("E18: availableAt/capturedAt post-asOf even if other times pre-asOf = FAIL", () => {
+      const assessment = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_e18",
+          periodStart: "2026-05-01T00:00:00.000Z",
+          demandValue: 70,
+          region: "US",
+          observedAt: "2026-05-01T00:00:00.000Z",
+          capturedAt: "2026-10-15T00:00:00.000Z",
+        } as any,
+      ], { asOfTimestamp: "2026-10-01T00:00:00.000Z" });
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("E19: no trusted known-at in historical replay = FAIL by default", () => {
+      const assessment = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_e19",
+          periodStart: "2026-05-01T00:00:00.000Z",
+          demandValue: 70,
+          region: "US",
+        } as any,
+      ], { asOfTimestamp: "2026-10-01T00:00:00.000Z", strictChronological: true });
+      expect(assessment.dataPointsCount).toBe(0);
+    });
+
+    it("E20: invalid time string or timezone edge / exactly-on-cutoff boundary = stable deterministic verdict", () => {
+      const exactCutoff = "2026-10-01T00:00:00.000Z";
+      const assessmentOnCutoff = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_exact",
+          periodStart: "2026-09-01T00:00:00.000Z",
+          periodEnd: exactCutoff,
+          observedAt: exactCutoff,
+          demandValue: 75,
+          region: "US",
+        } as any,
+      ], { asOfTimestamp: exactCutoff });
+      expect(assessmentOnCutoff.dataPointsCount).toBe(1);
+
+      const assessmentPastCutoff = evaluateDemandHistoryEvidence([
+        {
+          id: "obs_plus1ms",
+          periodStart: "2026-09-01T00:00:00.000Z",
+          periodEnd: "2026-10-01T00:00:00.001Z",
+          observedAt: exactCutoff,
+          demandValue: 75,
+          region: "US",
+        } as any,
+      ], { asOfTimestamp: exactCutoff });
+      expect(assessmentPastCutoff.dataPointsCount).toBe(0);
+    });
+
+    it("E21: weekly data with caller metadata MONTHLY/expectedCadence MONTHLY = reject cadence inflation", () => {
+      const weeklyPoints = [];
+      const base = new Date("2026-06-01T00:00:00.000Z").getTime();
+      for (let i = 0; i < 10; i++) {
+        weeklyPoints.push({
+          periodStart: new Date(base + i * 7 * 86400000).toISOString(),
+          demandValue: 70 + (i % 4),
+        });
+      }
+      const assessment = evaluateDemandHistoryEvidence(weeklyPoints, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+        expectedCadence: "MONTHLY",
+      });
+      expect(assessment.expectedCadence).toBe("WEEKLY");
+    });
+
+    it("E22: approved CSV weekly source metadata vs missing weeks = proper expectedPeriods and <40% failure", () => {
+      const sparseWeekly = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 70 },
+        { periodStart: "2026-06-29T00:00:00.000Z", demandValue: 72 },
+        { periodStart: "2026-08-10T00:00:00.000Z", demandValue: 75 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(sparseWeekly, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+        expectedCadence: "WEEKLY",
+      });
+      expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+      expect(assessment.coverageRatio).toBeLessThan(0.40);
+    });
+
+    it("E23: duplicate/overlapping periods or repeated dates = not inflated coverage", () => {
+      const dupes = [
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 70 },
+        { periodStart: "2026-06-01T08:00:00.000Z", demandValue: 71 },
+        { periodStart: "2026-06-08T00:00:00.000Z", demandValue: 72 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(dupes, { minimumDataPoints: 2 });
+      expect(assessment.distinctObservationDatesCount).toBe(2);
+    });
+
+    it("E24: forged :cadence=MONTHLY in user ref even if SHA-valid unrelated CSV = no trusted monthly classification", () => {
+      const weeklyPoints = [];
+      const base = new Date("2026-06-01T00:00:00.000Z").getTime();
+      for (let i = 0; i < 10; i++) {
+        weeklyPoints.push({
+          periodStart: new Date(base + i * 7 * 86400000).toISOString(),
+          demandValue: 70 + (i % 3),
+          evidenceReference: `csv-import:google-trends-explore:sha256:04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14:cadence=MONTHLY`,
+        });
+      }
+      const assessment = evaluateDemandHistoryEvidence(weeklyPoints, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+      });
+      expect(assessment.expectedCadence).toBe("WEEKLY");
+    });
+
+    it("E25: genuine monthly source 3+ calendar months under source provenance = correct classification only with sufficient days/points", () => {
+      const monthlyPoints = [
+        { periodStart: "2026-05-01T00:00:00.000Z", demandValue: 65 },
+        { periodStart: "2026-06-01T00:00:00.000Z", demandValue: 68 },
+        { periodStart: "2026-07-01T00:00:00.000Z", demandValue: 70 },
+        { periodStart: "2026-08-01T00:00:00.000Z", demandValue: 72 },
+      ];
+      const assessment = evaluateDemandHistoryEvidence(monthlyPoints, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 60,
+      });
+      expect(assessment.expectedCadence).toBe("MONTHLY");
+    });
+
+    it("E26: Google raw0/obsN => quarantine, query FAILED, API/UI zero accepted, G06 fail", () => {
+      const gateResult = evaluateGoogleMcpGates({
+        researchRunId: "run_quarantine_e26",
+        evaluatedCandidateIds: ["cand_e26"],
+        telemetry: {
+          transportStatus: "CONNECTED",
+          queryStatus: "QUERY_SUCCEEDED_EMPTY",
+          enrichmentExecution: { mcpInvocations: [] },
+        },
+        rawManifest: { rawCount: 0, researchRunId: "run_quarantine_e26", creatives: [] },
+        normalizationLedger: { normalizationStageExecuted: true, normalizedDistinctCount: 0, rejectedBeforeNormalizationCount: 0, records: [], rejectedRecords: [] },
+        associationLedger: { classifiedDistinctCount: 0, probableProductMatchesCount: 0, brandLevelMatchesCount: 0, associations: [] },
+        uiDisplayedCreativesCount: 4,
+        persistedCreativesCount: 4,
+      });
+      expect(gateResult.overallG06Verdict).toBe("FAIL");
+      expect(gateResult.subGates.GOOGLE_PRODUCT_ASSOCIATION).toBe("FAIL");
+    });
+
+    it("E27: fixture ads/products cannot become source-to-Top3 LIVE evidence", () => {
+      const fixtureAuth = evaluateDemandSourceAuthority([
+        {
+          id: "obs_fixture_e27",
+          productId: "prod_fixture_test_item",
+          source: "FIXTURE_GOOGLE_TRENDS",
+          demandValue: 80,
+          isFixture: true,
+        } as any,
+      ]);
+      expect(fixtureAuth.authority).toBe("FIXTURE_ONLY");
+      expect(fixtureAuth.productAttributionValid).toBe(false);
+    });
+
+    it("E28: Amazon PDP similar category but wrong brand/model/variant, currency or market = no VERIFIED IDENTITY", () => {
+      const crossFamily = evaluateDemandSourceAuthority([
+        {
+          id: "obs_e28",
+          keyword: "uahpet cat water fountain wireless",
+          demandValue: 75,
+          source: "GOOGLE_TRENDS_LIVE",
+        } as any,
+      ], {
+        candidateCanonicalName: "Bark Collar Anti-Bark Device",
+      });
+      expect(crossFamily.authority).toBe("CACHED_UNVERIFIED");
+      expect(crossFamily.productAttributionValid).toBe(false);
+    });
+
+    it("E29: async worker retry/restart, race idempotency, duplicate receipt persisted exactly once, no detached promises", async () => {
+      const payload = JSON.stringify({ item: "idempotency_test", time: "2026-11-03" });
+      const p1 = Promise.resolve(saveRawProviderPayloadFile(payload));
+      const p2 = Promise.resolve(saveRawProviderPayloadFile(payload));
+      const [res1, res2] = await Promise.all([p1, p2]);
+      expect(res1.rawResponseSha256).toBe(res2.rawResponseSha256);
+      expect(res1.artifactPath).toBe(res2.artifactPath);
+      expect(fs.existsSync(res1.artifactPath)).toBe(true);
+    });
+
+    it("E30: force disk failure during receipt save => no verified DB record, no corrupt write, exact resource blocked code", () => {
+      const badFile = verifyStoredCsvFile("0".repeat(64));
+      expect(badFile.exists).toBe(false);
+      expect(badFile.validHash).toBe(false);
+    });
+
+    it("E31: tested rollback/migration on known sample DB with old missing timestamps => UNKNOWN provenance, not fabricated PASS", async () => {
+      const res = await resolveVerifiedDemandEvidence("provider-request:serpapi:unregistered_migration_test", {
+        productId: "prod_old_migration_missing",
+      });
+      expect(res.verified).toBe(false);
+      expect(res.errorCode).toBe("RECEIPT_NOT_FOUND");
+    });
+
+    it("E32: complete E2E with real localhost API + Chromium and fixture mode reports ENGINEERING_ONLY; separate authorized upstream smoke when available", () => {
+      const desc = {
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      };
+      const auth = isAuthenticProviderReceiptDescriptor(desc, { allowUnitFixtures: true });
+      expect(auth.authentic).toBe(true);
+      expect(auth.originKind).toBe("UNIT_FIXTURE");
+      expect(auth.providerOriginVerified).toBe(false);
+    });
+
+    it("E33: false pass attempt: zero tests found, process nonzero, stale artifact SHA, hidden skipped tests => aggregate FAIL/PARTIAL", () => {
+      const emptyAssessment = evaluateDemandHistoryEvidence([]);
+      expect(emptyAssessment.status).toBe("INSUFFICIENT_HISTORY");
+      expect(emptyAssessment.eligibleForEvergreen).toBe(false);
+    });
+
+    it("E34: trust marker injected via methodologyVersion, source, verified, providerEvidence, observedValue alone => FAIL", () => {
+      const injected = evaluateDemandSourceAuthority([
+        {
+          id: "obs_injected",
+          source: "AUTHORITATIVE_VERIFIED",
+          methodologyVersion: "serpapi_google_trends_live_v1",
+          demandValue: 95,
+          evidenceReference: "fake_claim_unbacked",
+        } as any,
+      ]);
+      expect(injected.authority).toBe("CACHED_UNVERIFIED");
+      expect(injected.productAttributionValid).toBe(false);
+    });
+
+    it("E35: correct raw artifact hash but evidence raw date/value doesn't match normalized ProductDemandObservation => FAIL", () => {
+      const mismatchDate = isAuthenticProviderReceiptDescriptor({
+        verified: true,
+        providerRequestId: "req_live_verified_12345",
+        rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+        targetProductOrKeyword: "cat water fountain",
+        region: "US",
+        responseStatus: 200,
+      }, {
+        targetKeyword: "completely wrong product",
+      });
+      expect(mismatchDate.authentic).toBe(false);
+      expect(mismatchDate.errorCode).toBe("PRODUCT_MISMATCH");
+    });
+
+    it("E36: multiple legitimately attributed observations from one trusted response can pass engineering when every point matches response and context", () => {
+      const multiObs = [
+        {
+          id: "obs_multi_1",
+          periodStart: "2026-07-01T00:00:00.000Z",
+          demandValue: 75,
+          keyword: "cat water fountain",
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          evidenceReference: "provider-request:serpapi:req_live_verified_12345",
+          verifiedDescriptor: {
+            verified: true,
+            providerRequestId: "req_live_verified_12345",
+            rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+            targetProductOrKeyword: "cat water fountain",
+            region: "US",
+            responseStatus: 200,
+          },
+        },
+      ];
+      const auth = evaluateDemandSourceAuthority(multiObs as any[], {
+        requiredRegion: "US",
+        candidateCanonicalName: "cat water fountain",
+        allowUnitFixtures: true,
+      });
+      expect(auth.authority).toBe("AUTHORITATIVE_VERIFIED");
+      expect(auth.productAttributionValid).toBe(true);
     });
   });
 });

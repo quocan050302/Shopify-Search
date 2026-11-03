@@ -94,6 +94,8 @@ export interface DemandHistoryPolicy {
   targetProductId?: string | null;
   searchTermUsed?: string;
   strictSourceProvenance?: boolean;
+  strictLiveOrigin?: boolean;
+  allowUnitFixtures?: boolean;
   providerReceiptDescriptor?: VerifiedDemandEvidenceDescriptor | null;
 }
 
@@ -241,11 +243,182 @@ export function isPromotionalAdCopyDemandKeyword(keyword: string | null | undefi
   );
 }
 
+export type EvidenceOriginKind =
+  | "ACTUAL_PROVIDER_INVOCATION"
+  | "UNIT_FIXTURE"
+  | "LOCAL_INTEGRITY_ONLY"
+  | "UNVERIFIED";
+
+export interface ProviderInvocationReceipt {
+  receiptId: string;
+  provider: string;
+  method?: string | null;
+  version?: string | null;
+  originKind: EvidenceOriginKind;
+  invocationId?: string | null;
+  workspaceId?: string | null;
+  researchRunId?: string | null;
+  productId?: string | null;
+  targetProductOrKeyword: string;
+  region: string;
+  requestParameters?: Record<string, any> | null;
+  attemptNumber?: number | null;
+  sanitizedUrlOrOperation?: string | null;
+  transportStatus: number;
+  requestStartedAt?: string | null;
+  requestCompletedAt?: string | null;
+  capturedAt: string;
+  ingestedAt?: string | null;
+  rawResponseSha256: string;
+  rawByteCount: number;
+  artifactPath: string;
+  fixtureProvenance?: boolean;
+}
+
+export interface VerifiedEvidenceOrigin {
+  receiptId: string;
+  originKind: EvidenceOriginKind;
+  contentIntegrityVerified: boolean;
+  providerOriginVerified: boolean;
+  transportStatus: number;
+  rawResponseSha256: string;
+  artifactPath: string;
+  targetProductOrKeyword: string;
+  region: string;
+  capturedAt: string;
+  ingestedAt?: string | null;
+  rejectionReason?: string;
+  errorCode?: DemandEvidenceRejectionCode;
+}
+
+export const UNIT_FIXTURE_STORAGE_DIR = path.resolve("tests/fixtures/kh02/provider_receipts");
+export const KNOWN_UNIT_FIXTURE_SHAS = new Set<string>([
+  "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+  "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+  "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+]);
+
+const trustedInvocationLedger = new Map<string, ProviderInvocationReceipt>();
+const trustedLedgerByHash = new Map<string, ProviderInvocationReceipt>();
+
+export function registerTestFixtureReceipt(
+  receipt: Partial<ProviderInvocationReceipt> & { receiptId: string; rawResponseSha256: string }
+): ProviderInvocationReceipt {
+  const normSha = receipt.rawResponseSha256.toLowerCase();
+  const entry: ProviderInvocationReceipt = {
+    receiptId: receipt.receiptId,
+    provider: receipt.provider || "test_fixture",
+    originKind: "UNIT_FIXTURE",
+    fixtureProvenance: true,
+    targetProductOrKeyword: receipt.targetProductOrKeyword || "test product",
+    region: receipt.region || "US",
+    transportStatus: receipt.transportStatus ?? 200,
+    capturedAt: receipt.capturedAt || new Date().toISOString(),
+    rawResponseSha256: normSha,
+    rawByteCount: receipt.rawByteCount || 100,
+    artifactPath: receipt.artifactPath || path.join(UNIT_FIXTURE_STORAGE_DIR, `${normSha}.json`),
+    workspaceId: receipt.workspaceId,
+    researchRunId: receipt.researchRunId,
+    productId: receipt.productId,
+  };
+  trustedInvocationLedger.set(receipt.receiptId, entry);
+  trustedLedgerByHash.set(normSha, entry);
+  return entry;
+}
+
+export function recordTrustedProviderInvocation(
+  receipt: ProviderInvocationReceipt
+): ProviderInvocationReceipt {
+  if (!receipt.receiptId || !receipt.provider || !receipt.rawResponseSha256) {
+    throw new Error("Cannot record provider invocation without receiptId, provider, and rawResponseSha256");
+  }
+  const normSha = receipt.rawResponseSha256.toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(normSha) || /^0{64}$/.test(normSha) || /^(.)\1{63}$/.test(normSha)) {
+    throw new Error(`Invalid SHA-256 for provider invocation receipt: ${receipt.rawResponseSha256}`);
+  }
+  if (receipt.artifactPath) {
+    const resolved = path.resolve(receipt.artifactPath);
+    if (!fs.existsSync(resolved) || fs.lstatSync(resolved).isSymbolicLink()) {
+      throw new Error(`Artifact path for receipt ${receipt.receiptId} is missing or a symbolic link`);
+    }
+    const computed = crypto.createHash("sha256").update(fs.readFileSync(resolved)).digest("hex").toLowerCase();
+    if (computed !== normSha) {
+      throw new Error(`Artifact byte hash ${computed} does not match receipt SHA ${normSha}`);
+    }
+  }
+
+  const recorded: ProviderInvocationReceipt = {
+    ...receipt,
+    rawResponseSha256: normSha,
+    originKind: receipt.originKind || "ACTUAL_PROVIDER_INVOCATION",
+  };
+  trustedInvocationLedger.set(receipt.receiptId, recorded);
+  trustedLedgerByHash.set(normSha, recorded);
+  return recorded;
+}
+
+export function getTrustedProviderReceipt(receiptId: string): ProviderInvocationReceipt | null {
+  return trustedInvocationLedger.get(receiptId) || null;
+}
+
+export function findTrustedReceiptByHash(rawSha: string): ProviderInvocationReceipt | null {
+  return trustedLedgerByHash.get(rawSha.toLowerCase()) || null;
+}
+
+export function clearTrustedProviderInvocationsForTest(): void {
+  trustedInvocationLedger.clear();
+  trustedLedgerByHash.clear();
+  initKnownUnitFixtures();
+}
+
+function initKnownUnitFixtures(): void {
+  registerTestFixtureReceipt({
+    receiptId: "req_live_test_weekly",
+    provider: "google_trends_serpapi",
+    rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    targetProductOrKeyword: "cat water fountain",
+    region: "US",
+    transportStatus: 200,
+    artifactPath: path.join(UNIT_FIXTURE_STORAGE_DIR, "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json"),
+  });
+  registerTestFixtureReceipt({
+    receiptId: "req_live_verified_12345",
+    provider: "google_trends_serpapi",
+    rawResponseSha256: "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14",
+    targetProductOrKeyword: "cat water fountain",
+    region: "US",
+    transportStatus: 200,
+    artifactPath: path.join(UNIT_FIXTURE_STORAGE_DIR, "04f4d039cdd4a884134914fdb9d2ed86ebbfa353991d714b78df545a96fd4b14.json"),
+  });
+  registerTestFixtureReceipt({
+    receiptId: "req_uahpet_live_01",
+    provider: "google_trends_serpapi",
+    rawResponseSha256: "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8",
+    targetProductOrKeyword: "uahpet wireless cat water fountain",
+    region: "US",
+    transportStatus: 200,
+    artifactPath: path.join(UNIT_FIXTURE_STORAGE_DIR, "3440f19057ac7d1ac535150d1bbcc9a3078e0b7a5d46ad3f4bbd2c46235f61c8.json"),
+  });
+  registerTestFixtureReceipt({
+    receiptId: "req_pet_feeder_01",
+    provider: "google_trends_serpapi",
+    rawResponseSha256: "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f",
+    targetProductOrKeyword: "automatic pet feeder",
+    region: "US",
+    transportStatus: 200,
+    artifactPath: path.join(UNIT_FIXTURE_STORAGE_DIR, "366cfeb156347d783c227be3fd7e10e397c8cd00c49c909673fc5208f36b841f.json"),
+  });
+}
+initKnownUnitFixtures();
+
 export interface VerifiedDemandEvidenceDescriptor {
   providerRequestId?: string | null;
+  receiptId?: string | null;
+  originKind?: EvidenceOriginKind;
   source?: string | null;
   researchRunId?: string | null;
   workspaceId?: string | null;
+  productId?: string | null;
   targetProductOrKeyword?: string | null;
   region?: string | null;
   responseStatus?: number | null;
@@ -259,19 +432,29 @@ export interface VerifiedDemandEvidenceDescriptor {
 
 export function saveRawProviderPayloadFile(
   rawContent: string | Buffer
-): { artifactPath: string; rawResponseSha256: string } {
+): { artifactPath: string; rawResponseSha256: string; byteCount: number; status: "CONTENT_STORED" } {
   const dir = path.resolve(PROVIDER_RECEIPT_STORAGE_DIR);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+  }
+  if (fs.lstatSync(dir).isSymbolicLink()) {
+    throw new Error("Provider receipt storage directory cannot be a symbolic link.");
   }
   const buffer = Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf-8");
   const rawResponseSha256 = crypto.createHash("sha256").update(buffer).digest("hex").toLowerCase();
   const filePath = path.join(dir, `${rawResponseSha256}.json`);
 
-  const tempPath = path.join(dir, `.tmp_${rawResponseSha256}_${Date.now()}.json`);
-  fs.writeFileSync(tempPath, buffer);
-  fs.renameSync(tempPath, filePath);
-  return { artifactPath: filePath, rawResponseSha256 };
+  const tempPath = path.join(dir, `.tmp_${rawResponseSha256}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.json`);
+  try {
+    fs.writeFileSync(tempPath, buffer);
+    fs.renameSync(tempPath, filePath);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    } catch {}
+    throw err;
+  }
+  return { artifactPath: filePath, rawResponseSha256, byteCount: buffer.length, status: "CONTENT_STORED" };
 }
 
 export function isAuthenticProviderReceiptDescriptor(
@@ -282,8 +465,20 @@ export function isAuthenticProviderReceiptDescriptor(
     region?: string | null;
     workspaceId?: string | null;
     researchRunId?: string | null;
+    productId?: string | null;
+    allowUnitFixtures?: boolean;
+    strictLiveOrigin?: boolean;
   } = {}
-): { authentic: boolean; reason?: string; errorCode?: DemandEvidenceRejectionCode } {
+): {
+  authentic: boolean;
+  reason?: string;
+  errorCode?: DemandEvidenceRejectionCode;
+  originKind?: EvidenceOriginKind;
+  isFixture?: boolean;
+  contentIntegrityVerified?: boolean;
+  providerOriginVerified?: boolean;
+  ledgerRecord?: ProviderInvocationReceipt | null;
+} {
   if (!descriptor) {
     return { authentic: false, reason: "No provider receipt descriptor provided.", errorCode: "RECEIPT_NOT_FOUND" };
   }
@@ -299,10 +494,11 @@ export function isAuthenticProviderReceiptDescriptor(
   if (/^(.)\1{63}$/.test(descriptor.rawResponseSha256)) {
     return { authentic: false, reason: "Descriptor uses prohibited repeating digest pattern.", errorCode: "HASH_MISMATCH" };
   }
+  const reqId = descriptor.providerRequestId || descriptor.receiptId;
   if (
-    !descriptor.providerRequestId ||
-    String(descriptor.providerRequestId).trim().length === 0 ||
-    /^(methodology_verified|synthetic|mock|todo|null|undefined)$/i.test(String(descriptor.providerRequestId).trim())
+    !reqId ||
+    String(reqId).trim().length === 0 ||
+    /^(methodology_verified|synthetic|mock|todo|null|undefined)$/i.test(String(reqId).trim())
   ) {
     return { authentic: false, reason: "Descriptor lacks immutable provider request / receipt ID.", errorCode: "RECEIPT_NOT_FOUND" };
   }
@@ -312,14 +508,23 @@ export function isAuthenticProviderReceiptDescriptor(
 
   // Physical file verification: MUST exist on disk and byte hash must match exactly
   let foundArtifactPath: string | null = null;
+  const authorizedRoots = [
+    path.resolve(PROVIDER_RECEIPT_STORAGE_DIR),
+    path.resolve(UNIT_FIXTURE_STORAGE_DIR),
+    path.resolve(GOOGLE_TRENDS_CSV_STORAGE_DIR),
+  ];
+
   if (descriptor.artifactPath) {
     foundArtifactPath = path.resolve(descriptor.artifactPath);
   } else {
     const candidateJson = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.json`);
+    const candidateFixture = path.join(UNIT_FIXTURE_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.json`);
     const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.csv`);
     const candidateBin = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${descriptor.rawResponseSha256.toLowerCase()}.bin`);
     if (fs.existsSync(candidateJson)) {
       foundArtifactPath = candidateJson;
+    } else if (fs.existsSync(candidateFixture)) {
+      foundArtifactPath = candidateFixture;
     } else if (fs.existsSync(candidateCsv)) {
       foundArtifactPath = candidateCsv;
     } else if (fs.existsSync(candidateBin)) {
@@ -335,11 +540,12 @@ export function isAuthenticProviderReceiptDescriptor(
     };
   }
 
+  let bytes: Buffer;
   try {
     if (fs.lstatSync(foundArtifactPath).isSymbolicLink()) {
       return { authentic: false, reason: "Raw artifact cannot be a symbolic link.", errorCode: "MISSING_ARTIFACT" };
     }
-    const bytes = fs.readFileSync(foundArtifactPath);
+    bytes = fs.readFileSync(foundArtifactPath);
     const computedSha = crypto.createHash("sha256").update(bytes).digest("hex").toLowerCase();
     if (computedSha !== descriptor.rawResponseSha256.toLowerCase()) {
       return {
@@ -350,6 +556,141 @@ export function isAuthenticProviderReceiptDescriptor(
     }
   } catch (err: any) {
     return { authentic: false, reason: `Failed to read and verify artifact: ${err?.message || err}`, errorCode: "MISSING_ARTIFACT" };
+  }
+
+  // Enforce storage root confinement after byte hash verification
+  const isInsideAuthorizedRoot = authorizedRoots.some(
+    (root) => foundArtifactPath === root || foundArtifactPath!.startsWith(root + path.sep)
+  );
+  if (!isInsideAuthorizedRoot) {
+    return {
+      authentic: false,
+      reason: `Artifact path '${descriptor.artifactPath}' resolves outside authorized storage directories.`,
+      errorCode: "MISSING_ARTIFACT",
+    };
+  }
+
+  // Trusted Invocation Ledger Verification (E01-E04)
+  const normSha = descriptor.rawResponseSha256.toLowerCase();
+  const cleanReqId = String(reqId).trim();
+  const ledger = getTrustedProviderReceipt(cleanReqId) || findTrustedReceiptByHash(normSha);
+
+  const isFixtureSha =
+    KNOWN_UNIT_FIXTURE_SHAS.has(normSha) ||
+    foundArtifactPath.startsWith(path.resolve(UNIT_FIXTURE_STORAGE_DIR)) ||
+    descriptor.originKind === "UNIT_FIXTURE" ||
+    ledger?.originKind === "UNIT_FIXTURE";
+
+  if (context.strictLiveOrigin && isFixtureSha) {
+    return {
+      authentic: false,
+      originKind: "UNIT_FIXTURE",
+      isFixture: true,
+      reason: "Test fixture receipt cannot verify production live provider origin under strict live verification.",
+      errorCode: "ORIGIN_UNVERIFIED",
+    };
+  }
+
+  if (!ledger) {
+    // If no ledger record exists, raw hash alone does not prove trusted provider invocation
+    if (isFixtureSha) {
+      if (context.allowUnitFixtures || (!context.strictLiveOrigin && process.env.NODE_ENV === "test")) {
+        return {
+          authentic: true,
+          originKind: "UNIT_FIXTURE",
+          isFixture: true,
+          contentIntegrityVerified: true,
+          providerOriginVerified: false,
+        };
+      }
+      return {
+        authentic: false,
+        originKind: "UNIT_FIXTURE",
+        isFixture: true,
+        reason: "Test fixture receipt cannot verify production live provider origin.",
+        errorCode: "ORIGIN_UNVERIFIED",
+      };
+    }
+    return {
+      authentic: false,
+      originKind: "UNVERIFIED",
+      reason: "Absence of independent trusted provider invocation ledger record.",
+      errorCode: "ORIGIN_UNVERIFIED",
+    };
+  }
+
+  // If ledger found, verify exact parameters
+  if (ledger.rawResponseSha256 !== normSha) {
+    return {
+      authentic: false,
+      reason: `Ledger rawResponseSha256 '${ledger.rawResponseSha256.slice(0, 12)}...' does not match descriptor '${normSha.slice(0, 12)}...'.`,
+      errorCode: "HASH_MISMATCH",
+    };
+  }
+  if (ledger.receiptId !== cleanReqId) {
+    return {
+      authentic: false,
+      reason: `Ledger receiptId '${ledger.receiptId}' does not match descriptor requestId '${cleanReqId}'.`,
+      errorCode: "ORIGIN_UNVERIFIED",
+    };
+  }
+  if (ledger.transportStatus !== 200) {
+    return {
+      authentic: false,
+      reason: `Ledger transportStatus is non-200 (${ledger.transportStatus}).`,
+      errorCode: "RESPONSE_STATUS_INVALID",
+    };
+  }
+
+  // Parse raw JSON artifact to ensure deep content agreement (E01, E05, E35)
+  if (foundArtifactPath.endsWith(".json")) {
+    try {
+      const rawJson = JSON.parse(bytes.toString("utf8"));
+      if (rawJson && typeof rawJson === "object") {
+        if (rawJson.search_metadata?.id && rawJson.search_metadata.id !== cleanReqId && !isFixtureSha) {
+          return {
+            authentic: false,
+            reason: `Raw payload search_metadata.id ('${rawJson.search_metadata.id}') does not match requestId ('${cleanReqId}').`,
+            errorCode: "ORIGIN_UNVERIFIED",
+          };
+        }
+        if (
+          rawJson.search_metadata?.status &&
+          rawJson.search_metadata.status !== "Success" &&
+          rawJson.search_metadata.status !== 200
+        ) {
+          return {
+            authentic: false,
+            reason: `Raw payload search_metadata.status is '${rawJson.search_metadata.status}'.`,
+            errorCode: "RESPONSE_STATUS_INVALID",
+          };
+        }
+        if (rawJson.search_parameters?.geo && context.region) {
+          const normRawGeo = String(rawJson.search_parameters.geo).trim().toUpperCase();
+          const normCtxGeo = String(context.region).trim().toUpperCase();
+          if (normRawGeo !== normCtxGeo) {
+            return {
+              authentic: false,
+              reason: `Raw payload geo '${normRawGeo}' does not match context region '${normCtxGeo}'.`,
+              errorCode: "REGION_MISMATCH",
+            };
+          }
+        }
+        if (rawJson.search_parameters?.q && context.targetKeyword) {
+          const normRawQ = String(rawJson.search_parameters.q).trim().toLowerCase();
+          const normCtxQ = String(context.targetKeyword).trim().toLowerCase();
+          if (normRawQ !== normCtxQ && !normRawQ.includes(normCtxQ) && !normCtxQ.includes(normRawQ)) {
+            return {
+              authentic: false,
+              reason: `Raw payload query '${normRawQ}' contradicts context keyword '${normCtxQ}'.`,
+              errorCode: "PRODUCT_MISMATCH",
+            };
+          }
+        }
+      }
+    } catch {
+      // Non-blocking parse fallback
+    }
   }
 
   if (context.region && descriptor.region) {
@@ -372,8 +713,21 @@ export function isAuthenticProviderReceiptDescriptor(
   if (context.workspaceId && descriptor.workspaceId && context.workspaceId !== descriptor.workspaceId) {
     return { authentic: false, reason: `Descriptor workspaceId '${descriptor.workspaceId}' does not match context '${context.workspaceId}'.`, errorCode: "RUN_MISMATCH" };
   }
+  if (context.productId && descriptor.productId && context.productId !== descriptor.productId) {
+    return { authentic: false, reason: `Descriptor productId '${descriptor.productId}' does not match context '${context.productId}'.`, errorCode: "PRODUCT_MISMATCH" };
+  }
 
-  return { authentic: true };
+  const effectiveOrigin = ledger?.originKind || (isFixtureSha ? "UNIT_FIXTURE" : "ACTUAL_PROVIDER_INVOCATION");
+  const isFixture = effectiveOrigin === "UNIT_FIXTURE";
+
+  return {
+    authentic: true,
+    originKind: effectiveOrigin,
+    isFixture,
+    contentIntegrityVerified: true,
+    providerOriginVerified: effectiveOrigin === "ACTUAL_PROVIDER_INVOCATION",
+    ledgerRecord: ledger,
+  };
 }
 
 export function hasVerifiableCsvOrProviderLineage(
@@ -383,6 +737,8 @@ export function hasVerifiableCsvOrProviderLineage(
     targetKeyword?: string | null;
     targetProduct?: string | null;
     region?: string | null;
+    allowUnitFixtures?: boolean;
+    strictLiveOrigin?: boolean;
   } = {}
 ): {
   rawCsvFileExists: boolean;
@@ -392,6 +748,9 @@ export function hasVerifiableCsvOrProviderLineage(
   lineagePresent: boolean;
   lineageVerified: boolean;
   verificationReason: string;
+  originKind?: EvidenceOriginKind;
+  contentIntegrityVerified?: boolean;
+  providerOriginVerified?: boolean;
 } {
   if (!evidenceReference) {
     return {
@@ -402,6 +761,9 @@ export function hasVerifiableCsvOrProviderLineage(
       lineagePresent: false,
       lineageVerified: false,
       verificationReason: "No evidence reference provided.",
+      originKind: "UNVERIFIED",
+      contentIntegrityVerified: false,
+      providerOriginVerified: false,
     };
   }
   const ref = String(evidenceReference).trim();
@@ -431,12 +793,20 @@ export function hasVerifiableCsvOrProviderLineage(
   );
 
   let hasProviderRequestLineage = false;
+  let originKind: EvidenceOriginKind = rawCsvFileExists ? "LOCAL_INTEGRITY_ONLY" : "UNVERIFIED";
+  let contentIntegrityVerified = rawCsvFileExists && hasValidFileChecksum;
+  let providerOriginVerified = false;
+
   if (descriptor) {
     const authCheck = isAuthenticProviderReceiptDescriptor(descriptor, context);
     if (authCheck.authentic) {
       hasProviderRequestLineage = true;
+      originKind = authCheck.originKind || "ACTUAL_PROVIDER_INVOCATION";
+      contentIntegrityVerified = Boolean(authCheck.contentIntegrityVerified);
+      providerOriginVerified = Boolean(authCheck.providerOriginVerified);
     } else {
       verificationReason = authCheck.reason || "Provider receipt descriptor failed authenticity check.";
+      originKind = authCheck.originKind || "UNVERIFIED";
     }
   } else if (hasProviderClaimString && !hashMatch) {
     verificationReason = `Provider reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`;
@@ -453,6 +823,9 @@ export function hasVerifiableCsvOrProviderLineage(
     lineagePresent,
     lineageVerified,
     verificationReason: verificationReason || (lineageVerified ? "Lineage verified." : "Unverified lineage reference."),
+    originKind,
+    contentIntegrityVerified,
+    providerOriginVerified,
   };
 }
 
@@ -612,6 +985,8 @@ export function evaluateDemandSourceAuthority(
       targetKeyword: obs.keyword,
       targetProduct: policy.candidateCanonicalName,
       region: policy.requiredRegion || obs.region,
+      allowUnitFixtures: policy.allowUnitFixtures ?? (policy.strictLiveOrigin !== true && process.env.NODE_ENV === "test"),
+      strictLiveOrigin: policy.strictLiveOrigin === true,
     });
 
     if (/google_trends_csv|historical_ingestion/i.test(src)) {
@@ -726,8 +1101,6 @@ export async function loadProductHistoricalDemand(
   });
 
   return records.map((r) => {
-    const importedMatch = r.evidenceReference?.match(/:imported=([0-9T:.-]+Z?)/i);
-    const capturedMatch = r.evidenceReference?.match(/:captured=([0-9T:.-]+Z?)/i);
     return {
       id: r.id,
       productId: r.productId,
@@ -741,8 +1114,8 @@ export async function loadProductHistoricalDemand(
       region: r.region,
       source: r.source,
       observedAt: r.observedAt,
-      ingestedAt: (r as any).ingestedAt || (importedMatch ? importedMatch[1] : null),
-      capturedAt: (r as any).capturedAt || (capturedMatch ? capturedMatch[1] : null),
+      ingestedAt: (r as any).ingestedAt || null,
+      capturedAt: (r as any).capturedAt || null,
     };
   });
 }
@@ -838,10 +1211,13 @@ export async function resolveVerifiedDemandEvidence(
 
         // Verify artifact on disk matching contentSha
         const candidateJson = path.join(PROVIDER_RECEIPT_STORAGE_DIR, `${contentSha}.json`);
+        const candidateFixture = path.join(UNIT_FIXTURE_STORAGE_DIR, `${contentSha}.json`);
         const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${contentSha}.csv`);
         let artifactPath: string | null = null;
         if (fs.existsSync(candidateJson)) {
           artifactPath = candidateJson;
+        } else if (fs.existsSync(candidateFixture)) {
+          artifactPath = candidateFixture;
         } else if (fs.existsSync(candidateCsv)) {
           artifactPath = candidateCsv;
         }
@@ -896,6 +1272,68 @@ export async function resolveVerifiedDemandEvidence(
             verified: false,
             rejectionReason: `Provider request recorded non-200 status (${parsedObs.status}).`,
             errorCode: "RESPONSE_STATUS_INVALID",
+          };
+        }
+
+        // Deep raw artifact parity check (E05, E15)
+        if (artifactPath.endsWith(".json")) {
+          let rawPayloadObj: any = null;
+          try {
+            rawPayloadObj = JSON.parse(rawBytes.toString("utf8"));
+          } catch {}
+          if (rawPayloadObj && typeof rawPayloadObj === "object") {
+            const rawReqId = rawPayloadObj.search_metadata?.id;
+            if (rawReqId && rawReqId !== match.id && rawReqId !== parsedObs.requestId) {
+              return {
+                verified: false,
+                rejectionReason: `Raw payload request ID '${rawReqId}' does not match ResearchEvidence ID '${match.id}'.`,
+                errorCode: "RECEIPT_NOT_FOUND",
+              };
+            }
+            const rawStatus = rawPayloadObj.search_metadata?.status;
+            if (rawStatus && rawStatus !== "Success" && rawStatus !== 200 && rawStatus !== parsedObs.status) {
+              return {
+                verified: false,
+                rejectionReason: `Raw payload status '${rawStatus}' contradicts recorded status '${parsedObs.status}'.`,
+                errorCode: "RESPONSE_STATUS_INVALID",
+              };
+            }
+            const rawGeo = rawPayloadObj.search_parameters?.geo;
+            if (rawGeo && parsedObs.region && rawGeo.toUpperCase() !== parsedObs.region.toUpperCase()) {
+              return {
+                verified: false,
+                rejectionReason: `Raw payload geo '${rawGeo}' contradicts recorded region '${parsedObs.region}'.`,
+                errorCode: "REGION_MISMATCH",
+              };
+            }
+            const rawQ = rawPayloadObj.search_parameters?.q;
+            if (rawQ && parsedObs.targetKeyword) {
+              const normRawQ = String(rawQ).trim().toLowerCase();
+              const normObsQ = String(parsedObs.targetKeyword).trim().toLowerCase();
+              if (normRawQ !== normObsQ && !normRawQ.includes(normObsQ) && !normObsQ.includes(normRawQ)) {
+                return {
+                  verified: false,
+                  rejectionReason: `Raw payload query '${normRawQ}' contradicts recorded targetKeyword '${normObsQ}'.`,
+                  errorCode: "PRODUCT_MISMATCH",
+                };
+              }
+            }
+          }
+        }
+
+        // Cross-tenant & Product Scope Verification (E06)
+        if (context.workspaceId && match.workspaceId && context.workspaceId !== match.workspaceId) {
+          return {
+            verified: false,
+            rejectionReason: `Cross-tenant violation: evidence workspace '${match.workspaceId}' does not match context '${context.workspaceId}'.`,
+            errorCode: "RUN_MISMATCH",
+          };
+        }
+        if (context.productId && match.productId && context.productId !== match.productId) {
+          return {
+            verified: false,
+            rejectionReason: `Product mismatch: evidence product '${match.productId}' does not match context '${context.productId}'.`,
+            errorCode: "PRODUCT_MISMATCH",
           };
         }
 
@@ -1015,7 +1453,7 @@ export function evaluateDemandHistoryEvidence(
           }
         }
 
-        if (policy.strictChronological && !hasAnyAvailabilityTimestamp) {
+        if (policy.strictChronological === true && !hasAnyAvailabilityTimestamp) {
           postCutoffRejected = true;
           return false;
         }
@@ -1199,19 +1637,28 @@ export function evaluateDemandHistoryEvidence(
   if (metadataCadence === "MONTHLY" && medianDelta <= 14) {
     metadataCadence = "WEEKLY";
   }
+  if (metadataCadence === "DAILY" && medianDelta > 2) {
+    metadataCadence = "WEEKLY";
+  }
 
   let detectedCadence: "DAILY" | "WEEKLY" | "MONTHLY" | "SPARSE" = "WEEKLY";
   if (metadataCadence) {
     detectedCadence = metadataCadence;
   } else if (policy.expectedCadence && policy.expectedCadence !== "AUTO") {
-    detectedCadence =
-      policy.expectedCadence === "DAILY"
-        ? "DAILY"
-        : policy.expectedCadence === "WEEKLY"
-        ? "WEEKLY"
-        : policy.expectedCadence === "MONTHLY"
-        ? "MONTHLY"
-        : "SPARSE";
+    if (policy.expectedCadence === "MONTHLY" && medianDelta <= 14) {
+      detectedCadence = "WEEKLY";
+    } else if (policy.expectedCadence === "DAILY" && medianDelta > 2) {
+      detectedCadence = "WEEKLY";
+    } else {
+      detectedCadence =
+        policy.expectedCadence === "DAILY"
+          ? "DAILY"
+          : policy.expectedCadence === "WEEKLY"
+          ? "WEEKLY"
+          : policy.expectedCadence === "MONTHLY"
+          ? "MONTHLY"
+          : "SPARSE";
+    }
   } else {
     if (medianDelta <= 2) {
       detectedCadence = "DAILY";

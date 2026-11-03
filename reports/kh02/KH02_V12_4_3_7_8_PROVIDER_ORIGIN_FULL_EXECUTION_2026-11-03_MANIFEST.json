@@ -1,0 +1,30 @@
+{
+  "version": "12.4.3.7.8",
+  "instructionDate": "2026-11-03",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineCommitSha": "86fd1bd83d7c72da78a58e8594e89fbbbdb38bc1",
+  "engineeringStatus": "ENGINEERING_PASS",
+  "businessStatus": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+  "typecheck": { "command": "npx tsc --noEmit", "exitCode": 0, "errors": 0 },
+  "regression": {
+    "kh01": { "files": 5, "passed": 69, "failed": 0 },
+    "kh02Unit": { "files": 33, "passed": 947, "failed": 0 },
+    "postReviewHardening": { "tests": 82, "passed": 82, "failed": 0 },
+    "chromiumE2E": { "tests": 1, "passed": 1, "failed": 0, "durationMs": 38022 },
+    "backtest": {
+      "policyScenarios": { "total": 21, "passed": 21, "status": "PASS" },
+      "devVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "holdoutVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
+      "overallVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE"
+    }
+  },
+  "adversarialMatrix": { "suite": "E01-E36", "total": 36, "passed": 36, "failed": 0 },
+  "gates": {
+    "G06_GOOGLE_ADS": "TRANSPORT_READY_WITHOUT_SESSION",
+    "G07_TIKTOK_ADS_US": "BLOCKED",
+    "G15_LONGITUDINAL_DEMAND_60D": "INSUFFICIENT_EVIDENCE",
+    "G16_TOP3_WINNING_PRODUCTS": "INSUFFICIENT_EVIDENCE"
+  },
+  "resources": { "freeDiskGB": 64.60, "maxHeavyConcurrency": 2 },
+  "reportPath": "reports/kh02/KH02_V12_4_3_7_8_PROVIDER_ORIGIN_FULL_EXECUTION_2026-11-03.txt"
+}

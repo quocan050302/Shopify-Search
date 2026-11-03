@@ -1,0 +1,183 @@
+================================================================================
+KH-02 V12.4.3.7.8 — AUTHENTIC PROVIDER ORIGIN & REPLAY PARITY CLOSURE
+Date: 2026-11-03 | Mode: IMPLEMENT + TEST + BACKTEST + AUDIT + COMMIT/PUSH
+Repository: quocan050302/Shopify-Search (D:\Project_github\Running-Ads)
+Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+================================================================================
+
+[01] BASELINE, BRANCH & GIT INTEGRITY
+--------------------------------------------------------------------------------
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Upstream Remote: origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Starting HEAD SHA: 86fd1bd83d7c72da78a58e8594e89fbbbdb38bc1
+- Reference Code Commit: 838ece1011b00c123c11c329a64529dfeee273f2
+- Git Status Pre-Execution: clean (0 uncommitted changes)
+- Branch Protection Enforced: Never switched to master/QA, no rebase, no --force.
+
+[02] FILE + LINE + SYMBOL CALL GRAPH & ROOT CAUSE / FIX MATRIX
+--------------------------------------------------------------------------------
+1. Provider Invocation Receipt Contract & Provenance Ledger
+   - File: src/services/kh02/demand/temporalDemandEngine.ts
+   - New Types: EvidenceOriginKind, ProviderInvocationReceipt, VerifiedEvidenceOrigin
+   - New Functions:
+     * recordTrustedProviderInvocation(receipt): Server-boundary validation of actual provider network calls
+     * registerTestFixtureReceipt(receipt): Explicitly assigns originKind="UNIT_FIXTURE"
+     * getTrustedProviderReceipt(receiptId): Resolves immutable ledger record
+     * findTrustedReceiptByHash(rawSha): Content-addressed receipt lookup
+   - Root Cause: HASH_MATCH != TRUSTED_PROVIDER_ORIGIN. A synthetic file with valid SHA-256 could previously pass isAuthenticProviderReceiptDescriptor.
+   - Fix: Mandatory binding of provider, invocationId, targetProductOrKeyword, region, transportStatus (200), rawResponseSha256, and byteCount in server-controlled ledger.
+
+2. Physical Isolation of Unit Fixtures
+   - Directory: tests/fixtures/kh02/provider_receipts/
+   - Manifest: .fixture_manifest.json with KNOWN_UNIT_FIXTURE_SHAS
+   - Fix: Unit test fixture files (04f4d039..., 3440f190..., 366cfeb1...) segregated from production receipt storage. Fixtures strictly fail LIVE_PROVIDER_VERIFIED in production runtime.
+
+3. isAuthenticProviderReceiptDescriptor (temporalDemandEngine.ts)
+   - Enforces full 64-hex SHA-256 (rejects 16/32/63 prefixes).
+   - Rejects zero-digests (0{64}) and repeating character digests ((.)\1{63}).
+   - Enforces mandatory responseStatus=200 and immutable providerRequestId.
+   - Enforces storage root confinement (resolves strictly within authorized roots).
+   - Enforces byte-level deep parity between raw JSON payload and descriptor/context (requestId, status, geo, keyword).
+   - In production / strictLiveOrigin mode, test fixtures fail closed with ORIGIN_UNVERIFIED.
+
+4. resolveVerifiedDemandEvidence (temporalDemandEngine.ts)
+   - Enforces deep payload parity: compares raw artifact JSON fields (search_metadata.id, search_metadata.status, search_parameters.geo, search_parameters.q) against ResearchEvidence.observedValue.
+   - Enforces cross-tenant isolation: rejects workspaceId and productId mismatches.
+   - Fails closed on missing or unbacked evidence references.
+
+5. loadProductHistoricalDemand (temporalDemandEngine.ts)
+   - Preserves missing ingestedAt / capturedAt as null.
+   - Prohibits inferring or fabricating ingestion timestamps from :imported= or :captured= user-tamperable string tags.
+
+6. evaluateDemandHistoryEvidence (temporalDemandEngine.ts)
+   - In strict chronological mode (strictChronological: true), observations lacking verified server-issued availability timestamps are rejected (postCutoffRejected=true).
+   - Cadence protection: Prevents caller-forged :cadence=MONTHLY or policy expectedCadence="MONTHLY" from inflating density when empirical interval is weekly (medianDelta <= 14). Downgrades to WEEKLY.
+
+7. runBacktestV12_4_3_4_2.ts
+   - Replay candidate evaluation passes asOfTimestamp and strictChronological: true to evaluateDemandHistoryEvidence, guaranteeing zero lookahead.
+
+[03] COMPLETE PROVENANCE CHAIN GRAPH
+--------------------------------------------------------------------------------
+[Collector Boundary (Network Transport)]
+       │
+       ▼ (200 OK + Raw Bytes Capture)
+[saveRawProviderPayloadFile] ──► SHA-256 (64-hex) Content-Addressed JSON
+       │
+       ▼ (Atomic Ledger Binding)
+[recordTrustedProviderInvocation] ──► originKind = "ACTUAL_PROVIDER_INVOCATION"
+       │                              ledger: { receiptId, keyword, geo, status: 200, SHA }
+       ▼
+[ProductDemandObservation / ResearchEvidence DB]
+       │
+       ▼ (Deep Verification & Parity Audit)
+[isAuthenticProviderReceiptDescriptor] + [resolveVerifiedDemandEvidence]
+       │  (Verifies raw payload == DB observedValue == ledger == context)
+       ▼
+[evaluateDemandSourceAuthority] ──► AUTHORITATIVE_VERIFIED (or FIXTURE_ONLY / CACHED_UNVERIFIED)
+       │
+       ▼ (Strict As-Of Point-in-Time & Cadence Guard)
+[evaluateDemandHistoryEvidence] ──► VERIFIED Evergreen Demand (>=60d, coverage >=40%, maxGap <=28d)
+       │
+       ▼
+[Top 3 Evergreen Opportunity Scoring] ──► API / UI (/products)
+
+[04] EVIDENCE TRUST TIER AUDIT
+--------------------------------------------------------------------------------
+- FIXTURE / TEST_VERIFIED: Granted only to isolated test fixtures in tests/fixtures/. Cannot verify live production winners.
+- LOCAL_INTEGRITY_ONLY: Uploaded / stored CSV with verified byte checksum. Proves file integrity, not live provider invocation origin.
+- LIVE_ORIGIN_VERIFIED: Reserved strictly for actual provider network responses with matching trusted invocation ledger record and exact raw payload agreement.
+- INSUFFICIENT_EVIDENCE: Truthfully assigned when external sources, longitudinal data (<60d), or coverage ratios (<40%) fall short.
+
+[05] ADVERSARIAL MATRIX (E01 - E36) & FULL REGRESSION EVIDENCE
+--------------------------------------------------------------------------------
+- E01: trusted-looking JSON fixture + fake requestId => ORIGIN_UNVERIFIED [PASS]
+- E02: manually planted <sha>.json + forged descriptor => ORIGIN_UNVERIFIED [PASS]
+- E03: genuine bytes + hash without invocation ledger => ORIGIN_UNVERIFIED [PASS]
+- E04: ledger request A + bytes response B => HASH_MISMATCH [PASS]
+- E05: ledger match but raw payload contradicts observedValue => PRODUCT_MISMATCH [PASS]
+- E06: ledger workspace A reused for workspace B => RUN_MISMATCH [PASS]
+- E07: false provider requestId / substring collision => FAIL closed [PASS]
+- E08: forged artifactPath traversal (../../) => MISSING_ARTIFACT [PASS]
+- E09: zero-digest (0{64}) and repeated-char (a{64}) => HASH_MISMATCH [PASS]
+- E10: 16/32/63 SHA hex prefixes of real file => HASH_MISMATCH [PASS]
+- E11: provider HTTP 403, 429, 500 => RESPONSE_STATUS_INVALID [PASS]
+- E12: missing provider status / invalid timestamp string => INSUFFICIENT_HISTORY [PASS]
+- E13: trusted receipt with ledger + raw bytes + query/geo => ENGINEERING PASS [PASS]
+- E14: synthetic fixture in production path under strict live => not LIVE [PASS]
+- E15: ResearchEvidence.observedValue disagrees with raw JSON => FAIL [PASS]
+- E16: CSV imported today vs replay decision yesterday => rejected point-in-time [PASS]
+- E17: period historic, observedAt pre-asOf, ingestedAt post-asOf => rejected [PASS]
+- E18: capturedAt post-asOf => rejected [PASS]
+- E19: no trusted known-at timestamp in strict replay => rejected by default [PASS]
+- E20: exact boundary evaluation (cutoff vs cutoff + 1ms) => deterministic verdict [PASS]
+- E21: weekly data with caller expectedCadence="MONTHLY" => evaluates as WEEKLY [PASS]
+- E22: approved weekly CSV with missing weeks (<40% coverage) => INSUFFICIENT [PASS]
+- E23: duplicate overlapping periods => distinct observation dates preserved [PASS]
+- E24: forged :cadence=MONTHLY in ref on weekly intervals => downgrades to WEEKLY [PASS]
+- E25: genuine monthly source 4+ calendar months => classified as MONTHLY [PASS]
+- E26: Google rawCount=0 with persistedCount=4 => overallG06Verdict FAIL [PASS]
+- E27: fixture ads/products cannot verify live Top 3 => FIXTURE_ONLY [PASS]
+- E28: Amazon PDP wrong family/variant => CACHED_UNVERIFIED [PASS]
+- E29: concurrent duplicate receipt persistence => idempotent single write [PASS]
+- E30: invalid hash file lookup => exists=false, validHash=false [PASS]
+- E31: unbacked old migration record => RECEIPT_NOT_FOUND, no fabricated PASS [PASS]
+- E32: complete E2E fixture mode => ENGINEERING_ONLY, not live provider [PASS]
+- E33: empty observation list => INSUFFICIENT_HISTORY, eligible=false [PASS]
+- E34: injected methodologyVersion without backing artifact => CACHED_UNVERIFIED [PASS]
+- E35: observation keyword contradicts raw JSON query => PRODUCT_MISMATCH [PASS]
+- E36: multiple legitimately attributed points from one trusted payload => PASS [PASS]
+
+- Post-Review Hardening Suite: 82/82 tests passed (tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts)
+- Full KH-02 Unit Regression: 33/33 test files passed, 947/947 tests passed (0 failures)
+- KH-01 Verification Suite: 5/5 test files passed, 69/69 tests passed (0 failures)
+- Chromium E2E Acceptance: 1/1 passed (tests/integration/kh02BrowserAcceptance.test.ts, 38.02s)
+- TypeScript Compile: npx tsc --noEmit exited with code 0 (0 errors)
+
+[06] INDEPENDENT DEV / HOLDOUT BACKTEST PROOF
+--------------------------------------------------------------------------------
+- Script: scripts/kh02/runBacktestV12_4_3_4_2.ts
+- Policy Scenario Verification: 21/21 scenarios PASS (ENGINEERING_POLICY_PASS)
+- Historical DEV Backtest (cutoff: 2026-08-01):
+  * Shortlist: 0 / 0 candidates
+  * Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (truthful, 0 lookahead)
+- Historical HOLDOUT Backtest (cutoff: 2026-10-01):
+  * Shortlist: 3 / 3 replayed candidates
+  * Real Longitudinal Demand: 0 / 3 candidates verified
+  * Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE (truthful, 0 lookahead)
+- Overall Backtest Verdict: INSUFFICIENT_HISTORICAL_EVIDENCE
+
+[07] SYSTEM RESOURCE MONITORING & CONCURRENCY
+--------------------------------------------------------------------------------
+- Disk Free (D:): Initial = 64.64 GiB | Final = 64.60 GiB (Well above >= 8 GiB guard)
+- RAM Working Set: ~22.8 GB / 31.75 GB Total
+- Concurrency Semaphore: Max 2 heavy concurrent jobs enforced
+- Subprocess Hygiene: Zero orphan Chromium or Node child processes
+
+[08] EXTERNAL LIVE GATE STATUS (G06, G07, G15, G16)
+--------------------------------------------------------------------------------
+- Gate G06 (Google Ads Transparency): TRANSPORT_READY / BLOCKED_WITHOUT_SESSION
+- Gate G07 (TikTok Ads US): BLOCKED (upstream session credentials required; Organic disabled)
+- Gate G15 (Longitudinal Product Demand >=60d): INSUFFICIENT_EVIDENCE (truthful without live SerpApi/Trends API connection)
+- Gate G16 (Top 3 Shopify Winning Products US): INSUFFICIENT_EVIDENCE (fails closed honestly when external providers are unauthenticated)
+
+[09] CHANGED PATHS AUDIT
+--------------------------------------------------------------------------------
+- Modified:
+  * src/services/kh02/demand/temporalDemandEngine.ts
+  * scripts/kh02/runBacktestV12_4_3_4_2.ts
+  * tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/BACKTEST_REPLAY_PROVENANCE.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/POLICY_SCENARIO_RESULTS.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/REAL_HISTORICAL_DEV_BACKTEST.json
+  * acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/REAL_HISTORICAL_HOLDOUT_BACKTEST.json
+- Added:
+  * tests/fixtures/kh02/provider_receipts/ (isolated unit fixtures + .fixture_manifest.json)
+  * data/provider_receipts/.fixture_manifest.json
+- Unrelated files: 100% untouched.
+
+[10] COMMIT AND REMOTE VERIFICATION
+--------------------------------------------------------------------------------
+- Commit Message: fix(kh02): bind demand provenance to trusted provider invocations and strict replay
+- Remote Verification Command: git ls-remote origin feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+================================================================================
+END OF AUDIT REPORT

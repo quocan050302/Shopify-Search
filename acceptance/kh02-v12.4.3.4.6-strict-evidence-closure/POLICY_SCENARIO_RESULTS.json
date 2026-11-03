@@ -1,6 +1,6 @@
 {
   "version": "12.4.3.4.3",
-  "evaluatedAt": "2026-11-03T05:04:11.146Z",
+  "evaluatedAt": "2026-11-03T05:36:36.755Z",
   "verdict": "PASS",
   "totalScenarios": 21,
   "devScenariosCount": 9,
@@ -53,7 +53,10 @@
         "isMerchantDomainPseudoRef": false,
         "lineagePresent": true,
         "lineageVerified": true,
-        "verificationReason": "Lineage verified."
+        "verificationReason": "Lineage verified.",
+        "originKind": "LOCAL_INTEGRITY_ONLY",
+        "contentIntegrityVerified": true,
+        "providerOriginVerified": false
       },
       "detail": "rawCsvFileExists=true, hasValidFileChecksum=true"
     },
@@ -72,7 +75,10 @@
         "isMerchantDomainPseudoRef": false,
         "lineagePresent": true,
         "lineageVerified": false,
-        "verificationReason": "Referenced CSV file with checksum 'ffffffffffff...' not found in storage."
+        "verificationReason": "Referenced CSV file with checksum 'ffffffffffff...' not found in storage.",
+        "originKind": "UNVERIFIED",
+        "contentIntegrityVerified": false,
+        "providerOriginVerified": false
       },
       "detail": "Fabricated sha256 rejected: rawCsvFileExists=false"
     },
@@ -136,7 +142,7 @@
       "assertion": "res.status === 'INSUFFICIENT_DATA' && res.error.includes('INSUFFICIENT_COVERAGE')",
       "observed": {
         "status": "INSUFFICIENT_DATA",
-        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793682251111, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
+        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793684196713, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
       },
       "detail": "Status=INSUFFICIENT_DATA; error=INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in..."
     },
@@ -155,7 +161,10 @@
         "isMerchantDomainPseudoRef": false,
         "lineagePresent": true,
         "lineageVerified": false,
-        "verificationReason": "Referenced CSV file with checksum '000011112222...' not found in storage."
+        "verificationReason": "Referenced CSV file with checksum '000011112222...' not found in storage.",
+        "originKind": "UNVERIFIED",
+        "contentIntegrityVerified": false,
+        "providerOriginVerified": false
       },
       "detail": "Tampered hash rejected: rawCsvFileExists=false"
     },

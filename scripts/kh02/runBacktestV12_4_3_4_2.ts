@@ -2606,7 +2606,11 @@ export async function runRealHistoricalProductReplay(
       });
 
       if (candidateDemandObs.length >= 3) {
-        const assessment = evaluateDemandHistoryEvidence(candidateDemandObs as any[], { minimumCoveredDays: 60 });
+        const assessment = evaluateDemandHistoryEvidence(candidateDemandObs as any[], {
+          minimumCoveredDays: 60,
+          asOfTimestamp: asOf.toISOString(),
+          strictChronological: true,
+        });
         const eligible = Boolean(assessment.status === "VERIFIED" && assessment.eligibleForEvergreen);
         if (eligible) {
           hasAnyCandidateLongitudinalDemand = true;
