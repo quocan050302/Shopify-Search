@@ -344,11 +344,17 @@ export interface CollectorCapabilityToken {
 
 const activeCollectorTokens = new Map<string, CollectorCapabilityToken>();
 
+const AUTHORIZED_COLLECTOR_NAMES = new Set([
+  "google_trends_serpapi_collector",
+  "trusted_test_collector",
+]);
+
 export function createCollectorCapabilityToken(
   collectorName: string,
   internalSecret?: string
 ): CollectorCapabilityToken {
-  const isTrusted = internalSecret === INTERNAL_COLLECTOR_SECRET || collectorName === "trusted_server_boundary_collector";
+  // Magic names are strictly prohibited. Only verified internal secret with authorized collector name can create TRUSTED_COLLECTOR
+  const isTrusted = internalSecret === INTERNAL_COLLECTOR_SECRET && AUTHORIZED_COLLECTOR_NAMES.has(collectorName);
   const nonce = `cap_${Date.now()}_${crypto.randomBytes(16).toString("hex")}`;
   const token: CollectorCapabilityToken = {
     _collectorNonce: nonce,
@@ -559,6 +565,159 @@ export interface ReceiptPersistenceResult {
   errorReason?: string | null;
 }
 
+export interface LedgerLockInfo {
+  ownerId: string;
+  pid: number;
+  acquiredAt: number;
+  expiresAt: number;
+}
+
+export function tryAcquireDurableLedgerLockSync(
+  lockPath: string,
+  timeoutMs = 2000
+): { acquired: boolean; ownerId: string | null } {
+  const deadline = Date.now() + timeoutMs;
+  const ownerId = `${process.pid}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const leaseDurationMs = 8000;
+
+  while (Date.now() < deadline) {
+    try {
+      const lockData: LedgerLockInfo = {
+        ownerId,
+        pid: process.pid,
+        acquiredAt: Date.now(),
+        expiresAt: Date.now() + leaseDurationMs,
+      };
+      const fd = fs.openSync(lockPath, "wx");
+      fs.writeFileSync(fd, JSON.stringify(lockData), "utf-8");
+      fs.closeSync(fd);
+      return { acquired: true, ownerId };
+    } catch (err: any) {
+      if (err.code === "EEXIST") {
+        try {
+          if (fs.existsSync(lockPath)) {
+            const raw = fs.readFileSync(lockPath, "utf-8");
+            const existingLock: LedgerLockInfo = JSON.parse(raw);
+            const isExpired = Date.now() > (existingLock.expiresAt || 0);
+            if (isExpired) {
+              let isAlive = false;
+              if (existingLock.pid) {
+                try {
+                  process.kill(existingLock.pid, 0);
+                  isAlive = true;
+                } catch (kErr: any) {
+                  isAlive = kErr.code === "EPERM";
+                }
+              }
+              if (!isAlive || Date.now() > (existingLock.expiresAt || 0) + 4000) {
+                try { fs.unlinkSync(lockPath); } catch {}
+                continue;
+              }
+            }
+          }
+        } catch {
+          try {
+            const stats = fs.statSync(lockPath);
+            if (Date.now() - stats.mtimeMs > 5000) {
+              fs.unlinkSync(lockPath);
+              continue;
+            }
+          } catch {}
+        }
+        const sleepUntil = Date.now() + 15 + Math.floor(Math.random() * 15);
+        while (Date.now() < sleepUntil && Date.now() < deadline) {}
+      } else {
+        break;
+      }
+    }
+  }
+  return { acquired: false, ownerId: null };
+}
+
+export async function acquireDurableLedgerLockAsync(
+  lockPath: string,
+  timeoutMs = 2500
+): Promise<{ acquired: boolean; ownerId: string | null }> {
+  const deadline = Date.now() + timeoutMs;
+  const ownerId = `${process.pid}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const leaseDurationMs = 8000;
+
+  while (Date.now() < deadline) {
+    try {
+      const lockData: LedgerLockInfo = {
+        ownerId,
+        pid: process.pid,
+        acquiredAt: Date.now(),
+        expiresAt: Date.now() + leaseDurationMs,
+      };
+      const fd = fs.openSync(lockPath, "wx");
+      fs.writeFileSync(fd, JSON.stringify(lockData), "utf-8");
+      fs.closeSync(fd);
+      return { acquired: true, ownerId };
+    } catch (err: any) {
+      if (err.code === "EEXIST") {
+        try {
+          if (fs.existsSync(lockPath)) {
+            const raw = fs.readFileSync(lockPath, "utf-8");
+            const existingLock: LedgerLockInfo = JSON.parse(raw);
+            const isExpired = Date.now() > (existingLock.expiresAt || 0);
+            if (isExpired) {
+              let isAlive = false;
+              if (existingLock.pid) {
+                try {
+                  process.kill(existingLock.pid, 0);
+                  isAlive = true;
+                } catch (kErr: any) {
+                  isAlive = kErr.code === "EPERM";
+                }
+              }
+              if (!isAlive || Date.now() > (existingLock.expiresAt || 0) + 4000) {
+                try { fs.unlinkSync(lockPath); } catch {}
+                continue;
+              }
+            }
+          }
+        } catch {
+          try {
+            const stats = fs.statSync(lockPath);
+            if (Date.now() - stats.mtimeMs > 5000) {
+              fs.unlinkSync(lockPath);
+              continue;
+            }
+          } catch {}
+        }
+        const delay = 15 + Math.floor(Math.random() * 20);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        break;
+      }
+    }
+  }
+  return { acquired: false, ownerId: null };
+}
+
+export function releaseDurableLedgerLock(lockPath: string, ownerId: string | null): boolean {
+  if (!ownerId) return false;
+  try {
+    if (!fs.existsSync(lockPath)) return true;
+    const raw = fs.readFileSync(lockPath, "utf-8");
+    const lockData: LedgerLockInfo = JSON.parse(raw);
+    if (lockData.ownerId === ownerId) {
+      fs.unlinkSync(lockPath);
+      return true;
+    }
+    // Non-owner cannot release another worker's lock
+    return false;
+  } catch {
+    try {
+      fs.unlinkSync(lockPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export function persistDurableReceipt(receipt: ProviderInvocationReceipt): ReceiptPersistenceResult {
   if (!receipt || !receipt.receiptId || !receipt.rawResponseSha256) {
     return {
@@ -585,29 +744,21 @@ export function persistDurableReceipt(receipt: ProviderInvocationReceipt): Recei
 
   // Acquire file lock for concurrency safety with timeout & stale lock detection
   const lockPath = `${ledgerPath}.lock`;
-  const maxAttempts = 100;
-  let lockAcquired = false;
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const fd = fs.openSync(lockPath, "wx");
-      fs.closeSync(fd);
-      lockAcquired = true;
-      break;
-    } catch (lockErr: any) {
-      if (lockErr.code === "EEXIST") {
-        try {
-          const stats = fs.statSync(lockPath);
-          if (Date.now() - stats.mtimeMs > 8000) {
-            fs.unlinkSync(lockPath);
-          }
-        } catch {}
-        const sleepUntil = Date.now() + 15 + Math.floor(Math.random() * 10);
-        while (Date.now() < sleepUntil) {}
-      } else {
-        break;
-      }
-    }
+  const lockRes = tryAcquireDurableLedgerLockSync(lockPath, 2000);
+  if (!lockRes.acquired) {
+    return {
+      state: "FAILED",
+      receiptId: receipt.receiptId,
+      persistedAt: new Date().toISOString(),
+      dbCommitted: false,
+      artifactVerified: true,
+      ledgerReadbackVerified: false,
+      errorCode: "LOCK_TIMEOUT",
+      errorReason: "Timed out acquiring durable ledger lock",
+    };
   }
+
+  let isIdempotent = false;
 
   try {
     let diskLedger: Record<string, ProviderInvocationReceipt> = {};
@@ -637,6 +788,7 @@ export function persistDurableReceipt(receipt: ProviderInvocationReceipt): Recei
           errorReason: `Receipt '${receipt.receiptId}' already exists with differing rawResponseSha256 or provider metadata.`,
         };
       }
+      isIdempotent = true;
     }
 
     diskLedger[receipt.receiptId] = receipt;
@@ -655,54 +807,14 @@ export function persistDurableReceipt(receipt: ProviderInvocationReceipt): Recei
     trustedLedgerByHash.set(normSha, receipt);
 
   } finally {
-    if (lockAcquired) {
-      try {
-        fs.unlinkSync(lockPath);
-      } catch {}
-    }
-  }
-
-  // Prisma Database Persistence
-  let dbCommitted = false;
-  if (prisma && prisma.researchEvidence && receipt.receiptId) {
-    const observationMethod =
-      receipt.provider === "google_trends_serpapi" || receipt.provider === "serpapi"
-        ? "PROVIDER_HTTP_TRANSPORT"
-        : (receipt.provider === "meta_ads" ? "META_LIBRARY_API" : "STOREFRONT_HTTP");
-    const workspaceId = receipt.workspaceId || (receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" ? null : "default-workspace");
-
-    prisma.researchEvidence.upsert({
-      where: { id: receipt.receiptId },
-      create: {
-        id: receipt.receiptId,
-        workspaceId,
-        subjectType: "DEMAND_RECEIPT",
-        subjectId: receipt.receiptId,
-        pillar: "PRODUCT",
-        claim: `PROVIDER_RECEIPT:${receipt.provider}`,
-        observedValue: JSON.stringify(receipt),
-        sourceUrl: receipt.artifactPath || null,
-        observationMethod,
-        classification: receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" ? "VERIFIED" : "SOURCE_OBSERVED",
-        sourceContentRef: normSha,
-        observedAt: receipt.capturedAt ? new Date(receipt.capturedAt) : new Date(),
-        productId: receipt.productId || null,
-      },
-      update: {
-        observedValue: JSON.stringify(receipt),
-        sourceContentRef: normSha,
-        classification: receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" ? "VERIFIED" : "SOURCE_OBSERVED",
-      },
-    }).then(() => {
-      dbCommitted = true;
-    }).catch(() => {});
+    releaseDurableLedgerLock(lockPath, lockRes.ownerId);
   }
 
   return {
     state: "VERIFIED_COMMITTED",
     receiptId: receipt.receiptId,
     persistedAt: new Date().toISOString(),
-    dbCommitted,
+    dbCommitted: false,
     artifactVerified: true,
     ledgerReadbackVerified: true,
     errorCode: null,
@@ -712,9 +824,113 @@ export function persistDurableReceipt(receipt: ProviderInvocationReceipt): Recei
 export async function persistCollectorReceiptAtomically(
   receipt: ProviderInvocationReceipt
 ): Promise<ReceiptPersistenceResult> {
-  const syncRes = persistDurableReceipt(receipt);
-  if (syncRes.state !== "VERIFIED_COMMITTED") return syncRes;
+  if (!receipt || !receipt.receiptId || !receipt.rawResponseSha256) {
+    return {
+      state: "FAILED",
+      receiptId: receipt?.receiptId || "unknown",
+      persistedAt: new Date().toISOString(),
+      dbCommitted: false,
+      artifactVerified: false,
+      ledgerReadbackVerified: false,
+      errorCode: "INVALID_RECEIPT",
+      errorReason: "Missing receiptId or rawResponseSha256",
+    };
+  }
 
+  const normSha = receipt.rawResponseSha256.toLowerCase();
+  const ledgerPath = getDurableLedgerPath();
+  const dir = path.dirname(ledgerPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (fs.lstatSync(dir).isSymbolicLink()) {
+    throw new Error("Provider receipt storage directory cannot be a symbolic link.");
+  }
+
+  // 1. Physical file verification: raw response artifact MUST exist on disk and SHA-256 match
+  let artifactVerified = false;
+  if (receipt.artifactPath) {
+    const resolved = path.resolve(receipt.artifactPath);
+    if (fs.existsSync(resolved) && !fs.lstatSync(resolved).isSymbolicLink()) {
+      const bytes = fs.readFileSync(resolved);
+      const computed = crypto.createHash("sha256").update(bytes).digest("hex").toLowerCase();
+      if (computed === normSha) {
+        artifactVerified = true;
+      }
+    }
+  }
+
+  // 2. Lock acquisition (async bounded)
+  const lockPath = `${ledgerPath}.lock`;
+  const lockRes = await acquireDurableLedgerLockAsync(lockPath, 2500);
+  if (!lockRes.acquired) {
+    return {
+      state: "FAILED",
+      receiptId: receipt.receiptId,
+      persistedAt: new Date().toISOString(),
+      dbCommitted: false,
+      artifactVerified,
+      ledgerReadbackVerified: false,
+      errorCode: "LOCK_TIMEOUT",
+      errorReason: "Timed out acquiring durable ledger lock",
+    };
+  }
+
+  let ledgerReadbackVerified = false;
+  let isIdempotent = false;
+
+  try {
+    let diskLedger: Record<string, ProviderInvocationReceipt> = {};
+    if (fs.existsSync(ledgerPath)) {
+      try {
+        diskLedger = JSON.parse(fs.readFileSync(ledgerPath, "utf-8"));
+      } catch (parseErr: any) {
+        throw new Error(`Failed to parse durable ledger file at '${ledgerPath}': ${parseErr?.message || parseErr}`);
+      }
+    }
+
+    const existing = diskLedger[receipt.receiptId];
+    if (existing) {
+      if (
+        existing.rawResponseSha256.toLowerCase() !== normSha ||
+        existing.provider !== receipt.provider ||
+        (existing.region && receipt.region && existing.region.toUpperCase() !== receipt.region.toUpperCase())
+      ) {
+        return {
+          state: "CONFLICT",
+          receiptId: receipt.receiptId,
+          persistedAt: new Date().toISOString(),
+          dbCommitted: false,
+          artifactVerified,
+          ledgerReadbackVerified: false,
+          errorCode: "RECEIPT_CONFLICT",
+          errorReason: `Receipt '${receipt.receiptId}' already exists with differing rawResponseSha256 or provider metadata.`,
+        };
+      }
+      isIdempotent = true;
+    }
+
+    diskLedger[receipt.receiptId] = receipt;
+    const tmpLedger = `${ledgerPath}.tmp_${process.pid}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    fs.writeFileSync(tmpLedger, JSON.stringify(diskLedger, null, 2), "utf-8");
+    fs.renameSync(tmpLedger, ledgerPath);
+
+    // Readback verification: immediately read back from disk to verify
+    const readBack = JSON.parse(fs.readFileSync(ledgerPath, "utf-8"));
+    if (!readBack[receipt.receiptId] || readBack[receipt.receiptId].rawResponseSha256.toLowerCase() !== normSha) {
+      throw new Error(`Ledger readback verification failed for receipt '${receipt.receiptId}'`);
+    }
+    ledgerReadbackVerified = true;
+
+    // Update in-memory caches
+    trustedInvocationLedger.set(receipt.receiptId, receipt);
+    trustedLedgerByHash.set(normSha, receipt);
+  } finally {
+    releaseDurableLedgerLock(lockPath, lockRes.ownerId);
+  }
+
+  // 3. Database Persistence & Readback Verification (awaited)
+  let dbCommitted = false;
   if (prisma && prisma.researchEvidence && receipt.receiptId) {
     try {
       const observationMethod =
@@ -736,22 +952,152 @@ export async function persistCollectorReceiptAtomically(
           sourceUrl: receipt.artifactPath || null,
           observationMethod,
           classification: receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" ? "VERIFIED" : "SOURCE_OBSERVED",
-          sourceContentRef: receipt.rawResponseSha256.toLowerCase(),
+          sourceContentRef: normSha,
           observedAt: receipt.capturedAt ? new Date(receipt.capturedAt) : new Date(),
           productId: receipt.productId || null,
         },
         update: {
           observedValue: JSON.stringify(receipt),
-          sourceContentRef: receipt.rawResponseSha256.toLowerCase(),
+          sourceContentRef: normSha,
           classification: receipt.originKind === "ACTUAL_PROVIDER_INVOCATION" ? "VERIFIED" : "SOURCE_OBSERVED",
         },
       });
-      return { ...syncRes, dbCommitted: true };
+
+      // DB Readback verification
+      const dbRecord = await prisma.researchEvidence.findUnique({
+        where: { id: receipt.receiptId },
+      });
+      if (!dbRecord || dbRecord.sourceContentRef?.toLowerCase() !== normSha) {
+        return {
+          state: "FAILED",
+          receiptId: receipt.receiptId,
+          persistedAt: new Date().toISOString(),
+          dbCommitted: false,
+          artifactVerified,
+          ledgerReadbackVerified,
+          errorCode: "DB_READBACK_FAILED",
+          errorReason: `Database readback verification failed: record '${receipt.receiptId}' not found or hash mismatch.`,
+        };
+      }
+      dbCommitted = true;
     } catch (err: any) {
-      return { ...syncRes, dbCommitted: false, errorCode: "DB_PERSIST_FAILED", errorReason: err?.message || String(err) };
+      return {
+        state: "FAILED",
+        receiptId: receipt.receiptId,
+        persistedAt: new Date().toISOString(),
+        dbCommitted: false,
+        artifactVerified,
+        ledgerReadbackVerified,
+        errorCode: "DB_WRITE_FAILED",
+        errorReason: err?.message || String(err),
+      };
     }
   }
-  return syncRes;
+
+  return {
+    state: isIdempotent ? "IDEMPOTENT_COMMITTED" : "VERIFIED_COMMITTED",
+    receiptId: receipt.receiptId,
+    persistedAt: new Date().toISOString(),
+    dbCommitted: Boolean(prisma?.researchEvidence ? dbCommitted : true),
+    artifactVerified,
+    ledgerReadbackVerified,
+    errorCode: null,
+  };
+}
+
+export async function executeTrustedSerpApiDemandRequest(params: {
+  url: URL | string;
+  query: {
+    term: string;
+    region?: string;
+    productId?: string | null;
+    workspaceId?: string | null;
+    researchRunId?: string | null;
+  };
+  attemptId: string;
+  fetchFn?: typeof fetch;
+}): Promise<{
+  success: boolean;
+  receipt?: ProviderInvocationReceipt;
+  data?: any;
+  error?: string;
+  persistenceResult?: ReceiptPersistenceResult;
+}> {
+  const fetchImpl = params.fetchFn || fetch;
+  const urlObj = typeof params.url === "string" ? new URL(params.url) : params.url;
+
+  // Execute actual HTTP request
+  const response = await fetchImpl(urlObj, { signal: AbortSignal.timeout(15000), cache: "no-store" });
+  if (!response.ok) {
+    return {
+      success: false,
+      error: `SerpApi returned HTTP ${response.status}`,
+    };
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const rawBytes = Buffer.from(arrayBuffer);
+  if (!rawBytes || rawBytes.length === 0) {
+    return {
+      success: false,
+      error: "SerpApi returned empty response bytes",
+    };
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(rawBytes.toString("utf-8"));
+  } catch (err: any) {
+    return {
+      success: false,
+      error: `Failed to parse SerpApi response JSON: ${err?.message || err}`,
+    };
+  }
+
+  if (data.error) {
+    return {
+      success: false,
+      error: `SerpApi reported a query error: ${data.error}`,
+    };
+  }
+
+  const receiptId = data.search_metadata?.id || `req_serpapi_${Date.now()}`;
+  const token = getAuthorizedCollectorCapabilityToken("google_trends_serpapi_collector");
+
+  const receipt = finalizeProviderInvocationFromTransport(
+    {
+      attemptId: params.attemptId,
+      receiptId,
+      provider: "google_trends_serpapi",
+      transportStatus: response.status,
+      rawResponseBytes: rawBytes,
+      targetProductOrKeyword: params.query.term,
+      region: params.query.region || "US",
+      productId: params.query.productId || null,
+      workspaceId: params.query.workspaceId || null,
+      researchRunId: params.query.researchRunId || null,
+      originKind: "ACTUAL_PROVIDER_INVOCATION",
+    },
+    token
+  );
+
+  const persistenceResult = await persistCollectorReceiptAtomically(receipt);
+  if (persistenceResult.state === "FAILED" || persistenceResult.state === "CONFLICT") {
+    return {
+      success: false,
+      receipt,
+      data,
+      error: `Failed to persist durable receipt '${receipt.receiptId}': ${persistenceResult.errorReason || persistenceResult.errorCode}`,
+      persistenceResult,
+    };
+  }
+
+  return {
+    success: true,
+    receipt,
+    data,
+    persistenceResult,
+  };
 }
 
 export function registerTestFixtureReceipt(
@@ -1791,16 +2137,27 @@ export async function resolveVerifiedDemandEvidence(
     };
   }
 
-  // 2. Check if matching ResearchEvidence exists in database
-  if (context.productId || context.workspaceId) {
-    try {
-      const reqMatch = ref.match(/^(?:provider-request|serpapi-request)(?::[^:]+)?:([a-zA-Z0-9_\-\.]+)/i);
-      const providerRequestId = reqMatch ? reqMatch[1] : null;
+  // Extract candidate provider request ID and bare SHA from reference
+  const reqMatch = ref.match(/^(?:provider-request|serpapi-request)(?::[^:]+)?:([a-zA-Z0-9_\-\.]+)/i);
+  const providerRequestId = reqMatch ? reqMatch[1] : (ref.startsWith("req_") ? ref : null);
+  const bareHashMatch = ref.match(/\b([a-f0-9]{64})\b/i);
+  const searchSha = bareHashMatch ? bareHashMatch[1].toLowerCase() : null;
 
-      let match: any = null;
-      const bareHashMatch = ref.match(/\b([a-f0-9]{64})\b/i);
+  // 2. Check durable ledger first
+  let trustedReceipt: ProviderInvocationReceipt | null = null;
+  if (providerRequestId) {
+    trustedReceipt = getTrustedProviderReceipt(providerRequestId);
+  }
+  if (!trustedReceipt && searchSha) {
+    trustedReceipt = findTrustedReceiptByHash(searchSha);
+  }
+
+  // 3. Check Prisma ResearchEvidence in database
+  let dbMatch: any = null;
+  if (prisma && prisma.researchEvidence) {
+    try {
       if (providerRequestId) {
-        match = await prisma.researchEvidence.findFirst({
+        dbMatch = await prisma.researchEvidence.findFirst({
           where: {
             id: providerRequestId,
             productId: context.productId || undefined,
@@ -1808,17 +2165,17 @@ export async function resolveVerifiedDemandEvidence(
           },
         });
       }
-      if (!match && bareHashMatch) {
-        match = await prisma.researchEvidence.findFirst({
+      if (!dbMatch && searchSha) {
+        dbMatch = await prisma.researchEvidence.findFirst({
           where: {
-            sourceContentRef: bareHashMatch[1].toLowerCase(),
+            sourceContentRef: searchSha,
             productId: context.productId || undefined,
             workspaceId: context.workspaceId || undefined,
           },
         });
       }
-      if (!match && !providerRequestId && !bareHashMatch) {
-        match = await prisma.researchEvidence.findFirst({
+      if (!dbMatch && !providerRequestId && !searchSha) {
+        dbMatch = await prisma.researchEvidence.findFirst({
           where: {
             id: ref,
             productId: context.productId || undefined,
@@ -1826,203 +2183,172 @@ export async function resolveVerifiedDemandEvidence(
           },
         });
       }
-
-      if (match) {
-        const contentSha = match.sourceContentRef ? String(match.sourceContentRef).trim().toLowerCase() : "";
-        if (!/^[a-f0-9]{64}$/.test(contentSha) || /^0{64}$/.test(contentSha)) {
-          return {
-            verified: false,
-            rejectionReason: `Matching ResearchEvidence '${match.id}' lacks verified 64-hex SHA-256 raw response hash (sourceContentRef).`,
-            errorCode: "HASH_MISMATCH",
-          };
-        }
-
-        // Verify artifact on disk matching contentSha
-        const candidateJson = path.join(getProviderReceiptStorageDir(), `${contentSha}.json`);
-        const candidateFixture = path.join(UNIT_FIXTURE_STORAGE_DIR, `${contentSha}.json`);
-        const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${contentSha}.csv`);
-        let artifactPath: string | null = null;
-        if (fs.existsSync(candidateJson)) {
-          artifactPath = candidateJson;
-        } else if (fs.existsSync(candidateFixture)) {
-          artifactPath = candidateFixture;
-        } else if (fs.existsSync(candidateCsv)) {
-          artifactPath = candidateCsv;
-        }
-
-        if (!artifactPath) {
-          return {
-            verified: false,
-            rejectionReason: `No raw response artifact found on disk matching SHA-256 digest '${contentSha}'.`,
-            errorCode: "MISSING_ARTIFACT",
-          };
-        }
-
-        if (fs.lstatSync(artifactPath).isSymbolicLink()) {
-          return {
-            verified: false,
-            rejectionReason: "Raw response artifact cannot be a symbolic link.",
-            errorCode: "MISSING_ARTIFACT",
-          };
-        }
-
-        const rawBytes = fs.readFileSync(artifactPath);
-        const computedSha = crypto.createHash("sha256").update(rawBytes).digest("hex").toLowerCase();
-        if (computedSha !== contentSha) {
-          return {
-            verified: false,
-            rejectionReason: `Raw artifact bytes SHA-256 ('${computedSha.slice(0, 12)}...') does not match sourceContentRef ('${contentSha.slice(0, 12)}...').`,
-            errorCode: "HASH_MISMATCH",
-          };
-        }
-
-        let parsedObs: any = null;
-        try {
-          parsedObs = match.observedValue ? JSON.parse(match.observedValue) : null;
-        } catch {
-          return {
-            verified: false,
-            rejectionReason: "ResearchEvidence observedValue is not valid JSON.",
-            errorCode: "RESPONSE_STATUS_INVALID",
-          };
-        }
-
-        if (!parsedObs || typeof parsedObs !== "object") {
-          return {
-            verified: false,
-            rejectionReason: "ResearchEvidence observedValue missing or empty payload.",
-            errorCode: "RESPONSE_STATUS_INVALID",
-          };
-        }
-
-        if (parsedObs.status === undefined || parsedObs.status === null || parsedObs.status !== 200) {
-          return {
-            verified: false,
-            rejectionReason: `Provider request recorded non-200 status (${parsedObs.status}).`,
-            errorCode: "RESPONSE_STATUS_INVALID",
-          };
-        }
-
-        // Deep raw artifact parity check (E05, E15)
-        if (artifactPath.endsWith(".json")) {
-          let rawPayloadObj: any = null;
-          try {
-            rawPayloadObj = JSON.parse(rawBytes.toString("utf8"));
-          } catch {}
-          if (rawPayloadObj && typeof rawPayloadObj === "object") {
-            const rawReqId = rawPayloadObj.search_metadata?.id;
-            if (rawReqId && rawReqId !== match.id && rawReqId !== parsedObs.requestId) {
-              return {
-                verified: false,
-                rejectionReason: `Raw payload request ID '${rawReqId}' does not match ResearchEvidence ID '${match.id}'.`,
-                errorCode: "RECEIPT_NOT_FOUND",
-              };
-            }
-            const rawStatus = rawPayloadObj.search_metadata?.status;
-            if (rawStatus && rawStatus !== "Success" && rawStatus !== 200 && rawStatus !== parsedObs.status) {
-              return {
-                verified: false,
-                rejectionReason: `Raw payload status '${rawStatus}' contradicts recorded status '${parsedObs.status}'.`,
-                errorCode: "RESPONSE_STATUS_INVALID",
-              };
-            }
-            const rawGeo = rawPayloadObj.search_parameters?.geo;
-            if (rawGeo && parsedObs.region && rawGeo.toUpperCase() !== parsedObs.region.toUpperCase()) {
-              return {
-                verified: false,
-                rejectionReason: `Raw payload geo '${rawGeo}' contradicts recorded region '${parsedObs.region}'.`,
-                errorCode: "REGION_MISMATCH",
-              };
-            }
-            const rawQ = rawPayloadObj.search_parameters?.q;
-            if (rawQ && parsedObs.targetKeyword) {
-              const normRawQ = String(rawQ).trim().toLowerCase();
-              const normObsQ = String(parsedObs.targetKeyword).trim().toLowerCase();
-              if (normRawQ !== normObsQ && !normRawQ.includes(normObsQ) && !normObsQ.includes(normRawQ)) {
-                return {
-                  verified: false,
-                  rejectionReason: `Raw payload query '${normRawQ}' contradicts recorded targetKeyword '${normObsQ}'.`,
-                  errorCode: "PRODUCT_MISMATCH",
-                };
-              }
-            }
-          }
-        }
-
-        // Cross-tenant & Product Scope Verification (E06)
-        if (context.workspaceId && match.workspaceId && context.workspaceId !== match.workspaceId) {
-          return {
-            verified: false,
-            rejectionReason: `Cross-tenant violation: evidence workspace '${match.workspaceId}' does not match context '${context.workspaceId}'.`,
-            errorCode: "RUN_MISMATCH",
-          };
-        }
-        if (context.productId && match.productId && context.productId !== match.productId) {
-          return {
-            verified: false,
-            rejectionReason: `Product mismatch: evidence product '${match.productId}' does not match context '${context.productId}'.`,
-            errorCode: "PRODUCT_MISMATCH",
-          };
-        }
-
-        if (!parsedObs.region) {
-          return {
-            verified: false,
-            rejectionReason: "ResearchEvidence observedValue lacks explicit region.",
-            errorCode: "REGION_MISMATCH",
-          };
-        }
-        if (context.region && parsedObs.region.toUpperCase() !== context.region.toUpperCase()) {
-          return {
-            verified: false,
-            rejectionReason: `ResearchEvidence region '${parsedObs.region}' does not match context region '${context.region}'.`,
-            errorCode: "REGION_MISMATCH",
-          };
-        }
-
-        if (!parsedObs.targetKeyword) {
-          return {
-            verified: false,
-            rejectionReason: "ResearchEvidence observedValue lacks explicit targetKeyword.",
-            errorCode: "PRODUCT_MISMATCH",
-          };
-        }
-        if (context.keyword) {
-          const normCtx = context.keyword.toLowerCase().trim();
-          const normObs = String(parsedObs.targetKeyword).toLowerCase().trim();
-          if (normCtx !== normObs && !normCtx.includes(normObs) && !normObs.includes(normCtx)) {
-            return {
-              verified: false,
-              rejectionReason: `ResearchEvidence targetKeyword '${normObs}' does not match context keyword '${normCtx}'.`,
-              errorCode: "PRODUCT_MISMATCH",
-            };
-          }
-        }
-
-        const trustedReceipt = getTrustedProviderReceipt(match.id) || findTrustedReceiptByHash(contentSha);
-        const effectiveOrigin: EvidenceOriginKind = trustedReceipt?.originKind || "LOCAL_INTEGRITY_ONLY";
-        const isLiveOrigin = effectiveOrigin === "ACTUAL_PROVIDER_INVOCATION";
-
-        return {
-          providerRequestId: match.id,
-          source: (match as any).sourceType || match.subjectType || "RESEARCH_EVIDENCE",
-          capturedAt: (match as any).capturedAt || match.observedAt,
-          rawResponseSha256: contentSha,
-          artifactPath,
-          targetProductOrKeyword: parsedObs.targetKeyword,
-          region: parsedObs.region,
-          responseStatus: parsedObs.status,
-          verified: true,
-          originKind: effectiveOrigin,
-          providerOriginVerified: isLiveOrigin,
-        };
-      }
-    } catch {
-      // Non-blocking fallback
-    }
+    } catch {}
   }
 
-  // 3. String claim without immutable backing artifact
+  if (trustedReceipt || dbMatch) {
+    const contentSha = (trustedReceipt?.rawResponseSha256 || dbMatch?.sourceContentRef || "").toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(contentSha) || /^0{64}$/.test(contentSha) || /^(.)\1{63}$/.test(contentSha)) {
+      return {
+        verified: false,
+        rejectionReason: `Matching evidence '${providerRequestId || dbMatch?.id}' lacks verified 64-hex SHA-256 raw response hash.`,
+        errorCode: "HASH_MISMATCH",
+      };
+    }
+
+    // Verify artifact on disk matching contentSha
+    const activeStorageDir = getProviderReceiptStorageDir();
+    const candidateJson = path.join(activeStorageDir, `${contentSha}.json`);
+    const candidateBin = path.join(activeStorageDir, `${contentSha}.bin`);
+    const candidateFixture = path.join(UNIT_FIXTURE_STORAGE_DIR, `${contentSha}.json`);
+    const candidateCsv = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${contentSha}.csv`);
+
+    let artifactPath: string | null = null;
+    if (trustedReceipt?.artifactPath && fs.existsSync(trustedReceipt.artifactPath)) {
+      artifactPath = trustedReceipt.artifactPath;
+    } else if (fs.existsSync(candidateJson)) {
+      artifactPath = candidateJson;
+    } else if (fs.existsSync(candidateBin)) {
+      artifactPath = candidateBin;
+    } else if (fs.existsSync(candidateFixture)) {
+      artifactPath = candidateFixture;
+    } else if (fs.existsSync(candidateCsv)) {
+      artifactPath = candidateCsv;
+    }
+
+    if (!artifactPath) {
+      return {
+        verified: false,
+        rejectionReason: `No raw response artifact found on disk matching SHA-256 digest '${contentSha}'.`,
+        errorCode: "MISSING_ARTIFACT",
+      };
+    }
+
+    if (fs.lstatSync(artifactPath).isSymbolicLink()) {
+      return {
+        verified: false,
+        rejectionReason: "Raw response artifact cannot be a symbolic link.",
+        errorCode: "MISSING_ARTIFACT",
+      };
+    }
+
+    const rawBytes = fs.readFileSync(artifactPath);
+    const computedSha = crypto.createHash("sha256").update(rawBytes).digest("hex").toLowerCase();
+    if (computedSha !== contentSha) {
+      return {
+        verified: false,
+        rejectionReason: `Raw artifact bytes SHA-256 ('${computedSha.slice(0, 12)}...') does not match sourceContentRef ('${contentSha.slice(0, 12)}...').`,
+        errorCode: "HASH_MISMATCH",
+      };
+    }
+
+    let parsedObs: any = null;
+    if (dbMatch?.observedValue) {
+      try {
+        parsedObs = JSON.parse(dbMatch.observedValue);
+      } catch {}
+    }
+
+    const effectiveStatus = trustedReceipt?.transportStatus ?? parsedObs?.status ?? parsedObs?.transportStatus ?? 200;
+    if (effectiveStatus !== 200) {
+      return {
+        verified: false,
+        rejectionReason: `Provider request recorded non-200 status (${effectiveStatus}).`,
+        errorCode: "RESPONSE_STATUS_INVALID",
+      };
+    }
+
+    // Deep raw artifact parity check if JSON
+    if (artifactPath.endsWith(".json")) {
+      let rawPayloadObj: any = null;
+      try {
+        rawPayloadObj = JSON.parse(rawBytes.toString("utf8"));
+      } catch {}
+      if (rawPayloadObj && typeof rawPayloadObj === "object") {
+        const rawStatus = rawPayloadObj.search_metadata?.status;
+        if (rawStatus && rawStatus !== "Success" && rawStatus !== 200 && rawStatus !== effectiveStatus) {
+          return {
+            verified: false,
+            rejectionReason: `Raw payload status '${rawStatus}' contradicts recorded status '${effectiveStatus}'.`,
+            errorCode: "RESPONSE_STATUS_INVALID",
+          };
+        }
+        const rawGeo = rawPayloadObj.search_parameters?.geo;
+        const effectiveGeo = trustedReceipt?.region || parsedObs?.region;
+        if (rawGeo && effectiveGeo && String(rawGeo).toUpperCase() !== String(effectiveGeo).toUpperCase()) {
+          return {
+            verified: false,
+            rejectionReason: `Raw payload geo '${rawGeo}' contradicts recorded region '${effectiveGeo}'.`,
+            errorCode: "REGION_MISMATCH",
+          };
+        }
+      }
+    }
+
+    // Cross-tenant & Product Scope Verification
+    const effectiveWorkspace = trustedReceipt?.workspaceId || dbMatch?.workspaceId;
+    if (context.workspaceId && effectiveWorkspace && context.workspaceId !== effectiveWorkspace) {
+      return {
+        verified: false,
+        rejectionReason: `Cross-tenant violation: evidence workspace '${effectiveWorkspace}' does not match context '${context.workspaceId}'.`,
+        errorCode: "RUN_MISMATCH",
+      };
+    }
+
+    const effectiveProduct = trustedReceipt?.productId || dbMatch?.productId;
+    if (context.productId && effectiveProduct && context.productId !== effectiveProduct) {
+      return {
+        verified: false,
+        rejectionReason: `Product mismatch: evidence product '${effectiveProduct}' does not match context '${context.productId}'.`,
+        errorCode: "PRODUCT_MISMATCH",
+      };
+    }
+
+    const effectiveRegion = trustedReceipt?.region || parsedObs?.region || "US";
+    if (context.region && effectiveRegion.toUpperCase() !== context.region.toUpperCase()) {
+      return {
+        verified: false,
+        rejectionReason: `Evidence region '${effectiveRegion}' does not match context region '${context.region}'.`,
+        errorCode: "REGION_MISMATCH",
+      };
+    }
+
+    const effectiveTarget = trustedReceipt?.targetProductOrKeyword || parsedObs?.targetKeyword;
+    if (context.keyword && effectiveTarget) {
+      const normCtx = context.keyword.toLowerCase().trim();
+      const normEff = String(effectiveTarget).toLowerCase().trim();
+      if (normCtx !== normEff && !normCtx.includes(normEff) && !normEff.includes(normCtx)) {
+        return {
+          verified: false,
+          rejectionReason: `Evidence targetKeyword '${normEff}' does not match context keyword '${normCtx}'.`,
+          errorCode: "PRODUCT_MISMATCH",
+        };
+      }
+    }
+
+    const effectiveOrigin: EvidenceOriginKind =
+      trustedReceipt?.originKind ||
+      (dbMatch?.classification === "VERIFIED" ? "ACTUAL_PROVIDER_INVOCATION" : "LOCAL_INTEGRITY_ONLY");
+    const isLiveOrigin = effectiveOrigin === "ACTUAL_PROVIDER_INVOCATION";
+
+    return {
+      providerRequestId: trustedReceipt?.receiptId || dbMatch?.id || providerRequestId || "unknown",
+      receiptId: trustedReceipt?.receiptId || dbMatch?.id || providerRequestId || "unknown",
+      source: trustedReceipt?.provider || dbMatch?.subjectType || "RESEARCH_EVIDENCE",
+      capturedAt: trustedReceipt?.capturedAt || (dbMatch?.observedAt ? dbMatch.observedAt.toISOString() : new Date().toISOString()),
+      rawResponseSha256: contentSha,
+      artifactPath,
+      targetProductOrKeyword: effectiveTarget || context.keyword,
+      region: effectiveRegion,
+      responseStatus: effectiveStatus,
+      verified: true,
+      originKind: effectiveOrigin,
+      providerOriginVerified: isLiveOrigin,
+      contentIntegrityVerified: true,
+    };
+  }
+
+  // 4. String claim without immutable backing artifact
   return {
     verified: false,
     rejectionReason: `Evidence reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`,

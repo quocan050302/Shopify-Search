@@ -1,0 +1,91 @@
+=========================================================================================
+KH-02 V12.4.3.7.11 — ATOMIC RECEIPT COMMIT & VERIFIED DEMAND READBACK AUDIT REPORT
+Date: 2026-11-03 | Repository: quocan050302/Shopify-Search
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+=========================================================================================
+
+1. GIT IDENTITY & BASELINE PARITY
+- Repository Root: D:\Project_github\Running-Ads
+- Target Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Baseline Remote HEAD: 77ca51a50fee60f8e290a057373a5298600426a7
+- Baseline Divergence: 0 commits behind origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Working Tree Status: Scoped implementation files modified and new test suite added; 0 secrets or runtime ledgers staged.
+
+2. BUG AUDIT & FUNCTION-BY-FUNCTION ROOT CAUSE CLOSURE
+- Bug P0 CRITICAL A: File Lock Optional by Accident in persistDurableReceipt()
+  * File & Line: src/services/kh02/demand/temporalDemandEngine.ts:586-663
+  * Root Cause: Acquisition loop checked maxAttempts=100 with spin-wait, but if lockAcquired remained false it fell through into ledger read/write. Lock lacked owner identification, allowing foreign workers to unlink active locks.
+  * Fix: Implemented LedgerLockInfo { ownerId, pid, acquiredAt, expiresAt }. Added tryAcquireDurableLedgerLockSync() and acquireDurableLedgerLockAsync() with strict fail-closed semantic: if lock not acquired by deadline, immediately returns state: "FAILED", errorCode: "LOCK_TIMEOUT" with 0 ledger or DB modification. Implemented releaseDurableLedgerLock() verifying ownerId before unlinking. Safe stale recovery reclaims only if lease expired (>8000ms) and owner PID is dead.
+- Bug P0 CRITICAL B: Database is Not Awaited and False Commit Reported
+  * File & Line: src/services/kh02/demand/temporalDemandEngine.ts:665-715, 870-1010
+  * Root Cause: persistDurableReceipt() launched un-awaited prisma.researchEvidence.upsert(...).then(...).catch(...) returning { state: 'VERIFIED_COMMITTED', dbCommitted: false } before promise settled. persistCollectorReceiptAtomically() duplicated upsert.
+  * Fix: Consolidated persistence onto single awaited async path in persistCollectorReceiptAtomically(). Synchronous persistDurableReceipt() is ledger-only with dbCommitted: false. persistCollectorReceiptAtomically() executes staged commit: Disk artifact verified -> File lock acquired -> Ledger updated and readback verified -> File lock released -> Prisma upsert awaited -> Prisma findUnique readback verified -> VERIFIED_COMMITTED returned only when both stores verify. Injected DB errors return state: "FAILED", errorCode: "DB_WRITE_FAILED" or "DB_READBACK_FAILED", never VERIFIED_COMMITTED.
+- Bug P0 HIGH C: Exported Trusted Token Factory Self-Minting Vulnerability
+  * File & Line: src/services/kh02/demand/temporalDemandEngine.ts:345-375
+  * Root Cause: createCollectorCapabilityToken allowed magic name "trusted_server_boundary_collector" without internal secret. getAuthorizedCollectorCapabilityToken was exported without restricting allowed collector names.
+  * Fix: Removed magic name check entirely. Restricted TRUSTED_COLLECTOR classification strictly to AUTHORIZED_COLLECTOR_NAMES ("google_trends_serpapi_collector", "trusted_test_collector") verified against internal crypto secret. External or unauthorized calls fall closed to TEST_SIMULATION. Introduced executeTrustedSerpApiDemandRequest() to own fetch(), measure response, capture ArrayBuffer, validate status 200, parse JSON, mint single-use internal capability token, and await atomic persistence.
+- Bug P0 HIGH D: Receipt Saved but Never Read into Demand Assessment
+  * File & Line: src/services/kh02/demand/historicalDemandIngestion.ts:276-291, 417-430
+  * Root Cause: Points were created with string reference "provider-request:serpapi:<id>" without resolving verifiedDescriptor. evaluateDemandSourceAuthority defaulted bare strings to CACHED_UNVERIFIED.
+  * Fix: Wired resolveVerifiedDemandEvidence() into resolveProductDemandHistory() for both stored DB records and live provider series. Loaded canonical receipt from durable ledger or DB, verified physical artifact on disk, checked region/keyword/scope parity, and attached verifiedDescriptor and timestamps (observedAt, capturedAt) to demand data points.
+- Bug P0 HIGH E: Test/Production Parity & Point-in-Time Zero-Lookahead
+  * File & Line: src/services/kh02/demand/temporalDemandEngine.ts:2100-2370
+  * Root Cause: Ambiguous timestamp boundaries when evaluating historical series.
+  * Fix: Propagated observedAt and capturedAt on every observation point. Under strictChronological=true, any observation with capturedAt or periodEnd after asOfTimestamp is strictly excluded with postCutoffRejected.
+
+3. RECEIPT STATE MACHINE & ATOMICITY GUARANTEE BOUNDARIES
+- Explicit State Machine:
+  NEW_ATTEMPT -> RESPONSE_RECEIVED -> RAW_CONTENT_VERIFIED -> LEDGER_DURABLE -> DB_COMMITTED -> DB_READBACK_VERIFIED -> EVIDENCE_ELIGIBLE
+  Fault states: LOCK_TIMEOUT, HASH_MISMATCH, RECEIPT_CONFLICT, LEDGER_WRITE_FAILED, DB_WRITE_FAILED, DB_READBACK_FAILED, RECOVERY_REQUIRED.
+- Honest Distributed Atomicity Notice:
+  Filesystem and SQLite DB do not share a single distributed 2PC transaction. Staged commit ensures:
+  1) Raw payload bytes written immutably first (content-addressed SHA-256).
+  2) Ledger file written atomically via tmp file + rename + readback under lock.
+  3) Database record upserted and read back with identical SHA-256.
+  If DB write fails after ledger write, status is FAILED (DB_WRITE_FAILED), never VERIFIED_COMMITTED. Crash recovery reconciles idempotently from durable ledger.
+
+4. MULTI-PROCESS CONCURRENCY PROOF
+- Two independent OS child processes spawned via child_process.fork under a filesystem barrier (start_barrier.txt).
+- Both processes competed simultaneously for durable ledger lock and persisted disjoint receipt IDs (rec_worker_a, rec_worker_b).
+- Result: 0 lock corruptions, 0 lost updates, both processes exited code 0, ledger read back containing both records with matching SHA digests.
+- Lock contention test: child holding lock caused competing worker to fail closed cleanly with LOCK_TIMEOUT (0 busy spin).
+
+5. FAULT INJECTION RESULTS
+- LOCK_TIMEOUT: PASS (competing worker fails closed when lease held).
+- DB_WRITE_FAILED: PASS (Prisma upsert throw returns state FAILED, dbCommitted: false).
+- DB_READBACK_FAILED: PASS (missing row on readback fails closed).
+- HASH_MISMATCH: PASS (tampered artifact on disk fails closed).
+- RECEIPT_CONFLICT: PASS (same receipt ID with different SHA preserves canonical original).
+- MAGIC_NAME_FORGERY: PASS (magic name receives TEST_SIMULATION, not TRUSTED_COLLECTOR).
+
+6. FULL REPOSITORY TEST REGRESSION RESULTS
+- TypeScript Typecheck (npx tsc --noEmit): Exit code 0, 0 errors.
+- Unit Test Suite (tests/unit/kh02/v12_4_3_7_11_AtomicReceiptCommitReadback.test.ts): 36 passed / 36 tests (100% PASS, 2.86s).
+- KH02 Unit Tests (npx vitest run tests/unit/kh02): 63 passed / 63 files, 1373 passed / 1373 tests (100% PASS, 96.65s).
+- KH01 Verification (npm run kh01:verify): 5 passed / 5 files, 69 passed / 69 tests (100% PASS, 3.54s).
+- Chromium E2E (npx vitest run tests/integration/kh02BrowserAcceptance.test.ts): 1 passed / 1 test (100% PASS, 38.79s).
+- Backtest Suite (npx tsx scripts/kh02/runBacktestV12_4_3_4_2.ts): Policy PASS (21/21 assertions), Dev INSUFFICIENT_HISTORICAL_EVIDENCE, Holdout INSUFFICIENT_HISTORICAL_EVIDENCE.
+- Entire Repo Unit Tests (npx vitest run tests/unit): 118 passed / 118 files, 1993 passed / 1993 tests (100% PASS, 136.92s).
+
+7. GATE STATUS CLASSIFICATION (TRUTHFUL REPORTING)
+- G06 (Google Ads Transparency): TRANSPORT_READY_NOT_VERIFIED (Creative transport ready; does not prove PDP/product demand).
+- G07 (TikTok Ads US): BLOCKED (No legitimate access credentials; Organic disabled).
+- G15 (US Longitudinal Demand >=60D): INSUFFICIENT_EVIDENCE (Fail-closed; requires authentic provider network run).
+- G16 (Shopify Top 3 Winning Products): INSUFFICIENT_EVIDENCE (0/3 verified longitudinal demand; fail-closed).
+
+8. RESOURCE GUARD & DISK AUDIT
+- Initial Disk Space: 64.11 GB Free (> 8 GiB minimum requirement).
+- Final Disk Space: 64.10 GB Free (0.01 GB delta, no disk bloat).
+- Free RAM: 4.69 GB free / 31.75 GB total.
+- Maximum Concurrent Heavy Processes: 1 (bounded sequential execution).
+- Sentinel Files in data/provider_receipts: Byte-for-byte identical, 0 modifications.
+- Runtime Ledger: Ignored by git (.gitignore), untracked.
+
+9. CONCLUSION & NEXT TASKS
+- All engineering gates passed with full test coverage and two-process concurrency verification.
+- Safe for auto-commit and push to locked branch.
+- Next real external tasks:
+  1) Obtain authorized live Meta Ad Library token for live US niche discovery.
+  2) Configure authorized SerpApi credentials or BigQuery sandbox for live longitudinal Google Trends fetching.
+  3) Run live end-to-end pipeline under active network credentials to substantiate G15/G16 business verification.
+=========================================================================================

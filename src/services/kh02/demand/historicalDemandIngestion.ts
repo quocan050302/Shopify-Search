@@ -14,6 +14,7 @@ import {
   evaluateDemandHistoryEvidence,
   evaluateDemandSourceAuthority,
   detectSpecificProductFamily,
+  resolveVerifiedDemandEvidence,
 } from "./temporalDemandEngine";
 import {
   defaultDemandProvider,
@@ -273,21 +274,38 @@ export async function resolveProductDemandHistory(
   };
 
   // 3. Convert stored raw records to demand data points and evaluate authority/coverage
-  let currentPoints: DemandDataPoint[] = rawRecords.map((r) => ({
-    id: r.id,
-    productId: r.productId,
-    keyword: r.keyword,
-    evidenceReference: r.evidenceReference,
-    methodologyVersion: r.methodologyVersion,
-    isFixture: String(r.productId || "").startsWith("prod_fixture_"),
-    periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
-    periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
-    demandValue: r.demandValue,
-    region: r.region,
-    source: r.source,
-    date: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
-    value: r.demandValue,
-  }));
+  let currentPoints: DemandDataPoint[] = [];
+  for (const r of rawRecords) {
+    let verifiedDescriptor: any;
+    if (r.evidenceReference) {
+      const resolved = await resolveVerifiedDemandEvidence(r.evidenceReference, {
+        productId: r.productId,
+        keyword: r.keyword,
+        region: r.region,
+      });
+      if (resolved.verified) {
+        verifiedDescriptor = resolved;
+      }
+    }
+    currentPoints.push({
+      id: r.id,
+      productId: r.productId,
+      keyword: r.keyword,
+      evidenceReference: r.evidenceReference,
+      methodologyVersion: r.methodologyVersion,
+      isFixture: String(r.productId || "").startsWith("prod_fixture_"),
+      periodStart: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
+      periodEnd: r.periodEnd.toISOString ? r.periodEnd.toISOString() : String(r.periodEnd),
+      demandValue: r.demandValue,
+      region: r.region,
+      source: r.source,
+      date: r.periodStart.toISOString ? r.periodStart.toISOString() : String(r.periodStart),
+      value: r.demandValue,
+      verifiedDescriptor,
+      observedAt: r.observedAt ? (r.observedAt.toISOString ? r.observedAt.toISOString() : String(r.observedAt)) : undefined,
+      capturedAt: verifiedDescriptor?.capturedAt,
+    } as any);
+  }
 
   const initialAssessment = evaluateDemandHistoryEvidence(currentPoints, {
     minimumDataPoints: 3,
@@ -396,17 +414,38 @@ export async function resolveProductDemandHistory(
             }
           }
 
-          const livePoints: DemandDataPoint[] = seriesResult.points.map((p) => ({
-            periodStart: p.periodStart,
-            periodEnd: p.periodEnd,
-            demandValue: p.demandValue,
-            region: p.region,
-            source: p.source,
-            date: p.periodStart,
-            value: p.demandValue,
-            methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
-            evidenceReference: (p as any).evidenceReference || ((seriesResult as any).receiptId ? `provider-request:serpapi:${(seriesResult as any).receiptId}` : null),
-          }));
+          const livePoints: DemandDataPoint[] = [];
+          for (const p of seriesResult.points) {
+            const evidenceRef =
+              (p as any).evidenceReference ||
+              ((seriesResult as any).receiptId
+                ? `provider-request:serpapi:${(seriesResult as any).receiptId}`
+                : null);
+            let verifiedDescriptor: any;
+            if (evidenceRef) {
+              const resolved = await resolveVerifiedDemandEvidence(evidenceRef, {
+                productId: targetProductId,
+                keyword: searchTerm,
+                region,
+              });
+              if (resolved.verified) {
+                verifiedDescriptor = resolved;
+              }
+            }
+            livePoints.push({
+              periodStart: p.periodStart,
+              periodEnd: p.periodEnd,
+              demandValue: p.demandValue,
+              region: p.region,
+              source: p.source,
+              date: p.periodStart,
+              value: p.demandValue,
+              methodologyVersion: isGoogleFreeMode ? "google_free_demand_live" : "serpapi_google_trends_live",
+              evidenceReference: evidenceRef,
+              verifiedDescriptor,
+              capturedAt: verifiedDescriptor?.capturedAt || (seriesResult as any).acquiredAt || new Date().toISOString(),
+            } as any);
+          }
 
           // Merge live points with existing valid (non-fixture, non-synthetic) points
           const existingValid = currentPoints.filter(

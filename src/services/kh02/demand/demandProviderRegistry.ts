@@ -15,6 +15,7 @@ import {
   recordProviderInvocationAttempt,
   finalizeProviderInvocationFromTransport,
   getAuthorizedCollectorCapabilityToken,
+  executeTrustedSerpApiDemandRequest,
 } from "./temporalDemandEngine";
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 import {
@@ -663,26 +664,26 @@ export class GoogleTrendsLegacySerpApiProvider implements HistoricalDemandProvid
         productId: query.productId || null,
       });
 
-      const response = await fetch(url, { signal: AbortSignal.timeout(15000), cache: "no-store" });
-      if (!response.ok) return { ...result, status: "FAILED", error: `SerpApi returned HTTP ${response.status}` };
-      const arrayBuffer = await response.arrayBuffer();
-      const rawBytes = Buffer.from(arrayBuffer);
-      const data = JSON.parse(rawBytes.toString("utf-8"));
-      if (data.error) return { ...result, status: "FAILED", error: "SerpApi reported a query error." };
-
-      const receiptId = data.search_metadata?.id || `req_serpapi_${Date.now()}`;
-      const token = getAuthorizedCollectorCapabilityToken("google_trends_serpapi_collector");
-      const receipt = finalizeProviderInvocationFromTransport({
+      const execRes = await executeTrustedSerpApiDemandRequest({
+        url,
+        query: {
+          term: query.term,
+          region: query.region || "US",
+          productId: query.productId || null,
+        },
         attemptId: attempt.attemptId,
-        receiptId,
-        provider: "google_trends_serpapi",
-        transportStatus: response.status,
-        rawResponseBytes: rawBytes,
-        targetProductOrKeyword: query.term,
-        region: query.region || "US",
-        productId: query.productId || null,
-        originKind: "ACTUAL_PROVIDER_INVOCATION",
-      }, token);
+      });
+
+      if (!execRes.success || !execRes.receipt || !execRes.data) {
+        return {
+          ...result,
+          status: "FAILED",
+          error: execRes.error || "SerpApi request or durable persistence failed.",
+        };
+      }
+
+      const receipt = execRes.receipt;
+      const data = execRes.data;
 
       const timeline = data?.interest_over_time?.timeline_data;
       if (!Array.isArray(timeline)) return { ...result, status: "INSUFFICIENT_DATA" };

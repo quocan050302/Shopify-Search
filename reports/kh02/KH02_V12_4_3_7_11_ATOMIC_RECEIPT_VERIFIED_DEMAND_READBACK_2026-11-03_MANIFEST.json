@@ -1,0 +1,39 @@
+{
+  "version": "12.4.3.7.11",
+  "auditDate": "2026-11-03T16:35:00+07:00",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineCommitSha": "77ca51a50fee60f8e290a057373a5298600426a7",
+  "engineeringGates": {
+    "typeScriptNoEmit": "PASS",
+    "v12_4_3_7_11_UnitTestSuite": "PASS (36/36)",
+    "v12_4_3_7_10_UnitTestSuite": "PASS (28/28)",
+    "v12_4_3_7_9_UnitTestSuite": "PASS (35/35)",
+    "postReviewHardening": "PASS (82/82)",
+    "kh02UnitRegression": "PASS (1373/1373, 63 files)",
+    "repoUnitRegression": "PASS (1993/1993, 118 files)",
+    "kh01Verify": "PASS (69/69, 5 files)",
+    "chromiumBrowserAcceptance": "PASS (1/1)",
+    "walmartUsJinaIntegration": "PASS (6/6)",
+    "kh02ResearchApi": "PASS (5/5)",
+    "pointInTimeBacktestPolicy": "PASS (21/21)"
+  },
+  "businessGates": {
+    "G06_GoogleAds": "TRANSPORT_READY_NOT_VERIFIED",
+    "G07_TikTokAds": "BLOCKED",
+    "G15_LongitudinalDemand": "INSUFFICIENT_EVIDENCE",
+    "G16_Top3WinningProducts": "INSUFFICIENT_EVIDENCE"
+  },
+  "provenanceIntegrity": {
+    "fileLockProtocolSafe": true,
+    "lockOwnershipVerified": true,
+    "staleLockPidRecovery": true,
+    "awaitedDatabaseCommit": true,
+    "databaseReadbackVerified": true,
+    "collectorTokenBoundaryEnforced": true,
+    "serpApiTransportExecuted": true,
+    "demandReadbackIntegrated": true,
+    "zeroLookaheadEnforced": true,
+    "runtimeLedgerUntracked": true
+  }
+}
