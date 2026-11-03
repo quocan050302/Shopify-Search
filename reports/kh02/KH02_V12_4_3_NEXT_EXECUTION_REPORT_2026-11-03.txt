@@ -538,8 +538,9 @@ Thực thi trực tiếp runner `scripts/kh02/runBacktestV12_4_3_4_2.ts` cho ng�
 - Target Repository: `quocan050302/Shopify-Search`
 - Target Branch: `feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`
 - Parent / Baseline Commit SHA: `c344e1d8efaa937c95ee3e5550bf579847495d71`
+- Tested Code & Report Commit SHA: `e035fa0e52fd78b273e1ea795ce851dc2db80ce5`
 - Staged Files Verification: Chỉ stage các file mã nguồn KH-02 đã sửa, file unit test mới, và báo cáo trong `reports/kh02/`. Không sử dụng `git reset --hard`, `git clean -fdx`, hay `git push --force`.
-- Commit & Push Receipt: Được cập nhật và xác minh đồng bộ giữa `git rev-parse HEAD` và `git ls-remote origin refs/heads/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1` ngay ở bước commit/push cuối cùng (xem thêm trong `KH02_V12_4_3_NEXT_EXECUTION_MANIFEST_2026-11-03.json`).
+- Commit & Push Receipt: Đã đồng bộ lên `origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1` và xác minh khớp `git rev-parse HEAD` với `git ls-remote origin refs/heads/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1`.
 
 
 13. RESIDUAL BLOCKERS & NEXT ENGINEERING ACTIONS

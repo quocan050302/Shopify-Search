@@ -3,6 +3,7 @@
   "repository": "quocan050302/Shopify-Search",
   "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
   "baselineHeadSha": "c344e1d8efaa937c95ee3e5550bf579847495d71",
+  "testedCodeCommitSha": "e035fa0e52fd78b273e1ea795ce851dc2db80ce5",
   "evaluatedAt": "2026-11-03T01:21:45.000Z",
   "engineeringGatesVerdict": "PASS",
   "typecheckExitCode": 0,
