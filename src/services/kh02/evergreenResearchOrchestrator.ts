@@ -1319,8 +1319,11 @@ export async function runEvergreenProductResearch(
             ? [...googleResult.observations]
             : [];
 
+          const mismatchMsg = isZeroRawMismatch
+            ? `GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH: rawCreatives=0 while googleResult.observations=${googleResult.observations.length}; quarantined unbacked observations.`
+            : "";
+
           if (isZeroRawMismatch) {
-            const mismatchMsg = `GOOGLE_ZERO_RAW_NONZERO_OBSERVATIONS_MISMATCH: rawCreatives=0 while googleResult.observations=${googleResult.observations.length}; quarantined unbacked observations.`;
             warnings.push(mismatchMsg);
             if (googleResult.enrichmentExecution) {
               (googleResult.enrichmentExecution as any).associationMismatchDetected = true;
@@ -1336,14 +1339,18 @@ export async function runEvergreenProductResearch(
             googleResult.observations = [];
             googleResult.retrievedCount = 0;
             googleResult.acceptedCount = 0;
-            sourceStatuses.GOOGLE_ADS = "QUERY_SUCCEEDED_EMPTY";
+            sourceStatuses.GOOGLE_ADS = "FAILED";
           } else {
             secondaryObservations.push(...googleResult.observations);
           }
           if (googleResult.warnings.length > 0) warnings.push(...googleResult.warnings);
 
           const googleNow = new Date().toISOString();
-          const googleError = googleResult.errors.length > 0 ? googleResult.errors.join("; ") : null;
+          const googleError = isZeroRawMismatch
+            ? mismatchMsg
+            : googleResult.errors.length > 0
+            ? googleResult.errors.join("; ")
+            : null;
           const isExecuted =
             googleResult.status === "PASSED" ||
             googleResult.status === "QUERY_SUCCEEDED_EMPTY" ||
@@ -1363,7 +1370,7 @@ export async function runEvergreenProductResearch(
           providerTelemetry.GOOGLE_ADS = {
             source: "GOOGLE_ADS",
             queryExecuted: isExecuted,
-            queryStatus: isZeroRawMismatch ? "QUERY_SUCCEEDED_EMPTY" : googleResult.status,
+            queryStatus: isZeroRawMismatch ? "QUERY_FAILED" : googleResult.status,
             queryTimestamp: isExecuted ? googleNow : null,
             retrievedCount: isZeroRawMismatch ? 0 : (isSuccess ? googleResult.retrievedCount : null),
             acceptedCount: isZeroRawMismatch ? 0 : (isSuccess ? googleResult.acceptedCount : null),

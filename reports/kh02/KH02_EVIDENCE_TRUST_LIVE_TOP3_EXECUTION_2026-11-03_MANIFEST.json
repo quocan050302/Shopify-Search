@@ -1,0 +1,42 @@
+{
+  "manifestVersion": "12.4.3.7.5",
+  "generatedAt": "2026-11-03T10:16:00.000Z",
+  "repository": "quocan050302/Shopify-Search",
+  "branch": "feature/kh02-walmart-us-jina-reader-v12.4.3.5.1",
+  "baselineCommitSha": "c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d",
+  "reportFile": "reports/kh02/KH02_EVIDENCE_TRUST_LIVE_TOP3_EXECUTION_2026-11-03.txt",
+  "reportSha256": "e43a1ecaf94c73fa4798d5f38fc0e883b72507b6a79d7f540204411b103b3450",
+  "verdicts": {
+    "engineering": "PASS",
+    "providerAndTransport": "PASS",
+    "businessGateG07": "BLOCKED",
+    "businessGateG15": "INSUFFICIENT_EVIDENCE",
+    "businessGateG16": "INSUFFICIENT_EVIDENCE"
+  },
+  "testExecutionSummary": {
+    "typeCheck": "PASS (0 errors)",
+    "unitTestSuites": {
+      "filesTotal": 33,
+      "filesPassed": 33,
+      "testsTotal": 883,
+      "testsPassed": 883,
+      "durationSeconds": 55.55
+    },
+    "backtestPolicyScenarios": {
+      "total": 21,
+      "passed": 21,
+      "zeroFutureLeakageVerified": true
+    },
+    "chromiumE2E": {
+      "suites": 1,
+      "passed": 1,
+      "durationSeconds": 38.15
+    }
+  },
+  "environment": {
+    "os": "Windows_NT",
+    "freeDiskGB": 64.71,
+    "freePhysicalRamGB": 6.93,
+    "maxConcurrentHeavyProcesses": 1
+  }
+}

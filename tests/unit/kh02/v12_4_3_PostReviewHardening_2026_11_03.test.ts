@@ -5,7 +5,10 @@ import {
   evaluateDemandHistoryEvidence,
   evaluateTemporalDemandStability,
 } from "@/services/kh02/demand/temporalDemandEngine";
-import { verifyStoredCsvFile } from "@/services/kh02/demand/googleTrendsCsvValidator";
+import {
+  verifyStoredCsvFile,
+  saveOriginalGoogleTrendsCsvFile,
+} from "@/services/kh02/demand/googleTrendsCsvValidator";
 import {
   buildCanonicalRecommendedProducts,
   buildAllCandidatesExplorerList,
@@ -20,7 +23,7 @@ import { runEvergreenProductResearch } from "@/services/kh02/evergreenResearchOr
 
 describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
   describe("BUG P0-A: G15 Demand Source Authority & Provenance Integrity", () => {
-    it("verifyStoredCsvFile strictly rejects path traversal and non-hex inputs", () => {
+    it("verifyStoredCsvFile strictly rejects path traversal, non-hex inputs, and truncated prefixes (16, 32, 63 chars)", () => {
       const traversal1 = verifyStoredCsvFile("../../etc/passwd");
       expect(traversal1.exists).toBe(false);
       expect(traversal1.validHash).toBe(false);
@@ -36,6 +39,31 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       const fakeHex = verifyStoredCsvFile("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
       expect(fakeHex.exists).toBe(false);
       expect(fakeHex.validHash).toBe(false);
+
+      // Truncated 16, 32, 63 char prefixes of existing real file MUST FAIL
+      const real64 = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+      expect(verifyStoredCsvFile(real64).exists).toBe(true);
+      expect(verifyStoredCsvFile(real64).validHash).toBe(true);
+      expect(verifyStoredCsvFile(real64.slice(0, 16)).exists).toBe(false);
+      expect(verifyStoredCsvFile(real64.slice(0, 32)).exists).toBe(false);
+      expect(verifyStoredCsvFile(real64.slice(0, 63)).exists).toBe(false);
+    });
+
+    it("saveOriginalGoogleTrendsCsvFile enforces full 64 hex checksum and rejects checksum mismatches", () => {
+      // 1. Non-64 hex format throws
+      expect(() => {
+        saveOriginalGoogleTrendsCsvFile("test content", "not_64_hex_chars");
+      }).toThrow(/must be full 64 hexadecimal characters/);
+
+      // 2. Truncated 16 char prefix throws
+      expect(() => {
+        saveOriginalGoogleTrendsCsvFile("test content", "0123456789abcdef");
+      }).toThrow(/must be full 64 hexadecimal characters/);
+
+      // 3. 64 hex mismatch with actual content throws
+      expect(() => {
+        saveOriginalGoogleTrendsCsvFile("test content", "0000000000000000000000000000000000000000000000000000000000000000");
+      }).toThrow(/Checksum mismatch/);
     });
 
     it("hasVerifiableCsvOrProviderLineage never grants hasValidFileChecksum without verified file on disk", () => {
@@ -93,7 +121,23 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       expect(unbackedCsv.productAttributionValid).toBe(false);
     });
 
-    it("evaluateDemandSourceAuthority grants AUTHORITATIVE_VERIFIED only with genuine provider request receipt", () => {
+    it("evaluateDemandSourceAuthority rejects bare string claim provider-request without receipt descriptor", () => {
+      const bareClaim = evaluateDemandSourceAuthority([
+        {
+          id: "obs_bare_1",
+          source: "GOOGLE_TRENDS_LIVE",
+          demandValue: 75,
+          periodStart: "2026-07-01T00:00:00.000Z",
+          evidenceReference: "provider-request:serpapi:req_live_verified_12345",
+          keyword: "cat water fountain",
+        },
+      ]);
+      expect(bareClaim.authority).toBe("CACHED_UNVERIFIED");
+      expect(bareClaim.productAttributionValid).toBe(false);
+      expect(bareClaim.reasons.some((r) => r.includes("unverified string claim"))).toBe(true);
+    });
+
+    it("evaluateDemandSourceAuthority grants AUTHORITATIVE_VERIFIED only when observation carries verified provider receipt descriptor", () => {
       const authenticLive = evaluateDemandSourceAuthority([
         {
           id: "obs_real_live_1",
@@ -101,8 +145,13 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
           demandValue: 75,
           periodStart: "2026-07-01T00:00:00.000Z",
           evidenceReference: "provider-request:serpapi:req_live_verified_12345",
+          providerEvidence: {
+            requestId: "req_live_verified_12345",
+            status: 200,
+            source: "GOOGLE_TRENDS_LIVE",
+          },
           keyword: "cat water fountain",
-        },
+        } as any,
       ]);
       expect(authenticLive.authority).toBe("AUTHORITATIVE_VERIFIED");
       expect(authenticLive.productAttributionValid).toBe(true);
@@ -402,6 +451,7 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
         minimumDataPoints: 3,
         minimumCoveredDays: 60,
         requiredRegion: "US",
+        providerReceiptDescriptor: { verified: true, source: "GOOGLE_TRENDS_LIVE", responseStatus: 200 },
       });
 
       expect(assessment.status).toBe("VERIFIED");
@@ -410,6 +460,91 @@ describe("KH-02 Post-Review Hardening Audit Suite (2026-11-03)", () => {
       expect(assessment.maxGapDays).toBe(7);
       expect(assessment.coveredDays).toBe(63);
       expect(assessment.temporalCoverageValid).toBe(true);
+      expect(assessment.coverageRatio).toBeGreaterThanOrEqual(0.8);
+    });
+
+    it("strictly rejects sparse series with low sampling density (coverageRatio < 0.40)", () => {
+      // 3 weekly points spanning 63 days: week 0 (day 0), week 4 (day 28), week 8 (day 56)
+      // expectedPeriods = 63 / 7 = 9; qualifiedPeriods = 3; coverageRatio = 3/9 = 0.33 < 0.40
+      const sparsePoints = [
+        {
+          id: "obs_sp_1",
+          periodStart: "2026-06-01T00:00:00.000Z",
+          demandValue: 65,
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          evidenceReference: "provider-request:serpapi:req_sp1",
+        },
+        {
+          id: "obs_sp_2",
+          periodStart: "2026-06-29T00:00:00.000Z", // 28 days later
+          demandValue: 67,
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          evidenceReference: "provider-request:serpapi:req_sp2",
+        },
+        {
+          id: "obs_sp_3",
+          periodStart: "2026-07-27T00:00:00.000Z", // 28 days later
+          demandValue: 70,
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          evidenceReference: "provider-request:serpapi:req_sp3",
+        },
+      ];
+
+      const assessment = evaluateDemandHistoryEvidence(sparsePoints, {
+        minimumDataPoints: 3,
+        minimumCoveredDays: 50,
+        maxAllowedGapDays: 35,
+        expectedCadence: "WEEKLY",
+        minCoverageRatio: 0.40,
+        providerReceiptDescriptor: { verified: true, source: "GOOGLE_TRENDS_LIVE", responseStatus: 200 },
+      });
+
+      expect(assessment.status).toBe("INSUFFICIENT_HISTORY");
+      expect(assessment.eligibleForEvergreen).toBe(false);
+      expect(assessment.coverageRatio).toBeLessThan(0.40);
+      expect(assessment.missingEvidence.some((m) => m.includes("coverage ratio"))).toBe(true);
+    });
+
+    it("rejects observations with observedAt/ingestedAt timestamps after asOf cutoff (P0-3 Point-in-Time)", () => {
+      const asOfCutoff = "2026-10-01T00:00:00.000Z";
+      // Observation has old observation period (2026-07) but was ingested in 2026-11 (after 2026-10 cutoff)
+      const lateIngestedSeries = [
+        {
+          id: "obs_old_period_late_ingested",
+          periodStart: "2026-07-01T00:00:00.000Z",
+          demandValue: 60,
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          evidenceReference: "provider-request:serpapi:req_late",
+          observedAt: "2026-11-01T00:00:00.000Z", // INGESTED AFTER CUTOFF!
+        },
+        {
+          id: "obs_prior_1",
+          periodStart: "2026-06-01T00:00:00.000Z",
+          demandValue: 65,
+          region: "US",
+          source: "GOOGLE_TRENDS_LIVE",
+          keyword: "cat water fountain",
+          evidenceReference: "provider-request:serpapi:req_p1",
+          observedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ];
+
+      const assessment = evaluateDemandHistoryEvidence(lateIngestedSeries, {
+        minimumDataPoints: 2,
+        asOfTimestamp: asOfCutoff,
+        providerReceiptDescriptor: { verified: true, source: "GOOGLE_TRENDS_LIVE", responseStatus: 200 },
+      });
+
+      expect(assessment.dataPointsCount).toBe(1); // late-ingested point filtered out!
+      expect(assessment.missingEvidence.some((m) => m.includes("as-of cutoff"))).toBe(true);
     });
   });
 });

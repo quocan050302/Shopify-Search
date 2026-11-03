@@ -1,11 +1,11 @@
 {
   "version": "12.4.3.4.3",
-  "evaluatedAt": "2026-10-31T06:29:44.756Z",
+  "evaluatedAt": "2026-11-03T03:14:22.686Z",
   "verdict": "PASS",
-  "totalScenarios": 15,
-  "devScenariosCount": 7,
-  "holdoutScenariosCount": 8,
-  "passedCount": 15,
+  "totalScenarios": 21,
+  "devScenariosCount": 9,
+  "holdoutScenariosCount": 12,
+  "passedCount": 21,
   "failedCount": 0,
   "scenarios": [
     {
@@ -50,7 +50,10 @@
         "rawCsvFileExists": true,
         "hasValidFileChecksum": true,
         "hasProviderRequestLineage": false,
-        "isMerchantDomainPseudoRef": false
+        "isMerchantDomainPseudoRef": false,
+        "lineagePresent": true,
+        "lineageVerified": true,
+        "verificationReason": "Lineage verified."
       },
       "detail": "rawCsvFileExists=true, hasValidFileChecksum=true"
     },
@@ -66,7 +69,10 @@
         "rawCsvFileExists": false,
         "hasValidFileChecksum": false,
         "hasProviderRequestLineage": false,
-        "isMerchantDomainPseudoRef": false
+        "isMerchantDomainPseudoRef": false,
+        "lineagePresent": true,
+        "lineageVerified": false,
+        "verificationReason": "Referenced CSV file with checksum 'ffffffffffff...' not found in storage."
       },
       "detail": "Fabricated sha256 rejected: rawCsvFileExists=false"
     },
@@ -130,7 +136,7 @@
       "assertion": "res.status === 'INSUFFICIENT_DATA' && res.error.includes('INSUFFICIENT_COVERAGE')",
       "observed": {
         "status": "INSUFFICIENT_DATA",
-        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793428184748, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
+        "error": "INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in Google Trends public BigQuery top terms dataset for US (checked bigquery-public-data.google_trends.top_terms, jobId: mock_bqjob_1793675662649, bytesProcessed: 1048576). Public dataset tracks selected top terms, not arbitrary niche products. Official Explore CSV export can provide verified coverage."
       },
       "detail": "Status=INSUFFICIENT_DATA; error=INSUFFICIENT_COVERAGE: Keyword 'nano ultrasonic pet water fountain' not found in..."
     },
@@ -146,7 +152,10 @@
         "rawCsvFileExists": false,
         "hasValidFileChecksum": false,
         "hasProviderRequestLineage": false,
-        "isMerchantDomainPseudoRef": false
+        "isMerchantDomainPseudoRef": false,
+        "lineagePresent": true,
+        "lineageVerified": false,
+        "verificationReason": "Referenced CSV file with checksum '000011112222...' not found in storage."
       },
       "detail": "Tampered hash rejected: rawCsvFileExists=false"
     },
@@ -242,9 +251,165 @@
         "title": "Original Historical Ad Headline",
         "storeDomain": "historical-pet.com",
         "canonicalProductUrl": "https://historical-pet.com/products/feeder",
-        "identityStatus": "PROBABLE"
+        "identityStatus": "PROBABLE",
+        "verificationEvidenceStatus": "POST_CUTOFF",
+        "isCheckoutChampFunnel": false,
+        "evidenceRefIds": [],
+        "independentMerchantProofRefs": [],
+        "discoveryRefs": [
+          "candidate:cand_hist_historical-pet.com_original_historical_ad_headlin",
+          "domain:historical-pet.com",
+          "url:https://historical-pet.com/products/feeder"
+        ],
+        "evidenceObservedAt": null,
+        "identityReasonCodes": [
+          "REJECTED_POST_CUTOFF_JOINED_METADATA",
+          "AD_ONLY_NO_INDEPENDENT_MERCHANT_PROOF"
+        ]
       },
       "detail": "provenance=REJECTED_POST_CUTOFF_JOINED_METADATA; title=Original Historical Ad Headline"
+    },
+    {
+      "caseId": "v124350_holdout_08_amazon_post_cutoff_and_fixture_rejected",
+      "split": "HOLDOUT",
+      "category": "POINT_IN_TIME_AMAZON_LOOKAHEAD_GUARD",
+      "description": "Rejects post-cutoff Amazon US observations and test fixtures during historical replay and marks NOT_AVAILABLE_AT_ASOF",
+      "executed": true,
+      "passed": true,
+      "assertion": "eligiblePointInTimeCount === 0 && rejectedPostCutoffCount === 1 && availabilityStatus === 'NOT_AVAILABLE_AT_ASOF'",
+      "observed": {
+        "eligiblePointInTimeCount": 0,
+        "rejectedPostCutoffCount": 1,
+        "excludedFixtureCount": 1,
+        "availabilityStatus": "NOT_AVAILABLE_AT_ASOF"
+      },
+      "detail": "availabilityStatus=NOT_AVAILABLE_AT_ASOF; rejectedPostCutoff=1"
+    },
+    {
+      "caseId": "v124351_holdout_09_walmart_post_cutoff_and_fixture_rejected",
+      "split": "HOLDOUT",
+      "category": "POINT_IN_TIME_WALMART_LOOKAHEAD_GUARD",
+      "description": "Rejects post-cutoff Walmart US observations and test fixtures during historical replay and marks NOT_AVAILABLE_AT_ASOF",
+      "executed": true,
+      "passed": true,
+      "assertion": "eligibleRecords.length === 0 && excludedPostCutoffRecords.length === 1 && excludedFixtureRecords.length === 1 && zeroLeakCount === true",
+      "observed": {
+        "eligiblePointInTimeCount": 0,
+        "rejectedPostCutoffCount": 1,
+        "excludedFixtureCount": 1,
+        "availabilityStatus": "NOT_AVAILABLE_AT_ASOF",
+        "zeroLeakCount": true
+      },
+      "detail": "availabilityStatus=NOT_AVAILABLE_AT_ASOF; rejectedPostCutoff=1; excludedFixture=1"
+    },
+    {
+      "caseId": "v124351_dev_08_niche_relevance_rejects_cross_niche_and_ambiguous",
+      "split": "DEV",
+      "category": "POINT_IN_TIME_NICHE_RELEVANCE",
+      "description": "Point-in-time niche evaluator rejects cross-niche products, ambiguous 'hair' beauty items, and brand-only slogans while matching verified Pet Gadgets",
+      "executed": true,
+      "passed": true,
+      "assertion": "evAuto=MISMATCH && evHair=AMBIGUOUS_SINGLE_TOKEN_OVERLAP && evBrandOnly=UNCERTAIN && evPetFountain=MATCH",
+      "observed": {
+        "auto": {
+          "status": "MISMATCH",
+          "code": "CROSS_NICHE_MISMATCH"
+        },
+        "hair": {
+          "status": "MISMATCH",
+          "code": "AMBIGUOUS_SINGLE_TOKEN_OVERLAP"
+        },
+        "brandOnly": {
+          "status": "UNCERTAIN",
+          "code": "BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF"
+        },
+        "petFountain": {
+          "status": "MATCH",
+          "code": "NONE"
+        }
+      },
+      "detail": "auto=CROSS_NICHE_MISMATCH; hair=AMBIGUOUS_SINGLE_TOKEN_OVERLAP; brandOnly=BRAND_DOMAIN_ONLY_NO_PRODUCT_PROOF; petFountain=MATCH"
+    },
+    {
+      "caseId": "v124351_holdout_10_niche_shortlist_never_pads_with_unrelated",
+      "split": "HOLDOUT",
+      "category": "POINT_IN_TIME_NICHE_RELEVANCE",
+      "description": "When only 1 candidate matches Pet Gadgets, Top-3 shortlist returns 1 product with INSUFFICIENT_NICHE_COVERAGE and never pads with cross-niche items",
+      "executed": true,
+      "passed": true,
+      "assertion": "shortlistCount === 1 && shortlistShortfallCount === 2 && nicheCoverageStatus === 'INSUFFICIENT_NICHE_COVERAGE'",
+      "observed": {
+        "shortlistCount": 1,
+        "nicheMatchedCount": 1,
+        "shortlistShortfallCount": 2,
+        "nicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+        "shortlistIds": [
+          "cand_fountain_1"
+        ]
+      },
+      "detail": "shortlistCount=1, shortfall=2, status=INSUFFICIENT_NICHE_COVERAGE"
+    },
+    {
+      "caseId": "v124351_dev_09_historical_identity_rejects_url_path_only_and_funnel",
+      "split": "DEV",
+      "category": "HISTORICAL_IDENTITY_PROVENANCE_POLICY",
+      "description": "Historical identity classifier never promotes /products/ URL path, bare boolean flags, or CheckoutChamp funnel without point-in-time <= asOf raw Product JSON-LD + SHA-256 proof",
+      "executed": true,
+      "passed": true,
+      "assertion": "urlOnly=PROBABLE/DISCOVERY_ONLY && funnel=PROBABLE/FUNNEL_UNVERIFIED && postCutoff=PROBABLE/POST_CUTOFF && bareFlags=PROBABLE && validPit=VERIFIED/INDEPENDENT_VERIFIED",
+      "observed": {
+        "urlOnly": {
+          "status": "PROBABLE",
+          "evidence": "DISCOVERY_ONLY"
+        },
+        "funnel": {
+          "status": "PROBABLE",
+          "evidence": "FUNNEL_UNVERIFIED",
+          "funnel": true
+        },
+        "postCutoff": {
+          "status": "PROBABLE",
+          "evidence": "POST_CUTOFF"
+        },
+        "bareFlags": {
+          "status": "PROBABLE",
+          "reasons": [
+            "UNVALIDATED_CALLER_BOOLEAN_FLAGS_REJECTED_RAW_SOURCE_NOT_RECONSTRUCTABLE",
+            "URL_PATH_OR_PRODUCT_ROW_ONLY_NO_INDEPENDENT_POINT_IN_TIME_MERCHANT_PROOF"
+          ]
+        },
+        "validPit": {
+          "status": "VERIFIED",
+          "evidence": "INDEPENDENT_VERIFIED",
+          "refs": [
+            "ResearchEvidence:ev_pit_jsonld_1",
+            "jsonld_verified:ResearchEvidence:ev_pit_jsonld_1",
+            "merchantProductId:8369671045340",
+            "sku:KS-FOUNTAIN-01",
+            "sha256:88b25572ffabc8a2174c3e684600bbb38636fa1ae7265751fe345dee34338cf3"
+          ]
+        }
+      },
+      "detail": "urlOnly=PROBABLE/DISCOVERY_ONLY; funnel=PROBABLE/FUNNEL_UNVERIFIED; bareFlags=PROBABLE; validPit=VERIFIED"
+    },
+    {
+      "caseId": "v124351_holdout_11_replay_separates_niche_matches_from_verified_identity",
+      "split": "HOLDOUT",
+      "category": "HISTORICAL_IDENTITY_PROVENANCE_POLICY",
+      "description": "Replay reports nicheMatchingCandidates=3 and shortlistSelected=3 while honestly reporting verifiedIdentityCount=1, funnelProbableCount=1, and INSUFFICIENT_VERIFIED_IDENTITY",
+      "executed": true,
+      "passed": true,
+      "assertion": "nicheMatchingCandidates === 3 && verifiedIdentityCount === 1 && funnelProbableCount === 1 && identityCoverageStatus === 'INSUFFICIENT_VERIFIED_IDENTITY'",
+      "observed": {
+        "nicheMatchingCandidates": 3,
+        "shortlistSelected": 3,
+        "verifiedIdentityCount": 1,
+        "provisionalCandidates": 2,
+        "funnelProbableCount": 1,
+        "nicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+        "identityCoverageStatus": "INSUFFICIENT_VERIFIED_IDENTITY"
+      },
+      "detail": "nicheMatched=3, verifiedIdentity=1, funnelProbable=1, identityCoverage=INSUFFICIENT_VERIFIED_IDENTITY"
     }
   ]
 }

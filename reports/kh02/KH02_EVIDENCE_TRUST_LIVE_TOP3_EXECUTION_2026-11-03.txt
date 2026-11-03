@@ -1,0 +1,150 @@
+================================================================================
+KH-02 EVIDENCE TRUST BOUNDARY & REAL SOURCE-TO-TOP3 EXECUTION REPORT
+Date: 2026-11-03 | Execution Version: V12.4.3.7.5 | Locale: Vietnamese
+Repository: quocan050302/Shopify-Search
+Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+Baseline Commit SHA: c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d
+================================================================================
+
+01. EXECUTIVE VERDICT (SPLIT TRUTH SEPARATION)
+--------------------------------------------------------------------------------
+- Engineering Pipeline: PASS (All 33 unit test suites [883/883 tests], Chromium E2E acceptance [1/1], Backtest policy [21/21] and TypeScript type check compile with 0 errors).
+- Provider & Transport: PASS (Clean boundary handling; Meta Ads normalization active; Google Ads raw=0 quarantine enforced; Playwright MCP stdio lifecycle isolated with 0 orphan PIDs; Walmart bot wall respected).
+- Business Gates & Identity:
+  * G07 TikTok Ads US: BLOCKED (no live upstream credentials; TikTok Organic disabled).
+  * G15 Longitudinal Demand Provenance: INSUFFICIENT_EVIDENCE on production live stream without external SerpApi/Trends receipts; fails closed to CACHED_UNVERIFIED for unbacked string claims.
+  * G16 Top-3 Evergreen Winning Products: INSUFFICIENT_EVIDENCE (no synthetic promotion; provisional candidates fail closed).
+
+02. BRANCH & HEAD RECEIPT AUDIT
+--------------------------------------------------------------------------------
+- Locked Branch: feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Starting HEAD: c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d
+- Upstream Remote: origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+- Verification: Clean branch continuity, no new branch created, no reset --hard, no rebase/merge to master/QA.
+
+03. FUNCTION-LEVEL AUDIT & IMPLEMENTATION MAPPING
+--------------------------------------------------------------------------------
+1. saveOriginalGoogleTrendsCsvFile
+   - File & Line: src/services/kh02/demand/googleTrendsCsvValidator.ts:25
+   - Callers: validateAndParseGoogleTrendsCsv
+   - Responsibility: Atomic file persistence for raw Google Trends CSV.
+   - Patch: Enforces full 64-hex SHA-256 regex /^[a-f0-9]{64}$/; computes digest from Buffer bytes; writes via temporary file and atomic fs.renameSync; rejects existing file hash mismatches.
+   - Negative Tests: Rejects non-64 hex, hash mismatch, path traversal.
+
+2. verifyStoredCsvFile
+   - File & Line: src/services/kh02/demand/googleTrendsCsvValidator.ts:54
+   - Callers: hasVerifiableCsvOrProviderLineage, resolveVerifiedDemandEvidence
+   - Responsibility: Verifies existence and byte-for-byte SHA256 integrity of stored CSV files.
+   - Patch: Rejects 16..63 char truncated prefixes; eliminates directory prefix searches; verifies target path remains within storage root; checks symlink escapes via fs.lstatSync; recomputes byte hash.
+   - Negative Tests: 16/32/63 char prefixes fail; non-hex fails; corrupted file fails; missing file fails.
+
+3. validateAndParseGoogleTrendsCsv
+   - File & Line: src/services/kh02/demand/googleTrendsCsvValidator.ts:110
+   - Callers: importGoogleTrendsCsvToDatabase
+   - Responsibility: Structural and provenance parser for Google Trends CSV.
+   - Patch: Does not default extractedRegion="US" if header lacks geo; validates region against expectedRegion.
+
+4. hasVerifiableCsvOrProviderLineage & evaluateDemandSourceAuthority
+   - File & Line: src/services/kh02/demand/temporalDemandEngine.ts:240, 310
+   - Callers: auditDemandObservationsProvenance, evaluateDemandHistoryEvidence
+   - Responsibility: Row-level audit of demand observations.
+   - Patch: Rejects bare string claims (e.g. "provider-request:serpapi:req_live_verified_12345") as CACHED_UNVERIFIED without an immutable provider receipt descriptor or matching DB/storage artifact; passes VerifiedDemandEvidenceDescriptor.
+
+5. evaluateDemandHistoryEvidence
+   - File & Line: src/services/kh02/demand/temporalDemandEngine.ts:650
+   - Callers: evaluateTemporalDemandStability, runBacktestV12_4_3_4_2
+   - Responsibility: Longitudinal demand assessment (G15).
+   - Patch: Enforces Point-in-Time known-at cutoff (rejects observations where observedAt, ingestedAt, or capturedAt > asOfTimestamp); enforces requiredRegion="US"; implements cadence density grid (DAILY=1d, WEEKLY=7d, MONTHLY=30d) where coverageRatio = qualifiedPeriods / expectedPeriods; rejects coverageRatio < minCoverageRatio (0.40).
+
+6. runEvergreenProductResearch (Google Raw=0 Quarantine)
+   - File & Line: src/services/kh02/evergreenResearchOrchestrator.ts:1330
+   - Callers: worker, research API route
+   - Responsibility: Orchestrator provider gate reconciliation.
+   - Patch: When rawCreatives === 0 but observations > 0, sets sourceStatuses.GOOGLE_ADS = "FAILED" and providerTelemetry.GOOGLE_ADS.queryStatus = "QUERY_FAILED" (not QUERY_SUCCEEDED_EMPTY).
+
+04. PROVIDER TELEMETRY & LIVE BLOCKER STATUS
+--------------------------------------------------------------------------------
+- Meta Ads: Normalization active (FACEBOOK/META -> META_ADS); raw ad IDs and platform archive preserved.
+- Google Ads Transparency: Raw zero quarantine active; integrity mismatch quarantined; score inflation prevented.
+- TikTok Ads US: G07 BLOCKED; TikTok Organic disabled; separation verified.
+- Amazon US: Local Microsoft Playwright MCP pinned; stdio handshake isolated; anonymous session with 0 orphan PIDs.
+- Walmart US: Jina Reader bot wall classified as WALMART_BOT_OR_CAPTCHA_WALL; no proxy bypass.
+
+05. SOURCE-TO-PRODUCT-TO-DEMAND-TO-TOP3 PROVENANCE CHAIN
+--------------------------------------------------------------------------------
+- Candidate generation: Real physical products from ad creatives or marketplace search.
+- Identity: Exact ASIN/PDP corroboration; distinct product family separation enforced.
+- Demand: Product-level search interest >=60 days required; broad categories and promo copy rejected.
+- Top 3 Leaderboard: Without live provider receipts, provisional candidates remain unverified; no synthetic promotion.
+
+06. G06 GOOGLE RAW ZERO QUARANTINE METRICS
+--------------------------------------------------------------------------------
+- rawCreativesCount: 0
+- declared/persisted/observations: >0
+- Result: Quarantine triggered, status FAILED / QUERY_FAILED, acceptedCreatives = [], integrityReason preserved.
+
+07. G15 CSV 64-HEX SHA256 INTEGRITY & STORAGE PROOF
+--------------------------------------------------------------------------------
+- Canonical CSV Storage: data/google_trends_imports/
+- Sample Verified Hash: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+- Verification: Full 64-hex regex enforced; byte-for-byte SHA-256 recalculation; atomic rename via temp file.
+
+08. CADENCE DENSITY & POINT-IN-TIME AS-OF CUTOFF
+--------------------------------------------------------------------------------
+- Cadence determination: DAILY (step=1d, maxGap=14d), WEEKLY (step=7d, maxGap=28d), MONTHLY (step=30d, maxGap=45d).
+- Expected periods: coveredDays / cadenceStepDays.
+- Coverage ratio: qualifiedPeriods / expectedPeriods (minCoverageRatio = 0.40).
+- Point-in-Time: Observations ingested or captured after asOfTimestamp are rejected as postCutoffRejected.
+
+09. BUSINESS GATES (G07 / G15 / G16)
+--------------------------------------------------------------------------------
+- Gate G07 (TikTok Ads US): BLOCKED (upstream credentials required).
+- Gate G15 (Demand >=60d): INSUFFICIENT_EVIDENCE (requires live receipt ledger or 64-hex CSV).
+- Gate G16 (Top-3 Evergreen): INSUFFICIENT_EVIDENCE (fail closed; no synthetic top 3).
+
+10. TEST EXECUTION SUMMARY
+--------------------------------------------------------------------------------
+- TypeScript: npx tsc --noEmit -> PASS (0 errors)
+- Unit Suites: 33/33 test files passed (883/883 tests) in 55.55s.
+- Backtest: scripts/kh02/runBacktestV12_4_3_4_2.ts -> PASS (21/21 policy scenarios, DEV/HOLDOUT verified).
+- Chromium E2E: tests/integration/kh02BrowserAcceptance.test.ts -> PASS (1/1 test in 38.15s).
+
+11. DEV / HOLDOUT BACKTEST AUDIT
+--------------------------------------------------------------------------------
+- Replay Provenance: acceptance/kh02-v12.4.3.4.6-strict-evidence-closure/BACKTEST_REPLAY_PROVENANCE.json
+- Zero Lookahead: zeroFutureLeakageVerified = true
+- Policy Scenarios: 21/21 PASS
+- DEV Result: INSUFFICIENT_HISTORICAL_EVIDENCE (0/0 shortlist)
+- HOLDOUT Result: INSUFFICIENT_HISTORICAL_EVIDENCE (3/3 shortlist, G15 missing live proof)
+
+12. RESOURCE & HARDWARE SNAPSHOT
+--------------------------------------------------------------------------------
+- Start Free Disk D: 64.70 GiB
+- Min Free Disk D: 64.65 GiB
+- End Free Disk D: 64.71 GiB (All well above >= 8 GiB threshold)
+- Physical RAM: 31.75 GiB Total, ~6.93 GiB Free Physical
+- Max Concurrent Heavy Processes: 1 (strictly <= 2)
+- Orphan PIDs: 0
+
+13. CHANGED FILES & BACKWARD COMPATIBILITY
+--------------------------------------------------------------------------------
+- src/services/kh02/demand/googleTrendsCsvValidator.ts
+- src/services/kh02/demand/temporalDemandEngine.ts
+- src/services/kh02/evergreenResearchOrchestrator.ts
+- tests/unit/kh02/v12_4_3_2_LiveDiscoveryAuditAudienceUx.test.ts
+- tests/unit/kh02/v12_4_3_3_2_DemandAndIdentityIntegrity.test.ts
+- tests/unit/kh02/v12_4_3_PostReviewHardening_2026_11_03.test.ts
+- acceptance JSON backtest files updated cleanly.
+- Backward compatibility: Fully maintained for all callers and API DTOs.
+
+14. THREE NEXT PRIORITIZED STEPS
+--------------------------------------------------------------------------------
+1. Connect legitimate upstream SerpApi / Google Trends live data provider credentials when available.
+2. Complete live Amazon US product discovery on external network with USD/US postal delivery verification.
+3. Obtain authorized TikTok Ads US partner access token to unblock G07.
+
+15. FINAL COMMIT & PUSH RECEIPT
+--------------------------------------------------------------------------------
+- Commit Message: fix(kh02): evidence trust boundary, 64-hex csv verification and point-in-time demand
+- Target Branch: origin/feature/kh02-walmart-us-jina-reader-v12.4.3.5.1
+================================================================================

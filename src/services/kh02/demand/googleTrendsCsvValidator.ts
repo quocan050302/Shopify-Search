@@ -23,16 +23,68 @@ export const GOOGLE_TRENDS_CSV_STORAGE_DIR = path.resolve(
 
 export function saveOriginalGoogleTrendsCsvFile(
   rawCsvContent: string,
-  sha256Checksum: string
+  sha256Checksum?: string
 ): string {
-  if (!fs.existsSync(GOOGLE_TRENDS_CSV_STORAGE_DIR)) {
-    fs.mkdirSync(GOOGLE_TRENDS_CSV_STORAGE_DIR, { recursive: true });
+  const computedHash = createHash("sha256")
+    .update(Buffer.from(rawCsvContent, "utf8"))
+    .digest("hex")
+    .toLowerCase();
+
+  if (sha256Checksum) {
+    const cleanProvided = String(sha256Checksum).trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(cleanProvided)) {
+      throw new Error(`Invalid sha256Checksum format '${sha256Checksum}'; must be full 64 hexadecimal characters.`);
+    }
+    if (cleanProvided !== computedHash) {
+      throw new Error(`Checksum mismatch: provided '${cleanProvided}', computed from actual bytes '${computedHash}'.`);
+    }
   }
-  const filePath = path.join(GOOGLE_TRENDS_CSV_STORAGE_DIR, `${sha256Checksum}.csv`);
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, rawCsvContent, "utf8");
+
+  const storageDirResolved = path.resolve(GOOGLE_TRENDS_CSV_STORAGE_DIR);
+  if (!fs.existsSync(storageDirResolved)) {
+    fs.mkdirSync(storageDirResolved, { recursive: true });
   }
-  return filePath;
+
+  const filePath = path.join(storageDirResolved, `${computedHash}.csv`);
+  const resolvedPath = path.resolve(filePath);
+  if (!resolvedPath.startsWith(storageDirResolved + path.sep)) {
+    throw new Error(`Path traversal attempt detected in CSV file resolution: '${filePath}'.`);
+  }
+
+  if (fs.existsSync(resolvedPath)) {
+    try {
+      const stat = fs.lstatSync(resolvedPath);
+      if (stat.isSymbolicLink()) {
+        throw new Error(`Target file '${resolvedPath}' is a symbolic link; symlink targets are prohibited.`);
+      }
+      const existingBytes = fs.readFileSync(resolvedPath);
+      const existingHash = createHash("sha256").update(existingBytes).digest("hex").toLowerCase();
+      if (existingHash === computedHash) {
+        return resolvedPath;
+      }
+      throw new Error(`Hash conflict in storage: existing file hash '${existingHash}' does not match computed '${computedHash}'.`);
+    } catch (err: any) {
+      if (err.message && err.message.includes("Hash conflict")) throw err;
+    }
+  }
+
+  // Atomic persistence via temporary file on same directory
+  const tempPath = path.join(
+    storageDirResolved,
+    `.tmp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.tmp`
+  );
+  try {
+    fs.writeFileSync(tempPath, rawCsvContent, "utf8");
+    fs.renameSync(tempPath, resolvedPath);
+    return resolvedPath;
+  } catch (err) {
+    try {
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    } catch {
+      // Ignore cleanup error
+    }
+    throw err;
+  }
 }
 
 export function verifyStoredCsvFile(sha256Checksum: string): {
@@ -40,56 +92,40 @@ export function verifyStoredCsvFile(sha256Checksum: string): {
   validHash: boolean;
   filePath: string | null;
 } {
-  if (!sha256Checksum || typeof sha256Checksum !== "string" || sha256Checksum.length < 16) {
+  if (!sha256Checksum || typeof sha256Checksum !== "string" || sha256Checksum.length !== 64) {
     return { exists: false, validHash: false, filePath: null };
   }
 
-  // Path traversal & non-hex injection protection (Bug P0-A requirement A7)
+  // Path traversal & full 64-hex verification (P0-2 requirement: reject 16..63 prefixes)
   const cleanChecksum = sha256Checksum.trim().toLowerCase();
-  if (!/^[a-f0-9]{16,64}$/.test(cleanChecksum)) {
+  if (!/^[a-f0-9]{64}$/.test(cleanChecksum)) {
     return { exists: false, validHash: false, filePath: null };
   }
 
   const storageDirResolved = path.resolve(GOOGLE_TRENDS_CSV_STORAGE_DIR);
-  let filePath = path.join(storageDirResolved, `${cleanChecksum}.csv`);
+  const filePath = path.join(storageDirResolved, `${cleanChecksum}.csv`);
   const resolvedPath = path.resolve(filePath);
   if (!resolvedPath.startsWith(storageDirResolved + path.sep)) {
     return { exists: false, validHash: false, filePath: null };
   }
 
   if (!fs.existsSync(resolvedPath)) {
-    if (fs.existsSync(storageDirResolved)) {
-      try {
-        const files = fs.readdirSync(storageDirResolved);
-        const prefixMatch = files.find(
-          (f) => f.startsWith(cleanChecksum) && f.endsWith(".csv")
-        );
-        if (prefixMatch) {
-          filePath = path.join(storageDirResolved, prefixMatch);
-          if (!path.resolve(filePath).startsWith(storageDirResolved + path.sep)) {
-            return { exists: false, validHash: false, filePath: null };
-          }
-        } else {
-          return { exists: false, validHash: false, filePath: null };
-        }
-      } catch {
-        return { exists: false, validHash: false, filePath: null };
-      }
-    } else {
-      return { exists: false, validHash: false, filePath: null };
-    }
+    return { exists: false, validHash: false, filePath: null };
   }
 
   try {
-    const bytes = fs.readFileSync(filePath, "utf8");
-    const computedHash = createHash("sha256").update(bytes, "utf8").digest("hex");
-    const validHash =
-      computedHash === cleanChecksum ||
-      (cleanChecksum.length < 64 && computedHash.startsWith(cleanChecksum));
+    const stat = fs.lstatSync(resolvedPath);
+    if (stat.isSymbolicLink()) {
+      return { exists: false, validHash: false, filePath: null };
+    }
+
+    const bytes = fs.readFileSync(resolvedPath);
+    const computedHash = createHash("sha256").update(bytes).digest("hex").toLowerCase();
+    const validHash = computedHash === cleanChecksum;
     return {
       exists: true,
       validHash,
-      filePath,
+      filePath: resolvedPath,
     };
   } catch {
     return { exists: false, validHash: false, filePath: null };
@@ -192,7 +228,7 @@ export function validateAndParseGoogleTrendsCsv(
   const metricCol = rawColumnHeader.slice(commaIdx + 1).trim();
 
   let extractedKeyword = "";
-  let extractedRegion = options.expectedRegion || "US";
+  let extractedRegion: string | null = null;
 
   const matchWithRegion = metricCol.match(/^(.*?):\s*\((.*?)\)$/);
   if (matchWithRegion) {
@@ -205,6 +241,19 @@ export function validateAndParseGoogleTrendsCsv(
     }
   } else {
     extractedKeyword = metricCol.replace(/[":]/g, "").trim();
+  }
+
+  if (options.expectedRegion) {
+    const normExpected = options.expectedRegion.trim().toUpperCase();
+    if (!extractedRegion) {
+      errors.push(
+        `CSV header does not specify geographic region; cannot substantiate region expectation '${options.expectedRegion}'.`
+      );
+    } else if (extractedRegion.toUpperCase() !== normExpected) {
+      errors.push(
+        `CSV region '${extractedRegion}' does not match expected region '${options.expectedRegion}'.`
+      );
+    }
   }
 
   if (effectiveExpectedKeyword && effectiveExpectedKeyword.trim()) {
@@ -259,7 +308,7 @@ export function validateAndParseGoogleTrendsCsv(
       periodStart: dStart.toISOString(),
       periodEnd: !isNaN(dEnd.getTime()) ? dEnd.toISOString() : dStart.toISOString(),
       demandValue: demandVal,
-      region: extractedRegion,
+      region: extractedRegion || "UNKNOWN",
       keyword: extractedKeyword,
     });
   }
@@ -280,8 +329,9 @@ export function validateAndParseGoogleTrendsCsv(
   }
 
   const safeKeywordTag = encodeURIComponent(extractedKeyword.toLowerCase().replace(/\s+/g, "_"));
+  const safeGeoTag = extractedRegion || "UNKNOWN";
   const evidenceReference = valid
-    ? `csv-import:google-trends-explore:sha256:${sha256Checksum}:q=${safeKeywordTag}:geo=${extractedRegion}:start=${startDate?.slice(0, 10)}:end=${endDate?.slice(0, 10)}:imported=${importedAt}`
+    ? `csv-import:google-trends-explore:sha256:${sha256Checksum}:q=${safeKeywordTag}:geo=${safeGeoTag}:start=${startDate?.slice(0, 10)}:end=${endDate?.slice(0, 10)}:imported=${importedAt}`
     : null;
 
   if (valid) {

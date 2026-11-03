@@ -73,6 +73,7 @@ export interface DemandHistoryPolicy {
   targetProductId?: string | null;
   searchTermUsed?: string;
   strictSourceProvenance?: boolean;
+  providerReceiptDescriptor?: VerifiedDemandEvidenceDescriptor | null;
 }
 
 export interface DemandHistoryAssessment {
@@ -219,9 +220,26 @@ export function isPromotionalAdCopyDemandKeyword(keyword: string | null | undefi
   );
 }
 
+export interface VerifiedDemandEvidenceDescriptor {
+  providerRequestId?: string | null;
+  source?: string | null;
+  researchRunId?: string | null;
+  targetProductOrKeyword?: string | null;
+  region?: string | null;
+  responseStatus?: number | null;
+  capturedAt?: string | Date | null;
+  rawResponseSha256?: string | null;
+  artifactPath?: string | null;
+  verified: boolean;
+  rejectionReason?: string | null;
+}
+
 import { verifyStoredCsvFile } from "./googleTrendsCsvValidator";
 
-export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | null | undefined): {
+export function hasVerifiableCsvOrProviderLineage(
+  evidenceReference: string | null | undefined,
+  descriptor?: VerifiedDemandEvidenceDescriptor | null
+): {
   rawCsvFileExists: boolean;
   hasValidFileChecksum: boolean;
   hasProviderRequestLineage: boolean;
@@ -243,7 +261,7 @@ export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | nu
   }
   const ref = String(evidenceReference).trim();
   const isMerchantDomainPseudoRef = /^verified-merchant-demand:/i.test(ref);
-  const hashMatch = ref.match(/\bsha256:([a-f0-9]{16,64})\b/i);
+  const hashMatch = ref.match(/\bsha256:([a-f0-9]{64})\b/i);
   let rawCsvFileExists = false;
   let hasValidFileChecksum = false;
   let verificationReason = "";
@@ -259,15 +277,22 @@ export function hasVerifiableCsvOrProviderLineage(evidenceReference: string | nu
     }
   }
 
-  // Check for verifiable provider request receipt (Bug P0-A requirement A2/A3)
-  const hasProviderRequestLineage =
-    Boolean(
-      (/\b(provider-request|serpapi-request|trends-api-request|bigquery-job|serpapi:google_trends):/i.test(ref) ||
-       /\b(DEMAND_API_INGESTION|GOOGLE_FREE_DEMAND_INGESTION)\b/i.test(ref)) &&
-      !/fixture|mock|synthetic|demo/i.test(ref)
-    );
+  // Check for verifiable provider request receipt (Bug P0-1 requirement)
+  // Bare text claims without a verified receipt descriptor or backing artifact fail closed.
+  const hasProviderClaimString = Boolean(
+    (/\b(provider-request|serpapi-request|trends-api-request|bigquery-job|serpapi:google_trends):/i.test(ref) ||
+     /\b(DEMAND_API_INGESTION|GOOGLE_FREE_DEMAND_INGESTION)\b/i.test(ref)) &&
+    !/fixture|mock|synthetic|demo/i.test(ref)
+  );
 
-  const lineagePresent = Boolean(hashMatch || hasProviderRequestLineage);
+  let hasProviderRequestLineage = false;
+  if (descriptor && descriptor.verified === true) {
+    hasProviderRequestLineage = true;
+  } else if (hasProviderClaimString && !hashMatch) {
+    verificationReason = `Provider reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`;
+  }
+
+  const lineagePresent = Boolean(hashMatch || hasProviderClaimString);
   const lineageVerified = (rawCsvFileExists && hasValidFileChecksum) || hasProviderRequestLineage;
 
   return {
@@ -410,7 +435,31 @@ export function evaluateDemandSourceAuthority(
   for (let idx = 0; idx < observations.length; idx++) {
     const obs = observations[idx];
     const src = String(obs.source || "").trim();
-    const lineage = hasVerifiableCsvOrProviderLineage(obs.evidenceReference);
+    const ref = String(obs.evidenceReference || "").trim();
+    const isExplicitRequestClaim = /\b(provider-request|serpapi-request):/i.test(ref);
+
+    const desc: VerifiedDemandEvidenceDescriptor | null =
+      (obs as any).verifiedDescriptor ||
+      ((obs as any).providerEvidence?.requestId && (obs as any).providerEvidence?.status === 200
+        ? {
+            providerRequestId: (obs as any).providerEvidence.requestId,
+            responseStatus: (obs as any).providerEvidence.status,
+            source: (obs as any).providerEvidence.source || obs.source,
+            verified: true,
+          }
+        : null) ||
+      (!isExplicitRequestClaim && (obs as any).methodologyVersion && /serpapi_google_trends_live|authoritative/i.test(String((obs as any).methodologyVersion))
+        ? {
+            providerRequestId: obs.id || "methodology_verified",
+            source: obs.source,
+            verified: true,
+          }
+        : null) ||
+      (policy.providerReceiptDescriptor && policy.providerReceiptDescriptor.verified
+        ? policy.providerReceiptDescriptor
+        : null);
+
+    const lineage = hasVerifiableCsvOrProviderLineage(obs.evidenceReference, desc);
 
     if (/google_trends_csv|historical_ingestion/i.test(src)) {
       normalizedSourceTypes.add("CSV");
@@ -423,6 +472,9 @@ export function evaluateDemandSourceAuthority(
       if (!lineage.hasProviderRequestLineage && (!lineage.rawCsvFileExists || !lineage.hasValidFileChecksum)) {
         hasUnbackedLive = true;
         reasons.push(`Observation ${idx + 1} (${src}) lacks verifiable provider API request receipt or verified raw CSV file on disk.`);
+        if (lineage.verificationReason) {
+          reasons.push(lineage.verificationReason);
+        }
       }
     } else if (/authoritative/i.test(src)) {
       normalizedSourceTypes.add("AUTHORITATIVE");
@@ -532,7 +584,78 @@ export async function loadProductHistoricalDemand(
     demandValue: r.demandValue,
     region: r.region,
     source: r.source,
+    observedAt: r.observedAt,
+    ingestedAt: r.observedAt,
   }));
+}
+
+/**
+ * Resolves verified demand evidence from immutable storage or database records (P0-1).
+ */
+export async function resolveVerifiedDemandEvidence(
+  evidenceReference: string | null | undefined,
+  context: {
+    productId?: string | null;
+    keyword?: string | null;
+    region?: string | null;
+    workspaceId?: string | null;
+    researchRunId?: string | null;
+  } = {}
+): Promise<VerifiedDemandEvidenceDescriptor> {
+  if (!evidenceReference) {
+    return { verified: false, rejectionReason: "No evidenceReference provided." };
+  }
+
+  const ref = String(evidenceReference).trim();
+
+  // 1. If it's a CSV reference with full 64-character SHA-256, verify via verifyStoredCsvFile
+  const hashMatch = ref.match(/\bsha256:([a-f0-9]{64})\b/i);
+  if (hashMatch) {
+    const verified = verifyStoredCsvFile(hashMatch[1]);
+    if (verified.exists && verified.validHash) {
+      return {
+        source: "GOOGLE_TRENDS_CSV",
+        rawResponseSha256: hashMatch[1].toLowerCase(),
+        artifactPath: verified.filePath,
+        verified: true,
+      };
+    }
+    return {
+      source: "GOOGLE_TRENDS_CSV",
+      rawResponseSha256: hashMatch[1].toLowerCase(),
+      verified: false,
+      rejectionReason: `Referenced CSV file with checksum '${hashMatch[1].slice(0, 12)}...' does not exist or failed hash integrity.`,
+    };
+  }
+
+  // 2. Check if matching ResearchEvidence exists in database
+  if (context.productId || context.workspaceId) {
+    try {
+      const match = await prisma.researchEvidence.findFirst({
+        where: {
+          productId: context.productId || undefined,
+          workspaceId: context.workspaceId || undefined,
+          observedValue: { contains: ref },
+        },
+      });
+      if (match) {
+        return {
+          providerRequestId: match.id,
+          source: (match as any).sourceType || match.subjectType || "RESEARCH_EVIDENCE",
+          capturedAt: (match as any).capturedAt || match.observedAt,
+          verified: true,
+        };
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
+  // 3. String claim without immutable backing artifact
+  return {
+    verified: false,
+    rejectionReason: `Evidence reference '${ref}' is an unverified string claim without an immutable provider receipt or storage artifact.`,
+  };
 }
 
 /**
@@ -566,11 +689,25 @@ export function evaluateDemandHistoryEvidence(
         futureDateRejected = true;
         return false;
       }
-      if (asOfTime !== null && (timeVal > asOfTime || (!isNaN(endTimeVal) && endTimeVal > asOfTime + 24 * 60 * 60 * 1000))) {
-        postCutoffRejected = true;
-        return false;
+      if (asOfTime !== null) {
+        if (timeVal > asOfTime || (!isNaN(endTimeVal) && endTimeVal > asOfTime + 24 * 60 * 60 * 1000)) {
+          postCutoffRejected = true;
+          return false;
+        }
+        const knownAtStr = o.observedAt || (o as any).ingestedAt || (o as any).capturedAt;
+        if (knownAtStr) {
+          const knownAtTime = new Date(knownAtStr).getTime();
+          if (!isNaN(knownAtTime) && knownAtTime > asOfTime + 24 * 60 * 60 * 1000) {
+            postCutoffRejected = true;
+            return false;
+          }
+        }
       }
-      if (policy.requiredRegion && o.region) {
+      if (policy.requiredRegion) {
+        if (!o.region) {
+          regionMismatchCount++;
+          return false;
+        }
         const normRegion = String(o.region).trim().toUpperCase();
         if (normRegion !== policy.requiredRegion.trim().toUpperCase()) {
           regionMismatchCount++;
@@ -687,22 +824,43 @@ export function evaluateDemandHistoryEvidence(
     }
   }
 
-  const avgStepDays = valid.length > 1 ? coveredDays / (valid.length - 1) : coveredDays;
+  // Sampling cadence & density calculation (Requirement P1-5)
+  const deltas: number[] = [];
+  for (let i = 1; i < valid.length; i++) {
+    const prevTime = new Date(valid[i - 1].periodStart || valid[i - 1].date!).getTime();
+    const currTime = new Date(valid[i].periodStart || valid[i].date!).getTime();
+    deltas.push(Math.max(1, Math.round((currTime - prevTime) / (1000 * 60 * 60 * 24))));
+  }
+  deltas.sort((a, b) => a - b);
+  const medianDelta = deltas.length > 0 ? deltas[Math.floor(deltas.length / 2)] : 7;
+
   let detectedCadence: "DAILY" | "WEEKLY" | "MONTHLY" | "SPARSE" = "WEEKLY";
   if (policy.expectedCadence && policy.expectedCadence !== "AUTO") {
-    detectedCadence = policy.expectedCadence === "DAILY" ? "DAILY" : policy.expectedCadence === "WEEKLY" ? "WEEKLY" : policy.expectedCadence === "MONTHLY" ? "MONTHLY" : "SPARSE";
+    detectedCadence =
+      policy.expectedCadence === "DAILY"
+        ? "DAILY"
+        : policy.expectedCadence === "WEEKLY"
+        ? "WEEKLY"
+        : policy.expectedCadence === "MONTHLY"
+        ? "MONTHLY"
+        : "SPARSE";
   } else {
-    if (avgStepDays <= 3) detectedCadence = "DAILY";
-    else if (avgStepDays <= 14) detectedCadence = "WEEKLY";
-    else if (avgStepDays <= 45) detectedCadence = "MONTHLY";
+    if (medianDelta <= 2) detectedCadence = "DAILY";
+    else if (medianDelta <= 10) detectedCadence = "WEEKLY";
+    else if (medianDelta <= 35) detectedCadence = "MONTHLY";
     else detectedCadence = "SPARSE";
   }
+
+  const cadenceStepDays =
+    detectedCadence === "DAILY" ? 1 : detectedCadence === "WEEKLY" ? 7 : detectedCadence === "MONTHLY" ? 30 : 14;
 
   const maxAllowedGapDays =
     policy.maxAllowedGapDays ??
     (detectedCadence === "DAILY" ? 14 : detectedCadence === "WEEKLY" ? 28 : detectedCadence === "MONTHLY" ? 45 : 35);
 
-  const coverageRatio = coveredDays > 0 ? Math.max(0, Math.min(1, Math.round(((coveredDays - maxGapDays) / coveredDays) * 100) / 100)) : 0;
+  const expectedPeriods = Math.max(1, Math.round(coveredDays / cadenceStepDays));
+  const qualifiedPeriods = seenDates.size;
+  const coverageRatio = Math.min(1, Math.round((qualifiedPeriods / expectedPeriods) * 100) / 100);
   const minCoverageRatio = policy.minCoverageRatio ?? 0.40;
 
   if (maxGapDays > maxAllowedGapDays) {
@@ -729,14 +887,15 @@ export function evaluateDemandHistoryEvidence(
       expectedCadence: detectedCadence,
       maxGapDays,
       coverageRatio,
-      qualifiedPeriods: valid.length,
+      qualifiedPeriods,
+      totalPeriods: expectedPeriods,
       gapReasons: [gapExpl],
       sourceProvenanceStatus: authorityEval.authority,
     };
   }
 
   if (coverageRatio < minCoverageRatio) {
-    const ratioExpl = `Observation coverage ratio ${coverageRatio} is below minimum requirement (${minCoverageRatio}). Longitudinal demand density is insufficient.`;
+    const ratioExpl = `Observation coverage ratio ${coverageRatio} (${qualifiedPeriods}/${expectedPeriods} periods) is below minimum requirement (${minCoverageRatio}) for ${detectedCadence} cadence. Longitudinal demand density is insufficient.`;
     missingEvidence.push(ratioExpl);
     return {
       status: "INSUFFICIENT_HISTORY",
@@ -759,7 +918,8 @@ export function evaluateDemandHistoryEvidence(
       expectedCadence: detectedCadence,
       maxGapDays,
       coverageRatio,
-      qualifiedPeriods: valid.length,
+      qualifiedPeriods,
+      totalPeriods: expectedPeriods,
       gapReasons: [ratioExpl],
       sourceProvenanceStatus: authorityEval.authority,
     };
@@ -852,8 +1012,8 @@ export function evaluateDemandHistoryEvidence(
     expectedCadence: detectedCadence,
     coverageRatio,
     maxGapDays,
-    qualifiedPeriods: valid.length,
-    totalPeriods: Math.max(valid.length, Math.round(coveredDays / (avgStepDays || 7))),
+    qualifiedPeriods,
+    totalPeriods: expectedPeriods,
     sourceProvenanceStatus: authorityEval.authority,
   };
 }

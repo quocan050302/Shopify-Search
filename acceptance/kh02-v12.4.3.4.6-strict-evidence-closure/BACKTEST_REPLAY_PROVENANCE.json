@@ -1,6 +1,8 @@
 {
-  "version": "12.4.3.4.3",
-  "evaluatedAt": "2026-10-31T06:29:46.607Z",
+  "version": "12.4.3.5.1",
+  "sourceSha": "c4132fb9f76d1aee7e28ae4e7611d9296cfbd83d",
+  "evaluatedAt": "2026-11-03T03:14:22.999Z",
+  "niche": "Pet Gadgets",
   "policyScenarioVerdict": "PASS",
   "pointInTimeIntegrityVerdict": "PASS",
   "historicalDevVerdict": "INSUFFICIENT_HISTORICAL_EVIDENCE",
@@ -16,8 +18,17 @@
       "end": "2026-10-30T12:00:00.000Z"
     },
     "zeroOverlapVerified": true,
-    "devRecordsEvaluated": 60,
-    "holdoutRecordsEvaluated": 377,
+    "devRecordsEvaluated": 19,
+    "holdoutRecordsEvaluated": 380,
+    "devDatasetFingerprintSha256": "9855ac11a972adc0a558c23b7608309f158301c12ad8dcb0de3e3a5fd65af6a4",
+    "holdoutDatasetFingerprintSha256": "26bcffb0d900f14f43614918e4f1102015fbb2b9308292c6461acf6e582650b3",
+    "devShortlistCount": 0,
+    "devShortlistNicheMatchedCount": 0,
+    "devNicheCoverageStatus": "INSUFFICIENT_NICHE_COVERAGE",
+    "holdoutShortlistCount": 3,
+    "holdoutShortlistNicheMatchedCount": 3,
+    "holdoutNicheCoverageStatus": "SUFFICIENT_NICHE_COVERAGE",
+    "walmartPointInTimeVacuousAsHistoricalParityProof": false,
     "zeroFutureLeakageVerified": true
   }
 }
